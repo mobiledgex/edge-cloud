@@ -26,122 +26,123 @@ namespace DistributedMatchEngine {
           string.Concat(
             "ChBhcHAtY2xpZW50LnByb3RvEhhkaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUa",
             "HGdvb2dsZS9hcGkvYW5ub3RhdGlvbnMucHJvdG8aCWxvYy5wcm90bxoPYXBw",
-            "Y29tbW9uLnByb3RvIn8KFVJlZ2lzdGVyQ2xpZW50UmVxdWVzdBILCgNWZXIY",
-            "ASABKA0SDwoHRGV2TmFtZRgCIAEoCRIPCgdBcHBOYW1lGAMgASgJEg8KB0Fw",
-            "cFZlcnMYBCABKAkSEwoLQ2Fycmllck5hbWUYBSABKAkSEQoJQXV0aFRva2Vu",
-            "GAYgASgJIogBChNSZWdpc3RlckNsaWVudFJlcGx5EgsKA1ZlchgBIAEoDRI1",
-            "CgZTdGF0dXMYAiABKA4yJS5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuUmVw",
-            "bHlTdGF0dXMSFQoNU2Vzc2lvbkNvb2tpZRgDIAEoCRIWCg5Ub2tlblNlcnZl",
-            "clVSSRgEIAEoCSK1AQoTRmluZENsb3VkbGV0UmVxdWVzdBILCgNWZXIYASAB",
-            "KA0SFQoNU2Vzc2lvbkNvb2tpZRgCIAEoCRITCgtDYXJyaWVyTmFtZRgDIAEo",
-            "CRIyCgtHcHNMb2NhdGlvbhgEIAEoCzIdLmRpc3RyaWJ1dGVkX21hdGNoX2Vu",
-            "Z2luZS5Mb2MSDwoHRGV2TmFtZRgFIAEoCRIPCgdBcHBOYW1lGAYgASgJEg8K",
-            "B0FwcFZlcnMYByABKAkipQIKEUZpbmRDbG91ZGxldFJlcGx5EgsKA1ZlchgB",
-            "IAEoDRJGCgZzdGF0dXMYAiABKA4yNi5kaXN0cmlidXRlZF9tYXRjaF9lbmdp",
-            "bmUuRmluZENsb3VkbGV0UmVwbHkuRmluZFN0YXR1cxIMCgRGUUROGAMgASgJ",
-            "EjAKBXBvcnRzGAQgAygLMiEuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkFw",
-            "cFBvcnQSOAoRY2xvdWRsZXRfbG9jYXRpb24YBSABKAsyHS5kaXN0cmlidXRl",
-            "ZF9tYXRjaF9lbmdpbmUuTG9jIkEKCkZpbmRTdGF0dXMSEAoMRklORF9VTktO",
-            "T1dOEAASDgoKRklORF9GT1VORBABEhEKDUZJTkRfTk9URk9VTkQQAiKcAQoV",
-            "VmVyaWZ5TG9jYXRpb25SZXF1ZXN0EgsKA1ZlchgBIAEoDRIVCg1TZXNzaW9u",
-            "Q29va2llGAIgASgJEhMKC0NhcnJpZXJOYW1lGAMgASgJEjIKC0dwc0xvY2F0",
-            "aW9uGAQgASgLMh0uZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkxvYxIWCg5W",
-            "ZXJpZnlMb2NUb2tlbhgFIAEoCSLNBAoTVmVyaWZ5TG9jYXRpb25SZXBseRIL",
-            "CgN2ZXIYASABKA0SUAoMdG93ZXJfc3RhdHVzGAIgASgOMjouZGlzdHJpYnV0",
-            "ZWRfbWF0Y2hfZW5naW5lLlZlcmlmeUxvY2F0aW9uUmVwbHkuVG93ZXJfU3Rh",
-            "dHVzEl4KE2dwc19sb2NhdGlvbl9zdGF0dXMYAyABKA4yQS5kaXN0cmlidXRl",
-            "ZF9tYXRjaF9lbmdpbmUuVmVyaWZ5TG9jYXRpb25SZXBseS5HUFNfTG9jYXRp",
-            "b25fU3RhdHVzEiAKGEdQU19Mb2NhdGlvbl9BY2N1cmFjeV9LTRgEIAEoASJp",
-            "CgxUb3dlcl9TdGF0dXMSEQoNVE9XRVJfVU5LTk9XThAAEiAKHENPTk5FQ1RF",
-            "RF9UT19TUEVDSUZJRURfVE9XRVIQARIkCiBOT1RfQ09OTkVDVEVEX1RPX1NQ",
-            "RUNJRklFRF9UT1dFUhACIukBChNHUFNfTG9jYXRpb25fU3RhdHVzEg8KC0xP",
-            "Q19VTktOT1dOEAASEAoMTE9DX1ZFUklGSUVEEAESHQoZTE9DX01JU01BVENI",
-            "X1NBTUVfQ09VTlRSWRACEh4KGkxPQ19NSVNNQVRDSF9PVEhFUl9DT1VOVFJZ",
-            "EAMSHQoZTE9DX1JPQU1JTkdfQ09VTlRSWV9NQVRDSBAEEiAKHExPQ19ST0FN",
-            "SU5HX0NPVU5UUllfTUlTTUFUQ0gQBRIaChZMT0NfRVJST1JfVU5BVVRIT1JJ",
-            "WkVEEAYSEwoPTE9DX0VSUk9SX09USEVSEAciTQoSR2V0TG9jYXRpb25SZXF1",
-            "ZXN0EgsKA1ZlchgBIAEoDRIVCg1TZXNzaW9uQ29va2llGAIgASgJEhMKC0Nh",
-            "cnJpZXJOYW1lGAMgASgJIoACChBHZXRMb2NhdGlvblJlcGx5EgsKA1ZlchgB",
-            "IAEoDRJFCgZTdGF0dXMYAiABKA4yNS5kaXN0cmlidXRlZF9tYXRjaF9lbmdp",
-            "bmUuR2V0TG9jYXRpb25SZXBseS5Mb2NfU3RhdHVzEhMKC0NhcnJpZXJOYW1l",
-            "GAMgASgJEg0KBVRvd2VyGAQgASgEEjYKD05ldHdvcmtMb2NhdGlvbhgFIAEo",
-            "CzIdLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5Mb2MiPAoKTG9jX1N0YXR1",
-            "cxIPCgtMT0NfVU5LTk9XThAAEg0KCUxPQ19GT1VORBABEg4KCkxPQ19ERU5J",
-            "RUQQAiKBAQoSQXBwSW5zdExpc3RSZXF1ZXN0EgsKA1ZlchgBIAEoDRIVCg1T",
-            "ZXNzaW9uQ29va2llGAIgASgJEhMKC0NhcnJpZXJOYW1lGAMgASgJEjIKC0dw",
-            "c0xvY2F0aW9uGAQgASgLMh0uZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkxv",
-            "YyJvCgtBcHBpbnN0YW5jZRIPCgdBcHBOYW1lGAEgASgJEg8KB0FwcFZlcnMY",
-            "AiABKAkSDAoERlFEThgDIAEoCRIwCgVwb3J0cxgEIAMoCzIhLmRpc3RyaWJ1",
-            "dGVkX21hdGNoX2VuZ2luZS5BcHBQb3J0IsABChBDbG91ZGxldExvY2F0aW9u",
-            "EhMKC0NhcnJpZXJOYW1lGAEgASgJEhQKDENsb3VkbGV0TmFtZRgCIAEoCRIy",
-            "CgtHcHNMb2NhdGlvbhgDIAEoCzIdLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2lu",
-            "ZS5Mb2MSEAoIRGlzdGFuY2UYBCABKAESOwoMQXBwaW5zdGFuY2VzGAUgAygL",
-            "MiUuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkFwcGluc3RhbmNlIuABChBB",
-            "cHBJbnN0TGlzdFJlcGx5EgsKA1ZlchgBIAEoDRJECgZTdGF0dXMYAiABKA4y",
-            "NC5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuQXBwSW5zdExpc3RSZXBseS5B",
-            "SV9TdGF0dXMSPQoJQ2xvdWRsZXRzGAMgAygLMiouZGlzdHJpYnV0ZWRfbWF0",
-            "Y2hfZW5naW5lLkNsb3VkbGV0TG9jYXRpb24iOgoJQUlfU3RhdHVzEhAKDEFJ",
-            "X1VOREVGSU5FRBAAEg4KCkFJX1NVQ0NFU1MQARILCgdBSV9GQUlMEAIiNQoP",
-            "RnFkbkxpc3RSZXF1ZXN0EgsKA1ZlchgBIAEoDRIVCg1TZXNzaW9uQ29va2ll",
-            "GAIgASgJImcKB0FwcEZxZG4SDwoHQXBwTmFtZRgBIAEoCRIPCgdBcHBWZXJz",
-            "GAIgASgJEg8KB0Rldk5hbWUYAyABKAkSDQoFRlFETnMYBCADKAkSGgoSQW5k",
-            "cm9pZFBhY2thZ2VOYW1lGAUgASgJItABCg1GcWRuTGlzdFJlcGx5EgsKA3Zl",
-            "chgBIAEoDRIzCghBcHBGcWRucxgDIAMoCzIhLmRpc3RyaWJ1dGVkX21hdGNo",
-            "X2VuZ2luZS5BcHBGcWRuEkEKBlN0YXR1cxgEIAEoDjIxLmRpc3RyaWJ1dGVk",
-            "X21hdGNoX2VuZ2luZS5GcWRuTGlzdFJlcGx5LkZMX1N0YXR1cyI6CglGTF9T",
-            "dGF0dXMSEAoMRkxfVU5ERUZJTkVEEAASDgoKRkxfU1VDQ0VTUxABEgsKB0ZM",
-            "X0ZBSUwQAiLpAQoWRHluYW1pY0xvY0dyb3VwUmVxdWVzdBILCgNWZXIYASAB",
-            "KA0SFQoNU2Vzc2lvbkNvb2tpZRgCIAEoCRIMCgRMZ0lkGAMgASgEEk4KCENv",
-            "bW1UeXBlGAsgASgOMjwuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkR5bmFt",
-            "aWNMb2NHcm91cFJlcXVlc3QuRGxnQ29tbVR5cGUSEAoIVXNlckRhdGEYDCAB",
-            "KAkiOwoLRGxnQ29tbVR5cGUSEAoMRGxnVW5kZWZpbmVkEAASDQoJRGxnU2Vj",
-            "dXJlEAESCwoHRGxnT3BlbhACIoIBChREeW5hbWljTG9jR3JvdXBSZXBseRIL",
-            "CgN2ZXIYASABKA0SNQoGc3RhdHVzGAIgASgOMiUuZGlzdHJpYnV0ZWRfbWF0",
-            "Y2hfZW5naW5lLlJlcGx5U3RhdHVzEhEKCUVycm9yQ29kZRgDIAEoDRITCgtH",
-            "cm91cENvb2tpZRgFIAEoCSo9CgdJRFR5cGVzEhAKDElEX1VOREVGSU5FRBAA",
-            "EggKBElNRUkQARIKCgZNU0lTRE4QAhIKCgZJUEFERFIQAyo8CgtSZXBseVN0",
-            "YXR1cxIQCgxSU19VTkRFRklORUQQABIOCgpSU19TVUNDRVNTEAESCwoHUlNf",
-            "RkFJTBACMuUHChBNYXRjaF9FbmdpbmVfQXBpEo8BCg5SZWdpc3RlckNsaWVu",
-            "dBIvLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5SZWdpc3RlckNsaWVudFJl",
-            "cXVlc3QaLS5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuUmVnaXN0ZXJDbGll",
-            "bnRSZXBseSIdgtPkkwIXIhIvdjEvcmVnaXN0ZXJjbGllbnQ6ASoShwEKDEZp",
-            "bmRDbG91ZGxldBItLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5GaW5kQ2xv",
-            "dWRsZXRSZXF1ZXN0GisuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkZpbmRD",
-            "bG91ZGxldFJlcGx5IhuC0+STAhUiEC92MS9maW5kY2xvdWRsZXQ6ASoSjwEK",
-            "DlZlcmlmeUxvY2F0aW9uEi8uZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLlZl",
-            "cmlmeUxvY2F0aW9uUmVxdWVzdBotLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2lu",
-            "ZS5WZXJpZnlMb2NhdGlvblJlcGx5Ih2C0+STAhciEi92MS92ZXJpZnlsb2Nh",
-            "dGlvbjoBKhKDAQoLR2V0TG9jYXRpb24SLC5kaXN0cmlidXRlZF9tYXRjaF9l",
-            "bmdpbmUuR2V0TG9jYXRpb25SZXF1ZXN0GiouZGlzdHJpYnV0ZWRfbWF0Y2hf",
-            "ZW5naW5lLkdldExvY2F0aW9uUmVwbHkiGoLT5JMCFCIPL3YxL2dldGxvY2F0",
-            "aW9uOgEqEpEBCg5BZGRVc2VyVG9Hcm91cBIwLmRpc3RyaWJ1dGVkX21hdGNo",
-            "X2VuZ2luZS5EeW5hbWljTG9jR3JvdXBSZXF1ZXN0Gi4uZGlzdHJpYnV0ZWRf",
-            "bWF0Y2hfZW5naW5lLkR5bmFtaWNMb2NHcm91cFJlcGx5Ih2C0+STAhciEi92",
-            "MS9hZGR1c2VydG9ncm91cDoBKhKJAQoOR2V0QXBwSW5zdExpc3QSLC5kaXN0",
-            "cmlidXRlZF9tYXRjaF9lbmdpbmUuQXBwSW5zdExpc3RSZXF1ZXN0GiouZGlz",
-            "dHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkFwcEluc3RMaXN0UmVwbHkiHYLT5JMC",
-            "FyISL3YxL2dldGFwcGluc3RsaXN0OgEqEn0KC0dldEZxZG5MaXN0EikuZGlz",
-            "dHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkZxZG5MaXN0UmVxdWVzdBonLmRpc3Ry",
-            "aWJ1dGVkX21hdGNoX2VuZ2luZS5GcWRuTGlzdFJlcGx5IhqC0+STAhQiDy92",
-            "MS9nZXRmcWRubGlzdDoBKmIGcHJvdG8z"));
+            "Y29tbW9uLnByb3RvIoQBChVSZWdpc3RlckNsaWVudFJlcXVlc3QSCwoDdmVy",
+            "GAEgASgNEhAKCGRldl9uYW1lGAIgASgJEhAKCGFwcF9uYW1lGAMgASgJEhAK",
+            "CGFwcF92ZXJzGAQgASgJEhQKDGNhcnJpZXJfbmFtZRgFIAEoCRISCgphdXRo",
+            "X3Rva2VuGAYgASgJIosBChNSZWdpc3RlckNsaWVudFJlcGx5EgsKA3ZlchgB",
+            "IAEoDRI1CgZzdGF0dXMYAiABKA4yJS5kaXN0cmlidXRlZF9tYXRjaF9lbmdp",
+            "bmUuUmVwbHlTdGF0dXMSFgoOc2Vzc2lvbl9jb29raWUYAyABKAkSGAoQdG9r",
+            "ZW5fc2VydmVyX3VyaRgEIAEoCSK7AQoTRmluZENsb3VkbGV0UmVxdWVzdBIL",
+            "CgN2ZXIYASABKA0SFgoOc2Vzc2lvbl9jb29raWUYAiABKAkSFAoMY2Fycmll",
+            "cl9uYW1lGAMgASgJEjMKDGdwc19sb2NhdGlvbhgEIAEoCzIdLmRpc3RyaWJ1",
+            "dGVkX21hdGNoX2VuZ2luZS5Mb2MSEAoIZGV2X25hbWUYBSABKAkSEAoIYXBw",
+            "X25hbWUYBiABKAkSEAoIYXBwX3ZlcnMYByABKAkipQIKEUZpbmRDbG91ZGxl",
+            "dFJlcGx5EgsKA3ZlchgBIAEoDRJGCgZzdGF0dXMYAiABKA4yNi5kaXN0cmli",
+            "dXRlZF9tYXRjaF9lbmdpbmUuRmluZENsb3VkbGV0UmVwbHkuRmluZFN0YXR1",
+            "cxIMCgRmcWRuGAMgASgJEjAKBXBvcnRzGAQgAygLMiEuZGlzdHJpYnV0ZWRf",
+            "bWF0Y2hfZW5naW5lLkFwcFBvcnQSOAoRY2xvdWRsZXRfbG9jYXRpb24YBSAB",
+            "KAsyHS5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuTG9jIkEKCkZpbmRTdGF0",
+            "dXMSEAoMRklORF9VTktOT1dOEAASDgoKRklORF9GT1VORBABEhEKDUZJTkRf",
+            "Tk9URk9VTkQQAiKhAQoVVmVyaWZ5TG9jYXRpb25SZXF1ZXN0EgsKA3ZlchgB",
+            "IAEoDRIWCg5zZXNzaW9uX2Nvb2tpZRgCIAEoCRIUCgxjYXJyaWVyX25hbWUY",
+            "AyABKAkSMwoMZ3BzX2xvY2F0aW9uGAQgASgLMh0uZGlzdHJpYnV0ZWRfbWF0",
+            "Y2hfZW5naW5lLkxvYxIYChB2ZXJpZnlfbG9jX3Rva2VuGAUgASgJIscEChNW",
+            "ZXJpZnlMb2NhdGlvblJlcGx5EgsKA3ZlchgBIAEoDRJPCgx0b3dlcl9zdGF0",
+            "dXMYAiABKA4yOS5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuVmVyaWZ5TG9j",
+            "YXRpb25SZXBseS5Ub3dlclN0YXR1cxJcChNncHNfbG9jYXRpb25fc3RhdHVz",
+            "GAMgASgOMj8uZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLlZlcmlmeUxvY2F0",
+            "aW9uUmVwbHkuR1BTTG9jYXRpb25TdGF0dXMSIAoYZ3BzX2xvY2F0aW9uX2Fj",
+            "Y3VyYWN5X2ttGAQgASgBImgKC1Rvd2VyU3RhdHVzEhEKDVRPV0VSX1VOS05P",
+            "V04QABIgChxDT05ORUNURURfVE9fU1BFQ0lGSUVEX1RPV0VSEAESJAogTk9U",
+            "X0NPTk5FQ1RFRF9UT19TUEVDSUZJRURfVE9XRVIQAiLnAQoRR1BTTG9jYXRp",
+            "b25TdGF0dXMSDwoLTE9DX1VOS05PV04QABIQCgxMT0NfVkVSSUZJRUQQARId",
+            "ChlMT0NfTUlTTUFUQ0hfU0FNRV9DT1VOVFJZEAISHgoaTE9DX01JU01BVENI",
+            "X09USEVSX0NPVU5UUlkQAxIdChlMT0NfUk9BTUlOR19DT1VOVFJZX01BVENI",
+            "EAQSIAocTE9DX1JPQU1JTkdfQ09VTlRSWV9NSVNNQVRDSBAFEhoKFkxPQ19F",
+            "UlJPUl9VTkFVVEhPUklaRUQQBhITCg9MT0NfRVJST1JfT1RIRVIQByJPChJH",
+            "ZXRMb2NhdGlvblJlcXVlc3QSCwoDdmVyGAEgASgNEhYKDnNlc3Npb25fY29v",
+            "a2llGAIgASgJEhQKDGNhcnJpZXJfbmFtZRgDIAEoCSKAAgoQR2V0TG9jYXRp",
+            "b25SZXBseRILCgN2ZXIYASABKA0SRAoGc3RhdHVzGAIgASgOMjQuZGlzdHJp",
+            "YnV0ZWRfbWF0Y2hfZW5naW5lLkdldExvY2F0aW9uUmVwbHkuTG9jU3RhdHVz",
+            "EhQKDGNhcnJpZXJfbmFtZRgDIAEoCRINCgV0b3dlchgEIAEoBBI3ChBuZXR3",
+            "b3JrX2xvY2F0aW9uGAUgASgLMh0uZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5l",
+            "LkxvYyI7CglMb2NTdGF0dXMSDwoLTE9DX1VOS05PV04QABINCglMT0NfRk9V",
+            "TkQQARIOCgpMT0NfREVOSUVEEAIihAEKEkFwcEluc3RMaXN0UmVxdWVzdBIL",
+            "CgN2ZXIYASABKA0SFgoOc2Vzc2lvbl9jb29raWUYAiABKAkSFAoMY2Fycmll",
+            "cl9uYW1lGAMgASgJEjMKDGdwc19sb2NhdGlvbhgEIAEoCzIdLmRpc3RyaWJ1",
+            "dGVkX21hdGNoX2VuZ2luZS5Mb2MicQoLQXBwaW5zdGFuY2USEAoIYXBwX25h",
+            "bWUYASABKAkSEAoIYXBwX3ZlcnMYAiABKAkSDAoEZnFkbhgDIAEoCRIwCgVw",
+            "b3J0cxgEIAMoCzIhLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5BcHBQb3J0",
+            "IsMBChBDbG91ZGxldExvY2F0aW9uEhQKDGNhcnJpZXJfbmFtZRgBIAEoCRIV",
+            "Cg1jbG91ZGxldF9uYW1lGAIgASgJEjMKDGdwc19sb2NhdGlvbhgDIAEoCzId",
+            "LmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5Mb2MSEAoIZGlzdGFuY2UYBCAB",
+            "KAESOwoMYXBwaW5zdGFuY2VzGAUgAygLMiUuZGlzdHJpYnV0ZWRfbWF0Y2hf",
+            "ZW5naW5lLkFwcGluc3RhbmNlIt4BChBBcHBJbnN0TGlzdFJlcGx5EgsKA3Zl",
+            "chgBIAEoDRJDCgZzdGF0dXMYAiABKA4yMy5kaXN0cmlidXRlZF9tYXRjaF9l",
+            "bmdpbmUuQXBwSW5zdExpc3RSZXBseS5BSVN0YXR1cxI9CgljbG91ZGxldHMY",
+            "AyADKAsyKi5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuQ2xvdWRsZXRMb2Nh",
+            "dGlvbiI5CghBSVN0YXR1cxIQCgxBSV9VTkRFRklORUQQABIOCgpBSV9TVUND",
+            "RVNTEAESCwoHQUlfRkFJTBACIjYKD0ZxZG5MaXN0UmVxdWVzdBILCgN2ZXIY",
+            "ASABKA0SFgoOc2Vzc2lvbl9jb29raWUYAiABKAkibAoHQXBwRnFkbhIQCghh",
+            "cHBfbmFtZRgBIAEoCRIQCghhcHBfdmVycxgCIAEoCRIQCghkZXZfbmFtZRgD",
+            "IAEoCRINCgVmcWRucxgEIAMoCRIcChRhbmRyb2lkX3BhY2thZ2VfbmFtZRgF",
+            "IAEoCSLPAQoNRnFkbkxpc3RSZXBseRILCgN2ZXIYASABKA0SNAoJYXBwX2Zx",
+            "ZG5zGAMgAygLMiEuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkFwcEZxZG4S",
+            "QAoGc3RhdHVzGAQgASgOMjAuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkZx",
+            "ZG5MaXN0UmVwbHkuRkxTdGF0dXMiOQoIRkxTdGF0dXMSEAoMRkxfVU5ERUZJ",
+            "TkVEEAASDgoKRkxfU1VDQ0VTUxABEgsKB0ZMX0ZBSUwQAiLwAQoWRHluYW1p",
+            "Y0xvY0dyb3VwUmVxdWVzdBILCgN2ZXIYASABKA0SFgoOc2Vzc2lvbl9jb29r",
+            "aWUYAiABKAkSDQoFbGdfaWQYAyABKAQSTwoJY29tbV90eXBlGAsgASgOMjwu",
+            "ZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkR5bmFtaWNMb2NHcm91cFJlcXVl",
+            "c3QuRGxnQ29tbVR5cGUSEQoJdXNlcl9kYXRhGAwgASgJIj4KC0RsZ0NvbW1U",
+            "eXBlEhEKDURMR19VTkRFRklORUQQABIOCgpETEdfU0VDVVJFEAESDAoIRExH",
+            "X09QRU4QAiKEAQoURHluYW1pY0xvY0dyb3VwUmVwbHkSCwoDdmVyGAEgASgN",
+            "EjUKBnN0YXR1cxgCIAEoDjIlLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5S",
+            "ZXBseVN0YXR1cxISCgplcnJvcl9jb2RlGAMgASgNEhQKDGdyb3VwX2Nvb2tp",
+            "ZRgFIAEoCSo9CgdJRFR5cGVzEhAKDElEX1VOREVGSU5FRBAAEggKBElNRUkQ",
+            "ARIKCgZNU0lTRE4QAhIKCgZJUEFERFIQAyo8CgtSZXBseVN0YXR1cxIQCgxS",
+            "U19VTkRFRklORUQQABIOCgpSU19TVUNDRVNTEAESCwoHUlNfRkFJTBACMuMH",
+            "Cg5NYXRjaEVuZ2luZUFwaRKPAQoOUmVnaXN0ZXJDbGllbnQSLy5kaXN0cmli",
+            "dXRlZF9tYXRjaF9lbmdpbmUuUmVnaXN0ZXJDbGllbnRSZXF1ZXN0Gi0uZGlz",
+            "dHJpYnV0ZWRfbWF0Y2hfZW5naW5lLlJlZ2lzdGVyQ2xpZW50UmVwbHkiHYLT",
+            "5JMCFyISL3YxL3JlZ2lzdGVyY2xpZW50OgEqEocBCgxGaW5kQ2xvdWRsZXQS",
+            "LS5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuRmluZENsb3VkbGV0UmVxdWVz",
+            "dBorLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5GaW5kQ2xvdWRsZXRSZXBs",
+            "eSIbgtPkkwIVIhAvdjEvZmluZGNsb3VkbGV0OgEqEo8BCg5WZXJpZnlMb2Nh",
+            "dGlvbhIvLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5WZXJpZnlMb2NhdGlv",
+            "blJlcXVlc3QaLS5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuVmVyaWZ5TG9j",
+            "YXRpb25SZXBseSIdgtPkkwIXIhIvdjEvdmVyaWZ5bG9jYXRpb246ASoSgwEK",
+            "C0dldExvY2F0aW9uEiwuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkdldExv",
+            "Y2F0aW9uUmVxdWVzdBoqLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5HZXRM",
+            "b2NhdGlvblJlcGx5IhqC0+STAhQiDy92MS9nZXRsb2NhdGlvbjoBKhKRAQoO",
+            "QWRkVXNlclRvR3JvdXASMC5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuRHlu",
+            "YW1pY0xvY0dyb3VwUmVxdWVzdBouLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2lu",
+            "ZS5EeW5hbWljTG9jR3JvdXBSZXBseSIdgtPkkwIXIhIvdjEvYWRkdXNlcnRv",
+            "Z3JvdXA6ASoSiQEKDkdldEFwcEluc3RMaXN0EiwuZGlzdHJpYnV0ZWRfbWF0",
+            "Y2hfZW5naW5lLkFwcEluc3RMaXN0UmVxdWVzdBoqLmRpc3RyaWJ1dGVkX21h",
+            "dGNoX2VuZ2luZS5BcHBJbnN0TGlzdFJlcGx5Ih2C0+STAhciEi92MS9nZXRh",
+            "cHBpbnN0bGlzdDoBKhJ9CgtHZXRGcWRuTGlzdBIpLmRpc3RyaWJ1dGVkX21h",
+            "dGNoX2VuZ2luZS5GcWRuTGlzdFJlcXVlc3QaJy5kaXN0cmlidXRlZF9tYXRj",
+            "aF9lbmdpbmUuRnFkbkxpc3RSZXBseSIagtPkkwIUIg8vdjEvZ2V0ZnFkbmxp",
+            "c3Q6ASpiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Api.AnnotationsReflection.Descriptor, global::DistributedMatchEngine.LocReflection.Descriptor, global::DistributedMatchEngine.AppcommonReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::DistributedMatchEngine.IDTypes), typeof(global::DistributedMatchEngine.ReplyStatus), }, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.RegisterClientRequest), global::DistributedMatchEngine.RegisterClientRequest.Parser, new[]{ "Ver", "DevName", "AppName", "AppVers", "CarrierName", "AuthToken" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.RegisterClientReply), global::DistributedMatchEngine.RegisterClientReply.Parser, new[]{ "Ver", "Status", "SessionCookie", "TokenServerURI" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.RegisterClientReply), global::DistributedMatchEngine.RegisterClientReply.Parser, new[]{ "Ver", "Status", "SessionCookie", "TokenServerUri" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.FindCloudletRequest), global::DistributedMatchEngine.FindCloudletRequest.Parser, new[]{ "Ver", "SessionCookie", "CarrierName", "GpsLocation", "DevName", "AppName", "AppVers" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.FindCloudletReply), global::DistributedMatchEngine.FindCloudletReply.Parser, new[]{ "Ver", "Status", "FQDN", "Ports", "CloudletLocation" }, null, new[]{ typeof(global::DistributedMatchEngine.FindCloudletReply.Types.FindStatus) }, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.FindCloudletReply), global::DistributedMatchEngine.FindCloudletReply.Parser, new[]{ "Ver", "Status", "Fqdn", "Ports", "CloudletLocation" }, null, new[]{ typeof(global::DistributedMatchEngine.FindCloudletReply.Types.FindStatus) }, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.VerifyLocationRequest), global::DistributedMatchEngine.VerifyLocationRequest.Parser, new[]{ "Ver", "SessionCookie", "CarrierName", "GpsLocation", "VerifyLocToken" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.VerifyLocationReply), global::DistributedMatchEngine.VerifyLocationReply.Parser, new[]{ "Ver", "TowerStatus", "GpsLocationStatus", "GPSLocationAccuracyKM" }, null, new[]{ typeof(global::DistributedMatchEngine.VerifyLocationReply.Types.Tower_Status), typeof(global::DistributedMatchEngine.VerifyLocationReply.Types.GPS_Location_Status) }, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.VerifyLocationReply), global::DistributedMatchEngine.VerifyLocationReply.Parser, new[]{ "Ver", "TowerStatus", "GpsLocationStatus", "GpsLocationAccuracyKm" }, null, new[]{ typeof(global::DistributedMatchEngine.VerifyLocationReply.Types.TowerStatus), typeof(global::DistributedMatchEngine.VerifyLocationReply.Types.GPSLocationStatus) }, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.GetLocationRequest), global::DistributedMatchEngine.GetLocationRequest.Parser, new[]{ "Ver", "SessionCookie", "CarrierName" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.GetLocationReply), global::DistributedMatchEngine.GetLocationReply.Parser, new[]{ "Ver", "Status", "CarrierName", "Tower", "NetworkLocation" }, null, new[]{ typeof(global::DistributedMatchEngine.GetLocationReply.Types.Loc_Status) }, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.GetLocationReply), global::DistributedMatchEngine.GetLocationReply.Parser, new[]{ "Ver", "Status", "CarrierName", "Tower", "NetworkLocation" }, null, new[]{ typeof(global::DistributedMatchEngine.GetLocationReply.Types.LocStatus) }, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppInstListRequest), global::DistributedMatchEngine.AppInstListRequest.Parser, new[]{ "Ver", "SessionCookie", "CarrierName", "GpsLocation" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.Appinstance), global::DistributedMatchEngine.Appinstance.Parser, new[]{ "AppName", "AppVers", "FQDN", "Ports" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.Appinstance), global::DistributedMatchEngine.Appinstance.Parser, new[]{ "AppName", "AppVers", "Fqdn", "Ports" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.CloudletLocation), global::DistributedMatchEngine.CloudletLocation.Parser, new[]{ "CarrierName", "CloudletName", "GpsLocation", "Distance", "Appinstances" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppInstListReply), global::DistributedMatchEngine.AppInstListReply.Parser, new[]{ "Ver", "Status", "Cloudlets" }, null, new[]{ typeof(global::DistributedMatchEngine.AppInstListReply.Types.AI_Status) }, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppInstListReply), global::DistributedMatchEngine.AppInstListReply.Parser, new[]{ "Ver", "Status", "Cloudlets" }, null, new[]{ typeof(global::DistributedMatchEngine.AppInstListReply.Types.AIStatus) }, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.FqdnListRequest), global::DistributedMatchEngine.FqdnListRequest.Parser, new[]{ "Ver", "SessionCookie" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppFqdn), global::DistributedMatchEngine.AppFqdn.Parser, new[]{ "AppName", "AppVers", "DevName", "FQDNs", "AndroidPackageName" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.FqdnListReply), global::DistributedMatchEngine.FqdnListReply.Parser, new[]{ "Ver", "AppFqdns", "Status" }, null, new[]{ typeof(global::DistributedMatchEngine.FqdnListReply.Types.FL_Status) }, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppFqdn), global::DistributedMatchEngine.AppFqdn.Parser, new[]{ "AppName", "AppVers", "DevName", "Fqdns", "AndroidPackageName" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.FqdnListReply), global::DistributedMatchEngine.FqdnListReply.Parser, new[]{ "Ver", "AppFqdns", "Status" }, null, new[]{ typeof(global::DistributedMatchEngine.FqdnListReply.Types.FLStatus) }, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.DynamicLocGroupRequest), global::DistributedMatchEngine.DynamicLocGroupRequest.Parser, new[]{ "Ver", "SessionCookie", "LgId", "CommType", "UserData" }, null, new[]{ typeof(global::DistributedMatchEngine.DynamicLocGroupRequest.Types.DlgCommType) }, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.DynamicLocGroupReply), global::DistributedMatchEngine.DynamicLocGroupReply.Parser, new[]{ "Ver", "Status", "ErrorCode", "GroupCookie" }, null, null, null)
           }));
@@ -205,7 +206,7 @@ namespace DistributedMatchEngine {
       return new RegisterClientRequest(this);
     }
 
-    /// <summary>Field number for the "Ver" field.</summary>
+    /// <summary>Field number for the "ver" field.</summary>
     public const int VerFieldNumber = 1;
     private uint ver_;
     /// <summary>
@@ -219,7 +220,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "DevName" field.</summary>
+    /// <summary>Field number for the "dev_name" field.</summary>
     public const int DevNameFieldNumber = 2;
     private string devName_ = "";
     /// <summary>
@@ -233,7 +234,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "AppName" field.</summary>
+    /// <summary>Field number for the "app_name" field.</summary>
     public const int AppNameFieldNumber = 3;
     private string appName_ = "";
     /// <summary>
@@ -247,7 +248,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "AppVers" field.</summary>
+    /// <summary>Field number for the "app_vers" field.</summary>
     public const int AppVersFieldNumber = 4;
     private string appVers_ = "";
     /// <summary>
@@ -261,7 +262,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "CarrierName" field.</summary>
+    /// <summary>Field number for the "carrier_name" field.</summary>
     public const int CarrierNameFieldNumber = 5;
     private string carrierName_ = "";
     /// <summary>
@@ -275,7 +276,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "AuthToken" field.</summary>
+    /// <summary>Field number for the "auth_token" field.</summary>
     public const int AuthTokenFieldNumber = 6;
     private string authToken_ = "";
     /// <summary>
@@ -481,7 +482,7 @@ namespace DistributedMatchEngine {
       ver_ = other.ver_;
       status_ = other.status_;
       sessionCookie_ = other.sessionCookie_;
-      tokenServerURI_ = other.tokenServerURI_;
+      tokenServerUri_ = other.tokenServerUri_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -490,7 +491,7 @@ namespace DistributedMatchEngine {
       return new RegisterClientReply(this);
     }
 
-    /// <summary>Field number for the "Ver" field.</summary>
+    /// <summary>Field number for the "ver" field.</summary>
     public const int VerFieldNumber = 1;
     private uint ver_;
     /// <summary>
@@ -504,7 +505,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "Status" field.</summary>
+    /// <summary>Field number for the "status" field.</summary>
     public const int StatusFieldNumber = 2;
     private global::DistributedMatchEngine.ReplyStatus status_ = 0;
     /// <summary>
@@ -518,7 +519,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "SessionCookie" field.</summary>
+    /// <summary>Field number for the "session_cookie" field.</summary>
     public const int SessionCookieFieldNumber = 3;
     private string sessionCookie_ = "";
     /// <summary>
@@ -532,17 +533,17 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "TokenServerURI" field.</summary>
-    public const int TokenServerURIFieldNumber = 4;
-    private string tokenServerURI_ = "";
+    /// <summary>Field number for the "token_server_uri" field.</summary>
+    public const int TokenServerUriFieldNumber = 4;
+    private string tokenServerUri_ = "";
     /// <summary>
     /// URI for Token Server
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string TokenServerURI {
-      get { return tokenServerURI_; }
+    public string TokenServerUri {
+      get { return tokenServerUri_; }
       set {
-        tokenServerURI_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        tokenServerUri_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
@@ -562,7 +563,7 @@ namespace DistributedMatchEngine {
       if (Ver != other.Ver) return false;
       if (Status != other.Status) return false;
       if (SessionCookie != other.SessionCookie) return false;
-      if (TokenServerURI != other.TokenServerURI) return false;
+      if (TokenServerUri != other.TokenServerUri) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -572,7 +573,7 @@ namespace DistributedMatchEngine {
       if (Ver != 0) hash ^= Ver.GetHashCode();
       if (Status != 0) hash ^= Status.GetHashCode();
       if (SessionCookie.Length != 0) hash ^= SessionCookie.GetHashCode();
-      if (TokenServerURI.Length != 0) hash ^= TokenServerURI.GetHashCode();
+      if (TokenServerUri.Length != 0) hash ^= TokenServerUri.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -598,9 +599,9 @@ namespace DistributedMatchEngine {
         output.WriteRawTag(26);
         output.WriteString(SessionCookie);
       }
-      if (TokenServerURI.Length != 0) {
+      if (TokenServerUri.Length != 0) {
         output.WriteRawTag(34);
-        output.WriteString(TokenServerURI);
+        output.WriteString(TokenServerUri);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -619,8 +620,8 @@ namespace DistributedMatchEngine {
       if (SessionCookie.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(SessionCookie);
       }
-      if (TokenServerURI.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(TokenServerURI);
+      if (TokenServerUri.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(TokenServerUri);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -642,8 +643,8 @@ namespace DistributedMatchEngine {
       if (other.SessionCookie.Length != 0) {
         SessionCookie = other.SessionCookie;
       }
-      if (other.TokenServerURI.Length != 0) {
-        TokenServerURI = other.TokenServerURI;
+      if (other.TokenServerUri.Length != 0) {
+        TokenServerUri = other.TokenServerUri;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -669,7 +670,7 @@ namespace DistributedMatchEngine {
             break;
           }
           case 34: {
-            TokenServerURI = input.ReadString();
+            TokenServerUri = input.ReadString();
             break;
           }
         }
@@ -718,7 +719,7 @@ namespace DistributedMatchEngine {
       return new FindCloudletRequest(this);
     }
 
-    /// <summary>Field number for the "Ver" field.</summary>
+    /// <summary>Field number for the "ver" field.</summary>
     public const int VerFieldNumber = 1;
     private uint ver_;
     /// <summary>
@@ -732,7 +733,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "SessionCookie" field.</summary>
+    /// <summary>Field number for the "session_cookie" field.</summary>
     public const int SessionCookieFieldNumber = 2;
     private string sessionCookie_ = "";
     /// <summary>
@@ -746,7 +747,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "CarrierName" field.</summary>
+    /// <summary>Field number for the "carrier_name" field.</summary>
     public const int CarrierNameFieldNumber = 3;
     private string carrierName_ = "";
     /// <summary>
@@ -760,7 +761,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "GpsLocation" field.</summary>
+    /// <summary>Field number for the "gps_location" field.</summary>
     public const int GpsLocationFieldNumber = 4;
     private global::DistributedMatchEngine.Loc gpsLocation_;
     /// <summary>
@@ -774,7 +775,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "DevName" field.</summary>
+    /// <summary>Field number for the "dev_name" field.</summary>
     public const int DevNameFieldNumber = 5;
     private string devName_ = "";
     /// <summary>
@@ -788,7 +789,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "AppName" field.</summary>
+    /// <summary>Field number for the "app_name" field.</summary>
     public const int AppNameFieldNumber = 6;
     private string appName_ = "";
     /// <summary>
@@ -802,7 +803,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "AppVers" field.</summary>
+    /// <summary>Field number for the "app_vers" field.</summary>
     public const int AppVersFieldNumber = 7;
     private string appVers_ = "";
     /// <summary>
@@ -1029,7 +1030,7 @@ namespace DistributedMatchEngine {
     public FindCloudletReply(FindCloudletReply other) : this() {
       ver_ = other.ver_;
       status_ = other.status_;
-      fQDN_ = other.fQDN_;
+      fqdn_ = other.fqdn_;
       ports_ = other.ports_.Clone();
       cloudletLocation_ = other.cloudletLocation_ != null ? other.cloudletLocation_.Clone() : null;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
@@ -1040,7 +1041,7 @@ namespace DistributedMatchEngine {
       return new FindCloudletReply(this);
     }
 
-    /// <summary>Field number for the "Ver" field.</summary>
+    /// <summary>Field number for the "ver" field.</summary>
     public const int VerFieldNumber = 1;
     private uint ver_;
     /// <summary>
@@ -1068,17 +1069,17 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "FQDN" field.</summary>
-    public const int FQDNFieldNumber = 3;
-    private string fQDN_ = "";
+    /// <summary>Field number for the "fqdn" field.</summary>
+    public const int FqdnFieldNumber = 3;
+    private string fqdn_ = "";
     /// <summary>
     /// Full Qualified Domain Name of Closest App instance
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string FQDN {
-      get { return fQDN_; }
+    public string Fqdn {
+      get { return fqdn_; }
       set {
-        fQDN_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        fqdn_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
@@ -1124,7 +1125,7 @@ namespace DistributedMatchEngine {
       }
       if (Ver != other.Ver) return false;
       if (Status != other.Status) return false;
-      if (FQDN != other.FQDN) return false;
+      if (Fqdn != other.Fqdn) return false;
       if(!ports_.Equals(other.ports_)) return false;
       if (!object.Equals(CloudletLocation, other.CloudletLocation)) return false;
       return Equals(_unknownFields, other._unknownFields);
@@ -1135,7 +1136,7 @@ namespace DistributedMatchEngine {
       int hash = 1;
       if (Ver != 0) hash ^= Ver.GetHashCode();
       if (Status != 0) hash ^= Status.GetHashCode();
-      if (FQDN.Length != 0) hash ^= FQDN.GetHashCode();
+      if (Fqdn.Length != 0) hash ^= Fqdn.GetHashCode();
       hash ^= ports_.GetHashCode();
       if (cloudletLocation_ != null) hash ^= CloudletLocation.GetHashCode();
       if (_unknownFields != null) {
@@ -1159,9 +1160,9 @@ namespace DistributedMatchEngine {
         output.WriteRawTag(16);
         output.WriteEnum((int) Status);
       }
-      if (FQDN.Length != 0) {
+      if (Fqdn.Length != 0) {
         output.WriteRawTag(26);
-        output.WriteString(FQDN);
+        output.WriteString(Fqdn);
       }
       ports_.WriteTo(output, _repeated_ports_codec);
       if (cloudletLocation_ != null) {
@@ -1182,8 +1183,8 @@ namespace DistributedMatchEngine {
       if (Status != 0) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Status);
       }
-      if (FQDN.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(FQDN);
+      if (Fqdn.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Fqdn);
       }
       size += ports_.CalculateSize(_repeated_ports_codec);
       if (cloudletLocation_ != null) {
@@ -1206,8 +1207,8 @@ namespace DistributedMatchEngine {
       if (other.Status != 0) {
         Status = other.Status;
       }
-      if (other.FQDN.Length != 0) {
-        FQDN = other.FQDN;
+      if (other.Fqdn.Length != 0) {
+        Fqdn = other.Fqdn;
       }
       ports_.Add(other.ports_);
       if (other.cloudletLocation_ != null) {
@@ -1236,7 +1237,7 @@ namespace DistributedMatchEngine {
             break;
           }
           case 26: {
-            FQDN = input.ReadString();
+            Fqdn = input.ReadString();
             break;
           }
           case 34: {
@@ -1307,7 +1308,7 @@ namespace DistributedMatchEngine {
       return new VerifyLocationRequest(this);
     }
 
-    /// <summary>Field number for the "Ver" field.</summary>
+    /// <summary>Field number for the "ver" field.</summary>
     public const int VerFieldNumber = 1;
     private uint ver_;
     /// <summary>
@@ -1321,7 +1322,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "SessionCookie" field.</summary>
+    /// <summary>Field number for the "session_cookie" field.</summary>
     public const int SessionCookieFieldNumber = 2;
     private string sessionCookie_ = "";
     /// <summary>
@@ -1335,7 +1336,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "CarrierName" field.</summary>
+    /// <summary>Field number for the "carrier_name" field.</summary>
     public const int CarrierNameFieldNumber = 3;
     private string carrierName_ = "";
     /// <summary>
@@ -1349,7 +1350,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "GpsLocation" field.</summary>
+    /// <summary>Field number for the "gps_location" field.</summary>
     public const int GpsLocationFieldNumber = 4;
     private global::DistributedMatchEngine.Loc gpsLocation_;
     /// <summary>
@@ -1363,7 +1364,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "VerifyLocToken" field.</summary>
+    /// <summary>Field number for the "verify_loc_token" field.</summary>
     public const int VerifyLocTokenFieldNumber = 5;
     private string verifyLocToken_ = "";
     /// <summary>
@@ -1559,7 +1560,7 @@ namespace DistributedMatchEngine {
       ver_ = other.ver_;
       towerStatus_ = other.towerStatus_;
       gpsLocationStatus_ = other.gpsLocationStatus_;
-      gPSLocationAccuracyKM_ = other.gPSLocationAccuracyKM_;
+      gpsLocationAccuracyKm_ = other.gpsLocationAccuracyKm_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -1584,9 +1585,9 @@ namespace DistributedMatchEngine {
 
     /// <summary>Field number for the "tower_status" field.</summary>
     public const int TowerStatusFieldNumber = 2;
-    private global::DistributedMatchEngine.VerifyLocationReply.Types.Tower_Status towerStatus_ = 0;
+    private global::DistributedMatchEngine.VerifyLocationReply.Types.TowerStatus towerStatus_ = 0;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::DistributedMatchEngine.VerifyLocationReply.Types.Tower_Status TowerStatus {
+    public global::DistributedMatchEngine.VerifyLocationReply.Types.TowerStatus TowerStatus {
       get { return towerStatus_; }
       set {
         towerStatus_ = value;
@@ -1595,28 +1596,28 @@ namespace DistributedMatchEngine {
 
     /// <summary>Field number for the "gps_location_status" field.</summary>
     public const int GpsLocationStatusFieldNumber = 3;
-    private global::DistributedMatchEngine.VerifyLocationReply.Types.GPS_Location_Status gpsLocationStatus_ = 0;
+    private global::DistributedMatchEngine.VerifyLocationReply.Types.GPSLocationStatus gpsLocationStatus_ = 0;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::DistributedMatchEngine.VerifyLocationReply.Types.GPS_Location_Status GpsLocationStatus {
+    public global::DistributedMatchEngine.VerifyLocationReply.Types.GPSLocationStatus GpsLocationStatus {
       get { return gpsLocationStatus_; }
       set {
         gpsLocationStatus_ = value;
       }
     }
 
-    /// <summary>Field number for the "GPS_Location_Accuracy_KM" field.</summary>
-    public const int GPSLocationAccuracyKMFieldNumber = 4;
-    private double gPSLocationAccuracyKM_;
+    /// <summary>Field number for the "gps_location_accuracy_km" field.</summary>
+    public const int GpsLocationAccuracyKmFieldNumber = 4;
+    private double gpsLocationAccuracyKm_;
     /// <summary>
     /// location accuracy, the location is verified to 
     /// be within this number of kilometers.  Negative value
     /// means no verification was done 
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public double GPSLocationAccuracyKM {
-      get { return gPSLocationAccuracyKM_; }
+    public double GpsLocationAccuracyKm {
+      get { return gpsLocationAccuracyKm_; }
       set {
-        gPSLocationAccuracyKM_ = value;
+        gpsLocationAccuracyKm_ = value;
       }
     }
 
@@ -1636,7 +1637,7 @@ namespace DistributedMatchEngine {
       if (Ver != other.Ver) return false;
       if (TowerStatus != other.TowerStatus) return false;
       if (GpsLocationStatus != other.GpsLocationStatus) return false;
-      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(GPSLocationAccuracyKM, other.GPSLocationAccuracyKM)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(GpsLocationAccuracyKm, other.GpsLocationAccuracyKm)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1646,7 +1647,7 @@ namespace DistributedMatchEngine {
       if (Ver != 0) hash ^= Ver.GetHashCode();
       if (TowerStatus != 0) hash ^= TowerStatus.GetHashCode();
       if (GpsLocationStatus != 0) hash ^= GpsLocationStatus.GetHashCode();
-      if (GPSLocationAccuracyKM != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(GPSLocationAccuracyKM);
+      if (GpsLocationAccuracyKm != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(GpsLocationAccuracyKm);
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1672,9 +1673,9 @@ namespace DistributedMatchEngine {
         output.WriteRawTag(24);
         output.WriteEnum((int) GpsLocationStatus);
       }
-      if (GPSLocationAccuracyKM != 0D) {
+      if (GpsLocationAccuracyKm != 0D) {
         output.WriteRawTag(33);
-        output.WriteDouble(GPSLocationAccuracyKM);
+        output.WriteDouble(GpsLocationAccuracyKm);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -1693,7 +1694,7 @@ namespace DistributedMatchEngine {
       if (GpsLocationStatus != 0) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) GpsLocationStatus);
       }
-      if (GPSLocationAccuracyKM != 0D) {
+      if (GpsLocationAccuracyKm != 0D) {
         size += 1 + 8;
       }
       if (_unknownFields != null) {
@@ -1716,8 +1717,8 @@ namespace DistributedMatchEngine {
       if (other.GpsLocationStatus != 0) {
         GpsLocationStatus = other.GpsLocationStatus;
       }
-      if (other.GPSLocationAccuracyKM != 0D) {
-        GPSLocationAccuracyKM = other.GPSLocationAccuracyKM;
+      if (other.GpsLocationAccuracyKm != 0D) {
+        GpsLocationAccuracyKm = other.GpsLocationAccuracyKm;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -1735,15 +1736,15 @@ namespace DistributedMatchEngine {
             break;
           }
           case 16: {
-            towerStatus_ = (global::DistributedMatchEngine.VerifyLocationReply.Types.Tower_Status) input.ReadEnum();
+            towerStatus_ = (global::DistributedMatchEngine.VerifyLocationReply.Types.TowerStatus) input.ReadEnum();
             break;
           }
           case 24: {
-            gpsLocationStatus_ = (global::DistributedMatchEngine.VerifyLocationReply.Types.GPS_Location_Status) input.ReadEnum();
+            gpsLocationStatus_ = (global::DistributedMatchEngine.VerifyLocationReply.Types.GPSLocationStatus) input.ReadEnum();
             break;
           }
           case 33: {
-            GPSLocationAccuracyKM = input.ReadDouble();
+            GpsLocationAccuracyKm = input.ReadDouble();
             break;
           }
         }
@@ -1757,13 +1758,13 @@ namespace DistributedMatchEngine {
       /// <summary>
       /// Status of the reply
       /// </summary>
-      public enum Tower_Status {
+      public enum TowerStatus {
         [pbr::OriginalName("TOWER_UNKNOWN")] TowerUnknown = 0,
         [pbr::OriginalName("CONNECTED_TO_SPECIFIED_TOWER")] ConnectedToSpecifiedTower = 1,
         [pbr::OriginalName("NOT_CONNECTED_TO_SPECIFIED_TOWER")] NotConnectedToSpecifiedTower = 2,
       }
 
-      public enum GPS_Location_Status {
+      public enum GPSLocationStatus {
         [pbr::OriginalName("LOC_UNKNOWN")] LocUnknown = 0,
         [pbr::OriginalName("LOC_VERIFIED")] LocVerified = 1,
         [pbr::OriginalName("LOC_MISMATCH_SAME_COUNTRY")] LocMismatchSameCountry = 2,
@@ -1815,7 +1816,7 @@ namespace DistributedMatchEngine {
       return new GetLocationRequest(this);
     }
 
-    /// <summary>Field number for the "Ver" field.</summary>
+    /// <summary>Field number for the "ver" field.</summary>
     public const int VerFieldNumber = 1;
     private uint ver_;
     /// <summary>
@@ -1829,7 +1830,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "SessionCookie" field.</summary>
+    /// <summary>Field number for the "session_cookie" field.</summary>
     public const int SessionCookieFieldNumber = 2;
     private string sessionCookie_ = "";
     /// <summary>
@@ -1843,7 +1844,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "CarrierName" field.</summary>
+    /// <summary>Field number for the "carrier_name" field.</summary>
     public const int CarrierNameFieldNumber = 3;
     private string carrierName_ = "";
     /// <summary>
@@ -2011,7 +2012,7 @@ namespace DistributedMatchEngine {
       return new GetLocationReply(this);
     }
 
-    /// <summary>Field number for the "Ver" field.</summary>
+    /// <summary>Field number for the "ver" field.</summary>
     public const int VerFieldNumber = 1;
     private uint ver_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2022,18 +2023,18 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "Status" field.</summary>
+    /// <summary>Field number for the "status" field.</summary>
     public const int StatusFieldNumber = 2;
-    private global::DistributedMatchEngine.GetLocationReply.Types.Loc_Status status_ = 0;
+    private global::DistributedMatchEngine.GetLocationReply.Types.LocStatus status_ = 0;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::DistributedMatchEngine.GetLocationReply.Types.Loc_Status Status {
+    public global::DistributedMatchEngine.GetLocationReply.Types.LocStatus Status {
       get { return status_; }
       set {
         status_ = value;
       }
     }
 
-    /// <summary>Field number for the "CarrierName" field.</summary>
+    /// <summary>Field number for the "carrier_name" field.</summary>
     public const int CarrierNameFieldNumber = 3;
     private string carrierName_ = "";
     /// <summary>
@@ -2047,7 +2048,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "Tower" field.</summary>
+    /// <summary>Field number for the "tower" field.</summary>
     public const int TowerFieldNumber = 4;
     private ulong tower_;
     /// <summary>
@@ -2061,7 +2062,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "NetworkLocation" field.</summary>
+    /// <summary>Field number for the "network_location" field.</summary>
     public const int NetworkLocationFieldNumber = 5;
     private global::DistributedMatchEngine.Loc networkLocation_;
     /// <summary>
@@ -2205,7 +2206,7 @@ namespace DistributedMatchEngine {
             break;
           }
           case 16: {
-            status_ = (global::DistributedMatchEngine.GetLocationReply.Types.Loc_Status) input.ReadEnum();
+            status_ = (global::DistributedMatchEngine.GetLocationReply.Types.LocStatus) input.ReadEnum();
             break;
           }
           case 26: {
@@ -2234,7 +2235,7 @@ namespace DistributedMatchEngine {
       /// <summary>
       /// Status of the reply
       /// </summary>
-      public enum Loc_Status {
+      public enum LocStatus {
         [pbr::OriginalName("LOC_UNKNOWN")] LocUnknown = 0,
         [pbr::OriginalName("LOC_FOUND")] LocFound = 1,
         /// <summary>
@@ -2285,7 +2286,7 @@ namespace DistributedMatchEngine {
       return new AppInstListRequest(this);
     }
 
-    /// <summary>Field number for the "Ver" field.</summary>
+    /// <summary>Field number for the "ver" field.</summary>
     public const int VerFieldNumber = 1;
     private uint ver_;
     /// <summary>
@@ -2299,7 +2300,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "SessionCookie" field.</summary>
+    /// <summary>Field number for the "session_cookie" field.</summary>
     public const int SessionCookieFieldNumber = 2;
     private string sessionCookie_ = "";
     /// <summary>
@@ -2313,7 +2314,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "CarrierName" field.</summary>
+    /// <summary>Field number for the "carrier_name" field.</summary>
     public const int CarrierNameFieldNumber = 3;
     private string carrierName_ = "";
     /// <summary>
@@ -2327,7 +2328,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "GpsLocation" field.</summary>
+    /// <summary>Field number for the "gps_location" field.</summary>
     public const int GpsLocationFieldNumber = 4;
     private global::DistributedMatchEngine.Loc gpsLocation_;
     /// <summary>
@@ -2506,7 +2507,7 @@ namespace DistributedMatchEngine {
     public Appinstance(Appinstance other) : this() {
       appName_ = other.appName_;
       appVers_ = other.appVers_;
-      fQDN_ = other.fQDN_;
+      fqdn_ = other.fqdn_;
       ports_ = other.ports_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
@@ -2516,7 +2517,7 @@ namespace DistributedMatchEngine {
       return new Appinstance(this);
     }
 
-    /// <summary>Field number for the "AppName" field.</summary>
+    /// <summary>Field number for the "app_name" field.</summary>
     public const int AppNameFieldNumber = 1;
     private string appName_ = "";
     /// <summary>
@@ -2530,7 +2531,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "AppVers" field.</summary>
+    /// <summary>Field number for the "app_vers" field.</summary>
     public const int AppVersFieldNumber = 2;
     private string appVers_ = "";
     /// <summary>
@@ -2544,17 +2545,17 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "FQDN" field.</summary>
-    public const int FQDNFieldNumber = 3;
-    private string fQDN_ = "";
+    /// <summary>Field number for the "fqdn" field.</summary>
+    public const int FqdnFieldNumber = 3;
+    private string fqdn_ = "";
     /// <summary>
     /// App Instance FQDN
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string FQDN {
-      get { return fQDN_; }
+    public string Fqdn {
+      get { return fqdn_; }
       set {
-        fQDN_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        fqdn_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
@@ -2586,7 +2587,7 @@ namespace DistributedMatchEngine {
       }
       if (AppName != other.AppName) return false;
       if (AppVers != other.AppVers) return false;
-      if (FQDN != other.FQDN) return false;
+      if (Fqdn != other.Fqdn) return false;
       if(!ports_.Equals(other.ports_)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -2596,7 +2597,7 @@ namespace DistributedMatchEngine {
       int hash = 1;
       if (AppName.Length != 0) hash ^= AppName.GetHashCode();
       if (AppVers.Length != 0) hash ^= AppVers.GetHashCode();
-      if (FQDN.Length != 0) hash ^= FQDN.GetHashCode();
+      if (Fqdn.Length != 0) hash ^= Fqdn.GetHashCode();
       hash ^= ports_.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -2619,9 +2620,9 @@ namespace DistributedMatchEngine {
         output.WriteRawTag(18);
         output.WriteString(AppVers);
       }
-      if (FQDN.Length != 0) {
+      if (Fqdn.Length != 0) {
         output.WriteRawTag(26);
-        output.WriteString(FQDN);
+        output.WriteString(Fqdn);
       }
       ports_.WriteTo(output, _repeated_ports_codec);
       if (_unknownFields != null) {
@@ -2638,8 +2639,8 @@ namespace DistributedMatchEngine {
       if (AppVers.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(AppVers);
       }
-      if (FQDN.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(FQDN);
+      if (Fqdn.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Fqdn);
       }
       size += ports_.CalculateSize(_repeated_ports_codec);
       if (_unknownFields != null) {
@@ -2659,8 +2660,8 @@ namespace DistributedMatchEngine {
       if (other.AppVers.Length != 0) {
         AppVers = other.AppVers;
       }
-      if (other.FQDN.Length != 0) {
-        FQDN = other.FQDN;
+      if (other.Fqdn.Length != 0) {
+        Fqdn = other.Fqdn;
       }
       ports_.Add(other.ports_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
@@ -2683,7 +2684,7 @@ namespace DistributedMatchEngine {
             break;
           }
           case 26: {
-            FQDN = input.ReadString();
+            Fqdn = input.ReadString();
             break;
           }
           case 34: {
@@ -2734,7 +2735,7 @@ namespace DistributedMatchEngine {
       return new CloudletLocation(this);
     }
 
-    /// <summary>Field number for the "CarrierName" field.</summary>
+    /// <summary>Field number for the "carrier_name" field.</summary>
     public const int CarrierNameFieldNumber = 1;
     private string carrierName_ = "";
     /// <summary>
@@ -2748,7 +2749,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "CloudletName" field.</summary>
+    /// <summary>Field number for the "cloudlet_name" field.</summary>
     public const int CloudletNameFieldNumber = 2;
     private string cloudletName_ = "";
     /// <summary>
@@ -2762,7 +2763,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "GpsLocation" field.</summary>
+    /// <summary>Field number for the "gps_location" field.</summary>
     public const int GpsLocationFieldNumber = 3;
     private global::DistributedMatchEngine.Loc gpsLocation_;
     /// <summary>
@@ -2776,7 +2777,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "Distance" field.</summary>
+    /// <summary>Field number for the "distance" field.</summary>
     public const int DistanceFieldNumber = 4;
     private double distance_;
     /// <summary>
@@ -2790,7 +2791,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "Appinstances" field.</summary>
+    /// <summary>Field number for the "appinstances" field.</summary>
     public const int AppinstancesFieldNumber = 5;
     private static readonly pb::FieldCodec<global::DistributedMatchEngine.Appinstance> _repeated_appinstances_codec
         = pb::FieldCodec.ForMessage(42, global::DistributedMatchEngine.Appinstance.Parser);
@@ -2986,7 +2987,7 @@ namespace DistributedMatchEngine {
       return new AppInstListReply(this);
     }
 
-    /// <summary>Field number for the "Ver" field.</summary>
+    /// <summary>Field number for the "ver" field.</summary>
     public const int VerFieldNumber = 1;
     private uint ver_;
     /// <summary>
@@ -3000,18 +3001,18 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "Status" field.</summary>
+    /// <summary>Field number for the "status" field.</summary>
     public const int StatusFieldNumber = 2;
-    private global::DistributedMatchEngine.AppInstListReply.Types.AI_Status status_ = 0;
+    private global::DistributedMatchEngine.AppInstListReply.Types.AIStatus status_ = 0;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::DistributedMatchEngine.AppInstListReply.Types.AI_Status Status {
+    public global::DistributedMatchEngine.AppInstListReply.Types.AIStatus Status {
       get { return status_; }
       set {
         status_ = value;
       }
     }
 
-    /// <summary>Field number for the "Cloudlets" field.</summary>
+    /// <summary>Field number for the "cloudlets" field.</summary>
     public const int CloudletsFieldNumber = 3;
     private static readonly pb::FieldCodec<global::DistributedMatchEngine.CloudletLocation> _repeated_cloudlets_codec
         = pb::FieldCodec.ForMessage(26, global::DistributedMatchEngine.CloudletLocation.Parser);
@@ -3117,7 +3118,7 @@ namespace DistributedMatchEngine {
             break;
           }
           case 16: {
-            status_ = (global::DistributedMatchEngine.AppInstListReply.Types.AI_Status) input.ReadEnum();
+            status_ = (global::DistributedMatchEngine.AppInstListReply.Types.AIStatus) input.ReadEnum();
             break;
           }
           case 26: {
@@ -3135,7 +3136,7 @@ namespace DistributedMatchEngine {
       /// <summary>
       /// Status of the reply
       /// </summary>
-      public enum AI_Status {
+      public enum AIStatus {
         [pbr::OriginalName("AI_UNDEFINED")] AiUndefined = 0,
         [pbr::OriginalName("AI_SUCCESS")] AiSuccess = 1,
         [pbr::OriginalName("AI_FAIL")] AiFail = 2,
@@ -3181,7 +3182,7 @@ namespace DistributedMatchEngine {
       return new FqdnListRequest(this);
     }
 
-    /// <summary>Field number for the "Ver" field.</summary>
+    /// <summary>Field number for the "ver" field.</summary>
     public const int VerFieldNumber = 1;
     private uint ver_;
     /// <summary>
@@ -3195,7 +3196,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "SessionCookie" field.</summary>
+    /// <summary>Field number for the "session_cookie" field.</summary>
     public const int SessionCookieFieldNumber = 2;
     private string sessionCookie_ = "";
     /// <summary>
@@ -3337,7 +3338,7 @@ namespace DistributedMatchEngine {
       appName_ = other.appName_;
       appVers_ = other.appVers_;
       devName_ = other.devName_;
-      fQDNs_ = other.fQDNs_.Clone();
+      fqdns_ = other.fqdns_.Clone();
       androidPackageName_ = other.androidPackageName_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
@@ -3347,7 +3348,7 @@ namespace DistributedMatchEngine {
       return new AppFqdn(this);
     }
 
-    /// <summary>Field number for the "AppName" field.</summary>
+    /// <summary>Field number for the "app_name" field.</summary>
     public const int AppNameFieldNumber = 1;
     private string appName_ = "";
     /// <summary>
@@ -3361,7 +3362,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "AppVers" field.</summary>
+    /// <summary>Field number for the "app_vers" field.</summary>
     public const int AppVersFieldNumber = 2;
     private string appVers_ = "";
     /// <summary>
@@ -3375,7 +3376,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "DevName" field.</summary>
+    /// <summary>Field number for the "dev_name" field.</summary>
     public const int DevNameFieldNumber = 3;
     private string devName_ = "";
     /// <summary>
@@ -3389,20 +3390,20 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "FQDNs" field.</summary>
-    public const int FQDNsFieldNumber = 4;
-    private static readonly pb::FieldCodec<string> _repeated_fQDNs_codec
+    /// <summary>Field number for the "fqdns" field.</summary>
+    public const int FqdnsFieldNumber = 4;
+    private static readonly pb::FieldCodec<string> _repeated_fqdns_codec
         = pb::FieldCodec.ForString(34);
-    private readonly pbc::RepeatedField<string> fQDNs_ = new pbc::RepeatedField<string>();
+    private readonly pbc::RepeatedField<string> fqdns_ = new pbc::RepeatedField<string>();
     /// <summary>
     /// App FQDN
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<string> FQDNs {
-      get { return fQDNs_; }
+    public pbc::RepeatedField<string> Fqdns {
+      get { return fqdns_; }
     }
 
-    /// <summary>Field number for the "AndroidPackageName" field.</summary>
+    /// <summary>Field number for the "android_package_name" field.</summary>
     public const int AndroidPackageNameFieldNumber = 5;
     private string androidPackageName_ = "";
     /// <summary>
@@ -3432,7 +3433,7 @@ namespace DistributedMatchEngine {
       if (AppName != other.AppName) return false;
       if (AppVers != other.AppVers) return false;
       if (DevName != other.DevName) return false;
-      if(!fQDNs_.Equals(other.fQDNs_)) return false;
+      if(!fqdns_.Equals(other.fqdns_)) return false;
       if (AndroidPackageName != other.AndroidPackageName) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -3443,7 +3444,7 @@ namespace DistributedMatchEngine {
       if (AppName.Length != 0) hash ^= AppName.GetHashCode();
       if (AppVers.Length != 0) hash ^= AppVers.GetHashCode();
       if (DevName.Length != 0) hash ^= DevName.GetHashCode();
-      hash ^= fQDNs_.GetHashCode();
+      hash ^= fqdns_.GetHashCode();
       if (AndroidPackageName.Length != 0) hash ^= AndroidPackageName.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -3470,7 +3471,7 @@ namespace DistributedMatchEngine {
         output.WriteRawTag(26);
         output.WriteString(DevName);
       }
-      fQDNs_.WriteTo(output, _repeated_fQDNs_codec);
+      fqdns_.WriteTo(output, _repeated_fqdns_codec);
       if (AndroidPackageName.Length != 0) {
         output.WriteRawTag(42);
         output.WriteString(AndroidPackageName);
@@ -3492,7 +3493,7 @@ namespace DistributedMatchEngine {
       if (DevName.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(DevName);
       }
-      size += fQDNs_.CalculateSize(_repeated_fQDNs_codec);
+      size += fqdns_.CalculateSize(_repeated_fqdns_codec);
       if (AndroidPackageName.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(AndroidPackageName);
       }
@@ -3516,7 +3517,7 @@ namespace DistributedMatchEngine {
       if (other.DevName.Length != 0) {
         DevName = other.DevName;
       }
-      fQDNs_.Add(other.fQDNs_);
+      fqdns_.Add(other.fqdns_);
       if (other.AndroidPackageName.Length != 0) {
         AndroidPackageName = other.AndroidPackageName;
       }
@@ -3544,7 +3545,7 @@ namespace DistributedMatchEngine {
             break;
           }
           case 34: {
-            fQDNs_.AddEntriesFrom(input, _repeated_fQDNs_codec);
+            fqdns_.AddEntriesFrom(input, _repeated_fqdns_codec);
             break;
           }
           case 42: {
@@ -3607,7 +3608,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "AppFqdns" field.</summary>
+    /// <summary>Field number for the "app_fqdns" field.</summary>
     public const int AppFqdnsFieldNumber = 3;
     private static readonly pb::FieldCodec<global::DistributedMatchEngine.AppFqdn> _repeated_appFqdns_codec
         = pb::FieldCodec.ForMessage(26, global::DistributedMatchEngine.AppFqdn.Parser);
@@ -3617,11 +3618,11 @@ namespace DistributedMatchEngine {
       get { return appFqdns_; }
     }
 
-    /// <summary>Field number for the "Status" field.</summary>
+    /// <summary>Field number for the "status" field.</summary>
     public const int StatusFieldNumber = 4;
-    private global::DistributedMatchEngine.FqdnListReply.Types.FL_Status status_ = 0;
+    private global::DistributedMatchEngine.FqdnListReply.Types.FLStatus status_ = 0;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::DistributedMatchEngine.FqdnListReply.Types.FL_Status Status {
+    public global::DistributedMatchEngine.FqdnListReply.Types.FLStatus Status {
       get { return status_; }
       set {
         status_ = value;
@@ -3728,7 +3729,7 @@ namespace DistributedMatchEngine {
             break;
           }
           case 32: {
-            status_ = (global::DistributedMatchEngine.FqdnListReply.Types.FL_Status) input.ReadEnum();
+            status_ = (global::DistributedMatchEngine.FqdnListReply.Types.FLStatus) input.ReadEnum();
             break;
           }
         }
@@ -3742,7 +3743,7 @@ namespace DistributedMatchEngine {
       /// <summary>
       /// Status of the reply
       /// </summary>
-      public enum FL_Status {
+      public enum FLStatus {
         [pbr::OriginalName("FL_UNDEFINED")] FlUndefined = 0,
         [pbr::OriginalName("FL_SUCCESS")] FlSuccess = 1,
         [pbr::OriginalName("FL_FAIL")] FlFail = 2,
@@ -3791,7 +3792,7 @@ namespace DistributedMatchEngine {
       return new DynamicLocGroupRequest(this);
     }
 
-    /// <summary>Field number for the "Ver" field.</summary>
+    /// <summary>Field number for the "ver" field.</summary>
     public const int VerFieldNumber = 1;
     private uint ver_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3802,7 +3803,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "SessionCookie" field.</summary>
+    /// <summary>Field number for the "session_cookie" field.</summary>
     public const int SessionCookieFieldNumber = 2;
     private string sessionCookie_ = "";
     /// <summary>
@@ -3816,7 +3817,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "LgId" field.</summary>
+    /// <summary>Field number for the "lg_id" field.</summary>
     public const int LgIdFieldNumber = 3;
     private ulong lgId_;
     /// <summary>
@@ -3830,7 +3831,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "CommType" field.</summary>
+    /// <summary>Field number for the "comm_type" field.</summary>
     public const int CommTypeFieldNumber = 11;
     private global::DistributedMatchEngine.DynamicLocGroupRequest.Types.DlgCommType commType_ = 0;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3841,7 +3842,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "UserData" field.</summary>
+    /// <summary>Field number for the "user_data" field.</summary>
     public const int UserDataFieldNumber = 12;
     private string userData_ = "";
     /// <summary>
@@ -4009,9 +4010,9 @@ namespace DistributedMatchEngine {
       /// Use Secure communication or Open with the group
       /// </summary>
       public enum DlgCommType {
-        [pbr::OriginalName("DlgUndefined")] DlgUndefined = 0,
-        [pbr::OriginalName("DlgSecure")] DlgSecure = 1,
-        [pbr::OriginalName("DlgOpen")] DlgOpen = 2,
+        [pbr::OriginalName("DLG_UNDEFINED")] DlgUndefined = 0,
+        [pbr::OriginalName("DLG_SECURE")] DlgSecure = 1,
+        [pbr::OriginalName("DLG_OPEN")] DlgOpen = 2,
       }
 
     }
@@ -4081,7 +4082,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "ErrorCode" field.</summary>
+    /// <summary>Field number for the "error_code" field.</summary>
     public const int ErrorCodeFieldNumber = 3;
     private uint errorCode_;
     /// <summary>
@@ -4095,7 +4096,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "GroupCookie" field.</summary>
+    /// <summary>Field number for the "group_cookie" field.</summary>
     public const int GroupCookieFieldNumber = 5;
     private string groupCookie_ = "";
     /// <summary>

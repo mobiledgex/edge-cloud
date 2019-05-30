@@ -94,10 +94,10 @@ class MexRestClient {
         json regClientRequest;
 
         regClientRequest["ver"] = 1;
-        regClientRequest["AppName"] = appName;
-        regClientRequest["DevName"] = devName;
-        regClientRequest["AppVers"] = appVersionStr;
-        regClientRequest["CarrierName"] = getCarrierName();
+        regClientRequest["app_name"] = appName;
+        regClientRequest["dev_name"] = devName;
+        regClientRequest["app_vers"] = appVersionStr;
+        regClientRequest["carrier_name"] = getCarrierName();
         regClientRequest["AuthToken"] = ""; // Developer supplied user auth token.
 
         return regClientRequest;
@@ -108,10 +108,10 @@ class MexRestClient {
         json verifyLocationRequest;
 
         verifyLocationRequest["ver"] = 1;
-        verifyLocationRequest["SessionCookie"] = sessioncookie;
-        verifyLocationRequest["CarrierName"] = carrierName;
-        verifyLocationRequest["GpsLocation"] = gpslocation;
-        verifyLocationRequest["VerifyLocToken"] = verifyloctoken;
+        verifyLocationRequest["session_cookie"] = sessioncookie;
+        verifyLocationRequest["carrier_name"] = carrierName;
+        verifyLocationRequest["gps_location"] = gpslocation;
+        verifyLocationRequest["verify_loc_token"] = verifyloctoken;
 
         return verifyLocationRequest;
     }
@@ -121,9 +121,9 @@ class MexRestClient {
         json findCloudletRequest;
 
         findCloudletRequest["ver"] = 1;
-        findCloudletRequest["SessionCookie"] = sessioncookie;
-        findCloudletRequest["CarrierName"] = carrierName;
-        findCloudletRequest["GpsLocation"] = gpslocation;
+        findCloudletRequest["session_cookie"] = sessioncookie;
+        findCloudletRequest["carrier_name"] = carrierName;
+        findCloudletRequest["gps_location"] = gpslocation;
         return findCloudletRequest;
     }
 
@@ -190,8 +190,8 @@ class MexRestClient {
         if (httpResponse != 200) {
             return jreply;
         }
-        tokenserveruri = jreply["TokenServerURI"];
-        sessioncookie = jreply["SessionCookie"];
+        tokenserveruri = jreply["token_server_uri"];
+        sessioncookie = jreply["session_cookie"];
 
         return jreply;
     }
@@ -210,10 +210,10 @@ class MexRestClient {
         // Update request with the new token:
         json tokenizedRequest;
         tokenizedRequest["ver"] = request["ver"];
-        tokenizedRequest["SessionCookie"] = request["SessionCookie"];
-        tokenizedRequest["CarrierName"] = request["CarrierName"];
-        tokenizedRequest["GpsLocation"] = request["GpsLocation"];
-        tokenizedRequest["VerifyLocToken"] = token;
+        tokenizedRequest["session_cookie"] = request["session_cookie"];
+        tokenizedRequest["carrier_name"] = request["carrier_name"];
+        tokenizedRequest["gps_location"] = request["gps_location"];
+        tokenizedRequest["verify_loc_token"] = token;
 
         json jreply = postRequest(baseuri + verifylocationAPI, tokenizedRequest.dump(), httpResponse, reply, getReplyCallback);
         return jreply;
@@ -421,7 +421,7 @@ int main() {
 
         // Get the token (and wait for it)
         // GPRC uses "Channel". But, we can use libcurl here.
-        cout << "Token Server URI: " << registerClientReply["TokenServerURI"] << endl;
+        cout << "Token Server URI: " << registerClientReply["token_server_uri"] << endl;
 
         // Produces a new request. Now with sessioncooke and token initialized.
         cout << "Verify Location of this Mex client." << endl;

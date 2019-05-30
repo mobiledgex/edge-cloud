@@ -32,6 +32,7 @@ namespace DistributedMatchEngine {
     }
 
     /// <summary>Base class for server-side implementations of DynamicLocGroupApi</summary>
+    [grpc::BindServiceMethod(typeof(DynamicLocGroupApi), "BindService")]
     public abstract partial class DynamicLocGroupApiBase
     {
       public virtual global::System.Threading.Tasks.Task<global::DistributedMatchEngine.DlgReply> SendToGroup(global::DistributedMatchEngine.DlgMessage request, grpc::ServerCallContext context)

@@ -25,16 +25,16 @@ namespace DistributedMatchEngine {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "ChxkeW5hbWljLWxvY2F0aW9uLWdyb3VwLnByb3RvEhhkaXN0cmlidXRlZF9t",
-            "YXRjaF9lbmdpbmUi5gEKCkRsZ01lc3NhZ2USCwoDdmVyGAEgASgNEgwKBExn",
-            "SWQYAiABKAQSEwoLR3JvdXBDb29raWUYAyABKAkSEQoJTWVzc2FnZUlkGAQg",
-            "ASgEEjwKB0Fja1R5cGUYBSABKA4yKy5kaXN0cmlidXRlZF9tYXRjaF9lbmdp",
-            "bmUuRGxnTWVzc2FnZS5EbGdBY2sSDwoHTWVzc2FnZRgGIAEoCSJGCgZEbGdB",
-            "Y2sSFQoRRGxnQWNrRWFjaE1lc3NhZ2UQABIXChNEbGdBc3lFdmVyeU5NZXNz",
-            "YWdlEAESDAoIRGxnTm9BY2sQAiI7CghEbGdSZXBseRILCgN2ZXIYASABKA0S",
-            "DQoFQWNrSWQYAiABKAQSEwoLR3JvdXBDb29raWUYAyABKAkybwoSRHluYW1p",
-            "Y0xvY0dyb3VwQXBpElkKC1NlbmRUb0dyb3VwEiQuZGlzdHJpYnV0ZWRfbWF0",
-            "Y2hfZW5naW5lLkRsZ01lc3NhZ2UaIi5kaXN0cmlidXRlZF9tYXRjaF9lbmdp",
-            "bmUuRGxnUmVwbHkiAGIGcHJvdG8z"));
+            "YXRjaF9lbmdpbmUi8wEKCkRsZ01lc3NhZ2USCwoDdmVyGAEgASgNEg0KBWxn",
+            "X2lkGAIgASgEEhQKDGdyb3VwX2Nvb2tpZRgDIAEoCRISCgptZXNzYWdlX2lk",
+            "GAQgASgEEj0KCGFja190eXBlGAUgASgOMisuZGlzdHJpYnV0ZWRfbWF0Y2hf",
+            "ZW5naW5lLkRsZ01lc3NhZ2UuRGxnQWNrEg8KB21lc3NhZ2UYBiABKAkiTwoG",
+            "RGxnQWNrEhgKFERMR19BQ0tfRUFDSF9NRVNTQUdFEAASGwoXRExHX0FTWV9F",
+            "VkVSWV9OX01FU1NBR0UQARIOCgpETEdfTk9fQUNLEAIiPQoIRGxnUmVwbHkS",
+            "CwoDdmVyGAEgASgNEg4KBmFja19pZBgCIAEoBBIUCgxncm91cF9jb29raWUY",
+            "AyABKAkybwoSRHluYW1pY0xvY0dyb3VwQXBpElkKC1NlbmRUb0dyb3VwEiQu",
+            "ZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkRsZ01lc3NhZ2UaIi5kaXN0cmli",
+            "dXRlZF9tYXRjaF9lbmdpbmUuRGxnUmVwbHkiAGIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
@@ -96,7 +96,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "LgId" field.</summary>
+    /// <summary>Field number for the "lg_id" field.</summary>
     public const int LgIdFieldNumber = 2;
     private ulong lgId_;
     /// <summary>
@@ -110,7 +110,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "GroupCookie" field.</summary>
+    /// <summary>Field number for the "group_cookie" field.</summary>
     public const int GroupCookieFieldNumber = 3;
     private string groupCookie_ = "";
     /// <summary>
@@ -124,7 +124,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "MessageId" field.</summary>
+    /// <summary>Field number for the "message_id" field.</summary>
     public const int MessageIdFieldNumber = 4;
     private ulong messageId_;
     /// <summary>
@@ -138,7 +138,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "AckType" field.</summary>
+    /// <summary>Field number for the "ack_type" field.</summary>
     public const int AckTypeFieldNumber = 5;
     private global::DistributedMatchEngine.DlgMessage.Types.DlgAck ackType_ = 0;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -149,7 +149,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "Message" field.</summary>
+    /// <summary>Field number for the "message" field.</summary>
     public const int MessageFieldNumber = 6;
     private string message_ = "";
     /// <summary>
@@ -333,9 +333,9 @@ namespace DistributedMatchEngine {
       /// Need acknowledgement
       /// </summary>
       public enum DlgAck {
-        [pbr::OriginalName("DlgAckEachMessage")] EachMessage = 0,
-        [pbr::OriginalName("DlgAsyEveryNMessage")] DlgAsyEveryNmessage = 1,
-        [pbr::OriginalName("DlgNoAck")] DlgNoAck = 2,
+        [pbr::OriginalName("DLG_ACK_EACH_MESSAGE")] EachMessage = 0,
+        [pbr::OriginalName("DLG_ASY_EVERY_N_MESSAGE")] DlgAsyEveryNMessage = 1,
+        [pbr::OriginalName("DLG_NO_ACK")] DlgNoAck = 2,
       }
 
     }
@@ -390,7 +390,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "AckId" field.</summary>
+    /// <summary>Field number for the "ack_id" field.</summary>
     public const int AckIdFieldNumber = 2;
     private ulong ackId_;
     /// <summary>
@@ -404,7 +404,7 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "GroupCookie" field.</summary>
+    /// <summary>Field number for the "group_cookie" field.</summary>
     public const int GroupCookieFieldNumber = 3;
     private string groupCookie_ = "";
     /// <summary>
