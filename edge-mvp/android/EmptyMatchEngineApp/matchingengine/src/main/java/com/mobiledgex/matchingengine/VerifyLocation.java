@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import distributed_match_engine.AppClient;
 import distributed_match_engine.AppClient.VerifyLocationRequest;
 import distributed_match_engine.AppClient.VerifyLocationReply;
-import distributed_match_engine.Match_Engine_ApiGrpc;
+import distributed_match_engine.MatchEngineApiGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 
@@ -120,7 +120,7 @@ public class VerifyLocation implements Callable {
         ManagedChannel channel = null;
         try {
             channel = mMatchingEngine.channelPicker(mHost, mPort);
-            Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
+            MatchEngineApiGrpc.MatchEngineApiBlockingStub stub = MatchEngineApiGrpc.newBlockingStub(channel);
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .verifyLocation(grpcRequest);

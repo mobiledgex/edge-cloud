@@ -292,7 +292,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
                         someText = "[Location Verified: Tower: " + verifiedLocation.getTowerStatus() +
                                 ", GPS LocationStatus: " + verifiedLocation.getGpsLocationStatus() +
-                                ", Location Accuracy: " + verifiedLocation.getGPSLocationAccuracyKM() + " ]\n";
+                                ", Location Accuracy: " + verifiedLocation.getGpsLocationAccuracyKm() + " ]\n";
 
                         // Find the closest cloudlet for your application to use. (Blocking call, or use findCloudletFuture):
                         AppClient.FindCloudletRequest findCloudletRequest =
@@ -333,7 +333,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                             for (AppClient.Appinstance appinstance : cloudletLocation.getAppinstancesList()) {
                                 appInstListText += "Name: " + appinstance.getAppName()
                                                 + ", Version: " + appinstance.getAppVers()
-                                                + ", FQDN: " + appinstance.getFQDN()
+                                                + ", FQDN: " + appinstance.getFqdn()
                                                 + ", Ports: " + appinstance.getPortsList().toString();
 
                             }
