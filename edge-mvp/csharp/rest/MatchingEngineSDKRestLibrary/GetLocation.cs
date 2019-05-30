@@ -7,17 +7,17 @@ namespace DistributedMatchEngine
   public class GetLocationRequest
   {
     [DataMember]
-    public UInt32 Ver;
+    public UInt32 ver;
     [DataMember]
-    public string SessionCookie;
+    public string session_cookie;
     [DataMember]
-    public string CarrierName;
+    public string carrier_name;
   }
 
   [DataContract]
   public class GetLocationReply
   {
-    public enum Loc_Status
+    public enum LocStatus
     {
       LOC_UNKNOWN = 0,
       LOC_FOUND = 1,
@@ -25,28 +25,28 @@ namespace DistributedMatchEngine
       LOC_DENIED = 2
     }
     [DataMember]
-    public UInt32 Ver;
+    public UInt32 ver;
 
-    public Loc_Status Status = Loc_Status.LOC_UNKNOWN;
+    public LocStatus status = LocStatus.LOC_UNKNOWN;
 
-    [DataMember(Name = "Status")]
-    private string LocStatusString
+    [DataMember(Name = "status")]
+    private string loc_status_string
     {
       get
       {
-        return Status.ToString();
+        return status.ToString();
       }
       set
       {
-        Status = Enum.TryParse(value, out Loc_Status locStatus) ? locStatus : Loc_Status.LOC_UNKNOWN;
+        status = Enum.TryParse(value, out LocStatus locStatus) ? locStatus : LocStatus.LOC_UNKNOWN;
       }
     }
 
     [DataMember]
-    public string CarrierName;
+    public string carrier_name;
     [DataMember]
-    public string Tower;
+    public string tower;
     [DataMember]
-    public Loc NetworkLocation;
+    public Loc network_location;
   }
 }
