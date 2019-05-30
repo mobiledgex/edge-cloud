@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import distributed_match_engine.AppClient.AppInstListRequest;
 import distributed_match_engine.AppClient.AppInstListReply;
-import distributed_match_engine.Match_Engine_ApiGrpc;
+import distributed_match_engine.MatchEngineApiGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 
@@ -65,7 +65,7 @@ public class GetAppInstList implements Callable {
         NetworkManager nm = null;
         try {
             channel = mMatchingEngine.channelPicker(mHost, mPort);
-            Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
+            MatchEngineApiGrpc.MatchEngineApiBlockingStub stub = MatchEngineApiGrpc.newBlockingStub(channel);
 
             nm = mMatchingEngine.getNetworkManager();
             nm.switchToCellularInternetNetworkBlocking();
