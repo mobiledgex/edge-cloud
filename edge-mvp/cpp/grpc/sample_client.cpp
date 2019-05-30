@@ -11,7 +11,7 @@
 using namespace std;
 using namespace std::chrono;
 using namespace distributed_match_engine;
-using distributed_match_engine::Match_Engine_Api;
+using distributed_match_engine::MatchEngineApi;
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -37,7 +37,7 @@ class MexGrpcClient {
     const string appVersionStr = "1.0";
 
     MexGrpcClient(std::shared_ptr<Channel> channel)
-        : stub_(Match_Engine_Api::NewStub(channel)) {}
+        : stub_(MatchEngineApi::NewStub(channel)) {}
 
     // Retrieve the carrier name of the cellular network interface.
     static string getCarrierName() {
@@ -85,10 +85,10 @@ class MexGrpcClient {
 
         request->set_ver(1);
 
-        request->set_devname(devName);
-        request->set_appname(appName);
-        request->set_appvers(appVersionStr);
-        request->set_authtoken(authToken);
+        request->set_dev_name(devName);
+        request->set_app_name(appName);
+        request->set_app_vers(appVersionStr);
+        request->set_auth_token(authToken);
 
         return request;
     }
@@ -99,16 +99,16 @@ class MexGrpcClient {
 
         request->set_ver(1);
 
-        request->set_sessioncookie(sessioncookie);
-        request->set_carriername(carrierName);
+        request->set_session_cookie(session_cookie);
+        request->set_carrier_name(carrierName);
 
         Loc *ownedLocation = gpslocation->New();
         ownedLocation->CopyFrom(*gpslocation);
-        request->set_allocated_gpslocation(ownedLocation);
+        request->set_allocated_gps_location(ownedLocation);
 
         // This is a carrier supplied token.
         if (verifyloctoken.length() != 0) {
-            request->set_verifyloctoken(verifyloctoken);
+            request->set_verify_loc_token(verifyloctoken);
         }
 
         return request;
@@ -120,12 +120,12 @@ class MexGrpcClient {
 
         request->set_ver(1);
 
-        request->set_sessioncookie(sessioncookie);
-        request->set_carriername(carrierName);
+        request->set_session_cookie(session_cookie);
+        request->set_carrier_name(carrierName);
 
         Loc *ownedLocation = gpslocation->New();
         ownedLocation->CopyFrom(*gpslocation);
-        request->set_allocated_gpslocation(ownedLocation);
+        request->set_allocated_gps_location(ownedLocation);
 
         return request;
     }
@@ -141,14 +141,14 @@ class MexGrpcClient {
         grpc::Status grpcStatus = stub_->RegisterClient(&context, *request, &reply);
 
         // Save some Mex state info for other calls.
-        this->sessioncookie = reply.sessioncookie();
-        this->tokenserveruri = reply.tokenserveruri();
+        this->session_cookie = reply.session_cookie();
+        this->token_server_uri = reply.token_server_uri();
 
         return grpcStatus;
     }
 
     grpc::Status VerifyLocation(const shared_ptr<VerifyLocationRequest> request, VerifyLocationReply &reply) {
-        string token = getToken(tokenserveruri);
+        string token = getToken(token_server_uri);
 
         ClientContext context;
         // Context deadline is in seconds.
@@ -159,7 +159,7 @@ class MexGrpcClient {
         unique_ptr<VerifyLocationRequest> tokenizedRequest = unique_ptr<VerifyLocationRequest>(new VerifyLocationRequest());
         tokenizedRequest->CopyFrom(*request);
 
-        tokenizedRequest->set_verifyloctoken(token);
+        tokenizedRequest->set_verify_loc_token(token);
         grpc::Status grpcStatus = stub_->VerifyLocation(&context, *tokenizedRequest, &reply);
 
         return grpcStatus;
@@ -220,10 +220,10 @@ class MexGrpcClient {
     }
 
   private:
-    std::unique_ptr<Match_Engine_Api::Stub> stub_;
+    std::unique_ptr<MatchEngineApi::Stub> stub_;
     string token;  // short lived carrier dt-id token.
-    string tokenserveruri;
-    string sessioncookie;
+    string token_server_uri;
+    string session_cookie;
 
     static string parseParameter(const string &queryParameter, const string keyFind) {
         string value;
@@ -395,7 +395,7 @@ int main() {
 
         // Get the token (and wait for it)
         // GPRC uses "Channel". But, we can use libcurl here.
-        cout << "Token Server URI: " << registerClientReply.tokenserveruri() << endl;
+        cout << "Token Server URI: " << registerClientReply.token_server_uri() << endl;
 
         // Produces a new request. Now with sessioncooke and token initialized.
         cout << "Verify Location of this Mex client." << endl;

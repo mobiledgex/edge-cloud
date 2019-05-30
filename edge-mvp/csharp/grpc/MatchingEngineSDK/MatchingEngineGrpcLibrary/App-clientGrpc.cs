@@ -11,9 +11,9 @@
 using grpc = global::Grpc.Core;
 
 namespace DistributedMatchEngine {
-  public static partial class Match_Engine_Api
+  public static partial class MatchEngineApi
   {
-    static readonly string __ServiceName = "distributed_match_engine.Match_Engine_Api";
+    static readonly string __ServiceName = "distributed_match_engine.MatchEngineApi";
 
     static readonly grpc::Marshaller<global::DistributedMatchEngine.RegisterClientRequest> __Marshaller_distributed_match_engine_RegisterClientRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.RegisterClientRequest.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::DistributedMatchEngine.RegisterClientReply> __Marshaller_distributed_match_engine_RegisterClientReply = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.RegisterClientReply.Parser.ParseFrom);
@@ -85,8 +85,9 @@ namespace DistributedMatchEngine {
       get { return global::DistributedMatchEngine.AppClientReflection.Descriptor.Services[0]; }
     }
 
-    /// <summary>Base class for server-side implementations of Match_Engine_Api</summary>
-    public abstract partial class Match_Engine_ApiBase
+    /// <summary>Base class for server-side implementations of MatchEngineApi</summary>
+    [grpc::BindServiceMethod(typeof(MatchEngineApi), "BindService")]
+    public abstract partial class MatchEngineApiBase
     {
       public virtual global::System.Threading.Tasks.Task<global::DistributedMatchEngine.RegisterClientReply> RegisterClient(global::DistributedMatchEngine.RegisterClientRequest request, grpc::ServerCallContext context)
       {
@@ -125,26 +126,26 @@ namespace DistributedMatchEngine {
 
     }
 
-    /// <summary>Client for Match_Engine_Api</summary>
-    public partial class Match_Engine_ApiClient : grpc::ClientBase<Match_Engine_ApiClient>
+    /// <summary>Client for MatchEngineApi</summary>
+    public partial class MatchEngineApiClient : grpc::ClientBase<MatchEngineApiClient>
     {
-      /// <summary>Creates a new client for Match_Engine_Api</summary>
+      /// <summary>Creates a new client for MatchEngineApi</summary>
       /// <param name="channel">The channel to use to make remote calls.</param>
-      public Match_Engine_ApiClient(grpc::Channel channel) : base(channel)
+      public MatchEngineApiClient(grpc::Channel channel) : base(channel)
       {
       }
-      /// <summary>Creates a new client for Match_Engine_Api that uses a custom <c>CallInvoker</c>.</summary>
+      /// <summary>Creates a new client for MatchEngineApi that uses a custom <c>CallInvoker</c>.</summary>
       /// <param name="callInvoker">The callInvoker to use to make remote calls.</param>
-      public Match_Engine_ApiClient(grpc::CallInvoker callInvoker) : base(callInvoker)
+      public MatchEngineApiClient(grpc::CallInvoker callInvoker) : base(callInvoker)
       {
       }
       /// <summary>Protected parameterless constructor to allow creation of test doubles.</summary>
-      protected Match_Engine_ApiClient() : base()
+      protected MatchEngineApiClient() : base()
       {
       }
       /// <summary>Protected constructor to allow creation of configured clients.</summary>
       /// <param name="configuration">The client configuration.</param>
-      protected Match_Engine_ApiClient(ClientBaseConfiguration configuration) : base(configuration)
+      protected MatchEngineApiClient(ClientBaseConfiguration configuration) : base(configuration)
       {
       }
 
@@ -261,15 +262,15 @@ namespace DistributedMatchEngine {
         return CallInvoker.AsyncUnaryCall(__Method_GetFqdnList, null, options, request);
       }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
-      protected override Match_Engine_ApiClient NewInstance(ClientBaseConfiguration configuration)
+      protected override MatchEngineApiClient NewInstance(ClientBaseConfiguration configuration)
       {
-        return new Match_Engine_ApiClient(configuration);
+        return new MatchEngineApiClient(configuration);
       }
     }
 
     /// <summary>Creates service definition that can be registered with a server</summary>
     /// <param name="serviceImpl">An object implementing the server-side handling logic.</param>
-    public static grpc::ServerServiceDefinition BindService(Match_Engine_ApiBase serviceImpl)
+    public static grpc::ServerServiceDefinition BindService(MatchEngineApiBase serviceImpl)
     {
       return grpc::ServerServiceDefinition.CreateBuilder()
           .AddMethod(__Method_RegisterClient, serviceImpl.RegisterClient)
@@ -285,7 +286,7 @@ namespace DistributedMatchEngine {
     /// Note: this method is part of an experimental API that can change or be removed without any prior notice.</summary>
     /// <param name="serviceBinder">Service methods will be bound by calling <c>AddMethod</c> on this object.</param>
     /// <param name="serviceImpl">An object implementing the server-side handling logic.</param>
-    public static void BindService(grpc::ServiceBinderBase serviceBinder, Match_Engine_ApiBase serviceImpl)
+    public static void BindService(grpc::ServiceBinderBase serviceBinder, MatchEngineApiBase serviceImpl)
     {
       serviceBinder.AddMethod(__Method_RegisterClient, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::DistributedMatchEngine.RegisterClientRequest, global::DistributedMatchEngine.RegisterClientReply>(serviceImpl.RegisterClient));
       serviceBinder.AddMethod(__Method_FindCloudlet, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::DistributedMatchEngine.FindCloudletRequest, global::DistributedMatchEngine.FindCloudletReply>(serviceImpl.FindCloudlet));
