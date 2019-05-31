@@ -6,23 +6,23 @@ namespace DistributedMatchEngine
   public enum LProto
   {
     // Unknown protocol
-    LProtoUnknown = 0,
+    L_PROTO_UNKNOWN = 0,
     // TCP (L4) protocol
-    LProtoTCP = 1,
+    L_PROTO_TCP = 1,
     // UDP (L4) protocol
-    LProtoUDP = 2,
+    L_PROTO_UDP = 2,
     // HTTP (L7 tcp) protocol
-    LProtoHTTP = 3
+    L_PROTO_HTTP = 3
   }
 
   [DataContract]
   public class AppPort
   {
     // TCP (L4), UDP (L4), or HTTP (L7) protocol
-    public LProto proto = LProto.LProtoUnknown;
+    public LProto proto = LProto.L_PROTO_UNKNOWN;
 
     [DataMember(Name = "proto")]
-    private string protoString
+    private string proto_string
     {
       get
       {
@@ -30,7 +30,7 @@ namespace DistributedMatchEngine
       }
       set
       {
-        proto = Enum.TryParse(value, out LProto lproto) ? lproto : LProto.LProtoUnknown;
+        proto = Enum.TryParse(value, out LProto lproto) ? lproto : LProto.L_PROTO_UNKNOWN;
       }
     }
 
@@ -45,7 +45,7 @@ namespace DistributedMatchEngine
     public string path_prefix;
     // FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.
     [DataMember]
-    public string FQDN_prefix;
+    public string fqdn_prefix;
   }
 
   public enum IDTypes

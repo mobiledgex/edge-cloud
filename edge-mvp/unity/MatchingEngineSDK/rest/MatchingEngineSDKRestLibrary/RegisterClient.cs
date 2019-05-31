@@ -7,17 +7,17 @@ namespace DistributedMatchEngine
   public class RegisterClientRequest
   {
     [DataMember]
-    public UInt32 Ver;
+    public UInt32 ver;
     [DataMember]
-    public string DevName;
+    public string dev_name;
     [DataMember]
-    public string AppName;
+    public string app_name;
     [DataMember]
-    public string AppVers;
+    public string app_vers;
     [DataMember]
-    public string CarrierName;
+    public string carrier_name;
     [DataMember]
-    public string AuthToken;
+    public string auth_token;
   }
 
   [DataContract]
@@ -26,25 +26,25 @@ namespace DistributedMatchEngine
     [DataMember]
     public UInt32 Ver;
 
-    public ReplyStatus Status = ReplyStatus.RS_UNDEFINED;
+    public ReplyStatus status = ReplyStatus.RS_UNDEFINED;
 
-    [DataMember(Name = "Status")]
-    private string ReplyStatusString
+    [DataMember(Name = "status")]
+    private string reply_status_string
     {
       get
       {
-        return Status.ToString();
+        return status.ToString();
       }
       set
       {
-        Status = Enum.TryParse(value, out ReplyStatus replyStatus) ? replyStatus : ReplyStatus.RS_UNDEFINED;
+        status = Enum.TryParse(value, out ReplyStatus replyStatus) ? replyStatus : ReplyStatus.RS_UNDEFINED;
       }
     }
 
     [DataMember]
-    public string SessionCookie;
+    public string session_cookie;
     [DataMember]
-    public string TokenServerURI;
+    public string token_server_uri;
   }
 
 }
