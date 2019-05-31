@@ -1,6 +1,6 @@
 # Makefile
 
-GRPCTOOLS_VERSION := Grpc.Tools.1.20.0
+GRPCTOOLS_VERSION := Grpc.Tools.1.21.0
 TEMP_DIR := packages/$(GRPCTOOLS_VERSION)/tmp
 CURL_URL := https://www.nuget.org/api/v2/package/Grpc.Tools
 #PROTOC := packages/$(GRPCTOOLS_VERSION)/tools/macosx_x64/protoc
