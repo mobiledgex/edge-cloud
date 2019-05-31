@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 namespace DistributedMatchEngine
 {
   public class InvalidTokenServerTokenException : Exception

@@ -44,7 +44,7 @@ namespace RestSample
         try
         {
           var registerClientReply = await me.RegisterClient(host, port, registerClientRequest);
-          Console.WriteLine("RegisterClient Reply Status: " + registerClientReply.Status);
+          Console.WriteLine("RegisterClient Reply Status: " + registerClientReply.status);
         }
         catch (HttpException httpe) // HTTP status, and REST API call error codes.
         {
@@ -68,15 +68,15 @@ namespace RestSample
           var findCloudletReply = await me.FindCloudlet(host, port, findCloudletRequest);
           Console.WriteLine("FindCloudlet Reply: " + findCloudletReply.status);
           Console.WriteLine("FindCloudlet:" +
-                  " Ver: " + findCloudletReply.Ver +
-                  ", FQDN: " + findCloudletReply.FQDN +
+                  " ver: " + findCloudletReply.ver +
+                  ", fqdn: " + findCloudletReply.fqdn +
                   ", cloudlet_location: " +
                   " long: " + findCloudletReply.cloudlet_location.longitude +
                   ", lat: " + findCloudletReply.cloudlet_location.latitude);
           // App Ports:
           foreach (AppPort p in findCloudletReply.ports)
           {
-            Console.WriteLine("Port: FQDN_prefix: " + p.FQDN_prefix +
+            Console.WriteLine("Port: fqdn_prefix: " + p.fqdn_prefix +
                   ", protocol: " + p.proto +
                   ", public_port: " + p.public_port +
                   ", internal_port: " + p.internal_port +
@@ -92,7 +92,7 @@ namespace RestSample
         try
         {
           var getLocationReply = await me.GetLocation(host, port, getLocationRequest);
-          var location = getLocationReply.NetworkLocation;
+          var location = getLocationReply.network_location;
           Console.WriteLine("GetLocationReply: longitude: " + location.longitude + ", latitude: " + location.latitude);
         }
         catch (HttpException httpe)

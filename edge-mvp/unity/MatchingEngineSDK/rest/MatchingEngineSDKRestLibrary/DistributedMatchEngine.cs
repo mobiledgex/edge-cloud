@@ -291,12 +291,12 @@ namespace DistributedMatchEngine
     {
       return new RegisterClientRequest
       {
-        Ver = 1,
-        CarrierName = carrierName,
-        DevName = developerName,
-        AppName = appName,
-        AppVers = appVersion,
-        AuthToken = authToken
+        ver = 1,
+        carrier_name = carrierName,
+        dev_name = developerName,
+        app_name = appName,
+        app_vers = appVersion,
+        auth_token = authToken
       };
     }
 
@@ -315,8 +315,8 @@ namespace DistributedMatchEngine
 
       DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(RegisterClientReply));
       RegisterClientReply reply = (RegisterClientReply)deserializer.ReadObject(responseStream);
-      this.sessionCookie = reply.SessionCookie;
-      this.tokenServerURI = reply.TokenServerURI;
+      this.sessionCookie = reply.session_cookie;
+      this.tokenServerURI = reply.token_server_uri;
       return reply;
     }
 
@@ -329,12 +329,12 @@ namespace DistributedMatchEngine
       }
       return new FindCloudletRequest
       {
-        SessionCookie = this.sessionCookie,
-        CarrierName = carrierName,
-        DevName = devName,
-        AppName = appName,
-        AppVers = appVers,
-        GpsLocation = loc
+        session_cookie = this.sessionCookie,
+        carrier_name = carrierName,
+        dev_name = devName,
+        app_name = appName,
+        app_vers = appVers,
+        gps_location = loc
       };
     }
 
@@ -365,17 +365,17 @@ namespace DistributedMatchEngine
       }
       return new VerifyLocationRequest {
         Ver = 1,
-        CarrierName = carrierName,
-        GpsLocation = loc,
-        SessionCookie = this.sessionCookie,
-        VerifyLocToken = null
+        carrier_name = carrierName,
+        gps_location = loc,
+        session_cookie = this.sessionCookie,
+        verify_loc_token = null
       };
     }
 
     public async Task<VerifyLocationReply> VerifyLocation(string host, uint port, VerifyLocationRequest request)
     {
       string token = RetrieveToken(tokenServerURI);
-      request.VerifyLocToken = token;
+      request.verify_loc_token = token;
 
       DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(VerifyLocationRequest));
       MemoryStream ms = new MemoryStream();
@@ -401,9 +401,9 @@ namespace DistributedMatchEngine
       }
       return new GetLocationRequest
       {
-        Ver = 1,
-        CarrierName = carrierName,
-        SessionCookie = this.sessionCookie
+        ver = 1,
+        carrier_name = carrierName,
+        session_cookie = this.sessionCookie
       };
     }
 
@@ -442,10 +442,10 @@ namespace DistributedMatchEngine
 
       return new AppInstListRequest
       {
-        Ver = 1,
-        CarrierName = carrierName,
-        SessionCookie = this.sessionCookie,
-        GpsLocation = loc
+        ver = 1,
+        carrier_name = carrierName,
+        session_cookie = this.sessionCookie,
+        gps_location = loc
       };
     }
 
@@ -476,8 +476,8 @@ namespace DistributedMatchEngine
 
       return new FqdnListRequest
       {
-        Ver = 1,
-        SessionCookie = this.sessionCookie
+        ver = 1,
+        session_cookie = this.sessionCookie
       };
     }
 
@@ -508,11 +508,11 @@ namespace DistributedMatchEngine
 
       return new DynamicLocGroupRequest
       {
-        Ver = 1,
-        SessionCookie = this.sessionCookie,
-        LgId = lgId,
-        CommType = dlgCommType,
-        UserData = userData
+        ver = 1,
+        session_cookie = this.sessionCookie,
+        lg_id = lgId,
+        comm_type = dlgCommType,
+        user_data = userData
       };
     }
 
