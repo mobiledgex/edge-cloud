@@ -5,68 +5,68 @@ namespace DistributedMatchEngine
 {
   public enum DlgCommType
   {
-    DlgUndefined = 0,
-    DlgSecure = 1,
-    DlgOpen = 2
+    DLG_UNDEFINED = 0,
+    DLG_SECURE = 1,
+    DLG_OPEN = 2
   }
 
   [DataContract]
   public class DynamicLocGroupRequest
   {
     [DataMember]
-    public UInt32 Ver;
+    public UInt32 ver;
     // Session Cookie from RegisterClientRequest
     [DataMember]
-    public string SessionCookie;
+    public string session_cookie;
     [DataMember]
-    public UInt64 LgId;
+    public UInt64 lg_id;
 
-    public DlgCommType CommType = DlgCommType.DlgUndefined;
+    public DlgCommType comm_type = DlgCommType.DLG_UNDEFINED;
 
-    [DataMember(Name = "CommType")]
-    private string CommTypeString
+    [DataMember(Name = "comm_type")]
+    private string comm_type_string
     {
       get
       {
-        return CommType.ToString();
+        return comm_type.ToString();
       }
       set
       {
-        CommType = Enum.TryParse(value, out DlgCommType commType) ? commType : DlgCommType.DlgUndefined;
+        comm_type = Enum.TryParse(value, out DlgCommType commType) ? commType : DlgCommType.DLG_UNDEFINED;
       }
     }
 
     [DataMember]
-    public string UserData;
+    public string user_data;
   }
 
   [DataContract]
   public class DynamicLocGroupReply
   {
     [DataMember]
-    public UInt32 Ver;
+    public UInt32 ver;
+
     // Status of the reply
+    public ReplyStatus status = ReplyStatus.RS_UNDEFINED;
 
-    public ReplyStatus ReplyStatus = ReplyStatus.RS_UNDEFINED;
-
-    [DataMember(Name = "Status")]
-    private string ReplyStatusString
+    [DataMember(Name = "status")]
+    private string reply_status_string
     {
       get
       {
-        return ReplyStatus.ToString();
+        return status.ToString();
       }
       set
       {
-        ReplyStatus = Enum.TryParse(value, out ReplyStatus replyStatus) ? replyStatus : ReplyStatus.RS_UNDEFINED;
+        status = Enum.TryParse(value, out ReplyStatus replyStatus) ? replyStatus : ReplyStatus.RS_UNDEFINED;
       }
     }
 
-    // Status of the reply
+    // Error Code based on Failure
     [DataMember]
-    public UInt32 ErrorCode;
+    public UInt32 error_code;
     // Group Cookie for Secure Group Communication
     [DataMember]
-    public string GroupCookie;
+    public string group_cookie;
   }
 }

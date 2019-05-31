@@ -8,55 +8,60 @@ namespace DistributedMatchEngine
   {
     // App  Name
     [DataMember]
-    public string AppName;
+    public string app_ame;
     // App Version
     [DataMember]
-    public string AppVers;
+    public string app_vers;
     // developer name
     [DataMember]
-    public string DevName;
+    public string dev_name;
     // App FQDN
     [DataMember]
-    public string[] FQDNs;
+    public string[] fqdns;
     // optional android package name
     [DataMember]
-    public string AndroidPackageName;
+    public string android_package_name;
   }
 
   [DataContract]
   public class FqdnListRequest
   {
     [DataMember]
-    public UInt32 Ver;
+    public UInt32 ver;
     [DataMember]
-    public string SessionCookie;
+    public string session_cookie;
   };
 
   [DataContract]
   public class FqdnListReply
   {
     // Status of the reply
-    public enum FL_Status
+    public enum FLStatus
     {
       FL_UNDEFINED = 0,
       FL_SUCCESS = 1,
       FL_FAIL = 2
     }
+
     [DataMember]
-    public AppFqdn[] AppFqdns;
+    // API version
+    public UInt32 ver;
 
-    public FL_Status Status = FL_Status.FL_UNDEFINED;
+    [DataMember]
+    public AppFqdn[] app_fqdns;
 
-    [DataMember(Name = "Status")]
-    private string FlStatusString
+    public FLStatus status = FLStatus.FL_UNDEFINED;
+
+    [DataMember(Name = "status")]
+    private string fl_status_string
     {
       get
       {
-        return Status.ToString();
+        return status.ToString();
       }
       set
       {
-        Status = Enum.TryParse(value, out FL_Status flStatus) ? flStatus : FL_Status.FL_UNDEFINED;
+        status = Enum.TryParse(value, out FLStatus flStatus) ? flStatus : FLStatus.FL_UNDEFINED;
       }
     }
   }
