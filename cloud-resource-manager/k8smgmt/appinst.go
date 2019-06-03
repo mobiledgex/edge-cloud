@@ -29,7 +29,6 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 		return err
 	}
 	for ii, _ := range objs {
-		log.DebugLog(log.DebugLevelMexos, "obj loop", "ii", ii)
 		for {
 			deployment, ok := objs[ii].(*appsv1.Deployment)
 			if ok {
@@ -49,10 +48,11 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 				runningCount := 0
 
 				for _, line := range lines {
-
 					if line == "" {
 						continue
 					}
+					// there can be multiple pods, one per line. If all
+					// of them are running we can quit the loop
 					if r.MatchString(line) {
 						podCount++
 						matches := r.FindStringSubmatch(line)
