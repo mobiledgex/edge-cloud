@@ -141,6 +141,14 @@ func updateAppFields(in *edgeproto.App) error {
 		}
 	}
 
+	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER ||
+		in.Deployment == cloudcommon.AppDeploymentTypeHelm {
+		err := cloudcommon.ValidateRegistryPath(in.ImagePath)
+		if err != nil {
+			return err
+		}
+	}
+
 	if in.Config != "" {
 		configStr, err := cloudcommon.GetAppConfig(in)
 		if err != nil {
