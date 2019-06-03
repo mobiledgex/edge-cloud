@@ -223,8 +223,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 
 		nodeFlavor := edgeproto.Flavor{}
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
-			return fmt.Errorf("Cluster flavor %s node flavor %s not found",
-				in.Flavor.Name, nodeFlavor.Key)
+			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
 		var err error
 		in.NodeFlavor, err = flavor.GetClosestFlavor(info.Flavors, nodeFlavor)
