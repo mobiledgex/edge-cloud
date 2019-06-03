@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -138,6 +139,22 @@ func updateAppFields(in *edgeproto.App) error {
 				util.DockerSanitize(in.Key.Name)
 		} else {
 			in.ImagePath = "qcow path not determined yet"
+		}
+	}
+
+	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
+		if !strings.Contains(in.ImagePath, "artifactory.mobiledgex.net") {
+			urlInfo := strings.Split(in.ImagePath, "#")
+			if len(urlInfo) != 2 {
+				return fmt.Errorf("md5 checksum of image is required. Pease append checksum to imagepath: \"<url>#md5:checksum\"")
+			}
+			cSum := strings.Split(urlInfo[1], ":")
+			if len(cSum) != 2 {
+				return fmt.Errorf("incorrect checksum format, valid format: \"<url>#md5:checksum\"")
+			}
+			if cSum[0] != "md5" {
+				return fmt.Errorf("only md5 checksum is supported")
+			}
 		}
 	}
 
