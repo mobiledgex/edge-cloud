@@ -2,7 +2,9 @@ package k8smgmt
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -10,6 +12,72 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	appsv1 "k8s.io/api/apps/v1"
 )
+
+// WaitForAppInst waits for pods to either start or result in an error
+func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App) error {
+	log.DebugLog(log.DebugLevelMexos, "waiting for appinst pods", "app", app.Key.Name)
+
+	start := time.Now()
+
+	// it might be nicer to pull the state directly rather than parsing it, but the states displayed
+	// are a combination of states and reasons, e.g. ErrImagePull is not actually a state, so it's
+	// just easier to parse the summarized output from kubectl which combines states and reasons
+	r, _ := regexp.Compile("(\\S+)\\s+\\d+\\/\\d+\\s+(\\w+)\\s+\\d+\\s+\\S+")
+	objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
+	if err != nil {
+		log.InfoLog("unable to decode k8s yaml", "err", err)
+		return err
+	}
+	for {
+		waiting := false
+		for ii, _ := range objs {
+			deployment, ok := objs[ii].(*appsv1.Deployment)
+
+			if ok {
+				name := deployment.ObjectMeta.Name
+				cmd := fmt.Sprintf("%s kubectl get pods --no-headers --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
+				out, err := client.Output(cmd)
+				if err != nil {
+					log.InfoLog("error getting pods", "err", err, "out", out)
+					return fmt.Errorf("error getting pods: %v", err)
+				}
+				lines := strings.Split(out, "\n")
+				for _, line := range lines {
+					if line == "" {
+						continue
+					}
+					if r.MatchString(line) {
+						matches := r.FindStringSubmatch(line)
+						podName := matches[1]
+						podState := matches[2]
+						switch podState {
+						case "Running":
+							log.DebugLog(log.DebugLevelMexos, "pod is running", "podName", podName)
+						case "Pending":
+							fallthrough
+						case "ContainerCreating":
+							log.DebugLog(log.DebugLevelMexos, "still waiting for pod", "podName", podName, "state", podState)
+							waiting = true
+						default:
+							return fmt.Errorf("Pod is unexpected state: %s", podState)
+						}
+					} else {
+						return fmt.Errorf("unable to parse kubectl output: [%s]", line)
+					}
+				}
+			}
+		}
+		if !waiting {
+			return nil
+		}
+		elapsed := time.Since(start)
+		if elapsed >= (time.Minute * 5) {
+			return fmt.Errorf("AppInst is taking too long")
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+}
 
 func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	mf, err := cloudcommon.GetDeploymentManifest(app.DeploymentManifest)
@@ -34,11 +102,9 @@ func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 		return fmt.Errorf("error deploying kubernetes app, %s, %v", out, err)
 	}
 
-	// TODO: check pod status. For example, above command may
-	// succeed but pod state may be ErrImagePull if it can't access the image.
-
 	log.DebugLog(log.DebugLevelMexos, "done kubectl create")
-	return nil
+
+	return WaitForAppInst(client, names, app)
 }
 
 func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
