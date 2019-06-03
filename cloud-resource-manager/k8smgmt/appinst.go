@@ -103,8 +103,7 @@ func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 	}
 
 	log.DebugLog(log.DebugLevelMexos, "done kubectl create")
-
-	return WaitForAppInst(client, names, app)
+	return nil
 }
 
 func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
