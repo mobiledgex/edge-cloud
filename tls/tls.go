@@ -29,7 +29,7 @@ func getClientCertificate(tlsCertFile string) (tls.Certificate, error) {
 }
 
 // helper function to get the cert pool
-func getClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
+func GetClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
 	if tlsCertFile == "" {
 		return nil, nil
 	}
@@ -61,7 +61,7 @@ func GetMutualAuthClientConfig(addr string, tlsCertFile string) (*tls.Config, er
 		return nil, nil
 	}
 
-	certPool, err := getClientCertPool(tlsCertFile)
+	certPool, err := GetClientCertPool(tlsCertFile)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func GetGrpcDialOption(config *tls.Config) grpc.DialOption {
 // GetTLSClientConfig gets TLS Config for REST api connection
 func GetTLSClientConfig(addr string, tlsCertFile string) (*tls.Config, error) {
 	if tlsCertFile != "" {
-		certPool, err := getClientCertPool(tlsCertFile)
+		certPool, err := GetClientCertPool(tlsCertFile)
 		if err != nil {
 			return nil, err
 		}

@@ -236,9 +236,17 @@ func (p *Dme) GetRestClient(timeout time.Duration) (*http.Client, error) {
 
 func (p *Dme) getTlsConfig() *tls.Config {
 	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
-		// ServerAuth TLS, assume self-signed certs
+		// ServerAuth TLS. For real clients, they'll use
+		// their built-in trusted CAs to verify the cert.
+		// Since we're using self-signed certs here, add
+		// our CA to the cert pool.
+		certPool, err := mextls.GetClientCertPool(p.TLS.ServerCert)
+		if err != nil {
+			log.Printf("GetClientCertPool failed, %v\n", err)
+			return nil
+		}
 		config := &tls.Config{
-			InsecureSkipVerify: true,
+			RootCAs: certPool,
 		}
 		return config
 	}

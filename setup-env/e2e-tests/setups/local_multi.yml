@@ -104,6 +104,7 @@ dmes:
   cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-1"}'
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
@@ -120,6 +121,7 @@ dmes:
   cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-2"}'
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
