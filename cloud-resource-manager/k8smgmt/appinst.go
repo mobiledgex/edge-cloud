@@ -28,13 +28,14 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 		log.InfoLog("unable to decode k8s yaml", "err", err)
 		return err
 	}
-	for {
-		waiting := false
-		for ii, _ := range objs {
+	for ii, _ := range objs {
+		log.DebugLog(log.DebugLevelMexos, "obj loop", "ii", ii)
+		for {
 			deployment, ok := objs[ii].(*appsv1.Deployment)
-
 			if ok {
 				name := deployment.ObjectMeta.Name
+				log.DebugLog(log.DebugLevelMexos, "get pods", "name", name)
+
 				cmd := fmt.Sprintf("%s kubectl get pods --no-headers --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
 				out, err := client.Output(cmd)
 				if err != nil {
@@ -42,22 +43,29 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 					return fmt.Errorf("error getting pods: %v", err)
 				}
 				lines := strings.Split(out, "\n")
+				// there are potentially multiple pods in the lines loop, we will quit processing this obj
+				// only when they are all up, i.e. no non-
+				podCount := 0
+				runningCount := 0
+
 				for _, line := range lines {
+
 					if line == "" {
 						continue
 					}
 					if r.MatchString(line) {
+						podCount++
 						matches := r.FindStringSubmatch(line)
 						podName := matches[1]
 						podState := matches[2]
 						switch podState {
 						case "Running":
 							log.DebugLog(log.DebugLevelMexos, "pod is running", "podName", podName)
+							runningCount++
 						case "Pending":
 							fallthrough
 						case "ContainerCreating":
 							log.DebugLog(log.DebugLevelMexos, "still waiting for pod", "podName", podName, "state", podState)
-							waiting = true
 						default:
 							return fmt.Errorf("Pod is unexpected state: %s", podState)
 						}
@@ -65,18 +73,21 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 						return fmt.Errorf("unable to parse kubectl output: [%s]", line)
 					}
 				}
+				if podCount == runningCount {
+					log.DebugLog(log.DebugLevelMexos, "all pods up", "ii", ii)
+					break
+				}
+				elapsed := time.Since(start)
+				if elapsed >= (time.Minute * 5) {
+					return fmt.Errorf("AppInst is taking too long")
+				}
+				time.Sleep(1 * time.Second)
+			} else {
+				break
 			}
 		}
-		if !waiting {
-			return nil
-		}
-		elapsed := time.Since(start)
-		if elapsed >= (time.Minute * 5) {
-			return fmt.Errorf("AppInst is taking too long")
-		}
-		time.Sleep(1 * time.Second)
 	}
-
+	return nil
 }
 
 func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {

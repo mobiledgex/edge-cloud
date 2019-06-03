@@ -45,7 +45,7 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 		err = k8smgmt.CreateAppInst(client, names, app, appInst)
-		if err != nil {
+		if err == nil {
 			err = k8smgmt.WaitForAppInst(client, names, app)
 		}
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
