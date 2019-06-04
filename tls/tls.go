@@ -29,7 +29,7 @@ func getClientCertificate(tlsCertFile string) (tls.Certificate, error) {
 }
 
 // helper function to get the cert pool
-func getClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
+func GetClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
 	if tlsCertFile == "" {
 		return nil, nil
 	}
@@ -48,34 +48,49 @@ func getClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
 
 // GetTLSClientDialOption gets options needed for TLS connection
 func GetTLSClientDialOption(addr string, tlsCertFile string) (grpc.DialOption, error) {
-	if tlsCertFile != "" {
-		certPool, err := getClientCertPool(tlsCertFile)
-		if err != nil {
-			return nil, err
-		}
-		certificate, err := getClientCertificate(tlsCertFile)
-		if err != nil {
-			return nil, err
-		}
-		serverName := strings.Split(addr, ":")[0]
-
-		fmt.Printf("")
-		transportCreds := credentials.NewTLS(&tls.Config{
-			ServerName:   serverName,
-			Certificates: []tls.Certificate{certificate},
-			RootCAs:      certPool,
-		})
-		return grpc.WithTransportCredentials(transportCreds), nil
-
+	config, err := GetMutualAuthClientConfig(addr, tlsCertFile)
+	if err != nil {
+		return nil, err
 	}
-	///no TLS
-	return grpc.WithInsecure(), nil
+	return GetGrpcDialOption(config), nil
+}
+
+func GetMutualAuthClientConfig(addr string, tlsCertFile string) (*tls.Config, error) {
+	if tlsCertFile == "" {
+		// no TLS
+		return nil, nil
+	}
+
+	certPool, err := GetClientCertPool(tlsCertFile)
+	if err != nil {
+		return nil, err
+	}
+	certificate, err := getClientCertificate(tlsCertFile)
+	if err != nil {
+		return nil, err
+	}
+	serverName := strings.Split(addr, ":")[0]
+
+	return &tls.Config{
+		ServerName:   serverName,
+		Certificates: []tls.Certificate{certificate},
+		RootCAs:      certPool,
+	}, nil
+}
+
+func GetGrpcDialOption(config *tls.Config) grpc.DialOption {
+	if config == nil {
+		// no TLS
+		return grpc.WithInsecure()
+	}
+	transportCreds := credentials.NewTLS(config)
+	return grpc.WithTransportCredentials(transportCreds)
 }
 
 // GetTLSClientConfig gets TLS Config for REST api connection
 func GetTLSClientConfig(addr string, tlsCertFile string) (*tls.Config, error) {
 	if tlsCertFile != "" {
-		certPool, err := getClientCertPool(tlsCertFile)
+		certPool, err := GetClientCertPool(tlsCertFile)
 		if err != nil {
 			return nil, err
 		}
@@ -94,10 +109,10 @@ func GetTLSClientConfig(addr string, tlsCertFile string) (*tls.Config, error) {
 	return nil, nil
 }
 
-// GetTLSServerCreds gets options needed for TLS connection.
+// GetTLSServerCreds gets grpc credentials for the server for
+// mutual authentication.
 // Returns nil credentials is the TLS cert file name is blank
 func GetTLSServerCreds(tlsCertFile string) (credentials.TransportCredentials, error) {
-
 	if tlsCertFile == "" {
 		fmt.Printf("no server TLS credentials\n")
 		return nil, nil
@@ -135,4 +150,14 @@ func GetTLSServerCreds(tlsCertFile string) (credentials.TransportCredentials, er
 		ClientCAs:    certPool,
 	})
 	return creds, nil
+}
+
+// ServerAuthServerCreds gets grpc credentials for the server for
+// server-side authentication.
+func ServerAuthServerCreds(tlsCertFile, tlsKeyFile string) (credentials.TransportCredentials, error) {
+	if tlsCertFile == "" || tlsKeyFile == "" {
+		fmt.Printf("no server TLS credentials\n")
+		return nil, nil
+	}
+	return credentials.NewServerTLSFromFile(tlsCertFile, tlsKeyFile)
 }
