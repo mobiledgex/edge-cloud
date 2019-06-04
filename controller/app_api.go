@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -141,11 +142,21 @@ func updateAppFields(in *edgeproto.App) error {
 		}
 	}
 
-	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER ||
-		in.Deployment == cloudcommon.AppDeploymentTypeHelm {
-		err := cloudcommon.ValidateRegistryPath(in.ImagePath)
-		if err != nil {
-			return err
+	if !cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) &&
+		!*testMode {
+		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER ||
+			in.Deployment == cloudcommon.AppDeploymentTypeHelm {
+			valPrefix := ""
+			parts := strings.Split(in.ImagePath, "/")
+			// Append default registry address for internal image paths
+			if *registryAddr != "" &&
+				len(parts) < 2 || !strings.Contains(parts[0], ".") {
+				valPrefix = *registryAddr + "/"
+			}
+			err := cloudcommon.ValidateRegistryPath(valPrefix + in.ImagePath)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

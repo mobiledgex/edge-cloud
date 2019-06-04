@@ -33,14 +33,10 @@ func MexRegistry(host string) bool {
 	if len(hostname) < 1 {
 		return false
 	}
-	switch hostname[0] {
-	case "docker.mobiledgex.net":
+	if strings.HasSuffix(hostname[0], ".mobiledgex.net") {
 		return true
-	case "registry.mobiledgex.net":
-		return true
-	default:
-		return false
 	}
+	return false
 }
 
 func GetRegistryAuth() *BasicAuth {
@@ -76,9 +72,9 @@ func SendHTTPReq(method, fileUrlPath string, auth interface{}) (*http.Response, 
 	}
 	// Check server response
 	if resp.StatusCode != http.StatusOK {
-		return resp, fmt.Errorf("bad status: %s", resp.Status)
+		return resp, nil
 	}
-	return resp, err
+	return resp, nil
 }
 
 func ValidateRegistryPath(regUrl string) error {
@@ -109,29 +105,31 @@ func ValidateRegistryPath(regUrl string) error {
 	}
 	resp, err := SendHTTPReq("GET", regUrl, basicAuth)
 	if err != nil {
-		if resp != nil && resp.StatusCode == http.StatusUnauthorized {
-			authHeader := resp.Header.Get("Www-Authenticate")
-			if authHeader != "" {
-				// fetch authorization token to access tags
-				authTok := getAuthToken(regUrl, authHeader, basicAuth)
-				if authTok == nil {
-					return fmt.Errorf("Access denied to registry path")
-				}
-				// retry with token
-				resp, err = SendHTTPReq("GET", regUrl, authTok)
-				if err != nil {
-					return fmt.Errorf("Access denied to registry path")
-				}
+		return fmt.Errorf("Invalid registry path")
+	}
+	if resp.StatusCode == http.StatusUnauthorized {
+		// close respone body as we will retry with authtoken
+		resp.Body.Close()
+		authHeader := resp.Header.Get("Www-Authenticate")
+		if authHeader != "" {
+			// fetch authorization token to access tags
+			authTok := getAuthToken(regUrl, authHeader, basicAuth)
+			if authTok == nil {
+				return fmt.Errorf("Access denied to registry path")
 			}
-		}
-		if err != nil {
-			errMsg := ""
-			if resp != nil {
-				errMsg = ": " + http.StatusText(resp.StatusCode)
+			// retry with token
+			resp, err = SendHTTPReq("GET", regUrl, authTok)
+			if err != nil || resp.StatusCode != http.StatusOK {
+				if resp != nil {
+					resp.Body.Close()
+				}
+				return fmt.Errorf("Access denied to registry path")
 			}
-			return fmt.Errorf("Invalid registry path%s", errMsg)
+		} else {
+			return fmt.Errorf("Access denied to registry path")
 		}
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
 		tagsList := RegistryTags{}
 		json.NewDecoder(resp.Body).Decode(&tagsList)
@@ -142,7 +140,7 @@ func ValidateRegistryPath(regUrl string) error {
 		}
 		return fmt.Errorf("Invalid registry tag: %s does not exist", matchTag)
 	}
-	return fmt.Errorf("Invalid registry path")
+	return fmt.Errorf("Invalid registry path: %s", http.StatusText(resp.StatusCode))
 }
 
 func getAuthToken(regUrl, authHeader string, basicAuth *BasicAuth) *TokenAuth {
@@ -172,6 +170,7 @@ func getAuthToken(regUrl, authHeader string, basicAuth *BasicAuth) *TokenAuth {
 		if err != nil {
 			return nil
 		}
+		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
 			authTok := TokenAuth{}
 			json.NewDecoder(resp.Body).Decode(&authTok)

@@ -86,6 +86,13 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	if p.ShortTimeouts {
 		args = append(args, "-shortTimeouts")
 	}
+	if p.RegistryAddr != "" {
+		args = append(args, "-registryAddr")
+		args = append(args, p.RegistryAddr)
+	}
+	if p.TestMode {
+		args = append(args, "-testMode")
+	}
 
 	var err error
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
