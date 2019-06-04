@@ -13,10 +13,13 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 )
 
+// This is half of the default controller AppInst timeout
+var maxWait = 15 * time.Minute
+
 // WaitForAppInst waits for pods to either start or result in an error
 func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App) error {
-	log.DebugLog(log.DebugLevelMexos, "waiting for appinst pods", "app", app.Key.Name)
-
+	// wait half as long as the total controller wait time, which includes all tasks
+	log.DebugLog(log.DebugLevelMexos, "waiting for appinst pods", "appName", app.Key.Name, "maxWait", maxWait)
 	start := time.Now()
 
 	// it might be nicer to pull the state directly rather than parsing it, but the states displayed
@@ -74,12 +77,15 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 					}
 				}
 				if podCount == runningCount {
-					log.DebugLog(log.DebugLevelMexos, "all pods up", "ii", ii)
+					log.DebugLog(log.DebugLevelMexos, "all pods up", "deployment name", deployment.ObjectMeta.Name)
 					break
 				}
 				elapsed := time.Since(start)
-				if elapsed >= (time.Minute * 5) {
-					return fmt.Errorf("AppInst is taking too long")
+				if elapsed >= (maxWait) {
+					// for now we will return no errors when we time out.  In future we will use some other state or status
+					// field to reflect this and employ health checks to track these appinsts
+					log.InfoLog("AppInst wait timed out", "appName", app.Key.Name)
+					break
 				}
 				time.Sleep(1 * time.Second)
 			} else {
