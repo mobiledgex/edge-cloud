@@ -174,7 +174,7 @@ apps:
       name: AcmeAppCo1
     name: vmapp1
     version: "1.0"
-  imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img
+  imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
   imagetype: ImageTypeQcow
   deployment: "vm"
   defaultflavor:
@@ -188,7 +188,7 @@ apps:
       name: AcmeAppCo1
     name: vmapp2
     version: "1.0"
-  imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img
+  imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
   imagetype: ImageTypeQcow
   deployment: "vm"
   defaultflavor:
