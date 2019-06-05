@@ -65,6 +65,10 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		// user forgot to specify location
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
+	if in.PhysicalName == "" {
+		// if physical name is not set, then make it same as virtual name
+		in.PhysicalName = in.Key.Name
+	}
 	_, err := s.store.Create(in, s.sync.syncWait)
 	return err
 }

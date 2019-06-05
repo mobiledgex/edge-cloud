@@ -27,7 +27,9 @@ import (
 var bindAddress = flag.String("apiAddr", "0.0.0.0:55099", "Address to bind")
 var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of controller API")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
+var vaultAddr = flag.String("vaultAddr", "", "Address to vault")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
+var physicalName = flag.String("physicalName", "", "Unique name of the cloudlet")
 var debugLevels = flag.String("d", "", fmt.Sprintf("Comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var hostname = flag.String("hostname", "", "Unique hostname within Cloudlet")
@@ -64,6 +66,12 @@ func main() {
 		// if not specified, platform is derived from operator name
 		*platformName = myCloudlet.Key.OperatorKey.Name
 	}
+	if *physicalName == "" {
+		*physicalName = myCloudlet.Key.Name
+	}
+	if *vaultAddr == "" {
+		log.FatalLog("vaultAddr is not specified")
+	}
 	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key, "platform", *platformName)
 
 	// Load platform implementation.
@@ -88,7 +96,7 @@ func main() {
 
 	go func() {
 		log.DebugLog(log.DebugLevelMexos, "starting to init platform")
-		if err := initPlatform(&myCloudlet); err != nil {
+		if err := initPlatform(&myCloudlet, *physicalName, *vaultAddr); err != nil {
 			log.FatalLog("failed to init platform", "err", err)
 		}
 
@@ -177,13 +185,13 @@ func getPlatform(plat string) (pf.Platform, error) {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
+func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
 	//if err := mexos.FillManifestValues(mf, "platform"); err != nil {
 	//	return err
 	//}
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper)
-	err := platform.Init(&cloudlet.Key)
+	err := platform.Init(&cloudlet.Key, physicalName, vaultAddr)
 	return err
 }
