@@ -15,7 +15,6 @@ import (
 	"time"
 
 	sh "github.com/codeskyblue/go-sh"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/nginx"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
@@ -254,13 +253,25 @@ func CleanupDIND() error {
 		}
 	}
 	// cleanup nginxL7.
+	pscmd := exec.Command("docker", "ps", "-a", "-q", "--filter", "ancestor=nginx")
+	output, err = pscmd.Output()
+	if err != nil {
+		log.Printf("Error running docker ps: %v", err)
+		return err
+	}
+	nginxContainers := strings.Split(string(output), "\n")
 	nginxCmds := []string{"kill", "rm"}
-	for _, cmd := range nginxCmds {
-		killcmd := exec.Command("docker", cmd, nginx.NginxL7Name)
-		output, err = killcmd.CombinedOutput()
-		if err != nil {
-			// not fatal as it may not have been running
-			log.Printf("Error running command: %s on nginx L7 container: %s - %v - %v\n", cmd, nginx.NginxL7Name, string(output), err)
+	for _, nginx := range nginxContainers {
+		if nginx == "" {
+			continue
+		}
+		for _, cmd := range nginxCmds {
+			killcmd := exec.Command("docker", cmd, nginx)
+			output, err = killcmd.CombinedOutput()
+			if err != nil {
+				// not fatal as it may not have been running
+				log.Printf("Error running command: %s on nginx container: %s - %v - %v\n", cmd, nginx, string(output), err)
+			}
 		}
 	}
 	log.Println("done CleanupDIND")
