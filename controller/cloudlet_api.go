@@ -65,7 +65,6 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		// user forgot to specify location
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
-
 	_, err := s.store.Create(in, s.sync.syncWait)
 	return err
 }
