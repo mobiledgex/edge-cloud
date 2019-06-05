@@ -142,7 +142,11 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 		log.DebugLog(log.DebugLevelApi, "Auto-deleting appinst ", "appinst", val.Key.AppKey.Name)
 		cb.Send(&edgeproto.Result{Message: "Autodeleting appinst " + val.Key.AppKey.Name})
 		for {
-			err = s.deleteAppInstInternal(DefCallContext(), val, cb)
+			// ignore CRM errors when deleting dynamic apps as we will be deleting the cluster anyway
+			crmo := edgeproto.CRMOverride_IGNORE_CRM_ERRORS
+			cctx := DefCallContext()
+			cctx.SetOverride(&crmo)
+			err = s.deleteAppInstInternal(cctx, val, cb)
 			if err != nil && err.Error() == "AppInst busy, cannot delete" {
 				spinTime = time.Since(start)
 				if spinTime > DeleteAppInstTimeout {
