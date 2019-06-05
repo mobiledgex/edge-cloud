@@ -98,8 +98,6 @@ message Cloudlet {
   repeated string fields = 1;
   // Unique identifier key
   CloudletKey key = 2 [(gogoproto.nullable) = false];
-  // Physical name of the Cloudlet
-  string physical_name = 9;
   // URI to use to connect to and create and administer the Cloudlet. This is not the URI for applications clients to access their back-end instances.
   string access_uri = 4 [(protogen.test_update) = true];
   // Location of the Cloudlet site

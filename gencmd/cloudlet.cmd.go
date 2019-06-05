@@ -333,14 +333,13 @@ func CloudletInfraPropertiesWriteOutputOne(obj *edgeproto.CloudletInfraPropertie
 	}
 }
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 7)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
 	s = append(s, in.Fields[0])
 	s = append(s, in.Key.OperatorKey.Name)
 	s = append(s, in.Key.Name)
-	s = append(s, in.PhysicalName)
 	s = append(s, in.AccessUri)
 	s = append(s, strconv.FormatFloat(float64(in.Location.Latitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.Longitude), 'e', -1, 32))
@@ -361,11 +360,10 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 }
 
 func CloudletHeaderSlicer() []string {
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 7)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
-	s = append(s, "PhysicalName")
 	s = append(s, "AccessUri")
 	s = append(s, "Location-Latitude")
 	s = append(s, "Location-Longitude")
@@ -1011,7 +1009,6 @@ var CloudletMetricsApiCmds = []*cobra.Command{
 func init() {
 	CloudletFlagSet.StringVar(&CloudletIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.Key.Name, "key-name", "", "Key.Name")
-	CloudletFlagSet.StringVar(&CloudletIn.PhysicalName, "physicalname", "", "PhysicalName")
 	CloudletFlagSet.StringVar(&CloudletIn.AccessUri, "accessuri", "", "AccessUri")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Latitude, "location-latitude", 0, "Location.Latitude")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Longitude, "location-longitude", 0, "Location.Longitude")
@@ -1069,9 +1066,6 @@ func CloudletSetFields() {
 	}
 	if CloudletFlagSet.Lookup("key-name").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "2.2")
-	}
-	if CloudletFlagSet.Lookup("physicalname").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "9")
 	}
 	if CloudletFlagSet.Lookup("accessuri").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "4")
