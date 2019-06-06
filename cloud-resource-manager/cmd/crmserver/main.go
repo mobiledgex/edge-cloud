@@ -29,7 +29,7 @@ var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var vaultAddr = flag.String("vaultAddr", "", "Address to vault")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
-var physicalName = flag.String("physicalName", "", "Unique name of the cloudlet")
+var physicalName = flag.String("physicalName", "", "Physical infrastructure cloudlet name, defaults to cloudlet name in cloudletKey")
 var debugLevels = flag.String("d", "", fmt.Sprintf("Comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var hostname = flag.String("hostname", "", "Unique hostname within Cloudlet")
@@ -68,9 +68,6 @@ func main() {
 	}
 	if *physicalName == "" {
 		*physicalName = myCloudlet.Key.Name
-	}
-	if *vaultAddr == "" {
-		log.FatalLog("vaultAddr is not specified")
 	}
 	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key, "platform", *platformName)
 
