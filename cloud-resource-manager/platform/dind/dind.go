@@ -12,7 +12,7 @@ func (s *Platform) GetType() string {
 	return "dind"
 }
 
-func (s *Platform) Init(key *edgeproto.CloudletKey) error {
+func (s *Platform) Init(key *edgeproto.CloudletKey, physicalName, vaultAddr string) error {
 	// set up L7 load balancer
 	client, err := s.GetPlatformClient(nil)
 	if err != nil {
