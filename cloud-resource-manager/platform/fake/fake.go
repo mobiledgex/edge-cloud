@@ -13,7 +13,7 @@ func (s *Platform) GetType() string {
 	return "fake"
 }
 
-func (s *Platform) Init(key *edgeproto.CloudletKey) error {
+func (s *Platform) Init(key *edgeproto.CloudletKey, physicalName, vaultAddr string) error {
 	log.DebugLog(log.DebugLevelMexos, "running in fake cloudlet mode")
 	return nil
 }
