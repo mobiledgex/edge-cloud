@@ -35,7 +35,6 @@ func (s *ClusterInstInfoCache) SetState(key *ClusterInstKey, state TrackedState)
 	info.Errors = nil
 	info.State = state
 	info.Status = StatusInfo{}
-	log.InfoLog("ClusterInstInfoCache SetState", "state", state)
 	s.Update(&info, 0)
 }
 
