@@ -49,6 +49,7 @@ type Crm struct {
 	Plugin      string
 	TLS         TLSCerts
 	cmd         *exec.Cmd
+	VaultAddr   string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`
