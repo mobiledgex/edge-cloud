@@ -228,7 +228,7 @@ type App struct {
 	DelOpt DeleteType `protobuf:"varint,20,opt,name=del_opt,json=delOpt,proto3,enum=edgeproto.DeleteType" json:"del_opt,omitempty"`
 	// Customization files
 	Configs []*ConfigFile `protobuf:"bytes,21,rep,name=configs" json:"configs,omitempty"`
-	// scale
+	// Run application on all the nodes
 	Scale bool `protobuf:"varint,22,opt,name=scale,proto3" json:"scale,omitempty"`
 }
 

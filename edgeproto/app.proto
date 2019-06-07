@@ -98,7 +98,7 @@ message App {
   DeleteType del_opt = 20 [(protogen.hidetag) = "nocmp"];
   // Customization files
   repeated ConfigFile configs = 21;
-  // scale
+  // Run application on all the nodes
   bool scale = 22;
   // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
