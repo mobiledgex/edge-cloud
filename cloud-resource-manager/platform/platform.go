@@ -10,7 +10,7 @@ type Platform interface {
 	// GetType Returns the Cloudlet's stack type, i.e. Openstack, Azure, etc.
 	GetType() string
 	// Init is called once during CRM startup.
-	Init(key *edgeproto.CloudletKey, infoCache *edgeproto.ClusterInstInfoCache) error
+	Init(key *edgeproto.CloudletKey, physicalName, vaultAddr string, infoCache *edgeproto.ClusterInstInfoCache) error
 	// Gather information about the cloudlet platform.
 	// This includes available resources, flavors, etc.
 	GatherCloudletInfo(info *edgeproto.CloudletInfo) error

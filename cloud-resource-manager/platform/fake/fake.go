@@ -15,7 +15,7 @@ func (s *Platform) GetType() string {
 	return "fake"
 }
 
-func (s *Platform) Init(key *edgeproto.CloudletKey, infoCache *edgeproto.ClusterInstInfoCache) error {
+func (s *Platform) Init(key *edgeproto.CloudletKey, physicalName, vaultAddr string, infoCache *edgeproto.ClusterInstInfoCache) error {
 	log.DebugLog(log.DebugLevelMexos, "running in fake cloudlet mode")
 	s.infoCache = infoCache
 	return nil
