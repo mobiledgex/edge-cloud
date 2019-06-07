@@ -88,7 +88,7 @@ func main() {
 
 	go func() {
 		log.DebugLog(log.DebugLevelMexos, "starting to init platform")
-		if err := initPlatform(&myCloudlet); err != nil {
+		if err := initPlatform(&myCloudlet, &controllerData.ClusterInstInfoCache); err != nil {
 			log.FatalLog("failed to init platform", "err", err)
 		}
 
@@ -177,13 +177,13 @@ func getPlatform(plat string) (pf.Platform, error) {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
+func initPlatform(cloudlet *edgeproto.CloudletInfo, clusterInstCache *edgeproto.ClusterInstInfoCache) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
 	//if err := mexos.FillManifestValues(mf, "platform"); err != nil {
 	//	return err
 	//}
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper)
-	err := platform.Init(&cloudlet.Key)
+	err := platform.Init(&cloudlet.Key, clusterInstCache)
 	return err
 }

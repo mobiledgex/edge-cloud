@@ -85,7 +85,7 @@ func ClusterInstKeyWriteOutputOne(obj *edgeproto.ClusterInstKey) {
 	}
 }
 func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
-	s := make([]string, 0, 14)
+	s := make([]string, 0, 15)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -109,11 +109,17 @@ func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	s = append(s, in.Deployment)
 	s = append(s, strconv.FormatUint(uint64(in.NumMasters), 10))
 	s = append(s, strconv.FormatUint(uint64(in.NumNodes), 10))
+	if in.Status == nil {
+		in.Status = &edgeproto.StatusInfo{}
+	}
+	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
+	s = append(s, in.Status.TaskName)
+	s = append(s, in.Status.StepName)
 	return s
 }
 
 func ClusterInstHeaderSlicer() []string {
-	s := make([]string, 0, 14)
+	s := make([]string, 0, 15)
 	s = append(s, "Fields")
 	s = append(s, "Key-ClusterKey-Name")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
@@ -131,6 +137,9 @@ func ClusterInstHeaderSlicer() []string {
 	s = append(s, "Deployment")
 	s = append(s, "NumMasters")
 	s = append(s, "NumNodes")
+	s = append(s, "Status-TaskNumber")
+	s = append(s, "Status-TaskName")
+	s = append(s, "Status-StepName")
 	return s
 }
 
@@ -158,7 +167,7 @@ func ClusterInstWriteOutputOne(obj *edgeproto.ClusterInst) {
 	}
 }
 func ClusterInstInfoSlicer(in *edgeproto.ClusterInstInfo) []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -169,6 +178,12 @@ func ClusterInstInfoSlicer(in *edgeproto.ClusterInstInfo) []string {
 	s = append(s, in.Key.Developer)
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
 	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
+	if in.Status == nil {
+		in.Status = &edgeproto.StatusInfo{}
+	}
+	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
+	s = append(s, in.Status.TaskName)
+	s = append(s, in.Status.StepName)
 	if in.Errors == nil {
 		in.Errors = make([]string, 1)
 	}
@@ -177,7 +192,7 @@ func ClusterInstInfoSlicer(in *edgeproto.ClusterInstInfo) []string {
 }
 
 func ClusterInstInfoHeaderSlicer() []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	s = append(s, "Fields")
 	s = append(s, "Key-ClusterKey-Name")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
@@ -185,6 +200,9 @@ func ClusterInstInfoHeaderSlicer() []string {
 	s = append(s, "Key-Developer")
 	s = append(s, "NotifyId")
 	s = append(s, "State")
+	s = append(s, "Status-TaskNumber")
+	s = append(s, "Status-TaskName")
+	s = append(s, "Status-StepName")
 	s = append(s, "Errors")
 	return s
 }
@@ -234,6 +252,9 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NodeFlavor = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Status = nil
 	}
 }
 
@@ -560,12 +581,20 @@ func init() {
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Deployment, "deployment", "", "Deployment")
 	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumMasters, "nummasters", 0, "NumMasters")
 	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumNodes, "numnodes", 0, "NumNodes")
+	ClusterInstIn.Status = &edgeproto.StatusInfo{}
+	ClusterInstNoConfigFlagSet.Uint32Var(&ClusterInstIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
+	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
+	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.Status.StepName, "status-stepname", "", "Status.StepName")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.Developer, "key-developer", "", "Key.Developer")
 	ClusterInstInfoFlagSet.Int64Var(&ClusterInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
+	ClusterInstInfoIn.Status = &edgeproto.StatusInfo{}
+	ClusterInstInfoFlagSet.Uint32Var(&ClusterInstInfoIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
+	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
+	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Status.StepName, "status-stepname", "", "Status.StepName")
 	CreateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	DeleteClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	UpdateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
@@ -631,6 +660,15 @@ func ClusterInstSetFields() {
 	if ClusterInstFlagSet.Lookup("numnodes").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "14")
 	}
+	if ClusterInstNoConfigFlagSet.Lookup("status-tasknumber").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "16.1")
+	}
+	if ClusterInstNoConfigFlagSet.Lookup("status-taskname").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "16.2")
+	}
+	if ClusterInstNoConfigFlagSet.Lookup("status-stepname").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "16.3")
+	}
 }
 
 func ClusterInstInfoSetFields() {
@@ -652,6 +690,15 @@ func ClusterInstInfoSetFields() {
 	}
 	if ClusterInstInfoFlagSet.Lookup("state").Changed {
 		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "4")
+	}
+	if ClusterInstInfoNoConfigFlagSet.Lookup("status-tasknumber").Changed {
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "5.1")
+	}
+	if ClusterInstInfoNoConfigFlagSet.Lookup("status-taskname").Changed {
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "5.2")
+	}
+	if ClusterInstInfoNoConfigFlagSet.Lookup("status-stepname").Changed {
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "5.3")
 	}
 }
 

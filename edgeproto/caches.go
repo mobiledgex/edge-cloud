@@ -1,5 +1,7 @@
 package edgeproto
 
+import "github.com/mobiledgex/edge-cloud/log"
+
 // Common extra support code for caches
 
 // GetAppInstsForCloudlets finds all AppInsts associated with the given cloudlets
@@ -32,7 +34,40 @@ func (s *ClusterInstInfoCache) SetState(key *ClusterInstKey, state TrackedState)
 	}
 	info.Errors = nil
 	info.State = state
+	info.Status = &StatusInfo{}
+	log.InfoLog("ClusterInstInfoCache SetState", "state", state)
 	s.Update(&info, 0)
+}
+
+func (s *ClusterInstInfoCache) SetStatusTask(key *ClusterInstKey, taskName string) {
+	info := ClusterInstInfo{}
+	if !s.Get(key, &info) {
+		// we don't want to override the state in the cache if it is not present
+		log.InfoLog("SetStatusTask failed, did not find clusterInst in cache")
+		return
+	}
+	info.Status.setTask(taskName)
+	s.Update(&info, 0)
+}
+
+func (s *ClusterInstInfoCache) SetStatusStep(key *ClusterInstKey, stepName string) {
+	info := ClusterInstInfo{}
+	if !s.Get(key, &info) {
+		// we don't want to override the state in the cache if it is not present
+		log.InfoLog("SetStatusStep failed, did not find clusterInst in cache")
+		return
+	}
+
+	info.Status.setStep(stepName)
+	s.Update(&info, 0)
+}
+
+func (s *ClusterInstInfoCache) ResetStatus(key *ClusterInstKey) {
+	info := ClusterInstInfo{}
+	if !s.Get(key, &info) {
+		// nothing to do
+		return
+	}
 }
 
 func (s *ClusterInstInfoCache) SetError(key *ClusterInstKey, errState TrackedState, err string) {
@@ -52,6 +87,7 @@ func (s *AppInstInfoCache) SetState(key *AppInstKey, state TrackedState) {
 	}
 	info.Errors = nil
 	info.State = state
+	info.Status = &StatusInfo{}
 	s.Update(&info, 0)
 }
 
@@ -64,6 +100,36 @@ func (s *AppInstInfoCache) SetStateRuntime(key *AppInstKey, state TrackedState, 
 	info.State = state
 	info.RuntimeInfo = *rt
 	s.Update(&info, 0)
+}
+
+func (s *AppInstInfoCache) SetStatusTask(key *AppInstKey, taskName string) {
+	info := AppInstInfo{}
+	if !s.Get(key, &info) {
+		// we don't want to override the state in the cache if it is not present
+		log.InfoLog("SetStatusTask failed, did not find clusterInst in cache")
+		return
+	}
+	info.Status.setTask(taskName)
+	s.Update(&info, 0)
+}
+
+func (s *AppInstInfoCache) SetStatusStep(key *AppInstKey, stepName string) {
+	info := AppInstInfo{}
+	if !s.Get(key, &info) {
+		// we don't want to override the state in the cache if it is not present
+		log.InfoLog("SetStatusStep failed, did not find clusterInst in cache")
+		return
+	}
+	info.Status.setStep(stepName)
+	s.Update(&info, 0)
+}
+
+func (s *AppInstInfoCache) ResetStatus(key *AppInstKey) {
+	info := AppInstInfo{}
+	if !s.Get(key, &info) {
+		// nothing to do
+		return
+	}
 }
 
 func (s *AppInstInfoCache) SetError(key *AppInstKey, errState TrackedState, err string) {

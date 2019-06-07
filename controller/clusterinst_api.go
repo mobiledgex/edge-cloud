@@ -278,6 +278,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create ClusterInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(in, edgeproto.TrackedState_READY)
+		//clusterInstApi.cache
+		//cb.Send&edgeproto.Result{Message: "Cluster STATUS"})
 		cb.Send(&edgeproto.Result{Message: "Created ClusterInst successfully"})
 		err = nil
 	}
@@ -547,7 +549,7 @@ func ignoreCRM(cctx *CallContext) bool {
 }
 
 func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update ClusterInst from info", "key", in.Key, "state", in.State)
+	log.DebugLog(log.DebugLevelApi, "Update ClusterInst from info", "key", in.Key, "state", in.State, "status", in.Status)
 	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		inst := edgeproto.ClusterInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -555,8 +557,14 @@ func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
 			return nil
 		}
 		if inst.State == in.State {
-			// already in that state
-			return nil
+			if inst.Status == in.Status {
+				return nil
+			} else {
+				log.DebugLog(log.DebugLevelApi, "status change only")
+				inst.Status = in.Status
+				s.store.STMPut(stm, &inst)
+				return nil
+			}
 		}
 		// please see state_transitions.md
 		if !crmTransitionOk(inst.State, in.State) {
@@ -565,6 +573,7 @@ func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
 			return nil
 		}
 		inst.State = in.State
+		inst.Status = in.Status
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			inst.Errors = in.Errors
 		} else {

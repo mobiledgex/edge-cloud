@@ -10,7 +10,7 @@ type Platform interface {
 	// GetType Returns the Cloudlet's stack type, i.e. Openstack, Azure, etc.
 	GetType() string
 	// Init is called once during CRM startup.
-	Init(key *edgeproto.CloudletKey) error
+	Init(key *edgeproto.CloudletKey, infoCache *edgeproto.ClusterInstInfoCache) error
 	// Gather information about the cloudlet platform.
 	// This includes available resources, flavors, etc.
 	GatherCloudletInfo(info *edgeproto.CloudletInfo) error
@@ -21,7 +21,7 @@ type Platform interface {
 	// Update the cluster
 	UpdateClusterInst(clusterInst *edgeproto.ClusterInst) error
 	// Create an AppInst on a Cluster
-	CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor) error
+	CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, infoCache *edgeproto.AppInstInfoCache) error
 	// Delete an AppInst on a Cluster
 	DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error
 	// Get AppInst runtime information

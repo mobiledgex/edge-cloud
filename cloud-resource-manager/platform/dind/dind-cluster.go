@@ -25,6 +25,8 @@ type DindCluster struct {
 func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst) error {
 	var err error
 
+	s.infoCache.SetStatusTask(&clusterInst.Key, "Create DIND Cluster")
+
 	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
 	log.DebugLog(log.DebugLevelMexos, "creating local dind cluster", "clusterName", clusterName)
 

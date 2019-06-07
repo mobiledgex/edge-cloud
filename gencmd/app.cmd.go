@@ -47,6 +47,7 @@ It has these top-level messages:
 	ClusterInstKey
 	ClusterInst
 	ClusterInstInfo
+	StatusInfo
 	ControllerKey
 	Controller
 	DeveloperKey

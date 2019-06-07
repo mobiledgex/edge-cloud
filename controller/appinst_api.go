@@ -753,6 +753,10 @@ func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
 				// update runtime info
 				inst.RuntimeInfo = in.RuntimeInfo
 				s.store.STMPut(stm, &inst)
+			} else if inst.Status != in.Status {
+				// update status
+				inst.Status = in.Status
+				s.store.STMPut(stm, &inst)
 			}
 			return nil
 		}

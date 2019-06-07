@@ -2,7 +2,6 @@ package crmutil
 
 import (
 	"fmt"
-
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -133,13 +132,11 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 		// create
 		log.DebugLog(log.DebugLevelMexos, "cluster inst create", "clusterInst", clusterInst)
 		// create or update k8s cluster on this cloudlet
-
-		// XXX clusterInstCache has clusterInst but FlavorCache has clusterInst.Flavor.
 		cd.clusterInstInfoState(key, edgeproto.TrackedState_CREATING)
+
 		go func() {
 			var err error
 			log.DebugLog(log.DebugLevelMexos, "create cluster inst", "clusterinst", clusterInst)
-
 			err = cd.platform.CreateClusterInst(&clusterInst)
 			if err != nil {
 				log.DebugLog(log.DebugLevelMexos, "error cluster create fail", "error", err)
@@ -154,7 +151,6 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 	} else if clusterInst.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		log.DebugLog(log.DebugLevelMexos, "cluster inst update", "clusterinst", clusterInst)
 		cd.clusterInstInfoState(key, edgeproto.TrackedState_UPDATING)
-
 		var err error
 		log.DebugLog(log.DebugLevelMexos, "update cluster inst", "clusterinst", clusterInst)
 
@@ -250,7 +246,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "update kube config", "appinst", appInst, "clusterinst", clusterInst)
 
-			err := cd.platform.CreateAppInst(&clusterInst, &app, &appInst, &flavor)
+			err := cd.platform.CreateAppInst(&clusterInst, &app, &appInst, &flavor, &cd.AppInstInfoCache)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_CREATE_ERROR, errstr)
@@ -326,6 +322,8 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 func (cd *ControllerData) clusterInstInfoError(key *edgeproto.ClusterInstKey, errState edgeproto.TrackedState, err string) {
 	cd.ClusterInstInfoCache.SetError(key, errState, err)
 }
+
+var transnum = 1
 
 func (cd *ControllerData) clusterInstInfoState(key *edgeproto.ClusterInstKey, state edgeproto.TrackedState) {
 	cd.ClusterInstInfoCache.SetState(key, state)

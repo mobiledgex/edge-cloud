@@ -58,6 +58,8 @@ message AppInst {
   distributed_match_engine.Timestamp created_at = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // IpAccess for auto-clusters. Ignored otherwise.
   IpAccess auto_cluster_ip_access = 22 [(protogen.backend) = true];
+  //status
+  StatusInfo status = 23 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -67,7 +69,7 @@ message AppInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protocmd.noconfig) = "CloudletLoc,MappedPorts,Liveness,ClusterInstKey.CloudletKey,CreatedAt";
+  option (protocmd.noconfig) = "CloudletLoc,MappedPorts,Liveness,ClusterInstKey.CloudletKey,CreatedAt,Status";
   option (protocmd.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,developer=Key.AppKey.DeveloperKey.Name,cluster=Key.ClusterInstKey.ClusterKey.Name,clusterdeveloper=Key.ClusterInstKey.Developer,cloudlet=Key.ClusterInstKey.CloudletKey.Name,operator=Key.ClusterInstKey.CloudletKey.OperatorKey.Name";
   option (protocmd.notreq) = "Key.ClusterInstKey.Developer";
 }
@@ -129,6 +131,8 @@ message AppInstInfo {
   repeated string errors = 5;
   // AppInst runtime information
   AppInstRuntime runtime_info = 6 [(gogoproto.nullable) = false];
+  // Status of current operation
+  StatusInfo status = 7;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

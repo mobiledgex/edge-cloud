@@ -6,18 +6,21 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
-type Platform struct{}
+type Platform struct {
+	infoCache *edgeproto.ClusterInstInfoCache
+}
 
 func (s *Platform) GetType() string {
 	return "dind"
 }
 
-func (s *Platform) Init(key *edgeproto.CloudletKey) error {
+func (s *Platform) Init(key *edgeproto.CloudletKey, infoCache *edgeproto.ClusterInstInfoCache) error {
 	// set up L7 load balancer
 	client, err := s.GetPlatformClient(nil)
 	if err != nil {
 		return err
 	}
+	s.infoCache = infoCache
 	err = nginx.InitL7Proxy(client, nginx.WithDockerPublishPorts())
 	if err != nil {
 		return err
