@@ -62,14 +62,6 @@ func (s *ClusterInstInfoCache) SetStatusStep(key *ClusterInstKey, stepName strin
 	s.Update(&info, 0)
 }
 
-func (s *ClusterInstInfoCache) ResetStatus(key *ClusterInstKey) {
-	info := ClusterInstInfo{}
-	if !s.Get(key, &info) {
-		// nothing to do
-		return
-	}
-}
-
 func (s *ClusterInstInfoCache) SetError(key *ClusterInstKey, errState TrackedState, err string) {
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
@@ -123,14 +115,6 @@ func (s *AppInstInfoCache) SetStatusStep(key *AppInstKey, stepName string) {
 	}
 	info.Status.setStep(stepName)
 	s.Update(&info, 0)
-}
-
-func (s *AppInstInfoCache) ResetStatus(key *AppInstKey) {
-	info := AppInstInfo{}
-	if !s.Get(key, &info) {
-		// nothing to do
-		return
-	}
 }
 
 func (s *AppInstInfoCache) SetError(key *AppInstKey, errState TrackedState, err string) {
