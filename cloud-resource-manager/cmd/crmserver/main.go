@@ -69,7 +69,7 @@ func main() {
 	if *physicalName == "" {
 		*physicalName = myCloudlet.Key.Name
 	}
-	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key, "platform", *platformName)
+	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key, "platform", *platformName, "physicalName", physicalName)
 
 	// Load platform implementation.
 	var err error
