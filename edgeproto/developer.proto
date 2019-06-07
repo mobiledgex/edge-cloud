@@ -26,15 +26,7 @@ message Developer {
   repeated string fields = 1;
   // Unique identifier key
   DeveloperKey key = 2 [(gogoproto.nullable) = false];
-  // Login name (TODO)
-  string username = 3;
-  // Encrypted password (TODO)
-  string passhash = 4;
-  // Physical address
-  string address = 5;
-  // Contact email
-  string email = 6 [(protogen.test_update) = true];
-  // login cert?
+
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

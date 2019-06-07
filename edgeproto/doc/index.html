@@ -4,7 +4,7 @@
   <head>
     <title>Protocol Documentation</title>
     <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:400,700,400italic"/>
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Ubuntu:400,700,400italic"/>
     <style>
       body {
         width: 60em;
@@ -229,6 +229,10 @@
                   <a href="#edgeproto.AppInstMetrics"><span class="badge">M</span>AppInstMetrics</a>
                 </li>
               
+                <li>
+                  <a href="#edgeproto.AppInstRuntime"><span class="badge">M</span>AppInstRuntime</a>
+                </li>
+              
               
               
               
@@ -242,37 +246,6 @@
               
                 <li>
                   <a href="#edgeproto.AppInstMetricsApi"><span class="badge">S</span>AppInstMetricsApi</a>
-                </li>
-              
-            </ul>
-          </li>
-        
-          
-          <li>
-            <a href="#cloud-resource-manager.proto">cloud-resource-manager.proto</a>
-            <ul>
-              
-                <li>
-                  <a href="#edgeproto.CloudResource"><span class="badge">M</span>CloudResource</a>
-                </li>
-              
-                <li>
-                  <a href="#edgeproto.EdgeCloudApp"><span class="badge">M</span>EdgeCloudApp</a>
-                </li>
-              
-                <li>
-                  <a href="#edgeproto.EdgeCloudApplication"><span class="badge">M</span>EdgeCloudApplication</a>
-                </li>
-              
-              
-                <li>
-                  <a href="#edgeproto.CloudResourceCategory"><span class="badge">E</span>CloudResourceCategory</a>
-                </li>
-              
-              
-              
-                <li>
-                  <a href="#edgeproto.CloudResourceManager"><span class="badge">S</span>CloudResourceManager</a>
                 </li>
               
             </ul>
@@ -309,6 +282,10 @@
               
                 <li>
                   <a href="#edgeproto.CloudletMetrics"><span class="badge">M</span>CloudletMetrics</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.FlavorInfo"><span class="badge">M</span>FlavorInfo</a>
                 </li>
               
                 <li>
@@ -363,29 +340,6 @@
               
                 <li>
                   <a href="#edgeproto.ClusterApi"><span class="badge">S</span>ClusterApi</a>
-                </li>
-              
-            </ul>
-          </li>
-        
-          
-          <li>
-            <a href="#clusterflavor.proto">clusterflavor.proto</a>
-            <ul>
-              
-                <li>
-                  <a href="#edgeproto.ClusterFlavor"><span class="badge">M</span>ClusterFlavor</a>
-                </li>
-              
-                <li>
-                  <a href="#edgeproto.ClusterFlavorKey"><span class="badge">M</span>ClusterFlavorKey</a>
-                </li>
-              
-              
-              
-              
-                <li>
-                  <a href="#edgeproto.ClusterFlavorApi"><span class="badge">S</span>ClusterFlavorApi</a>
                 </li>
               
             </ul>
@@ -494,6 +448,25 @@
               
                 <li>
                   <a href="#edgeproto.DeveloperApi"><span class="badge">S</span>DeveloperApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#exec.proto">exec.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.ExecRequest"><span class="badge">M</span>ExecRequest</a>
+                </li>
+              
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.ExecApi"><span class="badge">S</span>ExecApi</a>
                 </li>
               
             </ul>
@@ -664,6 +637,21 @@
             </ul>
           </li>
         
+          
+          <li>
+            <a href="#version.proto">version.proto</a>
+            <ul>
+              
+              
+                <li>
+                  <a href="#edgeproto.VersionHash"><span class="badge">E</span>VersionHash</a>
+                </li>
+              
+              
+              
+            </ul>
+          </li>
+        
         <li><a href="#scalar-value-types">Scalar Value Types</a></li>
       </ul>
     </div>
@@ -712,13 +700,6 @@
                   <td><a href="#edgeproto.ImageType">ImageType</a></td>
                   <td></td>
                   <td><p>Image type (see ImageType) </p></td>
-                </tr>
-              
-                <tr>
-                  <td>ip_access</td>
-                  <td><a href="#edgeproto.IpAccess">IpAccess</a></td>
-                  <td></td>
-                  <td><p>IP access type </p></td>
                 </tr>
               
                 <tr>
@@ -920,13 +901,13 @@ on behalf of this app, such as FindCloudlet </p></td>
           <tbody>
             
               <tr>
-                <td>NoAutoDelete</td>
+                <td>NO_AUTO_DELETE</td>
                 <td>0</td>
                 <td><p>No autodelete</p></td>
               </tr>
             
               <tr>
-                <td>AutoDelete</td>
+                <td>AUTO_DELETE</td>
                 <td>1</td>
                 <td><p>Autodelete</p></td>
               </tr>
@@ -943,19 +924,19 @@ on behalf of this app, such as FindCloudlet </p></td>
           <tbody>
             
               <tr>
-                <td>ImageTypeUnknown</td>
+                <td>IMAGE_TYPE_UNKNOWN</td>
                 <td>0</td>
                 <td><p>Unknown image type</p></td>
               </tr>
             
               <tr>
-                <td>ImageTypeDocker</td>
+                <td>IMAGE_TYPE_DOCKER</td>
                 <td>1</td>
                 <td><p>Docker container image type compatible with Kubernetes</p></td>
               </tr>
             
               <tr>
-                <td>ImageTypeQCOW</td>
+                <td>IMAGE_TYPE_QCOW</td>
                 <td>2</td>
                 <td><p>QCOW2 virtual machine image type</p></td>
               </tr>
@@ -999,7 +980,7 @@ on behalf of this app, such as FindCloudlet </p></td>
               <tr>
                 <td>ShowApp</td>
                 <td><a href="#edgeproto.App">App</a></td>
-                <td><a href="#edgeproto.App">App</a> stream</td>
+                <td><a href="#edgeproto.App">App</a></td>
                 <td><p>Show applications. Any fields specified will be used to filter results.</p></td>
               </tr>
             
@@ -1053,13 +1034,6 @@ on behalf of this app, such as FindCloudlet </p></td>
                 </tr>
               
                 <tr>
-                  <td>cluster_inst_key</td>
-                  <td><a href="#edgeproto.ClusterInstKey">ClusterInstKey</a></td>
-                  <td></td>
-                  <td><p>Cluster instance on which this is instantiated </p></td>
-                </tr>
-              
-                <tr>
                   <td>liveness</td>
                   <td><a href="#edgeproto.Liveness">Liveness</a></td>
                   <td></td>
@@ -1080,13 +1054,6 @@ External ports should be appended to the Uri for L4 access. </p></td>
                   <td><a href="#edgeproto.FlavorKey">FlavorKey</a></td>
                   <td></td>
                   <td><p>Flavor defining resource requirements </p></td>
-                </tr>
-              
-                <tr>
-                  <td>ip_access</td>
-                  <td><a href="#edgeproto.IpAccess">IpAccess</a></td>
-                  <td></td>
-                  <td><p>IP access type. If set to SharedOrDedicated on App, one will be chosen for AppInst </p></td>
                 </tr>
               
                 <tr>
@@ -1111,10 +1078,10 @@ External ports should be appended to the Uri for L4 access. </p></td>
                 </tr>
               
                 <tr>
-                  <td>allocated_ip</td>
-                  <td><a href="#string">string</a></td>
+                  <td>runtime_info</td>
+                  <td><a href="#edgeproto.AppInstRuntime">AppInstRuntime</a></td>
                   <td></td>
-                  <td><p>allocated IP for dedicated access </p></td>
+                  <td><p>AppInst runtime information </p></td>
                 </tr>
               
                 <tr>
@@ -1122,6 +1089,13 @@ External ports should be appended to the Uri for L4 access. </p></td>
                   <td><a href="#distributed_match_engine.Timestamp">distributed_match_engine.Timestamp</a></td>
                   <td></td>
                   <td><p>Created at time </p></td>
+                </tr>
+              
+                <tr>
+                  <td>auto_cluster_ip_access</td>
+                  <td><a href="#edgeproto.IpAccess">IpAccess</a></td>
+                  <td></td>
+                  <td><p>IpAccess for auto-clusters. Ignored otherwise. </p></td>
                 </tr>
               
             </tbody>
@@ -1175,6 +1149,13 @@ External ports should be appended to the Uri for L4 access. </p></td>
                   <td><p>Any errors trying to create, update, or delete the AppInst on the Cloudlet </p></td>
                 </tr>
               
+                <tr>
+                  <td>runtime_info</td>
+                  <td><a href="#edgeproto.AppInstRuntime">AppInstRuntime</a></td>
+                  <td></td>
+                  <td><p>AppInst runtime information </p></td>
+                </tr>
+              
             </tbody>
           </table>
         
@@ -1199,17 +1180,10 @@ External ports should be appended to the Uri for L4 access. </p></td>
                 </tr>
               
                 <tr>
-                  <td>cloudlet_key</td>
-                  <td><a href="#edgeproto.CloudletKey">CloudletKey</a></td>
+                  <td>cluster_inst_key</td>
+                  <td><a href="#edgeproto.ClusterInstKey">ClusterInstKey</a></td>
                   <td></td>
-                  <td><p>Cloudlet on which the App is instantiated </p></td>
-                </tr>
-              
-                <tr>
-                  <td>id</td>
-                  <td><a href="#fixed64">fixed64</a></td>
-                  <td></td>
-                  <td><p>Instance id for defining multiple instances of the same App on the same Cloudlet (not supported yet) </p></td>
+                  <td><p>Cluster instance on which this is instantiated </p></td>
                 </tr>
               
             </tbody>
@@ -1244,6 +1218,29 @@ redundant unless they&#39;re needed for billing. </p></td>
 
         
       
+        <h3 id="edgeproto.AppInstRuntime">AppInstRuntime</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>container_ids</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>List of container names </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
 
       
 
@@ -1261,28 +1258,28 @@ redundant unless they&#39;re needed for billing. </p></td>
               <tr>
                 <td>CreateAppInst</td>
                 <td><a href="#edgeproto.AppInst">AppInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a> stream</td>
+                <td><a href="#edgeproto.Result">Result</a></td>
                 <td><p>Create an application instance</p></td>
               </tr>
             
               <tr>
                 <td>DeleteAppInst</td>
                 <td><a href="#edgeproto.AppInst">AppInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a> stream</td>
+                <td><a href="#edgeproto.Result">Result</a></td>
                 <td><p>Delete an application instance</p></td>
               </tr>
             
               <tr>
                 <td>UpdateAppInst</td>
                 <td><a href="#edgeproto.AppInst">AppInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a> stream</td>
+                <td><a href="#edgeproto.Result">Result</a></td>
                 <td><p>Update an application instance</p></td>
               </tr>
             
               <tr>
                 <td>ShowAppInst</td>
                 <td><a href="#edgeproto.AppInst">AppInst</a></td>
-                <td><a href="#edgeproto.AppInst">AppInst</a> stream</td>
+                <td><a href="#edgeproto.AppInst">AppInst</a></td>
                 <td><p>Show application instances. Any fields specified will be used to filter results.</p></td>
               </tr>
             
@@ -1300,7 +1297,7 @@ redundant unless they&#39;re needed for billing. </p></td>
               <tr>
                 <td>ShowAppInstInfo</td>
                 <td><a href="#edgeproto.AppInstInfo">AppInstInfo</a></td>
-                <td><a href="#edgeproto.AppInstInfo">AppInstInfo</a> stream</td>
+                <td><a href="#edgeproto.AppInstInfo">AppInstInfo</a></td>
                 <td><p>Show application instances state.</p></td>
               </tr>
             
@@ -1318,373 +1315,8 @@ redundant unless they&#39;re needed for billing. </p></td>
               <tr>
                 <td>ShowAppInstMetrics</td>
                 <td><a href="#edgeproto.AppInstMetrics">AppInstMetrics</a></td>
-                <td><a href="#edgeproto.AppInstMetrics">AppInstMetrics</a> stream</td>
+                <td><a href="#edgeproto.AppInstMetrics">AppInstMetrics</a></td>
                 <td><p>Show application instance metrics.</p></td>
-              </tr>
-            
-          </tbody>
-        </table>
-      
-    
-      
-      <div class="file-heading">
-        <h2 id="cloud-resource-manager.proto">cloud-resource-manager.proto</h2><a href="#title">Top</a>
-      </div>
-      <p></p>
-
-      
-        <h3 id="edgeproto.CloudResource">CloudResource</h3>
-        <p></p>
-
-        
-          <table class="field-table">
-            <thead>
-              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
-            </thead>
-            <tbody>
-              
-                <tr>
-                  <td>name</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>category</td>
-                  <td><a href="#edgeproto.CloudResourceCategory">CloudResourceCategory</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>cloudletKey</td>
-                  <td><a href="#edgeproto.CloudletKey">CloudletKey</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>active</td>
-                  <td><a href="#bool">bool</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>id</td>
-                  <td><a href="#int32">int32</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>access_ip</td>
-                  <td><a href="#bytes">bytes</a></td>
-                  <td></td>
-                  <td><p>AccessIp should come from the cloudlet, but for testing it
-is configurable here. This will need to be removed later. </p></td>
-                </tr>
-              
-            </tbody>
-          </table>
-        
-
-        
-      
-        <h3 id="edgeproto.EdgeCloudApp">EdgeCloudApp</h3>
-        <p></p>
-
-        
-          <table class="field-table">
-            <thead>
-              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
-            </thead>
-            <tbody>
-              
-                <tr>
-                  <td>name</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>repository</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>image</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>cpu</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>memory</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>limitfactor</td>
-                  <td><a href="#int32">int32</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>exposure</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>replicas</td>
-                  <td><a href="#int32">int32</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>context</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>namespace</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>region</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>flavor</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>network</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>appInstKey</td>
-                  <td><a href="#edgeproto.AppInstKey">AppInstKey</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-            </tbody>
-          </table>
-        
-
-        
-      
-        <h3 id="edgeproto.EdgeCloudApplication">EdgeCloudApplication</h3>
-        <p></p>
-
-        
-          <table class="field-table">
-            <thead>
-              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
-            </thead>
-            <tbody>
-              
-                <tr>
-                  <td>manifest</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>kind</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>apps</td>
-                  <td><a href="#edgeproto.EdgeCloudApp">EdgeCloudApp</a></td>
-                  <td>repeated</td>
-                  <td><p> </p></td>
-                </tr>
-              
-            </tbody>
-          </table>
-        
-
-        
-      
-
-      
-        <h3 id="edgeproto.CloudResourceCategory">CloudResourceCategory</h3>
-        <p></p>
-        <table class="enum-table">
-          <thead>
-            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
-          </thead>
-          <tbody>
-            
-              <tr>
-                <td>AllCloudResources</td>
-                <td>0</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>Kubernetes</td>
-                <td>200</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>k8s</td>
-                <td>200</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>Mesos</td>
-                <td>201</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>AWS</td>
-                <td>202</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>GCP</td>
-                <td>203</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>Azure</td>
-                <td>204</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>DigitalOcean</td>
-                <td>205</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>PacketNet</td>
-                <td>206</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>OpenStack</td>
-                <td>300</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>Docker</td>
-                <td>301</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>EKS</td>
-                <td>400</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>AKS</td>
-                <td>402</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>GKS</td>
-                <td>403</td>
-                <td><p></p></td>
-              </tr>
-            
-          </tbody>
-        </table>
-      
-
-      
-
-      
-        <h3 id="edgeproto.CloudResourceManager">CloudResourceManager</h3>
-        <p></p>
-        <table class="enum-table">
-          <thead>
-            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
-          </thead>
-          <tbody>
-            
-              <tr>
-                <td>ListCloudResource</td>
-                <td><a href="#edgeproto.CloudResource">CloudResource</a></td>
-                <td><a href="#edgeproto.CloudResource">CloudResource</a> stream</td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>AddCloudResource</td>
-                <td><a href="#edgeproto.CloudResource">CloudResource</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>DeleteCloudResource</td>
-                <td><a href="#edgeproto.CloudResource">CloudResource</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>DeployApplication</td>
-                <td><a href="#edgeproto.EdgeCloudApplication">EdgeCloudApplication</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
-                <td><p></p></td>
-              </tr>
-            
-              <tr>
-                <td>DeleteApplication</td>
-                <td><a href="#edgeproto.EdgeCloudApplication">EdgeCloudApplication</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
-                <td><p></p></td>
               </tr>
             
           </tbody>
@@ -1716,10 +1348,24 @@ is configurable here. This will need to be removed later. </p></td>
                 </tr>
               
                 <tr>
-                  <td>resourceGroup</td>
+                  <td>resource_group</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>azure resource group </p></td>
+                </tr>
+              
+                <tr>
+                  <td>user_name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>azure username </p></td>
+                </tr>
+              
+                <tr>
+                  <td>password</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>azure password </p></td>
                 </tr>
               
             </tbody>
@@ -1868,6 +1514,13 @@ Certs for accessing cloudlet site </p></td>
                   <td><p>Any errors encountered while making changes to the Cloudlet </p></td>
                 </tr>
               
+                <tr>
+                  <td>flavors</td>
+                  <td><a href="#edgeproto.FlavorInfo">FlavorInfo</a></td>
+                  <td>repeated</td>
+                  <td><p>Supported flavors by the Cloudlet </p></td>
+                </tr>
+              
             </tbody>
           </table>
         
@@ -1885,28 +1538,28 @@ Certs for accessing cloudlet site </p></td>
             <tbody>
               
                 <tr>
-                  <td>DockerRegistry</td>
+                  <td>docker_registry</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>the mex docker registry, e.g.  registry.mobiledgex.net:5000. </p></td>
                 </tr>
               
                 <tr>
-                  <td>DNSZone</td>
+                  <td>dns_zone</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>DNS Zone </p></td>
                 </tr>
               
                 <tr>
-                  <td>RegistryFileServer</td>
+                  <td>registry_file_server</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>registry file server contains files which get pulled on instantiation such as certs and images </p></td>
                 </tr>
               
                 <tr>
-                  <td>CFKey</td>
+                  <td>cf_key</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>Cloudflare key
@@ -1915,7 +1568,7 @@ MEX_CF_KEY </p></td>
                 </tr>
               
                 <tr>
-                  <td>CFUser</td>
+                  <td>cf_user</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>Cloudflare key
@@ -1924,12 +1577,26 @@ MEX_CF_KEY </p></td>
                 </tr>
               
                 <tr>
-                  <td>DockerRegPass</td>
+                  <td>docker_reg_pass</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>Docker registry password
 
 MEX_DOCKER_REG_PASS </p></td>
+                </tr>
+              
+                <tr>
+                  <td>network_scheme</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>network scheme </p></td>
+                </tr>
+              
+                <tr>
+                  <td>docker_registry_secret</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>the name of the docker registry secret, e.g. mexgitlabsecret </p></td>
                 </tr>
               
             </tbody>
@@ -1949,35 +1616,35 @@ MEX_DOCKER_REG_PASS </p></td>
             <tbody>
               
                 <tr>
-                  <td>CloudletKind</td>
+                  <td>cloudlet_kind</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>what kind of infrastructure: Azure, GCP, Openstack </p></td>
                 </tr>
               
                 <tr>
-                  <td>MexosContainerImageName</td>
+                  <td>mexos_container_image_name</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>name and version of the docker image container image that mexos runs in </p></td>
                 </tr>
               
                 <tr>
-                  <td>OpenstackProperties</td>
+                  <td>openstack_properties</td>
                   <td><a href="#edgeproto.OpenStackProperties">OpenStackProperties</a></td>
                   <td></td>
                   <td><p>openstack </p></td>
                 </tr>
               
                 <tr>
-                  <td>AzureProperties</td>
+                  <td>azure_properties</td>
                   <td><a href="#edgeproto.AzureProperties">AzureProperties</a></td>
                   <td></td>
                   <td><p>azure </p></td>
                 </tr>
               
                 <tr>
-                  <td>GcpProperties</td>
+                  <td>gcp_properties</td>
                   <td><a href="#edgeproto.GcpProperties">GcpProperties</a></td>
                   <td></td>
                   <td><p>gcp </p></td>
@@ -2042,6 +1709,50 @@ MEX_DOCKER_REG_PASS </p></td>
 
         
       
+        <h3 id="edgeproto.FlavorInfo">FlavorInfo</h3>
+        <p>Flavor details from the Cloudlet</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Name of the flavor on the Cloudlet </p></td>
+                </tr>
+              
+                <tr>
+                  <td>vcpus</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Number of VCPU cores on the Cloudlet </p></td>
+                </tr>
+              
+                <tr>
+                  <td>ram</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Ram in MB on the Cloudlet </p></td>
+                </tr>
+              
+                <tr>
+                  <td>disk</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Amount of disk in GB on the Cloudlet </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
         <h3 id="edgeproto.GcpProperties">GcpProperties</h3>
         <p></p>
 
@@ -2066,6 +1777,20 @@ MEX_DOCKER_REG_PASS </p></td>
                   <td><p>availability zone </p></td>
                 </tr>
               
+                <tr>
+                  <td>service_account</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>service account to login with </p></td>
+                </tr>
+              
+                <tr>
+                  <td>gcp_auth_key_url</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>vault credentials link </p></td>
+                </tr>
+              
             </tbody>
           </table>
         
@@ -2083,42 +1808,35 @@ MEX_DOCKER_REG_PASS </p></td>
             <tbody>
               
                 <tr>
-                  <td>OSExternalNetworkName</td>
+                  <td>os_external_network_name</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>name of the external network, e.g. external-network-shared </p></td>
                 </tr>
               
                 <tr>
-                  <td>OSImageName</td>
+                  <td>os_image_name</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>openstack image , e.g. mobiledgex </p></td>
                 </tr>
               
                 <tr>
-                  <td>OSExternalRouterName</td>
+                  <td>os_external_router_name</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>openstack router </p></td>
                 </tr>
               
                 <tr>
-                  <td>OSMexNetwork</td>
+                  <td>os_mex_network</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>openstack internal network </p></td>
                 </tr>
               
                 <tr>
-                  <td>OSNetworkScheme</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p>openstack network scheme </p></td>
-                </tr>
-              
-                <tr>
-                  <td>OpenRcVars</td>
+                  <td>open_rc_vars</td>
                   <td><a href="#edgeproto.OpenStackProperties.OpenRcVarsEntry">OpenStackProperties.OpenRcVarsEntry</a></td>
                   <td>repeated</td>
                   <td><p>openrc env vars </p></td>
@@ -2171,31 +1889,31 @@ MEX_DOCKER_REG_PASS </p></td>
           <tbody>
             
               <tr>
-                <td>CloudletStateUnknown</td>
+                <td>CLOUDLET_STATE_UNKNOWN</td>
                 <td>0</td>
                 <td><p>Unknown</p></td>
               </tr>
             
               <tr>
-                <td>CloudletStateErrors</td>
+                <td>CLOUDLET_STATE_ERRORS</td>
                 <td>1</td>
                 <td><p>Create/Delete/Update encountered errors (see Errors field of CloudletInfo)</p></td>
               </tr>
             
               <tr>
-                <td>CloudletStateReady</td>
+                <td>CLOUDLET_STATE_READY</td>
                 <td>2</td>
                 <td><p>Cloudlet is created and ready</p></td>
               </tr>
             
               <tr>
-                <td>CloudletStateOffline</td>
+                <td>CLOUDLET_STATE_OFFLINE</td>
                 <td>3</td>
                 <td><p>Cloudlet is offline (unreachable)</p></td>
               </tr>
             
               <tr>
-                <td>CloudletStateNotPresent</td>
+                <td>CLOUDLET_STATE_NOT_PRESENT</td>
                 <td>4</td>
                 <td><p>Cloudlet is not present</p></td>
               </tr>
@@ -2218,28 +1936,28 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>CreateCloudlet</td>
                 <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
-                <td><a href="#edgeproto.Result">Result</a> stream</td>
+                <td><a href="#edgeproto.Result">Result</a></td>
                 <td><p>Create a Cloudlet</p></td>
               </tr>
             
               <tr>
                 <td>DeleteCloudlet</td>
                 <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
-                <td><a href="#edgeproto.Result">Result</a> stream</td>
+                <td><a href="#edgeproto.Result">Result</a></td>
                 <td><p>Delete a Cloudlet</p></td>
               </tr>
             
               <tr>
                 <td>UpdateCloudlet</td>
                 <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
-                <td><a href="#edgeproto.Result">Result</a> stream</td>
+                <td><a href="#edgeproto.Result">Result</a></td>
                 <td><p>Update a Cloudlet</p></td>
               </tr>
             
               <tr>
                 <td>ShowCloudlet</td>
                 <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
-                <td><a href="#edgeproto.Cloudlet">Cloudlet</a> stream</td>
+                <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
                 <td><p>Show Cloudlets</p></td>
               </tr>
             
@@ -2257,7 +1975,7 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>ShowCloudletInfo</td>
                 <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a></td>
-                <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a> stream</td>
+                <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a></td>
                 <td><p>Show CloudletInfos</p></td>
               </tr>
             
@@ -2289,7 +2007,7 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>ShowCloudletMetrics</td>
                 <td><a href="#edgeproto.CloudletMetrics">CloudletMetrics</a></td>
-                <td><a href="#edgeproto.CloudletMetrics">CloudletMetrics</a> stream</td>
+                <td><a href="#edgeproto.CloudletMetrics">CloudletMetrics</a></td>
                 <td><p>Show Cloudlet metrics</p></td>
               </tr>
             
@@ -2330,7 +2048,7 @@ MEX_DOCKER_REG_PASS </p></td>
               
                 <tr>
                   <td>default_flavor</td>
-                  <td><a href="#edgeproto.ClusterFlavorKey">ClusterFlavorKey</a></td>
+                  <td><a href="#edgeproto.FlavorKey">FlavorKey</a></td>
                   <td></td>
                   <td><p>Default flavor of the Cluster, may be overridden on the ClusterInst </p></td>
                 </tr>
@@ -2409,149 +2127,8 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>ShowCluster</td>
                 <td><a href="#edgeproto.Cluster">Cluster</a></td>
-                <td><a href="#edgeproto.Cluster">Cluster</a> stream</td>
+                <td><a href="#edgeproto.Cluster">Cluster</a></td>
                 <td><p>Show Clusters</p></td>
-              </tr>
-            
-          </tbody>
-        </table>
-      
-    
-      
-      <div class="file-heading">
-        <h2 id="clusterflavor.proto">clusterflavor.proto</h2><a href="#title">Top</a>
-      </div>
-      <p></p>
-
-      
-        <h3 id="edgeproto.ClusterFlavor">ClusterFlavor</h3>
-        <p>ClusterFlavor defines a set of resources for a Cluster. ClusterFlavors should be fairly static objects that are almost never changed, and are only modified by Mobiledgex administrators.</p>
-
-        
-          <table class="field-table">
-            <thead>
-              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
-            </thead>
-            <tbody>
-              
-                <tr>
-                  <td>fields</td>
-                  <td><a href="#string">string</a></td>
-                  <td>repeated</td>
-                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
-                </tr>
-              
-                <tr>
-                  <td>key</td>
-                  <td><a href="#edgeproto.ClusterFlavorKey">ClusterFlavorKey</a></td>
-                  <td></td>
-                  <td><p>Unique key </p></td>
-                </tr>
-              
-                <tr>
-                  <td>node_flavor</td>
-                  <td><a href="#edgeproto.FlavorKey">FlavorKey</a></td>
-                  <td></td>
-                  <td><p>Flavor of each node in the Cluster </p></td>
-                </tr>
-              
-                <tr>
-                  <td>master_flavor</td>
-                  <td><a href="#edgeproto.FlavorKey">FlavorKey</a></td>
-                  <td></td>
-                  <td><p>Flavor of each master node in the Cluster </p></td>
-                </tr>
-              
-                <tr>
-                  <td>num_nodes</td>
-                  <td><a href="#uint32">uint32</a></td>
-                  <td></td>
-                  <td><p>Initial number of nodes in the Cluster </p></td>
-                </tr>
-              
-                <tr>
-                  <td>max_nodes</td>
-                  <td><a href="#uint32">uint32</a></td>
-                  <td></td>
-                  <td><p>Maximum number of nodes allowed in the Cluster (for auto-scaling) </p></td>
-                </tr>
-              
-                <tr>
-                  <td>num_masters</td>
-                  <td><a href="#uint32">uint32</a></td>
-                  <td></td>
-                  <td><p>Number of master nodes in the Cluster </p></td>
-                </tr>
-              
-            </tbody>
-          </table>
-        
-
-        
-      
-        <h3 id="edgeproto.ClusterFlavorKey">ClusterFlavorKey</h3>
-        <p>ClusterFlavorKey uniquely identifies a Cluster Flavor.</p>
-
-        
-          <table class="field-table">
-            <thead>
-              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
-            </thead>
-            <tbody>
-              
-                <tr>
-                  <td>name</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-            </tbody>
-          </table>
-        
-
-        
-      
-
-      
-
-      
-
-      
-        <h3 id="edgeproto.ClusterFlavorApi">ClusterFlavorApi</h3>
-        <p></p>
-        <table class="enum-table">
-          <thead>
-            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
-          </thead>
-          <tbody>
-            
-              <tr>
-                <td>CreateClusterFlavor</td>
-                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
-                <td><p>Create a ClusterFlavor</p></td>
-              </tr>
-            
-              <tr>
-                <td>DeleteClusterFlavor</td>
-                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
-                <td><p>Delete a ClusterFlavor</p></td>
-              </tr>
-            
-              <tr>
-                <td>UpdateClusterFlavor</td>
-                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
-                <td><p>Update a ClusterFlavor</p></td>
-              </tr>
-            
-              <tr>
-                <td>ShowClusterFlavor</td>
-                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
-                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a> stream</td>
-                <td><p>Show ClusterFlavors</p></td>
               </tr>
             
           </tbody>
@@ -2591,9 +2168,9 @@ MEX_DOCKER_REG_PASS </p></td>
               
                 <tr>
                   <td>flavor</td>
-                  <td><a href="#edgeproto.ClusterFlavorKey">ClusterFlavorKey</a></td>
+                  <td><a href="#edgeproto.FlavorKey">FlavorKey</a></td>
                   <td></td>
-                  <td><p>ClusterFlavor of the Cluster </p></td>
+                  <td><p>Node flavor </p></td>
                 </tr>
               
                 <tr>
@@ -2629,6 +2206,48 @@ MEX_DOCKER_REG_PASS </p></td>
                   <td><a href="#edgeproto.CRMOverride">CRMOverride</a></td>
                   <td></td>
                   <td><p>Override actions to CRM </p></td>
+                </tr>
+              
+                <tr>
+                  <td>ip_access</td>
+                  <td><a href="#edgeproto.IpAccess">IpAccess</a></td>
+                  <td></td>
+                  <td><p>IP access type </p></td>
+                </tr>
+              
+                <tr>
+                  <td>allocated_ip</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>allocated IP for dedicated access </p></td>
+                </tr>
+              
+                <tr>
+                  <td>node_flavor</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Cloudlet specific node flavor </p></td>
+                </tr>
+              
+                <tr>
+                  <td>deployment</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Deployment target (kubernetes, docker, kvm, etc) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>num_masters</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>number of masters </p></td>
+                </tr>
+              
+                <tr>
+                  <td>num_nodes</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>number of nodes </p></td>
                 </tr>
               
             </tbody>
@@ -2742,28 +2361,28 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>CreateClusterInst</td>
                 <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a> stream</td>
+                <td><a href="#edgeproto.Result">Result</a></td>
                 <td><p>Create a Cluster instance</p></td>
               </tr>
             
               <tr>
                 <td>DeleteClusterInst</td>
                 <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a> stream</td>
+                <td><a href="#edgeproto.Result">Result</a></td>
                 <td><p>Delete a Cluster instance</p></td>
               </tr>
             
               <tr>
                 <td>UpdateClusterInst</td>
                 <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a> stream</td>
+                <td><a href="#edgeproto.Result">Result</a></td>
                 <td><p>Update a Cluster instance</p></td>
               </tr>
             
               <tr>
                 <td>ShowClusterInst</td>
                 <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
-                <td><a href="#edgeproto.ClusterInst">ClusterInst</a> stream</td>
+                <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
                 <td><p>Show Cluster instances</p></td>
               </tr>
             
@@ -2781,7 +2400,7 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>ShowClusterInstInfo</td>
                 <td><a href="#edgeproto.ClusterInstInfo">ClusterInstInfo</a></td>
-                <td><a href="#edgeproto.ClusterInstInfo">ClusterInstInfo</a> stream</td>
+                <td><a href="#edgeproto.ClusterInstInfo">ClusterInstInfo</a></td>
                 <td><p>Show Cluster instances state.</p></td>
               </tr>
             
@@ -2807,31 +2426,31 @@ MEX_DOCKER_REG_PASS </p></td>
           <tbody>
             
               <tr>
-                <td>NoOverride</td>
+                <td>NO_OVERRIDE</td>
                 <td>0</td>
                 <td><p>No override</p></td>
               </tr>
             
               <tr>
-                <td>IgnoreCRMErrors</td>
+                <td>IGNORE_CRM_ERRORS</td>
                 <td>1</td>
                 <td><p>Ignore errors from CRM</p></td>
               </tr>
             
               <tr>
-                <td>IgnoreCRM</td>
+                <td>IGNORE_CRM</td>
                 <td>2</td>
                 <td><p>Ignore CRM completely (does not inform CRM of operation)</p></td>
               </tr>
             
               <tr>
-                <td>IgnoreTransientState</td>
+                <td>IGNORE_TRANSIENT_STATE</td>
                 <td>3</td>
                 <td><p>Ignore Transient State (only admin should use if CRM crashed)</p></td>
               </tr>
             
               <tr>
-                <td>IgnoreCRMandTransientState</td>
+                <td>IGNORE_CRM_AND_TRANSIENT_STATE</td>
                 <td>4</td>
                 <td><p>Ignore CRM and Transient State</p></td>
               </tr>
@@ -2848,25 +2467,25 @@ MEX_DOCKER_REG_PASS </p></td>
           <tbody>
             
               <tr>
-                <td>IpAccessUnknown</td>
+                <td>IP_ACCESS_UNKNOWN</td>
                 <td>0</td>
                 <td><p>Unknown IP access</p></td>
               </tr>
             
               <tr>
-                <td>IpAccessDedicated</td>
+                <td>IP_ACCESS_DEDICATED</td>
                 <td>1</td>
                 <td><p>Dedicated IP access</p></td>
               </tr>
             
               <tr>
-                <td>IpAccessDedicatedOrShared</td>
+                <td>IP_ACCESS_DEDICATED_OR_SHARED</td>
                 <td>2</td>
                 <td><p>Dedicated or shared (prefers dedicated) access</p></td>
               </tr>
             
               <tr>
-                <td>IpAccessShared</td>
+                <td>IP_ACCESS_SHARED</td>
                 <td>3</td>
                 <td><p>Shared IP access</p></td>
               </tr>
@@ -2883,19 +2502,19 @@ MEX_DOCKER_REG_PASS </p></td>
           <tbody>
             
               <tr>
-                <td>IpSupportUnknown</td>
+                <td>IP_SUPPORT_UNKNOWN</td>
                 <td>0</td>
                 <td><p>Unknown IP support</p></td>
               </tr>
             
               <tr>
-                <td>IpSupportStatic</td>
+                <td>IP_SUPPORT_STATIC</td>
                 <td>1</td>
                 <td><p>Static IP addresses are provided to and managed by Controller</p></td>
               </tr>
             
               <tr>
-                <td>IpSupportDynamic</td>
+                <td>IP_SUPPORT_DYNAMIC</td>
                 <td>2</td>
                 <td><p>IP addresses are dynamically provided by an Operator&#39;s DHCP server</p></td>
               </tr>
@@ -2912,19 +2531,19 @@ MEX_DOCKER_REG_PASS </p></td>
           <tbody>
             
               <tr>
-                <td>LivenessUnknown</td>
+                <td>LIVENESS_UNKNOWN</td>
                 <td>0</td>
                 <td><p>Unknown liveness</p></td>
               </tr>
             
               <tr>
-                <td>LivenessStatic</td>
+                <td>LIVENESS_STATIC</td>
                 <td>1</td>
                 <td><p>Object managed by external entity</p></td>
               </tr>
             
               <tr>
-                <td>LivenessDynamic</td>
+                <td>LIVENESS_DYNAMIC</td>
                 <td>2</td>
                 <td><p>Object managed internally</p></td>
               </tr>
@@ -2941,79 +2560,79 @@ MEX_DOCKER_REG_PASS </p></td>
           <tbody>
             
               <tr>
-                <td>TrackedStateUnknown</td>
+                <td>TRACKED_STATE_UNKNOWN</td>
                 <td>0</td>
                 <td><p>Unknown state</p></td>
               </tr>
             
               <tr>
-                <td>NotPresent</td>
+                <td>NOT_PRESENT</td>
                 <td>1</td>
                 <td><p>Not present (does not exist)</p></td>
               </tr>
             
               <tr>
-                <td>CreateRequested</td>
+                <td>CREATE_REQUESTED</td>
                 <td>2</td>
                 <td><p>Create requested</p></td>
               </tr>
             
               <tr>
-                <td>Creating</td>
+                <td>CREATING</td>
                 <td>3</td>
                 <td><p>Creating</p></td>
               </tr>
             
               <tr>
-                <td>CreateError</td>
+                <td>CREATE_ERROR</td>
                 <td>4</td>
                 <td><p>Create error</p></td>
               </tr>
             
               <tr>
-                <td>Ready</td>
+                <td>READY</td>
                 <td>5</td>
                 <td><p>Ready</p></td>
               </tr>
             
               <tr>
-                <td>UpdateRequested</td>
+                <td>UPDATE_REQUESTED</td>
                 <td>6</td>
                 <td><p>Update requested</p></td>
               </tr>
             
               <tr>
-                <td>Updating</td>
+                <td>UPDATING</td>
                 <td>7</td>
                 <td><p>Updating</p></td>
               </tr>
             
               <tr>
-                <td>UpdateError</td>
+                <td>UPDATE_ERROR</td>
                 <td>8</td>
                 <td><p>Update error</p></td>
               </tr>
             
               <tr>
-                <td>DeleteRequested</td>
+                <td>DELETE_REQUESTED</td>
                 <td>9</td>
                 <td><p>Delete requested</p></td>
               </tr>
             
               <tr>
-                <td>Deleting</td>
+                <td>DELETING</td>
                 <td>10</td>
                 <td><p>Deleting</p></td>
               </tr>
             
               <tr>
-                <td>DeleteError</td>
+                <td>DELETE_ERROR</td>
                 <td>11</td>
                 <td><p>Delete error</p></td>
               </tr>
             
               <tr>
-                <td>DeletePrepare</td>
+                <td>DELETE_PREPARE</td>
                 <td>12</td>
                 <td><p>Delete prepare (extra state used by controller to block other changes)</p></td>
               </tr>
@@ -3103,7 +2722,7 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>ShowController</td>
                 <td><a href="#edgeproto.Controller">Controller</a></td>
-                <td><a href="#edgeproto.Controller">Controller</a> stream</td>
+                <td><a href="#edgeproto.Controller">Controller</a></td>
                 <td><p>Show Controllers</p></td>
               </tr>
             
@@ -3237,8 +2856,105 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>ShowDeveloper</td>
                 <td><a href="#edgeproto.Developer">Developer</a></td>
-                <td><a href="#edgeproto.Developer">Developer</a> stream</td>
+                <td><a href="#edgeproto.Developer">Developer</a></td>
                 <td><p>Show Developers</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="exec.proto">exec.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.ExecRequest">ExecRequest</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>app_inst_key</td>
+                  <td><a href="#edgeproto.AppInstKey">AppInstKey</a></td>
+                  <td></td>
+                  <td><p>Target AppInst </p></td>
+                </tr>
+              
+                <tr>
+                  <td>command</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Command or Shell </p></td>
+                </tr>
+              
+                <tr>
+                  <td>container_id</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>ContainerID is the name of the target container, if applicable </p></td>
+                </tr>
+              
+                <tr>
+                  <td>offer</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>WebRTC Offer </p></td>
+                </tr>
+              
+                <tr>
+                  <td>answer</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>WebRTC Answer </p></td>
+                </tr>
+              
+                <tr>
+                  <td>err</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Any error message </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+
+      
+
+      
+        <h3 id="edgeproto.ExecApi">ExecApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>RunCommand</td>
+                <td><a href="#edgeproto.ExecRequest">ExecRequest</a></td>
+                <td><a href="#edgeproto.ExecRequest">ExecRequest</a></td>
+                <td><p>Run a Command or Shell on a container or VM</p></td>
+              </tr>
+            
+              <tr>
+                <td>SendLocalRequest</td>
+                <td><a href="#edgeproto.ExecRequest">ExecRequest</a></td>
+                <td><a href="#edgeproto.ExecRequest">ExecRequest</a></td>
+                <td><p>This is used internally to forward requests to other Controllers.</p></td>
               </tr>
             
           </tbody>
@@ -3364,7 +3080,7 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>ShowFlavor</td>
                 <td><a href="#edgeproto.Flavor">Flavor</a></td>
-                <td><a href="#edgeproto.Flavor">Flavor</a> stream</td>
+                <td><a href="#edgeproto.Flavor">Flavor</a></td>
                 <td><p>Show Flavors</p></td>
               </tr>
             
@@ -3589,19 +3305,19 @@ MEX_DOCKER_REG_PASS </p></td>
           <tbody>
             
               <tr>
-                <td>NodeUnknown</td>
+                <td>NODE_UNKNOWN</td>
                 <td>0</td>
                 <td><p>Unknown</p></td>
               </tr>
             
               <tr>
-                <td>NodeDME</td>
+                <td>NODE_DME</td>
                 <td>1</td>
                 <td><p>Distributed Matching Engine</p></td>
               </tr>
             
               <tr>
-                <td>NodeCRM</td>
+                <td>NODE_CRM</td>
                 <td>2</td>
                 <td><p>Cloudlet Resource Manager</p></td>
               </tr>
@@ -3624,14 +3340,14 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>ShowNodeLocal</td>
                 <td><a href="#edgeproto.Node">Node</a></td>
-                <td><a href="#edgeproto.Node">Node</a> stream</td>
+                <td><a href="#edgeproto.Node">Node</a></td>
                 <td><p>Show Nodes connected locally only</p></td>
               </tr>
             
               <tr>
                 <td>ShowNode</td>
                 <td><a href="#edgeproto.Node">Node</a></td>
-                <td><a href="#edgeproto.Node">Node</a> stream</td>
+                <td><a href="#edgeproto.Node">Node</a></td>
                 <td><p>Show all Nodes connected to all Controllers</p></td>
               </tr>
             
@@ -3754,8 +3470,8 @@ MEX_DOCKER_REG_PASS </p></td>
             
               <tr>
                 <td>StreamNotice</td>
-                <td><a href="#edgeproto.Notice">Notice</a> stream</td>
-                <td><a href="#edgeproto.Notice">Notice</a> stream</td>
+                <td><a href="#edgeproto.Notice">Notice</a></td>
+                <td><a href="#edgeproto.Notice">Notice</a></td>
                 <td><p>Bidrectional stream for exchanging data between controller and DME/CRM</p></td>
               </tr>
             
@@ -3861,7 +3577,7 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>ShowOperator</td>
                 <td><a href="#edgeproto.Operator">Operator</a></td>
-                <td><a href="#edgeproto.Operator">Operator</a> stream</td>
+                <td><a href="#edgeproto.Operator">Operator</a></td>
                 <td><p>Show Operators</p></td>
               </tr>
             
@@ -3925,7 +3641,8 @@ MEX_DOCKER_REG_PASS </p></td>
                   <td>root_lb_ports</td>
                   <td><a href="#edgeproto.CloudletRefs.RootLbPortsEntry">CloudletRefs.RootLbPortsEntry</a></td>
                   <td>repeated</td>
-                  <td><p>Used ports on root load balancer. Map key is public port, value is unused. </p></td>
+                  <td><p>Used ports on root load balancer. Map key is public port, value is a bitmap for the protocol
+bitmap: bit 0: tcp, bit 1: udp </p></td>
                 </tr>
               
                 <tr>
@@ -4046,7 +3763,7 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>ShowCloudletRefs</td>
                 <td><a href="#edgeproto.CloudletRefs">CloudletRefs</a></td>
-                <td><a href="#edgeproto.CloudletRefs">CloudletRefs</a> stream</td>
+                <td><a href="#edgeproto.CloudletRefs">CloudletRefs</a></td>
                 <td><p>Show CloudletRefs (debug only)</p></td>
               </tr>
             
@@ -4064,7 +3781,7 @@ MEX_DOCKER_REG_PASS </p></td>
               <tr>
                 <td>ShowClusterRefs</td>
                 <td><a href="#edgeproto.ClusterRefs">ClusterRefs</a></td>
-                <td><a href="#edgeproto.ClusterRefs">ClusterRefs</a> stream</td>
+                <td><a href="#edgeproto.ClusterRefs">ClusterRefs</a></td>
                 <td><p>Show ClusterRefs (debug only)</p></td>
               </tr>
             
@@ -4110,6 +3827,67 @@ MEX_DOCKER_REG_PASS </p></td>
         
       
 
+      
+
+      
+
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="version.proto">version.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+
+      
+        <h3 id="edgeproto.VersionHash">VersionHash</h3>
+        <p>Below enum lists hashes as well as corresponding versions</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>HASH_d41d8cd98f00b204e9800998ecf8427e</td>
+                <td>0</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>HASH_b35326df0fcd1550b7c0cf6460c4bca2</td>
+                <td>1</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>HASH_52e6980599cd59bbbd0de8d5f4d53d4b</td>
+                <td>2</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>HASH_00bdcfa956ca4ee42be87abcd8fcaf1c</td>
+                <td>3</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>HASH_0d2d9c0b07ad989e96fb3b3a44924316</td>
+                <td>4</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>HASH_2b79f0b6e402045ee5f68d697b9386ae</td>
+                <td>5</td>
+                <td><p></p></td>
+              </tr>
+            
+          </tbody>
+        </table>
       
 
       

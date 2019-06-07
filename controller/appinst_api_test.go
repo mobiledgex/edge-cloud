@@ -42,7 +42,6 @@ func TestAppInstApi(t *testing.T) {
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(testutil.CloudletInfoData)
-	testutil.InternalClusterCreate(t, &clusterApi, testutil.ClusterData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 	testutil.InternalClusterInstCreate(t, &clusterInstApi, testutil.ClusterInstData)
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
@@ -158,9 +157,9 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 	updater := edgeproto.App{}
 	updater.Key = testutil.AppData[0].Key
 	newPath := "resources: a new config"
-	updater.Config = newPath
+	updater.AuthPublicKey = newPath
 	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, edgeproto.AppFieldConfig)
+	updater.Fields = append(updater.Fields, edgeproto.AppFieldAuthPublicKey)
 	_, err := cAppApi.UpdateApp(ctx, &updater)
 	require.Nil(t, err, "Update app")
 
@@ -228,7 +227,6 @@ func TestAutoClusterInst(t *testing.T) {
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(testutil.CloudletInfoData)
-	testutil.InternalClusterCreate(t, &clusterApi, testutil.ClusterData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 
 	// since cluster inst does not exist, it will be auto-created

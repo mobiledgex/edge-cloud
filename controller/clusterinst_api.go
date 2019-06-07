@@ -23,6 +23,11 @@ type ClusterInstApi struct {
 
 var clusterInstApi = ClusterInstApi{}
 
+const ClusterAutoPrefix = "autocluster"
+
+var ClusterAutoPrefixErr = fmt.Sprintf("Cluster name prefix \"%s\" is reserved",
+	ClusterAutoPrefix)
+
 // TODO: these timeouts should be adjust based on target platform,
 // as some platforms (azure, etc) may take much longer.
 // These timeouts should be at least long enough for the controller and
@@ -209,16 +214,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			initCloudletRefs(&refs, &in.Key.CloudletKey)
 		}
 
-		// cluster does not need to exist.
-		// cluster will eventually be deprecated and removed.
-		var cluster edgeproto.Cluster
-		if clusterApi.store.STMGet(stm, &in.Key.ClusterKey, &cluster) {
-			if in.Flavor.Name == "" {
-				in.Flavor = cluster.DefaultFlavor
-			}
-		}
 		if in.Flavor.Name == "" {
-			return errors.New("No Flavor specified and no default Flavor for Cluster")
+			return errors.New("No Flavor specified")
 		}
 
 		nodeFlavor := edgeproto.Flavor{}

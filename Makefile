@@ -62,6 +62,9 @@ tools:
 doc:
 	make -C edgeproto doc
 
+external-doc:
+	make -C edgeproto external-doc
+
 lint:
 	@ln -sfh $(GOGOPROTO) link-gogo-protobuf
 	@ln -sfh $(GRPCGATEWAY) link-grpc-gateway
