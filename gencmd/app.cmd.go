@@ -188,7 +188,7 @@ func ConfigFileWriteOutputOne(obj *edgeproto.ConfigFile) {
 	}
 }
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 20)
+	s := make([]string, 0, 19)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -202,7 +202,6 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.Config)
 	s = append(s, in.DefaultFlavor.Name)
 	s = append(s, in.Cluster.Name)
-	s = append(s, in.AppTemplate)
 	s = append(s, in.AuthPublicKey)
 	s = append(s, in.Command)
 	s = append(s, in.Annotations)
@@ -225,7 +224,7 @@ func AppSlicer(in *edgeproto.App) []string {
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 20)
+	s := make([]string, 0, 19)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
@@ -236,7 +235,6 @@ func AppHeaderSlicer() []string {
 	s = append(s, "Config")
 	s = append(s, "DefaultFlavor-Name")
 	s = append(s, "Cluster-Name")
-	s = append(s, "AppTemplate")
 	s = append(s, "AuthPublicKey")
 	s = append(s, "Command")
 	s = append(s, "Annotations")
@@ -509,7 +507,6 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.Config, "config", "", "Config")
 	AppFlagSet.StringVar(&AppIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
 	AppFlagSet.StringVar(&AppIn.Cluster.Name, "cluster-name", "", "Cluster.Name")
-	AppFlagSet.StringVar(&AppIn.AppTemplate, "apptemplate", "", "AppTemplate")
 	AppFlagSet.StringVar(&AppIn.AuthPublicKey, "authpublickey", "", "AuthPublicKey")
 	AppFlagSet.StringVar(&AppIn.Command, "command", "", "Command")
 	AppFlagSet.StringVar(&AppIn.Annotations, "annotations", "", "Annotations")
@@ -561,9 +558,6 @@ func AppSetFields() {
 	}
 	if AppFlagSet.Lookup("cluster-name").Changed {
 		AppIn.Fields = append(AppIn.Fields, "10.1")
-	}
-	if AppFlagSet.Lookup("apptemplate").Changed {
-		AppIn.Fields = append(AppIn.Fields, "11")
 	}
 	if AppFlagSet.Lookup("authpublickey").Changed {
 		AppIn.Fields = append(AppIn.Fields, "12")

@@ -76,12 +76,6 @@ message App {
   FlavorKey default_flavor = 9 [(gogoproto.nullable) = false];
   // Cluster field is deprecated. Apps no longer have dependencies on Clusters.
   ClusterKey cluster = 10 [(gogoproto.nullable) = false, (protogen.backend) = true];
-  // Template of kubernetes deployment yaml.
-  // Who/What sets this is TDB, but it should not be directly
-  // exposed to the user, because we do not want to expose
-  // kubernetes to the user. However, because we currently don't have any
-  // other way to set it, for flexibility, for now it is exposed to the user.
-  string app_template = 11;
   // public key used for authentication
   string auth_public_key = 12;
   // Command to start service
