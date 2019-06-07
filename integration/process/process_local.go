@@ -282,6 +282,10 @@ func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--plugin")
 		args = append(args, p.Plugin)
 	}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
