@@ -15,12 +15,6 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusters:
-- key:
-    name: SmallCluster
-  defaultflavor:
-    name: x1.small
-
 clusterinsts:
 - key:
     clusterkey:
@@ -63,29 +57,16 @@ operators:
 developers:
 - key:
     name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
 - key:
     name: AcmeAppCo1
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
 - key:
     name: platos
-  username: sammy
-  passhash: aaaabbbccdfdfad444449941
-  address: 1 Samstreet, platos Town, South Korea
-  email: platos@xxxx.com
 
 cloudlets:
 - key:
     operatorkey:
       name: dmuus
     name: dmuus-cloud-1
-  accessuri: cloud1.tmo
   location:
     latitude: 31
     longitude: -91
@@ -95,7 +76,6 @@ cloudlets:
     operatorkey:
       name: dmuus
     name: dmuus-cloud-2
-  accessuri: cloud2.tmo
   location:
     latitude: 35
     longitude: -95
@@ -105,7 +85,6 @@ cloudlets:
     operatorkey:
       name: azure
     name: azure-cloud-9
-  accessuri: cloud9.azure
   location:
     latitude: 32
     longitude: -91
@@ -115,7 +94,6 @@ cloudlets:
     operatorkey:
       name: gcp
     name: gcp-cloud-10
-  accessuri: cloud2.gcp
   location:
     latitude: 36
     longitude: -95
@@ -133,8 +111,6 @@ apps:
   deployment: "kubernetes"
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   accessports: "tcp:80,http:443,udp:10002"
   androidpackagename: com.acme.someapplication1
   permitsplatformapps: true
@@ -148,8 +124,6 @@ apps:
   deployment: helm
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   accessports: "udp:20002"
   androidpackagename: com.acme.helmApplication
   permitsplatformapps: true
@@ -165,8 +139,6 @@ apps:
   deployment: "kubernetes"
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   accessports: "tcp:64000"
 
 - key:
@@ -179,8 +151,6 @@ apps:
   deployment: "vm"
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SomeCluster
   accessports: "tcp:80,http:443,udp:10002"
   authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
 - key:
@@ -193,8 +163,6 @@ apps:
   deployment: "vm"
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SomeCluster
   accessports: "tcp:80,http:443,udp:10002"
   command: touch "/tmp/test.txt"
 

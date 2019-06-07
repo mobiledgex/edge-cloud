@@ -68,27 +68,19 @@ func DeveloperKeyWriteOutputOne(obj *edgeproto.DeveloperKey) {
 	}
 }
 func DeveloperSlicer(in *edgeproto.Developer) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 2)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
 	s = append(s, in.Fields[0])
 	s = append(s, in.Key.Name)
-	s = append(s, in.Username)
-	s = append(s, in.Passhash)
-	s = append(s, in.Address)
-	s = append(s, in.Email)
 	return s
 }
 
 func DeveloperHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 2)
 	s = append(s, "Fields")
 	s = append(s, "Key-Name")
-	s = append(s, "Username")
-	s = append(s, "Passhash")
-	s = append(s, "Address")
-	s = append(s, "Email")
 	return s
 }
 
@@ -304,10 +296,6 @@ var DeveloperApiCmds = []*cobra.Command{
 
 func init() {
 	DeveloperFlagSet.StringVar(&DeveloperIn.Key.Name, "key-name", "", "Key.Name")
-	DeveloperFlagSet.StringVar(&DeveloperIn.Username, "username", "", "Username")
-	DeveloperFlagSet.StringVar(&DeveloperIn.Passhash, "passhash", "", "Passhash")
-	DeveloperFlagSet.StringVar(&DeveloperIn.Address, "address", "", "Address")
-	DeveloperFlagSet.StringVar(&DeveloperIn.Email, "email", "", "Email")
 	CreateDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
 	DeleteDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
 	UpdateDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
@@ -325,17 +313,5 @@ func DeveloperSetFields() {
 	DeveloperIn.Fields = make([]string, 0)
 	if DeveloperFlagSet.Lookup("key-name").Changed {
 		DeveloperIn.Fields = append(DeveloperIn.Fields, "2.2")
-	}
-	if DeveloperFlagSet.Lookup("username").Changed {
-		DeveloperIn.Fields = append(DeveloperIn.Fields, "3")
-	}
-	if DeveloperFlagSet.Lookup("passhash").Changed {
-		DeveloperIn.Fields = append(DeveloperIn.Fields, "4")
-	}
-	if DeveloperFlagSet.Lookup("address").Changed {
-		DeveloperIn.Fields = append(DeveloperIn.Fields, "5")
-	}
-	if DeveloperFlagSet.Lookup("email").Changed {
-		DeveloperIn.Fields = append(DeveloperIn.Fields, "6")
 	}
 }

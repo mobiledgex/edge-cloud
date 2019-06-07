@@ -67,7 +67,6 @@ func runShow(ctrl *process.Controller, showCmds []string, outputDir string, cmp 
 func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool {
 	var showCmds = []string{
 		"flavors: ShowFlavor",
-		"clusters: ShowCluster",
 		"clusterinsts: ShowClusterInst",
 		"operators: ShowOperator",
 		"developers: ShowDeveloper",
@@ -230,27 +229,6 @@ func runCloudletInfoApi(conn *grpc.ClientConn, ctx context.Context, appdata *edg
 	return nil
 }
 
-func runClusterApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	clusterAPI := edgeproto.NewClusterApiClient(conn)
-	for _, c := range appdata.Clusters {
-		log.Printf("API %v for cluster: %v data %+v", mode, c.Key, c)
-		switch mode {
-		case "create":
-			_, err = clusterAPI.CreateCluster(ctx, &c)
-		case "update":
-			_, err = clusterAPI.UpdateCluster(ctx, &c)
-		case "delete":
-			_, err = clusterAPI.DeleteCluster(ctx, &c)
-		}
-		err = ignoreExpectedErrors(mode, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, c.Key, err)
-		}
-	}
-	return nil
-}
-
 func runAppApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
 	var err error = nil
 	appAPI := edgeproto.NewAppApiClient(conn)
@@ -386,11 +364,6 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in app API %v\n", err)
 				rc = false
 			}
-			err = runClusterApi(ctrlapi, ctx, &appData, api)
-			if err != nil {
-				log.Printf("Error in cluster API %v\n", err)
-				rc = false
-			}
 			err = runCloudletInfoApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in cloudletInfo API %v\n", err)
@@ -442,11 +415,6 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = runCloudletInfoApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in cloudletInfo API %v\n", err)
-				rc = false
-			}
-			err = runClusterApi(ctrlapi, ctx, &appData, api)
-			if err != nil {
-				log.Printf("Error in cluster API %v\n", err)
 				rc = false
 			}
 			err = runAppApi(ctrlapi, ctx, &appData, api)
