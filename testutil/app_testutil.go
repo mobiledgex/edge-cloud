@@ -43,7 +43,6 @@ It has these top-level messages:
 	CloudletInfo
 	CloudletMetrics
 	ClusterKey
-	Cluster
 	ClusterInstKey
 	ClusterInst
 	ClusterInstInfo
