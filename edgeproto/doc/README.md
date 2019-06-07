@@ -1,5 +1,5 @@
 # Protocol Documentation
-<a name="top"></a>
+<a name="top"/>
 
 ## Table of Contents
 
@@ -20,23 +20,13 @@
     - [AppInstInfo](#edgeproto.AppInstInfo)
     - [AppInstKey](#edgeproto.AppInstKey)
     - [AppInstMetrics](#edgeproto.AppInstMetrics)
+    - [AppInstRuntime](#edgeproto.AppInstRuntime)
   
   
   
     - [AppInstApi](#edgeproto.AppInstApi)
     - [AppInstInfoApi](#edgeproto.AppInstInfoApi)
     - [AppInstMetricsApi](#edgeproto.AppInstMetricsApi)
-  
-
-- [cloud-resource-manager.proto](#cloud-resource-manager.proto)
-    - [CloudResource](#edgeproto.CloudResource)
-    - [EdgeCloudApp](#edgeproto.EdgeCloudApp)
-    - [EdgeCloudApplication](#edgeproto.EdgeCloudApplication)
-  
-    - [CloudResourceCategory](#edgeproto.CloudResourceCategory)
-  
-  
-    - [CloudResourceManager](#edgeproto.CloudResourceManager)
   
 
 - [cloudlet.proto](#cloudlet.proto)
@@ -47,6 +37,7 @@
     - [CloudletInfraProperties](#edgeproto.CloudletInfraProperties)
     - [CloudletKey](#edgeproto.CloudletKey)
     - [CloudletMetrics](#edgeproto.CloudletMetrics)
+    - [FlavorInfo](#edgeproto.FlavorInfo)
     - [GcpProperties](#edgeproto.GcpProperties)
     - [OpenStackProperties](#edgeproto.OpenStackProperties)
     - [OpenStackProperties.OpenRcVarsEntry](#edgeproto.OpenStackProperties.OpenRcVarsEntry)
@@ -66,15 +57,6 @@
   
   
     - [ClusterApi](#edgeproto.ClusterApi)
-  
-
-- [clusterflavor.proto](#clusterflavor.proto)
-    - [ClusterFlavor](#edgeproto.ClusterFlavor)
-    - [ClusterFlavorKey](#edgeproto.ClusterFlavorKey)
-  
-  
-  
-    - [ClusterFlavorApi](#edgeproto.ClusterFlavorApi)
   
 
 - [clusterinst.proto](#clusterinst.proto)
@@ -115,6 +97,14 @@
   
   
     - [DeveloperApi](#edgeproto.DeveloperApi)
+  
+
+- [exec.proto](#exec.proto)
+    - [ExecRequest](#edgeproto.ExecRequest)
+  
+  
+  
+    - [ExecApi](#edgeproto.ExecApi)
   
 
 - [flavor.proto](#flavor.proto)
@@ -181,18 +171,25 @@
   
   
 
+- [version.proto](#version.proto)
+  
+    - [VersionHash](#edgeproto.VersionHash)
+  
+  
+  
+
 - [Scalar Value Types](#scalar-value-types)
 
 
 
-<a name="app.proto"></a>
+<a name="app.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## app.proto
 
 
 
-<a name="edgeproto.App"></a>
+<a name="edgeproto.App"/>
 
 ### App
 Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.
@@ -205,7 +202,6 @@ An application in itself is not tied to a Cloudlet, but provides a definition th
 | key | [AppKey](#edgeproto.AppKey) |  | Unique identifier key |
 | image_path | [string](#string) |  | URI from which to download image |
 | image_type | [ImageType](#edgeproto.ImageType) |  | Image type (see ImageType) |
-| ip_access | [IpAccess](#edgeproto.IpAccess) |  | IP access type |
 | access_ports | [string](#string) |  | For Layer4 access, the ports the app listens on. This is a comma separated list of protocol:port pairs, i.e. tcp:80,http:443,udp:10002. Only tcp, udp, and http protocols are supported; tcp and udp are assumed to be L4, and http is assumed to be L7 access. |
 | config | [string](#string) |  | URI of resource to be used to establish config for App. |
 | default_flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Default flavor for the App, may be overridden by the AppInst |
@@ -227,7 +223,7 @@ An application in itself is not tied to a Cloudlet, but provides a definition th
 
 
 
-<a name="edgeproto.AppKey"></a>
+<a name="edgeproto.AppKey"/>
 
 ### AppKey
 AppKey uniquely identifies an Application.
@@ -244,7 +240,7 @@ AppKey uniquely identifies an Application.
 
 
 
-<a name="edgeproto.ConfigFile"></a>
+<a name="edgeproto.ConfigFile"/>
 
 ### ConfigFile
 
@@ -262,28 +258,28 @@ AppKey uniquely identifies an Application.
  
 
 
-<a name="edgeproto.DeleteType"></a>
+<a name="edgeproto.DeleteType"/>
 
 ### DeleteType
 
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| NoAutoDelete | 0 | No autodelete |
-| AutoDelete | 1 | Autodelete |
+| NO_AUTO_DELETE | 0 | No autodelete |
+| AUTO_DELETE | 1 | Autodelete |
 
 
 
-<a name="edgeproto.ImageType"></a>
+<a name="edgeproto.ImageType"/>
 
 ### ImageType
 ImageType specifies the image type of the application.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| ImageTypeUnknown | 0 | Unknown image type |
-| ImageTypeDocker | 1 | Docker container image type compatible with Kubernetes |
-| ImageTypeQCOW | 2 | QCOW2 virtual machine image type |
+| IMAGE_TYPE_UNKNOWN | 0 | Unknown image type |
+| IMAGE_TYPE_DOCKER | 1 | Docker container image type compatible with Kubernetes |
+| IMAGE_TYPE_QCOW | 2 | QCOW2 virtual machine image type |
 
 
  
@@ -291,30 +287,30 @@ ImageType specifies the image type of the application.
  
 
 
-<a name="edgeproto.AppApi"></a>
+<a name="edgeproto.AppApi"/>
 
 ### AppApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| CreateApp | [App](#edgeproto.App) | [Result](#edgeproto.Result) | Create an application |
-| DeleteApp | [App](#edgeproto.App) | [Result](#edgeproto.Result) | Delete an application |
-| UpdateApp | [App](#edgeproto.App) | [Result](#edgeproto.Result) | Update an application |
-| ShowApp | [App](#edgeproto.App) | [App](#edgeproto.App) stream | Show applications. Any fields specified will be used to filter results. |
+| CreateApp | [App](#edgeproto.App) | [Result](#edgeproto.App) | Create an application |
+| DeleteApp | [App](#edgeproto.App) | [Result](#edgeproto.App) | Delete an application |
+| UpdateApp | [App](#edgeproto.App) | [Result](#edgeproto.App) | Update an application |
+| ShowApp | [App](#edgeproto.App) | [App](#edgeproto.App) | Show applications. Any fields specified will be used to filter results. |
 
  
 
 
 
-<a name="app_inst.proto"></a>
+<a name="app_inst.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## app_inst.proto
 
 
 
-<a name="edgeproto.AppInst"></a>
+<a name="edgeproto.AppInst"/>
 
 ### AppInst
 AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
@@ -328,23 +324,22 @@ Many of the fields here are inherited from the App definition. Some are derived,
 | key | [AppInstKey](#edgeproto.AppInstKey) |  | Unique identifier key |
 | cloudlet_loc | [distributed_match_engine.Loc](#distributed_match_engine.Loc) |  | Cached location of the cloudlet |
 | uri | [string](#string) |  | Base FQDN (not really URI) for the App. See Service FQDN for endpoint access. |
-| cluster_inst_key | [ClusterInstKey](#edgeproto.ClusterInstKey) |  | Cluster instance on which this is instantiated |
 | liveness | [Liveness](#edgeproto.Liveness) |  | Liveness of instance (see Liveness) |
 | mapped_ports | [distributed_match_engine.AppPort](#distributed_match_engine.AppPort) | repeated | For instances accessible via a shared load balancer, defines the external ports on the shared load balancer that map to the internal ports External ports should be appended to the Uri for L4 access. |
 | flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Flavor defining resource requirements |
-| ip_access | [IpAccess](#edgeproto.IpAccess) |  | IP access type. If set to SharedOrDedicated on App, one will be chosen for AppInst |
 | state | [TrackedState](#edgeproto.TrackedState) |  | Current state of the AppInst on the Cloudlet |
 | errors | [string](#string) | repeated | Any errors trying to create, update, or delete the AppInst on the Cloudlet |
 | crm_override | [CRMOverride](#edgeproto.CRMOverride) |  | Override actions to CRM |
-| allocated_ip | [string](#string) |  | allocated IP for dedicated access |
+| runtime_info | [AppInstRuntime](#edgeproto.AppInstRuntime) |  | AppInst runtime information |
 | created_at | [distributed_match_engine.Timestamp](#distributed_match_engine.Timestamp) |  | Created at time |
+| auto_cluster_ip_access | [IpAccess](#edgeproto.IpAccess) |  | IpAccess for auto-clusters. Ignored otherwise. |
 
 
 
 
 
 
-<a name="edgeproto.AppInstInfo"></a>
+<a name="edgeproto.AppInstInfo"/>
 
 ### AppInstInfo
 AppInstInfo provides information from the Cloudlet Resource Manager about the state of the AppInst on the Cloudlet. Whereas the AppInst defines the intent of instantiating an App on a Cloudlet, the AppInstInfo defines the current state of trying to apply that intent on the physical resources of the Cloudlet.
@@ -357,13 +352,14 @@ AppInstInfo provides information from the Cloudlet Resource Manager about the st
 | notify_id | [int64](#int64) |  | Id of client assigned by server (internal use only) |
 | state | [TrackedState](#edgeproto.TrackedState) |  | Current state of the AppInst on the Cloudlet |
 | errors | [string](#string) | repeated | Any errors trying to create, update, or delete the AppInst on the Cloudlet |
+| runtime_info | [AppInstRuntime](#edgeproto.AppInstRuntime) |  | AppInst runtime information |
 
 
 
 
 
 
-<a name="edgeproto.AppInstKey"></a>
+<a name="edgeproto.AppInstKey"/>
 
 ### AppInstKey
 AppInstKey uniquely identifies an Application Instance (AppInst) or Application Instance state (AppInstInfo).
@@ -372,15 +368,14 @@ AppInstKey uniquely identifies an Application Instance (AppInst) or Application 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | app_key | [AppKey](#edgeproto.AppKey) |  | App key |
-| cloudlet_key | [CloudletKey](#edgeproto.CloudletKey) |  | Cloudlet on which the App is instantiated |
-| id | [fixed64](#fixed64) |  | Instance id for defining multiple instances of the same App on the same Cloudlet (not supported yet) |
+| cluster_inst_key | [ClusterInstKey](#edgeproto.ClusterInstKey) |  | Cluster instance on which this is instantiated |
 
 
 
 
 
 
-<a name="edgeproto.AppInstMetrics"></a>
+<a name="edgeproto.AppInstMetrics"/>
 
 ### AppInstMetrics
 (TODO) AppInstMetrics provide metrics collected about the application instance on the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.
@@ -394,176 +389,72 @@ AppInstKey uniquely identifies an Application Instance (AppInst) or Application 
 
 
 
- 
+
+<a name="edgeproto.AppInstRuntime"/>
+
+### AppInstRuntime
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| container_ids | [string](#string) | repeated | List of container names |
+
+
+
+
 
  
 
  
 
+ 
 
-<a name="edgeproto.AppInstApi"></a>
+
+<a name="edgeproto.AppInstApi"/>
 
 ### AppInstApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| CreateAppInst | [AppInst](#edgeproto.AppInst) | [Result](#edgeproto.Result) stream | Create an application instance |
-| DeleteAppInst | [AppInst](#edgeproto.AppInst) | [Result](#edgeproto.Result) stream | Delete an application instance |
-| UpdateAppInst | [AppInst](#edgeproto.AppInst) | [Result](#edgeproto.Result) stream | Update an application instance |
-| ShowAppInst | [AppInst](#edgeproto.AppInst) | [AppInst](#edgeproto.AppInst) stream | Show application instances. Any fields specified will be used to filter results. |
+| CreateAppInst | [AppInst](#edgeproto.AppInst) | [Result](#edgeproto.AppInst) | Create an application instance |
+| DeleteAppInst | [AppInst](#edgeproto.AppInst) | [Result](#edgeproto.AppInst) | Delete an application instance |
+| UpdateAppInst | [AppInst](#edgeproto.AppInst) | [Result](#edgeproto.AppInst) | Update an application instance |
+| ShowAppInst | [AppInst](#edgeproto.AppInst) | [AppInst](#edgeproto.AppInst) | Show application instances. Any fields specified will be used to filter results. |
 
 
-<a name="edgeproto.AppInstInfoApi"></a>
+<a name="edgeproto.AppInstInfoApi"/>
 
 ### AppInstInfoApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| ShowAppInstInfo | [AppInstInfo](#edgeproto.AppInstInfo) | [AppInstInfo](#edgeproto.AppInstInfo) stream | Show application instances state. |
+| ShowAppInstInfo | [AppInstInfo](#edgeproto.AppInstInfo) | [AppInstInfo](#edgeproto.AppInstInfo) | Show application instances state. |
 
 
-<a name="edgeproto.AppInstMetricsApi"></a>
+<a name="edgeproto.AppInstMetricsApi"/>
 
 ### AppInstMetricsApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| ShowAppInstMetrics | [AppInstMetrics](#edgeproto.AppInstMetrics) | [AppInstMetrics](#edgeproto.AppInstMetrics) stream | Show application instance metrics. |
+| ShowAppInstMetrics | [AppInstMetrics](#edgeproto.AppInstMetrics) | [AppInstMetrics](#edgeproto.AppInstMetrics) | Show application instance metrics. |
 
  
 
 
 
-<a name="cloud-resource-manager.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cloud-resource-manager.proto
-
-
-
-<a name="edgeproto.CloudResource"></a>
-
-### CloudResource
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-| category | [CloudResourceCategory](#edgeproto.CloudResourceCategory) |  |  |
-| cloudletKey | [CloudletKey](#edgeproto.CloudletKey) |  |  |
-| active | [bool](#bool) |  |  |
-| id | [int32](#int32) |  |  |
-| access_ip | [bytes](#bytes) |  | AccessIp should come from the cloudlet, but for testing it is configurable here. This will need to be removed later. |
-
-
-
-
-
-
-<a name="edgeproto.EdgeCloudApp"></a>
-
-### EdgeCloudApp
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-| repository | [string](#string) |  |  |
-| image | [string](#string) |  |  |
-| cpu | [string](#string) |  |  |
-| memory | [string](#string) |  |  |
-| limitfactor | [int32](#int32) |  |  |
-| exposure | [string](#string) |  |  |
-| replicas | [int32](#int32) |  |  |
-| context | [string](#string) |  |  |
-| namespace | [string](#string) |  |  |
-| region | [string](#string) |  |  |
-| flavor | [string](#string) |  |  |
-| network | [string](#string) |  |  |
-| appInstKey | [AppInstKey](#edgeproto.AppInstKey) |  |  |
-
-
-
-
-
-
-<a name="edgeproto.EdgeCloudApplication"></a>
-
-### EdgeCloudApplication
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| manifest | [string](#string) |  |  |
-| kind | [string](#string) |  |  |
-| apps | [EdgeCloudApp](#edgeproto.EdgeCloudApp) | repeated |  |
-
-
-
-
-
- 
-
-
-<a name="edgeproto.CloudResourceCategory"></a>
-
-### CloudResourceCategory
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| AllCloudResources | 0 |  |
-| Kubernetes | 200 |  |
-| k8s | 200 |  |
-| Mesos | 201 |  |
-| AWS | 202 |  |
-| GCP | 203 |  |
-| Azure | 204 |  |
-| DigitalOcean | 205 |  |
-| PacketNet | 206 |  |
-| OpenStack | 300 |  |
-| Docker | 301 |  |
-| EKS | 400 |  |
-| AKS | 402 |  |
-| GKS | 403 |  |
-
-
- 
-
- 
-
-
-<a name="edgeproto.CloudResourceManager"></a>
-
-### CloudResourceManager
-
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| ListCloudResource | [CloudResource](#edgeproto.CloudResource) | [CloudResource](#edgeproto.CloudResource) stream |  |
-| AddCloudResource | [CloudResource](#edgeproto.CloudResource) | [Result](#edgeproto.Result) |  |
-| DeleteCloudResource | [CloudResource](#edgeproto.CloudResource) | [Result](#edgeproto.Result) |  |
-| DeployApplication | [EdgeCloudApplication](#edgeproto.EdgeCloudApplication) | [Result](#edgeproto.Result) |  |
-| DeleteApplication | [EdgeCloudApplication](#edgeproto.EdgeCloudApplication) | [Result](#edgeproto.Result) |  |
-
- 
-
-
-
-<a name="cloudlet.proto"></a>
+<a name="cloudlet.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## cloudlet.proto
 
 
 
-<a name="edgeproto.AzureProperties"></a>
+<a name="edgeproto.AzureProperties"/>
 
 ### AzureProperties
 
@@ -572,14 +463,16 @@ AppInstKey uniquely identifies an Application Instance (AppInst) or Application 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | location | [string](#string) |  | azure region e.g. uswest2 |
-| resourceGroup | [string](#string) |  | azure resource group |
+| resource_group | [string](#string) |  | azure resource group |
+| user_name | [string](#string) |  | azure username |
+| password | [string](#string) |  | azure password |
 
 
 
 
 
 
-<a name="edgeproto.Cloudlet"></a>
+<a name="edgeproto.Cloudlet"/>
 
 ### Cloudlet
 A Cloudlet is a set of compute resources at a particular location, typically an Operator&#39;s regional data center, or a cell tower. The Cloudlet is managed by a Cloudlet Resource Manager, which communicates with the Mobiledgex Controller and allows AppInsts (application instances) to be instantiated on the Cloudlet.
@@ -603,7 +496,7 @@ Certs for accessing cloudlet site |
 
 
 
-<a name="edgeproto.CloudletInfo"></a>
+<a name="edgeproto.CloudletInfo"/>
 
 ### CloudletInfo
 CloudletInfo provides information from the Cloudlet Resource Manager about the state of the Cloudlet.
@@ -620,13 +513,14 @@ CloudletInfo provides information from the Cloudlet Resource Manager about the s
 | os_max_vcores | [uint64](#uint64) |  | Maximum number of VCPU cores on the Cloudlet |
 | os_max_vol_gb | [uint64](#uint64) |  | Maximum amount of disk in GB on the Cloudlet |
 | errors | [string](#string) | repeated | Any errors encountered while making changes to the Cloudlet |
+| flavors | [FlavorInfo](#edgeproto.FlavorInfo) | repeated | Supported flavors by the Cloudlet |
 
 
 
 
 
 
-<a name="edgeproto.CloudletInfraCommon"></a>
+<a name="edgeproto.CloudletInfraCommon"/>
 
 ### CloudletInfraCommon
 properites common to all cloudlets
@@ -634,25 +528,27 @@ properites common to all cloudlets
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| DockerRegistry | [string](#string) |  | the mex docker registry, e.g. registry.mobiledgex.net:5000. |
-| DNSZone | [string](#string) |  | DNS Zone |
-| RegistryFileServer | [string](#string) |  | registry file server contains files which get pulled on instantiation such as certs and images |
-| CFKey | [string](#string) |  | Cloudflare key
+| docker_registry | [string](#string) |  | the mex docker registry, e.g. registry.mobiledgex.net:5000. |
+| dns_zone | [string](#string) |  | DNS Zone |
+| registry_file_server | [string](#string) |  | registry file server contains files which get pulled on instantiation such as certs and images |
+| cf_key | [string](#string) |  | Cloudflare key
 
 MEX_CF_KEY |
-| CFUser | [string](#string) |  | Cloudflare key
+| cf_user | [string](#string) |  | Cloudflare key
 
 MEX_CF_KEY |
-| DockerRegPass | [string](#string) |  | Docker registry password
+| docker_reg_pass | [string](#string) |  | Docker registry password
 
 MEX_DOCKER_REG_PASS |
+| network_scheme | [string](#string) |  | network scheme |
+| docker_registry_secret | [string](#string) |  | the name of the docker registry secret, e.g. mexgitlabsecret |
 
 
 
 
 
 
-<a name="edgeproto.CloudletInfraProperties"></a>
+<a name="edgeproto.CloudletInfraProperties"/>
 
 ### CloudletInfraProperties
 
@@ -660,18 +556,18 @@ MEX_DOCKER_REG_PASS |
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| CloudletKind | [string](#string) |  | what kind of infrastructure: Azure, GCP, Openstack |
-| MexosContainerImageName | [string](#string) |  | name and version of the docker image container image that mexos runs in |
-| OpenstackProperties | [OpenStackProperties](#edgeproto.OpenStackProperties) |  | openstack |
-| AzureProperties | [AzureProperties](#edgeproto.AzureProperties) |  | azure |
-| GcpProperties | [GcpProperties](#edgeproto.GcpProperties) |  | gcp |
+| cloudlet_kind | [string](#string) |  | what kind of infrastructure: Azure, GCP, Openstack |
+| mexos_container_image_name | [string](#string) |  | name and version of the docker image container image that mexos runs in |
+| openstack_properties | [OpenStackProperties](#edgeproto.OpenStackProperties) |  | openstack |
+| azure_properties | [AzureProperties](#edgeproto.AzureProperties) |  | azure |
+| gcp_properties | [GcpProperties](#edgeproto.GcpProperties) |  | gcp |
 
 
 
 
 
 
-<a name="edgeproto.CloudletKey"></a>
+<a name="edgeproto.CloudletKey"/>
 
 ### CloudletKey
 CloudletKey uniquely identifies a Cloudlet.
@@ -687,7 +583,7 @@ CloudletKey uniquely identifies a Cloudlet.
 
 
 
-<a name="edgeproto.CloudletMetrics"></a>
+<a name="edgeproto.CloudletMetrics"/>
 
 ### CloudletMetrics
 (TODO) CloudletMetrics provide metrics collected about the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.
@@ -702,7 +598,25 @@ CloudletKey uniquely identifies a Cloudlet.
 
 
 
-<a name="edgeproto.GcpProperties"></a>
+<a name="edgeproto.FlavorInfo"/>
+
+### FlavorInfo
+Flavor details from the Cloudlet
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | Name of the flavor on the Cloudlet |
+| vcpus | [uint64](#uint64) |  | Number of VCPU cores on the Cloudlet |
+| ram | [uint64](#uint64) |  | Ram in MB on the Cloudlet |
+| disk | [uint64](#uint64) |  | Amount of disk in GB on the Cloudlet |
+
+
+
+
+
+
+<a name="edgeproto.GcpProperties"/>
 
 ### GcpProperties
 
@@ -712,13 +626,15 @@ CloudletKey uniquely identifies a Cloudlet.
 | ----- | ---- | ----- | ----------- |
 | project | [string](#string) |  | gcp project for billing |
 | zone | [string](#string) |  | availability zone |
+| service_account | [string](#string) |  | service account to login with |
+| gcp_auth_key_url | [string](#string) |  | vault credentials link |
 
 
 
 
 
 
-<a name="edgeproto.OpenStackProperties"></a>
+<a name="edgeproto.OpenStackProperties"/>
 
 ### OpenStackProperties
 
@@ -726,19 +642,18 @@ CloudletKey uniquely identifies a Cloudlet.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| OSExternalNetworkName | [string](#string) |  | name of the external network, e.g. external-network-shared |
-| OSImageName | [string](#string) |  | openstack image , e.g. mobiledgex |
-| OSExternalRouterName | [string](#string) |  | openstack router |
-| OSMexNetwork | [string](#string) |  | openstack internal network |
-| OSNetworkScheme | [string](#string) |  | openstack network scheme |
-| OpenRcVars | [OpenStackProperties.OpenRcVarsEntry](#edgeproto.OpenStackProperties.OpenRcVarsEntry) | repeated | openrc env vars |
+| os_external_network_name | [string](#string) |  | name of the external network, e.g. external-network-shared |
+| os_image_name | [string](#string) |  | openstack image , e.g. mobiledgex |
+| os_external_router_name | [string](#string) |  | openstack router |
+| os_mex_network | [string](#string) |  | openstack internal network |
+| open_rc_vars | [OpenStackProperties.OpenRcVarsEntry](#edgeproto.OpenStackProperties.OpenRcVarsEntry) | repeated | openrc env vars |
 
 
 
 
 
 
-<a name="edgeproto.OpenStackProperties.OpenRcVarsEntry"></a>
+<a name="edgeproto.OpenStackProperties.OpenRcVarsEntry"/>
 
 ### OpenStackProperties.OpenRcVarsEntry
 
@@ -756,18 +671,18 @@ CloudletKey uniquely identifies a Cloudlet.
  
 
 
-<a name="edgeproto.CloudletState"></a>
+<a name="edgeproto.CloudletState"/>
 
 ### CloudletState
 CloudletState is the state of the Cloudlet.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| CloudletStateUnknown | 0 | Unknown |
-| CloudletStateErrors | 1 | Create/Delete/Update encountered errors (see Errors field of CloudletInfo) |
-| CloudletStateReady | 2 | Cloudlet is created and ready |
-| CloudletStateOffline | 3 | Cloudlet is offline (unreachable) |
-| CloudletStateNotPresent | 4 | Cloudlet is not present |
+| CLOUDLET_STATE_UNKNOWN | 0 | Unknown |
+| CLOUDLET_STATE_ERRORS | 1 | Create/Delete/Update encountered errors (see Errors field of CloudletInfo) |
+| CLOUDLET_STATE_READY | 2 | Cloudlet is created and ready |
+| CLOUDLET_STATE_OFFLINE | 3 | Cloudlet is offline (unreachable) |
+| CLOUDLET_STATE_NOT_PRESENT | 4 | Cloudlet is not present |
 
 
  
@@ -775,52 +690,52 @@ CloudletState is the state of the Cloudlet.
  
 
 
-<a name="edgeproto.CloudletApi"></a>
+<a name="edgeproto.CloudletApi"/>
 
 ### CloudletApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| CreateCloudlet | [Cloudlet](#edgeproto.Cloudlet) | [Result](#edgeproto.Result) stream | Create a Cloudlet |
-| DeleteCloudlet | [Cloudlet](#edgeproto.Cloudlet) | [Result](#edgeproto.Result) stream | Delete a Cloudlet |
-| UpdateCloudlet | [Cloudlet](#edgeproto.Cloudlet) | [Result](#edgeproto.Result) stream | Update a Cloudlet |
-| ShowCloudlet | [Cloudlet](#edgeproto.Cloudlet) | [Cloudlet](#edgeproto.Cloudlet) stream | Show Cloudlets |
+| CreateCloudlet | [Cloudlet](#edgeproto.Cloudlet) | [Result](#edgeproto.Cloudlet) | Create a Cloudlet |
+| DeleteCloudlet | [Cloudlet](#edgeproto.Cloudlet) | [Result](#edgeproto.Cloudlet) | Delete a Cloudlet |
+| UpdateCloudlet | [Cloudlet](#edgeproto.Cloudlet) | [Result](#edgeproto.Cloudlet) | Update a Cloudlet |
+| ShowCloudlet | [Cloudlet](#edgeproto.Cloudlet) | [Cloudlet](#edgeproto.Cloudlet) | Show Cloudlets |
 
 
-<a name="edgeproto.CloudletInfoApi"></a>
+<a name="edgeproto.CloudletInfoApi"/>
 
 ### CloudletInfoApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| ShowCloudletInfo | [CloudletInfo](#edgeproto.CloudletInfo) | [CloudletInfo](#edgeproto.CloudletInfo) stream | Show CloudletInfos |
-| InjectCloudletInfo | [CloudletInfo](#edgeproto.CloudletInfo) | [Result](#edgeproto.Result) | Inject (create) a CloudletInfo for regression testing |
-| EvictCloudletInfo | [CloudletInfo](#edgeproto.CloudletInfo) | [Result](#edgeproto.Result) | Evict (delete) a CloudletInfo for regression testing |
+| ShowCloudletInfo | [CloudletInfo](#edgeproto.CloudletInfo) | [CloudletInfo](#edgeproto.CloudletInfo) | Show CloudletInfos |
+| InjectCloudletInfo | [CloudletInfo](#edgeproto.CloudletInfo) | [Result](#edgeproto.CloudletInfo) | Inject (create) a CloudletInfo for regression testing |
+| EvictCloudletInfo | [CloudletInfo](#edgeproto.CloudletInfo) | [Result](#edgeproto.CloudletInfo) | Evict (delete) a CloudletInfo for regression testing |
 
 
-<a name="edgeproto.CloudletMetricsApi"></a>
+<a name="edgeproto.CloudletMetricsApi"/>
 
 ### CloudletMetricsApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| ShowCloudletMetrics | [CloudletMetrics](#edgeproto.CloudletMetrics) | [CloudletMetrics](#edgeproto.CloudletMetrics) stream | Show Cloudlet metrics |
+| ShowCloudletMetrics | [CloudletMetrics](#edgeproto.CloudletMetrics) | [CloudletMetrics](#edgeproto.CloudletMetrics) | Show Cloudlet metrics |
 
  
 
 
 
-<a name="cluster.proto"></a>
+<a name="cluster.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## cluster.proto
 
 
 
-<a name="edgeproto.Cluster"></a>
+<a name="edgeproto.Cluster"/>
 
 ### Cluster
 Clusters define a set of resources that are provided to one or more Apps tied to the cluster. The set of resources is defined by the Cluster flavor. The Cluster definition here is analogous to a Kubernetes cluster.
@@ -832,7 +747,7 @@ In comparison to ClusterFlavors which are fairly static and controller by admini
 | ----- | ---- | ----- | ----------- |
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
 | key | [ClusterKey](#edgeproto.ClusterKey) |  | Unique key |
-| default_flavor | [ClusterFlavorKey](#edgeproto.ClusterFlavorKey) |  | Default flavor of the Cluster, may be overridden on the ClusterInst |
+| default_flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Default flavor of the Cluster, may be overridden on the ClusterInst |
 | auto | [bool](#bool) |  | Auto is set to true when automatically created by back-end (internal use only) |
 
 
@@ -840,7 +755,7 @@ In comparison to ClusterFlavors which are fairly static and controller by admini
 
 
 
-<a name="edgeproto.ClusterKey"></a>
+<a name="edgeproto.ClusterKey"/>
 
 ### ClusterKey
 ClusterKey uniquely identifies a Cluster.
@@ -861,95 +776,30 @@ ClusterKey uniquely identifies a Cluster.
  
 
 
-<a name="edgeproto.ClusterApi"></a>
+<a name="edgeproto.ClusterApi"/>
 
 ### ClusterApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| CreateCluster | [Cluster](#edgeproto.Cluster) | [Result](#edgeproto.Result) | Create a Cluster |
-| DeleteCluster | [Cluster](#edgeproto.Cluster) | [Result](#edgeproto.Result) | Delete a Cluster |
-| UpdateCluster | [Cluster](#edgeproto.Cluster) | [Result](#edgeproto.Result) | Update a Cluster |
-| ShowCluster | [Cluster](#edgeproto.Cluster) | [Cluster](#edgeproto.Cluster) stream | Show Clusters |
+| CreateCluster | [Cluster](#edgeproto.Cluster) | [Result](#edgeproto.Cluster) | Create a Cluster |
+| DeleteCluster | [Cluster](#edgeproto.Cluster) | [Result](#edgeproto.Cluster) | Delete a Cluster |
+| UpdateCluster | [Cluster](#edgeproto.Cluster) | [Result](#edgeproto.Cluster) | Update a Cluster |
+| ShowCluster | [Cluster](#edgeproto.Cluster) | [Cluster](#edgeproto.Cluster) | Show Clusters |
 
  
 
 
 
-<a name="clusterflavor.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## clusterflavor.proto
-
-
-
-<a name="edgeproto.ClusterFlavor"></a>
-
-### ClusterFlavor
-ClusterFlavor defines a set of resources for a Cluster. ClusterFlavors should be fairly static objects that are almost never changed, and are only modified by Mobiledgex administrators.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
-| key | [ClusterFlavorKey](#edgeproto.ClusterFlavorKey) |  | Unique key |
-| node_flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Flavor of each node in the Cluster |
-| master_flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Flavor of each master node in the Cluster |
-| num_nodes | [uint32](#uint32) |  | Initial number of nodes in the Cluster |
-| max_nodes | [uint32](#uint32) |  | Maximum number of nodes allowed in the Cluster (for auto-scaling) |
-| num_masters | [uint32](#uint32) |  | Number of master nodes in the Cluster |
-
-
-
-
-
-
-<a name="edgeproto.ClusterFlavorKey"></a>
-
-### ClusterFlavorKey
-ClusterFlavorKey uniquely identifies a Cluster Flavor.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-
-
-
-
-
- 
-
- 
-
- 
-
-
-<a name="edgeproto.ClusterFlavorApi"></a>
-
-### ClusterFlavorApi
-
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| CreateClusterFlavor | [ClusterFlavor](#edgeproto.ClusterFlavor) | [Result](#edgeproto.Result) | Create a ClusterFlavor |
-| DeleteClusterFlavor | [ClusterFlavor](#edgeproto.ClusterFlavor) | [Result](#edgeproto.Result) | Delete a ClusterFlavor |
-| UpdateClusterFlavor | [ClusterFlavor](#edgeproto.ClusterFlavor) | [Result](#edgeproto.Result) | Update a ClusterFlavor |
-| ShowClusterFlavor | [ClusterFlavor](#edgeproto.ClusterFlavor) | [ClusterFlavor](#edgeproto.ClusterFlavor) stream | Show ClusterFlavors |
-
- 
-
-
-
-<a name="clusterinst.proto"></a>
+<a name="clusterinst.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## clusterinst.proto
 
 
 
-<a name="edgeproto.ClusterInst"></a>
+<a name="edgeproto.ClusterInst"/>
 
 ### ClusterInst
 ClusterInst is an instance of a Cluster on a Cloudlet. It is defined by a Cluster plus a Cloudlet key. This separation of the definition of the Cluster versus its instance is unique to Mobiledgex, and allows the Developer to provide the Cluster definition, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
@@ -960,19 +810,25 @@ When a Cluster is instantiated on a Cloudlet, the user may override the default 
 | ----- | ---- | ----- | ----------- |
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
 | key | [ClusterInstKey](#edgeproto.ClusterInstKey) |  | Unique key |
-| flavor | [ClusterFlavorKey](#edgeproto.ClusterFlavorKey) |  | ClusterFlavor of the Cluster |
+| flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Node flavor |
 | liveness | [Liveness](#edgeproto.Liveness) |  | Liveness of instance (see Liveness) |
 | auto | [bool](#bool) |  | Auto is set to true when automatically created by back-end (internal use only) |
 | state | [TrackedState](#edgeproto.TrackedState) |  | State of the cluster instance |
 | errors | [string](#string) | repeated | Any errors trying to create, update, or delete the ClusterInst on the Cloudlet. |
 | crm_override | [CRMOverride](#edgeproto.CRMOverride) |  | Override actions to CRM |
+| ip_access | [IpAccess](#edgeproto.IpAccess) |  | IP access type |
+| allocated_ip | [string](#string) |  | allocated IP for dedicated access |
+| node_flavor | [string](#string) |  | Cloudlet specific node flavor |
+| deployment | [string](#string) |  | Deployment target (kubernetes, docker, kvm, etc) |
+| num_masters | [uint32](#uint32) |  | number of masters |
+| num_nodes | [uint32](#uint32) |  | number of nodes |
 
 
 
 
 
 
-<a name="edgeproto.ClusterInstInfo"></a>
+<a name="edgeproto.ClusterInstInfo"/>
 
 ### ClusterInstInfo
 ClusterInstInfo provides information from the Cloudlet Resource Manager about the state of the ClusterInst on the Cloudlet. Whereas the ClusterInst defines the intent of instantiating a Cluster on a Cloudlet, the ClusterInstInfo defines the current state of trying to apply that intent on the physical resources of the Cloudlet.
@@ -991,7 +847,7 @@ ClusterInstInfo provides information from the Cloudlet Resource Manager about th
 
 
 
-<a name="edgeproto.ClusterInstKey"></a>
+<a name="edgeproto.ClusterInstKey"/>
 
 ### ClusterInstKey
 ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster Instance state (ClusterInstInfo).
@@ -1014,33 +870,33 @@ ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster I
  
 
 
-<a name="edgeproto.ClusterInstApi"></a>
+<a name="edgeproto.ClusterInstApi"/>
 
 ### ClusterInstApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| CreateClusterInst | [ClusterInst](#edgeproto.ClusterInst) | [Result](#edgeproto.Result) stream | Create a Cluster instance |
-| DeleteClusterInst | [ClusterInst](#edgeproto.ClusterInst) | [Result](#edgeproto.Result) stream | Delete a Cluster instance |
-| UpdateClusterInst | [ClusterInst](#edgeproto.ClusterInst) | [Result](#edgeproto.Result) stream | Update a Cluster instance |
-| ShowClusterInst | [ClusterInst](#edgeproto.ClusterInst) | [ClusterInst](#edgeproto.ClusterInst) stream | Show Cluster instances |
+| CreateClusterInst | [ClusterInst](#edgeproto.ClusterInst) | [Result](#edgeproto.ClusterInst) | Create a Cluster instance |
+| DeleteClusterInst | [ClusterInst](#edgeproto.ClusterInst) | [Result](#edgeproto.ClusterInst) | Delete a Cluster instance |
+| UpdateClusterInst | [ClusterInst](#edgeproto.ClusterInst) | [Result](#edgeproto.ClusterInst) | Update a Cluster instance |
+| ShowClusterInst | [ClusterInst](#edgeproto.ClusterInst) | [ClusterInst](#edgeproto.ClusterInst) | Show Cluster instances |
 
 
-<a name="edgeproto.ClusterInstInfoApi"></a>
+<a name="edgeproto.ClusterInstInfoApi"/>
 
 ### ClusterInstInfoApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| ShowClusterInstInfo | [ClusterInstInfo](#edgeproto.ClusterInstInfo) | [ClusterInstInfo](#edgeproto.ClusterInstInfo) stream | Show Cluster instances state. |
+| ShowClusterInstInfo | [ClusterInstInfo](#edgeproto.ClusterInstInfo) | [ClusterInstInfo](#edgeproto.ClusterInstInfo) | Show Cluster instances state. |
 
  
 
 
 
-<a name="common.proto"></a>
+<a name="common.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## common.proto
@@ -1049,7 +905,7 @@ ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster I
  
 
 
-<a name="edgeproto.CRMOverride"></a>
+<a name="edgeproto.CRMOverride"/>
 
 ### CRMOverride
 CRMOverride can be applied to commands that issue requests to the CRM.
@@ -1060,55 +916,55 @@ Controller to ignore errors from the CRM, or ignore the CRM completely
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| NoOverride | 0 | No override |
-| IgnoreCRMErrors | 1 | Ignore errors from CRM |
-| IgnoreCRM | 2 | Ignore CRM completely (does not inform CRM of operation) |
-| IgnoreTransientState | 3 | Ignore Transient State (only admin should use if CRM crashed) |
-| IgnoreCRMandTransientState | 4 | Ignore CRM and Transient State |
+| NO_OVERRIDE | 0 | No override |
+| IGNORE_CRM_ERRORS | 1 | Ignore errors from CRM |
+| IGNORE_CRM | 2 | Ignore CRM completely (does not inform CRM of operation) |
+| IGNORE_TRANSIENT_STATE | 3 | Ignore Transient State (only admin should use if CRM crashed) |
+| IGNORE_CRM_AND_TRANSIENT_STATE | 4 | Ignore CRM and Transient State |
 
 
 
-<a name="edgeproto.IpAccess"></a>
+<a name="edgeproto.IpAccess"/>
 
 ### IpAccess
 
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| IpAccessUnknown | 0 | Unknown IP access |
-| IpAccessDedicated | 1 | Dedicated IP access |
-| IpAccessDedicatedOrShared | 2 | Dedicated or shared (prefers dedicated) access |
-| IpAccessShared | 3 | Shared IP access |
+| IP_ACCESS_UNKNOWN | 0 | Unknown IP access |
+| IP_ACCESS_DEDICATED | 1 | Dedicated IP access |
+| IP_ACCESS_DEDICATED_OR_SHARED | 2 | Dedicated or shared (prefers dedicated) access |
+| IP_ACCESS_SHARED | 3 | Shared IP access |
 
 
 
-<a name="edgeproto.IpSupport"></a>
+<a name="edgeproto.IpSupport"/>
 
 ### IpSupport
 IpSupport indicates the type of public IP support provided by the Cloudlet. Static IP support indicates a set of static public IPs are available for use, and managed by the Controller. Dynamic indicates the Cloudlet uses a DHCP server to provide public IP addresses, and the controller has no control over which IPs are assigned.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| IpSupportUnknown | 0 | Unknown IP support |
-| IpSupportStatic | 1 | Static IP addresses are provided to and managed by Controller |
-| IpSupportDynamic | 2 | IP addresses are dynamically provided by an Operator&#39;s DHCP server |
+| IP_SUPPORT_UNKNOWN | 0 | Unknown IP support |
+| IP_SUPPORT_STATIC | 1 | Static IP addresses are provided to and managed by Controller |
+| IP_SUPPORT_DYNAMIC | 2 | IP addresses are dynamically provided by an Operator&#39;s DHCP server |
 
 
 
-<a name="edgeproto.Liveness"></a>
+<a name="edgeproto.Liveness"/>
 
 ### Liveness
 Liveness indicates if an object was created statically via an external API call, or dynamically via an internal algorithm.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| LivenessUnknown | 0 | Unknown liveness |
-| LivenessStatic | 1 | Object managed by external entity |
-| LivenessDynamic | 2 | Object managed internally |
+| LIVENESS_UNKNOWN | 0 | Unknown liveness |
+| LIVENESS_STATIC | 1 | Object managed by external entity |
+| LIVENESS_DYNAMIC | 2 | Object managed internally |
 
 
 
-<a name="edgeproto.TrackedState"></a>
+<a name="edgeproto.TrackedState"/>
 
 ### TrackedState
 TrackedState is used to track the state of an object on a remote node,
@@ -1116,19 +972,19 @@ i.e. track the state of a ClusterInst object on the CRM (Cloudlet).
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| TrackedStateUnknown | 0 | Unknown state |
-| NotPresent | 1 | Not present (does not exist) |
-| CreateRequested | 2 | Create requested |
-| Creating | 3 | Creating |
-| CreateError | 4 | Create error |
-| Ready | 5 | Ready |
-| UpdateRequested | 6 | Update requested |
-| Updating | 7 | Updating |
-| UpdateError | 8 | Update error |
-| DeleteRequested | 9 | Delete requested |
-| Deleting | 10 | Deleting |
-| DeleteError | 11 | Delete error |
-| DeletePrepare | 12 | Delete prepare (extra state used by controller to block other changes) |
+| TRACKED_STATE_UNKNOWN | 0 | Unknown state |
+| NOT_PRESENT | 1 | Not present (does not exist) |
+| CREATE_REQUESTED | 2 | Create requested |
+| CREATING | 3 | Creating |
+| CREATE_ERROR | 4 | Create error |
+| READY | 5 | Ready |
+| UPDATE_REQUESTED | 6 | Update requested |
+| UPDATING | 7 | Updating |
+| UPDATE_ERROR | 8 | Update error |
+| DELETE_REQUESTED | 9 | Delete requested |
+| DELETING | 10 | Deleting |
+| DELETE_ERROR | 11 | Delete error |
+| DELETE_PREPARE | 12 | Delete prepare (extra state used by controller to block other changes) |
 
 
  
@@ -1139,14 +995,14 @@ i.e. track the state of a ClusterInst object on the CRM (Cloudlet).
 
 
 
-<a name="controller.proto"></a>
+<a name="controller.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## controller.proto
 
 
 
-<a name="edgeproto.Controller"></a>
+<a name="edgeproto.Controller"/>
 
 ### Controller
 A Controller is a service that manages the edge-cloud data and controls other edge-cloud micro-services.
@@ -1162,7 +1018,7 @@ A Controller is a service that manages the edge-cloud data and controls other ed
 
 
 
-<a name="edgeproto.ControllerKey"></a>
+<a name="edgeproto.ControllerKey"/>
 
 ### ControllerKey
 ControllerKey uniquely defines a Controller
@@ -1183,27 +1039,27 @@ ControllerKey uniquely defines a Controller
  
 
 
-<a name="edgeproto.ControllerApi"></a>
+<a name="edgeproto.ControllerApi"/>
 
 ### ControllerApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| ShowController | [Controller](#edgeproto.Controller) | [Controller](#edgeproto.Controller) stream | Show Controllers |
+| ShowController | [Controller](#edgeproto.Controller) | [Controller](#edgeproto.Controller) | Show Controllers |
 
  
 
 
 
-<a name="developer.proto"></a>
+<a name="developer.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## developer.proto
 
 
 
-<a name="edgeproto.Developer"></a>
+<a name="edgeproto.Developer"/>
 
 ### Developer
 A Developer defines a Mobiledgex customer that can create and manage applications, clusters, instances, etc. Applications and other objects created by one Developer cannot be seen or managed by other Developers. Billing will likely be done on a per-developer basis.
@@ -1225,7 +1081,7 @@ TODO: user management, auth, etc is not implemented yet.
 
 
 
-<a name="edgeproto.DeveloperKey"></a>
+<a name="edgeproto.DeveloperKey"/>
 
 ### DeveloperKey
 DeveloperKey uniquely identifies a Developer (Mobiledgex customer)
@@ -1246,30 +1102,77 @@ DeveloperKey uniquely identifies a Developer (Mobiledgex customer)
  
 
 
-<a name="edgeproto.DeveloperApi"></a>
+<a name="edgeproto.DeveloperApi"/>
 
 ### DeveloperApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| CreateDeveloper | [Developer](#edgeproto.Developer) | [Result](#edgeproto.Result) | Create a Developer |
-| DeleteDeveloper | [Developer](#edgeproto.Developer) | [Result](#edgeproto.Result) | Delete a Developer |
-| UpdateDeveloper | [Developer](#edgeproto.Developer) | [Result](#edgeproto.Result) | Update a Developer |
-| ShowDeveloper | [Developer](#edgeproto.Developer) | [Developer](#edgeproto.Developer) stream | Show Developers |
+| CreateDeveloper | [Developer](#edgeproto.Developer) | [Result](#edgeproto.Developer) | Create a Developer |
+| DeleteDeveloper | [Developer](#edgeproto.Developer) | [Result](#edgeproto.Developer) | Delete a Developer |
+| UpdateDeveloper | [Developer](#edgeproto.Developer) | [Result](#edgeproto.Developer) | Update a Developer |
+| ShowDeveloper | [Developer](#edgeproto.Developer) | [Developer](#edgeproto.Developer) | Show Developers |
 
  
 
 
 
-<a name="flavor.proto"></a>
+<a name="exec.proto"/>
+<p align="right"><a href="#top">Top</a></p>
+
+## exec.proto
+
+
+
+<a name="edgeproto.ExecRequest"/>
+
+### ExecRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| app_inst_key | [AppInstKey](#edgeproto.AppInstKey) |  | Target AppInst |
+| command | [string](#string) |  | Command or Shell |
+| container_id | [string](#string) |  | ContainerID is the name of the target container, if applicable |
+| offer | [string](#string) |  | WebRTC Offer |
+| answer | [string](#string) |  | WebRTC Answer |
+| err | [string](#string) |  | Any error message |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+
+<a name="edgeproto.ExecApi"/>
+
+### ExecApi
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| RunCommand | [ExecRequest](#edgeproto.ExecRequest) | [ExecRequest](#edgeproto.ExecRequest) | Run a Command or Shell on a container or VM |
+| SendLocalRequest | [ExecRequest](#edgeproto.ExecRequest) | [ExecRequest](#edgeproto.ExecRequest) | This is used internally to forward requests to other Controllers. |
+
+ 
+
+
+
+<a name="flavor.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## flavor.proto
 
 
 
-<a name="edgeproto.Flavor"></a>
+<a name="edgeproto.Flavor"/>
 
 ### Flavor
 A Flavor identifies the Cpu, Ram, and Disk resources required for either a node in a Cluster, or an application instance. For a node in a cluster, these are the physical resources provided by that node. For an application instance, this defines the resources (per node) that should be allocated to the instance from the Cluster.
@@ -1288,7 +1191,7 @@ A Flavor identifies the Cpu, Ram, and Disk resources required for either a node 
 
 
 
-<a name="edgeproto.FlavorKey"></a>
+<a name="edgeproto.FlavorKey"/>
 
 ### FlavorKey
 FlavorKey uniquely identifies a Flavor.
@@ -1309,30 +1212,30 @@ FlavorKey uniquely identifies a Flavor.
  
 
 
-<a name="edgeproto.FlavorApi"></a>
+<a name="edgeproto.FlavorApi"/>
 
 ### FlavorApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| CreateFlavor | [Flavor](#edgeproto.Flavor) | [Result](#edgeproto.Result) | Create a Flavor |
-| DeleteFlavor | [Flavor](#edgeproto.Flavor) | [Result](#edgeproto.Result) | Delete a Flavor |
-| UpdateFlavor | [Flavor](#edgeproto.Flavor) | [Result](#edgeproto.Result) | Update a Flavor |
-| ShowFlavor | [Flavor](#edgeproto.Flavor) | [Flavor](#edgeproto.Flavor) stream | Show Flavors |
+| CreateFlavor | [Flavor](#edgeproto.Flavor) | [Result](#edgeproto.Flavor) | Create a Flavor |
+| DeleteFlavor | [Flavor](#edgeproto.Flavor) | [Result](#edgeproto.Flavor) | Delete a Flavor |
+| UpdateFlavor | [Flavor](#edgeproto.Flavor) | [Result](#edgeproto.Flavor) | Update a Flavor |
+| ShowFlavor | [Flavor](#edgeproto.Flavor) | [Flavor](#edgeproto.Flavor) | Show Flavors |
 
  
 
 
 
-<a name="metric.proto"></a>
+<a name="metric.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## metric.proto
 
 
 
-<a name="edgeproto.Metric"></a>
+<a name="edgeproto.Metric"/>
 
 ### Metric
 Metric is an entry/point in a time series of values for Analytics/Billing.
@@ -1350,7 +1253,7 @@ Metric is an entry/point in a time series of values for Analytics/Billing.
 
 
 
-<a name="edgeproto.MetricTag"></a>
+<a name="edgeproto.MetricTag"/>
 
 ### MetricTag
 MetricTag is used as a tag or label to look up the metric, beyond just the name of the metric.
@@ -1366,7 +1269,7 @@ MetricTag is used as a tag or label to look up the metric, beyond just the name 
 
 
 
-<a name="edgeproto.MetricVal"></a>
+<a name="edgeproto.MetricVal"/>
 
 ### MetricVal
 MetricVal is a value associated with the metric.
@@ -1392,14 +1295,14 @@ MetricVal is a value associated with the metric.
 
 
 
-<a name="node.proto"></a>
+<a name="node.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## node.proto
 
 
 
-<a name="edgeproto.Node"></a>
+<a name="edgeproto.Node"/>
 
 ### Node
 Node defines a DME (distributed matching engine) or CRM (cloudlet resource manager) instance.
@@ -1416,7 +1319,7 @@ Node defines a DME (distributed matching engine) or CRM (cloudlet resource manag
 
 
 
-<a name="edgeproto.NodeKey"></a>
+<a name="edgeproto.NodeKey"/>
 
 ### NodeKey
 NodeKey uniquely identifies a DME or CRM node
@@ -1435,16 +1338,16 @@ NodeKey uniquely identifies a DME or CRM node
  
 
 
-<a name="edgeproto.NodeType"></a>
+<a name="edgeproto.NodeType"/>
 
 ### NodeType
 NodeType defines the type of Node
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| NodeUnknown | 0 | Unknown |
-| NodeDME | 1 | Distributed Matching Engine |
-| NodeCRM | 2 | Cloudlet Resource Manager |
+| NODE_UNKNOWN | 0 | Unknown |
+| NODE_DME | 1 | Distributed Matching Engine |
+| NODE_CRM | 2 | Cloudlet Resource Manager |
 
 
  
@@ -1452,21 +1355,21 @@ NodeType defines the type of Node
  
 
 
-<a name="edgeproto.NodeApi"></a>
+<a name="edgeproto.NodeApi"/>
 
 ### NodeApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| ShowNodeLocal | [Node](#edgeproto.Node) | [Node](#edgeproto.Node) stream | Show Nodes connected locally only |
-| ShowNode | [Node](#edgeproto.Node) | [Node](#edgeproto.Node) stream | Show all Nodes connected to all Controllers |
+| ShowNodeLocal | [Node](#edgeproto.Node) | [Node](#edgeproto.Node) | Show Nodes connected locally only |
+| ShowNode | [Node](#edgeproto.Node) | [Node](#edgeproto.Node) | Show all Nodes connected to all Controllers |
 
  
 
 
 
-<a name="notice.proto"></a>
+<a name="notice.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## notice.proto
@@ -1474,7 +1377,7 @@ Notice is the message used by the notify protocol to communicate and coordinate 
 In general, the protocol is used to synchronize state from one service to another. The protocol is fairly symmetric, with different state being synchronized both from server to client and client to server.
 
 
-<a name="edgeproto.Notice"></a>
+<a name="edgeproto.Notice"/>
 
 ### Notice
 
@@ -1495,7 +1398,7 @@ In general, the protocol is used to synchronize state from one service to anothe
  
 
 
-<a name="edgeproto.NoticeAction"></a>
+<a name="edgeproto.NoticeAction"/>
 
 ### NoticeAction
 NoticeAction denotes what kind of action this notification is for.
@@ -1514,27 +1417,27 @@ NoticeAction denotes what kind of action this notification is for.
  
 
 
-<a name="edgeproto.NotifyApi"></a>
+<a name="edgeproto.NotifyApi"/>
 
 ### NotifyApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| StreamNotice | [Notice](#edgeproto.Notice) stream | [Notice](#edgeproto.Notice) stream | Bidrectional stream for exchanging data between controller and DME/CRM |
+| StreamNotice | [Notice](#edgeproto.Notice) | [Notice](#edgeproto.Notice) | Bidrectional stream for exchanging data between controller and DME/CRM |
 
  
 
 
 
-<a name="operator.proto"></a>
+<a name="operator.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## operator.proto
 
 
 
-<a name="edgeproto.Operator"></a>
+<a name="edgeproto.Operator"/>
 
 ### Operator
 An Operator defines a telecommunications provider such as AT&amp;T, T-Mobile, etc. The operators in turn provide Mobiledgex with compute resource Cloudlets that serve as the basis for location-based services.
@@ -1550,7 +1453,7 @@ An Operator defines a telecommunications provider such as AT&amp;T, T-Mobile, et
 
 
 
-<a name="edgeproto.OperatorKey"></a>
+<a name="edgeproto.OperatorKey"/>
 
 ### OperatorKey
 OperatorKey uniquely identifies an Operator
@@ -1571,30 +1474,30 @@ OperatorKey uniquely identifies an Operator
  
 
 
-<a name="edgeproto.OperatorApi"></a>
+<a name="edgeproto.OperatorApi"/>
 
 ### OperatorApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| CreateOperator | [Operator](#edgeproto.Operator) | [Result](#edgeproto.Result) | Create an Operator |
-| DeleteOperator | [Operator](#edgeproto.Operator) | [Result](#edgeproto.Result) | Delete an Operator |
-| UpdateOperator | [Operator](#edgeproto.Operator) | [Result](#edgeproto.Result) | Update an Operator |
-| ShowOperator | [Operator](#edgeproto.Operator) | [Operator](#edgeproto.Operator) stream | Show Operators |
+| CreateOperator | [Operator](#edgeproto.Operator) | [Result](#edgeproto.Operator) | Create an Operator |
+| DeleteOperator | [Operator](#edgeproto.Operator) | [Result](#edgeproto.Operator) | Delete an Operator |
+| UpdateOperator | [Operator](#edgeproto.Operator) | [Result](#edgeproto.Operator) | Update an Operator |
+| ShowOperator | [Operator](#edgeproto.Operator) | [Operator](#edgeproto.Operator) | Show Operators |
 
  
 
 
 
-<a name="refs.proto"></a>
+<a name="refs.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## refs.proto
 
 
 
-<a name="edgeproto.CloudletRefs"></a>
+<a name="edgeproto.CloudletRefs"/>
 
 ### CloudletRefs
 CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used resources are compared against max resources for a Cloudlet to determine if resources are available for a new Cluster to be instantiated on the Cloudlet.
@@ -1607,7 +1510,7 @@ CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used 
 | used_ram | [uint64](#uint64) |  | Used RAM in MB |
 | used_vcores | [uint64](#uint64) |  | Used VCPU cores |
 | used_disk | [uint64](#uint64) |  | Used disk in GB |
-| root_lb_ports | [CloudletRefs.RootLbPortsEntry](#edgeproto.CloudletRefs.RootLbPortsEntry) | repeated | Used ports on root load balancer. Map key is public port, value is unused. |
+| root_lb_ports | [CloudletRefs.RootLbPortsEntry](#edgeproto.CloudletRefs.RootLbPortsEntry) | repeated | Used ports on root load balancer. Map key is public port, value is a bitmap for the protocol bitmap: bit 0: tcp, bit 1: udp |
 | used_dynamic_ips | [int32](#int32) |  | Used dynamic IPs |
 | used_static_ips | [string](#string) |  | Used static IPs |
 
@@ -1616,7 +1519,7 @@ CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used 
 
 
 
-<a name="edgeproto.CloudletRefs.RootLbPortsEntry"></a>
+<a name="edgeproto.CloudletRefs.RootLbPortsEntry"/>
 
 ### CloudletRefs.RootLbPortsEntry
 
@@ -1632,7 +1535,7 @@ CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used 
 
 
 
-<a name="edgeproto.ClusterRefs"></a>
+<a name="edgeproto.ClusterRefs"/>
 
 ### ClusterRefs
 ClusterRefs track used resources within a ClusterInst. Each AppInst specifies a set of required resources (Flavor), so tracking resources used by Apps within a Cluster is necessary to determine if enough resources are available for another AppInst to be instantiated on a ClusterInst.
@@ -1657,37 +1560,37 @@ ClusterRefs track used resources within a ClusterInst. Each AppInst specifies a 
  
 
 
-<a name="edgeproto.CloudletRefsApi"></a>
+<a name="edgeproto.CloudletRefsApi"/>
 
 ### CloudletRefsApi
 This API should be admin-only
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| ShowCloudletRefs | [CloudletRefs](#edgeproto.CloudletRefs) | [CloudletRefs](#edgeproto.CloudletRefs) stream | Show CloudletRefs (debug only) |
+| ShowCloudletRefs | [CloudletRefs](#edgeproto.CloudletRefs) | [CloudletRefs](#edgeproto.CloudletRefs) | Show CloudletRefs (debug only) |
 
 
-<a name="edgeproto.ClusterRefsApi"></a>
+<a name="edgeproto.ClusterRefsApi"/>
 
 ### ClusterRefsApi
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| ShowClusterRefs | [ClusterRefs](#edgeproto.ClusterRefs) | [ClusterRefs](#edgeproto.ClusterRefs) stream | Show ClusterRefs (debug only) |
+| ShowClusterRefs | [ClusterRefs](#edgeproto.ClusterRefs) | [ClusterRefs](#edgeproto.ClusterRefs) | Show ClusterRefs (debug only) |
 
  
 
 
 
-<a name="result.proto"></a>
+<a name="result.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
 ## result.proto
 
 
 
-<a name="edgeproto.Result"></a>
+<a name="edgeproto.Result"/>
 
 ### Result
 Result is a generic object for returning the result of an API call. In general, result is not used. The error value returned by the GRPC API call is used instead.
@@ -1703,6 +1606,38 @@ Result is a generic object for returning the result of an API call. In general, 
 
 
  
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="version.proto"/>
+<p align="right"><a href="#top">Top</a></p>
+
+## version.proto
+
+
+ 
+
+
+<a name="edgeproto.VersionHash"/>
+
+### VersionHash
+Below enum lists hashes as well as corresponding versions
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| HASH_d41d8cd98f00b204e9800998ecf8427e | 0 |  |
+| HASH_b35326df0fcd1550b7c0cf6460c4bca2 | 1 |  |
+| HASH_52e6980599cd59bbbd0de8d5f4d53d4b | 2 |  |
+| HASH_00bdcfa956ca4ee42be87abcd8fcaf1c | 3 |  |
+| HASH_0d2d9c0b07ad989e96fb3b3a44924316 | 4 |  |
+| HASH_2b79f0b6e402045ee5f68d697b9386ae | 5 |  |
+
 
  
 
