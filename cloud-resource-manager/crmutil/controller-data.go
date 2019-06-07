@@ -323,8 +323,6 @@ func (cd *ControllerData) clusterInstInfoError(key *edgeproto.ClusterInstKey, er
 	cd.ClusterInstInfoCache.SetError(key, errState, err)
 }
 
-var transnum = 1
-
 func (cd *ControllerData) clusterInstInfoState(key *edgeproto.ClusterInstKey, state edgeproto.TrackedState) {
 	cd.ClusterInstInfoCache.SetState(key, state)
 }
