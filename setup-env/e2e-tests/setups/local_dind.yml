@@ -82,9 +82,11 @@ crms:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  vaultaddr: "vault.mobiledgex.net"
   envvars:
     PLATFORM: mexdind
-    MEXENV_URL: "https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json"
+    VAULT_ROLE_ID: e017fc39-dff7-adc3-364f-bb8e04805454
+    VAULT_SECRET_ID: ***REMOVED***
 
 clustersvcs:
 - name: cluster-svc1
