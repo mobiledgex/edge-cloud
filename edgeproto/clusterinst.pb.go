@@ -1448,7 +1448,6 @@ func (c *ClusterInstCache) Show(filter *ClusterInst, cb func(ret *ClusterInst) e
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
-			log.DebugLog(log.DebugLevelApi, "Show ClusterInst NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show ClusterInst", "obj", obj)
@@ -2191,7 +2190,6 @@ func (c *ClusterInstInfoCache) Show(filter *ClusterInstInfo, cb func(ret *Cluste
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
-			log.DebugLog(log.DebugLevelApi, "Show ClusterInstInfo NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show ClusterInstInfo", "obj", obj)

@@ -825,7 +825,6 @@ func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) 
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
-			log.DebugLog(log.DebugLevelApi, "Show Developer NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show Developer", "obj", obj)

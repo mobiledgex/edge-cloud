@@ -852,7 +852,6 @@ func (c *NodeCache) Show(filter *Node, cb func(ret *Node) error) error {
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
-			log.DebugLog(log.DebugLevelApi, "Show Node NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show Node", "obj", obj)

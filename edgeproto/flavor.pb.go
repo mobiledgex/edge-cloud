@@ -797,7 +797,6 @@ func (c *FlavorCache) Show(filter *Flavor, cb func(ret *Flavor) error) error {
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
-			log.DebugLog(log.DebugLevelApi, "Show Flavor NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show Flavor", "obj", obj)

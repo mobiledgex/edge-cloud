@@ -2032,7 +2032,6 @@ func (c *CloudletCache) Show(filter *Cloudlet, cb func(ret *Cloudlet) error) err
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
-			log.DebugLog(log.DebugLevelApi, "Show Cloudlet NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show Cloudlet", "obj", obj)
@@ -2730,7 +2729,6 @@ func (c *CloudletInfoCache) Show(filter *CloudletInfo, cb func(ret *CloudletInfo
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
-			log.DebugLog(log.DebugLevelApi, "Show CloudletInfo NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show CloudletInfo", "obj", obj)

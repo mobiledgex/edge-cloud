@@ -791,7 +791,6 @@ func (c *ClusterCache) Show(filter *Cluster, cb func(ret *Cluster) error) error 
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
-			log.DebugLog(log.DebugLevelApi, "Show Cluster NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show Cluster", "obj", obj)

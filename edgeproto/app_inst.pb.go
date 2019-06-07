@@ -1835,7 +1835,6 @@ func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error 
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
-			log.DebugLog(log.DebugLevelApi, "Show AppInst NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show AppInst", "obj", obj)
@@ -2679,7 +2678,6 @@ func (c *AppInstInfoCache) Show(filter *AppInstInfo, cb func(ret *AppInstInfo) e
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
-			log.DebugLog(log.DebugLevelApi, "Show AppInstInfo NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show AppInstInfo", "obj", obj)

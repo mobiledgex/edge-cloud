@@ -629,7 +629,6 @@ func (c *ControllerCache) Show(filter *Controller, cb func(ret *Controller) erro
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
-			log.DebugLog(log.DebugLevelApi, "Show Controller NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show Controller", "obj", obj)
