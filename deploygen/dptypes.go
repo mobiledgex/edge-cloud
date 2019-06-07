@@ -21,6 +21,7 @@ type AppSpec struct {
 	Config      string          `json:"config"`
 	Annotations string          `json:"annotations"`
 	Ports       []util.PortSpec `json:"ports"`
+	Scale       bool            `json:"scale"`
 }
 
 func NewAppSpec(app *edgeproto.App) (*AppSpec, error) {
@@ -33,6 +34,7 @@ func NewAppSpec(app *edgeproto.App) (*AppSpec, error) {
 		ImageType:   edgeproto.ImageType_name[int32(app.ImageType)],
 		Command:     app.Command,
 		Annotations: app.Annotations,
+		Scale:       app.Scale,
 	}
 	if app.AccessPorts == "" {
 		return out, nil

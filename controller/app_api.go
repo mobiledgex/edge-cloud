@@ -142,6 +142,10 @@ func updateAppFields(in *edgeproto.App) error {
 		}
 	}
 
+	if in.Scale && in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+		return fmt.Errorf("app scaling is only supported for Kubernetes deployments")
+	}
+
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
 		urlInfo := strings.Split(in.ImagePath, "#")
 		if len(urlInfo) != 2 {

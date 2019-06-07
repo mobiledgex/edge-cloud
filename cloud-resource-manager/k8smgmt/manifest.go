@@ -40,6 +40,10 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string,
 	if err != nil {
 		return mf, err
 	}
+	if envVars == nil {
+		//nothing to do
+		return mf, nil
+	}
 	//decode the objects so we can find the container objects, where we'll add the env vars
 	objs, _, err := cloudcommon.DecodeK8SYaml(mf)
 	if err != nil {
@@ -48,20 +52,33 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string,
 
 	//walk the objects
 	for i, _ := range objs {
-		//make sure we are working on the Deployment object
+		//make sure we are working on either Deployment or Daemonset object
 		deployment, ok := objs[i].(*appsv1.Deployment)
 		if !ok {
-			continue
+			daemonset, ok := objs[i].(*appsv1.DaemonSet)
+			if !ok {
+				continue
+			}
+			//walk the containers and append environment variables to each
+			for j, _ := range daemonset.Spec.Template.Spec.Containers {
+				daemonset.Spec.Template.Spec.Containers[j].Env =
+					append(daemonset.Spec.Template.Spec.Containers[j].Env, envVars...)
+			}
+			// Add a label so we can lookup the pods created by this
+			// deployment. Pods names are used for shell access.
+			daemonset.Spec.Template.ObjectMeta.Labels[MexAppLabel] =
+				daemonset.ObjectMeta.Name
+		} else {
+			//walk the containers and append environment variables to each
+			for j, _ := range deployment.Spec.Template.Spec.Containers {
+				deployment.Spec.Template.Spec.Containers[j].Env =
+					append(deployment.Spec.Template.Spec.Containers[j].Env, envVars...)
+			}
+			// Add a label so we can lookup the pods created by this
+			// deployment. Pods names are used for shell access.
+			deployment.Spec.Template.ObjectMeta.Labels[MexAppLabel] =
+				deployment.ObjectMeta.Name
 		}
-		//walk the containers and append environment variables to each
-		for j, _ := range deployment.Spec.Template.Spec.Containers {
-			deployment.Spec.Template.Spec.Containers[j].Env =
-				append(deployment.Spec.Template.Spec.Containers[j].Env, envVars...)
-		}
-		// Add a label so we can lookup the pods created by this
-		// deployment. Pods names are used for shell access.
-		deployment.Spec.Template.ObjectMeta.Labels[MexAppLabel] =
-			deployment.ObjectMeta.Name
 	}
 	//marshal the objects back together and return as one string
 	printer := &printers.YAMLPrinter{}
