@@ -61,7 +61,6 @@ func TestController(t *testing.T) {
 	cloudletClient := edgeproto.NewCloudletApiClient(conn)
 	appInstClient := edgeproto.NewAppInstApiClient(conn)
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
-	clusterClient := edgeproto.NewClusterApiClient(conn)
 	clusterInstClient := edgeproto.NewClusterInstApiClient(conn)
 	cloudletInfoClient := edgeproto.NewCloudletInfoApiClient(conn)
 
@@ -70,7 +69,6 @@ func TestController(t *testing.T) {
 
 	testutil.ClientDeveloperTest(t, "cud", devClient, testutil.DevData)
 	testutil.ClientFlavorTest(t, "cud", flavorClient, testutil.FlavorData)
-	testutil.ClientClusterTest(t, "cud", clusterClient, testutil.ClusterData)
 	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
 	testutil.ClientOperatorTest(t, "cud", operClient, testutil.OperatorData)
 	testutil.ClientCloudletTest(t, "cud", cloudletClient, testutil.CloudletData)

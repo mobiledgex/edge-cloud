@@ -9,7 +9,6 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "developer.proto";
 import "flavor.proto";
-import "cluster.proto";
 import "gogoproto/gogo.proto";
 
 // It is important that embedded key structs are not referenced by a
@@ -53,7 +52,7 @@ message ConfigFile {
   string config = 2;
 }
 
-// Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.
+// Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes.
 // An application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet.
 message App {
   // Fields are used for the Update API to specify which fields to apply
@@ -70,18 +69,8 @@ message App {
   // Only tcp, udp, and http protocols are supported; tcp and udp are assumed
   // to be L4, and http is assumed to be L7 access.
   string access_ports = 7;
-  // URI of resource to be used to establish config for App.
-  string config = 8;
   // Default flavor for the App, may be overridden by the AppInst
   FlavorKey default_flavor = 9 [(gogoproto.nullable) = false];
-  // Cluster field is deprecated. Apps no longer have dependencies on Clusters.
-  ClusterKey cluster = 10 [(gogoproto.nullable) = false, (protogen.backend) = true];
-  // Template of kubernetes deployment yaml.
-  // Who/What sets this is TDB, but it should not be directly
-  // exposed to the user, because we do not want to expose
-  // kubernetes to the user. However, because we currently don't have any
-  // other way to set it, for flexibility, for now it is exposed to the user.
-  string app_template = 11;
   // public key used for authentication
   string auth_public_key = 12;
   // Command to start service
@@ -93,18 +82,17 @@ message App {
   string deployment = 15 [(protogen.backend) = true];
   // Deployment manifest is the deployment specific manifest file/config
   string deployment_manifest = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // Deployment generator target
+  // Deployment generator target to generate a basic deployment manifest
   string deployment_generator = 17 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // Android package name, optional
+  // Android package name used to match the App name from the Android package
   string android_package_name = 18;
   // Indicates whether or not platform apps are allowed to perform actions
-	// on behalf of this app, such as FindCloudlet
+  // on behalf of this app, such as FindCloudlet
   bool permits_platform_apps = 19;
   // Override actions to Controller
   DeleteType del_opt = 20 [(protogen.hidetag) = "nocmp"];
-  // Customization files
+  // Customization files passed through to implementing services
   repeated ConfigFile configs = 21;
-  // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
