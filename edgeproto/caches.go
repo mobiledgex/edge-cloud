@@ -34,7 +34,7 @@ func (s *ClusterInstInfoCache) SetState(key *ClusterInstKey, state TrackedState)
 	}
 	info.Errors = nil
 	info.State = state
-	info.Status = &StatusInfo{}
+	info.Status = StatusInfo{}
 	log.InfoLog("ClusterInstInfoCache SetState", "state", state)
 	s.Update(&info, 0)
 }
@@ -87,7 +87,7 @@ func (s *AppInstInfoCache) SetState(key *AppInstKey, state TrackedState) {
 	}
 	info.Errors = nil
 	info.State = state
-	info.Status = &StatusInfo{}
+	info.Status = StatusInfo{}
 	s.Update(&info, 0)
 }
 
@@ -98,6 +98,7 @@ func (s *AppInstInfoCache) SetStateRuntime(key *AppInstKey, state TrackedState, 
 	}
 	info.Errors = nil
 	info.State = state
+	info.Status = StatusInfo{}
 	info.RuntimeInfo = *rt
 	s.Update(&info, 0)
 }

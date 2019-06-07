@@ -53,6 +53,7 @@ func (s *Platform) DeleteClusterInst(clusterInst *edgeproto.ClusterInst) error {
 }
 
 func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, infoCache *edgeproto.AppInstInfoCache) error {
+	infoCache.SetStatusTask(&appInst.Key, "Creating App Instance")
 	log.DebugLog(log.DebugLevelMexos, "fake AppInst ready")
 	return nil
 }

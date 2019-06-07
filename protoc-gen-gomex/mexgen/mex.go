@@ -1027,6 +1027,7 @@ func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) 
 	for _, obj := range c.Objs {
 {{- if .CudCache}}
 		if !obj.Matches(filter, MatchFilter()) {
+			log.DebugLog(log.DebugLevelApi, "Show {{.Name}} NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 {{- end}}

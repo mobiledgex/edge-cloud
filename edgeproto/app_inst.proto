@@ -58,8 +58,8 @@ message AppInst {
   distributed_match_engine.Timestamp created_at = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // IpAccess for auto-clusters. Ignored otherwise.
   IpAccess auto_cluster_ip_access = 22 [(protogen.backend) = true];
-  //status
-  StatusInfo status = 23 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // status is used to reflect progress of creation or other events
+  StatusInfo status = 23 [(protogen.backend) = true, (gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -131,8 +131,8 @@ message AppInstInfo {
   repeated string errors = 5;
   // AppInst runtime information
   AppInstRuntime runtime_info = 6 [(gogoproto.nullable) = false];
-  // Status of current operation
-  StatusInfo status = 7;
+// status is used to reflect progress of creation or other events
+  StatusInfo status = 7 [(protogen.backend) = true, (gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

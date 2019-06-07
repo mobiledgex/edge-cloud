@@ -278,8 +278,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create ClusterInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(in, edgeproto.TrackedState_READY)
-		//clusterInstApi.cache
-		//cb.Send&edgeproto.Result{Message: "Cluster STATUS"})
 		cb.Send(&edgeproto.Result{Message: "Created ClusterInst successfully"})
 		err = nil
 	}

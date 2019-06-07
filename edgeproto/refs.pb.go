@@ -781,6 +781,7 @@ func (c *CloudletRefsCache) Show(filter *CloudletRefs, cb func(ret *CloudletRefs
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
+			log.DebugLog(log.DebugLevelApi, "Show CloudletRefs NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show CloudletRefs", "obj", obj)
@@ -1252,6 +1253,7 @@ func (c *ClusterRefsCache) Show(filter *ClusterRefs, cb func(ret *ClusterRefs) e
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
+			log.DebugLog(log.DebugLevelApi, "Show ClusterRefs NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show ClusterRefs", "obj", obj)

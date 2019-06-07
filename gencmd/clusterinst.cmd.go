@@ -109,9 +109,6 @@ func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	s = append(s, in.Deployment)
 	s = append(s, strconv.FormatUint(uint64(in.NumMasters), 10))
 	s = append(s, strconv.FormatUint(uint64(in.NumNodes), 10))
-	if in.Status == nil {
-		in.Status = &edgeproto.StatusInfo{}
-	}
 	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
 	s = append(s, in.Status.TaskName)
 	s = append(s, in.Status.StepName)
@@ -178,9 +175,6 @@ func ClusterInstInfoSlicer(in *edgeproto.ClusterInstInfo) []string {
 	s = append(s, in.Key.Developer)
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
 	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
-	if in.Status == nil {
-		in.Status = &edgeproto.StatusInfo{}
-	}
 	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
 	s = append(s, in.Status.TaskName)
 	s = append(s, in.Status.StepName)
@@ -252,9 +246,6 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NodeFlavor = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.Status = nil
 	}
 }
 
@@ -581,7 +572,6 @@ func init() {
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Deployment, "deployment", "", "Deployment")
 	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumMasters, "nummasters", 0, "NumMasters")
 	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumNodes, "numnodes", 0, "NumNodes")
-	ClusterInstIn.Status = &edgeproto.StatusInfo{}
 	ClusterInstNoConfigFlagSet.Uint32Var(&ClusterInstIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.Status.StepName, "status-stepname", "", "Status.StepName")
@@ -591,7 +581,6 @@ func init() {
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.Developer, "key-developer", "", "Key.Developer")
 	ClusterInstInfoFlagSet.Int64Var(&ClusterInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
-	ClusterInstInfoIn.Status = &edgeproto.StatusInfo{}
 	ClusterInstInfoFlagSet.Uint32Var(&ClusterInstInfoIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Status.StepName, "status-stepname", "", "Status.StepName")

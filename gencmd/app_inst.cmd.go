@@ -147,9 +147,6 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Nanos), 10))
 	s = append(s, edgeproto.IpAccess_CamelName[int32(in.AutoClusterIpAccess)])
-	if in.Status == nil {
-		in.Status = &edgeproto.StatusInfo{}
-	}
 	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
 	s = append(s, in.Status.TaskName)
 	s = append(s, in.Status.StepName)
@@ -280,9 +277,6 @@ func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 		in.RuntimeInfo.ContainerIds = make([]string, 1)
 	}
 	s = append(s, in.RuntimeInfo.ContainerIds[0])
-	if in.Status == nil {
-		in.Status = &edgeproto.StatusInfo{}
-	}
 	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
 	s = append(s, in.Status.TaskName)
 	s = append(s, in.Status.StepName)
@@ -392,9 +386,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
-	}
-	if _, found := tags["nocmp"]; found {
-		in.Status = nil
 	}
 }
 
@@ -806,7 +797,6 @@ func init() {
 	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
 	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
 	AppInstFlagSet.StringVar(&AppInstInAutoClusterIpAccess, "autoclusteripaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
-	AppInstIn.Status = &edgeproto.StatusInfo{}
 	AppInstNoConfigFlagSet.Uint32Var(&AppInstIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Status.StepName, "status-stepname", "", "Status.StepName")
@@ -819,7 +809,6 @@ func init() {
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.ClusterInstKey.Developer, "key-clusterinstkey-developer", "", "Key.ClusterInstKey.Developer")
 	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
-	AppInstInfoIn.Status = &edgeproto.StatusInfo{}
 	AppInstInfoFlagSet.Uint32Var(&AppInstInfoIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Status.StepName, "status-stepname", "", "Status.StepName")

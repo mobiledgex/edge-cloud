@@ -735,6 +735,7 @@ func (c *OperatorCache) Show(filter *Operator, cb func(ret *Operator) error) err
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter, MatchFilter()) {
+			log.DebugLog(log.DebugLevelApi, "Show Operator NOMATCH", "obj", obj, "filter", filter, "opts", MatchFilter())
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show Operator", "obj", obj)
