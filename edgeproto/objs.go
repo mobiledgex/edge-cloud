@@ -22,7 +22,6 @@ type ApplicationData struct {
 	Operators        []Operator        `yaml:"operators"`
 	Cloudlets        []Cloudlet        `yaml:"cloudlets"`
 	Flavors          []Flavor          `yaml:"flavors"`
-	Clusters         []Cluster         `yaml:"clusters"`
 	ClusterInsts     []ClusterInst     `yaml:"clusterinsts"`
 	Developers       []Developer       `yaml:"developers"`
 	Applications     []App             `yaml:"apps"`
@@ -49,9 +48,6 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.Operators[:], func(i, j int) bool {
 		return a.Operators[i].Key.GetKeyString() < a.Operators[j].Key.GetKeyString()
-	})
-	sort.Slice(a.Clusters[:], func(i, j int) bool {
-		return a.Clusters[i].Key.GetKeyString() < a.Clusters[j].Key.GetKeyString()
 	})
 	sort.Slice(a.ClusterInsts[:], func(i, j int) bool {
 		return a.ClusterInsts[i].Key.GetKeyString() < a.ClusterInsts[j].Key.GetKeyString()
@@ -102,10 +98,6 @@ func (key *ClusterKey) Validate() error {
 		return errors.New("Invalid cluster name")
 	}
 	return nil
-}
-
-func (s *Cluster) Validate(fields map[string]struct{}) error {
-	return s.GetKey().Validate()
 }
 
 func (key *ClusterInstKey) Validate() error {
@@ -395,7 +387,6 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudlet))
 	opts = append(opts, cmpopts.SortSlices(CmpSortDeveloper))
 	opts = append(opts, cmpopts.SortSlices(CmpSortOperator))
-	opts = append(opts, cmpopts.SortSlices(CmpSortCluster))
 	opts = append(opts, cmpopts.SortSlices(CmpSortClusterInst))
 	opts = append(opts, cmpopts.SortSlices(CmpSortFlavor))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletInfo))

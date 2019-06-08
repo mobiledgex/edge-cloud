@@ -160,19 +160,6 @@ func updateAppFields(in *edgeproto.App) error {
 		}
 	}
 
-	if in.Config != "" {
-		configStr, err := cloudcommon.GetAppConfig(in)
-		if err != nil {
-			return err
-		}
-		in.Config = configStr
-		// do a quick parse just to make sure it's valid
-		_, err = cloudcommon.ParseAppConfig(in.Config)
-		if err != nil {
-			return err
-		}
-	}
-
 	// for update, trigger regenerating deployment manifest
 	if in.DeploymentGenerator != "" {
 		in.DeploymentManifest = ""
