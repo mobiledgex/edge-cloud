@@ -142,7 +142,7 @@ func updateAppFields(in *edgeproto.App) error {
 		}
 	}
 
-	if in.Scale && in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+	if in.ScaleWithCluster && in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
 		return fmt.Errorf("app scaling is only supported for Kubernetes deployments")
 	}
 

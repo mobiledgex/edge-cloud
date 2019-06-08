@@ -143,7 +143,7 @@ func (g *kubeBasicGen) kubeApp() {
 		RegistrySecret: MexRegistrySecret,
 	}
 	buf := bytes.Buffer{}
-	if g.app.Scale {
+	if g.app.ScaleWithCluster {
 		g.err = kubeAppDsT.Execute(&buf, &data)
 	} else {
 		g.err = kubeAppDpT.Execute(&buf, &data)

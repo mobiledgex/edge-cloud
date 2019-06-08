@@ -219,7 +219,7 @@ func AppSlicer(in *edgeproto.App) []string {
 	}
 	s = append(s, in.Configs[0].Kind)
 	s = append(s, in.Configs[0].Config)
-	s = append(s, strconv.FormatBool(in.Scale))
+	s = append(s, strconv.FormatBool(in.ScaleWithCluster))
 	return s
 }
 
@@ -246,7 +246,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "DelOpt")
 	s = append(s, "Configs-Kind")
 	s = append(s, "Configs-Config")
-	s = append(s, "Scale")
+	s = append(s, "ScaleWithCluster")
 	return s
 }
 
@@ -516,7 +516,7 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.AndroidPackageName, "androidpackagename", "", "AndroidPackageName")
 	AppFlagSet.BoolVar(&AppIn.PermitsPlatformApps, "permitsplatformapps", false, "PermitsPlatformApps")
 	AppFlagSet.StringVar(&AppInDelOpt, "delopt", "", "one of [NoAutoDelete AutoDelete]")
-	AppFlagSet.BoolVar(&AppIn.Scale, "scale", false, "Scale")
+	AppFlagSet.BoolVar(&AppIn.ScaleWithCluster, "scalewithcluster", false, "ScaleWithCluster")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -586,7 +586,7 @@ func AppSetFields() {
 	if AppFlagSet.Lookup("delopt").Changed {
 		AppIn.Fields = append(AppIn.Fields, "20")
 	}
-	if AppFlagSet.Lookup("scale").Changed {
+	if AppFlagSet.Lookup("scalewithcluster").Changed {
 		AppIn.Fields = append(AppIn.Fields, "22")
 	}
 }

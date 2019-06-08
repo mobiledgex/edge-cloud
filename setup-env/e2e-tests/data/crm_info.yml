@@ -1,27 +1,3 @@
-operators:
-- key:
-    name: tmus
-cloudlets:
-- key:
-    operatorkey:
-      name: tmus
-    name: tmus-cloud-1
-  accessuri: cloud1.tmo
-  location:
-    latitude: 31
-    longitude: -91
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-- key:
-    operatorkey:
-      name: tmus
-    name: tmus-cloud-2
-  accessuri: cloud2.tmo
-  location:
-    latitude: 35
-    longitude: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
 flavors:
 - key:
     name: x1.tiny
@@ -38,6 +14,9 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
+
+clusters:
+
 clusterinsts:
 - key:
     clusterkey:
@@ -75,6 +54,29 @@ clusterinsts:
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-2
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  state: Ready
+  ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+
+operators:
+- key:
+    name: tmus
+
 developers:
 - key:
     name: AcmeAppCo
@@ -82,7 +84,120 @@ developers:
   passhash: 8136f09c17354891c642b9b9f1722c34
   address: 123 Maple Street, Gainesville, FL 32604
   email: acmeapp@xxxx.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-1
+  accessuri: cloud1.tmo
+  location:
+    latitude: 31
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-2
+  accessuri: cloud2.tmo
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
 apps:
+- key:
+    developerkey:
+      name: MobiledgeX
+    name: MEXPrometheusAppName
+    version: "1.0"
+  imagepath: stable/prometheus-operator
+  defaultflavor:
+    name: x1.medium
+  deployment: helm
+  delopt: AutoDelete
+  configs:
+  - kind: hemlCustomizationYaml
+    config: |
+      prometheus:
+        prometheusSpec:
+          scrapeInterval: "15s"
+        service:
+          type: LoadBalancer
+      kubelet:
+        serviceMonitor:
+          ## Enable scraping the kubelet over https. For requirements to enable this see
+          ## https://github.com/coreos/prometheus-operator/issues/926
+          ##
+          https: true
+- key:
+    developerkey:
+      name: MobiledgeX
+    name: MEXMetricsExporter
+    version: "1.0"
+  imagepath: docker.mobiledgex.net/mobiledgex/images/metrics-exporter:latest
+  imagetype: ImageTypeDocker
+  defaultflavor:
+    name: x1.medium
+  deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: mexmetricsexporter-deployment
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: mexmetricsexporter
+      template:
+        metadata:
+          labels:
+            run: mexmetricsexporter
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: mexgitlabsecret
+          containers:
+          - name: mexmetricsexporter
+            image: docker.mobiledgex.net/mobiledgex/images/metrics-exporter:latest
+            imagePullPolicy: Always
+            ports:
+  deploymentgenerator: kubernetes-basic
+  delopt: AutoDelete
+  configs:
+  - kind: envVarsYaml
+    config: |
+      - name: MEX_INFLUXDB_ADDR
+        value: 0.0.0.0:8086
+      - name: MEX_INFLUXDB_USER
+        value: root
+      - name: MEX_INFLUXDB_PASS
+        value: root
+      - name: MEX_SCRAPE_INTERVAL
+        value: 15s
+  - kind: envVarsYaml
+    config: |
+      - name: MEX_CLUSTER_NAME
+        valueFrom:
+          configMapKeyRef:
+            name: mexcluster-info
+            key: ClusterName
+            optional: true
+      - name: MEX_CLOUDLET_NAME
+        valueFrom:
+          configMapKeyRef:
+            name: mexcluster-info
+            key: CloudletName
+            optional: true
+      - name: MEX_OPERATOR_NAME
+        valueFrom:
+          configMapKeyRef:
+            name: mexcluster-info
+            key: OperatorName
+            optional: true
 - key:
     developerkey:
       name: AcmeAppCo
@@ -136,10 +251,10 @@ apps:
     metadata:
       name: someapplication1-deployment
     spec:
+      replicas: 1
       selector:
         matchLabels:
           run: someapplication1
-      replicas: 1
       template:
         metadata:
           labels:
@@ -162,100 +277,88 @@ apps:
   deploymentgenerator: kubernetes-basic
 - key:
     developerkey:
-      name: MobiledgeX
-    name: MEXPrometheusAppName
+      name: AcmeAppCo
+    name: someapplication2
     version: "1.0"
-  imagepath: stable/prometheus-operator
-  defaultflavor:
-    name: x1.medium
-  deployment: helm
-  delopt: AutoDelete
-  configs:
-  - kind: hemlCustomizationYaml
-    config: |
-      prometheus:
-        prometheusSpec:
-          scrapeInterval: "15s"
-        service:
-          type: LoadBalancer
-      kubelet:
-        serviceMonitor:
-          ## Enable scraping the kubelet over https. For requirements to enable this see
-          ## https://github.com/coreos/prometheus-operator/issues/926
-          ##
-          https: true
-- key:
-    developerkey:
-      name: MobiledgeX
-    name: MEXMetricsExporter
-    version: "1.0"
-  imagepath: docker.mobiledgex.net/mobiledgex/images/metrics-exporter:latest
+  imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
   imagetype: ImageTypeDocker
+  accessports: tcp:80,http:443,udp:10002
   defaultflavor:
-    name: x1.medium
+    name: x1.small
   deployment: kubernetes
   deploymentmanifest: |
-    apiVersion: apps/v1
-    kind: Deployment
+    apiVersion: v1
+    kind: Service
     metadata:
-      name: mexmetricsexporter-deployment
+      name: someapplication2-tcp
+      labels:
+        run: someapplication2
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp80
+        protocol: TCP
+        port: 80
+        targetPort: 80
+      - name: http443
+        protocol: TCP
+        port: 443
+        targetPort: 443
+      selector:
+        run: someapplication2
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication2-udp
+      labels:
+        run: someapplication2
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: udp10002
+        protocol: UDP
+        port: 10002
+        targetPort: 10002
+      selector:
+        run: someapplication2
+    ---
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      name: someapplication2-deployment
     spec:
       selector:
         matchLabels:
-          run: mexmetricsexporter
-      replicas: 1
+          run: someapplication2
       template:
         metadata:
           labels:
-            run: mexmetricsexporter
+            run: someapplication2
         spec:
           volumes:
           imagePullSecrets:
           - name: mexgitlabsecret
           containers:
-          - name: mexmetricsexporter
-            image: docker.mobiledgex.net/mobiledgex/images/metrics-exporter:latest
+          - name: someapplication2
+            image: mobiledgex_AcmeAppCo/someapplication2:1.0
             imagePullPolicy: Always
             ports:
+            - containerPort: 80
+              protocol: TCP
+            - containerPort: 443
+              protocol: TCP
+            - containerPort: 10002
+              protocol: UDP
   deploymentgenerator: kubernetes-basic
-  delopt: AutoDelete
-  configs:
-  - kind: envVarsYaml
-    config: |
-      - name: MEX_INFLUXDB_ADDR
-        value: 0.0.0.0:8086
-      - name: MEX_INFLUXDB_USER
-        value: root
-      - name: MEX_INFLUXDB_PASS
-        value: root
-      - name: MEX_SCRAPE_INTERVAL
-        value: 15s
-  - kind: envVarsYaml
-    config: |
-      - name: MEX_CLUSTER_NAME
-        valueFrom:
-          configMapKeyRef:
-            name: mexcluster-info
-            key: ClusterName
-            optional: true
-      - name: MEX_CLOUDLET_NAME
-        valueFrom:
-          configMapKeyRef:
-            name: mexcluster-info
-            key: CloudletName
-            optional: true
-      - name: MEX_OPERATOR_NAME
-        valueFrom:
-          configMapKeyRef:
-            name: mexcluster-info
-            key: OperatorName
-            optional: true
+  scalewithcluster: true
+
 appinstances:
 - key:
     appkey:
       developerkey:
         name: MobiledgeX
-      name: MEXMetricsExporter
+      name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
@@ -320,6 +423,28 @@ appinstances:
       cloudletkey:
         operatorkey:
           name: tmus
+        name: tmus-cloud-1
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  uri: tmus-cloud-1.tmus.mobiledgex.net
+  liveness: LivenessStatic
+  flavor:
+    name: x1.medium
+  state: Ready
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX
+      name: MEXMetricsExporter
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
         name: tmus-cloud-2
       developer: AcmeAppCo
   cloudletloc:
@@ -338,29 +463,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication1
-      cloudletkey:
-        operatorkey:
-          name: tmus
-        name: tmus-cloud-1
-      developer: AcmeAppCo
-  cloudletloc:
-    latitude: 31
-    longitude: -91
-  uri: tmus-cloud-1.tmus.mobiledgex.net
-  liveness: LivenessStatic
-  flavor:
-    name: x1.medium
-  state: Ready
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX
-      name: MEXPrometheusAppName
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication1
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: tmus
@@ -409,3 +512,83 @@ appinstances:
   flavor:
     name: x1.small
   state: Ready
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  uri: tmus-cloud-2.tmus.mobiledgex.net
+  liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 80
+    publicport: 10000
+    fqdnprefix: someapplication2-tcp.
+  - proto: LProtoHttp
+    internalport: 443
+    publicport: 443
+    pathprefix: acmeappco/someapplication210/p443
+  - proto: LProtoUdp
+    internalport: 10002
+    publicport: 10000
+    fqdnprefix: someapplication2-udp.
+  flavor:
+    name: x1.small
+  state: Ready
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX
+      name: MEXMetricsExporter
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  uri: tmus-cloud-2.tmus.mobiledgex.net
+  liveness: LivenessStatic
+  flavor:
+    name: x1.medium
+  state: Ready
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  uri: tmus-cloud-2.tmus.mobiledgex.net
+  liveness: LivenessStatic
+  flavor:
+    name: x1.medium
+  state: Ready
+
