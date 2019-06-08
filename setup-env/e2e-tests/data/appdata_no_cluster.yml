@@ -69,7 +69,7 @@ apps:
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.small
-  accessports: "tcp:80,http:443,udp:10002"
+  accessports: "tcp:22,udp:10003"
   scalewithcluster: true
 
 appinstances:
