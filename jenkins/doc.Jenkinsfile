@@ -19,11 +19,13 @@ pipeline {
                 dir(path: 'go/src/github.com/grpc-ecosystem/grpc-gateway') {
                     git url: 'git@github.com:mobiledgex/grpc-gateway'
                 }
+                dir(path: 'go/src/github.com/grpc-ecosystem/grpc-gateway') {
+                    sh label: 'pull in dependencies', script: 'GOPATH=$WORKSPACE/go go get ./...'
+                }
                 dir(path: 'go/src') {
                     sh label: 'build protoc-gen-swagger',
                        script: '''#!/bin/bash
 export GOPATH=$WORKSPACE/go
-go get github.com/grpc-ecosystem/grpc-gateway
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
                                 '''
                 }
