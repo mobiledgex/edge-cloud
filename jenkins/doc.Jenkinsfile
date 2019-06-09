@@ -45,6 +45,15 @@ go mod download
 make doc
                     '''
                 }
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                    sh label: 'make external doc', script: '''#!/bin/bash
+export PATH=$PATH:$WORKSPACE/go/bin:$HOME/go/bin
+export GOPATH=$WORKSPACE/go
+export GO111MODULE=on
+go mod download
+make external-doc
+                    '''
+                }
                 rtUpload (
                     serverId: "artifactory",
                     spec:
@@ -53,6 +62,18 @@ make doc
                                 {
                                     "pattern": "go/src/github.com/mobiledgex/edge-cloud/edgeproto/doc/*.json",
                                     "target": "build-artifacts/swagger-spec/${BUILD_TAG}/"
+                                }
+                            ]
+                        }"""
+                )
+                rtUpload (
+                    serverId: "artifactory",
+                    spec:
+                        """{
+                            "files": [
+                                {
+                                    "pattern": "go/src/github.com/mobiledgex/edge-cloud/edgeproto/external-doc/*.json",
+                                    "target": "build-artifacts/swagger-spec/${BUILD_TAG}/external/"
                                 }
                             ]
                         }"""
