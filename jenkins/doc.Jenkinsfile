@@ -14,6 +14,25 @@ pipeline {
                 }
             }
         }
+        stage('Generate protoc-gen-swagger') {
+            steps {
+                dir(path: 'go/src/github.com/grpc-ecosystem') {
+                    git url: 'git@github.com:grpc-ecosystem/grpc-gateway'
+                }
+                dir(path: 'go/src/github.com/grpc-ecosystem/grpc-gateway') {
+                    sh label: 'switch to mobiledgex fork',
+                       script: 'git remote add mobiledgex got@github.com:mobiledgex/grpc-gateway'
+                }
+                dir(path: 'go/src/github.com/grpc-ecosystem/grpc-gateway') {
+                    sh label: 'pull latest changes from fork',
+                       script: 'git pull mobiledgex master'
+                }
+                dir(path: 'go/src') {
+                    sh label: 'build protoc-gen-swagger',
+                       script: 'go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger'
+                }
+            }
+        }
         stage('Generate docs') {
             steps {
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
