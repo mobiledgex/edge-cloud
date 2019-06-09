@@ -17,15 +17,7 @@ pipeline {
         stage('Generate protoc-gen-swagger') {
             steps {
                 dir(path: 'go/src/github.com/grpc-ecosystem') {
-                    git url: 'git@github.com:grpc-ecosystem/grpc-gateway'
-                }
-                dir(path: 'go/src/github.com/grpc-ecosystem/grpc-gateway') {
-                    sh label: 'switch to mobiledgex fork',
-                       script: 'git remote add mobiledgex git@github.com:mobiledgex/grpc-gateway'
-                }
-                dir(path: 'go/src/github.com/grpc-ecosystem/grpc-gateway') {
-                    sh label: 'pull latest changes from fork',
-                       script: 'git pull mobiledgex master'
+                    git url: 'git@github.com:mobiledgex/grpc-gateway'
                 }
                 dir(path: 'go/src') {
                     sh label: 'build protoc-gen-swagger',
