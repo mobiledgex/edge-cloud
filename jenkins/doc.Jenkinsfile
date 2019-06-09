@@ -16,7 +16,7 @@ pipeline {
         }
         stage('Generate protoc-gen-swagger') {
             steps {
-                dir(path: 'go/src/github.com/grpc-ecosystem') {
+                dir(path: 'go/src/github.com/grpc-ecosystem/grpc-gateway') {
                     git url: 'git@github.com:mobiledgex/grpc-gateway'
                 }
                 dir(path: 'go/src') {
