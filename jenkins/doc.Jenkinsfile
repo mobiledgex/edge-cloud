@@ -21,7 +21,7 @@ pipeline {
                 }
                 dir(path: 'go/src/github.com/grpc-ecosystem/grpc-gateway') {
                     sh label: 'switch to mobiledgex fork',
-                       script: 'git remote add mobiledgex got@github.com:mobiledgex/grpc-gateway'
+                       script: 'git remote add mobiledgex git@github.com:mobiledgex/grpc-gateway'
                 }
                 dir(path: 'go/src/github.com/grpc-ecosystem/grpc-gateway') {
                     sh label: 'pull latest changes from fork',
