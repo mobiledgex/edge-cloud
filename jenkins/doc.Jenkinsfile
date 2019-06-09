@@ -21,7 +21,10 @@ pipeline {
                 }
                 dir(path: 'go/src') {
                     sh label: 'build protoc-gen-swagger',
-                       script: 'go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger'
+                       script: '''#!/bin/bash
+export GOPATH=$WORKSPACE/go
+go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger'
+                                '''
                 }
             }
         }
@@ -32,7 +35,7 @@ pipeline {
                 }
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'make doc', script: '''#!/bin/bash
-export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin
+export PATH=$PATH:$WORKSPACE/go/bin:$HOME/go/bin
 export GOPATH=$WORKSPACE/go
 export GO111MODULE=on
 go mod download
