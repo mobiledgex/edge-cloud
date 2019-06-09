@@ -82,7 +82,7 @@ make external-doc
         }
         stage('Update swagger UI') {
             steps {
-                sh 'sudo /root/swagger-ui.sh'
+                sh 'sudo /root/swagger-ui.sh $WORKSPACE'
             }
         }
     }
