@@ -23,7 +23,7 @@ pipeline {
                     sh label: 'build protoc-gen-swagger',
                        script: '''#!/bin/bash
 export GOPATH=$WORKSPACE/go
-go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger'
+go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
                                 '''
                 }
             }
