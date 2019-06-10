@@ -19,3 +19,8 @@ doc: build
 	protoc ${INCLUDE} --doc_out=./doc --doc_opt=markdown,README.md *.proto
 	#swagger annotations for REST APIs
 	protoc ${INCLUDE} --swagger_out=logtostderr=true,allow_merge=true:./doc  *.proto
+
+external-doc: build
+	mkdir -p ./external-doc
+	protoc ${INCLUDE} --swagger_out=logtostderr=true,allow_merge=true,config_file=swagger_config.yaml:./external-doc  *.proto
+

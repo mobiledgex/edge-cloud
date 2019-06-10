@@ -1363,7 +1363,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("}")
 		m.P("")
-		m.importUtil = true
+		m.importJson = true
 		m.importLog = true
 	}
 	if field := gensupport.GetMessageKey(message); field != nil {
