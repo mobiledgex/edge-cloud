@@ -11,12 +11,26 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
 const AppConfigEnvYaml = "envVarsYaml"
 
 const MexAppLabel = "mex-app"
+
+func addEnvVars(template *v1.PodTemplateSpec, envVars []v1.EnvVar) {
+	// walk the containers and append environment variables to each
+	for j, _ := range template.Spec.Containers {
+		template.Spec.Containers[j].Env = append(template.Spec.Containers[j].Env, envVars...)
+	}
+}
+
+func addMexLabel(meta *metav1.ObjectMeta, label string) {
+	// Add a label so we can lookup the pods created by this
+	// deployment. Pods names are used for shell access.
+	meta.Labels[MexAppLabel] = label
+}
 
 // Merge in all the environment variables into
 func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string, error) {
@@ -48,20 +62,14 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string,
 
 	//walk the objects
 	for i, _ := range objs {
-		//make sure we are working on the Deployment object
-		deployment, ok := objs[i].(*appsv1.Deployment)
-		if !ok {
-			continue
+		switch obj := objs[i].(type) {
+		case *appsv1.Deployment:
+			addEnvVars(&obj.Spec.Template, envVars)
+			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
+		case *appsv1.DaemonSet:
+			addEnvVars(&obj.Spec.Template, envVars)
+			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
 		}
-		//walk the containers and append environment variables to each
-		for j, _ := range deployment.Spec.Template.Spec.Containers {
-			deployment.Spec.Template.Spec.Containers[j].Env =
-				append(deployment.Spec.Template.Spec.Containers[j].Env, envVars...)
-		}
-		// Add a label so we can lookup the pods created by this
-		// deployment. Pods names are used for shell access.
-		deployment.Spec.Template.ObjectMeta.Labels[MexAppLabel] =
-			deployment.ObjectMeta.Name
 	}
 	//marshal the objects back together and return as one string
 	printer := &printers.YAMLPrinter{}

@@ -93,6 +93,9 @@ message App {
   DeleteType del_opt = 20 [(protogen.hidetag) = "nocmp"];
   // Customization files passed through to implementing services
   repeated ConfigFile configs = 21;
+  // Run application on all the nodes of the cluster
+  bool scale_with_cluster = 22;
+  // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
