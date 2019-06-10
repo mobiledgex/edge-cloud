@@ -690,16 +690,16 @@ func ClusterInstInfoSetFields() {
 		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "4")
 	}
 	if ClusterInstInfoNoConfigFlagSet.Lookup("status-tasknumber").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "7.1")
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "6.1")
 	}
 	if ClusterInstInfoNoConfigFlagSet.Lookup("status-maxtasks").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "7.2")
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "6.2")
 	}
 	if ClusterInstInfoNoConfigFlagSet.Lookup("status-taskname").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "7.3")
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "6.3")
 	}
 	if ClusterInstInfoNoConfigFlagSet.Lookup("status-stepname").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "7.4")
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "6.4")
 	}
 }
 

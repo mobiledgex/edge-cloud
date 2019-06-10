@@ -139,6 +139,7 @@ func (s *AppInstInfoCache) SetStatusMaxTasks(key *AppInstKey, maxTasks uint32) {
 }
 
 func (s *AppInstInfoCache) SetStatusTask(key *AppInstKey, taskName string) {
+	log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
@@ -150,6 +151,7 @@ func (s *AppInstInfoCache) SetStatusTask(key *AppInstKey, taskName string) {
 }
 
 func (s *AppInstInfoCache) SetStatusStep(key *AppInstKey, stepName string) {
+	log.DebugLog(log.DebugLevelApi, "SetStatusStep", "key", key, "stepName", stepName)
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present

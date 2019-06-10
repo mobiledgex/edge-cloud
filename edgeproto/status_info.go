@@ -1,7 +1,9 @@
 package edgeproto
 
-import "github.com/mobiledgex/edge-cloud/log"
-import "fmt"
+import (
+	"fmt"
+	"github.com/mobiledgex/edge-cloud/log"
+)
 
 func (s *StatusInfo) toString() string {
 	if s == nil {

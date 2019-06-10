@@ -186,7 +186,10 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr stri
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
 
-	pc := pf.PlatformConfig{CloudletKey: &cloudlet.Key, PhysicalName: physicalName, VaultAddr: vaultAddr}
+	pc := pf.PlatformConfig{
+		CloudletKey:  &cloudlet.Key,
+		PhysicalName: physicalName,
+		VaultAddr:    vaultAddr}
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper)
 	err := platform.Init(&pc)
 	return err
