@@ -66,8 +66,11 @@ external-doc:
 	make -C edgeproto external-doc
 
 lint:
-	@ln -sfh $(GOGOPROTO) link-gogo-protobuf
-	@ln -sfh $(GRPCGATEWAY) link-grpc-gateway
+	go get github.com/uber/prototool/cmd/prototool
+	$(RM) link-gogo-protobuf
+	$(RM) link-grpc-gateway
+	ln -s $(GOGOPROTO) link-gogo-protobuf
+	ln -s $(GRPCGATEWAY) link-grpc-gateway
 	prototool lint edgeproto
 	prototool lint d-match-engine
 
