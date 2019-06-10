@@ -46,6 +46,7 @@
 		ClusterInstKey
 		ClusterInst
 		ClusterInstInfo
+		StatusInfo
 		ControllerKey
 		Controller
 		DeveloperKey
