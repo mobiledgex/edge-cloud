@@ -75,6 +75,24 @@ clusterinsts:
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-2
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  state: Ready
+  ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
 developers:
 - key:
     name: AcmeAppCo
@@ -136,10 +154,10 @@ apps:
     metadata:
       name: someapplication1-deployment
     spec:
+      replicas: 1
       selector:
         matchLabels:
           run: someapplication1
-      replicas: 1
       template:
         metadata:
           labels:
@@ -160,6 +178,77 @@ apps:
             - containerPort: 10002
               protocol: UDP
   deploymentgenerator: kubernetes-basic
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: someapplication2
+    version: "1.0"
+  imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
+  imagetype: ImageTypeDocker
+  accessports: tcp:22,udp:10003
+  defaultflavor:
+    name: x1.small
+  deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication2-tcp
+      labels:
+        run: someapplication2
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp22
+        protocol: TCP
+        port: 22
+        targetPort: 22
+      selector:
+        run: someapplication2
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication2-udp
+      labels:
+        run: someapplication2
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: udp10003
+        protocol: UDP
+        port: 10003
+        targetPort: 10003
+      selector:
+        run: someapplication2
+    ---
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      name: someapplication2-deployment
+    spec:
+      selector:
+        matchLabels:
+          run: someapplication2
+      template:
+        metadata:
+          labels:
+            run: someapplication2
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: mexgitlabsecret
+          containers:
+          - name: someapplication2
+            image: mobiledgex_AcmeAppCo/someapplication2:1.0
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 22
+              protocol: TCP
+            - containerPort: 10003
+              protocol: UDP
+  deploymentgenerator: kubernetes-basic
+  scalewithcluster: true
 - key:
     developerkey:
       name: MobiledgeX
@@ -200,10 +289,10 @@ apps:
     metadata:
       name: mexmetricsexporter-deployment
     spec:
+      replicas: 1
       selector:
         matchLabels:
           run: mexmetricsexporter
-      replicas: 1
       template:
         metadata:
           labels:
@@ -408,4 +497,79 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  state: Ready
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  uri: dmuus-cloud-2.dmuus.mobiledgex.net
+  liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 22
+    publicport: 10000
+    fqdnprefix: someapplication2-tcp.
+  - proto: LProtoUdp
+    internalport: 10003
+    publicport: 10003
+    fqdnprefix: someapplication2-udp.
+  flavor:
+    name: x1.small
+  state: Ready
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  uri: dmuus-cloud-2.dmuus.mobiledgex.net
+  liveness: LivenessStatic
+  flavor:
+    name: x1.medium
+  state: Ready
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX
+      name: MEXMetricsExporter
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  uri: dmuus-cloud-2.dmuus.mobiledgex.net
+  liveness: LivenessStatic
+  flavor:
+    name: x1.medium
   state: Ready

@@ -11,11 +11,13 @@ var MexRegistry = "docker.mobiledgex.net"
 var MexRegistrySecret = "mexgitlabsecret"
 
 var kubeLbT *template.Template
-var kubeAppT *template.Template
+var kubeAppDpT *template.Template
+var kubeAppDsT *template.Template
 
 func init() {
 	kubeLbT = template.Must(template.New("lb").Parse(lbTemplate))
-	kubeAppT = template.Must(template.New("app").Parse(appTemplate))
+	kubeAppDpT = template.Must(template.New("appdp").Parse(dpTemplate + podTemplate))
+	kubeAppDsT = template.Must(template.New("appds").Parse(dsTemplate + podTemplate))
 }
 
 type kubeBasicGen struct {
@@ -141,7 +143,11 @@ func (g *kubeBasicGen) kubeApp() {
 		RegistrySecret: MexRegistrySecret,
 	}
 	buf := bytes.Buffer{}
-	g.err = kubeAppT.Execute(&buf, &data)
+	if g.app.ScaleWithCluster {
+		g.err = kubeAppDsT.Execute(&buf, &data)
+	} else {
+		g.err = kubeAppDpT.Execute(&buf, &data)
+	}
 	if g.err != nil {
 		return
 	}
@@ -158,15 +164,23 @@ type appData struct {
 	RegistrySecret string
 }
 
-var appTemplate = `apiVersion: apps/v1
+var dpTemplate = `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{.Name}}
 spec:
+  replicas: 1`
+
+var dsTemplate = `apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{.Name}}
+spec:`
+
+var podTemplate = `
   selector:
     matchLabels:
       run: {{.Run}}
-  replicas: 1
   template:
     metadata:
       labels:
