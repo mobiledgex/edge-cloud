@@ -8,9 +8,12 @@ func (s *StatusInfo) toString() string {
 		return ""
 	}
 	if s.TaskNumber > 0 {
-		rc := fmt.Sprintf("TASK: [%02d] - [%s]", s.TaskNumber, s.TaskName)
+		rc := s.TaskName
+		if s.MaxTasks > 0 {
+			rc += fmt.Sprintf("(%d of %d)", s.TaskNumber, s.MaxTasks)
+		}
 		if s.StepName != "" {
-			rc += fmt.Sprintf("\n   -- STEP: [%s]", s.StepName)
+			rc += fmt.Sprintf(", %s", s.StepName)
 		}
 		return rc
 	}
@@ -18,14 +21,17 @@ func (s *StatusInfo) toString() string {
 }
 
 func (s *StatusInfo) reset() {
-	log.DebugLog(log.DebugLevelApi, "StatusInfo resetting status")
 	s.TaskNumber = 0
+	s.MaxTasks = 0
 	s.TaskName = ""
 	s.StepName = ""
 }
 
+func (s *StatusInfo) setMaxTasks(maxtask uint32) {
+	s.MaxTasks = maxtask
+}
+
 func (s *StatusInfo) setTask(task string) {
-	log.DebugLog(log.DebugLevelApi, "StatusInfo setting task", "task", task)
 	if s == nil {
 		log.WarnLog("nil StatusInfo")
 		return
@@ -40,7 +46,6 @@ func (s *StatusInfo) setTask(task string) {
 }
 
 func (s *StatusInfo) setStep(step string) {
-	log.DebugLog(log.DebugLevelApi, "StatusInfo setting step", "step", step)
 	if s == nil {
 		log.WarnLog("nil StatusInfo")
 		return

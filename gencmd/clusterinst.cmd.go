@@ -110,6 +110,7 @@ func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	s = append(s, strconv.FormatUint(uint64(in.NumMasters), 10))
 	s = append(s, strconv.FormatUint(uint64(in.NumNodes), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
 	s = append(s, in.Status.TaskName)
 	s = append(s, in.Status.StepName)
 	return s
@@ -135,6 +136,7 @@ func ClusterInstHeaderSlicer() []string {
 	s = append(s, "NumMasters")
 	s = append(s, "NumNodes")
 	s = append(s, "Status-TaskNumber")
+	s = append(s, "Status-MaxTasks")
 	s = append(s, "Status-TaskName")
 	s = append(s, "Status-StepName")
 	return s
@@ -175,13 +177,14 @@ func ClusterInstInfoSlicer(in *edgeproto.ClusterInstInfo) []string {
 	s = append(s, in.Key.Developer)
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
 	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
-	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
-	s = append(s, in.Status.TaskName)
-	s = append(s, in.Status.StepName)
 	if in.Errors == nil {
 		in.Errors = make([]string, 1)
 	}
 	s = append(s, in.Errors[0])
+	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
+	s = append(s, in.Status.TaskName)
+	s = append(s, in.Status.StepName)
 	return s
 }
 
@@ -194,10 +197,11 @@ func ClusterInstInfoHeaderSlicer() []string {
 	s = append(s, "Key-Developer")
 	s = append(s, "NotifyId")
 	s = append(s, "State")
+	s = append(s, "Errors")
 	s = append(s, "Status-TaskNumber")
+	s = append(s, "Status-MaxTasks")
 	s = append(s, "Status-TaskName")
 	s = append(s, "Status-StepName")
-	s = append(s, "Errors")
 	return s
 }
 
@@ -573,6 +577,7 @@ func init() {
 	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumMasters, "nummasters", 0, "NumMasters")
 	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumNodes, "numnodes", 0, "NumNodes")
 	ClusterInstNoConfigFlagSet.Uint32Var(&ClusterInstIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
+	ClusterInstNoConfigFlagSet.Uint32Var(&ClusterInstIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.Status.StepName, "status-stepname", "", "Status.StepName")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
@@ -582,6 +587,7 @@ func init() {
 	ClusterInstInfoFlagSet.Int64Var(&ClusterInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	ClusterInstInfoFlagSet.Uint32Var(&ClusterInstInfoIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
+	ClusterInstInfoFlagSet.Uint32Var(&ClusterInstInfoIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Status.StepName, "status-stepname", "", "Status.StepName")
 	CreateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
@@ -652,11 +658,14 @@ func ClusterInstSetFields() {
 	if ClusterInstNoConfigFlagSet.Lookup("status-tasknumber").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "16.1")
 	}
-	if ClusterInstNoConfigFlagSet.Lookup("status-taskname").Changed {
+	if ClusterInstNoConfigFlagSet.Lookup("status-maxtasks").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "16.2")
 	}
-	if ClusterInstNoConfigFlagSet.Lookup("status-stepname").Changed {
+	if ClusterInstNoConfigFlagSet.Lookup("status-taskname").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "16.3")
+	}
+	if ClusterInstNoConfigFlagSet.Lookup("status-stepname").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "16.4")
 	}
 }
 
@@ -681,13 +690,16 @@ func ClusterInstInfoSetFields() {
 		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "4")
 	}
 	if ClusterInstInfoNoConfigFlagSet.Lookup("status-tasknumber").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "5.1")
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "7.1")
+	}
+	if ClusterInstInfoNoConfigFlagSet.Lookup("status-maxtasks").Changed {
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "7.2")
 	}
 	if ClusterInstInfoNoConfigFlagSet.Lookup("status-taskname").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "5.2")
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "7.3")
 	}
 	if ClusterInstInfoNoConfigFlagSet.Lookup("status-stepname").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "5.3")
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "7.4")
 	}
 }
 

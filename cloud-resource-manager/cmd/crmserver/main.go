@@ -185,10 +185,9 @@ func getPlatform(plat string) (pf.Platform, error) {
 func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
-	//if err := mexos.FillManifestValues(mf, "platform"); err != nil {
-	//	return err
-	//}
+
+	pc := pf.PlatformConfig{CloudletKey: &cloudlet.Key, PhysicalName: physicalName, VaultAddr: vaultAddr}
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper)
-	err := platform.Init(&cloudlet.Key, physicalName, vaultAddr, clusterInstCache)
+	err := platform.Init(&pc)
 	return err
 }

@@ -2,25 +2,24 @@ package dind
 
 import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/nginx"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
 type Platform struct {
-	infoCache *edgeproto.ClusterInstInfoCache
 }
 
 func (s *Platform) GetType() string {
 	return "dind"
 }
 
-func (s *Platform) Init(key *edgeproto.CloudletKey, physicalName, vaultAddr string, infoCache *edgeproto.ClusterInstInfoCache) error {
+func (s *Platform) Init(platformConfig *platform.PlatformConfig) error {
 	// set up L7 load balancer
 	client, err := s.GetPlatformClient(nil)
 	if err != nil {
 		return err
 	}
-	s.infoCache = infoCache
 	err = nginx.InitL7Proxy(client, nginx.WithDockerPublishPorts())
 	if err != nil {
 		return err

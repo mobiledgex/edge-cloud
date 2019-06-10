@@ -1150,8 +1150,9 @@ const AppInstFieldCreatedAtNanos = "21.2"
 const AppInstFieldAutoClusterIpAccess = "22"
 const AppInstFieldStatus = "23"
 const AppInstFieldStatusTaskNumber = "23.1"
-const AppInstFieldStatusTaskName = "23.2"
-const AppInstFieldStatusStepName = "23.3"
+const AppInstFieldStatusMaxTasks = "23.2"
+const AppInstFieldStatusTaskName = "23.3"
+const AppInstFieldStatusStepName = "23.4"
 
 var AppInstAllFields = []string{
 	AppInstFieldKeyAppKeyDeveloperKeyName,
@@ -1186,6 +1187,7 @@ var AppInstAllFields = []string{
 	AppInstFieldCreatedAtNanos,
 	AppInstFieldAutoClusterIpAccess,
 	AppInstFieldStatusTaskNumber,
+	AppInstFieldStatusMaxTasks,
 	AppInstFieldStatusTaskName,
 	AppInstFieldStatusStepName,
 }
@@ -1223,6 +1225,7 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldCreatedAtNanos:                              struct{}{},
 	AppInstFieldAutoClusterIpAccess:                         struct{}{},
 	AppInstFieldStatusTaskNumber:                            struct{}{},
+	AppInstFieldStatusMaxTasks:                              struct{}{},
 	AppInstFieldStatusTaskName:                              struct{}{},
 	AppInstFieldStatusStepName:                              struct{}{},
 }
@@ -1385,6 +1388,10 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 		fields[AppInstFieldStatusTaskNumber] = struct{}{}
 		fields[AppInstFieldStatus] = struct{}{}
 	}
+	if m.Status.MaxTasks != o.Status.MaxTasks {
+		fields[AppInstFieldStatusMaxTasks] = struct{}{}
+		fields[AppInstFieldStatus] = struct{}{}
+	}
 	if m.Status.TaskName != o.Status.TaskName {
 		fields[AppInstFieldStatusTaskName] = struct{}{}
 		fields[AppInstFieldStatus] = struct{}{}
@@ -1533,9 +1540,12 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 			m.Status.TaskNumber = src.Status.TaskNumber
 		}
 		if _, set := fmap["23.2"]; set {
-			m.Status.TaskName = src.Status.TaskName
+			m.Status.MaxTasks = src.Status.MaxTasks
 		}
 		if _, set := fmap["23.3"]; set {
+			m.Status.TaskName = src.Status.TaskName
+		}
+		if _, set := fmap["23.4"]; set {
 			m.Status.StepName = src.Status.StepName
 		}
 	}
@@ -1963,7 +1973,13 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 			curState = TrackedState_NOT_PRESENT
 		}
 		if send != nil {
-			msg := TrackedState_CamelName[int32(curState)] + " " + info.Status.toString()
+			statusString := info.Status.toString()
+			var msg string
+			if statusString != "" {
+				msg = statusString
+			} else {
+				msg = TrackedState_CamelName[int32(curState)]
+			}
 			send(&Result{Message: msg})
 		}
 		log.DebugLog(log.DebugLevelApi, "Watch event for AppInst", "key", key, "state", TrackedState_CamelName[int32(curState)], "status", info.Status)
@@ -2176,8 +2192,9 @@ const AppInstInfoFieldRuntimeInfo = "6"
 const AppInstInfoFieldRuntimeInfoContainerIds = "6.1"
 const AppInstInfoFieldStatus = "7"
 const AppInstInfoFieldStatusTaskNumber = "7.1"
-const AppInstInfoFieldStatusTaskName = "7.2"
-const AppInstInfoFieldStatusStepName = "7.3"
+const AppInstInfoFieldStatusMaxTasks = "7.2"
+const AppInstInfoFieldStatusTaskName = "7.3"
+const AppInstInfoFieldStatusStepName = "7.4"
 
 var AppInstInfoAllFields = []string{
 	AppInstInfoFieldKeyAppKeyDeveloperKeyName,
@@ -2192,6 +2209,7 @@ var AppInstInfoAllFields = []string{
 	AppInstInfoFieldErrors,
 	AppInstInfoFieldRuntimeInfoContainerIds,
 	AppInstInfoFieldStatusTaskNumber,
+	AppInstInfoFieldStatusMaxTasks,
 	AppInstInfoFieldStatusTaskName,
 	AppInstInfoFieldStatusStepName,
 }
@@ -2209,6 +2227,7 @@ var AppInstInfoAllFieldsMap = map[string]struct{}{
 	AppInstInfoFieldErrors:                                      struct{}{},
 	AppInstInfoFieldRuntimeInfoContainerIds:                     struct{}{},
 	AppInstInfoFieldStatusTaskNumber:                            struct{}{},
+	AppInstInfoFieldStatusMaxTasks:                              struct{}{},
 	AppInstInfoFieldStatusTaskName:                              struct{}{},
 	AppInstInfoFieldStatusStepName:                              struct{}{},
 }
@@ -2286,6 +2305,10 @@ func (m *AppInstInfo) DiffFields(o *AppInstInfo, fields map[string]struct{}) {
 		fields[AppInstInfoFieldStatusTaskNumber] = struct{}{}
 		fields[AppInstInfoFieldStatus] = struct{}{}
 	}
+	if m.Status.MaxTasks != o.Status.MaxTasks {
+		fields[AppInstInfoFieldStatusMaxTasks] = struct{}{}
+		fields[AppInstInfoFieldStatus] = struct{}{}
+	}
 	if m.Status.TaskName != o.Status.TaskName {
 		fields[AppInstInfoFieldStatusTaskName] = struct{}{}
 		fields[AppInstInfoFieldStatus] = struct{}{}
@@ -2358,9 +2381,12 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) {
 			m.Status.TaskNumber = src.Status.TaskNumber
 		}
 		if _, set := fmap["7.2"]; set {
-			m.Status.TaskName = src.Status.TaskName
+			m.Status.MaxTasks = src.Status.MaxTasks
 		}
 		if _, set := fmap["7.3"]; set {
+			m.Status.TaskName = src.Status.TaskName
+		}
+		if _, set := fmap["7.4"]; set {
 			m.Status.StepName = src.Status.StepName
 		}
 	}

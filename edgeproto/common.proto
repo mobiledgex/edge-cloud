@@ -91,6 +91,7 @@ enum CRMOverride {
 // is converted to a string
 message StatusInfo{
   uint32 task_number = 1;
-  string task_name = 2;
-  string step_name = 3;
+  uint32 max_tasks = 2;
+  string task_name = 3;
+  string step_name = 4;
 }

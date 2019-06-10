@@ -64,16 +64,18 @@ var CRMOverrideStrings = []string{
 }
 
 func StatusInfoSlicer(in *edgeproto.StatusInfo) []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 4)
 	s = append(s, strconv.FormatUint(uint64(in.TaskNumber), 10))
+	s = append(s, strconv.FormatUint(uint64(in.MaxTasks), 10))
 	s = append(s, in.TaskName)
 	s = append(s, in.StepName)
 	return s
 }
 
 func StatusInfoHeaderSlicer() []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 4)
 	s = append(s, "TaskNumber")
+	s = append(s, "MaxTasks")
 	s = append(s, "TaskName")
 	s = append(s, "StepName")
 	return s

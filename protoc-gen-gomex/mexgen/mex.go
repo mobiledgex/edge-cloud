@@ -1160,7 +1160,13 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 			curState = {{.WaitForState}}_NOT_PRESENT
 		}
 		if send != nil {
-			msg := {{.WaitForState}}_CamelName[int32(curState)] + " " + info.Status.toString()			
+			statusString := info.Status.toString()
+			var msg string
+			if statusString != ""{
+				msg = statusString			
+			} else {
+				msg = {{.WaitForState}}_CamelName[int32(curState)]
+			}
 			send(&Result{Message: msg})
 		}
 		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_CamelName[int32(curState)], "status", info.Status)
