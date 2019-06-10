@@ -740,7 +740,7 @@ func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_
 }
 
 func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State)
+	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status)
 	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -752,6 +752,11 @@ func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
 			if in.State == edgeproto.TrackedState_READY {
 				// update runtime info
 				inst.RuntimeInfo = in.RuntimeInfo
+				inst.Status = in.Status
+				s.store.STMPut(stm, &inst)
+			} else if inst.Status != in.Status {
+				// update status
+				inst.Status = in.Status
 				s.store.STMPut(stm, &inst)
 			}
 			return nil
@@ -763,6 +768,7 @@ func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
 			return nil
 		}
 		inst.State = in.State
+		inst.Status = in.Status
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			inst.Errors = in.Errors
 		}

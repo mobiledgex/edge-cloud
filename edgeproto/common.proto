@@ -84,3 +84,14 @@ enum CRMOverride {
   // Ignore CRM and Transient State
   IGNORE_CRM_AND_TRANSIENT_STATE = 4;
 }
+
+// Used to track status of create/delete/update for resources that are being modified 
+// by the controller via the CRM.  Tasks are the high level jobs that are to be completed.
+// Steps are work items within a task.   Within the clusterinst and appinst objects this
+// is converted to a string
+message StatusInfo{
+  uint32 task_number = 1;
+  uint32 max_tasks = 2;
+  string task_name = 3;
+  string step_name = 4;
+}

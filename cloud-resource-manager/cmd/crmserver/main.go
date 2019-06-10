@@ -69,7 +69,7 @@ func main() {
 	if *physicalName == "" {
 		*physicalName = myCloudlet.Key.Name
 	}
-	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key, "platform", *platformName)
+	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key, "platform", *platformName, "physicalName", physicalName)
 
 	// Load platform implementation.
 	var err error
@@ -93,7 +93,7 @@ func main() {
 
 	go func() {
 		log.DebugLog(log.DebugLevelMexos, "starting to init platform")
-		if err := initPlatform(&myCloudlet, *physicalName, *vaultAddr); err != nil {
+		if err := initPlatform(&myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache); err != nil {
 			log.FatalLog("failed to init platform", "err", err)
 		}
 
@@ -182,13 +182,15 @@ func getPlatform(plat string) (pf.Platform, error) {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string) error {
+func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
-	//if err := mexos.FillManifestValues(mf, "platform"); err != nil {
-	//	return err
-	//}
+
+	pc := pf.PlatformConfig{
+		CloudletKey:  &cloudlet.Key,
+		PhysicalName: physicalName,
+		VaultAddr:    vaultAddr}
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper)
-	err := platform.Init(&cloudlet.Key, physicalName, vaultAddr)
+	err := platform.Init(&pc)
 	return err
 }
