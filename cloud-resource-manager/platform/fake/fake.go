@@ -2,18 +2,20 @@ package fake
 
 import (
 	"fmt"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-type Platform struct{}
+type Platform struct {
+}
 
 func (s *Platform) GetType() string {
 	return "fake"
 }
 
-func (s *Platform) Init(key *edgeproto.CloudletKey, physicalName, vaultAddr string) error {
+func (s *Platform) Init(platformConfig *platform.PlatformConfig) error {
 	log.DebugLog(log.DebugLevelMexos, "running in fake cloudlet mode")
 	return nil
 }
@@ -32,10 +34,13 @@ func (s *Platform) GatherCloudletInfo(info *edgeproto.CloudletInfo) error {
 	}
 	return nil
 }
-func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst) error {
+
+func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	return fmt.Errorf("update cluster not supported for fake cloudlets")
 }
-func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst) error {
+func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
+	updateCallback(edgeproto.UpdateTask, "First Create Task")
+	updateCallback(edgeproto.UpdateTask, "Second Create Task")
 	log.DebugLog(log.DebugLevelMexos, "fake ClusterInst ready")
 	return nil
 }
@@ -45,7 +50,8 @@ func (s *Platform) DeleteClusterInst(clusterInst *edgeproto.ClusterInst) error {
 	return nil
 }
 
-func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor) error {
+func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
+	updateCallback(edgeproto.UpdateTask, "Creating App Inst")
 	log.DebugLog(log.DebugLevelMexos, "fake AppInst ready")
 	return nil
 }
