@@ -15,7 +15,6 @@ flavors:
   vcpus: 4
   disk: 4
 
-
 operators:
 - key:
     name: tmus
@@ -61,6 +60,17 @@ apps:
   defaultflavor:
     name: x1.small
   accessports: "tcp:80,http:443,udp:10002"
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: someapplication2
+    version: "1.0"
+  imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
+  imagetype: ImageTypeDocker
+  defaultflavor:
+    name: x1.small
+  accessports: "tcp:22,udp:10003"
+  scalewithcluster: true
 
 appinstances:
 - key:
@@ -92,6 +102,26 @@ appinstances:
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: tmus
