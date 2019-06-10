@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -157,6 +158,13 @@ func updateAppFields(in *edgeproto.App) error {
 		}
 		if cSum[0] != "md5" {
 			return fmt.Errorf("only md5 checksum is supported")
+		}
+		if len(cSum[1]) < 32 {
+			return fmt.Errorf("md5 checksum must be at least 32 characters")
+		}
+		_, err := hex.DecodeString(cSum[1])
+		if err != nil {
+			return fmt.Errorf("invalid md5 checksum")
 		}
 	}
 
