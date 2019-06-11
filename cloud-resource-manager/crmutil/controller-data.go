@@ -46,7 +46,6 @@ func NewControllerData(pf platform.Platform) *ControllerData {
 	cd.ClusterInstCache.SetNotifyCb(cd.clusterInstChanged)
 	cd.AppInstCache.SetNotifyCb(cd.appInstChanged)
 	cd.FlavorCache.SetNotifyCb(cd.flavorChanged)
-	cd.CloudletCache.SetNotifyCb(cd.cloudletChanged)
 	return cd
 }
 
@@ -104,16 +103,6 @@ func (cd *ControllerData) flavorChanged(key *edgeproto.FlavorKey, old *edgeproto
 	} else {
 		// CRM TODO: delete flavor?
 	}
-}
-
-func (cd *ControllerData) cloudletChanged(key *edgeproto.CloudletKey, old *edgeproto.Cloudlet) {
-	log.DebugLog(log.DebugLevelMexos, "cloudletChanged", "key", key, "old", old)
-	cloudlet := edgeproto.Cloudlet{}
-	found := cd.CloudletCache.Get(key, &cloudlet)
-	if !found {
-		return
-	}
-	log.DebugLog(log.DebugLevelMexos, "cloudlet", "time limits", cloudlet.TimeLimits)
 }
 
 func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInst) {
