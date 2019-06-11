@@ -147,19 +147,14 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 		cd.clusterInstInfoState(key, edgeproto.TrackedState_CREATING)
 		go func() {
 			var err error
-			log.DebugLog(log.DebugLevelMexos, "create cluster inst", "clusterinst", clusterInst)
 			var cloudlet edgeproto.Cloudlet
-			var timeout time.Duration
-			found := cd.CloudletCache.Get(&clusterInst.Key.CloudletKey, &cloudlet)
-			if found {
-				timeout = time.Duration(cloudlet.TimeLimits.CreateClusterInstTimeout)
-			} else {
+			if !cd.CloudletCache.Get(&clusterInst.Key.CloudletKey, &cloudlet) {
 				log.WarnLog("Could not find cloudlet in cache", "key", clusterInst.Key.CloudletKey)
 				cd.clusterInstInfoError(key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create Failed, Could not find cloudlet in cache %s", clusterInst.Key.CloudletKey))
 				return
 			}
-			log.DebugLog(log.DebugLevelMexos, "setting cluster create timeout", "timeout", timeout)
-
+			timeout := time.Duration(cloudlet.TimeLimits.CreateClusterInstTimeout)
+			log.DebugLog(log.DebugLevelMexos, "create cluster inst", "clusterinst", clusterInst, "timeout", timeout)
 			err = cd.platform.CreateClusterInst(&clusterInst, updateClusterCacheCallback, timeout)
 			if err != nil {
 				log.DebugLog(log.DebugLevelMexos, "error cluster create fail", "error", err)
