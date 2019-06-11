@@ -42,7 +42,6 @@ var NetworkSchemePublicIP = "publicip"
 var NetworkSchemePrivateIP = "privateip"
 
 // Metrics common variables - TODO move to edge-cloud-infra after metrics-exporter chagnes
-var InfluxDBVaultPath = "https://vault.mobiledgex.net/v1/secret/data/influxdb/"
 var DeveloperMetricsDbName = "clusterstats"
 var DeveloperAppMetrics = "crm-appinst"
 var DeveloperClusterMetric = "crm-cluster"
