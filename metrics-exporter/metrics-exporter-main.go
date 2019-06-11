@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -43,7 +44,6 @@ var Env = map[string]string{
 	"INFLUXDB_PASS": "root",
 }
 
-var InfluxDBName = "clusterstats"
 var influxQ *influxq.InfluxQ
 
 var sigChan chan os.Signal
@@ -105,7 +105,7 @@ func main() {
 	initEnv()
 	fmt.Printf("InfluxDB is at: %s\n", *influxdb)
 	fmt.Printf("Metrics collection interval is %s\n", *collectInterval)
-	influxQ = influxq.NewInfluxQ(InfluxDBName)
+	influxQ = influxq.NewInfluxQ(cloudcommon.DeveloperMetricsDbName)
 	err = influxQ.Start(*influxdb)
 	if err != nil {
 		log.FatalLog("Failed to start influx queue",
