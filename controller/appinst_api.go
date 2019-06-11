@@ -27,14 +27,6 @@ const RootLBSharedPortBegin int32 = 10000
 
 var appInstApi = AppInstApi{}
 
-// TODO: these timeouts should be adjust based on target platform,
-// as some platforms (azure, etc) may take much longer.
-// These timeouts should be at least long enough for the controller and
-// CRM to exchange an initial set of messages (i.e. 10 sec or so).
-var CreateAppInstTimeout = 30 * time.Minute
-var UpdateAppInstTimeout = 20 * time.Minute
-var DeleteAppInstTimeout = 20 * time.Minute
-
 // Transition states indicate states in which the CRM is still busy.
 var CreateAppInstTransitions = map[edgeproto.TrackedState]struct{}{
 	edgeproto.TrackedState_CREATING: struct{}{},
@@ -52,9 +44,9 @@ func InitAppInstApi(sync *Sync) {
 	edgeproto.InitAppInstCache(&appInstApi.cache)
 	sync.RegisterCache(&appInstApi.cache)
 	if *shortTimeouts {
-		CreateAppInstTimeout = 3 * time.Second
-		UpdateAppInstTimeout = 2 * time.Second
-		DeleteAppInstTimeout = 2 * time.Second
+		cloudcommon.CreateAppInstTimeout = 3 * time.Second
+		cloudcommon.UpdateAppInstTimeout = 2 * time.Second
+		cloudcommon.DeleteAppInstTimeout = 2 * time.Second
 	}
 }
 
@@ -149,7 +141,7 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 			err = s.deleteAppInstInternal(cctx, val, cb)
 			if err != nil && err.Error() == "AppInst busy, cannot delete" {
 				spinTime = time.Since(start)
-				if spinTime > DeleteAppInstTimeout {
+				if spinTime > cloudcommon.DeleteAppInstTimeout {
 					log.DebugLog(log.DebugLevelApi, "Timeout while waiting for app", "appName", val.Key.AppKey.Name)
 					return err
 				}
@@ -562,7 +554,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Created successfully"})
 		return nil
 	}
-	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR, CreateAppInstTimeout, "Created successfully", cb.Send)
+	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR, cloudcommon.CreateAppInstTimeout, "Created successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create AppInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(in, edgeproto.TrackedState_READY)
@@ -702,7 +694,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
 		return nil
 	}
-	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, DeleteAppInstTimeout, "Deleted AppInst successfully", cb.Send)
+	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, cloudcommon.DeleteAppInstTimeout, "Deleted AppInst successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(in, edgeproto.TrackedState_NOT_PRESENT)

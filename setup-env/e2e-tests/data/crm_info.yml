@@ -12,6 +12,14 @@ cloudlets:
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  timelimits:
+    createclusterinsttimeout: 3000000000
+    updateclusterinsttimeout: 2000000000
+    deleteclusterinsttimeout: 2000000000
+    createappinsttimeout: 3000000000
+    updateappinsttimeout: 2000000000
+    deleteappinsttimeout: 2000000000
+
 - key:
     operatorkey:
       name: tmus
@@ -22,6 +30,14 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  timelimits:
+    createclusterinsttimeout: 3000000000
+    updateclusterinsttimeout: 2000000000
+    deleteclusterinsttimeout: 2000000000
+    createappinsttimeout: 3000000000
+    updateappinsttimeout: 2000000000
+    deleteappinsttimeout: 2000000000
+
 flavors:
 - key:
     name: x1.tiny

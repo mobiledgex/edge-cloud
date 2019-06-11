@@ -1,6 +1,8 @@
 package platform
 
 import (
+	"time"
+
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
@@ -21,7 +23,7 @@ type Platform interface {
 	// This includes available resources, flavors, etc.
 	GatherCloudletInfo(info *edgeproto.CloudletInfo) error
 	// Create a Kubernetes Cluster on the cloudlet.
-	CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
+	CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error
 	// Delete a Kuberentes Cluster on the cloudlet.
 	DeleteClusterInst(clusterInst *edgeproto.ClusterInst) error
 	// Update the cluster

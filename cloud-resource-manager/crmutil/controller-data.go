@@ -2,6 +2,7 @@ package crmutil
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -45,6 +46,7 @@ func NewControllerData(pf platform.Platform) *ControllerData {
 	cd.ClusterInstCache.SetNotifyCb(cd.clusterInstChanged)
 	cd.AppInstCache.SetNotifyCb(cd.appInstChanged)
 	cd.FlavorCache.SetNotifyCb(cd.flavorChanged)
+	cd.CloudletCache.SetNotifyCb(cd.cloudletChanged)
 	return cd
 }
 
@@ -104,6 +106,16 @@ func (cd *ControllerData) flavorChanged(key *edgeproto.FlavorKey, old *edgeproto
 	}
 }
 
+func (cd *ControllerData) cloudletChanged(key *edgeproto.CloudletKey, old *edgeproto.Cloudlet) {
+	log.DebugLog(log.DebugLevelMexos, "cloudletChanged", "key", key, "old", old)
+	cloudlet := edgeproto.Cloudlet{}
+	found := cd.CloudletCache.Get(key, &cloudlet)
+	if !found {
+		return
+	}
+	log.DebugLog(log.DebugLevelMexos, "cloudlet", "time limits", cloudlet.TimeLimits)
+}
+
 func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInst) {
 	log.DebugLog(log.DebugLevelMexos, "clusterInstChange", "key", key, "old", old)
 	clusterInst := edgeproto.ClusterInst{}
@@ -147,7 +159,19 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 		go func() {
 			var err error
 			log.DebugLog(log.DebugLevelMexos, "create cluster inst", "clusterinst", clusterInst)
-			err = cd.platform.CreateClusterInst(&clusterInst, updateClusterCacheCallback)
+			var cloudlet edgeproto.Cloudlet
+			var timeout time.Duration
+			found := cd.CloudletCache.Get(&clusterInst.Key.CloudletKey, &cloudlet)
+			if found {
+				timeout = time.Duration(cloudlet.TimeLimits.CreateClusterInstTimeout)
+			} else {
+				log.WarnLog("Could not find cloudlet in cache", clusterInst.Key.CloudletKey)
+				cd.clusterInstInfoError(key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create Failed, Could not find cloudlet in cache %s", clusterInst.Key.CloudletKey))
+				return
+			}
+			log.DebugLog(log.DebugLevelMexos, "setting cluster create timeout", "timeout", timeout)
+
+			err = cd.platform.CreateClusterInst(&clusterInst, updateClusterCacheCallback, timeout)
 			if err != nil {
 				log.DebugLog(log.DebugLevelMexos, "error cluster create fail", "error", err)
 				cd.clusterInstInfoError(key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create failed: %s", err))
