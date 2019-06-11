@@ -11,7 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor) error {
+func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.DebugLog(log.DebugLevelMexos, "call runKubectlCreateApp for dind")
 
 	var err error
@@ -45,6 +45,9 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 		err = k8smgmt.CreateAppInst(client, names, app, appInst)
+		if err == nil {
+			err = k8smgmt.WaitForAppInst(client, names, app)
+		}
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
 		err = k8smgmt.CreateHelmAppInst(client, names, clusterInst, app, appInst)
 	} else {

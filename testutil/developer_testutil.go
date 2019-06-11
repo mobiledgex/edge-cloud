@@ -259,26 +259,6 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	_, err = api.CreateDeveloper(ctx, &bad)
 	require.NotNil(t, err, "Create Developer with no key info")
 
-	// test update
-	updater := edgeproto.Developer{}
-	updater.Key = testData[0].Key
-	updater.Email = "update just this"
-	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, edgeproto.DeveloperFieldEmail)
-	_, err = api.UpdateDeveloper(ctx, &updater)
-	require.Nil(t, err, "Update Developer %s", testData[0].Key.GetKeyString())
-
-	show.Init()
-	updater = testData[0]
-	updater.Email = "update just this"
-	err = api.ShowDeveloper(ctx, &filterNone, &show)
-	require.Nil(t, err, "show Developer")
-	show.AssertFound(t, &updater)
-
-	// revert change
-	updater.Email = testData[0].Email
-	_, err = api.UpdateDeveloper(ctx, &updater)
-	require.Nil(t, err, "Update back Developer")
 }
 
 func InternalDeveloperCreate(t *testing.T, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
@@ -330,7 +310,6 @@ func (s *DummyServer) ShowDeveloper(in *edgeproto.Developer, server edgeproto.De
 type DummyServer struct {
 	Developers       []edgeproto.Developer
 	Flavors          []edgeproto.Flavor
-	Clusters         []edgeproto.Cluster
 	Apps             []edgeproto.App
 	Operators        []edgeproto.Operator
 	Cloudlets        []edgeproto.Cloudlet
@@ -349,7 +328,6 @@ func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	d := &DummyServer{}
 	d.Developers = make([]edgeproto.Developer, 0)
 	d.Flavors = make([]edgeproto.Flavor, 0)
-	d.Clusters = make([]edgeproto.Cluster, 0)
 	d.Apps = make([]edgeproto.App, 0)
 	d.Operators = make([]edgeproto.Operator, 0)
 	d.Cloudlets = make([]edgeproto.Cloudlet, 0)
@@ -364,7 +342,6 @@ func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	d.ClusterRefss = make([]edgeproto.ClusterRefs, 0)
 	edgeproto.RegisterDeveloperApiServer(server, d)
 	edgeproto.RegisterFlavorApiServer(server, d)
-	edgeproto.RegisterClusterApiServer(server, d)
 	edgeproto.RegisterAppApiServer(server, d)
 	edgeproto.RegisterOperatorApiServer(server, d)
 	edgeproto.RegisterCloudletApiServer(server, d)

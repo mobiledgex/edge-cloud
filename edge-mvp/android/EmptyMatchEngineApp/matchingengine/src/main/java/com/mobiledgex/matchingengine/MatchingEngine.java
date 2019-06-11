@@ -391,8 +391,8 @@ public class MatchingEngine {
             throw new IllegalArgumentException("MatchingEngine requires a working application context.");
         }
 
-        if (commType == null || commType == DynamicLocGroupRequest.DlgCommType.DlgUndefined) {
-            commType = DynamicLocGroupRequest.DlgCommType.DlgSecure;
+        if (commType == null || commType == DynamicLocGroupRequest.DlgCommType.DLG_UNDEFINED) {
+            commType = DynamicLocGroupRequest.DlgCommType.DLG_SECURE;
         }
 
         return DynamicLocGroupRequest.newBuilder()

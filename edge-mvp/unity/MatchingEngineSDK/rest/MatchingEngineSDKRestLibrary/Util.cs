@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
@@ -12,9 +12,6 @@ namespace DistributedMatchEngine
 
     }
 
-    /*
-     * Stream is consumed after use, not always repositionable.
-     */
     public static string StreamToString(Stream ms)
     {
       ms.Position = 0;

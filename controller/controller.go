@@ -172,7 +172,6 @@ func startServices() error {
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
 	edgeproto.RegisterFlavorApiServer(server, &flavorApi)
-	edgeproto.RegisterClusterApiServer(server, &clusterApi)
 	edgeproto.RegisterClusterInstApiServer(server, &clusterInstApi)
 	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
 	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
@@ -204,7 +203,6 @@ func startServices() error {
 			edgeproto.RegisterCloudletApiHandler,
 			edgeproto.RegisterCloudletInfoApiHandler,
 			edgeproto.RegisterFlavorApiHandler,
-			edgeproto.RegisterClusterApiHandler,
 			edgeproto.RegisterClusterInstApiHandler,
 			edgeproto.RegisterControllerApiHandler,
 			edgeproto.RegisterNodeApiHandler,
@@ -302,7 +300,6 @@ func InitApis(sync *Sync) {
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
 	InitFlavorApi(sync)
-	InitClusterApi(sync)
 	InitClusterInstApi(sync)
 	InitCloudletInfoApi(sync)
 	InitAppInstInfoApi(sync)
@@ -321,7 +318,6 @@ func InitApis(sync *Sync) {
 func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)
-	notify.ServerMgrOne.RegisterSendClusterCache(&clusterApi.cache)
 	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)

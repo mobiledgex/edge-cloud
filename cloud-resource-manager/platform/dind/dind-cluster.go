@@ -22,9 +22,10 @@ type DindCluster struct {
 	KContext    string
 }
 
-func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst) error {
+func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	var err error
 
+	updateCallback(edgeproto.UpdateTask, "Create DIND Cluster")
 	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
 	log.DebugLog(log.DebugLevelMexos, "creating local dind cluster", "clusterName", clusterName)
 
@@ -36,7 +37,7 @@ func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst) error {
 	return nil
 }
 
-func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst) error {
+func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	return fmt.Errorf("update cluster not supported for DIND")
 }
 

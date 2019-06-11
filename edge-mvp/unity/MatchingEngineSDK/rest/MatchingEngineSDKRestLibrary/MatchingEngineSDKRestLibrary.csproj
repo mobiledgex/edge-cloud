@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <ReleaseVersion>1.3.8.1</ReleaseVersion>
+    <ReleaseVersion>1.4.0</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>1.3.8.1</PackageVersion>
+    <PackageVersion>1.4.0</PackageVersion>
     <Authors>MobiledgeX, Inc.</Authors>
     <Description>MobiledgeX MatchingEngineSDK Library for Unity</Description>
     <Owners>MobiledgeX, Inc.</Owners>
@@ -25,9 +25,5 @@
   <ItemGroup>
     <PackageReference Include="System.Json" Version="4.5.0" />
     <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="AppPort.cs" />
-    <Compile Remove=":Users:garnerlee:go:src:github.com:mobiledgex:edge-cloud:edge-mvp:unity:MatchingEngineSDK:MatchingEngineSDKLibrary:AppPort.cs" />
   </ItemGroup>
 </Project>

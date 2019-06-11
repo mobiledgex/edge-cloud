@@ -23,6 +23,11 @@ type ClusterInstApi struct {
 
 var clusterInstApi = ClusterInstApi{}
 
+const ClusterAutoPrefix = "autocluster"
+
+var ClusterAutoPrefixErr = fmt.Sprintf("Cluster name prefix \"%s\" is reserved",
+	ClusterAutoPrefix)
+
 // TODO: these timeouts should be adjust based on target platform,
 // as some platforms (azure, etc) may take much longer.
 // These timeouts should be at least long enough for the controller and
@@ -209,22 +214,13 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			initCloudletRefs(&refs, &in.Key.CloudletKey)
 		}
 
-		// cluster does not need to exist.
-		// cluster will eventually be deprecated and removed.
-		var cluster edgeproto.Cluster
-		if clusterApi.store.STMGet(stm, &in.Key.ClusterKey, &cluster) {
-			if in.Flavor.Name == "" {
-				in.Flavor = cluster.DefaultFlavor
-			}
-		}
 		if in.Flavor.Name == "" {
-			return errors.New("No Flavor specified and no default Flavor for Cluster")
+			return errors.New("No Flavor specified")
 		}
 
 		nodeFlavor := edgeproto.Flavor{}
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
-			return fmt.Errorf("Cluster flavor %s node flavor %s not found",
-				in.Flavor.Name, nodeFlavor.Key)
+			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
 		var err error
 		in.NodeFlavor, err = flavor.GetClosestFlavor(info.Flavors, nodeFlavor)
@@ -548,7 +544,7 @@ func ignoreCRM(cctx *CallContext) bool {
 }
 
 func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update ClusterInst from info", "key", in.Key, "state", in.State)
+	log.DebugLog(log.DebugLevelApi, "Update ClusterInst from info", "key", in.Key, "state", in.State, "status", in.Status)
 	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		inst := edgeproto.ClusterInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -556,8 +552,14 @@ func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
 			return nil
 		}
 		if inst.State == in.State {
-			// already in that state
-			return nil
+			if inst.Status == in.Status {
+				return nil
+			} else {
+				log.DebugLog(log.DebugLevelApi, "status change only")
+				inst.Status = in.Status
+				s.store.STMPut(stm, &inst)
+				return nil
+			}
 		}
 		// please see state_transitions.md
 		if !crmTransitionOk(inst.State, in.State) {
@@ -566,6 +568,7 @@ func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
 			return nil
 		}
 		inst.State = in.State
+		inst.Status = in.Status
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			inst.Errors = in.Errors
 		} else {

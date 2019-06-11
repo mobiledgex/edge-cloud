@@ -142,7 +142,11 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 		log.DebugLog(log.DebugLevelApi, "Auto-deleting appinst ", "appinst", val.Key.AppKey.Name)
 		cb.Send(&edgeproto.Result{Message: "Autodeleting appinst " + val.Key.AppKey.Name})
 		for {
-			err = s.deleteAppInstInternal(DefCallContext(), val, cb)
+			// ignore CRM errors when deleting dynamic apps as we will be deleting the cluster anyway
+			crmo := edgeproto.CRMOverride_IGNORE_CRM_ERRORS
+			cctx := DefCallContext()
+			cctx.SetOverride(&crmo)
+			err = s.deleteAppInstInternal(cctx, val, cb)
 			if err != nil && err.Error() == "AppInst busy, cannot delete" {
 				spinTime = time.Since(start)
 				if spinTime > DeleteAppInstTimeout {
@@ -736,7 +740,7 @@ func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_
 }
 
 func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State)
+	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status)
 	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -748,6 +752,11 @@ func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
 			if in.State == edgeproto.TrackedState_READY {
 				// update runtime info
 				inst.RuntimeInfo = in.RuntimeInfo
+				inst.Status = in.Status
+				s.store.STMPut(stm, &inst)
+			} else if inst.Status != in.Status {
+				// update status
+				inst.Status = in.Status
 				s.store.STMPut(stm, &inst)
 			}
 			return nil
@@ -759,6 +768,7 @@ func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
 			return nil
 		}
 		inst.State = in.State
+		inst.Status = in.Status
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			inst.Errors = in.Errors
 		}

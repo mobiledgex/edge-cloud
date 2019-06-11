@@ -2,6 +2,7 @@ package process
 
 import (
 	"bytes"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -17,7 +18,7 @@ import (
 
 	ct "github.com/daviddengcn/go-colortext"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/influxsup"
-	"github.com/mobiledgex/edge-cloud/tls"
+	mextls "github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -100,11 +101,7 @@ func (p *Controller) GetExeName() string { return "controller" }
 
 func (p *Controller) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
 
-func getRestClientImpl(timeout time.Duration, addr string, tlsCertFile string) (*http.Client, error) {
-	tlsConfig, err := tls.GetTLSClientConfig(addr, tlsCertFile)
-	if err != nil {
-		return nil, err
-	}
+func getRestClientImpl(timeout time.Duration, addr string, tlsConfig *tls.Config) (*http.Client, error) {
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: tlsConfig,
@@ -114,7 +111,7 @@ func getRestClientImpl(timeout time.Duration, addr string, tlsCertFile string) (
 	return client, nil
 }
 
-func connectAPIImpl(timeout time.Duration, apiaddr string, tlsCertFile string) (*grpc.ClientConn, error) {
+func connectAPIImpl(timeout time.Duration, apiaddr string, tlsConfig *tls.Config) (*grpc.ClientConn, error) {
 	// Wait for service to be ready to connect.
 	// Note: using grpc WithBlock() takes about a second longer
 	// than doing the retry connect below so requires a larger timeout.
@@ -136,16 +133,16 @@ func connectAPIImpl(timeout time.Duration, apiaddr string, tlsCertFile string) (
 		timeout -= wait
 		time.Sleep(wait)
 	}
-	dialOption, err := tls.GetTLSClientDialOption(apiaddr, tlsCertFile)
-	if err != nil {
-		return nil, err
-	}
-	conn, err := grpc.Dial(apiaddr, dialOption)
+	conn, err := grpc.Dial(apiaddr, mextls.GetGrpcDialOption(tlsConfig))
 	return conn, err
 }
 
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
+	tlsConfig, err := mextls.GetMutualAuthClientConfig(p.ApiAddr, p.TLS.ClientCert)
+	if err != nil {
+		return nil, err
+	}
+	return connectAPIImpl(timeout, p.ApiAddr, tlsConfig)
 }
 
 // DmeLocal
@@ -179,6 +176,10 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 	if p.TLS.ServerCert != "" {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
+	}
+	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
+		args = append(args, "--tlsApiCertFile", p.TLS.ServerCert)
+		args = append(args, "--tlsApiKeyFile", p.TLS.ServerKey)
 	}
 	if p.VaultAddr != "" {
 		args = append(args, "--vaultAddr")
@@ -226,11 +227,31 @@ func (p *Dme) GetExeName() string { return "dme-server" }
 func (p *Dme) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
 
 func (p *Dme) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
+	return connectAPIImpl(timeout, p.ApiAddr, p.getTlsConfig())
 }
 
 func (p *Dme) GetRestClient(timeout time.Duration) (*http.Client, error) {
-	return getRestClientImpl(timeout, p.HttpAddr, p.TLS.ClientCert)
+	return getRestClientImpl(timeout, p.HttpAddr, p.getTlsConfig())
+}
+
+func (p *Dme) getTlsConfig() *tls.Config {
+	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
+		// ServerAuth TLS. For real clients, they'll use
+		// their built-in trusted CAs to verify the cert.
+		// Since we're using self-signed certs here, add
+		// our CA to the cert pool.
+		certPool, err := mextls.GetClientCertPool(p.TLS.ServerCert)
+		if err != nil {
+			log.Printf("GetClientCertPool failed, %v\n", err)
+			return nil
+		}
+		config := &tls.Config{
+			RootCAs: certPool,
+		}
+		return config
+	}
+	// no TLS
+	return nil
 }
 
 // CrmLocal
@@ -261,6 +282,14 @@ func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--plugin")
 		args = append(args, p.Plugin)
 	}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
+	}
+	if p.PhysicalName != "" {
+		args = append(args, "--physicalName")
+		args = append(args, p.PhysicalName)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -282,7 +311,11 @@ func (p *Crm) GetExeName() string { return "crmserver" }
 func (p *Crm) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
 
 func (p *Crm) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
+	tlsConfig, err := mextls.GetMutualAuthClientConfig(p.ApiAddr, p.TLS.ClientCert)
+	if err != nil {
+		return nil, err
+	}
+	return connectAPIImpl(timeout, p.ApiAddr, tlsConfig)
 }
 
 // InfluxLocal
