@@ -403,8 +403,8 @@ var VaultAddress = "http://127.0.0.1:8200"
 type VaultRoles struct {
 	DmeRoleID       string `json:"dmeroleid"`
 	DmeSecretID     string `json:"dmesecretid"`
-	MCORMRoleID     string `json:"mcormroleid"`
-	MCORMSecretID   string `json:"mcormsecretid"`
+	CRMRoleID       string `json:"crmroleid"`
+	CRMSecretID     string `json:"crmsecretid"`
 	RotatorRoleID   string `json:"rotatorroleid"`
 	RotatorSecretID string `json:"rotatorsecretid"`
 }
@@ -417,9 +417,6 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	if p.DmeSecret == "" {
 		p.DmeSecret = "dme-secret"
 	}
-	if p.McormSecret == "" {
-		p.McormSecret = "mcorm-secret"
-	}
 
 	args := []string{"server", "-dev"}
 	var err error
@@ -430,7 +427,7 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	// wait until vault is online and ready
 	for ii := 0; ii < 10; ii++ {
 		var serr error
-		p.run("vault", "status", &serr)
+		p.Run("vault", "status", &serr)
 		if serr == nil {
 			break
 		}
@@ -439,20 +436,19 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 
 	// run setup script
 	gopath := os.Getenv("GOPATH")
-	setup := gopath + "/src/github.com/mobiledgex/edge-cloud/vault/setup.sh"
-	out := p.run("/bin/sh", setup, &err)
+	region := "local"
+	setup := gopath + "/src/github.com/mobiledgex/edge-cloud/vault/setup.sh " + region
+	out := p.Run("/bin/sh", setup, &err)
 	if err != nil {
 		fmt.Println(out)
 	}
 	// get roleIDs and secretIDs
 	roles := VaultRoles{}
-	p.getAppRole("dme", &roles.DmeRoleID, &roles.DmeSecretID, &err)
-	p.getAppRole("mcorm", &roles.MCORMRoleID, &roles.MCORMSecretID, &err)
-	p.getAppRole("rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
-	p.putSecret("dme", p.DmeSecret+"-old", &err)
-	p.putSecret("dme", p.DmeSecret, &err)
-	p.putSecret("mcorm", p.McormSecret+"-old", &err)
-	p.putSecret("mcorm", p.McormSecret, &err)
+	p.GetAppRole(region, "dme", &roles.DmeRoleID, &roles.DmeSecretID, &err)
+	p.GetAppRole(region, "crm", &roles.CRMRoleID, &roles.CRMSecretID, &err)
+	p.GetAppRole(region, "rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
+	p.PutSecret(region, "dme", p.DmeSecret+"-old", &err)
+	p.PutSecret(region, "dme", p.DmeSecret, &err)
 	if err != nil {
 		p.StopLocal()
 		return err
@@ -482,27 +478,33 @@ func (p *Vault) GetExeName() string { return "vault" }
 
 func (p *Vault) LookupArgs() string { return "" }
 
-func (p *Vault) getAppRole(name string, roleID, secretID *string, err *error) {
+func (p *Vault) GetAppRole(region, name string, roleID, secretID *string, err *error) {
 	if *err != nil {
 		return
 	}
-	out := p.run("vault", fmt.Sprintf("read auth/approle/role/%s/role-id", name), err)
+	if region != "" {
+		name = region + "." + name
+	}
+	out := p.Run("vault", fmt.Sprintf("read auth/approle/role/%s/role-id", name), err)
 	vals := p.mapVals(out)
 	if val, ok := vals["role_id"]; ok {
 		*roleID = val
 	}
-	out = p.run("vault", fmt.Sprintf("write -f auth/approle/role/%s/secret-id", name), err)
+	out = p.Run("vault", fmt.Sprintf("write -f auth/approle/role/%s/secret-id", name), err)
 	vals = p.mapVals(out)
 	if val, ok := vals["secret_id"]; ok {
 		*secretID = val
 	}
 }
 
-func (p *Vault) putSecret(name, secret string, err *error) {
-	p.run("vault", fmt.Sprintf("kv put jwtkeys/%s secret=%s", name, secret), err)
+func (p *Vault) PutSecret(region, name, secret string, err *error) {
+	if region != "" {
+		region += "/"
+	}
+	p.Run("vault", fmt.Sprintf("kv put %sjwtkeys/%s secret=%s", region, name, secret), err)
 }
 
-func (p *Vault) run(bin, args string, err *error) string {
+func (p *Vault) Run(bin, args string, err *error) string {
 	if *err != nil {
 		return ""
 	}
@@ -510,7 +512,7 @@ func (p *Vault) run(bin, args string, err *error) string {
 	cmd.Env = append(os.Environ(), fmt.Sprintf("VAULT_ADDR=%s", VaultAddress))
 	out, cerr := cmd.CombinedOutput()
 	if cerr != nil {
-		*err = fmt.Errorf("cmd '%s %s' failed, %s", bin, args, cerr.Error())
+		*err = fmt.Errorf("cmd '%s %s' failed, %s, %v", bin, args, string(out), cerr.Error())
 		return string(out)
 	}
 	return string(out)

@@ -20,13 +20,13 @@ import (
 
 var Jwks vault.JWKS
 
-func InitVault(addr string) {
+func InitVault(addr, region string) {
 	// roleID and secretID could also come from RAM disk.
 	// assume env vars for now.
 	roleID := os.Getenv("VAULT_ROLE_ID")
 	secretID := os.Getenv("VAULT_SECRET_ID")
 
-	Jwks.Init(addr, "dme", roleID, secretID)
+	Jwks.Init(addr, region, "dme", roleID, secretID)
 	Jwks.GoUpdate()
 }
 
