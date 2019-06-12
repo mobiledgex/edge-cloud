@@ -2,6 +2,8 @@ package fake
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -38,7 +40,7 @@ func (s *Platform) GatherCloudletInfo(info *edgeproto.CloudletInfo) error {
 func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	return fmt.Errorf("update cluster not supported for fake cloudlets")
 }
-func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	updateCallback(edgeproto.UpdateTask, "First Create Task")
 	updateCallback(edgeproto.UpdateTask, "Second Create Task")
 	log.DebugLog(log.DebugLevelMexos, "fake ClusterInst ready")
