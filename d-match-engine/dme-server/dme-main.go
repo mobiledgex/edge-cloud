@@ -47,6 +47,7 @@ var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address
 var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
+var region = flag.String("region", "local", "region name")
 
 // TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -259,7 +260,7 @@ func main() {
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudletKey)
 	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NODE_DME, &myCloudletKey, &myNode.Key)
 
-	dmecommon.InitVault(*vaultAddr)
+	dmecommon.InitVault(*vaultAddr, *region)
 
 	setupMatchEngine()
 	grpcOpts := make([]grpc.ServerOption, 0)

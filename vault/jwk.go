@@ -53,11 +53,14 @@ type JWK struct {
 var DefaultJwkRefreshDelay = 5 * time.Minute
 var JwkUpdateDelay = 5 * time.Second
 
-func (s *JWKS) Init(addr, name, roleID, secretID string) {
+func (s *JWKS) Init(addr, region, name, roleID, secretID string) {
+	if region != "" {
+		region += "/"
+	}
 	s.Keys = make(map[int]*JWK)
 	s.RefreshDelay = DefaultJwkRefreshDelay
-	s.Path = "jwtkeys/data/" + name
-	s.Metapath = "jwtkeys/metadata/" + name
+	s.Path = region + "jwtkeys/data/" + name
+	s.Metapath = region + "jwtkeys/metadata/" + name
 	s.addr = addr
 	s.roleID = roleID
 	s.secretID = secretID
@@ -180,7 +183,7 @@ func (s *JWKS) updateKeys() error {
 	return nil
 }
 
-func PutSecret(addr, roleID, secretID, name, secret, refresh string) error {
+func PutSecret(addr, region, roleID, secretID, name, secret, refresh string) error {
 	client, err := NewClient(addr)
 	if err != nil {
 		return err
@@ -189,7 +192,10 @@ func PutSecret(addr, roleID, secretID, name, secret, refresh string) error {
 	if err != nil {
 		return err
 	}
-	path := "jwtkeys/data/" + name
+	if region != "" {
+		region += "/"
+	}
+	path := region + "jwtkeys/data/" + name
 	data := map[string]interface{}{
 		"secret":  secret,
 		"refresh": refresh,

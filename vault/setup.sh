@@ -3,29 +3,77 @@
 # exit immediately on failure
 set -e
 
-# This collection of commands are used to configure Vault for e2e testing.
-# The commands here represent a subset of configuration used for the
-# production Vault. This script is not idempotent, so it cannot be re-run
-# against the production Vault, but as new config is added, commands can
-# copy-and-pasted to add new config to the production Vault.
+# Set up the profiles for the edge-cloud approles.
+# This assumes a global Vault for all regions, so paths in the Vault
+# are region-specific.
+# This script should be run for each new region that we bring online.
 
 # You may need to set the following env vars before running:
 # VAULT_ADDR=http://127.0.0.1:8200
 # VAULT_TOKEN=<my auth token>
 
-# enable approle auth
-vault auth enable approle
+# Region should be set to the correct region name
+# REGION=local
+REGION=$1
 
-# set up jwtkey key-value database
-vault secrets enable -path=jwtkeys kv
-vault kv enable-versioning jwtkeys
-vault write jwtkeys/config max_versions=2
+if [ -z "$REGION" ]; then
+    echo "Usage: setup-region.sh <region>"
+    exit 1
+fi
+echo "Setting up Vault region $REGION"
 
-# these are commented out but are used to set the dme/mcorm secrets
-#vault kv put jwtkeys/dme secret=12345 refresh=60m
-#vault kv put jwtkeys/mcorm secret=12345 refresh=60m
-#vault kv get jwtkeys/dme
-#vault kv metadata get jwtkeys/dme
+# enable approle auth if not already enabled
+auths=$(vault auth list)
+case "$auths" in
+    *_"approle"_*) ;;
+    *) vault auth enable approle
+esac
+
+# set up regional kv database
+vault secrets enable -path=$REGION/jwtkeys kv
+vault kv enable-versioning $REGION/jwtkeys
+vault write $REGION/jwtkeys/config max_versions=2
+
+cat > /tmp/controller-pol.hcl <<EOF
+path "auth/approle/login" {
+  capabilities = [ "create", "read" ]
+}
+
+path "secret/data/registry/*" {
+  capabilities = [ "read" ]
+}
+
+path "secret/data/$REGION/cloudlet/*" {
+  capabilities = [ "create", "update", "delete", "read" ]
+}
+EOF
+vault policy write $REGION.controller /tmp/controller-pol.hcl
+rm /tmp/controller-pol.hcl
+vault write auth/approle/role/$REGION.controller period="720h" policies="$REGION.controller"
+# get controller app roleID and generate secretID
+vault read auth/approle/role/$REGION.controller/role-id
+vault write -f auth/approle/role/$REGION.controller/secret-id
+
+# set crm approle
+cat > /tmp/crm-pol.hcl <<EOF
+path "auth/approle/login" {
+  capabilities = [ "create", "read" ]
+}
+
+path "secret/data/registry/*" {
+  capabilities = [ "read" ]
+}
+
+path "secret/data/$REGION/cloudlet/*" {
+  capabilities = [ "read" ]
+}
+EOF
+vault policy write $REGION.crm /tmp/crm-pol.hcl
+rm /tmp/crm-pol.hcl
+vault write auth/approle/role/$REGION.crm period="720h" policies="$REGION.crm"
+# get crm app roleID and generate secretID
+vault read auth/approle/role/$REGION.crm/role-id
+vault write -f auth/approle/role/$REGION.crm/secret-id
 
 # set dme approle
 cat > /tmp/dme-pol.hcl <<EOF
@@ -33,62 +81,41 @@ path "auth/approle/login" {
   capabilities = [ "create", "read" ]
 }
 
-path "jwtkeys/data/dme" {
+path "$REGION/jwtkeys/data/dme" {
   capabilities = [ "read" ]
 }
 
-path "jwtkeys/metadata/dme" {
+path "$REGION/jwtkeys/metadata/dme" {
   capabilities = [ "read" ]
 }
 EOF
-vault policy write dme /tmp/dme-pol.hcl
+vault policy write $REGION.dme /tmp/dme-pol.hcl
 rm /tmp/dme-pol.hcl
-vault write auth/approle/role/dme period="720h" policies="dme"
+vault write auth/approle/role/$REGION.dme period="720h" policies="$REGION.dme"
 # get dme app roleID and generate secretID
-vault read auth/approle/role/dme/role-id
-vault write -f auth/approle/role/dme/secret-id
+vault read auth/approle/role/$REGION.dme/role-id
+vault write -f auth/approle/role/$REGION.dme/secret-id
 
-# set mcorm approle
-cat > /tmp/mcorm-pol.hcl <<EOF
-path "auth/approle/login" {
-  capabilities = [ "create", "read" ]
-}
-
-path "jwtkeys/data/mcorm" {
-  capabilities = [ "read" ]
-}
-
-path "jwtkeys/metadata/mcorm" {
-  capabilities = [ "read" ]
-}
-EOF
-vault policy write mcorm /tmp/mcorm-pol.hcl
-rm /tmp/mcorm-pol.hcl
-vault write auth/approle/role/mcorm period="720h" policies="mcorm"
-# get mcorm app roleID and generate secretID
-vault read auth/approle/role/mcorm/role-id
-vault write -f auth/approle/role/mcorm/secret-id
-
-# set rotator approle - rotates dme/mcorm secret
+# set rotator approle - rotates dme secret
 cat > /tmp/rotator-pol.hcl <<EOF
 path "auth/approle/login" {
   capabilities = [ "create", "read" ]
 }
 
-path "jwtkeys/data/*" {
+path "$REGION/jwtkeys/data/*" {
   capabilities = [ "create", "update", "read" ]
 }
 
-path "jwtkeys/metadata/*" {
+path "$REGION/jwtkeys/metadata/*" {
   capabilities = [ "read" ]
 }
 EOF
-vault policy write rotator /tmp/rotator-pol.hcl
+vault policy write $REGION.rotator /tmp/rotator-pol.hcl
 rm /tmp/rotator-pol.hcl
-vault write auth/approle/role/rotator period="720h" policies="rotator"
+vault write auth/approle/role/$REGION.rotator period="720h" policies="$REGION.rotator"
 # get rotator app roleID and generate secretID
-vault read auth/approle/role/rotator/role-id
-vault write -f auth/approle/role/rotator/secret-id
+vault read auth/approle/role/$REGION.rotator/role-id
+vault write -f auth/approle/role/$REGION.rotator/secret-id
 
 # generate secret string:
 # openssl rand -base64 128
