@@ -53,12 +53,12 @@ type DmeStats struct {
 	numShards uint
 	mux       sync.Mutex
 	interval  time.Duration
-	send      func(metric *edgeproto.Metric)
+	send      func(metric *edgeproto.Metric) bool
 	waitGroup sync.WaitGroup
 	stop      chan struct{}
 }
 
-func NewDmeStats(interval time.Duration, numShards uint, send func(metric *edgeproto.Metric)) *DmeStats {
+func NewDmeStats(interval time.Duration, numShards uint, send func(metric *edgeproto.Metric) bool) *DmeStats {
 	s := DmeStats{}
 	s.shards = make([]MapShard, numShards, numShards)
 	s.numShards = numShards

@@ -649,6 +649,7 @@ func ControllerCLI(ctrl *process.Controller, args ...string) ([]byte, error) {
 		cmdargs = append(cmdargs, "--tls", ctrl.TLS.ClientCert)
 	}
 	cmdargs = append(cmdargs, args...)
+	log.Printf("Running: edgectl %v\n", cmdargs)
 	cmd := exec.Command("edgectl", cmdargs...)
 	return cmd.CombinedOutput()
 }

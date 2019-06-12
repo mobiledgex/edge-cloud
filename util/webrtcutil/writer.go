@@ -1,6 +1,8 @@
 package webrtcutil
 
-import webrtc "github.com/pion/webrtc/v2"
+import (
+	webrtc "github.com/pion/webrtc/v2"
+)
 
 type DataChanWriter struct {
 	dataChan *webrtc.DataChannel
