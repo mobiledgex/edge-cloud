@@ -35,6 +35,7 @@ var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA 
 var hostname = flag.String("hostname", "", "Unique hostname within Cloudlet")
 var platformName = flag.String("platform", "", "Platform type of Cloudlet")
 var solib = flag.String("plugin", "", "plugin file")
+var region = flag.String("region", "local", "region name")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
