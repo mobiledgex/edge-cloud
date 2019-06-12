@@ -28,14 +28,6 @@ const ClusterAutoPrefix = "autocluster"
 var ClusterAutoPrefixErr = fmt.Sprintf("Cluster name prefix \"%s\" is reserved",
 	ClusterAutoPrefix)
 
-// TODO: these timeouts should be adjust based on target platform,
-// as some platforms (azure, etc) may take much longer.
-// These timeouts should be at least long enough for the controller and
-// CRM to exchange an initial set of messages (i.e. 10 sec or so).
-var CreateClusterInstTimeout = 30 * time.Minute
-var UpdateClusterInstTimeout = 20 * time.Minute
-var DeleteClusterInstTimeout = 20 * time.Minute
-
 // Transition states indicate states in which the CRM is still busy.
 var CreateClusterInstTransitions = map[edgeproto.TrackedState]struct{}{
 	edgeproto.TrackedState_CREATING: struct{}{},
@@ -53,9 +45,9 @@ func InitClusterInstApi(sync *Sync) {
 	edgeproto.InitClusterInstCache(&clusterInstApi.cache)
 	sync.RegisterCache(&clusterInstApi.cache)
 	if *shortTimeouts {
-		CreateClusterInstTimeout = 3 * time.Second
-		UpdateClusterInstTimeout = 2 * time.Second
-		DeleteClusterInstTimeout = 2 * time.Second
+		cloudcommon.CreateClusterInstTimeout = 3 * time.Second
+		cloudcommon.UpdateClusterInstTimeout = 2 * time.Second
+		cloudcommon.DeleteClusterInstTimeout = 2 * time.Second
 	}
 }
 
@@ -271,7 +263,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions, edgeproto.TrackedState_CREATE_ERROR, CreateClusterInstTimeout, "Created successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions, edgeproto.TrackedState_CREATE_ERROR, cloudcommon.CreateClusterInstTimeout, "Created successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create ClusterInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(in, edgeproto.TrackedState_READY)
@@ -355,7 +347,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, UpdateClusterInstTimeout, "Updated successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateClusterInstTimeout, "Updated successfully", cb.Send)
 	return err
 }
 
@@ -460,7 +452,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteClusterInstTransitions, edgeproto.TrackedState_DELETE_ERROR, DeleteClusterInstTimeout, "Deleted ClusterInst successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteClusterInstTransitions, edgeproto.TrackedState_DELETE_ERROR, cloudcommon.DeleteClusterInstTimeout, "Deleted ClusterInst successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete ClusterInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(in, edgeproto.TrackedState_NOT_PRESENT)
