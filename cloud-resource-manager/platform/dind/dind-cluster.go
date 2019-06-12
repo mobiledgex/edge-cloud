@@ -22,7 +22,7 @@ type DindCluster struct {
 	KContext    string
 }
 
-func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	var err error
 
 	updateCallback(edgeproto.UpdateTask, "Create DIND Cluster")
