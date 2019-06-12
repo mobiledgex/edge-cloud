@@ -16,6 +16,10 @@ var nameMatch = regexp.MustCompile("^[0-9a-zA-Z][-_0-9a-zA-Z .&,!]*$")
 var k8sMatch = regexp.MustCompile("^[0-9a-zA-Z][-0-9a-zA-Z.]*$")
 var emailMatch = regexp.MustCompile(`(.+)@(.+)\.(.+)`)
 
+// region names are used in Vault approle names, which are very
+// restrictive in what characters they allow.
+var regionMatch = regexp.MustCompile(`^\w+$`)
+
 func ValidName(name string) bool {
 	return nameMatch.MatchString(name)
 }
@@ -33,6 +37,10 @@ func ValidIp(ip []byte) bool {
 
 func ValidEmail(email string) bool {
 	return emailMatch.MatchString(email)
+}
+
+func ValidRegion(name string) bool {
+	return regionMatch.MatchString(name)
 }
 
 // DockerSanitize sanitizes the name string (which is assumed to be a

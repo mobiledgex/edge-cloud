@@ -30,7 +30,7 @@ require (
 	github.com/codeskyblue/go-sh v0.0.0-20170112005953-b097669b1569
 	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
 	github.com/coreos/bbolt v1.3.2 // indirect
-	github.com/coreos/etcd v3.3.9+incompatible
+	github.com/coreos/etcd v3.3.10+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/daviddengcn/go-colortext v0.0.0-20171126034257-17e75f6184bc
@@ -79,7 +79,6 @@ require (
 	github.com/hashicorp/go-uuid v1.0.1 // indirect
 	github.com/hashicorp/go-version v1.1.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
-	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/vault v0.11.5
 	github.com/hashicorp/vault-plugin-secrets-kv v0.0.0-20190404212640-4807e6564154 // indirect
 	github.com/imdario/mergo v0.3.4 // indirect
@@ -102,7 +101,6 @@ require (
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
-	github.com/mitchellh/go-homedir v1.0.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mobiledgex/yaml/v2 v2.2.4
@@ -126,11 +124,11 @@ require (
 	github.com/sirupsen/logrus v1.2.0 // indirect
 	github.com/soheilhy/cmux v0.1.4 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/spf13/cobra v0.0.3
+	github.com/spf13/cobra v0.0.4
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
-	github.com/uber/prototool v1.7.0 // indirect
+	github.com/uber/prototool v1.8.0 // indirect
 	github.com/ugorji/go v1.1.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/xanzy/go-gitlab v0.16.0
@@ -147,7 +145,7 @@ require (
 	golang.org/x/tools v0.0.0-20190312170243-e65039ee4138 // indirect
 	google.golang.org/api v0.1.0 // indirect
 	google.golang.org/genproto v0.0.0-20190307195333-5fe7a883aa19 // indirect
-	google.golang.org/grpc v1.20.1
+	google.golang.org/grpc v1.21.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce // indirect
