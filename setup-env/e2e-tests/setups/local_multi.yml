@@ -29,6 +29,9 @@ influxs:
 - name: influx1
   datadir: /var/tmp/edge-cloud-local-influx/influx1
   httpaddr: "127.0.0.1:8086"
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
   hostname: "127.0.0.1"
 
 etcds:

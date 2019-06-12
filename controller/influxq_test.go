@@ -33,7 +33,7 @@ func TestInfluxQ(t *testing.T) {
 	}
 
 	q := influxq.NewInfluxQ(InfluxDBName)
-	err = q.Start(addr)
+	err = q.Start(addr, "")
 	require.Nil(t, err, "new influx q")
 	defer q.Stop()
 

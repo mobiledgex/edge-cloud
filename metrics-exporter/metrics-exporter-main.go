@@ -106,7 +106,8 @@ func main() {
 	fmt.Printf("InfluxDB is at: %s\n", *influxdb)
 	fmt.Printf("Metrics collection interval is %s\n", *collectInterval)
 	influxQ = influxq.NewInfluxQ(cloudcommon.DeveloperMetricsDbName)
-	err = influxQ.Start(*influxdb)
+	// TODO -add TLS config
+	err = influxQ.Start(*influxdb, "")
 	if err != nil {
 		log.FatalLog("Failed to start influx queue",
 			"address", *influxdb, "err", err)

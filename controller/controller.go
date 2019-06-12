@@ -150,7 +150,7 @@ func startServices() error {
 	}
 
 	influxQ := influxq.NewInfluxQ(InfluxDBName)
-	err = influxQ.Start(*influxAddr)
+	err = influxQ.Start(*influxAddr, *tlsCertFile)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)

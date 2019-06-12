@@ -11,6 +11,7 @@ import (
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/tls"
 )
 
 // Each write to the Influx DB is an HTTP Post method.
@@ -48,13 +49,20 @@ func NewInfluxQ(DBName string) *InfluxQ {
 	return &q
 }
 
-func (q *InfluxQ) Start(addr string) error {
+func (q *InfluxQ) Start(addr, tlsCert string) error {
 	var err error
+	var url string
 	q.mux.Lock()
 	defer q.mux.Unlock()
-	url := "http://" + addr
+	if tlsCert == "" {
+		url = "http://" + addr
+	} else {
+		url = "https://" + addr
+	}
+	creds, _ := tls.GetTLSClientConfig(tlsCert)
 	q.client, err = client.NewHTTPClient(client.HTTPConfig{
-		Addr: url,
+		Addr:      url,
+		TLSConfig: creds,
 	})
 	if err != nil {
 		return err

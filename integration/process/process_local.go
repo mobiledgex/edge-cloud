@@ -329,7 +329,8 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 		}
 	}
 
-	configFile, err := influxsup.SetupInflux(p.DataDir)
+	configFile, err := influxsup.SetupInflux(p.DataDir,
+		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey))
 	if err != nil {
 		return err
 	}
