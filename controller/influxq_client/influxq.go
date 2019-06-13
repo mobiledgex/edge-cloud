@@ -3,6 +3,7 @@ package influxq
 import (
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -51,19 +52,22 @@ func NewInfluxQ(DBName string) *InfluxQ {
 
 func (q *InfluxQ) Start(addr, tlsCert string) error {
 	var err error
-	var url string
+	var conf = client.HTTPConfig{
+		Addr: addr,
+	}
+	if strings.HasPrefix(addr, "https://") {
+		creds, err := tls.GetTLSClientConfig(tlsCert)
+		// Should not try to verify
+		if err != nil || creds == nil {
+			conf.InsecureSkipVerify = true
+		} else {
+			conf.TLSConfig = creds
+		}
+	}
+
 	q.mux.Lock()
 	defer q.mux.Unlock()
-	if tlsCert == "" {
-		url = "http://" + addr
-	} else {
-		url = "https://" + addr
-	}
-	creds, _ := tls.GetTLSClientConfig(tlsCert)
-	q.client, err = client.NewHTTPClient(client.HTTPConfig{
-		Addr:      url,
-		TLSConfig: creds,
-	})
+	q.client, err = client.NewHTTPClient(conf)
 	if err != nil {
 		return err
 	}

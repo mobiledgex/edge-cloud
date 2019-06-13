@@ -22,6 +22,7 @@ type Controller struct {
 	ApiAddr       string
 	HttpAddr      string
 	NotifyAddr    string
+	InfluxAddr    string
 	TLS           TLSCerts
 	ShortTimeouts bool
 	cmd           *exec.Cmd

@@ -78,6 +78,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
 	}
+	if p.InfluxAddr != "" {
+		args = append(args, "--influxAddr")
+		args = append(args, p.InfluxAddr)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
