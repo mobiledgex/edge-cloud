@@ -572,6 +572,11 @@ func RunAction(actionSpec, outputDir string, spec *TestSpec, mods []string) []st
 			log.Printf("Unable to run api for %s, %v\n", action, mods)
 			errors = append(errors, "controller api failed")
 		}
+	case "runcommand":
+		if !apis.RunCommandAPI(actionSubtype, actionParam, spec.ApiFile, outputDir) {
+			log.Printf("Unable to run RunCommand api for %s, %v\n", action, mods)
+			errors = append(errors, "controller RunCommand api failed")
+		}
 	case "dmeapi":
 		if !apis.RunDmeAPI(actionSubtype, actionParam, spec.ApiFile, spec.ApiType, outputDir) {
 			log.Printf("Unable to run api for %s\n", action)
