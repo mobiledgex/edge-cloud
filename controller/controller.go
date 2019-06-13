@@ -26,6 +26,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/tls"
+	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 )
 
@@ -33,7 +34,7 @@ import (
 var rootDir = flag.String("r", "", "root directory; set for testing")
 var localEtcd = flag.Bool("localEtcd", false, "set to start local etcd for testing")
 var initLocalEtcd = flag.Bool("initLocalEtcd", false, "set to init local etcd database")
-var region = flag.Uint("region", 1, "Region")
+var region = flag.String("region", "local", "region name")
 var etcdUrls = flag.String("etcdUrls", "http://127.0.0.1:2380", "etcd client listener URLs")
 var apiAddr = flag.String("apiAddr", "127.0.0.1:55001", "API listener address")
 
@@ -42,6 +43,7 @@ var apiAddr = flag.String("apiAddr", "127.0.0.1:55001", "API listener address")
 var externalApiAddr = flag.String("externalApiAddr", "", "External API listener address if behind proxy/LB. Defaults to apiAddr")
 var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address")
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
+var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
@@ -96,7 +98,12 @@ func startServices() error {
 	}
 
 	log.InfoLog("Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
-	objstore.InitRegion(uint32(*region))
+	// region number for etcd is a deprecated concept since we decided
+	// etcd is per-region.
+	objstore.InitRegion(uint32(1))
+	if !util.ValidRegion(*region) {
+		return fmt.Errorf("invalid region name")
+	}
 
 	if *localEtcd {
 		opts := []process.StartOp{}

@@ -226,11 +226,17 @@ func (s *{{.Name}}Send) updateInternal(key *{{.KeyType}}) {
 {{- else}}
 func (s *{{.Name}}Send) UpdateAll() {}
 
-func (s *{{.Name}}Send) Update(msg *{{.NameType}}) {
+func (s *{{.Name}}Send) Update(msg *{{.NameType}}) bool {
+{{- if .CustomUpdate}}
+	if !s.UpdateOk(msg) { // to be implemented by hand
+		return false
+	}
+{{- end}}
 	s.Mux.Lock()
 	s.Data = append(s.Data, msg)
 	s.Mux.Unlock()
 	s.sendrecv.wakeup()
+	return true
 }
 {{- end}}
 
@@ -365,12 +371,16 @@ func (s *{{.Name}}SendMany) Update(key *{{.KeyType}}, old *{{.NameType}}) {
 	}
 }
 {{- else}}
-func (s *{{.Name}}SendMany) Update(msg *{{.NameType}}) {
+func (s *{{.Name}}SendMany) Update(msg *{{.NameType}}) int {
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
+	count := 0
 	for _, send := range s.sends {
-		send.Update(msg)
+		if send.Update(msg) {
+			count++
+		}
 	}
+	return count
 }
 {{- end}}
 

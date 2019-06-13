@@ -14,8 +14,7 @@ func TestJwk(t *testing.T) {
 		Common: process.Common{
 			Name: "vault",
 		},
-		DmeSecret:   "123456",
-		McormSecret: "987664",
+		DmeSecret: "123456",
 	}
 	roles, err := vault.StartLocalRoles()
 	require.Nil(t, err, "start local vault")
@@ -23,7 +22,7 @@ func TestJwk(t *testing.T) {
 
 	// this represents a dme process accessing vault
 	jwks := JWKS{}
-	jwks.Init(process.VaultAddress, "dme", roles.DmeRoleID, roles.DmeSecretID)
+	jwks.Init(process.VaultAddress, "local", "dme", roles.DmeRoleID, roles.DmeSecretID)
 	// vault local process puts two secrets to start
 	err = jwks.updateKeys()
 	require.Nil(t, err, "update keys")
@@ -48,11 +47,11 @@ func TestJwk(t *testing.T) {
 
 	// put a new secret to rotate secrets
 	newSecret := "abcdefg"
-	err = PutSecret(process.VaultAddress, roles.RotatorRoleID, roles.RotatorSecretID, "dme", newSecret, "1m")
+	err = PutSecret(process.VaultAddress, "local", roles.RotatorRoleID, roles.RotatorSecretID, "dme", newSecret, "1m")
 	require.Nil(t, err, "put secret")
 	// simulate another dme that has the new key set
 	jwks2 := JWKS{}
-	jwks2.Init(process.VaultAddress, "dme", roles.DmeRoleID, roles.DmeSecretID)
+	jwks2.Init(process.VaultAddress, "local", "dme", roles.DmeRoleID, roles.DmeSecretID)
 	err = jwks2.updateKeys()
 	require.Nil(t, err, "update keys2")
 	require.Equal(t, 3, jwks2.Meta.CurrentVersion)

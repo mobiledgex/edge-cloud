@@ -29,6 +29,8 @@ skipfields:
     runtime_info:
     auto_cluster_ip_access:
     state:
+  Cloudlet:
+    time_limits:
   ClusterInst:
     liveness:
     auto:

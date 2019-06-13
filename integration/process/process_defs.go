@@ -3,10 +3,9 @@ package process
 import "os/exec"
 
 type Vault struct {
-	Common      `yaml:",inline"`
-	DmeSecret   string
-	McormSecret string
-	cmd         *exec.Cmd
+	Common    `yaml:",inline"`
+	DmeSecret string
+	cmd       *exec.Cmd
 }
 type Etcd struct {
 	Common         `yaml:",inline"`

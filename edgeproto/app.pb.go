@@ -33,6 +33,7 @@
 		AppInstInfo
 		AppInstMetrics
 		CloudletKey
+		OperationTimeLimits
 		CloudletInfraCommon
 		AzureProperties
 		GcpProperties
