@@ -145,16 +145,13 @@ func updateAppFields(in *edgeproto.App) error {
 
 	if !cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) &&
 		!*testMode {
-		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER ||
-			in.Deployment == cloudcommon.AppDeploymentTypeHelm {
-			valPrefix := ""
+		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
 			parts := strings.Split(in.ImagePath, "/")
 			// Append default registry address for internal image paths
-			if *registryAddr != "" &&
-				len(parts) < 2 || !strings.Contains(parts[0], ".") {
-				valPrefix = *registryAddr + "/"
+			if len(parts) < 2 || !strings.Contains(parts[0], ".") {
+				return fmt.Errorf("imagepath should be full registry URL: <domain-name>/<registry-path>")
 			}
-			err := cloudcommon.ValidateRegistryPath(valPrefix + in.ImagePath)
+			err := cloudcommon.ValidateRegistryPath(in.ImagePath, *vaultAddr)
 			if err != nil {
 				return err
 			}

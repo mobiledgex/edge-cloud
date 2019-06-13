@@ -107,6 +107,17 @@ func startServices() error {
 		return fmt.Errorf("invalid region name")
 	}
 
+	if *vaultAddr != "" && !*testMode {
+		RoleID := os.Getenv("VAULT_ROLE_ID")
+		if RoleID == "" {
+			return fmt.Errorf("missing VAULT_ROLE_ID")
+		}
+		SecretID := os.Getenv("VAULT_SECRET_ID")
+		if SecretID == "" {
+			return fmt.Errorf("missing VAULT_SECRET_ID")
+		}
+	}
+
 	if *localEtcd {
 		opts := []process.StartOp{}
 		if *initLocalEtcd {

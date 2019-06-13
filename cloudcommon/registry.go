@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/vault"
 )
 
 const RequestTimeout = 5 * time.Second
@@ -19,8 +20,8 @@ type TokenAuth struct {
 }
 
 type BasicAuth struct {
-	Username string
-	Password string
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type RegistryTags struct {
@@ -28,23 +29,33 @@ type RegistryTags struct {
 	Tags []string `json:"tags"`
 }
 
-func MexRegistry(host string) bool {
-	hostname := strings.Split(host, ":")
-	if len(hostname) < 1 {
-		return false
-	}
-	if strings.HasSuffix(hostname[0], ".mobiledgex.net") {
-		return true
-	}
-	return false
+func getVaultRegistryPath(registry, vaultAddr string) string {
+	return fmt.Sprintf(
+		"%s/v1/secret/data/registry/%s",
+		vaultAddr, registry,
+	)
 }
 
-func GetRegistryAuth() *BasicAuth {
-	bAuth := BasicAuth{}
-	bAuth.Username = os.Getenv("MEX_DOCKER_REG_USER")
-	bAuth.Password = os.Getenv("MEX_DOCKER_REG_PASS")
+func GetRegistryAuth(registry, vaultAddr string) *BasicAuth {
+	hostname := strings.Split(registry, ":")
+
+	if len(hostname) < 1 {
+		return nil
+	}
+	vaultPath := getVaultRegistryPath(hostname[0], vaultAddr)
+	log.DebugLog(log.DebugLevelApi, "get registry auth", "vault-path", vaultPath)
+
+	data, err := vault.GetVaultData(vaultPath)
+	if err != nil {
+		return nil
+	}
+	bAuth := &BasicAuth{}
+	err = mapstructure.WeakDecode(data["data"], bAuth)
+	if err != nil {
+		return nil
+	}
 	if bAuth.Username != "" && bAuth.Password != "" {
-		return &bAuth
+		return bAuth
 	}
 	return nil
 }
@@ -70,14 +81,10 @@ func SendHTTPReq(method, fileUrlPath string, auth interface{}) (*http.Response, 
 	if err != nil {
 		return nil, fmt.Errorf("failed fetching response %v", err)
 	}
-	// Check server response
-	if resp.StatusCode != http.StatusOK {
-		return resp, nil
-	}
 	return resp, nil
 }
 
-func ValidateRegistryPath(regUrl string) error {
+func ValidateRegistryPath(regUrl, vaultAddr string) error {
 	log.DebugLog(log.DebugLevelApi, "validate registry path", "path", regUrl)
 
 	protocol := "https"
@@ -99,10 +106,8 @@ func ValidateRegistryPath(regUrl string) error {
 	regUrl = fmt.Sprintf("%s://%s/%s%s/tags/list", urlObj.Scheme, urlObj.Host, version, regPath)
 	log.DebugLog(log.DebugLevelApi, "registry api url", "url", regUrl)
 
-	var basicAuth *BasicAuth
-	if MexRegistry(urlObj.Host) {
-		basicAuth = GetRegistryAuth()
-	}
+	basicAuth := GetRegistryAuth(urlObj.Host, vaultAddr)
+
 	resp, err := SendHTTPReq("GET", regUrl, basicAuth)
 	if err != nil {
 		return fmt.Errorf("Invalid registry path")
