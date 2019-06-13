@@ -22,7 +22,6 @@ message ExecRequest {
   string err = 6;
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
-  option (protogen.notify_filter_cloudlet_key) = true;
   option (protocmd.noconfig) = "Offer,Answer,Err";
   option (protocmd.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name";
 }

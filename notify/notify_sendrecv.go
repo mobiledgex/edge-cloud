@@ -319,6 +319,18 @@ func (s *SendRecv) hasCloudletKey(key *edgeproto.CloudletKey) bool {
 	return found
 }
 
+func (s *SendRecv) updateCloudletKey(action edgeproto.NoticeAction, key *edgeproto.CloudletKey) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	if action == edgeproto.NoticeAction_UPDATE {
+		log.DebugLog(log.DebugLevelNotify, "sendrecv add cloudletkey", "key", key)
+		s.cloudletKeys[*key] = struct{}{}
+	} else {
+		log.DebugLog(log.DebugLevelNotify, "sendrecv remove cloudletkey", "key", key)
+		delete(s.cloudletKeys, *key)
+	}
+}
+
 func (s *SendRecv) setObjStats(stats *Stats) {
 	stats.ObjSend = make(map[string]uint64)
 	stats.ObjRecv = make(map[string]uint64)

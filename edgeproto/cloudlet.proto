@@ -134,6 +134,7 @@ message Cloudlet {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
+  option (protogen.notify_recv_hook) = true;
   option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits";
   option (protocmd.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }

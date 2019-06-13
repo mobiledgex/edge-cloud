@@ -48,6 +48,10 @@ tests:
     yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
 
+- name: test run command against app data
+  apifile: "{{datadir}}/runcommand.yml"
+  actions: [runcommand]
+
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]
   apifile: "{{datadir}}/appdata.yml"
