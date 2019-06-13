@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"sync"
 
 	"github.com/kr/pty"
 )
@@ -34,13 +35,20 @@ func (s *LocalClient) Shell(sin io.Reader, sout, serr io.Writer, args ...string)
 	}
 	defer tty.Close()
 
+	// wait until all data has been written to avoid
+	// race conditions between write back and caller closing
+	// the webrtc data channel.
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
 		io.Copy(sout, tty)
+		wg.Done()
 	}()
 	go func() {
 		io.Copy(tty, sin)
 	}()
 	cmd.Wait()
+	wg.Wait()
 	return nil
 }
 
