@@ -22,11 +22,12 @@ func (n *testdb) Init() {
 	n.stats = make(map[StatKey]*ApiStat)
 }
 
-func (n *testdb) send(metric *edgeproto.Metric) {
+func (n *testdb) send(metric *edgeproto.Metric) bool {
 	key, stat := MetricToStat(metric)
 	n.mux.Lock()
 	n.stats[*key] = stat
 	n.mux.Unlock()
+	return true
 }
 
 func TestStatDrops(t *testing.T) {

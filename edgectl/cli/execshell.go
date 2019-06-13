@@ -19,6 +19,9 @@ func RunWebrtcShell(exchangeFunc func(offer webrtc.SessionDescription) (*webrtc.
 					"stun:stun.mobiledgex.net:19302",
 					"turn:stun.mobiledgex.net:19302",
 				},
+				Username:       "fake",
+				Credential:     "fake",
+				CredentialType: webrtc.ICECredentialTypePassword,
 			},
 		},
 	}
@@ -34,21 +37,25 @@ func RunWebrtcShell(exchangeFunc func(offer webrtc.SessionDescription) (*webrtc.
 		return fmt.Errorf("failed to create data channel, %v", err)
 	}
 
-	// Set stdin and Stdout to raw
-	sinOldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		return err
+	interactive := false
+	if terminal.IsTerminal(int(os.Stdin.Fd())) {
+		// Set stdin and Stdout to raw
+		sinOldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
+		if err != nil {
+			return err
+		}
+		defer func() {
+			terminal.Restore(int(os.Stdin.Fd()), sinOldState)
+		}()
+		soutOldState, err := terminal.MakeRaw(int(os.Stdout.Fd()))
+		if err != nil {
+			return err
+		}
+		defer func() {
+			terminal.Restore(int(os.Stdout.Fd()), soutOldState)
+		}()
+		interactive = true
 	}
-	defer func() {
-		terminal.Restore(int(os.Stdin.Fd()), sinOldState)
-	}()
-	soutOldState, err := terminal.MakeRaw(int(os.Stdout.Fd()))
-	if err != nil {
-		return err
-	}
-	defer func() {
-		terminal.Restore(int(os.Stdout.Fd()), soutOldState)
-	}()
 
 	done := make(chan bool, 1)
 	wr := webrtcutil.NewDataChanWriter(dataChan)
@@ -58,7 +65,13 @@ func RunWebrtcShell(exchangeFunc func(offer webrtc.SessionDescription) (*webrtc.
 			// send stdin to data channel
 			io.Copy(wr, os.Stdin)
 			// close data channel if input stream is closed
-			dataChan.Close()
+			// in interactive mode. In non-interactive mode,
+			// os.Stdin is already closed. Instead we wait
+			// until remote end closes data channel.
+			// We could also add a timeout for non-interactive mode.
+			if interactive {
+				dataChan.Close()
+			}
 		}()
 	})
 	dataChan.OnMessage(func(msg webrtc.DataChannelMessage) {

@@ -2,7 +2,6 @@ package notify
 
 import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
 )
 
 // Customize functions are used to filter sending of data
@@ -51,6 +50,15 @@ func (s *ClusterInstSend) UpdateOk(key *edgeproto.ClusterInstKey) bool {
 	return true
 }
 
+func (s *ExecRequestSend) UpdateOk(msg *edgeproto.ExecRequest) bool {
+	if s.sendrecv.filterCloudletKeys {
+		if !s.sendrecv.hasCloudletKey(&msg.AppInstKey.ClusterInstKey.CloudletKey) {
+			return false
+		}
+	}
+	return true
+}
+
 func (s *AppSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
 }
@@ -71,15 +79,7 @@ func (s *CloudletInfoRecv) RecvHook(notice *edgeproto.Notice, buf *edgeproto.Clo
 	if !s.sendrecv.filterCloudletKeys {
 		return
 	}
-	s.sendrecv.mux.Lock()
-	if notice.Action == edgeproto.NoticeAction_UPDATE {
-		log.DebugLog(log.DebugLevelNotify, "server add cloudletkey", "key", buf.Key)
-		s.sendrecv.cloudletKeys[buf.Key] = struct{}{}
-	} else {
-		log.DebugLog(log.DebugLevelNotify, "server remove cloudletkey", "key", buf.Key)
-		delete(s.sendrecv.cloudletKeys, buf.Key)
-	}
-	s.sendrecv.mux.Unlock()
+	s.sendrecv.updateCloudletKey(notice.Action, &buf.Key)
 
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
 		// trigger send of all objects related to cloudlet
@@ -101,4 +101,11 @@ func (s *CloudletInfoRecv) RecvHook(notice *edgeproto.Notice, buf *edgeproto.Clo
 			}
 		}
 	}
+}
+
+func (s *CloudletRecv) RecvHook(notice *edgeproto.Notice, buf *edgeproto.Cloudlet, perrAddr string) {
+	// register cloudlet key on sendrecv for CRM, otherwise the
+	// ExecRequest messages it tries to send back to the controller
+	// will get filtered by UpdateOk above.
+	s.sendrecv.updateCloudletKey(notice.Action, &buf.Key)
 }

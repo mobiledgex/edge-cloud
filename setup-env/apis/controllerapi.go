@@ -19,6 +19,11 @@ import (
 
 var appData edgeproto.ApplicationData
 
+type runCommandData struct {
+	Request        edgeproto.ExecRequest
+	ExpectedOutput string
+}
+
 func readAppDataFile(file string) {
 	err := util.ReadYamlFile(file, &appData, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
 	if err != nil {
@@ -480,6 +485,46 @@ func RunControllerCLI(api string, ctrlname string, apiFile string, outputDir str
 		}
 	default:
 		log.Printf("Error: unsupported controller CLI %s\n", api)
+		return false
+	}
+	return true
+}
+
+func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string) bool {
+	log.Printf("RunCommand using %s\n", apiFile)
+
+	ctrl := util.GetController(ctrlname)
+
+	data := runCommandData{}
+	if apiFile == "" {
+		log.Println("Error: Cannot run RunCommand API without API file")
+		return false
+	}
+	err := util.ReadYamlFile(apiFile, &data)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s, %v\n", apiFile, err)
+		return false
+	}
+	req := &data.Request
+
+	args := []string{"RunCommand"}
+	args = append(args, "--appinstkey-appkey-developerkey-name", req.AppInstKey.AppKey.DeveloperKey.Name)
+	args = append(args, "--appinstkey-appkey-name", req.AppInstKey.AppKey.Name)
+	args = append(args, "--appinstkey-appkey-version", req.AppInstKey.AppKey.Version)
+	args = append(args, "--appinstkey-clusterinstkey-cloudletkey-name", req.AppInstKey.ClusterInstKey.CloudletKey.Name)
+	args = append(args, "--appinstkey-clusterinstkey-cloudletkey-operatorkey-name", req.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	args = append(args, "--appinstkey-clusterinstkey-clusterkey-name", req.AppInstKey.ClusterInstKey.ClusterKey.Name)
+	args = append(args, "--appinstkey-clusterinstkey-developer", req.AppInstKey.ClusterInstKey.Developer)
+	args = append(args, "--command", req.Command)
+	out, err := util.ControllerCLI(ctrl, args...)
+	if err != nil {
+		log.Printf("Error running RunCommand API %v\n", err)
+		return false
+	}
+	log.Printf("RunCommand output: %s\n", string(out))
+	actual := strings.TrimSpace(string(out))
+	if actual != data.ExpectedOutput {
+		log.Printf("Did not get expected output: %s\n", data.ExpectedOutput)
 		return false
 	}
 	return true
