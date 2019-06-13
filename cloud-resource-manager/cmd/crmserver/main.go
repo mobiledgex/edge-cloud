@@ -6,14 +6,12 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"plugin"
 	"strings"
 	"syscall"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/dind"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/fake"
+	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -73,7 +71,7 @@ func main() {
 
 	// Load platform implementation.
 	var err error
-	platform, err = getPlatform(*platformName)
+	platform, err = pfutils.GetPlatform(*platformName)
 	if err != nil {
 		log.FatalLog("Failed to get platform %s, %s", *platformName, err.Error())
 	}
@@ -149,36 +147,6 @@ func main() {
 
 	<-sigChan
 	os.Exit(0)
-}
-
-func getPlatform(plat string) (pf.Platform, error) {
-	// Building plugins is slow, so directly importable
-	// platforms are not built as plugins.
-	if plat == "dind" {
-		return &dind.Platform{}, nil
-	} else if plat == "fakecloudlet" {
-		return &fake.Platform{}, nil
-	}
-
-	// Load platform from plugin
-	if *solib == "" {
-		*solib = os.Getenv("GOPATH") + "/plugins/platforms.so"
-	}
-	log.DebugLog(log.DebugLevelMexos, "Loading plugin", "plugin", *solib)
-	plug, err := plugin.Open(*solib)
-	if err != nil {
-		log.FatalLog("failed to load plugin", "plugin", *solib, "error", err)
-	}
-	sym, err := plug.Lookup("GetPlatform")
-	if err != nil {
-		log.FatalLog("plugin does not have GetPlatform symbol", "plugin", *solib)
-	}
-	getPlatFunc, ok := sym.(func(plat string) (pf.Platform, error))
-	if !ok {
-		log.FatalLog("plugin GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", "plugin", *solib)
-	}
-	log.DebugLog(log.DebugLevelMexos, "Creating platform")
-	return getPlatFunc(*platformName)
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*

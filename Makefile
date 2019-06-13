@@ -94,7 +94,7 @@ test-reset:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_reset_create.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
 
 test-stop:
-	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/stop_cleanup.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_stop_create.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
 
 test-sdk:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/sdk_test/stop_start_create_sdk.yml -setupfile ./setup-env/e2e-tests/setups/local_sdk.yml

@@ -101,7 +101,6 @@ type DeploymentData struct {
 	Etcds       []*process.Etcd       `yaml:"etcds"`
 	Controllers []*process.Controller `yaml:"controllers"`
 	Dmes        []*process.Dme        `yaml:"dmes"`
-	Crms        []*process.Crm        `yaml:"crms"`
 	SampleApps  []*process.SampleApp  `yaml:"sampleapps"`
 	Influxs     []*process.Influx     `yaml:"influxs"`
 	ClusterSvcs []*process.ClusterSvc `yaml:"clustersvcs"`
@@ -131,9 +130,6 @@ func GetAllProcesses() []process.Process {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.Dmes {
-		all = append(all, p)
-	}
-	for _, p := range Deployment.Crms {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.SampleApps {

@@ -38,6 +38,7 @@ var CloudletIn edgeproto.Cloudlet
 var CloudletFlagSet = pflag.NewFlagSet("Cloudlet", pflag.ExitOnError)
 var CloudletNoConfigFlagSet = pflag.NewFlagSet("CloudletNoConfig", pflag.ExitOnError)
 var CloudletInIpSupport string
+var CloudletInState string
 var CloudletInfoIn edgeproto.CloudletInfo
 var CloudletInfoFlagSet = pflag.NewFlagSet("CloudletInfo", pflag.ExitOnError)
 var CloudletInfoNoConfigFlagSet = pflag.NewFlagSet("CloudletInfoNoConfig", pflag.ExitOnError)
@@ -333,7 +334,7 @@ func CloudletInfraPropertiesWriteOutputOne(obj *edgeproto.CloudletInfraPropertie
 	}
 }
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 15)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -356,11 +357,25 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, edgeproto.IpSupport_CamelName[int32(in.IpSupport)])
 	s = append(s, in.StaticIps)
 	s = append(s, strconv.FormatUint(uint64(in.NumDynamicIps), 10))
+	s = append(s, in.ControllerAddr)
+	s = append(s, in.Platform)
+	s = append(s, in.VaultAddr)
+	s = append(s, in.PhysicalName)
+	s = append(s, strconv.FormatUint(uint64(in.BindPort), 10))
+	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
+	if in.Errors == nil {
+		in.Errors = make([]string, 1)
+	}
+	s = append(s, in.Errors[0])
+	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
+	s = append(s, in.Status.TaskName)
+	s = append(s, in.Status.StepName)
 	return s
 }
 
 func CloudletHeaderSlicer() []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 15)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
@@ -377,6 +392,17 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "IpSupport")
 	s = append(s, "StaticIps")
 	s = append(s, "NumDynamicIps")
+	s = append(s, "ControllerAddr")
+	s = append(s, "Platform")
+	s = append(s, "VaultAddr")
+	s = append(s, "PhysicalName")
+	s = append(s, "BindPort")
+	s = append(s, "State")
+	s = append(s, "Errors")
+	s = append(s, "Status-TaskNumber")
+	s = append(s, "Status-MaxTasks")
+	s = append(s, "Status-TaskName")
+	s = append(s, "Status-StepName")
 	return s
 }
 
@@ -550,6 +576,21 @@ func CloudletMetricsWriteOutputOne(obj *edgeproto.CloudletMetrics) {
 		output.Flush()
 	} else {
 		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func CloudletHideTags(in *edgeproto.Cloudlet) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.State = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Errors = nil
 	}
 }
 
@@ -762,6 +803,7 @@ func ShowCloudlet(in *edgeproto.Cloudlet) error {
 		if err != nil {
 			return fmt.Errorf("ShowCloudlet recv failed: %s", err.Error())
 		}
+		CloudletHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -1023,6 +1065,16 @@ func init() {
 	CloudletFlagSet.StringVar(&CloudletInIpSupport, "ipsupport", "", "one of [IpSupportUnknown IpSupportStatic IpSupportDynamic]")
 	CloudletFlagSet.StringVar(&CloudletIn.StaticIps, "staticips", "", "StaticIps")
 	CloudletFlagSet.Int32Var(&CloudletIn.NumDynamicIps, "numdynamicips", 0, "NumDynamicIps")
+	CloudletFlagSet.StringVar(&CloudletIn.ControllerAddr, "controlleraddr", "", "ControllerAddr")
+	CloudletFlagSet.StringVar(&CloudletIn.Platform, "platform", "", "Platform")
+	CloudletFlagSet.StringVar(&CloudletIn.VaultAddr, "vaultaddr", "", "VaultAddr")
+	CloudletFlagSet.StringVar(&CloudletIn.PhysicalName, "physicalname", "", "PhysicalName")
+	CloudletFlagSet.Int32Var(&CloudletIn.BindPort, "bindport", 0, "BindPort")
+	CloudletFlagSet.StringVar(&CloudletInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
+	CloudletNoConfigFlagSet.Uint32Var(&CloudletIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
+	CloudletNoConfigFlagSet.Uint32Var(&CloudletIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
+	CloudletNoConfigFlagSet.StringVar(&CloudletIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
+	CloudletNoConfigFlagSet.StringVar(&CloudletIn.Status.StepName, "status-stepname", "", "Status.StepName")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [CloudletStateUnknown CloudletStateErrors CloudletStateReady CloudletStateOffline CloudletStateNotPresent]")
@@ -1106,6 +1158,36 @@ func CloudletSetFields() {
 	if CloudletFlagSet.Lookup("numdynamicips").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "8")
 	}
+	if CloudletFlagSet.Lookup("controlleraddr").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "9")
+	}
+	if CloudletFlagSet.Lookup("platform").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "10")
+	}
+	if CloudletFlagSet.Lookup("vaultaddr").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "11")
+	}
+	if CloudletFlagSet.Lookup("physicalname").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "12")
+	}
+	if CloudletFlagSet.Lookup("bindport").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "13")
+	}
+	if CloudletFlagSet.Lookup("state").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "14")
+	}
+	if CloudletNoConfigFlagSet.Lookup("status-tasknumber").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "16.1")
+	}
+	if CloudletNoConfigFlagSet.Lookup("status-maxtasks").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "16.2")
+	}
+	if CloudletNoConfigFlagSet.Lookup("status-taskname").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "16.3")
+	}
+	if CloudletNoConfigFlagSet.Lookup("status-stepname").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "16.4")
+	}
 }
 
 func CloudletInfoSetFields() {
@@ -1147,6 +1229,38 @@ func parseCloudletEnums() error {
 			CloudletIn.IpSupport = edgeproto.IpSupport(2)
 		default:
 			return errors.New("Invalid value for CloudletInIpSupport")
+		}
+	}
+	if CloudletInState != "" {
+		switch CloudletInState {
+		case "TrackedStateUnknown":
+			CloudletIn.State = edgeproto.TrackedState(0)
+		case "NotPresent":
+			CloudletIn.State = edgeproto.TrackedState(1)
+		case "CreateRequested":
+			CloudletIn.State = edgeproto.TrackedState(2)
+		case "Creating":
+			CloudletIn.State = edgeproto.TrackedState(3)
+		case "CreateError":
+			CloudletIn.State = edgeproto.TrackedState(4)
+		case "Ready":
+			CloudletIn.State = edgeproto.TrackedState(5)
+		case "UpdateRequested":
+			CloudletIn.State = edgeproto.TrackedState(6)
+		case "Updating":
+			CloudletIn.State = edgeproto.TrackedState(7)
+		case "UpdateError":
+			CloudletIn.State = edgeproto.TrackedState(8)
+		case "DeleteRequested":
+			CloudletIn.State = edgeproto.TrackedState(9)
+		case "Deleting":
+			CloudletIn.State = edgeproto.TrackedState(10)
+		case "DeleteError":
+			CloudletIn.State = edgeproto.TrackedState(11)
+		case "DeletePrepare":
+			CloudletIn.State = edgeproto.TrackedState(12)
+		default:
+			return errors.New("Invalid value for CloudletInState")
 		}
 	}
 	return nil

@@ -36,4 +36,8 @@ type Platform interface {
 	GetPlatformClient(clusterInst *edgeproto.ClusterInst) (pc.PlatformClient, error)
 	// Get the command to pass to PlatformClient for the container command
 	GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error)
+	// Create Cloudlet
+	CreateCloudlet(cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error
+	// Delete Cloudlet
+	DeleteCloudlet(cloudlet *edgeproto.Cloudlet) error
 }

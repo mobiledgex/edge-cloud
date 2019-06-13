@@ -88,13 +88,6 @@ func WaitForProcesses(processName string, procs []process.Process) bool {
 		count++
 		go util.ConnectDme(dme, c)
 	}
-	for _, crm := range util.Deployment.Crms {
-		if processName != "" && processName != crm.Name && processName != "allcrms" {
-			continue
-		}
-		count++
-		go util.ConnectCrm(crm, c)
-	}
 	allpass := true
 	for i := 0; i < count; i++ {
 		rc := <-c
@@ -467,12 +460,6 @@ func StartProcesses(processName string, outputDir string) bool {
 	}
 	for _, p := range util.Deployment.Controllers {
 		opts = append(opts, process.WithDebug("etcd,api,notify"))
-		if !StartLocal(processName, outputDir, p, opts...) {
-			return false
-		}
-	}
-	for _, p := range util.Deployment.Crms {
-		opts = append(opts, process.WithDebug("api,notify,mexos"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}

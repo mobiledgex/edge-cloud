@@ -1586,7 +1586,7 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 			curState = TrackedState_NOT_PRESENT
 		}
 		if send != nil {
-			statusString := info.Status.toString()
+			statusString := info.Status.ToString()
 			var msg string
 			if statusString != "" {
 				msg = statusString

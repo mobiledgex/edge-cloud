@@ -72,6 +72,9 @@ cloudlets:
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platform: fakecloudlet
+  controlleraddr: 127.0.0.1
+  bindport: 55091
 - key:
     operatorkey:
       name: tmus
@@ -81,6 +84,81 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platform: fakecloudlet
+  controlleraddr: 127.0.0.1
+  bindport: 55092
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-3
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platform: fakecloudlet
+  controlleraddr: 127.0.0.1
+  bindport: 55093
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-4
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platform: fakecloudlet
+  controlleraddr: 127.0.0.1
+  bindport: 55094
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-5
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platform: fakecloudlet
+  controlleraddr: 127.0.0.1
+  bindport: 55095
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-6
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platform: fakecloudlet
+  controlleraddr: 127.0.0.1
+  bindport: 55096
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-7
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platform: fakecloudlet
+  controlleraddr: 127.0.0.1
+  bindport: 55097
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-8
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platform: fakecloudlet
+  controlleraddr: 127.0.0.1
+  bindport: 55098
 - key:
     operatorkey:
       name: azure
@@ -90,6 +168,9 @@ cloudlets:
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platform: fakecloudlet
+  controlleraddr: 127.0.0.1
+  bindport: 55099
 - key:
     operatorkey:
       name: gcp
@@ -99,6 +180,9 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platform: fakecloudlet
+  controlleraddr: 127.0.0.1
+  bindport: 55100
 
 apps:
 - key:

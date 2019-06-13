@@ -2,10 +2,16 @@ package main
 
 import (
 	"errors"
+	"fmt"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
+	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
 )
+
+const DefaultBindPort = 55091
 
 type CloudletApi struct {
 	sync  *Sync
@@ -65,7 +71,49 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		// user forgot to specify location
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
-	_, err := s.store.Create(in, s.sync.syncWait)
+
+	if in.BindPort < 1 {
+		in.BindPort = DefaultBindPort
+	}
+
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if s.store.STMGet(stm, &in.Key, nil) {
+			return objstore.ErrKVStoreKeyExists
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Load platform implementation
+	platform, err := pfutils.GetPlatform(in.Platform)
+	if err != nil {
+		return err
+	}
+
+	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
+		switch updateType {
+		case edgeproto.UpdateTask:
+			setStatusTask(in, value, cb)
+		case edgeproto.UpdateStep:
+			setStatusStep(in, value, cb)
+		}
+	}
+
+	in.State = edgeproto.TrackedState_CREATING
+	err = platform.CreateCloudlet(in, updateCloudletCallback)
+	if err != nil {
+		in.State = edgeproto.TrackedState_CREATE_ERROR
+		in.Errors = append(in.Errors, err.Error())
+	}
+	in.State = edgeproto.TrackedState_READY
+
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		s.store.STMPut(stm, in)
+		return nil
+	})
+
 	return err
 }
 
@@ -107,16 +155,57 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		// disallow delete if static instances are present
 		return errors.New("Cloudlet in use by static Application Instance")
 	}
+
 	clDynInsts := make(map[edgeproto.ClusterInstKey]struct{})
 	if clusterInstApi.UsesCloudlet(&in.Key, clDynInsts) {
 		return errors.New("Cloudlet in use by static Cluster Instance")
 	}
-	_, err := s.store.Delete(in, s.sync.syncWait)
+
+	// Set state to prevent other apps from being created on ClusterInst
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, in) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		if in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE {
+			if in.State == edgeproto.TrackedState_DELETE_ERROR {
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
+				cb.Send(&edgeproto.Result{Message: "Use CreateCloudlet to rebuild, and try again"})
+			}
+			return errors.New("Cloudlet busy, cannot delete")
+		}
+		in.State = edgeproto.TrackedState_DELETE_PREPARE
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Load platform implementation
+	platform, err := pfutils.GetPlatform(in.Platform)
+	if err != nil {
+		return err
+	}
+
+	err = platform.DeleteCloudlet(in)
+	if err != nil {
+		return err
+	}
+
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		s.store.STMDel(stm, &in.Key)
+
+		cloudletRefsApi.store.STMDel(stm, &in.Key)
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
 	// also delete associated info
 	// Note: don't delete cloudletinfo, that will get deleted once CRM
 	// disconnects. Otherwise if admin deletes/recreates Cloudlet with
 	// CRM connected the whole time, we will end up without cloudletInfo.
-	cloudletRefsApi.Delete(&in.Key, s.sync.syncWait)
 	// also delete dynamic instances
 	if len(dynInsts) > 0 {
 		// delete dynamic instances
@@ -201,4 +290,25 @@ func (s *CloudletApi) UpdateAppInstLocations(in *edgeproto.Cloudlet) {
 				"inst", inst, "err", err)
 		}
 	}
+}
+
+func setStatusTask(in *edgeproto.Cloudlet, taskName string, cb edgeproto.CloudletApi_CreateCloudletServer) {
+	log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", in.Key, "taskName", taskName)
+	in.Status.SetTask(taskName)
+
+	cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
+}
+
+func setStatusMaxTasks(in *edgeproto.Cloudlet, maxTasks uint32, cb edgeproto.CloudletApi_CreateCloudletServer) {
+	log.DebugLog(log.DebugLevelApi, "SetStatusMaxTasks", "key", in.Key, "maxTasks", maxTasks)
+	in.Status.SetMaxTasks(maxTasks)
+
+	cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
+}
+
+func setStatusStep(in *edgeproto.Cloudlet, stepName string, cb edgeproto.CloudletApi_CreateCloudletServer) {
+	log.DebugLog(log.DebugLevelApi, "SetStatusStep", "key", in.Key, "stepName", stepName)
+	in.Status.SetStep(stepName)
+
+	cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
 }

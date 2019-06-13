@@ -1160,7 +1160,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 			curState = {{.WaitForState}}_NOT_PRESENT
 		}
 		if send != nil {
-			statusString := info.Status.toString()
+			statusString := info.Status.ToString()
 			var msg string
 			if statusString != ""{
 				msg = statusString			

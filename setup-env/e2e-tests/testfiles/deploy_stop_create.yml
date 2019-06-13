@@ -1,0 +1,12 @@
+##
+##
+description: Deploys and starts a system, adds provisioning. Does not stop or cleanup
+
+tests:
+
+- name: delete provisioning
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-delete,ctrlapi-show]
+
+- name: stop services and cleanup
+  actions: [stop,cleanup]

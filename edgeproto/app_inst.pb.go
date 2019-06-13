@@ -1973,7 +1973,7 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 			curState = TrackedState_NOT_PRESENT
 		}
 		if send != nil {
-			statusString := info.Status.toString()
+			statusString := info.Status.ToString()
 			var msg string
 			if statusString != "" {
 				msg = statusString
