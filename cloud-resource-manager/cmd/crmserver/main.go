@@ -120,8 +120,8 @@ func main() {
 
 	//setup crm notify listener (for shepherd)
 	var notifyServer notify.ServerMgr
-	initCrmNotify(&notifyServer)
 	notifyServer.Init()
+	initCrmNotify(&notifyServer)
 	notifyServer.Start(*notifyCrmAddr, *tlsCertFile)
 	defer notifyServer.Stop()
 
@@ -209,7 +209,4 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr stri
 func initCrmNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
 	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
-
-	notifyServer.RegisterRecv(notify.NewAppInstRecvMany(&controllerData.AppInstCache))
-	notifyServer.RegisterRecv(notify.NewClusterInstRecvMany(&controllerData.ClusterInstCache))
 }
