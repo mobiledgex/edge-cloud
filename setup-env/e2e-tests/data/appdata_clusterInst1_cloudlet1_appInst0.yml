@@ -90,7 +90,7 @@ apps:
   - kind: envVarsYaml
     config: |
       - name: MEX_INFLUXDB_ADDR
-        value: 0.0.0.0:8086
+        value: http://0.0.0.0:8086
       - name: MEX_INFLUXDB_USER
         value: root
       - name: MEX_INFLUXDB_PASS
