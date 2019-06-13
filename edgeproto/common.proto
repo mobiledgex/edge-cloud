@@ -25,14 +25,15 @@ enum IpSupport {
   IP_SUPPORT_DYNAMIC = 2;
 }
 
+// IpAccess indicates the type of RootLB that Developer requires for their App
 enum IpAccess {
   // Unknown IP access
   IP_ACCESS_UNKNOWN = 0;
-  // Dedicated IP access
+  // Dedicated RootLB
   IP_ACCESS_DEDICATED = 1;
-  // Dedicated or shared (prefers dedicated) access
+  // Dedicated or shared (prefers dedicated) RootLB
   IP_ACCESS_DEDICATED_OR_SHARED = 2;
-  // Shared IP access
+  // Shared RootLB
   IP_ACCESS_SHARED = 3;
 }
 

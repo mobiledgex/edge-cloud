@@ -15,24 +15,24 @@ import "gogoproto/gogo.proto";
 // pointer, otherwise the enclosing struct cannot properly function
 // as the key to a hash table. Thus embedded key structs have nullable false.
 
-// AppKey uniquely identifies an Application.
+// AppKey uniquely identifies an App
 message AppKey {
   // Developer key
   DeveloperKey developer_key = 1 [(gogoproto.nullable) = false];
-  // Application name
+  // App name
   string name = 2;
-  // Version of the app
+  // App version
   string version = 3;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
 }
 
-// ImageType specifies the image type of the application.
+// ImageType specifies image type of an App
 enum ImageType {
   // Unknown image type
   IMAGE_TYPE_UNKNOWN = 0;
-  // Docker container image type compatible with Kubernetes
+  // Docker container image type compatible either with Docker or Kubernetes
   IMAGE_TYPE_DOCKER = 1;
   // QCOW2 virtual machine image type
   IMAGE_TYPE_QCOW = 2;
@@ -52,35 +52,33 @@ message ConfigFile {
   string config = 2;
 }
 
-// Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes.
-// An application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet.
-message App {
+//Apps belong to developers and is used to provide information about their application.
+ message App {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Unique identifier key
   AppKey key = 2 [(gogoproto.nullable) = false];
-  // URI from which to download image
+  // URI of where image resides
   string image_path = 4 [(protogen.backend) = true];
   // Image type (see ImageType)
   ImageType image_type = 5;
-  // For Layer4 access, the ports the app listens on.
-  // This is a comma separated list of protocol:port pairs, i.e.
-  // tcp:80,http:443,udp:10002.
-  // Only tcp, udp, and http protocols are supported; tcp and udp are assumed
-  // to be L4, and http is assumed to be L7 access.
+  // Comma separated list of protocol:port pairs that the App listens on 
+  // i.e. tcp:80, udp:10002, http:443
   string access_ports = 7;
-  // Default flavor for the App, may be overridden by the AppInst
+  // Default flavor for the App, which may be overridden by the AppInst
   FlavorKey default_flavor = 9 [(gogoproto.nullable) = false];
   // public key used for authentication
   string auth_public_key = 12;
-  // Command to start service
+  // Command that the container runs to start service 
   string command = 13;
   // Annotations is a comma separated map of arbitrary key value pairs,
   // for example: key1=val1,key2=val2,key3="val 3"
   string annotations = 14;
-  // Deployment target (kubernetes, docker, kvm, etc)
+  // Deployment type (kubernetes, docker, or VM)
   string deployment = 15 [(protogen.backend) = true];
   // Deployment manifest is the deployment specific manifest file/config
+  // For docker deployment, this can be a docker-compose or docker run file
+  // For k8s deployment, this can be a k8s yaml or helm chart file
   string deployment_manifest = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Deployment generator target to generate a basic deployment manifest
   string deployment_generator = 17 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
@@ -93,7 +91,7 @@ message App {
   DeleteType del_opt = 20 [(protogen.hidetag) = "nocmp"];
   // Customization files passed through to implementing services
   repeated ConfigFile configs = 21;
-  // Run application on all the nodes of the cluster
+  // Option to run App on all nodes of the cluster
   bool scale_with_cluster = 22;
   // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;

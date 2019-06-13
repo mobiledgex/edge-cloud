@@ -16,11 +16,16 @@ skipmethods:
   ShowClusterRefs:
 skipfields:
   App:
+    fields:
+    auth_public_key:
     annotations:
     deployment_generator:
     permits_platform_apps:
     del_opt:
+    android_package_name:
+    configs:
   AppInst:
+    fields:
     cloudlet_loc:
     liveness:
     mapped_ports:
@@ -30,11 +35,19 @@ skipfields:
     auto_cluster_ip_access:
     state:
   Cloudlet:
+    fields:
     time_limits:
   ClusterInst:
+    fields:
     liveness:
     auto:
     state:
     errors:
     crm_override:
-    node_flavor:
+    allocated_ip:
+  Developer:
+    fields:
+  Flavor:
+    fields:
+  Operator:
+    fields:

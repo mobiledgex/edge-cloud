@@ -19,17 +19,20 @@ message FlavorKey {
   option (gogoproto.gostring) = true;
 }
 
-// A Flavor identifies the Cpu, Ram, and Disk resources required for either a node in a Cluster, or an application instance. For a node in a cluster, these are the physical resources provided by that node. For an application instance, this defines the resources (per node) that should be allocated to the instance from the Cluster.
+//Flavors define the compute, memory, and storage capacity of computing instances. 
+//To put it simply, a flavor is an available hardware configuration for a server. 
+//It defines the size of a virtual server that can be launched.
+
 message Flavor {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
-  // Unique key
+  // Unique key for the new flavor.
   FlavorKey key = 2 [(gogoproto.nullable) = false];
-  // RAM in MB
+  // Amount of RAM to use (in megabytes)
   uint64 ram = 3;
-  // VCPU cores
+  // Number of virtual CPUs to use
   uint64 vcpus = 4;
-  // Amount of disk in GB
+  // Amount of disk space (in gigabytes) to use
   uint64 disk = 5;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
