@@ -3,10 +3,9 @@ package process
 import "os/exec"
 
 type Vault struct {
-	Common      `yaml:",inline"`
-	DmeSecret   string
-	McormSecret string
-	cmd         *exec.Cmd
+	Common    `yaml:",inline"`
+	DmeSecret string
+	cmd       *exec.Cmd
 }
 type Etcd struct {
 	Common         `yaml:",inline"`
@@ -43,14 +42,16 @@ type Dme struct {
 	cmd         *exec.Cmd
 }
 type Crm struct {
-	Common      `yaml:",inline"`
-	ApiAddr     string
-	NotifyAddrs string
-	CloudletKey string
-	Platform    string
-	Plugin      string
-	TLS         TLSCerts
-	cmd         *exec.Cmd
+	Common       `yaml:",inline"`
+	ApiAddr      string
+	NotifyAddrs  string
+	CloudletKey  string
+	Platform     string
+	Plugin       string
+	TLS          TLSCerts
+	cmd          *exec.Cmd
+	VaultAddr    string
+	PhysicalName string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`

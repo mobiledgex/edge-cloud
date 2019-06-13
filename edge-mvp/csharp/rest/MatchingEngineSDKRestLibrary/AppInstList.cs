@@ -8,13 +8,13 @@ namespace DistributedMatchEngine
   {
     // App Instance Name
     [DataMember]
-    string AppName;
+    string app_name;
     // App Instance Version
     [DataMember]
-    string AppVers;
+    string app_vers;
     // App Instance FQDN
     [DataMember]
-    string FQDN;
+    string fqdn;
     // ports to access app
     [DataMember]
     AppPort[] ports;
@@ -25,57 +25,63 @@ namespace DistributedMatchEngine
   {
     // The carrier name that user is connected to ("Cellular Carrier Name")
     [DataMember]
-    string CarrierName;
+    string carrier_name;
     // Cloudlet Name
     [DataMember]
-    string CloudletName;
+    string cloudlet_name;
     // The GPS Location of the user
-    Loc GpsLocation;
+    Loc gps_location;
     [DataMember]
     // Distance of cloudlet vs loc in request
-    double Distance;
+    double distance;
     // App instances
     [DataMember]
-    Appinstance[] Appinstances;
+    Appinstance[] appinstances;
   }
 
   [DataContract]
   public class AppInstListRequest
   {
     [DataMember]
-    public UInt32 Ver;
+    public UInt32 ver;
     [DataMember]
-    public string SessionCookie;
+    public string session_cookie;
     [DataMember]
-    public string CarrierName;
+    public string carrier_name;
     [DataMember]
-    public Loc GpsLocation;
+    public Loc gps_location;
   }
 
   [DataContract]
   public class AppInstListReply
   {
+    // Status of the reply
+    public enum AIStatus
+    {
+      AI_UNDEFINED = 0,
+      AI_SUCCESS = 1,
+      AI_FAIL = 2
+    }
+
     [DataMember]
-    public UInt32 Ver;
+    public UInt32 ver;
 
-    public ReplyStatus ReplyStatus;
+    public AIStatus status;
 
-    [DataMember(Name = "ReplyStatus")]
-    private string ReplyStatusString
+    [DataMember(Name = "status")]
+    private string ai_status_string
     {
       get
       {
-        return ReplyStatus.ToString();
+        return status.ToString();
       }
       set
       {
-        ReplyStatus = Enum.TryParse(value, out ReplyStatus rStatus) ? rStatus : ReplyStatus.RS_UNDEFINED;
+        status = Enum.TryParse(value, out AIStatus rStatus) ? rStatus : AIStatus.AI_UNDEFINED;
       }
     }
 
     [DataMember]
-    public string SessionCookie;
-    [DataMember]
-    public string TokenServerURI;
+    public CloudletLocation[] cloudlets;
   }
 }

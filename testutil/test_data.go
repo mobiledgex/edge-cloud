@@ -46,55 +46,35 @@ var DevData = []edgeproto.Developer{
 		Key: edgeproto.DeveloperKey{
 			Name: "Niantic, Inc.",
 		},
-		Address: "1230 Midas Way #200, Sunnyvale, CA 94085",
-		Email:   "edge.niantic.com",
 	},
 	edgeproto.Developer{
 		Key: edgeproto.DeveloperKey{
 			Name: "Ever.ai",
 		},
-		Address: "1 Letterman Drive Building C, San Francisco, CA 94129",
-		Email:   "edge.everai.com",
 	},
 	edgeproto.Developer{
 		Key: edgeproto.DeveloperKey{
 			Name: "1000 realities",
 		},
-		Address: "Kamienna 43, 31-403 Krakow, Poland",
-		Email:   "edge.1000realities.com",
 	},
 	edgeproto.Developer{
 		Key: edgeproto.DeveloperKey{
 			Name: "Sierraware LLC",
 		},
-		Address: "1250 Oakmead Parkway Suite 210, Sunnyvalue, CA 94085",
-		Email:   "support@sierraware.com",
 	},
 }
-var ClusterData = []edgeproto.Cluster{
-	edgeproto.Cluster{
-		Key: edgeproto.ClusterKey{
-			Name: "Pokemons",
-		},
-		DefaultFlavor: FlavorData[0].Key, //x1.tiny
+var ClusterKeys = []edgeproto.ClusterKey{
+	edgeproto.ClusterKey{
+		Name: "Pokemons",
 	},
-	edgeproto.Cluster{
-		Key: edgeproto.ClusterKey{
-			Name: "Ever.Ai",
-		},
-		DefaultFlavor: FlavorData[1].Key, //x1.small
+	edgeproto.ClusterKey{
+		Name: "Ever.Ai",
 	},
-	edgeproto.Cluster{
-		Key: edgeproto.ClusterKey{
-			Name: "1000realities",
-		},
-		DefaultFlavor: FlavorData[2].Key,
+	edgeproto.ClusterKey{
+		Name: "1000realities",
 	},
-	edgeproto.Cluster{
-		Key: edgeproto.ClusterKey{
-			Name: "Big-Pokemons",
-		},
-		DefaultFlavor: FlavorData[2].Key,
+	edgeproto.ClusterKey{
+		Name: "Big-Pokemons",
 	},
 }
 
@@ -108,7 +88,6 @@ var AppData = []edgeproto.App{
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "http:443,tcp:10002,udp:10002",
 		DefaultFlavor: FlavorData[0].Key,
-		Cluster:       ClusterData[0].Key,
 	},
 	edgeproto.App{
 		Key: edgeproto.AppKey{
@@ -137,7 +116,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.2.0",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
-		ImagePath:     "http://somerepo/image/path/ai/1.2.0",
+		ImagePath:     "http://somerepo/image/path/ai/1.2.0#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "http:8080",
 		DefaultFlavor: FlavorData[1].Key,
 	},
@@ -148,10 +127,9 @@ var AppData = []edgeproto.App{
 			Version:      "0.0.1",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
-		ImagePath:     "http://somerepo/image/path/myreality/0.0.1",
+		ImagePath:     "http://somerepo/image/path/myreality/0.0.1#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "udp:1024",
 		DefaultFlavor: FlavorData[2].Key,
-		Cluster:       ClusterData[2].Key,
 	},
 	edgeproto.App{
 		Key: edgeproto.AppKey{
@@ -162,7 +140,6 @@ var AppData = []edgeproto.App{
 		Deployment:    "helm",
 		AccessPorts:   "udp:2024",
 		DefaultFlavor: FlavorData[2].Key,
-		Cluster:       ClusterData[2].Key,
 	},
 	edgeproto.App{
 		Key: edgeproto.AppKey{
@@ -203,7 +180,6 @@ var CloudletData = []edgeproto.Cloudlet{
 			OperatorKey: OperatorData[0].Key,
 			Name:        "San Jose Site",
 		},
-		AccessUri:     "10.100.0.1",
 		IpSupport:     edgeproto.IpSupport_IP_SUPPORT_DYNAMIC,
 		NumDynamicIps: 100,
 		Location: dme.Loc{
@@ -216,7 +192,6 @@ var CloudletData = []edgeproto.Cloudlet{
 			OperatorKey: OperatorData[0].Key,
 			Name:        "New York Site",
 		},
-		AccessUri:     "ff.f8::1",
 		IpSupport:     edgeproto.IpSupport_IP_SUPPORT_DYNAMIC,
 		NumDynamicIps: 100,
 		Location: dme.Loc{
@@ -229,7 +204,6 @@ var CloudletData = []edgeproto.Cloudlet{
 			OperatorKey: OperatorData[1].Key,
 			Name:        "San Francisco Site",
 		},
-		AccessUri:     "172.24.0.1",
 		IpSupport:     edgeproto.IpSupport_IP_SUPPORT_DYNAMIC,
 		NumDynamicIps: 100,
 		Location: dme.Loc{
@@ -242,7 +216,6 @@ var CloudletData = []edgeproto.Cloudlet{
 			OperatorKey: OperatorData[2].Key,
 			Name:        "Hawaii Site",
 		},
-		AccessUri:     "hi76.verizon.com",
 		IpSupport:     edgeproto.IpSupport_IP_SUPPORT_DYNAMIC,
 		NumDynamicIps: 10,
 		Location: dme.Loc{
@@ -254,7 +227,7 @@ var CloudletData = []edgeproto.Cloudlet{
 var ClusterInstData = []edgeproto.ClusterInst{
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
-			ClusterKey:  ClusterData[0].Key,
+			ClusterKey:  ClusterKeys[0],
 			CloudletKey: CloudletData[0].Key,
 			Developer:   DevData[0].Key.Name,
 		},
@@ -266,7 +239,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
-			ClusterKey:  ClusterData[0].Key,
+			ClusterKey:  ClusterKeys[0],
 			CloudletKey: CloudletData[1].Key,
 			Developer:   DevData[0].Key.Name,
 		},
@@ -278,7 +251,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
-			ClusterKey:  ClusterData[0].Key,
+			ClusterKey:  ClusterKeys[0],
 			CloudletKey: CloudletData[2].Key,
 			Developer:   DevData[3].Key.Name,
 		},
@@ -290,7 +263,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
-			ClusterKey:  ClusterData[1].Key,
+			ClusterKey:  ClusterKeys[1],
 			CloudletKey: CloudletData[0].Key,
 			Developer:   DevData[0].Key.Name,
 		},
@@ -302,7 +275,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
-			ClusterKey:  ClusterData[1].Key,
+			ClusterKey:  ClusterKeys[1],
 			CloudletKey: CloudletData[1].Key,
 			Developer:   DevData[3].Key.Name,
 		},
@@ -314,7 +287,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
-			ClusterKey:  ClusterData[2].Key,
+			ClusterKey:  ClusterKeys[2],
 			CloudletKey: CloudletData[2].Key,
 			Developer:   DevData[3].Key.Name,
 		},
@@ -326,7 +299,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
-			ClusterKey:  ClusterData[3].Key,
+			ClusterKey:  ClusterKeys[3],
 			CloudletKey: CloudletData[3].Key,
 			Developer:   DevData[3].Key.Name,
 		},
@@ -349,7 +322,7 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 			CloudletKey: CloudletData[1].Key,
 			Developer:   AppData[1].Key.DeveloperKey.Name,
 		},
-		Flavor:     ClusterData[0].DefaultFlavor,
+		Flavor:     FlavorData[0].Key,
 		NodeFlavor: CloudletInfoData[1].Flavors[1].Name,
 		NumMasters: 1,
 		NumNodes:   1,
@@ -365,7 +338,7 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 			CloudletKey: CloudletData[2].Key,
 			Developer:   AppData[2].Key.DeveloperKey.Name,
 		},
-		Flavor:     ClusterData[1].DefaultFlavor,
+		Flavor:     FlavorData[1].Key,
 		NodeFlavor: CloudletInfoData[2].Flavors[2].Name,
 		NumMasters: 1,
 		NumNodes:   1,
@@ -381,7 +354,7 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 			CloudletKey: CloudletData[2].Key,
 			Developer:   AppData[6].Key.DeveloperKey.Name,
 		},
-		Flavor:     ClusterData[1].DefaultFlavor,
+		Flavor:     FlavorData[1].Key,
 		NodeFlavor: CloudletInfoData[2].Flavors[2].Name,
 		NumMasters: 1,
 		NumNodes:   1,
@@ -577,8 +550,8 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	edgeproto.CloudletRefs{
 		Key: CloudletData[0].Key,
 		Clusters: []edgeproto.ClusterKey{
-			ClusterData[0].Key,
-			ClusterData[1].Key,
+			ClusterKeys[0],
+			ClusterKeys[1],
 		},
 		UsedRam:        GetCloudletUsedRam(0, 3),
 		UsedVcores:     GetCloudletUsedVcores(0, 3),
@@ -589,8 +562,8 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
 		Clusters: []edgeproto.ClusterKey{
-			ClusterData[0].Key,
-			ClusterData[1].Key,
+			ClusterKeys[0],
+			ClusterKeys[1],
 		},
 		UsedRam:    GetCloudletUsedRam(1, 4),
 		UsedVcores: GetCloudletUsedVcores(1, 4),
@@ -600,8 +573,8 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	edgeproto.CloudletRefs{
 		Key: CloudletData[2].Key,
 		Clusters: []edgeproto.ClusterKey{
-			ClusterData[0].Key,
-			ClusterData[2].Key,
+			ClusterKeys[0],
+			ClusterKeys[2],
 		},
 		UsedRam:        GetCloudletUsedRam(2, 5),
 		UsedVcores:     GetCloudletUsedVcores(2, 5),
@@ -612,7 +585,7 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	edgeproto.CloudletRefs{
 		Key: CloudletData[3].Key,
 		Clusters: []edgeproto.ClusterKey{
-			ClusterData[3].Key,
+			ClusterKeys[3],
 		},
 		UsedRam:    GetCloudletUsedRam(6),
 		UsedVcores: GetCloudletUsedVcores(6),
@@ -629,8 +602,8 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	edgeproto.CloudletRefs{
 		Key: CloudletData[0].Key,
 		Clusters: []edgeproto.ClusterKey{
-			ClusterData[0].Key,
-			ClusterData[1].Key,
+			ClusterKeys[0],
+			ClusterKeys[1],
 		},
 		UsedRam:        GetCloudletUsedRam(0, 3),
 		UsedVcores:     GetCloudletUsedVcores(0, 3),
@@ -642,8 +615,8 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
 		Clusters: []edgeproto.ClusterKey{
-			ClusterData[0].Key,
-			ClusterData[1].Key,
+			ClusterKeys[0],
+			ClusterKeys[1],
 			ClusterInstAutoData[0].Key.ClusterKey,
 		},
 		UsedRam:     GetCloudletUsedRam(1, 4, -1, 0),
@@ -656,8 +629,8 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	edgeproto.CloudletRefs{
 		Key: CloudletData[2].Key,
 		Clusters: []edgeproto.ClusterKey{
-			ClusterData[0].Key,
-			ClusterData[2].Key,
+			ClusterKeys[0],
+			ClusterKeys[2],
 			ClusterInstAutoData[1].Key.ClusterKey,
 			ClusterInstAutoData[2].Key.ClusterKey,
 		},
@@ -671,7 +644,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	edgeproto.CloudletRefs{
 		Key: CloudletData[3].Key,
 		Clusters: []edgeproto.ClusterKey{
-			ClusterData[3].Key,
+			ClusterKeys[3],
 		},
 		UsedRam:    GetCloudletUsedRam(6),
 		UsedVcores: GetCloudletUsedVcores(6),

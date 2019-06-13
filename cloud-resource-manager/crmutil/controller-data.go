@@ -2,6 +2,7 @@ package crmutil
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -128,37 +129,49 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 			return
 		}
 	}
+
+	updateClusterCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
+		switch updateType {
+		case edgeproto.UpdateTask:
+			cd.ClusterInstInfoCache.SetStatusTask(key, value)
+		case edgeproto.UpdateStep:
+			cd.ClusterInstInfoCache.SetStatusStep(key, value)
+		}
+	}
+
 	// do request
 	if clusterInst.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// create
 		log.DebugLog(log.DebugLevelMexos, "cluster inst create", "clusterInst", clusterInst)
 		// create or update k8s cluster on this cloudlet
-
-		// XXX clusterInstCache has clusterInst but FlavorCache has clusterInst.Flavor.
 		cd.clusterInstInfoState(key, edgeproto.TrackedState_CREATING)
 		go func() {
 			var err error
-			log.DebugLog(log.DebugLevelMexos, "create cluster inst", "clusterinst", clusterInst)
-
-			err = cd.platform.CreateClusterInst(&clusterInst)
+			var cloudlet edgeproto.Cloudlet
+			if !cd.CloudletCache.Get(&clusterInst.Key.CloudletKey, &cloudlet) {
+				log.WarnLog("Could not find cloudlet in cache", "key", clusterInst.Key.CloudletKey)
+				cd.clusterInstInfoError(key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create Failed, Could not find cloudlet in cache %s", clusterInst.Key.CloudletKey))
+				return
+			}
+			timeout := time.Duration(cloudlet.TimeLimits.CreateClusterInstTimeout)
+			log.DebugLog(log.DebugLevelMexos, "create cluster inst", "clusterinst", clusterInst, "timeout", timeout)
+			err = cd.platform.CreateClusterInst(&clusterInst, updateClusterCacheCallback, timeout)
 			if err != nil {
 				log.DebugLog(log.DebugLevelMexos, "error cluster create fail", "error", err)
 				cd.clusterInstInfoError(key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create failed: %s", err))
 				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
 				return
 			}
-
 			log.DebugLog(log.DebugLevelMexos, "cluster state ready", "clusterinst", clusterInst)
 			cd.clusterInstInfoState(key, edgeproto.TrackedState_READY)
 		}()
 	} else if clusterInst.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		log.DebugLog(log.DebugLevelMexos, "cluster inst update", "clusterinst", clusterInst)
 		cd.clusterInstInfoState(key, edgeproto.TrackedState_UPDATING)
-
 		var err error
 		log.DebugLog(log.DebugLevelMexos, "update cluster inst", "clusterinst", clusterInst)
 
-		err = cd.platform.UpdateClusterInst(&clusterInst)
+		err = cd.platform.UpdateClusterInst(&clusterInst, updateClusterCacheCallback)
 		if err != nil {
 			str := fmt.Sprintf("update failed: %s", err)
 			cd.clusterInstInfoError(key, edgeproto.TrackedState_DELETE_ERROR, str)
@@ -225,6 +238,15 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 
 	// do request
 	log.DebugLog(log.DebugLevelMexos, "appInstChanged", "appInst", appInst)
+	updateAppCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
+		switch updateType {
+		case edgeproto.UpdateTask:
+			cd.AppInstInfoCache.SetStatusTask(&appInst.Key, value)
+		case edgeproto.UpdateStep:
+			cd.AppInstInfoCache.SetStatusStep(&appInst.Key, value)
+		}
+	}
+
 	if appInst.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// create
 		flavor := edgeproto.Flavor{}
@@ -247,10 +269,11 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 		}
 
 		cd.appInstInfoState(key, edgeproto.TrackedState_CREATING)
+
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "update kube config", "appinst", appInst, "clusterinst", clusterInst)
 
-			err := cd.platform.CreateAppInst(&clusterInst, &app, &appInst, &flavor)
+			err := cd.platform.CreateAppInst(&clusterInst, &app, &appInst, &flavor, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_CREATE_ERROR, errstr)

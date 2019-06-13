@@ -23,13 +23,10 @@ type ClusterInstApi struct {
 
 var clusterInstApi = ClusterInstApi{}
 
-// TODO: these timeouts should be adjust based on target platform,
-// as some platforms (azure, etc) may take much longer.
-// These timeouts should be at least long enough for the controller and
-// CRM to exchange an initial set of messages (i.e. 10 sec or so).
-var CreateClusterInstTimeout = 30 * time.Minute
-var UpdateClusterInstTimeout = 20 * time.Minute
-var DeleteClusterInstTimeout = 20 * time.Minute
+const ClusterAutoPrefix = "autocluster"
+
+var ClusterAutoPrefixErr = fmt.Sprintf("Cluster name prefix \"%s\" is reserved",
+	ClusterAutoPrefix)
 
 // Transition states indicate states in which the CRM is still busy.
 var CreateClusterInstTransitions = map[edgeproto.TrackedState]struct{}{
@@ -48,9 +45,9 @@ func InitClusterInstApi(sync *Sync) {
 	edgeproto.InitClusterInstCache(&clusterInstApi.cache)
 	sync.RegisterCache(&clusterInstApi.cache)
 	if *shortTimeouts {
-		CreateClusterInstTimeout = 3 * time.Second
-		UpdateClusterInstTimeout = 2 * time.Second
-		DeleteClusterInstTimeout = 2 * time.Second
+		cloudcommon.CreateClusterInstTimeout = 3 * time.Second
+		cloudcommon.UpdateClusterInstTimeout = 2 * time.Second
+		cloudcommon.DeleteClusterInstTimeout = 2 * time.Second
 	}
 }
 
@@ -209,22 +206,13 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			initCloudletRefs(&refs, &in.Key.CloudletKey)
 		}
 
-		// cluster does not need to exist.
-		// cluster will eventually be deprecated and removed.
-		var cluster edgeproto.Cluster
-		if clusterApi.store.STMGet(stm, &in.Key.ClusterKey, &cluster) {
-			if in.Flavor.Name == "" {
-				in.Flavor = cluster.DefaultFlavor
-			}
-		}
 		if in.Flavor.Name == "" {
-			return errors.New("No Flavor specified and no default Flavor for Cluster")
+			return errors.New("No Flavor specified")
 		}
 
 		nodeFlavor := edgeproto.Flavor{}
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
-			return fmt.Errorf("Cluster flavor %s node flavor %s not found",
-				in.Flavor.Name, nodeFlavor.Key)
+			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
 		var err error
 		in.NodeFlavor, err = flavor.GetClosestFlavor(info.Flavors, nodeFlavor)
@@ -275,7 +263,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions, edgeproto.TrackedState_CREATE_ERROR, CreateClusterInstTimeout, "Created successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions, edgeproto.TrackedState_CREATE_ERROR, cloudcommon.CreateClusterInstTimeout, "Created successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create ClusterInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(in, edgeproto.TrackedState_READY)
@@ -359,7 +347,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, UpdateClusterInstTimeout, "Updated successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateClusterInstTimeout, "Updated successfully", cb.Send)
 	return err
 }
 
@@ -464,7 +452,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteClusterInstTransitions, edgeproto.TrackedState_DELETE_ERROR, DeleteClusterInstTimeout, "Deleted ClusterInst successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteClusterInstTransitions, edgeproto.TrackedState_DELETE_ERROR, cloudcommon.DeleteClusterInstTimeout, "Deleted ClusterInst successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete ClusterInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(in, edgeproto.TrackedState_NOT_PRESENT)
@@ -548,7 +536,7 @@ func ignoreCRM(cctx *CallContext) bool {
 }
 
 func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update ClusterInst from info", "key", in.Key, "state", in.State)
+	log.DebugLog(log.DebugLevelApi, "Update ClusterInst from info", "key", in.Key, "state", in.State, "status", in.Status)
 	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		inst := edgeproto.ClusterInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -556,8 +544,14 @@ func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
 			return nil
 		}
 		if inst.State == in.State {
-			// already in that state
-			return nil
+			if inst.Status == in.Status {
+				return nil
+			} else {
+				log.DebugLog(log.DebugLevelApi, "status change only")
+				inst.Status = in.Status
+				s.store.STMPut(stm, &inst)
+				return nil
+			}
 		}
 		// please see state_transitions.md
 		if !crmTransitionOk(inst.State, in.State) {
@@ -566,6 +560,7 @@ func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
 			return nil
 		}
 		inst.State = in.State
+		inst.Status = in.Status
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			inst.Errors = in.Errors
 		} else {

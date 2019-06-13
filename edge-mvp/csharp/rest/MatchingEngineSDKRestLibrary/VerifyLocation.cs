@@ -9,27 +9,27 @@ namespace DistributedMatchEngine
     [DataMember]
     public UInt32 Ver = 1;
     [DataMember]
-    public string SessionCookie;
+    public string session_cookie;
     [DataMember]
-    public string CarrierName;
+    public string carrier_name;
     [DataMember]
-    public Loc GpsLocation;
+    public Loc gps_location;
     [DataMember]
-    public string VerifyLocToken;
+    public string verify_loc_token;
   };
 
   [DataContract]
   public class VerifyLocationReply
   {
     // Status of the reply
-    public enum Tower_Status
+    public enum TowerStatus
     {
       TOWER_UNKNOWN = 0,
       CONNECTED_TO_SPECIFIED_TOWER = 1,
       NOT_CONNECTED_TO_SPECIFIED_TOWER = 2,
     }
 
-    public enum GPS_Location_Status
+    public enum GPSLocationStatus
     {
       LOC_UNKNOWN = 0,
       LOC_VERIFIED = 1,
@@ -44,10 +44,10 @@ namespace DistributedMatchEngine
     [DataMember]
     public UInt32 ver;
 
-    public Tower_Status tower_status = Tower_Status.TOWER_UNKNOWN;
+    public TowerStatus tower_status = TowerStatus.TOWER_UNKNOWN;
 
-    [DataMember(Name = "Tower_Status")]
-    private string Tower_Status_String
+    [DataMember(Name = "tower_status")]
+    private string tower_status_tring
     {
       get
       {
@@ -55,11 +55,11 @@ namespace DistributedMatchEngine
       }
       set
       {
-        tower_status = Enum.TryParse(value, out Tower_Status towerStatus) ? towerStatus : Tower_Status.TOWER_UNKNOWN;
+        tower_status = Enum.TryParse(value, out TowerStatus towerStatus) ? towerStatus : TowerStatus.TOWER_UNKNOWN;
       }
     }
 
-    public GPS_Location_Status gps_location_status = GPS_Location_Status.LOC_UNKNOWN;
+    public GPSLocationStatus gps_location_status = GPSLocationStatus.LOC_UNKNOWN;
 
     [DataMember(Name = "gps_location_status")]
     private string gps_location_status_string
@@ -70,11 +70,11 @@ namespace DistributedMatchEngine
       }
       set
       {
-        gps_location_status = Enum.TryParse(value, out GPS_Location_Status gpsLocation) ? gpsLocation : GPS_Location_Status.LOC_UNKNOWN;
+        gps_location_status = Enum.TryParse(value, out GPSLocationStatus gpsLocation) ? gpsLocation : GPSLocationStatus.LOC_UNKNOWN;
       }
     }
 
     [DataMember]
-    public double GPS_Location_Accuracy_KM;
+    public double gps_location_accuracy_km;
   }
 }

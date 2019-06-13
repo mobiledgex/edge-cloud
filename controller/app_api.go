@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -160,16 +161,28 @@ func updateAppFields(in *edgeproto.App) error {
 		}
 	}
 
-	if in.Config != "" {
-		configStr, err := cloudcommon.GetAppConfig(in)
-		if err != nil {
-			return err
+	if in.ScaleWithCluster && in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+		return fmt.Errorf("app scaling is only supported for Kubernetes deployments")
+	}
+
+	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
+		urlInfo := strings.Split(in.ImagePath, "#")
+		if len(urlInfo) != 2 {
+			return fmt.Errorf("md5 checksum of image is required. Please append checksum to imagepath: \"<url>#md5:checksum\"")
 		}
-		in.Config = configStr
-		// do a quick parse just to make sure it's valid
-		_, err = cloudcommon.ParseAppConfig(in.Config)
+		cSum := strings.Split(urlInfo[1], ":")
+		if len(cSum) != 2 {
+			return fmt.Errorf("incorrect checksum format, valid format: \"<url>#md5:checksum\"")
+		}
+		if cSum[0] != "md5" {
+			return fmt.Errorf("only md5 checksum is supported")
+		}
+		if len(cSum[1]) < 32 {
+			return fmt.Errorf("md5 checksum must be at least 32 characters")
+		}
+		_, err := hex.DecodeString(cSum[1])
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid md5 checksum")
 		}
 	}
 

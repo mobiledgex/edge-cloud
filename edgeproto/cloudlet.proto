@@ -23,11 +23,27 @@ message CloudletKey {
   option (gogoproto.gostring) = true;
 }
 
+// time limits for cloudlet create, update and delete operations
+message OperationTimeLimits{
+    // max time to create a cluster instance
+    int64 create_cluster_inst_timeout = 1;
+    // max time to update a cluster instance
+    int64 update_cluster_inst_timeout = 2;
+    // max time to delete a cluster instance
+    int64 delete_cluster_inst_timeout = 3;
+    // max time to create an app instance
+    int64 create_app_inst_timeout = 4;
+    // max time to update an app instance
+    int64 update_app_inst_timeout = 5;
+    // max time to delete an app instance
+    int64 delete_app_inst_timeout = 6;
+}
+
 // properites common to all cloudlets
 message CloudletInfraCommon{
     // the mex docker registry, e.g.  registry.mobiledgex.net:5000. 
     string docker_registry = 1;
-     // DNS Zone
+    // DNS Zone
     string dns_zone = 2;
     // registry file server contains files which get pulled on instantiation such as certs and images
     string registry_file_server = 3;
@@ -37,9 +53,9 @@ message CloudletInfraCommon{
     string cf_user = 5; //MEX_CF_KEY
     // Docker registry password
     string docker_reg_pass = 6; //MEX_DOCKER_REG_PASS
-     // network scheme
+    // network scheme
     string network_scheme = 7;
-     // the name of the docker registry secret, e.g. mexgitlabsecret
+    // the name of the docker registry secret, e.g. mexgitlabsecret
     string docker_registry_secret = 8;
 }
 
@@ -98,8 +114,8 @@ message Cloudlet {
   repeated string fields = 1;
   // Unique identifier key
   CloudletKey key = 2 [(gogoproto.nullable) = false];
-  // URI to use to connect to and create and administer the Cloudlet. This is not the URI for applications clients to access their back-end instances.
-  string access_uri = 4 [(protogen.test_update) = true];
+  // Placeholder for cloudlet access credentials, i.e. openstack keys, passwords, etc
+  string access_credentials = 4 [(protogen.test_update) = true];
   // Location of the Cloudlet site
   distributed_match_engine.Loc location = 5 [(gogoproto.nullable) = false];
   // Type of IP support provided by Cloudlet (see IpSupport)
@@ -108,7 +124,8 @@ message Cloudlet {
   string static_ips = 7;
   // Number of dynamic IPs available for dynamic IP support
   int32 num_dynamic_ips = 8;
-  // Certs for accessing cloudlet site
+  // time limits
+  OperationTimeLimits time_limits = 9 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -117,7 +134,7 @@ message Cloudlet {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
-  option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp";
+  option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits";
   option (protocmd.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }
 

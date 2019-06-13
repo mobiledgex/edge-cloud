@@ -99,7 +99,7 @@ func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 13)
+	s := make([]string, 0, 14)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -147,11 +147,15 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Nanos), 10))
 	s = append(s, edgeproto.IpAccess_CamelName[int32(in.AutoClusterIpAccess)])
+	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
+	s = append(s, in.Status.TaskName)
+	s = append(s, in.Status.StepName)
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 13)
+	s := make([]string, 0, 14)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -184,6 +188,10 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "CreatedAt-Seconds")
 	s = append(s, "CreatedAt-Nanos")
 	s = append(s, "AutoClusterIpAccess")
+	s = append(s, "Status-TaskNumber")
+	s = append(s, "Status-MaxTasks")
+	s = append(s, "Status-TaskName")
+	s = append(s, "Status-StepName")
 	return s
 }
 
@@ -249,7 +257,7 @@ func AppInstRuntimeWriteOutputOne(obj *edgeproto.AppInstRuntime) {
 	}
 }
 func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -271,11 +279,15 @@ func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 		in.RuntimeInfo.ContainerIds = make([]string, 1)
 	}
 	s = append(s, in.RuntimeInfo.ContainerIds[0])
+	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
+	s = append(s, in.Status.TaskName)
+	s = append(s, in.Status.StepName)
 	return s
 }
 
 func AppInstInfoHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -288,6 +300,10 @@ func AppInstInfoHeaderSlicer() []string {
 	s = append(s, "State")
 	s = append(s, "Errors")
 	s = append(s, "RuntimeInfo-ContainerIds")
+	s = append(s, "Status-TaskNumber")
+	s = append(s, "Status-MaxTasks")
+	s = append(s, "Status-TaskName")
+	s = append(s, "Status-StepName")
 	return s
 }
 
@@ -785,6 +801,10 @@ func init() {
 	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
 	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
 	AppInstFlagSet.StringVar(&AppInstInAutoClusterIpAccess, "autoclusteripaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
+	AppInstNoConfigFlagSet.Uint32Var(&AppInstIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
+	AppInstNoConfigFlagSet.Uint32Var(&AppInstIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Status.StepName, "status-stepname", "", "Status.StepName")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -794,6 +814,10 @@ func init() {
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.ClusterInstKey.Developer, "key-clusterinstkey-developer", "", "Key.ClusterInstKey.Developer")
 	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
+	AppInstInfoFlagSet.Uint32Var(&AppInstInfoIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
+	AppInstInfoFlagSet.Uint32Var(&AppInstInfoIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Status.StepName, "status-stepname", "", "Status.StepName")
 	AppInstMetricsFlagSet.Uint64Var(&AppInstMetricsIn.Something, "something", 0, "Something")
 	CreateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	DeleteAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
@@ -892,6 +916,18 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("autoclusteripaccess").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "22")
 	}
+	if AppInstNoConfigFlagSet.Lookup("status-tasknumber").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "23.1")
+	}
+	if AppInstNoConfigFlagSet.Lookup("status-maxtasks").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "23.2")
+	}
+	if AppInstNoConfigFlagSet.Lookup("status-taskname").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "23.3")
+	}
+	if AppInstNoConfigFlagSet.Lookup("status-stepname").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "23.4")
+	}
 }
 
 func AppInstInfoSetFields() {
@@ -922,6 +958,18 @@ func AppInstInfoSetFields() {
 	}
 	if AppInstInfoFlagSet.Lookup("state").Changed {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "4")
+	}
+	if AppInstInfoNoConfigFlagSet.Lookup("status-tasknumber").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "7.1")
+	}
+	if AppInstInfoNoConfigFlagSet.Lookup("status-maxtasks").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "7.2")
+	}
+	if AppInstInfoNoConfigFlagSet.Lookup("status-taskname").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "7.3")
+	}
+	if AppInstInfoNoConfigFlagSet.Lookup("status-stepname").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "7.4")
 	}
 }
 

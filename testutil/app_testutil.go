@@ -33,6 +33,7 @@ It has these top-level messages:
 	AppInstInfo
 	AppInstMetrics
 	CloudletKey
+	OperationTimeLimits
 	CloudletInfraCommon
 	AzureProperties
 	GcpProperties
@@ -43,10 +44,10 @@ It has these top-level messages:
 	CloudletInfo
 	CloudletMetrics
 	ClusterKey
-	Cluster
 	ClusterInstKey
 	ClusterInst
 	ClusterInstInfo
+	StatusInfo
 	ControllerKey
 	Controller
 	DeveloperKey

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -38,7 +39,6 @@ func TestClusterInstApi(t *testing.T) {
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(testutil.CloudletInfoData)
-	testutil.InternalClusterCreate(t, &clusterApi, testutil.ClusterData)
 
 	// Set responder to fail. This should clean up the object after
 	// the fake crm returns a failure. If it doesn't, the next test to
@@ -118,13 +118,13 @@ func TestClusterInstApi(t *testing.T) {
 }
 
 func reduceInfoTimeouts() {
-	CreateClusterInstTimeout = 1 * time.Second
-	UpdateClusterInstTimeout = 1 * time.Second
-	DeleteClusterInstTimeout = 1 * time.Second
+	cloudcommon.CreateClusterInstTimeout = 1 * time.Second
+	cloudcommon.UpdateClusterInstTimeout = 1 * time.Second
+	cloudcommon.DeleteClusterInstTimeout = 1 * time.Second
 
-	CreateAppInstTimeout = 1 * time.Second
-	UpdateAppInstTimeout = 1 * time.Second
-	DeleteAppInstTimeout = 1 * time.Second
+	cloudcommon.CreateAppInstTimeout = 1 * time.Second
+	cloudcommon.UpdateAppInstTimeout = 1 * time.Second
+	cloudcommon.DeleteAppInstTimeout = 1 * time.Second
 }
 
 func checkClusterInstState(t *testing.T, api *testutil.ClusterInstCommonApi, in *edgeproto.ClusterInst, state edgeproto.TrackedState) {

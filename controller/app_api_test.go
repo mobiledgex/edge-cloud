@@ -34,7 +34,6 @@ func TestAppApi(t *testing.T) {
 	// create support data
 	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalClusterCreate(t, &clusterApi, testutil.ClusterData)
 
 	testutil.InternalAppTest(t, "cud", &appApi, testutil.AppData)
 
