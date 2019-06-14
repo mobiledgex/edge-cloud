@@ -28,11 +28,11 @@ message Flavor {
   repeated string fields = 1;
   // Unique key for the new flavor.
   FlavorKey key = 2 [(gogoproto.nullable) = false];
-  // Amount of RAM to use (in megabytes)
+  // RAM in megabytes
   uint64 ram = 3;
-  // Number of virtual CPUs to use
+  // Number of virtual CPUs
   uint64 vcpus = 4;
-  // Amount of disk space (in gigabytes) to use
+  // Amount of disk space in gigabytes
   uint64 disk = 5;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

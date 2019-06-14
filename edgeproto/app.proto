@@ -52,7 +52,7 @@ message ConfigFile {
   string config = 2;
 }
 
-//Apps belong to developers and is used to provide information about their application.
+//App belongs to developers and is used to provide information about their application.
  message App {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
@@ -63,7 +63,7 @@ message ConfigFile {
   // Image type (see ImageType)
   ImageType image_type = 5;
   // Comma separated list of protocol:port pairs that the App listens on 
-  // i.e. tcp:80, udp:10002, http:443
+  // i.e. tcp:80,udp:10002,http:443
   string access_ports = 7;
   // Default flavor for the App, which may be overridden by the AppInst
   FlavorKey default_flavor = 9 [(gogoproto.nullable) = false];
@@ -74,11 +74,11 @@ message ConfigFile {
   // Annotations is a comma separated map of arbitrary key value pairs,
   // for example: key1=val1,key2=val2,key3="val 3"
   string annotations = 14;
-  // Deployment type (kubernetes, docker, or VM)
+  // Deployment type (kubernetes, docker, or vm)
   string deployment = 15 [(protogen.backend) = true];
   // Deployment manifest is the deployment specific manifest file/config
   // For docker deployment, this can be a docker-compose or docker run file
-  // For k8s deployment, this can be a k8s yaml or helm chart file
+  // For kubernetes deployment, this can be a kubernetes yaml or helm chart file
   string deployment_manifest = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Deployment generator target to generate a basic deployment manifest
   string deployment_generator = 17 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];

@@ -1,4 +1,4 @@
-// A ClusterInst defines kubernetes cluster on a particular Cloudlet
+// ClusterInst defines a kubernetes cluster on a particular Cloudlet
 
 syntax = "proto3";
 package edgeproto;
