@@ -87,6 +87,9 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	if p.ShortTimeouts {
 		args = append(args, "-shortTimeouts")
 	}
+	if p.TestMode {
+		args = append(args, "-testMode")
+	}
 
 	var err error
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
