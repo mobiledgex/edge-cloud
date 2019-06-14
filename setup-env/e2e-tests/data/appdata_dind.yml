@@ -60,7 +60,7 @@ apps:
       name: MobiledgeX
     name: MobiledgeX SDK Demo
     version: "1.0"
-  imagepath: docker.mobiledgex.net/mobiledgex/images/mobiledgexsdkdemo
+  imagepath: docker.mobiledgex.net/mobiledgex/mobiledgex_public/mobiledgexsdkdemo
   imagetype: ImageTypeDocker
   accessports: tcp:7777
   defaultflavor:
@@ -75,7 +75,7 @@ apps:
       name: MobiledgeX
     name: Face Detection Demo
     version: "1.0"
-  imagepath: docker.mobiledgex.net/mobiledgex/images/facedetection
+  imagepath: docker.mobiledgex.net/mobiledgex/mobiledgex_public/facedetection
   imagetype: ImageTypeDocker
   accessports: tcp:8008
   defaultflavor:

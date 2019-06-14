@@ -1625,11 +1625,6 @@ func (e *ImageType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e ImageType) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(ImageType_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
-}
-
 var DeleteTypeStrings = []string{
 	"NO_AUTO_DELETE",
 	"AUTO_DELETE",
@@ -1704,11 +1699,6 @@ func (e *DeleteType) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
-}
-
-func (e DeleteType) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(DeleteType_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
 }
 
 type MatchOptions struct {
