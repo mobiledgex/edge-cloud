@@ -3143,12 +3143,6 @@ func (e *CloudletState) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
-
-func (e CloudletState) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(CloudletState_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
-}
-
 func (m *CloudletKey) Size() (n int) {
 	var l int
 	_ = l

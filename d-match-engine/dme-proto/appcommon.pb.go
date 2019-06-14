@@ -229,12 +229,6 @@ func (e *LProto) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
-
-func (e LProto) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(LProto_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
-}
-
 func (m *AppPort) Size() (n int) {
 	var l int
 	_ = l
