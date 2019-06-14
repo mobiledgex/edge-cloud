@@ -470,7 +470,7 @@ public class EngineCallTest {
 
         if (findCloudletReply != null) {
             // Temporary.
-            assertEquals("App's expected test cloudlet FQDN doesn't match.", "mobiledgexmobiledgexsdkdemo10.westindia-mexdemo.azure.mobiledgex.net", findCloudletReply.getFQDN());
+            assertEquals("App's expected test cloudlet FQDN doesn't match.", "mobiledgexmobiledgexsdkdemo10.westindia-mexdemo.azure.mobiledgex.net", findCloudletReply.getFqdn());
         } else {
             assertFalse("No findCloudlet response!", false);
         }
@@ -514,7 +514,7 @@ public class EngineCallTest {
         }
 
         // Temporary.
-        assertEquals("Fully qualified domain name not epected.", "mobiledgexmobiledgexsdkdemo10.westindia-mexdemo.azure.mobiledgex.net", result.getFQDN());
+        assertEquals("Fully qualified domain name not epected.", "mobiledgexmobiledgexsdkdemo10.westindia-mexdemo.azure.mobiledgex.net", result.getFqdn());
 
     }
 
@@ -564,8 +564,8 @@ public class EngineCallTest {
 
         // Temporary.
         assertEquals(0, verifyLocationReply.getVer());
-        assertEquals(AppClient.VerifyLocationReply.Tower_Status.TOWER_UNKNOWN, verifyLocationReply.getTowerStatus());
-        assertEquals(AppClient.VerifyLocationReply.GPS_Location_Status.LOC_ROAMING_COUNTRY_MISMATCH, verifyLocationReply.getGpsLocationStatus());
+        assertEquals(AppClient.VerifyLocationReply.TowerStatus.TOWER_UNKNOWN, verifyLocationReply.getTowerStatus());
+        assertEquals(AppClient.VerifyLocationReply.GPSLocationStatus.LOC_ROAMING_COUNTRY_MISMATCH, verifyLocationReply.getGpsLocationStatus());
     }
 
     @Test
@@ -609,8 +609,8 @@ public class EngineCallTest {
 
         // Temporary.
         assertEquals(0, verifyLocationReply.getVer());
-        assertEquals(AppClient.VerifyLocationReply.Tower_Status.TOWER_UNKNOWN, verifyLocationReply.getTowerStatus());
-        assertEquals(AppClient.VerifyLocationReply.GPS_Location_Status.LOC_ROAMING_COUNTRY_MISMATCH, verifyLocationReply.getGpsLocationStatus());
+        assertEquals(AppClient.VerifyLocationReply.TowerStatus.TOWER_UNKNOWN, verifyLocationReply.getTowerStatus());
+        assertEquals(AppClient.VerifyLocationReply.GPSLocationStatus.LOC_ROAMING_COUNTRY_MISMATCH, verifyLocationReply.getGpsLocationStatus());
     }
 
 
@@ -662,8 +662,8 @@ public class EngineCallTest {
 
         // Temporary.
         assertEquals(0, verifyLocationReply.getVer());
-        assertEquals(AppClient.VerifyLocationReply.Tower_Status.TOWER_UNKNOWN, verifyLocationReply.getTowerStatus());
-        assertEquals(AppClient.VerifyLocationReply.GPS_Location_Status.LOC_ROAMING_COUNTRY_MATCH, verifyLocationReply.getGpsLocationStatus()); // Based on test data.
+        assertEquals(AppClient.VerifyLocationReply.TowerStatus.TOWER_UNKNOWN, verifyLocationReply.getTowerStatus());
+        assertEquals(AppClient.VerifyLocationReply.GPSLocationStatus.LOC_ROAMING_COUNTRY_MATCH, verifyLocationReply.getGpsLocationStatus()); // Based on test data.
 
     }
 
@@ -714,7 +714,7 @@ public class EngineCallTest {
         assertEquals(0, getLocationReply.getVer());
 
         assertEquals(carrierName, getLocationReply.getCarrierName());
-        assertEquals(AppClient.GetLocationReply.Loc_Status.LOC_FOUND, getLocationReply.getStatus());
+        assertEquals(AppClient.GetLocationReply.LocStatus.LOC_FOUND, getLocationReply.getStatus());
 
         assertEquals(0, getLocationReply.getTower());
         // FIXME: Server is currently a pure echo of client location.
@@ -770,7 +770,7 @@ public class EngineCallTest {
         Log.i(TAG, "getLocationFutureTest() response: " + getLocationReply.toString());
         assertEquals(0, getLocationReply.getVer());
         assertEquals(carrierName, getLocationReply.getCarrierName());
-        assertEquals(AppClient.GetLocationReply.Loc_Status.LOC_FOUND, getLocationReply.getStatus());
+        assertEquals(AppClient.GetLocationReply.LocStatus.LOC_FOUND, getLocationReply.getStatus());
 
         assertEquals(getLocationReply.getTower(), 0);
         // FIXME: Server is currently a pure echo of client location.
@@ -912,7 +912,7 @@ public class EngineCallTest {
             }
 
             assertEquals(0, list.getVer());
-            assertEquals(AppClient.AppInstListReply.AI_Status.AI_SUCCESS, list.getStatus());
+            assertEquals(AppClient.AppInstListReply.AIStatus.AI_SUCCESS, list.getStatus());
             assertEquals(3, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
@@ -962,7 +962,7 @@ public class EngineCallTest {
             AppClient.AppInstListReply list = listFuture.get();
 
             assertEquals(0, list.getVer());
-            assertEquals(AppClient.AppInstListReply.AI_Status.AI_SUCCESS, list.getStatus());
+            assertEquals(AppClient.AppInstListReply.AIStatus.AI_SUCCESS, list.getStatus());
             assertEquals(3, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
