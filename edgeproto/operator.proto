@@ -11,14 +11,15 @@ import "gogoproto/gogo.proto";
 
 // OperatorKey uniquely identifies an Operator
 message OperatorKey {
-  // Company or Organization name of the operator
+  // Company or Organization name of the operator 
   string name = 1;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
 }
 
-// An Operator defines a telecommunications provider such as AT&T, T-Mobile, etc. The operators in turn provide Mobiledgex with compute resource Cloudlets that serve as the basis for location-based services.
+// An Operator supplies compute resources.
+// For example, telecommunications provider such as AT&T is an Operator
 message Operator {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
