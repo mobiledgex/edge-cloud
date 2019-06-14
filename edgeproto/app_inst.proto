@@ -77,6 +77,7 @@ message AppInst {
 message AppInstRuntime {
   // List of container names
   repeated string container_ids = 1 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string console_url = 2 [(protogen.hidetag) = "nocmp"];
 }
 
 service AppInstApi {
