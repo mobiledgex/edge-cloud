@@ -374,12 +374,6 @@ func (e *NoticeAction) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
-
-func (e NoticeAction) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(NoticeAction_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
-}
-
 func (m *Notice) Size() (n int) {
 	var l int
 	_ = l
