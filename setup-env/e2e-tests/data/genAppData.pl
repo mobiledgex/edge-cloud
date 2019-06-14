@@ -307,7 +307,7 @@ print(
       name: Samsung
     name: SamsungEnablingLayer
     version: \"1.0\"
-  imagepath: dummyvalue
+  imagepath: registry.mobiledgex.net/dummyvalue
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.small

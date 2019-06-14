@@ -24,6 +24,7 @@ type Controller struct {
 	TLS           TLSCerts
 	ShortTimeouts bool
 	cmd           *exec.Cmd
+	TestMode      bool
 }
 type Dme struct {
 	Common      `yaml:",inline"`

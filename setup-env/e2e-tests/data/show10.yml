@@ -464,7 +464,7 @@ apps:
       name: Samsung
     name: SamsungEnablingLayer
     version: "1.0"
-  imagepath: dummyvalue
+  imagepath: registry.mobiledgex.net/dummyvalue
   imagetype: ImageTypeDocker
   accessports: tcp:64000
   defaultflavor:
