@@ -129,7 +129,7 @@ apps:
       name: AcmeAppCo
     name: someapplication1
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   deployment: kubernetes
   defaultflavor:
@@ -146,7 +146,7 @@ apps:
       name: platos
     name: PlatosEnablingLayer
     version: "1.0"
-  imagepath: dummyvalue
+  imagepath: registry.mobiledgex.net/dummyvalue
   imagetype: ImageTypeDocker
   deployment: kubernetes
   defaultflavor:

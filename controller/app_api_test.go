@@ -13,6 +13,8 @@ import (
 func TestAppApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	objstore.InitRegion(1)
+	tMode := true
+	testMode = &tMode
 
 	dummy := dummyEtcd{}
 	dummy.Start()

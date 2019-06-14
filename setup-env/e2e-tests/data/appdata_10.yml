@@ -174,7 +174,7 @@ apps:
       name: platos
     name: PlatosEnablingLayer
     version: "1.0"
-  imagepath: dummyvalue
+  imagepath: registry.mobiledgex.net/dummyvalue
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.small
