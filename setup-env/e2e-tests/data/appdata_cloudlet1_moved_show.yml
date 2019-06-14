@@ -130,7 +130,7 @@ apps:
       name: Samsung
     name: SamsungEnablingLayer
     version: "1.0"
-  imagepath: dummyvalue
+  imagepath: registry.mobiledgex.net/dummyvalue
   imagetype: ImageTypeDocker
   deployment: kubernetes
   accessports: tcp:64000
@@ -143,7 +143,7 @@ apps:
       name: AcmeAppCo
     name: someapplication1
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   deployment: kubernetes
   accessports: tcp:80,http:443,udp:10002

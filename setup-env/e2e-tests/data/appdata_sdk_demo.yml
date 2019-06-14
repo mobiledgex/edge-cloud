@@ -94,7 +94,7 @@ apps:
       name: MobiledgeXSDKDemo
     name: MobiledgeXSDKDemo
     version: "1.0"
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
   accesslayer: AccessLayerL7
   defaultflavor:
@@ -117,7 +117,7 @@ appinstances:
           name: TDG
         name: Saginaw1
   liveness: LivenessStatic
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
   mappedpath: MobiledgeXSDKDemo
   flavor:
@@ -138,7 +138,7 @@ appinstances:
           name: TDG
         name: Saginaw1
   liveness: LivenessStatic
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
   mappedpath: MobiledgeXSDKDemo
   flavor:
@@ -159,7 +159,7 @@ appinstances:
           name: TDG
         name: Saginaw1
   liveness: LivenessStatic
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
   mappedpath: MobiledgeXSDKDemo
   flavor:
@@ -180,7 +180,7 @@ appinstances:
           name: TDG
         name: 1
   liveness: LivenessStatic
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
   mappedpath: MobiledgeXSDKDemo
   flavor:

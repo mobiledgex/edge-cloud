@@ -142,7 +142,7 @@ apps:
       name: MobiledgeX SDK Demo
     name: MobiledgeX SDK Demo
     version: "1.0"
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
   accesslayer: AccessLayerL7
   defaultflavor:
@@ -163,7 +163,7 @@ appinstances:
           name: TDG
         name: centraluscloudlet
   liveness: LivenessStatic
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
   mappedpath: MobiledgeXSDKDemo
   flavor:
@@ -184,7 +184,7 @@ appinstances:
           name: TDG
         name: westuscloudlet
   liveness: LivenessStatic
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
   mappedpath: MobiledgeXSDKDemo
   flavor:
@@ -205,7 +205,7 @@ appinstances:
           name: TDG
         name: bonncloudlet
   liveness: LivenessStatic
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
   mappedpath: MobiledgeXSDKDemo
   flavor:
