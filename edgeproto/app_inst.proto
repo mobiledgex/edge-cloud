@@ -26,9 +26,8 @@ message AppInstKey {
   option (gogoproto.gostring) = true;
 }
 
-// AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
-// When an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.
-// Many of the fields here are inherited from the App definition. Some are derived, like the mapped ports field, depending upon if the AppInst accessibility is via a shared or dedicated load balancer.
+// AppInst is an instance of an App on a Cloudlet where it is defined by an App plus a ClusterInst key. 
+// Many of the fields here are inherited from the App definition. 
 message AppInst {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;

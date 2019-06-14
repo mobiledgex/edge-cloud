@@ -9,18 +9,16 @@ import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto"
 import "result.proto";
 import "gogoproto/gogo.proto";
 
-// DeveloperKey uniquely identifies a Developer (Mobiledgex customer)
+// DeveloperKey uniquely identifies a Developer 
 message DeveloperKey {
-  // Organization or Company Name
+  // Organization or Company Name that a Developer is part of
   string name = 2;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
 }
 
-// A Developer defines a Mobiledgex customer that can create and manage applications, clusters, instances, etc. Applications and other objects created by one Developer cannot be seen or managed by other Developers. Billing will likely be done on a per-developer basis.
-// Creating a developer identity is likely the first step of (self-)registering a new customer.
-// TODO: user management, auth, etc is not implemented yet.
+// Developer is defined as the consumer of edge computing resources to manage and deploy Apps
 message Developer {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
