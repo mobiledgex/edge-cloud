@@ -80,7 +80,7 @@ dmes:
 crms:
 - name: crm1
   apiaddr: "0.0.0.0:55091"
-  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  notifyctladdrs: "127.0.0.1:37001,127.0.0.1:37002"
   cloudletkey: '{"operator_key":{"name":"mexdev"},"name":"localtest"}'
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
