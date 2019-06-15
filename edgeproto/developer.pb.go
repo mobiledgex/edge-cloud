@@ -30,9 +30,9 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// DeveloperKey uniquely identifies a Developer (Mobiledgex customer)
+// DeveloperKey uniquely identifies a Developer
 type DeveloperKey struct {
-	// Organization or Company Name
+	// Organization or Company Name that a Developer is part of
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
 
@@ -41,9 +41,7 @@ func (m *DeveloperKey) String() string            { return proto.CompactTextStri
 func (*DeveloperKey) ProtoMessage()               {}
 func (*DeveloperKey) Descriptor() ([]byte, []int) { return fileDescriptorDeveloper, []int{0} }
 
-// A Developer defines a Mobiledgex customer that can create and manage applications, clusters, instances, etc. Applications and other objects created by one Developer cannot be seen or managed by other Developers. Billing will likely be done on a per-developer basis.
-// Creating a developer identity is likely the first step of (self-)registering a new customer.
-// TODO: user management, auth, etc is not implemented yet.
+// Developer is defined as the consumer of edge computing resources to manage and deploy Apps
 type Developer struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
