@@ -3,6 +3,7 @@ package influxq
 import (
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/tls"
 )
 
 // Each write to the Influx DB is an HTTP Post method.
@@ -48,14 +50,24 @@ func NewInfluxQ(DBName string) *InfluxQ {
 	return &q
 }
 
-func (q *InfluxQ) Start(addr string) error {
+func (q *InfluxQ) Start(addr, tlsCert string) error {
 	var err error
+	var conf = client.HTTPConfig{
+		Addr: addr,
+	}
+	if strings.HasPrefix(addr, "https://") {
+		creds, err := tls.GetTLSClientConfig(tlsCert)
+		// Should not try to verify
+		if err != nil || creds == nil {
+			conf.InsecureSkipVerify = true
+		} else {
+			conf.TLSConfig = creds
+		}
+	}
+
 	q.mux.Lock()
 	defer q.mux.Unlock()
-	url := "http://" + addr
-	q.client, err = client.NewHTTPClient(client.HTTPConfig{
-		Addr: url,
-	})
+	q.client, err = client.NewHTTPClient(conf)
 	if err != nil {
 		return err
 	}
