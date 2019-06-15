@@ -41,7 +41,8 @@ func (m *OperatorKey) String() string            { return proto.CompactTextStrin
 func (*OperatorKey) ProtoMessage()               {}
 func (*OperatorKey) Descriptor() ([]byte, []int) { return fileDescriptorOperator, []int{0} }
 
-// An Operator defines a telecommunications provider such as UFGT, xmobx, etc. The operators in turn provide Mobiledgex with compute resource Cloudlets that serve as the basis for location-based services.
+// An Operator supplies compute resources.
+// For example, telecommunications provider such as UFGT is an Operator
 type Operator struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`

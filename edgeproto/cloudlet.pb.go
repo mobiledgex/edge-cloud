@@ -198,8 +198,7 @@ func (m *CloudletInfraProperties) String() string            { return proto.Comp
 func (*CloudletInfraProperties) ProtoMessage()               {}
 func (*CloudletInfraProperties) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{6} }
 
-// A Cloudlet is a set of compute resources at a particular location, typically an Operator's regional data center, or a cell tower. The Cloudlet is managed by a Cloudlet Resource Manager, which communicates with the Mobiledgex Controller and allows AppInsts (application instances) to be instantiated on the Cloudlet.
-// A Cloudlet will be created by either a Mobiledgex admin or an Operator that provides the Cloudlet.
+// A Cloudlet is a set of compute resources at a particular location, provided by an Operator.
 type Cloudlet struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`

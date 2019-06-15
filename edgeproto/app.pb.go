@@ -106,13 +106,13 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-// ImageType specifies the image type of the application.
+// ImageType specifies image type of an App
 type ImageType int32
 
 const (
 	// Unknown image type
 	ImageType_IMAGE_TYPE_UNKNOWN ImageType = 0
-	// Docker container image type compatible with Kubernetes
+	// Docker container image type compatible either with Docker or Kubernetes
 	ImageType_IMAGE_TYPE_DOCKER ImageType = 1
 	// QCOW2 virtual machine image type
 	ImageType_IMAGE_TYPE_QCOW ImageType = 2
@@ -157,13 +157,13 @@ func (x DeleteType) String() string {
 }
 func (DeleteType) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
 
-// AppKey uniquely identifies an Application.
+// AppKey uniquely identifies an App
 type AppKey struct {
 	// Developer key
 	DeveloperKey DeveloperKey `protobuf:"bytes,1,opt,name=developer_key,json=developerKey" json:"developer_key"`
-	// Application name
+	// App name
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// Version of the app
+	// App version
 	Version string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
 }
 
@@ -184,35 +184,33 @@ func (m *ConfigFile) String() string            { return proto.CompactTextString
 func (*ConfigFile) ProtoMessage()               {}
 func (*ConfigFile) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
 
-// Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes.
-// An application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet.
+// App belongs to developers and is used to provide information about their application.
 type App struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
 	Key AppKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// URI from which to download image
+	// URI of where image resides
 	ImagePath string `protobuf:"bytes,4,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`
 	// Image type (see ImageType)
 	ImageType ImageType `protobuf:"varint,5,opt,name=image_type,json=imageType,proto3,enum=edgeproto.ImageType" json:"image_type,omitempty"`
-	// For Layer4 access, the ports the app listens on.
-	// This is a comma separated list of protocol:port pairs, i.e.
-	// tcp:80,http:443,udp:10002.
-	// Only tcp, udp, and http protocols are supported; tcp and udp are assumed
-	// to be L4, and http is assumed to be L7 access.
+	// Comma separated list of protocol:port pairs that the App listens on
+	// i.e. tcp:80,udp:10002,http:443
 	AccessPorts string `protobuf:"bytes,7,opt,name=access_ports,json=accessPorts,proto3" json:"access_ports,omitempty"`
-	// Default flavor for the App, may be overridden by the AppInst
+	// Default flavor for the App, which may be overridden by the AppInst
 	DefaultFlavor FlavorKey `protobuf:"bytes,9,opt,name=default_flavor,json=defaultFlavor" json:"default_flavor"`
 	// public key used for authentication
 	AuthPublicKey string `protobuf:"bytes,12,opt,name=auth_public_key,json=authPublicKey,proto3" json:"auth_public_key,omitempty"`
-	// Command to start service
+	// Command that the container runs to start service
 	Command string `protobuf:"bytes,13,opt,name=command,proto3" json:"command,omitempty"`
 	// Annotations is a comma separated map of arbitrary key value pairs,
 	// for example: key1=val1,key2=val2,key3="val 3"
 	Annotations string `protobuf:"bytes,14,opt,name=annotations,proto3" json:"annotations,omitempty"`
-	// Deployment target (kubernetes, docker, kvm, etc)
+	// Deployment type (kubernetes, docker, or vm)
 	Deployment string `protobuf:"bytes,15,opt,name=deployment,proto3" json:"deployment,omitempty"`
 	// Deployment manifest is the deployment specific manifest file/config
+	// For docker deployment, this can be a docker-compose or docker run file
+	// For kubernetes deployment, this can be a kubernetes yaml or helm chart file
 	DeploymentManifest string `protobuf:"bytes,16,opt,name=deployment_manifest,json=deploymentManifest,proto3" json:"deployment_manifest,omitempty"`
 	// Deployment generator target to generate a basic deployment manifest
 	DeploymentGenerator string `protobuf:"bytes,17,opt,name=deployment_generator,json=deploymentGenerator,proto3" json:"deployment_generator,omitempty"`
@@ -225,7 +223,7 @@ type App struct {
 	DelOpt DeleteType `protobuf:"varint,20,opt,name=del_opt,json=delOpt,proto3,enum=edgeproto.DeleteType" json:"del_opt,omitempty"`
 	// Customization files passed through to implementing services
 	Configs []*ConfigFile `protobuf:"bytes,21,rep,name=configs" json:"configs,omitempty"`
-	// Run application on all the nodes of the cluster
+	// Option to run App on all nodes of the cluster
 	ScaleWithCluster bool `protobuf:"varint,22,opt,name=scale_with_cluster,json=scaleWithCluster,proto3" json:"scale_with_cluster,omitempty"`
 }
 
