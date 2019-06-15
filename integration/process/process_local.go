@@ -78,6 +78,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
 	}
+	if p.InfluxAddr != "" {
+		args = append(args, "--influxAddr")
+		args = append(args, p.InfluxAddr)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -332,7 +336,8 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 		}
 	}
 
-	configFile, err := influxsup.SetupInflux(p.DataDir)
+	configFile, err := influxsup.SetupInflux(p.DataDir,
+		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey))
 	if err != nil {
 		return err
 	}
