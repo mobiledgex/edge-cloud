@@ -40,17 +40,16 @@ func (m *FlavorKey) String() string            { return proto.CompactTextString(
 func (*FlavorKey) ProtoMessage()               {}
 func (*FlavorKey) Descriptor() ([]byte, []int) { return fileDescriptorFlavor, []int{0} }
 
-// A Flavor identifies the Cpu, Ram, and Disk resources required for either a node in a Cluster, or an application instance. For a node in a cluster, these are the physical resources provided by that node. For an application instance, this defines the resources (per node) that should be allocated to the instance from the Cluster.
 type Flavor struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
-	// Unique key
+	// Unique key for the new flavor.
 	Key FlavorKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// RAM in MB
+	// RAM in megabytes
 	Ram uint64 `protobuf:"varint,3,opt,name=ram,proto3" json:"ram,omitempty"`
-	// VCPU cores
+	// Number of virtual CPUs
 	Vcpus uint64 `protobuf:"varint,4,opt,name=vcpus,proto3" json:"vcpus,omitempty"`
-	// Amount of disk in GB
+	// Amount of disk space in gigabytes
 	Disk uint64 `protobuf:"varint,5,opt,name=disk,proto3" json:"disk,omitempty"`
 }
 

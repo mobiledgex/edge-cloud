@@ -76,16 +76,17 @@ func (x IpSupport) String() string {
 }
 func (IpSupport) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{1} }
 
+// IpAccess indicates the type of RootLB that Developer requires for their App
 type IpAccess int32
 
 const (
 	// Unknown IP access
 	IpAccess_IP_ACCESS_UNKNOWN IpAccess = 0
-	// Dedicated IP access
+	// Dedicated RootLB
 	IpAccess_IP_ACCESS_DEDICATED IpAccess = 1
-	// Dedicated or shared (prefers dedicated) access
+	// Dedicated or shared (prefers dedicated) RootLB
 	IpAccess_IP_ACCESS_DEDICATED_OR_SHARED IpAccess = 2
-	// Shared IP access
+	// Shared RootLB
 	IpAccess_IP_ACCESS_SHARED IpAccess = 3
 )
 
