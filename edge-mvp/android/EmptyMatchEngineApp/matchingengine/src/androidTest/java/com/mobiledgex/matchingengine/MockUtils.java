@@ -93,7 +93,7 @@ public class MockUtils {
                 .setVer(0)
                 .setSessionCookie(me.getSessionCookie() == null ? "" : me.getSessionCookie())
                 .setLgId(1)
-                .setCommType(AppClient.DynamicLocGroupRequest.DlgCommType.DlgSecure)
+                .setCommType(AppClient.DynamicLocGroupRequest.DlgCommType.DLG_SECURE)
                 .setUserData(userData == null ? "" : userData)
                 .build();
     }
