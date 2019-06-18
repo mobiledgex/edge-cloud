@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <PackageId>MobiledgeX.MatchingEngineGrpcLibrary</PackageId>
-    <Version>1.4.0</Version>
+    <Version>1.4.2</Version>
     <Authors>MobiledgeX, Inc</Authors>
     <Company>MobiledgeX, Inc.</Company>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <ReleaseVersion>1.4.0</ReleaseVersion>
+    <ReleaseVersion>1.4.2</ReleaseVersion>
   </PropertyGroup>
 
   <ItemGroup>
