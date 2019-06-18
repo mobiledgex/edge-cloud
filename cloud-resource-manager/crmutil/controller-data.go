@@ -129,9 +129,9 @@ func (cd *ControllerData) clusterInstChanged(old *edgeproto.ClusterInst, new *ed
 	updateClusterCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
-			cd.ClusterInstInfoCache.SetStatusTask(key, value)
+			cd.ClusterInstInfoCache.SetStatusTask(&new.Key, value)
 		case edgeproto.UpdateStep:
-			cd.ClusterInstInfoCache.SetStatusStep(key, value)
+			cd.ClusterInstInfoCache.SetStatusStep(&new.Key, value)
 		}
 	}
 
