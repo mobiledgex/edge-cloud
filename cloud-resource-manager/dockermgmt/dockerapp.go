@@ -44,7 +44,7 @@ func CreateAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgepr
 		if err != nil {
 			return err
 		}
-		cmd := fmt.Sprintf("docker-compose -f  %s up -d", filename)
+		cmd := fmt.Sprintf("docker-compose -f %s up -d", filename)
 		log.DebugLog(log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
 		if err != nil {
@@ -76,7 +76,7 @@ func DeleteAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgepr
 		}
 	} else {
 		filename := getDockerComposeFileName(client, app, appInst)
-		cmd := fmt.Sprintf("docker-compose -f  %s down", filename)
+		cmd := fmt.Sprintf("docker-compose -f %s down", filename)
 		log.DebugLog(log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
 		if err != nil {
@@ -100,7 +100,7 @@ func GetAppInstRuntime(client pc.PlatformClient, app *edgeproto.App, appInst *ed
 		rt.ContainerIds = append(rt.ContainerIds, name)
 	} else {
 		filename := getDockerComposeFileName(client, app, appInst)
-		cmd := fmt.Sprintf("docker-compose -f  %s images", filename)
+		cmd := fmt.Sprintf("docker-compose -f %s images", filename)
 		log.DebugLog(log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
 		if err != nil {
