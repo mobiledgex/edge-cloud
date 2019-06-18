@@ -60,7 +60,7 @@ build-release:
 
 publish:
 	test MEX_LIB_API_KEY
-	$(shell dotnet nuget push $(BINOUT)/Release/Mobiledgex.MatchingEngineGrpcLibrary.1.3.8.nupkg -k $(MEX_LIB_API_KEY) -s $(NUGET_RELEASE_SERVER) > $(PUBLISHLOG))
+	$(shell nuget push $(BINOUT)/Release/Mobiledgex.MatchingEngineGrpcLibrary.1.4.2.nupkg -ApiKey $(MEX_LIB_API_KEY) -Source $(NUGET_RELEASE_SERVER) > $(PUBLISHLOG))
 	cat $(PUBLISHLOG)
 
 
