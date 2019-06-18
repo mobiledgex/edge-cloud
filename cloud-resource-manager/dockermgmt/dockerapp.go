@@ -14,7 +14,7 @@ func getDockerComposeFileName(client pc.PlatformClient, app *edgeproto.App, appI
 	return util.DNSSanitize("docker-compose-"+app.Key.Name+app.Key.Version) + ".yml"
 }
 
-//createDockerComposeFile creates/updates a docker compose file and returns the file name
+//createDockerComposeFile creates a docker compose file and returns the file name
 func createDockerComposeFile(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) (string, error) {
 	filename := getDockerComposeFileName(client, app, appInst)
 	log.DebugLog(log.DebugLevelMexos, "creating docker compose file", "filename", filename)
@@ -129,5 +129,4 @@ func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App,
 	}
 	cmdStr := fmt.Sprintf("docker exec -it %s -- %s", req.ContainerId, req.Command)
 	return cmdStr, nil
-
 }
