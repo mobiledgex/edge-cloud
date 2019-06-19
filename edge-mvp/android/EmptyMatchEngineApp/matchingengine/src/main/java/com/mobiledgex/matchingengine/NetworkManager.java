@@ -186,9 +186,16 @@ public class NetworkManager extends SubscriptionManager.OnSubscriptionsChangedLi
     // This Roaming Data value is un-reliable except under a new NetworkCapabilities Key in API 28.
     @RequiresApi(api = android.os.Build.VERSION_CODES.P)
     boolean isRoamingData() {
-        boolean isroaming = mConnectivityManager.getNetworkCapabilities(mConnectivityManager.getActiveNetwork())
-            .hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING);
-        return isroaming;
+        Network activeNetwork = mConnectivityManager.getActiveNetwork();
+        if (activeNetwork == null) {
+            return false;
+        }
+        NetworkCapabilities caps = mConnectivityManager.getNetworkCapabilities(activeNetwork);
+        if (caps == null) {
+            return false;
+        }
+
+        return !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING);
     }
 
     /**
