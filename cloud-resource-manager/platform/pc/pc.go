@@ -41,6 +41,17 @@ func WriteFile(client PlatformClient, file string, contents string, kind string)
 	return nil
 }
 
+func DeleteFile(client PlatformClient, file string) error {
+	log.DebugLog(log.DebugLevelMexos, "delete file")
+	cmd := fmt.Sprintf("rm -f %s", file)
+	out, err := client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error deleting  %s, %s, %v", cmd, out, err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "deleted file", "file", file)
+	return nil
+}
+
 func CopyFile(client PlatformClient, src, dst string) error {
 	cmd := fmt.Sprintf("cp %s %s", src, dst)
 	out, err := client.Output(cmd)
