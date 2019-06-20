@@ -8,6 +8,7 @@ import android.net.wifi.WifiManager;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.telephony.CarrierConfigManager;
+import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 
@@ -19,6 +20,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -57,8 +59,6 @@ import javax.net.ssl.TrustManagerFactory;
 
 import static android.content.Context.TELEPHONY_SUBSCRIPTION_SERVICE;
 
-
-// TODO: GRPC (which needs http/2).
 public class MatchingEngine {
     public static final String TAG = "MatchingEngine";
     private final String mInitialDMEContactHost = "tdg.dme.mobiledgex.net";
@@ -117,19 +117,19 @@ public class MatchingEngine {
     }
 
     public boolean isNetworkSwitchingEnabled() {
-        return this.getNetworkManager().isNetworkSwitchingEnabled();
+        return getNetworkManager().isNetworkSwitchingEnabled();
     }
 
     public void setNetworkSwitchingEnabled(boolean networkSwitchingEnabled) {
-        this.getNetworkManager().setNetworkSwitchingEnabled(networkSwitchingEnabled);
+        getNetworkManager().setNetworkSwitchingEnabled(networkSwitchingEnabled);
     }
 
     public boolean isAllowSwitchIfNoSubscriberInfo() {
-        return mNetworkManager.isAllowSwitchIfNoSubscriberInfo();
+        return getNetworkManager().isAllowSwitchIfNoSubscriberInfo();
     }
 
     public void setAllowSwitchIfNoSubscriberInfo(boolean allowSwitchIfNoSubscriberInfo) {
-        this.mNetworkManager.setAllowSwitchIfNoSubscriberInfo(allowSwitchIfNoSubscriberInfo);
+        getNetworkManager().setAllowSwitchIfNoSubscriberInfo(allowSwitchIfNoSubscriberInfo);
     }
 
     /**

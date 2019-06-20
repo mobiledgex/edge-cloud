@@ -46,10 +46,11 @@ import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "MainActivity";
-    private MatchingEngine mMatchingEngine;
+
     private String someText = null;
 
     private RequestPermissions mRpUtil;
+    private MatchingEngine mMatchingEngine;
     private FusedLocationProviderClient mFusedLocationClient;
 
     private LocationCallback mLocationCallback;
@@ -61,15 +62,20 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         super.onCreate(savedInstanceState);
 
         /**
-         * MatchEngine APIs require special user approved permissions to READ_PHONE_STATE and
+         * MatchingEngine APIs require special user approved permissions to READ_PHONE_STATE and
          * one of the following:
-         * ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION. This creates a dialog, if needed.
+         * ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION.
+         *
+         * The example RequestPermissions utility creates a UI dialog, if needed.
+         *
+         * You can do this anywhere, MainApplication.onActivityResumed(), or a subset of permissions
+         * onResume() on each Activity.
+         *
+         * Permissions must exist prior to API usage to avoid SecurityExceptions.
          */
         mRpUtil = new RequestPermissions();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mLocationRequest = new LocationRequest();
-
-        mMatchingEngine = new MatchingEngine(this);
 
         // Restore mex location preference, defaulting to false:
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -119,7 +125,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         setSupportActionBar(myToolbar);
 
         // Open dialog for MEX if this is the first time the app is created:
-
         String firstTimeUsePrefKey = getResources().getString(R.string.preference_first_time_use);
         boolean firstTimeUse = prefs.getBoolean(firstTimeUsePrefKey, true);
 
@@ -158,6 +163,14 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Override
     public void onResume() {
         super.onResume();
+
+        if (mRpUtil.getNeededPermissions(this).size() > 0) {
+            // Opens a UI. When it returns, onResume() is called again.
+            mRpUtil.requestMultiplePermissions(this);
+        } else if (mMatchingEngine == null) {
+            // Permissions available. Create a MobiledgeX MatchingEngine instance (could also use Application wide instance).
+            mMatchingEngine = new MatchingEngine(this); // Using ApplicationContext for app wide usage.
+        }
 
         if (mDoLocationUpdates) {
             startLocationUpdates();
@@ -222,12 +235,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     public void doEnhancedLocationVerification() throws SecurityException {
         final Activity ctx = this;
 
-        // As of Android 23, permissions can be asked for while the app is still running.
-        if (mRpUtil.getNeededPermissions(this).size() > 0) {
-            mRpUtil.requestMultiplePermissions(this);
-            return;
-        }
-
         // Run in the background and post text results to the UI thread.
         mFusedLocationClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
             @Override
@@ -251,7 +258,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             public void run() {
                 Location location = aTask.getResult();
                 // Location found. Create a request:
-
                 try {
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
                     boolean mexAllowed = prefs.getBoolean(getResources().getString(R.string.preference_mex_location_verification), false);
