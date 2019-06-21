@@ -51,7 +51,7 @@ kubelet:
     https: true
 `
 
-var MEXPrometheusAppName = "MEXPrometheusAppName"
+var MEXPrometheusAppName = cloudcommon.MEXPrometheusAppName
 var MEXPrometheusAppVer = "1.0"
 
 var MEXPrometheusApp = edgeproto.App{
