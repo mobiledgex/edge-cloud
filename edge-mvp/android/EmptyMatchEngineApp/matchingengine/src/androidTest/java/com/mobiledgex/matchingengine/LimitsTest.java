@@ -12,7 +12,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.mobiledgex.matchingengine.util.MexLocation;
+import com.mobiledgex.matchingengine.util.MeLocation;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -151,10 +151,10 @@ public class LimitsTest {
     public void basicLatencyTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context, Executors.newFixedThreadPool(20));
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
 
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
         Location location;
         AppClient.VerifyLocationReply verifyLocationReply1 = null;
         AppClient.VerifyLocationReply verifyLocationReply2 = null;
@@ -167,7 +167,7 @@ public class LimitsTest {
         long elapsed2[] = new long[20];
         try {
             setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             long sum1 = 0, sum2 = 0;
@@ -240,10 +240,10 @@ public class LimitsTest {
         final String TAG = "basicLatencyTestConcurrent";
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
 
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
         Location location;
         AppClient.VerifyLocationReply verifyLocationReply1 = null;
 
@@ -256,7 +256,7 @@ public class LimitsTest {
         final AppClient.VerifyLocationReply responses[] = new AppClient.VerifyLocationReply[elapsed2.length];
         try {
             setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             long sum2 = 0;
@@ -369,10 +369,10 @@ public class LimitsTest {
         MatchingEngine me = new MatchingEngine(context, Executors.newWorkStealingPool(threadPoolSize));
 
         final long start = System.currentTimeMillis();
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
 
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
         Location location;
 
         enableMockLocation(context,true);
@@ -383,7 +383,7 @@ public class LimitsTest {
         final AppClient.VerifyLocationReply responses[] = new AppClient.VerifyLocationReply[elapsed.length];
         try {
             setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             long sum = 0;

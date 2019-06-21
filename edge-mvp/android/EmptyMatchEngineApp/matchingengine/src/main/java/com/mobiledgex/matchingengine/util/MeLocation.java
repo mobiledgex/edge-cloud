@@ -18,9 +18,9 @@ import java.util.concurrent.Future;
 import android.util.Log;
 
 
-
-public class MexLocation {
-    private static final String TAG = "MexLocation";
+// Simple util class for last known location.
+public class MeLocation {
+    private static final String TAG = "MeLocation";
     private MatchingEngine mMatchingEngine;
     private Location mLocation;
     private volatile boolean mWaitingForNotify = false;
@@ -96,7 +96,7 @@ public class MexLocation {
     }
 
 
-    public MexLocation(MatchingEngine matchingEngine) {
+    public MeLocation(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 

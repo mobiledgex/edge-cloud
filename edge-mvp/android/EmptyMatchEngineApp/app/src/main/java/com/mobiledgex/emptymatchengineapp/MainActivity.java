@@ -11,6 +11,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.telephony.CarrierConfigManager;
+import android.telephony.SubscriptionInfo;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
@@ -77,14 +78,14 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mLocationRequest = new LocationRequest();
 
-        // Restore mex location preference, defaulting to false:
+        // Restore app's matching engine location preference, defaulting to false:
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         PreferenceManager.setDefaultValues(this, R.xml.location_preferences, false);
 
-        boolean mexLocationAllowed = prefs.getBoolean(getResources()
-                .getString(R.string.preference_mex_location_verification),
+        boolean matchingEngineLocationAllowed = prefs.getBoolean(getResources()
+                .getString(R.string.preference_matching_engine_location_verification),
                 false);
-        MatchingEngine.setMexLocationAllowed(mexLocationAllowed);
+        MatchingEngine.setMatchingEngineLocationAllowed(matchingEngineLocationAllowed);
 
         // Watch allowed preference:
         prefs.registerOnSharedPreferenceChangeListener(this);
@@ -124,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         Toolbar myToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(myToolbar);
 
-        // Open dialog for MEX if this is the first time the app is created:
+        // Open dialog for MobiledgeX MatchingEngine if this is the first time the app is created:
         String firstTimeUsePrefKey = getResources().getString(R.string.preference_first_time_use);
         boolean firstTimeUse = prefs.getBoolean(firstTimeUsePrefKey, true);
 
@@ -167,9 +168,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         if (mRpUtil.getNeededPermissions(this).size() > 0) {
             // Opens a UI. When it returns, onResume() is called again.
             mRpUtil.requestMultiplePermissions(this);
-        } else if (mMatchingEngine == null) {
+            return;
+        }
+
+        if (mMatchingEngine == null) {
             // Permissions available. Create a MobiledgeX MatchingEngine instance (could also use Application wide instance).
-            mMatchingEngine = new MatchingEngine(this); // Using ApplicationContext for app wide usage.
+            mMatchingEngine = new MatchingEngine(this);
         }
 
         if (mDoLocationUpdates) {
@@ -186,14 +190,14 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putBoolean(MatchingEngine.MEX_LOCATION_PERMISSION, MatchingEngine.isMexLocationAllowed());
+        savedInstanceState.putBoolean(MatchingEngine.MATCHING_ENGINE_LOCATION_PERMISSION, MatchingEngine.isMatchingEngineLocationAllowed());
     }
 
     @Override
     public void onRestoreInstanceState(Bundle restoreInstanceState) {
         super.onRestoreInstanceState(restoreInstanceState);
         if (restoreInstanceState != null) {
-            MatchingEngine.setMexLocationAllowed(restoreInstanceState.getBoolean(MatchingEngine.MEX_LOCATION_PERMISSION));
+            MatchingEngine.setMatchingEngineLocationAllowed(restoreInstanceState.getBoolean(MatchingEngine.MATCHING_ENGINE_LOCATION_PERMISSION));
         }
     }
 
@@ -224,11 +228,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        final String prefKeyAllowMEX = getResources().getString(R.string.preference_mex_location_verification);
+        final String prefKeyAllowMatchingEngine = getResources().getString(R.string.preference_matching_engine_location_verification);
 
-        if (key.equals(prefKeyAllowMEX)) {
-            boolean mexLocationAllowed = sharedPreferences.getBoolean(prefKeyAllowMEX, false);
-            MatchingEngine.setMexLocationAllowed(mexLocationAllowed);
+        if (key.equals(prefKeyAllowMatchingEngine)) {
+            boolean locationAllowed = sharedPreferences.getBoolean(prefKeyAllowMatchingEngine, false);
+            MatchingEngine.setMatchingEngineLocationAllowed(locationAllowed);
         }
     }
 
@@ -245,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     Log.w(TAG, "getLastLocation:exception", task.getException());
                     someText = "Last location not found, or has never been used. Location cannot be verified using 'getLastLocation()'. " +
                             "Use the requestLocationUpdates() instead if applicable for location verification.";
-                    TextView tv = findViewById(R.id.mex_verified_location_content);
+                    TextView tv = findViewById(R.id.mobiledgex_verified_location_content);
                     tv.setText(someText);
                 }
             }
@@ -259,14 +263,31 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 Location location = aTask.getResult();
                 // Location found. Create a request:
                 try {
+                    someText = "";
+                    // If no carrierName, or active Subscription networks, the app should use the public cloud instead.
+                    List<SubscriptionInfo> subList = mMatchingEngine.getActiveSubscriptionInfoList();
+                    if (subList != null && subList.size() > 0) {
+                        for(SubscriptionInfo info: subList) {
+                            if (info.getCarrierName().equals("Android")) {
+                                someText += "Emulator Active Subscription Network: " + info.toString() + "\n";
+                            } else {
+                                someText += "Active Subscription network: " + info.toString() + "\n";
+                            }
+                        }
+                        mMatchingEngine.setNetworkSwitchingEnabled(true);
+                    } else {
+                        // This example will continue to execute anyway, as Demo DME may still be reachable to discover nearby edge cloudlets.
+                        someText += "No active cellular networks: app should use public cloud instead of the edgecloudlet at this time.\n";
+                        mMatchingEngine.setNetworkSwitchingEnabled(false);
+                    }
+
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
-                    boolean mexAllowed = prefs.getBoolean(getResources().getString(R.string.preference_mex_location_verification), false);
+                    boolean locationVerificationAllowed = prefs.getBoolean(getResources().getString(R.string.preference_matching_engine_location_verification), false);
 
                     //String carrierName = mMatchingEngine.retrieveNetworkCarrierName(ctx); // Regular use case
                     String carrierName = "mexdemo";                                         // Override carrierName
-                    //String carrierName = mMatchingEngine.retrieveNetworkCarrierName(ctx); // Regular use case
                     if (carrierName == null) {
-                        someText = "No carrier Info!";
+                        someText += "No carrier Info!\n";
                     }
                     String host = mMatchingEngine.generateDmeHostAddress(carrierName);      // Override carrier specific host name
                     int port = mMatchingEngine.getPort(); // Keep same port.
@@ -283,8 +304,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                                     host, port, 10000);
 
                     if (registerStatus.getStatus() != AppClient.ReplyStatus.RS_SUCCESS) {
-                        someText = "Registration Failed. Error: " + registerStatus.getStatus();
-                        TextView tv = findViewById(R.id.mex_verified_location_content);
+                        someText += "Registration Failed. Error: " + registerStatus.getStatus();
+                        TextView tv = findViewById(R.id.mobiledgex_verified_location_content);
                         tv.setText(someText);
                         return;
                     }
@@ -296,7 +317,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         AppClient.VerifyLocationReply verifiedLocation =
                                 mMatchingEngine.verifyLocation(verifyRequest, host, port, 10000);
 
-                        someText = "[Location Verified: Tower: " + verifiedLocation.getTowerStatus() +
+                        someText += "[Location Verified: Tower: " + verifiedLocation.getTowerStatus() +
                                 ", GPS LocationStatus: " + verifiedLocation.getGpsLocationStatus() +
                                 ", Location Accuracy: " + verifiedLocation.getGpsLocationAccuracyKm() + " ]\n";
 
@@ -350,7 +371,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         }
                     } else {
                         someText = "Cannot create request object.\n";
-                        if (!mexAllowed) {
+                        if (!locationVerificationAllowed) {
                             someText += " Reason: Enhanced location is disabled.\n";
                         }
                     }
@@ -372,7 +393,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     ctx.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            TextView tv = findViewById(R.id.mex_verified_location_content);
+                            TextView tv = findViewById(R.id.mobiledgex_verified_location_content);
                             tv.setText(someText);
                         }
                     });
@@ -382,11 +403,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         String causeMessage = ee.getCause().getMessage();
                         someText = "Network connection failed: " + causeMessage;
                         Log.e(TAG, someText);
-                        // Handle network error with failover logic. MEX requests over cellular is needed to talk to the DME.
+                        // Handle network error with failover logic. MobiledgeX MatchingEngine requests over cellular is needed to talk to the DME.
                         ctx.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                TextView tv = findViewById(R.id.mex_verified_location_content);
+                                TextView tv = findViewById(R.id.mobiledgex_verified_location_content);
                                 tv.setText(someText);
                             }
                         });

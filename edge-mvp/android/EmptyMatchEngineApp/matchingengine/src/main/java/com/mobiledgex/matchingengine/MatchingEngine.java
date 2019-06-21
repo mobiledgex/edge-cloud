@@ -101,15 +101,15 @@ public class MatchingEngine {
     }
 
     // Application state Bundle Key.
-    public static final String MEX_LOCATION_PERMISSION = "MEX_LOCATION_PERMISSION";
-    private static boolean mMexLocationAllowed = false;
+    public static final String MATCHING_ENGINE_LOCATION_PERMISSION = "MATCHING_ENGINE_LOCATION_PERMISSION";
+    private static boolean mMatchingEngineLocationAllowed = false;
 
-    public static boolean isMexLocationAllowed() {
-        return mMexLocationAllowed;
+    public static boolean isMatchingEngineLocationAllowed() {
+        return mMatchingEngineLocationAllowed;
     }
 
-    public static void setMexLocationAllowed(boolean allowMexLocation) {
-        mMexLocationAllowed = allowMexLocation;
+    public static void setMatchingEngineLocationAllowed(boolean allowMatchingEngineLocation) {
+        mMatchingEngineLocationAllowed = allowMatchingEngineLocation;
     }
 
     private SubscriptionManager getSubscriptionManager(Context context) {
@@ -130,6 +130,20 @@ public class MatchingEngine {
 
     public void setAllowSwitchIfNoSubscriberInfo(boolean allowSwitchIfNoSubscriberInfo) {
         getNetworkManager().setAllowSwitchIfNoSubscriberInfo(allowSwitchIfNoSubscriberInfo);
+    }
+
+    /**
+     * Utility function to get the active subscription network provider list for this device as
+     * known to the MatchingEngine. If it is empty, the application should use the public cloud
+     * instead, as the Distributed Matching Engine may be unavailable (firewalled) from the current
+     * network. Calling MatchingEngine APIs in that state will result in a
+     * NetworkRequestNoSubscriptionInfoException.
+     *
+     * @return
+     */
+    public List<SubscriptionInfo> getActiveSubscriptionInfoList() {
+        List<SubscriptionInfo> subs = getNetworkManager().getActiveSubscriptionInfoList(true);
+        return subs;
     }
 
     /**
@@ -235,7 +249,7 @@ public class MatchingEngine {
                                                              String applicationName, String appVersion,
                                                              String carrierName, String authToken)
     {
-        if (!mMexLocationAllowed) {
+        if (!mMatchingEngineLocationAllowed) {
             Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
             return null;
         }
@@ -286,7 +300,7 @@ public class MatchingEngine {
             throw new IllegalArgumentException("MatchingEngine requires a working application context.");
         }
 
-        if (!mMexLocationAllowed) {
+        if (!mMatchingEngineLocationAllowed) {
             Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
             return null;
         }
@@ -299,7 +313,7 @@ public class MatchingEngine {
         if(carrierName == null || carrierName.equals("")) {
             carrierName = retrievedNetworkOperatorName;
         }
-        Loc aLoc = androidLocToMexLoc(location);
+        Loc aLoc = androidLocToMeLoc(location);
 
         return AppClient.VerifyLocationRequest.newBuilder()
                 .setSessionCookie(mSessionCookie)
@@ -312,7 +326,7 @@ public class MatchingEngine {
 
     public FindCloudletRequest createFindCloudletRequest(Context context, String carrierName,
                                                          android.location.Location location) {
-        if (!mMexLocationAllowed) {
+        if (!mMatchingEngineLocationAllowed) {
             Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
             return null;
         }
@@ -320,7 +334,7 @@ public class MatchingEngine {
             throw new IllegalArgumentException("MatchingEngine requires a working application context.");
         }
 
-        Loc aLoc = androidLocToMexLoc(location);
+        Loc aLoc = androidLocToMeLoc(location);
 
         return FindCloudletRequest.newBuilder()
                 .setSessionCookie(mSessionCookie)
@@ -333,7 +347,7 @@ public class MatchingEngine {
     }
 
     public GetLocationRequest createGetLocationRequest(Context context, String carrierName) {
-        if (!mMexLocationAllowed) {
+        if (!mMatchingEngineLocationAllowed) {
             Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
             return null;
         }
@@ -353,7 +367,7 @@ public class MatchingEngine {
 
     public AppInstListRequest createAppInstListRequest(Context context, String carrierName,
                                                        android.location.Location location) {
-        if (!mMexLocationAllowed) {
+        if (!mMatchingEngineLocationAllowed) {
             Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
             return null;
         }
@@ -370,7 +384,7 @@ public class MatchingEngine {
         if(carrierName == null || carrierName.equals("")) {
             carrierName = retrievedNetworkOperatorName;
         }
-        Loc aLoc = androidLocToMexLoc(location);
+        Loc aLoc = androidLocToMeLoc(location);
 
         return AppClient.AppInstListRequest.newBuilder()
                 .setSessionCookie(mSessionCookie)
@@ -383,7 +397,7 @@ public class MatchingEngine {
     public DynamicLocGroupRequest createDynamicLocGroupRequest(Context context,
                                                                DynamicLocGroupRequest.DlgCommType commType,
                                                                String userData) {
-        if (!mMexLocationAllowed) {
+        if (!mMatchingEngineLocationAllowed) {
             Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
             return null;
         }
@@ -403,7 +417,7 @@ public class MatchingEngine {
                 .build();
     }
 
-    private Loc androidLocToMexLoc(android.location.Location loc) {
+    private Loc androidLocToMeLoc(android.location.Location loc) {
         return Loc.newBuilder()
                 .setLatitude((loc == null) ? 0.0d : loc. getLatitude())
                 .setLongitude((loc == null) ? 0.0d : loc.getLongitude())
@@ -869,7 +883,7 @@ public class MatchingEngine {
     }
 
     public SSLSocketFactory getMutualAuthSSLSocketFactoryInstance()
-            throws IOException, MexKeyStoreException,
+            throws IOException, MatchingEngineKeyStoreException,
             KeyManagementException, KeyStoreException, NoSuchAlgorithmException {
         if (mMutualAuthSocketFactory != null) {
             return mMutualAuthSocketFactory;
@@ -886,9 +900,9 @@ public class MatchingEngine {
             mMutualAuthSocketFactory = getMutualAuthSSLSocketFactoryInstance(serverBksFileName,
                     clientKeyPairFileName, serverBksPassword, clientKeyPairPassword);
         } catch (CertificateException ce) {
-            throw new MexKeyStoreException("MexKeyStoreException: ", ce);
+            throw new MatchingEngineKeyStoreException("MatchingEngineKeyStoreException: ", ce);
         } catch (UnrecoverableKeyException uke) {
-            throw new MexKeyStoreException("MexKeyStoreException: ", uke);
+            throw new MatchingEngineKeyStoreException("MatchingEngineKeyStoreException: ", uke);
         }
 
         return mMutualAuthSocketFactory;
@@ -945,13 +959,13 @@ public class MatchingEngine {
      * @param host
      * @param port
      * @return
-     * @throws MexKeyStoreException
-     * @throws MexTrustStoreException
+     * @throws MatchingEngineKeyStoreException
+     * @throws MatchingEngineTrustStoreException
      * @throws KeyManagementException
      * @throws NoSuchAlgorithmException
      */
     ManagedChannel channelPicker(String host, int port)
-            throws IOException, MexKeyStoreException, MexTrustStoreException, KeyManagementException, NoSuchAlgorithmException {
+            throws IOException, MatchingEngineKeyStoreException, MatchingEngineTrustStoreException, KeyManagementException, NoSuchAlgorithmException {
 
         try {
             if (isSSLEnabled()) {
@@ -966,7 +980,7 @@ public class MatchingEngine {
                         .build();
             }
         } catch (KeyStoreException kse) {
-            throw new MexKeyStoreException("MexKeyStoreException: ", kse);
+            throw new MatchingEngineKeyStoreException("MexKeyStoreException: ", kse);
         }
     }
 
