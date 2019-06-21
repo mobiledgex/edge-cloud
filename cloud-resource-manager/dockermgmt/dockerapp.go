@@ -31,7 +31,7 @@ func CreateAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgepr
 	image := app.ImagePath
 	name := app.Key.Name
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host--name=%s %s %s", name, image, app.Command)
+		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", name, image, app.Command)
 		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 
 		out, err := client.Output(cmd)
