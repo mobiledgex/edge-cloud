@@ -264,10 +264,10 @@ func (p *Dme) getTlsConfig() *tls.Config {
 // CrmLocal
 
 func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
-	args := []string{"--notifyCtlAddrs", p.NotifyCtlAddrs}
-	if p.NotifyCrmAddr != "" {
-		args = append(args, "--notifyCrmAddr")
-		args = append(args, p.NotifyCrmAddr)
+	args := []string{"--notifyAddrs", p.NotifyAddrs}
+	if p.NotifySrvAddr != "" {
+		args = append(args, "--notifySrvAddr")
+		args = append(args, p.NotifySrvAddr)
 	}
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")

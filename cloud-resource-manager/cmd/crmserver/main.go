@@ -27,8 +27,8 @@ import (
 var bindAddress = flag.String("apiAddr", "0.0.0.0:55099", "Address to bind")
 var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of controller API")
 var vaultAddr = flag.String("vaultAddr", "", "Address to vault")
-var notifyCtlAddrs = flag.String("notifyCtlAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
-var notifyCrmAddr = flag.String("notifyCrmAddr", "127.0.0.1:51001", "Address for the CRM notify listener to run on")
+var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
+var notifySrvAddr = flag.String("notifySrvAddr", "127.0.0.1:51001", "Address for the CRM notify listener to run on")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
 var physicalName = flag.String("physicalName", "", "Physical infrastructure cloudlet name, defaults to cloudlet name in cloudletKey")
 var debugLevels = flag.String("d", "", fmt.Sprintf("Comma separated list of %v", log.DebugLevelStrings))
@@ -110,7 +110,7 @@ func main() {
 	}()
 
 	//ctl notify
-	addrs := strings.Split(*notifyCtlAddrs, ",")
+	addrs := strings.Split(*notifyAddrs, ",")
 	notifyClient = notify.NewClient(addrs, *tlsCertFile)
 	notifyClient.SetFilterByCloudletKey()
 	InitNotify(notifyClient, controllerData)
@@ -122,7 +122,7 @@ func main() {
 	var notifyServer notify.ServerMgr
 	notifyServer.Init()
 	initCrmNotify(&notifyServer)
-	notifyServer.Start(*notifyCrmAddr, *tlsCertFile)
+	notifyServer.Start(*notifySrvAddr, *tlsCertFile)
 	defer notifyServer.Stop()
 
 	go func() {

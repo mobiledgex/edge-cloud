@@ -133,8 +133,8 @@ dmes:
 crms:
 - name: crm1
   apiaddr: "0.0.0.0:55091"
-  notifyctladdrs: "127.0.0.1:37001,127.0.0.1:37002"
-  notifycrmaddr: "127.0.0.1:51101"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  notifysrvaddr: "127.0.0.1:51101"
   cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-1"}'
   platform: fakecloudlet
   tls:
@@ -144,8 +144,8 @@ crms:
 
 - name: crm2
   apiaddr: "0.0.0.0:55092"
-  notifyctladdrs: "127.0.0.1:37001,127.0.0.1:37002"
-  notifycrmaddr: "127.0.0.1:51102"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  notifysrvaddr: "127.0.0.1:51102"
   cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-2"}'
   platform: fakecloudlet
   tls:
@@ -155,8 +155,8 @@ crms:
 
 - name: crm3
   apiaddr: "0.0.0.0:55093"
-  notifyctladdrs: "127.0.0.1:37001,127.0.0.1:37002"
-  notifycrmaddr: "127.0.0.1:51103"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  notifysrvaddr: "127.0.0.1:51103"
   cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-3"}'
   platform: fakecloudlet
   tls:
@@ -166,8 +166,8 @@ crms:
 
 - name: crm4
   apiaddr: "0.0.0.0:55094"
-  notifyctladdrs: "127.0.0.1:37001,127.0.0.1:37002"
-  notifycrmaddr: "127.0.0.1:51104"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  notifysrvaddr: "127.0.0.1:51104"
   cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-4"}'
   platform: fakecloudlet
   tls:
@@ -177,8 +177,8 @@ crms:
 
 - name: crm5
   apiaddr: "0.0.0.0:55095"
-  notifyctladdrs: "127.0.0.1:37001,127.0.0.1:37002"
-  notifycrmaddr: "127.0.0.1:51105"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  notifysrvaddr: "127.0.0.1:51105"
   cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-5"}'
   platform: fakecloudlet
   tls:
@@ -188,8 +188,8 @@ crms:
 
 - name: crm6
   apiaddr: "0.0.0.0:55096"
-  notifyctladdrs: "127.0.0.1:37001,127.0.0.1:37002"
-  notifycrmaddr: "127.0.0.1:51106"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  notifysrvaddr: "127.0.0.1:51106"
   cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-6"}'
   platform: fakecloudlet
   tls:
@@ -199,8 +199,8 @@ crms:
 
 - name: crm7
   apiaddr: "0.0.0.0:55097"
-  notifyctladdrs: "127.0.0.1:37001,127.0.0.1:37002"
-  notifycrmaddr: "127.0.0.1:51107"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  notifysrvaddr: "127.0.0.1:51107"
   cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-7"}'
   platform: fakecloudlet
   tls:
@@ -210,8 +210,8 @@ crms:
 
 - name: crm8
   apiaddr: "0.0.0.0:55098"
-  notifyctladdrs: "127.0.0.1:37001,127.0.0.1:37002"
-  notifycrmaddr: "127.0.0.1:51108"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  notifysrvaddr: "127.0.0.1:51108"
   cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-8"}'
   platform: fakecloudlet
   tls:
@@ -221,8 +221,8 @@ crms:
 
 - name: crm9
   apiaddr: "0.0.0.0:55099"
-  notifyctladdrs: "127.0.0.1:37001,127.0.0.1:37002"
-  notifycrmaddr: "127.0.0.1:51109"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  notifysrvaddr: "127.0.0.1:51109"
   cloudletkey: '{"operator_key":{"name":"azure"},"name":"azure-cloud-9"}'
   platform: fakecloudlet
   tls:
@@ -232,8 +232,8 @@ crms:
 
 - name: crm10
   apiaddr: "0.0.0.0:55100"
-  notifyctladdrs: "127.0.0.1:37001,127.0.0.1:37002"
-  notifycrmaddr: "127.0.0.1:51110"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  notifysrvaddr: "127.0.0.1:51110"
   cloudletkey: '{"operator_key":{"name":"gcp"},"name":"gcp-cloud-10"}'
   platform: fakecloudlet
   tls:
