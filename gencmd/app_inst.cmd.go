@@ -144,6 +144,7 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 		in.RuntimeInfo.ContainerIds = make([]string, 1)
 	}
 	s = append(s, in.RuntimeInfo.ContainerIds[0])
+	s = append(s, in.RuntimeInfo.ConsoleUrl)
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Nanos), 10))
 	s = append(s, edgeproto.IpAccess_CamelName[int32(in.AutoClusterIpAccess)])
@@ -185,6 +186,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Errors")
 	s = append(s, "CrmOverride")
 	s = append(s, "RuntimeInfo-ContainerIds")
+	s = append(s, "RuntimeInfo-ConsoleUrl")
 	s = append(s, "CreatedAt-Seconds")
 	s = append(s, "CreatedAt-Nanos")
 	s = append(s, "AutoClusterIpAccess")
@@ -219,17 +221,19 @@ func AppInstWriteOutputOne(obj *edgeproto.AppInst) {
 	}
 }
 func AppInstRuntimeSlicer(in *edgeproto.AppInstRuntime) []string {
-	s := make([]string, 0, 1)
+	s := make([]string, 0, 2)
 	if in.ContainerIds == nil {
 		in.ContainerIds = make([]string, 1)
 	}
 	s = append(s, in.ContainerIds[0])
+	s = append(s, in.ConsoleUrl)
 	return s
 }
 
 func AppInstRuntimeHeaderSlicer() []string {
-	s := make([]string, 0, 1)
+	s := make([]string, 0, 2)
 	s = append(s, "ContainerIds")
+	s = append(s, "ConsoleUrl")
 	return s
 }
 
@@ -279,6 +283,7 @@ func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 		in.RuntimeInfo.ContainerIds = make([]string, 1)
 	}
 	s = append(s, in.RuntimeInfo.ContainerIds[0])
+	s = append(s, in.RuntimeInfo.ConsoleUrl)
 	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
 	s = append(s, in.Status.TaskName)
@@ -300,6 +305,7 @@ func AppInstInfoHeaderSlicer() []string {
 	s = append(s, "State")
 	s = append(s, "Errors")
 	s = append(s, "RuntimeInfo-ContainerIds")
+	s = append(s, "RuntimeInfo-ConsoleUrl")
 	s = append(s, "Status-TaskNumber")
 	s = append(s, "Status-MaxTasks")
 	s = append(s, "Status-TaskName")
@@ -388,6 +394,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.RuntimeInfo.ContainerIds = nil
 	}
+	if _, found := tags["nocmp"]; found {
+		in.RuntimeInfo.ConsoleUrl = ""
+	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
@@ -404,6 +413,9 @@ func AppInstRuntimeHideTags(in *edgeproto.AppInstRuntime) {
 	if _, found := tags["nocmp"]; found {
 		in.ContainerIds = nil
 	}
+	if _, found := tags["nocmp"]; found {
+		in.ConsoleUrl = ""
+	}
 }
 
 func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
@@ -419,6 +431,9 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.RuntimeInfo.ContainerIds = nil
+	}
+	if _, found := tags["nocmp"]; found {
+		in.RuntimeInfo.ConsoleUrl = ""
 	}
 }
 
@@ -798,6 +813,7 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCrmErrors IgnoreCrm IgnoreTransientState IgnoreCrmAndTransientState]")
+	AppInstFlagSet.StringVar(&AppInstIn.RuntimeInfo.ConsoleUrl, "runtimeinfo-consoleurl", "", "RuntimeInfo.ConsoleUrl")
 	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
 	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
 	AppInstFlagSet.StringVar(&AppInstInAutoClusterIpAccess, "autoclusteripaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
@@ -814,6 +830,7 @@ func init() {
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.ClusterInstKey.Developer, "key-clusterinstkey-developer", "", "Key.ClusterInstKey.Developer")
 	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.RuntimeInfo.ConsoleUrl, "runtimeinfo-consoleurl", "", "RuntimeInfo.ConsoleUrl")
 	AppInstInfoFlagSet.Uint32Var(&AppInstInfoIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
 	AppInstInfoFlagSet.Uint32Var(&AppInstInfoIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
@@ -907,6 +924,9 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("crmoverride").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "16")
 	}
+	if AppInstFlagSet.Lookup("runtimeinfo-consoleurl").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "17.2")
+	}
 	if AppInstNoConfigFlagSet.Lookup("createdat-seconds").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "21.1")
 	}
@@ -958,6 +978,9 @@ func AppInstInfoSetFields() {
 	}
 	if AppInstInfoFlagSet.Lookup("state").Changed {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "4")
+	}
+	if AppInstInfoFlagSet.Lookup("runtimeinfo-consoleurl").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "6.2")
 	}
 	if AppInstInfoNoConfigFlagSet.Lookup("status-tasknumber").Changed {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "7.1")
