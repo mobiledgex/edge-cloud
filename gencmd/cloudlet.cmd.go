@@ -379,7 +379,7 @@ func CloudletInfraPropertiesWriteOutputOne(obj *edgeproto.CloudletInfraPropertie
 	}
 }
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
-	s := make([]string, 0, 16)
+	s := make([]string, 0, 17)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -422,11 +422,12 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
 	s = append(s, in.Status.TaskName)
 	s = append(s, in.Status.StepName)
+	s = append(s, in.Uri)
 	return s
 }
 
 func CloudletHeaderSlicer() []string {
-	s := make([]string, 0, 16)
+	s := make([]string, 0, 17)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
@@ -460,6 +461,7 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "Status-MaxTasks")
 	s = append(s, "Status-TaskName")
 	s = append(s, "Status-StepName")
+	s = append(s, "Uri")
 	return s
 }
 
@@ -1141,6 +1143,7 @@ func init() {
 	CloudletNoConfigFlagSet.Uint32Var(&CloudletIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
 	CloudletNoConfigFlagSet.StringVar(&CloudletIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
 	CloudletNoConfigFlagSet.StringVar(&CloudletIn.Status.StepName, "status-stepname", "", "Status.StepName")
+	CloudletFlagSet.StringVar(&CloudletIn.Uri, "uri", "", "Uri")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [CloudletStateUnknown CloudletStateErrors CloudletStateReady CloudletStateOffline CloudletStateNotPresent]")
@@ -1271,6 +1274,9 @@ func CloudletSetFields() {
 	}
 	if CloudletNoConfigFlagSet.Lookup("status-stepname").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "17.4")
+	}
+	if CloudletFlagSet.Lookup("uri").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "18")
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
@@ -13,7 +14,10 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
-const DefaultBindPort = 55091
+const (
+	DefaultBindPort   = 55091
+	CRMBringupTimeout = 5 * time.Minute
+)
 
 type CloudletApi struct {
 	sync  *Sync
@@ -91,6 +95,8 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return objstore.ErrKVStoreKeyExists
 		}
+
+		s.store.STMPut(stm, in)
 		return nil
 	})
 	if err != nil {
@@ -112,13 +118,51 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 	}
 
+	// Create Cloudlet
 	in.State = edgeproto.TrackedState_CREATE_REQUESTED
 	err = platform.CreateCloudlet(in, updateCloudletCallback)
 	if err != nil {
 		in.State = edgeproto.TrackedState_CREATE_ERROR
 		in.Errors = append(in.Errors, err.Error())
+		err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+			s.store.STMPut(stm, in)
+			return nil
+		})
+		return err
 	}
-	in.State = edgeproto.TrackedState_READY
+
+	// Wait for CRM to connect to controller
+	var cloudletInfo edgeproto.CloudletInfo
+	start := time.Now()
+	for {
+		err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+			if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cloudletInfo) {
+				return objstore.ErrKVStoreKeyNotFound
+			}
+			return nil
+		})
+		if err == nil {
+			break
+		}
+		elapsed := time.Since(start)
+		if elapsed >= (CRMBringupTimeout) {
+			in.State = edgeproto.TrackedState_CREATE_ERROR
+			in.Errors = append(in.Errors, "crm bringup timed out")
+			break
+		}
+		// Wait till timeout
+		time.Sleep(10 * time.Second)
+	}
+
+	if in.State != edgeproto.TrackedState_CREATE_ERROR {
+		in.State = edgeproto.TrackedState_READY
+		cb.Send(&edgeproto.Result{Message: "Created Cloudlet successfully"})
+	}
+
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		s.store.STMPut(stm, in)
+		return nil
+	})
 
 	in.TimeLimits.CreateClusterInstTimeout = int64(cloudcommon.CreateClusterInstTimeout)
 	in.TimeLimits.UpdateClusterInstTimeout = int64(cloudcommon.UpdateClusterInstTimeout)
@@ -127,12 +171,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	in.TimeLimits.UpdateAppInstTimeout = int64(cloudcommon.UpdateAppInstTimeout)
 	in.TimeLimits.DeleteAppInstTimeout = int64(cloudcommon.DeleteAppInstTimeout)
 
-	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		s.store.STMPut(stm, in)
-		return nil
-	})
-
-	return err
+	return nil
 }
 
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
