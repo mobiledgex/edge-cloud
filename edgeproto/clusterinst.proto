@@ -1,4 +1,4 @@
-// A ClusterInst defines a cluster on a particular Cloudlet
+// ClusterInst defines a kubernetes cluster on a particular Cloudlet
 
 syntax = "proto3";
 package edgeproto;
@@ -15,25 +15,25 @@ import "gogoproto/gogo.proto";
 
 // ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster Instance state (ClusterInstInfo).
 message ClusterInstKey {
-  // Cluster key
+  // Name of Cluster
   ClusterKey cluster_key = 1 [(gogoproto.nullable) = false];
-  // Cloudlet on which the Cluster is instantiated
+  // Name of Cloudlet on which the Cluster is instantiated
   CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
-  // Developer organization this cluster belongs to
+  // Name of Developer that this cluster belongs to
   string developer = 3;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
 }
 
-// ClusterInst is an instance of a Cluster on a Cloudlet. It is defined by a Cluster plus a Cloudlet key. This separation of the definition of the Cluster versus its instance is unique to Mobiledgex, and allows the Developer to provide the Cluster definition, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
-// When a Cluster is instantiated on a Cloudlet, the user may override the default ClusterFlavor of the Cluster. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.
+// ClusterInst is an instance of a Cluster on a Cloudlet. 
+// It is defined by a Cluster, Cloudlet, and Developer key. 
 message ClusterInst {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Unique key
   ClusterInstKey key = 2 [(gogoproto.nullable) = false];
-  // Node flavor 
+  // Flavor of the k8s node 
   FlavorKey flavor = 3 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Liveness of instance (see Liveness)
   Liveness liveness = 9 [(protogen.backend) = true];
@@ -45,17 +45,17 @@ message ClusterInst {
   repeated string errors = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Override actions to CRM
   CRMOverride crm_override = 6 [(protogen.hidetag) = "nocmp"];
-  // IP access type
+  // IP access type (RootLB Type)
   IpAccess ip_access = 7 [(protogen.backend) = true];
-  // allocated IP for dedicated access
+  // Allocated IP for dedicated access
   string allocated_ip = 8 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Cloudlet specific node flavor
   string node_flavor = 11 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
-  // Deployment target (kubernetes, docker, kvm, etc)
+  // Deployment type (kubernetes or docker)
   string deployment = 15 [(protogen.backend) = true];
-  // number of masters
+  // Number of k8s masters (In case of docker deployment, this field is not required)
   uint32 num_masters = 13;
-  // number of nodes 
+  // Number of k8s nodes (In case of docker deployment, this field is not required)
   uint32 num_nodes = 14;
   // status is used to reflect progress of creation or other events
   StatusInfo status = 16 [(protogen.backend) = true, (gogoproto.nullable) = false];
@@ -70,7 +70,7 @@ message ClusterInst {
   option (protogen.notify_filter_cloudlet_key) = true;
   option (protocmd.noconfig) = "Liveness,Auto,MasterFlavor,NodeFlavor,AllocatedIp,Status";
   option (protogen.generate_wait_for_state) = "TrackedState";
-  option (protocmd.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,operator=Key.CloudletKey.OperatorKey.Name";
+  option (protocmd.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,operator=Key.CloudletKey.OperatorKey.Name,developer=Key.Developer";
 }
 
 service ClusterInstApi {

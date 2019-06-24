@@ -287,12 +287,6 @@ func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
-
-func (e {{.Name}}) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName({{.Name}}_CamelName, int32(e))
-	return []byte("\""+str+"\""), nil
-}
-
 `
 
 type MatchType int

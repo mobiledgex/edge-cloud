@@ -12,6 +12,14 @@ cloudlets:
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  timelimits:
+    createclusterinsttimeout: 3000000000
+    updateclusterinsttimeout: 2000000000
+    deleteclusterinsttimeout: 2000000000
+    createappinsttimeout: 3000000000
+    updateappinsttimeout: 2000000000
+    deleteappinsttimeout: 2000000000
+
 - key:
     operatorkey:
       name: tmus
@@ -22,6 +30,14 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  timelimits:
+    createclusterinsttimeout: 3000000000
+    updateclusterinsttimeout: 2000000000
+    deleteclusterinsttimeout: 2000000000
+    createappinsttimeout: 3000000000
+    updateappinsttimeout: 2000000000
+    deleteappinsttimeout: 2000000000
+
 flavors:
 - key:
     name: x1.tiny
@@ -106,7 +122,7 @@ apps:
       name: AcmeAppCo
     name: someapplication1
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
   defaultflavor:
@@ -168,7 +184,7 @@ apps:
           - name: mexgitlabsecret
           containers:
           - name: someapplication1
-            image: mobiledgex_AcmeAppCo/someapplication1:1.0
+            image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
             imagePullPolicy: Always
             ports:
             - containerPort: 80
@@ -183,7 +199,7 @@ apps:
       name: AcmeAppCo
     name: someapplication2
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication2:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:22,udp:10003
   defaultflavor:
@@ -240,7 +256,7 @@ apps:
           - name: mexgitlabsecret
           containers:
           - name: someapplication2
-            image: mobiledgex_AcmeAppCo/someapplication2:1.0
+            image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication2:1.0
             imagePullPolicy: Always
             ports:
             - containerPort: 22
@@ -312,7 +328,7 @@ apps:
   - kind: envVarsYaml
     config: |
       - name: MEX_INFLUXDB_ADDR
-        value: 0.0.0.0:8086
+        value: http://0.0.0.0:8086
       - name: MEX_INFLUXDB_USER
         value: root
       - name: MEX_INFLUXDB_PASS

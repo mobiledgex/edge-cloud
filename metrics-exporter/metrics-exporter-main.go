@@ -9,13 +9,14 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
 var promAddress = flag.String("apiAddr", "0.0.0.0:9090", "Prometheus address to bind to")
-var influxdb = flag.String("influxdb", "0.0.0.0:8086", "InfluxDB address to export to")
+var influxdb = flag.String("influxdb", "http://0.0.0.0:8086", "InfluxDB address to export to")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var operatorName = flag.String("operator", "local", "Cloudlet Operator Name")
 var cloudletName = flag.String("cloudlet", "local", "Cloudlet Name")
@@ -43,7 +44,6 @@ var Env = map[string]string{
 	"INFLUXDB_PASS": "root",
 }
 
-var InfluxDBName = "clusterstats"
 var influxQ *influxq.InfluxQ
 
 var sigChan chan os.Signal
@@ -105,8 +105,8 @@ func main() {
 	initEnv()
 	fmt.Printf("InfluxDB is at: %s\n", *influxdb)
 	fmt.Printf("Metrics collection interval is %s\n", *collectInterval)
-	influxQ = influxq.NewInfluxQ(InfluxDBName)
-	err = influxQ.Start(*influxdb)
+	influxQ = influxq.NewInfluxQ(cloudcommon.DeveloperMetricsDbName)
+	err = influxQ.Start(*influxdb, "")
 	if err != nil {
 		log.FatalLog("Failed to start influx queue",
 			"address", *influxdb, "err", err)

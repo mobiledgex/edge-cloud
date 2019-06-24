@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -40,6 +41,23 @@ var OperatingSystemLinux = "linux"
 // network schemes for use by standalone deployments (e.g. DIND)
 var NetworkSchemePublicIP = "publicip"
 var NetworkSchemePrivateIP = "privateip"
+
+// Metrics common variables - TODO move to edge-cloud-infra after metrics-exporter chagnes
+var DeveloperMetricsDbName = "clusterstats"
+var DeveloperAppMetrics = "crm-appinst"
+var DeveloperClusterMetric = "crm-cluster"
+
+// TODO: these timeouts should be adjust based on target platform,
+// as some platforms (azure, etc) may take much longer.
+// These timeouts should be at least long enough for the controller and
+// CRM to exchange an initial set of messages (i.e. 10 sec or so).
+var CreateAppInstTimeout = 30 * time.Minute
+var UpdateAppInstTimeout = 20 * time.Minute
+var DeleteAppInstTimeout = 20 * time.Minute
+
+var CreateClusterInstTimeout = 30 * time.Minute
+var UpdateClusterInstTimeout = 20 * time.Minute
+var DeleteClusterInstTimeout = 20 * time.Minute
 
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.

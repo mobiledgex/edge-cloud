@@ -23,11 +23,27 @@ message CloudletKey {
   option (gogoproto.gostring) = true;
 }
 
+// time limits for cloudlet create, update and delete operations
+message OperationTimeLimits{
+    // max time to create a cluster instance
+    int64 create_cluster_inst_timeout = 1;
+    // max time to update a cluster instance
+    int64 update_cluster_inst_timeout = 2;
+    // max time to delete a cluster instance
+    int64 delete_cluster_inst_timeout = 3;
+    // max time to create an app instance
+    int64 create_app_inst_timeout = 4;
+    // max time to update an app instance
+    int64 update_app_inst_timeout = 5;
+    // max time to delete an app instance
+    int64 delete_app_inst_timeout = 6;
+}
+
 // properites common to all cloudlets
 message CloudletInfraCommon{
     // the mex docker registry, e.g.  registry.mobiledgex.net:5000. 
     string docker_registry = 1;
-     // DNS Zone
+    // DNS Zone
     string dns_zone = 2;
     // registry file server contains files which get pulled on instantiation such as certs and images
     string registry_file_server = 3;
@@ -37,9 +53,9 @@ message CloudletInfraCommon{
     string cf_user = 5; //MEX_CF_KEY
     // Docker registry password
     string docker_reg_pass = 6; //MEX_DOCKER_REG_PASS
-     // network scheme
+    // network scheme
     string network_scheme = 7;
-     // the name of the docker registry secret, e.g. mexgitlabsecret
+    // the name of the docker registry secret, e.g. mexgitlabsecret
     string docker_registry_secret = 8;
 }
 
@@ -91,8 +107,7 @@ message CloudletInfraProperties{
     GcpProperties gcp_properties = 5;
 }
 
-// A Cloudlet is a set of compute resources at a particular location, typically an Operator's regional data center, or a cell tower. The Cloudlet is managed by a Cloudlet Resource Manager, which communicates with the Mobiledgex Controller and allows AppInsts (application instances) to be instantiated on the Cloudlet.
-// A Cloudlet will be created by either a Mobiledgex admin or an Operator that provides the Cloudlet.
+// A Cloudlet is a set of compute resources at a particular location, provided by an Operator. 
 message Cloudlet {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
@@ -108,22 +123,24 @@ message Cloudlet {
   string static_ips = 7;
   // Number of dynamic IPs available for dynamic IP support
   int32 num_dynamic_ips = 8;
+  // time limits
+  OperationTimeLimits time_limits = 9 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Address of controller API
-  string controller_addr = 9;
+  string controller_addr = 10;
   // Platform type of Cloudlet
-  string platform = 10;
+  string platform = 11;
   // Address to vault
-  string vault_addr = 11;
+  string vault_addr = 12;
   // Physical infrastructure cloudlet name, defaults to cloudlet name in cloudletKey
-  string physical_name = 12;
+  string physical_name = 13;
   // Server port to which cloudlet will bind to
-  int32 bind_port = 13;
+  int32 bind_port = 14;
   // Current state of the cloudlet
-  TrackedState state = 14 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  TrackedState state = 15 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Any errors trying to create, update, or delete the Cloudlet.
-  repeated string errors = 15 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  repeated string errors = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // status is used to reflect progress of creation or other events
-  StatusInfo status = 16 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  StatusInfo status = 17 [(protogen.backend) = true, (gogoproto.nullable) = false];
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -132,7 +149,8 @@ message Cloudlet {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
-  option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status";
+  option (protogen.notify_recv_hook) = true;
+  option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status";
   option (protocmd.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }
 

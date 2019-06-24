@@ -88,7 +88,7 @@ func GetGrpcDialOption(config *tls.Config) grpc.DialOption {
 }
 
 // GetTLSClientConfig gets TLS Config for REST api connection
-func GetTLSClientConfig(addr string, tlsCertFile string) (*tls.Config, error) {
+func GetTLSClientConfig(tlsCertFile string) (*tls.Config, error) {
 	if tlsCertFile != "" {
 		certPool, err := GetClientCertPool(tlsCertFile)
 		if err != nil {

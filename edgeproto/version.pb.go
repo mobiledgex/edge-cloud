@@ -154,11 +154,6 @@ func (e *VersionHash) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e VersionHash) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(VersionHash_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
-}
-
 // Keys being hashed:
 // AppInstKey
 // AppKey

@@ -7,6 +7,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -118,6 +119,13 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.Errors = append(in.Errors, err.Error())
 	}
 	in.State = edgeproto.TrackedState_READY
+
+	in.TimeLimits.CreateClusterInstTimeout = int64(cloudcommon.CreateClusterInstTimeout)
+	in.TimeLimits.UpdateClusterInstTimeout = int64(cloudcommon.UpdateClusterInstTimeout)
+	in.TimeLimits.DeleteClusterInstTimeout = int64(cloudcommon.DeleteClusterInstTimeout)
+	in.TimeLimits.CreateAppInstTimeout = int64(cloudcommon.CreateAppInstTimeout)
+	in.TimeLimits.UpdateAppInstTimeout = int64(cloudcommon.UpdateAppInstTimeout)
+	in.TimeLimits.DeleteAppInstTimeout = int64(cloudcommon.DeleteAppInstTimeout)
 
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		s.store.STMPut(stm, in)

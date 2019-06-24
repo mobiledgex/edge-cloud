@@ -3,10 +3,9 @@ package process
 import "os/exec"
 
 type Vault struct {
-	Common      `yaml:",inline"`
-	DmeSecret   string
-	McormSecret string
-	cmd         *exec.Cmd
+	Common    `yaml:",inline"`
+	DmeSecret string
+	cmd       *exec.Cmd
 }
 type Etcd struct {
 	Common         `yaml:",inline"`
@@ -22,9 +21,11 @@ type Controller struct {
 	ApiAddr       string
 	HttpAddr      string
 	NotifyAddr    string
+	InfluxAddr    string
 	TLS           TLSCerts
 	ShortTimeouts bool
 	cmd           *exec.Cmd
+	TestMode      bool
 }
 type Dme struct {
 	Common      `yaml:",inline"`
@@ -79,6 +80,7 @@ type Influx struct {
 	DataDir  string
 	HttpAddr string
 	Config   string // set during Start
+	TLS      TLSCerts
 	cmd      *exec.Cmd
 }
 type ClusterSvc struct {

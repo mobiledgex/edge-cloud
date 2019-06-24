@@ -143,11 +143,33 @@ func updateAppFields(in *edgeproto.App) error {
 		}
 	}
 
+	if !cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) {
+		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
+			parts := strings.Split(in.ImagePath, "/")
+			// Append default registry address for internal image paths
+			if len(parts) < 2 || !strings.Contains(parts[0], ".") {
+				return fmt.Errorf("imagepath should be full registry URL: <domain-name>/<registry-path>")
+			}
+			if !*testMode {
+				err := cloudcommon.ValidateDockerRegistryPath(in.ImagePath, *vaultAddr)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	if in.ScaleWithCluster && in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
 		return fmt.Errorf("app scaling is only supported for Kubernetes deployments")
 	}
 
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
+		if !*testMode {
+			err := cloudcommon.ValidateVMRegistryPath(in.ImagePath, *vaultAddr)
+			if err != nil {
+				return err
+			}
+		}
 		urlInfo := strings.Split(in.ImagePath, "#")
 		if len(urlInfo) != 2 {
 			return fmt.Errorf("md5 checksum of image is required. Please append checksum to imagepath: \"<url>#md5:checksum\"")
@@ -202,7 +224,13 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
 		return &edgeproto.Result{}, fmt.Errorf("deployment is not valid for image type")
 	}
-
+	if in.Deployment == cloudcommon.AppDeploymentTypeDocker {
+		if in.AccessPorts != "" {
+			if strings.Contains(in.AccessPorts, "http") {
+				return &edgeproto.Result{}, fmt.Errorf("Deployment Type Docker and HTTP access ports are incompatable")
+			}
+		}
+	}
 	err = updateAppFields(in)
 	if err != nil {
 		return &edgeproto.Result{}, err

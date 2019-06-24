@@ -53,10 +53,10 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 			defer cancel()
 			reply, err = cmd.SendLocalRequest(ctx, req)
 		}
-		if err == nil && reply.Answer != "" {
+		if err == nil && reply != nil {
 			req.Answer = reply.Answer
+			req.Err = reply.Err
 		}
-		// TODO: process multiple replies with Err set to not found
 		return nil
 	}, nil)
 	if err != nil {
@@ -84,16 +84,24 @@ func (s *ExecApi) SendLocalRequest(ctx context.Context, req *edgeproto.ExecReque
 	s.requests[req.Offer] = sr
 	s.mux.Unlock()
 
-	execRequestSendMany.Update(req)
-
-	// wait for reply or timeout
+	// SendMany filters based on CloudletKey, so will not send if
+	// the attached CRM(s) aren't for that CloudletKey. This will
+	// return the number of messages sent. We don't need to refcount
+	// multiple replies because there should only be one CRM in the
+	// system that matches the CloudletKey, so there should only ever
+	// be one reply.
 	var err error
-	select {
-	case <-sr.done:
-	case <-time.After(execRequestTimeout):
-		err = fmt.Errorf("ExecRequest timed out")
+	count := execRequestSendMany.Update(req)
+	if count == 0 {
+		err = fmt.Errorf("no matching CRMs")
+	} else {
+		// wait for reply or timeout
+		select {
+		case <-sr.done:
+		case <-time.After(execRequestTimeout):
+			err = fmt.Errorf("ExecRequest timed out")
+		}
 	}
-
 	s.mux.Lock()
 	delete(s.requests, req.Offer)
 	s.mux.Unlock()
@@ -115,5 +123,6 @@ func (s *ExecApi) Recv(msg *edgeproto.ExecRequest) {
 		return
 	}
 	sr.req.Answer = msg.Answer
+	sr.req.Err = msg.Err
 	sr.done <- true
 }

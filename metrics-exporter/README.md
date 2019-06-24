@@ -41,7 +41,7 @@ Usage of metrics-exporter:
   -d string
     	comma separated list of [etcd api notify dmedb dmereq locapi mexos metrics]
   -influxdb string
-    	InfluxDB address to export to (default "0.0.0.0:8086")
+    	InfluxDB address to export to (default "http://0.0.0.0:8086")
   -interval duration
     	Metrics collection interval (default 15s)
   -operator string

@@ -62,7 +62,7 @@ apps:
       name: AcmeAppCo
     name: someapplication1
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
   defaultflavor:
@@ -84,7 +84,7 @@ apps:
   - kind: envVarsYaml
     config: |
       - name: MEX_INFLUXDB_ADDR
-        value: 0.0.0.0:8086
+        value: http://0.0.0.0:8086
       - name: MEX_INFLUXDB_USER
         value: root
       - name: MEX_INFLUXDB_PASS

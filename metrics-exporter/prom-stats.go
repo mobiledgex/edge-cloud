@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -328,7 +329,7 @@ func (p *PromStats) RunNotify() {
 func ClusterStatToMetric(ts *types.Timestamp, stat *ClustPromStat) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
-	metric.Name = "crm-cluster"
+	metric.Name = cloudcommon.DeveloperClusterMetric
 	metric.AddTag("operator", *operatorName)
 	metric.AddTag("cloudlet", *cloudletName)
 	metric.AddTag("cluster", *clusterName)
@@ -348,7 +349,7 @@ func ClusterStatToMetric(ts *types.Timestamp, stat *ClustPromStat) *edgeproto.Me
 func PodStatToMetric(ts *types.Timestamp, key *MetricAppInstKey, stat *PodPromStat) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
-	metric.Name = "crm-appinst"
+	metric.Name = cloudcommon.DeveloperAppMetrics
 	metric.AddTag("operator", key.operator)
 	metric.AddTag("cloudlet", key.cloudlet)
 	metric.AddTag("cluster", key.cluster)

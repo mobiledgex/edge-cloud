@@ -1078,12 +1078,6 @@ func (e *NodeType) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
-
-func (e NodeType) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(NodeType_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
-}
-
 func (m *NodeKey) Size() (n int) {
 	var l int
 	_ = l

@@ -76,16 +76,17 @@ func (x IpSupport) String() string {
 }
 func (IpSupport) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{1} }
 
+// IpAccess indicates the type of RootLB that Developer requires for their App
 type IpAccess int32
 
 const (
 	// Unknown IP access
 	IpAccess_IP_ACCESS_UNKNOWN IpAccess = 0
-	// Dedicated IP access
+	// Dedicated RootLB
 	IpAccess_IP_ACCESS_DEDICATED IpAccess = 1
-	// Dedicated or shared (prefers dedicated) access
+	// Dedicated or shared (prefers dedicated) RootLB
 	IpAccess_IP_ACCESS_DEDICATED_OR_SHARED IpAccess = 2
-	// Shared IP access
+	// Shared RootLB
 	IpAccess_IP_ACCESS_SHARED IpAccess = 3
 )
 
@@ -382,11 +383,6 @@ func (e *Liveness) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e Liveness) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(Liveness_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
-}
-
 var IpSupportStrings = []string{
 	"IP_SUPPORT_UNKNOWN",
 	"IP_SUPPORT_STATIC",
@@ -466,11 +462,6 @@ func (e *IpSupport) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
-}
-
-func (e IpSupport) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(IpSupport_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
 }
 
 var IpAccessStrings = []string{
@@ -557,11 +548,6 @@ func (e *IpAccess) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
-}
-
-func (e IpAccess) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(IpAccess_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
 }
 
 var TrackedStateStrings = []string{
@@ -695,11 +681,6 @@ func (e *TrackedState) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e TrackedState) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(TrackedState_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
-}
-
 var CRMOverrideStrings = []string{
 	"NO_OVERRIDE",
 	"IGNORE_CRM_ERRORS",
@@ -790,12 +771,6 @@ func (e *CRMOverride) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
-
-func (e CRMOverride) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(CRMOverride_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
-}
-
 func (m *StatusInfo) Size() (n int) {
 	var l int
 	_ = l

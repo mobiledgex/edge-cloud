@@ -50,7 +50,7 @@ func TestVerifyLoc(t *testing.T) {
 
 func setupJwks() {
 	// setup fake JWT key
-	dmecommon.Jwks.Init("foo", "dme", "roleID", "secretID")
+	dmecommon.Jwks.Init("foo", "local", "dme", "roleID", "secretID")
 	dmecommon.Jwks.Meta.CurrentVersion = 1
 	dmecommon.Jwks.Keys[1] = &vault.JWK{
 		Secret:  "12345",

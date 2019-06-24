@@ -2337,11 +2337,6 @@ func (e *OuterEnum) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e OuterEnum) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(OuterEnum_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
-}
-
 var InnerEnumStrings = []string{
 	"INNER0",
 	"INNER1",
@@ -2426,11 +2421,6 @@ func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
-}
-
-func (e TestGen_InnerEnum) MarshalJSON() ([]byte, error) {
-	str := proto.EnumName(TestGen_InnerEnum_CamelName, int32(e))
-	return []byte("\"" + str + "\""), nil
 }
 
 type MatchOptions struct {
