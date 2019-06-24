@@ -88,7 +88,6 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet) (*process.Crm, error) {
 			Hostname: "127.0.0.1",
 		},
 		TLS: process.TLSCerts{
-			// ServerCert: "/Users/ashishjain/go/src/github.com/mobiledgex/edge-cloud/tls/out/mex-server.crt",
 			ServerCert: "tls/out/mex-server.crt",
 		},
 	}, nil
