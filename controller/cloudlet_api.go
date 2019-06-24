@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
@@ -72,6 +73,15 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
 
+	roleID := os.Getenv("VAULT_ROLE_ID")
+	if roleID == "" {
+		return fmt.Errorf("Env variable VAULT_ROLE_ID not set")
+	}
+	secretID := os.Getenv("VAULT_SECRET_ID")
+	if secretID == "" {
+		return fmt.Errorf("Env variable VAULT_SECRET_ID not set")
+	}
+
 	if in.BindPort < 1 {
 		in.BindPort = DefaultBindPort
 	}
@@ -101,7 +111,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 	}
 
-	in.State = edgeproto.TrackedState_CREATING
+	in.State = edgeproto.TrackedState_CREATE_REQUESTED
 	err = platform.CreateCloudlet(in, updateCloudletCallback)
 	if err != nil {
 		in.State = edgeproto.TrackedState_CREATE_ERROR
