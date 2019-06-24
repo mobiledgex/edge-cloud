@@ -92,7 +92,8 @@ func (*AppInst) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []i
 type AppInstRuntime struct {
 	// List of container names
 	ContainerIds []string `protobuf:"bytes,1,rep,name=container_ids,json=containerIds" json:"container_ids,omitempty"`
-	ConsoleUrl   string   `protobuf:"bytes,2,opt,name=console_url,json=consoleUrl,proto3" json:"console_url,omitempty"`
+	// URL to access VM console
+	ConsoleUrl string `protobuf:"bytes,2,opt,name=console_url,json=consoleUrl,proto3" json:"console_url,omitempty"`
 }
 
 func (m *AppInstRuntime) Reset()                    { *m = AppInstRuntime{} }
