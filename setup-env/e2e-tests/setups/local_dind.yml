@@ -23,6 +23,9 @@ influxs:
 - name: influx1
   datadir: /var/tmp/edge-cloud-local-influx/influx1
   httpaddr: "127.0.0.1:8086"
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
   hostname: "127.0.0.1"
 
 etcds:
@@ -53,6 +56,7 @@ controllers:
   apiaddr: "0.0.0.0:55001"
   httpaddr: "0.0.0.0:36001"
   notifyaddr: "127.0.0.1:37001"
+  influxaddr: "https://127.0.0.1:8086"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -96,6 +100,6 @@ clustersvcs:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   promports: "tcp:9090"
-  influxdb: "host.docker.internal:8086"
+  influxdb: "https://host.docker.internal:8086"
   interval: "5s"
   hostname: "127.0.0.1"

@@ -47,6 +47,10 @@ type InfluxOptions struct {
 	HttpAddr string
 	// BindAddr is the listener addr for clustering multiple instances
 	BindAddr string
+	// TLS server certificate
+	TlsCertfile string
+	// TLS server cert key
+	TlsCertKey string
 }
 
 type InfluxOp func(opts *InfluxOptions)
@@ -57,6 +61,14 @@ func WithHttpAddr(addr string) InfluxOp {
 
 func WithBindAddr(addr string) InfluxOp {
 	return func(opts *InfluxOptions) { opts.BindAddr = addr }
+}
+
+func WithSeverCert(cert string) InfluxOp {
+	return func(opts *InfluxOptions) { opts.TlsCertfile = cert }
+}
+
+func WithSeverCertKey(key string) InfluxOp {
+	return func(opts *InfluxOptions) { opts.TlsCertKey = key }
 }
 
 func (s *InfluxOptions) Apply(ops ...InfluxOp) {
@@ -84,4 +96,9 @@ bind-address = "{{.BindAddr}}"
 [http]
   enabled = true
   bind-address = "{{.HttpAddr}}"
+{{if .TlsCertfile}}
+  https-enabled = true
+  https-certificate = "{{.TlsCertfile}}"
+  https-private-key = "{{.TlsCertKey}}"
+{{end}}
 `

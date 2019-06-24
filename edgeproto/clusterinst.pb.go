@@ -36,11 +36,11 @@ var _ = math.Inf
 
 // ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster Instance state (ClusterInstInfo).
 type ClusterInstKey struct {
-	// Cluster key
+	// Name of Cluster
 	ClusterKey ClusterKey `protobuf:"bytes,1,opt,name=cluster_key,json=clusterKey" json:"cluster_key"`
-	// Cloudlet on which the Cluster is instantiated
+	// Name of Cloudlet on which the Cluster is instantiated
 	CloudletKey CloudletKey `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey" json:"cloudlet_key"`
-	// Developer organization this cluster belongs to
+	// Name of Developer that this cluster belongs to
 	Developer string `protobuf:"bytes,3,opt,name=developer,proto3" json:"developer,omitempty"`
 }
 
@@ -49,14 +49,14 @@ func (m *ClusterInstKey) String() string            { return proto.CompactTextSt
 func (*ClusterInstKey) ProtoMessage()               {}
 func (*ClusterInstKey) Descriptor() ([]byte, []int) { return fileDescriptorClusterinst, []int{0} }
 
-// ClusterInst is an instance of a Cluster on a Cloudlet. It is defined by a Cluster plus a Cloudlet key. This separation of the definition of the Cluster versus its instance is unique to Mobiledgex, and allows the Developer to provide the Cluster definition, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
-// When a Cluster is instantiated on a Cloudlet, the user may override the default ClusterFlavor of the Cluster. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.
+// ClusterInst is an instance of a Cluster on a Cloudlet.
+// It is defined by a Cluster, Cloudlet, and Developer key.
 type ClusterInst struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique key
 	Key ClusterInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// Node flavor
+	// Flavor of the k8s node
 	Flavor FlavorKey `protobuf:"bytes,3,opt,name=flavor" json:"flavor"`
 	// Liveness of instance (see Liveness)
 	Liveness Liveness `protobuf:"varint,9,opt,name=liveness,proto3,enum=edgeproto.Liveness" json:"liveness,omitempty"`
@@ -68,17 +68,17 @@ type ClusterInst struct {
 	Errors []string `protobuf:"bytes,5,rep,name=errors" json:"errors,omitempty"`
 	// Override actions to CRM
 	CrmOverride CRMOverride `protobuf:"varint,6,opt,name=crm_override,json=crmOverride,proto3,enum=edgeproto.CRMOverride" json:"crm_override,omitempty"`
-	// IP access type
+	// IP access type (RootLB Type)
 	IpAccess IpAccess `protobuf:"varint,7,opt,name=ip_access,json=ipAccess,proto3,enum=edgeproto.IpAccess" json:"ip_access,omitempty"`
-	// allocated IP for dedicated access
+	// Allocated IP for dedicated access
 	AllocatedIp string `protobuf:"bytes,8,opt,name=allocated_ip,json=allocatedIp,proto3" json:"allocated_ip,omitempty"`
 	// Cloudlet specific node flavor
 	NodeFlavor string `protobuf:"bytes,11,opt,name=node_flavor,json=nodeFlavor,proto3" json:"node_flavor,omitempty"`
-	// Deployment target (kubernetes, docker, kvm, etc)
+	// Deployment type (kubernetes or docker)
 	Deployment string `protobuf:"bytes,15,opt,name=deployment,proto3" json:"deployment,omitempty"`
-	// number of masters
+	// Number of k8s masters (In case of docker deployment, this field is not required)
 	NumMasters uint32 `protobuf:"varint,13,opt,name=num_masters,json=numMasters,proto3" json:"num_masters,omitempty"`
-	// number of nodes
+	// Number of k8s nodes (In case of docker deployment, this field is not required)
 	NumNodes uint32 `protobuf:"varint,14,opt,name=num_nodes,json=numNodes,proto3" json:"num_nodes,omitempty"`
 	// status is used to reflect progress of creation or other events
 	Status StatusInfo `protobuf:"bytes,16,opt,name=status" json:"status"`
