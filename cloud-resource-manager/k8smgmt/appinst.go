@@ -70,6 +70,16 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 						case "ContainerCreating":
 							log.DebugLog(log.DebugLevelMexos, "still waiting for pod", "podName", podName, "state", podState)
 						default:
+							// try to find out what error was
+							// TODO: pull events and send
+							// them back as status updates
+							// rather than sending back
+							// full "describe" dump
+							cmd := fmt.Sprintf("%s kubectl describe pod --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
+							out, derr := client.Output(cmd)
+							if derr == nil {
+								return fmt.Errorf("Run container failed: %s", out)
+							}
 							return fmt.Errorf("Pod is unexpected state: %s", podState)
 						}
 					} else {

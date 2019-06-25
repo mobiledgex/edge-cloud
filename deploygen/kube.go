@@ -2,13 +2,14 @@ package deploygen
 
 import (
 	"bytes"
-	"github.com/mobiledgex/edge-cloud/util"
 	"strings"
 	"text/template"
+
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
-var MexRegistry = "docker.mobiledgex.net"
-var MexRegistrySecret = "mexgitlabsecret"
+//var MexRegistry = "docker.mobiledgex.net"
+//var MexRegistrySecret = "mexgitlabsecret"
 
 var kubeLbT *template.Template
 var kubeAppDpT *template.Template
@@ -140,7 +141,7 @@ func (g *kubeBasicGen) kubeApp() {
 		Ports:          g.ports,
 		ImagePath:      g.app.ImagePath,
 		Command:        cs,
-		RegistrySecret: MexRegistrySecret,
+		RegistrySecret: g.app.ImageHost,
 	}
 	buf := bytes.Buffer{}
 	if g.app.ScaleWithCluster {
