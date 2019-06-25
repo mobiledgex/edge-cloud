@@ -151,7 +151,7 @@ func TestCRM(t *testing.T) {
 
 	os.Args = append(os.Args, "-cloudletKey")
 	os.Args = append(os.Args, string(bytes))
-	os.Args = append(os.Args, "-notifyAddrs")
+	os.Args = append(os.Args, "-notifyCtlAddrs")
 	os.Args = append(os.Args, notifyAddr)
 	mainDone, err := startMain(t)
 	if err != nil {

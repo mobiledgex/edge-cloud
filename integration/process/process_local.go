@@ -265,6 +265,10 @@ func (p *Dme) getTlsConfig() *tls.Config {
 
 func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
+	if p.NotifySrvAddr != "" {
+		args = append(args, "--notifySrvAddr")
+		args = append(args, p.NotifySrvAddr)
+	}
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
 		args = append(args, p.ApiAddr)
