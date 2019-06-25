@@ -181,7 +181,7 @@ apps:
         spec:
           volumes:
           imagePullSecrets:
-          - name: mexgitlabsecret
+          - name: registry.mobiledgex.net
           containers:
           - name: someapplication1
             image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -253,7 +253,7 @@ apps:
         spec:
           volumes:
           imagePullSecrets:
-          - name: mexgitlabsecret
+          - name: registry.mobiledgex.net
           containers:
           - name: someapplication2
             image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication2:1.0
