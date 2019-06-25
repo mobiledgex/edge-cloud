@@ -81,6 +81,7 @@ type Influx struct {
 	HttpAddr string
 	Config   string // set during Start
 	TLS      TLSCerts
+	Auth     LocalAuth
 	cmd      *exec.Cmd
 }
 type ClusterSvc struct {

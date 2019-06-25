@@ -27,6 +27,9 @@ influxs:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
   hostname: "127.0.0.1"
+  auth:
+    username: "root"
+    password: "root"
 
 etcds:
 - name: etcd1

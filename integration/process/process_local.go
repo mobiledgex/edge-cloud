@@ -10,8 +10,10 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -30,6 +32,11 @@ type TLSCerts struct {
 	ServerCert string
 	ServerKey  string
 	ClientCert string
+}
+
+type LocalAuth struct {
+	Username string
+	Password string
 }
 
 // EtcdLocal
@@ -328,6 +335,7 @@ func (p *Crm) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
 // InfluxLocal
 
 func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
+	var prefix string
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.CleanStartup {
@@ -337,13 +345,45 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 	}
 
 	configFile, err := influxsup.SetupInflux(p.DataDir,
-		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey))
+		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey), influxsup.WithAuth(p.Auth.Username != ""))
 	if err != nil {
 		return err
 	}
 	p.Config = configFile
 	args := []string{"-config", configFile}
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	if err != nil {
+		return err
+	}
+
+	// if auth is enabled we need to create default user
+	if p.Auth.Username != "" {
+		time.Sleep(5 * time.Second)
+		if p.TLS.ServerCert != "" {
+			prefix = "https://" + p.HttpAddr
+			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		} else {
+			prefix = "http://" + p.HttpAddr
+		}
+
+		resource := "/query"
+		data := url.Values{}
+		data.Set("q", "CREATE USER "+p.Auth.Username+" WITH PASSWORD '"+p.Auth.Password+"' WITH ALL PRIVILEGES")
+		u, _ := url.ParseRequestURI(prefix)
+		u.Path = resource
+		u.RawQuery = data.Encode()
+		urlStr := fmt.Sprintf("%v", u)
+		client := &http.Client{}
+		r, _ := http.NewRequest("POST", urlStr, nil)
+
+		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+		fmt.Printf("Query: %s\n", urlStr)
+		_, err := client.Do(r)
+		if err != nil {
+			return err
+		}
+	}
 	return err
 }
 

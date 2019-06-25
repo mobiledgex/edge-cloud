@@ -105,7 +105,7 @@ func main() {
 	initEnv()
 	fmt.Printf("InfluxDB is at: %s\n", *influxdb)
 	fmt.Printf("Metrics collection interval is %s\n", *collectInterval)
-	influxQ = influxq.NewInfluxQ(cloudcommon.DeveloperMetricsDbName)
+	influxQ = influxq.NewInfluxQ(cloudcommon.DeveloperMetricsDbName, Env["INFLUXDB_USER"], Env["INFLUXDB_PASS"])
 	err = influxQ.Start(*influxdb, "")
 	if err != nil {
 		log.FatalLog("Failed to start influx queue",

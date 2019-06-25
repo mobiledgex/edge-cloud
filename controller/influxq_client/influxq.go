@@ -30,6 +30,8 @@ var InfluxQReconnectDelay time.Duration = time.Second
 
 type InfluxQ struct {
 	dbName    string
+	user      string
+	password  string
 	client    client.Client
 	data      []*edgeproto.Metric
 	done      bool
@@ -42,18 +44,22 @@ type InfluxQ struct {
 	Qfull     uint64
 }
 
-func NewInfluxQ(DBName string) *InfluxQ {
+func NewInfluxQ(DBName, username, password string) *InfluxQ {
 	q := InfluxQ{}
 	q.dbName = DBName
 	q.data = make([]*edgeproto.Metric, 0)
 	q.doPush = make(chan bool, 1)
+	q.user = username
+	q.password = password
 	return &q
 }
 
 func (q *InfluxQ) Start(addr, tlsCert string) error {
 	var err error
 	var conf = client.HTTPConfig{
-		Addr: addr,
+		Addr:     addr,
+		Username: q.user,
+		Password: q.password,
 	}
 	if strings.HasPrefix(addr, "https://") {
 		creds, err := tls.GetTLSClientConfig(tlsCert)

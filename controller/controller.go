@@ -157,7 +157,7 @@ func startServices() error {
 		return fmt.Errorf("Failed to register controller, %v", err)
 	}
 
-	influxQ := influxq.NewInfluxQ(InfluxDBName)
+	influxQ := influxq.NewInfluxQ(InfluxDBName, "root", "root")
 	err = influxQ.Start(*influxAddr, "")
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
