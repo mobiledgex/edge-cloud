@@ -8,7 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 type KubeNames struct {
@@ -30,10 +30,10 @@ func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
 		clusterInst.Key.CloudletKey.OperatorKey.Name)
 }
 
-func GetK8sNodeNameSuffix(clusterInst *edgeproto.ClusterInst) string {
-	cloudletName := clusterInst.Key.CloudletKey.Name
-	clusterName := clusterInst.Key.ClusterKey.Name
-	devName := clusterInst.Key.Developer
+func GetK8sNodeNameSuffix(clusterInstKey *edgeproto.ClusterInstKey) string {
+	cloudletName := clusterInstKey.CloudletKey.Name
+	clusterName := clusterInstKey.ClusterKey.Name
+	devName := clusterInstKey.Developer
 	if devName != "" {
 		return NormalizeName(cloudletName + "-" + clusterName + "-" + devName)
 	}
@@ -58,7 +58,7 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	}
 	kubeNames := KubeNames{}
 	kubeNames.ClusterName = NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
-	kubeNames.K8sNodeNameSuffix = GetK8sNodeNameSuffix(clusterInst)
+	kubeNames.K8sNodeNameSuffix = GetK8sNodeNameSuffix(&clusterInst.Key)
 	kubeNames.AppName = NormalizeName(app.Key.Name)
 	kubeNames.AppURI = appInst.Uri
 	kubeNames.AppImage = NormalizeName(app.ImagePath)
