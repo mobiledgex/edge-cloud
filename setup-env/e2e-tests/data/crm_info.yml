@@ -289,95 +289,7 @@ apps:
           ## https://github.com/coreos/prometheus-operator/issues/926
           ##
           https: true
-- key:
-    developerkey:
-      name: MobiledgeX
-    name: MEXMetricsExporter
-    version: "1.0"
-  imagepath: docker.mobiledgex.net/mobiledgex/images/metrics-exporter:latest
-  imagetype: ImageTypeDocker
-  defaultflavor:
-    name: x1.medium
-  deployment: kubernetes
-  deploymentmanifest: |
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: mexmetricsexporter-deployment
-    spec:
-      replicas: 1
-      selector:
-        matchLabels:
-          run: mexmetricsexporter
-      template:
-        metadata:
-          labels:
-            run: mexmetricsexporter
-        spec:
-          volumes:
-          imagePullSecrets:
-          - name: mexgitlabsecret
-          containers:
-          - name: mexmetricsexporter
-            image: docker.mobiledgex.net/mobiledgex/images/metrics-exporter:latest
-            imagePullPolicy: Always
-            ports:
-  deploymentgenerator: kubernetes-basic
-  delopt: AutoDelete
-  configs:
-  - kind: envVarsYaml
-    config: |
-      - name: MEX_INFLUXDB_ADDR
-        value: http://0.0.0.0:8086
-      - name: MEX_INFLUXDB_USER
-        value: root
-      - name: MEX_INFLUXDB_PASS
-        value: root
-      - name: MEX_SCRAPE_INTERVAL
-        value: 15s
-  - kind: envVarsYaml
-    config: |
-      - name: MEX_CLUSTER_NAME
-        valueFrom:
-          configMapKeyRef:
-            name: mexcluster-info
-            key: ClusterName
-            optional: true
-      - name: MEX_CLOUDLET_NAME
-        valueFrom:
-          configMapKeyRef:
-            name: mexcluster-info
-            key: CloudletName
-            optional: true
-      - name: MEX_OPERATOR_NAME
-        valueFrom:
-          configMapKeyRef:
-            name: mexcluster-info
-            key: OperatorName
-            optional: true
 appinstances:
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX
-      name: MEXMetricsExporter
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication1
-      cloudletkey:
-        operatorkey:
-          name: tmus
-        name: tmus-cloud-1
-      developer: AcmeAppCo
-  cloudletloc:
-    latitude: 31
-    longitude: -91
-  uri: tmus-cloud-1.tmus.mobiledgex.net
-  liveness: LivenessStatic
-  flavor:
-    name: x1.medium
-  state: Ready
 - key:
     appkey:
       developerkey:
@@ -412,28 +324,6 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  state: Ready
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX
-      name: MEXMetricsExporter
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication1
-      cloudletkey:
-        operatorkey:
-          name: tmus
-        name: tmus-cloud-2
-      developer: AcmeAppCo
-  cloudletloc:
-    latitude: 35
-    longitude: -95
-  uri: tmus-cloud-2.tmus.mobiledgex.net
-  liveness: LivenessStatic
-  flavor:
-    name: x1.medium
   state: Ready
 - key:
     appkey:
@@ -550,28 +440,6 @@ appinstances:
       developerkey:
         name: MobiledgeX
       name: MEXPrometheusAppName
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication2
-      cloudletkey:
-        operatorkey:
-          name: tmus
-        name: tmus-cloud-2
-      developer: AcmeAppCo
-  cloudletloc:
-    latitude: 35
-    longitude: -95
-  uri: tmus-cloud-2.tmus.mobiledgex.net
-  liveness: LivenessStatic
-  flavor:
-    name: x1.medium
-  state: Ready
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX
-      name: MEXMetricsExporter
       version: "1.0"
     clusterinstkey:
       clusterkey:
