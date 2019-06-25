@@ -39,8 +39,8 @@ public class VerifyLocation implements Callable {
                               String host, int port, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
-        } else if (!mMatchingEngine.isMexLocationAllowed()) {
-            Log.e(TAG, "Mex Location is disabled.");
+        } else if (!mMatchingEngine.isMatchingEngineLocationAllowed()) {
+            Log.e(TAG, "MatchingEngine location is disabled.");
             mRequest = null;
             return false;
         }
@@ -126,9 +126,9 @@ public class VerifyLocation implements Callable {
                     .verifyLocation(grpcRequest);
 
             // Nothing a sdk user can do below but read the exception cause:
-        } catch (MexKeyStoreException mkse) {
+        } catch (MatchingEngineKeyStoreException mkse) {
             throw new ExecutionException("Exception calling VerifyLocation: ", mkse);
-        } catch (MexTrustStoreException mtse) {
+        } catch (MatchingEngineTrustStoreException mtse) {
             throw new ExecutionException("Exception calling VerifyLocation: ", mtse);
         } catch (KeyManagementException kme) {
             throw new ExecutionException("Exception calling VerifyLocation: ", kme);

@@ -5,6 +5,7 @@ import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.os.Parcel;
 import android.os.PersistableBundle;
 import android.support.annotation.RequiresApi;
 import android.telephony.CarrierConfigManager;
@@ -12,6 +13,7 @@ import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -110,7 +112,7 @@ public class NetworkManager extends SubscriptionManager.OnSubscriptionsChangedLi
      * @throws SecurityException
      */
     @Override
-    public void onSubscriptionsChanged() throws SecurityException {
+    synchronized public void onSubscriptionsChanged() throws SecurityException {
         // Store it for inspection later.
         mActiveSubscriptionInfoList = mSubscriptionManager.getActiveSubscriptionInfoList();
     }
@@ -231,8 +233,25 @@ public class NetworkManager extends SubscriptionManager.OnSubscriptionsChangedLi
         return mSSLEnabled;
     }
 
-    public List<SubscriptionInfo> getActiveSubscriptionInfoList() {
-        return mActiveSubscriptionInfoList;
+    synchronized public List<SubscriptionInfo> getActiveSubscriptionInfoList(boolean clone) {
+        if (clone == false) {
+            return mActiveSubscriptionInfoList;
+        }
+
+        if (mActiveSubscriptionInfoList == null) {
+            return null;
+        }
+
+        List<SubscriptionInfo> subInfoList = new ArrayList<>();
+        for (SubscriptionInfo info : mActiveSubscriptionInfoList) {
+            Parcel p = Parcel.obtain();
+            p.writeValue(info);
+            p.setDataPosition(0);
+            SubscriptionInfo copy = (SubscriptionInfo)p.readValue(SubscriptionInfo.class.getClassLoader());
+            p.recycle();
+            subInfoList.add(copy);
+        }
+        return subInfoList;
     }
 
     public boolean isAllowSwitchIfNoSubscriberInfo() {
@@ -264,7 +283,7 @@ public class NetworkManager extends SubscriptionManager.OnSubscriptionsChangedLi
             // If there are none, the requested network will very likely not succeed.
             // Early exit if API >= 28.
             if (android.os.Build.VERSION.SDK_INT >= 28) {
-                mActiveSubscriptionInfoList = getActiveSubscriptionInfoList();
+                mActiveSubscriptionInfoList = getActiveSubscriptionInfoList(false);
                 if (mNetworkRequest.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) &&
                     mAllowSwitchIfNoSubscriberInfo == false &&
                     (mActiveSubscriptionInfoList == null || mActiveSubscriptionInfoList.size() == 0)) {
