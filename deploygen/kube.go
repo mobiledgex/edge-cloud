@@ -8,9 +8,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
-//var MexRegistry = "docker.mobiledgex.net"
-//var MexRegistrySecret = "mexgitlabsecret"
-
 var kubeLbT *template.Template
 var kubeAppDpT *template.Template
 var kubeAppDsT *template.Template
