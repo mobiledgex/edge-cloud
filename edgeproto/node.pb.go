@@ -498,6 +498,10 @@ var NodeAllFieldsStringMap = map[string]string{
 	NodeFieldNotifyId:                      "Node Field Notify Id",
 }
 
+func (m *Node) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, NodeFieldKey+".")
+}
+
 func (m *Node) DiffFields(o *Node, fields map[string]struct{}) {
 	if m.Key.Name != o.Key.Name {
 		fields[NodeFieldKeyName] = struct{}{}

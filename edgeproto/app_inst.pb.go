@@ -1269,6 +1269,7 @@ var AppInstAllFieldsStringMap = map[string]string{
 	AppInstFieldErrors:                                      "App Inst Field Errors",
 	AppInstFieldCrmOverride:                                 "App Inst Field Crm Override",
 	AppInstFieldRuntimeInfoContainerIds:                     "App Inst Field Runtime Info Container Ids",
+	AppInstFieldRuntimeInfoConsoleUrl:                       "App Inst Field Runtime Info Console Url",
 	AppInstFieldCreatedAtSeconds:                            "App Inst Field Created At Seconds",
 	AppInstFieldCreatedAtNanos:                              "App Inst Field Created At Nanos",
 	AppInstFieldAutoClusterIpAccess:                         "App Inst Field Auto Cluster Ip Access",
@@ -1276,6 +1277,10 @@ var AppInstAllFieldsStringMap = map[string]string{
 	AppInstFieldStatusMaxTasks:                              "App Inst Field Status Max Tasks",
 	AppInstFieldStatusTaskName:                              "App Inst Field Status Task Name",
 	AppInstFieldStatusStepName:                              "App Inst Field Status Step Name",
+}
+
+func (m *AppInst) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, AppInstFieldKey+".")
 }
 
 func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
@@ -2309,10 +2314,15 @@ var AppInstInfoAllFieldsStringMap = map[string]string{
 	AppInstInfoFieldState:                                       "App Inst Info Field State",
 	AppInstInfoFieldErrors:                                      "App Inst Info Field Errors",
 	AppInstInfoFieldRuntimeInfoContainerIds:                     "App Inst Info Field Runtime Info Container Ids",
+	AppInstInfoFieldRuntimeInfoConsoleUrl:                       "App Inst Info Field Runtime Info Console Url",
 	AppInstInfoFieldStatusTaskNumber:                            "App Inst Info Field Status Task Number",
 	AppInstInfoFieldStatusMaxTasks:                              "App Inst Info Field Status Max Tasks",
 	AppInstInfoFieldStatusTaskName:                              "App Inst Info Field Status Task Name",
 	AppInstInfoFieldStatusStepName:                              "App Inst Info Field Status Step Name",
+}
+
+func (m *AppInstInfo) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, AppInstInfoFieldKey+".")
 }
 
 func (m *AppInstInfo) DiffFields(o *AppInstInfo, fields map[string]struct{}) {

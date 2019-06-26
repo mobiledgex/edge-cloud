@@ -1025,6 +1025,10 @@ var ClusterInstAllFieldsStringMap = map[string]string{
 	ClusterInstFieldStatusStepName:                "Cluster Inst Field Status Step Name",
 }
 
+func (m *ClusterInst) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, ClusterInstFieldKey+".")
+}
+
 func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 	if m.Key.ClusterKey.Name != o.Key.ClusterKey.Name {
 		fields[ClusterInstFieldKeyClusterKeyName] = struct{}{}
@@ -1834,6 +1838,10 @@ var ClusterInstInfoAllFieldsStringMap = map[string]string{
 	ClusterInstInfoFieldStatusMaxTasks:                "Cluster Inst Info Field Status Max Tasks",
 	ClusterInstInfoFieldStatusTaskName:                "Cluster Inst Info Field Status Task Name",
 	ClusterInstInfoFieldStatusStepName:                "Cluster Inst Info Field Status Step Name",
+}
+
+func (m *ClusterInstInfo) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, ClusterInstInfoFieldKey+".")
 }
 
 func (m *ClusterInstInfo) DiffFields(o *ClusterInstInfo, fields map[string]struct{}) {

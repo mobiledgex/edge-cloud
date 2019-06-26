@@ -959,6 +959,10 @@ var AppAllFieldsStringMap = map[string]string{
 	AppFieldScaleWithCluster:    "App Field Scale With Cluster",
 }
 
+func (m *App) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, AppFieldKey+".")
+}
+
 func (m *App) DiffFields(o *App, fields map[string]struct{}) {
 	if m.Key.DeveloperKey.Name != o.Key.DeveloperKey.Name {
 		fields[AppFieldKeyDeveloperKeyName] = struct{}{}

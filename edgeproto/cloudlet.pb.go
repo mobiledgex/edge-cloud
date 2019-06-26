@@ -1758,6 +1758,10 @@ var CloudletAllFieldsStringMap = map[string]string{
 	CloudletFieldTimeLimitsDeleteAppInstTimeout:     "Cloudlet Field Time Limits Delete App Inst Timeout",
 }
 
+func (m *Cloudlet) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, CloudletFieldKey+".")
+}
+
 func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 	if m.Key.OperatorKey.Name != o.Key.OperatorKey.Name {
 		fields[CloudletFieldKeyOperatorKeyName] = struct{}{}
@@ -2510,6 +2514,10 @@ var CloudletInfoAllFieldsStringMap = map[string]string{
 	CloudletInfoFieldFlavorsVcpus:       "Cloudlet Info Field Flavors Vcpus",
 	CloudletInfoFieldFlavorsRam:         "Cloudlet Info Field Flavors Ram",
 	CloudletInfoFieldFlavorsDisk:        "Cloudlet Info Field Flavors Disk",
+}
+
+func (m *CloudletInfo) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, CloudletInfoFieldKey+".")
 }
 
 func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {

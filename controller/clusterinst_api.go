@@ -287,11 +287,6 @@ func (s *ClusterInstApi) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.deleteClusterInstInternal(DefCallContext(), in, cb)
 }
 
-func (s *ClusterInstApi)IsKeyField(field string) bool { // TODO generate in mex.go
-	return strings.HasPrefix(field, edgeproto.ClusterInstFieldKey+".")
-}
-
-
 func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
 	// Unsupported for now
 	return s.updateClusterInstInternal(DefCallContext(), in, cb)
@@ -308,7 +303,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	for _, field := range in.Fields {
 		if field == edgeproto.ClusterInstFieldCrmOverride ||
 			field == edgeproto.ClusterInstFieldKey ||
-			s.IsKeyField(field) { // add to mex.go
+			in.IsKeyField(field) {
 			continue
 		} else if field == edgeproto.ClusterInstFieldNumNodes {
 			allowedFields = append(allowedFields, field)

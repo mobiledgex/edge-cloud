@@ -475,6 +475,10 @@ var FlavorAllFieldsStringMap = map[string]string{
 	FlavorFieldDisk:    "Flavor Field Disk",
 }
 
+func (m *Flavor) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, FlavorFieldKey+".")
+}
+
 func (m *Flavor) DiffFields(o *Flavor, fields map[string]struct{}) {
 	if m.Key.Name != o.Key.Name {
 		fields[FlavorFieldKeyName] = struct{}{}

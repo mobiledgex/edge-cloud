@@ -323,6 +323,10 @@ var ControllerAllFieldsStringMap = map[string]string{
 	ControllerFieldKeyAddr: "Controller Field Key Addr",
 }
 
+func (m *Controller) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, ControllerFieldKey+".")
+}
+
 func (m *Controller) DiffFields(o *Controller, fields map[string]struct{}) {
 	if m.Key.Addr != o.Key.Addr {
 		fields[ControllerFieldKeyAddr] = struct{}{}

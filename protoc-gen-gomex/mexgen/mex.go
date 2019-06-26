@@ -503,6 +503,19 @@ func (m *mex) markDiff(names []string, name string) {
 		names = names[:len(names)-1]
 	}
 }
+// generator.EnumDescriptor as formal arg type ?
+func (m *mex) generateIsKeyField(parents, names []string, desc *generator.Descriptor) {
+	message := desc.DescriptorProto
+	for ii, field := range message.Field {
+		if ii == 0 && *field.Name == "fields" {
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		m.P("        return strings.HasPrefix(s, ",strings.Join(append(names, name), ""),  "+\".\")")
+
+		return
+	}
+}
 
 func (m *mex) generateDiffFields(parents, names []string, desc *generator.Descriptor) {
 	message := desc.DescriptorProto
@@ -1340,6 +1353,10 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("")
 		m.P("var ", *message.Name, "AllFieldsStringMap = map[string]string{")
 		m.generateAllStringFieldsMap(AllFieldsGenMap, []string{*message.Name + "Field"}, []string{}, desc)
+		m.P("}")
+		m.P("")
+		m.P("func (m *", *message.Name, ") IsKeyField(s string) bool {")
+		m.generateIsKeyField([]string{}, []string{*message.Name + "Field"}, desc)
 		m.P("}")
 		m.P("")
 		m.P("func (m *", message.Name, ") DiffFields(o *", message.Name, ", fields map[string]struct{}) {")
