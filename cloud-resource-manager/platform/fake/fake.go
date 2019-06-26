@@ -1,6 +1,7 @@
 package fake
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -78,26 +79,29 @@ func (s *Platform) GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *
 	return req.Command, nil
 }
 
-func getCrmProc(cloudlet *edgeproto.Cloudlet) (*process.Crm, error) {
+func getCrmProc(cloudlet *edgeproto.Cloudlet, platType string) (*process.Crm, error) {
+	cloudletKeyStr, err := json.Marshal(cloudlet.Key)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal cloudlet key")
+	}
 	return &process.Crm{
-		ApiAddr:     fmt.Sprintf("0.0.0.0:%d", cloudlet.BindPort),
-		NotifyAddrs: fmt.Sprintf("%s:37001,%s:37002", cloudlet.ControllerAddr, cloudlet.ControllerAddr),
-		CloudletKey: fmt.Sprintf("{\"operator_key\":{\"name\":\"%s\"},\"name\":\"%s\"}", cloudlet.Key.OperatorKey.Name, cloudlet.Key.Name),
-		Platform:    cloudlet.Platform,
+		NotifyAddrs: cloudlet.NotifyCtrlAddrs,
+		CloudletKey: string(cloudletKeyStr),
+		Platform:    platType,
 		Common: process.Common{
 			Hostname: "127.0.0.1",
 		},
 		TLS: process.TLSCerts{
-			ServerCert: "tls/out/mex-server.crt",
+			ServerCert: cloudlet.TlsCertFile,
 		},
 	}, nil
 }
 
-func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.DebugLog(log.DebugLevelMexos, "create fake Cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 
-	crmProc, err := getCrmProc(cloudlet)
+	crmProc, err := getCrmProc(cloudlet, string(pf.Type))
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "fake Cloudlet failed", "err", err)
 		return err
@@ -116,7 +120,7 @@ func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, updateCallback e
 
 func (s *Platform) DeleteCloudlet(cloudlet *edgeproto.Cloudlet) error {
 	log.DebugLog(log.DebugLevelMexos, "delete fake Cloudlet")
-	crmProc, err := getCrmProc(cloudlet)
+	crmProc, err := getCrmProc(cloudlet, "")
 	if err != nil {
 		return err
 	}

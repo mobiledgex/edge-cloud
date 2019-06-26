@@ -15,9 +15,9 @@ var solib = ""
 func GetPlatform(plat string) (pf.Platform, error) {
 	// Building plugins is slow, so directly importable
 	// platforms are not built as plugins.
-	if plat == "dind" {
+	if plat == "DIND" {
 		return &dind.Platform{}, nil
-	} else if plat == "fakecloudlet" {
+	} else if plat == "FAKE" {
 		return &fake.Platform{}, nil
 	}
 

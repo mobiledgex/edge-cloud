@@ -174,6 +174,17 @@ var OperatorData = []edgeproto.Operator{
 		},
 	},
 }
+var PlatformData = []edgeproto.Platform{
+	edgeproto.Platform{
+		Key: edgeproto.PlatformKey{
+			Name: "platform_fake",
+		},
+		Type:         edgeproto.PlatformType_FAKE,
+		Flavor:       FlavorData[0].Key,
+		RegistryPath: "registry.mobiledgex.net/somewhere/edge-cloud:1.0",
+		ImagePath:    "http://somerepo/image/path/ai/1.2.0#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
+	},
+}
 var CloudletData = []edgeproto.Cloudlet{
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{

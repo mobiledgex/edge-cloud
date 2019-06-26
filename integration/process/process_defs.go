@@ -43,7 +43,6 @@ type Dme struct {
 }
 type Crm struct {
 	Common       `yaml:",inline"`
-	ApiAddr      string
 	NotifyAddrs  string
 	CloudletKey  string
 	Platform     string

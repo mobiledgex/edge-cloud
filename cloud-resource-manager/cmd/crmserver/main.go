@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net"
 	"os"
 	"os/signal"
 	"strings"
@@ -22,7 +21,6 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-var bindAddress = flag.String("apiAddr", "0.0.0.0:55099", "Address to bind")
 var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of controller API")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var vaultAddr = flag.String("vaultAddr", "", "Address to vault")
@@ -77,11 +75,6 @@ func main() {
 		log.FatalLog("Failed to get platform %s, %s", *platformName, err.Error())
 	}
 
-	// Start Communictions.
-	listener, err := net.Listen("tcp", *bindAddress)
-	if err != nil {
-		log.FatalLog("Failed to bind", "addr", *bindAddress, "err", err)
-	}
 	controllerData = crmutil.NewControllerData(platform)
 
 	creds, err := tls.GetTLSServerCreds(*tlsCertFile)
@@ -114,14 +107,6 @@ func main() {
 	defer notifyClient.Stop()
 	reflection.Register(grpcServer)
 
-	go func() {
-		if err = grpcServer.Serve(listener); err != nil {
-			log.FatalLog("Failed to serve grpc", "err", err)
-		}
-	}()
-	defer grpcServer.Stop()
-
-	log.InfoLog("Server started", "addr", *bindAddress)
 	dialOption, err := tls.GetTLSClientDialOption(*controllerAddress, *tlsCertFile)
 	if err != nil {
 		log.FatalLog("Failed get TLS options", "error", err)

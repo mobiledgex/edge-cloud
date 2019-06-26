@@ -39,6 +39,8 @@
 		GcpProperties
 		OpenStackProperties
 		CloudletInfraProperties
+		PlatformKey
+		Platform
 		Cloudlet
 		FlavorInfo
 		CloudletInfo
@@ -1769,6 +1771,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(CRMOverride(0)):
 		if en, ok := CRMOverride_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(PlatformType(0)):
+		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(CloudletState(0)):

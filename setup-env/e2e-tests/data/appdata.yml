@@ -62,6 +62,29 @@ developers:
 - key:
     name: Samsung
 
+platforms:
+- key:
+    name: tmus-platform
+  type: fake
+  flavor:
+    name: x1.small
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
+  imagepath: https://artifactory.mobiledgex.net/artifactory/platform-images/openstack/testimg-v1.0.qcow2#md5:a605d8d5385e74b28f60381acd4a9433
+- key:
+    name: azure-platform
+  type: fake
+  flavor:
+    name: x1.tiny
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
+  imagepath: https://artifactory.mobiledgex.net/artifactory/platform-images/azure/testimg-v1.0.qcow2#md5:a605d8d5385e74b28f60381acd4a9433
+- key:
+    name: gcp-platform
+  type: fake
+  flavor:
+    name: x1.medium
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
+  imagepath: https://artifactory.mobiledgex.net/artifactory/platform-images/gcp/testimg-v1.0.qcow2#md5:a605d8d5385e74b28f60381acd4a9433
+
 cloudlets:
 - key:
     operatorkey:
@@ -72,9 +95,9 @@ cloudlets:
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform: fakecloudlet
-  controlleraddr: 127.0.0.1
-  bindport: 55091
+  platform:
+    name: tmus-platform
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
 - key:
     operatorkey:
       name: tmus
@@ -84,9 +107,9 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform: fakecloudlet
-  controlleraddr: 127.0.0.1
-  bindport: 55092
+  platform:
+    name: tmus-platform
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
 - key:
     operatorkey:
       name: tmus
@@ -96,9 +119,9 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform: fakecloudlet
-  controlleraddr: 127.0.0.1
-  bindport: 55093
+  platform:
+    name: tmus-platform
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
 - key:
     operatorkey:
       name: tmus
@@ -108,9 +131,9 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform: fakecloudlet
-  controlleraddr: 127.0.0.1
-  bindport: 55094
+  platform:
+    name: tmus-platform
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
 - key:
     operatorkey:
       name: tmus
@@ -120,9 +143,9 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform: fakecloudlet
-  controlleraddr: 127.0.0.1
-  bindport: 55095
+  platform:
+    name: tmus-platform
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
 - key:
     operatorkey:
       name: tmus
@@ -132,9 +155,9 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform: fakecloudlet
-  controlleraddr: 127.0.0.1
-  bindport: 55096
+  platform:
+    name: tmus-platform
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
 - key:
     operatorkey:
       name: tmus
@@ -144,9 +167,9 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform: fakecloudlet
-  controlleraddr: 127.0.0.1
-  bindport: 55097
+  platform:
+    name: tmus-platform
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
 - key:
     operatorkey:
       name: tmus
@@ -156,9 +179,9 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform: fakecloudlet
-  controlleraddr: 127.0.0.1
-  bindport: 55098
+  platform:
+    name: tmus-platform
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
 - key:
     operatorkey:
       name: azure
@@ -168,9 +191,9 @@ cloudlets:
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform: fakecloudlet
-  controlleraddr: 127.0.0.1
-  bindport: 55099
+  platform:
+    name: azure-platform
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
 - key:
     operatorkey:
       name: gcp
@@ -180,9 +203,9 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform: fakecloudlet
-  controlleraddr: 127.0.0.1
-  bindport: 55100
+  platform:
+    name: gcp-platform
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
 
 apps:
 - key:

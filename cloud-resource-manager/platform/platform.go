@@ -39,7 +39,7 @@ type Platform interface {
 	// Get the command to pass to PlatformClient for the container command
 	GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error)
 	// Create Cloudlet
-	CreateCloudlet(cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error
+	CreateCloudlet(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet
 	DeleteCloudlet(cloudlet *edgeproto.Cloudlet) error
 }

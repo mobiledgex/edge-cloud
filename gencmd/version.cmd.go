@@ -23,6 +23,7 @@ var VersionHashStrings = []string{
 	"Hash00Bdcfa956Ca4Ee42Be87Abcd8Fcaf1C",
 	"Hash0D2D9C0B07Ad989E96Fb3B3A44924316",
 	"Hash2B79F0B6E402045Ee5F68D697B9386Ae",
+	"Hash6983E8B52864A7Bac28Cb8F2Af22E03B",
 }
 
 func init() {

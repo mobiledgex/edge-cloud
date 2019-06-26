@@ -265,10 +265,6 @@ func (p *Dme) getTlsConfig() *tls.Config {
 
 func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
-	if p.ApiAddr != "" {
-		args = append(args, "--apiAddr")
-		args = append(args, p.ApiAddr)
-	}
 	if p.CloudletKey != "" {
 		args = append(args, "--cloudletKey")
 		args = append(args, p.CloudletKey)
@@ -315,15 +311,7 @@ func (p *Crm) StopLocal() {
 
 func (p *Crm) GetExeName() string { return "crmserver" }
 
-func (p *Crm) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
-
-func (p *Crm) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetMutualAuthClientConfig(p.ApiAddr, p.TLS.ClientCert)
-	if err != nil {
-		return nil, err
-	}
-	return connectAPIImpl(timeout, p.ApiAddr, tlsConfig)
-}
+func (p *Crm) LookupArgs() string { return "--cloudletKey " + p.CloudletKey }
 
 // InfluxLocal
 

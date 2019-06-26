@@ -187,6 +187,27 @@ func runDeveloperApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepr
 	return nil
 }
 
+func runPlatformApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
+	pfAPI := edgeproto.NewPlatformApiClient(conn)
+	var err error = nil
+	for _, p := range appdata.Platforms {
+		log.Printf("API %v for platform: %v", mode, p.Key)
+		switch mode {
+		case "create":
+			_, err = pfAPI.CreatePlatform(ctx, &p)
+		case "update":
+			_, err = pfAPI.UpdatePlatform(ctx, &p)
+		case "delete":
+			_, err = pfAPI.DeletePlatform(ctx, &p)
+		}
+		err = ignoreExpectedErrors(mode, err)
+		if err != nil {
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, p.Key, err)
+		}
+	}
+	return nil
+}
+
 func runCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
 	var err error = nil
 	clAPI := edgeproto.NewCloudletApiClient(conn)
@@ -379,6 +400,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in cloudlet API %v\n", err)
 				rc = false
 			}
+			err = runPlatformApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in platform API %v\n", err)
+				rc = false
+			}
 			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in developer API %v\n", err)
@@ -410,6 +436,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in developer API %v\n", err)
+				rc = false
+			}
+			err = runPlatformApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in platform API %v\n", err)
 				rc = false
 			}
 			err = runCloudletApi(ctrlapi, ctx, &appData, api)

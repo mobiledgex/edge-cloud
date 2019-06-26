@@ -260,32 +260,6 @@ func GetDme(dmename string) *process.Dme {
 	return nil //unreachable
 }
 
-func ConnectCrm(p *process.Crm, c chan ReturnCodeWithText) {
-	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
-	if p.ApiAddr == ApiAddrNone {
-		c <- ReturnCodeWithText{true, "skipped nonexistent addr " + p.Name}
-	}
-	api, err := p.ConnectAPI(10 * time.Second)
-	if err != nil {
-		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
-		return
-	}
-	api.Close()
-	// check that controller sees crm online (has received cloudletinfo),
-	// which is required before create clusterinst/appinst will work.
-	if len(Deployment.Controllers) > 0 {
-		err = checkCloudletState(p, 10*time.Second)
-		if err != nil {
-			c <- ReturnCodeWithText{false, "Ok connect to " + p.Name + " but " + err.Error()}
-		} else {
-			c <- ReturnCodeWithText{true, "OK connect to " + p.Name + " with CloudletInfo"}
-		}
-	} else {
-		// this is a CRM only test
-		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
-	}
-}
-
 func ConnectDme(p *process.Dme, c chan ReturnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
 	api, err := p.ConnectAPI(10 * time.Second)

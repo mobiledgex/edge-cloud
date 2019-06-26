@@ -7,16 +7,10 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
-	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
-)
-
-const (
-	DefaultBindPort   = 55091
-	CRMBringupTimeout = 5 * time.Minute
 )
 
 type CloudletApi struct {
@@ -57,6 +51,17 @@ func (s *CloudletApi) UsesOperator(in *edgeproto.OperatorKey) bool {
 	return false
 }
 
+func (s *CloudletApi) UsesPlatform(in *edgeproto.PlatformKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key, _ := range s.cache.Objs {
+		if s.cache.Objs[key].Platform.Matches(in) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_UNKNOWN {
 		in.IpSupport = edgeproto.IpSupport_IP_SUPPORT_DYNAMIC
@@ -78,18 +83,32 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
 
-	roleID := os.Getenv("VAULT_ROLE_ID")
-	if roleID == "" {
+	// Vault controller level credentials are required to access
+	// registry credentials
+	roleId := os.Getenv("VAULT_ROLE_ID")
+	if roleId == "" {
 		return fmt.Errorf("Env variable VAULT_ROLE_ID not set")
 	}
-	secretID := os.Getenv("VAULT_SECRET_ID")
-	if secretID == "" {
+	secretId := os.Getenv("VAULT_SECRET_ID")
+	if secretId == "" {
 		return fmt.Errorf("Env variable VAULT_SECRET_ID not set")
 	}
 
-	if in.BindPort < 1 {
-		in.BindPort = DefaultBindPort
+	// Vault CRM level credentials are required to access
+	// instantiate crmserver
+	crmRoleId := os.Getenv("VAULT_CRM_ROLE_ID")
+	if crmRoleId == "" {
+		return fmt.Errorf("Env variable VAULT_CRM_ROLE_ID not set")
 	}
+	crmSecretId := os.Getenv("VAULT_CRM_SECRET_ID")
+	if crmSecretId == "" {
+		return fmt.Errorf("Env variable VAULT_CRM_SECRET_ID not set")
+	}
+
+	in.TlsCertFile = *tlsCertFile
+	in.CrmRoleId = crmRoleId
+	in.CrmSecretId = crmSecretId
+	in.VaultAddr = *vaultAddr
 
 	in.TimeLimits.CreateClusterInstTimeout = int64(cloudcommon.CreateClusterInstTimeout)
 	in.TimeLimits.UpdateClusterInstTimeout = int64(cloudcommon.UpdateClusterInstTimeout)
@@ -98,20 +117,23 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	in.TimeLimits.UpdateAppInstTimeout = int64(cloudcommon.UpdateAppInstTimeout)
 	in.TimeLimits.DeleteAppInstTimeout = int64(cloudcommon.DeleteAppInstTimeout)
 
+	pf := edgeproto.Platform{}
+	pfFlavor := edgeproto.Flavor{}
+
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return objstore.ErrKVStoreKeyExists
+		}
+		if !platformApi.store.STMGet(stm, &in.Platform, &pf) {
+			return fmt.Errorf("Platform %s not found", in.Platform.Name)
+		}
+		if !flavorApi.store.STMGet(stm, &pf.Flavor, &pfFlavor) {
+			return fmt.Errorf("Platform flavor %s not found", pf.Flavor.Name)
 		}
 
 		s.store.STMPut(stm, in)
 		return nil
 	})
-	if err != nil {
-		return err
-	}
-
-	// Load platform implementation
-	platform, err := pfutils.GetPlatform(in.Platform)
 	if err != nil {
 		return err
 	}
@@ -126,15 +148,16 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	}
 
 	// Create Cloudlet
-	in.State = edgeproto.TrackedState_CREATE_REQUESTED
-	err = platform.CreateCloudlet(in, updateCloudletCallback)
+	in.State = edgeproto.TrackedState_CREATING
+	_, err = s.store.Create(in, s.sync.syncWait)
+	if err != nil {
+		return err
+	}
+	err = cloudletPlatform.CreateCloudlet(in, &pf, &pfFlavor, updateCloudletCallback)
 	if err != nil {
 		in.State = edgeproto.TrackedState_CREATE_ERROR
 		in.Errors = append(in.Errors, err.Error())
-		err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-			s.store.STMPut(stm, in)
-			return nil
-		})
+		_, err = s.store.Delete(in, s.sync.syncWait)
 		return err
 	}
 
@@ -152,25 +175,21 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			break
 		}
 		elapsed := time.Since(start)
-		if elapsed >= (CRMBringupTimeout) {
+		if elapsed >= (PlatformInitTimeout) {
 			in.State = edgeproto.TrackedState_CREATE_ERROR
-			in.Errors = append(in.Errors, "crm bringup timed out")
+			in.Errors = append(in.Errors, "platform bringup timed out")
 			break
 		}
 		// Wait till timeout
 		time.Sleep(10 * time.Second)
 	}
 
-	if in.State != edgeproto.TrackedState_CREATE_ERROR {
+	if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 		in.State = edgeproto.TrackedState_READY
 		cb.Send(&edgeproto.Result{Message: "Created Cloudlet successfully"})
 	}
 
-	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		s.store.STMPut(stm, in)
-		return nil
-	})
-
+	s.store.Put(in, s.sync.syncWait)
 	return nil
 }
 
@@ -223,7 +242,7 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE {
+		if in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR {
 			if in.State == edgeproto.TrackedState_DELETE_ERROR {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
 				cb.Send(&edgeproto.Result{Message: "Use CreateCloudlet to rebuild, and try again"})
@@ -231,19 +250,14 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return errors.New("Cloudlet busy, cannot delete")
 		}
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
+		s.store.STMPut(stm, in)
 		return nil
 	})
 	if err != nil {
 		return err
 	}
 
-	// Load platform implementation
-	platform, err := pfutils.GetPlatform(in.Platform)
-	if err != nil {
-		return err
-	}
-
-	err = platform.DeleteCloudlet(in)
+	err = cloudletPlatform.DeleteCloudlet(in)
 	if err != nil {
 		return err
 	}

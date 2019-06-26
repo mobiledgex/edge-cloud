@@ -181,6 +181,7 @@ func startServices() error {
 	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
 	edgeproto.RegisterFlavorApiServer(server, &flavorApi)
 	edgeproto.RegisterClusterInstApiServer(server, &clusterInstApi)
+	edgeproto.RegisterPlatformApiServer(server, &platformApi)
 	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
 	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
 	edgeproto.RegisterCloudletInfoApiServer(server, &cloudletInfoApi)
@@ -208,6 +209,7 @@ func startServices() error {
 			edgeproto.RegisterAppApiHandler,
 			edgeproto.RegisterAppInstApiHandler,
 			edgeproto.RegisterOperatorApiHandler,
+			edgeproto.RegisterPlatformApiHandler,
 			edgeproto.RegisterCloudletApiHandler,
 			edgeproto.RegisterCloudletInfoApiHandler,
 			edgeproto.RegisterFlavorApiHandler,
@@ -305,6 +307,7 @@ func InitApis(sync *Sync) {
 	InitDeveloperApi(sync)
 	InitAppApi(sync)
 	InitOperatorApi(sync)
+	InitPlatformApi(sync)
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
 	InitFlavorApi(sync)
