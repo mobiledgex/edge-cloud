@@ -205,6 +205,27 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 	return protos & (^protocolToRemove)
 }
 
+func isPrometheus(app *edgeproto.AppInst) bool {
+	if app.Key.AppKey.Name != cloudcommon.MEXPrometheusAppName {
+		return false
+	}
+	if app.Key.AppKey.DeveloperKey.Name != cloudcommon.DeveloperMobiledgeX {
+		return false
+	}
+	return true
+}
+
+//prometheus uses TCP port 9090
+func usesPromPorts(port int, proto dme.LProto) bool {
+	if port != cloudcommon.PromPort {
+		return false
+	}
+	if proto == dme.LProto_L_PROTO_UDP {
+		return false
+	}
+	return true
+}
+
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
@@ -476,9 +497,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 					// rootLB has its own ports it uses
 					// before any apps are even present.
+					// also non prometheus apps cannot use TCP/HTTP port 9090
 					iport := ports[ii].InternalPort
-					if iport != 22 &&
-						iport != cloudcommon.RootLBL7Port {
+					if iport != 22 && iport != cloudcommon.RootLBL7Port && (!usesPromPorts(int(iport), ports[ii].Proto) || isPrometheus(in)) {
 						eport = iport
 					}
 				}

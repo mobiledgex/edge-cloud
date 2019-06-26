@@ -47,6 +47,7 @@ var DeveloperMetricsDbName = "clusterstats"
 var DeveloperAppMetrics = "crm-appinst"
 var DeveloperClusterMetric = "crm-cluster"
 var MEXPrometheusAppName = "MEXPrometheusAppName"
+var PromPort = 9090
 
 // TODO: these timeouts should be adjust based on target platform,
 // as some platforms (azure, etc) may take much longer.
