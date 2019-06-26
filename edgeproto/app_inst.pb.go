@@ -1229,6 +1229,44 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldStatusStepName:                              struct{}{},
 }
 
+var AppInstAllFieldsStringMap = map[string]string{
+	AppInstFieldKeyAppKeyDeveloperKeyName:                   "App Inst Field Key App Key Developer Key Name",
+	AppInstFieldKeyAppKeyName:                               "App Inst Field Key App Key Name",
+	AppInstFieldKeyAppKeyVersion:                            "App Inst Field Key App Key Version",
+	AppInstFieldKeyClusterInstKeyClusterKeyName:             "App Inst Field Key Cluster Inst Key Cluster Key Name",
+	AppInstFieldKeyClusterInstKeyCloudletKeyOperatorKeyName: "App Inst Field Key Cluster Inst Key Cloudlet Key Operator Key Name",
+	AppInstFieldKeyClusterInstKeyCloudletKeyName:            "App Inst Field Key Cluster Inst Key Cloudlet Key Name",
+	AppInstFieldKeyClusterInstKeyDeveloper:                  "App Inst Field Key Cluster Inst Key Developer",
+	AppInstFieldCloudletLocLatitude:                         "App Inst Field Cloudlet Loc Latitude",
+	AppInstFieldCloudletLocLongitude:                        "App Inst Field Cloudlet Loc Longitude",
+	AppInstFieldCloudletLocHorizontalAccuracy:               "App Inst Field Cloudlet Loc Horizontal Accuracy",
+	AppInstFieldCloudletLocVerticalAccuracy:                 "App Inst Field Cloudlet Loc Vertical Accuracy",
+	AppInstFieldCloudletLocAltitude:                         "App Inst Field Cloudlet Loc Altitude",
+	AppInstFieldCloudletLocCourse:                           "App Inst Field Cloudlet Loc Course",
+	AppInstFieldCloudletLocSpeed:                            "App Inst Field Cloudlet Loc Speed",
+	AppInstFieldCloudletLocTimestampSeconds:                 "App Inst Field Cloudlet Loc Timestamp Seconds",
+	AppInstFieldCloudletLocTimestampNanos:                   "App Inst Field Cloudlet Loc Timestamp Nanos",
+	AppInstFieldUri:                                         "App Inst Field Uri",
+	AppInstFieldLiveness:                                    "App Inst Field Liveness",
+	AppInstFieldMappedPortsProto:                            "App Inst Field Mapped Ports Proto",
+	AppInstFieldMappedPortsInternalPort:                     "App Inst Field Mapped Ports Internal Port",
+	AppInstFieldMappedPortsPublicPort:                       "App Inst Field Mapped Ports Public Port",
+	AppInstFieldMappedPortsPathPrefix:                       "App Inst Field Mapped Ports Path Prefix",
+	AppInstFieldMappedPortsFqdnPrefix:                       "App Inst Field Mapped Ports Fqdn Prefix",
+	AppInstFieldFlavorName:                                  "App Inst Field Flavor Name",
+	AppInstFieldState:                                       "App Inst Field State",
+	AppInstFieldErrors:                                      "App Inst Field Errors",
+	AppInstFieldCrmOverride:                                 "App Inst Field Crm Override",
+	AppInstFieldRuntimeInfoContainerIds:                     "App Inst Field Runtime Info Container Ids",
+	AppInstFieldCreatedAtSeconds:                            "App Inst Field Created At Seconds",
+	AppInstFieldCreatedAtNanos:                              "App Inst Field Created At Nanos",
+	AppInstFieldAutoClusterIpAccess:                         "App Inst Field Auto Cluster Ip Access",
+	AppInstFieldStatusTaskNumber:                            "App Inst Field Status Task Number",
+	AppInstFieldStatusMaxTasks:                              "App Inst Field Status Max Tasks",
+	AppInstFieldStatusTaskName:                              "App Inst Field Status Task Name",
+	AppInstFieldStatusStepName:                              "App Inst Field Status Step Name",
+}
+
 func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 	if m.Key.AppKey.DeveloperKey.Name != o.Key.AppKey.DeveloperKey.Name {
 		fields[AppInstFieldKeyAppKeyDeveloperKeyName] = struct{}{}
@@ -2229,6 +2267,24 @@ var AppInstInfoAllFieldsMap = map[string]struct{}{
 	AppInstInfoFieldStatusMaxTasks:                              struct{}{},
 	AppInstInfoFieldStatusTaskName:                              struct{}{},
 	AppInstInfoFieldStatusStepName:                              struct{}{},
+}
+
+var AppInstInfoAllFieldsStringMap = map[string]string{
+	AppInstInfoFieldKeyAppKeyDeveloperKeyName:                   "App Inst Info Field Key App Key Developer Key Name",
+	AppInstInfoFieldKeyAppKeyName:                               "App Inst Info Field Key App Key Name",
+	AppInstInfoFieldKeyAppKeyVersion:                            "App Inst Info Field Key App Key Version",
+	AppInstInfoFieldKeyClusterInstKeyClusterKeyName:             "App Inst Info Field Key Cluster Inst Key Cluster Key Name",
+	AppInstInfoFieldKeyClusterInstKeyCloudletKeyOperatorKeyName: "App Inst Info Field Key Cluster Inst Key Cloudlet Key Operator Key Name",
+	AppInstInfoFieldKeyClusterInstKeyCloudletKeyName:            "App Inst Info Field Key Cluster Inst Key Cloudlet Key Name",
+	AppInstInfoFieldKeyClusterInstKeyDeveloper:                  "App Inst Info Field Key Cluster Inst Key Developer",
+	AppInstInfoFieldNotifyId:                                    "App Inst Info Field Notify Id",
+	AppInstInfoFieldState:                                       "App Inst Info Field State",
+	AppInstInfoFieldErrors:                                      "App Inst Info Field Errors",
+	AppInstInfoFieldRuntimeInfoContainerIds:                     "App Inst Info Field Runtime Info Container Ids",
+	AppInstInfoFieldStatusTaskNumber:                            "App Inst Info Field Status Task Number",
+	AppInstInfoFieldStatusMaxTasks:                              "App Inst Info Field Status Max Tasks",
+	AppInstInfoFieldStatusTaskName:                              "App Inst Info Field Status Task Name",
+	AppInstInfoFieldStatusStepName:                              "App Inst Info Field Status Step Name",
 }
 
 func (m *AppInstInfo) DiffFields(o *AppInstInfo, fields map[string]struct{}) {

@@ -425,6 +425,10 @@ var DeveloperAllFieldsMap = map[string]struct{}{
 	DeveloperFieldKeyName: struct{}{},
 }
 
+var DeveloperAllFieldsStringMap = map[string]string{
+	DeveloperFieldKeyName: "Developer Field Key Name",
+}
+
 func (m *Developer) DiffFields(o *Developer, fields map[string]struct{}) {
 	if m.Key.Name != o.Key.Name {
 		fields[DeveloperFieldKeyName] = struct{}{}

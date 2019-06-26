@@ -287,6 +287,11 @@ func (s *ClusterInstApi) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.deleteClusterInstInternal(DefCallContext(), in, cb)
 }
 
+func (s *ClusterInstApi)IsKeyField(field string) bool { // TODO generate in mex.go
+	return strings.HasPrefix(field, edgeproto.ClusterInstFieldKey+".")
+}
+
+
 func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
 	// Unsupported for now
 	return s.updateClusterInstInternal(DefCallContext(), in, cb)
@@ -303,8 +308,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	for _, field := range in.Fields {
 		if field == edgeproto.ClusterInstFieldCrmOverride ||
 			field == edgeproto.ClusterInstFieldKey ||
-			strings.HasPrefix(field, edgeproto.ClusterInstFieldKey+".") {
-			// ignore. TODO: generate a func to check if field is a key field.
+			s.IsKeyField(field) { // add to mex.go
 			continue
 		} else if field == edgeproto.ClusterInstFieldNumNodes {
 			allowedFields = append(allowedFields, field)
@@ -313,8 +317,13 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	if len(badFields) > 0 {
-		// TODO: generate func to convert field consts to string names.
-		return fmt.Errorf("some specified fields cannot be modified")
+		// cat all the bad field names and return error
+		badstrs := [] string{}
+		for _, bad := range badFields {
+		badstrs = append(badstrs,  edgeproto.ClusterInstAllFieldsStringMap[bad]);
+			badstrs = append(badstrs, ",")
+		}
+		return fmt.Errorf("specified field(s) %s cannot be modified", badstrs)
 	}
 	in.Fields = allowedFields
 

@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
@@ -599,6 +600,56 @@ func (m *mex) generateAllFields(afg AllFieldsGen, names, nums []string, desc *ge
 		}
 	}
 }
+
+// Generate a simple string map to use in user-friendly error messages EC-608
+func (m *mex) generateAllStringFieldsMap(afg AllFieldsGen, names, nums []string, desc *generator.Descriptor) {
+
+
+	message := desc.DescriptorProto
+	for ii, field := range message.Field {
+		if ii == 0 && *field.Name == "fields" {
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		pname := name
+		num := fmt.Sprintf("%d", *field.Number)
+
+		switch *field.Type {
+		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+			m.generateAllStringFieldsMap(afg, append(names, name), append(nums, num), subDesc)
+		default:
+
+			switch afg {
+
+			case AllFieldsGenSlice:
+				m.P(strings.Join(append(names, name), ""), ",")
+
+			case AllFieldsGenMap:
+				var readable []string
+				pname = strings.Join(append(names,name,""), "")
+				m.P(strings.Join(append(names, name), ""), ":")
+
+				l := 0
+				// take the camelcase name and insert " " before
+				// each capital letter, use as the value of map
+				//
+				for s := pname; s != ""; s = s[l:] {
+					l = strings.IndexFunc(s[1:], unicode.IsUpper) + 1
+					if l <= 0 {
+						l = len(s)
+					}
+					readable = append(readable, s[:l])
+				}
+				pstr := strings.Join(readable, " ") // readable?
+				m.P("\"", pstr, "\"", ",")
+				readable = nil
+
+			}
+		}
+	}
+}
+
 
 func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor, visited []*generator.Descriptor, hasGrpcFields bool) {
 	if gensupport.WasVisited(desc, visited) {
@@ -1285,6 +1336,10 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("")
 		m.P("var ", *message.Name, "AllFieldsMap = map[string]struct{}{")
 		m.generateAllFields(AllFieldsGenMap, []string{*message.Name + "Field"}, []string{}, desc)
+		m.P("}")
+		m.P("")
+		m.P("var ", *message.Name, "AllFieldsStringMap = map[string]string{")
+		m.generateAllStringFieldsMap(AllFieldsGenMap, []string{*message.Name + "Field"}, []string{}, desc)
 		m.P("}")
 		m.P("")
 		m.P("func (m *", message.Name, ") DiffFields(o *", message.Name, ", fields map[string]struct{}) {")

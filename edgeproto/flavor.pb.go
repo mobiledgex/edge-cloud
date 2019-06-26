@@ -468,6 +468,13 @@ var FlavorAllFieldsMap = map[string]struct{}{
 	FlavorFieldDisk:    struct{}{},
 }
 
+var FlavorAllFieldsStringMap = map[string]string{
+	FlavorFieldKeyName: "Flavor Field Key Name",
+	FlavorFieldRam:     "Flavor Field Ram",
+	FlavorFieldVcpus:   "Flavor Field Vcpus",
+	FlavorFieldDisk:    "Flavor Field Disk",
+}
+
 func (m *Flavor) DiffFields(o *Flavor, fields map[string]struct{}) {
 	if m.Key.Name != o.Key.Name {
 		fields[FlavorFieldKeyName] = struct{}{}

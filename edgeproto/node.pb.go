@@ -490,6 +490,14 @@ var NodeAllFieldsMap = map[string]struct{}{
 	NodeFieldNotifyId:                      struct{}{},
 }
 
+var NodeAllFieldsStringMap = map[string]string{
+	NodeFieldKeyName:                       "Node Field Key Name",
+	NodeFieldKeyNodeType:                   "Node Field Key Node Type",
+	NodeFieldKeyCloudletKeyOperatorKeyName: "Node Field Key Cloudlet Key Operator Key Name",
+	NodeFieldKeyCloudletKeyName:            "Node Field Key Cloudlet Key Name",
+	NodeFieldNotifyId:                      "Node Field Notify Id",
+}
+
 func (m *Node) DiffFields(o *Node, fields map[string]struct{}) {
 	if m.Key.Name != o.Key.Name {
 		fields[NodeFieldKeyName] = struct{}{}

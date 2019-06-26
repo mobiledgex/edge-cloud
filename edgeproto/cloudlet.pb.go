@@ -1734,6 +1734,30 @@ var CloudletAllFieldsMap = map[string]struct{}{
 	CloudletFieldTimeLimitsDeleteAppInstTimeout:     struct{}{},
 }
 
+var CloudletAllFieldsStringMap = map[string]string{
+	CloudletFieldKeyOperatorKeyName:                 "Cloudlet Field Key Operator Key Name",
+	CloudletFieldKeyName:                            "Cloudlet Field Key Name",
+	CloudletFieldAccessCredentials:                  "Cloudlet Field Access Credentials",
+	CloudletFieldLocationLatitude:                   "Cloudlet Field Location Latitude",
+	CloudletFieldLocationLongitude:                  "Cloudlet Field Location Longitude",
+	CloudletFieldLocationHorizontalAccuracy:         "Cloudlet Field Location Horizontal Accuracy",
+	CloudletFieldLocationVerticalAccuracy:           "Cloudlet Field Location Vertical Accuracy",
+	CloudletFieldLocationAltitude:                   "Cloudlet Field Location Altitude",
+	CloudletFieldLocationCourse:                     "Cloudlet Field Location Course",
+	CloudletFieldLocationSpeed:                      "Cloudlet Field Location Speed",
+	CloudletFieldLocationTimestampSeconds:           "Cloudlet Field Location Timestamp Seconds",
+	CloudletFieldLocationTimestampNanos:             "Cloudlet Field Location Timestamp Nanos",
+	CloudletFieldIpSupport:                          "Cloudlet Field Ip Support",
+	CloudletFieldStaticIps:                          "Cloudlet Field Static Ips",
+	CloudletFieldNumDynamicIps:                      "Cloudlet Field Num Dynamic Ips",
+	CloudletFieldTimeLimitsCreateClusterInstTimeout: "Cloudlet Field Time Limits Create Cluster Inst Timeout",
+	CloudletFieldTimeLimitsUpdateClusterInstTimeout: "Cloudlet Field Time Limits Update Cluster Inst Timeout",
+	CloudletFieldTimeLimitsDeleteClusterInstTimeout: "Cloudlet Field Time Limits Delete Cluster Inst Timeout",
+	CloudletFieldTimeLimitsCreateAppInstTimeout:     "Cloudlet Field Time Limits Create App Inst Timeout",
+	CloudletFieldTimeLimitsUpdateAppInstTimeout:     "Cloudlet Field Time Limits Update App Inst Timeout",
+	CloudletFieldTimeLimitsDeleteAppInstTimeout:     "Cloudlet Field Time Limits Delete App Inst Timeout",
+}
+
 func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 	if m.Key.OperatorKey.Name != o.Key.OperatorKey.Name {
 		fields[CloudletFieldKeyOperatorKeyName] = struct{}{}
@@ -2470,6 +2494,22 @@ var CloudletInfoAllFieldsMap = map[string]struct{}{
 	CloudletInfoFieldFlavorsVcpus:       struct{}{},
 	CloudletInfoFieldFlavorsRam:         struct{}{},
 	CloudletInfoFieldFlavorsDisk:        struct{}{},
+}
+
+var CloudletInfoAllFieldsStringMap = map[string]string{
+	CloudletInfoFieldKeyOperatorKeyName: "Cloudlet Info Field Key Operator Key Name",
+	CloudletInfoFieldKeyName:            "Cloudlet Info Field Key Name",
+	CloudletInfoFieldState:              "Cloudlet Info Field State",
+	CloudletInfoFieldNotifyId:           "Cloudlet Info Field Notify Id",
+	CloudletInfoFieldController:         "Cloudlet Info Field Controller",
+	CloudletInfoFieldOsMaxRam:           "Cloudlet Info Field Os Max Ram",
+	CloudletInfoFieldOsMaxVcores:        "Cloudlet Info Field Os Max Vcores",
+	CloudletInfoFieldOsMaxVolGb:         "Cloudlet Info Field Os Max Vol Gb",
+	CloudletInfoFieldErrors:             "Cloudlet Info Field Errors",
+	CloudletInfoFieldFlavorsName:        "Cloudlet Info Field Flavors Name",
+	CloudletInfoFieldFlavorsVcpus:       "Cloudlet Info Field Flavors Vcpus",
+	CloudletInfoFieldFlavorsRam:         "Cloudlet Info Field Flavors Ram",
+	CloudletInfoFieldFlavorsDisk:        "Cloudlet Info Field Flavors Disk",
 }
 
 func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {

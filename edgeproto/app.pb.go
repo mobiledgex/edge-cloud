@@ -937,6 +937,28 @@ var AppAllFieldsMap = map[string]struct{}{
 	AppFieldScaleWithCluster:    struct{}{},
 }
 
+var AppAllFieldsStringMap = map[string]string{
+	AppFieldKeyDeveloperKeyName: "App Field Key Developer Key Name",
+	AppFieldKeyName:             "App Field Key Name",
+	AppFieldKeyVersion:          "App Field Key Version",
+	AppFieldImagePath:           "App Field Image Path",
+	AppFieldImageType:           "App Field Image Type",
+	AppFieldAccessPorts:         "App Field Access Ports",
+	AppFieldDefaultFlavorName:   "App Field Default Flavor Name",
+	AppFieldAuthPublicKey:       "App Field Auth Public Key",
+	AppFieldCommand:             "App Field Command",
+	AppFieldAnnotations:         "App Field Annotations",
+	AppFieldDeployment:          "App Field Deployment",
+	AppFieldDeploymentManifest:  "App Field Deployment Manifest",
+	AppFieldDeploymentGenerator: "App Field Deployment Generator",
+	AppFieldAndroidPackageName:  "App Field Android Package Name",
+	AppFieldPermitsPlatformApps: "App Field Permits Platform Apps",
+	AppFieldDelOpt:              "App Field Del Opt",
+	AppFieldConfigsKind:         "App Field Configs Kind",
+	AppFieldConfigsConfig:       "App Field Configs Config",
+	AppFieldScaleWithCluster:    "App Field Scale With Cluster",
+}
+
 func (m *App) DiffFields(o *App, fields map[string]struct{}) {
 	if m.Key.DeveloperKey.Name != o.Key.DeveloperKey.Name {
 		fields[AppFieldKeyDeveloperKeyName] = struct{}{}
