@@ -46,6 +46,7 @@ var NetworkSchemePrivateIP = "privateip"
 var DeveloperMetricsDbName = "clusterstats"
 var DeveloperAppMetrics = "crm-appinst"
 var DeveloperClusterMetric = "crm-cluster"
+var MEXPrometheusAppName = "MEXPrometheusAppName"
 
 // TODO: these timeouts should be adjust based on target platform,
 // as some platforms (azure, etc) may take much longer.

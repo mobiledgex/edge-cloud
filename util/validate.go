@@ -5,6 +5,7 @@ package util
 
 import (
 	"net"
+	"net/url"
 	"regexp"
 	"strings"
 	"unicode"
@@ -107,4 +108,13 @@ func IsLatitudeValid(latitude float64) bool {
 // IsLongitudeValid checks that the longitude is within accepted ranges
 func IsLongitudeValid(longitude float64) bool {
 	return (longitude >= -180) && (longitude <= 180)
+}
+
+func ImagePathParse(imagepath string) (*url.URL, error) {
+	// url.Parse requires the scheme but won't error if
+	// it's not present.
+	if !strings.Contains(imagepath, "://") {
+		imagepath = "https://" + imagepath
+	}
+	return url.Parse(imagepath)
 }

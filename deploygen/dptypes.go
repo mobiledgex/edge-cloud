@@ -22,6 +22,7 @@ type AppSpec struct {
 	Annotations      string          `json:"annotations"`
 	Ports            []util.PortSpec `json:"ports"`
 	ScaleWithCluster bool            `json:"scalewithcluster"`
+	ImageHost        string          `json:"imagehost"`
 }
 
 func NewAppSpec(app *edgeproto.App) (*AppSpec, error) {
@@ -36,6 +37,12 @@ func NewAppSpec(app *edgeproto.App) (*AppSpec, error) {
 		Annotations:      app.Annotations,
 		ScaleWithCluster: app.ScaleWithCluster,
 	}
+	urlObj, err := util.ImagePathParse(app.ImagePath)
+	if err != nil {
+		return nil, err
+	}
+	out.ImageHost = urlObj.Host
+
 	if app.AccessPorts == "" {
 		return out, nil
 	}

@@ -9,7 +9,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import distributed_match_engine.AppClient;
 import distributed_match_engine.AppClient.GetLocationRequest;
 import distributed_match_engine.AppClient.GetLocationReply;
 import distributed_match_engine.MatchEngineApiGrpc;
@@ -34,8 +33,8 @@ public class GetLocation implements Callable {
                               long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
-        } else if (!mMatchingEngine.isMexLocationAllowed()) {
-            Log.e(TAG, "Mex Location is disabled.");
+        } else if (!mMatchingEngine.isMatchingEngineLocationAllowed()) {
+            Log.e(TAG, "MatchingEngine location is disabled.");
             mRequest = null;
             return false;
         }
@@ -76,9 +75,9 @@ public class GetLocation implements Callable {
                     .getLocation(mRequest);
 
             // Nothing a sdk user can do below but read the exception cause:
-        } catch (MexKeyStoreException mkse) {
+        } catch (MatchingEngineKeyStoreException mkse) {
             throw new ExecutionException("Exception calling GetLocation: ", mkse);
-        } catch (MexTrustStoreException mtse) {
+        } catch (MatchingEngineTrustStoreException mtse) {
             throw new ExecutionException("Exception calling GetLocation: ", mtse);
         } catch (KeyManagementException kme) {
             throw new ExecutionException("Exception calling GetLocation: ", kme);

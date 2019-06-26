@@ -48,6 +48,7 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "http://127.0.0.1:8086", "InfluxDB listener address")
+var registryFQDN = flag.String("registryFQDN", "docker.mobiledgex.net", "mobiledgex registry FQDN")
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
@@ -158,8 +159,7 @@ func startServices() error {
 	}
 
 	influxQ := influxq.NewInfluxQ(InfluxDBName)
-	clientCert := strings.Replace(*tlsCertFile, "server", "client", 1)
-	err = influxQ.Start(*influxAddr, clientCert)
+	err = influxQ.Start(*influxAddr, "")
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
