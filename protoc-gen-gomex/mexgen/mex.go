@@ -511,7 +511,7 @@ func (m *mex) generateIsKeyField(parents, names []string, desc *generator.Descri
 			continue
 		}
 		name := generator.CamelCase(*field.Name)
-		m.P("        return strings.HasPrefix(s, ",strings.Join(append(names, name), ""),  "+\".\")")
+		m.P("return strings.HasPrefix(s, ",strings.Join(append(names, name), ""),  "+\".\")")
 
 		return
 	}
