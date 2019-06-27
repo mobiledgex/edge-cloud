@@ -6,6 +6,7 @@ package distributed_match_engine;
 import "google/api/annotations.proto";
 import "loc.proto";
 import "appcommon.proto";
+import "predictiveqos.proto";
 
 enum IDTypes {
   ID_UNDEFINED = 0;
@@ -256,6 +257,31 @@ message DynamicLocGroupReply {
   string group_cookie = 5;
 }
 
+message QosPosition{
+  // as set by the client, must be unique within QosRequest
+  int64 positionid = 1;
+  //location
+  Loc gps_location = 2;
+}
+
+message QosPositionKpiRequest{
+   // API version
+  uint32 ver = 1;
+  // Session Cookie from RegisterClientRequest
+  string session_cookie = 2;
+  // list of positions
+  QosPosition positions = 3;
+}
+
+message QosPositionKpiReply{
+  uint32 ver = 1;
+  // Status of the reply
+  ReplyStatus status = 2;
+  // kpi details
+  repeated PositionKpiResult position_results = 3;
+}
+
+
 service MatchEngineApi {
   rpc RegisterClient(RegisterClientRequest) returns (RegisterClientReply) {
       option (google.api.http) = {
@@ -296,6 +322,12 @@ service MatchEngineApi {
    rpc GetFqdnList(FqdnListRequest) returns (FqdnListReply) {
     option (google.api.http) = {
       post: "/v1/getfqdnlist"
+      body: "*"
+    };
+  }
+    rpc GetQosPositionKpi(QosPositionKpiRequest) returns (QosPositionKpiReply) {
+    option (google.api.http) = {
+      post: "/v1/getpositionkpi"
       body: "*"
     };
   }

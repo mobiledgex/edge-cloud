@@ -145,6 +145,32 @@
         ]
       }
     },
+    "/v1/getpositionkpi": {
+      "post": {
+        "operationId": "GetQosPositionKpi",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/distributed_match_engineQosPositionKpiReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/distributed_match_engineQosPositionKpiRequest"
+            }
+          }
+        ],
+        "tags": [
+          "MatchEngineApi"
+        ]
+      }
+    },
     "/v1/registerclient": {
       "post": {
         "operationId": "RegisterClient",
@@ -258,6 +284,15 @@
       "default": "LOC_UNKNOWN",
       "description": "- LOC_DENIED: The user does not allow his location to be tracked",
       "title": "Status of the reply"
+    },
+    "HealthCheckResponseServingStatus": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "SERVING",
+        "NOT_SERVING"
+      ],
+      "default": "UNKNOWN"
     },
     "VerifyLocationReplyGPSLocationStatus": {
       "type": "string",
@@ -637,6 +672,24 @@
         }
       }
     },
+    "distributed_match_engineHealthCheckResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/HealthCheckResponseServingStatus"
+        },
+        "errorcode": {
+          "type": "integer",
+          "format": "int32",
+          "title": "similar to http status codes, attach it to error reports"
+        },
+        "modelversion": {
+          "type": "string",
+          "title": "prediction model version that is used for calculating the response"
+        }
+      },
+      "title": "The response to the above message. The NOT_SERVING\"\nresponse represents an internal error condition of the system, when the\nAPI frontend is up (hence can answer the health request), but cannot\nprovide actual results"
+    },
     "distributed_match_engineLProto": {
       "type": "string",
       "enum": [
@@ -689,6 +742,151 @@
         "timestamp": {
           "$ref": "#/definitions/distributed_match_engineTimestamp",
           "title": "timestamp"
+        }
+      }
+    },
+    "distributed_match_enginePositionKpiRequest": {
+      "type": "object",
+      "properties": {
+        "positionid": {
+          "type": "string",
+          "format": "int64"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "float",
+          "title": "as decimal degree, i.e.: 48.1855141 , 11.5613505\nin wsg84 coordinate system\nminus number represent south / west coordinate"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "float"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64",
+          "title": "UNIX timestamp for which the prediction has to be calculated\nse when the vehicle is due at the given position, in secs"
+        },
+        "altitude": {
+          "type": "number",
+          "format": "float",
+          "title": "in meter, above ground level\n(ignored in the calculations during the Pilot phase - added here only for completness)"
+        }
+      },
+      "title": "Represents a request which queries the KPIs at the given grid\n(represented with lat/long coordinates) at the given timestamp.\nThe QoSKPIRequest contains a\nlist of this objects"
+    },
+    "distributed_match_enginePositionKpiResult": {
+      "type": "object",
+      "properties": {
+        "positionid": {
+          "type": "string",
+          "format": "int64",
+          "title": "as set by the client, must be unique within one QoSKPIRequest"
+        },
+        "dluserthroughput_min": {
+          "type": "number",
+          "format": "float"
+        },
+        "dluserthroughput_avg": {
+          "type": "number",
+          "format": "float"
+        },
+        "dluserthroughput_max": {
+          "type": "number",
+          "format": "float"
+        },
+        "uluserthroughput_min": {
+          "type": "number",
+          "format": "float"
+        },
+        "uluserthroughput_avg": {
+          "type": "number",
+          "format": "float"
+        },
+        "uluserthroughput_max": {
+          "type": "number",
+          "format": "float"
+        },
+        "latency_min": {
+          "type": "number",
+          "format": "float"
+        },
+        "latency_avg": {
+          "type": "number",
+          "format": "float"
+        },
+        "latency_max": {
+          "type": "number",
+          "format": "float"
+        }
+      },
+      "title": "Represents a response object which contains the calculated\nKPIs at the given grid (represented with\nlat/long coordinates) at the given timestamp.\nA QoSKPIResponse contains a list of this result object"
+    },
+    "distributed_match_engineQoSKPIResponse": {
+      "type": "object",
+      "properties": {
+        "requestid": {
+          "type": "string",
+          "format": "int64",
+          "title": "set by the client (the Unix timestamp when the initial\nrequest was in the client, in microseconds) and the\nserver attaches it to each response"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/distributed_match_enginePositionKpiResult"
+          }
+        }
+      },
+      "title": "renewal responses, and when all of the timestamps are passed, the server\ncloses the stream for this request"
+    },
+    "distributed_match_engineQosPosition": {
+      "type": "object",
+      "properties": {
+        "positionid": {
+          "type": "string",
+          "format": "int64",
+          "title": "as set by the client, must be unique within QosRequest"
+        },
+        "gps_location": {
+          "$ref": "#/definitions/distributed_match_engineLoc",
+          "title": "location"
+        }
+      }
+    },
+    "distributed_match_engineQosPositionKpiReply": {
+      "type": "object",
+      "properties": {
+        "ver": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "status": {
+          "$ref": "#/definitions/distributed_match_engineReplyStatus",
+          "title": "Status of the reply"
+        },
+        "position_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/distributed_match_enginePositionKpiResult"
+          },
+          "title": "kpi details"
+        }
+      }
+    },
+    "distributed_match_engineQosPositionKpiRequest": {
+      "type": "object",
+      "properties": {
+        "ver": {
+          "type": "integer",
+          "format": "int64",
+          "title": "API version"
+        },
+        "session_cookie": {
+          "type": "string",
+          "title": "Session Cookie from RegisterClientRequest"
+        },
+        "positions": {
+          "$ref": "#/definitions/distributed_match_engineQosPosition",
+          "title": "list of positions"
         }
       }
     },
@@ -813,6 +1011,57 @@
           "title": "token used for location verification, app must retrieve from TokenServerURI"
         }
       }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeStreamError": {
+      "type": "object",
+      "properties": {
+        "grpc_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "http_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "http_status": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  },
+  "x-stream-definitions": {
+    "distributed_match_engineQoSKPIResponse": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/distributed_match_engineQoSKPIResponse"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of distributed_match_engineQoSKPIResponse"
     }
   }
 }

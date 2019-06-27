@@ -97,6 +97,17 @@ func (c *dmeRestClient) GetLocation(ctx context.Context, in *dmeproto.GetLocatio
 	return out, nil
 }
 
+func (c *dmeRestClient) GetQosPositionKpi(ctx context.Context, in *dmeproto.QosPositionKpiRequest, opts ...grpc.CallOption) (*dmeproto.QosPositionKpiReply, error) {
+	out := new(dmeproto.QosPositionKpiReply)
+	err := util.CallRESTPost("https://"+c.addr+"/v1/getqospositionkpi",
+		c.client, in, out)
+	if err != nil {
+		log.Printf("getpositionkpi rest API failed\n")
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dmeRestClient) AddUserToGroup(ctx context.Context, in *dmeproto.DynamicLocGroupRequest, opts ...grpc.CallOption) (*dmeproto.DynamicLocGroupReply, error) {
 	out := new(dmeproto.DynamicLocGroupReply)
 	err := util.CallRESTPost("https://"+c.addr+"/v1/addusertogroup",
