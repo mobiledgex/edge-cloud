@@ -1,4 +1,5 @@
 *~
+.vscode
 *.kubeconfig
 protoc-gen-cmd/protoc-gen-cmd
 protoc-gen-gomex/protoc-gen-gomex

@@ -127,9 +127,6 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	log.DebugLog(log.DebugLevelApi, "registry api url", "url", regUrl)
 
 	auth, err := GetRegistryAuth(regUrl, vaultAddr)
-	if err != nil {
-		return err
-	}
 
 	resp, err := SendHTTPReq("GET", regUrl, auth)
 	if err != nil {
