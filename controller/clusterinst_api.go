@@ -303,8 +303,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	for _, field := range in.Fields {
 		if field == edgeproto.ClusterInstFieldCrmOverride ||
 			field == edgeproto.ClusterInstFieldKey ||
-			strings.HasPrefix(field, edgeproto.ClusterInstFieldKey+".") {
-			// ignore. TODO: generate a func to check if field is a key field.
+			in.IsKeyField(field) {
 			continue
 		} else if field == edgeproto.ClusterInstFieldNumNodes {
 			allowedFields = append(allowedFields, field)
@@ -313,8 +312,12 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	if len(badFields) > 0 {
-		// TODO: generate func to convert field consts to string names.
-		return fmt.Errorf("some specified fields cannot be modified")
+		// cat all the bad field names and return error
+		badstrs := [] string{}
+		for _, bad := range badFields {
+			badstrs = append(badstrs,  edgeproto.ClusterInstAllFieldsStringMap[bad]);
+		}
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badstrs, ","))
 	}
 	in.Fields = allowedFields
 

@@ -178,7 +178,7 @@ func IncludeFieldsWriteOutputOne(obj *testgen.IncludeFields) {
 	}
 }
 func TestGenSlicer(in *testgen.TestGen) []string {
-	s := make([]string, 0, 38)
+	s := make([]string, 0, 39)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -362,11 +362,12 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 	}
 	s = append(s, strconv.FormatUint(uint64(in.RepeatedLocNonnull[0].Timestamp.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.RepeatedLocNonnull[0].Timestamp.Nanos), 10))
+	s = append(s, in.Unused)
 	return s
 }
 
 func TestGenHeaderSlicer() []string {
-	s := make([]string, 0, 38)
+	s := make([]string, 0, 39)
 	s = append(s, "Fields")
 	s = append(s, "Name")
 	s = append(s, "Db")
@@ -451,6 +452,7 @@ func TestGenHeaderSlicer() []string {
 	s = append(s, "RepeatedLocNonnull-Speed")
 	s = append(s, "RepeatedLocNonnull-Timestamp-Seconds")
 	s = append(s, "RepeatedLocNonnull-Timestamp-Nanos")
+	s = append(s, "Unused")
 	return s
 }
 
@@ -514,6 +516,34 @@ func InnerMessageWriteOutputOne(obj *testgen.TestGen_InnerMessage) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func TestGenHideTags(in *testgen.TestGen) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	for i0 := 0; i0 < len(in.RepeatedMsg); i0++ {
+	}
+	for i0 := 0; i0 < len(in.RepeatedMsgNonnull); i0++ {
+	}
+	for i0 := 0; i0 < len(in.RepeatedFields); i0++ {
+	}
+	for i0 := 0; i0 < len(in.RepeatedFieldsNonnull); i0++ {
+	}
+	for i0 := 0; i0 < len(in.RepeatedInnerMsg); i0++ {
+	}
+	for i0 := 0; i0 < len(in.RepeatedInnerMsgNonnull); i0++ {
+	}
+	for i0 := 0; i0 < len(in.RepeatedLoc); i0++ {
+	}
+	for i0 := 0; i0 < len(in.RepeatedLocNonnull); i0++ {
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Unused = ""
+	}
+}
 
 var RequestCmd = &cobra.Command{
 	Use: "Request",
@@ -542,6 +572,7 @@ func Request(in *testgen.TestGen) error {
 		}
 		return fmt.Errorf("Request failed: %s", errstr)
 	}
+	TestGenHideTags(obj)
 	TestGenWriteOutputOne(obj)
 	return nil
 }
@@ -620,6 +651,7 @@ func init() {
 	TestGenFlagSet.Int64Var(&TestGenIn.LocNonnull.Timestamp.Seconds, "locnonnull-timestamp-seconds", 0, "LocNonnull.Timestamp.Seconds")
 	TestGenFlagSet.Int32Var(&TestGenIn.LocNonnull.Timestamp.Nanos, "locnonnull-timestamp-nanos", 0, "LocNonnull.Timestamp.Nanos")
 	TestGenFlagSet.BytesHexVar(&TestGenIn.Ip, "ip", nil, "Ip")
+	TestGenFlagSet.StringVar(&TestGenIn.Unused, "unused", "", "Unused")
 	RequestCmd.Flags().AddFlagSet(TestGenFlagSet)
 }
 
@@ -769,6 +801,9 @@ func TestGenSetFields() {
 	}
 	if TestGenFlagSet.Lookup("ip").Changed {
 		TestGenIn.Fields = append(TestGenIn.Fields, "27")
+	}
+	if TestGenFlagSet.Lookup("unused").Changed {
+		TestGenIn.Fields = append(TestGenIn.Fields, "39")
 	}
 }
 
