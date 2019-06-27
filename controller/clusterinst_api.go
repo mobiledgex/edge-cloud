@@ -315,10 +315,9 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		// cat all the bad field names and return error
 		badstrs := [] string{}
 		for _, bad := range badFields {
-		badstrs = append(badstrs,  edgeproto.ClusterInstAllFieldsStringMap[bad]);
-			badstrs = append(badstrs, ",")
+			badstrs = append(badstrs,  edgeproto.ClusterInstAllFieldsStringMap[bad]);
 		}
-		return fmt.Errorf("specified field(s) %s cannot be modified", badstrs)
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badstrs, ","))
 	}
 	in.Fields = allowedFields
 
