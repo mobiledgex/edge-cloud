@@ -46,6 +46,7 @@ message TestGen {
   sfixed64 sf64 = 14;
   bool bb = 15;
   OuterEnum outer_en = 16;
+
   enum InnerEnum {
     INNER0 = 0;
     INNER1 = 1;
@@ -79,6 +80,9 @@ message TestGen {
   map<int32, int32> intMap = 37;
   map<int32, NestedMessage> msgMap = 38;
   option (protogen.generate_matches) = true;
+
+  // xxx win import of strings. xxx
+  string unused = 39  [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
 }
 
 service TestApi {
