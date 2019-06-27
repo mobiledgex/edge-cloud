@@ -46,6 +46,9 @@ path "secret/data/registry/*" {
 path "secret/data/$REGION/cloudlet/*" {
   capabilities = [ "create", "update", "delete", "read" ]
 }
+path "secret/data/$REGION/accounts/*" {
+  capabilities = [ "create", "update", "delete", "read" ]
+}
 EOF
 vault policy write $REGION.controller /tmp/controller-pol.hcl
 rm /tmp/controller-pol.hcl

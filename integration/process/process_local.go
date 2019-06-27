@@ -35,8 +35,8 @@ type TLSCerts struct {
 }
 
 type LocalAuth struct {
-	Username string
-	Password string
+	User string `json:"user"`
+	Pass string `json:"pass"`
 }
 
 // EtcdLocal
@@ -345,7 +345,7 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 	}
 
 	configFile, err := influxsup.SetupInflux(p.DataDir,
-		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey), influxsup.WithAuth(p.Auth.Username != ""))
+		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey), influxsup.WithAuth(p.Auth.User != ""))
 	if err != nil {
 		return err
 	}
@@ -357,7 +357,7 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 	}
 
 	// if auth is enabled we need to create default user
-	if p.Auth.Username != "" {
+	if p.Auth.User != "" {
 		time.Sleep(5 * time.Second)
 		if p.TLS.ServerCert != "" {
 			prefix = "https://" + p.HttpAddr
@@ -368,7 +368,7 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 
 		resource := "/query"
 		data := url.Values{}
-		data.Set("q", "CREATE USER "+p.Auth.Username+" WITH PASSWORD '"+p.Auth.Password+"' WITH ALL PRIVILEGES")
+		data.Set("q", "CREATE USER "+p.Auth.User+" WITH PASSWORD '"+p.Auth.Pass+"' WITH ALL PRIVILEGES")
 		u, _ := url.ParseRequestURI(prefix)
 		u.Path = resource
 		u.RawQuery = data.Encode()
@@ -497,6 +497,7 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	p.GetAppRole(region, "rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
 	p.PutSecret(region, "dme", p.DmeSecret+"-old", &err)
 	p.PutSecret(region, "dme", p.DmeSecret, &err)
+	p.PutInfluxDbCreds(region, "/tmp/influx.json", &err)
 	if err != nil {
 		p.StopLocal()
 		return err
@@ -543,6 +544,13 @@ func (p *Vault) GetAppRole(region, name string, roleID, secretID *string, err *e
 	if val, ok := vals["secret_id"]; ok {
 		*secretID = val
 	}
+}
+
+func (p *Vault) PutInfluxDbCreds(region, influxAuth string, err *error) {
+	if region != "" {
+		region += "/"
+	}
+	p.Run("vault", fmt.Sprintf("kv put secret/data/%saccounts/influxdb @%s", region, influxAuth), err)
 }
 
 func (p *Vault) PutSecret(region, name, secret string, err *error) {
