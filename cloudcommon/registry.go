@@ -103,6 +103,10 @@ func SendHTTPReq(method, fileUrlPath string, auth *RegistryAuth) (*http.Response
 func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	log.DebugLog(log.DebugLevelApi, "validate registry path", "path", regUrl)
 
+	if regUrl == "" {
+		return fmt.Errorf("registry path is empty")
+	}
+
 	protocol := "https"
 	version := "v2"
 	matchTag := "latest"
@@ -204,6 +208,9 @@ func getAuthToken(regUrl, authHeader string, auth *RegistryAuth) *RegistryAuth {
 
 func ValidateVMRegistryPath(imgUrl, vaultAddr string) error {
 	log.DebugLog(log.DebugLevelApi, "validate vm-image path", "path", imgUrl)
+	if imgUrl == "" {
+		return fmt.Errorf("image path is empty")
+	}
 
 	urlObj, err := url.Parse(imgUrl)
 	if err != nil {

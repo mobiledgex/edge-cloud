@@ -225,6 +225,9 @@ func (s *Platform) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().Validate(); err != nil {
 		return err
 	}
+	if err := s.ValidateEnums(); err != nil {
+		return err
+	}
 	if _, found := fields[PlatformFieldImagePath]; found {
 		err := util.ValidateImagePath(s.ImagePath)
 		if err != nil {
@@ -305,6 +308,16 @@ func MakeFieldMap(fields []string) map[string]struct{} {
 		}
 	}
 	return fmap
+}
+
+func GetFields(fmap map[string]struct{}) []string {
+	var fields []string
+
+	for k, _ := range fmap {
+		fields = append(fields, k)
+	}
+
+	return fields
 }
 
 func HasField(fmap map[string]struct{}, field string) bool {
@@ -408,6 +421,7 @@ func CmpSortSlices() []cmp.Option {
 	opts := []cmp.Option{}
 	opts = append(opts, cmpopts.SortSlices(CmpSortApp))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAppInst))
+	opts = append(opts, cmpopts.SortSlices(CmpSortPlatform))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudlet))
 	opts = append(opts, cmpopts.SortSlices(CmpSortDeveloper))
 	opts = append(opts, cmpopts.SortSlices(CmpSortOperator))

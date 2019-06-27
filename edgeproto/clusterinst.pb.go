@@ -1086,7 +1086,9 @@ func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 }
 
 func (m *ClusterInst) CopyInFields(src *ClusterInst) {
-	fmap := MakeFieldMap(src.Fields)
+	// Copy only diff fields
+	var fmap = make(map[string]struct{})
+	m.DiffFields(src, fmap)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.1"]; set {
@@ -1855,7 +1857,9 @@ func (m *ClusterInstInfo) DiffFields(o *ClusterInstInfo, fields map[string]struc
 }
 
 func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) {
-	fmap := MakeFieldMap(src.Fields)
+	// Copy only diff fields
+	var fmap = make(map[string]struct{})
+	m.DiffFields(src, fmap)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.1"]; set {

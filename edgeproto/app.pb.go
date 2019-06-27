@@ -993,17 +993,19 @@ func (m *App) DiffFields(o *App, fields map[string]struct{}) {
 	if m.DelOpt != o.DelOpt {
 		fields[AppFieldDelOpt] = struct{}{}
 	}
-	if len(m.Configs) != len(o.Configs) {
-		fields[AppFieldConfigs] = struct{}{}
-	} else {
-		for i0 := 0; i0 < len(m.Configs); i0++ {
-			if m.Configs[i0].Kind != o.Configs[i0].Kind {
-				fields[AppFieldConfigsKind] = struct{}{}
-				fields[AppFieldConfigs] = struct{}{}
-			}
-			if m.Configs[i0].Config != o.Configs[i0].Config {
-				fields[AppFieldConfigsConfig] = struct{}{}
-				fields[AppFieldConfigs] = struct{}{}
+	if m.Configs != nil {
+		if len(m.Configs) != len(o.Configs) {
+			fields[AppFieldConfigs] = struct{}{}
+		} else {
+			for i0 := 0; i0 < len(m.Configs); i0++ {
+				if m.Configs[i0].Kind != o.Configs[i0].Kind {
+					fields[AppFieldConfigsKind] = struct{}{}
+					fields[AppFieldConfigs] = struct{}{}
+				}
+				if m.Configs[i0].Config != o.Configs[i0].Config {
+					fields[AppFieldConfigsConfig] = struct{}{}
+					fields[AppFieldConfigs] = struct{}{}
+				}
 			}
 		}
 	}
@@ -1013,7 +1015,9 @@ func (m *App) DiffFields(o *App, fields map[string]struct{}) {
 }
 
 func (m *App) CopyInFields(src *App) {
-	fmap := MakeFieldMap(src.Fields)
+	// Copy only diff fields
+	var fmap = make(map[string]struct{})
+	m.DiffFields(src, fmap)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.2"]; set {

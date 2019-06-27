@@ -65,21 +65,21 @@ developers:
 platforms:
 - key:
     name: tmus-platform
-  type: fake
+  type: PlatformTypeFake
   flavor:
     name: x1.small
   registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
   imagepath: https://artifactory.mobiledgex.net/artifactory/platform-images/openstack/testimg-v1.0.qcow2#md5:a605d8d5385e74b28f60381acd4a9433
 - key:
     name: azure-platform
-  type: fake
+  type: PlatformTypeFake
   flavor:
     name: x1.tiny
   registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
   imagepath: https://artifactory.mobiledgex.net/artifactory/platform-images/azure/testimg-v1.0.qcow2#md5:a605d8d5385e74b28f60381acd4a9433
 - key:
     name: gcp-platform
-  type: fake
+  type: PlatformTypeFake
   flavor:
     name: x1.medium
   registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud

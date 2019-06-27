@@ -520,6 +520,13 @@ func (m *mex) generateDiffFields(parents, names []string, desc *generator.Descri
 		mapType := m.support.GetMapType(m.gen, field)
 		loop := false
 		skipMap := false
+		nullableMessage := false
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE && gogoproto.IsNullable(field) {
+			nullableMessage = true
+		}
+		if nullableMessage {
+			m.P("if m.", hierName, " != nil {")
+		}
 
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
 			*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
@@ -566,6 +573,9 @@ func (m *mex) generateDiffFields(parents, names []string, desc *generator.Descri
 			if mapType != nil {
 				m.P("}")
 			}
+		}
+		if nullableMessage {
+			m.P("}")
 		}
 	}
 }
@@ -1299,7 +1309,9 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	msgtyp := m.gen.TypeName(desc)
 	m.P("func (m *", msgtyp, ") CopyInFields(src *", msgtyp, ") {")
 	if gensupport.HasGrpcFields(message) {
-		m.P("fmap := MakeFieldMap(src.Fields)")
+		m.P("// Copy only diff fields")
+		m.P("var fmap = make(map[string]struct{})")
+		m.P("m.DiffFields(src, fmap)")
 	}
 	m.generateCopyIn(make([]string, 0), make([]string, 0), desc, make([]*generator.Descriptor, 0), gensupport.HasGrpcFields(message))
 	m.P("}")

@@ -15,9 +15,9 @@ var solib = ""
 func GetPlatform(plat string) (pf.Platform, error) {
 	// Building plugins is slow, so directly importable
 	// platforms are not built as plugins.
-	if plat == "DIND" {
+	if plat == "PLATFORM_TYPE_DIND" {
 		return &dind.Platform{}, nil
-	} else if plat == "FAKE" {
+	} else if plat == "PLATFORM_TYPE_FAKE" {
 		return &fake.Platform{}, nil
 	}
 
@@ -28,7 +28,7 @@ func GetPlatform(plat string) (pf.Platform, error) {
 	log.DebugLog(log.DebugLevelMexos, "Loading plugin", "plugin", solib)
 	plug, err := plugin.Open(solib)
 	if err != nil {
-		log.FatalLog("failed to load plugin", "plugin", solib, "error", err)
+		log.FatalLog("failed to load plugin", "plugin", solib, "platform", plat, "error", err)
 	}
 	sym, err := plug.Lookup("GetPlatform")
 	if err != nil {

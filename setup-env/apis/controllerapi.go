@@ -75,6 +75,7 @@ func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool 
 		"clusterinsts: ShowClusterInst",
 		"operators: ShowOperator",
 		"developers: ShowDeveloper",
+		"platforms: ShowPlatform",
 		"cloudlets: ShowCloudlet",
 		"apps: ShowApp",
 		"appinstances: ShowAppInst",

@@ -1298,15 +1298,17 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 		fields[AppInstFieldCloudletLocSpeed] = struct{}{}
 		fields[AppInstFieldCloudletLoc] = struct{}{}
 	}
-	if m.CloudletLoc.Timestamp.Seconds != o.CloudletLoc.Timestamp.Seconds {
-		fields[AppInstFieldCloudletLocTimestampSeconds] = struct{}{}
-		fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
-		fields[AppInstFieldCloudletLoc] = struct{}{}
-	}
-	if m.CloudletLoc.Timestamp.Nanos != o.CloudletLoc.Timestamp.Nanos {
-		fields[AppInstFieldCloudletLocTimestampNanos] = struct{}{}
-		fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
-		fields[AppInstFieldCloudletLoc] = struct{}{}
+	if m.CloudletLoc.Timestamp != nil {
+		if m.CloudletLoc.Timestamp.Seconds != o.CloudletLoc.Timestamp.Seconds {
+			fields[AppInstFieldCloudletLocTimestampSeconds] = struct{}{}
+			fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
+			fields[AppInstFieldCloudletLoc] = struct{}{}
+		}
+		if m.CloudletLoc.Timestamp.Nanos != o.CloudletLoc.Timestamp.Nanos {
+			fields[AppInstFieldCloudletLocTimestampNanos] = struct{}{}
+			fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
+			fields[AppInstFieldCloudletLoc] = struct{}{}
+		}
 	}
 	if m.Uri != o.Uri {
 		fields[AppInstFieldUri] = struct{}{}
@@ -1402,7 +1404,9 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 }
 
 func (m *AppInst) CopyInFields(src *AppInst) {
-	fmap := MakeFieldMap(src.Fields)
+	// Copy only diff fields
+	var fmap = make(map[string]struct{})
+	m.DiffFields(src, fmap)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.1"]; set {
@@ -2319,7 +2323,9 @@ func (m *AppInstInfo) DiffFields(o *AppInstInfo, fields map[string]struct{}) {
 }
 
 func (m *AppInstInfo) CopyInFields(src *AppInstInfo) {
-	fmap := MakeFieldMap(src.Fields)
+	// Copy only diff fields
+	var fmap = make(map[string]struct{})
+	m.DiffFields(src, fmap)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.1"]; set {

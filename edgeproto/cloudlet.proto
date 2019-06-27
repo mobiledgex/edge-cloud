@@ -111,11 +111,11 @@ message CloudletInfraProperties{
 // PlatformType is the support list of platform types 
 enum PlatformType {
   // Fake Cloudlet
-  FAKE = 0;
+  PLATFORM_TYPE_FAKE = 0;
   // DIND Cloudlet
-  DIND = 1;
+  PLATFORM_TYPE_DIND = 1;
   // Openstack Cloudlet
-  OPENSTACK = 2;
+  PLATFORM_TYPE_OPENSTACK = 2;
 }
 
 // PlatformKey uniquely identifies a Platform.
@@ -134,7 +134,7 @@ message Platform {
   // Platform config name
   PlatformKey key = 2 [(gogoproto.nullable) = false];
   // Platform type
-  PlatformType type = 3;
+  PlatformType platform_type = 3;
   // Min system resource requirements for platform
   FlavorKey flavor = 4 [(gogoproto.nullable) = false];
   // Path to Docker registry holding edge-cloud image

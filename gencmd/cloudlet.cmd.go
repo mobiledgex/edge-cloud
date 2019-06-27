@@ -50,11 +50,11 @@ var CloudletMetricsNoConfigFlagSet = pflag.NewFlagSet("CloudletMetricsNoConfig",
 var PlatformIn edgeproto.Platform
 var PlatformFlagSet = pflag.NewFlagSet("Platform", pflag.ExitOnError)
 var PlatformNoConfigFlagSet = pflag.NewFlagSet("PlatformNoConfig", pflag.ExitOnError)
-var PlatformInType string
+var PlatformInPlatformType string
 var PlatformTypeStrings = []string{
-	"Fake",
-	"Dind",
-	"Openstack",
+	"PlatformTypeFake",
+	"PlatformTypeDind",
+	"PlatformTypeOpenstack",
 }
 
 var CloudletStateStrings = []string{
@@ -431,7 +431,7 @@ func PlatformSlicer(in *edgeproto.Platform) []string {
 	}
 	s = append(s, in.Fields[0])
 	s = append(s, in.Key.Name)
-	s = append(s, edgeproto.PlatformType_CamelName[int32(in.Type)])
+	s = append(s, edgeproto.PlatformType_CamelName[int32(in.PlatformType)])
 	s = append(s, in.Flavor.Name)
 	s = append(s, in.RegistryPath)
 	s = append(s, in.ImagePath)
@@ -442,7 +442,7 @@ func PlatformHeaderSlicer() []string {
 	s := make([]string, 0, 6)
 	s = append(s, "Fields")
 	s = append(s, "Key-Name")
-	s = append(s, "Type")
+	s = append(s, "PlatformType")
 	s = append(s, "Flavor-Name")
 	s = append(s, "RegistryPath")
 	s = append(s, "ImagePath")
@@ -1410,7 +1410,7 @@ var CloudletMetricsApiCmds = []*cobra.Command{
 
 func init() {
 	PlatformFlagSet.StringVar(&PlatformIn.Key.Name, "key-name", "", "Key.Name")
-	PlatformFlagSet.StringVar(&PlatformInType, "type", "", "one of [Fake Dind Openstack]")
+	PlatformFlagSet.StringVar(&PlatformInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeDind PlatformTypeOpenstack]")
 	PlatformFlagSet.StringVar(&PlatformIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	PlatformFlagSet.StringVar(&PlatformIn.RegistryPath, "registrypath", "", "RegistryPath")
 	PlatformFlagSet.StringVar(&PlatformIn.ImagePath, "imagepath", "", "ImagePath")
@@ -1500,7 +1500,7 @@ func PlatformSetFields() {
 	if PlatformFlagSet.Lookup("key-name").Changed {
 		PlatformIn.Fields = append(PlatformIn.Fields, "2.1")
 	}
-	if PlatformFlagSet.Lookup("type").Changed {
+	if PlatformFlagSet.Lookup("platformtype").Changed {
 		PlatformIn.Fields = append(PlatformIn.Fields, "3")
 	}
 	if PlatformFlagSet.Lookup("flavor-name").Changed {
@@ -1714,16 +1714,16 @@ func parseCloudletInfoEnums() error {
 }
 
 func parsePlatformEnums() error {
-	if PlatformInType != "" {
-		switch PlatformInType {
-		case "Fake":
-			PlatformIn.Type = edgeproto.PlatformType(0)
-		case "Dind":
-			PlatformIn.Type = edgeproto.PlatformType(1)
-		case "Openstack":
-			PlatformIn.Type = edgeproto.PlatformType(2)
+	if PlatformInPlatformType != "" {
+		switch PlatformInPlatformType {
+		case "PlatformTypeFake":
+			PlatformIn.PlatformType = edgeproto.PlatformType(0)
+		case "PlatformTypeDind":
+			PlatformIn.PlatformType = edgeproto.PlatformType(1)
+		case "PlatformTypeOpenstack":
+			PlatformIn.PlatformType = edgeproto.PlatformType(2)
 		default:
-			return errors.New("Invalid value for PlatformInType")
+			return errors.New("Invalid value for PlatformInPlatformType")
 		}
 	}
 	return nil

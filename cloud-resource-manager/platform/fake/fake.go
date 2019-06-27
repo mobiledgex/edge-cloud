@@ -101,7 +101,7 @@ func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Pl
 	log.DebugLog(log.DebugLevelMexos, "create fake Cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 
-	crmProc, err := getCrmProc(cloudlet, string(pf.Type))
+	crmProc, err := getCrmProc(cloudlet, pf.PlatformType.String())
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "fake Cloudlet failed", "err", err)
 		return err
@@ -109,6 +109,7 @@ func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Pl
 	opts := []process.StartOp{}
 	opts = append(opts, process.WithDebug("mexos"))
 
+	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
 	err = crmProc.StartLocal("/tmp/e2e_test_out/"+util.DNSSanitize(cloudlet.Key.Name)+".log", opts...)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "fake Cloudlet failed", "err", err)

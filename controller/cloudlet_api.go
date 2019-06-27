@@ -83,31 +83,33 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
 
-	// Vault controller level credentials are required to access
-	// registry credentials
-	roleId := os.Getenv("VAULT_ROLE_ID")
-	if roleId == "" {
-		return fmt.Errorf("Env variable VAULT_ROLE_ID not set")
-	}
-	secretId := os.Getenv("VAULT_SECRET_ID")
-	if secretId == "" {
-		return fmt.Errorf("Env variable VAULT_SECRET_ID not set")
-	}
+	if !*testMode {
+		// Vault controller level credentials are required to access
+		// registry credentials
+		roleId := os.Getenv("VAULT_ROLE_ID")
+		if roleId == "" {
+			return fmt.Errorf("Env variable VAULT_ROLE_ID not set")
+		}
+		secretId := os.Getenv("VAULT_SECRET_ID")
+		if secretId == "" {
+			return fmt.Errorf("Env variable VAULT_SECRET_ID not set")
+		}
 
-	// Vault CRM level credentials are required to access
-	// instantiate crmserver
-	crmRoleId := os.Getenv("VAULT_CRM_ROLE_ID")
-	if crmRoleId == "" {
-		return fmt.Errorf("Env variable VAULT_CRM_ROLE_ID not set")
-	}
-	crmSecretId := os.Getenv("VAULT_CRM_SECRET_ID")
-	if crmSecretId == "" {
-		return fmt.Errorf("Env variable VAULT_CRM_SECRET_ID not set")
+		// Vault CRM level credentials are required to access
+		// instantiate crmserver
+		crmRoleId := os.Getenv("VAULT_CRM_ROLE_ID")
+		if crmRoleId == "" {
+			return fmt.Errorf("Env variable VAULT_CRM_ROLE_ID not set")
+		}
+		crmSecretId := os.Getenv("VAULT_CRM_SECRET_ID")
+		if crmSecretId == "" {
+			return fmt.Errorf("Env variable VAULT_CRM_SECRET_ID not set")
+		}
+		in.CrmRoleId = crmRoleId
+		in.CrmSecretId = crmSecretId
 	}
 
 	in.TlsCertFile = *tlsCertFile
-	in.CrmRoleId = crmRoleId
-	in.CrmSecretId = crmSecretId
 	in.VaultAddr = *vaultAddr
 
 	in.TimeLimits.CreateClusterInstTimeout = int64(cloudcommon.CreateClusterInstTimeout)
@@ -131,7 +133,6 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return fmt.Errorf("Platform flavor %s not found", pf.Flavor.Name)
 		}
 
-		s.store.STMPut(stm, in)
 		return nil
 	})
 	if err != nil {
@@ -186,10 +187,13 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 		in.State = edgeproto.TrackedState_READY
-		cb.Send(&edgeproto.Result{Message: "Created Cloudlet successfully"})
+	} else {
+		in.State = edgeproto.TrackedState_CREATE_ERROR
+		in.Errors = append(in.Errors, "cloudlet state is not ready: "+cloudletInfo.State.String())
 	}
 
 	s.store.Put(in, s.sync.syncWait)
+
 	return nil
 }
 
