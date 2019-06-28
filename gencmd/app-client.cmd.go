@@ -9,7 +9,6 @@ It is generated from these files:
 	appcommon.proto
 	dynamic-location-group.proto
 	loc.proto
-	predictiveqos.proto
 
 It has these top-level messages:
 	RegisterClientRequest
@@ -31,18 +30,13 @@ It has these top-level messages:
 	DynamicLocGroupReply
 	QosPosition
 	QosPositionKpiRequest
+	QosPositionResult
 	QosPositionKpiReply
 	AppPort
 	DlgMessage
 	DlgReply
 	Timestamp
 	Loc
-	QoSKPIRequest
-	PositionKpiResult
-	PositionKpiRequest
-	QoSKPIResponse
-	HealthCheckRequest
-	HealthCheckResponse
 */
 package gencmd
 
@@ -1195,24 +1189,27 @@ func QosPositionKpiRequestSlicer(in *distributed_match_engine.QosPositionKpiRequ
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, in.SessionCookie)
 	if in.Positions == nil {
-		in.Positions = &distributed_match_engine.QosPosition{}
+		in.Positions = make([]*distributed_match_engine.QosPosition, 1)
 	}
-	s = append(s, strconv.FormatUint(uint64(in.Positions.Positionid), 10))
-	if in.Positions.GpsLocation == nil {
-		in.Positions.GpsLocation = &distributed_match_engine.Loc{}
+	if in.Positions[0] == nil {
+		in.Positions[0] = &distributed_match_engine.QosPosition{}
 	}
-	s = append(s, strconv.FormatFloat(float64(in.Positions.GpsLocation.Latitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Positions.GpsLocation.Longitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Positions.GpsLocation.HorizontalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Positions.GpsLocation.VerticalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Positions.GpsLocation.Altitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Positions.GpsLocation.Course), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Positions.GpsLocation.Speed), 'e', -1, 32))
-	if in.Positions.GpsLocation.Timestamp == nil {
-		in.Positions.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	s = append(s, strconv.FormatUint(uint64(in.Positions[0].Positionid), 10))
+	if in.Positions[0].GpsLocation == nil {
+		in.Positions[0].GpsLocation = &distributed_match_engine.Loc{}
 	}
-	s = append(s, strconv.FormatUint(uint64(in.Positions.GpsLocation.Timestamp.Seconds), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Positions.GpsLocation.Timestamp.Nanos), 10))
+	s = append(s, strconv.FormatFloat(float64(in.Positions[0].GpsLocation.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Positions[0].GpsLocation.Longitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Positions[0].GpsLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Positions[0].GpsLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Positions[0].GpsLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Positions[0].GpsLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Positions[0].GpsLocation.Speed), 'e', -1, 32))
+	if in.Positions[0].GpsLocation.Timestamp == nil {
+		in.Positions[0].GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	}
+	s = append(s, strconv.FormatUint(uint64(in.Positions[0].GpsLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Positions[0].GpsLocation.Timestamp.Nanos), 10))
 	return s
 }
 
@@ -1256,17 +1253,79 @@ func QosPositionKpiRequestWriteOutputOne(obj *distributed_match_engine.QosPositi
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func QosPositionResultSlicer(in *distributed_match_engine.QosPositionResult) []string {
+	s := make([]string, 0, 10)
+	s = append(s, strconv.FormatUint(uint64(in.Positionid), 10))
+	s = append(s, strconv.FormatFloat(float64(in.DluserthroughputMin), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.DluserthroughputAvg), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.DluserthroughputMax), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.UluserthroughputMin), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.UluserthroughputAvg), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.UluserthroughputMax), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.LatencyMin), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.LatencyAvg), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.LatencyMax), 'e', -1, 32))
+	return s
+}
+
+func QosPositionResultHeaderSlicer() []string {
+	s := make([]string, 0, 10)
+	s = append(s, "Positionid")
+	s = append(s, "DluserthroughputMin")
+	s = append(s, "DluserthroughputAvg")
+	s = append(s, "DluserthroughputMax")
+	s = append(s, "UluserthroughputMin")
+	s = append(s, "UluserthroughputAvg")
+	s = append(s, "UluserthroughputMax")
+	s = append(s, "LatencyMin")
+	s = append(s, "LatencyAvg")
+	s = append(s, "LatencyMax")
+	return s
+}
+
+func QosPositionResultWriteOutputArray(objs []*distributed_match_engine.QosPositionResult) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(QosPositionResultHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(QosPositionResultSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func QosPositionResultWriteOutputOne(obj *distributed_match_engine.QosPositionResult) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(QosPositionResultHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(QosPositionResultSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func QosPositionKpiReplySlicer(in *distributed_match_engine.QosPositionKpiReply) []string {
 	s := make([]string, 0, 3)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.ReplyStatus_CamelName[int32(in.Status)])
 	if in.PositionResults == nil {
-		in.PositionResults = make([]*distributed_match_engine.PositionKpiResult, 1)
+		in.PositionResults = make([]*distributed_match_engine.QosPositionResult, 1)
 	}
 	if in.PositionResults[0] == nil {
-		in.PositionResults[0] = &distributed_match_engine.PositionKpiResult{}
+		in.PositionResults[0] = &distributed_match_engine.QosPositionResult{}
 	}
 	s = append(s, strconv.FormatUint(uint64(in.PositionResults[0].Positionid), 10))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].DluserthroughputMin), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].DluserthroughputAvg), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].DluserthroughputMax), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].UluserthroughputMin), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].UluserthroughputAvg), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].UluserthroughputMax), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].LatencyMin), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].LatencyAvg), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].LatencyMax), 'e', -1, 32))
 	return s
 }
 
@@ -1275,6 +1334,15 @@ func QosPositionKpiReplyHeaderSlicer() []string {
 	s = append(s, "Ver")
 	s = append(s, "Status")
 	s = append(s, "PositionResults-Positionid")
+	s = append(s, "PositionResults-DluserthroughputMin")
+	s = append(s, "PositionResults-DluserthroughputAvg")
+	s = append(s, "PositionResults-DluserthroughputMax")
+	s = append(s, "PositionResults-UluserthroughputMin")
+	s = append(s, "PositionResults-UluserthroughputAvg")
+	s = append(s, "PositionResults-UluserthroughputMax")
+	s = append(s, "PositionResults-LatencyMin")
+	s = append(s, "PositionResults-LatencyAvg")
+	s = append(s, "PositionResults-LatencyMax")
 	return s
 }
 
@@ -1710,19 +1778,6 @@ func init() {
 	DynamicLocGroupRequestFlagSet.StringVar(&DynamicLocGroupRequestIn.UserData, "userdata", "", "UserData")
 	QosPositionKpiRequestFlagSet.Uint32Var(&QosPositionKpiRequestIn.Ver, "ver", 0, "Ver")
 	QosPositionKpiRequestFlagSet.StringVar(&QosPositionKpiRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
-	QosPositionKpiRequestIn.Positions = &distributed_match_engine.QosPosition{}
-	QosPositionKpiRequestFlagSet.Int64Var(&QosPositionKpiRequestIn.Positions.Positionid, "positions-positionid", 0, "Positions.Positionid")
-	QosPositionKpiRequestIn.Positions.GpsLocation = &distributed_match_engine.Loc{}
-	QosPositionKpiRequestFlagSet.Float64Var(&QosPositionKpiRequestIn.Positions.GpsLocation.Latitude, "positions-gpslocation-latitude", 0, "Positions.GpsLocation.Latitude")
-	QosPositionKpiRequestFlagSet.Float64Var(&QosPositionKpiRequestIn.Positions.GpsLocation.Longitude, "positions-gpslocation-longitude", 0, "Positions.GpsLocation.Longitude")
-	QosPositionKpiRequestFlagSet.Float64Var(&QosPositionKpiRequestIn.Positions.GpsLocation.HorizontalAccuracy, "positions-gpslocation-horizontalaccuracy", 0, "Positions.GpsLocation.HorizontalAccuracy")
-	QosPositionKpiRequestFlagSet.Float64Var(&QosPositionKpiRequestIn.Positions.GpsLocation.VerticalAccuracy, "positions-gpslocation-verticalaccuracy", 0, "Positions.GpsLocation.VerticalAccuracy")
-	QosPositionKpiRequestFlagSet.Float64Var(&QosPositionKpiRequestIn.Positions.GpsLocation.Altitude, "positions-gpslocation-altitude", 0, "Positions.GpsLocation.Altitude")
-	QosPositionKpiRequestFlagSet.Float64Var(&QosPositionKpiRequestIn.Positions.GpsLocation.Course, "positions-gpslocation-course", 0, "Positions.GpsLocation.Course")
-	QosPositionKpiRequestFlagSet.Float64Var(&QosPositionKpiRequestIn.Positions.GpsLocation.Speed, "positions-gpslocation-speed", 0, "Positions.GpsLocation.Speed")
-	QosPositionKpiRequestIn.Positions.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
-	QosPositionKpiRequestFlagSet.Int64Var(&QosPositionKpiRequestIn.Positions.GpsLocation.Timestamp.Seconds, "positions-gpslocation-timestamp-seconds", 0, "Positions.GpsLocation.Timestamp.Seconds")
-	QosPositionKpiRequestFlagSet.Int32Var(&QosPositionKpiRequestIn.Positions.GpsLocation.Timestamp.Nanos, "positions-gpslocation-timestamp-nanos", 0, "Positions.GpsLocation.Timestamp.Nanos")
 	RegisterClientCmd.Flags().AddFlagSet(RegisterClientRequestFlagSet)
 	FindCloudletCmd.Flags().AddFlagSet(FindCloudletRequestFlagSet)
 	VerifyLocationCmd.Flags().AddFlagSet(VerifyLocationRequestFlagSet)

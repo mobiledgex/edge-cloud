@@ -380,7 +380,7 @@ var (
 
 	pattern_MatchEngineApi_GetFqdnList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "getfqdnlist"}, ""))
 
-	pattern_MatchEngineApi_GetQosPositionKpi_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "getpositionkpi"}, ""))
+	pattern_MatchEngineApi_GetQosPositionKpi_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "getqospositionkpi"}, ""))
 )
 
 var (

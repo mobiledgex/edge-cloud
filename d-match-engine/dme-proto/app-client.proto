@@ -6,7 +6,6 @@ package distributed_match_engine;
 import "google/api/annotations.proto";
 import "loc.proto";
 import "appcommon.proto";
-import "predictiveqos.proto";
 
 enum IDTypes {
   ID_UNDEFINED = 0;
@@ -270,7 +269,22 @@ message QosPositionKpiRequest{
   // Session Cookie from RegisterClientRequest
   string session_cookie = 2;
   // list of positions
-  QosPosition positions = 3;
+  repeated QosPosition positions = 3;
+}
+
+message QosPositionResult{
+    // as set by the client, must be unique within one QosPositionKpiRequest
+    int64 positionid = 1;
+    // throughput 
+    float dluserthroughput_min = 2;
+    float dluserthroughput_avg = 3;
+    float dluserthroughput_max = 4;
+    float uluserthroughput_min = 5;
+    float uluserthroughput_avg = 6;
+    float uluserthroughput_max = 7;
+    float latency_min = 8;
+    float latency_avg = 9;
+    float latency_max = 10;
 }
 
 message QosPositionKpiReply{
@@ -278,7 +292,7 @@ message QosPositionKpiReply{
   // Status of the reply
   ReplyStatus status = 2;
   // kpi details
-  repeated PositionKpiResult position_results = 3;
+  repeated QosPositionResult position_results = 3;
 }
 
 
@@ -327,7 +341,7 @@ service MatchEngineApi {
   }
     rpc GetQosPositionKpi(QosPositionKpiRequest) returns (QosPositionKpiReply) {
     option (google.api.http) = {
-      post: "/v1/getpositionkpi"
+      post: "/v1/getqospositionkpi"
       body: "*"
     };
   }
