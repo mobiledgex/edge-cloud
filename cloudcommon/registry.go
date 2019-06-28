@@ -100,6 +100,21 @@ func SendHTTPReq(method, fileUrlPath string, auth *RegistryAuth) (*http.Response
 	return resp, nil
 }
 
+func GetRegistryTag(regUrl string) (string, error) {
+	urlObj, err := url.Parse("https://" + regUrl)
+	if err != nil {
+		return "", err
+	}
+	out := strings.Split(urlObj.Path, ":")
+	if len(out) == 1 {
+		return "", nil
+	} else if len(out) == 2 {
+		return out[1], nil
+	} else {
+		return "", fmt.Errorf("Invalid tag in registry path")
+	}
+}
+
 func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	log.DebugLog(log.DebugLevelApi, "validate registry path", "path", regUrl)
 
@@ -113,6 +128,9 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	regPath := ""
 
 	urlObj, err := url.Parse(protocol + "://" + regUrl)
+	if err != nil {
+		return err
+	}
 	out := strings.Split(urlObj.Path, ":")
 	if len(out) == 1 {
 		regPath = urlObj.Path

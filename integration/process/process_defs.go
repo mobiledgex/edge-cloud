@@ -21,6 +21,7 @@ type Controller struct {
 	ApiAddr       string
 	HttpAddr      string
 	NotifyAddr    string
+	VaultAddr     string
 	InfluxAddr    string
 	TLS           TLSCerts
 	ShortTimeouts bool

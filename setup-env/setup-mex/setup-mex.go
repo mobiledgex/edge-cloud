@@ -115,7 +115,7 @@ func ensureProcesses(processName string, procs []process.Process) bool {
 		exeName := p.GetExeName()
 		args := p.LookupArgs()
 		log.Printf("Looking for host %v processexe %v processargs %v\n", p.GetHostname(), exeName, args)
-		if !util.EnsureProcessesByName(exeName, args) {
+		if !process.EnsureProcessesByName(exeName, args) {
 			ensured = false
 		}
 	}
@@ -289,7 +289,7 @@ func StopProcesses(processName string, allprocs []process.Process) bool {
 			continue
 		}
 		log.Println("stopping/killing processes " + p.GetName())
-		go util.StopProcess(allprocs[ii], maxWait, c)
+		go process.StopProcess(allprocs[ii], maxWait, c)
 		count++
 	}
 	if processName != "" && count == 0 {

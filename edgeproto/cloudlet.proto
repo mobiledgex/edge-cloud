@@ -108,7 +108,7 @@ message CloudletInfraProperties{
     GcpProperties gcp_properties = 5;
 }
 
-// PlatformType is the support list of platform types 
+// PlatformType is the supported list of cloudlet types
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
@@ -116,12 +116,29 @@ enum PlatformType {
   PLATFORM_TYPE_DIND = 1;
   // Openstack Cloudlet
   PLATFORM_TYPE_OPENSTACK = 2;
+  // Azure Cloudlet
+  PLATFORM_TYPE_AZURE = 3;
+  // GCP Cloudlet
+  PLATFORM_TYPE_GCP = 4;
+  // MEXDIND Cloudlet
+  PLATFORM_TYPE_MEXDIND = 5;
+}
+
+// DeploymentType specifies where to deploy cloudlet services
+enum DeploymentType {
+  // Deploy cloudlet services locally
+  DEPLOYMENT_LOCAL = 0;
+  // Deploy cloudlet services on openstack platform
+  DEPLOYMENT_OPENSTACK  = 1;
+  // Deploy cloudlet services on baremetal platform
+  DEPLOYMENT_BAREMETAL  = 2;
 }
 
 // PlatformKey uniquely identifies a Platform.
 message PlatformKey {
   // Platform Name
   string name = 1;
+
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
@@ -135,12 +152,14 @@ message Platform {
   PlatformKey key = 2 [(gogoproto.nullable) = false];
   // Platform type
   PlatformType platform_type = 3;
+  // Deployment specificies where to deploy platform services
+  DeploymentType deployment = 4;
   // Min system resource requirements for platform
-  FlavorKey flavor = 4 [(gogoproto.nullable) = false];
+  FlavorKey flavor = 5;
   // Path to Docker registry holding edge-cloud image
-  string registry_path = 5;
+  string registry_path = 6;
   // Path to VM registry holding platform base image
-  string image_path = 6;
+  string image_path = 7;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

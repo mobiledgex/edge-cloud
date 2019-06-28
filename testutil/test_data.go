@@ -180,7 +180,7 @@ var PlatformData = []edgeproto.Platform{
 			Name: "platform_fake",
 		},
 		PlatformType: edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
-		Flavor:       FlavorData[0].Key,
+		Flavor:       &FlavorData[0].Key,
 		RegistryPath: "registry.mobiledgex.net/somewhere/edge-cloud",
 		ImagePath:    "http://somerepo/image/path/ai/1.2.0#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 	},

@@ -82,6 +82,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--influxAddr")
 		args = append(args, p.InfluxAddr)
 	}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -263,7 +267,7 @@ func (p *Dme) getTlsConfig() *tls.Config {
 
 // CrmLocal
 
-func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
+func (p *Crm) GetArgs(opts ...StartOp) []string {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	if p.CloudletKey != "" {
 		args = append(args, "--cloudletKey")
@@ -299,8 +303,13 @@ func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
+	return args
+}
 
+func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 	var err error
+
+	args := p.GetArgs(opts...)
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	return err
 }
@@ -312,6 +321,10 @@ func (p *Crm) StopLocal() {
 func (p *Crm) GetExeName() string { return "crmserver" }
 
 func (p *Crm) LookupArgs() string { return "--cloudletKey " + p.CloudletKey }
+
+func (p *Crm) String(opts ...StartOp) string {
+	return p.GetExeName() + " " + strings.Join(p.GetArgs(opts...), " ")
+}
 
 // InfluxLocal
 

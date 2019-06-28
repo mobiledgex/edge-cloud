@@ -51,10 +51,20 @@ var PlatformIn edgeproto.Platform
 var PlatformFlagSet = pflag.NewFlagSet("Platform", pflag.ExitOnError)
 var PlatformNoConfigFlagSet = pflag.NewFlagSet("PlatformNoConfig", pflag.ExitOnError)
 var PlatformInPlatformType string
+var PlatformInDeployment string
 var PlatformTypeStrings = []string{
 	"PlatformTypeFake",
 	"PlatformTypeDind",
 	"PlatformTypeOpenstack",
+	"PlatformTypeAzure",
+	"PlatformTypeGcp",
+	"PlatformTypeMexdind",
+}
+
+var DeploymentTypeStrings = []string{
+	"DeploymentLocal",
+	"DeploymentOpenstack",
+	"DeploymentBaremetal",
 }
 
 var CloudletStateStrings = []string{
@@ -425,13 +435,17 @@ func PlatformKeyWriteOutputOne(obj *edgeproto.PlatformKey) {
 	}
 }
 func PlatformSlicer(in *edgeproto.Platform) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
 	s = append(s, in.Fields[0])
 	s = append(s, in.Key.Name)
 	s = append(s, edgeproto.PlatformType_CamelName[int32(in.PlatformType)])
+	s = append(s, edgeproto.DeploymentType_CamelName[int32(in.Deployment)])
+	if in.Flavor == nil {
+		in.Flavor = &edgeproto.FlavorKey{}
+	}
 	s = append(s, in.Flavor.Name)
 	s = append(s, in.RegistryPath)
 	s = append(s, in.ImagePath)
@@ -439,10 +453,11 @@ func PlatformSlicer(in *edgeproto.Platform) []string {
 }
 
 func PlatformHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, "Fields")
 	s = append(s, "Key-Name")
 	s = append(s, "PlatformType")
+	s = append(s, "Deployment")
 	s = append(s, "Flavor-Name")
 	s = append(s, "RegistryPath")
 	s = append(s, "ImagePath")
@@ -1410,7 +1425,9 @@ var CloudletMetricsApiCmds = []*cobra.Command{
 
 func init() {
 	PlatformFlagSet.StringVar(&PlatformIn.Key.Name, "key-name", "", "Key.Name")
-	PlatformFlagSet.StringVar(&PlatformInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeDind PlatformTypeOpenstack]")
+	PlatformFlagSet.StringVar(&PlatformInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeDind PlatformTypeOpenstack PlatformTypeAzure PlatformTypeGcp PlatformTypeMexdind]")
+	PlatformFlagSet.StringVar(&PlatformInDeployment, "deployment", "", "one of [DeploymentLocal DeploymentOpenstack DeploymentBaremetal]")
+	PlatformIn.Flavor = &edgeproto.FlavorKey{}
 	PlatformFlagSet.StringVar(&PlatformIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	PlatformFlagSet.StringVar(&PlatformIn.RegistryPath, "registrypath", "", "RegistryPath")
 	PlatformFlagSet.StringVar(&PlatformIn.ImagePath, "imagepath", "", "ImagePath")
@@ -1503,14 +1520,17 @@ func PlatformSetFields() {
 	if PlatformFlagSet.Lookup("platformtype").Changed {
 		PlatformIn.Fields = append(PlatformIn.Fields, "3")
 	}
+	if PlatformFlagSet.Lookup("deployment").Changed {
+		PlatformIn.Fields = append(PlatformIn.Fields, "4")
+	}
 	if PlatformFlagSet.Lookup("flavor-name").Changed {
-		PlatformIn.Fields = append(PlatformIn.Fields, "4.1")
+		PlatformIn.Fields = append(PlatformIn.Fields, "5.1")
 	}
 	if PlatformFlagSet.Lookup("registrypath").Changed {
-		PlatformIn.Fields = append(PlatformIn.Fields, "5")
+		PlatformIn.Fields = append(PlatformIn.Fields, "6")
 	}
 	if PlatformFlagSet.Lookup("imagepath").Changed {
-		PlatformIn.Fields = append(PlatformIn.Fields, "6")
+		PlatformIn.Fields = append(PlatformIn.Fields, "7")
 	}
 }
 
@@ -1722,8 +1742,26 @@ func parsePlatformEnums() error {
 			PlatformIn.PlatformType = edgeproto.PlatformType(1)
 		case "PlatformTypeOpenstack":
 			PlatformIn.PlatformType = edgeproto.PlatformType(2)
+		case "PlatformTypeAzure":
+			PlatformIn.PlatformType = edgeproto.PlatformType(3)
+		case "PlatformTypeGcp":
+			PlatformIn.PlatformType = edgeproto.PlatformType(4)
+		case "PlatformTypeMexdind":
+			PlatformIn.PlatformType = edgeproto.PlatformType(5)
 		default:
 			return errors.New("Invalid value for PlatformInPlatformType")
+		}
+	}
+	if PlatformInDeployment != "" {
+		switch PlatformInDeployment {
+		case "DeploymentLocal":
+			PlatformIn.Deployment = edgeproto.DeploymentType(0)
+		case "DeploymentOpenstack":
+			PlatformIn.Deployment = edgeproto.DeploymentType(1)
+		case "DeploymentBaremetal":
+			PlatformIn.Deployment = edgeproto.DeploymentType(2)
+		default:
+			return errors.New("Invalid value for PlatformInDeployment")
 		}
 	}
 	return nil

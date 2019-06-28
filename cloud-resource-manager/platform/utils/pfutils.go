@@ -1,6 +1,7 @@
 package pfutils
 
 import (
+	"fmt"
 	"os"
 	"plugin"
 
@@ -28,15 +29,18 @@ func GetPlatform(plat string) (pf.Platform, error) {
 	log.DebugLog(log.DebugLevelMexos, "Loading plugin", "plugin", solib)
 	plug, err := plugin.Open(solib)
 	if err != nil {
-		log.FatalLog("failed to load plugin", "plugin", solib, "platform", plat, "error", err)
+		log.DebugLog(log.DebugLevelMexos, "failed to load plugin", "plugin", solib, "platform", plat, "error", err)
+		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: %v", plat, err)
 	}
 	sym, err := plug.Lookup("GetPlatform")
 	if err != nil {
-		log.FatalLog("plugin does not have GetPlatform symbol", "plugin", solib)
+		log.DebugLog(log.DebugLevelMexos, "plugin does not have GetPlatform symbol", "plugin", solib)
+		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol not found", plat)
 	}
 	getPlatFunc, ok := sym.(func(plat string) (pf.Platform, error))
 	if !ok {
-		log.FatalLog("plugin GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", "plugin", solib)
+		log.DebugLog(log.DebugLevelMexos, "plugin GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", "plugin", solib)
+		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", plat)
 	}
 	log.DebugLog(log.DebugLevelMexos, "Creating platform")
 	return getPlatFunc(plat)

@@ -1,17 +1,14 @@
 package fake
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
-	ut "github.com/mobiledgex/edge-cloud/setup-env/util"
-	"github.com/mobiledgex/edge-cloud/util"
 )
 
 type Platform struct {
@@ -79,40 +76,14 @@ func (s *Platform) GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *
 	return req.Command, nil
 }
 
-func getCrmProc(cloudlet *edgeproto.Cloudlet, platType string) (*process.Crm, error) {
-	cloudletKeyStr, err := json.Marshal(cloudlet.Key)
-	if err != nil {
-		return nil, fmt.Errorf("unable to marshal cloudlet key")
-	}
-	return &process.Crm{
-		NotifyAddrs: cloudlet.NotifyCtrlAddrs,
-		CloudletKey: string(cloudletKeyStr),
-		Platform:    platType,
-		Common: process.Common{
-			Hostname: "127.0.0.1",
-		},
-		TLS: process.TLSCerts{
-			ServerCert: cloudlet.TlsCertFile,
-		},
-	}, nil
-}
-
 func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.DebugLog(log.DebugLevelMexos, "create fake Cloudlet", "key", cloudlet.Key)
+	log.DebugLog(log.DebugLevelMexos, "create fake cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 
-	crmProc, err := getCrmProc(cloudlet, pf.PlatformType.String())
-	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "fake Cloudlet failed", "err", err)
-		return err
-	}
-	opts := []process.StartOp{}
-	opts = append(opts, process.WithDebug("mexos"))
-
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
-	err = crmProc.StartLocal("/tmp/e2e_test_out/"+util.DNSSanitize(cloudlet.Key.Name)+".log", opts...)
+	err := cloudcommon.StartCRMService(cloudlet, pf)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "fake Cloudlet failed", "err", err)
+		log.DebugLog(log.DebugLevelMexos, "fake cloudlet create failed", "err", err)
 		return err
 	}
 	updateCallback(edgeproto.UpdateTask, "Cloudlet created successfully")
@@ -120,17 +91,12 @@ func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Pl
 }
 
 func (s *Platform) DeleteCloudlet(cloudlet *edgeproto.Cloudlet) error {
-	log.DebugLog(log.DebugLevelMexos, "delete fake Cloudlet")
-	crmProc, err := getCrmProc(cloudlet, "")
+	log.DebugLog(log.DebugLevelMexos, "delete fake Cloudlet", "key", cloudlet.Key)
+	err := cloudcommon.StopCRMService(cloudlet)
 	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "fake cloudlet delete failed", "err", err)
 		return err
 	}
-	maxwait := 5 * time.Second
-
-	crmProc.StopLocal()
-	c := make(chan string)
-	go ut.KillProcessesByName(crmProc.GetExeName(), maxwait, crmProc.LookupArgs(), c)
-	log.DebugLog(log.DebugLevelMexos, "fake Cloudlet deleted", "msg", <-c)
 
 	return nil
 }

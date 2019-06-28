@@ -72,7 +72,7 @@ func main() {
 	var err error
 	platform, err = pfutils.GetPlatform(*platformName)
 	if err != nil {
-		log.FatalLog("Failed to get platform %s, %s", *platformName, err.Error())
+		log.FatalLog(err.Error())
 	}
 
 	controllerData = crmutil.NewControllerData(platform)

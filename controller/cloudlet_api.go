@@ -129,7 +129,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if !platformApi.store.STMGet(stm, &in.Platform, &pf) {
 			return fmt.Errorf("Platform %s not found", in.Platform.Name)
 		}
-		if !flavorApi.store.STMGet(stm, &pf.Flavor, &pfFlavor) {
+		if !flavorApi.store.STMGet(stm, pf.Flavor, &pfFlavor) {
 			return fmt.Errorf("Platform flavor %s not found", pf.Flavor.Name)
 		}
 
@@ -154,14 +154,19 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	if err != nil {
 		return err
 	}
-	err = cloudletPlatform.CreateCloudlet(in, &pf, &pfFlavor, updateCloudletCallback)
+
+	if pf.Deployment == edgeproto.DeploymentType_DEPLOYMENT_LOCAL {
+		err = cloudcommon.StartCRMService(in, &pf)
+	} else {
+		err = cloudletPlatform.CreateCloudlet(in, &pf, &pfFlavor, updateCloudletCallback)
+	}
+
 	if err != nil {
 		in.State = edgeproto.TrackedState_CREATE_ERROR
 		in.Errors = append(in.Errors, err.Error())
 		_, err = s.store.Delete(in, s.sync.syncWait)
 		return err
 	}
-
 	// Wait for CRM to connect to controller
 	var cloudletInfo edgeproto.CloudletInfo
 	start := time.Now()
@@ -241,6 +246,7 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("Cloudlet in use by static Cluster Instance")
 	}
 
+	pf := edgeproto.Platform{}
 	// Set state to prevent other apps from being created on ClusterInst
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
@@ -253,6 +259,9 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			}
 			return errors.New("Cloudlet busy, cannot delete")
 		}
+		if !platformApi.store.STMGet(stm, &in.Platform, &pf) {
+			return fmt.Errorf("Delete failed, platform %s not found", in.Platform.Name)
+		}
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
 		s.store.STMPut(stm, in)
 		return nil
@@ -261,7 +270,11 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return err
 	}
 
-	err = cloudletPlatform.DeleteCloudlet(in)
+	if pf.Deployment == edgeproto.DeploymentType_DEPLOYMENT_LOCAL {
+		err = cloudcommon.StopCRMService(in)
+	} else {
+		err = cloudletPlatform.DeleteCloudlet(in)
+	}
 	if err != nil {
 		return err
 	}
