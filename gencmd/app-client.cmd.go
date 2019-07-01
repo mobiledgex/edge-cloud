@@ -1254,8 +1254,23 @@ func QosPositionKpiRequestWriteOutputOne(obj *distributed_match_engine.QosPositi
 	}
 }
 func QosPositionResultSlicer(in *distributed_match_engine.QosPositionResult) []string {
-	s := make([]string, 0, 10)
+	s := make([]string, 0, 11)
 	s = append(s, strconv.FormatUint(uint64(in.Positionid), 10))
+	if in.GpsLocation == nil {
+		in.GpsLocation = &distributed_match_engine.Loc{}
+	}
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Longitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Speed), 'e', -1, 32))
+	if in.GpsLocation.Timestamp == nil {
+		in.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	}
+	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Nanos), 10))
 	s = append(s, strconv.FormatFloat(float64(in.DluserthroughputMin), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.DluserthroughputAvg), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.DluserthroughputMax), 'e', -1, 32))
@@ -1269,8 +1284,17 @@ func QosPositionResultSlicer(in *distributed_match_engine.QosPositionResult) []s
 }
 
 func QosPositionResultHeaderSlicer() []string {
-	s := make([]string, 0, 10)
+	s := make([]string, 0, 11)
 	s = append(s, "Positionid")
+	s = append(s, "GpsLocation-Latitude")
+	s = append(s, "GpsLocation-Longitude")
+	s = append(s, "GpsLocation-HorizontalAccuracy")
+	s = append(s, "GpsLocation-VerticalAccuracy")
+	s = append(s, "GpsLocation-Altitude")
+	s = append(s, "GpsLocation-Course")
+	s = append(s, "GpsLocation-Speed")
+	s = append(s, "GpsLocation-Timestamp-Seconds")
+	s = append(s, "GpsLocation-Timestamp-Nanos")
 	s = append(s, "DluserthroughputMin")
 	s = append(s, "DluserthroughputAvg")
 	s = append(s, "DluserthroughputMax")
@@ -1317,6 +1341,21 @@ func QosPositionKpiReplySlicer(in *distributed_match_engine.QosPositionKpiReply)
 		in.PositionResults[0] = &distributed_match_engine.QosPositionResult{}
 	}
 	s = append(s, strconv.FormatUint(uint64(in.PositionResults[0].Positionid), 10))
+	if in.PositionResults[0].GpsLocation == nil {
+		in.PositionResults[0].GpsLocation = &distributed_match_engine.Loc{}
+	}
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].GpsLocation.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].GpsLocation.Longitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].GpsLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].GpsLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].GpsLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].GpsLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].GpsLocation.Speed), 'e', -1, 32))
+	if in.PositionResults[0].GpsLocation.Timestamp == nil {
+		in.PositionResults[0].GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	}
+	s = append(s, strconv.FormatUint(uint64(in.PositionResults[0].GpsLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.PositionResults[0].GpsLocation.Timestamp.Nanos), 10))
 	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].DluserthroughputMin), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].DluserthroughputAvg), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.PositionResults[0].DluserthroughputMax), 'e', -1, 32))
@@ -1334,6 +1373,15 @@ func QosPositionKpiReplyHeaderSlicer() []string {
 	s = append(s, "Ver")
 	s = append(s, "Status")
 	s = append(s, "PositionResults-Positionid")
+	s = append(s, "PositionResults-GpsLocation-Latitude")
+	s = append(s, "PositionResults-GpsLocation-Longitude")
+	s = append(s, "PositionResults-GpsLocation-HorizontalAccuracy")
+	s = append(s, "PositionResults-GpsLocation-VerticalAccuracy")
+	s = append(s, "PositionResults-GpsLocation-Altitude")
+	s = append(s, "PositionResults-GpsLocation-Course")
+	s = append(s, "PositionResults-GpsLocation-Speed")
+	s = append(s, "PositionResults-GpsLocation-Timestamp-Seconds")
+	s = append(s, "PositionResults-GpsLocation-Timestamp-Nanos")
 	s = append(s, "PositionResults-DluserthroughputMin")
 	s = append(s, "PositionResults-DluserthroughputAvg")
 	s = append(s, "PositionResults-DluserthroughputMax")

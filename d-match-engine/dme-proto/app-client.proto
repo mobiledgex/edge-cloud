@@ -275,16 +275,18 @@ message QosPositionKpiRequest{
 message QosPositionResult{
     // as set by the client, must be unique within one QosPositionKpiRequest
     int64 positionid = 1;
+    // the location which was requested
+    Loc gps_location = 2;
     // throughput 
-    float dluserthroughput_min = 2;
-    float dluserthroughput_avg = 3;
-    float dluserthroughput_max = 4;
-    float uluserthroughput_min = 5;
-    float uluserthroughput_avg = 6;
-    float uluserthroughput_max = 7;
-    float latency_min = 8;
-    float latency_avg = 9;
-    float latency_max = 10;
+    float dluserthroughput_min = 3;
+    float dluserthroughput_avg = 4;
+    float dluserthroughput_max = 5;
+    float uluserthroughput_min = 6;
+    float uluserthroughput_avg = 7;
+    float uluserthroughput_max = 8;
+    float latency_min = 9;
+    float latency_avg = 10;
+    float latency_max = 11;
 }
 
 message QosPositionKpiReply{

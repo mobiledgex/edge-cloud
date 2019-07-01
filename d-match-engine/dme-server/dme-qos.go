@@ -44,6 +44,7 @@ func getQosPositionKpi(mreq *dme.QosPositionKpiRequest, mreply *dme.QosPositionK
 		var qosres dme.QosPositionResult
 
 		qosres.Positionid = pid
+		qosres.GpsLocation = p.GpsLocation
 		getQosResults(&qosres)
 		log.DebugLog(log.DebugLevelDmereq, "Position", "pid", pid, "qosres", qosres)
 

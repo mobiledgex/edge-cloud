@@ -781,6 +781,10 @@
           "format": "int64",
           "title": "as set by the client, must be unique within one QosPositionKpiRequest"
         },
+        "gps_location": {
+          "$ref": "#/definitions/distributed_match_engineLoc",
+          "title": "the location which was requested"
+        },
         "dluserthroughput_min": {
           "type": "number",
           "format": "float",
