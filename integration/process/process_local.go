@@ -518,7 +518,9 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	p.GetAppRole(region, "controller", &roles.CtrlRoleID, &roles.CtrlSecretID, &err)
 	p.PutSecret(region, "dme", p.DmeSecret+"-old", &err)
 	p.PutSecret(region, "dme", p.DmeSecret, &err)
-	p.PutInfluxDbCreds(region, "/tmp/influx.json", &err)
+	// Get the directory where the influx.json file is
+	path := "secret/" + region + "/accounts/influxdb"
+	p.PutSecretsJson(path, "/tmp/influx.json", &err)
 	if err != nil {
 		p.StopLocal()
 		return err
@@ -567,11 +569,8 @@ func (p *Vault) GetAppRole(region, name string, roleID, secretID *string, err *e
 	}
 }
 
-func (p *Vault) PutInfluxDbCreds(region, influxAuth string, err *error) {
-	if region != "" {
-		region += "/"
-	}
-	p.Run("vault", fmt.Sprintf("kv put secret/%saccounts/influxdb @%s", region, influxAuth), err)
+func (p *Vault) PutSecretsJson(SecretsPath, jsonFile string, err *error) {
+	p.Run("vault", fmt.Sprintf("kv put %s @%s", SecretsPath, jsonFile), err)
 }
 
 func (p *Vault) PutSecret(region, name, secret string, err *error) {
