@@ -571,7 +571,7 @@ func (p *Vault) PutInfluxDbCreds(region, influxAuth string, err *error) {
 	if region != "" {
 		region += "/"
 	}
-	p.Run("vault", fmt.Sprintf("kv put secret/data/%saccounts/influxdb @%s", region, influxAuth), err)
+	p.Run("vault", fmt.Sprintf("kv put secret/%saccounts/influxdb @%s", region, influxAuth), err)
 }
 
 func (p *Vault) PutSecret(region, name, secret string, err *error) {

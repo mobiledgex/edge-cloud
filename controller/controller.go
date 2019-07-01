@@ -18,7 +18,6 @@ import (
 	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/mitchellh/mapstructure"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -28,7 +27,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
-	"github.com/mobiledgex/edge-cloud/vault"
 	"google.golang.org/grpc"
 )
 
@@ -73,11 +71,6 @@ type Services struct {
 	notifyServerMgr bool
 	grpcServer      *grpc.Server
 	httpServer      *http.Server
-}
-
-type InfluxCreds struct {
-	User string
-	Pass string
 }
 
 func main() {
@@ -163,20 +156,9 @@ func startServices() error {
 	if err != nil {
 		return fmt.Errorf("Failed to register controller, %v", err)
 	}
-	// TODO: Move influxDB credentials to vault
-	influxData := &InfluxCreds{}
-	path := *vaultAddr + "/v1/secret/data/" + *region + "/accounts/influxdb"
-	data, err := vault.GetVaultData(path)
-	if err == nil {
-		err = mapstructure.Decode(data, influxData)
-		if err != nil {
-			log.InfoLog("Error decoding vault data", "error", err)
-		}
-	} else {
-		log.InfoLog("Error getting vault data", "error", err)
-	}
-	influxQ := influxq.NewInfluxQ(InfluxDBName, influxData.User, influxData.Pass)
-	log.InfoLog("InfluxQ", "DBName", InfluxDBName, "path", path, "data", influxData)
+	// get influxDB credentials from vault
+	influxAuth := cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
+	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
 	err = influxQ.Start(*influxAddr, "")
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
