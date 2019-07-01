@@ -145,6 +145,32 @@
         ]
       }
     },
+    "/v1/getqospositionkpi": {
+      "post": {
+        "operationId": "GetQosPositionKpi",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/distributed_match_engineQosPositionKpiReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/distributed_match_engineQosPositionKpiRequest"
+            }
+          }
+        ],
+        "tags": [
+          "MatchEngineApi"
+        ]
+      }
+    },
     "/v1/registerclient": {
       "post": {
         "operationId": "RegisterClient",
@@ -689,6 +715,112 @@
         "timestamp": {
           "$ref": "#/definitions/distributed_match_engineTimestamp",
           "title": "timestamp"
+        }
+      }
+    },
+    "distributed_match_engineQosPosition": {
+      "type": "object",
+      "properties": {
+        "positionid": {
+          "type": "string",
+          "format": "int64",
+          "title": "as set by the client, must be unique within QosRequest"
+        },
+        "gps_location": {
+          "$ref": "#/definitions/distributed_match_engineLoc",
+          "title": "location"
+        }
+      }
+    },
+    "distributed_match_engineQosPositionKpiReply": {
+      "type": "object",
+      "properties": {
+        "ver": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "status": {
+          "$ref": "#/definitions/distributed_match_engineReplyStatus",
+          "title": "Status of the reply"
+        },
+        "position_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/distributed_match_engineQosPositionResult"
+          },
+          "title": "kpi details"
+        }
+      }
+    },
+    "distributed_match_engineQosPositionKpiRequest": {
+      "type": "object",
+      "properties": {
+        "ver": {
+          "type": "integer",
+          "format": "int64",
+          "title": "API version"
+        },
+        "session_cookie": {
+          "type": "string",
+          "title": "Session Cookie from RegisterClientRequest"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/distributed_match_engineQosPosition"
+          },
+          "title": "list of positions"
+        }
+      }
+    },
+    "distributed_match_engineQosPositionResult": {
+      "type": "object",
+      "properties": {
+        "positionid": {
+          "type": "string",
+          "format": "int64",
+          "title": "as set by the client, must be unique within one QosPositionKpiRequest"
+        },
+        "gps_location": {
+          "$ref": "#/definitions/distributed_match_engineLoc",
+          "title": "the location which was requested"
+        },
+        "dluserthroughput_min": {
+          "type": "number",
+          "format": "float",
+          "title": "throughput"
+        },
+        "dluserthroughput_avg": {
+          "type": "number",
+          "format": "float"
+        },
+        "dluserthroughput_max": {
+          "type": "number",
+          "format": "float"
+        },
+        "uluserthroughput_min": {
+          "type": "number",
+          "format": "float"
+        },
+        "uluserthroughput_avg": {
+          "type": "number",
+          "format": "float"
+        },
+        "uluserthroughput_max": {
+          "type": "number",
+          "format": "float"
+        },
+        "latency_min": {
+          "type": "number",
+          "format": "float"
+        },
+        "latency_avg": {
+          "type": "number",
+          "format": "float"
+        },
+        "latency_max": {
+          "type": "number",
+          "format": "float"
         }
       }
     },
