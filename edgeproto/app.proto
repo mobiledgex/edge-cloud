@@ -93,6 +93,8 @@ message ConfigFile {
   repeated ConfigFile configs = 21;
   // Option to run App on all nodes of the cluster
   bool scale_with_cluster = 22;
+  // MD5Sum of the VM-based app image
+  string md5sum = 23;
   // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

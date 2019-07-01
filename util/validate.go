@@ -100,6 +100,25 @@ func GitlabGroupSanitize(name string) string {
 	}, name)
 }
 
+// Artifactory repo name constraints:
+// * can only contain letters, digits, _ . -
+// * cannot start with '-' or '.'
+// * cannot end with "-cache"
+func ArtifactoryRepoSanitize(name string) string {
+	name = strings.TrimPrefix(name, "-")
+	name = strings.TrimSuffix(name, ".")
+	if strings.HasSuffix(name, "-cache") {
+		name = name[:len(name)-4] + ".cache"
+	}
+	return strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) ||
+			r == '_' || r == '.' || r == '-' {
+			return r
+		}
+		return '-'
+	}, name)
+}
+
 // IsLatitudeValid checks that the latitude is within accepted ranges
 func IsLatitudeValid(latitude float64) bool {
 	return (latitude >= -90) && (latitude <= 90)

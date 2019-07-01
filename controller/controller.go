@@ -52,6 +52,7 @@ var registryFQDN = flag.String("registryFQDN", "docker.mobiledgex.net", "mobiled
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
+var mcTag = flag.String("mcTag", "mc", "Tag to differentiate MC instances")
 var ControllerId = ""
 var InfluxDBName = "metrics"
 
