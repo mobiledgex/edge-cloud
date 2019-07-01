@@ -3,6 +3,7 @@ package cloudcommon
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
 
@@ -27,6 +29,7 @@ type RegistryAuth struct {
 	Password string `json:"password"`
 	Token    string `json:"token"`
 	ApiKey   string `json:"apikey"`
+	Hostname string `json:"hostname"`
 }
 
 type RegistryTags struct {
@@ -41,37 +44,37 @@ func getVaultRegistryPath(registry, vaultAddr string) string {
 	)
 }
 
-func GetRegistryAuth(registry, vaultAddr string) *RegistryAuth {
-	hostname := strings.Split(registry, ":")
+func GetRegistryAuth(imgUrl, vaultAddr string) (*RegistryAuth, error) {
+	urlObj, err := util.ImagePathParse(imgUrl)
+	if err != nil {
+		return nil, err
+	}
+	hostname := strings.Split(urlObj.Host, ":")
 
 	if len(hostname) < 1 {
-		return nil
+		return nil, fmt.Errorf("empty hostname")
 	}
 	vaultPath := getVaultRegistryPath(hostname[0], vaultAddr)
 	log.DebugLog(log.DebugLevelApi, "get registry auth", "vault-path", vaultPath)
 
 	data, err := vault.GetVaultData(vaultPath)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	auth := &RegistryAuth{}
 	err = mapstructure.WeakDecode(data["data"], auth)
 	if err != nil {
-		return nil
+		return nil, err
 	}
+	auth.Hostname = hostname[0]
 	if auth.Username != "" && auth.Password != "" {
 		auth.AuthType = BasicAuth
-		return auth
-	}
-	if auth.Token != "" {
+	} else if auth.Token != "" {
 		auth.AuthType = TokenAuth
-		return auth
-	}
-	if auth.ApiKey != "" {
+	} else if auth.ApiKey != "" {
 		auth.AuthType = ApiKeyAuth
-		return auth
 	}
-	return nil
+	return auth, nil
 }
 
 func SendHTTPReq(method, fileUrlPath string, auth *RegistryAuth) (*http.Response, error) {
@@ -122,12 +125,11 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 		return fmt.Errorf("registry path is empty")
 	}
 
-	protocol := "https"
 	version := "v2"
 	matchTag := "latest"
 	regPath := ""
 
-	urlObj, err := url.Parse(protocol + "://" + regUrl)
+	urlObj, err := util.ImagePathParse(regUrl)
 	if err != nil {
 		return err
 	}
@@ -144,7 +146,7 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	regUrl = fmt.Sprintf("%s://%s/%s%s/tags/list", urlObj.Scheme, urlObj.Host, version, regPath)
 	log.DebugLog(log.DebugLevelApi, "registry api url", "url", regUrl)
 
-	auth := GetRegistryAuth(urlObj.Host, vaultAddr)
+	auth, err := GetRegistryAuth(regUrl, vaultAddr)
 
 	resp, err := SendHTTPReq("GET", regUrl, auth)
 	if err != nil {
@@ -175,7 +177,15 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
 		tagsList := RegistryTags{}
-		json.NewDecoder(resp.Body).Decode(&tagsList)
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("Failed to read response body, %v", err)
+		}
+		log.DebugLog(log.DebugLevelApi, "list tags", "resp", string(body))
+		err = json.Unmarshal(body, &tagsList)
+		if err != nil {
+			return err
+		}
 		for _, tag := range tagsList.Tags {
 			if tag == matchTag {
 				return nil
@@ -230,11 +240,10 @@ func ValidateVMRegistryPath(imgUrl, vaultAddr string) error {
 		return fmt.Errorf("image path is empty")
 	}
 
-	urlObj, err := url.Parse(imgUrl)
+	auth, err := GetRegistryAuth(imgUrl, vaultAddr)
 	if err != nil {
-		return nil
+		return err
 	}
-	auth := GetRegistryAuth(urlObj.Host, vaultAddr)
 
 	resp, err := SendHTTPReq("GET", imgUrl, auth)
 	if err != nil {

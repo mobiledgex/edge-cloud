@@ -8,7 +8,7 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.mobiledgex.matchingengine.util.MexLocation;
+import com.mobiledgex.matchingengine.util.MeLocation;
 
 import org.junit.Test;
 import org.junit.Before;
@@ -192,10 +192,10 @@ public class EngineCallTest {
     public void registerClientTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
 
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
         Location location;
         AppClient.RegisterClientReply reply = null;
         String appName = applicationName;
@@ -205,7 +205,7 @@ public class EngineCallTest {
 
         try {
             setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             AppClient.RegisterClientRequest request = MockUtils.createMockRegisterClientRequest(developerName, appName, me);
@@ -240,10 +240,10 @@ public class EngineCallTest {
     public void registerClientFutureTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
 
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
         Location location;
         Future<AppClient.RegisterClientReply> registerReplyFuture;
         AppClient.RegisterClientReply reply = null;
@@ -253,7 +253,7 @@ public class EngineCallTest {
 
         try {
             setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             AppClient.RegisterClientRequest request = MockUtils.createMockRegisterClientRequest(developerName, applicationName, me);
@@ -285,9 +285,9 @@ public class EngineCallTest {
     public void mexDisabledTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(false);
+        me.setMatchingEngineLocationAllowed(false);
         me.setAllowSwitchIfNoSubscriberInfo(true);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
 
         Location loc = MockUtils.createLocation("mexDisabledTest", 122.3321, 47.6062);
         boolean allRun = false;
@@ -295,7 +295,7 @@ public class EngineCallTest {
         try {
             enableMockLocation(context, true);
             setMockLocation(context, loc);
-            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            Location location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             try {
                 // Non-Mock.
                 AppClient.RegisterClientRequest registerClientRequest = me.createRegisterClientRequest(
@@ -386,21 +386,21 @@ public class EngineCallTest {
      * non-cellular communications.
      */
     @Test
-    public void mexNetworkingDisabledTest() {
+    public void meNetworkingDisabledTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setNetworkSwitchingEnabled(false);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
 
-        Location loc = MockUtils.createLocation("mexNetworkingDisabledTest", 122.3321, 47.6062);
+        Location loc = MockUtils.createLocation("meNetworkingDisabledTest", 122.3321, 47.6062);
 
         AppClient.RegisterClientReply registerClientReply = null;
         try {
             enableMockLocation(context, true);
             setMockLocation(context, loc);
-            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            Location location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
 
             AppClient.RegisterClientRequest registerClientRequest = MockUtils.createMockRegisterClientRequest(
                     developerName,
@@ -413,13 +413,13 @@ public class EngineCallTest {
             }
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("mexNetworkingDisabledTest: ExecutionException!", true);
+            assertFalse("meNetworkingDisabledTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.e(TAG, Log.getStackTraceString(sre));
             assertTrue("mexNetworkDisabledTest: registerClient non-null, and somehow succeeded!",registerClientReply == null);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("mexNetworkingDisabledTest: InterruptedException!", true);
+            assertFalse("meNetworkingDisabledTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
             me.setNetworkSwitchingEnabled(true);
@@ -432,9 +432,9 @@ public class EngineCallTest {
         AppClient.RegisterClientReply registerClientReply = null;
         AppClient.FindCloudletReply findCloudletReply = null;
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
 
         Location loc = MockUtils.createLocation("findCloudletTest", 122.3321, 47.6062);
 
@@ -442,7 +442,7 @@ public class EngineCallTest {
         try {
             enableMockLocation(context, true);
             setMockLocation(context, loc);
-            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            Location location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
 
             String carrierName = MockUtils.getCarrierName(context);
             registerClient(context, me.retrieveNetworkCarrierName(context), me);
@@ -482,16 +482,16 @@ public class EngineCallTest {
         Future<AppClient.FindCloudletReply> response;
         AppClient.FindCloudletReply result = null;
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
 
         Location loc = MockUtils.createLocation("findCloudletTest", 122.3321, 47.6062);
 
         try {
             enableMockLocation(context, true);
             setMockLocation(context, loc);
-            Location location = mexLoc.getBlocking(context, 10000);
+            Location location = meLoc.getBlocking(context, 10000);
 
             String carrierName = MockUtils.getCarrierName(context);
             registerClient(context, carrierName, me);
@@ -523,16 +523,16 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
 
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
         AppClient.VerifyLocationReply verifyLocationReply = null;
 
         try {
             enableMockLocation(context, true);
             Location mockLoc = MockUtils.createLocation("verifyLocationTest", 122.3321, 47.6062);
             setMockLocation(context, mockLoc);
-            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            Location location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
 
             String carrierName = MockUtils.getCarrierName(context);
             registerClient(context, carrierName, me);
@@ -573,9 +573,9 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
 
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
         AppClient.VerifyLocationReply verifyLocationReply = null;
         Future<AppClient.VerifyLocationReply> verifyLocationReplyFuture = null;
         Future<AppClient.VerifyLocationRequest> verifyLocationRequestFuture = null;
@@ -584,7 +584,7 @@ public class EngineCallTest {
             enableMockLocation(context, true);
             Location mockLoc = MockUtils.createLocation("verifyLocationFutureTest", 122.3321, 47.6062);
             setMockLocation(context, mockLoc);
-            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            Location location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
 
             String carrierName = MockUtils.getCarrierName(context);
             registerClient(context, carrierName, me);
@@ -627,14 +627,14 @@ public class EngineCallTest {
 
 
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
 
         AppClient.VerifyLocationReply verifyLocationReply = null;
         try {
             setMockLocation(context, mockLoc); // North Pole.
-            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            Location location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             String carrierName = MockUtils.getCarrierName(context);
@@ -671,9 +671,9 @@ public class EngineCallTest {
     public void getLocationTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
         Location location;
         AppClient.GetLocationReply getLocationReply = null;
 
@@ -683,7 +683,7 @@ public class EngineCallTest {
         String carrierName = MockUtils.getCarrierName(context);
         try {
             setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
 
@@ -726,10 +726,10 @@ public class EngineCallTest {
     public void getLocationFutureTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
 
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
         Location location;
         Future<AppClient.GetLocationReply> getLocationReplyFuture;
         AppClient.GetLocationReply getLocationReply = null;
@@ -742,7 +742,7 @@ public class EngineCallTest {
             // Directly create request for testing:
             // Passed in Location (which is a callback interface)
             setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
 
@@ -785,19 +785,19 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getContext();
 
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
 
         AppClient.DynamicLocGroupReply dynamicLocGroupReply = null;
 
         enableMockLocation(context,true);
         Location location = MockUtils.createLocation("createDynamicLocationGroupAddTest", 122.3321, 47.6062);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
 
         String carrierName = MockUtils.getCarrierName(context);
         try {
             setMockLocation(context, location);
-            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             registerClient(context, carrierName, me);
@@ -835,19 +835,19 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getContext();
 
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
 
         AppClient.DynamicLocGroupReply dynamicLocGroupReply = null;
 
         enableMockLocation(context,true);
         Location location = MockUtils.createLocation("createDynamicLocationGroupAddTest", 122.3321, 47.6062);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
 
         String carrierName = MockUtils.getCarrierName(context);
         try {
             setMockLocation(context, location);
-            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             registerClient(context, carrierName, me);
@@ -887,18 +887,18 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getContext();
 
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
 
         AppClient.AppInstListReply appInstListReply = null;
 
         enableMockLocation(context,true);
         Location location = MockUtils.createLocation("getCloudletListTest", 122.3321, 47.6062);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
 
         try {
             setMockLocation(context, location);
-            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse("Mock'ed Location is missing!", location == null);
 
             registerClient(context, MockUtils.getCarrierName(context), me);
@@ -938,16 +938,16 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getContext();
 
         MatchingEngine me = new MatchingEngine(context);
-        me.setMexLocationAllowed(true);
+        me.setMatchingEngineLocationAllowed(true);
         me.setAllowSwitchIfNoSubscriberInfo(true);
 
         enableMockLocation(context,true);
         Location location = MockUtils.createLocation("getAppInstListFutureTest", 122.3321, 47.6062);
-        MexLocation mexLoc = new MexLocation(me);
+        MeLocation meLoc = new MeLocation(me);
 
         try {
             setMockLocation(context, location);
-            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse("Mock'ed Location is missing!", location == null);
 
             registerClient(context, me.retrieveNetworkCarrierName(context), me);

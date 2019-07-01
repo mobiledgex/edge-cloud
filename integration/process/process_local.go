@@ -269,6 +269,10 @@ func (p *Dme) getTlsConfig() *tls.Config {
 
 func (p *Crm) GetArgs(opts ...StartOp) []string {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
+	if p.NotifySrvAddr != "" {
+		args = append(args, "--notifySrvAddr")
+		args = append(args, p.NotifySrvAddr)
+	}
 	if p.CloudletKey != "" {
 		args = append(args, "--cloudletKey")
 		args = append(args, p.CloudletKey)

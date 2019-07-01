@@ -13,13 +13,17 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 )
 
+const WaitDeleted string = "WaitDeleted"
+const WaitRunning string = "WaitRunning"
+
 // This is half of the default controller AppInst timeout
 var maxWait = 15 * time.Minute
 
-// WaitForAppInst waits for pods to either start or result in an error
-func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App) error {
+// WaitForAppInst waits for pods to either start or result in an error if WaitRunning specified,
+// or if WaitDeleted is specified then wait for them to all disappear.
+func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, waitFor string) error {
 	// wait half as long as the total controller wait time, which includes all tasks
-	log.DebugLog(log.DebugLevelMexos, "waiting for appinst pods", "appName", app.Key.Name, "maxWait", maxWait)
+	log.DebugLog(log.DebugLevelMexos, "waiting for appinst pods", "appName", app.Key.Name, "maxWait", maxWait, "waitFor", waitFor)
 	start := time.Now()
 
 	// it might be nicer to pull the state directly rather than parsing it, but the states displayed
@@ -69,16 +73,38 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 							fallthrough
 						case "ContainerCreating":
 							log.DebugLog(log.DebugLevelMexos, "still waiting for pod", "podName", podName, "state", podState)
+						case "Terminating":
+							log.DebugLog(log.DebugLevelMexos, "pod is terminating", "podName", podName, "state", podState)
 						default:
+							// try to find out what error was
+							// TODO: pull events and send
+							// them back as status updates
+							// rather than sending back
+							// full "describe" dump
+							cmd := fmt.Sprintf("%s kubectl describe pod --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
+							out, derr := client.Output(cmd)
+							if derr == nil {
+								return fmt.Errorf("Run container failed: %s", out)
+							}
 							return fmt.Errorf("Pod is unexpected state: %s", podState)
 						}
 					} else {
+						if waitFor == WaitDeleted && strings.Contains(line, "No resources found") {
+							break
+						}
 						return fmt.Errorf("unable to parse kubectl output: [%s]", line)
 					}
 				}
-				if podCount == runningCount {
-					log.DebugLog(log.DebugLevelMexos, "all pods up", "deployment name", deployment.ObjectMeta.Name)
-					break
+				if waitFor == WaitDeleted {
+					if podCount == 0 {
+						log.DebugLog(log.DebugLevelMexos, "all pods gone", "deployment name", deployment.ObjectMeta.Name)
+						break
+					}
+				} else {
+					if podCount == runningCount {
+						log.DebugLog(log.DebugLevelMexos, "all pods up", "deployment name", deployment.ObjectMeta.Name)
+						break
+					}
 				}
 				elapsed := time.Since(start)
 				if elapsed >= (maxWait) {
@@ -135,7 +161,10 @@ func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 		}
 	}
 	log.DebugLog(log.DebugLevelMexos, "deleted deployment", "name", names.AppName)
-	return nil
+	//Note wait for deletion of appinst can be done here in a generic place, but wait for creation is split
+	// out in each platform specific task so that we can optimize the time taken for create by allowing the
+	// wait to be run in parallel with other tasks
+	return WaitForAppInst(client, names, app, WaitDeleted)
 }
 
 func GetAppInstRuntime(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {

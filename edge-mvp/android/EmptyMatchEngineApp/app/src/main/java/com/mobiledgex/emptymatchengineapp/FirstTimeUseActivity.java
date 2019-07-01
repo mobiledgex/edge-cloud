@@ -22,7 +22,7 @@ public class FirstTimeUseActivity extends AppCompatActivity {
     private RequestPermissions mRpUtil;
     private AppCompatActivity self;
     private SharedPreferences prefs;
-    private String prefKeyAllowMEX;
+    private String prefKeyAllowMatchingEngineLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +32,7 @@ public class FirstTimeUseActivity extends AppCompatActivity {
         mRpUtil = new RequestPermissions();
         self = this;
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        prefKeyAllowMEX = getResources().getString(R.string.preference_mex_location_verification);
+        prefKeyAllowMatchingEngineLocation = getResources().getString(R.string.preference_matching_engine_location_verification);
 
         TextView devLocationWhy = findViewById(R.id.permission_location_device_why);
         devLocationWhy.setOnClickListener(new View.OnClickListener() {
@@ -69,7 +69,7 @@ public class FirstTimeUseActivity extends AppCompatActivity {
             }
         });
 
-        Button ok = findViewById(R.id.okbutton);
+        Button ok = findViewById(R.id.ok_button);
         ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -92,12 +92,11 @@ public class FirstTimeUseActivity extends AppCompatActivity {
     }
 
     private boolean shouldFinish(Activity activity) {
-        final String prefKeyAllowMEX = getResources().getString(R.string.preference_mex_location_verification);
-        boolean mexLocationAllowed = prefs.getBoolean(prefKeyAllowMEX, false);
+        boolean mobiledgeXLocationAllowed = prefs.getBoolean(prefKeyAllowMatchingEngineLocation, false);
 
-        Log.d(TAG, "mexLocationallowed: " + mexLocationAllowed);
+        Log.d(TAG, "mobiledgeXLocationAllowed: " + mobiledgeXLocationAllowed);
         Log.d(TAG, "Needs More Permissions: " + mRpUtil.getNeededPermissions(self).size());
-        if (mexLocationAllowed &&
+        if (mobiledgeXLocationAllowed &&
             (mRpUtil.getNeededPermissions(activity).size() == 0)) {
 
             // Nothing to ask for. Close FirstTimeUseActivity.
@@ -111,7 +110,7 @@ public class FirstTimeUseActivity extends AppCompatActivity {
         if (mRpUtil.getNeededPermissions(appCompatActivity).size() > 0) {
             mRpUtil.requestMultiplePermissions(appCompatActivity);
         }
-        if (!prefs.getBoolean(prefKeyAllowMEX, false)) {
+        if (!prefs.getBoolean(prefKeyAllowMatchingEngineLocation, false)) {
             new EnhancedLocationDialog().show(appCompatActivity.getSupportFragmentManager(), "dialog");
         }
     }

@@ -426,6 +426,14 @@ var OperatorAllFieldsMap = map[string]struct{}{
 	OperatorFieldKeyName: struct{}{},
 }
 
+var OperatorAllFieldsStringMap = map[string]string{
+	OperatorFieldKeyName: "Operator Field Key Name",
+}
+
+func (m *Operator) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, OperatorFieldKey+".")
+}
+
 func (m *Operator) DiffFields(o *Operator, fields map[string]struct{}) {
 	if m.Key.Name != o.Key.Name {
 		fields[OperatorFieldKeyName] = struct{}{}
