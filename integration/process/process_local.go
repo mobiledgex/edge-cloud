@@ -102,8 +102,26 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-testMode")
 	}
 
+	var envs []string
+	if options.RolesFile != "" {
+		dat, err := ioutil.ReadFile(options.RolesFile)
+		if err != nil {
+			return err
+		}
+		roles := VaultRoles{}
+		err = yaml.Unmarshal(dat, &roles)
+		if err != nil {
+			return err
+		}
+		envs = []string{
+			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.CtrlRoleID),
+			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.CtrlSecretID),
+		}
+		log.Printf("dme envs: %v\n", envs)
+	}
+
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envs, logfile)
 	return err
 }
 
@@ -455,6 +473,8 @@ type VaultRoles struct {
 	CRMSecretID     string `json:"crmsecretid"`
 	RotatorRoleID   string `json:"rotatorroleid"`
 	RotatorSecretID string `json:"rotatorsecretid"`
+	CtrlRoleID      string `json:"controllerroleid"`
+	CtrlSecretID    string `json:"controllersecretid"`
 }
 
 func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
@@ -495,6 +515,7 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	p.GetAppRole(region, "dme", &roles.DmeRoleID, &roles.DmeSecretID, &err)
 	p.GetAppRole(region, "crm", &roles.CRMRoleID, &roles.CRMSecretID, &err)
 	p.GetAppRole(region, "rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
+	p.GetAppRole(region, "controller", &roles.CtrlRoleID, &roles.CtrlSecretID, &err)
 	p.PutSecret(region, "dme", p.DmeSecret+"-old", &err)
 	p.PutSecret(region, "dme", p.DmeSecret, &err)
 	p.PutInfluxDbCreds(region, "/tmp/influx.json", &err)
