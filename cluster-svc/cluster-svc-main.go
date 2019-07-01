@@ -15,7 +15,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -33,45 +32,11 @@ var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data i
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var externalPorts = flag.String("prometheus-ports", "", "ports to expose in form \"tcp:123,udp:123\"")
-var influxDBAddr = flag.String("influxdb", "http://0.0.0.0:8086", "InfluxDB address to export to")
-var influxDBUser = flag.String("influxdb-user", "root", "InfluxDB username")
-var influxDBPass = flag.String("influxdb-pass", "root", "InfluxDB password")
 var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics collection interval")
 var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc applications")
 
-var MEXMetricsExporterAppName = "MEXMetricsExporter"
-var MEXMetricsExporterAppVer = "1.0"
-
 var exporterT *template.Template
 
-var MEXMetricsExporterEnvVars = `- name: MEX_CLUSTER_NAME
-  valueFrom:
-    configMapKeyRef:
-      name: mexcluster-info
-      key: ClusterName
-      optional: true
-- name: MEX_CLOUDLET_NAME
-  valueFrom:
-    configMapKeyRef:
-      name: mexcluster-info
-      key: CloudletName
-      optional: true
-- name: MEX_OPERATOR_NAME
-  valueFrom:
-    configMapKeyRef:
-      name: mexcluster-info
-      key: OperatorName
-      optional: true
-`
-var MEXMetricsExporterEnvTempl = `- name: MEX_INFLUXDB_ADDR
-  value: {{.InfluxDBAddr}}
-- name: MEX_INFLUXDB_USER
-  value: {{.InfluxDBUser}}
-- name: MEX_INFLUXDB_PASS
-  value: {{.InfluxDBPass}}
-- name: MEX_SCRAPE_INTERVAL
-  value: {{.Interval}}
-`
 var prometheusT *template.Template
 var MEXPrometheusAppHelmTemplate = `prometheus:
   prometheusSpec:
@@ -86,21 +51,7 @@ kubelet:
     https: true
 `
 
-var MEXMetricsExporterApp = edgeproto.App{
-	Key: edgeproto.AppKey{
-		Name:    MEXMetricsExporterAppName,
-		Version: MEXMetricsExporterAppVer,
-		DeveloperKey: edgeproto.DeveloperKey{
-			Name: cloudcommon.DeveloperMobiledgeX,
-		},
-	},
-	ImagePath:     deploygen.MexRegistry + "/mobiledgex/images/metrics-exporter:latest",
-	ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
-	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
-}
-
-var MEXPrometheusAppName = "MEXPrometheusAppName"
+var MEXPrometheusAppName = cloudcommon.MEXPrometheusAppName
 var MEXPrometheusAppVer = "1.0"
 
 var MEXPrometheusApp = edgeproto.App{
@@ -139,14 +90,9 @@ func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 		"cloudlet", in.Key.CloudletKey.Name, "state", edgeproto.TrackedState_name[int32(in.State)])
 	// Need to create a connection to server, as passed to us by commands
 	if in.State == edgeproto.TrackedState_READY {
-		// Create Two applications on the cluster after creation
-		//   - Prometheus and MetricsExporter
+		// Create Prometheus on the cluster after creation
 		if err = createMEXPromInst(dialOpts, in.Key); err != nil {
 			log.DebugLog(log.DebugLevelMexos, "Prometheus-operator inst create failed", "cluster", in.Key.ClusterKey.Name,
-				"error", err.Error())
-		}
-		if err = createMEXMetricsExporterInst(dialOpts, in.Key); err != nil {
-			log.DebugLog(log.DebugLevelMexos, "Metrics-exporter inst create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
 		}
 	}
@@ -170,7 +116,6 @@ func (c *ClusterInstHandler) Prune(keys map[edgeproto.ClusterInstKey]struct{}) {
 func (c *ClusterInstHandler) Flush(notifyId int64) {}
 
 func init() {
-	exporterT = template.Must(template.New("exporter").Parse(MEXMetricsExporterEnvTempl))
 	prometheusT = template.Must(template.New("prometheus").Parse(MEXPrometheusAppHelmTemplate))
 }
 
@@ -251,10 +196,6 @@ func createMEXPromInst(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKe
 	return createAppInstCommon(dialOpts, instKey, &MEXPrometheusApp)
 }
 
-func createMEXMetricsExporterInst(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey) error {
-	return createAppInstCommon(dialOpts, instKey, &MEXMetricsExporterApp)
-}
-
 func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
 	var secs = int(scrapeInterval.Seconds()) //round it to the second
 	var scrapeStr = strconv.Itoa(secs) + "s"
@@ -264,28 +205,6 @@ func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
 func fillAppConfigs(app *edgeproto.App) error {
 	var scrapeStr = scrapeIntervalInSeconds(*scrapeInterval)
 	switch app.Key.Name {
-	case MEXMetricsExporterAppName:
-		ex := exporterData{
-			InfluxDBAddr: *influxDBAddr,
-			InfluxDBUser: *influxDBUser,
-			InfluxDBPass: *influxDBPass,
-			Interval:     scrapeStr,
-		}
-		buf := bytes.Buffer{}
-		err := exporterT.Execute(&buf, &ex)
-		if err != nil {
-			return err
-		}
-		paramConf := edgeproto.ConfigFile{
-			Kind:   k8smgmt.AppConfigEnvYaml,
-			Config: buf.String(),
-		}
-		envConf := edgeproto.ConfigFile{
-			Kind:   k8smgmt.AppConfigEnvYaml,
-			Config: MEXMetricsExporterEnvVars,
-		}
-
-		app.Configs = []*edgeproto.ConfigFile{&paramConf, &envConf}
 	case MEXPrometheusAppName:
 		ex := exporterData{
 			Interval: scrapeStr,

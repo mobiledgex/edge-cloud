@@ -9,8 +9,9 @@
 
     <ImageView
         android:id="@+id/permission_icon"
-        android:layout_width="300px"
-        android:layout_height="300px"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:contentDescription="@string/permissions_needed"
         android:gravity="center"
         android:src="@android:color/holo_blue_dark"
         android:visibility="visible"
@@ -30,6 +31,9 @@
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/imageView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/permission_icon" />
 
 
@@ -37,6 +41,7 @@
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/access_device_location_permission_icon"
         android:src="@android:drawable/ic_menu_mylocation"
         app:layout_constraintBottom_toTopOf="@+id/permission_device_location"
         app:layout_constraintEnd_toStartOf="@+id/permission_device_location"
@@ -56,13 +61,14 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/imageView"
         app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintTop_toTopOf="@id/imageView" />
+        app:layout_constraintTop_toTopOf="@id/imageView"/>
 
     <TextView
         android:id="@+id/permission_location_device_why"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:clickable="true"
+        android:focusable="true"
         android:text="@string/why"
         android:textColor="?attr/colorPrimary"
         android:textSize="18sp"
@@ -74,6 +80,7 @@
         android:id="@+id/imageView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/verify_location_with_carrier_permission_icon"
         android:src="@android:drawable/ic_menu_mylocation"
         app:layout_constraintBottom_toTopOf="@+id/permission_carrier_location"
         app:layout_constraintEnd_toStartOf="@+id/permission_carrier_location"
@@ -93,25 +100,26 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/imageView2"
         app:layout_constraintTop_toBottomOf="@+id/imageView2"
-        app:layout_constraintTop_toTopOf="@id/imageView2"/>
+        app:layout_constraintTop_toTopOf="@id/imageView2" />
 
     <TextView
         android:id="@+id/permission_location_carrier_why"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:clickable="true"
+        android:focusable="true"
         android:text="@string/why"
         android:textColor="?attr/colorPrimary"
         android:textSize="18sp"
-        app:layout_constraintBottom_toTopOf="@+id/okbutton"
+        app:layout_constraintBottom_toTopOf="@+id/ok_button"
         app:layout_constraintLeft_toLeftOf="@+id/permission_carrier_location"
         app:layout_constraintTop_toBottomOf="@+id/permission_carrier_location" />
 
     <Button
-        android:id="@+id/okbutton"
+        android:id="@+id/ok_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="OK"
+        android:text="@string/button_ok_text"
         app:layout_constraintBottom_toTopOf="@+id/permission_icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"

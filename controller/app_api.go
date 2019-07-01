@@ -11,7 +11,6 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -128,14 +127,14 @@ func updateAppFields(in *edgeproto.App) error {
 
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
-			in.ImagePath = deploygen.MexRegistry + "/" +
+			in.ImagePath = *registryFQDN + "/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
 		} else if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
 			return fmt.Errorf("imagepath is required for imagetype %s", in.ImageType)
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
-			in.ImagePath = deploygen.MexRegistry + "/" +
+			in.ImagePath = *registryFQDN + "/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
 				util.DockerSanitize(in.Key.Name)
 		} else {

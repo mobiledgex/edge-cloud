@@ -17,6 +17,9 @@ func GetVaultData(keyURL string) (map[string]interface{}, error) {
 	if secretID == "" {
 		return nil, fmt.Errorf("VAULT_SECRET_ID env var missing")
 	}
+	if !strings.Contains(keyURL, "://") {
+		keyURL = "https://" + keyURL
+	}
 	uri, err := url.ParseRequestURI(keyURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid keypath %s, %v", keyURL, err)
