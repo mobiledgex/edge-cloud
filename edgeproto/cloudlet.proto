@@ -188,7 +188,7 @@ service PlatformApi {
       post: "/create/platform"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourcePlatforms,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourcePlatforms,ActionManage,Key.Name";
   }
   // Delete a Platform
   rpc DeletePlatform(Platform) returns (stream Result) {
@@ -197,7 +197,7 @@ service PlatformApi {
       body: "*"
     };
     option (protocmd.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourcePlatforms,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourcePlatforms,ActionManage,Key.Name";
   }
   // Update a Platform
   rpc UpdatePlatform(Platform) returns (stream Result) {
@@ -205,7 +205,7 @@ service PlatformApi {
       post: "/update/platform"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourcePlatforms,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourcePlatforms,ActionManage,Key.Name";
   }
   // Show Platforms
   rpc ShowPlatform(Platform) returns (stream Platform) {
