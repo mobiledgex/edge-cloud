@@ -519,7 +519,7 @@ func PlatformWriteOutputOne(obj *edgeproto.Platform) {
 	}
 }
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
-	s := make([]string, 0, 13)
+	s := make([]string, 0, 14)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -528,6 +528,7 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, in.Key.Name)
 	s = append(s, in.Platform.Name)
 	s = append(s, edgeproto.DeploymentType_CamelName[int32(in.Deployment)])
+	s = append(s, in.PhysicalName)
 	s = append(s, in.AccessCredentials)
 	s = append(s, strconv.FormatFloat(float64(in.Location.Latitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.Longitude), 'e', -1, 32))
@@ -563,12 +564,13 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 }
 
 func CloudletHeaderSlicer() []string {
-	s := make([]string, 0, 13)
+	s := make([]string, 0, 14)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
 	s = append(s, "Platform-Name")
 	s = append(s, "Deployment")
+	s = append(s, "PhysicalName")
 	s = append(s, "AccessCredentials")
 	s = append(s, "Location-Latitude")
 	s = append(s, "Location-Longitude")
@@ -1537,6 +1539,7 @@ func init() {
 	CloudletFlagSet.StringVar(&CloudletIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.Platform.Name, "platform-name", "", "Platform.Name")
 	CloudletFlagSet.StringVar(&CloudletInDeployment, "deployment", "", "one of [DeploymentLocal DeploymentOpenstack DeploymentAzure DeploymentGcp]")
+	CloudletFlagSet.StringVar(&CloudletIn.PhysicalName, "physicalname", "", "PhysicalName")
 	CloudletFlagSet.StringVar(&CloudletIn.AccessCredentials, "accesscredentials", "", "AccessCredentials")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Latitude, "location-latitude", 0, "Location.Latitude")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Longitude, "location-longitude", 0, "Location.Longitude")
@@ -1681,77 +1684,80 @@ func CloudletSetFields() {
 	if CloudletFlagSet.Lookup("deployment").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "4")
 	}
-	if CloudletFlagSet.Lookup("accesscredentials").Changed {
+	if CloudletFlagSet.Lookup("physicalname").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5")
 	}
+	if CloudletFlagSet.Lookup("accesscredentials").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "6")
+	}
 	if CloudletFlagSet.Lookup("location-latitude").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "6.1")
+		CloudletIn.Fields = append(CloudletIn.Fields, "7.1")
 	}
 	if CloudletFlagSet.Lookup("location-longitude").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "6.2")
+		CloudletIn.Fields = append(CloudletIn.Fields, "7.2")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-horizontalaccuracy").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "6.3")
+		CloudletIn.Fields = append(CloudletIn.Fields, "7.3")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-verticalaccuracy").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "6.4")
+		CloudletIn.Fields = append(CloudletIn.Fields, "7.4")
 	}
 	if CloudletFlagSet.Lookup("location-altitude").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "6.5")
+		CloudletIn.Fields = append(CloudletIn.Fields, "7.5")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-course").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "6.6")
+		CloudletIn.Fields = append(CloudletIn.Fields, "7.6")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-speed").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "6.7")
+		CloudletIn.Fields = append(CloudletIn.Fields, "7.7")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-timestamp-seconds").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "6.8.1")
+		CloudletIn.Fields = append(CloudletIn.Fields, "7.8.1")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-timestamp-nanos").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "6.8.2")
+		CloudletIn.Fields = append(CloudletIn.Fields, "7.8.2")
 	}
 	if CloudletFlagSet.Lookup("ipsupport").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "7")
-	}
-	if CloudletFlagSet.Lookup("staticips").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "8")
 	}
-	if CloudletFlagSet.Lookup("numdynamicips").Changed {
+	if CloudletFlagSet.Lookup("staticips").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "9")
 	}
-	if CloudletFlagSet.Lookup("state").Changed {
+	if CloudletFlagSet.Lookup("numdynamicips").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "10")
 	}
+	if CloudletFlagSet.Lookup("state").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "11")
+	}
 	if CloudletNoConfigFlagSet.Lookup("status-tasknumber").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "12.1")
-	}
-	if CloudletNoConfigFlagSet.Lookup("status-maxtasks").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "12.2")
-	}
-	if CloudletNoConfigFlagSet.Lookup("status-taskname").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "12.3")
-	}
-	if CloudletNoConfigFlagSet.Lookup("status-stepname").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "12.4")
-	}
-	if CloudletNoConfigFlagSet.Lookup("timelimits-createclusterinsttimeout").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "13.1")
 	}
-	if CloudletNoConfigFlagSet.Lookup("timelimits-updateclusterinsttimeout").Changed {
+	if CloudletNoConfigFlagSet.Lookup("status-maxtasks").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "13.2")
 	}
-	if CloudletNoConfigFlagSet.Lookup("timelimits-deleteclusterinsttimeout").Changed {
+	if CloudletNoConfigFlagSet.Lookup("status-taskname").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "13.3")
 	}
-	if CloudletNoConfigFlagSet.Lookup("timelimits-createappinsttimeout").Changed {
+	if CloudletNoConfigFlagSet.Lookup("status-stepname").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "13.4")
 	}
+	if CloudletNoConfigFlagSet.Lookup("timelimits-createclusterinsttimeout").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "14.1")
+	}
+	if CloudletNoConfigFlagSet.Lookup("timelimits-updateclusterinsttimeout").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "14.2")
+	}
+	if CloudletNoConfigFlagSet.Lookup("timelimits-deleteclusterinsttimeout").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "14.3")
+	}
+	if CloudletNoConfigFlagSet.Lookup("timelimits-createappinsttimeout").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "14.4")
+	}
 	if CloudletNoConfigFlagSet.Lookup("timelimits-updateappinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "13.5")
+		CloudletIn.Fields = append(CloudletIn.Fields, "14.5")
 	}
 	if CloudletNoConfigFlagSet.Lookup("timelimits-deleteappinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "13.6")
+		CloudletIn.Fields = append(CloudletIn.Fields, "14.6")
 	}
 }
 
