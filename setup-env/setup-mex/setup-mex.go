@@ -3,6 +3,7 @@ package setupmex
 // consists of utilities used to deploy, start, stop MEX processes either locally or remotely via Ansible.
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -174,6 +175,14 @@ func ReadSetupFile(setupfile string, deployment interface{}, vars map[string]str
 				fmt.Fprintf(os.Stderr, "One or more fatal unmarshal errors in %s", setupfile)
 				return false
 			}
+		}
+	}
+	// TODO: currently support just one influx.json
+	for _, v := range util.Deployment.Influxs {
+		creds_file := "/tmp/influx.json"
+		creds_json, err := json.Marshal(v.Auth)
+		if err == nil {
+			ioutil.WriteFile(creds_file, creds_json, 0644)
 		}
 	}
 	//equals sign is not well handled in yaml so it is url encoded and changed after loading

@@ -157,8 +157,12 @@ func startServices() error {
 	if err != nil {
 		return fmt.Errorf("Failed to register controller, %v", err)
 	}
-
-	influxQ := influxq.NewInfluxQ(InfluxDBName)
+	// get influxDB credentials from vault
+	influxAuth := &cloudcommon.InfluxCreds{}
+	if !*testMode {
+		influxAuth = cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
+	}
+	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
 	err = influxQ.Start(*influxAddr, "")
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
