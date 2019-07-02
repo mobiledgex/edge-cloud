@@ -162,7 +162,6 @@ func startServices() error {
 	if !*testMode {
 		influxAuth = cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
 	}
-	log.InfoLog("Start up", "vault", vaultAddr, "region", region, "tesMode", testMode)
 	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
 	err = influxQ.Start(*influxAddr, "")
 	if err != nil {
