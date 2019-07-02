@@ -32,7 +32,7 @@ func TestInfluxQ(t *testing.T) {
 		defer db.Stop()
 	}
 
-	q := influxq.NewInfluxQ(InfluxDBName)
+	q := influxq.NewInfluxQ(InfluxDBName, "", "")
 	err = q.Start("http://"+addr, "")
 	require.Nil(t, err, "new influx q")
 	defer q.Stop()
