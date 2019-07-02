@@ -83,26 +83,75 @@ developers:
 
 platforms:
 - key:
-    name: tmus-platform
+    name: tmus-platform-1
   flavor:
     name: x1.small
-  registrypath: |
-    registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  imagepath: https://artifactory.mobiledgex.net/artifactory/platform-images/openstack/testimg-v1.0.qcow2#md5:a605d8d5385e74b28f60381acd4a9433
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
+  notifysrvaddr: 127.0.0.1:51101
+- key:
+    name: tmus-platform-2
+  flavor:
+    name: x1.small
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
+  notifysrvaddr: 127.0.0.1:51102
+- key:
+    name: tmus-platform-3
+  flavor:
+    name: x1.small
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
+  notifysrvaddr: 127.0.0.1:51103
+- key:
+    name: tmus-platform-4
+  flavor:
+    name: x1.small
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
+  notifysrvaddr: 127.0.0.1:51104
+- key:
+    name: tmus-platform-5
+  flavor:
+    name: x1.small
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
+  notifysrvaddr: 127.0.0.1:51105
+- key:
+    name: tmus-platform-6
+  flavor:
+    name: x1.small
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
+  notifysrvaddr: 127.0.0.1:51106
+- key:
+    name: tmus-platform-7
+  flavor:
+    name: x1.small
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
+  notifysrvaddr: 127.0.0.1:51107
+- key:
+    name: tmus-platform-8
+  flavor:
+    name: x1.small
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
+  notifysrvaddr: 127.0.0.1:51108
 - key:
     name: azure-platform
   flavor:
     name: x1.tiny
-  registrypath: |
-    registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  imagepath: https://artifactory.mobiledgex.net/artifactory/platform-images/azure/testimg-v1.0.qcow2#md5:a605d8d5385e74b28f60381acd4a9433
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
+  notifysrvaddr: 127.0.0.1:51109
 - key:
     name: gcp-platform
   flavor:
     name: x1.medium
-  registrypath: |
-    registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  imagepath: https://artifactory.mobiledgex.net/artifactory/platform-images/gcp/testimg-v1.0.qcow2#md5:a605d8d5385e74b28f60381acd4a9433
+  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
+  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
+  notifysrvaddr: 127.0.0.1:51110
 
 cloudlets:
 - key:

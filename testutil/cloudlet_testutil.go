@@ -40,6 +40,38 @@ func (x *ShowPlatform) Send(m *edgeproto.Platform) error {
 	return nil
 }
 
+type CudStreamoutPlatform struct {
+	grpc.ServerStream
+}
+
+func (x *CudStreamoutPlatform) Send(res *edgeproto.Result) error {
+	fmt.Println(res)
+	return nil
+}
+func (x *CudStreamoutPlatform) Context() context.Context {
+	return context.TODO()
+}
+
+type PlatformStream interface {
+	Recv() (*edgeproto.Result, error)
+}
+
+func PlatformReadResultStream(stream PlatformStream, err error) error {
+	if err != nil {
+		return err
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		fmt.Println(res)
+	}
+}
+
 func (x *ShowPlatform) ReadStream(stream edgeproto.PlatformApi_ShowPlatformClient, err error) {
 	x.Data = make(map[string]edgeproto.Platform)
 	if err != nil {
@@ -121,9 +153,12 @@ func (x *PlatformCommonApi) CreatePlatform(ctx context.Context, in *edgeproto.Pl
 	copy := &edgeproto.Platform{}
 	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.CreatePlatform(ctx, copy)
+		err := x.internal_api.CreatePlatform(copy, &CudStreamoutPlatform{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.CreatePlatform(ctx, copy)
+		stream, err := x.client_api.CreatePlatform(ctx, copy)
+		err = PlatformReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 
@@ -131,9 +166,12 @@ func (x *PlatformCommonApi) UpdatePlatform(ctx context.Context, in *edgeproto.Pl
 	copy := &edgeproto.Platform{}
 	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.UpdatePlatform(ctx, copy)
+		err := x.internal_api.UpdatePlatform(copy, &CudStreamoutPlatform{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.UpdatePlatform(ctx, copy)
+		stream, err := x.client_api.UpdatePlatform(ctx, copy)
+		err = PlatformReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 
@@ -141,9 +179,12 @@ func (x *PlatformCommonApi) DeletePlatform(ctx context.Context, in *edgeproto.Pl
 	copy := &edgeproto.Platform{}
 	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.DeletePlatform(ctx, copy)
+		err := x.internal_api.DeletePlatform(copy, &CudStreamoutPlatform{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.DeletePlatform(ctx, copy)
+		stream, err := x.client_api.DeletePlatform(ctx, copy)
+		err = PlatformReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 
@@ -754,16 +795,31 @@ func GetCloudletInfo(t *testing.T, api *CloudletInfoCommonApi, key *edgeproto.Cl
 	return found
 }
 
-func (s *DummyServer) CreatePlatform(ctx context.Context, in *edgeproto.Platform) (*edgeproto.Result, error) {
-	return &edgeproto.Result{}, nil
+func (s *DummyServer) CreatePlatform(in *edgeproto.Platform, server edgeproto.PlatformApi_CreatePlatformServer) error {
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
+	return nil
 }
 
-func (s *DummyServer) DeletePlatform(ctx context.Context, in *edgeproto.Platform) (*edgeproto.Result, error) {
-	return &edgeproto.Result{}, nil
+func (s *DummyServer) DeletePlatform(in *edgeproto.Platform, server edgeproto.PlatformApi_DeletePlatformServer) error {
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
+	return nil
 }
 
-func (s *DummyServer) UpdatePlatform(ctx context.Context, in *edgeproto.Platform) (*edgeproto.Result, error) {
-	return &edgeproto.Result{}, nil
+func (s *DummyServer) UpdatePlatform(in *edgeproto.Platform, server edgeproto.PlatformApi_UpdatePlatformServer) error {
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
+	return nil
 }
 
 func (s *DummyServer) ShowPlatform(in *edgeproto.Platform, server edgeproto.PlatformApi_ShowPlatformServer) error {

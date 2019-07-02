@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -83,35 +82,6 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
 
-	if !*testMode {
-		// Vault controller level credentials are required to access
-		// registry credentials
-		roleId := os.Getenv("VAULT_ROLE_ID")
-		if roleId == "" {
-			return fmt.Errorf("Env variable VAULT_ROLE_ID not set")
-		}
-		secretId := os.Getenv("VAULT_SECRET_ID")
-		if secretId == "" {
-			return fmt.Errorf("Env variable VAULT_SECRET_ID not set")
-		}
-
-		// Vault CRM level credentials are required to access
-		// instantiate crmserver
-		crmRoleId := os.Getenv("VAULT_CRM_ROLE_ID")
-		if crmRoleId == "" {
-			return fmt.Errorf("Env variable VAULT_CRM_ROLE_ID not set")
-		}
-		crmSecretId := os.Getenv("VAULT_CRM_SECRET_ID")
-		if crmSecretId == "" {
-			return fmt.Errorf("Env variable VAULT_CRM_SECRET_ID not set")
-		}
-		in.CrmRoleId = crmRoleId
-		in.CrmSecretId = crmSecretId
-	}
-
-	in.TlsCertFile = *tlsCertFile
-	in.VaultAddr = *vaultAddr
-
 	in.TimeLimits.CreateClusterInstTimeout = int64(cloudcommon.CreateClusterInstTimeout)
 	in.TimeLimits.UpdateClusterInstTimeout = int64(cloudcommon.UpdateClusterInstTimeout)
 	in.TimeLimits.DeleteClusterInstTimeout = int64(cloudcommon.DeleteClusterInstTimeout)
@@ -142,9 +112,13 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
-			setStatusTask(in, value, cb)
+			log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", in.Key, "taskName", value)
+			in.Status.SetTask(value)
+			cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
 		case edgeproto.UpdateStep:
-			setStatusStep(in, value, cb)
+			log.DebugLog(log.DebugLevelApi, "SetStatusStep", "key", in.Key, "stepName", value)
+			in.Status.SetStep(value)
+			cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
 		}
 	}
 
@@ -155,10 +129,19 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return err
 	}
 
-	if pf.Deployment == edgeproto.DeploymentType_DEPLOYMENT_LOCAL {
+	cloudletPlatform, ok := cloudletPlatforms[pf.PlatformType]
+	if !ok {
+		return fmt.Errorf("Platform plugin %s not found", pf.PlatformType.String())
+	}
+
+	switch in.Deployment {
+	case edgeproto.DeploymentType_DEPLOYMENT_LOCAL:
+		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(in, &pf)
-	} else {
+	case edgeproto.DeploymentType_DEPLOYMENT_OPENSTACK:
 		err = cloudletPlatform.CreateCloudlet(in, &pf, &pfFlavor, updateCloudletCallback)
+	default:
+		err = fmt.Errorf("unsupported deployment type")
 	}
 
 	if err != nil {
@@ -192,6 +175,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 		in.State = edgeproto.TrackedState_READY
+		updateCloudletCallback(edgeproto.UpdateTask, "Cloudlet created successfully")
 	} else {
 		in.State = edgeproto.TrackedState_CREATE_ERROR
 		in.Errors = append(in.Errors, "cloudlet state is not ready: "+cloudletInfo.State.String())
@@ -270,10 +254,18 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return err
 	}
 
-	if pf.Deployment == edgeproto.DeploymentType_DEPLOYMENT_LOCAL {
-		err = cloudcommon.StopCRMService(in)
-	} else {
-		err = cloudletPlatform.DeleteCloudlet(in)
+	cloudletPlatform, ok := cloudletPlatforms[pf.PlatformType]
+	if !ok {
+		return fmt.Errorf("Platform plugin %s not found", pf.PlatformType.String())
+	}
+
+	switch in.Deployment {
+	case edgeproto.DeploymentType_DEPLOYMENT_LOCAL:
+		err = cloudcommon.StopCRMService(in, &pf)
+	case edgeproto.DeploymentType_DEPLOYMENT_OPENSTACK:
+		err = cloudletPlatform.DeleteCloudlet(in, &pf)
+	default:
+		err = fmt.Errorf("unsupported deployment type")
 	}
 	if err != nil {
 		return err
@@ -378,25 +370,4 @@ func (s *CloudletApi) UpdateAppInstLocations(in *edgeproto.Cloudlet) {
 				"inst", inst, "err", err)
 		}
 	}
-}
-
-func setStatusTask(in *edgeproto.Cloudlet, taskName string, cb edgeproto.CloudletApi_CreateCloudletServer) {
-	log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", in.Key, "taskName", taskName)
-	in.Status.SetTask(taskName)
-
-	cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
-}
-
-func setStatusMaxTasks(in *edgeproto.Cloudlet, maxTasks uint32, cb edgeproto.CloudletApi_CreateCloudletServer) {
-	log.DebugLog(log.DebugLevelApi, "SetStatusMaxTasks", "key", in.Key, "maxTasks", maxTasks)
-	in.Status.SetMaxTasks(maxTasks)
-
-	cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
-}
-
-func setStatusStep(in *edgeproto.Cloudlet, stepName string, cb edgeproto.CloudletApi_CreateCloudletServer) {
-	log.DebugLog(log.DebugLevelApi, "SetStatusStep", "key", in.Key, "stepName", stepName)
-	in.Status.SetStep(stepName)
-
-	cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
 }

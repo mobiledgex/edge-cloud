@@ -228,11 +228,11 @@ func (s *Platform) Validate(fields map[string]struct{}) error {
 	if err := s.ValidateEnums(); err != nil {
 		return err
 	}
-	if _, found := fields[PlatformFieldImagePath]; found {
-		err := util.ValidateImagePath(s.ImagePath)
-		if err != nil {
-			return err
-		}
+	if s.NotifyCtrlAddrs == "" {
+		return errors.New("notifyctrladdrs cannot be empy")
+	}
+	if s.NotifySrvAddr == "" {
+		return errors.New("notifysrvaddr cannot be empy")
 	}
 	return nil
 }

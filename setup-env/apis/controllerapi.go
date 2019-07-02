@@ -189,21 +189,23 @@ func runDeveloperApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepr
 }
 
 func runPlatformApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	pfAPI := edgeproto.NewPlatformApiClient(conn)
 	var err error = nil
-	for _, p := range appdata.Platforms {
-		log.Printf("API %v for platform: %v", mode, p.Key)
+	pfAPI := edgeproto.NewPlatformApiClient(conn)
+	for _, pf := range appdata.Platforms {
+		log.Printf("API %v for platform: %v data %+v", mode, pf.Key.Name, pf)
+		var stream testutil.PlatformStream
 		switch mode {
 		case "create":
-			_, err = pfAPI.CreatePlatform(ctx, &p)
+			stream, err = pfAPI.CreatePlatform(ctx, &pf)
 		case "update":
-			_, err = pfAPI.UpdatePlatform(ctx, &p)
+			stream, err = pfAPI.UpdatePlatform(ctx, &pf)
 		case "delete":
-			_, err = pfAPI.DeletePlatform(ctx, &p)
+			stream, err = pfAPI.DeletePlatform(ctx, &pf)
 		}
+		err = testutil.PlatformReadResultStream(stream, err)
 		err = ignoreExpectedErrors(mode, err)
 		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, p.Key, err)
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, pf.Key, err)
 		}
 	}
 	return nil

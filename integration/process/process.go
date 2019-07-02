@@ -100,7 +100,7 @@ func getPidsByName(processName string, processArgs string) []ProcessInfo {
 		pgrepCommand = "pgrep -x " + processName
 	} else {
 		//look for a process running with particular arguments
-		pgrepCommand = "pgrep -f \"" + processName + " .*" + processArgs + ".*\""
+		pgrepCommand = "pgrep -f '" + processName + " .*" + processArgs + ".*'"
 	}
 	log.Printf("Running pgrep %v\n", pgrepCommand)
 	out, perr := exec.Command("sh", "-c", pgrepCommand).Output()

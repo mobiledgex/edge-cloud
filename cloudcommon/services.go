@@ -10,7 +10,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func getCrmProc(cloudlet *edgeproto.Cloudlet, platType string) (*process.Crm, []process.StartOp, error) {
+func getCrmProc(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform) (*process.Crm, []process.StartOp, error) {
 	opts := []process.StartOp{}
 
 	cloudletKeyStr, err := json.Marshal(cloudlet.Key)
@@ -19,29 +19,30 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, platType string) (*process.Crm, []
 	}
 
 	envVars := make(map[string]string)
-	envVars["VAULT_ROLE_ID"] = cloudlet.CrmRoleId
-	envVars["VAULT_SECRET_ID"] = cloudlet.CrmSecretId
+	envVars["VAULT_ROLE_ID"] = pf.CrmRoleId
+	envVars["VAULT_SECRET_ID"] = pf.CrmSecretId
 
 	opts = append(opts, process.WithDebug("api,mexos,notify"))
 
 	return &process.Crm{
-		NotifyAddrs: cloudlet.NotifyCtrlAddrs,
-		CloudletKey: string(cloudletKeyStr),
-		Platform:    platType,
+		NotifyAddrs:   pf.NotifyCtrlAddrs,
+		NotifySrvAddr: pf.NotifySrvAddr,
+		CloudletKey:   string(cloudletKeyStr),
+		Platform:      pf.PlatformType.String(),
 		Common: process.Common{
 			Hostname: cloudlet.Key.Name,
 			EnvVars:  envVars,
 		},
 		TLS: process.TLSCerts{
-			ServerCert: cloudlet.TlsCertFile,
+			ServerCert: pf.TlsCertFile,
 		},
-		VaultAddr:    cloudlet.VaultAddr,
-		PhysicalName: cloudlet.PhysicalName,
+		VaultAddr:    pf.VaultAddr,
+		PhysicalName: pf.PhysicalName,
 	}, opts, nil
 }
 
 func GetCRMCmd(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform) (string, *map[string]string, error) {
-	crmProc, opts, err := getCrmProc(cloudlet, pf.PlatformType.String())
+	crmProc, opts, err := getCrmProc(cloudlet, pf)
 	if err != nil {
 		return "", nil, err
 	}
@@ -50,7 +51,7 @@ func GetCRMCmd(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform) (string, *m
 }
 
 func StartCRMService(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform) error {
-	crmProc, opts, err := getCrmProc(cloudlet, pf.PlatformType.String())
+	crmProc, opts, err := getCrmProc(cloudlet, pf)
 	if err != nil {
 		return err
 	}
@@ -59,13 +60,13 @@ func StartCRMService(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform) error
 	if err != nil {
 		return err
 	}
-	log.DebugLog(log.DebugLevelMexos, "started crmserver")
+	log.DebugLog(log.DebugLevelMexos, "started "+crmProc.GetExeName())
 
 	return nil
 }
 
-func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
-	crmProc, _, err := getCrmProc(cloudlet, "")
+func StopCRMService(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform) error {
+	crmProc, _, err := getCrmProc(cloudlet, pf)
 	if err != nil {
 		return err
 	}
