@@ -93,11 +93,6 @@ type TLSCertInfo struct {
 	DNSNames   []string
 }
 
-type EnvVar struct {
-	Name  string
-	Value string
-}
-
 type DeploymentData struct {
 	TLSCerts    []*TLSCertInfo        `yaml:"tlscerts"`
 	Locsims     []*process.LocApiSim  `yaml:"locsims"`
