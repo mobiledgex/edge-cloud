@@ -20,6 +20,7 @@ func GetInfluxDataAuth(vaultAddr, region string) *InfluxCreds {
 	log.DebugLog(log.DebugLevelApi, "get influxDB credentials ", "vault-path", vaultPath)
 	data, err := vault.GetVaultData(vaultPath)
 	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Could not get influxDB credentials", "vault-path", vaultPath, "err", err)
 		return nil
 	}
 	creds := &InfluxCreds{}
