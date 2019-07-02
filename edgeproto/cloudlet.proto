@@ -148,24 +148,28 @@ message Platform {
   FlavorKey flavor = 5;
   // Path to Docker registry holding edge-cloud image
   string registry_path = 6;
+  // Path to platform base image
+  string image_path = 7;
   // Address of controller notify port (can be multiple of these)
-  string notify_ctrl_addrs = 7;
+  string notify_ctrl_addrs = 8;
   // Address for the CRM notify listener to run on
-  string notify_srv_addr = 8;
+  string notify_srv_addr = 9;
   // Vault address
-  string vault_addr  = 9 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string vault_addr  = 10 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // TLS cert file
-  string tls_cert_file = 10 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string tls_cert_file = 11 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Vault role ID for CRM
-  string crm_role_id    = 11 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string crm_role_id    = 12 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Vault secret ID for CRM
-  string crm_secret_id = 12 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string crm_secret_id = 13 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Current state of the platform
-  TrackedState state = 13 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  TrackedState state = 14 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Any errors trying to create, update, or delete the platform.
-  repeated string errors = 14 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  repeated string errors = 15 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // status is used to reflect progress of creation or other events
-  StatusInfo status = 15 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  StatusInfo status = 16 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  // Tag of edge-cloud image
+  string platform_tag = 17 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -173,7 +177,7 @@ message Platform {
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protocmd.noconfig) = "VaultAddr,TlsCertFile,CrmRoleId,CrmSecretId,Status";
+  option (protocmd.noconfig) = "VaultAddr,TlsCertFile,CrmRoleId,CrmSecretId,Status,PlatformTag";
   option (protocmd.alias) = "name=Key.Name";
 }
 

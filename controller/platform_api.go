@@ -41,52 +41,34 @@ func InitPlatformApi(sync *Sync) {
 
 func (s *PlatformApi) CreatePlatform(in *edgeproto.Platform, cb edgeproto.PlatformApi_CreatePlatformServer) error {
 	var err error
+
 	if err = in.Validate(edgeproto.PlatformAllFieldsMap); err != nil {
 		return err
 	}
 
-	parts := strings.Split(in.RegistryPath, "/")
-	// Append default registry address for internal image paths
-	if len(parts) < 2 || !strings.Contains(parts[0], ".") {
-		return fmt.Errorf("registrypath should be full registry URL: <domain-name>/<registry-path>")
-	}
-	tag, err := cloudcommon.GetRegistryTag(in.RegistryPath)
-	if err != nil {
-		return err
-	}
-	if tag != "" {
-		return fmt.Errorf("registrypath should not have image tag")
-	}
-
-	// Fetch Controller Image Tag from /version.txt
-	// Platform image tag should be same as controller image tag
-	platform_version, err := ioutil.ReadFile("/version.txt")
-	if err != nil {
-		return fmt.Errorf("unable to fetch controller image tag: %v", err)
-	}
-	tag = strings.TrimSpace(string(platform_version))
-
-	platform_registry_path := in.RegistryPath + ":" + tag
 	if !*testMode {
-		err = cloudcommon.ValidateDockerRegistryPath(platform_registry_path, *vaultAddr)
-		if err != nil {
-			return err
+		if in.RegistryPath != "" {
+			// Fetch Controller Image Tag from /version.txt
+			// Platform image tag should be same as controller image tag
+			platform_version, err := ioutil.ReadFile("/version.txt")
+			if err != nil {
+				return fmt.Errorf("unable to fetch controller image tag: %v", err)
+			}
+			tag := strings.TrimSpace(string(platform_version))
+			platform_registry_path := in.RegistryPath + ":" + tag
+			err = cloudcommon.ValidateDockerRegistryPath(platform_registry_path, *vaultAddr)
+			if err != nil {
+				return err
+			}
+			in.PlatformTag = tag
 		}
-	}
-	in.RegistryPath = platform_registry_path
-
-	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		if !flavorApi.store.STMGet(stm, in.Flavor, nil) {
-			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
+		if in.ImagePath != "" {
+			err = cloudcommon.ValidateVMRegistryPath(in.ImagePath, *vaultAddr)
+			if err != nil {
+				return err
+			}
 		}
 
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	if !*testMode {
 		// Vault controller level credentials are required to access
 		// registry credentials
 		roleId := os.Getenv("VAULT_ROLE_ID")
@@ -114,6 +96,17 @@ func (s *PlatformApi) CreatePlatform(in *edgeproto.Platform, cb edgeproto.Platfo
 
 	in.TlsCertFile = *tlsCertFile
 	in.VaultAddr = *vaultAddr
+
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if !flavorApi.store.STMGet(stm, in.Flavor, nil) {
+			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
 
 	// Load platform implementation
 	cloudletPlatform, ok := cloudletPlatforms[in.PlatformType]

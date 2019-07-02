@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -101,21 +100,6 @@ func SendHTTPReq(method, fileUrlPath string, auth *RegistryAuth) (*http.Response
 		return nil, fmt.Errorf("failed fetching response %v", err)
 	}
 	return resp, nil
-}
-
-func GetRegistryTag(regUrl string) (string, error) {
-	urlObj, err := url.Parse("https://" + regUrl)
-	if err != nil {
-		return "", err
-	}
-	out := strings.Split(urlObj.Path, ":")
-	if len(out) == 1 {
-		return "", nil
-	} else if len(out) == 2 {
-		return out[1], nil
-	} else {
-		return "", fmt.Errorf("Invalid tag in registry path")
-	}
 }
 
 func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {

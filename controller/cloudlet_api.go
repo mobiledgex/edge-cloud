@@ -139,9 +139,15 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(in, &pf)
 	case edgeproto.DeploymentType_DEPLOYMENT_OPENSTACK:
+		if pf.ImagePath == "" {
+			return fmt.Errorf("Platform must have imagepath specified")
+		}
+		if pf.RegistryPath == "" {
+			return fmt.Errorf("Platform must have registrypath specified")
+		}
 		err = cloudletPlatform.CreateCloudlet(in, &pf, &pfFlavor, updateCloudletCallback)
 	default:
-		err = fmt.Errorf("unsupported deployment type")
+		err = fmt.Errorf("Unsupported deployment type")
 	}
 
 	if err != nil {

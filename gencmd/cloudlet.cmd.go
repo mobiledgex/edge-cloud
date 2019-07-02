@@ -437,7 +437,7 @@ func PlatformKeyWriteOutputOne(obj *edgeproto.PlatformKey) {
 	}
 }
 func PlatformSlicer(in *edgeproto.Platform) []string {
-	s := make([]string, 0, 15)
+	s := make([]string, 0, 17)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -450,6 +450,7 @@ func PlatformSlicer(in *edgeproto.Platform) []string {
 	}
 	s = append(s, in.Flavor.Name)
 	s = append(s, in.RegistryPath)
+	s = append(s, in.ImagePath)
 	s = append(s, in.NotifyCtrlAddrs)
 	s = append(s, in.NotifySrvAddr)
 	s = append(s, in.VaultAddr)
@@ -465,17 +466,19 @@ func PlatformSlicer(in *edgeproto.Platform) []string {
 	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
 	s = append(s, in.Status.TaskName)
 	s = append(s, in.Status.StepName)
+	s = append(s, in.PlatformTag)
 	return s
 }
 
 func PlatformHeaderSlicer() []string {
-	s := make([]string, 0, 15)
+	s := make([]string, 0, 17)
 	s = append(s, "Fields")
 	s = append(s, "Key-Name")
 	s = append(s, "PlatformType")
 	s = append(s, "PhysicalName")
 	s = append(s, "Flavor-Name")
 	s = append(s, "RegistryPath")
+	s = append(s, "ImagePath")
 	s = append(s, "NotifyCtrlAddrs")
 	s = append(s, "NotifySrvAddr")
 	s = append(s, "VaultAddr")
@@ -488,6 +491,7 @@ func PlatformHeaderSlicer() []string {
 	s = append(s, "Status-MaxTasks")
 	s = append(s, "Status-TaskName")
 	s = append(s, "Status-StepName")
+	s = append(s, "PlatformTag")
 	return s
 }
 
@@ -790,6 +794,9 @@ func PlatformHideTags(in *edgeproto.Platform) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
+	}
+	if _, found := tags["nocmp"]; found {
+		in.PlatformTag = ""
 	}
 }
 
@@ -1513,6 +1520,7 @@ func init() {
 	PlatformIn.Flavor = &edgeproto.FlavorKey{}
 	PlatformFlagSet.StringVar(&PlatformIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	PlatformFlagSet.StringVar(&PlatformIn.RegistryPath, "registrypath", "", "RegistryPath")
+	PlatformFlagSet.StringVar(&PlatformIn.ImagePath, "imagepath", "", "ImagePath")
 	PlatformFlagSet.StringVar(&PlatformIn.NotifyCtrlAddrs, "notifyctrladdrs", "", "NotifyCtrlAddrs")
 	PlatformFlagSet.StringVar(&PlatformIn.NotifySrvAddr, "notifysrvaddr", "", "NotifySrvAddr")
 	PlatformNoConfigFlagSet.StringVar(&PlatformIn.VaultAddr, "vaultaddr", "", "VaultAddr")
@@ -1524,6 +1532,7 @@ func init() {
 	PlatformNoConfigFlagSet.Uint32Var(&PlatformIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
 	PlatformNoConfigFlagSet.StringVar(&PlatformIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
 	PlatformNoConfigFlagSet.StringVar(&PlatformIn.Status.StepName, "status-stepname", "", "Status.StepName")
+	PlatformNoConfigFlagSet.StringVar(&PlatformIn.PlatformTag, "platformtag", "", "PlatformTag")
 	CloudletFlagSet.StringVar(&CloudletIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.Platform.Name, "platform-name", "", "Platform.Name")
@@ -1617,38 +1626,44 @@ func PlatformSetFields() {
 	if PlatformFlagSet.Lookup("registrypath").Changed {
 		PlatformIn.Fields = append(PlatformIn.Fields, "6")
 	}
-	if PlatformFlagSet.Lookup("notifyctrladdrs").Changed {
+	if PlatformFlagSet.Lookup("imagepath").Changed {
 		PlatformIn.Fields = append(PlatformIn.Fields, "7")
 	}
-	if PlatformFlagSet.Lookup("notifysrvaddr").Changed {
+	if PlatformFlagSet.Lookup("notifyctrladdrs").Changed {
 		PlatformIn.Fields = append(PlatformIn.Fields, "8")
 	}
-	if PlatformNoConfigFlagSet.Lookup("vaultaddr").Changed {
+	if PlatformFlagSet.Lookup("notifysrvaddr").Changed {
 		PlatformIn.Fields = append(PlatformIn.Fields, "9")
 	}
-	if PlatformNoConfigFlagSet.Lookup("tlscertfile").Changed {
+	if PlatformNoConfigFlagSet.Lookup("vaultaddr").Changed {
 		PlatformIn.Fields = append(PlatformIn.Fields, "10")
 	}
-	if PlatformNoConfigFlagSet.Lookup("crmroleid").Changed {
+	if PlatformNoConfigFlagSet.Lookup("tlscertfile").Changed {
 		PlatformIn.Fields = append(PlatformIn.Fields, "11")
 	}
-	if PlatformNoConfigFlagSet.Lookup("crmsecretid").Changed {
+	if PlatformNoConfigFlagSet.Lookup("crmroleid").Changed {
 		PlatformIn.Fields = append(PlatformIn.Fields, "12")
 	}
-	if PlatformFlagSet.Lookup("state").Changed {
+	if PlatformNoConfigFlagSet.Lookup("crmsecretid").Changed {
 		PlatformIn.Fields = append(PlatformIn.Fields, "13")
 	}
+	if PlatformFlagSet.Lookup("state").Changed {
+		PlatformIn.Fields = append(PlatformIn.Fields, "14")
+	}
 	if PlatformNoConfigFlagSet.Lookup("status-tasknumber").Changed {
-		PlatformIn.Fields = append(PlatformIn.Fields, "15.1")
+		PlatformIn.Fields = append(PlatformIn.Fields, "16.1")
 	}
 	if PlatformNoConfigFlagSet.Lookup("status-maxtasks").Changed {
-		PlatformIn.Fields = append(PlatformIn.Fields, "15.2")
+		PlatformIn.Fields = append(PlatformIn.Fields, "16.2")
 	}
 	if PlatformNoConfigFlagSet.Lookup("status-taskname").Changed {
-		PlatformIn.Fields = append(PlatformIn.Fields, "15.3")
+		PlatformIn.Fields = append(PlatformIn.Fields, "16.3")
 	}
 	if PlatformNoConfigFlagSet.Lookup("status-stepname").Changed {
-		PlatformIn.Fields = append(PlatformIn.Fields, "15.4")
+		PlatformIn.Fields = append(PlatformIn.Fields, "16.4")
+	}
+	if PlatformNoConfigFlagSet.Lookup("platformtag").Changed {
+		PlatformIn.Fields = append(PlatformIn.Fields, "17")
 	}
 }
 
