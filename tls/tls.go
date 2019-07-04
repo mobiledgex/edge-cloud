@@ -35,17 +35,18 @@ func GetClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
 		return nil, nil
 	}
 	dir := path.Dir(tlsCertFile)
+	// get the public certs from the host's cert pool
 	certPool, err := x509.SystemCertPool()
 	if err != nil {
 		return nil, fmt.Errorf("fail to load system cert pool")
 	}
+	// append the mex ca if present. If not, we will only trust public signed certs
 	bs, err := ioutil.ReadFile(dir + "/mex-ca.crt")
-	if err != nil {
-		return nil, err
-	}
-	ok := certPool.AppendCertsFromPEM(bs)
-	if !ok {
-		return nil, fmt.Errorf("fail to append certs")
+	if err == nil {
+		ok := certPool.AppendCertsFromPEM(bs)
+		if !ok {
+			return nil, fmt.Errorf("fail to append certs")
+		}
 	}
 	return certPool, nil
 }
