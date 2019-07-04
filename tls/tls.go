@@ -124,7 +124,7 @@ func GetTLSServerCreds(tlsCertFile string, mutualAuth bool) (credentials.Transpo
 			return nil, fmt.Errorf("could not read CA certificate: %s", err)
 		}
 		// this is not fatal if we are not trying to do mutual auth
-		fmt.Printf("no mex-ca-crt file in dir: %s\n", dir)
+		fmt.Printf("no mex-ca.crt file in dir: %s\n", dir)
 	}
 	if len(cabs) > 0 {
 		ok := certPool.AppendCertsFromPEM(cabs)
