@@ -52,10 +52,7 @@ func GetClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
 
 // GetTLSClientDialOption gets GRPC options needed for TLS connection
 func GetTLSClientDialOption(serverAddr string, tlsCertFile string) (grpc.DialOption, error) {
-	var config *tls.Config
-	var err error
-
-	config, err = GetTLSClientConfig(serverAddr, tlsCertFile)
+	config, err := GetTLSClientConfig(serverAddr, tlsCertFile)
 	if err != nil {
 		return nil, err
 	}
