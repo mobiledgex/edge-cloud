@@ -45,7 +45,7 @@ var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted clou
 var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
 var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
 var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
-var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
+var statsShards = flag.Uint("statsShards", 10, "nfumber of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
 var region = flag.String("region", "local", "region name")
 
@@ -332,7 +332,7 @@ func main() {
 	mux := http.NewServeMux()
 	gwcfg := &cloudcommon.GrpcGWConfig{
 		ApiAddr:     *apiAddr,
-		TlsCertFile: *tlsCertFile,
+		TlsCertFile: *tlsApiCertFile,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 			dme.RegisterMatchEngineApiHandler,
 		},
