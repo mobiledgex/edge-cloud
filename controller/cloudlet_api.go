@@ -182,11 +182,14 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(in, &pf)
 	} else {
-		if pf.ImagePath == "" {
-			return fmt.Errorf("Platform must have imagepath specified")
-		}
-		if pf.RegistryPath == "" {
-			return fmt.Errorf("Platform must have registrypath specified")
+		if pf.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE &&
+			pf.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_MEXDIND {
+			if pf.ImagePath == "" {
+				return fmt.Errorf("Platform must have imagepath specified")
+			}
+			if pf.RegistryPath == "" {
+				return fmt.Errorf("Platform must have registrypath specified")
+			}
 		}
 		err = cloudletPlatform.CreateCloudlet(in, &pf, &pfFlavor, updateCloudletCallback)
 	}
