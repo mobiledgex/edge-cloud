@@ -115,7 +115,7 @@ func (mgr *ServerMgr) Start(addr string, tlsCertFile string) {
 		log.FatalLog("ServerMgr listen failed", "err", err)
 	}
 
-	creds, err := tls.GetTLSServerCreds(tlsCertFile)
+	creds, err := tls.GetTLSServerCreds(tlsCertFile, true)
 	if err != nil {
 		log.FatalLog("Failed to get TLS creds", "err", err)
 	}
