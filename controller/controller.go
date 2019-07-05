@@ -174,7 +174,7 @@ func startServices() error {
 	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile)
 	services.notifyServerMgr = true
 
-	creds, err := tls.GetTLSServerCreds(*tlsCertFile)
+	creds, err := tls.GetTLSServerCreds(*tlsCertFile, true)
 	if err != nil {
 		return fmt.Errorf("get TLS Credentials failed, %v", err)
 	}

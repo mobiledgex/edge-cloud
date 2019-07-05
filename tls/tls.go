@@ -28,39 +28,45 @@ func getClientCertificate(tlsCertFile string) (tls.Certificate, error) {
 	return certificate, nil
 }
 
-// helper function to get the cert pool
+// GetClientCertPool gets the system cert pool for all the trusted CA certs
+// and then appends the mex specific CA
 func GetClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
 	if tlsCertFile == "" {
 		return nil, nil
 	}
 	dir := path.Dir(tlsCertFile)
-	certPool := x509.NewCertPool()
-	bs, err := ioutil.ReadFile(dir + "/mex-ca.crt")
+	// get the public certs from the host's cert pool
+	certPool, err := x509.SystemCertPool()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fail to load system cert pool")
 	}
-	ok := certPool.AppendCertsFromPEM(bs)
-	if !ok {
-		return nil, fmt.Errorf("fail to append certs")
+	// append the mex ca if present. If not, we will only trust public signed certs
+	bs, err := ioutil.ReadFile(dir + "/mex-ca.crt")
+	if err == nil {
+		ok := certPool.AppendCertsFromPEM(bs)
+		if !ok {
+			return nil, fmt.Errorf("fail to append certs")
+		}
 	}
 	return certPool, nil
 }
 
-// GetTLSClientDialOption gets options needed for TLS connection
-func GetTLSClientDialOption(addr string, tlsCertFile string) (grpc.DialOption, error) {
-	config, err := GetMutualAuthClientConfig(addr, tlsCertFile)
+// GetTLSClientDialOption gets GRPC options needed for TLS connection
+func GetTLSClientDialOption(serverAddr string, tlsCertFile string) (grpc.DialOption, error) {
+	config, err := GetTLSClientConfig(serverAddr, tlsCertFile)
 	if err != nil {
 		return nil, err
 	}
 	return GetGrpcDialOption(config), nil
 }
 
-func GetMutualAuthClientConfig(addr string, tlsCertFile string) (*tls.Config, error) {
+// GetTLSClientConfig builds client side TLS configuration.  If the serverAddr
+// is blank, no validation is done on the cert
+func GetTLSClientConfig(serverAddr string, tlsCertFile string) (*tls.Config, error) {
 	if tlsCertFile == "" {
-		// no TLS
+		fmt.Println("No TLS cert file")
 		return nil, nil
 	}
-
 	certPool, err := GetClientCertPool(tlsCertFile)
 	if err != nil {
 		return nil, err
@@ -69,16 +75,26 @@ func GetMutualAuthClientConfig(addr string, tlsCertFile string) (*tls.Config, er
 	if err != nil {
 		return nil, err
 	}
-	serverName := strings.Split(addr, ":")[0]
 
-	return &tls.Config{
-		ServerName:   serverName,
-		Certificates: []tls.Certificate{certificate},
-		RootCAs:      certPool,
-	}, nil
+	if serverAddr != "" {
+		serverName := strings.Split(serverAddr, ":")[0]
+		return &tls.Config{
+			ServerName:   serverName,
+			Certificates: []tls.Certificate{certificate},
+			RootCAs:      certPool,
+		}, nil
+	} else {
+		// do not validate the server address.
+		return &tls.Config{
+			Certificates: []tls.Certificate{certificate},
+			RootCAs:      certPool,
+		}, nil
+	}
+
 }
 
 func GetGrpcDialOption(config *tls.Config) grpc.DialOption {
+
 	if config == nil {
 		// no TLS
 		return grpc.WithInsecure()
@@ -87,32 +103,10 @@ func GetGrpcDialOption(config *tls.Config) grpc.DialOption {
 	return grpc.WithTransportCredentials(transportCreds)
 }
 
-// GetTLSClientConfig gets TLS Config for REST api connection
-func GetTLSClientConfig(tlsCertFile string) (*tls.Config, error) {
-	if tlsCertFile != "" {
-		certPool, err := GetClientCertPool(tlsCertFile)
-		if err != nil {
-			return nil, err
-		}
-		certificate, err := getClientCertificate(tlsCertFile)
-		if err != nil {
-			return nil, err
-		}
-		tlsConfig := &tls.Config{
-			Certificates: []tls.Certificate{certificate},
-			RootCAs:      certPool,
-		}
-		tlsConfig.BuildNameToCertificate()
-		return tlsConfig, nil
-	}
-	///no TLS - TODO NEED TO have non-secure connection
-	return nil, nil
-}
-
 // GetTLSServerCreds gets grpc credentials for the server for
 // mutual authentication.
 // Returns nil credentials is the TLS cert file name is blank
-func GetTLSServerCreds(tlsCertFile string) (credentials.TransportCredentials, error) {
+func GetTLSServerCreds(tlsCertFile string, mutualAuth bool) (credentials.TransportCredentials, error) {
 	if tlsCertFile == "" {
 		fmt.Printf("no server TLS credentials\n")
 		return nil, nil
@@ -122,16 +116,21 @@ func GetTLSServerCreds(tlsCertFile string) (credentials.TransportCredentials, er
 	caFile := dir + "/" + "mex-ca.crt"
 	keyFile := strings.Replace(tlsCertFile, "crt", "key", 1)
 	fmt.Printf("Loading certfile %s cafile %s keyfile %s\n", tlsCertFile, caFile, keyFile)
-
 	// Create a certificate pool from the certificate authority
 	certPool := x509.NewCertPool()
 	cabs, err := ioutil.ReadFile(caFile)
 	if err != nil {
-		return nil, fmt.Errorf("could not read CA certificate: %s", err)
+		if mutualAuth {
+			return nil, fmt.Errorf("could not read CA certificate: %s", err)
+		}
+		// this is not fatal if we are not trying to do mutual auth
+		fmt.Printf("no mex-ca.crt file in dir: %s\n", dir)
 	}
-	ok := certPool.AppendCertsFromPEM(cabs)
-	if !ok {
-		return nil, fmt.Errorf("fail to append cert CA %s", caFile)
+	if len(cabs) > 0 {
+		ok := certPool.AppendCertsFromPEM(cabs)
+		if !ok {
+			return nil, fmt.Errorf("fail to append cert CA %s", caFile)
+		}
 	}
 
 	// Load the certificates from disk
@@ -141,14 +140,19 @@ func GetTLSServerCreds(tlsCertFile string) (credentials.TransportCredentials, er
 	}
 
 	// Create the TLS credentials
-	creds := credentials.NewTLS(&tls.Config{
-		ClientAuth: tls.RequireAndVerifyClientCert,
-		//ClientAuth:   tls.RequireAnyClientCert,
-		//ClientAuth: tls.VerifyClientCertIfGiven,
+	var creds credentials.TransportCredentials
 
-		Certificates: []tls.Certificate{certificate},
-		ClientCAs:    certPool,
-	})
+	if mutualAuth {
+		creds = credentials.NewTLS(&tls.Config{
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			Certificates: []tls.Certificate{certificate},
+			ClientCAs:    certPool})
+	} else {
+		creds = credentials.NewTLS(&tls.Config{
+			ClientAuth:   tls.NoClientCert,
+			Certificates: []tls.Certificate{certificate},
+			ClientCAs:    certPool})
+	}
 	return creds, nil
 }
 
