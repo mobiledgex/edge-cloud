@@ -87,7 +87,7 @@ func main() {
 	}
 	controllerData = crmutil.NewControllerData(platform)
 
-	creds, err := tls.GetTLSServerCreds(*tlsCertFile)
+	creds, err := tls.GetTLSServerCreds(*tlsCertFile, true)
 	if err != nil {
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
