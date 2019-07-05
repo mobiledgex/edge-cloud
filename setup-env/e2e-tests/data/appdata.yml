@@ -130,7 +130,6 @@ platforms:
 - key:
     name: azure-platform
   platformtype: PlatformTypeFake
-  deployment: DeploymentLocal
   flavor:
     name: x1.tiny
   registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
@@ -139,7 +138,6 @@ platforms:
 - key:
     name: gcp-platform
   platformtype: PlatformTypeFake
-  deployment: DeploymentLocal
   flavor:
     name: x1.medium
   registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
@@ -158,7 +156,7 @@ cloudlets:
   numdynamicips: 254
   platform:
     name: tmus-platform-1
-  deployment: DeploymentLocal
+  deploymentlocal: true
 - key:
     operatorkey:
       name: tmus
@@ -170,7 +168,7 @@ cloudlets:
   numdynamicips: 254
   platform:
     name: tmus-platform-2
-  deployment: DeploymentLocal
+  deploymentlocal: true
 - key:
     operatorkey:
       name: tmus
@@ -182,7 +180,7 @@ cloudlets:
   numdynamicips: 254
   platform:
     name: tmus-platform-3
-  deployment: DeploymentLocal
+  deploymentlocal: true
 - key:
     operatorkey:
       name: tmus
@@ -194,7 +192,7 @@ cloudlets:
   numdynamicips: 254
   platform:
     name: tmus-platform-4
-  deployment: DeploymentLocal
+  deploymentlocal: true
 - key:
     operatorkey:
       name: tmus
@@ -206,7 +204,7 @@ cloudlets:
   numdynamicips: 254
   platform:
     name: tmus-platform-5
-  deployment: DeploymentLocal
+  deploymentlocal: true
 - key:
     operatorkey:
       name: tmus
@@ -218,7 +216,7 @@ cloudlets:
   numdynamicips: 254
   platform:
     name: tmus-platform-6
-  deployment: DeploymentLocal
+  deploymentlocal: true
 - key:
     operatorkey:
       name: tmus
@@ -230,7 +228,7 @@ cloudlets:
   numdynamicips: 254
   platform:
     name: tmus-platform-7
-  deployment: DeploymentLocal
+  deploymentlocal: true
 - key:
     operatorkey:
       name: tmus
@@ -242,7 +240,7 @@ cloudlets:
   numdynamicips: 254
   platform:
     name: tmus-platform-8
-  deployment: DeploymentLocal
+  deploymentlocal: true
 - key:
     operatorkey:
       name: azure
@@ -254,7 +252,7 @@ cloudlets:
   numdynamicips: 254
   platform:
     name: azure-platform
-  deployment: DeploymentLocal
+  deploymentlocal: true
 - key:
     operatorkey:
       name: gcp
@@ -266,7 +264,7 @@ cloudlets:
   numdynamicips: 254
   platform:
     name: gcp-platform
-  deployment: DeploymentLocal
+  deploymentlocal: true
 
 apps:
 - key:
