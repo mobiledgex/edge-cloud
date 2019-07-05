@@ -10,8 +10,10 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -30,6 +32,11 @@ type TLSCerts struct {
 	ServerCert string
 	ServerKey  string
 	ClientCert string
+}
+
+type LocalAuth struct {
+	User string `json:"user"`
+	Pass string `json:"pass"`
 }
 
 // EtcdLocal
@@ -99,8 +106,26 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-testMode")
 	}
 
+	var envs []string
+	if options.RolesFile != "" {
+		dat, err := ioutil.ReadFile(options.RolesFile)
+		if err != nil {
+			return err
+		}
+		roles := VaultRoles{}
+		err = yaml.Unmarshal(dat, &roles)
+		if err != nil {
+			return err
+		}
+		envs = []string{
+			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.CtrlRoleID),
+			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.CtrlSecretID),
+		}
+		log.Printf("dme envs: %v\n", envs)
+	}
+
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envs, logfile)
 	return err
 }
 
@@ -345,6 +370,7 @@ func (p *Crm) String(opts ...StartOp) string {
 // InfluxLocal
 
 func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
+	var prefix string
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.CleanStartup {
@@ -354,13 +380,45 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 	}
 
 	configFile, err := influxsup.SetupInflux(p.DataDir,
-		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey))
+		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey), influxsup.WithAuth(p.Auth.User != ""))
 	if err != nil {
 		return err
 	}
 	p.Config = configFile
 	args := []string{"-config", configFile}
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	if err != nil {
+		return err
+	}
+
+	// if auth is enabled we need to create default user
+	if p.Auth.User != "" {
+		time.Sleep(5 * time.Second)
+		if p.TLS.ServerCert != "" {
+			prefix = "https://" + p.HttpAddr
+			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		} else {
+			prefix = "http://" + p.HttpAddr
+		}
+
+		resource := "/query"
+		data := url.Values{}
+		data.Set("q", "CREATE USER "+p.Auth.User+" WITH PASSWORD '"+p.Auth.Pass+"' WITH ALL PRIVILEGES")
+		u, _ := url.ParseRequestURI(prefix)
+		u.Path = resource
+		u.RawQuery = data.Encode()
+		urlStr := fmt.Sprintf("%v", u)
+		client := &http.Client{}
+		r, _ := http.NewRequest("POST", urlStr, nil)
+
+		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+		fmt.Printf("Query: %s\n", urlStr)
+		_, err := client.Do(r)
+		if err != nil {
+			return err
+		}
+	}
 	return err
 }
 
@@ -432,6 +490,8 @@ type VaultRoles struct {
 	CRMSecretID     string `json:"crmsecretid"`
 	RotatorRoleID   string `json:"rotatorroleid"`
 	RotatorSecretID string `json:"rotatorsecretid"`
+	CtrlRoleID      string `json:"controllerroleid"`
+	CtrlSecretID    string `json:"controllersecretid"`
 }
 
 func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
@@ -472,8 +532,12 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	p.GetAppRole(region, "dme", &roles.DmeRoleID, &roles.DmeSecretID, &err)
 	p.GetAppRole(region, "crm", &roles.CRMRoleID, &roles.CRMSecretID, &err)
 	p.GetAppRole(region, "rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
+	p.GetAppRole(region, "controller", &roles.CtrlRoleID, &roles.CtrlSecretID, &err)
 	p.PutSecret(region, "dme", p.DmeSecret+"-old", &err)
 	p.PutSecret(region, "dme", p.DmeSecret, &err)
+	// Get the directory where the influx.json file is
+	path := "secret/" + region + "/accounts/influxdb"
+	p.PutSecretsJson(path, "/tmp/influx.json", &err)
 	if err != nil {
 		p.StopLocal()
 		return err
@@ -520,6 +584,10 @@ func (p *Vault) GetAppRole(region, name string, roleID, secretID *string, err *e
 	if val, ok := vals["secret_id"]; ok {
 		*secretID = val
 	}
+}
+
+func (p *Vault) PutSecretsJson(SecretsPath, jsonFile string, err *error) {
+	p.Run("vault", fmt.Sprintf("kv put %s @%s", SecretsPath, jsonFile), err)
 }
 
 func (p *Vault) PutSecret(region, name, secret string, err *error) {

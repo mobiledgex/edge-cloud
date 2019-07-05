@@ -131,6 +131,9 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	log.DebugLog(log.DebugLevelApi, "registry api url", "url", regUrl)
 
 	auth, err := GetRegistryAuth(regUrl, vaultAddr)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "warning, cannot get docker registry secret from vault - assume public registry", "err", err)
+	}
 
 	resp, err := SendHTTPReq("GET", regUrl, auth)
 	if err != nil {

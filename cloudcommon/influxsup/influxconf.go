@@ -51,6 +51,8 @@ type InfluxOptions struct {
 	TlsCertfile string
 	// TLS server cert key
 	TlsCertKey string
+	// Authentication
+	Auth bool
 }
 
 type InfluxOp func(opts *InfluxOptions)
@@ -69,6 +71,10 @@ func WithSeverCert(cert string) InfluxOp {
 
 func WithSeverCertKey(key string) InfluxOp {
 	return func(opts *InfluxOptions) { opts.TlsCertKey = key }
+}
+
+func WithAuth(auth bool) InfluxOp {
+	return func(opts *InfluxOptions) { opts.Auth = auth }
 }
 
 func (s *InfluxOptions) Apply(ops ...InfluxOp) {
@@ -96,6 +102,9 @@ bind-address = "{{.BindAddr}}"
 [http]
   enabled = true
   bind-address = "{{.HttpAddr}}"
+{{if .Auth}}
+  auth-enabled = true
+{{end}}
 {{if .TlsCertfile}}
   https-enabled = true
   https-certificate = "{{.TlsCertfile}}"
