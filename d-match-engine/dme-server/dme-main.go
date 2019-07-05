@@ -332,7 +332,7 @@ func main() {
 	mux := http.NewServeMux()
 	gwcfg := &cloudcommon.GrpcGWConfig{
 		ApiAddr:     *apiAddr,
-		TlsCertFile: *tlsCertFile,
+		TlsCertFile: *tlsApiCertFile,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 			dme.RegisterMatchEngineApiHandler,
 		},
