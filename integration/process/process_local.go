@@ -327,7 +327,19 @@ func (p *Crm) GetExeName() string { return "crmserver" }
 func (p *Crm) LookupArgs() string { return "--cloudletKey " + p.CloudletKey }
 
 func (p *Crm) String(opts ...StartOp) string {
-	return p.GetExeName() + " " + strings.Join(p.GetArgs(opts...), " ")
+	cmd_str := p.GetExeName()
+	args := p.GetArgs(opts...)
+	key := true
+	for _, v := range args {
+		if key {
+			cmd_str += " " + v
+			key = false
+		} else {
+			cmd_str += " '" + v + "'"
+			key = true
+		}
+	}
+	return cmd_str
 }
 
 // InfluxLocal

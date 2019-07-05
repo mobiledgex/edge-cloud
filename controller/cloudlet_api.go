@@ -61,6 +61,30 @@ func (s *CloudletApi) UsesPlatform(in *edgeproto.PlatformKey) bool {
 	return false
 }
 
+func (s *CloudletApi) ReplaceErrorState(in *edgeproto.Cloudlet, newState edgeproto.TrackedState) {
+	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		inst := edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, &in.Key, &inst) {
+			// got deleted in the meantime
+			return nil
+		}
+
+		if inst.State != edgeproto.TrackedState_CREATE_ERROR &&
+			inst.State != edgeproto.TrackedState_DELETE_ERROR &&
+			inst.State != edgeproto.TrackedState_UPDATE_ERROR {
+			return nil
+		}
+		if newState == edgeproto.TrackedState_NOT_PRESENT {
+			s.store.STMDel(stm, &in.Key)
+		} else {
+			inst.State = newState
+			inst.Errors = nil
+			s.store.STMPut(stm, &inst)
+		}
+		return nil
+	})
+}
+
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_UNKNOWN {
 		in.IpSupport = edgeproto.IpSupport_IP_SUPPORT_DYNAMIC
@@ -82,6 +106,11 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
 
+	return s.createCloudletInternal(DefCallContext(), in, cb)
+}
+func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
+	cctx.SetOverride(&in.CrmOverride)
+
 	in.TimeLimits.CreateClusterInstTimeout = int64(cloudcommon.CreateClusterInstTimeout)
 	in.TimeLimits.UpdateClusterInstTimeout = int64(cloudcommon.UpdateClusterInstTimeout)
 	in.TimeLimits.DeleteClusterInstTimeout = int64(cloudcommon.DeleteClusterInstTimeout)
@@ -94,7 +123,14 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
-			return objstore.ErrKVStoreKeyExists
+			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
+				if in.State == edgeproto.TrackedState_CREATE_ERROR {
+					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
+					cb.Send(&edgeproto.Result{Message: "Use DeleteCloudlet to remove and try again"})
+				}
+				return objstore.ErrKVStoreKeyExists
+			}
+			in.Errors = nil
 		}
 		if !platformApi.store.STMGet(stm, &in.Platform, &pf) {
 			return fmt.Errorf("Platform %s not found", in.Platform.Name)
@@ -122,11 +158,19 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 	}
 
-	// Create Cloudlet
-	in.State = edgeproto.TrackedState_CREATING
+	if ignoreCRM(cctx) {
+		in.State = edgeproto.TrackedState_READY
+	} else {
+		in.State = edgeproto.TrackedState_CREATING
+	}
+
 	_, err = s.store.Create(in, s.sync.syncWait)
 	if err != nil {
 		return err
+	}
+
+	if ignoreCRM(cctx) {
+		return nil
 	}
 
 	cloudletPlatform, ok := cloudletPlatforms[pf.PlatformType]
@@ -134,11 +178,10 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return fmt.Errorf("Platform plugin %s not found", pf.PlatformType.String())
 	}
 
-	switch in.Deployment {
-	case edgeproto.DeploymentType_DEPLOYMENT_LOCAL:
+	if in.DeploymentLocal {
 		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(in, &pf)
-	case edgeproto.DeploymentType_DEPLOYMENT_OPENSTACK:
+	} else {
 		if pf.ImagePath == "" {
 			return fmt.Errorf("Platform must have imagepath specified")
 		}
@@ -146,16 +189,29 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return fmt.Errorf("Platform must have registrypath specified")
 		}
 		err = cloudletPlatform.CreateCloudlet(in, &pf, &pfFlavor, updateCloudletCallback)
-	default:
-		err = fmt.Errorf("Unsupported deployment type")
 	}
 
+	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create Cloudlet ignoring CRM failure: %s", err.Error())})
+		s.ReplaceErrorState(in, edgeproto.TrackedState_READY)
+		cb.Send(&edgeproto.Result{Message: "Created Cloudlet successfully"})
+		return nil
+	}
 	if err != nil {
 		in.State = edgeproto.TrackedState_CREATE_ERROR
 		in.Errors = append(in.Errors, err.Error())
-		_, err = s.store.Delete(in, s.sync.syncWait)
-		return err
+		s.store.Put(in, s.sync.syncWait)
+
+		cb.Send(&edgeproto.Result{Message: err.Error()})
+		cb.Send(&edgeproto.Result{Message: "DELETING cloudlet due to failures"})
+
+		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb)
+		if undoErr != nil {
+			log.InfoLog("Undo create cloudlet", "undoErr", undoErr)
+		}
+		return nil
 	}
+
 	// Wait for CRM to connect to controller
 	var cloudletInfo edgeproto.CloudletInfo
 	start := time.Now()
@@ -225,6 +281,10 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 }
 
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
+	return s.deleteCloudletInternal(DefCallContext(), in, cb)
+}
+
+func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
 	if appInstApi.UsesCloudlet(&in.Key, dynInsts) {
 		// disallow delete if static instances are present
@@ -236,13 +296,15 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("Cloudlet in use by static Cluster Instance")
 	}
 
+	cctx.SetOverride(&in.CrmOverride)
+
 	pf := edgeproto.Platform{}
 	// Set state to prevent other apps from being created on ClusterInst
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR {
+		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR {
 			if in.State == edgeproto.TrackedState_DELETE_ERROR {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
 				cb.Send(&edgeproto.Result{Message: "Use CreateCloudlet to rebuild, and try again"})
@@ -251,6 +313,9 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 		if !platformApi.store.STMGet(stm, &in.Platform, &pf) {
 			return fmt.Errorf("Delete failed, platform %s not found", in.Platform.Name)
+		}
+		if ignoreCRM(cctx) {
+			s.store.STMDel(stm, &in.Key)
 		}
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
 		s.store.STMPut(stm, in)
@@ -265,14 +330,18 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return fmt.Errorf("Platform plugin %s not found", pf.PlatformType.String())
 	}
 
-	switch in.Deployment {
-	case edgeproto.DeploymentType_DEPLOYMENT_LOCAL:
+	if in.DeploymentLocal {
 		err = cloudcommon.StopCRMService(in, &pf)
-	case edgeproto.DeploymentType_DEPLOYMENT_OPENSTACK:
+	} else {
 		err = cloudletPlatform.DeleteCloudlet(in, &pf)
-	default:
-		err = fmt.Errorf("unsupported deployment type")
 	}
+	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete Cloudlet ignoring CRM failure: %s", err.Error())})
+		s.ReplaceErrorState(in, edgeproto.TrackedState_NOT_PRESENT)
+		cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
+		err = nil
+	}
+
 	if err != nil {
 		return err
 	}

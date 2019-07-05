@@ -38,9 +38,9 @@ var CloudletMetricsApiCmd edgeproto.CloudletMetricsApiClient
 var CloudletIn edgeproto.Cloudlet
 var CloudletFlagSet = pflag.NewFlagSet("Cloudlet", pflag.ExitOnError)
 var CloudletNoConfigFlagSet = pflag.NewFlagSet("CloudletNoConfig", pflag.ExitOnError)
-var CloudletInDeployment string
 var CloudletInIpSupport string
 var CloudletInState string
+var CloudletInCrmOverride string
 var CloudletInfoIn edgeproto.CloudletInfo
 var CloudletInfoFlagSet = pflag.NewFlagSet("CloudletInfo", pflag.ExitOnError)
 var CloudletInfoNoConfigFlagSet = pflag.NewFlagSet("CloudletInfoNoConfig", pflag.ExitOnError)
@@ -60,13 +60,6 @@ var PlatformTypeStrings = []string{
 	"PlatformTypeGcp",
 	"PlatformTypeMexdind",
 	"PlatformTypeBaremetal",
-}
-
-var DeploymentTypeStrings = []string{
-	"DeploymentLocal",
-	"DeploymentOpenstack",
-	"DeploymentAzure",
-	"DeploymentGcp",
 }
 
 var CloudletStateStrings = []string{
@@ -527,8 +520,6 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, in.Key.OperatorKey.Name)
 	s = append(s, in.Key.Name)
 	s = append(s, in.Platform.Name)
-	s = append(s, edgeproto.DeploymentType_CamelName[int32(in.Deployment)])
-	s = append(s, in.PhysicalName)
 	s = append(s, in.AccessCredentials)
 	s = append(s, strconv.FormatFloat(float64(in.Location.Latitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.Longitude), 'e', -1, 32))
@@ -560,6 +551,8 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.CreateAppInstTimeout), 10))
 	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.UpdateAppInstTimeout), 10))
 	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.DeleteAppInstTimeout), 10))
+	s = append(s, edgeproto.CRMOverride_CamelName[int32(in.CrmOverride)])
+	s = append(s, strconv.FormatBool(in.DeploymentLocal))
 	return s
 }
 
@@ -569,8 +562,6 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
 	s = append(s, "Platform-Name")
-	s = append(s, "Deployment")
-	s = append(s, "PhysicalName")
 	s = append(s, "AccessCredentials")
 	s = append(s, "Location-Latitude")
 	s = append(s, "Location-Longitude")
@@ -596,6 +587,8 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "TimeLimits-CreateAppInstTimeout")
 	s = append(s, "TimeLimits-UpdateAppInstTimeout")
 	s = append(s, "TimeLimits-DeleteAppInstTimeout")
+	s = append(s, "CrmOverride")
+	s = append(s, "DeploymentLocal")
 	return s
 }
 
@@ -818,6 +811,12 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.TimeLimits = edgeproto.OperationTimeLimits{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.CrmOverride = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeploymentLocal = false
 	}
 }
 
@@ -1538,8 +1537,6 @@ func init() {
 	CloudletFlagSet.StringVar(&CloudletIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.Platform.Name, "platform-name", "", "Platform.Name")
-	CloudletFlagSet.StringVar(&CloudletInDeployment, "deployment", "", "one of [DeploymentLocal DeploymentOpenstack DeploymentAzure DeploymentGcp]")
-	CloudletFlagSet.StringVar(&CloudletIn.PhysicalName, "physicalname", "", "PhysicalName")
 	CloudletFlagSet.StringVar(&CloudletIn.AccessCredentials, "accesscredentials", "", "AccessCredentials")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Latitude, "location-latitude", 0, "Location.Latitude")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Longitude, "location-longitude", 0, "Location.Longitude")
@@ -1565,6 +1562,8 @@ func init() {
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.CreateAppInstTimeout, "timelimits-createappinsttimeout", 0, "TimeLimits.CreateAppInstTimeout")
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.UpdateAppInstTimeout, "timelimits-updateappinsttimeout", 0, "TimeLimits.UpdateAppInstTimeout")
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.DeleteAppInstTimeout, "timelimits-deleteappinsttimeout", 0, "TimeLimits.DeleteAppInstTimeout")
+	CloudletFlagSet.StringVar(&CloudletInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCrmErrors IgnoreCrm IgnoreTransientState IgnoreCrmAndTransientState]")
+	CloudletFlagSet.BoolVar(&CloudletIn.DeploymentLocal, "deploymentlocal", false, "DeploymentLocal")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [CloudletStateUnknown CloudletStateErrors CloudletStateReady CloudletStateOffline CloudletStateNotPresent]")
@@ -1681,83 +1680,83 @@ func CloudletSetFields() {
 	if CloudletFlagSet.Lookup("platform-name").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "3.1")
 	}
-	if CloudletFlagSet.Lookup("deployment").Changed {
+	if CloudletFlagSet.Lookup("accesscredentials").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "4")
 	}
-	if CloudletFlagSet.Lookup("physicalname").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "5")
-	}
-	if CloudletFlagSet.Lookup("accesscredentials").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "6")
-	}
 	if CloudletFlagSet.Lookup("location-latitude").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "7.1")
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.1")
 	}
 	if CloudletFlagSet.Lookup("location-longitude").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "7.2")
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.2")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-horizontalaccuracy").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "7.3")
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.3")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-verticalaccuracy").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "7.4")
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.4")
 	}
 	if CloudletFlagSet.Lookup("location-altitude").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "7.5")
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.5")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-course").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "7.6")
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.6")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-speed").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "7.7")
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.7")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-timestamp-seconds").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "7.8.1")
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.8.1")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-timestamp-nanos").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "7.8.2")
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.8.2")
 	}
 	if CloudletFlagSet.Lookup("ipsupport").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "8")
+		CloudletIn.Fields = append(CloudletIn.Fields, "6")
 	}
 	if CloudletFlagSet.Lookup("staticips").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "9")
+		CloudletIn.Fields = append(CloudletIn.Fields, "7")
 	}
 	if CloudletFlagSet.Lookup("numdynamicips").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "10")
+		CloudletIn.Fields = append(CloudletIn.Fields, "8")
 	}
 	if CloudletFlagSet.Lookup("state").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "11")
+		CloudletIn.Fields = append(CloudletIn.Fields, "9")
 	}
 	if CloudletNoConfigFlagSet.Lookup("status-tasknumber").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "13.1")
+		CloudletIn.Fields = append(CloudletIn.Fields, "11.1")
 	}
 	if CloudletNoConfigFlagSet.Lookup("status-maxtasks").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "13.2")
+		CloudletIn.Fields = append(CloudletIn.Fields, "11.2")
 	}
 	if CloudletNoConfigFlagSet.Lookup("status-taskname").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "13.3")
+		CloudletIn.Fields = append(CloudletIn.Fields, "11.3")
 	}
 	if CloudletNoConfigFlagSet.Lookup("status-stepname").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "13.4")
+		CloudletIn.Fields = append(CloudletIn.Fields, "11.4")
 	}
 	if CloudletNoConfigFlagSet.Lookup("timelimits-createclusterinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "14.1")
+		CloudletIn.Fields = append(CloudletIn.Fields, "12.1")
 	}
 	if CloudletNoConfigFlagSet.Lookup("timelimits-updateclusterinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "14.2")
+		CloudletIn.Fields = append(CloudletIn.Fields, "12.2")
 	}
 	if CloudletNoConfigFlagSet.Lookup("timelimits-deleteclusterinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "14.3")
+		CloudletIn.Fields = append(CloudletIn.Fields, "12.3")
 	}
 	if CloudletNoConfigFlagSet.Lookup("timelimits-createappinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "14.4")
+		CloudletIn.Fields = append(CloudletIn.Fields, "12.4")
 	}
 	if CloudletNoConfigFlagSet.Lookup("timelimits-updateappinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "14.5")
+		CloudletIn.Fields = append(CloudletIn.Fields, "12.5")
 	}
 	if CloudletNoConfigFlagSet.Lookup("timelimits-deleteappinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "14.6")
+		CloudletIn.Fields = append(CloudletIn.Fields, "12.6")
+	}
+	if CloudletFlagSet.Lookup("crmoverride").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "13")
+	}
+	if CloudletFlagSet.Lookup("deploymentlocal").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "14")
 	}
 }
 
@@ -1790,20 +1789,6 @@ func CloudletInfoSetFields() {
 }
 
 func parseCloudletEnums() error {
-	if CloudletInDeployment != "" {
-		switch CloudletInDeployment {
-		case "DeploymentLocal":
-			CloudletIn.Deployment = edgeproto.DeploymentType(0)
-		case "DeploymentOpenstack":
-			CloudletIn.Deployment = edgeproto.DeploymentType(1)
-		case "DeploymentAzure":
-			CloudletIn.Deployment = edgeproto.DeploymentType(2)
-		case "DeploymentGcp":
-			CloudletIn.Deployment = edgeproto.DeploymentType(3)
-		default:
-			return errors.New("Invalid value for CloudletInDeployment")
-		}
-	}
 	if CloudletInIpSupport != "" {
 		switch CloudletInIpSupport {
 		case "IpSupportUnknown":
@@ -1846,6 +1831,22 @@ func parseCloudletEnums() error {
 			CloudletIn.State = edgeproto.TrackedState(12)
 		default:
 			return errors.New("Invalid value for CloudletInState")
+		}
+	}
+	if CloudletInCrmOverride != "" {
+		switch CloudletInCrmOverride {
+		case "NoOverride":
+			CloudletIn.CrmOverride = edgeproto.CRMOverride(0)
+		case "IgnoreCrmErrors":
+			CloudletIn.CrmOverride = edgeproto.CRMOverride(1)
+		case "IgnoreCrm":
+			CloudletIn.CrmOverride = edgeproto.CRMOverride(2)
+		case "IgnoreTransientState":
+			CloudletIn.CrmOverride = edgeproto.CRMOverride(3)
+		case "IgnoreCrmAndTransientState":
+			CloudletIn.CrmOverride = edgeproto.CRMOverride(4)
+		default:
+			return errors.New("Invalid value for CloudletInCrmOverride")
 		}
 	}
 	return nil

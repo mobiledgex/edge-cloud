@@ -37,7 +37,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform) (*process.
 			ServerCert: pf.TlsCertFile,
 		},
 		VaultAddr:    pf.VaultAddr,
-		PhysicalName: cloudlet.PhysicalName,
+		PhysicalName: pf.PhysicalName,
 	}, opts, nil
 }
 
