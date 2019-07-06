@@ -198,11 +198,11 @@ flavors:
   disk: 1
 developers:
 - key:
-    name: AcmeAppCo
+    name: acme-app-co
 apps:
 - key:
     developerkey:
-      name: AcmeAppCo
+      name: acme-app-co
     name: someApplication
     version: 1.0
   defaultflavor:
@@ -214,7 +214,7 @@ appinstances:
 - key:
     appkey:
       developerkey:
-        name: AcmeAppCo
+        name: acme-app-co
       name: someApplication
       version: 1.0
     cloudletkey:
