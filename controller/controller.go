@@ -49,10 +49,10 @@ var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA 
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "http://127.0.0.1:8086", "InfluxDB listener address")
 var registryFQDN = flag.String("registryFQDN", "docker.mobiledgex.net", "mobiledgex registry FQDN")
+var artifactoryFQDN = flag.String("artifactoryFQDN", "https://artifactory.mobiledgex.net/artifactory/mc", "mobiledgex artifactory FQDN with mc tag")
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
-var mcTag = flag.String("mcTag", "mc", "Tag to differentiate MC instances")
 var ControllerId = ""
 var InfluxDBName = "metrics"
 

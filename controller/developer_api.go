@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
@@ -23,10 +24,12 @@ func InitDeveloperApi(sync *Sync) {
 }
 
 func (s *DeveloperApi) CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	in.Key.Name = strings.ToLower(in.Key.Name)
 	return s.store.Create(in, s.sync.syncWait)
 }
 
 func (s *DeveloperApi) UpdateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	in.Key.Name = strings.ToLower(in.Key.Name)
 	return s.store.Update(in, s.sync.syncWait)
 }
 
@@ -36,6 +39,7 @@ func (s *DeveloperApi) DeleteDeveloper(ctx context.Context, in *edgeproto.Develo
 	}
 	// clean up auto-apps using developer
 	appApi.AutoDeleteAppsForDeveloper(ctx, &in.Key)
+	in.Key.Name = strings.ToLower(in.Key.Name)
 	return s.store.Delete(in, s.sync.syncWait)
 }
 
