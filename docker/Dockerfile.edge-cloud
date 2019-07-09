@@ -19,9 +19,7 @@ WORKDIR /go/src/github.com/mobiledgex
 COPY edge-cloud edge-cloud
 COPY edge-cloud-infra edge-cloud-infra
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud
-RUN go get github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc; exit 0
 RUN go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger; exit 0
-RUN go get golang.org/x/sys
 RUN go mod download
 RUN make tools
 RUN make clean
