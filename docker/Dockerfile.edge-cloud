@@ -40,6 +40,7 @@ COPY --from=build /go/bin/edgectl /usr/local/bin
 COPY --from=build /go/bin/tok-srv-sim /usr/local/bin
 COPY --from=build /go/bin/loc-api-sim /usr/local/bin
 COPY --from=build /go/bin/mc /usr/local/bin
+COPY --from=build /go/bin/shepherd /usr/local/shepherd
 COPY --from=build /go/plugins /plugins
 
 ADD edge-cloud/docker/mex-docker.env /root/mex-docker.env
