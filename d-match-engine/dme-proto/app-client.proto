@@ -341,7 +341,7 @@ service MatchEngineApi {
       body: "*"
     };
   }
-    rpc GetQosPositionKpi(QosPositionKpiRequest) returns (QosPositionKpiReply) {
+    rpc GetQosPositionKpi(QosPositionKpiRequest) returns (stream QosPositionKpiReply) {
     option (google.api.http) = {
       post: "/v1/getqospositionkpi"
       body: "*"

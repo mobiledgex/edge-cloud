@@ -254,13 +254,11 @@ func (s *server) AddUserToGroup(ctx context.Context,
 	return mreq, nil
 }
 
-func (s *server) GetQosPositionKpi(ctx context.Context,
-	req *dme.QosPositionKpiRequest) (*dme.QosPositionKpiReply, error) {
+func (s *server) GetQosPositionKpi(req *dme.QosPositionKpiRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {
 	log.DebugLog(log.DebugLevelDmereq, "GetQosPositionKpi", "request", req)
 
-	mrep := new(dme.QosPositionKpiReply)
-	getQosPositionKpi(req, mrep)
-	return mrep, nil
+	getQosPositionKpi(req, getQosSvr)
+	return nil
 }
 
 func main() {

@@ -46,6 +46,7 @@ import "strconv"
 import "github.com/spf13/cobra"
 import "context"
 import "os"
+import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
@@ -1723,7 +1724,7 @@ func GetQosPositionKpi(in *distributed_match_engine.QosPositionKpiRequest) error
 		return fmt.Errorf("MatchEngineApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := MatchEngineApiCmd.GetQosPositionKpi(ctx, in)
+	stream, err := MatchEngineApiCmd.GetQosPositionKpi(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -1732,7 +1733,21 @@ func GetQosPositionKpi(in *distributed_match_engine.QosPositionKpiRequest) error
 		}
 		return fmt.Errorf("GetQosPositionKpi failed: %s", errstr)
 	}
-	QosPositionKpiReplyWriteOutputOne(obj)
+	objs := make([]*distributed_match_engine.QosPositionKpiReply, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("GetQosPositionKpi recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	QosPositionKpiReplyWriteOutputArray(objs)
 	return nil
 }
 

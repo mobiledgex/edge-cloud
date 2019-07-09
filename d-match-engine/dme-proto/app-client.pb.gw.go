@@ -147,7 +147,7 @@ func request_MatchEngineApi_GetFqdnList_0(ctx context.Context, marshaler runtime
 
 }
 
-func request_MatchEngineApi_GetQosPositionKpi_0(ctx context.Context, marshaler runtime.Marshaler, client MatchEngineApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_MatchEngineApi_GetQosPositionKpi_0(ctx context.Context, marshaler runtime.Marshaler, client MatchEngineApiClient, req *http.Request, pathParams map[string]string) (MatchEngineApi_GetQosPositionKpiClient, runtime.ServerMetadata, error) {
 	var protoReq QosPositionKpiRequest
 	var metadata runtime.ServerMetadata
 
@@ -159,8 +159,16 @@ func request_MatchEngineApi_GetQosPositionKpi_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetQosPositionKpi(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.GetQosPositionKpi(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
@@ -358,7 +366,7 @@ func RegisterMatchEngineApiHandlerClient(ctx context.Context, mux *runtime.Serve
 			return
 		}
 
-		forward_MatchEngineApi_GetQosPositionKpi_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_MatchEngineApi_GetQosPositionKpi_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -398,5 +406,5 @@ var (
 
 	forward_MatchEngineApi_GetFqdnList_0 = runtime.ForwardResponseMessage
 
-	forward_MatchEngineApi_GetQosPositionKpi_0 = runtime.ForwardResponseMessage
+	forward_MatchEngineApi_GetQosPositionKpi_0 = runtime.ForwardResponseStream
 )
