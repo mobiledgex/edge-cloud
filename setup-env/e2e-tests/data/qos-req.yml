@@ -1,0 +1,43 @@
+qospositionkpirequest:
+  positions: 
+     - positionid: 1
+       gpslocation:
+          latitude: 36.01
+          longitude: -96.01
+     - positionid: 2
+       gpslocation:
+          latitude: 37.02
+          longitude: -97.02
+     - positionid: 3
+       gpslocation:
+          latitude: 36.03
+          longitude: -96.03
+     - positionid: 4
+       gpslocation:
+          latitude: 37.04
+          longitude: -97.04
+     - positionid: 5
+       gpslocation:
+          latitude: 36.05
+          longitude: -96.05
+     - positionid: 6
+       gpslocation:
+          latitude: 37.06
+          longitude: -97.07
+     - positionid: 7
+       gpslocation:
+          latitude: 36.07
+          longitude: -96.07
+     - positionid: 8
+       gpslocation:
+          latitude: 37.08
+          longitude: -97.08
+     - positionid: 9
+       gpslocation:
+          latitude: 36.09
+          longitude: -96.09
+     - positionid: 10
+       gpslocation:
+          latitude: 37.10
+          longitude: -97.10
+
