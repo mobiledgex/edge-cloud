@@ -30,6 +30,8 @@ tests:
     loops: 1
   - includefile: verify_loc.yml
     api: rest
+  - includefile: get_pos_qos.yml
+    loops: 2
   - includefile: default_cluster_test.yml
   - includefile: crminfo.yml
   - includefile: update_move_cloudlet1.yml 
