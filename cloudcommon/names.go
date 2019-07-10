@@ -44,8 +44,6 @@ var NetworkSchemePrivateIP = "privateip"
 
 // Metrics common variables - TODO move to edge-cloud-infra after metrics-exporter chagnes
 var DeveloperMetricsDbName = "clusterstats"
-var DeveloperAppMetrics = "crm-appinst"
-var DeveloperClusterMetric = "crm-cluster"
 var MEXPrometheusAppName = "MEXPrometheusAppName"
 
 // TODO: these timeouts should be adjust based on target platform,
