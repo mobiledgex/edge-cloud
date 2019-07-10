@@ -648,6 +648,8 @@ func (p *Vault) StartLocalRoles() (*VaultRoles, error) {
 func StartLocal(name, bin string, args, envs []string, logfile string) (*exec.Cmd, error) {
 	cmd := exec.Command(bin, args...)
 	if envs != nil {
+		// Append to the current process's env
+		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, envs...)
 	}
 	if logfile == "" {
