@@ -133,7 +133,7 @@ func main() {
 	defer grpcServer.Stop()
 
 	log.InfoLog("Server started", "addr", *bindAddress)
-	dialOption, err := tls.GetTLSClientDialOption(*controllerAddress, *tlsCertFile)
+	dialOption, err := tls.GetTLSClientDialOption(*controllerAddress, *tlsCertFile, false)
 	if err != nil {
 		log.FatalLog("Failed get TLS options", "error", err)
 		os.Exit(1)

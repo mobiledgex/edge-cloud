@@ -33,7 +33,9 @@ type GrpcGWConfig struct {
 
 func GrpcGateway(cfg *GrpcGWConfig) (http.Handler, error) {
 	ctx := context.Background()
-	dialOption, err := tls.GetTLSClientDialOption(cfg.ApiAddr, cfg.TlsCertFile)
+	// GRPC GW does not validate the GRPC server cert because it may be public signed and therefore
+	// may not work with internal addressing
+	dialOption, err := tls.GetTLSClientDialOption(cfg.ApiAddr, cfg.TlsCertFile, true)
 	if err != nil {
 		return nil, err
 	}
