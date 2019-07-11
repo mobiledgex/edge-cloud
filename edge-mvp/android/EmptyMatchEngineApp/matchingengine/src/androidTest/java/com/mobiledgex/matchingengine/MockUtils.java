@@ -5,10 +5,13 @@ import android.location.Location;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 import distributed_match_engine.AppClient;
 import distributed_match_engine.LocOuterClass;
+import distributed_match_engine.AppClient.QosPosition;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -27,6 +30,67 @@ public class MockUtils {
         loc.setLatitude(latitude);
         loc.setTime(System.currentTimeMillis());
         return loc;
+    }
+
+    public static ArrayList<QosPosition> createQosPositionArray(Location firstLocation, double direction_degrees, double totalDistanceKm, double increment) {
+        // Create a bunch of locations to get QOS information. Server is to be proxied by the DME server.
+        ArrayList<QosPosition> positions = new ArrayList<>();
+
+        Location lastLocation = firstLocation;
+        long id = 1;
+        double traverse;
+
+        // First point:
+        AppClient.QosPosition firstPositionKpi = AppClient.QosPosition.newBuilder()
+                .setPositionid(id)
+                .setGpsLocation(androidToMessageLoc(firstLocation))
+                .build();
+        positions.add(firstPositionKpi);
+
+        // Everything in between:
+        for (traverse = increment; traverse + increment < totalDistanceKm - increment; traverse += increment, id++) {
+            Location next = MockUtils.createLocation(lastLocation.getLongitude(), lastLocation.getLatitude(), direction_degrees, increment);
+            QosPosition np = AppClient.QosPosition.newBuilder()
+                    .setPositionid(id)
+                    .setGpsLocation(androidToMessageLoc(next))
+                    .build();
+            positions.add(np);
+            lastLocation = next;
+        }
+
+        // Last point, if needed.
+        if (traverse < totalDistanceKm) {
+            Location lastLoc = MockUtils.createLocation(lastLocation.getLongitude(), lastLocation.getLatitude(), direction_degrees, totalDistanceKm);
+            QosPosition lastPosition = QosPosition.newBuilder()
+                    .setPositionid(id)
+                    .setGpsLocation(androidToMessageLoc(lastLoc))
+                    .build();
+            positions.add(lastPosition);
+        }
+
+        return positions;
+    }
+
+    /**
+     * Returns a destination long/lat as a Location object, along direction (in degrees), some distance in kilometers away.
+     *
+     * @param longitude_src
+     * @param latitude_src
+     * @param direction_degrees
+     * @param kilometers
+     * @return
+     */
+    public static Location createLocation(double longitude_src, double latitude_src, double direction_degrees, double kilometers) {
+        double direction_radians = direction_degrees * (Math.PI / 180);
+
+        // Provider is static class name:
+        Location newLoc = new Location(MethodHandles.lookup().lookupClass().getName());
+
+        // Not accurate:
+        newLoc.setLongitude(longitude_src + kilometers * Math.cos(direction_radians));
+        newLoc.setLatitude(latitude_src + kilometers * Math.sin(direction_radians));
+
+        return newLoc;
     }
 
     public static LocOuterClass.Loc androidToMessageLoc(Location location) {

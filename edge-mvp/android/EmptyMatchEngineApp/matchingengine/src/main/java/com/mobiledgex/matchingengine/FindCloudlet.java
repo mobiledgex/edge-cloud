@@ -29,7 +29,7 @@ public class FindCloudlet implements Callable {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(FindCloudletRequest request, String host,  int port, long timeoutInMilliseconds) {
+    public boolean setRequest(FindCloudletRequest request, String host, int port, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMatchingEngineLocationAllowed()) {
@@ -93,7 +93,6 @@ public class FindCloudlet implements Callable {
             }
         }
 
-        // Let MatchingEngine know of the latest cookie.
         mMatchingEngine.setFindCloudletResponse(reply);
         return reply;
     }
