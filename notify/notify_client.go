@@ -124,7 +124,7 @@ func (s *Client) connect() (StreamNotify, error) {
 	s.mux.Unlock()
 
 	ctx, cancel := context.WithTimeout(context.Background(), NotifyRetryTime)
-	dialOption, err := tls.GetTLSClientDialOption(addr, s.tlsCertFile)
+	dialOption, err := tls.GetTLSClientDialOption(addr, s.tlsCertFile, false)
 	if err != nil {
 		return nil, err
 	}
