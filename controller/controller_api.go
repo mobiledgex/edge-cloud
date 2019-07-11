@@ -93,7 +93,7 @@ func (s *ControllerApi) RunJobs(run func(arg interface{}, addr string) error, ar
 }
 
 func ControllerConnect(addr string) (*grpc.ClientConn, error) {
-	dialOption, err := tls.GetTLSClientDialOption(addr, *tlsCertFile)
+	dialOption, err := tls.GetTLSClientDialOption(addr, *tlsCertFile, false)
 	if err != nil {
 		return nil, err
 	}

@@ -172,7 +172,7 @@ func connectAPIImpl(timeout time.Duration, apiaddr string, tlsConfig *tls.Config
 }
 
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert)
+	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, false)
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +354,7 @@ func (p *Crm) GetExeName() string { return "crmserver" }
 func (p *Crm) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
 
 func (p *Crm) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert)
+	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, false)
 	if err != nil {
 		return nil, err
 	}
