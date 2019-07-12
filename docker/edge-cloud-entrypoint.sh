@@ -45,6 +45,10 @@ case "$1" in
 	shift
 	test-edgectl.sh $*
 	;;
+    shepherd)
+	shift
+	shepherd $*
+	;;
     version)
 	shift
 	cat /version.txt
