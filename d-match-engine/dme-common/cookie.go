@@ -109,8 +109,6 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 	allow := false
 	var cookie string
 
-	log.DebugLog(log.DebugLevelDmereq, "UnaryAuthInterceptor", "req", req)
-
 	switch typ := req.(type) {
 	case *dme.RegisterClientRequest:
 		// allow any
