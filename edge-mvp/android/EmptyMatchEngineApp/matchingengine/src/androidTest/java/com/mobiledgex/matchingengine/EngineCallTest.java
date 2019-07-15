@@ -915,7 +915,7 @@ public class EngineCallTest {
 
             assertEquals(0, list.getVer());
             assertEquals(AppClient.AppInstListReply.AIStatus.AI_SUCCESS, list.getStatus());
-            assertEquals(1, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
+            assertEquals(2, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
             }
@@ -965,7 +965,7 @@ public class EngineCallTest {
 
             assertEquals(0, list.getVer());
             assertEquals(AppClient.AppInstListReply.AIStatus.AI_SUCCESS, list.getStatus());
-            assertEquals(1, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
+            assertEquals(2, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
             }
@@ -1039,4 +1039,60 @@ public class EngineCallTest {
 
     }
 
+    @Test
+    public void getQosPositionKpiFutureTest() {
+        Context context = InstrumentationRegistry.getContext();
+
+        MatchingEngine me = new MatchingEngine(context);
+        me.setMatchingEngineLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
+
+        enableMockLocation(context,true);
+        Location location = MockUtils.createLocation("getQosPositionKpiTest", 122.3321, 47.6062);
+        MeLocation meLoc = new MeLocation(me);
+
+        try {
+            setMockLocation(context, location);
+            location = meLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            assertFalse("Mock'ed Location is missing!", location == null);
+
+            registerClient(context, me.retrieveNetworkCarrierName(context), me);
+
+            double totalDistanceKm = 200;
+            double increment = 0.1;
+            double direction = 45d;
+
+            ArrayList<AppClient.QosPosition> kpiRequests = MockUtils.createQosPositionArray(location, direction, totalDistanceKm, increment);
+
+            AppClient.QosPositionKpiRequest request = me.createQoSKPIRequest(kpiRequests);
+            assertFalse("SessionCookie must not be empty.", request.getSessionCookie().isEmpty());
+
+
+            Future<ChannelIterator<AppClient.QosPositionKpiReply>> replyFuture = me.getQosPositionKpiFuture(request, hostOverride, portOverride, GRPC_TIMEOUT_MS);
+            // A stream of QosPositionKpiReply(s), with a non-stream block of responses.
+            // Wait for value with get().
+            ChannelIterator<AppClient.QosPositionKpiReply> responseIterator = replyFuture.get();
+            long total = 0;
+            while (responseIterator.hasNext()) {
+                AppClient.QosPositionKpiReply aR = responseIterator.next();
+                for (int i = 0; i < aR.getPositionResultsCount(); i++) {
+                    System.out.println(aR.getPositionResults(i));
+                }
+                total += aR.getPositionResultsCount();
+            }
+            assertEquals((long)(kpiRequests.size()), total);
+        } catch (ExecutionException ee) {
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("getQosPositionKpiFutureTest: ExecutionException!", true);
+        } catch (StatusRuntimeException sre) {
+            Log.i(TAG, Log.getStackTraceString(sre));
+            assertFalse("getQosPositionKpiFutureTest: StatusRuntimeException!", true);
+        } catch (InterruptedException ie) {
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("getQosPositionKpiFutureTest: InterruptedException!", true);
+        } finally {
+            enableMockLocation(context,false);
+        }
+
+    }
 }
