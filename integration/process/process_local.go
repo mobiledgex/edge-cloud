@@ -341,10 +341,6 @@ func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--physicalName")
 		args = append(args, p.PhysicalName)
 	}
-	if p.NotifySrvAddr != "" {
-		args = append(args, "--notifySrvAddr")
-		args = append(args, p.NotifySrvAddr)
-	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
