@@ -140,28 +140,6 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 	return handler(ctx, req)
 }
 
-func StreamAuthInterceptor(req interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	allow := false
-	var cookie string
-
-	log.DebugLog(log.DebugLevelDmereq, "StreamAuthInterceptor", "req", "info", info, "ss", ss)
-
-	switch typ := req.(type) {
-	case *dme.QosPositionKpiRequest:
-		cookie = typ.SessionCookie
-	}
-	if !allow {
-		// Verify session cookie, add decoded CookieKey to context
-		_, err := VerifyCookie(cookie)
-		if err != nil {
-			return grpc.Errorf(codes.Unauthenticated, err.Error())
-		}
-		//	ctx = NewCookieContext(ctx, ckey)
-	}
-	// call the handler
-	return handler(req, ss)
-}
-
 func NewCookieContext(ctx context.Context, ckey *CookieKey) context.Context {
 	if ckey == nil {
 		return ctx

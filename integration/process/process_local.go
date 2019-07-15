@@ -172,7 +172,7 @@ func connectAPIImpl(timeout time.Duration, apiaddr string, tlsConfig *tls.Config
 }
 
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, false)
+	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, "", false)
 	if err != nil {
 		return nil, err
 	}
@@ -198,6 +198,14 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 	if p.TokSrvUrl != "" {
 		args = append(args, "--toksrvurl")
 		args = append(args, p.TokSrvUrl)
+	}
+	if p.QosPosUrl != "" {
+		args = append(args, "--qosposurl")
+		args = append(args, p.QosPosUrl)
+	}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
 	}
 	if p.Carrier != "" {
 		args = append(args, "--carrier")
@@ -279,7 +287,7 @@ func (p *Dme) getTlsConfig() *tls.Config {
 		// their built-in trusted CAs to verify the cert.
 		// Since we're using self-signed certs here, add
 		// our CA to the cert pool.
-		certPool, err := mextls.GetClientCertPool(p.TLS.ServerCert)
+		certPool, err := mextls.GetClientCertPool(p.TLS.ServerCert, "")
 		if err != nil {
 			log.Printf("GetClientCertPool failed, %v\n", err)
 			return nil
@@ -358,7 +366,7 @@ func (p *Crm) GetExeName() string { return "crmserver" }
 func (p *Crm) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
 
 func (p *Crm) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, false)
+	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, "", false)
 	if err != nil {
 		return nil, err
 	}

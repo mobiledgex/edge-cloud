@@ -40,6 +40,7 @@ var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data i
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
+var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to")
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
 var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
@@ -298,6 +299,11 @@ func main() {
 	if err != nil {
 		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
 	}
+	err = operatorApiGw.Init(*carrier, *vaultAddr, *qosPosUrl, *locVerUrl, *tokSrvUrl)
+	if err != nil {
+		log.FatalLog("Unable to init API GW", "err", err)
+
+	}
 	log.DebugLog(log.DebugLevelDmereq, "plugin init done", "operatorApiGw", operatorApiGw)
 
 	dmecommon.InitVault(*vaultAddr, *region)
@@ -328,7 +334,7 @@ func main() {
 		defer stats.Stop()
 		grpcOpts = append(grpcOpts,
 			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
-			grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.StreamAuthInterceptor)))
+			grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))
 	}
 	nodeCache.Update(&myNode, 0)
 

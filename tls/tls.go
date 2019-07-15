@@ -29,8 +29,8 @@ func getClientCertificate(tlsCertFile string) (tls.Certificate, error) {
 }
 
 // GetClientCertPool gets the system cert pool for all the trusted CA certs
-// and then appends the mex specific CA
-func GetClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
+// and then appends the caCertFile.  Leave caCertFile blank to use the mex-ca.crt
+func GetClientCertPool(tlsCertFile string, caCertFile string) (*x509.CertPool, error) {
 	if tlsCertFile == "" {
 		return nil, nil
 	}
@@ -40,8 +40,12 @@ func GetClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("fail to load system cert pool")
 	}
-	// append the mex ca if present. If not, we will only trust public signed certs
-	bs, err := ioutil.ReadFile(dir + "/mex-ca.crt")
+	// use mex-ca if no CA file specified
+	if caCertFile == "" {
+		caCertFile = dir + "/mex-ca.crt"
+	}
+	// append the CA file to the system cert pool
+	bs, err := ioutil.ReadFile(caCertFile)
 	if err == nil {
 		ok := certPool.AppendCertsFromPEM(bs)
 		if !ok {
@@ -53,7 +57,7 @@ func GetClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
 
 // GetTLSClientDialOption gets GRPC options needed for TLS connection
 func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bool) (grpc.DialOption, error) {
-	config, err := GetTLSClientConfig(serverAddr, tlsCertFile, skipVerify)
+	config, err := GetTLSClientConfig(serverAddr, tlsCertFile, "", skipVerify)
 	if err != nil {
 		return nil, err
 	}
@@ -61,14 +65,15 @@ func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bo
 }
 
 // GetTLSClientConfig builds client side TLS configuration.  If the serverAddr
-// is blank, no validation is done on the cert.  Skipverify is only to be used for internal
-// connections such as GRPCGW to GRPC
-func GetTLSClientConfig(serverAddr string, tlsCertFile string, skipVerify bool) (*tls.Config, error) {
+// is blank, no validation is done on the cert.  CaCertFile is specified when communicating to
+// exernal servers with their own privately signed certs.  Leave this blank to use the mex-ca.crt.
+// Skipverify is only to be used for internal connections such as GRPCGW to GRPC.
+func GetTLSClientConfig(serverAddr string, tlsCertFile string, caCertFile string, skipVerify bool) (*tls.Config, error) {
 	if tlsCertFile == "" {
 		fmt.Println("No TLS cert file")
 		return nil, nil
 	}
-	certPool, err := GetClientCertPool(tlsCertFile)
+	certPool, err := GetClientCertPool(tlsCertFile, caCertFile)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +98,6 @@ func GetTLSClientConfig(serverAddr string, tlsCertFile string, skipVerify bool) 
 			RootCAs:            certPool,
 		}, nil
 	}
-
 }
 
 func GetGrpcDialOption(config *tls.Config) grpc.DialOption {
