@@ -109,9 +109,6 @@ func ValidOrgName(name string) error {
 	if !ValidLDAPName(name) {
 		return fmt.Errorf("invalid characters in Name")
 	}
-	if name != strings.ToLower(name) {
-		return fmt.Errorf("Name should have all lowercase characters")
-	}
 	if strings.Contains(name, "::") {
 		return fmt.Errorf("Name cannot contain ::")
 	}
