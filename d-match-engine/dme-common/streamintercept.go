@@ -8,6 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"google.golang.org/grpc"
 
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -48,9 +49,9 @@ func (a ServerStreamWrapper) RecvMsg(m interface{}) error {
 		// Verify session cookie
 		ckey, err := VerifyCookie(cookie)
 		log.DebugLog(log.DebugLevelDmereq, "VerifyCookie result", "ckey", ckey, "err", err)
-		//	if err != nil {
-		//		return grpc.Errorf(codes.Unauthenticated, err.Error())
-		//	}
+		if err != nil {
+			return grpc.Errorf(codes.Unauthenticated, err.Error())
+		}
 	}
 	return err
 }
