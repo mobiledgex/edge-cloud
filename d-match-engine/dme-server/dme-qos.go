@@ -34,8 +34,10 @@ func getQosResults(qosres *dme.QosPositionResult) {
 	qosres.LatencyAvg = randomInRange(40)
 }
 
-func getQosPositionKpi(mreq *dme.QosPositionKpiRequest, mreply *dme.QosPositionKpiReply) {
+func getQosPositionKpi(mreq *dme.QosPositionKpiRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) {
 	log.DebugLog(log.DebugLevelDmereq, "getQosPositionKpi", "request", mreq)
+
+	var mreply dme.QosPositionKpiReply
 
 	mreply.Status = dme.ReplyStatus_RS_SUCCESS
 
@@ -50,5 +52,7 @@ func getQosPositionKpi(mreq *dme.QosPositionKpiRequest, mreply *dme.QosPositionK
 
 		mreply.PositionResults = append(mreply.PositionResults, &qosres)
 	}
+
+	getQosSvr.Send(&mreply)
 
 }

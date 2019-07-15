@@ -254,13 +254,11 @@ func (s *server) AddUserToGroup(ctx context.Context,
 	return mreq, nil
 }
 
-func (s *server) GetQosPositionKpi(ctx context.Context,
-	req *dme.QosPositionKpiRequest) (*dme.QosPositionKpiReply, error) {
+func (s *server) GetQosPositionKpi(req *dme.QosPositionKpiRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {
 	log.DebugLog(log.DebugLevelDmereq, "GetQosPositionKpi", "request", req)
 
-	mrep := new(dme.QosPositionKpiReply)
-	getQosPositionKpi(req, mrep)
-	return mrep, nil
+	getQosPositionKpi(req, getQosSvr)
+	return nil
 }
 
 func main() {
@@ -332,7 +330,7 @@ func main() {
 	mux := http.NewServeMux()
 	gwcfg := &cloudcommon.GrpcGWConfig{
 		ApiAddr:     *apiAddr,
-		TlsCertFile: *tlsCertFile,
+		TlsCertFile: *tlsApiCertFile,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 			dme.RegisterMatchEngineApiHandler,
 		},

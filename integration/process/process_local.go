@@ -32,6 +32,8 @@ type TLSCerts struct {
 	ServerCert string
 	ServerKey  string
 	ClientCert string
+	ApiCert    string
+	ApiKey     string
 }
 
 type LocalAuth struct {
@@ -174,7 +176,7 @@ func connectAPIImpl(timeout time.Duration, apiaddr string, tlsConfig *tls.Config
 }
 
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetMutualAuthClientConfig(p.ApiAddr, p.TLS.ClientCert)
+	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, false)
 	if err != nil {
 		return nil, err
 	}
@@ -214,8 +216,13 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, p.TLS.ServerCert)
 	}
 	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
-		args = append(args, "--tlsApiCertFile", p.TLS.ServerCert)
-		args = append(args, "--tlsApiKeyFile", p.TLS.ServerKey)
+		if p.TLS.ApiCert != "" {
+			args = append(args, "--tlsApiCertFile", p.TLS.ApiCert)
+			args = append(args, "--tlsApiKeyFile", p.TLS.ApiKey)
+		} else {
+			args = append(args, "--tlsApiCertFile", p.TLS.ServerCert)
+			args = append(args, "--tlsApiKeyFile", p.TLS.ServerKey)
+		}
 	}
 	if p.VaultAddr != "" {
 		args = append(args, "--vaultAddr")
@@ -654,6 +661,8 @@ func (p *Vault) StartLocalRoles() (*VaultRoles, error) {
 func StartLocal(name, bin string, args, envs []string, logfile string) (*exec.Cmd, error) {
 	cmd := exec.Command(bin, args...)
 	if envs != nil {
+		// Append to the current process's env
+		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, envs...)
 	}
 	if logfile == "" {

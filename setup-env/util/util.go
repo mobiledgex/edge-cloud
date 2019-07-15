@@ -421,7 +421,7 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 	PrintStepBanner("running compareYamlFiles")
 
-	log.Printf("Comparing yamls: %v  %v\n", firstYamlFile, secondYamlFile)
+	log.Printf("Comparing yamls: %s %s fileType %s\n", firstYamlFile, secondYamlFile, fileType)
 
 	var err1 error
 	var err2 error
@@ -461,6 +461,33 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		}
 		y1 = f1
 		y2 = f2
+	} else if fileType == "getqosposition" {
+		var q1 dmeproto.QosPositionKpiReply
+		var q2 dmeproto.QosPositionKpiReply
+
+		err1 = ReadYamlFile(firstYamlFile, &q1)
+		err2 = ReadYamlFile(secondYamlFile, &q2)
+
+		qs := []dmeproto.QosPositionKpiReply{q1, q2}
+		for _, q := range qs {
+			for _, p := range q.PositionResults {
+				// nil the actual values as they are unpredictable.  We will just
+				//compare GPS locations vs positionIds
+				p.LatencyMin = 0
+				p.LatencyMax = 0
+				p.LatencyAvg = 0
+				p.DluserthroughputMin = 0
+				p.DluserthroughputMax = 0
+				p.DluserthroughputAvg = 0
+				p.UluserthroughputMin = 0
+				p.UluserthroughputMax = 0
+				p.UluserthroughputAvg = 0
+			}
+		}
+
+		y1 = q1
+		y2 = q2
+
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1)
 		err2 = ReadYamlFile(secondYamlFile, &y2)

@@ -78,7 +78,7 @@ func main() {
 
 	controllerData = crmutil.NewControllerData(platform)
 
-	creds, err := tls.GetTLSServerCreds(*tlsCertFile)
+	creds, err := tls.GetTLSServerCreds(*tlsCertFile, true)
 	if err != nil {
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
@@ -116,7 +116,7 @@ func main() {
 	notifyServer.Start(*notifySrvAddr, *tlsCertFile)
 	defer notifyServer.Stop()
 
-	dialOption, err := tls.GetTLSClientDialOption(*controllerAddress, *tlsCertFile)
+	dialOption, err := tls.GetTLSClientDialOption(*controllerAddress, *tlsCertFile, false)
 	if err != nil {
 		log.FatalLog("Failed get TLS options", "error", err)
 		os.Exit(1)

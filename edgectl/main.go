@@ -54,7 +54,7 @@ var completionCmd = &cobra.Command{
 func connect(cmd *cobra.Command, args []string) error {
 	var err error
 
-	dialOption, err := tls.GetTLSClientDialOption(addr, tlsCertFile)
+	dialOption, err := tls.GetTLSClientDialOption(addr, tlsCertFile, false)
 	if err != nil {
 		return err
 	}
