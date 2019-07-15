@@ -203,10 +203,6 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--qosposurl")
 		args = append(args, p.QosPosUrl)
 	}
-	if p.VaultAddr != "" {
-		args = append(args, "--vaultAddr")
-		args = append(args, p.VaultAddr)
-	}
 	if p.Carrier != "" {
 		args = append(args, "--carrier")
 		args = append(args, p.Carrier)
