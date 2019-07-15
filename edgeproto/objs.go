@@ -259,11 +259,11 @@ func (s *Platform) Validate(fields map[string]struct{}) error {
 	}
 
 	if s.NotifyCtrlAddrs == "" {
-		return errors.New("notifyctrladdrs cannot be empy")
+		return errors.New("notifyctrladdrs cannot be empty")
 	}
 
 	if s.NotifySrvAddr == "" {
-		return errors.New("notifysrvaddr cannot be empy")
+		return errors.New("notifysrvaddr cannot be empty")
 	}
 	return nil
 }
