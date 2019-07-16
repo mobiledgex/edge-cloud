@@ -88,46 +88,6 @@ platforms:
   notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
   notifysrvaddr: 127.0.0.1:51103
 - key:
-    name: tmus-platform-4
-  platformtype: PlatformTypeFake
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51104
-- key:
-    name: tmus-platform-5
-  platformtype: PlatformTypeFake
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51105
-- key:
-    name: tmus-platform-6
-  platformtype: PlatformTypeFake
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51106
-- key:
-    name: tmus-platform-7
-  platformtype: PlatformTypeFake
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51107
-- key:
-    name: tmus-platform-8
-  platformtype: PlatformTypeFake
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51108
-- key:
     name: azure-platform
   platformtype: PlatformTypeFake
   flavor:
@@ -183,68 +143,8 @@ cloudlets:
   deploymentlocal: true
 - key:
     operatorkey:
-      name: tmus
-    name: tmus-cloud-4
-  location:
-    latitude: 35
-    longitude: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-  platform:
-    name: tmus-platform-4
-  deploymentlocal: true
-- key:
-    operatorkey:
-      name: tmus
-    name: tmus-cloud-5
-  location:
-    latitude: 35
-    longitude: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-  platform:
-    name: tmus-platform-5
-  deploymentlocal: true
-- key:
-    operatorkey:
-      name: tmus
-    name: tmus-cloud-6
-  location:
-    latitude: 35
-    longitude: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-  platform:
-    name: tmus-platform-6
-  deploymentlocal: true
-- key:
-    operatorkey:
-      name: tmus
-    name: tmus-cloud-7
-  location:
-    latitude: 35
-    longitude: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-  platform:
-    name: tmus-platform-7
-  deploymentlocal: true
-- key:
-    operatorkey:
-      name: tmus
-    name: tmus-cloud-8
-  location:
-    latitude: 35
-    longitude: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-  platform:
-    name: tmus-platform-8
-  deploymentlocal: true
-- key:
-    operatorkey:
       name: azure
-    name: azure-cloud-9
+    name: azure-cloud-4
   location:
     latitude: 32
     longitude: -91
@@ -256,7 +156,7 @@ cloudlets:
 - key:
     operatorkey:
       name: gcp
-    name: gcp-cloud-10
+    name: gcp-cloud-5
   location:
     latitude: 36
     longitude: -95

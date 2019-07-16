@@ -56,7 +56,7 @@ func StartCRMService(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform) error
 		return err
 	}
 
-	err = crmProc.StartLocal("/tmp/e2e_test_out/"+cloudlet.Key.Name+".log", opts...)
+	err = crmProc.StartLocal("/tmp/"+cloudlet.Key.Name+".log", opts...)
 	if err != nil {
 		return err
 	}

@@ -39,6 +39,15 @@ func InitPlatformApi(sync *Sync) {
 	sync.RegisterCache(&platformApi.cache)
 }
 
+func IsPlatformInternal(pf *edgeproto.Platform) bool {
+	if pf.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE ||
+		pf.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND ||
+		pf.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_MEXDIND {
+		return true
+	}
+	return false
+}
+
 func (s *PlatformApi) CreatePlatform(in *edgeproto.Platform, cb edgeproto.PlatformApi_CreatePlatformServer) error {
 	var err error
 
@@ -46,7 +55,7 @@ func (s *PlatformApi) CreatePlatform(in *edgeproto.Platform, cb edgeproto.Platfo
 		return err
 	}
 
-	if !*testMode {
+	if !*testMode && !IsPlatformInternal(in) {
 		if in.RegistryPath != "" {
 			// Fetch Controller Image Tag from /version.txt
 			// Platform image tag should be same as controller image tag

@@ -177,8 +177,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(in, &pf)
 	} else {
-		if pf.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE &&
-			pf.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_MEXDIND {
+		if !IsPlatformInternal(&pf) {
 			if pf.ImagePath == "" {
 				return fmt.Errorf("Platform must have imagepath specified")
 			}
@@ -203,12 +202,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		cb.Send(&edgeproto.Result{Message: err.Error()})
 		cb.Send(&edgeproto.Result{Message: "DELETING cloudlet due to failures"})
 
-		/*
-			undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb)
-			if undoErr != nil {
-				log.InfoLog("Undo create cloudlet", "undoErr", undoErr)
-			}
-		*/
+		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb)
+		if undoErr != nil {
+			log.InfoLog("Undo create cloudlet", "undoErr", undoErr)
+		}
 		return nil
 	}
 
