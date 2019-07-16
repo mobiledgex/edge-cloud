@@ -13,7 +13,7 @@ namespace MexGrpcSampleConsoleApp
   {
     static void Main(string[] args)
     {
-      Console.WriteLine("Hello MEX GRPC Library Sample App!");
+      Console.WriteLine("Hello MobiledgeX GRPC Library Sample App!");
 
 
       var mexGrpcLibApp = new MexGrpcLibApp();

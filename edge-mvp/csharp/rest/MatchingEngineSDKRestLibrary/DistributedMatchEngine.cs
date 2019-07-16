@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Json;
 using System.Text;
+using System.Collections.Generic;
 
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
@@ -89,6 +90,7 @@ namespace DistributedMatchEngine
     private string appinstlistAPI = "/v1/getappinstlist";
     private string dynamiclocgroupAPI = "/v1/dynamiclocgroup";
     private string getfqdnlistAPI = "/v1/getfqdnlist";
+    private string qospositionkpiAPI = "/v1/getqospositionkpi";
 
     public string sessionCookie { get; set; }
     string tokenServerURI;
@@ -467,7 +469,7 @@ namespace DistributedMatchEngine
       };
     }
 
-    public async Task<AppInstListReply> AppInstList(string host, uint port, AppInstListRequest request)
+    public async Task<AppInstListReply> GetAppInstList(string host, uint port, AppInstListRequest request)
     {
       DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(AppInstListRequest));
       MemoryStream ms = new MemoryStream();
@@ -499,7 +501,7 @@ namespace DistributedMatchEngine
       };
     }
 
-    public async Task<FqdnListReply> FqdnList(string host, uint port, FqdnListRequest request)
+    public async Task<FqdnListReply> GetFqdnList(string host, uint port, FqdnListRequest request)
     {
       DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(FqdnListRequest));
       MemoryStream ms = new MemoryStream();
@@ -534,7 +536,7 @@ namespace DistributedMatchEngine
       };
     }
 
-    public async Task<DynamicLocGroupReply> DynamicLocGroup(string host, uint port, DynamicLocGroupRequest request)
+    public async Task<DynamicLocGroupReply> AddUserToGroup(string host, uint port, DynamicLocGroupRequest request)
     {
       DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(DynamicLocGroupRequest));
       MemoryStream ms = new MemoryStream();
@@ -550,6 +552,46 @@ namespace DistributedMatchEngine
       DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(DynamicLocGroupReply));
       DynamicLocGroupReply reply = (DynamicLocGroupReply)deserializer.ReadObject(responseStream);
       return reply;
+    }
+
+    public QosPositionKpiRequest CreateQosPositionKpiRequest(List<QosPosition> QosPositions)
+    {
+      if (sessionCookie == null)
+      {
+        return null;
+      }
+
+      return new QosPositionKpiRequest
+      {
+        ver = 1,
+        positions = QosPositions.ToArray(),
+        session_cookie = this.sessionCookie
+      };
+    }
+
+    public async Task<QosPositionKpiStreamReply> GetQosPositionKpi(string host, uint port, QosPositionKpiRequest request)
+    {
+      DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(QosPositionKpiRequest));
+      MemoryStream ms = new MemoryStream();
+      serializer.WriteObject(ms, request);
+      string jsonStr = Util.StreamToString(ms);
+
+      Stream responseStream = await PostRequest(CreateUri(host, port) + qospositionkpiAPI, jsonStr);
+      if (responseStream == null || !responseStream.CanRead)
+      {
+        return null;
+      }
+      
+      DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(QosPositionKpiStreamReply));
+
+      responseStream.Position = 0;
+      string str = Util.StreamToString(responseStream);
+      Log.D("Result: str: " + str);
+      responseStream.Position = 0;
+
+
+      QosPositionKpiStreamReply streamReply = (QosPositionKpiStreamReply)deserializer.ReadObject(responseStream);
+      return streamReply;
     }
 
   };
