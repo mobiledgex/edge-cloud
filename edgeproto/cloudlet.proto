@@ -112,16 +112,18 @@ message CloudletInfraProperties{
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
+  // DIND Cloudlet
+  PLATFORM_TYPE_DIND = 1;
   // Openstack Cloudlet
-  PLATFORM_TYPE_OPENSTACK = 1;
+  PLATFORM_TYPE_OPENSTACK = 2;
   // Azure Cloudlet
-  PLATFORM_TYPE_AZURE = 2;
+  PLATFORM_TYPE_AZURE = 3;
   // GCP Cloudlet
-  PLATFORM_TYPE_GCP = 3;
+  PLATFORM_TYPE_GCP = 4;
   // MEXDIND Cloudlet
-  PLATFORM_TYPE_MEXDIND = 4;
+  PLATFORM_TYPE_MEXDIND = 5;
   // Baremetal Cloudlet
-  PLATFORM_TYPE_BAREMETAL = 5;
+  PLATFORM_TYPE_BAREMETAL = 6;
 }
 
 // PlatformKey uniquely identifies a Platform.

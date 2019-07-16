@@ -55,6 +55,7 @@ var PlatformInPlatformType string
 var PlatformInState string
 var PlatformTypeStrings = []string{
 	"PlatformTypeFake",
+	"PlatformTypeDind",
 	"PlatformTypeOpenstack",
 	"PlatformTypeAzure",
 	"PlatformTypeGcp",
@@ -1522,7 +1523,7 @@ var CloudletMetricsApiCmds = []*cobra.Command{
 
 func init() {
 	PlatformFlagSet.StringVar(&PlatformIn.Key.Name, "key-name", "", "Key.Name")
-	PlatformFlagSet.StringVar(&PlatformInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeOpenstack PlatformTypeAzure PlatformTypeGcp PlatformTypeMexdind PlatformTypeBaremetal]")
+	PlatformFlagSet.StringVar(&PlatformInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeDind PlatformTypeOpenstack PlatformTypeAzure PlatformTypeGcp PlatformTypeMexdind PlatformTypeBaremetal]")
 	PlatformFlagSet.StringVar(&PlatformIn.PhysicalName, "physicalname", "", "PhysicalName")
 	PlatformIn.Flavor = &edgeproto.FlavorKey{}
 	PlatformFlagSet.StringVar(&PlatformIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
@@ -1883,16 +1884,18 @@ func parsePlatformEnums() error {
 		switch PlatformInPlatformType {
 		case "PlatformTypeFake":
 			PlatformIn.PlatformType = edgeproto.PlatformType(0)
-		case "PlatformTypeOpenstack":
+		case "PlatformTypeDind":
 			PlatformIn.PlatformType = edgeproto.PlatformType(1)
-		case "PlatformTypeAzure":
+		case "PlatformTypeOpenstack":
 			PlatformIn.PlatformType = edgeproto.PlatformType(2)
-		case "PlatformTypeGcp":
+		case "PlatformTypeAzure":
 			PlatformIn.PlatformType = edgeproto.PlatformType(3)
-		case "PlatformTypeMexdind":
+		case "PlatformTypeGcp":
 			PlatformIn.PlatformType = edgeproto.PlatformType(4)
-		case "PlatformTypeBaremetal":
+		case "PlatformTypeMexdind":
 			PlatformIn.PlatformType = edgeproto.PlatformType(5)
+		case "PlatformTypeBaremetal":
+			PlatformIn.PlatformType = edgeproto.PlatformType(6)
 		default:
 			return errors.New("Invalid value for PlatformInPlatformType")
 		}
