@@ -12,6 +12,8 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// TODO: This file handles authentication only.  We need to handle stats also.
+
 // A wrapper for the real grpc.ServerStream
 type ServerStreamWrapper struct {
 	inner grpc.ServerStream
@@ -52,6 +54,9 @@ func (a ServerStreamWrapper) RecvMsg(m interface{}) error {
 		if err != nil {
 			return grpc.Errorf(codes.Unauthenticated, err.Error())
 		}
+	default:
+		log.InfoLog("Unknown streaming operation, cannot verify cookie", "type", reflect.TypeOf(m).String())
+		return grpc.Errorf(codes.Unauthenticated, err.Error())
 	}
 	return err
 }
