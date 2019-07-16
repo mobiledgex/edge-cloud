@@ -125,8 +125,6 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 		cookie = typ.SessionCookie
 	case *dme.FqdnListRequest:
 		cookie = typ.SessionCookie
-	case *dme.QosPositionKpiRequest:
-		cookie = typ.SessionCookie
 	}
 	if !allow {
 		// Verify session cookie, add decoded CookieKey to context

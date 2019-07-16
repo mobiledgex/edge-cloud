@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"plugin"
 	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -18,6 +19,8 @@ import (
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
+	op "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
+	operator "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	log "github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -38,6 +41,7 @@ var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data i
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
+var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to")
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
 var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
@@ -48,11 +52,14 @@ var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between se
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
 var region = flag.String("region", "local", "region name")
+var solib = flag.String("plugin", "", "plugin file")
 
 // TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
 // verify location API behavior and e2e test setups.
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for internal DME")
+
+var operatorApiGw op.OperatorApiGw
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
@@ -257,8 +264,30 @@ func (s *server) AddUserToGroup(ctx context.Context,
 func (s *server) GetQosPositionKpi(req *dme.QosPositionKpiRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {
 	log.DebugLog(log.DebugLevelDmereq, "GetQosPositionKpi", "request", req)
 
-	getQosPositionKpi(req, getQosSvr)
-	return nil
+	return operatorApiGw.GetQOSPositionKPI(req, getQosSvr)
+	//return getQosPositionKpi(req, getQosSvr)
+
+}
+
+func initPlugin(operatorName string) (op.OperatorApiGw, error) {
+	if *solib == "" {
+		*solib = os.Getenv("GOPATH") + "/plugins/platforms.so"
+	}
+	log.DebugLog(log.DebugLevelDmereq, "Loading plugin", "plugin", *solib)
+	plug, err := plugin.Open(*solib)
+	if err != nil {
+		log.WarnLog("failed to load plugin", "plugin", *solib, "error", err)
+		return nil, err
+	}
+	sym, err := plug.Lookup("GetOperatorApiGw")
+	if err != nil {
+		log.FatalLog("plugin does not have GetOperatorApiGw symbol", "plugin", *solib)
+	}
+	getOperatorFunc, ok := sym.(func(operatorName string) (op.OperatorApiGw, error))
+	if !ok {
+		log.FatalLog("plugin GetOperatorApiGw symbol does not implement func(opername string) (op.OperatorApiGw, error)", "plugin", *solib)
+	}
+	return getOperatorFunc(operatorName)
 }
 
 func main() {
@@ -266,6 +295,18 @@ func main() {
 	log.SetDebugLevelStrs(*debugLevels)
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudletKey)
 	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NODE_DME, &myCloudletKey, &myNode.Key)
+	var err error
+	operatorApiGw, err = initPlugin(*carrier)
+	if err != nil {
+		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
+	}
+	var servers = operator.OperatorApiGwServers{VaultAddr: *vaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl}
+	err = operatorApiGw.Init(*carrier, &servers)
+	if err != nil {
+		log.FatalLog("Unable to init API GW", "err", err)
+
+	}
+	log.DebugLog(log.DebugLevelDmereq, "plugin init done", "operatorApiGw", operatorApiGw)
 
 	dmecommon.InitVault(*vaultAddr, *region)
 
@@ -293,7 +334,9 @@ func main() {
 		stats := NewDmeStats(interval, *statsShards, sendMetric.Update)
 		stats.Start()
 		defer stats.Stop()
-		grpcOpts = append(grpcOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)))
+		grpcOpts = append(grpcOpts,
+			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
+			grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))
 	}
 	nodeCache.Update(&myNode, 0)
 
