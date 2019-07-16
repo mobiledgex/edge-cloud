@@ -3,6 +3,7 @@ package process
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -40,6 +41,8 @@ type LocalAuth struct {
 	User string `json:"user"`
 	Pass string `json:"pass"`
 }
+
+var InfluxCredsFile = "/tmp/influx.json"
 
 // EtcdLocal
 
@@ -176,7 +179,7 @@ func connectAPIImpl(timeout time.Duration, apiaddr string, tlsConfig *tls.Config
 }
 
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, false)
+	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, "", false)
 	if err != nil {
 		return nil, err
 	}
@@ -202,6 +205,10 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 	if p.TokSrvUrl != "" {
 		args = append(args, "--toksrvurl")
 		args = append(args, p.TokSrvUrl)
+	}
+	if p.QosPosUrl != "" {
+		args = append(args, "--qosposurl")
+		args = append(args, p.QosPosUrl)
 	}
 	if p.Carrier != "" {
 		args = append(args, "--carrier")
@@ -283,7 +290,7 @@ func (p *Dme) getTlsConfig() *tls.Config {
 		// their built-in trusted CAs to verify the cert.
 		// Since we're using self-signed certs here, add
 		// our CA to the cert pool.
-		certPool, err := mextls.GetClientCertPool(p.TLS.ServerCert)
+		certPool, err := mextls.GetClientCertPool(p.TLS.ServerCert, "")
 		if err != nil {
 			log.Printf("GetClientCertPool failed, %v\n", err)
 			return nil
@@ -423,10 +430,17 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 		fmt.Printf("Query: %s\n", urlStr)
 		_, err := client.Do(r)
 		if err != nil {
+			p.StopLocal()
 			return err
 		}
 	}
-	return err
+	// create auth file for Vault
+	creds_json, err := json.Marshal(p.Auth)
+	if err != nil {
+		p.StopLocal()
+		return err
+	}
+	return ioutil.WriteFile(InfluxCredsFile, creds_json, 0644)
 }
 
 func (p *Influx) StopLocal() {
@@ -543,8 +557,10 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	p.PutSecret(region, "dme", p.DmeSecret+"-old", &err)
 	p.PutSecret(region, "dme", p.DmeSecret, &err)
 	// Get the directory where the influx.json file is
-	path := "secret/" + region + "/accounts/influxdb"
-	p.PutSecretsJson(path, "/tmp/influx.json", &err)
+	if _, serr := os.Stat(InfluxCredsFile); !os.IsNotExist(serr) {
+		path := "secret/" + region + "/accounts/influxdb"
+		p.PutSecretsJson(path, InfluxCredsFile, &err)
+	}
 	if err != nil {
 		p.StopLocal()
 		return err

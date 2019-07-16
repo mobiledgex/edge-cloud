@@ -129,7 +129,7 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
-	github.com/uber/prototool v1.8.0 // indirect
+	github.com/uber/prototool v1.8.1 // indirect
 	github.com/ugorji/go v1.1.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/xanzy/go-gitlab v0.16.0

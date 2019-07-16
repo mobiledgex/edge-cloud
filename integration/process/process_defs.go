@@ -35,6 +35,7 @@ type Dme struct {
 	NotifyAddrs string
 	LocVerUrl   string
 	TokSrvUrl   string
+	QosPosUrl   string
 	Carrier     string
 	CloudletKey string
 	VaultAddr   string
