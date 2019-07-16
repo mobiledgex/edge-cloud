@@ -536,7 +536,12 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, edgeproto.IpSupport_CamelName[int32(in.IpSupport)])
 	s = append(s, in.StaticIps)
 	s = append(s, strconv.FormatUint(uint64(in.NumDynamicIps), 10))
-	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
+	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.CreateClusterInstTimeout), 10))
+	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.UpdateClusterInstTimeout), 10))
+	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.DeleteClusterInstTimeout), 10))
+	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.CreateAppInstTimeout), 10))
+	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.UpdateAppInstTimeout), 10))
+	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.DeleteAppInstTimeout), 10))
 	if in.Errors == nil {
 		in.Errors = make([]string, 1)
 	}
@@ -545,12 +550,7 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
 	s = append(s, in.Status.TaskName)
 	s = append(s, in.Status.StepName)
-	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.CreateClusterInstTimeout), 10))
-	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.UpdateClusterInstTimeout), 10))
-	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.DeleteClusterInstTimeout), 10))
-	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.CreateAppInstTimeout), 10))
-	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.UpdateAppInstTimeout), 10))
-	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.DeleteAppInstTimeout), 10))
+	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
 	s = append(s, edgeproto.CRMOverride_CamelName[int32(in.CrmOverride)])
 	s = append(s, strconv.FormatBool(in.DeploymentLocal))
 	return s
@@ -575,18 +575,18 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "IpSupport")
 	s = append(s, "StaticIps")
 	s = append(s, "NumDynamicIps")
-	s = append(s, "State")
-	s = append(s, "Errors")
-	s = append(s, "Status-TaskNumber")
-	s = append(s, "Status-MaxTasks")
-	s = append(s, "Status-TaskName")
-	s = append(s, "Status-StepName")
 	s = append(s, "TimeLimits-CreateClusterInstTimeout")
 	s = append(s, "TimeLimits-UpdateClusterInstTimeout")
 	s = append(s, "TimeLimits-DeleteClusterInstTimeout")
 	s = append(s, "TimeLimits-CreateAppInstTimeout")
 	s = append(s, "TimeLimits-UpdateAppInstTimeout")
 	s = append(s, "TimeLimits-DeleteAppInstTimeout")
+	s = append(s, "Errors")
+	s = append(s, "Status-TaskNumber")
+	s = append(s, "Status-MaxTasks")
+	s = append(s, "Status-TaskName")
+	s = append(s, "Status-StepName")
+	s = append(s, "State")
 	s = append(s, "CrmOverride")
 	s = append(s, "DeploymentLocal")
 	return s
@@ -791,6 +791,9 @@ func PlatformHideTags(in *edgeproto.Platform) {
 		in.Errors = nil
 	}
 	if _, found := tags["nocmp"]; found {
+		in.Status = edgeproto.StatusInfo{}
+	}
+	if _, found := tags["nocmp"]; found {
 		in.PlatformTag = ""
 	}
 }
@@ -804,13 +807,16 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.State = 0
+		in.TimeLimits = edgeproto.OperationTimeLimits{}
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
 	}
 	if _, found := tags["nocmp"]; found {
-		in.TimeLimits = edgeproto.OperationTimeLimits{}
+		in.Status = edgeproto.StatusInfo{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.State = 0
 	}
 	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
@@ -1551,17 +1557,17 @@ func init() {
 	CloudletFlagSet.StringVar(&CloudletInIpSupport, "ipsupport", "", "one of [IpSupportUnknown IpSupportStatic IpSupportDynamic]")
 	CloudletFlagSet.StringVar(&CloudletIn.StaticIps, "staticips", "", "StaticIps")
 	CloudletFlagSet.Int32Var(&CloudletIn.NumDynamicIps, "numdynamicips", 0, "NumDynamicIps")
-	CloudletFlagSet.StringVar(&CloudletInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
-	CloudletNoConfigFlagSet.Uint32Var(&CloudletIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
-	CloudletNoConfigFlagSet.Uint32Var(&CloudletIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
-	CloudletNoConfigFlagSet.StringVar(&CloudletIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
-	CloudletNoConfigFlagSet.StringVar(&CloudletIn.Status.StepName, "status-stepname", "", "Status.StepName")
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.CreateClusterInstTimeout, "timelimits-createclusterinsttimeout", 0, "TimeLimits.CreateClusterInstTimeout")
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.UpdateClusterInstTimeout, "timelimits-updateclusterinsttimeout", 0, "TimeLimits.UpdateClusterInstTimeout")
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.DeleteClusterInstTimeout, "timelimits-deleteclusterinsttimeout", 0, "TimeLimits.DeleteClusterInstTimeout")
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.CreateAppInstTimeout, "timelimits-createappinsttimeout", 0, "TimeLimits.CreateAppInstTimeout")
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.UpdateAppInstTimeout, "timelimits-updateappinsttimeout", 0, "TimeLimits.UpdateAppInstTimeout")
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.DeleteAppInstTimeout, "timelimits-deleteappinsttimeout", 0, "TimeLimits.DeleteAppInstTimeout")
+	CloudletNoConfigFlagSet.Uint32Var(&CloudletIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
+	CloudletNoConfigFlagSet.Uint32Var(&CloudletIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
+	CloudletNoConfigFlagSet.StringVar(&CloudletIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
+	CloudletNoConfigFlagSet.StringVar(&CloudletIn.Status.StepName, "status-stepname", "", "Status.StepName")
+	CloudletFlagSet.StringVar(&CloudletInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	CloudletFlagSet.StringVar(&CloudletInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCrmErrors IgnoreCrm IgnoreTransientState IgnoreCrmAndTransientState]")
 	CloudletFlagSet.BoolVar(&CloudletIn.DeploymentLocal, "deploymentlocal", false, "DeploymentLocal")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
@@ -1719,8 +1725,23 @@ func CloudletSetFields() {
 	if CloudletFlagSet.Lookup("numdynamicips").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "8")
 	}
-	if CloudletFlagSet.Lookup("state").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "9")
+	if CloudletNoConfigFlagSet.Lookup("timelimits-createclusterinsttimeout").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "9.1")
+	}
+	if CloudletNoConfigFlagSet.Lookup("timelimits-updateclusterinsttimeout").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "9.2")
+	}
+	if CloudletNoConfigFlagSet.Lookup("timelimits-deleteclusterinsttimeout").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "9.3")
+	}
+	if CloudletNoConfigFlagSet.Lookup("timelimits-createappinsttimeout").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "9.4")
+	}
+	if CloudletNoConfigFlagSet.Lookup("timelimits-updateappinsttimeout").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "9.5")
+	}
+	if CloudletNoConfigFlagSet.Lookup("timelimits-deleteappinsttimeout").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "9.6")
 	}
 	if CloudletNoConfigFlagSet.Lookup("status-tasknumber").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "11.1")
@@ -1734,23 +1755,8 @@ func CloudletSetFields() {
 	if CloudletNoConfigFlagSet.Lookup("status-stepname").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "11.4")
 	}
-	if CloudletNoConfigFlagSet.Lookup("timelimits-createclusterinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "12.1")
-	}
-	if CloudletNoConfigFlagSet.Lookup("timelimits-updateclusterinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "12.2")
-	}
-	if CloudletNoConfigFlagSet.Lookup("timelimits-deleteclusterinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "12.3")
-	}
-	if CloudletNoConfigFlagSet.Lookup("timelimits-createappinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "12.4")
-	}
-	if CloudletNoConfigFlagSet.Lookup("timelimits-updateappinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "12.5")
-	}
-	if CloudletNoConfigFlagSet.Lookup("timelimits-deleteappinsttimeout").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "12.6")
+	if CloudletFlagSet.Lookup("state").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "12")
 	}
 	if CloudletFlagSet.Lookup("crmoverride").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "13")
