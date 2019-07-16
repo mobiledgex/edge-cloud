@@ -20,6 +20,7 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	op "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
+	operator "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	log "github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -299,7 +300,8 @@ func main() {
 	if err != nil {
 		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
 	}
-	err = operatorApiGw.Init(*carrier, *vaultAddr, *qosPosUrl, *locVerUrl, *tokSrvUrl)
+	var servers = operator.OperatorApiGwServers{VaultAddr: *vaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl}
+	err = operatorApiGw.Init(*carrier, &servers)
 	if err != nil {
 		log.FatalLog("Unable to init API GW", "err", err)
 
