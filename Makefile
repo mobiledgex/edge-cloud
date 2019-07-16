@@ -58,6 +58,7 @@ tools:
 	go install ${GOGOPROTO}/protoc-gen-gogo
 	go install ${GOGOPROTO}/protoc-gen-gogofast
 	go install ${GRPCGATEWAY}/protoc-gen-grpc-gateway
+	go get github.com/uber/prototool/cmd/prototool
 
 doc:
 	make -C edgeproto doc
@@ -66,7 +67,6 @@ external-doc:
 	make -C edgeproto external-doc
 
 lint:
-	go get github.com/uber/prototool/cmd/prototool
 	$(RM) link-gogo-protobuf
 	$(RM) link-grpc-gateway
 	ln -s $(GOGOPROTO) link-gogo-protobuf
