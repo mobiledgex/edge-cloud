@@ -189,7 +189,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				return fmt.Errorf("Platform flavor %s not found", in.Flavor.Name)
 			}
 		} else {
-			in.Flavor = &DefaultPlatformFlavor.Key
 			pfFlavor = DefaultPlatformFlavor
 		}
 		if ignoreCRM(cctx) {
@@ -400,8 +399,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		s.store.STMDel(stm, &in.Key)
-
 		cloudletRefsApi.store.STMDel(stm, &in.Key)
+		cloudletInfoApi.store.STMDel(stm, &in.Key)
 		return nil
 	})
 

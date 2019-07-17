@@ -213,37 +213,6 @@ func (s *CloudletInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-/*
-	if _, found := fields[PlatformFieldRegistryPath]; found {
-		if s.RegistryPath != "" {
-			parts := strings.Split(s.RegistryPath, "/")
-			if len(parts) < 2 || !strings.Contains(parts[0], ".") {
-				return fmt.Errorf("registrypath should be full registry URL: <domain-name>/<registry-path>")
-			}
-			urlObj, err := util.ImagePathParse(s.RegistryPath)
-			if err != nil {
-				return fmt.Errorf("Invalid registry path: %v", err)
-			}
-			out := strings.Split(urlObj.Path, ":")
-			if len(out) == 2 {
-				return fmt.Errorf("registrypath should not have image tag")
-			} else if len(out) != 1 {
-				return fmt.Errorf("Invalid registry path")
-			}
-		}
-	}
-
-	if _, found := fields[PlatformFieldImagePath]; found {
-		if s.ImagePath != "" {
-			err := util.ValidateImagePath(s.ImagePath)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-*/
-
 func (key *AppInstKey) Validate() error {
 	if err := key.AppKey.Validate(); err != nil {
 		return err
