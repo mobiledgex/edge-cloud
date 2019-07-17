@@ -581,15 +581,8 @@ namespace DistributedMatchEngine
       {
         return null;
       }
-      
+
       DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(QosPositionKpiStreamReply));
-
-      responseStream.Position = 0;
-      string str = Util.StreamToString(responseStream);
-      Log.D("Result: str: " + str);
-      responseStream.Position = 0;
-
-
       QosPositionKpiStreamReply streamReply = (QosPositionKpiStreamReply)deserializer.ReadObject(responseStream);
       return streamReply;
     }
