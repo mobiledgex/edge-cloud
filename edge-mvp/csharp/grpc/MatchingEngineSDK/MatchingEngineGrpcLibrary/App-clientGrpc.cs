@@ -29,6 +29,8 @@ namespace DistributedMatchEngine {
     static readonly grpc::Marshaller<global::DistributedMatchEngine.AppInstListReply> __Marshaller_distributed_match_engine_AppInstListReply = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.AppInstListReply.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::DistributedMatchEngine.FqdnListRequest> __Marshaller_distributed_match_engine_FqdnListRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.FqdnListRequest.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::DistributedMatchEngine.FqdnListReply> __Marshaller_distributed_match_engine_FqdnListReply = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.FqdnListReply.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::DistributedMatchEngine.QosPositionKpiRequest> __Marshaller_distributed_match_engine_QosPositionKpiRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.QosPositionKpiRequest.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::DistributedMatchEngine.QosPositionKpiReply> __Marshaller_distributed_match_engine_QosPositionKpiReply = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.QosPositionKpiReply.Parser.ParseFrom);
 
     static readonly grpc::Method<global::DistributedMatchEngine.RegisterClientRequest, global::DistributedMatchEngine.RegisterClientReply> __Method_RegisterClient = new grpc::Method<global::DistributedMatchEngine.RegisterClientRequest, global::DistributedMatchEngine.RegisterClientReply>(
         grpc::MethodType.Unary,
@@ -79,6 +81,13 @@ namespace DistributedMatchEngine {
         __Marshaller_distributed_match_engine_FqdnListRequest,
         __Marshaller_distributed_match_engine_FqdnListReply);
 
+    static readonly grpc::Method<global::DistributedMatchEngine.QosPositionKpiRequest, global::DistributedMatchEngine.QosPositionKpiReply> __Method_GetQosPositionKpi = new grpc::Method<global::DistributedMatchEngine.QosPositionKpiRequest, global::DistributedMatchEngine.QosPositionKpiReply>(
+        grpc::MethodType.ServerStreaming,
+        __ServiceName,
+        "GetQosPositionKpi",
+        __Marshaller_distributed_match_engine_QosPositionKpiRequest,
+        __Marshaller_distributed_match_engine_QosPositionKpiReply);
+
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
     {
@@ -120,6 +129,11 @@ namespace DistributedMatchEngine {
       }
 
       public virtual global::System.Threading.Tasks.Task<global::DistributedMatchEngine.FqdnListReply> GetFqdnList(global::DistributedMatchEngine.FqdnListRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      public virtual global::System.Threading.Tasks.Task GetQosPositionKpi(global::DistributedMatchEngine.QosPositionKpiRequest request, grpc::IServerStreamWriter<global::DistributedMatchEngine.QosPositionKpiReply> responseStream, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -261,6 +275,14 @@ namespace DistributedMatchEngine {
       {
         return CallInvoker.AsyncUnaryCall(__Method_GetFqdnList, null, options, request);
       }
+      public virtual grpc::AsyncServerStreamingCall<global::DistributedMatchEngine.QosPositionKpiReply> GetQosPositionKpi(global::DistributedMatchEngine.QosPositionKpiRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return GetQosPositionKpi(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual grpc::AsyncServerStreamingCall<global::DistributedMatchEngine.QosPositionKpiReply> GetQosPositionKpi(global::DistributedMatchEngine.QosPositionKpiRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncServerStreamingCall(__Method_GetQosPositionKpi, null, options, request);
+      }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
       protected override MatchEngineApiClient NewInstance(ClientBaseConfiguration configuration)
       {
@@ -279,7 +301,8 @@ namespace DistributedMatchEngine {
           .AddMethod(__Method_GetLocation, serviceImpl.GetLocation)
           .AddMethod(__Method_AddUserToGroup, serviceImpl.AddUserToGroup)
           .AddMethod(__Method_GetAppInstList, serviceImpl.GetAppInstList)
-          .AddMethod(__Method_GetFqdnList, serviceImpl.GetFqdnList).Build();
+          .AddMethod(__Method_GetFqdnList, serviceImpl.GetFqdnList)
+          .AddMethod(__Method_GetQosPositionKpi, serviceImpl.GetQosPositionKpi).Build();
     }
 
     /// <summary>Register service method with a service binder with or without implementation. Useful when customizing the  service binding logic.
@@ -295,6 +318,7 @@ namespace DistributedMatchEngine {
       serviceBinder.AddMethod(__Method_AddUserToGroup, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::DistributedMatchEngine.DynamicLocGroupRequest, global::DistributedMatchEngine.DynamicLocGroupReply>(serviceImpl.AddUserToGroup));
       serviceBinder.AddMethod(__Method_GetAppInstList, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::DistributedMatchEngine.AppInstListRequest, global::DistributedMatchEngine.AppInstListReply>(serviceImpl.GetAppInstList));
       serviceBinder.AddMethod(__Method_GetFqdnList, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::DistributedMatchEngine.FqdnListRequest, global::DistributedMatchEngine.FqdnListReply>(serviceImpl.GetFqdnList));
+      serviceBinder.AddMethod(__Method_GetQosPositionKpi, serviceImpl == null ? null : new grpc::ServerStreamingServerMethod<global::DistributedMatchEngine.QosPositionKpiRequest, global::DistributedMatchEngine.QosPositionKpiReply>(serviceImpl.GetQosPositionKpi));
     }
 
   }
