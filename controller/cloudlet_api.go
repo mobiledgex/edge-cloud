@@ -122,6 +122,10 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
 
+	if IsCloudletLocal(in) {
+		in.DeploymentLocal = true
+	}
+
 	if !*testMode && !IsCloudletLocal(in) {
 		// Vault controller level credentials are required to access
 		// registry credentials
@@ -189,6 +193,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				return fmt.Errorf("Platform flavor %s not found", in.Flavor.Name)
 			}
 		} else {
+			in.Flavor = &DefaultPlatformFlavor.Key
 			pfFlavor = DefaultPlatformFlavor
 		}
 		if ignoreCRM(cctx) {
@@ -221,7 +226,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}
 
-	if in.DeploymentLocal || IsCloudletLocal(in) {
+	if in.DeploymentLocal {
 		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(in)
 	} else {
