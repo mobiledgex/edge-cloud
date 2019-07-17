@@ -62,48 +62,6 @@ developers:
 - key:
     name: Samsung
 
-platforms:
-- key:
-    name: tmus-platform-1
-  platformtype: PlatformTypeFake
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51101
-- key:
-    name: tmus-platform-2
-  platformtype: PlatformTypeFake
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51102
-- key:
-    name: tmus-platform-3
-  platformtype: PlatformTypeFake
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51103
-- key:
-    name: azure-platform
-  platformtype: PlatformTypeFake
-  flavor:
-    name: x1.tiny
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51109
-- key:
-    name: gcp-platform
-  platformtype: PlatformTypeFake
-  flavor:
-    name: x1.medium
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51110
-
 cloudlets:
 - key:
     operatorkey:
@@ -114,9 +72,8 @@ cloudlets:
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform:
-    name: tmus-platform-1
-  deploymentlocal: true
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51101
 - key:
     operatorkey:
       name: tmus
@@ -126,9 +83,8 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform:
-    name: tmus-platform-2
-  deploymentlocal: true
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51102
 - key:
     operatorkey:
       name: tmus
@@ -138,9 +94,8 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform:
-    name: tmus-platform-3
-  deploymentlocal: true
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51103
 - key:
     operatorkey:
       name: azure
@@ -150,9 +105,8 @@ cloudlets:
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform:
-    name: azure-platform
-  deploymentlocal: true
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51104
 - key:
     operatorkey:
       name: gcp
@@ -162,9 +116,8 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  platform:
-    name: gcp-platform
-  deploymentlocal: true
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51105
 
 apps:
 - key:

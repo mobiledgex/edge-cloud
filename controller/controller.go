@@ -97,12 +97,11 @@ func main() {
 }
 
 func validateFields() error {
-	if *versionTag == "" {
-		return fmt.Errorf("Version tag is required")
-	}
-
 	if *testMode {
 		return nil
+	}
+	if *versionTag == "" {
+		return fmt.Errorf("Version tag is required")
 	}
 	if *cloudletRegistryPath != "" {
 		parts := strings.Split(*cloudletRegistryPath, "/")

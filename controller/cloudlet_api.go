@@ -38,7 +38,7 @@ const (
 	PlatformInitTimeout = 5 * time.Minute
 )
 
-func IsPlatformInternal(in *edgeproto.Cloudlet) bool {
+func IsCloudletLocal(in *edgeproto.Cloudlet) bool {
 	if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE ||
 		in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND ||
 		in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_MEXDIND {
@@ -122,7 +122,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
 
-	if !*testMode && !IsPlatformInternal(in) {
+	if !*testMode && !IsCloudletLocal(in) {
 		// Vault controller level credentials are required to access
 		// registry credentials
 		roleId := os.Getenv("VAULT_ROLE_ID")
@@ -160,6 +160,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
+
 func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	cctx.SetOverride(&in.CrmOverride)
 
@@ -221,7 +222,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}
 
-	if in.DeploymentLocal {
+	if in.DeploymentLocal || IsCloudletLocal(in) {
 		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(in)
 	} else {
