@@ -312,7 +312,6 @@ type DummyServer struct {
 	Flavors          []edgeproto.Flavor
 	Apps             []edgeproto.App
 	Operators        []edgeproto.Operator
-	Platforms        []edgeproto.Platform
 	Cloudlets        []edgeproto.Cloudlet
 	CloudletInfos    []edgeproto.CloudletInfo
 	ClusterInsts     []edgeproto.ClusterInst
@@ -331,7 +330,6 @@ func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	d.Flavors = make([]edgeproto.Flavor, 0)
 	d.Apps = make([]edgeproto.App, 0)
 	d.Operators = make([]edgeproto.Operator, 0)
-	d.Platforms = make([]edgeproto.Platform, 0)
 	d.Cloudlets = make([]edgeproto.Cloudlet, 0)
 	d.CloudletInfos = make([]edgeproto.CloudletInfo, 0)
 	d.ClusterInsts = make([]edgeproto.ClusterInst, 0)
@@ -346,7 +344,6 @@ func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	edgeproto.RegisterFlavorApiServer(server, d)
 	edgeproto.RegisterAppApiServer(server, d)
 	edgeproto.RegisterOperatorApiServer(server, d)
-	edgeproto.RegisterPlatformApiServer(server, d)
 	edgeproto.RegisterCloudletApiServer(server, d)
 	edgeproto.RegisterCloudletInfoApiServer(server, d)
 	edgeproto.RegisterClusterInstApiServer(server, d)

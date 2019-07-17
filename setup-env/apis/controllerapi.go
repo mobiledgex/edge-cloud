@@ -75,7 +75,6 @@ func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool 
 		"clusterinsts: ShowClusterInst",
 		"operators: ShowOperator",
 		"developers: ShowDeveloper",
-		"platforms: ShowPlatform",
 		"cloudlets: ShowCloudlet",
 		"apps: ShowApp",
 		"appinstances: ShowAppInst",
@@ -183,29 +182,6 @@ func runDeveloperApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepr
 		err = ignoreExpectedErrors(mode, err)
 		if err != nil {
 			return fmt.Errorf("API %s failed for %v -- err %v", mode, d.Key, err)
-		}
-	}
-	return nil
-}
-
-func runPlatformApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	pfAPI := edgeproto.NewPlatformApiClient(conn)
-	for _, pf := range appdata.Platforms {
-		log.Printf("API %v for platform: %v data %+v", mode, pf.Key.Name, pf)
-		var stream testutil.PlatformStream
-		switch mode {
-		case "create":
-			stream, err = pfAPI.CreatePlatform(ctx, &pf)
-		case "update":
-			stream, err = pfAPI.UpdatePlatform(ctx, &pf)
-		case "delete":
-			stream, err = pfAPI.DeletePlatform(ctx, &pf)
-		}
-		err = testutil.PlatformReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, pf.Key, err)
 		}
 	}
 	return nil
@@ -403,11 +379,6 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in cloudlet API %v\n", err)
 				rc = false
 			}
-			err = runPlatformApi(ctrlapi, ctx, &appData, api)
-			if err != nil {
-				log.Printf("Error in platform API %v\n", err)
-				rc = false
-			}
 			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in developer API %v\n", err)
@@ -439,11 +410,6 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in developer API %v\n", err)
-				rc = false
-			}
-			err = runPlatformApi(ctrlapi, ctx, &appData, api)
-			if err != nil {
-				log.Printf("Error in platform API %v\n", err)
 				rc = false
 			}
 			err = runCloudletApi(ctrlapi, ctx, &appData, api)

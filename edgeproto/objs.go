@@ -20,7 +20,6 @@ var ErrEdgeApiAppNotFound = errors.New("Specified app not found")
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
 	Operators        []Operator        `yaml:"operators"`
-	Platforms        []Platform        `yaml:"platforms"`
 	Cloudlets        []Cloudlet        `yaml:"cloudlets"`
 	Flavors          []Flavor          `yaml:"flavors"`
 	ClusterInsts     []ClusterInst     `yaml:"clusterinsts"`
@@ -40,9 +39,6 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.Applications[:], func(i, j int) bool {
 		return a.Applications[i].Key.GetKeyString() < a.Applications[j].Key.GetKeyString()
-	})
-	sort.Slice(a.Platforms[:], func(i, j int) bool {
-		return a.Platforms[i].Key.GetKeyString() < a.Platforms[j].Key.GetKeyString()
 	})
 	sort.Slice(a.Cloudlets[:], func(i, j int) bool {
 		return a.Cloudlets[i].Key.GetKeyString() < a.Cloudlets[j].Key.GetKeyString()
@@ -206,6 +202,9 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 	if err := s.ValidateEnums(); err != nil {
 		return err
 	}
+	if s.NotifySrvAddr == "" {
+		return errors.New("notifysrvaddr cannot be empty")
+	}
 
 	return nil
 }
@@ -214,22 +213,7 @@ func (s *CloudletInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (key *PlatformKey) Validate() error {
-	if !util.ValidName(key.Name) {
-		return errors.New("Invalid platform name")
-	}
-	return nil
-}
-
-func (s *Platform) Validate(fields map[string]struct{}) error {
-	if err := s.GetKey().Validate(); err != nil {
-		return err
-	}
-
-	if err := s.ValidateEnums(); err != nil {
-		return err
-	}
-
+/*
 	if _, found := fields[PlatformFieldRegistryPath]; found {
 		if s.RegistryPath != "" {
 			parts := strings.Split(s.RegistryPath, "/")
@@ -257,16 +241,8 @@ func (s *Platform) Validate(fields map[string]struct{}) error {
 			}
 		}
 	}
-
-	if s.NotifyCtrlAddrs == "" {
-		return errors.New("notifyctrladdrs cannot be empty")
-	}
-
-	if s.NotifySrvAddr == "" {
-		return errors.New("notifysrvaddr cannot be empty")
-	}
 	return nil
-}
+*/
 
 func (key *AppInstKey) Validate() error {
 	if err := key.AppKey.Validate(); err != nil {
@@ -452,7 +428,6 @@ func CmpSortSlices() []cmp.Option {
 	opts := []cmp.Option{}
 	opts = append(opts, cmpopts.SortSlices(CmpSortApp))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAppInst))
-	opts = append(opts, cmpopts.SortSlices(CmpSortPlatform))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudlet))
 	opts = append(opts, cmpopts.SortSlices(CmpSortDeveloper))
 	opts = append(opts, cmpopts.SortSlices(CmpSortOperator))

@@ -3,9 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -18,7 +22,30 @@ type CloudletApi struct {
 	cache edgeproto.CloudletCache
 }
 
-var cloudletApi = CloudletApi{}
+var (
+	cloudletApi           = CloudletApi{}
+	DefaultPlatformFlavor = edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "DefaultPlatformFlavor",
+		},
+		Vcpus: 2,
+		Ram:   4096,
+		Disk:  20,
+	}
+)
+
+const (
+	PlatformInitTimeout = 5 * time.Minute
+)
+
+func IsPlatformInternal(in *edgeproto.Cloudlet) bool {
+	if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE ||
+		in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND ||
+		in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_MEXDIND {
+		return true
+	}
+	return false
+}
 
 func InitCloudletApi(sync *Sync) {
 	cloudletApi.sync = sync
@@ -44,17 +71,6 @@ func (s *CloudletApi) UsesOperator(in *edgeproto.OperatorKey) bool {
 	defer s.cache.Mux.Unlock()
 	for key, _ := range s.cache.Objs {
 		if key.OperatorKey.Matches(in) {
-			return true
-		}
-	}
-	return false
-}
-
-func (s *CloudletApi) UsesPlatform(in *edgeproto.PlatformKey) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for key, _ := range s.cache.Objs {
-		if s.cache.Objs[key].Platform.Matches(in) {
 			return true
 		}
 	}
@@ -106,6 +122,42 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
 
+	if !*testMode && !IsPlatformInternal(in) {
+		// Vault controller level credentials are required to access
+		// registry credentials
+		roleId := os.Getenv("VAULT_ROLE_ID")
+		if roleId == "" {
+			return fmt.Errorf("Env variable VAULT_ROLE_ID not set")
+		}
+		secretId := os.Getenv("VAULT_SECRET_ID")
+		if secretId == "" {
+			return fmt.Errorf("Env variable VAULT_SECRET_ID not set")
+		}
+
+		// Vault CRM level credentials are required to access
+		// instantiate crmserver
+		crmRoleId := os.Getenv("VAULT_CRM_ROLE_ID")
+		if crmRoleId == "" {
+			return fmt.Errorf("Env variable VAULT_CRM_ROLE_ID not set")
+		}
+		crmSecretId := os.Getenv("VAULT_CRM_SECRET_ID")
+		if crmSecretId == "" {
+			return fmt.Errorf("Env variable VAULT_CRM_SECRET_ID not set")
+		}
+		in.CrmRoleId = crmRoleId
+		in.CrmSecretId = crmSecretId
+	}
+	in.PlatformTag = *versionTag
+	in.TlsCertFile = *tlsCertFile
+	in.VaultAddr = *vaultAddr
+	in.RegistryPath = *cloudletRegistryPath
+	in.ImagePath = *cloudletVMImagePath
+	addrObjs := strings.Split(*notifyAddr, ":")
+	if len(addrObjs) != 2 {
+		return fmt.Errorf("unable to fetch notify addr of the controller")
+	}
+	in.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
+
 	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
@@ -118,7 +170,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	in.TimeLimits.UpdateAppInstTimeout = int64(cloudcommon.UpdateAppInstTimeout)
 	in.TimeLimits.DeleteAppInstTimeout = int64(cloudcommon.DeleteAppInstTimeout)
 
-	pf := edgeproto.Platform{}
 	pfFlavor := edgeproto.Flavor{}
 
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
@@ -132,11 +183,13 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 			in.Errors = nil
 		}
-		if !platformApi.store.STMGet(stm, &in.Platform, &pf) {
-			return fmt.Errorf("Platform %s not found", in.Platform.Name)
-		}
-		if !flavorApi.store.STMGet(stm, pf.Flavor, &pfFlavor) {
-			return fmt.Errorf("Platform flavor %s not found", pf.Flavor.Name)
+		if in.Flavor != nil && in.Flavor.Name != "" {
+			if !flavorApi.store.STMGet(stm, in.Flavor, &pfFlavor) {
+				return fmt.Errorf("Platform flavor %s not found", in.Flavor.Name)
+			}
+		} else {
+			in.Flavor = &DefaultPlatformFlavor.Key
+			pfFlavor = DefaultPlatformFlavor
 		}
 		if ignoreCRM(cctx) {
 			in.State = edgeproto.TrackedState_READY
@@ -168,24 +221,15 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}
 
-	cloudletPlatform, ok := cloudletPlatforms[pf.PlatformType]
-	if !ok {
-		return fmt.Errorf("Platform plugin %s not found", pf.PlatformType.String())
-	}
-
 	if in.DeploymentLocal {
 		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
-		err = cloudcommon.StartCRMService(in, &pf)
+		err = cloudcommon.StartCRMService(in)
 	} else {
-		if !IsPlatformInternal(&pf) {
-			if pf.ImagePath == "" {
-				return fmt.Errorf("Platform must have imagepath specified")
-			}
-			if pf.RegistryPath == "" {
-				return fmt.Errorf("Platform must have registrypath specified")
-			}
+		var cloudletPlatform pf.Platform
+		cloudletPlatform, err = pfutils.GetPlatform(in.PlatformType.String())
+		if err == nil {
+			err = cloudletPlatform.CreateCloudlet(in, &pfFlavor, updateCloudletCallback)
 		}
-		err = cloudletPlatform.CreateCloudlet(in, &pf, &pfFlavor, updateCloudletCallback)
 	}
 
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
@@ -310,7 +354,6 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cctx.SetOverride(&in.CrmOverride)
 
-	pf := edgeproto.Platform{}
 	// Set state to prevent other apps from being created on ClusterInst
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
@@ -323,9 +366,6 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 			return errors.New("Cloudlet busy, cannot delete")
 		}
-		if !platformApi.store.STMGet(stm, &in.Platform, &pf) {
-			return fmt.Errorf("Delete failed, platform %s not found", in.Platform.Name)
-		}
 		if ignoreCRM(cctx) {
 			s.store.STMDel(stm, &in.Key)
 		}
@@ -337,15 +377,14 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return err
 	}
 
-	cloudletPlatform, ok := cloudletPlatforms[pf.PlatformType]
-	if !ok {
-		return fmt.Errorf("Platform plugin %s not found", pf.PlatformType.String())
-	}
-
 	if in.DeploymentLocal {
-		err = cloudcommon.StopCRMService(in, &pf)
+		err = cloudcommon.StopCRMService(in)
 	} else {
-		err = cloudletPlatform.DeleteCloudlet(in, &pf)
+		var cloudletPlatform pf.Platform
+		cloudletPlatform, err = pfutils.GetPlatform(in.PlatformType.String())
+		if err == nil {
+			err = cloudletPlatform.DeleteCloudlet(in)
+		}
 	}
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete Cloudlet ignoring CRM failure: %s", err.Error())})

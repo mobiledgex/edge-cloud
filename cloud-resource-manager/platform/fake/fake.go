@@ -76,24 +76,12 @@ func (s *Platform) GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *
 	return req.Command, nil
 }
 
-func (s *Platform) CreatePlatform(pf *edgeproto.Platform, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.DebugLog(log.DebugLevelMexos, "create fake platform", "key", pf.Key)
-	updateCallback(edgeproto.UpdateTask, "Creating platform")
-	updateCallback(edgeproto.UpdateTask, "fake platform created successfully")
-	return nil
-}
-
-func (s *Platform) DeletePlatform(pf *edgeproto.Platform) error {
-	log.DebugLog(log.DebugLevelMexos, "delete fake platform", "key", pf.Key)
-	return nil
-}
-
-func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.DebugLog(log.DebugLevelMexos, "create fake cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
-	err := cloudcommon.StartCRMService(cloudlet, pf)
+	err := cloudcommon.StartCRMService(cloudlet)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "fake cloudlet create failed", "err", err)
 		return err
@@ -101,9 +89,9 @@ func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Pl
 	return nil
 }
 
-func (s *Platform) DeleteCloudlet(cloudlet *edgeproto.Cloudlet, pf *edgeproto.Platform) error {
+func (s *Platform) DeleteCloudlet(cloudlet *edgeproto.Cloudlet) error {
 	log.DebugLog(log.DebugLevelMexos, "delete fake Cloudlet", "key", cloudlet.Key)
-	err := cloudcommon.StopCRMService(cloudlet, pf)
+	err := cloudcommon.StopCRMService(cloudlet)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "fake cloudlet delete failed", "err", err)
 		return err

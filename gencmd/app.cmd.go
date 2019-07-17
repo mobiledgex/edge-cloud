@@ -39,8 +39,6 @@ It has these top-level messages:
 	GcpProperties
 	OpenStackProperties
 	CloudletInfraProperties
-	PlatformKey
-	Platform
 	Cloudlet
 	FlavorInfo
 	CloudletInfo

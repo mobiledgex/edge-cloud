@@ -174,16 +174,6 @@ var OperatorData = []edgeproto.Operator{
 		},
 	},
 }
-var PlatformData = []edgeproto.Platform{
-	edgeproto.Platform{
-		Key: edgeproto.PlatformKey{
-			Name: "platform_fake",
-		},
-		PlatformType: edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
-		Flavor:       &FlavorData[0].Key,
-		RegistryPath: "registry.mobiledgex.net/somewhere/edge-cloud",
-	},
-}
 var CloudletData = []edgeproto.Cloudlet{
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -196,6 +186,9 @@ var CloudletData = []edgeproto.Cloudlet{
 			Latitude:  37.338207,
 			Longitude: -121.886330,
 		},
+		PlatformType: edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
+		Flavor:       &FlavorData[0].Key,
+		RegistryPath: "registry.mobiledgex.net/somewhere/edge-cloud",
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{

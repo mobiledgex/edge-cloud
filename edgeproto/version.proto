@@ -15,7 +15,6 @@ enum VersionHash {
   HASH_00bdcfa956ca4ee42be87abcd8fcaf1c = 3 [(protogen.upgrade_func) = "AddClusterInstKeyToAppInstKey"];
   HASH_0d2d9c0b07ad989e96fb3b3a44924316 = 4 [(protogen.upgrade_func) = "LintFixAppInstFields"];
   HASH_2b79f0b6e402045ee5f68d697b9386ae = 5 [(protogen.upgrade_func) = "AddClusterInstDeploymentField"];
-  HASH_6983e8b52864a7bac28cb8f2af22e03b= 6;
   option (protogen.version_hash) = true;
   option (protogen.version_hash_salt) = "2";
 }
