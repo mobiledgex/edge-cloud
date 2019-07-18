@@ -6,7 +6,6 @@ cloudlets:
     operatorkey:
       name: tmus
     name: tmus-cloud-1
-  accessuri: cloud1.tmo
   location:
     latitude: 31
     longitude: -91
@@ -19,12 +18,20 @@ cloudlets:
     createappinsttimeout: 3000000000
     updateappinsttimeout: 2000000000
     deleteappinsttimeout: 2000000000
-
+  state: Ready
+  deploymentlocal: true
+  registrypath: registry.mobiledgex.net:5000/mobiledgex/edge-cloud
+  imagepath: https://artifactory.mobiledgex.net/artifactory/baseimages/mobiledgex-v2.0.2.qcow2#md5:51371613a81f7218c2633ce3c1814258
+  notifyctrladdrs: 127.0.0.1:37001
+  notifysrvaddr: 127.0.0.1:51001
+  vaultaddr: http://127.0.0.1:8200
+  tlscertfile: /Users/ashishjain/go/src/github.com/mobiledgex/edge-cloud/tls/out/mex-server.crt
+  flavor:
+    name: x1.medium
 - key:
     operatorkey:
       name: tmus
     name: tmus-cloud-2
-  accessuri: cloud2.tmo
   location:
     latitude: 35
     longitude: -95
@@ -37,6 +44,16 @@ cloudlets:
     createappinsttimeout: 3000000000
     updateappinsttimeout: 2000000000
     deleteappinsttimeout: 2000000000
+  state: Ready
+  deploymentlocal: true
+  registrypath: registry.mobiledgex.net:5000/mobiledgex/edge-cloud
+  imagepath: https://artifactory.mobiledgex.net/artifactory/baseimages/mobiledgex-v2.0.2.qcow2#md5:51371613a81f7218c2633ce3c1814258
+  notifyctrladdrs: 127.0.0.1:37001
+  notifysrvaddr: 127.0.0.1:51002
+  vaultaddr: http://127.0.0.1:8200
+  tlscertfile: /Users/ashishjain/go/src/github.com/mobiledgex/edge-cloud/tls/out/mex-server.crt
+  flavor:
+    name: x1.medium
 
 flavors:
 - key:

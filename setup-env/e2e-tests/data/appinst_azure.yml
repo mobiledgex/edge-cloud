@@ -11,5 +11,5 @@ appinstances:
       cloudletkey:
         operatorkey:
           name: azure
-        name: azure-cloud-9
+        name: azure-cloud-4
       developer: AcmeAppCo

@@ -100,7 +100,7 @@ sub printCloudlet{
   platformtype: PlatformTypeFake
   notifysrvaddr: 127.0.0.1:$notifysrvport
   flavor:
-    name: x1.medium
+    name: x1.tiny
 \n")
 }
 
@@ -237,12 +237,7 @@ flavors:
     name: x1.small
   ram: 2048
   vcpus: 2
-  disk: 2
-- key:
-    name: x1.medium
-  ram: 4096
-  vcpus: 4
-  disk: 4\n\n")
+  disk: 2\n\n")
 }
 
 
