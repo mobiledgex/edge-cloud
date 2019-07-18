@@ -126,6 +126,11 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.DeploymentLocal = true
 	}
 
+	// If notifysrvaddr is empty, set default value
+	if in.NotifySrvAddr == "" {
+		in.NotifySrvAddr = "127.0.0.1:51001"
+	}
+
 	if !*testMode && !IsCloudletLocal(in) {
 		// Vault controller level credentials are required to access
 		// registry credentials

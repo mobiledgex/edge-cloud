@@ -55,7 +55,6 @@ var PlatformTypeStrings = []string{
 	"PlatformTypeAzure",
 	"PlatformTypeGcp",
 	"PlatformTypeMexdind",
-	"PlatformTypeBaremetal",
 }
 
 var CloudletStateStrings = []string{
@@ -1204,7 +1203,7 @@ func init() {
 	CloudletFlagSet.StringVar(&CloudletInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	CloudletFlagSet.StringVar(&CloudletInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCrmErrors IgnoreCrm IgnoreTransientState IgnoreCrmAndTransientState]")
 	CloudletFlagSet.BoolVar(&CloudletIn.DeploymentLocal, "deploymentlocal", false, "DeploymentLocal")
-	CloudletFlagSet.StringVar(&CloudletInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeDind PlatformTypeOpenstack PlatformTypeAzure PlatformTypeGcp PlatformTypeMexdind PlatformTypeBaremetal]")
+	CloudletFlagSet.StringVar(&CloudletInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeDind PlatformTypeOpenstack PlatformTypeAzure PlatformTypeGcp PlatformTypeMexdind]")
 	CloudletNoConfigFlagSet.StringVar(&CloudletIn.RegistryPath, "registrypath", "", "RegistryPath")
 	CloudletNoConfigFlagSet.StringVar(&CloudletIn.ImagePath, "imagepath", "", "ImagePath")
 	CloudletNoConfigFlagSet.StringVar(&CloudletIn.NotifyCtrlAddrs, "notifyctrladdrs", "", "NotifyCtrlAddrs")
@@ -1480,8 +1479,6 @@ func parseCloudletEnums() error {
 			CloudletIn.PlatformType = edgeproto.PlatformType(4)
 		case "PlatformTypeMexdind":
 			CloudletIn.PlatformType = edgeproto.PlatformType(5)
-		case "PlatformTypeBaremetal":
-			CloudletIn.PlatformType = edgeproto.PlatformType(6)
 		default:
 			return errors.New("Invalid value for CloudletInPlatformType")
 		}

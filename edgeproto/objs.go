@@ -202,9 +202,6 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 	if err := s.ValidateEnums(); err != nil {
 		return err
 	}
-	if s.NotifySrvAddr == "" {
-		return errors.New("notifysrvaddr cannot be empty")
-	}
 
 	return nil
 }
