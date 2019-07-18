@@ -35,7 +35,9 @@ var (
 )
 
 const (
-	PlatformInitTimeout = 5 * time.Minute
+	PlatformInitTimeout   = 5 * time.Minute
+	CloudletShortWaitTime = 2 * time.Second
+	CloudletWaitTime      = 10 * time.Second
 )
 
 func IsCloudletLocal(in *edgeproto.Cloudlet) bool {
@@ -283,7 +285,14 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			break
 		}
 		// Wait till timeout
-		time.Sleep(10 * time.Second)
+		if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
+			// Fake cloudlets connected faster to controller as it
+			// only has to start cloudlet services
+			// This will speedup testing
+			time.Sleep(CloudletShortWaitTime)
+		} else {
+			time.Sleep(CloudletWaitTime)
+		}
 	}
 
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {

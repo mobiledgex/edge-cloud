@@ -1,7 +1,7 @@
 tests:
   - includefile: stop_cleanup.yml
   - includefile: deploy_start.yml
-  - includefile: check_nodes.yml
+  - includefile: check_dme_nodes.yml
   - includefile: add_delete.yml
     loops: 2
   - includefile: add_delete.yml

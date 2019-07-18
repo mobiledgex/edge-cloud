@@ -81,119 +81,72 @@ developers:
   address: 1 Samstreet, Samsung Town, South Korea
   email: samsung@xxxx.com
 
-platforms:
-- key:
-    name: tmus-platform-1
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51101
-- key:
-    name: tmus-platform-2
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51102
-- key:
-    name: tmus-platform-3
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51103
-- key:
-    name: tmus-platform-4
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51104
-- key:
-    name: tmus-platform-5
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51105
-- key:
-    name: tmus-platform-6
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51106
-- key:
-    name: tmus-platform-7
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51107
-- key:
-    name: tmus-platform-8
-  flavor:
-    name: x1.small
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51108
-- key:
-    name: azure-platform
-  flavor:
-    name: x1.tiny
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51109
-- key:
-    name: gcp-platform
-  flavor:
-    name: x1.medium
-  registrypath: registry.mobiledgex.net/mobiledgex/edge-cloud:2019-06-20
-  notifyctrladdrs: 127.0.0.1:37001,127.0.0.1:37002
-  notifysrvaddr: 127.0.0.1:51110
-
 cloudlets:
-- key:
-    operatorkey:
-      name: azure
-    name: azure-cloud-9
-  accessuri: cloud9.azure
-  location:
-    latitude: 32
-    longitude: -91
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-- key:
-    operatorkey:
-      name: gcp
-    name: gcp-cloud-10
-  accessuri: cloud2.gcp
-  location:
-    latitude: 36
-    longitude: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
 - key:
     operatorkey:
       name: tmus
     name: tmus-cloud-1
-  accessuri: cloud1.tmo
   location:
     latitude: 31
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51101
+  flavor:
+    name: DefaultPlatformFlavor
 - key:
     operatorkey:
       name: tmus
     name: tmus-cloud-2
-  accessuri: cloud2.tmo
   location:
     latitude: 35
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51102
+  flavor:
+    name: DefaultPlatformFlavor
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-3
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51103
+  flavor:
+    name: DefaultPlatformFlavor
+- key:
+    operatorkey:
+      name: azure
+    name: azure-cloud-4
+  location:
+    latitude: 32
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51104
+  flavor:
+    name: DefaultPlatformFlavor
+- key:
+    operatorkey:
+      name: gcp
+    name: gcp-cloud-5
+  location:
+    latitude: 36
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51105
+  flavor:
+    name: DefaultPlatformFlavor
 
 apps:
 - key:
