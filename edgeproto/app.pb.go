@@ -1017,7 +1017,7 @@ func (m *App) DiffFields(o *App, fields map[string]struct{}) {
 	if m.DelOpt != o.DelOpt {
 		fields[AppFieldDelOpt] = struct{}{}
 	}
-	if m.Configs != nil {
+	if m.Configs != nil && o.Configs != nil {
 		if len(m.Configs) != len(o.Configs) {
 			fields[AppFieldConfigs] = struct{}{}
 		} else {

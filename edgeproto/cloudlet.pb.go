@@ -2217,7 +2217,7 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 		fields[CloudletFieldLocationSpeed] = struct{}{}
 		fields[CloudletFieldLocation] = struct{}{}
 	}
-	if m.Location.Timestamp != nil {
+	if m.Location.Timestamp != nil && o.Location.Timestamp != nil {
 		if m.Location.Timestamp.Seconds != o.Location.Timestamp.Seconds {
 			fields[CloudletFieldLocationTimestampSeconds] = struct{}{}
 			fields[CloudletFieldLocationTimestamp] = struct{}{}
@@ -2324,7 +2324,7 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 	if m.CrmSecretId != o.CrmSecretId {
 		fields[CloudletFieldCrmSecretId] = struct{}{}
 	}
-	if m.Flavor != nil {
+	if m.Flavor != nil && o.Flavor != nil {
 		if m.Flavor.Name != o.Flavor.Name {
 			fields[CloudletFieldFlavorName] = struct{}{}
 			fields[CloudletFieldFlavor] = struct{}{}
@@ -3172,7 +3172,7 @@ func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
 			}
 		}
 	}
-	if m.Flavors != nil {
+	if m.Flavors != nil && o.Flavors != nil {
 		if len(m.Flavors) != len(o.Flavors) {
 			fields[CloudletInfoFieldFlavors] = struct{}{}
 		} else {

@@ -1352,7 +1352,7 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 		fields[AppInstFieldCloudletLocSpeed] = struct{}{}
 		fields[AppInstFieldCloudletLoc] = struct{}{}
 	}
-	if m.CloudletLoc.Timestamp != nil {
+	if m.CloudletLoc.Timestamp != nil && o.CloudletLoc.Timestamp != nil {
 		if m.CloudletLoc.Timestamp.Seconds != o.CloudletLoc.Timestamp.Seconds {
 			fields[AppInstFieldCloudletLocTimestampSeconds] = struct{}{}
 			fields[AppInstFieldCloudletLocTimestamp] = struct{}{}

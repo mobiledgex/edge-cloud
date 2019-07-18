@@ -1579,7 +1579,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 	if m.InnerEn != o.InnerEn {
 		fields[TestGenFieldInnerEn] = struct{}{}
 	}
-	if m.InnerMsg != nil {
+	if m.InnerMsg != nil && o.InnerMsg != nil {
 		if m.InnerMsg.Url != o.InnerMsg.Url {
 			fields[TestGenFieldInnerMsgUrl] = struct{}{}
 			fields[TestGenFieldInnerMsg] = struct{}{}
@@ -1597,7 +1597,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 		fields[TestGenFieldInnerMsgNonnullId] = struct{}{}
 		fields[TestGenFieldInnerMsgNonnull] = struct{}{}
 	}
-	if m.IncludeMsg != nil {
+	if m.IncludeMsg != nil && o.IncludeMsg != nil {
 		if m.IncludeMsg.Name != o.IncludeMsg.Name {
 			fields[TestGenFieldIncludeMsgName] = struct{}{}
 			fields[TestGenFieldIncludeMsg] = struct{}{}
@@ -1606,7 +1606,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 			fields[TestGenFieldIncludeMsgId] = struct{}{}
 			fields[TestGenFieldIncludeMsg] = struct{}{}
 		}
-		if m.IncludeMsg.NestedMsg != nil {
+		if m.IncludeMsg.NestedMsg != nil && o.IncludeMsg.NestedMsg != nil {
 			if m.IncludeMsg.NestedMsg.Name != o.IncludeMsg.NestedMsg.Name {
 				fields[TestGenFieldIncludeMsgNestedMsgName] = struct{}{}
 				fields[TestGenFieldIncludeMsgNestedMsg] = struct{}{}
@@ -1622,14 +1622,14 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 		fields[TestGenFieldIncludeMsgNonnullId] = struct{}{}
 		fields[TestGenFieldIncludeMsgNonnull] = struct{}{}
 	}
-	if m.IncludeMsgNonnull.NestedMsg != nil {
+	if m.IncludeMsgNonnull.NestedMsg != nil && o.IncludeMsgNonnull.NestedMsg != nil {
 		if m.IncludeMsgNonnull.NestedMsg.Name != o.IncludeMsgNonnull.NestedMsg.Name {
 			fields[TestGenFieldIncludeMsgNonnullNestedMsgName] = struct{}{}
 			fields[TestGenFieldIncludeMsgNonnullNestedMsg] = struct{}{}
 			fields[TestGenFieldIncludeMsgNonnull] = struct{}{}
 		}
 	}
-	if m.IncludeFields != nil {
+	if m.IncludeFields != nil && o.IncludeFields != nil {
 		if m.IncludeFields.Name != o.IncludeFields.Name {
 			fields[TestGenFieldIncludeFieldsName] = struct{}{}
 			fields[TestGenFieldIncludeFields] = struct{}{}
@@ -1639,7 +1639,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 		fields[TestGenFieldIncludeFieldsNonnullName] = struct{}{}
 		fields[TestGenFieldIncludeFieldsNonnull] = struct{}{}
 	}
-	if m.Loc != nil {
+	if m.Loc != nil && o.Loc != nil {
 		if m.Loc.Latitude != o.Loc.Latitude {
 			fields[TestGenFieldLocLatitude] = struct{}{}
 			fields[TestGenFieldLoc] = struct{}{}
@@ -1668,7 +1668,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 			fields[TestGenFieldLocSpeed] = struct{}{}
 			fields[TestGenFieldLoc] = struct{}{}
 		}
-		if m.Loc.Timestamp != nil {
+		if m.Loc.Timestamp != nil && o.Loc.Timestamp != nil {
 			if m.Loc.Timestamp.Seconds != o.Loc.Timestamp.Seconds {
 				fields[TestGenFieldLocTimestampSeconds] = struct{}{}
 				fields[TestGenFieldLocTimestamp] = struct{}{}
@@ -1709,7 +1709,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 		fields[TestGenFieldLocNonnullSpeed] = struct{}{}
 		fields[TestGenFieldLocNonnull] = struct{}{}
 	}
-	if m.LocNonnull.Timestamp != nil {
+	if m.LocNonnull.Timestamp != nil && o.LocNonnull.Timestamp != nil {
 		if m.LocNonnull.Timestamp.Seconds != o.LocNonnull.Timestamp.Seconds {
 			fields[TestGenFieldLocNonnullTimestampSeconds] = struct{}{}
 			fields[TestGenFieldLocNonnullTimestamp] = struct{}{}
@@ -1751,7 +1751,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 			}
 		}
 	}
-	if m.RepeatedMsg != nil {
+	if m.RepeatedMsg != nil && o.RepeatedMsg != nil {
 		if len(m.RepeatedMsg) != len(o.RepeatedMsg) {
 			fields[TestGenFieldRepeatedMsg] = struct{}{}
 		} else {
@@ -1764,7 +1764,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 					fields[TestGenFieldRepeatedMsgId] = struct{}{}
 					fields[TestGenFieldRepeatedMsg] = struct{}{}
 				}
-				if m.RepeatedMsg[i0].NestedMsg != nil {
+				if m.RepeatedMsg[i0].NestedMsg != nil && o.RepeatedMsg[i0].NestedMsg != nil {
 					if m.RepeatedMsg[i0].NestedMsg.Name != o.RepeatedMsg[i0].NestedMsg.Name {
 						fields[TestGenFieldRepeatedMsgNestedMsgName] = struct{}{}
 						fields[TestGenFieldRepeatedMsgNestedMsg] = struct{}{}
@@ -1786,7 +1786,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 				fields[TestGenFieldRepeatedMsgNonnullId] = struct{}{}
 				fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
 			}
-			if m.RepeatedMsgNonnull[i0].NestedMsg != nil {
+			if m.RepeatedMsgNonnull[i0].NestedMsg != nil && o.RepeatedMsgNonnull[i0].NestedMsg != nil {
 				if m.RepeatedMsgNonnull[i0].NestedMsg.Name != o.RepeatedMsgNonnull[i0].NestedMsg.Name {
 					fields[TestGenFieldRepeatedMsgNonnullNestedMsgName] = struct{}{}
 					fields[TestGenFieldRepeatedMsgNonnullNestedMsg] = struct{}{}
@@ -1795,7 +1795,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 			}
 		}
 	}
-	if m.RepeatedFields != nil {
+	if m.RepeatedFields != nil && o.RepeatedFields != nil {
 		if len(m.RepeatedFields) != len(o.RepeatedFields) {
 			fields[TestGenFieldRepeatedFields] = struct{}{}
 		} else {
@@ -1817,7 +1817,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 			}
 		}
 	}
-	if m.RepeatedInnerMsg != nil {
+	if m.RepeatedInnerMsg != nil && o.RepeatedInnerMsg != nil {
 		if len(m.RepeatedInnerMsg) != len(o.RepeatedInnerMsg) {
 			fields[TestGenFieldRepeatedInnerMsg] = struct{}{}
 		} else {
@@ -1847,7 +1847,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 			}
 		}
 	}
-	if m.RepeatedLoc != nil {
+	if m.RepeatedLoc != nil && o.RepeatedLoc != nil {
 		if len(m.RepeatedLoc) != len(o.RepeatedLoc) {
 			fields[TestGenFieldRepeatedLoc] = struct{}{}
 		} else {
@@ -1880,7 +1880,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 					fields[TestGenFieldRepeatedLocSpeed] = struct{}{}
 					fields[TestGenFieldRepeatedLoc] = struct{}{}
 				}
-				if m.RepeatedLoc[i0].Timestamp != nil {
+				if m.RepeatedLoc[i0].Timestamp != nil && o.RepeatedLoc[i0].Timestamp != nil {
 					if m.RepeatedLoc[i0].Timestamp.Seconds != o.RepeatedLoc[i0].Timestamp.Seconds {
 						fields[TestGenFieldRepeatedLocTimestampSeconds] = struct{}{}
 						fields[TestGenFieldRepeatedLocTimestamp] = struct{}{}
@@ -1927,7 +1927,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 				fields[TestGenFieldRepeatedLocNonnullSpeed] = struct{}{}
 				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
 			}
-			if m.RepeatedLocNonnull[i0].Timestamp != nil {
+			if m.RepeatedLocNonnull[i0].Timestamp != nil && o.RepeatedLocNonnull[i0].Timestamp != nil {
 				if m.RepeatedLocNonnull[i0].Timestamp.Seconds != o.RepeatedLocNonnull[i0].Timestamp.Seconds {
 					fields[TestGenFieldRepeatedLocNonnullTimestampSeconds] = struct{}{}
 					fields[TestGenFieldRepeatedLocNonnullTimestamp] = struct{}{}
@@ -1941,7 +1941,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 			}
 		}
 	}
-	if m.IntMap != nil {
+	if m.IntMap != nil && o.IntMap != nil {
 		if len(m.IntMap) != len(o.IntMap) {
 			fields[TestGenFieldIntMap] = struct{}{}
 		} else {
@@ -1958,7 +1958,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 			}
 		}
 	}
-	if m.MsgMap != nil {
+	if m.MsgMap != nil && o.MsgMap != nil {
 		if len(m.MsgMap) != len(o.MsgMap) {
 			fields[TestGenFieldMsgMap] = struct{}{}
 		} else {
