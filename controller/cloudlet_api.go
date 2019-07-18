@@ -203,7 +203,7 @@ func (s *CloudletApi) UpdateAppInstLocations(in *edgeproto.Cloudlet) {
 			first = false
 		}
 
-		err := appInstApi.updateAppInstInternal(DefCallContext(), &inst, nil)
+		err := appInstApi.updateAppInstStore(&inst)
 		if err != nil {
 			log.DebugLog(log.DebugLevelApi, "Update AppInst Location",
 				"inst", inst, "err", err)

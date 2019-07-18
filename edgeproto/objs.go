@@ -16,6 +16,7 @@ import (
 //TODO - need to move out Errors into a separate package
 var ErrEdgeApiFlavorNotFound = errors.New("Specified flavor not found")
 var ErrEdgeApiAppNotFound = errors.New("Specified app not found")
+var ErrEdgeApiAppInstNotFound = errors.New("Specified app instance not found")
 
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {

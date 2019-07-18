@@ -167,6 +167,33 @@ func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 	return WaitForAppInst(client, names, app, WaitDeleted)
 }
 
+func UpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	mf, err := cloudcommon.GetDeploymentManifest(app.DeploymentManifest)
+	if err != nil {
+		return err
+	}
+	mf, err = MergeEnvVars(mf, app.Configs)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "failed to merge env vars", "error", err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "writing config file", "kubeManifest", mf)
+	file := names.AppName + ".yaml"
+	err = pc.WriteFile(client, file, mf, "K8s Deployment")
+	if err != nil {
+		return err
+	}
+	log.DebugLog(log.DebugLevelMexos, "running kubectl apply ", "file", file)
+	cmd := fmt.Sprintf("%s kubectl apply -f %s", names.KconfEnv, file)
+
+	out, err := client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error updating kubernetes app, %s, %v", out, err)
+	}
+
+	log.DebugLog(log.DebugLevelMexos, "done kubectl update")
+	return nil
+}
+
 func GetAppInstRuntime(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
 	rt := &edgeproto.AppInstRuntime{}
 	rt.ContainerIds = make([]string, 0)
