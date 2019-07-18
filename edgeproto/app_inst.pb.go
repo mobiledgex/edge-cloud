@@ -1462,9 +1462,7 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 }
 
 func (m *AppInst) CopyInFields(src *AppInst) {
-	// Copy only diff fields
-	var fmap = make(map[string]struct{})
-	m.DiffFields(src, fmap)
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.1"]; set {
@@ -2421,9 +2419,7 @@ func (m *AppInstInfo) DiffFields(o *AppInstInfo, fields map[string]struct{}) {
 }
 
 func (m *AppInstInfo) CopyInFields(src *AppInstInfo) {
-	// Copy only diff fields
-	var fmap = make(map[string]struct{})
-	m.DiffFields(src, fmap)
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.1"]; set {

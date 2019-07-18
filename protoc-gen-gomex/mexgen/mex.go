@@ -1380,9 +1380,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	msgtyp := m.gen.TypeName(desc)
 	m.P("func (m *", msgtyp, ") CopyInFields(src *", msgtyp, ") {")
 	if gensupport.HasGrpcFields(message) {
-		m.P("// Copy only diff fields")
-		m.P("var fmap = make(map[string]struct{})")
-		m.P("m.DiffFields(src, fmap)")
+		m.P("fmap := MakeFieldMap(src.Fields)")
 	}
 	m.generateCopyIn(make([]string, 0), make([]string, 0), desc, make([]*generator.Descriptor, 0), gensupport.HasGrpcFields(message))
 	m.P("}")

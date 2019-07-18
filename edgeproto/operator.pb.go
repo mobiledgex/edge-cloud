@@ -442,9 +442,7 @@ func (m *Operator) DiffFields(o *Operator, fields map[string]struct{}) {
 }
 
 func (m *Operator) CopyInFields(src *Operator) {
-	// Copy only diff fields
-	var fmap = make(map[string]struct{})
-	m.DiffFields(src, fmap)
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			m.Key.Name = src.Key.Name

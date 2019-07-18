@@ -335,9 +335,7 @@ func (m *Controller) DiffFields(o *Controller, fields map[string]struct{}) {
 }
 
 func (m *Controller) CopyInFields(src *Controller) {
-	// Copy only diff fields
-	var fmap = make(map[string]struct{})
-	m.DiffFields(src, fmap)
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			m.Key.Addr = src.Key.Addr

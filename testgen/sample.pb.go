@@ -1982,9 +1982,7 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 }
 
 func (m *TestGen) CopyInFields(src *TestGen) {
-	// Copy only diff fields
-	var fmap = make(map[string]struct{})
-	m.DiffFields(src, fmap)
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		m.Name = src.Name
 	}

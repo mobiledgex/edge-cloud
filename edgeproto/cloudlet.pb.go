@@ -2339,9 +2339,7 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 }
 
 func (m *Cloudlet) CopyInFields(src *Cloudlet) {
-	// Copy only diff fields
-	var fmap = make(map[string]struct{})
-	m.DiffFields(src, fmap)
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.1"]; set {
@@ -3199,9 +3197,7 @@ func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
 }
 
 func (m *CloudletInfo) CopyInFields(src *CloudletInfo) {
-	// Copy only diff fields
-	var fmap = make(map[string]struct{})
-	m.DiffFields(src, fmap)
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.1"]; set {
