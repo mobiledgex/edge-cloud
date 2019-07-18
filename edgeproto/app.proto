@@ -93,7 +93,8 @@ message ConfigFile {
   repeated ConfigFile configs = 21;
   // Option to run App on all nodes of the cluster
   bool scale_with_cluster = 22;
-  // manifest - which cloudlets can this run on?
+  // Should this app have access to outside world?
+  bool internal_ports = 23;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
