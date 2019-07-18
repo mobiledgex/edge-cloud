@@ -39,17 +39,6 @@ tests:
     yaml2: "{{datadir}}/appdata_clusterInst1_cloudlet1_appInst1_show.yml"
     filetype: appdata
 
-- name: restart crm
-  actions: [stop=crm1,start=crm1]
-
-- name: show provisioning after restart and verify it is there
-  apifile: "{{datadir}}/appdata_clusterInst1_cloudlet1_appInst1.yml"
-  actions: [ctrlapi-show]
-  compareyaml:
-    yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata_clusterInst1_cloudlet1_appInst1_show.yml"
-    filetype: appdata
-
 - name: delete one appinst
   apifile: "{{datadir}}/appinst1.yml"
   actions: [ctrlapi-delete]

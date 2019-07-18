@@ -347,7 +347,19 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 	}
 
-	_, err := s.store.Update(in, s.sync.syncWait)
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		cur := &edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, &in.Key, cur) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		cur.CopyInFields(in)
+		s.store.STMPut(stm, cur)
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
 
 	// after the cloudlet change is committed, if the location changed,
 	// update app insts as well.
@@ -483,30 +495,20 @@ func (s *CloudletApi) UpdateAppInstLocations(in *edgeproto.Cloudlet) {
 	}
 	appInstApi.cache.Mux.Unlock()
 
-	first := true
 	inst := edgeproto.AppInst{}
 	for ii, _ := range keys {
-		inst.Key = keys[ii]
-		if first {
-			inst.Fields = make([]string, 0)
-		}
+		inst = *appInstApi.cache.Objs[keys[ii]]
+		inst.Fields = make([]string, 0)
 		if _, found := fmap[edgeproto.CloudletFieldLocationLatitude]; found {
 			inst.CloudletLoc.Latitude = in.Location.Latitude
-			if first {
-				inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLatitude)
-			}
+			inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLatitude)
 		}
 		if _, found := fmap[edgeproto.CloudletFieldLocationLongitude]; found {
 			inst.CloudletLoc.Longitude = in.Location.Longitude
-			if first {
-				inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLongitude)
-			}
+			inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLongitude)
 		}
-		if first {
-			if len(inst.Fields) == 0 {
-				break
-			}
-			first = false
+		if len(inst.Fields) == 0 {
+			break
 		}
 
 		err := appInstApi.updateAppInstInternal(DefCallContext(), &inst, nil)
