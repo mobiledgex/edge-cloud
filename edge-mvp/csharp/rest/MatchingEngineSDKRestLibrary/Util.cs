@@ -26,7 +26,7 @@ namespace DistributedMatchEngine
       long timeLongMs = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
       long seconds = timeLongMs / 1000;
       int nanoSec = (int)(timeLongMs % 1000) * 1000000;
-      var ts = new Timestamp { nanos = nanoSec, seconds = seconds };
+      var ts = new Timestamp { nanos = nanoSec, seconds = seconds.ToString() };
       var loc = new Loc()
       {
         course = 0,

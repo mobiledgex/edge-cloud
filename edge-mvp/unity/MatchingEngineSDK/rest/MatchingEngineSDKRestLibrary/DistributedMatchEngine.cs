@@ -2,10 +2,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Json;
 using System.Text;
+using System.Collections.Generic;
 
-using System.Net.Http;
 using System.Runtime.Serialization.Json;
 using System.Security.Cryptography.X509Certificates;
 
@@ -86,6 +85,7 @@ namespace DistributedMatchEngine
     private string appinstlistAPI = "/v1/getappinstlist";
     private string dynamiclocgroupAPI = "/v1/dynamiclocgroup";
     private string getfqdnlistAPI = "/v1/getfqdnlist";
+    private string qospositionkpiAPI = "/v1/getqospositionkpi";
 
     public string sessionCookie { get; set; }
     string tokenServerURI;
@@ -532,6 +532,39 @@ namespace DistributedMatchEngine
       DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(DynamicLocGroupReply));
       DynamicLocGroupReply reply = (DynamicLocGroupReply)deserializer.ReadObject(responseStream);
       return reply;
+    }
+
+    public QosPositionKpiRequest CreateQosPositionKpiRequest(List<QosPosition> QosPositions)
+    {
+      if (sessionCookie == null)
+      {
+        return null;
+      }
+
+      return new QosPositionKpiRequest
+      {
+        ver = 1,
+        positions = QosPositions.ToArray(),
+        session_cookie = this.sessionCookie
+      };
+    }
+
+    public async Task<QosPositionKpiStreamReply> GetQosPositionKpi(string host, uint port, QosPositionKpiRequest request)
+    {
+      DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(QosPositionKpiRequest));
+      MemoryStream ms = new MemoryStream();
+      serializer.WriteObject(ms, request);
+      string jsonStr = Util.StreamToString(ms);
+
+      Stream responseStream = await PostRequest(CreateUri(host, port) + qospositionkpiAPI, jsonStr);
+      if (responseStream == null || !responseStream.CanRead)
+      {
+        return null;
+      }
+
+      DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(QosPositionKpiStreamReply));
+      QosPositionKpiStreamReply streamReply = (QosPositionKpiStreamReply)deserializer.ReadObject(responseStream);
+      return streamReply;
     }
 
   };

@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <ReleaseVersion>1.4.0</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>1.4.0</PackageVersion>
+    <PackageVersion>1.4.7</PackageVersion>
     <Authors>MobiledgeX, Inc.</Authors>
     <Description>MobiledgeX MatchingEngineSDK Library</Description>
     <Owners>MobiledgeX, Inc.</Owners>
@@ -12,8 +12,8 @@
     <Title>MobiledgeX MatchingEngineSDK Rest Library</Title>
     <PackageId>MobiledgeX.MatchingEngineRestSDKLibrary</PackageId>
     <PackageTags>MobiledgeX MatchingEngine</PackageTags>
-    <AssemblyVersion>1.4.0</AssemblyVersion>
-    <FileVersion>1.4.0</FileVersion>
+    <AssemblyVersion>1.4.7</AssemblyVersion>
+    <FileVersion>1.4.7</FileVersion>
     <Copyright>Copyright 2019 MobiledgeX, Inc. All rights and licenses reserved.</Copyright>
   </PropertyGroup>
 
@@ -27,9 +27,5 @@
   <ItemGroup>
     <PackageReference Include="System.Json" Version="4.5.0" />
     <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="AppPort.cs" />
-    <Compile Remove=":Users:garnerlee:go:src:github.com:mobiledgex:edge-cloud:edge-mvp:unity:MatchingEngineSDK:MatchingEngineSDKLibrary:AppPort.cs" />
   </ItemGroup>
 </Project>
