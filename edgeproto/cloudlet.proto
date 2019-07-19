@@ -149,7 +149,7 @@ message Cloudlet {
   // Current state of the cloudlet
   TrackedState state = 12 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Override actions to CRM
-  CRMOverride crm_override = 13 [(protogen.hidetag) = "nocmp"];
+  CRMOverride crm_override = 13 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Deploy cloudlet services locally
   bool deployment_local = 14 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Platform type

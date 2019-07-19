@@ -203,6 +203,11 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			in.Flavor = &DefaultPlatformFlavor.Key
 			pfFlavor = DefaultPlatformFlavor
 		}
+		err := in.Validate(edgeproto.CloudletAllFieldsMap)
+		if err != nil {
+			return err
+		}
+
 		if ignoreCRM(cctx) {
 			in.State = edgeproto.TrackedState_READY
 		} else {
@@ -399,6 +404,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 		if ignoreCRM(cctx) {
 			s.store.STMDel(stm, &in.Key)
+			cloudletRefsApi.store.STMDel(stm, &in.Key)
+			return nil
 		}
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
 		s.store.STMPut(stm, in)
@@ -406,6 +413,10 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	})
 	if err != nil {
 		return err
+	}
+
+	if ignoreCRM(cctx) {
+		return nil
 	}
 
 	if in.DeploymentLocal {
