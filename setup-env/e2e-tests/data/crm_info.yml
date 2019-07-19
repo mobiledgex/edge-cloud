@@ -346,6 +346,10 @@ appinstances:
     longitude: -91
   uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
   flavor:
     name: x1.medium
   state: Ready
@@ -367,6 +371,10 @@ appinstances:
     latitude: 35
     longitude: -95
   uri: tmus-cloud-2.tmus.mobiledgex.net
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -456,6 +464,10 @@ appinstances:
     longitude: -95
   uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
   flavor:
     name: x1.medium
   state: Ready
