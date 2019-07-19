@@ -97,39 +97,6 @@ func (s *AppInstApi) updateAppInstRevision(key *edgeproto.AppInstKey, revision i
 	return err
 }
 
-func (s *AppInstApi) UpdateRevisions(appkey *edgeproto.AppKey, revision int32) error {
-	matches := make([]edgeproto.AppInstKey, 0)
-	s.cache.Mux.Lock()
-	for _, val := range s.cache.Objs {
-		matches = append(matches, val.Key)
-	}
-
-	for instkey := range s.cache.Objs {
-		if instkey.AppKey.Matches(appkey) {
-			matches = append(matches, instkey)
-		}
-	}
-	s.cache.Mux.Unlock()
-
-	for _, m := range matches {
-		s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-			inst := edgeproto.AppInst{}
-			if !s.store.STMGet(stm, &m, &inst) {
-				// got deleted in the meantime
-				return nil
-			}
-			inst.Revision = revision
-			log.DebugLog(log.DebugLevelApi, "AppInst revision updated", "key", m, "revision", revision)
-
-			s.store.STMPut(stm, &inst)
-			return nil
-		})
-
-	}
-
-	return nil
-}
-
 func (s *AppInstApi) UsesApp(in *edgeproto.AppKey, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
