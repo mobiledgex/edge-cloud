@@ -185,7 +185,6 @@ func AddClusterInstDeploymentField(objStore objstore.KVStore) error {
 }
 
 func AddInternalPortsForPrometheus(objStore objstore.KVStore) error {
-	// TODO:
 	//   should upgrade the Prometheus apps only - add internal_ports as true and add accessports tcp:9090
 	log.DebugLog(log.DebugLevelUpgrade, "AddClusterInstDeploymentField - defaults to kubernetes")
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
