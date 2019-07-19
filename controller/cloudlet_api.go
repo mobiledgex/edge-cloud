@@ -395,17 +395,17 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
+		if ignoreCRM(cctx) {
+			s.store.STMDel(stm, &in.Key)
+			cloudletRefsApi.store.STMDel(stm, &in.Key)
+			return nil
+		}
 		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR {
 			if in.State == edgeproto.TrackedState_DELETE_ERROR {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
 				cb.Send(&edgeproto.Result{Message: "Use CreateCloudlet to rebuild, and try again"})
 			}
 			return errors.New("Cloudlet busy, cannot delete")
-		}
-		if ignoreCRM(cctx) {
-			s.store.STMDel(stm, &in.Key)
-			cloudletRefsApi.store.STMDel(stm, &in.Key)
-			return nil
 		}
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
 		s.store.STMPut(stm, in)
