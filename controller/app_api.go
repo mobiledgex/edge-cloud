@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -122,8 +123,12 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	return false
 }
 
-// updates fields that need manipulation on setting, or fetched remotely
+// updates fields that need manipulation on setting, or fetched remotely. Updates the revision only if something changed
 func updateAppFields(in *edgeproto.App, revision int32) error {
+
+	// keep a copy of the old app so we can see if it changed.   This could be if we specifically modified a field,
+	// or the contents that we pull from a remove manifest changed
+	var oldApp = *in
 
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
@@ -202,7 +207,13 @@ func updateAppFields(in *edgeproto.App, revision int32) error {
 	// Manifest is required on app delete and we'll be in trouble
 	// if remote target is unreachable or changed at that time.
 	in.DeploymentManifest = deploymf
-	in.Revision = revision
+
+	if reflect.DeepEqual(oldApp, *in) {
+		log.DebugLog(log.DebugLevelApi, "no changes in app, maintaining old revision")
+	} else {
+		log.DebugLog(log.DebugLevelApi, "app was modified, updating revision", "revision", revision)
+		in.Revision = revision
+	}
 	return nil
 }
 
@@ -291,7 +302,6 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		cur.CopyInFields(in)
 		newRevision := cur.Revision + 1
-		log.DebugLog(log.DebugLevelApi, "updating revision", "newRevision", newRevision)
 		if err := updateAppFields(&cur, newRevision); err != nil {
 			return err
 		}
