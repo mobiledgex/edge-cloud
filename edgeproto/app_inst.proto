@@ -60,7 +60,7 @@ message AppInst {
   // status is used to reflect progress of creation or other events
   StatusInfo status = 23 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Revision increments each time the App is updated.  Updating the App Instance will sync the revision with that of the App
-  int32 revision = 24;
+  int32 revision = 24 [(protogen.hidetag) = "nocmp"];
     // Force Appinst upgrade when UpdateAppInst is done if revision matches
   bool force_upgrade = 25 [(protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;

@@ -405,6 +405,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
 	if _, found := tags["nocmp"]; found {
+		in.Revision = 0
+	}
+	if _, found := tags["nocmp"]; found {
 		in.ForceUpgrade = false
 	}
 }

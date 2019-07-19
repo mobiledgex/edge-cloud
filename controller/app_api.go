@@ -242,7 +242,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 		}
 	}
-	err = updateAppFields(in, 1)
+	err = updateAppFields(in, 0)
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}

@@ -132,7 +132,7 @@ func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 		log.DebugLog(log.DebugLevelMexos, "failed to merge env vars", "error", err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "writing config file", "kubeManifest", mf)
-	file := names.AppName + ".yaml"
+	file := names.AppName + names.AppRevision + ".yaml"
 	err = pc.WriteFile(client, file, mf, "K8s Deployment")
 	if err != nil {
 		return err
