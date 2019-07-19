@@ -6,6 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MobiledgeX.MatchingEngineGrpcLibrary" Version="1.4.2" />
+    <PackageReference Include="MobiledgeX.MatchingEngineGrpcLibrary" Version="1.4.7" />
   </ItemGroup>
 </Project>

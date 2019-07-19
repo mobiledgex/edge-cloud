@@ -65,7 +65,7 @@ namespace DistributedMatchEngine
 
   public class Timestamp
   {
-    public Int64 seconds;
+    public string seconds;
     public Int32 nanos;
   }
 }
