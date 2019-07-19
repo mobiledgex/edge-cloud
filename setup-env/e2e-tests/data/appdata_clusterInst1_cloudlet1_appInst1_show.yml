@@ -76,6 +76,8 @@ apps:
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
+  accessports: tcp:9090
+  internalports: true
   defaultflavor:
     name: x1.medium
   deployment: helm

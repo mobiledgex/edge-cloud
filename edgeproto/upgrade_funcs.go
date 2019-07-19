@@ -196,8 +196,17 @@ func AddInternalPortsForPrometheus(objStore objstore.KVStore) error {
 			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading App", "App", app)
-		//TODO : Upgrade and change upgrade count
+		if app.Key.Name == "MEXPrometheusAppName"{
+			log.DebugLog(log.DebugLevelUpgrade, "Upgrading App", "App", app)
+			app.AccessPorts = "tcp:9090"
+			app.InternalPorts = true
+			val, err2 = json.Marshal(app)
+			if err2 != nil {
+				log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", key, "obj", app, "err", err2)
+				return err2
+			}
+			objStore.Put(string(key), string(val))	
+		}
 		return nil
 	})
 	return err
