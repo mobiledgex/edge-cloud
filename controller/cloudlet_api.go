@@ -305,19 +305,21 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if !s.store.STMGet(stm, &in.Key, &updatedCloudlet) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cloudletInfo) {
-			return objstore.ErrKVStoreKeyNotFound
-		}
 		if timedout {
 			updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
 			updatedCloudlet.Errors = append(updatedCloudlet.Errors, "platform bringup timed out")
 		} else {
-			if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-				updatedCloudlet.State = edgeproto.TrackedState_READY
-				updateCloudletCallback(edgeproto.UpdateTask, "Cloudlet created successfully")
-			} else {
+			if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cloudletInfo) {
 				updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
-				updatedCloudlet.Errors = append(updatedCloudlet.Errors, "cloudlet state is not ready: "+cloudletInfo.State.String())
+				updatedCloudlet.Errors = append(updatedCloudlet.Errors, "unable to fetch cloudlet info")
+			} else {
+				if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+					updatedCloudlet.State = edgeproto.TrackedState_READY
+					updateCloudletCallback(edgeproto.UpdateTask, "Cloudlet created successfully")
+				} else {
+					updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
+					updatedCloudlet.Errors = append(updatedCloudlet.Errors, "cloudlet state is not ready: "+cloudletInfo.State.String())
+				}
 			}
 		}
 
