@@ -389,8 +389,57 @@ func CloudletInfraPropertiesWriteOutputOne(obj *edgeproto.CloudletInfraPropertie
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func PlatformConfigSlicer(in *edgeproto.PlatformConfig) []string {
+	s := make([]string, 0, 8)
+	s = append(s, in.RegistryPath)
+	s = append(s, in.ImagePath)
+	s = append(s, in.NotifyCtrlAddrs)
+	s = append(s, in.VaultAddr)
+	s = append(s, in.TlsCertFile)
+	s = append(s, in.CrmRoleId)
+	s = append(s, in.CrmSecretId)
+	s = append(s, in.PlatformTag)
+	return s
+}
+
+func PlatformConfigHeaderSlicer() []string {
+	s := make([]string, 0, 8)
+	s = append(s, "RegistryPath")
+	s = append(s, "ImagePath")
+	s = append(s, "NotifyCtrlAddrs")
+	s = append(s, "VaultAddr")
+	s = append(s, "TlsCertFile")
+	s = append(s, "CrmRoleId")
+	s = append(s, "CrmSecretId")
+	s = append(s, "PlatformTag")
+	return s
+}
+
+func PlatformConfigWriteOutputArray(objs []*edgeproto.PlatformConfig) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(PlatformConfigHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(PlatformConfigSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func PlatformConfigWriteOutputOne(obj *edgeproto.PlatformConfig) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(PlatformConfigHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(PlatformConfigSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
-	s := make([]string, 0, 25)
+	s := make([]string, 0, 17)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -431,25 +480,17 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, edgeproto.CRMOverride_CamelName[int32(in.CrmOverride)])
 	s = append(s, strconv.FormatBool(in.DeploymentLocal))
 	s = append(s, edgeproto.PlatformType_CamelName[int32(in.PlatformType)])
-	s = append(s, in.RegistryPath)
-	s = append(s, in.ImagePath)
-	s = append(s, in.NotifyCtrlAddrs)
 	s = append(s, in.NotifySrvAddr)
-	s = append(s, in.VaultAddr)
-	s = append(s, in.TlsCertFile)
-	s = append(s, in.CrmRoleId)
-	s = append(s, in.CrmSecretId)
 	if in.Flavor == nil {
 		in.Flavor = &edgeproto.FlavorKey{}
 	}
 	s = append(s, in.Flavor.Name)
-	s = append(s, in.PlatformTag)
 	s = append(s, in.PhysicalName)
 	return s
 }
 
 func CloudletHeaderSlicer() []string {
-	s := make([]string, 0, 25)
+	s := make([]string, 0, 17)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
@@ -481,16 +522,8 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "CrmOverride")
 	s = append(s, "DeploymentLocal")
 	s = append(s, "PlatformType")
-	s = append(s, "RegistryPath")
-	s = append(s, "ImagePath")
-	s = append(s, "NotifyCtrlAddrs")
 	s = append(s, "NotifySrvAddr")
-	s = append(s, "VaultAddr")
-	s = append(s, "TlsCertFile")
-	s = append(s, "CrmRoleId")
-	s = append(s, "CrmSecretId")
 	s = append(s, "Flavor-Name")
-	s = append(s, "PlatformTag")
 	s = append(s, "PhysicalName")
 	return s
 }
@@ -692,30 +725,6 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.DeploymentLocal = false
-	}
-	if _, found := tags["nocmp"]; found {
-		in.RegistryPath = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.ImagePath = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.NotifyCtrlAddrs = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.VaultAddr = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.TlsCertFile = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.CrmRoleId = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.CrmSecretId = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.PlatformTag = ""
 	}
 }
 
@@ -1204,17 +1213,9 @@ func init() {
 	CloudletFlagSet.StringVar(&CloudletInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCrmErrors IgnoreCrm IgnoreTransientState IgnoreCrmAndTransientState]")
 	CloudletFlagSet.BoolVar(&CloudletIn.DeploymentLocal, "deploymentlocal", false, "DeploymentLocal")
 	CloudletFlagSet.StringVar(&CloudletInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeDind PlatformTypeOpenstack PlatformTypeAzure PlatformTypeGcp PlatformTypeMexdind]")
-	CloudletNoConfigFlagSet.StringVar(&CloudletIn.RegistryPath, "registrypath", "", "RegistryPath")
-	CloudletNoConfigFlagSet.StringVar(&CloudletIn.ImagePath, "imagepath", "", "ImagePath")
-	CloudletNoConfigFlagSet.StringVar(&CloudletIn.NotifyCtrlAddrs, "notifyctrladdrs", "", "NotifyCtrlAddrs")
 	CloudletFlagSet.StringVar(&CloudletIn.NotifySrvAddr, "notifysrvaddr", "", "NotifySrvAddr")
-	CloudletNoConfigFlagSet.StringVar(&CloudletIn.VaultAddr, "vaultaddr", "", "VaultAddr")
-	CloudletNoConfigFlagSet.StringVar(&CloudletIn.TlsCertFile, "tlscertfile", "", "TlsCertFile")
-	CloudletNoConfigFlagSet.StringVar(&CloudletIn.CrmRoleId, "crmroleid", "", "CrmRoleId")
-	CloudletNoConfigFlagSet.StringVar(&CloudletIn.CrmSecretId, "crmsecretid", "", "CrmSecretId")
 	CloudletIn.Flavor = &edgeproto.FlavorKey{}
 	CloudletFlagSet.StringVar(&CloudletIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
-	CloudletNoConfigFlagSet.StringVar(&CloudletIn.PlatformTag, "platformtag", "", "PlatformTag")
 	CloudletFlagSet.StringVar(&CloudletIn.PhysicalName, "physicalname", "", "PhysicalName")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
@@ -1341,38 +1342,14 @@ func CloudletSetFields() {
 	if CloudletFlagSet.Lookup("platformtype").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "15")
 	}
-	if CloudletNoConfigFlagSet.Lookup("registrypath").Changed {
+	if CloudletFlagSet.Lookup("notifysrvaddr").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "16")
 	}
-	if CloudletNoConfigFlagSet.Lookup("imagepath").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "17")
-	}
-	if CloudletNoConfigFlagSet.Lookup("notifyctrladdrs").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "18")
-	}
-	if CloudletFlagSet.Lookup("notifysrvaddr").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "19")
-	}
-	if CloudletNoConfigFlagSet.Lookup("vaultaddr").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "20")
-	}
-	if CloudletNoConfigFlagSet.Lookup("tlscertfile").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "21")
-	}
-	if CloudletNoConfigFlagSet.Lookup("crmroleid").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "22")
-	}
-	if CloudletNoConfigFlagSet.Lookup("crmsecretid").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "23")
-	}
 	if CloudletFlagSet.Lookup("flavor-name").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "24.1")
-	}
-	if CloudletNoConfigFlagSet.Lookup("platformtag").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "25")
+		CloudletIn.Fields = append(CloudletIn.Fields, "17.1")
 	}
 	if CloudletFlagSet.Lookup("physicalname").Changed {
-		CloudletIn.Fields = append(CloudletIn.Fields, "26")
+		CloudletIn.Fields = append(CloudletIn.Fields, "18")
 	}
 }
 

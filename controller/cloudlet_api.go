@@ -133,6 +133,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.NotifySrvAddr = "127.0.0.1:51001"
 	}
 
+	pfConfig := edgeproto.PlatformConfig{}
 	if !*testMode && !IsCloudletLocal(in) {
 		// Vault controller level credentials are required to access
 		// registry credentials
@@ -155,24 +156,24 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if crmSecretId == "" {
 			return fmt.Errorf("Env variable VAULT_CRM_SECRET_ID not set")
 		}
-		in.CrmRoleId = crmRoleId
-		in.CrmSecretId = crmSecretId
+		pfConfig.CrmRoleId = crmRoleId
+		pfConfig.CrmSecretId = crmSecretId
 	}
-	in.PlatformTag = *versionTag
-	in.TlsCertFile = *tlsCertFile
-	in.VaultAddr = *vaultAddr
-	in.RegistryPath = *cloudletRegistryPath
-	in.ImagePath = *cloudletVMImagePath
+	pfConfig.PlatformTag = *versionTag
+	pfConfig.TlsCertFile = *tlsCertFile
+	pfConfig.VaultAddr = *vaultAddr
+	pfConfig.RegistryPath = *cloudletRegistryPath
+	pfConfig.ImagePath = *cloudletVMImagePath
 	addrObjs := strings.Split(*notifyAddr, ":")
 	if len(addrObjs) != 2 {
 		return fmt.Errorf("unable to fetch notify addr of the controller")
 	}
-	in.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
+	pfConfig.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
 
-	return s.createCloudletInternal(DefCallContext(), in, cb)
+	return s.createCloudletInternal(DefCallContext(), in, &pfConfig, cb)
 }
 
-func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
+func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	cctx.SetOverride(&in.CrmOverride)
 
 	in.TimeLimits.CreateClusterInstTimeout = int64(cloudcommon.CreateClusterInstTimeout)
@@ -240,12 +241,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if in.DeploymentLocal {
 		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
-		err = cloudcommon.StartCRMService(in)
+		err = cloudcommon.StartCRMService(in, pfConfig)
 	} else {
 		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(in.PlatformType.String())
 		if err == nil {
-			err = cloudletPlatform.CreateCloudlet(in, &pfFlavor, updateCloudletCallback)
+			err = cloudletPlatform.CreateCloudlet(in, pfConfig, &pfFlavor, updateCloudletCallback)
 		}
 	}
 
@@ -307,18 +308,18 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 		if timedout {
 			updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
-			updatedCloudlet.Errors = append(updatedCloudlet.Errors, "platform bringup timed out")
+			updateCloudletCallback(edgeproto.UpdateTask, "platform bringup timed out")
 		} else {
 			if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cloudletInfo) {
 				updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
-				updatedCloudlet.Errors = append(updatedCloudlet.Errors, "unable to fetch cloudlet info")
+				updateCloudletCallback(edgeproto.UpdateTask, "unable to fetch cloudlet info")
 			} else {
 				if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 					updatedCloudlet.State = edgeproto.TrackedState_READY
 					updateCloudletCallback(edgeproto.UpdateTask, "Cloudlet created successfully")
 				} else {
 					updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
-					updatedCloudlet.Errors = append(updatedCloudlet.Errors, "cloudlet state is not ready: "+cloudletInfo.State.String())
+					updateCloudletCallback(edgeproto.UpdateTask, "cloudlet state is not ready: "+cloudletInfo.State.String())
 				}
 			}
 		}

@@ -39,6 +39,7 @@
 		GcpProperties
 		OpenStackProperties
 		CloudletInfraProperties
+		PlatformConfig
 		Cloudlet
 		FlavorInfo
 		CloudletInfo

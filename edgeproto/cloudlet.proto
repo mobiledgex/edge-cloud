@@ -108,6 +108,25 @@ message CloudletInfraProperties{
     GcpProperties gcp_properties = 5;
 }
 
+message PlatformConfig {
+  // Path to Docker registry holding edge-cloud image
+  string registry_path = 1;
+  // Path to platform base image
+  string image_path = 2;
+  // Address of controller notify port (can be multiple of these)
+  string notify_ctrl_addrs = 3;
+  // Vault address
+  string vault_addr  = 4;
+  // TLS cert file
+  string tls_cert_file = 5;
+  // Vault role ID for CRM
+  string crm_role_id    = 6;
+  // Vault secret ID for CRM
+  string crm_secret_id = 7;
+  // Tag of edge-cloud image
+  string platform_tag = 8;
+}
+
 // PlatformType is the supported list of cloudlet types
 enum PlatformType {
   // Fake Cloudlet
@@ -154,28 +173,12 @@ message Cloudlet {
   bool deployment_local = 14 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Platform type
   PlatformType platform_type = 15;
-  // Path to Docker registry holding edge-cloud image
-  string registry_path = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // Path to platform base image
-  string image_path = 17 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // Address of controller notify port (can be multiple of these)
-  string notify_ctrl_addrs = 18 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Address for the CRM notify listener to run on
-  string notify_srv_addr = 19;
-  // Vault address
-  string vault_addr  = 20 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // TLS cert file
-  string tls_cert_file = 21 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // Vault role ID for CRM
-  string crm_role_id    = 22 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // Vault secret ID for CRM
-  string crm_secret_id = 23 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string notify_srv_addr = 16;
   // Min system resource requirements for platform
-  FlavorKey flavor = 24;
-  // Tag of edge-cloud image
-  string platform_tag = 25 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  FlavorKey flavor = 17;
   // Physical infrastructure cloudlet name
-  string physical_name = 26;
+  string physical_name = 18;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -185,7 +188,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status,RegistryPath,ImagePath,NotifyCtrlAddrs,VaultAddr,TlsCertFile,CrmRoleId,CrmSecretId,PlatformTag";
+  option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status";
   option (protocmd.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }
 

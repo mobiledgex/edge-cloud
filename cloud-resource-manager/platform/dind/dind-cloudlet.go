@@ -6,12 +6,12 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.DebugLog(log.DebugLevelMexos, "create cloudlet for dind")
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
-	err := cloudcommon.StartCRMService(cloudlet)
+	err := cloudcommon.StartCRMService(cloudlet, pfConfig)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "dind cloudlet create failed", "err", err)
 		return err
