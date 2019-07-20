@@ -123,7 +123,7 @@ appinstances:
 func startMain(t *testing.T) (chan struct{}, error) {
 	mainStarted = make(chan struct{})
 	mainDone := make(chan struct{})
-	*platformName = "fakecloudlet"
+	*platformName = "PLATFORM_TYPE_FAKE"
 	go func() {
 		main()
 		close(mainDone)

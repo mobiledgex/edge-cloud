@@ -367,6 +367,10 @@ cloudlets:
     longitude: 2
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51002
+  flavor:
+    name: x1.tiny
 - key:
     operatorkey:
       name: tmus
@@ -377,6 +381,10 @@ cloudlets:
     longitude: 5
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51005
+  flavor:
+    name: x1.tiny
 - key:
     operatorkey:
       name: tmus
@@ -387,6 +395,10 @@ cloudlets:
     longitude: 6
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51006
+  flavor:
+    name: x1.tiny
 - key:
     operatorkey:
       name: azure
@@ -397,6 +409,10 @@ cloudlets:
     longitude: 9
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51009
+  flavor:
+    name: x1.tiny
 - key:
     operatorkey:
       name: gcp
@@ -407,6 +423,10 @@ cloudlets:
     longitude: 10
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51010
+  flavor:
+    name: x1.tiny
 - key:
     operatorkey:
       name: tmus
@@ -417,6 +437,10 @@ cloudlets:
     longitude: 1
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51001
+  flavor:
+    name: x1.tiny
 - key:
     operatorkey:
       name: tmus
@@ -427,6 +451,10 @@ cloudlets:
     longitude: 3
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51003
+  flavor:
+    name: x1.tiny
 - key:
     operatorkey:
       name: tmus
@@ -437,6 +465,10 @@ cloudlets:
     longitude: 4
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51004
+  flavor:
+    name: x1.tiny
 - key:
     operatorkey:
       name: tmus
@@ -447,6 +479,10 @@ cloudlets:
     longitude: 7
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51007
+  flavor:
+    name: x1.tiny
 - key:
     operatorkey:
       name: tmus
@@ -457,6 +493,10 @@ cloudlets:
     longitude: 8
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51008
+  flavor:
+    name: x1.tiny
 
 apps:
 - key:
