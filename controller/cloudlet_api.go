@@ -36,7 +36,7 @@ var (
 
 const (
 	PlatformInitTimeout   = 5 * time.Minute
-	CloudletShortWaitTime = 1 * time.Second
+	CloudletShortWaitTime = 10 * time.Millisecond
 	CloudletWaitTime      = 10 * time.Second
 )
 

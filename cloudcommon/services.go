@@ -71,7 +71,7 @@ func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
 		return err
 	}
 	// max wait time for process to go down gracefully, after which it is killed forcefully
-	maxwait := 1 * time.Second
+	maxwait := 10 * time.Millisecond
 
 	c := make(chan string)
 	go process.KillProcessesByName(crmProc.GetExeName(), maxwait, crmProc.LookupArgs(), c)
