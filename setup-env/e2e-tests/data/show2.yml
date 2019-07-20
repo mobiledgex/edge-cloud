@@ -78,6 +78,10 @@ cloudlets:
     longitude: 2
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51002
+  flavor:
+    name: x1.medium
 - key:
     operatorkey:
       name: dmuus
@@ -88,6 +92,10 @@ cloudlets:
     longitude: 1
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51001
+  flavor:
+    name: x1.medium
 
 apps:
 - key:

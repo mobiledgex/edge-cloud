@@ -24,6 +24,8 @@ func TestCloudletApi(t *testing.T) {
 
 	// create operators
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
+	// create flavors
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 
 	testutil.InternalCloudletTest(t, "cud", &cloudletApi, testutil.CloudletData)
 
