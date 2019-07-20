@@ -94,6 +94,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--influxAddr")
 		args = append(args, p.InfluxAddr)
 	}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -302,15 +306,11 @@ func (p *Dme) getTlsConfig() *tls.Config {
 
 // CrmLocal
 
-func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
+func (p *Crm) GetArgs(opts ...StartOp) []string {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	if p.NotifySrvAddr != "" {
 		args = append(args, "--notifySrvAddr")
 		args = append(args, p.NotifySrvAddr)
-	}
-	if p.ApiAddr != "" {
-		args = append(args, "--apiAddr")
-		args = append(args, p.ApiAddr)
 	}
 	if p.CloudletKey != "" {
 		args = append(args, "--cloudletKey")
@@ -346,8 +346,13 @@ func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
+	return args
+}
 
+func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 	var err error
+
+	args := p.GetArgs(opts...)
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	return err
 }
@@ -358,14 +363,22 @@ func (p *Crm) StopLocal() {
 
 func (p *Crm) GetExeName() string { return "crmserver" }
 
-func (p *Crm) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
+func (p *Crm) LookupArgs() string { return "--cloudletKey " + p.CloudletKey }
 
-func (p *Crm) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, "", false)
-	if err != nil {
-		return nil, err
+func (p *Crm) String(opts ...StartOp) string {
+	cmd_str := p.GetExeName()
+	args := p.GetArgs(opts...)
+	key := true
+	for _, v := range args {
+		if key {
+			cmd_str += " " + v
+			key = false
+		} else {
+			cmd_str += " '" + v + "'"
+			key = true
+		}
 	}
-	return connectAPIImpl(timeout, p.ApiAddr, tlsConfig)
+	return cmd_str
 }
 
 // InfluxLocal

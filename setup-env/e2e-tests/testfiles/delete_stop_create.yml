@@ -1,0 +1,12 @@
+##
+##
+description: deletes, stops services and does cleanup
+
+tests:
+
+- name: delete provisioning
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-delete,ctrlapi-show]
+
+- name: stop services and cleanup
+  actions: [stop,cleanup]

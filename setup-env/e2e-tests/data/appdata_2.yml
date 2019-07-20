@@ -19,7 +19,6 @@ flavors:
   disk: 4
 
 
-
 operators:
 - key:
     name: dmuus
@@ -33,12 +32,15 @@ cloudlets:
       name: dmuus
     name: dmuus-cloud-1
   accessuri: dmuus-cloud.1
-
   location:
     latitude: 1
     longitude: 1
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51001
+  flavor:
+    name: x1.medium
 
 
 - key:
@@ -46,12 +48,15 @@ cloudlets:
       name: dmuus
     name: dmuus-cloud-2
   accessuri: dmuus-cloud.2
-
   location:
     latitude: 1
     longitude: 2
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51002
+  flavor:
+    name: x1.medium
 
 
 developers:

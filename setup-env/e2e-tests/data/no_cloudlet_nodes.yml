@@ -1,0 +1,13 @@
+nodes:
+- key:
+    nodetype: NodeDme
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-1
+- key:
+    nodetype: NodeDme
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-2
