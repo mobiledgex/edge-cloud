@@ -6,7 +6,6 @@ cloudlets:
     operatorkey:
       name: tmus
     name: tmus-cloud-1
-  accessuri: cloud1.tmo
   location:
     latitude: 31
     longitude: -91
@@ -19,12 +18,15 @@ cloudlets:
     createappinsttimeout: 3000000000
     updateappinsttimeout: 2000000000
     deleteappinsttimeout: 2000000000
-
+  state: Ready
+  deploymentlocal: true
+  notifysrvaddr: 127.0.0.1:51001
+  flavor:
+    name: x1.medium
 - key:
     operatorkey:
       name: tmus
     name: tmus-cloud-2
-  accessuri: cloud2.tmo
   location:
     latitude: 35
     longitude: -95
@@ -37,6 +39,11 @@ cloudlets:
     createappinsttimeout: 3000000000
     updateappinsttimeout: 2000000000
     deleteappinsttimeout: 2000000000
+  state: Ready
+  deploymentlocal: true
+  notifysrvaddr: 127.0.0.1:51002
+  flavor:
+    name: x1.medium
 
 flavors:
 - key:

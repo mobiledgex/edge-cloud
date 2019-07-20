@@ -39,6 +39,7 @@
 		GcpProperties
 		OpenStackProperties
 		CloudletInfraProperties
+		PlatformConfig
 		Cloudlet
 		FlavorInfo
 		CloudletInfo
@@ -1017,17 +1018,19 @@ func (m *App) DiffFields(o *App, fields map[string]struct{}) {
 	if m.DelOpt != o.DelOpt {
 		fields[AppFieldDelOpt] = struct{}{}
 	}
-	if len(m.Configs) != len(o.Configs) {
-		fields[AppFieldConfigs] = struct{}{}
-	} else {
-		for i0 := 0; i0 < len(m.Configs); i0++ {
-			if m.Configs[i0].Kind != o.Configs[i0].Kind {
-				fields[AppFieldConfigsKind] = struct{}{}
-				fields[AppFieldConfigs] = struct{}{}
-			}
-			if m.Configs[i0].Config != o.Configs[i0].Config {
-				fields[AppFieldConfigsConfig] = struct{}{}
-				fields[AppFieldConfigs] = struct{}{}
+	if m.Configs != nil && o.Configs != nil {
+		if len(m.Configs) != len(o.Configs) {
+			fields[AppFieldConfigs] = struct{}{}
+		} else {
+			for i0 := 0; i0 < len(m.Configs); i0++ {
+				if m.Configs[i0].Kind != o.Configs[i0].Kind {
+					fields[AppFieldConfigsKind] = struct{}{}
+					fields[AppFieldConfigs] = struct{}{}
+				}
+				if m.Configs[i0].Config != o.Configs[i0].Config {
+					fields[AppFieldConfigsConfig] = struct{}{}
+					fields[AppFieldConfigs] = struct{}{}
+				}
 			}
 		}
 	}
@@ -1795,6 +1798,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(CRMOverride(0)):
 		if en, ok := CRMOverride_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(PlatformType(0)):
+		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(CloudletState(0)):
