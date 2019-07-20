@@ -145,7 +145,7 @@ func (s *WebrtcExec) DataChannel(d *webrtc.DataChannel) {
 		prd, pwr := io.Pipe()
 		s.sin = pwr
 
-		err := s.client.Shell(prd, wr, wr, "sh", "-c", s.contcmd)
+		err := s.client.Shell(prd, wr, wr, s.contcmd)
 		if err != nil {
 			log.DebugLog(log.DebugLevelApi,
 				"failed to exec",
@@ -154,8 +154,6 @@ func (s *WebrtcExec) DataChannel(d *webrtc.DataChannel) {
 		d.Close()
 	})
 	d.OnMessage(func(msg webrtc.DataChannelMessage) {
-		log.DebugLog(log.DebugLevelApi, "on message",
-			"data", msg.Data)
 		s.sin.Write(msg.Data)
 	})
 	d.OnClose(func() {
