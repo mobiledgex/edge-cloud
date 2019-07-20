@@ -2,10 +2,18 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"strings"
+	"time"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
+	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
 type CloudletApi struct {
@@ -14,7 +22,32 @@ type CloudletApi struct {
 	cache edgeproto.CloudletCache
 }
 
-var cloudletApi = CloudletApi{}
+var (
+	cloudletApi           = CloudletApi{}
+	DefaultPlatformFlavor = edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "DefaultPlatformFlavor",
+		},
+		Vcpus: 2,
+		Ram:   4096,
+		Disk:  20,
+	}
+)
+
+const (
+	PlatformInitTimeout   = 5 * time.Minute
+	CloudletShortWaitTime = 10 * time.Millisecond
+	CloudletWaitTime      = 10 * time.Second
+)
+
+func IsCloudletLocal(in *edgeproto.Cloudlet) bool {
+	if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE ||
+		in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND ||
+		in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_MEXDIND {
+		return true
+	}
+	return false
+}
 
 func InitCloudletApi(sync *Sync) {
 	cloudletApi.sync = sync
@@ -46,6 +79,30 @@ func (s *CloudletApi) UsesOperator(in *edgeproto.OperatorKey) bool {
 	return false
 }
 
+func (s *CloudletApi) ReplaceErrorState(in *edgeproto.Cloudlet, newState edgeproto.TrackedState) {
+	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		inst := edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, &in.Key, &inst) {
+			// got deleted in the meantime
+			return nil
+		}
+
+		if inst.State != edgeproto.TrackedState_CREATE_ERROR &&
+			inst.State != edgeproto.TrackedState_DELETE_ERROR &&
+			inst.State != edgeproto.TrackedState_UPDATE_ERROR {
+			return nil
+		}
+		if newState == edgeproto.TrackedState_NOT_PRESENT {
+			s.store.STMDel(stm, &in.Key)
+		} else {
+			inst.State = newState
+			inst.Errors = nil
+			s.store.STMPut(stm, &inst)
+		}
+		return nil
+	})
+}
+
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_UNKNOWN {
 		in.IpSupport = edgeproto.IpSupport_IP_SUPPORT_DYNAMIC
@@ -66,6 +123,59 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		// user forgot to specify location
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
+
+	if IsCloudletLocal(in) {
+		in.DeploymentLocal = true
+	}
+
+	// If notifysrvaddr is empty, set default value
+	if in.NotifySrvAddr == "" {
+		in.NotifySrvAddr = "127.0.0.1:51001"
+	}
+
+	pfConfig := edgeproto.PlatformConfig{}
+	if !*testMode && !IsCloudletLocal(in) {
+		// Vault controller level credentials are required to access
+		// registry credentials
+		roleId := os.Getenv("VAULT_ROLE_ID")
+		if roleId == "" {
+			return fmt.Errorf("Env variable VAULT_ROLE_ID not set")
+		}
+		secretId := os.Getenv("VAULT_SECRET_ID")
+		if secretId == "" {
+			return fmt.Errorf("Env variable VAULT_SECRET_ID not set")
+		}
+
+		// Vault CRM level credentials are required to access
+		// instantiate crmserver
+		crmRoleId := os.Getenv("VAULT_CRM_ROLE_ID")
+		if crmRoleId == "" {
+			return fmt.Errorf("Env variable VAULT_CRM_ROLE_ID not set")
+		}
+		crmSecretId := os.Getenv("VAULT_CRM_SECRET_ID")
+		if crmSecretId == "" {
+			return fmt.Errorf("Env variable VAULT_CRM_SECRET_ID not set")
+		}
+		pfConfig.CrmRoleId = crmRoleId
+		pfConfig.CrmSecretId = crmSecretId
+	}
+	pfConfig.PlatformTag = *versionTag
+	pfConfig.TlsCertFile = *tlsCertFile
+	pfConfig.VaultAddr = *vaultAddr
+	pfConfig.RegistryPath = *cloudletRegistryPath
+	pfConfig.ImagePath = *cloudletVMImagePath
+	addrObjs := strings.Split(*notifyAddr, ":")
+	if len(addrObjs) != 2 {
+		return fmt.Errorf("unable to fetch notify addr of the controller")
+	}
+	pfConfig.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
+
+	return s.createCloudletInternal(DefCallContext(), in, &pfConfig, cb)
+}
+
+func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_CreateCloudletServer) error {
+	cctx.SetOverride(&in.CrmOverride)
+
 	in.TimeLimits.CreateClusterInstTimeout = int64(cloudcommon.CreateClusterInstTimeout)
 	in.TimeLimits.UpdateClusterInstTimeout = int64(cloudcommon.UpdateClusterInstTimeout)
 	in.TimeLimits.DeleteClusterInstTimeout = int64(cloudcommon.DeleteClusterInstTimeout)
@@ -73,7 +183,151 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	in.TimeLimits.UpdateAppInstTimeout = int64(cloudcommon.UpdateAppInstTimeout)
 	in.TimeLimits.DeleteAppInstTimeout = int64(cloudcommon.DeleteAppInstTimeout)
 
-	_, err := s.store.Create(in, s.sync.syncWait)
+	pfFlavor := edgeproto.Flavor{}
+
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if s.store.STMGet(stm, &in.Key, nil) {
+			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
+				if in.State == edgeproto.TrackedState_CREATE_ERROR {
+					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
+					cb.Send(&edgeproto.Result{Message: "Use DeleteCloudlet to remove and try again"})
+				}
+				return objstore.ErrKVStoreKeyExists
+			}
+			in.Errors = nil
+		}
+		if in.Flavor != nil && in.Flavor.Name != "" {
+			if !flavorApi.store.STMGet(stm, in.Flavor, &pfFlavor) {
+				return fmt.Errorf("Platform flavor %s not found", in.Flavor.Name)
+			}
+		} else {
+			in.Flavor = &DefaultPlatformFlavor.Key
+			pfFlavor = DefaultPlatformFlavor
+		}
+		err := in.Validate(edgeproto.CloudletAllFieldsMap)
+		if err != nil {
+			return err
+		}
+
+		if ignoreCRM(cctx) {
+			in.State = edgeproto.TrackedState_READY
+		} else {
+			in.State = edgeproto.TrackedState_CREATING
+		}
+
+		s.store.STMPut(stm, in)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	if ignoreCRM(cctx) {
+		return nil
+	}
+
+	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
+		switch updateType {
+		case edgeproto.UpdateTask:
+			log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", in.Key, "taskName", value)
+			in.Status.SetTask(value)
+			cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
+		case edgeproto.UpdateStep:
+			log.DebugLog(log.DebugLevelApi, "SetStatusStep", "key", in.Key, "stepName", value)
+			in.Status.SetStep(value)
+			cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
+		}
+	}
+
+	if in.DeploymentLocal {
+		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
+		err = cloudcommon.StartCRMService(in, pfConfig)
+	} else {
+		var cloudletPlatform pf.Platform
+		cloudletPlatform, err = pfutils.GetPlatform(in.PlatformType.String())
+		if err == nil {
+			err = cloudletPlatform.CreateCloudlet(in, pfConfig, &pfFlavor, updateCloudletCallback)
+		}
+	}
+
+	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create Cloudlet ignoring CRM failure: %s", err.Error())})
+		s.ReplaceErrorState(in, edgeproto.TrackedState_READY)
+		cb.Send(&edgeproto.Result{Message: "Created Cloudlet successfully"})
+		return nil
+	}
+	if err != nil {
+		in.State = edgeproto.TrackedState_CREATE_ERROR
+		in.Errors = append(in.Errors, err.Error())
+		s.store.Put(in, s.sync.syncWait)
+
+		cb.Send(&edgeproto.Result{Message: err.Error()})
+		cb.Send(&edgeproto.Result{Message: "DELETING cloudlet due to failures"})
+
+		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb)
+		if undoErr != nil {
+			log.InfoLog("Undo create cloudlet", "undoErr", undoErr)
+		}
+		return nil
+	}
+
+	// Wait for CRM to connect to controller
+	var cloudletInfo edgeproto.CloudletInfo
+	start := time.Now()
+	timedout := false
+	for {
+		err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+			if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cloudletInfo) {
+				return objstore.ErrKVStoreKeyNotFound
+			}
+			return nil
+		})
+		if err == nil {
+			break
+		}
+		elapsed := time.Since(start)
+		if elapsed >= (PlatformInitTimeout) {
+			timedout = true
+			break
+		}
+		// Wait till timeout
+		if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
+			// Fake cloudlets connected faster to controller as it
+			// only has to start cloudlet services
+			// This will speedup testing
+			time.Sleep(CloudletShortWaitTime)
+		} else {
+			time.Sleep(CloudletWaitTime)
+		}
+	}
+
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		updatedCloudlet := edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, &in.Key, &updatedCloudlet) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		if timedout {
+			updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
+			updateCloudletCallback(edgeproto.UpdateTask, "platform bringup timed out")
+		} else {
+			if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cloudletInfo) {
+				updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
+				updateCloudletCallback(edgeproto.UpdateTask, "unable to fetch cloudlet info")
+			} else {
+				if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+					updatedCloudlet.State = edgeproto.TrackedState_READY
+					updateCloudletCallback(edgeproto.UpdateTask, "Cloudlet created successfully")
+				} else {
+					updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
+					updateCloudletCallback(edgeproto.UpdateTask, "cloudlet state is not ready: "+cloudletInfo.State.String())
+				}
+			}
+		}
+
+		s.store.STMPut(stm, &updatedCloudlet)
+		return nil
+	})
+
 	return err
 }
 
@@ -101,7 +355,19 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 	}
 
-	_, err := s.store.Update(in, s.sync.syncWait)
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		cur := &edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, &in.Key, cur) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		cur.CopyInFields(in)
+		s.store.STMPut(stm, cur)
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
 
 	// after the cloudlet change is committed, if the location changed,
 	// update app insts as well.
@@ -110,21 +376,87 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 }
 
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
+	return s.deleteCloudletInternal(DefCallContext(), in, cb)
+}
+
+func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
 	if appInstApi.UsesCloudlet(&in.Key, dynInsts) {
 		// disallow delete if static instances are present
 		return errors.New("Cloudlet in use by static Application Instance")
 	}
+
 	clDynInsts := make(map[edgeproto.ClusterInstKey]struct{})
 	if clusterInstApi.UsesCloudlet(&in.Key, clDynInsts) {
 		return errors.New("Cloudlet in use by static Cluster Instance")
 	}
-	_, err := s.store.Delete(in, s.sync.syncWait)
+
+	cctx.SetOverride(&in.CrmOverride)
+
+	// Set state to prevent other apps from being created on ClusterInst
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, in) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		if ignoreCRM(cctx) {
+			s.store.STMDel(stm, &in.Key)
+			cloudletRefsApi.store.STMDel(stm, &in.Key)
+			return nil
+		}
+		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR {
+			if in.State == edgeproto.TrackedState_DELETE_ERROR {
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
+				cb.Send(&edgeproto.Result{Message: "Use CreateCloudlet to rebuild, and try again"})
+			}
+			return errors.New("Cloudlet busy, cannot delete")
+		}
+		in.State = edgeproto.TrackedState_DELETE_PREPARE
+		s.store.STMPut(stm, in)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	if ignoreCRM(cctx) {
+		return nil
+	}
+
+	if in.DeploymentLocal {
+		err = cloudcommon.StopCRMService(in)
+	} else {
+		var cloudletPlatform pf.Platform
+		cloudletPlatform, err = pfutils.GetPlatform(in.PlatformType.String())
+		if err == nil {
+			err = cloudletPlatform.DeleteCloudlet(in)
+		}
+	}
+	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete Cloudlet ignoring CRM failure: %s", err.Error())})
+		s.ReplaceErrorState(in, edgeproto.TrackedState_NOT_PRESENT)
+		cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
+		err = nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		s.store.STMDel(stm, &in.Key)
+		cloudletRefsApi.store.STMDel(stm, &in.Key)
+		cloudletInfoApi.store.STMDel(stm, &in.Key)
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
 	// also delete associated info
 	// Note: don't delete cloudletinfo, that will get deleted once CRM
 	// disconnects. Otherwise if admin deletes/recreates Cloudlet with
 	// CRM connected the whole time, we will end up without cloudletInfo.
-	cloudletRefsApi.Delete(&in.Key, s.sync.syncWait)
 	// also delete dynamic instances
 	if len(dynInsts) > 0 {
 		// delete dynamic instances
@@ -177,30 +509,20 @@ func (s *CloudletApi) UpdateAppInstLocations(in *edgeproto.Cloudlet) {
 	}
 	appInstApi.cache.Mux.Unlock()
 
-	first := true
 	inst := edgeproto.AppInst{}
 	for ii, _ := range keys {
-		inst.Key = keys[ii]
-		if first {
-			inst.Fields = make([]string, 0)
-		}
+		inst = *appInstApi.cache.Objs[keys[ii]]
+		inst.Fields = make([]string, 0)
 		if _, found := fmap[edgeproto.CloudletFieldLocationLatitude]; found {
 			inst.CloudletLoc.Latitude = in.Location.Latitude
-			if first {
-				inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLatitude)
-			}
+			inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLatitude)
 		}
 		if _, found := fmap[edgeproto.CloudletFieldLocationLongitude]; found {
 			inst.CloudletLoc.Longitude = in.Location.Longitude
-			if first {
-				inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLongitude)
-			}
+			inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLongitude)
 		}
-		if first {
-			if len(inst.Fields) == 0 {
-				break
-			}
-			first = false
+		if len(inst.Fields) == 0 {
+			break
 		}
 
 		err := appInstApi.updateAppInstInternal(DefCallContext(), &inst, nil)

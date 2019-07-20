@@ -9,3 +9,5 @@ cloudlets:
     longitude: -99
   ipsupport: IpSupportDynamic
   numdynamicips: 100
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51101
