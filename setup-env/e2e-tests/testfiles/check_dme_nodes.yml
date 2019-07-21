@@ -1,0 +1,12 @@
+##
+##
+description: check DME node-show
+
+tests:
+
+- name: check DME node-show
+  actions: [ctrlapi-nodeshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/dme_nodes.yml"
+    filetype: appdata

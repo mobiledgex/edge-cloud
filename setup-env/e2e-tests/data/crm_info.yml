@@ -6,7 +6,6 @@ cloudlets:
     operatorkey:
       name: tmus
     name: tmus-cloud-1
-  accessuri: cloud1.tmo
   location:
     latitude: 31
     longitude: -91
@@ -19,12 +18,15 @@ cloudlets:
     createappinsttimeout: 3000000000
     updateappinsttimeout: 2000000000
     deleteappinsttimeout: 2000000000
-
+  state: Ready
+  deploymentlocal: true
+  notifysrvaddr: 127.0.0.1:51001
+  flavor:
+    name: x1.medium
 - key:
     operatorkey:
       name: tmus
     name: tmus-cloud-2
-  accessuri: cloud2.tmo
   location:
     latitude: 35
     longitude: -95
@@ -37,6 +39,11 @@ cloudlets:
     createappinsttimeout: 3000000000
     updateappinsttimeout: 2000000000
     deleteappinsttimeout: 2000000000
+  state: Ready
+  deploymentlocal: true
+  notifysrvaddr: 127.0.0.1:51002
+  flavor:
+    name: x1.medium
 
 flavors:
 - key:
@@ -271,6 +278,8 @@ apps:
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
+  accessports: tcp:9090
+  internalports: true
   defaultflavor:
     name: x1.medium
   deployment: helm
@@ -344,6 +353,10 @@ appinstances:
     longitude: -91
   uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
   flavor:
     name: x1.medium
   state: Ready
@@ -365,6 +378,10 @@ appinstances:
     latitude: 35
     longitude: -95
   uri: tmus-cloud-2.tmus.mobiledgex.net
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -454,6 +471,10 @@ appinstances:
     longitude: -95
   uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
   flavor:
     name: x1.medium
   state: Ready

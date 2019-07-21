@@ -85,18 +85,22 @@ sub printCloudlet{
   my $cid = shift;
   my $lat = shift;
   my $long = shift;
+  my $notifysrvport = 51000 + $cid;
   print ("
 - key:
     operatorkey:
       name: $operator
     name: $operator-$cloudlet-$cid
   accessuri: $operator-$cloudlet.$cid
-
   location:
     latitude: $lat
     longitude: $long
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:$notifysrvport
+  flavor:
+    name: x1.tiny
 \n")
 }
 
@@ -159,12 +163,14 @@ sub genLatLongs{
 	return;
       }
       my $operator = $Operator;
-      # the last 2 will be azure and gcp if we have 10
-      if ($c == 9) {
+      # the last 2 will be azure and gcp if we have 5
+      if ($Max >= 5) {
+        if ($c == $Max-1) {
           $operator = "azure";
-      }
-      if ($c == 10){
+        }
+        if ($c == $Max){
           $operator = "gcp";
+        }
       }
       if ($type eq "cloudlets"){
         printCloudlet($operator,$Cloudlet,$c,$lat,$long);

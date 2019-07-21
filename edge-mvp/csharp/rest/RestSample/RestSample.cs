@@ -1,6 +1,12 @@
 using System;
 using System.Threading.Tasks;
+
+using System.Collections.Generic;
+using System.Runtime.Serialization.Json;
+using System.IO;
+
 using DistributedMatchEngine;
+
 
 namespace RestSample
 {
@@ -22,13 +28,78 @@ namespace RestSample
       return carrierName;
     }
 
+    static Loc createLocation(double longitude_src, double latitude_src, double direction_degrees, double kilometers)
+    {
+      long ticks = DateTime.Now.Ticks;
+      long sec = ticks / TimeSpan.TicksPerSecond; // Truncates.
+      long remainderTicks = ticks - (sec * TimeSpan.TicksPerSecond);
+      int nanos = (int)(remainderTicks / TimeSpan.TicksPerMillisecond) * 1000000;
+
+      double direction_radians = direction_degrees * Math.PI / 180;
+
+      Loc loc = new Loc
+      {
+        longitude = longitude_src + kilometers * Math.Cos(direction_radians),
+        latitude = latitude_src + kilometers * Math.Sin(direction_radians),
+        timestamp = new Timestamp
+        {
+          seconds = sec.ToString(),
+          nanos = nanos
+        }
+      };
+
+      return loc;
+    }
+
+    static List<QosPosition> CreateQosPositionList(Loc firstLocation, double direction_degrees, double totalDistanceKm, double increment)
+    {
+      var req = new List<QosPosition>();
+      long positionid = 1;
+      Loc lastLocation = createLocation(firstLocation.longitude, firstLocation.latitude, 0, 0);
+
+      var firstQosPostion = new QosPosition
+      {
+        positionid = positionid.ToString(),
+        gps_location = lastLocation
+      };
+
+      req.Add(firstQosPostion);
+
+      var traverse = increment;
+      for (traverse = increment; traverse + increment < totalDistanceKm - increment; traverse += increment, positionid++)
+      {
+        Loc next = createLocation(lastLocation.longitude, lastLocation.latitude, direction_degrees, increment);
+        var np = new QosPosition
+        {
+          positionid = positionid.ToString(),
+          gps_location = next
+        };
+        req.Add(np);
+        lastLocation = next;
+      }
+
+      // Last point, if needed.
+      if (traverse < totalDistanceKm)
+      {
+        lastLocation = createLocation(lastLocation.longitude, lastLocation.latitude, direction_degrees, totalDistanceKm);
+        var lastPosition = new QosPosition
+        {
+          positionid = positionid.ToString(),
+          gps_location = lastLocation
+        };
+        req.Add(lastPosition);
+      }
+
+      return req;
+    }
+
     async static Task Main(string[] args)
     {
       try
       {
         carrierName = await getCurrentCarrierName();
 
-        Console.WriteLine("RestSample!");
+        Console.WriteLine("MobiledgeX RestSample!");
 
         MatchingEngine me = new MatchingEngine();
         port = MatchingEngine.defaultDmeRestPort;
@@ -115,6 +186,45 @@ namespace RestSample
         {
           Console.WriteLine(itste.Message + "\n" + itste.StackTrace);
         }
+
+        // Get QosPositionKpi:
+        try
+        {
+          // Create a list of quality of service position requests:
+          var firstLoc = new Loc
+          {
+            longitude = -121.892558,
+            latitude = 37.327820,
+            timestamp = new Timestamp { seconds = "0", nanos = 0}
+          };
+          var requestList = CreateQosPositionList(firstLoc, 45, 2, 0.1);
+
+          var qosPositionKpiRequest = me.CreateQosPositionKpiRequest(requestList);
+          QosPositionKpiStreamReply qosPositionKpiStreamReply = await me.GetQosPositionKpi(host, port, qosPositionKpiRequest); // FIXME: Stream of objects
+
+          if (qosPositionKpiStreamReply.result == null || qosPositionKpiStreamReply.error != null)
+          {
+            Console.WriteLine("Reply result missing: " + qosPositionKpiStreamReply);
+          }
+          else
+          {
+            Console.WriteLine("Result: " + qosPositionKpiStreamReply.result);
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(QosPositionResult));
+            MemoryStream ms = new MemoryStream();
+            foreach (QosPositionResult qpr in qosPositionKpiStreamReply.result.position_results)
+            {
+              ms.Position = 0;
+              serializer.WriteObject(ms, qpr);
+              string jsonStr = Util.StreamToString(ms);
+              Console.WriteLine("QosPositionResult: " + jsonStr);
+            }
+          }
+        }
+        catch (HttpException httpe)
+        {
+          Console.WriteLine("QosPositionKpi Exception: " + httpe.Message + ", HTTP StatusCode: " + httpe.HttpStatusCode + ", API ErrorCode: " + httpe.ErrorCode + "\nStack: " + httpe.StackTrace);
+        }
+
       }
       catch (Exception e) // Catch All
       {

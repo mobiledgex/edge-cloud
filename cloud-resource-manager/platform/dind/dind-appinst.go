@@ -22,7 +22,7 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	if err != nil {
 		return err
 	}
-
+	// NOTE: for DIND we don't check whether this is internal
 	if len(appInst.MappedPorts) > 0 {
 		log.DebugLog(log.DebugLevelMexos, "AddNginxProxy for dind", "ports", appInst.MappedPorts)
 		cluster, err := FindCluster(names.ClusterName)

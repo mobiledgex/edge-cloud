@@ -5,7 +5,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func (s *StatusInfo) toString() string {
+func (s *StatusInfo) ToString() string {
 	if s == nil {
 		return ""
 	}
@@ -22,18 +22,18 @@ func (s *StatusInfo) toString() string {
 	return ""
 }
 
-func (s *StatusInfo) reset() {
+func (s *StatusInfo) StatusReset() {
 	s.TaskNumber = 0
 	s.MaxTasks = 0
 	s.TaskName = ""
 	s.StepName = ""
 }
 
-func (s *StatusInfo) setMaxTasks(maxtask uint32) {
+func (s *StatusInfo) SetMaxTasks(maxtask uint32) {
 	s.MaxTasks = maxtask
 }
 
-func (s *StatusInfo) setTask(task string) {
+func (s *StatusInfo) SetTask(task string) {
 	if s == nil {
 		log.WarnLog("nil StatusInfo")
 		return
@@ -47,7 +47,7 @@ func (s *StatusInfo) setTask(task string) {
 	s.StepName = ""
 }
 
-func (s *StatusInfo) setStep(step string) {
+func (s *StatusInfo) SetStep(step string) {
 	if s == nil {
 		log.WarnLog("nil StatusInfo")
 		return

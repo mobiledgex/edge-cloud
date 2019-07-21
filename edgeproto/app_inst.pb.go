@@ -1393,15 +1393,17 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 		fields[AppInstFieldCloudletLocSpeed] = struct{}{}
 		fields[AppInstFieldCloudletLoc] = struct{}{}
 	}
-	if m.CloudletLoc.Timestamp.Seconds != o.CloudletLoc.Timestamp.Seconds {
-		fields[AppInstFieldCloudletLocTimestampSeconds] = struct{}{}
-		fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
-		fields[AppInstFieldCloudletLoc] = struct{}{}
-	}
-	if m.CloudletLoc.Timestamp.Nanos != o.CloudletLoc.Timestamp.Nanos {
-		fields[AppInstFieldCloudletLocTimestampNanos] = struct{}{}
-		fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
-		fields[AppInstFieldCloudletLoc] = struct{}{}
+	if m.CloudletLoc.Timestamp != nil && o.CloudletLoc.Timestamp != nil {
+		if m.CloudletLoc.Timestamp.Seconds != o.CloudletLoc.Timestamp.Seconds {
+			fields[AppInstFieldCloudletLocTimestampSeconds] = struct{}{}
+			fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
+			fields[AppInstFieldCloudletLoc] = struct{}{}
+		}
+		if m.CloudletLoc.Timestamp.Nanos != o.CloudletLoc.Timestamp.Nanos {
+			fields[AppInstFieldCloudletLocTimestampNanos] = struct{}{}
+			fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
+			fields[AppInstFieldCloudletLoc] = struct{}{}
+		}
 	}
 	if m.Uri != o.Uri {
 		fields[AppInstFieldUri] = struct{}{}
@@ -2086,7 +2088,7 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 			curState = TrackedState_NOT_PRESENT
 		}
 		if send != nil {
-			statusString := info.Status.toString()
+			statusString := info.Status.ToString()
 			var msg string
 			if statusString != "" {
 				msg = statusString
