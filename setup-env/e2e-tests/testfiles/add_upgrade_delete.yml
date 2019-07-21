@@ -1,0 +1,36 @@
+##
+##
+description: adds and deletes multiple times 
+
+tests:
+
+- name: verify provisioning is empty to start
+  actions: [ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+
+- name: Add and show provisioning and verify it is there
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
+    filetype: appdata
+
+- name: Update provisioning to upgrade app
+  apifile: "{{datadir}}/app_update.yml"
+  actions: [ctrlapi-update,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_show_after_upgrade.yml"
+    filetype: appdata
+
+- name: delete provisioning, verify it is empty
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata

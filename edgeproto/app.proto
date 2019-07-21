@@ -94,7 +94,7 @@ message ConfigFile {
   // Option to run App on all nodes of the cluster
   bool scale_with_cluster = 22;
     // Revision increments each time the App is updated
-  int32 revision = 23 [(protogen.hidetag) = "nocmp"];
+  int32 revision = 23;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

@@ -19,6 +19,9 @@ const WaitRunning string = "WaitRunning"
 // This is half of the default controller AppInst timeout
 var maxWait = 15 * time.Minute
 
+var applyManifest = "apply"
+var createManifest = "create"
+
 // WaitForAppInst waits for pods to either start or result in an error if WaitRunning specified,
 // or if WaitDeleted is specified then wait for them to all disappear.
 func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, waitFor string) error {
@@ -122,7 +125,7 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 	return nil
 }
 
-func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func createOrUpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
 	mf, err := cloudcommon.GetDeploymentManifest(app.DeploymentManifest)
 	if err != nil {
 		return err
@@ -137,16 +140,24 @@ func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 	if err != nil {
 		return err
 	}
-	log.DebugLog(log.DebugLevelMexos, "running kubectl create ", "file", file)
-	cmd := fmt.Sprintf("%s kubectl create -f %s", names.KconfEnv, file)
+	log.DebugLog(log.DebugLevelMexos, "running kubectl", "action", action, "file", file)
+	cmd := fmt.Sprintf("%s kubectl %s -f %s", names.KconfEnv, action, file)
 
 	out, err := client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("error deploying kubernetes app, %s, %v", out, err)
+		return fmt.Errorf("error running kubectl %s command %s, %v", action, out, err)
 	}
-
-	log.DebugLog(log.DebugLevelMexos, "done kubectl create")
+	log.DebugLog(log.DebugLevelMexos, "done kubectl", "action", action)
 	return nil
+
+}
+
+func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	return createOrUpdateAppInst(client, names, app, appInst, createManifest)
+}
+
+func UpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	return createOrUpdateAppInst(client, names, app, appInst, applyManifest)
 }
 
 func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
@@ -165,33 +176,6 @@ func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 	// out in each platform specific task so that we can optimize the time taken for create by allowing the
 	// wait to be run in parallel with other tasks
 	return WaitForAppInst(client, names, app, WaitDeleted)
-}
-
-func UpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	mf, err := cloudcommon.GetDeploymentManifest(app.DeploymentManifest)
-	if err != nil {
-		return err
-	}
-	mf, err = MergeEnvVars(mf, app.Configs)
-	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "failed to merge env vars", "error", err)
-	}
-	log.DebugLog(log.DebugLevelMexos, "writing config file", "kubeManifest", mf)
-	file := names.AppName + names.AppRevision + ".yaml"
-	err = pc.WriteFile(client, file, mf, "K8s Deployment")
-	if err != nil {
-		return err
-	}
-	log.DebugLog(log.DebugLevelMexos, "running kubectl apply ", "file", file)
-	cmd := fmt.Sprintf("%s kubectl apply -f %s", names.KconfEnv, file)
-
-	out, err := client.Output(cmd)
-	if err != nil {
-		return fmt.Errorf("error updating kubernetes app, %s, %v", out, err)
-	}
-
-	log.DebugLog(log.DebugLevelMexos, "done kubectl update")
-	return nil
 }
 
 func GetAppInstRuntime(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {

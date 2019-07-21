@@ -1,0 +1,12 @@
+##
+##
+
+tests:
+
+
+
+- name: Update provisioning to upgrade app
+  apifile: "{{datadir}}/app_update.yml"
+  actions: [ctrlapi-update]
+
+

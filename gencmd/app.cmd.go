@@ -291,9 +291,6 @@ func AppHideTags(in *edgeproto.App) {
 	}
 	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
-	if _, found := tags["nocmp"]; found {
-		in.Revision = 0
-	}
 }
 
 var CreateAppCmd = &cobra.Command{

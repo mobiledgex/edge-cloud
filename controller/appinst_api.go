@@ -187,33 +187,32 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 }
 
 func (s *AppInstApi) EnsureAllKeysPresent(in *edgeproto.AppInst) error {
-	keysFound := make(map[string]bool)
 	missingKeys := []string{}
 
-	for k := range edgeproto.AppInstAllFieldsMap {
-		if in.IsKeyField(k) {
-			keysFound[k] = false
-		}
+	if in.Key.AppKey.Name == "" {
+		missingKeys = append(missingKeys, "appkey-name")
 	}
-	// mark which keys are present
-	for _, f := range in.Fields {
-		if _, ok := keysFound[f]; ok {
-			keysFound[f] = true
-		}
+	if in.Key.AppKey.Version == "" {
+		missingKeys = append(missingKeys, "appkey-version")
 	}
-	// check all the keys are present
-	for kf, found := range keysFound {
-		if !found {
-			fieldName := edgeproto.AppInstAllFieldsStringMap[kf]
-			fieldName = strings.TrimPrefix(fieldName, "App Inst Field")
-			fieldName = strings.TrimSpace(fieldName)
-			missingKeys = append(missingKeys, fieldName)
-		}
+	if in.Key.AppKey.DeveloperKey.Name == "" {
+		missingKeys = append(missingKeys, "appkey-developerkey-name")
+	}
+	if in.Key.ClusterInstKey.ClusterKey.Name == "" {
+		missingKeys = append(missingKeys, "key-clusterinstkey-clusterkey-name")
+	}
+	if in.Key.ClusterInstKey.Developer == "" {
+		missingKeys = append(missingKeys, "key-clusterinstkey-developer")
+	}
+	if in.Key.ClusterInstKey.CloudletKey.OperatorKey.Name == "" {
+		missingKeys = append(missingKeys, "key-clusterinstkey-cloudletkey-operatorkey-name")
+	}
+	if in.Key.ClusterInstKey.CloudletKey.Name == "" {
+		missingKeys = append(missingKeys, "key-clusterinstkey-cloudletkey-name")
 	}
 	if len(missingKeys) > 0 {
 		return fmt.Errorf("Missing Keys: %s", strings.Join(missingKeys, ","))
 	}
-
 	return nil
 }
 
@@ -257,6 +256,10 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
 
+	err := s.EnsureAllKeysPresent(in)
+	if err != nil {
+		return err
+	}
 	if in.Liveness == edgeproto.Liveness_LIVENESS_UNKNOWN {
 		in.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 	}
@@ -274,7 +277,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// indicates special default cloudlet maintained by the developer
 	var defaultCloudlet bool
 
-	if err := in.Key.AppKey.Validate(); err != nil {
+	if err = in.Key.AppKey.Validate(); err != nil {
 		return err
 	}
 
@@ -422,7 +425,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return fmt.Errorf("Cannot specify URI %s for non-default cloudlet", in.Uri)
 	}
 
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		buf := in
 		if !defaultCloudlet {
 			// lookup already done, don't overwrite changes
@@ -659,15 +662,10 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cb.Send(&edgeproto.Result{Message: "No upgrade required"})
 				return nil
 			}
-			curr.Revision = app.Revision
 			txt := fmt.Sprintf("Doing upgrade for instance to revision: %d on cloudlet: %s", app.Revision, in.Key.ClusterInstKey.CloudletKey.Name)
 			cb.Send(&edgeproto.Result{Message: txt})
 		} else {
 			return edgeproto.ErrEdgeApiAppInstNotFound
-		}
-
-		if !s.store.STMGet(stm, &in.Key, &curr) {
-			return objstore.ErrKVStoreKeyNotFound
 		}
 
 		if curr.State != edgeproto.TrackedState_READY {

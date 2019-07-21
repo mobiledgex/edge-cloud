@@ -164,6 +164,7 @@ appinstances:
     clusterinstkey:
       clusterkey:
         name: default
+      developer: AcmeAppCo
       cloudletkey:
         operatorkey:
           name: developer
@@ -179,6 +180,7 @@ appinstances:
     clusterinstkey:
       clusterkey:
         name: default
+      developer: AcmeAppCo
       cloudletkey:
         operatorkey:
           name: developer

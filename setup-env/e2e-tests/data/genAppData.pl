@@ -273,6 +273,7 @@ sub genDefaultAppInst{
     clusterinstkey:
       clusterkey:
         name: default
+      developer: $Developer
       cloudletkey:
         operatorkey:
           name: developer
@@ -292,6 +293,7 @@ sub genSamsungAppInst{
     clusterinstkey:
       clusterkey:
         name: default
+      developer: Samsung
       cloudletkey:
         operatorkey:
           name: developer
