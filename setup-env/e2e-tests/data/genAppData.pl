@@ -279,6 +279,7 @@ sub genDefaultAppInst{
     clusterinstkey:
       clusterkey:
         name: default
+      developer: $Developer
       cloudletkey:
         operatorkey:
           name: developer
@@ -298,6 +299,7 @@ sub genplatosAppInst{
     clusterinstkey:
       clusterkey:
         name: default
+      developer: platos
       cloudletkey:
         operatorkey:
           name: developer

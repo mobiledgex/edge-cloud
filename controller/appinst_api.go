@@ -80,6 +80,23 @@ func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgepr
 	return static
 }
 
+func (s *AppInstApi) updateAppInstRevision(key *edgeproto.AppInstKey, revision int32) error {
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		inst := edgeproto.AppInst{}
+		if !s.store.STMGet(stm, key, &inst) {
+			// got deleted in the meantime
+			return nil
+		}
+		inst.Revision = revision
+		log.DebugLog(log.DebugLevelApi, "AppInst revision updated", "key", key, "revision", revision)
+
+		s.store.STMPut(stm, &inst)
+		return nil
+	})
+
+	return err
+}
+
 func (s *AppInstApi) UsesApp(in *edgeproto.AppKey, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -169,6 +186,36 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	return false
 }
 
+func (s *AppInstApi) EnsureAllKeysPresent(in *edgeproto.AppInst) error {
+	missingKeys := []string{}
+
+	if in.Key.AppKey.Name == "" {
+		missingKeys = append(missingKeys, "appkey-name")
+	}
+	if in.Key.AppKey.Version == "" {
+		missingKeys = append(missingKeys, "appkey-version")
+	}
+	if in.Key.AppKey.DeveloperKey.Name == "" {
+		missingKeys = append(missingKeys, "appkey-developerkey-name")
+	}
+	if in.Key.ClusterInstKey.ClusterKey.Name == "" {
+		missingKeys = append(missingKeys, "key-clusterinstkey-clusterkey-name")
+	}
+	if in.Key.ClusterInstKey.Developer == "" {
+		missingKeys = append(missingKeys, "key-clusterinstkey-developer")
+	}
+	if in.Key.ClusterInstKey.CloudletKey.OperatorKey.Name == "" {
+		missingKeys = append(missingKeys, "key-clusterinstkey-cloudletkey-operatorkey-name")
+	}
+	if in.Key.ClusterInstKey.CloudletKey.Name == "" {
+		missingKeys = append(missingKeys, "key-clusterinstkey-cloudletkey-name")
+	}
+	if len(missingKeys) > 0 {
+		return fmt.Errorf("Missing Keys: %s", strings.Join(missingKeys, ","))
+	}
+	return nil
+}
+
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	return s.createAppInstInternal(DefCallContext(), in, cb)
@@ -208,6 +255,11 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
+
+	err := s.EnsureAllKeysPresent(in)
+	if err != nil {
+		return err
+	}
 	if in.Liveness == edgeproto.Liveness_LIVENESS_UNKNOWN {
 		in.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 	}
@@ -225,7 +277,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// indicates special default cloudlet maintained by the developer
 	var defaultCloudlet bool
 
-	if err := in.Key.AppKey.Validate(); err != nil {
+	if err = in.Key.AppKey.Validate(); err != nil {
 		return err
 	}
 
@@ -284,6 +336,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 				return edgeproto.ErrEdgeApiAppNotFound
 			}
+			in.Revision = app.Revision
 			appDeploymentType = app.Deployment
 			// Check if specified ClusterInst exists
 			if !strings.HasPrefix(cikey.ClusterKey.Name, ClusterAutoPrefix) && cloudcommon.IsClusterInstReqd(&app) {
@@ -372,7 +425,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return fmt.Errorf("Cannot specify URI %s for non-default cloudlet", in.Uri)
 	}
 
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		buf := in
 		if !defaultCloudlet {
 			// lookup already done, don't overwrite changes
@@ -574,13 +627,18 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	return err
 }
 
-func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
+func (s *AppInstApi) updateAppInstStore(in *edgeproto.AppInst) error {
 	_, err := s.store.Update(in, s.sync.syncWait)
 	return err
 }
 
-func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
-	// don't allow updates to cached fields
+func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
+
+	log.DebugLog(log.DebugLevelApi, "updateAppInstInternal", "appinst", in)
+	err := s.EnsureAllKeysPresent(in)
+	if err != nil {
+		return err
+	}
 	if in.Fields != nil {
 		for _, field := range in.Fields {
 			if strings.HasPrefix(field, edgeproto.AppInstFieldCloudletLoc) {
@@ -588,7 +646,52 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 			}
 		}
 	}
-	return errors.New("Update app instance not supported yet")
+	var app edgeproto.App
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		var curr edgeproto.AppInst
+
+		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+			return edgeproto.ErrEdgeApiAppNotFound
+		}
+		if s.store.STMGet(stm, &in.Key, &curr) {
+			if curr.Revision != app.Revision {
+				cb.Send(&edgeproto.Result{Message: "Upgrade required"})
+			} else if in.ForceUpgrade {
+				cb.Send(&edgeproto.Result{Message: "Force upgrade"})
+			} else {
+				cb.Send(&edgeproto.Result{Message: "No upgrade required"})
+				return nil
+			}
+			txt := fmt.Sprintf("Doing upgrade for instance to revision: %d on cloudlet: %s", app.Revision, in.Key.ClusterInstKey.CloudletKey.Name)
+			cb.Send(&edgeproto.Result{Message: txt})
+		} else {
+			return edgeproto.ErrEdgeApiAppInstNotFound
+		}
+
+		if curr.State != edgeproto.TrackedState_READY {
+			return fmt.Errorf("AppInst is not ready")
+		}
+		if !ignoreCRM(cctx) {
+			curr.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
+		s.store.STMPut(stm, &curr)
+
+		return err
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if !ignoreCRM(cctx) {
+		err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateAppInstTimeout, "Updated successfully", cb.Send)
+	}
+
+	return s.updateAppInstRevision(&in.Key, app.Revision)
+}
+
+func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
+	return s.updateAppInstInternal(DefCallContext(), in, cb)
 }
 
 func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {

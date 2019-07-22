@@ -93,6 +93,10 @@ func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	return nil
 }
 
+func (s *Platform) UpdateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
+	return fmt.Errorf("UpdateAppInst not supported for dind")
+}
+
 func (s *Platform) GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
 	client, err := s.GetPlatformClient(clusterInst)
 	if err != nil {
