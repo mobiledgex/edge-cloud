@@ -107,6 +107,9 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 // bypassing static assignment. It is also used to create auto-cluster insts.
 func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	cctx.SetOverride(&in.CrmOverride)
+	if err := in.Key.Validate(); err != nil {
+		return err
+	}
 	if !ignoreCRM(cctx) {
 		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
 			return err
@@ -294,6 +297,9 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 
 func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	log.DebugLog(log.DebugLevelApi, "updateClusterInstInternal", "in", in)
+	if err := in.Key.Validate(); err != nil {
+		return err
+	}
 
 	if in.Fields == nil {
 		return fmt.Errorf("nothing specified to update")
@@ -313,9 +319,9 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 	if len(badFields) > 0 {
 		// cat all the bad field names and return error
-		badstrs := [] string{}
+		badstrs := []string{}
 		for _, bad := range badFields {
-			badstrs = append(badstrs,  edgeproto.ClusterInstAllFieldsStringMap[bad]);
+			badstrs = append(badstrs, edgeproto.ClusterInstAllFieldsStringMap[bad])
 		}
 		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badstrs, ","))
 	}
@@ -355,6 +361,9 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 }
 
 func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
+	if err := in.Key.Validate(); err != nil {
+		return err
+	}
 	if appInstApi.UsesClusterInst(&in.Key) {
 		return errors.New("ClusterInst in use by Application Instance")
 	}
