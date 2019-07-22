@@ -186,36 +186,6 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	return false
 }
 
-func (s *AppInstApi) EnsureAllKeysPresent(in *edgeproto.AppInst) error {
-	missingKeys := []string{}
-
-	if in.Key.AppKey.Name == "" {
-		missingKeys = append(missingKeys, "appkey-name")
-	}
-	if in.Key.AppKey.Version == "" {
-		missingKeys = append(missingKeys, "appkey-version")
-	}
-	if in.Key.AppKey.DeveloperKey.Name == "" {
-		missingKeys = append(missingKeys, "appkey-developerkey-name")
-	}
-	if in.Key.ClusterInstKey.ClusterKey.Name == "" {
-		missingKeys = append(missingKeys, "key-clusterinstkey-clusterkey-name")
-	}
-	if in.Key.ClusterInstKey.Developer == "" {
-		missingKeys = append(missingKeys, "key-clusterinstkey-developer")
-	}
-	if in.Key.ClusterInstKey.CloudletKey.OperatorKey.Name == "" {
-		missingKeys = append(missingKeys, "key-clusterinstkey-cloudletkey-operatorkey-name")
-	}
-	if in.Key.ClusterInstKey.CloudletKey.Name == "" {
-		missingKeys = append(missingKeys, "key-clusterinstkey-cloudletkey-name")
-	}
-	if len(missingKeys) > 0 {
-		return fmt.Errorf("Missing Keys: %s", strings.Join(missingKeys, ","))
-	}
-	return nil
-}
-
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	return s.createAppInstInternal(DefCallContext(), in, cb)
@@ -256,10 +226,15 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
 
-	err := s.EnsureAllKeysPresent(in)
-	if err != nil {
+	// populate the clusterinst developer from the app developer if not already present
+	if in.Key.ClusterInstKey.Developer == "" {
+		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
+	}
+	if err := in.Key.Validate(); err != nil {
 		return err
 	}
+
 	if in.Liveness == edgeproto.Liveness_LIVENESS_UNKNOWN {
 		in.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 	}
@@ -277,23 +252,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// indicates special default cloudlet maintained by the developer
 	var defaultCloudlet bool
 
-	if err = in.Key.AppKey.Validate(); err != nil {
-		return err
-	}
-
 	if in.Key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
 		log.DebugLog(log.DebugLevelApi, "special default public cloud case", "appinst", in)
 		defaultCloudlet = true
-		if in.Key.ClusterInstKey.Developer == "" {
-			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
-		}
 	}
-	if in.Key.ClusterInstKey.Developer == "" {
-		// This is allowed for:
-		// 1) older clusters that were created before it was required
-		// 2) autoclusters
-		// We do ClusterInst lookup for both cases below.
-	} else if in.Key.AppKey.DeveloperKey.Name != cloudcommon.DeveloperMobiledgeX &&
+	if in.Key.AppKey.DeveloperKey.Name != cloudcommon.DeveloperMobiledgeX &&
 		in.Key.AppKey.DeveloperKey.Name != in.Key.ClusterInstKey.Developer {
 		// both are specified, make sure they match
 		return fmt.Errorf("Developer name mismatch between app: %s and cluster inst: %s", in.Key.AppKey.DeveloperKey.Name, in.Key.ClusterInstKey.Developer)
@@ -425,7 +388,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return fmt.Errorf("Cannot specify URI %s for non-default cloudlet", in.Uri)
 	}
 
-	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		buf := in
 		if !defaultCloudlet {
 			// lookup already done, don't overwrite changes
@@ -635,8 +598,13 @@ func (s *AppInstApi) updateAppInstStore(in *edgeproto.AppInst) error {
 func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
 
 	log.DebugLog(log.DebugLevelApi, "updateAppInstInternal", "appinst", in)
-	err := s.EnsureAllKeysPresent(in)
-	if err != nil {
+
+	// populate the clusterinst developer from the app developer if not already present
+	if in.Key.ClusterInstKey.Developer == "" {
+		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
+	}
+	if err := in.Key.Validate(); err != nil {
 		return err
 	}
 	if in.Fields != nil {
@@ -647,7 +615,7 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 	}
 	var app edgeproto.App
-	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		var curr edgeproto.AppInst
 
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
@@ -675,8 +643,7 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			curr.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
 		s.store.STMPut(stm, &curr)
-
-		return err
+		return nil
 	})
 
 	if err != nil {
@@ -704,6 +671,14 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	var defaultCloudlet bool
 
 	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "appinst", in)
+	// populate the clusterinst developer from the app developer if not already present
+	if in.Key.ClusterInstKey.Developer == "" {
+		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
+	}
+	if err := in.Key.Validate(); err != nil {
+		return err
+	}
 
 	if in.Key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
 		log.DebugLog(log.DebugLevelApi, "special default cloud case", "appinst", in)
