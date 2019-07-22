@@ -3,10 +3,9 @@ tests:
   - includefile: deploy_start.yml
   - includefile: check_dme_nodes.yml
   - includefile: add_delete.yml
-    loops: 2
   - includefile: add_delete.yml
     mods: [cli]
-    loops: 2
+  - includefile: add_update_delete.yml
   - includefile: add_delete_2apps.yml
     loops: 2
   - includefile: get_appinstlist.yml
