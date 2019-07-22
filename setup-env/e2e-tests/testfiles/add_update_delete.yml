@@ -24,7 +24,7 @@ tests:
   actions: [ctrlapi-update,ctrlapi-show]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata_show_after_upgrade.yml"
+    yaml2: "{{datadir}}/appdata_show_after_update.yml"
     filetype: appdata
 
 - name: delete provisioning, verify it is empty
