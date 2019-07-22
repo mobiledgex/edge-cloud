@@ -288,7 +288,32 @@ func (cd *ControllerData) appInstChanged(old *edgeproto.AppInst, new *edgeproto.
 			}
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
-		// update (TODO)
+		cd.appInstInfoState(&new.Key, edgeproto.TrackedState_UPDATING)
+		clusterInst := edgeproto.ClusterInst{}
+		if cloudcommon.IsClusterInstReqd(&app) {
+			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)
+			if !clusterInstFound {
+				str := fmt.Sprintf("Cluster instance %s not found",
+					new.Key.ClusterInstKey.ClusterKey.Name)
+				cd.appInstInfoError(&new.Key, edgeproto.TrackedState_UPDATE_ERROR, str)
+				return
+			}
+		}
+		err := cd.platform.UpdateAppInst(&clusterInst, &app, new, updateAppCacheCallback)
+		if err != nil {
+			errstr := fmt.Sprintf("Update App Inst failed: %s", err)
+			cd.appInstInfoError(&new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr)
+			log.InfoLog("can't update app inst", "error", errstr, "key", new.Key)
+			return
+		}
+		log.DebugLog(log.DebugLevelMexos, "updated app inst", "appisnt", new, "clusterinst", clusterInst)
+		rt, err := cd.platform.GetAppInstRuntime(&clusterInst, &app, new)
+		if err != nil {
+			log.InfoLog("unable to get AppInstRuntime", "key", new.Key, "err", err)
+			cd.appInstInfoState(&new.Key, edgeproto.TrackedState_READY)
+		} else {
+			cd.appInstInfoRuntime(&new.Key, edgeproto.TrackedState_READY, rt)
+		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
