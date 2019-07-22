@@ -84,44 +84,69 @@ developers:
 cloudlets:
 - key:
     operatorkey:
-      name: azure
-    name: azure-cloud-9
-  accessuri: cloud9.azure
-  location:
-    latitude: 32
-    longitude: -91
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-- key:
-    operatorkey:
-      name: gcp
-    name: gcp-cloud-10
-  accessuri: cloud2.gcp
-  location:
-    latitude: 36
-    longitude: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-- key:
-    operatorkey:
       name: dmuus
     name: dmuus-cloud-1
-  accessuri: cloud1.tmo
   location:
     latitude: 31
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51101
+  flavor:
+    name: DefaultPlatformFlavor
 - key:
     operatorkey:
       name: dmuus
     name: dmuus-cloud-2
-  accessuri: cloud2.tmo
   location:
     latitude: 35
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51102
+  flavor:
+    name: DefaultPlatformFlavor
+- key:
+    operatorkey:
+      name: dmuus
+    name: dmuus-cloud-3
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51103
+  flavor:
+    name: DefaultPlatformFlavor
+- key:
+    operatorkey:
+      name: azure
+    name: azure-cloud-4
+  location:
+    latitude: 32
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51104
+  flavor:
+    name: DefaultPlatformFlavor
+- key:
+    operatorkey:
+      name: gcp
+    name: gcp-cloud-5
+  location:
+    latitude: 36
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51105
+  flavor:
+    name: DefaultPlatformFlavor
 
 apps:
 - key:
@@ -132,7 +157,6 @@ apps:
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:2.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
-  revision: 1
   defaultflavor:
     name: x1.small
   cluster:
@@ -150,6 +174,7 @@ apps:
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
   permitsplatformapps: true
+  revision: 1
 - key:
     developerkey:
       name: AcmeAppCo
@@ -193,6 +218,8 @@ apps:
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
+  accessports: tcp:9090
+  internalports: true
   defaultflavor:
     name: x1.medium
   deployment: helm
@@ -288,10 +315,10 @@ appinstances:
     latitude: 31
     longitude: -91
   uri: dmuus-cloud-1.dmuus.mobiledgex.net
-  revision: 1
   liveness: LivenessStatic
   flavor:
     name: x1.small
+  revision: 1
 - key:
     appkey:
       developerkey:
