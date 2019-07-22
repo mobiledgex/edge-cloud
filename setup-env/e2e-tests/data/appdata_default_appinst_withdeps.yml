@@ -54,6 +54,7 @@ appinstances:
     clusterinstkey:
       clusterkey:
         name: default
+      developer: AcmeAppCo
       cloudletkey:
         operatorkey:
           name: developer

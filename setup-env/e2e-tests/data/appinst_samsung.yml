@@ -8,6 +8,7 @@ appinstances:
     clusterinstkey:
       clusterkey:
         name: default
+      developer: Samsung
       cloudletkey:
         operatorkey:
           name: developer
