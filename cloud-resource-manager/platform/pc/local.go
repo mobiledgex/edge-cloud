@@ -25,10 +25,8 @@ func (s *LocalClient) Output(command string) (string, error) {
 // Shell requests a shell from the remote. If an arg is passed, it tries to
 // exec them on the server.
 func (s *LocalClient) Shell(sin io.Reader, sout, serr io.Writer, args ...string) error {
-	if len(args) == 0 {
-		args = []string{"/bin/sh"}
-	}
-	cmd := exec.Command(args[0], args[1:]...)
+	args = append([]string{"-c"}, args...)
+	cmd := exec.Command("/bin/sh", args...)
 	tty, err := pty.Start(cmd)
 	if err != nil {
 		return err
