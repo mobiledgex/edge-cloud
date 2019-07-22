@@ -70,7 +70,6 @@ func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bo
 // Skipverify is only to be used for internal connections such as GRPCGW to GRPC.
 func GetTLSClientConfig(serverAddr string, tlsCertFile string, caCertFile string, skipVerify bool) (*tls.Config, error) {
 	if tlsCertFile == "" {
-		fmt.Println("No TLS cert file")
 		return nil, nil
 	}
 	certPool, err := GetClientCertPool(tlsCertFile, caCertFile)
