@@ -44,22 +44,22 @@ var FlavorData = []edgeproto.Flavor{
 var DevData = []edgeproto.Developer{
 	edgeproto.Developer{
 		Key: edgeproto.DeveloperKey{
-			Name: "niantic-inc",
+			Name: "Niantic, Inc",
 		},
 	},
 	edgeproto.Developer{
 		Key: edgeproto.DeveloperKey{
-			Name: "ever.ai",
+			Name: "Ever.ai",
 		},
 	},
 	edgeproto.Developer{
 		Key: edgeproto.DeveloperKey{
-			Name: "1000-realities",
+			Name: "1000 realities",
 		},
 	},
 	edgeproto.Developer{
 		Key: edgeproto.DeveloperKey{
-			Name: "sierraware_llc",
+			Name: "Sierraware LLC",
 		},
 	},
 }

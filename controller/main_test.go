@@ -199,7 +199,7 @@ flavors:
   disk: 1
 developers:
 - key:
-    name: acme-app-co
+    name: AcmeAppCo
 apps:
 - key:
     developerkey:
