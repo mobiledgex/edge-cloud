@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"strings"
 
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
+	v1 "k8s.io/api/core/v1"
 )
 
 var AppDeploymentTypeKubernetes = "kubernetes"
@@ -49,7 +52,7 @@ func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string)
 	return false
 }
 
-func IsValidDeploymentManifest(appDeploymentType, command, manifest string) error {
+func IsValidDeploymentManifest(appDeploymentType, command, manifest string, ports []dme.AppPort) error {
 	if appDeploymentType == AppDeploymentTypeVM {
 		if command != "" {
 			return fmt.Errorf("both deploymentmanifest and command cannot be used together for VM based deployment")
@@ -58,6 +61,44 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string) erro
 			return nil
 		}
 		return fmt.Errorf("only cloud-init script support, must start with '#cloud-config'")
+	} else if appDeploymentType == AppDeploymentTypeKubernetes {
+		objs, _, err := DecodeK8SYaml(manifest)
+		if err != nil {
+			return fmt.Errorf("parse kubernetes deployment yaml failed, %v", err)
+		}
+		// check that any ports specified on App are part of manifest
+		objPorts := make(map[dme.AppPort]struct{})
+		for _, obj := range objs {
+			ksvc, ok := obj.(*v1.Service)
+			if !ok {
+				continue
+			}
+			for _, kp := range ksvc.Spec.Ports {
+				appPort := dme.AppPort{}
+				appPort.Proto, err = edgeproto.GetLProto(string(kp.Protocol))
+				if err != nil {
+					log.DebugLog(log.DebugLevelApi, "unrecognized port protocol in kubernetes manifest", "proto", string(kp.Protocol))
+					continue
+				}
+				appPort.InternalPort = int32(kp.TargetPort.IntValue())
+				objPorts[appPort] = struct{}{}
+			}
+		}
+		missingPorts := []string{}
+		for _, appPort := range ports {
+			// http is mapped to tcp
+			if appPort.Proto == dme.LProto_L_PROTO_HTTP {
+				appPort.Proto = dme.LProto_L_PROTO_TCP
+			}
+			if _, found := objPorts[appPort]; found {
+				continue
+			}
+			protoStr, _ := edgeproto.LProtoStr(appPort.Proto)
+			missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, appPort.InternalPort))
+		}
+		if len(missingPorts) > 0 {
+			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest (note http is mapped to tcp)", strings.Join(missingPorts, ","))
+		}
 	}
 	return nil
 }

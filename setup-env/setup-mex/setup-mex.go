@@ -88,13 +88,6 @@ func WaitForProcesses(processName string, procs []process.Process) bool {
 		count++
 		go util.ConnectDme(dme, c)
 	}
-	for _, crm := range util.Deployment.Crms {
-		if processName != "" && processName != crm.Name && processName != "allcrms" {
-			continue
-		}
-		count++
-		go util.ConnectCrm(crm, c)
-	}
 	allpass := true
 	for i := 0; i < count; i++ {
 		rc := <-c
@@ -122,7 +115,7 @@ func ensureProcesses(processName string, procs []process.Process) bool {
 		exeName := p.GetExeName()
 		args := p.LookupArgs()
 		log.Printf("Looking for host %v processexe %v processargs %v\n", p.GetHostname(), exeName, args)
-		if !util.EnsureProcessesByName(exeName, args) {
+		if !process.EnsureProcessesByName(exeName, args) {
 			ensured = false
 		}
 	}
@@ -296,7 +289,7 @@ func StopProcesses(processName string, allprocs []process.Process) bool {
 			continue
 		}
 		log.Println("stopping/killing processes " + p.GetName())
-		go util.StopProcess(allprocs[ii], maxWait, c)
+		go process.StopProcess(allprocs[ii], maxWait, c)
 		count++
 	}
 	if processName != "" && count == 0 {
@@ -449,6 +442,11 @@ func StartProcesses(processName string, outputDir string) bool {
 		opts = append(opts, process.WithCleanStartup())
 	}
 
+	for _, p := range util.Deployment.Influxs {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
 	for _, p := range util.Deployment.Vaults {
 		opts = append(opts, process.WithRolesFile(rolesfile))
 		if !StartLocal(processName, outputDir, p, opts...) {
@@ -460,19 +458,8 @@ func StartProcesses(processName string, outputDir string) bool {
 			return false
 		}
 	}
-	for _, p := range util.Deployment.Influxs {
-		if !StartLocal(processName, outputDir, p, opts...) {
-			return false
-		}
-	}
 	for _, p := range util.Deployment.Controllers {
 		opts = append(opts, process.WithDebug("etcd,api,notify"))
-		if !StartLocal(processName, outputDir, p, opts...) {
-			return false
-		}
-	}
-	for _, p := range util.Deployment.Crms {
-		opts = append(opts, process.WithDebug("api,notify,mexos"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}

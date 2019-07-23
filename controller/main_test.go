@@ -28,6 +28,7 @@ func TestController(t *testing.T) {
 	flag.Parse() // set defaults
 	*localEtcd = true
 	*initLocalEtcd = true
+	*testMode = true
 
 	err := startServices()
 	require.Nil(t, err, "start")

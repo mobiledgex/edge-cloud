@@ -93,8 +93,12 @@ message ConfigFile {
   repeated ConfigFile configs = 21;
   // Option to run App on all nodes of the cluster
   bool scale_with_cluster = 22;
+    // Should this app have access to outside world?
+  bool internal_ports = 23;
+  // Revision increments each time the App is updated
+  int32 revision = 24;
   // MD5Sum of the VM-based app image
-  string md5sum = 23;
+  string md5sum = 25;
   // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -103,6 +107,7 @@ message ConfigFile {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protocmd.alias) = "appname=Key.Name,appvers=Key.Version,developer=Key.DeveloperKey.Name";
+  option (protocmd.noconfig) = "Revision";
 }
 
 service AppApi {

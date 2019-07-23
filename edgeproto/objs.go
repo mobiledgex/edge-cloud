@@ -16,6 +16,7 @@ import (
 //TODO - need to move out Errors into a separate package
 var ErrEdgeApiFlavorNotFound = errors.New("Specified flavor not found")
 var ErrEdgeApiAppNotFound = errors.New("Specified app not found")
+var ErrEdgeApiAppInstNotFound = errors.New("Specified app instance not found")
 
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
@@ -278,6 +279,16 @@ func MakeFieldMap(fields []string) map[string]struct{} {
 		}
 	}
 	return fmap
+}
+
+func GetFields(fmap map[string]struct{}) []string {
+	var fields []string
+
+	for k, _ := range fmap {
+		fields = append(fields, k)
+	}
+
+	return fields
 }
 
 func HasField(fmap map[string]struct{}, field string) bool {

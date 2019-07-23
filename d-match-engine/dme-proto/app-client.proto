@@ -256,6 +256,48 @@ message DynamicLocGroupReply {
   string group_cookie = 5;
 }
 
+message QosPosition{
+  // as set by the client, must be unique within QosRequest
+  int64 positionid = 1;
+  //location
+  Loc gps_location = 2;
+}
+
+message QosPositionKpiRequest{
+   // API version
+  uint32 ver = 1;
+  // Session Cookie from RegisterClientRequest
+  string session_cookie = 2;
+  // list of positions
+  repeated QosPosition positions = 3;
+}
+
+message QosPositionResult{
+    // as set by the client, must be unique within one QosPositionKpiRequest
+    int64 positionid = 1;
+    // the location which was requested
+    Loc gps_location = 2;
+    // throughput 
+    float dluserthroughput_min = 3;
+    float dluserthroughput_avg = 4;
+    float dluserthroughput_max = 5;
+    float uluserthroughput_min = 6;
+    float uluserthroughput_avg = 7;
+    float uluserthroughput_max = 8;
+    float latency_min = 9;
+    float latency_avg = 10;
+    float latency_max = 11;
+}
+
+message QosPositionKpiReply{
+  uint32 ver = 1;
+  // Status of the reply
+  ReplyStatus status = 2;
+  // kpi details
+  repeated QosPositionResult position_results = 3;
+}
+
+
 service MatchEngineApi {
   rpc RegisterClient(RegisterClientRequest) returns (RegisterClientReply) {
       option (google.api.http) = {
@@ -296,6 +338,12 @@ service MatchEngineApi {
    rpc GetFqdnList(FqdnListRequest) returns (FqdnListReply) {
     option (google.api.http) = {
       post: "/v1/getfqdnlist"
+      body: "*"
+    };
+  }
+    rpc GetQosPositionKpi(QosPositionKpiRequest) returns (stream QosPositionKpiReply) {
+    option (google.api.http) = {
+      post: "/v1/getqospositionkpi"
       body: "*"
     };
   }

@@ -21,6 +21,7 @@ type Controller struct {
 	ApiAddr       string
 	HttpAddr      string
 	NotifyAddr    string
+	VaultAddr     string
 	InfluxAddr    string
 	TLS           TLSCerts
 	ShortTimeouts bool
@@ -34,6 +35,7 @@ type Dme struct {
 	NotifyAddrs string
 	LocVerUrl   string
 	TokSrvUrl   string
+	QosPosUrl   string
 	Carrier     string
 	CloudletKey string
 	VaultAddr   string
@@ -43,7 +45,6 @@ type Dme struct {
 }
 type Crm struct {
 	Common        `yaml:",inline"`
-	ApiAddr       string
 	NotifyAddrs   string
 	NotifySrvAddr string
 	CloudletKey   string
@@ -82,6 +83,7 @@ type Influx struct {
 	HttpAddr string
 	Config   string // set during Start
 	TLS      TLSCerts
+	Auth     LocalAuth
 	cmd      *exec.Cmd
 }
 type ClusterSvc struct {

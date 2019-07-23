@@ -6,6 +6,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -63,6 +64,11 @@ func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	return nil
 }
 
+func (s *Platform) UpdateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
+	updateCallback(edgeproto.UpdateTask, "fake appInst updated")
+	return nil
+}
+
 func (s *Platform) GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
 	return &edgeproto.AppInstRuntime{}, nil
 }
@@ -73,4 +79,28 @@ func (s *Platform) GetPlatformClient(clusterInst *edgeproto.ClusterInst) (pc.Pla
 
 func (s *Platform) GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
 	return req.Command, nil
+}
+
+func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
+	log.DebugLog(log.DebugLevelMexos, "create fake cloudlet", "key", cloudlet.Key)
+	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
+
+	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
+	err := cloudcommon.StartCRMService(cloudlet, pfConfig)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "fake cloudlet create failed", "err", err)
+		return err
+	}
+	return nil
+}
+
+func (s *Platform) DeleteCloudlet(cloudlet *edgeproto.Cloudlet) error {
+	log.DebugLog(log.DebugLevelMexos, "delete fake Cloudlet", "key", cloudlet.Key)
+	err := cloudcommon.StopCRMService(cloudlet)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "fake cloudlet delete failed", "err", err)
+		return err
+	}
+
+	return nil
 }

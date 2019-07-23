@@ -20,6 +20,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -38,6 +39,10 @@ import distributed_match_engine.AppClient.GetLocationRequest;
 import distributed_match_engine.AppClient.GetLocationReply;
 import distributed_match_engine.AppClient.AppInstListRequest;
 import distributed_match_engine.AppClient.AppInstListReply;
+import distributed_match_engine.AppClient.QosPositionKpiRequest;
+import distributed_match_engine.AppClient.QosPositionKpiReply;
+import distributed_match_engine.AppClient.QosPosition;
+
 
 import distributed_match_engine.AppClient.DynamicLocGroupRequest;
 import distributed_match_engine.AppClient.DynamicLocGroupReply;
@@ -414,6 +419,13 @@ public class MatchingEngine {
                 .setLgId(1001L) // FIXME: NOT IMPLEMENTED
                 .setCommType(commType)
                 .setUserData(userData == null ? "" : userData)
+                .build();
+    }
+
+    public QosPositionKpiRequest createQoSKPIRequest(List<QosPosition> requests) {
+        return QosPositionKpiRequest.newBuilder()
+                .setSessionCookie(mSessionCookie)
+                .addAllPositions(requests)
                 .build();
     }
 
@@ -804,6 +816,87 @@ public class MatchingEngine {
         GetAppInstList getAppInstList = new GetAppInstList(this);
         getAppInstList.setRequest(request, host, port, timeoutInMilliseconds);
         return submit(getAppInstList);
+    }
+
+
+    /**
+     * Request QOS values from a list of PositionKPIRequests, and returns a stream Iterator of
+     * predicted QOS values.
+     * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public ChannelIterator<QosPositionKpiReply> getQosPositionKpi(QosPositionKpiRequest request,
+                                                                  long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
+
+        String carrierName = retrieveNetworkCarrierName(mContext);
+        QosPositionKpi qosPositionKpi = new QosPositionKpi(this);
+        qosPositionKpi.setRequest(request,generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+        return qosPositionKpi.call();
+    }
+
+    /**
+     * Request QOS values from a list of PositionKPIRequests, and returns an asynchronous Future
+     * for a stream Iterator of predicted QOS values.
+     * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public Future<ChannelIterator<QosPositionKpiReply>> getQosPositionKpiFuture(QosPositionKpiRequest request,
+                                                                  long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
+
+        String carrierName = retrieveNetworkCarrierName(mContext);
+        QosPositionKpi qosPositionKpi = new QosPositionKpi(this);
+        qosPositionKpi.setRequest(request,generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+        return submit(qosPositionKpi);
+    }
+    /**
+     * Request QOS values from a list of PositionKPIRequests, and returns a stream Iterator of
+     * predicted QOS values.
+     * @param request
+     * @param host
+     * @param port
+     * @param timeoutInMilliseconds
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public ChannelIterator<QosPositionKpiReply> getQosPositionKpi(QosPositionKpiRequest request,
+                                                                  String host, int port,
+                                                                  long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
+
+        QosPositionKpi qosPositionKpi = new QosPositionKpi(this);
+        qosPositionKpi.setRequest(request, host, port, timeoutInMilliseconds);
+        return qosPositionKpi.call();
+    }
+
+    /**
+     * Request QOS values from a list of PositionKPIRequests, and returns an asynchronous Future
+     * for a stream Iterator of predicted QOS values.
+     *
+     * @param request
+     * @param host
+     * @param port
+     * @param timeoutInMilliseconds
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public Future<ChannelIterator<QosPositionKpiReply>> getQosPositionKpiFuture(QosPositionKpiRequest request,
+                                                                                String host, int port,
+                                                                                long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
+
+        QosPositionKpi qosPositionKpi = new QosPositionKpi(this);
+        qosPositionKpi.setRequest(request, host, port, timeoutInMilliseconds);
+        return submit(qosPositionKpi);
     }
 
     //

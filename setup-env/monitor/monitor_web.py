@@ -87,7 +87,7 @@ class show_status:
        p = subprocess.Popen(["/usr/local/bin/edgectl --addr "+uri+" --tls /root/tls/mex-client.crt dme RegisterClient --appname \""+appname+"\" --appvers \"1.0\" --devname \""+devname+"\""], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
        out,err = p.communicate()
        print ("DME OUT %s" % out)
-       if "RS_SUCCESS" in out:
+       if "RsSuccess" in out:
            return type,name,uri,"OK"
        else:
            return type,name,uri,"FAIL"
@@ -105,6 +105,7 @@ class show_status:
          req = urllib2.Request("http://"+uri, msg, headers)
          print ("posting to %s\n" % uri)
          response = urllib2.urlopen(req, timeout=3)
+         print ("got response from %s\n" % uri)
          return type,name,uri,"OK"
        except urllib2.HTTPError, e:
           if (e.code == 404) and ("facedetection" in uri):
@@ -155,7 +156,7 @@ class show_status:
         ## todo: remove hardcoded endpoints
         gws = ("Token Simulator|mexdemo.tok.mobiledgex.net:9999", 
                "Location API Simulator|mexdemo.locsim.mobiledgex.net:8888",
-               "DME - MWC|tdg.dme.mobiledgex.net:50051", 
+               "DME - Samsung|samsung.dme.mobiledgex.net:50051", 
                "DME - Demo|mexdemo.dme.mobiledgex.net:50051")
         
         for gw in gws:

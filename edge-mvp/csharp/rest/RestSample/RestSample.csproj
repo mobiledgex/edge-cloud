@@ -7,6 +7,6 @@
     <ReleaseVersion>1.4.0</ReleaseVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MobiledgeX.MatchingEngineRestSDKLibrary" Version="1.4.0" />
+    <PackageReference Include="MobiledgeX.MatchingEngineRestSDKLibrary" Version="1.4.7" />
   </ItemGroup>
 </Project>

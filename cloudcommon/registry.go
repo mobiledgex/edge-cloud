@@ -105,6 +105,10 @@ func SendHTTPReq(method, fileUrlPath string, auth *RegistryAuth) (*http.Response
 func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	log.DebugLog(log.DebugLevelApi, "validate registry path", "path", regUrl)
 
+	if regUrl == "" {
+		return fmt.Errorf("registry path is empty")
+	}
+
 	version := "v2"
 	matchTag := "latest"
 	regPath := ""
@@ -127,6 +131,9 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	log.DebugLog(log.DebugLevelApi, "registry api url", "url", regUrl)
 
 	auth, err := GetRegistryAuth(regUrl, vaultAddr)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "warning, cannot get docker registry secret from vault - assume public registry", "err", err)
+	}
 
 	resp, err := SendHTTPReq("GET", regUrl, auth)
 	if err != nil {
@@ -216,6 +223,9 @@ func getAuthToken(regUrl, authHeader string, auth *RegistryAuth) *RegistryAuth {
 
 func ValidateVMRegistryPath(imgUrl, vaultAddr string) error {
 	log.DebugLog(log.DebugLevelApi, "validate vm-image path", "path", imgUrl)
+	if imgUrl == "" {
+		return fmt.Errorf("image path is empty")
+	}
 
 	auth, err := GetRegistryAuth(imgUrl, vaultAddr)
 	if err != nil {

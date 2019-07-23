@@ -4,6 +4,7 @@
 package util
 
 import (
+	"encoding/hex"
 	"fmt"
 	"net"
 	"net/url"
@@ -141,6 +142,28 @@ func IsLatitudeValid(latitude float64) bool {
 // IsLongitudeValid checks that the longitude is within accepted ranges
 func IsLongitudeValid(longitude float64) bool {
 	return (longitude >= -180) && (longitude <= 180)
+}
+
+func ValidateImagePath(imagePath string) error {
+	urlInfo := strings.Split(imagePath, "#")
+	if len(urlInfo) != 2 {
+		return fmt.Errorf("md5 checksum of image is required. Please append checksum to imagepath: \"<url>#md5:checksum\"")
+	}
+	cSum := strings.Split(urlInfo[1], ":")
+	if len(cSum) != 2 {
+		return fmt.Errorf("incorrect checksum format, valid format: \"<url>#md5:checksum\"")
+	}
+	if cSum[0] != "md5" {
+		return fmt.Errorf("only md5 checksum is supported")
+	}
+	if len(cSum[1]) < 32 {
+		return fmt.Errorf("md5 checksum must be at least 32 characters")
+	}
+	_, err := hex.DecodeString(cSum[1])
+	if err != nil {
+		return fmt.Errorf("invalid md5 checksum")
+	}
+	return nil
 }
 
 func ImagePathParse(imagepath string) (*url.URL, error) {

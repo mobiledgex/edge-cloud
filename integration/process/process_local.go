@@ -3,6 +3,7 @@ package process
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -10,8 +11,10 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -30,7 +33,16 @@ type TLSCerts struct {
 	ServerCert string
 	ServerKey  string
 	ClientCert string
+	ApiCert    string
+	ApiKey     string
 }
+
+type LocalAuth struct {
+	User string `json:"user"`
+	Pass string `json:"pass"`
+}
+
+var InfluxCredsFile = "/tmp/influx.json"
 
 // EtcdLocal
 
@@ -82,6 +94,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--influxAddr")
 		args = append(args, p.InfluxAddr)
 	}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -95,8 +111,26 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-testMode")
 	}
 
+	var envs []string
+	if options.RolesFile != "" {
+		dat, err := ioutil.ReadFile(options.RolesFile)
+		if err != nil {
+			return err
+		}
+		roles := VaultRoles{}
+		err = yaml.Unmarshal(dat, &roles)
+		if err != nil {
+			return err
+		}
+		envs = []string{
+			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.CtrlRoleID),
+			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.CtrlSecretID),
+		}
+		log.Printf("dme envs: %v\n", envs)
+	}
+
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envs, logfile)
 	return err
 }
 
@@ -145,7 +179,7 @@ func connectAPIImpl(timeout time.Duration, apiaddr string, tlsConfig *tls.Config
 }
 
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetMutualAuthClientConfig(p.ApiAddr, p.TLS.ClientCert)
+	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, "", false)
 	if err != nil {
 		return nil, err
 	}
@@ -172,6 +206,10 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--toksrvurl")
 		args = append(args, p.TokSrvUrl)
 	}
+	if p.QosPosUrl != "" {
+		args = append(args, "--qosposurl")
+		args = append(args, p.QosPosUrl)
+	}
 	if p.Carrier != "" {
 		args = append(args, "--carrier")
 		args = append(args, p.Carrier)
@@ -185,8 +223,13 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, p.TLS.ServerCert)
 	}
 	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
-		args = append(args, "--tlsApiCertFile", p.TLS.ServerCert)
-		args = append(args, "--tlsApiKeyFile", p.TLS.ServerKey)
+		if p.TLS.ApiCert != "" {
+			args = append(args, "--tlsApiCertFile", p.TLS.ApiCert)
+			args = append(args, "--tlsApiKeyFile", p.TLS.ApiKey)
+		} else {
+			args = append(args, "--tlsApiCertFile", p.TLS.ServerCert)
+			args = append(args, "--tlsApiKeyFile", p.TLS.ServerKey)
+		}
 	}
 	if p.VaultAddr != "" {
 		args = append(args, "--vaultAddr")
@@ -247,7 +290,7 @@ func (p *Dme) getTlsConfig() *tls.Config {
 		// their built-in trusted CAs to verify the cert.
 		// Since we're using self-signed certs here, add
 		// our CA to the cert pool.
-		certPool, err := mextls.GetClientCertPool(p.TLS.ServerCert)
+		certPool, err := mextls.GetClientCertPool(p.TLS.ServerCert, "")
 		if err != nil {
 			log.Printf("GetClientCertPool failed, %v\n", err)
 			return nil
@@ -263,15 +306,11 @@ func (p *Dme) getTlsConfig() *tls.Config {
 
 // CrmLocal
 
-func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
+func (p *Crm) GetArgs(opts ...StartOp) []string {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	if p.NotifySrvAddr != "" {
 		args = append(args, "--notifySrvAddr")
 		args = append(args, p.NotifySrvAddr)
-	}
-	if p.ApiAddr != "" {
-		args = append(args, "--apiAddr")
-		args = append(args, p.ApiAddr)
 	}
 	if p.CloudletKey != "" {
 		args = append(args, "--cloudletKey")
@@ -307,8 +346,13 @@ func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
+	return args
+}
 
+func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 	var err error
+
+	args := p.GetArgs(opts...)
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	return err
 }
@@ -319,19 +363,28 @@ func (p *Crm) StopLocal() {
 
 func (p *Crm) GetExeName() string { return "crmserver" }
 
-func (p *Crm) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
+func (p *Crm) LookupArgs() string { return "--cloudletKey " + p.CloudletKey }
 
-func (p *Crm) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetMutualAuthClientConfig(p.ApiAddr, p.TLS.ClientCert)
-	if err != nil {
-		return nil, err
+func (p *Crm) String(opts ...StartOp) string {
+	cmd_str := p.GetExeName()
+	args := p.GetArgs(opts...)
+	key := true
+	for _, v := range args {
+		if key {
+			cmd_str += " " + v
+			key = false
+		} else {
+			cmd_str += " '" + v + "'"
+			key = true
+		}
 	}
-	return connectAPIImpl(timeout, p.ApiAddr, tlsConfig)
+	return cmd_str
 }
 
 // InfluxLocal
 
 func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
+	var prefix string
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.CleanStartup {
@@ -341,14 +394,53 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 	}
 
 	configFile, err := influxsup.SetupInflux(p.DataDir,
-		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey))
+		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey), influxsup.WithAuth(p.Auth.User != ""))
 	if err != nil {
 		return err
 	}
 	p.Config = configFile
 	args := []string{"-config", configFile}
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// if auth is enabled we need to create default user
+	if p.Auth.User != "" {
+		time.Sleep(5 * time.Second)
+		if p.TLS.ServerCert != "" {
+			prefix = "https://" + p.HttpAddr
+			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		} else {
+			prefix = "http://" + p.HttpAddr
+		}
+
+		resource := "/query"
+		data := url.Values{}
+		data.Set("q", "CREATE USER "+p.Auth.User+" WITH PASSWORD '"+p.Auth.Pass+"' WITH ALL PRIVILEGES")
+		u, _ := url.ParseRequestURI(prefix)
+		u.Path = resource
+		u.RawQuery = data.Encode()
+		urlStr := fmt.Sprintf("%v", u)
+		client := &http.Client{}
+		r, _ := http.NewRequest("POST", urlStr, nil)
+
+		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+		fmt.Printf("Query: %s\n", urlStr)
+		_, err := client.Do(r)
+		if err != nil {
+			p.StopLocal()
+			return err
+		}
+	}
+	// create auth file for Vault
+	creds_json, err := json.Marshal(p.Auth)
+	if err != nil {
+		p.StopLocal()
+		return err
+	}
+	return ioutil.WriteFile(InfluxCredsFile, creds_json, 0644)
 }
 
 func (p *Influx) StopLocal() {
@@ -419,6 +511,8 @@ type VaultRoles struct {
 	CRMSecretID     string `json:"crmsecretid"`
 	RotatorRoleID   string `json:"rotatorroleid"`
 	RotatorSecretID string `json:"rotatorsecretid"`
+	CtrlRoleID      string `json:"controllerroleid"`
+	CtrlSecretID    string `json:"controllersecretid"`
 }
 
 func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
@@ -459,8 +553,14 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	p.GetAppRole(region, "dme", &roles.DmeRoleID, &roles.DmeSecretID, &err)
 	p.GetAppRole(region, "crm", &roles.CRMRoleID, &roles.CRMSecretID, &err)
 	p.GetAppRole(region, "rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
+	p.GetAppRole(region, "controller", &roles.CtrlRoleID, &roles.CtrlSecretID, &err)
 	p.PutSecret(region, "dme", p.DmeSecret+"-old", &err)
 	p.PutSecret(region, "dme", p.DmeSecret, &err)
+	// Get the directory where the influx.json file is
+	if _, serr := os.Stat(InfluxCredsFile); !os.IsNotExist(serr) {
+		path := "secret/" + region + "/accounts/influxdb"
+		p.PutSecretsJson(path, InfluxCredsFile, &err)
+	}
 	if err != nil {
 		p.StopLocal()
 		return err
@@ -507,6 +607,10 @@ func (p *Vault) GetAppRole(region, name string, roleID, secretID *string, err *e
 	if val, ok := vals["secret_id"]; ok {
 		*secretID = val
 	}
+}
+
+func (p *Vault) PutSecretsJson(SecretsPath, jsonFile string, err *error) {
+	p.Run("vault", fmt.Sprintf("kv put %s @%s", SecretsPath, jsonFile), err)
 }
 
 func (p *Vault) PutSecret(region, name, secret string, err *error) {
@@ -573,6 +677,8 @@ func (p *Vault) StartLocalRoles() (*VaultRoles, error) {
 func StartLocal(name, bin string, args, envs []string, logfile string) (*exec.Cmd, error) {
 	cmd := exec.Command(bin, args...)
 	if envs != nil {
+		// Append to the current process's env
+		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, envs...)
 	}
 	if logfile == "" {

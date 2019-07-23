@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.google.protobuf'
-apply plugin: 'maven-publish'
+
+apply plugin: 'com.jfrog.artifactory'
 
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
@@ -14,7 +15,7 @@ android {
         minSdkVersion 23
         targetSdkVersion 28
         versionCode 1
-        versionName "1.4.4"
+        versionName "1.4.7"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -25,7 +26,7 @@ android {
             minifyEnabled false
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -95,31 +96,19 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:15.0.1'
 }
 
+artifactoryPublish.dependsOn('build')
 publishing {
-    repositories {
-        maven {
-            def version = android.defaultConfig.versionName
-            def releasesRepoUrl = "https://registry.mobiledgex.net/nexus/content/repositories/releases/"
-            def snapshotsRepoUrl = "https://registry.mobiledgex.net/nexus/content/repositories/snapshots/"
-            url = version.endsWith('SNAP') ? snapshotsRepoUrl : releasesRepoUrl
-            credentials {
-                username nexusUser
-                password nexusPassword
-            }
-            authentication {
-                digest(DigestAuthentication)
-            }
-        }
-        mavenLocal()
-    }
-
     publications {
-        maven(MavenPublication) {
-            // AAR of each library
-            version android.defaultConfig.versionName
-            groupId "com.mobiledgex"
-            artifactId "${project.name}"
-            artifact "${project.buildDir}/outputs/aar/${project.name}-release.aar"
+        aar(MavenPublication) {
+            groupId = "com.mobiledgex"
+            artifactId = project.getName()
+            version = android.defaultConfig.versionName
+            // Tell maven to prepare the generated "*.aar" file for publishing
+            artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
         }
     }
+}
+
+artifactoryPublish {
+    publications(publishing.publications.aar)
 }

@@ -31,7 +31,7 @@ var ctrlAddr = flag.String("ctrlAddrs", "127.0.0.1:55001", "address to connect t
 var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
-var externalPorts = flag.String("prometheus-ports", "", "ports to expose in form \"tcp:123,udp:123\"")
+var externalPorts = flag.String("prometheus-ports", "tcp:9090", "ports to expose in form \"tcp:123,udp:123\"")
 var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics collection interval")
 var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc applications")
 
@@ -66,6 +66,7 @@ var MEXPrometheusApp = edgeproto.App{
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,
 	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
+	InternalPorts: true,
 }
 
 var dialOpts grpc.DialOption
@@ -277,7 +278,7 @@ func main() {
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	dialOpts, err = tls.GetTLSClientDialOption(*ctrlAddr, *tlsCertFile)
+	dialOpts, err = tls.GetTLSClientDialOption(*ctrlAddr, *tlsCertFile, false)
 	if err != nil {
 		log.FatalLog("get TLS Credentials", "error", err)
 	}

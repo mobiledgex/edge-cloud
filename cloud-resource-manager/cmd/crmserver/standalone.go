@@ -34,6 +34,8 @@ func (s *standaloneServer) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppIn
 	return err
 }
 
+
+
 func (s *standaloneServer) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	s.data.ClusterInstCache.Update(in, 0)
 	return nil

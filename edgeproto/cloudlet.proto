@@ -6,6 +6,7 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
+import "flavor.proto";
 import "operator.proto";
 import "result.proto";
 import "common.proto";
@@ -107,6 +108,41 @@ message CloudletInfraProperties{
     GcpProperties gcp_properties = 5;
 }
 
+message PlatformConfig {
+  // Path to Docker registry holding edge-cloud image
+  string registry_path = 1;
+  // Path to platform base image
+  string image_path = 2;
+  // Address of controller notify port (can be multiple of these)
+  string notify_ctrl_addrs = 3;
+  // Vault address
+  string vault_addr  = 4;
+  // TLS cert file
+  string tls_cert_file = 5;
+  // Vault role ID for CRM
+  string crm_role_id    = 6;
+  // Vault secret ID for CRM
+  string crm_secret_id = 7;
+  // Tag of edge-cloud image
+  string platform_tag = 8;
+}
+
+// PlatformType is the supported list of cloudlet types
+enum PlatformType {
+  // Fake Cloudlet
+  PLATFORM_TYPE_FAKE = 0;
+  // DIND Cloudlet
+  PLATFORM_TYPE_DIND = 1;
+  // Openstack Cloudlet
+  PLATFORM_TYPE_OPENSTACK = 2;
+  // Azure Cloudlet
+  PLATFORM_TYPE_AZURE = 3;
+  // GCP Cloudlet
+  PLATFORM_TYPE_GCP = 4;
+  // MEXDIND Cloudlet
+  PLATFORM_TYPE_MEXDIND = 5;
+}
+
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator. 
 message Cloudlet {
   // Fields are used for the Update API to specify which fields to apply
@@ -125,6 +161,24 @@ message Cloudlet {
   int32 num_dynamic_ips = 8;
   // time limits
   OperationTimeLimits time_limits = 9 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Any errors trying to create, update, or delete the Cloudlet.
+  repeated string errors = 10 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // status is used to reflect progress of creation or other events
+  StatusInfo status = 11 [(protogen.backend) = true, (gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
+  // Current state of the cloudlet
+  TrackedState state = 12 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Override actions to CRM
+  CRMOverride crm_override = 13 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Deploy cloudlet services locally
+  bool deployment_local = 14 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Platform type
+  PlatformType platform_type = 15;
+  // Address for the CRM notify listener to run on
+  string notify_srv_addr = 16;
+  // Min system resource requirements for platform
+  FlavorKey flavor = 17;
+  // Physical infrastructure cloudlet name
+  string physical_name = 18;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -134,7 +188,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits";
+  option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status";
   option (protocmd.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }
 

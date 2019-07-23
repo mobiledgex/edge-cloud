@@ -65,7 +65,7 @@ func (s *ClusterInstInfoCache) SetStatusTask(key *ClusterInstKey, taskName strin
 		log.InfoLog("SetStatusTask failed, did not find clusterInst in cache")
 		return
 	}
-	info.Status.setTask(taskName)
+	info.Status.SetTask(taskName)
 	s.Update(&info, 0)
 }
 
@@ -77,7 +77,7 @@ func (s *ClusterInstInfoCache) SetStatusMaxTasks(key *ClusterInstKey, maxTasks u
 		log.InfoLog("SetStatusMaxTasks failed, did not find clusterInst in cache")
 		return
 	}
-	info.Status.setMaxTasks(maxTasks)
+	info.Status.SetMaxTasks(maxTasks)
 	s.Update(&info, 0)
 }
 
@@ -89,7 +89,7 @@ func (s *ClusterInstInfoCache) SetStatusStep(key *ClusterInstKey, stepName strin
 		log.InfoLog("SetStatusStep failed, did not find clusterInst in cache")
 		return
 	}
-	info.Status.setStep(stepName)
+	info.Status.SetStep(stepName)
 	s.Update(&info, 0)
 }
 
@@ -134,7 +134,7 @@ func (s *AppInstInfoCache) SetStatusMaxTasks(key *AppInstKey, maxTasks uint32) {
 		log.InfoLog("SetStatusTaskMax failed, did not find clusterInst in cache")
 		return
 	}
-	info.Status.setMaxTasks(maxTasks)
+	info.Status.SetMaxTasks(maxTasks)
 	s.Update(&info, 0)
 }
 
@@ -146,7 +146,7 @@ func (s *AppInstInfoCache) SetStatusTask(key *AppInstKey, taskName string) {
 		log.InfoLog("SetStatusTask failed, did not find clusterInst in cache")
 		return
 	}
-	info.Status.setTask(taskName)
+	info.Status.SetTask(taskName)
 	s.Update(&info, 0)
 }
 
@@ -158,7 +158,7 @@ func (s *AppInstInfoCache) SetStatusStep(key *AppInstKey, stepName string) {
 		log.InfoLog("SetStatusStep failed, did not find clusterInst in cache")
 		return
 	}
-	info.Status.setStep(stepName)
+	info.Status.SetStep(stepName)
 	s.Update(&info, 0)
 }
 

@@ -99,32 +99,51 @@ namespace DistributedMatchEngine {
             "X09QRU4QAiKEAQoURHluYW1pY0xvY0dyb3VwUmVwbHkSCwoDdmVyGAEgASgN",
             "EjUKBnN0YXR1cxgCIAEoDjIlLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5S",
             "ZXBseVN0YXR1cxISCgplcnJvcl9jb2RlGAMgASgNEhQKDGdyb3VwX2Nvb2tp",
-            "ZRgFIAEoCSo9CgdJRFR5cGVzEhAKDElEX1VOREVGSU5FRBAAEggKBElNRUkQ",
-            "ARIKCgZNU0lTRE4QAhIKCgZJUEFERFIQAyo8CgtSZXBseVN0YXR1cxIQCgxS",
-            "U19VTkRFRklORUQQABIOCgpSU19TVUNDRVNTEAESCwoHUlNfRkFJTBACMuMH",
-            "Cg5NYXRjaEVuZ2luZUFwaRKPAQoOUmVnaXN0ZXJDbGllbnQSLy5kaXN0cmli",
-            "dXRlZF9tYXRjaF9lbmdpbmUuUmVnaXN0ZXJDbGllbnRSZXF1ZXN0Gi0uZGlz",
-            "dHJpYnV0ZWRfbWF0Y2hfZW5naW5lLlJlZ2lzdGVyQ2xpZW50UmVwbHkiHYLT",
-            "5JMCFyISL3YxL3JlZ2lzdGVyY2xpZW50OgEqEocBCgxGaW5kQ2xvdWRsZXQS",
-            "LS5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuRmluZENsb3VkbGV0UmVxdWVz",
-            "dBorLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5GaW5kQ2xvdWRsZXRSZXBs",
-            "eSIbgtPkkwIVIhAvdjEvZmluZGNsb3VkbGV0OgEqEo8BCg5WZXJpZnlMb2Nh",
-            "dGlvbhIvLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5WZXJpZnlMb2NhdGlv",
-            "blJlcXVlc3QaLS5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuVmVyaWZ5TG9j",
-            "YXRpb25SZXBseSIdgtPkkwIXIhIvdjEvdmVyaWZ5bG9jYXRpb246ASoSgwEK",
-            "C0dldExvY2F0aW9uEiwuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkdldExv",
-            "Y2F0aW9uUmVxdWVzdBoqLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5HZXRM",
-            "b2NhdGlvblJlcGx5IhqC0+STAhQiDy92MS9nZXRsb2NhdGlvbjoBKhKRAQoO",
-            "QWRkVXNlclRvR3JvdXASMC5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuRHlu",
-            "YW1pY0xvY0dyb3VwUmVxdWVzdBouLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2lu",
-            "ZS5EeW5hbWljTG9jR3JvdXBSZXBseSIdgtPkkwIXIhIvdjEvYWRkdXNlcnRv",
-            "Z3JvdXA6ASoSiQEKDkdldEFwcEluc3RMaXN0EiwuZGlzdHJpYnV0ZWRfbWF0",
-            "Y2hfZW5naW5lLkFwcEluc3RMaXN0UmVxdWVzdBoqLmRpc3RyaWJ1dGVkX21h",
-            "dGNoX2VuZ2luZS5BcHBJbnN0TGlzdFJlcGx5Ih2C0+STAhciEi92MS9nZXRh",
-            "cHBpbnN0bGlzdDoBKhJ9CgtHZXRGcWRuTGlzdBIpLmRpc3RyaWJ1dGVkX21h",
-            "dGNoX2VuZ2luZS5GcWRuTGlzdFJlcXVlc3QaJy5kaXN0cmlidXRlZF9tYXRj",
-            "aF9lbmdpbmUuRnFkbkxpc3RSZXBseSIagtPkkwIUIg8vdjEvZ2V0ZnFkbmxp",
-            "c3Q6ASpiBnByb3RvMw=="));
+            "ZRgFIAEoCSJWCgtRb3NQb3NpdGlvbhISCgpwb3NpdGlvbmlkGAEgASgDEjMK",
+            "DGdwc19sb2NhdGlvbhgCIAEoCzIdLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2lu",
+            "ZS5Mb2MidgoVUW9zUG9zaXRpb25LcGlSZXF1ZXN0EgsKA3ZlchgBIAEoDRIW",
+            "Cg5zZXNzaW9uX2Nvb2tpZRgCIAEoCRI4Cglwb3NpdGlvbnMYAyADKAsyJS5k",
+            "aXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuUW9zUG9zaXRpb24izwIKEVFvc1Bv",
+            "c2l0aW9uUmVzdWx0EhIKCnBvc2l0aW9uaWQYASABKAMSMwoMZ3BzX2xvY2F0",
+            "aW9uGAIgASgLMh0uZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkxvYxIcChRk",
+            "bHVzZXJ0aHJvdWdocHV0X21pbhgDIAEoAhIcChRkbHVzZXJ0aHJvdWdocHV0",
+            "X2F2ZxgEIAEoAhIcChRkbHVzZXJ0aHJvdWdocHV0X21heBgFIAEoAhIcChR1",
+            "bHVzZXJ0aHJvdWdocHV0X21pbhgGIAEoAhIcChR1bHVzZXJ0aHJvdWdocHV0",
+            "X2F2ZxgHIAEoAhIcChR1bHVzZXJ0aHJvdWdocHV0X21heBgIIAEoAhITCgts",
+            "YXRlbmN5X21pbhgJIAEoAhITCgtsYXRlbmN5X2F2ZxgKIAEoAhITCgtsYXRl",
+            "bmN5X21heBgLIAEoAiKgAQoTUW9zUG9zaXRpb25LcGlSZXBseRILCgN2ZXIY",
+            "ASABKA0SNQoGc3RhdHVzGAIgASgOMiUuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5n",
+            "aW5lLlJlcGx5U3RhdHVzEkUKEHBvc2l0aW9uX3Jlc3VsdHMYAyADKAsyKy5k",
+            "aXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuUW9zUG9zaXRpb25SZXN1bHQqPQoH",
+            "SURUeXBlcxIQCgxJRF9VTkRFRklORUQQABIICgRJTUVJEAESCgoGTVNJU0RO",
+            "EAISCgoGSVBBRERSEAMqPAoLUmVwbHlTdGF0dXMSEAoMUlNfVU5ERUZJTkVE",
+            "EAASDgoKUlNfU1VDQ0VTUxABEgsKB1JTX0ZBSUwQAjL9CAoOTWF0Y2hFbmdp",
+            "bmVBcGkSjwEKDlJlZ2lzdGVyQ2xpZW50Ei8uZGlzdHJpYnV0ZWRfbWF0Y2hf",
+            "ZW5naW5lLlJlZ2lzdGVyQ2xpZW50UmVxdWVzdBotLmRpc3RyaWJ1dGVkX21h",
+            "dGNoX2VuZ2luZS5SZWdpc3RlckNsaWVudFJlcGx5Ih2C0+STAhciEi92MS9y",
+            "ZWdpc3RlcmNsaWVudDoBKhKHAQoMRmluZENsb3VkbGV0Ei0uZGlzdHJpYnV0",
+            "ZWRfbWF0Y2hfZW5naW5lLkZpbmRDbG91ZGxldFJlcXVlc3QaKy5kaXN0cmli",
+            "dXRlZF9tYXRjaF9lbmdpbmUuRmluZENsb3VkbGV0UmVwbHkiG4LT5JMCFSIQ",
+            "L3YxL2ZpbmRjbG91ZGxldDoBKhKPAQoOVmVyaWZ5TG9jYXRpb24SLy5kaXN0",
+            "cmlidXRlZF9tYXRjaF9lbmdpbmUuVmVyaWZ5TG9jYXRpb25SZXF1ZXN0Gi0u",
+            "ZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLlZlcmlmeUxvY2F0aW9uUmVwbHki",
+            "HYLT5JMCFyISL3YxL3ZlcmlmeWxvY2F0aW9uOgEqEoMBCgtHZXRMb2NhdGlv",
+            "bhIsLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5HZXRMb2NhdGlvblJlcXVl",
+            "c3QaKi5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuR2V0TG9jYXRpb25SZXBs",
+            "eSIagtPkkwIUIg8vdjEvZ2V0bG9jYXRpb246ASoSkQEKDkFkZFVzZXJUb0dy",
+            "b3VwEjAuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkR5bmFtaWNMb2NHcm91",
+            "cFJlcXVlc3QaLi5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuRHluYW1pY0xv",
+            "Y0dyb3VwUmVwbHkiHYLT5JMCFyISL3YxL2FkZHVzZXJ0b2dyb3VwOgEqEokB",
+            "Cg5HZXRBcHBJbnN0TGlzdBIsLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5B",
+            "cHBJbnN0TGlzdFJlcXVlc3QaKi5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUu",
+            "QXBwSW5zdExpc3RSZXBseSIdgtPkkwIXIhIvdjEvZ2V0YXBwaW5zdGxpc3Q6",
+            "ASoSfQoLR2V0RnFkbkxpc3QSKS5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUu",
+            "RnFkbkxpc3RSZXF1ZXN0GicuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkZx",
+            "ZG5MaXN0UmVwbHkiGoLT5JMCFCIPL3YxL2dldGZxZG5saXN0OgEqEpcBChFH",
+            "ZXRRb3NQb3NpdGlvbktwaRIvLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5R",
+            "b3NQb3NpdGlvbktwaVJlcXVlc3QaLS5kaXN0cmlidXRlZF9tYXRjaF9lbmdp",
+            "bmUuUW9zUG9zaXRpb25LcGlSZXBseSIggtPkkwIaIhUvdjEvZ2V0cW9zcG9z",
+            "aXRpb25rcGk6ASowAWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Api.AnnotationsReflection.Descriptor, global::DistributedMatchEngine.LocReflection.Descriptor, global::DistributedMatchEngine.AppcommonReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::DistributedMatchEngine.IDTypes), typeof(global::DistributedMatchEngine.ReplyStatus), }, new pbr::GeneratedClrTypeInfo[] {
@@ -144,7 +163,11 @@ namespace DistributedMatchEngine {
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppFqdn), global::DistributedMatchEngine.AppFqdn.Parser, new[]{ "AppName", "AppVers", "DevName", "Fqdns", "AndroidPackageName" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.FqdnListReply), global::DistributedMatchEngine.FqdnListReply.Parser, new[]{ "Ver", "AppFqdns", "Status" }, null, new[]{ typeof(global::DistributedMatchEngine.FqdnListReply.Types.FLStatus) }, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.DynamicLocGroupRequest), global::DistributedMatchEngine.DynamicLocGroupRequest.Parser, new[]{ "Ver", "SessionCookie", "LgId", "CommType", "UserData" }, null, new[]{ typeof(global::DistributedMatchEngine.DynamicLocGroupRequest.Types.DlgCommType) }, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.DynamicLocGroupReply), global::DistributedMatchEngine.DynamicLocGroupReply.Parser, new[]{ "Ver", "Status", "ErrorCode", "GroupCookie" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.DynamicLocGroupReply), global::DistributedMatchEngine.DynamicLocGroupReply.Parser, new[]{ "Ver", "Status", "ErrorCode", "GroupCookie" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.QosPosition), global::DistributedMatchEngine.QosPosition.Parser, new[]{ "Positionid", "GpsLocation" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.QosPositionKpiRequest), global::DistributedMatchEngine.QosPositionKpiRequest.Parser, new[]{ "Ver", "SessionCookie", "Positions" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.QosPositionResult), global::DistributedMatchEngine.QosPositionResult.Parser, new[]{ "Positionid", "GpsLocation", "DluserthroughputMin", "DluserthroughputAvg", "DluserthroughputMax", "UluserthroughputMin", "UluserthroughputAvg", "UluserthroughputMax", "LatencyMin", "LatencyAvg", "LatencyMax" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.QosPositionKpiReply), global::DistributedMatchEngine.QosPositionKpiReply.Parser, new[]{ "Ver", "Status", "PositionResults" }, null, null, null)
           }));
     }
     #endregion
@@ -4234,6 +4257,968 @@ namespace DistributedMatchEngine {
           }
           case 42: {
             GroupCookie = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
+  public sealed partial class QosPosition : pb::IMessage<QosPosition> {
+    private static readonly pb::MessageParser<QosPosition> _parser = new pb::MessageParser<QosPosition>(() => new QosPosition());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<QosPosition> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::DistributedMatchEngine.AppClientReflection.Descriptor.MessageTypes[17]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPosition() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPosition(QosPosition other) : this() {
+      positionid_ = other.positionid_;
+      gpsLocation_ = other.gpsLocation_ != null ? other.gpsLocation_.Clone() : null;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPosition Clone() {
+      return new QosPosition(this);
+    }
+
+    /// <summary>Field number for the "positionid" field.</summary>
+    public const int PositionidFieldNumber = 1;
+    private long positionid_;
+    /// <summary>
+    /// as set by the client, must be unique within QosRequest
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public long Positionid {
+      get { return positionid_; }
+      set {
+        positionid_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "gps_location" field.</summary>
+    public const int GpsLocationFieldNumber = 2;
+    private global::DistributedMatchEngine.Loc gpsLocation_;
+    /// <summary>
+    ///location
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::DistributedMatchEngine.Loc GpsLocation {
+      get { return gpsLocation_; }
+      set {
+        gpsLocation_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as QosPosition);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(QosPosition other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Positionid != other.Positionid) return false;
+      if (!object.Equals(GpsLocation, other.GpsLocation)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Positionid != 0L) hash ^= Positionid.GetHashCode();
+      if (gpsLocation_ != null) hash ^= GpsLocation.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (Positionid != 0L) {
+        output.WriteRawTag(8);
+        output.WriteInt64(Positionid);
+      }
+      if (gpsLocation_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(GpsLocation);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (Positionid != 0L) {
+        size += 1 + pb::CodedOutputStream.ComputeInt64Size(Positionid);
+      }
+      if (gpsLocation_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(GpsLocation);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(QosPosition other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Positionid != 0L) {
+        Positionid = other.Positionid;
+      }
+      if (other.gpsLocation_ != null) {
+        if (gpsLocation_ == null) {
+          gpsLocation_ = new global::DistributedMatchEngine.Loc();
+        }
+        GpsLocation.MergeFrom(other.GpsLocation);
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Positionid = input.ReadInt64();
+            break;
+          }
+          case 18: {
+            if (gpsLocation_ == null) {
+              gpsLocation_ = new global::DistributedMatchEngine.Loc();
+            }
+            input.ReadMessage(gpsLocation_);
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
+  public sealed partial class QosPositionKpiRequest : pb::IMessage<QosPositionKpiRequest> {
+    private static readonly pb::MessageParser<QosPositionKpiRequest> _parser = new pb::MessageParser<QosPositionKpiRequest>(() => new QosPositionKpiRequest());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<QosPositionKpiRequest> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::DistributedMatchEngine.AppClientReflection.Descriptor.MessageTypes[18]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPositionKpiRequest() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPositionKpiRequest(QosPositionKpiRequest other) : this() {
+      ver_ = other.ver_;
+      sessionCookie_ = other.sessionCookie_;
+      positions_ = other.positions_.Clone();
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPositionKpiRequest Clone() {
+      return new QosPositionKpiRequest(this);
+    }
+
+    /// <summary>Field number for the "ver" field.</summary>
+    public const int VerFieldNumber = 1;
+    private uint ver_;
+    /// <summary>
+    /// API version
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public uint Ver {
+      get { return ver_; }
+      set {
+        ver_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "session_cookie" field.</summary>
+    public const int SessionCookieFieldNumber = 2;
+    private string sessionCookie_ = "";
+    /// <summary>
+    /// Session Cookie from RegisterClientRequest
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string SessionCookie {
+      get { return sessionCookie_; }
+      set {
+        sessionCookie_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "positions" field.</summary>
+    public const int PositionsFieldNumber = 3;
+    private static readonly pb::FieldCodec<global::DistributedMatchEngine.QosPosition> _repeated_positions_codec
+        = pb::FieldCodec.ForMessage(26, global::DistributedMatchEngine.QosPosition.Parser);
+    private readonly pbc::RepeatedField<global::DistributedMatchEngine.QosPosition> positions_ = new pbc::RepeatedField<global::DistributedMatchEngine.QosPosition>();
+    /// <summary>
+    /// list of positions
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public pbc::RepeatedField<global::DistributedMatchEngine.QosPosition> Positions {
+      get { return positions_; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as QosPositionKpiRequest);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(QosPositionKpiRequest other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Ver != other.Ver) return false;
+      if (SessionCookie != other.SessionCookie) return false;
+      if(!positions_.Equals(other.positions_)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Ver != 0) hash ^= Ver.GetHashCode();
+      if (SessionCookie.Length != 0) hash ^= SessionCookie.GetHashCode();
+      hash ^= positions_.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (Ver != 0) {
+        output.WriteRawTag(8);
+        output.WriteUInt32(Ver);
+      }
+      if (SessionCookie.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(SessionCookie);
+      }
+      positions_.WriteTo(output, _repeated_positions_codec);
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (Ver != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt32Size(Ver);
+      }
+      if (SessionCookie.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(SessionCookie);
+      }
+      size += positions_.CalculateSize(_repeated_positions_codec);
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(QosPositionKpiRequest other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Ver != 0) {
+        Ver = other.Ver;
+      }
+      if (other.SessionCookie.Length != 0) {
+        SessionCookie = other.SessionCookie;
+      }
+      positions_.Add(other.positions_);
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Ver = input.ReadUInt32();
+            break;
+          }
+          case 18: {
+            SessionCookie = input.ReadString();
+            break;
+          }
+          case 26: {
+            positions_.AddEntriesFrom(input, _repeated_positions_codec);
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
+  public sealed partial class QosPositionResult : pb::IMessage<QosPositionResult> {
+    private static readonly pb::MessageParser<QosPositionResult> _parser = new pb::MessageParser<QosPositionResult>(() => new QosPositionResult());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<QosPositionResult> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::DistributedMatchEngine.AppClientReflection.Descriptor.MessageTypes[19]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPositionResult() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPositionResult(QosPositionResult other) : this() {
+      positionid_ = other.positionid_;
+      gpsLocation_ = other.gpsLocation_ != null ? other.gpsLocation_.Clone() : null;
+      dluserthroughputMin_ = other.dluserthroughputMin_;
+      dluserthroughputAvg_ = other.dluserthroughputAvg_;
+      dluserthroughputMax_ = other.dluserthroughputMax_;
+      uluserthroughputMin_ = other.uluserthroughputMin_;
+      uluserthroughputAvg_ = other.uluserthroughputAvg_;
+      uluserthroughputMax_ = other.uluserthroughputMax_;
+      latencyMin_ = other.latencyMin_;
+      latencyAvg_ = other.latencyAvg_;
+      latencyMax_ = other.latencyMax_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPositionResult Clone() {
+      return new QosPositionResult(this);
+    }
+
+    /// <summary>Field number for the "positionid" field.</summary>
+    public const int PositionidFieldNumber = 1;
+    private long positionid_;
+    /// <summary>
+    /// as set by the client, must be unique within one QosPositionKpiRequest
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public long Positionid {
+      get { return positionid_; }
+      set {
+        positionid_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "gps_location" field.</summary>
+    public const int GpsLocationFieldNumber = 2;
+    private global::DistributedMatchEngine.Loc gpsLocation_;
+    /// <summary>
+    /// the location which was requested
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::DistributedMatchEngine.Loc GpsLocation {
+      get { return gpsLocation_; }
+      set {
+        gpsLocation_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "dluserthroughput_min" field.</summary>
+    public const int DluserthroughputMinFieldNumber = 3;
+    private float dluserthroughputMin_;
+    /// <summary>
+    /// throughput 
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public float DluserthroughputMin {
+      get { return dluserthroughputMin_; }
+      set {
+        dluserthroughputMin_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "dluserthroughput_avg" field.</summary>
+    public const int DluserthroughputAvgFieldNumber = 4;
+    private float dluserthroughputAvg_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public float DluserthroughputAvg {
+      get { return dluserthroughputAvg_; }
+      set {
+        dluserthroughputAvg_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "dluserthroughput_max" field.</summary>
+    public const int DluserthroughputMaxFieldNumber = 5;
+    private float dluserthroughputMax_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public float DluserthroughputMax {
+      get { return dluserthroughputMax_; }
+      set {
+        dluserthroughputMax_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "uluserthroughput_min" field.</summary>
+    public const int UluserthroughputMinFieldNumber = 6;
+    private float uluserthroughputMin_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public float UluserthroughputMin {
+      get { return uluserthroughputMin_; }
+      set {
+        uluserthroughputMin_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "uluserthroughput_avg" field.</summary>
+    public const int UluserthroughputAvgFieldNumber = 7;
+    private float uluserthroughputAvg_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public float UluserthroughputAvg {
+      get { return uluserthroughputAvg_; }
+      set {
+        uluserthroughputAvg_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "uluserthroughput_max" field.</summary>
+    public const int UluserthroughputMaxFieldNumber = 8;
+    private float uluserthroughputMax_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public float UluserthroughputMax {
+      get { return uluserthroughputMax_; }
+      set {
+        uluserthroughputMax_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "latency_min" field.</summary>
+    public const int LatencyMinFieldNumber = 9;
+    private float latencyMin_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public float LatencyMin {
+      get { return latencyMin_; }
+      set {
+        latencyMin_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "latency_avg" field.</summary>
+    public const int LatencyAvgFieldNumber = 10;
+    private float latencyAvg_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public float LatencyAvg {
+      get { return latencyAvg_; }
+      set {
+        latencyAvg_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "latency_max" field.</summary>
+    public const int LatencyMaxFieldNumber = 11;
+    private float latencyMax_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public float LatencyMax {
+      get { return latencyMax_; }
+      set {
+        latencyMax_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as QosPositionResult);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(QosPositionResult other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Positionid != other.Positionid) return false;
+      if (!object.Equals(GpsLocation, other.GpsLocation)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(DluserthroughputMin, other.DluserthroughputMin)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(DluserthroughputAvg, other.DluserthroughputAvg)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(DluserthroughputMax, other.DluserthroughputMax)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(UluserthroughputMin, other.UluserthroughputMin)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(UluserthroughputAvg, other.UluserthroughputAvg)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(UluserthroughputMax, other.UluserthroughputMax)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(LatencyMin, other.LatencyMin)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(LatencyAvg, other.LatencyAvg)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(LatencyMax, other.LatencyMax)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Positionid != 0L) hash ^= Positionid.GetHashCode();
+      if (gpsLocation_ != null) hash ^= GpsLocation.GetHashCode();
+      if (DluserthroughputMin != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(DluserthroughputMin);
+      if (DluserthroughputAvg != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(DluserthroughputAvg);
+      if (DluserthroughputMax != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(DluserthroughputMax);
+      if (UluserthroughputMin != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(UluserthroughputMin);
+      if (UluserthroughputAvg != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(UluserthroughputAvg);
+      if (UluserthroughputMax != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(UluserthroughputMax);
+      if (LatencyMin != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(LatencyMin);
+      if (LatencyAvg != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(LatencyAvg);
+      if (LatencyMax != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(LatencyMax);
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (Positionid != 0L) {
+        output.WriteRawTag(8);
+        output.WriteInt64(Positionid);
+      }
+      if (gpsLocation_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(GpsLocation);
+      }
+      if (DluserthroughputMin != 0F) {
+        output.WriteRawTag(29);
+        output.WriteFloat(DluserthroughputMin);
+      }
+      if (DluserthroughputAvg != 0F) {
+        output.WriteRawTag(37);
+        output.WriteFloat(DluserthroughputAvg);
+      }
+      if (DluserthroughputMax != 0F) {
+        output.WriteRawTag(45);
+        output.WriteFloat(DluserthroughputMax);
+      }
+      if (UluserthroughputMin != 0F) {
+        output.WriteRawTag(53);
+        output.WriteFloat(UluserthroughputMin);
+      }
+      if (UluserthroughputAvg != 0F) {
+        output.WriteRawTag(61);
+        output.WriteFloat(UluserthroughputAvg);
+      }
+      if (UluserthroughputMax != 0F) {
+        output.WriteRawTag(69);
+        output.WriteFloat(UluserthroughputMax);
+      }
+      if (LatencyMin != 0F) {
+        output.WriteRawTag(77);
+        output.WriteFloat(LatencyMin);
+      }
+      if (LatencyAvg != 0F) {
+        output.WriteRawTag(85);
+        output.WriteFloat(LatencyAvg);
+      }
+      if (LatencyMax != 0F) {
+        output.WriteRawTag(93);
+        output.WriteFloat(LatencyMax);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (Positionid != 0L) {
+        size += 1 + pb::CodedOutputStream.ComputeInt64Size(Positionid);
+      }
+      if (gpsLocation_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(GpsLocation);
+      }
+      if (DluserthroughputMin != 0F) {
+        size += 1 + 4;
+      }
+      if (DluserthroughputAvg != 0F) {
+        size += 1 + 4;
+      }
+      if (DluserthroughputMax != 0F) {
+        size += 1 + 4;
+      }
+      if (UluserthroughputMin != 0F) {
+        size += 1 + 4;
+      }
+      if (UluserthroughputAvg != 0F) {
+        size += 1 + 4;
+      }
+      if (UluserthroughputMax != 0F) {
+        size += 1 + 4;
+      }
+      if (LatencyMin != 0F) {
+        size += 1 + 4;
+      }
+      if (LatencyAvg != 0F) {
+        size += 1 + 4;
+      }
+      if (LatencyMax != 0F) {
+        size += 1 + 4;
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(QosPositionResult other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Positionid != 0L) {
+        Positionid = other.Positionid;
+      }
+      if (other.gpsLocation_ != null) {
+        if (gpsLocation_ == null) {
+          gpsLocation_ = new global::DistributedMatchEngine.Loc();
+        }
+        GpsLocation.MergeFrom(other.GpsLocation);
+      }
+      if (other.DluserthroughputMin != 0F) {
+        DluserthroughputMin = other.DluserthroughputMin;
+      }
+      if (other.DluserthroughputAvg != 0F) {
+        DluserthroughputAvg = other.DluserthroughputAvg;
+      }
+      if (other.DluserthroughputMax != 0F) {
+        DluserthroughputMax = other.DluserthroughputMax;
+      }
+      if (other.UluserthroughputMin != 0F) {
+        UluserthroughputMin = other.UluserthroughputMin;
+      }
+      if (other.UluserthroughputAvg != 0F) {
+        UluserthroughputAvg = other.UluserthroughputAvg;
+      }
+      if (other.UluserthroughputMax != 0F) {
+        UluserthroughputMax = other.UluserthroughputMax;
+      }
+      if (other.LatencyMin != 0F) {
+        LatencyMin = other.LatencyMin;
+      }
+      if (other.LatencyAvg != 0F) {
+        LatencyAvg = other.LatencyAvg;
+      }
+      if (other.LatencyMax != 0F) {
+        LatencyMax = other.LatencyMax;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Positionid = input.ReadInt64();
+            break;
+          }
+          case 18: {
+            if (gpsLocation_ == null) {
+              gpsLocation_ = new global::DistributedMatchEngine.Loc();
+            }
+            input.ReadMessage(gpsLocation_);
+            break;
+          }
+          case 29: {
+            DluserthroughputMin = input.ReadFloat();
+            break;
+          }
+          case 37: {
+            DluserthroughputAvg = input.ReadFloat();
+            break;
+          }
+          case 45: {
+            DluserthroughputMax = input.ReadFloat();
+            break;
+          }
+          case 53: {
+            UluserthroughputMin = input.ReadFloat();
+            break;
+          }
+          case 61: {
+            UluserthroughputAvg = input.ReadFloat();
+            break;
+          }
+          case 69: {
+            UluserthroughputMax = input.ReadFloat();
+            break;
+          }
+          case 77: {
+            LatencyMin = input.ReadFloat();
+            break;
+          }
+          case 85: {
+            LatencyAvg = input.ReadFloat();
+            break;
+          }
+          case 93: {
+            LatencyMax = input.ReadFloat();
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
+  public sealed partial class QosPositionKpiReply : pb::IMessage<QosPositionKpiReply> {
+    private static readonly pb::MessageParser<QosPositionKpiReply> _parser = new pb::MessageParser<QosPositionKpiReply>(() => new QosPositionKpiReply());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<QosPositionKpiReply> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::DistributedMatchEngine.AppClientReflection.Descriptor.MessageTypes[20]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPositionKpiReply() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPositionKpiReply(QosPositionKpiReply other) : this() {
+      ver_ = other.ver_;
+      status_ = other.status_;
+      positionResults_ = other.positionResults_.Clone();
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public QosPositionKpiReply Clone() {
+      return new QosPositionKpiReply(this);
+    }
+
+    /// <summary>Field number for the "ver" field.</summary>
+    public const int VerFieldNumber = 1;
+    private uint ver_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public uint Ver {
+      get { return ver_; }
+      set {
+        ver_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "status" field.</summary>
+    public const int StatusFieldNumber = 2;
+    private global::DistributedMatchEngine.ReplyStatus status_ = 0;
+    /// <summary>
+    /// Status of the reply
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::DistributedMatchEngine.ReplyStatus Status {
+      get { return status_; }
+      set {
+        status_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "position_results" field.</summary>
+    public const int PositionResultsFieldNumber = 3;
+    private static readonly pb::FieldCodec<global::DistributedMatchEngine.QosPositionResult> _repeated_positionResults_codec
+        = pb::FieldCodec.ForMessage(26, global::DistributedMatchEngine.QosPositionResult.Parser);
+    private readonly pbc::RepeatedField<global::DistributedMatchEngine.QosPositionResult> positionResults_ = new pbc::RepeatedField<global::DistributedMatchEngine.QosPositionResult>();
+    /// <summary>
+    /// kpi details
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public pbc::RepeatedField<global::DistributedMatchEngine.QosPositionResult> PositionResults {
+      get { return positionResults_; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as QosPositionKpiReply);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(QosPositionKpiReply other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Ver != other.Ver) return false;
+      if (Status != other.Status) return false;
+      if(!positionResults_.Equals(other.positionResults_)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Ver != 0) hash ^= Ver.GetHashCode();
+      if (Status != 0) hash ^= Status.GetHashCode();
+      hash ^= positionResults_.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (Ver != 0) {
+        output.WriteRawTag(8);
+        output.WriteUInt32(Ver);
+      }
+      if (Status != 0) {
+        output.WriteRawTag(16);
+        output.WriteEnum((int) Status);
+      }
+      positionResults_.WriteTo(output, _repeated_positionResults_codec);
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (Ver != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt32Size(Ver);
+      }
+      if (Status != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Status);
+      }
+      size += positionResults_.CalculateSize(_repeated_positionResults_codec);
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(QosPositionKpiReply other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Ver != 0) {
+        Ver = other.Ver;
+      }
+      if (other.Status != 0) {
+        Status = other.Status;
+      }
+      positionResults_.Add(other.positionResults_);
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Ver = input.ReadUInt32();
+            break;
+          }
+          case 16: {
+            status_ = (global::DistributedMatchEngine.ReplyStatus) input.ReadEnum();
+            break;
+          }
+          case 26: {
+            positionResults_.AddEntriesFrom(input, _repeated_positionResults_codec);
             break;
           }
         }

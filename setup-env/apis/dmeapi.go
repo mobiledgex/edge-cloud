@@ -29,6 +29,7 @@ type dmeApiRequest struct {
 	Dlreq           dmeproto.DynamicLocGroupRequest `yaml:"dynamiclocgrouprequest"`
 	Aireq           dmeproto.AppInstListRequest     `yaml:"appinstlistrequest"`
 	Fqreq           dmeproto.FqdnListRequest        `yaml:"fqdnlistrequest"`
+	Qosreq          dmeproto.QosPositionKpiRequest  `yaml:"qospositionkpirequest"`
 	TokenServerPath string                          `yaml:"token-server-path"`
 	ErrorExpected   string                          `yaml:"error-expected"`
 }
@@ -91,10 +92,15 @@ func (c *dmeRestClient) GetLocation(ctx context.Context, in *dmeproto.GetLocatio
 	err := util.CallRESTPost("https://"+c.addr+"/v1/getlocation",
 		c.client, in, out)
 	if err != nil {
-		log.Printf("getlockation rest API failed\n")
+		log.Printf("getlocation rest API failed\n")
 		return nil, err
 	}
 	return out, nil
+}
+
+
+func (c *dmeRestClient) GetQosPositionKpi(ctx context.Context, in *dmeproto.QosPositionKpiRequest, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_GetQosPositionKpiClient, error) {
+	return nil, fmt.Errorf("GetQosPositionKpi not supported yet in E2E via REST")
 }
 
 func (c *dmeRestClient) AddUserToGroup(ctx context.Context, in *dmeproto.DynamicLocGroupRequest, opts ...grpc.CallOption) (*dmeproto.DynamicLocGroupReply, error) {
@@ -294,6 +300,15 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 			})
 		}
 		dmereply = resp
+		dmeerror = err
+
+	case "getqospositionkpi":
+		apiRequest.Qosreq.SessionCookie = sessionCookie
+		log.Printf("getqospositionkpi request: %+v\n", apiRequest.Qosreq)
+		resp, err := client.GetQosPositionKpi(ctx, &apiRequest.Qosreq)
+		if err == nil {
+			dmereply, err = resp.Recv()
+		}
 		dmeerror = err
 	default:
 		log.Printf("Unsupported dme api %s\n", api)

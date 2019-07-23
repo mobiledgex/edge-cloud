@@ -58,6 +58,7 @@ tools:
 	go install ${GOGOPROTO}/protoc-gen-gogo
 	go install ${GOGOPROTO}/protoc-gen-gogofast
 	go install ${GRPCGATEWAY}/protoc-gen-grpc-gateway
+	go get github.com/uber/prototool/cmd/prototool
 
 doc:
 	make -C edgeproto doc
@@ -66,7 +67,6 @@ external-doc:
 	make -C edgeproto external-doc
 
 lint:
-	go get github.com/uber/prototool/cmd/prototool
 	$(RM) link-gogo-protobuf
 	$(RM) link-grpc-gateway
 	ln -s $(GOGOPROTO) link-gogo-protobuf
@@ -94,7 +94,7 @@ test-reset:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_reset_create.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
 
 test-stop:
-	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/stop_cleanup.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/delete_stop_create.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -notimestamp
 
 test-sdk:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/sdk_test/stop_start_create_sdk.yml -setupfile ./setup-env/e2e-tests/setups/local_sdk.yml

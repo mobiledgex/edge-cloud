@@ -1,0 +1,20 @@
+tests:
+
+- name: Add provisioning
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-create]
+
+- includefile: register.yml
+
+- name: send a position qos request and compare results
+  apifile: "{{datadir}}/qos-req.yml"
+  actions: [dmeapi-getqospositionkpi]
+  compareyaml:
+    yaml1: "{{outputdir}}/getqospositionkpi.yml"
+    yaml2: "{{datadir}}/qos-resp.yml"
+    filetype: getqosposition
+
+
+- name: Delete provisioning
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-delete]
