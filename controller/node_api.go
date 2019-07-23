@@ -49,7 +49,25 @@ func (s *NodeApi) ShowNodeLocal(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNod
 }
 
 func (s *NodeApi) ShowNode(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeServer) error {
-	err := controllerApi.RunJobs(func(arg interface{}, addr string) error {
+	filter := &edgeproto.Controller{}
+	err := controllerApi.cache.Show(filter, func(obj *edgeproto.Controller) error {
+		node := edgeproto.Node{
+			Key: edgeproto.NodeKey{
+				Name:     obj.Key.Addr,
+				NodeType: edgeproto.NodeType_NODE_CONTROLLER,
+			},
+			BuildMaster: obj.BuildMaster,
+			BuildHead:   obj.BuildHead,
+			BuildAuthor: obj.BuildAuthor,
+			Hostname:    obj.Hostname,
+		}
+		err := cb.Send(&node)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+	err = controllerApi.RunJobs(func(arg interface{}, addr string) error {
 		if addr == *externalApiAddr {
 			// local node
 			return s.ShowNodeLocal(in, cb)

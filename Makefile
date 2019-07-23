@@ -15,6 +15,7 @@ check-vers:
 		echo "See https://mobiledgex.atlassian.net/wiki/spaces/SWDEV/pages/307986555/Upgrade+to+go+1.12"; \
 		exit 2; \
 	fi
+	(cd version; ./version.sh)
 
 build: check-vers
 	make -C protogen
