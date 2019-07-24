@@ -17,6 +17,8 @@ enum NodeType {
   NODE_DME = 1;
   // Cloudlet Resource Manager
   NODE_CRM = 2;
+  // Controller Node
+  NODE_CONTROLLER = 3;
 }
 
 // NodeKey uniquely identifies a DME or CRM node
@@ -40,9 +42,18 @@ message Node {
   NodeKey key = 2 [(gogoproto.nullable) = false];
   // Id of client assigned by server (internal use only)
   int64 notify_id = 3 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Build Master Version
+  string build_master = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Build Head Version
+  string build_head = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Build Author
+  string build_author = 6 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Hostname
+  string hostname = 7 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
 }
@@ -61,5 +72,6 @@ service NodeApi {
       post: "/show/node"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceConfig,ActionView,";
   }
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/version"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -338,6 +339,10 @@ func main() {
 			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
 			grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))
 	}
+	myNode.BuildMaster = version.BuildMaster
+	myNode.BuildHead = version.BuildHead
+	myNode.BuildAuthor = version.BuildAuthor
+	myNode.Hostname = cloudcommon.Hostname()
 	nodeCache.Update(&myNode, 0)
 
 	lis, err := net.Listen("tcp", *apiAddr)

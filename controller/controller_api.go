@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/tls"
+	"github.com/mobiledgex/edge-cloud/version"
 	"google.golang.org/grpc"
 )
 
@@ -44,6 +46,11 @@ func (s *ControllerApi) registerController() error {
 
 	ctrl := edgeproto.Controller{}
 	ctrl.Key.Addr = *externalApiAddr
+	ctrl.BuildMaster = version.BuildMaster
+	ctrl.BuildHead = version.BuildHead
+	ctrl.BuildAuthor = version.BuildAuthor
+	ctrl.Hostname = cloudcommon.Hostname()
+	log.DebugLog(log.DebugLevelApi, "register controller", "ctrl", ctrl)
 	_, err = s.store.Put(&ctrl, s.sync.syncWait, objstore.WithLease(lease))
 	if err != nil {
 		return err

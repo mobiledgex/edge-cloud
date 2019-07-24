@@ -183,3 +183,11 @@ func IsClusterInstReqd(app *edgeproto.App) bool {
 	}
 	return true
 }
+
+func Hostname() string {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return "nohostname"
+	}
+	return hostname
+}
