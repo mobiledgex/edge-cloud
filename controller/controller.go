@@ -44,11 +44,15 @@ var externalApiAddr = flag.String("externalApiAddr", "", "External API listener 
 var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address")
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
 var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
+var publicAddr = flag.String("publicAddr", "127.0.0.1", "Public facing address/hostname of controller")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "http://127.0.0.1:8086", "InfluxDB listener address")
 var registryFQDN = flag.String("registryFQDN", "docker.mobiledgex.net", "mobiledgex registry FQDN")
+var cloudletRegistryPath = flag.String("cloudletRegistryPath", "registry.mobiledgex.net:5000/mobiledgex/edge-cloud", "edge-cloud image registry path for deploying cloudlet services")
+var cloudletVMImagePath = flag.String("cloudletVMImagePath", "https://artifactory.mobiledgex.net/artifactory/baseimages/mobiledgex-v2.0.2.qcow2#md5:51371613a81f7218c2633ce3c1814258", "mobiledgex VM image for deploying cloudlet services")
+var versionTag = flag.String("versionTag", "", "edge-cloud image tag indicating controller version")
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
@@ -92,11 +96,53 @@ func main() {
 	fmt.Println(sig)
 }
 
+func validateFields() error {
+	if *testMode {
+		return nil
+	}
+	if *versionTag == "" {
+		return fmt.Errorf("Version tag is required")
+	}
+	if *cloudletRegistryPath != "" {
+		parts := strings.Split(*cloudletRegistryPath, "/")
+		if len(parts) < 2 || !strings.Contains(parts[0], ".") {
+			return fmt.Errorf("Cloudlet registry path should be full registry URL: <domain-name>/<registry-path>")
+		}
+		urlObj, err := util.ImagePathParse(*cloudletRegistryPath)
+		if err != nil {
+			return fmt.Errorf("Invalid cloudlet registry path: %v", err)
+		}
+		out := strings.Split(urlObj.Path, ":")
+		if len(out) == 2 {
+			return fmt.Errorf("Cloudlet registry path should not have image tag")
+		} else if len(out) != 1 {
+			return fmt.Errorf("Invalid registry path")
+		}
+		platform_registry_path := *cloudletRegistryPath + ":" + strings.TrimSpace(string(*versionTag))
+		err = cloudcommon.ValidateDockerRegistryPath(platform_registry_path, *vaultAddr)
+		if err != nil {
+			return err
+		}
+	}
+	if *cloudletVMImagePath != "" {
+		err := util.ValidateImagePath(*cloudletVMImagePath)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func startServices() error {
 	log.SetDebugLevelStrs(*debugLevels)
 
 	if *externalApiAddr == "" {
 		*externalApiAddr = *apiAddr
+	}
+
+	err := validateFields()
+	if err != nil {
+		return err
 	}
 
 	log.InfoLog("Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
@@ -159,8 +205,10 @@ func startServices() error {
 	}
 	// get influxDB credentials from vault
 	influxAuth := &cloudcommon.InfluxCreds{}
-	if !*testMode {
-		influxAuth = cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
+	influxAuth = cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
+	// Default to empty credentials if in test mode
+	if *testMode && influxAuth == nil {
+		influxAuth = &cloudcommon.InfluxCreds{}
 	}
 	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
 	err = influxQ.Start(*influxAddr, "")

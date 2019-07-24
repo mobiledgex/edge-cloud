@@ -12,6 +12,10 @@ cloudlets:
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51001
+  flavor:
+    name: DefaultPlatformFlavor
 flavors:
 - key:
     name: x1.tiny
@@ -76,6 +80,8 @@ apps:
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
+  accessports: tcp:9090
+  internalports: true
   defaultflavor:
     name: x1.medium
   deployment: helm

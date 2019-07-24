@@ -503,6 +503,7 @@ func (m *mex) markDiff(names []string, name string) {
 		names = names[:len(names)-1]
 	}
 }
+
 // generator.EnumDescriptor as formal arg type ?
 func (m *mex) generateIsKeyField(parents, names []string, desc *generator.Descriptor) {
 	message := desc.DescriptorProto
@@ -511,7 +512,7 @@ func (m *mex) generateIsKeyField(parents, names []string, desc *generator.Descri
 			continue
 		}
 		name := generator.CamelCase(*field.Name)
-		m.P("return strings.HasPrefix(s, ",strings.Join(append(names, name), ""),  "+\".\")")
+		m.P("return strings.HasPrefix(s, ", strings.Join(append(names, name), ""), "+\".\")")
 
 		return
 	}
@@ -534,6 +535,13 @@ func (m *mex) generateDiffFields(parents, names []string, desc *generator.Descri
 		mapType := m.support.GetMapType(m.gen, field)
 		loop := false
 		skipMap := false
+		nullableMessage := false
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE && gogoproto.IsNullable(field) {
+			nullableMessage = true
+		}
+		if nullableMessage {
+			m.P("if m.", hierName, " != nil && o.", hierName, " != nil {")
+		}
 
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
 			*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
@@ -581,6 +589,9 @@ func (m *mex) generateDiffFields(parents, names []string, desc *generator.Descri
 				m.P("}")
 			}
 		}
+		if nullableMessage {
+			m.P("}")
+		}
 	}
 }
 
@@ -617,7 +628,6 @@ func (m *mex) generateAllFields(afg AllFieldsGen, names, nums []string, desc *ge
 // Generate a simple string map to use in user-friendly error messages EC-608
 func (m *mex) generateAllStringFieldsMap(afg AllFieldsGen, names, nums []string, desc *generator.Descriptor) {
 
-
 	message := desc.DescriptorProto
 	for ii, field := range message.Field {
 		if ii == 0 && *field.Name == "fields" {
@@ -640,7 +650,7 @@ func (m *mex) generateAllStringFieldsMap(afg AllFieldsGen, names, nums []string,
 
 			case AllFieldsGenMap:
 				var readable []string
-				pname = strings.Join(append(names,name,""), "")
+				pname = strings.Join(append(names, name, ""), "")
 				m.P(strings.Join(append(names, name), ""), ":")
 
 				l := 0
@@ -662,7 +672,6 @@ func (m *mex) generateAllStringFieldsMap(afg AllFieldsGen, names, nums []string,
 		}
 	}
 }
-
 
 func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor, visited []*generator.Descriptor, hasGrpcFields bool) {
 	if gensupport.WasVisited(desc, visited) {
@@ -1218,7 +1227,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 			curState = {{.WaitForState}}_NOT_PRESENT
 		}
 		if send != nil {
-			statusString := info.Status.toString()
+			statusString := info.Status.ToString()
 			var msg string
 			if statusString != ""{
 				msg = statusString			

@@ -22,7 +22,7 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	if err != nil {
 		return err
 	}
-
+	// NOTE: for DIND we don't check whether this is internal
 	if len(appInst.MappedPorts) > 0 {
 		log.DebugLog(log.DebugLevelMexos, "AddNginxProxy for dind", "ports", appInst.MappedPorts)
 		cluster, err := FindCluster(names.ClusterName)
@@ -91,6 +91,10 @@ func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 		}
 	}
 	return nil
+}
+
+func (s *Platform) UpdateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
+	return fmt.Errorf("UpdateAppInst not supported for dind")
 }
 
 func (s *Platform) GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {

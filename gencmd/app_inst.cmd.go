@@ -99,7 +99,7 @@ func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 14)
+	s := make([]string, 0, 16)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -152,11 +152,13 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
 	s = append(s, in.Status.TaskName)
 	s = append(s, in.Status.StepName)
+	s = append(s, strconv.FormatUint(uint64(in.Revision), 10))
+	s = append(s, strconv.FormatBool(in.ForceUpgrade))
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 14)
+	s := make([]string, 0, 16)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -194,6 +196,8 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Status-MaxTasks")
 	s = append(s, "Status-TaskName")
 	s = append(s, "Status-StepName")
+	s = append(s, "Revision")
+	s = append(s, "ForceUpgrade")
 	return s
 }
 
@@ -399,6 +403,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.ForceUpgrade = false
 	}
 }
 
@@ -821,6 +828,8 @@ func init() {
 	AppInstNoConfigFlagSet.Uint32Var(&AppInstIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Status.StepName, "status-stepname", "", "Status.StepName")
+	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.Revision, "revision", 0, "Revision")
+	AppInstFlagSet.BoolVar(&AppInstIn.ForceUpgrade, "forceupgrade", false, "ForceUpgrade")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -947,6 +956,12 @@ func AppInstSetFields() {
 	}
 	if AppInstNoConfigFlagSet.Lookup("status-stepname").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "23.4")
+	}
+	if AppInstNoConfigFlagSet.Lookup("revision").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "24")
+	}
+	if AppInstFlagSet.Lookup("forceupgrade").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "25")
 	}
 }
 

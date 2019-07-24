@@ -38,6 +38,9 @@ var CloudletIn edgeproto.Cloudlet
 var CloudletFlagSet = pflag.NewFlagSet("Cloudlet", pflag.ExitOnError)
 var CloudletNoConfigFlagSet = pflag.NewFlagSet("CloudletNoConfig", pflag.ExitOnError)
 var CloudletInIpSupport string
+var CloudletInState string
+var CloudletInCrmOverride string
+var CloudletInPlatformType string
 var CloudletInfoIn edgeproto.CloudletInfo
 var CloudletInfoFlagSet = pflag.NewFlagSet("CloudletInfo", pflag.ExitOnError)
 var CloudletInfoNoConfigFlagSet = pflag.NewFlagSet("CloudletInfoNoConfig", pflag.ExitOnError)
@@ -45,6 +48,15 @@ var CloudletInfoInState string
 var CloudletMetricsIn edgeproto.CloudletMetrics
 var CloudletMetricsFlagSet = pflag.NewFlagSet("CloudletMetrics", pflag.ExitOnError)
 var CloudletMetricsNoConfigFlagSet = pflag.NewFlagSet("CloudletMetricsNoConfig", pflag.ExitOnError)
+var PlatformTypeStrings = []string{
+	"PlatformTypeFake",
+	"PlatformTypeDind",
+	"PlatformTypeOpenstack",
+	"PlatformTypeAzure",
+	"PlatformTypeGcp",
+	"PlatformTypeMexdind",
+}
+
 var CloudletStateStrings = []string{
 	"CloudletStateUnknown",
 	"CloudletStateErrors",
@@ -377,8 +389,57 @@ func CloudletInfraPropertiesWriteOutputOne(obj *edgeproto.CloudletInfraPropertie
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
-func CloudletSlicer(in *edgeproto.Cloudlet) []string {
+func PlatformConfigSlicer(in *edgeproto.PlatformConfig) []string {
 	s := make([]string, 0, 8)
+	s = append(s, in.RegistryPath)
+	s = append(s, in.ImagePath)
+	s = append(s, in.NotifyCtrlAddrs)
+	s = append(s, in.VaultAddr)
+	s = append(s, in.TlsCertFile)
+	s = append(s, in.CrmRoleId)
+	s = append(s, in.CrmSecretId)
+	s = append(s, in.PlatformTag)
+	return s
+}
+
+func PlatformConfigHeaderSlicer() []string {
+	s := make([]string, 0, 8)
+	s = append(s, "RegistryPath")
+	s = append(s, "ImagePath")
+	s = append(s, "NotifyCtrlAddrs")
+	s = append(s, "VaultAddr")
+	s = append(s, "TlsCertFile")
+	s = append(s, "CrmRoleId")
+	s = append(s, "CrmSecretId")
+	s = append(s, "PlatformTag")
+	return s
+}
+
+func PlatformConfigWriteOutputArray(objs []*edgeproto.PlatformConfig) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(PlatformConfigHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(PlatformConfigSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func PlatformConfigWriteOutputOne(obj *edgeproto.PlatformConfig) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(PlatformConfigHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(PlatformConfigSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func CloudletSlicer(in *edgeproto.Cloudlet) []string {
+	s := make([]string, 0, 17)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -407,11 +468,29 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.CreateAppInstTimeout), 10))
 	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.UpdateAppInstTimeout), 10))
 	s = append(s, strconv.FormatUint(uint64(in.TimeLimits.DeleteAppInstTimeout), 10))
+	if in.Errors == nil {
+		in.Errors = make([]string, 1)
+	}
+	s = append(s, in.Errors[0])
+	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
+	s = append(s, in.Status.TaskName)
+	s = append(s, in.Status.StepName)
+	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
+	s = append(s, edgeproto.CRMOverride_CamelName[int32(in.CrmOverride)])
+	s = append(s, strconv.FormatBool(in.DeploymentLocal))
+	s = append(s, edgeproto.PlatformType_CamelName[int32(in.PlatformType)])
+	s = append(s, in.NotifySrvAddr)
+	if in.Flavor == nil {
+		in.Flavor = &edgeproto.FlavorKey{}
+	}
+	s = append(s, in.Flavor.Name)
+	s = append(s, in.PhysicalName)
 	return s
 }
 
 func CloudletHeaderSlicer() []string {
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 17)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
@@ -434,6 +513,18 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "TimeLimits-CreateAppInstTimeout")
 	s = append(s, "TimeLimits-UpdateAppInstTimeout")
 	s = append(s, "TimeLimits-DeleteAppInstTimeout")
+	s = append(s, "Errors")
+	s = append(s, "Status-TaskNumber")
+	s = append(s, "Status-MaxTasks")
+	s = append(s, "Status-TaskName")
+	s = append(s, "Status-StepName")
+	s = append(s, "State")
+	s = append(s, "CrmOverride")
+	s = append(s, "DeploymentLocal")
+	s = append(s, "PlatformType")
+	s = append(s, "NotifySrvAddr")
+	s = append(s, "Flavor-Name")
+	s = append(s, "PhysicalName")
 	return s
 }
 
@@ -619,6 +710,21 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.TimeLimits = edgeproto.OperationTimeLimits{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Errors = nil
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Status = edgeproto.StatusInfo{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.State = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.CrmOverride = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeploymentLocal = false
 	}
 }
 
@@ -1099,6 +1205,18 @@ func init() {
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.CreateAppInstTimeout, "timelimits-createappinsttimeout", 0, "TimeLimits.CreateAppInstTimeout")
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.UpdateAppInstTimeout, "timelimits-updateappinsttimeout", 0, "TimeLimits.UpdateAppInstTimeout")
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.TimeLimits.DeleteAppInstTimeout, "timelimits-deleteappinsttimeout", 0, "TimeLimits.DeleteAppInstTimeout")
+	CloudletNoConfigFlagSet.Uint32Var(&CloudletIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
+	CloudletNoConfigFlagSet.Uint32Var(&CloudletIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
+	CloudletNoConfigFlagSet.StringVar(&CloudletIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
+	CloudletNoConfigFlagSet.StringVar(&CloudletIn.Status.StepName, "status-stepname", "", "Status.StepName")
+	CloudletFlagSet.StringVar(&CloudletInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
+	CloudletFlagSet.StringVar(&CloudletInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCrmErrors IgnoreCrm IgnoreTransientState IgnoreCrmAndTransientState]")
+	CloudletFlagSet.BoolVar(&CloudletIn.DeploymentLocal, "deploymentlocal", false, "DeploymentLocal")
+	CloudletFlagSet.StringVar(&CloudletInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeDind PlatformTypeOpenstack PlatformTypeAzure PlatformTypeGcp PlatformTypeMexdind]")
+	CloudletFlagSet.StringVar(&CloudletIn.NotifySrvAddr, "notifysrvaddr", "", "NotifySrvAddr")
+	CloudletIn.Flavor = &edgeproto.FlavorKey{}
+	CloudletFlagSet.StringVar(&CloudletIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
+	CloudletFlagSet.StringVar(&CloudletIn.PhysicalName, "physicalname", "", "PhysicalName")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [CloudletStateUnknown CloudletStateErrors CloudletStateReady CloudletStateOffline CloudletStateNotPresent]")
@@ -1200,6 +1318,39 @@ func CloudletSetFields() {
 	if CloudletNoConfigFlagSet.Lookup("timelimits-deleteappinsttimeout").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "9.6")
 	}
+	if CloudletNoConfigFlagSet.Lookup("status-tasknumber").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "11.1")
+	}
+	if CloudletNoConfigFlagSet.Lookup("status-maxtasks").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "11.2")
+	}
+	if CloudletNoConfigFlagSet.Lookup("status-taskname").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "11.3")
+	}
+	if CloudletNoConfigFlagSet.Lookup("status-stepname").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "11.4")
+	}
+	if CloudletFlagSet.Lookup("state").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "12")
+	}
+	if CloudletFlagSet.Lookup("crmoverride").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "13")
+	}
+	if CloudletFlagSet.Lookup("deploymentlocal").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "14")
+	}
+	if CloudletFlagSet.Lookup("platformtype").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "15")
+	}
+	if CloudletFlagSet.Lookup("notifysrvaddr").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "16")
+	}
+	if CloudletFlagSet.Lookup("flavor-name").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "17.1")
+	}
+	if CloudletFlagSet.Lookup("physicalname").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "18")
+	}
 }
 
 func CloudletInfoSetFields() {
@@ -1241,6 +1392,72 @@ func parseCloudletEnums() error {
 			CloudletIn.IpSupport = edgeproto.IpSupport(2)
 		default:
 			return errors.New("Invalid value for CloudletInIpSupport")
+		}
+	}
+	if CloudletInState != "" {
+		switch CloudletInState {
+		case "TrackedStateUnknown":
+			CloudletIn.State = edgeproto.TrackedState(0)
+		case "NotPresent":
+			CloudletIn.State = edgeproto.TrackedState(1)
+		case "CreateRequested":
+			CloudletIn.State = edgeproto.TrackedState(2)
+		case "Creating":
+			CloudletIn.State = edgeproto.TrackedState(3)
+		case "CreateError":
+			CloudletIn.State = edgeproto.TrackedState(4)
+		case "Ready":
+			CloudletIn.State = edgeproto.TrackedState(5)
+		case "UpdateRequested":
+			CloudletIn.State = edgeproto.TrackedState(6)
+		case "Updating":
+			CloudletIn.State = edgeproto.TrackedState(7)
+		case "UpdateError":
+			CloudletIn.State = edgeproto.TrackedState(8)
+		case "DeleteRequested":
+			CloudletIn.State = edgeproto.TrackedState(9)
+		case "Deleting":
+			CloudletIn.State = edgeproto.TrackedState(10)
+		case "DeleteError":
+			CloudletIn.State = edgeproto.TrackedState(11)
+		case "DeletePrepare":
+			CloudletIn.State = edgeproto.TrackedState(12)
+		default:
+			return errors.New("Invalid value for CloudletInState")
+		}
+	}
+	if CloudletInCrmOverride != "" {
+		switch CloudletInCrmOverride {
+		case "NoOverride":
+			CloudletIn.CrmOverride = edgeproto.CRMOverride(0)
+		case "IgnoreCrmErrors":
+			CloudletIn.CrmOverride = edgeproto.CRMOverride(1)
+		case "IgnoreCrm":
+			CloudletIn.CrmOverride = edgeproto.CRMOverride(2)
+		case "IgnoreTransientState":
+			CloudletIn.CrmOverride = edgeproto.CRMOverride(3)
+		case "IgnoreCrmAndTransientState":
+			CloudletIn.CrmOverride = edgeproto.CRMOverride(4)
+		default:
+			return errors.New("Invalid value for CloudletInCrmOverride")
+		}
+	}
+	if CloudletInPlatformType != "" {
+		switch CloudletInPlatformType {
+		case "PlatformTypeFake":
+			CloudletIn.PlatformType = edgeproto.PlatformType(0)
+		case "PlatformTypeDind":
+			CloudletIn.PlatformType = edgeproto.PlatformType(1)
+		case "PlatformTypeOpenstack":
+			CloudletIn.PlatformType = edgeproto.PlatformType(2)
+		case "PlatformTypeAzure":
+			CloudletIn.PlatformType = edgeproto.PlatformType(3)
+		case "PlatformTypeGcp":
+			CloudletIn.PlatformType = edgeproto.PlatformType(4)
+		case "PlatformTypeMexdind":
+			CloudletIn.PlatformType = edgeproto.PlatformType(5)
+		default:
+			return errors.New("Invalid value for CloudletInPlatformType")
 		}
 	}
 	return nil

@@ -27,12 +27,15 @@ cloudlets:
       name: tmus
     name: tmus-cloud-1
   accessuri: tmus-cloud.1
-
   location:
     latitude: 1
     longitude: 1
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51001
+  flavor:
+    name: x1.tiny
 
 
 - key:
@@ -40,12 +43,15 @@ cloudlets:
       name: tmus
     name: tmus-cloud-2
   accessuri: tmus-cloud.2
-
   location:
     latitude: 1
     longitude: 2
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51002
+  flavor:
+    name: x1.tiny
 
 
 - key:
@@ -53,12 +59,15 @@ cloudlets:
       name: tmus
     name: tmus-cloud-3
   accessuri: tmus-cloud.3
-
   location:
     latitude: 1
     longitude: 3
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51003
+  flavor:
+    name: x1.tiny
 
 
 - key:
@@ -66,12 +75,15 @@ cloudlets:
       name: tmus
     name: tmus-cloud-4
   accessuri: tmus-cloud.4
-
   location:
     latitude: 1
     longitude: 4
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51004
+  flavor:
+    name: x1.tiny
 
 
 - key:
@@ -79,12 +91,15 @@ cloudlets:
       name: tmus
     name: tmus-cloud-5
   accessuri: tmus-cloud.5
-
   location:
     latitude: 1
     longitude: 5
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51005
+  flavor:
+    name: x1.tiny
 
 
 - key:
@@ -92,12 +107,15 @@ cloudlets:
       name: tmus
     name: tmus-cloud-6
   accessuri: tmus-cloud.6
-
   location:
     latitude: 1
     longitude: 6
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51006
+  flavor:
+    name: x1.tiny
 
 
 - key:
@@ -105,12 +123,15 @@ cloudlets:
       name: tmus
     name: tmus-cloud-7
   accessuri: tmus-cloud.7
-
   location:
     latitude: 1
     longitude: 7
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51007
+  flavor:
+    name: x1.tiny
 
 
 - key:
@@ -118,12 +139,15 @@ cloudlets:
       name: tmus
     name: tmus-cloud-8
   accessuri: tmus-cloud.8
-
   location:
     latitude: 1
     longitude: 8
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51008
+  flavor:
+    name: x1.tiny
 
 
 - key:
@@ -131,12 +155,15 @@ cloudlets:
       name: azure
     name: azure-cloud-9
   accessuri: azure-cloud.9
-
   location:
     latitude: 1
     longitude: 9
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51009
+  flavor:
+    name: x1.tiny
 
 
 - key:
@@ -144,12 +171,15 @@ cloudlets:
       name: gcp
     name: gcp-cloud-10
   accessuri: gcp-cloud.10
-
   location:
     latitude: 1
     longitude: 10
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51010
+  flavor:
+    name: x1.tiny
 
 
 developers:
@@ -573,6 +603,7 @@ appinstances:
     clusterinstkey:
       clusterkey:
         name: default
+      developer: AcmeAppCo
       cloudletkey:
         operatorkey:
           name: developer
@@ -588,6 +619,7 @@ appinstances:
     clusterinstkey:
       clusterkey:
         name: default
+      developer: AcmeAppCo
       cloudletkey:
         operatorkey:
           name: developer
@@ -603,6 +635,7 @@ appinstances:
     clusterinstkey:
       clusterkey:
         name: default
+      developer: Samsung
       cloudletkey:
         operatorkey:
           name: developer

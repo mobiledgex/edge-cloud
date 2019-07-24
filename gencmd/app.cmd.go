@@ -39,6 +39,7 @@ It has these top-level messages:
 	GcpProperties
 	OpenStackProperties
 	CloudletInfraProperties
+	PlatformConfig
 	Cloudlet
 	FlavorInfo
 	CloudletInfo
@@ -189,7 +190,7 @@ func ConfigFileWriteOutputOne(obj *edgeproto.ConfigFile) {
 	}
 }
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 17)
+	s := make([]string, 0, 19)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -219,11 +220,13 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.Configs[0].Kind)
 	s = append(s, in.Configs[0].Config)
 	s = append(s, strconv.FormatBool(in.ScaleWithCluster))
+	s = append(s, strconv.FormatBool(in.InternalPorts))
+	s = append(s, strconv.FormatUint(uint64(in.Revision), 10))
 	return s
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 17)
+	s := make([]string, 0, 19)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
@@ -244,6 +247,8 @@ func AppHeaderSlicer() []string {
 	s = append(s, "Configs-Kind")
 	s = append(s, "Configs-Config")
 	s = append(s, "ScaleWithCluster")
+	s = append(s, "InternalPorts")
+	s = append(s, "Revision")
 	return s
 }
 
@@ -512,6 +517,8 @@ func init() {
 	AppFlagSet.BoolVar(&AppIn.PermitsPlatformApps, "permitsplatformapps", false, "PermitsPlatformApps")
 	AppFlagSet.StringVar(&AppInDelOpt, "delopt", "", "one of [NoAutoDelete AutoDelete]")
 	AppFlagSet.BoolVar(&AppIn.ScaleWithCluster, "scalewithcluster", false, "ScaleWithCluster")
+	AppFlagSet.BoolVar(&AppIn.InternalPorts, "internalports", false, "InternalPorts")
+	AppNoConfigFlagSet.Int32Var(&AppIn.Revision, "revision", 0, "Revision")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -577,6 +584,12 @@ func AppSetFields() {
 	}
 	if AppFlagSet.Lookup("scalewithcluster").Changed {
 		AppIn.Fields = append(AppIn.Fields, "22")
+	}
+	if AppFlagSet.Lookup("internalports").Changed {
+		AppIn.Fields = append(AppIn.Fields, "23")
+	}
+	if AppNoConfigFlagSet.Lookup("revision").Changed {
+		AppIn.Fields = append(AppIn.Fields, "24")
 	}
 }
 

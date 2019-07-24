@@ -243,6 +243,12 @@ func runAppApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.Ap
 		case "create":
 			_, err = appAPI.CreateApp(ctx, &a)
 		case "update":
+			if a.ImagePath != "" {
+				a.Fields = append(a.Fields, edgeproto.AppFieldImagePath)
+			}
+			if a.DeploymentManifest != "" {
+				a.Fields = append(a.Fields, edgeproto.AppFieldDeploymentManifest)
+			}
 			_, err = appAPI.UpdateApp(ctx, &a)
 		case "delete":
 			_, err = appAPI.DeleteApp(ctx, &a)

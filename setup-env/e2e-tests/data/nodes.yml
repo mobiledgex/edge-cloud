@@ -16,49 +16,19 @@ nodes:
     cloudletkey:
       operatorkey:
         name: gcp
-      name: gcp-cloud-10
-- key:
-    nodetype: NodeCrm
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-8
+      name: gcp-cloud-5
 - key:
     nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: azure
-      name: azure-cloud-9
-- key:
-    nodetype: NodeCrm
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-5
-- key:
-    nodetype: NodeCrm
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-6
+      name: azure-cloud-4
 - key:
     nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: tmus
       name: tmus-cloud-2
-- key:
-    nodetype: NodeCrm
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-4
-- key:
-    nodetype: NodeCrm
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-7
 - key:
     nodetype: NodeCrm
     cloudletkey:

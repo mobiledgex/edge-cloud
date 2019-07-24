@@ -4,9 +4,9 @@ package main
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -122,8 +122,12 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	return false
 }
 
-// updates fields that need manipulation on setting, or fetched remotely
-func updateAppFields(in *edgeproto.App) error {
+// updates fields that need manipulation on setting, or fetched remotely. Updates the revision only if something changed
+func updateAppFields(in *edgeproto.App, revision int32) error {
+
+	// keep a copy of the old app so we can see if it changed.   This could be if we specifically modified a field,
+	// or the contents that we pull from a remove manifest changed
+	var oldApp = *in
 
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
@@ -157,37 +161,27 @@ func updateAppFields(in *edgeproto.App) error {
 	}
 
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
-		urlInfo := strings.Split(in.ImagePath, "#")
-		if len(urlInfo) != 2 {
-			return fmt.Errorf("md5 checksum of image is required. Please append checksum to imagepath: \"<url>#md5:checksum\"")
-		}
-		cSum := strings.Split(urlInfo[1], ":")
-		if len(cSum) != 2 {
-			return fmt.Errorf("incorrect checksum format, valid format: \"<url>#md5:checksum\"")
-		}
-		if cSum[0] != "md5" {
-			return fmt.Errorf("only md5 checksum is supported")
-		}
-		if len(cSum[1]) < 32 {
-			return fmt.Errorf("md5 checksum must be at least 32 characters")
-		}
-		_, err := hex.DecodeString(cSum[1])
+		err := util.ValidateImagePath(in.ImagePath)
 		if err != nil {
-			return fmt.Errorf("invalid md5 checksum")
+			return err
 		}
-	}
-
-	if !*testMode {
-		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER &&
-			!cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) {
-			err := cloudcommon.ValidateDockerRegistryPath(in.ImagePath, *vaultAddr)
-			if err != nil {
+		err = cloudcommon.ValidateVMRegistryPath(in.ImagePath, *vaultAddr)
+		if err != nil {
+			if *testMode {
+				log.DebugLog(log.DebugLevelApi, "Warning, could not validate VM registry path.", "err", err)
+			} else {
 				return err
 			}
 		}
-		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
-			err := cloudcommon.ValidateVMRegistryPath(in.ImagePath, *vaultAddr)
-			if err != nil {
+	}
+
+	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER &&
+		!cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) {
+		err := cloudcommon.ValidateDockerRegistryPath(in.ImagePath, *vaultAddr)
+		if err != nil {
+			if *testMode {
+				log.DebugLog(log.DebugLevelApi, "Warning, could not validate docker registry path.", "err", err)
+			} else {
 				return err
 			}
 		}
@@ -206,6 +200,13 @@ func updateAppFields(in *edgeproto.App) error {
 	// Manifest is required on app delete and we'll be in trouble
 	// if remote target is unreachable or changed at that time.
 	in.DeploymentManifest = deploymf
+
+	if reflect.DeepEqual(oldApp, *in) {
+		log.DebugLog(log.DebugLevelApi, "no changes in app, maintaining old revision")
+	} else {
+		log.DebugLog(log.DebugLevelApi, "app was modified, updating revision", "revision", revision)
+		in.Revision = revision
+	}
 	return nil
 }
 
@@ -234,14 +235,18 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 		}
 	}
-	err = updateAppFields(in)
+	err = updateAppFields(in, 0)
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	ports, err := edgeproto.ParseAppPorts(in.AccessPorts)
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
 	if in.DeploymentManifest != "" {
-		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.Command, in.DeploymentManifest)
+		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.Command, in.DeploymentManifest, ports)
 		if err != nil {
-			return &edgeproto.Result{}, fmt.Errorf("invalid deploymentment manifest %v", err)
+			return &edgeproto.Result{}, fmt.Errorf("invalid deploymentment manifest, %v", err)
 		}
 	}
 
@@ -266,13 +271,35 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if s.AndroidPackageConflicts(in) {
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another app", in.AndroidPackageName)
 	}
+
+	// if the app is already deployed, there are restrictions on what can be changed.
+	dynInsts := make(map[edgeproto.AppInstKey]struct{})
+	appInstExists := false
+	if appInstApi.UsesApp(&in.Key, dynInsts) {
+		appInstExists = true
+		for _, field := range in.Fields {
+			if field == edgeproto.AppFieldAccessPorts ||
+				field == edgeproto.AppFieldDeployment {
+				return &edgeproto.Result{}, fmt.Errorf("Field cannot be modified when AppInstances exist")
+			}
+		}
+	}
+
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		cur := edgeproto.App{}
+
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
+		if appInstExists {
+			if cur.Deployment != cloudcommon.AppDeploymentTypeKubernetes &&
+				cur.Deployment != cloudcommon.AppDeploymentTypeDocker {
+				return fmt.Errorf("UpdateApp not supported for deployment: %s when AppInstances exist", cur.Deployment)
+			}
+		}
 		cur.CopyInFields(in)
-		if err := updateAppFields(&cur); err != nil {
+		newRevision := cur.Revision + 1
+		if err := updateAppFields(&cur, newRevision); err != nil {
 			return err
 		}
 		s.store.STMPut(stm, &cur)
