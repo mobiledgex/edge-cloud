@@ -680,7 +680,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		revisionUpdated bool
 	}
 	instanceUpdateResults := make(map[edgeproto.AppInstKey]chan updateResult)
-	instances := make(map[edgeproto.AppInstKey]edgeproto.AppInstKey)
+	instances := make(map[edgeproto.AppInstKey]struct{})
 
 	for k, val := range s.cache.Objs {
 		// ignore forceupdate, Crmoverride updatemultiple for match
@@ -690,7 +690,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		if !val.Matches(in, edgeproto.MatchFilter()) {
 			continue
 		}
-		instances[k] = val.Key
+		instances[k] = struct{}{}
 		instanceUpdateResults[k] = make(chan updateResult)
 
 	}
@@ -703,7 +703,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 
 	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d App Instances", len(instances))})
 
-	for _, instkey := range instances {
+	for instkey, _ := range instances {
 		go func(k edgeproto.AppInstKey) {
 			log.DebugLog(log.DebugLevelApi, "updating appinst", "key", k)
 			updated, err := s.updateAppInstInternal(DefCallContext(), k, cb, in.ForceUpdate)
