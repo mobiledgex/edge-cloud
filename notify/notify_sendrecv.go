@@ -7,12 +7,14 @@ package notify
 // Sendrecv code handles this common send/recv logic.
 
 import (
+	"context"
 	fmt "fmt"
 	"sync"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
@@ -34,7 +36,7 @@ type NotifySend interface {
 	// Return true if there are keys to send, prepares keys to send
 	PrepData() bool
 	// Queue all cached data for send
-	UpdateAll()
+	UpdateAll(ctx context.Context)
 }
 
 // NotifyRecv is implemented by auto-generated code. The same
@@ -49,11 +51,11 @@ type NotifyRecv interface {
 	// Get recv count for object
 	GetRecvCount() uint64
 	// Recieve the data
-	Recv(notice *edgeproto.Notice, notifyId int64, peerAddr string)
+	Recv(ctx context.Context, notice *edgeproto.Notice, notifyId int64, peerAddr string)
 	// Start receiving a send all
 	RecvAllStart()
 	// End receiving a send all
-	RecvAllEnd(cleanup Cleanup)
+	RecvAllEnd(ctx context.Context, cleanup Cleanup)
 }
 
 type StreamNotify interface {
@@ -179,6 +181,11 @@ func (s *SendRecv) send(stream StreamNotify) {
 	var notice edgeproto.Notice
 
 	sendAll := true
+	sendAllSpan := log.StartSpan(log.DebugLevelNotify, "notify-send-all")
+	sendAllSpan.SetTag("peer", s.peerAddr)
+	sendAllSpan.SetTag("cliserv", s.cliserv)
+	sendAllCtx := opentracing.ContextWithSpan(context.Background(), sendAllSpan)
+
 	// trigger initial sendAll
 	s.wakeup()
 	streamDone := false
@@ -205,7 +212,7 @@ func (s *SendRecv) send(stream StreamNotify) {
 		// it depended on.
 		for ii := len(s.sendlist) - 1; ii >= 0; ii-- {
 			if sendAll {
-				s.sendlist[ii].UpdateAll()
+				s.sendlist[ii].UpdateAll(sendAllCtx)
 			}
 			if s.sendlist[ii].PrepData() {
 				hasData = true
@@ -218,9 +225,7 @@ func (s *SendRecv) send(stream StreamNotify) {
 			break
 		}
 		if sendAll {
-			log.DebugLog(log.DebugLevelNotify,
-				fmt.Sprintf("%s send all", s.cliserv),
-				"peer", s.peerAddr)
+			log.SpanLog(sendAllCtx, log.DebugLevelNotify, "send all")
 			s.stats.SendAll++
 		}
 		// Note that order is important here, as some objects
@@ -241,17 +246,20 @@ func (s *SendRecv) send(stream StreamNotify) {
 			notice.Any = types.Any{}
 			err = stream.Send(&notice)
 			if err != nil {
-				log.DebugLog(log.DebugLevelNotify,
-					fmt.Sprintf("%s send all end", s.cliserv),
-					"peer", s.peerAddr,
-					"err", err)
+				log.SpanLog(sendAllCtx, log.DebugLevelNotify,
+					"send all end", "err", err)
 				break
 			}
 			sendAll = false
+			sendAllSpan.Finish()
+			sendAllSpan = nil
 		}
 		if err != nil {
 			break
 		}
+	}
+	if sendAllSpan != nil {
+		sendAllSpan.Finish()
 	}
 	close(s.sendRunning)
 }
@@ -271,31 +279,41 @@ func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 				fmt.Sprintf("%s receive", s.cliserv), "err", err)
 			break
 		}
-		name, err := types.AnyMessageName(&notice.Any)
-		if err != nil && notice.Action != edgeproto.NoticeAction_SENDALL_END {
-			log.DebugLog(log.DebugLevelNotify,
-				fmt.Sprintf("%s receive", s.cliserv),
-				"peer", s.peerAddr,
-				"notice", notice, "err", err)
-			continue
-		}
-		if recvAll && notice.Action == edgeproto.NoticeAction_SENDALL_END {
-			for _, recv := range s.recvmap {
-				recv.RecvAllEnd(cleanup)
+		func() {
+			// anonymous inner func so we can use defer to close span
+			ctx := context.Background()
+			name, err := types.AnyMessageName(&notice.Any)
+			if notice.Span != "" {
+				spanName := fmt.Sprintf("notify-recv %s", name)
+				span := log.SpanFromString(notice.Span, spanName)
+				span.SetTag("action", notice.Action)
+				span.SetTag("cliserv", s.cliserv)
+				span.SetTag("peer", s.peerAddr)
+				defer span.Finish()
+				ctx = opentracing.ContextWithSpan(ctx, span)
 			}
-			recvAll = false
-			continue
-		}
-		recv := s.recvmap[name]
-		if recv != nil {
-			recv.Recv(notice, notifyId, s.peerAddr)
-		} else {
-			log.DebugLog(log.DebugLevelNotify,
-				fmt.Sprintf("%s recv unhandled", s.cliserv),
-				"peer", s.peerAddr,
-				"action", notice.Action,
-				"name", name)
-		}
+			if err != nil && notice.Action != edgeproto.NoticeAction_SENDALL_END {
+				log.SpanLog(ctx, log.DebugLevelNotify, "err", err)
+				return
+			}
+			if recvAll && notice.Action == edgeproto.NoticeAction_SENDALL_END {
+				for _, recv := range s.recvmap {
+					recv.RecvAllEnd(ctx, cleanup)
+				}
+				recvAll = false
+				return
+			}
+			recv := s.recvmap[name]
+			if recv != nil {
+				recv.Recv(ctx, notice, notifyId, s.peerAddr)
+			} else {
+				log.DebugLog(log.DebugLevelNotify,
+					fmt.Sprintf("%s recv unhandled", s.cliserv),
+					"peer", s.peerAddr,
+					"action", notice.Action,
+					"name", name)
+			}
+		}()
 	}
 	close(s.recvRunning)
 }

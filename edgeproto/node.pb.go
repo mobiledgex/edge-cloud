@@ -668,7 +668,7 @@ func NewNodeStore(kvstore objstore.KVStore) NodeStore {
 	return NodeStore{kvstore: kvstore}
 }
 
-func (s *NodeStore) Create(m *Node, wait func(int64)) (*Result, error) {
+func (s *NodeStore) Create(ctx context.Context, m *Node, wait func(int64)) (*Result, error) {
 	err := m.Validate(NodeAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -678,7 +678,7 @@ func (s *NodeStore) Create(m *Node, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(ctx, key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -688,7 +688,7 @@ func (s *NodeStore) Create(m *Node, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-func (s *NodeStore) Update(m *Node, wait func(int64)) (*Result, error) {
+func (s *NodeStore) Update(ctx context.Context, m *Node, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -712,7 +712,7 @@ func (s *NodeStore) Update(m *Node, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -722,7 +722,7 @@ func (s *NodeStore) Update(m *Node, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-func (s *NodeStore) Put(m *Node, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *NodeStore) Put(ctx context.Context, m *Node, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(NodeAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -734,7 +734,7 @@ func (s *NodeStore) Put(m *Node, wait func(int64), ops ...objstore.KVOp) (*Resul
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val), ops...)
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}
@@ -744,13 +744,13 @@ func (s *NodeStore) Put(m *Node, wait func(int64), ops ...objstore.KVOp) (*Resul
 	return &Result{}, err
 }
 
-func (s *NodeStore) Delete(m *Node, wait func(int64)) (*Result, error) {
+func (s *NodeStore) Delete(ctx context.Context, m *Node, wait func(int64)) (*Result, error) {
 	err := m.GetKey().Validate()
 	if err != nil {
 		return nil, err
 	}
 	key := objstore.DbKeyString("Node", m.GetKey())
-	rev, err := s.kvstore.Delete(key)
+	rev, err := s.kvstore.Delete(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -805,7 +805,7 @@ func (s *NodeStore) STMDel(stm concurrency.STM, key *NodeKey) {
 }
 
 type NodeKeyWatcher struct {
-	cb func()
+	cb func(ctx context.Context)
 }
 
 // NodeCache caches Node objects in memory in a hash table
@@ -814,8 +814,8 @@ type NodeCache struct {
 	Objs        map[NodeKey]*Node
 	Mux         util.Mutex
 	List        map[NodeKey]struct{}
-	NotifyCb    func(obj *NodeKey, old *Node)
-	UpdatedCb   func(old *Node, new *Node)
+	NotifyCb    func(ctx context.Context, obj *NodeKey, old *Node)
+	UpdatedCb   func(ctx context.Context, old *Node, new *Node)
 	KeyWatchers map[NodeKey][]*NodeKeyWatcher
 }
 
@@ -851,21 +851,21 @@ func (c *NodeCache) HasKey(key *NodeKey) bool {
 	return found
 }
 
-func (c *NodeCache) GetAllKeys(keys map[NodeKey]struct{}) {
+func (c *NodeCache) GetAllKeys(ctx context.Context, keys map[NodeKey]context.Context) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
-		keys[key] = struct{}{}
+		keys[key] = ctx
 	}
 }
 
-func (c *NodeCache) Update(in *Node, rev int64) {
-	c.UpdateModFunc(&in.Key, rev, func(old *Node) (*Node, bool) {
+func (c *NodeCache) Update(ctx context.Context, in *Node, rev int64) {
+	c.UpdateModFunc(ctx, &in.Key, rev, func(old *Node) (*Node, bool) {
 		return in, true
 	})
 }
 
-func (c *NodeCache) UpdateModFunc(key *NodeKey, rev int64, modFunc func(old *Node) (new *Node, changed bool)) {
+func (c *NodeCache) UpdateModFunc(ctx context.Context, key *NodeKey, rev int64, modFunc func(old *Node) (new *Node, changed bool)) {
 	c.Mux.Lock()
 	old := c.Objs[*key]
 	new, changed := modFunc(old)
@@ -877,31 +877,33 @@ func (c *NodeCache) UpdateModFunc(key *NodeKey, rev int64, modFunc func(old *Nod
 		if c.UpdatedCb != nil {
 			newCopy := &Node{}
 			*newCopy = *new
-			defer c.UpdatedCb(old, newCopy)
+			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&new.Key, old)
+			defer c.NotifyCb(ctx, &new.Key, old)
 		}
 	}
 	c.Objs[new.Key] = new
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Node", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&new.Key)
+	c.TriggerKeyWatchers(ctx, &new.Key)
 }
 
-func (c *NodeCache) Delete(in *Node, rev int64) {
+func (c *NodeCache) Delete(ctx context.Context, in *Node, rev int64) {
 	c.Mux.Lock()
 	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	log.DebugLog(log.DebugLevelApi, "SyncDelete Node", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key, old)
+		c.NotifyCb(ctx, &in.Key, old)
 	}
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(ctx, &in.Key)
 }
 
-func (c *NodeCache) Prune(validKeys map[NodeKey]struct{}) {
+func (c *NodeCache) Prune(ctx context.Context, validKeys map[NodeKey]struct{}) {
 	notify := make(map[NodeKey]*Node)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
@@ -915,9 +917,9 @@ func (c *NodeCache) Prune(validKeys map[NodeKey]struct{}) {
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key, old)
+			c.NotifyCb(ctx, &key, old)
 		}
-		c.TriggerKeyWatchers(&key)
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
@@ -927,7 +929,7 @@ func (c *NodeCache) GetCount() int {
 	return len(c.Objs)
 }
 
-func (c *NodeCache) Flush(notifyId int64) {
+func (c *NodeCache) Flush(ctx context.Context, notifyId int64) {
 	flushed := make(map[NodeKey]*Node)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -941,9 +943,9 @@ func (c *NodeCache) Flush(notifyId int64) {
 	if len(flushed) > 0 {
 		for key, old := range flushed {
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key, old)
+				c.NotifyCb(ctx, &key, old)
 			}
-			c.TriggerKeyWatchers(&key)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 }
@@ -971,15 +973,15 @@ func NodeGenericNotifyCb(fn func(key *NodeKey, old *Node)) func(objstore.ObjKey,
 	}
 }
 
-func (c *NodeCache) SetNotifyCb(fn func(obj *NodeKey, old *Node)) {
+func (c *NodeCache) SetNotifyCb(fn func(ctx context.Context, obj *NodeKey, old *Node)) {
 	c.NotifyCb = fn
 }
 
-func (c *NodeCache) SetUpdatedCb(fn func(old *Node, new *Node)) {
+func (c *NodeCache) SetUpdatedCb(fn func(ctx context.Context, old *Node, new *Node)) {
 	c.UpdatedCb = fn
 }
 
-func (c *NodeCache) WatchKey(key *NodeKey, cb func()) context.CancelFunc {
+func (c *NodeCache) WatchKey(key *NodeKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -1012,7 +1014,7 @@ func (c *NodeCache) WatchKey(key *NodeKey, cb func()) context.CancelFunc {
 	}
 }
 
-func (c *NodeCache) TriggerKeyWatchers(key *NodeKey) {
+func (c *NodeCache) TriggerKeyWatchers(ctx context.Context, key *NodeKey) {
 	watchers := make([]*NodeKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -1020,17 +1022,17 @@ func (c *NodeCache) TriggerKeyWatchers(key *NodeKey) {
 	}
 	c.Mux.Unlock()
 	for ii, _ := range watchers {
-		watchers[ii].cb()
+		watchers[ii].cb(ctx)
 	}
 }
-func (c *NodeCache) SyncUpdate(key, val []byte, rev int64) {
+func (c *NodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	obj := Node{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Node data", "val", string(val))
 		return
 	}
-	c.Update(&obj, rev)
+	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.Key] = struct{}{}
@@ -1038,18 +1040,18 @@ func (c *NodeCache) SyncUpdate(key, val []byte, rev int64) {
 	c.Mux.Unlock()
 }
 
-func (c *NodeCache) SyncDelete(key []byte, rev int64) {
+func (c *NodeCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := Node{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	NodeKeyStringParse(keystr, &obj.Key)
-	c.Delete(&obj, rev)
+	c.Delete(ctx, &obj, rev)
 }
 
-func (c *NodeCache) SyncListStart() {
+func (c *NodeCache) SyncListStart(ctx context.Context) {
 	c.List = make(map[NodeKey]struct{})
 }
 
-func (c *NodeCache) SyncListEnd() {
+func (c *NodeCache) SyncListEnd(ctx context.Context) {
 	deleted := make(map[NodeKey]*Node)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -1062,8 +1064,8 @@ func (c *NodeCache) SyncListEnd() {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(&key, val)
-			c.TriggerKeyWatchers(&key)
+			c.NotifyCb(ctx, &key, val)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 }

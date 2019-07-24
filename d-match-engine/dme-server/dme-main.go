@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	ctls "crypto/tls"
 	"flag"
 	"fmt"
@@ -27,7 +28,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/version"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
@@ -294,6 +294,11 @@ func initPlugin(operatorName string) (op.OperatorApiGw, error) {
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
+	log.InitTracer()
+	defer log.FinishTracer()
+	span := log.StartSpan(log.DebugLevelInfo, "main")
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudletKey)
 	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NODE_DME, &myCloudletKey, &myNode.Key)
 	var err error
@@ -307,7 +312,7 @@ func main() {
 		log.FatalLog("Unable to init API GW", "err", err)
 
 	}
-	log.DebugLog(log.DebugLevelDmereq, "plugin init done", "operatorApiGw", operatorApiGw)
+	log.SpanLog(ctx, log.DebugLevelInfo, "plugin init done", "operatorApiGw", operatorApiGw)
 
 	dmecommon.InitVault(*vaultAddr, *region)
 
@@ -343,15 +348,17 @@ func main() {
 	myNode.BuildHead = version.BuildHead
 	myNode.BuildAuthor = version.BuildAuthor
 	myNode.Hostname = cloudcommon.Hostname()
-	nodeCache.Update(&myNode, 0)
+	nodeCache.Update(ctx, &myNode, 0)
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed to listen", "addr", *apiAddr, "err", err)
 	}
 
 	creds, err := tls.ServerAuthServerCreds(*tlsApiCertFile, *tlsApiKeyFile)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
 	grpcOpts = append(grpcOpts, grpc.Creds(creds))
@@ -369,6 +376,7 @@ func main() {
 	reflection.Register(s)
 	go func() {
 		if err := s.Serve(lis); err != nil {
+			span.Finish()
 			log.FatalLog("Failed to server", "err", err)
 		}
 	}()
@@ -385,6 +393,7 @@ func main() {
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed to start grpc Gateway", "err", err)
 	}
 	mux.Handle("/", gw)
@@ -420,7 +429,8 @@ func main() {
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	log.InfoLog("Ready")
+	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
+	span.Finish()
 
 	// wait until process in killed/interrupted
 	sig := <-sigChan

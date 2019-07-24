@@ -1,6 +1,9 @@
 package edgeproto
 
-import "github.com/mobiledgex/edge-cloud/log"
+import (
+	"github.com/mobiledgex/edge-cloud/log"
+	context "golang.org/x/net/context"
+)
 
 // Common extra support code for caches
 
@@ -46,7 +49,7 @@ func (s *ClusterInstCache) GetForCloudlet(key *CloudletKey, clusterInsts map[Clu
 	}
 }
 
-func (s *ClusterInstInfoCache) SetState(key *ClusterInstKey, state TrackedState) {
+func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey, state TrackedState) {
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
@@ -54,10 +57,10 @@ func (s *ClusterInstInfoCache) SetState(key *ClusterInstKey, state TrackedState)
 	info.Errors = nil
 	info.State = state
 	info.Status = StatusInfo{}
-	s.Update(&info, 0)
+	s.Update(ctx, &info, 0)
 }
 
-func (s *ClusterInstInfoCache) SetStatusTask(key *ClusterInstKey, taskName string) {
+func (s *ClusterInstInfoCache) SetStatusTask(ctx context.Context, key *ClusterInstKey, taskName string) {
 	log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
@@ -66,10 +69,10 @@ func (s *ClusterInstInfoCache) SetStatusTask(key *ClusterInstKey, taskName strin
 		return
 	}
 	info.Status.SetTask(taskName)
-	s.Update(&info, 0)
+	s.Update(ctx, &info, 0)
 }
 
-func (s *ClusterInstInfoCache) SetStatusMaxTasks(key *ClusterInstKey, maxTasks uint32) {
+func (s *ClusterInstInfoCache) SetStatusMaxTasks(ctx context.Context, key *ClusterInstKey, maxTasks uint32) {
 	log.DebugLog(log.DebugLevelApi, "SetStatusMaxTasks", "key", key, "maxTasks", maxTasks)
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
@@ -78,10 +81,10 @@ func (s *ClusterInstInfoCache) SetStatusMaxTasks(key *ClusterInstKey, maxTasks u
 		return
 	}
 	info.Status.SetMaxTasks(maxTasks)
-	s.Update(&info, 0)
+	s.Update(ctx, &info, 0)
 }
 
-func (s *ClusterInstInfoCache) SetStatusStep(key *ClusterInstKey, stepName string) {
+func (s *ClusterInstInfoCache) SetStatusStep(ctx context.Context, key *ClusterInstKey, stepName string) {
 	log.DebugLog(log.DebugLevelApi, "SetStatusStep", "key", key, "stepName", stepName)
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
@@ -90,20 +93,20 @@ func (s *ClusterInstInfoCache) SetStatusStep(key *ClusterInstKey, stepName strin
 		return
 	}
 	info.Status.SetStep(stepName)
-	s.Update(&info, 0)
+	s.Update(ctx, &info, 0)
 }
 
-func (s *ClusterInstInfoCache) SetError(key *ClusterInstKey, errState TrackedState, err string) {
+func (s *ClusterInstInfoCache) SetError(ctx context.Context, key *ClusterInstKey, errState TrackedState, err string) {
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
 	}
 	info.Errors = append(info.Errors, err)
 	info.State = errState
-	s.Update(&info, 0)
+	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) SetState(key *AppInstKey, state TrackedState) {
+func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state TrackedState) {
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
@@ -111,10 +114,10 @@ func (s *AppInstInfoCache) SetState(key *AppInstKey, state TrackedState) {
 	info.Errors = nil
 	info.State = state
 	info.Status = StatusInfo{}
-	s.Update(&info, 0)
+	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) SetStateRuntime(key *AppInstKey, state TrackedState, rt *AppInstRuntime) {
+func (s *AppInstInfoCache) SetStateRuntime(ctx context.Context, key *AppInstKey, state TrackedState, rt *AppInstRuntime) {
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
@@ -123,10 +126,10 @@ func (s *AppInstInfoCache) SetStateRuntime(key *AppInstKey, state TrackedState, 
 	info.State = state
 	info.Status = StatusInfo{}
 	info.RuntimeInfo = *rt
-	s.Update(&info, 0)
+	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) SetStatusMaxTasks(key *AppInstKey, maxTasks uint32) {
+func (s *AppInstInfoCache) SetStatusMaxTasks(ctx context.Context, key *AppInstKey, maxTasks uint32) {
 	log.DebugLog(log.DebugLevelApi, "SetStatusMaxTasks", "key", key, "maxTasks", maxTasks)
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
@@ -135,10 +138,10 @@ func (s *AppInstInfoCache) SetStatusMaxTasks(key *AppInstKey, maxTasks uint32) {
 		return
 	}
 	info.Status.SetMaxTasks(maxTasks)
-	s.Update(&info, 0)
+	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) SetStatusTask(key *AppInstKey, taskName string) {
+func (s *AppInstInfoCache) SetStatusTask(ctx context.Context, key *AppInstKey, taskName string) {
 	log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
@@ -147,10 +150,10 @@ func (s *AppInstInfoCache) SetStatusTask(key *AppInstKey, taskName string) {
 		return
 	}
 	info.Status.SetTask(taskName)
-	s.Update(&info, 0)
+	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) SetStatusStep(key *AppInstKey, stepName string) {
+func (s *AppInstInfoCache) SetStatusStep(ctx context.Context, key *AppInstKey, stepName string) {
 	log.DebugLog(log.DebugLevelApi, "SetStatusStep", "key", key, "stepName", stepName)
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
@@ -159,15 +162,15 @@ func (s *AppInstInfoCache) SetStatusStep(key *AppInstKey, stepName string) {
 		return
 	}
 	info.Status.SetStep(stepName)
-	s.Update(&info, 0)
+	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) SetError(key *AppInstKey, errState TrackedState, err string) {
+func (s *AppInstInfoCache) SetError(ctx context.Context, key *AppInstKey, errState TrackedState, err string) {
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
 	}
 	info.Errors = append(info.Errors, err)
 	info.State = errState
-	s.Update(&info, 0)
+	s.Update(ctx, &info, 0)
 }

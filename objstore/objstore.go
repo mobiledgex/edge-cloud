@@ -19,20 +19,20 @@ type KVStore interface {
 	// Create creates an object with the given string key and value.
 	// Create should fail if the key already exists.
 	// It returns the revision (transaction) number and any error.
-	Create(key, val string) (int64, error)
+	Create(ctx context.Context, key, val string) (int64, error)
 	// Update updates an object with the given string key and value.
 	// Update should fail if the key does not exist, or if the version
 	// doesn't match (meaning some other thread has already updated it).
 	// It returns the revision (transaction) number and any error.
-	Update(key, val string, version int64) (int64, error)
+	Update(ctx context.Context, key, val string, version int64) (int64, error)
 	// Delete deletes an object with the given key string.
 	// It returns the revision (transaction) number and any error.
-	Delete(key string) (int64, error)
+	Delete(ctx context.Context, key string) (int64, error)
 	// Get retrieves a single object with the given key string.
 	// Get returns the data, a version, mod revision, and any error.
-	Get(key string) ([]byte, int64, int64, error)
+	Get(key string, opts ...KVOp) ([]byte, int64, int64, error)
 	// Put the key-value pair, regardless of whether it already exists or not.
-	Put(key, val string, opts ...KVOp) (int64, error)
+	Put(ctx context.Context, key, val string, opts ...KVOp) (int64, error)
 	// List retrives all objects that have the given key string prefix.
 	List(key string, cb ListCb) error
 	// Sync is a blocking call used to keep in sync with the database.
@@ -57,7 +57,7 @@ type KVStore interface {
 	// multiple puts appear within an apply func, at least for watch
 	// callbacks (perhaps because they all have the same revision ID).
 	// If ordering is important, do not use multiple puts in the same STM.
-	ApplySTM(apply func(concurrency.STM) error) (int64, error)
+	ApplySTM(ctx context.Context, apply func(concurrency.STM) error) (int64, error)
 	// Leases work like etcd leases. A key committed with a lease will
 	// automatically be deleted once the lease expires.
 	// To avoid that, the KeepAlive call must remain active.
@@ -99,12 +99,17 @@ type ObjKey interface {
 
 type KVOptions struct {
 	LeaseID int64
+	Rev     int64
 }
 
 type KVOp func(opts *KVOptions)
 
 func WithLease(leaseID int64) KVOp {
 	return func(opts *KVOptions) { opts.LeaseID = leaseID }
+}
+
+func WithRevision(rev int64) KVOp {
+	return func(opts *KVOptions) { opts.Rev = rev }
 }
 
 func (o *KVOptions) Apply(opts []KVOp) {
@@ -137,7 +142,7 @@ var SyncActionStrs = [...]string{
 	"list-end",
 }
 
-type SyncCb func(data *SyncCbData)
+type SyncCb func(ctx context.Context, data *SyncCbData)
 
 type SyncCbData struct {
 	// action on the data

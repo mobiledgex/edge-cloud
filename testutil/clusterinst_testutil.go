@@ -10,6 +10,7 @@ import "testing"
 import "context"
 import "time"
 import "github.com/stretchr/testify/require"
+import "github.com/mobiledgex/edge-cloud/log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -41,14 +42,22 @@ func (x *ShowClusterInst) Send(m *edgeproto.ClusterInst) error {
 
 type CudStreamoutClusterInst struct {
 	grpc.ServerStream
+	ctx context.Context
 }
 
 func (x *CudStreamoutClusterInst) Send(res *edgeproto.Result) error {
 	fmt.Println(res)
 	return nil
 }
+
 func (x *CudStreamoutClusterInst) Context() context.Context {
-	return context.TODO()
+	return x.ctx
+}
+
+func NewCudStreamoutClusterInst(ctx context.Context) *CudStreamoutClusterInst {
+	return &CudStreamoutClusterInst{
+		ctx: ctx,
+	}
 }
 
 type ClusterInstStream interface {
@@ -152,7 +161,7 @@ func (x *ClusterInstCommonApi) CreateClusterInst(ctx context.Context, in *edgepr
 	copy := &edgeproto.ClusterInst{}
 	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.CreateClusterInst(copy, &CudStreamoutClusterInst{})
+		err := x.internal_api.CreateClusterInst(copy, NewCudStreamoutClusterInst(ctx))
 		return &edgeproto.Result{}, err
 	} else {
 		stream, err := x.client_api.CreateClusterInst(ctx, copy)
@@ -165,7 +174,7 @@ func (x *ClusterInstCommonApi) UpdateClusterInst(ctx context.Context, in *edgepr
 	copy := &edgeproto.ClusterInst{}
 	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.UpdateClusterInst(copy, &CudStreamoutClusterInst{})
+		err := x.internal_api.UpdateClusterInst(copy, NewCudStreamoutClusterInst(ctx))
 		return &edgeproto.Result{}, err
 	} else {
 		stream, err := x.client_api.UpdateClusterInst(ctx, copy)
@@ -178,7 +187,7 @@ func (x *ClusterInstCommonApi) DeleteClusterInst(ctx context.Context, in *edgepr
 	copy := &edgeproto.ClusterInst{}
 	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.DeleteClusterInst(copy, &CudStreamoutClusterInst{})
+		err := x.internal_api.DeleteClusterInst(copy, NewCudStreamoutClusterInst(ctx))
 		return &edgeproto.Result{}, err
 	} else {
 		stream, err := x.client_api.DeleteClusterInst(ctx, copy)
@@ -210,26 +219,33 @@ func NewClientClusterInstApi(api edgeproto.ClusterInstApiClient) *ClusterInstCom
 }
 
 func InternalClusterInstTest(t *testing.T, test string, api edgeproto.ClusterInstApiServer, testData []edgeproto.ClusterInst) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalClusterInstTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicClusterInstCudTest(t, NewInternalClusterInstApi(api), testData)
+		basicClusterInstCudTest(t, ctx, NewInternalClusterInstApi(api), testData)
 	case "show":
-		basicClusterInstShowTest(t, NewInternalClusterInstApi(api), testData)
+		basicClusterInstShowTest(t, ctx, NewInternalClusterInstApi(api), testData)
 	}
 }
 
 func ClientClusterInstTest(t *testing.T, test string, api edgeproto.ClusterInstApiClient, testData []edgeproto.ClusterInst) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientClusterInstTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicClusterInstCudTest(t, NewClientClusterInstApi(api), testData)
+		basicClusterInstCudTest(t, ctx, NewClientClusterInstApi(api), testData)
 	case "show":
-		basicClusterInstShowTest(t, NewClientClusterInstApi(api), testData)
+		basicClusterInstShowTest(t, ctx, NewClientClusterInstApi(api), testData)
 	}
 }
 
-func basicClusterInstShowTest(t *testing.T, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
+func basicClusterInstShowTest(t *testing.T, ctx context.Context, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowClusterInst{}
 	show.Init()
@@ -242,9 +258,8 @@ func basicClusterInstShowTest(t *testing.T, api *ClusterInstCommonApi, testData 
 	}
 }
 
-func GetClusterInst(t *testing.T, api *ClusterInstCommonApi, key *edgeproto.ClusterInstKey, out *edgeproto.ClusterInst) bool {
+func GetClusterInst(t *testing.T, ctx context.Context, api *ClusterInstCommonApi, key *edgeproto.ClusterInstKey, out *edgeproto.ClusterInst) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowClusterInst{}
 	show.Init()
@@ -259,9 +274,8 @@ func GetClusterInst(t *testing.T, api *ClusterInstCommonApi, key *edgeproto.Clus
 	return found
 }
 
-func basicClusterInstCudTest(t *testing.T, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
+func basicClusterInstCudTest(t *testing.T, ctx context.Context, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
 	var err error
-	ctx := context.TODO()
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
@@ -269,14 +283,14 @@ func basicClusterInstCudTest(t *testing.T, api *ClusterInstCommonApi, testData [
 	}
 
 	// test create
-	createClusterInstData(t, api, testData)
+	createClusterInstData(t, ctx, api, testData)
 
 	// test duplicate create - should fail
 	_, err = api.CreateClusterInst(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate ClusterInst")
 
 	// test show all items
-	basicClusterInstShowTest(t, api, testData)
+	basicClusterInstShowTest(t, ctx, api, testData)
 
 	// test delete
 	_, err = api.DeleteClusterInst(ctx, &testData[0])
@@ -303,16 +317,23 @@ func basicClusterInstCudTest(t *testing.T, api *ClusterInstCommonApi, testData [
 }
 
 func InternalClusterInstCreate(t *testing.T, api edgeproto.ClusterInstApiServer, testData []edgeproto.ClusterInst) {
-	createClusterInstData(t, NewInternalClusterInstApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "InternalClusterInstCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createClusterInstData(t, ctx, NewInternalClusterInstApi(api), testData)
 }
 
 func ClientClusterInstCreate(t *testing.T, api edgeproto.ClusterInstApiClient, testData []edgeproto.ClusterInst) {
-	createClusterInstData(t, NewClientClusterInstApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "ClientClusterInstCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createClusterInstData(t, ctx, NewClientClusterInstApi(api), testData)
 }
 
-func createClusterInstData(t *testing.T, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
+func createClusterInstData(t *testing.T, ctx context.Context, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
 	var err error
-	ctx := context.TODO()
 
 	for _, obj := range testData {
 		_, err = api.CreateClusterInst(ctx, &obj)
@@ -434,22 +455,29 @@ func NewClientClusterInstInfoApi(api edgeproto.ClusterInstInfoApiClient) *Cluste
 }
 
 func InternalClusterInstInfoTest(t *testing.T, test string, api edgeproto.ClusterInstInfoApiServer, testData []edgeproto.ClusterInstInfo) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalClusterInstInfoTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "show":
-		basicClusterInstInfoShowTest(t, NewInternalClusterInstInfoApi(api), testData)
+		basicClusterInstInfoShowTest(t, ctx, NewInternalClusterInstInfoApi(api), testData)
 	}
 }
 
 func ClientClusterInstInfoTest(t *testing.T, test string, api edgeproto.ClusterInstInfoApiClient, testData []edgeproto.ClusterInstInfo) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientClusterInstInfoTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "show":
-		basicClusterInstInfoShowTest(t, NewClientClusterInstInfoApi(api), testData)
+		basicClusterInstInfoShowTest(t, ctx, NewClientClusterInstInfoApi(api), testData)
 	}
 }
 
-func basicClusterInstInfoShowTest(t *testing.T, api *ClusterInstInfoCommonApi, testData []edgeproto.ClusterInstInfo) {
+func basicClusterInstInfoShowTest(t *testing.T, ctx context.Context, api *ClusterInstInfoCommonApi, testData []edgeproto.ClusterInstInfo) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowClusterInstInfo{}
 	show.Init()
@@ -462,9 +490,8 @@ func basicClusterInstInfoShowTest(t *testing.T, api *ClusterInstInfoCommonApi, t
 	}
 }
 
-func GetClusterInstInfo(t *testing.T, api *ClusterInstInfoCommonApi, key *edgeproto.ClusterInstKey, out *edgeproto.ClusterInstInfo) bool {
+func GetClusterInstInfo(t *testing.T, ctx context.Context, api *ClusterInstInfoCommonApi, key *edgeproto.ClusterInstKey, out *edgeproto.ClusterInstInfo) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowClusterInstInfo{}
 	show.Init()
