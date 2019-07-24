@@ -684,9 +684,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	s.cache.Mux.Lock()
 	instanceUpdateResults := make(map[edgeproto.AppInstKey]chan string)
 	instances := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
-	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating App Instances")})
 
-	log.DebugLog(log.DebugLevelApi, "UpdateAllAppInstances ", "appKey", in.Key)
 	for k, val := range s.cache.Objs {
 		// ignore forceupdate, Crmoverride updatemultiple for match
 		val.ForceUpdate = in.ForceUpdate
@@ -700,6 +698,11 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 
 	}
 	s.cache.Mux.Unlock()
+
+	if len(instances) == 0 {
+		log.DebugLog(log.DebugLevelApi, "no app instances matched", "key", in.Key)
+		return objstore.ErrKVStoreKeyNotFound
+	}
 
 	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d App Instances", len(instances))})
 	for _, inst := range instances {
@@ -724,7 +727,6 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("App Instance on Cloudlet %s Update Error: %v", k.ClusterInstKey.CloudletKey.Name, errstr)})
 		}
 	}
-
 	return nil
 }
 
