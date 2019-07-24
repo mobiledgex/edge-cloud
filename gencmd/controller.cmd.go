@@ -68,19 +68,27 @@ func ControllerKeyWriteOutputOne(obj *edgeproto.ControllerKey) {
 	}
 }
 func ControllerSlicer(in *edgeproto.Controller) []string {
-	s := make([]string, 0, 2)
+	s := make([]string, 0, 6)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
 	s = append(s, in.Fields[0])
 	s = append(s, in.Key.Addr)
+	s = append(s, in.BuildMaster)
+	s = append(s, in.BuildHead)
+	s = append(s, in.BuildAuthor)
+	s = append(s, in.Hostname)
 	return s
 }
 
 func ControllerHeaderSlicer() []string {
-	s := make([]string, 0, 2)
+	s := make([]string, 0, 6)
 	s = append(s, "Fields")
 	s = append(s, "Key-Addr")
+	s = append(s, "BuildMaster")
+	s = append(s, "BuildHead")
+	s = append(s, "BuildAuthor")
+	s = append(s, "Hostname")
 	return s
 }
 
@@ -105,6 +113,27 @@ func ControllerWriteOutputOne(obj *edgeproto.Controller) {
 		output.Flush()
 	} else {
 		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func ControllerHideTags(in *edgeproto.Controller) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.BuildMaster = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.BuildHead = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.BuildAuthor = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Hostname = ""
 	}
 }
 
@@ -140,6 +169,7 @@ func ShowController(in *edgeproto.Controller) error {
 		if err != nil {
 			return fmt.Errorf("ShowController recv failed: %s", err.Error())
 		}
+		ControllerHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -169,6 +199,10 @@ var ControllerApiCmds = []*cobra.Command{
 
 func init() {
 	ControllerFlagSet.StringVar(&ControllerIn.Key.Addr, "key-addr", "", "Key.Addr")
+	ControllerFlagSet.StringVar(&ControllerIn.BuildMaster, "buildmaster", "", "BuildMaster")
+	ControllerFlagSet.StringVar(&ControllerIn.BuildHead, "buildhead", "", "BuildHead")
+	ControllerFlagSet.StringVar(&ControllerIn.BuildAuthor, "buildauthor", "", "BuildAuthor")
+	ControllerFlagSet.StringVar(&ControllerIn.Hostname, "hostname", "", "Hostname")
 	ShowControllerCmd.Flags().AddFlagSet(ControllerFlagSet)
 }
 
@@ -180,5 +214,17 @@ func ControllerSetFields() {
 	ControllerIn.Fields = make([]string, 0)
 	if ControllerFlagSet.Lookup("key-addr").Changed {
 		ControllerIn.Fields = append(ControllerIn.Fields, "2.1")
+	}
+	if ControllerFlagSet.Lookup("buildmaster").Changed {
+		ControllerIn.Fields = append(ControllerIn.Fields, "4")
+	}
+	if ControllerFlagSet.Lookup("buildhead").Changed {
+		ControllerIn.Fields = append(ControllerIn.Fields, "5")
+	}
+	if ControllerFlagSet.Lookup("buildauthor").Changed {
+		ControllerIn.Fields = append(ControllerIn.Fields, "6")
+	}
+	if ControllerFlagSet.Lookup("hostname").Changed {
+		ControllerIn.Fields = append(ControllerIn.Fields, "7")
 	}
 }

@@ -1,5 +1,9 @@
 nodes:
 - key:
+    nodetype: NodeController
+- key:
+    nodetype: NodeController
+- key:
     nodetype: NodeDme
     cloudletkey:
       operatorkey:
@@ -41,4 +45,3 @@ nodes:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-1
-

@@ -17,6 +17,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/version"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -96,6 +97,11 @@ func main() {
 		log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
 		// trigger send of info upstream to controller
 		controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
+
+		myNode.BuildMaster = version.BuildMaster
+		myNode.BuildHead = version.BuildHead
+		myNode.BuildAuthor = version.BuildAuthor
+		myNode.Hostname = cloudcommon.Hostname()
 		controllerData.NodeCache.Update(&myNode, 0)
 		log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
 	}()

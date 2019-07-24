@@ -839,31 +839,15 @@ func (s *{{.Name}}Store) Update(m *{{.Name}}, wait func(int64)) (*Result, error)
 
 func (s *{{.Name}}Store) Put(m *{{.Name}}, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 {{- if (.HasFields)}}
-	fmap := MakeFieldMap(m.Fields)
-	err := m.Validate(fmap)
+	err := m.Validate({{.Name}}AllFieldsMap)
+	m.Fields = nil
 {{- else}}
 	err := m.Validate(nil)
 {{- end}}
 	if err != nil { return nil, err }
 	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
 	var val []byte
-{{- if (.HasFields)}}
-	curBytes, _, _, err := s.kvstore.Get(key)
-	if err == nil {
-		var cur {{.Name}}
-		err = json.Unmarshal(curBytes, &cur)
-		if err != nil { return nil, err }
-		cur.CopyInFields(m)
-		// never save fields
-		cur.Fields = nil
-		val, err = json.Marshal(cur)
-	} else {
-		m.Fields = nil
-		val, err = json.Marshal(m)
-	}
-{{- else}}
 	val, err = json.Marshal(m)
-{{- end}}
 	if err != nil { return nil, err }
 	rev, err := s.kvstore.Put(key, string(val), ops...)
 	if err != nil { return nil, err }

@@ -1234,28 +1234,14 @@ func (s *AppStore) Update(m *App, wait func(int64)) (*Result, error) {
 }
 
 func (s *AppStore) Put(m *App, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
-	fmap := MakeFieldMap(m.Fields)
-	err := m.Validate(fmap)
+	err := m.Validate(AppAllFieldsMap)
+	m.Fields = nil
 	if err != nil {
 		return nil, err
 	}
 	key := objstore.DbKeyString("App", m.GetKey())
 	var val []byte
-	curBytes, _, _, err := s.kvstore.Get(key)
-	if err == nil {
-		var cur App
-		err = json.Unmarshal(curBytes, &cur)
-		if err != nil {
-			return nil, err
-		}
-		cur.CopyInFields(m)
-		// never save fields
-		cur.Fields = nil
-		val, err = json.Marshal(cur)
-	} else {
-		m.Fields = nil
-		val, err = json.Marshal(m)
-	}
+	val, err = json.Marshal(m)
 	if err != nil {
 		return nil, err
 	}
