@@ -34,7 +34,7 @@ func initSrvNotify(notifyServer *notify.ServerMgr) {
 
 type CrmMetricsReceiver struct{}
 
-//just forward to crm
+//just forward to controller
 func (cmr *CrmMetricsReceiver) Recv(metric *edgeproto.Metric) {
 	sendMetric.Update(metric)
 }
