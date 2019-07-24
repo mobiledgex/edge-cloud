@@ -596,13 +596,14 @@ func (s *AppInstApi) updateAppInstStore(in *edgeproto.AppInst) error {
 }
 
 func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
-
 	log.DebugLog(log.DebugLevelApi, "updateAppInstInternal", "appinst", in)
 
-	// populate the clusterinst developer from the app developer if not already present
-	if in.Key.ClusterInstKey.Developer == "" {
-		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
-		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
+	defaultCloudlet := false
+	crmUpdateRequired := false
+
+	if in.Key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
+		log.DebugLog(log.DebugLevelApi, "special default cloud case", "appinst", in)
+		defaultCloudlet = true
 	}
 	if err := in.Key.Validate(); err != nil {
 		return err
@@ -622,12 +623,15 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return edgeproto.ErrEdgeApiAppNotFound
 		}
 		if s.store.STMGet(stm, &in.Key, &curr) {
+			if curr.State != edgeproto.TrackedState_READY {
+				return fmt.Errorf("AppInst is not ready")
+			}
 			if curr.Revision != app.Revision {
-				cb.Send(&edgeproto.Result{Message: "Upgrade required"})
-			} else if in.ForceUpgrade {
-				cb.Send(&edgeproto.Result{Message: "Force upgrade"})
+				crmUpdateRequired = true
+			} else if in.ForceUpdate {
+				crmUpdateRequired = true
 			} else {
-				cb.Send(&edgeproto.Result{Message: "No upgrade required"})
+				cb.Send(&edgeproto.Result{Message: "No update required"})
 				return nil
 			}
 			txt := fmt.Sprintf("Doing upgrade for instance to revision: %d on cloudlet: %s", app.Revision, in.Key.ClusterInstKey.CloudletKey.Name)
@@ -635,11 +639,9 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		} else {
 			return edgeproto.ErrEdgeApiAppInstNotFound
 		}
-
-		if curr.State != edgeproto.TrackedState_READY {
-			return fmt.Errorf("AppInst is not ready")
-		}
-		if !ignoreCRM(cctx) {
+		if ignoreCRM(cctx) || defaultCloudlet {
+			crmUpdateRequired = false
+		} else {
 			curr.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
 		s.store.STMPut(stm, &curr)
@@ -650,15 +652,80 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return err
 	}
 
-	if !ignoreCRM(cctx) {
-		err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateAppInstTimeout, "Updated successfully", cb.Send)
+	if crmUpdateRequired {
+		msg := ""
+		msg = fmt.Sprintf("Updated successfully on cloudlet %s", in.Key.ClusterInstKey.CloudletKey.Name)
+		err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateAppInstTimeout, msg, cb.Send)
 	}
 
 	return s.updateAppInstRevision(&in.Key, app.Revision)
 }
 
 func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
-	return s.updateAppInstInternal(DefCallContext(), in, cb)
+
+	// populate the clusterinst developer from the app developer if not already present
+	if in.Key.ClusterInstKey.Developer == "" {
+		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
+	}
+
+	if in.UpdateMultiple {
+		// if UpdateMuliple flag is specified, then only the appkey must be present
+		if err := in.Key.AppKey.Validate(); err != nil {
+			return err
+		}
+	} else {
+		// the whole key must be present
+		if err := in.Key.Validate(); err != nil {
+			return err
+		}
+	}
+
+	s.cache.Mux.Lock()
+	instanceUpdateResults := make(map[edgeproto.AppInstKey]chan string)
+	instances := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
+	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating App Instances")})
+
+	log.DebugLog(log.DebugLevelApi, "UpdateAllAppInstances ", "appKey", in.Key)
+	for k, val := range s.cache.Objs {
+		// ignore forceupdate, Crmoverride updatemultiple for match
+		val.ForceUpdate = in.ForceUpdate
+		val.UpdateMultiple = in.UpdateMultiple
+		val.CrmOverride = in.CrmOverride
+		if !val.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		instances[k] = val
+		instanceUpdateResults[k] = make(chan string)
+
+	}
+	s.cache.Mux.Unlock()
+
+	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d App Instances", len(instances))})
+	for _, inst := range instances {
+		go func(appinst *edgeproto.AppInst) {
+			log.DebugLog(log.DebugLevelApi, "updating appinst", "key", appinst.Key)
+
+			err := s.updateAppInstInternal(DefCallContext(), appinst, cb)
+			if err == nil {
+				instanceUpdateResults[appinst.Key] <- ""
+			} else {
+				instanceUpdateResults[appinst.Key] <- err.Error()
+			}
+		}(inst)
+	}
+
+	for k, e := range instanceUpdateResults {
+		log.DebugLog(log.DebugLevelApi, "instanceUpdateResults ", "key", k, "error", e)
+		errstr := <-e
+		if errstr == "" {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("App Instance on Cloudlet %s Update OK", k.ClusterInstKey.CloudletKey.Name)})
+		} else {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("App Instance on Cloudlet %s Update Error: %v", k.ClusterInstKey.CloudletKey.Name, errstr)})
+		}
+	}
+
+	return nil
 }
 
 func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {

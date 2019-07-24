@@ -15,6 +15,7 @@ import (
 	"time"
 
 	sh "github.com/codeskyblue/go-sh"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
@@ -509,6 +510,10 @@ func StartProcesses(processName string, outputDir string) bool {
 }
 
 func Cleanup() error {
+	err := cloudcommon.StopCRMService(nil)
+	if err != nil {
+		return err
+	}
 	return CleanupDIND()
 }
 
