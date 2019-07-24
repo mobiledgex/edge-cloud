@@ -1,5 +1,9 @@
 nodes:
 - key:
+    nodetype: NodeController
+- key:
+    nodetype: NodeController
+- key:
     nodetype: NodeDme
     cloudletkey:
       operatorkey:
