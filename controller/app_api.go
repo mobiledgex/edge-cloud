@@ -153,9 +153,10 @@ func updateAppFields(in *edgeproto.App, revision int32) error {
 			if len(parts) < 2 || !strings.Contains(parts[0], ".") {
 				return fmt.Errorf("imagepath should be full registry URL: <domain-name>/<registry-path>")
 			}
-			if !*testMode {
-				err := cloudcommon.ValidateDockerRegistryPath(in.ImagePath, *vaultAddr)
-				if err != nil {
+			if err := cloudcommon.ValidateDockerRegistryPath(in.ImagePath, *vaultAddr); err != nil {
+				if *testMode {
+					log.DebugLog(log.DebugLevelApi, "Warning, could not validate docker registry path.", "err", err)
+				} else {
 					return err
 				}
 			}
@@ -167,9 +168,10 @@ func updateAppFields(in *edgeproto.App, revision int32) error {
 	}
 
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
-		if !*testMode {
-			err := cloudcommon.ValidateVMRegistryPath(in.ImagePath, *vaultAddr)
-			if err != nil {
+		if err := cloudcommon.ValidateVMRegistryPath(in.ImagePath, *vaultAddr); err != nil {
+			if *testMode {
+				log.DebugLog(log.DebugLevelApi, "Warning, could not validate VM registry path.", "err", err)
+			} else {
 				return err
 			}
 		}
