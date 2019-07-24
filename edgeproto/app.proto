@@ -93,7 +93,7 @@ message ConfigFile {
   repeated ConfigFile configs = 21;
   // Option to run App on all nodes of the cluster
   bool scale_with_cluster = 22;
-    // Should this app have access to outside world?
+  // Should this app have access to outside world?
   bool internal_ports = 23;
   // Revision increments each time the App is updated
   int32 revision = 24;
