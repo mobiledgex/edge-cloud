@@ -2444,28 +2444,14 @@ func (s *CloudletStore) Update(m *Cloudlet, wait func(int64)) (*Result, error) {
 }
 
 func (s *CloudletStore) Put(m *Cloudlet, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
-	fmap := MakeFieldMap(m.Fields)
-	err := m.Validate(fmap)
+	err := m.Validate(CloudletAllFieldsMap)
+	m.Fields = nil
 	if err != nil {
 		return nil, err
 	}
 	key := objstore.DbKeyString("Cloudlet", m.GetKey())
 	var val []byte
-	curBytes, _, _, err := s.kvstore.Get(key)
-	if err == nil {
-		var cur Cloudlet
-		err = json.Unmarshal(curBytes, &cur)
-		if err != nil {
-			return nil, err
-		}
-		cur.CopyInFields(m)
-		// never save fields
-		cur.Fields = nil
-		val, err = json.Marshal(cur)
-	} else {
-		m.Fields = nil
-		val, err = json.Marshal(m)
-	}
+	val, err = json.Marshal(m)
 	if err != nil {
 		return nil, err
 	}
@@ -3190,28 +3176,14 @@ func (s *CloudletInfoStore) Update(m *CloudletInfo, wait func(int64)) (*Result, 
 }
 
 func (s *CloudletInfoStore) Put(m *CloudletInfo, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
-	fmap := MakeFieldMap(m.Fields)
-	err := m.Validate(fmap)
+	err := m.Validate(CloudletInfoAllFieldsMap)
+	m.Fields = nil
 	if err != nil {
 		return nil, err
 	}
 	key := objstore.DbKeyString("CloudletInfo", m.GetKey())
 	var val []byte
-	curBytes, _, _, err := s.kvstore.Get(key)
-	if err == nil {
-		var cur CloudletInfo
-		err = json.Unmarshal(curBytes, &cur)
-		if err != nil {
-			return nil, err
-		}
-		cur.CopyInFields(m)
-		// never save fields
-		cur.Fields = nil
-		val, err = json.Marshal(cur)
-	} else {
-		m.Fields = nil
-		val, err = json.Marshal(m)
-	}
+	val, err = json.Marshal(m)
 	if err != nil {
 		return nil, err
 	}

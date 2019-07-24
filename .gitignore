@@ -10,3 +10,4 @@ testutil/*_testutil.go
 *__pycache__
 link-gogo-protobuf
 link-grpc-gateway
+version/version.go
