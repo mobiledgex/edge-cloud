@@ -595,47 +595,43 @@ func (s *AppInstApi) updateAppInstStore(in *edgeproto.AppInst) error {
 	return err
 }
 
-func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
-	log.DebugLog(log.DebugLevelApi, "updateAppInstInternal", "appinst", in)
+// updateAppInstInternal returns true if the appinst updated, false otherwise.  False value with no error means no update was needed
+func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppInstKey, cb edgeproto.AppInstApi_UpdateAppInstServer, forceUpdate bool) (bool, error) {
+	log.DebugLog(log.DebugLevelApi, "updateAppInstInternal", "key", key)
 
 	defaultCloudlet := false
+	updatedRevision := false
 	crmUpdateRequired := false
 
-	if in.Key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
-		log.DebugLog(log.DebugLevelApi, "special default cloud case", "appinst", in)
+	if key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
+		log.DebugLog(log.DebugLevelApi, "special default cloud case", "key", key)
 		defaultCloudlet = true
 	}
-	if err := in.Key.Validate(); err != nil {
-		return err
+	if err := key.Validate(); err != nil {
+		return false, err
 	}
-	if in.Fields != nil {
-		for _, field := range in.Fields {
-			if strings.HasPrefix(field, edgeproto.AppInstFieldCloudletLoc) {
-				return errors.New("Cannot specify cloudlet location fields as they are inherited from specified cloudlet")
-			}
-		}
-	}
+
 	var app edgeproto.App
+
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		var curr edgeproto.AppInst
 
-		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+		if !appApi.store.STMGet(stm, &key.AppKey, &app) {
 			return edgeproto.ErrEdgeApiAppNotFound
 		}
-		if s.store.STMGet(stm, &in.Key, &curr) {
+		if s.store.STMGet(stm, &key, &curr) {
 			if curr.State != edgeproto.TrackedState_READY {
 				return fmt.Errorf("AppInst is not ready")
 			}
 			if curr.Revision != app.Revision {
 				crmUpdateRequired = true
-			} else if in.ForceUpdate {
+				updatedRevision = true
+			} else if forceUpdate {
 				crmUpdateRequired = true
+				updatedRevision = true
 			} else {
-				cb.Send(&edgeproto.Result{Message: "No update required"})
 				return nil
 			}
-			txt := fmt.Sprintf("Doing upgrade for instance to revision: %d on cloudlet: %s", app.Revision, in.Key.ClusterInstKey.CloudletKey.Name)
-			cb.Send(&edgeproto.Result{Message: txt})
 		} else {
 			return edgeproto.ErrEdgeApiAppInstNotFound
 		}
@@ -649,16 +645,12 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	})
 
 	if err != nil {
-		return err
+		return false, err
 	}
-
 	if crmUpdateRequired {
-		msg := ""
-		msg = fmt.Sprintf("Updated successfully on cloudlet %s", in.Key.ClusterInstKey.CloudletKey.Name)
-		err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateAppInstTimeout, msg, cb.Send)
+		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateAppInstTimeout, "", cb.Send)
 	}
-
-	return s.updateAppInstRevision(&in.Key, app.Revision)
+	return updatedRevision, s.updateAppInstRevision(&key, app.Revision)
 }
 
 func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
@@ -682,8 +674,13 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	}
 
 	s.cache.Mux.Lock()
-	instanceUpdateResults := make(map[edgeproto.AppInstKey]chan string)
-	instances := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
+
+	type updateResult struct {
+		errString       string
+		revisionUpdated bool
+	}
+	instanceUpdateResults := make(map[edgeproto.AppInstKey]chan updateResult)
+	instances := make(map[edgeproto.AppInstKey]edgeproto.AppInstKey)
 
 	for k, val := range s.cache.Objs {
 		// ignore forceupdate, Crmoverride updatemultiple for match
@@ -693,8 +690,8 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		if !val.Matches(in, edgeproto.MatchFilter()) {
 			continue
 		}
-		instances[k] = val
-		instanceUpdateResults[k] = make(chan string)
+		instances[k] = val.Key
+		instanceUpdateResults[k] = make(chan updateResult)
 
 	}
 	s.cache.Mux.Unlock()
@@ -705,28 +702,42 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	}
 
 	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d App Instances", len(instances))})
-	for _, inst := range instances {
-		go func(appinst *edgeproto.AppInst) {
-			log.DebugLog(log.DebugLevelApi, "updating appinst", "key", appinst.Key)
 
-			err := s.updateAppInstInternal(DefCallContext(), appinst, cb)
+	for _, instkey := range instances {
+		go func(k edgeproto.AppInstKey) {
+			log.DebugLog(log.DebugLevelApi, "updating appinst", "key", k)
+			updated, err := s.updateAppInstInternal(DefCallContext(), k, cb, in.ForceUpdate)
 			if err == nil {
-				instanceUpdateResults[appinst.Key] <- ""
+				instanceUpdateResults[k] <- updateResult{errString: "", revisionUpdated: updated}
 			} else {
-				instanceUpdateResults[appinst.Key] <- err.Error()
+				instanceUpdateResults[k] <- updateResult{errString: err.Error(), revisionUpdated: updated}
 			}
-		}(inst)
+		}(instkey)
 	}
 
-	for k, e := range instanceUpdateResults {
-		log.DebugLog(log.DebugLevelApi, "instanceUpdateResults ", "key", k, "error", e)
-		errstr := <-e
-		if errstr == "" {
-			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("App Instance on Cloudlet %s Update OK", k.ClusterInstKey.CloudletKey.Name)})
+	numUpdated := 0
+	numFailed := 0
+	numSkipped := 0
+	numTotal := 0
+	for k, r := range instanceUpdateResults {
+		numTotal++
+		result := <-r
+		log.DebugLog(log.DebugLevelApi, "instanceUpdateResult ", "key", k, "updated", result.revisionUpdated, "error", result.errString)
+		if result.errString == "" {
+			if result.revisionUpdated {
+				numUpdated++
+			} else {
+				numSkipped++
+			}
 		} else {
-			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("App Instance on Cloudlet %s Update Error: %v", k.ClusterInstKey.CloudletKey.Name, errstr)})
+			numFailed++
+		}
+		// give some intermediate status
+		if (numTotal%10 == 0) && numTotal != len(instances) {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processing: %d of %d instances.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
 		}
 	}
+	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Completed: %d of %d instances.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
 	return nil
 }
 
