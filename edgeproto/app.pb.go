@@ -230,7 +230,7 @@ type App struct {
 	InternalPorts bool `protobuf:"varint,23,opt,name=internal_ports,json=internalPorts,proto3" json:"internal_ports,omitempty"`
 	// Revision increments each time the App is updated
 	Revision int32 `protobuf:"varint,24,opt,name=revision,proto3" json:"revision,omitempty"`
-	// Official FQDN is the FQDN that the app uses to connect
+	// Official FQDN is the FQDN that the app uses to connect by default
 	OfficialFqdn string `protobuf:"bytes,25,opt,name=official_fqdn,json=officialFqdn,proto3" json:"official_fqdn,omitempty"`
 }
 
