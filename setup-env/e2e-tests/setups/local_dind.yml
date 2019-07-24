@@ -64,7 +64,7 @@ controllers:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  skipimageverify: true
+  testmode: true
 
 dmes:
 - name: dme1

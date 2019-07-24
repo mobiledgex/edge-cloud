@@ -16,18 +16,17 @@ type Etcd struct {
 	cmd            *exec.Cmd
 }
 type Controller struct {
-	Common          `yaml:",inline"`
-	EtcdAddrs       string
-	ApiAddr         string
-	HttpAddr        string
-	NotifyAddr      string
-	VaultAddr       string
-	InfluxAddr      string
-	TLS             TLSCerts
-	ShortTimeouts   bool
-	cmd             *exec.Cmd
-	TestMode        bool
-	SkipImageVerify bool
+	Common        `yaml:",inline"`
+	EtcdAddrs     string
+	ApiAddr       string
+	HttpAddr      string
+	NotifyAddr    string
+	VaultAddr     string
+	InfluxAddr    string
+	TLS           TLSCerts
+	ShortTimeouts bool
+	cmd           *exec.Cmd
+	TestMode      bool
 }
 type Dme struct {
 	Common      `yaml:",inline"`

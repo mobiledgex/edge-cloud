@@ -110,9 +110,6 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	if p.TestMode {
 		args = append(args, "-testMode")
 	}
-	if p.SkipImageVerify {
-		args = append(args, "--skipImageVerify")
-	}
 
 	var envs []string
 	if options.RolesFile != "" {

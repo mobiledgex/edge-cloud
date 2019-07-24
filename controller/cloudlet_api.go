@@ -22,6 +22,16 @@ type CloudletApi struct {
 	cache edgeproto.CloudletCache
 }
 
+// Vault roles for all services
+type VaultRoles struct {
+	DmeRoleID       string `json:"dmeroleid"`
+	DmeSecretID     string `json:"dmesecretid"`
+	CRMRoleID       string `json:"crmroleid"`
+	CRMSecretID     string `json:"crmsecretid"`
+	CtrlRoleID      string `json:"controllerroleid"`
+	CtrlSecretID    string `json:"controllersecretid"`
+}
+
 var (
 	cloudletApi           = CloudletApi{}
 	DefaultPlatformFlavor = edgeproto.Flavor{
@@ -103,6 +113,35 @@ func (s *CloudletApi) ReplaceErrorState(in *edgeproto.Cloudlet, newState edgepro
 	})
 }
 
+func getRolesAndSecrets(appRoles *VaultRoles) error {
+	// Vault controller level credentials are required to access
+	// registry credentials
+	roleId := os.Getenv("VAULT_ROLE_ID")
+	if roleId == "" {
+		return fmt.Errorf("Env variable VAULT_ROLE_ID not set")
+	}
+	secretId := os.Getenv("VAULT_SECRET_ID")
+	if secretId == "" {
+		return fmt.Errorf("Env variable VAULT_SECRET_ID not set")
+	}
+
+	// Vault CRM level credentials are required to access
+	// instantiate crmserver
+	crmRoleId := os.Getenv("VAULT_CRM_ROLE_ID")
+	if crmRoleId == "" {
+		return fmt.Errorf("Env variable VAULT_CRM_ROLE_ID not set")
+	}
+	crmSecretId := os.Getenv("VAULT_CRM_SECRET_ID")
+	if crmSecretId == "" {
+		return fmt.Errorf("Env variable VAULT_CRM_SECRET_ID not set")
+	}
+	appRoles.CtrlRoleID = roleId
+	appRoles.CtrlSecretID = secretId
+	appRoles.CRMRoleID = crmRoleId
+	appRoles.CRMSecretID = crmSecretId
+	//Once we integrate DME add dme roles to the same structure
+	return nil
+}
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_UNKNOWN {
 		in.IpSupport = edgeproto.IpSupport_IP_SUPPORT_DYNAMIC
@@ -134,30 +173,16 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	}
 
 	pfConfig := edgeproto.PlatformConfig{}
-	if !*testMode && !IsCloudletLocal(in) {
-		// Vault controller level credentials are required to access
-		// registry credentials
-		roleId := os.Getenv("VAULT_ROLE_ID")
-		if roleId == "" {
-			return fmt.Errorf("Env variable VAULT_ROLE_ID not set")
+	appRoles := VaultRoles{}
+	if err := getRolesAndSecrets(&appRoles); err != nil {
+		if !*testMode && !IsCloudletLocal(in) {
+			return err
 		}
-		secretId := os.Getenv("VAULT_SECRET_ID")
-		if secretId == "" {
-			return fmt.Errorf("Env variable VAULT_SECRET_ID not set")
-		}
-
-		// Vault CRM level credentials are required to access
-		// instantiate crmserver
-		crmRoleId := os.Getenv("VAULT_CRM_ROLE_ID")
-		if crmRoleId == "" {
-			return fmt.Errorf("Env variable VAULT_CRM_ROLE_ID not set")
-		}
-		crmSecretId := os.Getenv("VAULT_CRM_SECRET_ID")
-		if crmSecretId == "" {
-			return fmt.Errorf("Env variable VAULT_CRM_SECRET_ID not set")
-		}
-		pfConfig.CrmRoleId = crmRoleId
-		pfConfig.CrmSecretId = crmSecretId
+		log.DebugLog(log.DebugLevelApi, "Warning, Failed to get roleIDs - running locally",
+			"err", err)
+	} else {
+		pfConfig.CrmRoleId = appRoles.CRMRoleID
+		pfConfig.CrmSecretId = appRoles.CRMSecretID
 	}
 	pfConfig.PlatformTag = *versionTag
 	pfConfig.TlsCertFile = *tlsCertFile

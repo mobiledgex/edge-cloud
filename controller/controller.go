@@ -53,7 +53,6 @@ var registryFQDN = flag.String("registryFQDN", "docker.mobiledgex.net", "mobiled
 var cloudletRegistryPath = flag.String("cloudletRegistryPath", "registry.mobiledgex.net:5000/mobiledgex/edge-cloud", "edge-cloud image registry path for deploying cloudlet services")
 var cloudletVMImagePath = flag.String("cloudletVMImagePath", "https://artifactory.mobiledgex.net/artifactory/baseimages/mobiledgex-v2.0.2.qcow2#md5:51371613a81f7218c2633ce3c1814258", "mobiledgex VM image for deploying cloudlet services")
 var versionTag = flag.String("versionTag", "", "edge-cloud image tag indicating controller version")
-var skipImageVerify = flag.Bool("skipImageVerify", false, "Skip the check for edge-cloud image in the registry")
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
@@ -98,7 +97,7 @@ func main() {
 }
 
 func validateFields() error {
-	if *testMode || *skipImageVerify {
+	if *testMode {
 		return nil
 	}
 	if *versionTag == "" {
@@ -206,8 +205,10 @@ func startServices() error {
 	}
 	// get influxDB credentials from vault
 	influxAuth := &cloudcommon.InfluxCreds{}
-	if !*testMode {
-		influxAuth = cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
+	influxAuth = cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
+	// Default to empty credentials if in test mode
+	if *testMode && influxAuth == nil {
+		influxAuth = &cloudcommon.InfluxCreds{}
 	}
 	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
 	err = influxQ.Start(*influxAddr, "")
