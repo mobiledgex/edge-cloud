@@ -206,8 +206,10 @@ func startServices() error {
 	}
 	// get influxDB credentials from vault
 	influxAuth := &cloudcommon.InfluxCreds{}
-	if !*testMode {
-		influxAuth = cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
+	influxAuth = cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
+	// Default to empty credentials if in test mode
+	if *testMode && influxAuth == nil {
+		influxAuth = &cloudcommon.InfluxCreds{}
 	}
 	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
 	err = influxQ.Start(*influxAddr, "")
