@@ -73,16 +73,23 @@ func StartCRMService(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformC
 	return nil
 }
 
+// StopCRMService stops the crmserver on the specified cloudlet, or kills any
+// crm process if the cloudlet specified is nil
 func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
-	crmProc, _, err := getCrmProc(cloudlet, nil)
-	if err != nil {
-		return err
+	args := ""
+	if cloudlet != nil {
+		crmProc, _, err := getCrmProc(cloudlet, nil)
+		if err != nil {
+			return err
+		}
+		args = crmProc.LookupArgs()
 	}
+
 	// max wait time for process to go down gracefully, after which it is killed forcefully
 	maxwait := 10 * time.Millisecond
 
 	c := make(chan string)
-	go process.KillProcessesByName(crmProc.GetExeName(), maxwait, crmProc.LookupArgs(), c)
+	go process.KillProcessesByName("crmserver", maxwait, args, c)
 
 	log.DebugLog(log.DebugLevelMexos, "stopped crmserver", "msg", <-c)
 	return nil
