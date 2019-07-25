@@ -97,9 +97,10 @@ message ConfigFile {
   bool internal_ports = 23;
   // Revision increments each time the App is updated
   int32 revision = 24;
+  // Official FQDN is the FQDN that the app uses to connect by default
+  string official_fqdn = 25;
   // MD5Sum of the VM-based app image
-  string md5sum = 25;
-  // manifest - which cloudlets can this run on?
+  string md5sum = 26;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

@@ -38,6 +38,7 @@ var NodeTypeStrings = []string{
 	"NodeUnknown",
 	"NodeDme",
 	"NodeCrm",
+	"NodeController",
 }
 
 func NodeKeySlicer(in *edgeproto.NodeKey) []string {
@@ -82,7 +83,7 @@ func NodeKeyWriteOutputOne(obj *edgeproto.NodeKey) {
 	}
 }
 func NodeSlicer(in *edgeproto.Node) []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 7)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -92,17 +93,25 @@ func NodeSlicer(in *edgeproto.Node) []string {
 	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
+	s = append(s, in.BuildMaster)
+	s = append(s, in.BuildHead)
+	s = append(s, in.BuildAuthor)
+	s = append(s, in.Hostname)
 	return s
 }
 
 func NodeHeaderSlicer() []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 7)
 	s = append(s, "Fields")
 	s = append(s, "Key-Name")
 	s = append(s, "Key-NodeType")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
 	s = append(s, "Key-CloudletKey-Name")
 	s = append(s, "NotifyId")
+	s = append(s, "BuildMaster")
+	s = append(s, "BuildHead")
+	s = append(s, "BuildAuthor")
+	s = append(s, "Hostname")
 	return s
 }
 
@@ -155,6 +164,18 @@ func NodeHideTags(in *edgeproto.Node) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.BuildMaster = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.BuildHead = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.BuildAuthor = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Hostname = ""
 	}
 }
 
@@ -285,10 +306,14 @@ var NodeApiCmds = []*cobra.Command{
 
 func init() {
 	NodeFlagSet.StringVar(&NodeIn.Key.Name, "key-name", "", "Key.Name")
-	NodeFlagSet.StringVar(&NodeInKeyNodeType, "key-nodetype", "", "one of [NodeUnknown NodeDme NodeCrm]")
+	NodeFlagSet.StringVar(&NodeInKeyNodeType, "key-nodetype", "", "one of [NodeUnknown NodeDme NodeCrm NodeController]")
 	NodeFlagSet.StringVar(&NodeIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	NodeFlagSet.StringVar(&NodeIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	NodeFlagSet.Int64Var(&NodeIn.NotifyId, "notifyid", 0, "NotifyId")
+	NodeFlagSet.StringVar(&NodeIn.BuildMaster, "buildmaster", "", "BuildMaster")
+	NodeFlagSet.StringVar(&NodeIn.BuildHead, "buildhead", "", "BuildHead")
+	NodeFlagSet.StringVar(&NodeIn.BuildAuthor, "buildauthor", "", "BuildAuthor")
+	NodeFlagSet.StringVar(&NodeIn.Hostname, "hostname", "", "Hostname")
 	ShowNodeLocalCmd.Flags().AddFlagSet(NodeFlagSet)
 	ShowNodeCmd.Flags().AddFlagSet(NodeFlagSet)
 }
@@ -315,6 +340,18 @@ func NodeSetFields() {
 	if NodeFlagSet.Lookup("notifyid").Changed {
 		NodeIn.Fields = append(NodeIn.Fields, "3")
 	}
+	if NodeFlagSet.Lookup("buildmaster").Changed {
+		NodeIn.Fields = append(NodeIn.Fields, "4")
+	}
+	if NodeFlagSet.Lookup("buildhead").Changed {
+		NodeIn.Fields = append(NodeIn.Fields, "5")
+	}
+	if NodeFlagSet.Lookup("buildauthor").Changed {
+		NodeIn.Fields = append(NodeIn.Fields, "6")
+	}
+	if NodeFlagSet.Lookup("hostname").Changed {
+		NodeIn.Fields = append(NodeIn.Fields, "7")
+	}
 }
 
 func parseNodeEnums() error {
@@ -326,6 +363,8 @@ func parseNodeEnums() error {
 			NodeIn.Key.NodeType = edgeproto.NodeType(1)
 		case "NodeCrm":
 			NodeIn.Key.NodeType = edgeproto.NodeType(2)
+		case "NodeController":
+			NodeIn.Key.NodeType = edgeproto.NodeType(3)
 		default:
 			return errors.New("Invalid value for NodeInKeyNodeType")
 		}

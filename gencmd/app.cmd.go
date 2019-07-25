@@ -190,7 +190,7 @@ func ConfigFileWriteOutputOne(obj *edgeproto.ConfigFile) {
 	}
 }
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 20)
+	s := make([]string, 0, 21)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -222,12 +222,13 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, strconv.FormatBool(in.ScaleWithCluster))
 	s = append(s, strconv.FormatBool(in.InternalPorts))
 	s = append(s, strconv.FormatUint(uint64(in.Revision), 10))
+	s = append(s, in.OfficialFqdn)
 	s = append(s, in.Md5Sum)
 	return s
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 20)
+	s := make([]string, 0, 21)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
@@ -250,6 +251,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "ScaleWithCluster")
 	s = append(s, "InternalPorts")
 	s = append(s, "Revision")
+	s = append(s, "OfficialFqdn")
 	s = append(s, "Md5Sum")
 	return s
 }
@@ -521,6 +523,7 @@ func init() {
 	AppFlagSet.BoolVar(&AppIn.ScaleWithCluster, "scalewithcluster", false, "ScaleWithCluster")
 	AppFlagSet.BoolVar(&AppIn.InternalPorts, "internalports", false, "InternalPorts")
 	AppNoConfigFlagSet.Int32Var(&AppIn.Revision, "revision", 0, "Revision")
+	AppFlagSet.StringVar(&AppIn.OfficialFqdn, "officialfqdn", "", "OfficialFqdn")
 	AppFlagSet.StringVar(&AppIn.Md5Sum, "md5sum", "", "Md5Sum")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -594,8 +597,11 @@ func AppSetFields() {
 	if AppNoConfigFlagSet.Lookup("revision").Changed {
 		AppIn.Fields = append(AppIn.Fields, "24")
 	}
-	if AppFlagSet.Lookup("md5sum").Changed {
+	if AppFlagSet.Lookup("officialfqdn").Changed {
 		AppIn.Fields = append(AppIn.Fields, "25")
+	}
+	if AppFlagSet.Lookup("md5sum").Changed {
+		AppIn.Fields = append(AppIn.Fields, "26")
 	}
 }
 

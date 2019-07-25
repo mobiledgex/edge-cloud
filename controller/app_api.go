@@ -152,6 +152,10 @@ func updateAppFields(in *edgeproto.App, revision int32) error {
 		log.DebugLog(log.DebugLevelApi, "derived imagepath", "imagepath", in.ImagePath)
 	}
 
+	if in.ScaleWithCluster && in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+		return fmt.Errorf("app scaling is only supported for Kubernetes deployments")
+	}
+
 	if !cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
 			parts := strings.Split(in.ImagePath, "/")
@@ -159,31 +163,33 @@ func updateAppFields(in *edgeproto.App, revision int32) error {
 			if len(parts) < 2 || !strings.Contains(parts[0], ".") {
 				return fmt.Errorf("imagepath should be full registry URL: <domain-name>/<registry-path>")
 			}
-			if err := cloudcommon.ValidateDockerRegistryPath(in.ImagePath, *vaultAddr); err != nil {
-				if *testMode {
-					log.DebugLog(log.DebugLevelApi, "Warning, could not validate docker registry path.", "err", err)
-				} else {
-					return err
-				}
-			}
 		}
 	}
 
-	if in.ScaleWithCluster && in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
-		return fmt.Errorf("app scaling is only supported for Kubernetes deployments")
-	}
-
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
-		if err := cloudcommon.ValidateVMRegistryPath(in.ImagePath, *vaultAddr); err != nil {
+		err := util.ValidateImagePath(in.ImagePath)
+		if err != nil {
+			return err
+		}
+		err = cloudcommon.ValidateVMRegistryPath(in.ImagePath, *vaultAddr)
+		if err != nil {
 			if *testMode {
 				log.DebugLog(log.DebugLevelApi, "Warning, could not validate VM registry path.", "err", err)
 			} else {
 				return err
 			}
 		}
-		err := util.ValidateImagePath(in.ImagePath)
+	}
+
+	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER &&
+		!cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) {
+		err := cloudcommon.ValidateDockerRegistryPath(in.ImagePath, *vaultAddr)
 		if err != nil {
-			return err
+			if *testMode {
+				log.DebugLog(log.DebugLevelApi, "Warning, could not validate docker registry path.", "err", err)
+			} else {
+				return err
+			}
 		}
 	}
 
