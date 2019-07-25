@@ -13,13 +13,22 @@ import (
 var slogger *zap.SugaredLogger
 var debugLevel uint64
 var mux sync.Mutex
+var spanlogger *zap.Logger
 
 func init() {
 	logger, _ := zap.NewDevelopment(zap.AddCallerSkip(1))
 	defer logger.Sync()
 	slogger = logger.Sugar()
+
+	// logger that does not log caller, optimization for
+	// span logging to local disk since caller is derived by spanlog.
+	cfg := zap.NewDevelopmentConfig()
+	cfg.DisableCaller = true
+	spanlogger, _ = cfg.Build()
+	defer spanlogger.Sync()
 }
 
+// Deprecated: you should use SpanLog instead.
 func DebugLog(lvl uint64, msg string, keysAndValues ...interface{}) {
 	if debugLevel&lvl == 0 {
 		return

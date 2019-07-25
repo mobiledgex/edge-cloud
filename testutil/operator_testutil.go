@@ -10,6 +10,7 @@ import "testing"
 import "context"
 import "time"
 import "github.com/stretchr/testify/require"
+import "github.com/mobiledgex/edge-cloud/log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -169,26 +170,33 @@ func NewClientOperatorApi(api edgeproto.OperatorApiClient) *OperatorCommonApi {
 }
 
 func InternalOperatorTest(t *testing.T, test string, api edgeproto.OperatorApiServer, testData []edgeproto.Operator) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalOperatorTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicOperatorCudTest(t, NewInternalOperatorApi(api), testData)
+		basicOperatorCudTest(t, ctx, NewInternalOperatorApi(api), testData)
 	case "show":
-		basicOperatorShowTest(t, NewInternalOperatorApi(api), testData)
+		basicOperatorShowTest(t, ctx, NewInternalOperatorApi(api), testData)
 	}
 }
 
 func ClientOperatorTest(t *testing.T, test string, api edgeproto.OperatorApiClient, testData []edgeproto.Operator) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientOperatorTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicOperatorCudTest(t, NewClientOperatorApi(api), testData)
+		basicOperatorCudTest(t, ctx, NewClientOperatorApi(api), testData)
 	case "show":
-		basicOperatorShowTest(t, NewClientOperatorApi(api), testData)
+		basicOperatorShowTest(t, ctx, NewClientOperatorApi(api), testData)
 	}
 }
 
-func basicOperatorShowTest(t *testing.T, api *OperatorCommonApi, testData []edgeproto.Operator) {
+func basicOperatorShowTest(t *testing.T, ctx context.Context, api *OperatorCommonApi, testData []edgeproto.Operator) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowOperator{}
 	show.Init()
@@ -201,9 +209,8 @@ func basicOperatorShowTest(t *testing.T, api *OperatorCommonApi, testData []edge
 	}
 }
 
-func GetOperator(t *testing.T, api *OperatorCommonApi, key *edgeproto.OperatorKey, out *edgeproto.Operator) bool {
+func GetOperator(t *testing.T, ctx context.Context, api *OperatorCommonApi, key *edgeproto.OperatorKey, out *edgeproto.Operator) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowOperator{}
 	show.Init()
@@ -218,9 +225,8 @@ func GetOperator(t *testing.T, api *OperatorCommonApi, key *edgeproto.OperatorKe
 	return found
 }
 
-func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgeproto.Operator) {
+func basicOperatorCudTest(t *testing.T, ctx context.Context, api *OperatorCommonApi, testData []edgeproto.Operator) {
 	var err error
-	ctx := context.TODO()
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
@@ -228,14 +234,14 @@ func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgep
 	}
 
 	// test create
-	createOperatorData(t, api, testData)
+	createOperatorData(t, ctx, api, testData)
 
 	// test duplicate create - should fail
 	_, err = api.CreateOperator(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate Operator")
 
 	// test show all items
-	basicOperatorShowTest(t, api, testData)
+	basicOperatorShowTest(t, ctx, api, testData)
 
 	// test delete
 	_, err = api.DeleteOperator(ctx, &testData[0])
@@ -262,16 +268,23 @@ func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgep
 }
 
 func InternalOperatorCreate(t *testing.T, api edgeproto.OperatorApiServer, testData []edgeproto.Operator) {
-	createOperatorData(t, NewInternalOperatorApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "InternalOperatorCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createOperatorData(t, ctx, NewInternalOperatorApi(api), testData)
 }
 
 func ClientOperatorCreate(t *testing.T, api edgeproto.OperatorApiClient, testData []edgeproto.Operator) {
-	createOperatorData(t, NewClientOperatorApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "ClientOperatorCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createOperatorData(t, ctx, NewClientOperatorApi(api), testData)
 }
 
-func createOperatorData(t *testing.T, api *OperatorCommonApi, testData []edgeproto.Operator) {
+func createOperatorData(t *testing.T, ctx context.Context, api *OperatorCommonApi, testData []edgeproto.Operator) {
 	var err error
-	ctx := context.TODO()
 
 	for _, obj := range testData {
 		_, err = api.CreateOperator(ctx, &obj)

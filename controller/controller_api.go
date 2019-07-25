@@ -37,7 +37,7 @@ func InitControllerApi(sync *Sync) {
 // is shut-down/disappears, etcd will automatically remove it
 // from the database after the ttl time.
 // We use this mechanism to keep track of the controllers that are online.
-func (s *ControllerApi) registerController() error {
+func (s *ControllerApi) registerController(ctx context.Context) error {
 	lease, err := s.sync.store.Grant(context.Background(), leaseTimeoutSec)
 	if err != nil {
 		return err
@@ -50,8 +50,7 @@ func (s *ControllerApi) registerController() error {
 	ctrl.BuildHead = version.BuildHead
 	ctrl.BuildAuthor = version.BuildAuthor
 	ctrl.Hostname = cloudcommon.Hostname()
-	log.DebugLog(log.DebugLevelApi, "register controller", "ctrl", ctrl)
-	_, err = s.store.Put(&ctrl, s.sync.syncWait, objstore.WithLease(lease))
+	_, err = s.store.Put(ctx, &ctrl, s.sync.syncWait, objstore.WithLease(lease))
 	if err != nil {
 		return err
 	}

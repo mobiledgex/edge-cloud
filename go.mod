@@ -112,6 +112,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
+	github.com/opentracing/opentracing-go v1.1.0
 	github.com/openzipkin/zipkin-go v0.1.5 // indirect
 	github.com/ory/dockertest v3.3.4+incompatible // indirect
 	github.com/pascaldekloe/goe v0.1.0 // indirect
@@ -129,6 +130,8 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
+	github.com/uber/jaeger-client-go v2.16.1-0.20190705220040-402bec9e6ead+incompatible
+	github.com/uber/jaeger-lib v2.0.0+incompatible // indirect
 	github.com/uber/prototool v1.8.1 // indirect
 	github.com/ugorji/go v1.1.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

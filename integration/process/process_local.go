@@ -672,6 +672,32 @@ func (p *Vault) StartLocalRoles() (*VaultRoles, error) {
 	return &roles, nil
 }
 
+func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
+	args := []string{
+		"run", "--rm", "--name", "jaeger",
+		"-e", "COLLECTOR_ZIPKIN_HTTP_PORT=9411",
+		"-p", "5775:5775/udp",
+		"-p", "6831:6831/udp",
+		"-p", "6832:6832/udp",
+		"-p", "5778:5778",
+		"-p", "16686:16686",
+		"-p", "14268:14268",
+		"-p", "9411:9411",
+		"jaegertracing/all-in-one:1.12",
+	}
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	return err
+}
+
+func (p *Jaeger) StopLocal() {
+	StopLocal(p.cmd)
+}
+
+func (p *Jaeger) GetExeName() string { return "docker" }
+
+func (p *Jaeger) LookupArgs() string { return "jaeger" }
+
 // Support funcs
 
 func StartLocal(name, bin string, args, envs []string, logfile string) (*exec.Cmd, error) {
