@@ -10,6 +10,7 @@ import "testing"
 import "context"
 import "time"
 import "github.com/stretchr/testify/require"
+import "github.com/mobiledgex/edge-cloud/log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -42,14 +43,22 @@ func (x *ShowCloudlet) Send(m *edgeproto.Cloudlet) error {
 
 type CudStreamoutCloudlet struct {
 	grpc.ServerStream
+	ctx context.Context
 }
 
 func (x *CudStreamoutCloudlet) Send(res *edgeproto.Result) error {
 	fmt.Println(res)
 	return nil
 }
+
 func (x *CudStreamoutCloudlet) Context() context.Context {
-	return context.TODO()
+	return x.ctx
+}
+
+func NewCudStreamoutCloudlet(ctx context.Context) *CudStreamoutCloudlet {
+	return &CudStreamoutCloudlet{
+		ctx: ctx,
+	}
 }
 
 type CloudletStream interface {
@@ -153,7 +162,7 @@ func (x *CloudletCommonApi) CreateCloudlet(ctx context.Context, in *edgeproto.Cl
 	copy := &edgeproto.Cloudlet{}
 	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.CreateCloudlet(copy, &CudStreamoutCloudlet{})
+		err := x.internal_api.CreateCloudlet(copy, NewCudStreamoutCloudlet(ctx))
 		return &edgeproto.Result{}, err
 	} else {
 		stream, err := x.client_api.CreateCloudlet(ctx, copy)
@@ -166,7 +175,7 @@ func (x *CloudletCommonApi) UpdateCloudlet(ctx context.Context, in *edgeproto.Cl
 	copy := &edgeproto.Cloudlet{}
 	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.UpdateCloudlet(copy, &CudStreamoutCloudlet{})
+		err := x.internal_api.UpdateCloudlet(copy, NewCudStreamoutCloudlet(ctx))
 		return &edgeproto.Result{}, err
 	} else {
 		stream, err := x.client_api.UpdateCloudlet(ctx, copy)
@@ -179,7 +188,7 @@ func (x *CloudletCommonApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cl
 	copy := &edgeproto.Cloudlet{}
 	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.DeleteCloudlet(copy, &CudStreamoutCloudlet{})
+		err := x.internal_api.DeleteCloudlet(copy, NewCudStreamoutCloudlet(ctx))
 		return &edgeproto.Result{}, err
 	} else {
 		stream, err := x.client_api.DeleteCloudlet(ctx, copy)
@@ -211,26 +220,33 @@ func NewClientCloudletApi(api edgeproto.CloudletApiClient) *CloudletCommonApi {
 }
 
 func InternalCloudletTest(t *testing.T, test string, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalCloudletTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicCloudletCudTest(t, NewInternalCloudletApi(api), testData)
+		basicCloudletCudTest(t, ctx, NewInternalCloudletApi(api), testData)
 	case "show":
-		basicCloudletShowTest(t, NewInternalCloudletApi(api), testData)
+		basicCloudletShowTest(t, ctx, NewInternalCloudletApi(api), testData)
 	}
 }
 
 func ClientCloudletTest(t *testing.T, test string, api edgeproto.CloudletApiClient, testData []edgeproto.Cloudlet) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientCloudletTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicCloudletCudTest(t, NewClientCloudletApi(api), testData)
+		basicCloudletCudTest(t, ctx, NewClientCloudletApi(api), testData)
 	case "show":
-		basicCloudletShowTest(t, NewClientCloudletApi(api), testData)
+		basicCloudletShowTest(t, ctx, NewClientCloudletApi(api), testData)
 	}
 }
 
-func basicCloudletShowTest(t *testing.T, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
+func basicCloudletShowTest(t *testing.T, ctx context.Context, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowCloudlet{}
 	show.Init()
@@ -243,9 +259,8 @@ func basicCloudletShowTest(t *testing.T, api *CloudletCommonApi, testData []edge
 	}
 }
 
-func GetCloudlet(t *testing.T, api *CloudletCommonApi, key *edgeproto.CloudletKey, out *edgeproto.Cloudlet) bool {
+func GetCloudlet(t *testing.T, ctx context.Context, api *CloudletCommonApi, key *edgeproto.CloudletKey, out *edgeproto.Cloudlet) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowCloudlet{}
 	show.Init()
@@ -260,9 +275,8 @@ func GetCloudlet(t *testing.T, api *CloudletCommonApi, key *edgeproto.CloudletKe
 	return found
 }
 
-func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
+func basicCloudletCudTest(t *testing.T, ctx context.Context, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
 	var err error
-	ctx := context.TODO()
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
@@ -270,14 +284,14 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 	}
 
 	// test create
-	createCloudletData(t, api, testData)
+	createCloudletData(t, ctx, api, testData)
 
 	// test duplicate create - should fail
 	_, err = api.CreateCloudlet(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate Cloudlet")
 
 	// test show all items
-	basicCloudletShowTest(t, api, testData)
+	basicCloudletShowTest(t, ctx, api, testData)
 
 	// test delete
 	_, err = api.DeleteCloudlet(ctx, &testData[0])
@@ -324,16 +338,23 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 }
 
 func InternalCloudletCreate(t *testing.T, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet) {
-	createCloudletData(t, NewInternalCloudletApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "InternalCloudletCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createCloudletData(t, ctx, NewInternalCloudletApi(api), testData)
 }
 
 func ClientCloudletCreate(t *testing.T, api edgeproto.CloudletApiClient, testData []edgeproto.Cloudlet) {
-	createCloudletData(t, NewClientCloudletApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "ClientCloudletCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createCloudletData(t, ctx, NewClientCloudletApi(api), testData)
 }
 
-func createCloudletData(t *testing.T, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
+func createCloudletData(t *testing.T, ctx context.Context, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
 	var err error
-	ctx := context.TODO()
 
 	for _, obj := range testData {
 		_, err = api.CreateCloudlet(ctx, &obj)
@@ -455,22 +476,29 @@ func NewClientCloudletInfoApi(api edgeproto.CloudletInfoApiClient) *CloudletInfo
 }
 
 func InternalCloudletInfoTest(t *testing.T, test string, api edgeproto.CloudletInfoApiServer, testData []edgeproto.CloudletInfo) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalCloudletInfoTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "show":
-		basicCloudletInfoShowTest(t, NewInternalCloudletInfoApi(api), testData)
+		basicCloudletInfoShowTest(t, ctx, NewInternalCloudletInfoApi(api), testData)
 	}
 }
 
 func ClientCloudletInfoTest(t *testing.T, test string, api edgeproto.CloudletInfoApiClient, testData []edgeproto.CloudletInfo) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientCloudletInfoTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "show":
-		basicCloudletInfoShowTest(t, NewClientCloudletInfoApi(api), testData)
+		basicCloudletInfoShowTest(t, ctx, NewClientCloudletInfoApi(api), testData)
 	}
 }
 
-func basicCloudletInfoShowTest(t *testing.T, api *CloudletInfoCommonApi, testData []edgeproto.CloudletInfo) {
+func basicCloudletInfoShowTest(t *testing.T, ctx context.Context, api *CloudletInfoCommonApi, testData []edgeproto.CloudletInfo) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowCloudletInfo{}
 	show.Init()
@@ -483,9 +511,8 @@ func basicCloudletInfoShowTest(t *testing.T, api *CloudletInfoCommonApi, testDat
 	}
 }
 
-func GetCloudletInfo(t *testing.T, api *CloudletInfoCommonApi, key *edgeproto.CloudletKey, out *edgeproto.CloudletInfo) bool {
+func GetCloudletInfo(t *testing.T, ctx context.Context, api *CloudletInfoCommonApi, key *edgeproto.CloudletKey, out *edgeproto.CloudletInfo) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowCloudletInfo{}
 	show.Init()

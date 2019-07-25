@@ -30,11 +30,11 @@ func InitCloudletInfoApi(sync *Sync) {
 // and CRM suddenly go away, etcd will remove the stale CloudletInfo data.
 
 func (s *CloudletInfoApi) InjectCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
-	return s.store.Put(in, s.sync.syncWait, objstore.WithLease(controllerAliveLease))
+	return s.store.Put(ctx, in, s.sync.syncWait, objstore.WithLease(controllerAliveLease))
 }
 
 func (s *CloudletInfoApi) EvictCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
-	return s.store.Delete(in, s.sync.syncWait)
+	return s.store.Delete(ctx, in, s.sync.syncWait)
 }
 
 func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgeproto.CloudletInfoApi_ShowCloudletInfoServer) error {
@@ -45,22 +45,22 @@ func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgepr
 	return err
 }
 
-func (s *CloudletInfoApi) Update(in *edgeproto.CloudletInfo, rev int64) {
+func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
 	// for now assume all fields have been specified
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
-	s.store.Put(in, nil, objstore.WithLease(controllerAliveLease))
+	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
 }
 
-func (s *CloudletInfoApi) Del(key *edgeproto.CloudletKey, wait func(int64)) {
+func (s *CloudletInfoApi) Del(ctx context.Context, key *edgeproto.CloudletKey, wait func(int64)) {
 	in := edgeproto.CloudletInfo{Key: *key}
-	s.store.Delete(&in, wait)
+	s.store.Delete(ctx, &in, wait)
 }
 
 // Delete from notify just marks the cloudlet offline
-func (s *CloudletInfoApi) Delete(in *edgeproto.CloudletInfo, rev int64) {
+func (s *CloudletInfoApi) Delete(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
 	buf := edgeproto.CloudletInfo{}
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &buf) {
 			return nil
 		}
@@ -79,7 +79,7 @@ func (s *CloudletInfoApi) Delete(in *edgeproto.CloudletInfo, rev int64) {
 	}
 }
 
-func (s *CloudletInfoApi) Flush(notifyId int64) {
+func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 	// mark all cloudlets from the client as offline
 	matches := make([]edgeproto.CloudletKey, 0)
 	s.cache.Mux.Lock()
@@ -94,7 +94,7 @@ func (s *CloudletInfoApi) Flush(notifyId int64) {
 	info := edgeproto.CloudletInfo{}
 	for ii, _ := range matches {
 		info.Key = matches[ii]
-		err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if s.store.STMGet(stm, &info.Key, &info) {
 				if info.NotifyId != notifyId || info.Controller != ControllerId {
 					// Updated by another thread or controller
@@ -112,7 +112,7 @@ func (s *CloudletInfoApi) Flush(notifyId int64) {
 	}
 }
 
-func (s *CloudletInfoApi) Prune(keys map[edgeproto.CloudletKey]struct{}) {}
+func (s *CloudletInfoApi) Prune(ctx context.Context, keys map[edgeproto.CloudletKey]struct{}) {}
 
 func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) edgeproto.CloudletState {
 	if *key == cloudcommon.DefaultCloudletKey {

@@ -6,19 +6,21 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/opentracing/opentracing-go"
+	context "golang.org/x/net/context"
 )
 
 var testDataKeyPrefix = "_testdatakey"
 
 // Prototype for the upgrade function - takes an objectstore and stm to ensure
 // automicity of each upgrade function
-type VersionUpgradeFunc func(objstore.KVStore) error
+type VersionUpgradeFunc func(context.Context, objstore.KVStore) error
 
 // Helper function to run a single upgrade function across all the elements of a KVStore
 // fn will be called for each of the entries, and therefore it's up to the
 // fn implementation to filter based on the prefix
-func RunSingleUpgrade(objStore objstore.KVStore, fn VersionUpgradeFunc) error {
-	err := fn(objStore)
+func RunSingleUpgrade(ctx context.Context, objStore objstore.KVStore, fn VersionUpgradeFunc) error {
+	err := fn(ctx, objStore)
 	if err != nil {
 		return fmt.Errorf("Could not upgrade objects store entries, err: %v\n", err)
 	}
@@ -33,23 +35,31 @@ func UpgradeToLatest(fromVersion string, objStore objstore.KVStore) error {
 	if !ok {
 		return fmt.Errorf("fromVersion %s doesn't exist\n", fromVersion)
 	}
-	log.InfoLog("Upgrading", "fromVersion", fromVersion, "verID", verID)
+	span := log.StartSpan(log.DebugLevelInfo, "upgrade")
+	span.SetTag("fromVersion", fromVersion)
+	span.SetTag("verID", verID)
+	defer span.Finish()
+	ctx := opentracing.ContextWithSpan(context.Background(), span)
 	nextVer := verID + 1
 	for {
 		if fn, ok = VersionHash_UpgradeFuncs[nextVer]; !ok {
 			break
 		}
+		name := VersionHash_UpgradeFuncNames[nextVer]
+
+		uspan := span.Tracer().StartSpan(name)
+		uctx := opentracing.ContextWithSpan(context.Background(), uspan)
 		if fn != nil {
 			// Call the upgrade with an appropriate callback
-			if err := RunSingleUpgrade(objStore, fn); err != nil {
+			if err := RunSingleUpgrade(uctx, objStore, fn); err != nil {
+				uspan.Finish()
 				return fmt.Errorf("Failed to run %s: %v\n",
-					VersionHash_UpgradeFuncNames[nextVer], err)
+					name, err)
 			}
-			log.DebugLog(log.DebugLevelUpgrade, "Upgrade complete", "upgradeFunc",
-				VersionHash_UpgradeFuncNames[nextVer])
+			log.SpanLog(uctx, log.DebugLevelUpgrade, "Upgrade complete", "upgradeFunc", name)
 		}
 		// Write out the new version
-		_, err := objStore.ApplySTM(func(stm concurrency.STM) error {
+		_, err := objStore.ApplySTM(uctx, func(stm concurrency.STM) error {
 			// Start from the whole region
 			key := objstore.DbKeyPrefixString("Version")
 			versionStr, ok := VersionHash_name[nextVer]
@@ -60,22 +70,23 @@ func UpgradeToLatest(fromVersion string, objStore objstore.KVStore) error {
 			stm.Put(string(key), versionStr)
 			return nil
 		})
+		uspan.Finish()
 		if err != nil {
 			return fmt.Errorf("Failed to update version for the db: %v\n", err)
 		}
 		nextVer++
 	}
-	log.InfoLog("Upgrade done")
+	log.SpanLog(ctx, log.DebugLevelInfo, "Upgrade done")
 	return nil
 }
 
-func TestUpgradeExample(objStore objstore.KVStore) error {
+func TestUpgradeExample(ctx context.Context, objStore objstore.KVStore) error {
 	log.DebugLog(log.DebugLevelUpgrade, "TestUpgradeExample - reverse keys and values")
 	// Define a prefix for a walk
 	keystr := fmt.Sprintf("%s/", testDataKeyPrefix)
 	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
-		objStore.Delete(string(key))
-		objStore.Put(string(val), string(key))
+		objStore.Delete(ctx, string(key))
+		objStore.Put(ctx, string(val), string(key))
 		return nil
 	})
 	return err

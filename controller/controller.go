@@ -27,6 +27,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
@@ -139,13 +140,18 @@ func startServices() error {
 	if *externalApiAddr == "" {
 		*externalApiAddr = *apiAddr
 	}
+	log.InitTracer()
+	span := log.StartSpan(log.DebugLevelInfo, "main")
+	span.SetTag("level", "init")
+	defer span.Finish()
+	ctx := opentracing.ContextWithSpan(context.Background(), span)
 
 	err := validateFields()
 	if err != nil {
 		return err
 	}
 
-	log.InfoLog("Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
+	log.SpanLog(ctx, log.DebugLevelInfo, "Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
 	// region number for etcd is a deprecated concept since we decided
 	// etcd is per-region.
 	objstore.InitRegion(uint32(1))
@@ -177,7 +183,7 @@ func startServices() error {
 	// We might need to upgrade the stored objects
 	if !*skipVersionCheck {
 		// First off - check version of the objectStore we are running
-		version, err := checkVersion(objStore)
+		version, err := checkVersion(ctx, objStore)
 		if err != nil && strings.Contains(err.Error(), ErrCtrlUpgradeRequired.Error()) && *autoUpgrade {
 			err = edgeproto.UpgradeToLatest(version, objStore)
 			if err != nil {
@@ -199,7 +205,7 @@ func startServices() error {
 
 	// register controller must be called before starting Notify protocol
 	// to set up controllerAliveLease.
-	err = controllerApi.registerController()
+	err = controllerApi.registerController(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to register controller, %v", err)
 	}
@@ -302,7 +308,7 @@ func startServices() error {
 	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
 	services.httpServer = httpServer
 
-	log.InfoLog("Ready")
+	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	return nil
 }
 
@@ -325,11 +331,12 @@ func stopServices() {
 	if services.etcdLocal != nil {
 		services.etcdLocal.StopLocal()
 	}
+	log.FinishTracer()
 }
 
 // Helper function to verify the compatibility of etcd version and
 // current data model version
-func checkVersion(objStore objstore.KVStore) (string, error) {
+func checkVersion(ctx context.Context, objStore objstore.KVStore) (string, error) {
 	key := objstore.DbKeyPrefixString("Version")
 	val, _, _, err := objStore.Get(key)
 	if err != nil {
@@ -342,7 +349,7 @@ func checkVersion(objStore objstore.KVStore) (string, error) {
 	if verHash == "" {
 		log.InfoLog("Could not find a previous version", "curr hash", edgeproto.GetDataModelVersion())
 		key := objstore.DbKeyPrefixString("Version")
-		_, err = objStore.Put(key, edgeproto.GetDataModelVersion())
+		_, err = objStore.Put(ctx, key, edgeproto.GetDataModelVersion())
 		if err != nil {
 			return "", err
 		}

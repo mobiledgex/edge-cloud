@@ -10,6 +10,7 @@ import "testing"
 import "context"
 import "time"
 import "github.com/stretchr/testify/require"
+import "github.com/mobiledgex/edge-cloud/log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -169,26 +170,33 @@ func NewClientFlavorApi(api edgeproto.FlavorApiClient) *FlavorCommonApi {
 }
 
 func InternalFlavorTest(t *testing.T, test string, api edgeproto.FlavorApiServer, testData []edgeproto.Flavor) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalFlavorTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicFlavorCudTest(t, NewInternalFlavorApi(api), testData)
+		basicFlavorCudTest(t, ctx, NewInternalFlavorApi(api), testData)
 	case "show":
-		basicFlavorShowTest(t, NewInternalFlavorApi(api), testData)
+		basicFlavorShowTest(t, ctx, NewInternalFlavorApi(api), testData)
 	}
 }
 
 func ClientFlavorTest(t *testing.T, test string, api edgeproto.FlavorApiClient, testData []edgeproto.Flavor) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientFlavorTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicFlavorCudTest(t, NewClientFlavorApi(api), testData)
+		basicFlavorCudTest(t, ctx, NewClientFlavorApi(api), testData)
 	case "show":
-		basicFlavorShowTest(t, NewClientFlavorApi(api), testData)
+		basicFlavorShowTest(t, ctx, NewClientFlavorApi(api), testData)
 	}
 }
 
-func basicFlavorShowTest(t *testing.T, api *FlavorCommonApi, testData []edgeproto.Flavor) {
+func basicFlavorShowTest(t *testing.T, ctx context.Context, api *FlavorCommonApi, testData []edgeproto.Flavor) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowFlavor{}
 	show.Init()
@@ -201,9 +209,8 @@ func basicFlavorShowTest(t *testing.T, api *FlavorCommonApi, testData []edgeprot
 	}
 }
 
-func GetFlavor(t *testing.T, api *FlavorCommonApi, key *edgeproto.FlavorKey, out *edgeproto.Flavor) bool {
+func GetFlavor(t *testing.T, ctx context.Context, api *FlavorCommonApi, key *edgeproto.FlavorKey, out *edgeproto.Flavor) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowFlavor{}
 	show.Init()
@@ -218,9 +225,8 @@ func GetFlavor(t *testing.T, api *FlavorCommonApi, key *edgeproto.FlavorKey, out
 	return found
 }
 
-func basicFlavorCudTest(t *testing.T, api *FlavorCommonApi, testData []edgeproto.Flavor) {
+func basicFlavorCudTest(t *testing.T, ctx context.Context, api *FlavorCommonApi, testData []edgeproto.Flavor) {
 	var err error
-	ctx := context.TODO()
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
@@ -228,14 +234,14 @@ func basicFlavorCudTest(t *testing.T, api *FlavorCommonApi, testData []edgeproto
 	}
 
 	// test create
-	createFlavorData(t, api, testData)
+	createFlavorData(t, ctx, api, testData)
 
 	// test duplicate create - should fail
 	_, err = api.CreateFlavor(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate Flavor")
 
 	// test show all items
-	basicFlavorShowTest(t, api, testData)
+	basicFlavorShowTest(t, ctx, api, testData)
 
 	// test delete
 	_, err = api.DeleteFlavor(ctx, &testData[0])
@@ -262,16 +268,23 @@ func basicFlavorCudTest(t *testing.T, api *FlavorCommonApi, testData []edgeproto
 }
 
 func InternalFlavorCreate(t *testing.T, api edgeproto.FlavorApiServer, testData []edgeproto.Flavor) {
-	createFlavorData(t, NewInternalFlavorApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "InternalFlavorCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createFlavorData(t, ctx, NewInternalFlavorApi(api), testData)
 }
 
 func ClientFlavorCreate(t *testing.T, api edgeproto.FlavorApiClient, testData []edgeproto.Flavor) {
-	createFlavorData(t, NewClientFlavorApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "ClientFlavorCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createFlavorData(t, ctx, NewClientFlavorApi(api), testData)
 }
 
-func createFlavorData(t *testing.T, api *FlavorCommonApi, testData []edgeproto.Flavor) {
+func createFlavorData(t *testing.T, ctx context.Context, api *FlavorCommonApi, testData []edgeproto.Flavor) {
 	var err error
-	ctx := context.TODO()
 
 	for _, obj := range testData {
 		_, err = api.CreateFlavor(ctx, &obj)

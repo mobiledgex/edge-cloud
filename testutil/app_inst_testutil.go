@@ -10,6 +10,7 @@ import "testing"
 import "context"
 import "time"
 import "github.com/stretchr/testify/require"
+import "github.com/mobiledgex/edge-cloud/log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -43,14 +44,22 @@ func (x *ShowAppInst) Send(m *edgeproto.AppInst) error {
 
 type CudStreamoutAppInst struct {
 	grpc.ServerStream
+	ctx context.Context
 }
 
 func (x *CudStreamoutAppInst) Send(res *edgeproto.Result) error {
 	fmt.Println(res)
 	return nil
 }
+
 func (x *CudStreamoutAppInst) Context() context.Context {
-	return context.TODO()
+	return x.ctx
+}
+
+func NewCudStreamoutAppInst(ctx context.Context) *CudStreamoutAppInst {
+	return &CudStreamoutAppInst{
+		ctx: ctx,
+	}
 }
 
 type AppInstStream interface {
@@ -154,7 +163,7 @@ func (x *AppInstCommonApi) CreateAppInst(ctx context.Context, in *edgeproto.AppI
 	copy := &edgeproto.AppInst{}
 	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.CreateAppInst(copy, &CudStreamoutAppInst{})
+		err := x.internal_api.CreateAppInst(copy, NewCudStreamoutAppInst(ctx))
 		return &edgeproto.Result{}, err
 	} else {
 		stream, err := x.client_api.CreateAppInst(ctx, copy)
@@ -167,7 +176,7 @@ func (x *AppInstCommonApi) UpdateAppInst(ctx context.Context, in *edgeproto.AppI
 	copy := &edgeproto.AppInst{}
 	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.UpdateAppInst(copy, &CudStreamoutAppInst{})
+		err := x.internal_api.UpdateAppInst(copy, NewCudStreamoutAppInst(ctx))
 		return &edgeproto.Result{}, err
 	} else {
 		stream, err := x.client_api.UpdateAppInst(ctx, copy)
@@ -180,7 +189,7 @@ func (x *AppInstCommonApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppI
 	copy := &edgeproto.AppInst{}
 	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.DeleteAppInst(copy, &CudStreamoutAppInst{})
+		err := x.internal_api.DeleteAppInst(copy, NewCudStreamoutAppInst(ctx))
 		return &edgeproto.Result{}, err
 	} else {
 		stream, err := x.client_api.DeleteAppInst(ctx, copy)
@@ -212,26 +221,33 @@ func NewClientAppInstApi(api edgeproto.AppInstApiClient) *AppInstCommonApi {
 }
 
 func InternalAppInstTest(t *testing.T, test string, api edgeproto.AppInstApiServer, testData []edgeproto.AppInst) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalAppInstTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicAppInstCudTest(t, NewInternalAppInstApi(api), testData)
+		basicAppInstCudTest(t, ctx, NewInternalAppInstApi(api), testData)
 	case "show":
-		basicAppInstShowTest(t, NewInternalAppInstApi(api), testData)
+		basicAppInstShowTest(t, ctx, NewInternalAppInstApi(api), testData)
 	}
 }
 
 func ClientAppInstTest(t *testing.T, test string, api edgeproto.AppInstApiClient, testData []edgeproto.AppInst) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientAppInstTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicAppInstCudTest(t, NewClientAppInstApi(api), testData)
+		basicAppInstCudTest(t, ctx, NewClientAppInstApi(api), testData)
 	case "show":
-		basicAppInstShowTest(t, NewClientAppInstApi(api), testData)
+		basicAppInstShowTest(t, ctx, NewClientAppInstApi(api), testData)
 	}
 }
 
-func basicAppInstShowTest(t *testing.T, api *AppInstCommonApi, testData []edgeproto.AppInst) {
+func basicAppInstShowTest(t *testing.T, ctx context.Context, api *AppInstCommonApi, testData []edgeproto.AppInst) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowAppInst{}
 	show.Init()
@@ -244,9 +260,8 @@ func basicAppInstShowTest(t *testing.T, api *AppInstCommonApi, testData []edgepr
 	}
 }
 
-func GetAppInst(t *testing.T, api *AppInstCommonApi, key *edgeproto.AppInstKey, out *edgeproto.AppInst) bool {
+func GetAppInst(t *testing.T, ctx context.Context, api *AppInstCommonApi, key *edgeproto.AppInstKey, out *edgeproto.AppInst) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowAppInst{}
 	show.Init()
@@ -261,9 +276,8 @@ func GetAppInst(t *testing.T, api *AppInstCommonApi, key *edgeproto.AppInstKey, 
 	return found
 }
 
-func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgeproto.AppInst) {
+func basicAppInstCudTest(t *testing.T, ctx context.Context, api *AppInstCommonApi, testData []edgeproto.AppInst) {
 	var err error
-	ctx := context.TODO()
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
@@ -271,14 +285,14 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	}
 
 	// test create
-	createAppInstData(t, api, testData)
+	createAppInstData(t, ctx, api, testData)
 
 	// test duplicate create - should fail
 	_, err = api.CreateAppInst(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate AppInst")
 
 	// test show all items
-	basicAppInstShowTest(t, api, testData)
+	basicAppInstShowTest(t, ctx, api, testData)
 
 	// test delete
 	_, err = api.DeleteAppInst(ctx, &testData[0])
@@ -305,16 +319,23 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 }
 
 func InternalAppInstCreate(t *testing.T, api edgeproto.AppInstApiServer, testData []edgeproto.AppInst) {
-	createAppInstData(t, NewInternalAppInstApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "InternalAppInstCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createAppInstData(t, ctx, NewInternalAppInstApi(api), testData)
 }
 
 func ClientAppInstCreate(t *testing.T, api edgeproto.AppInstApiClient, testData []edgeproto.AppInst) {
-	createAppInstData(t, NewClientAppInstApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "ClientAppInstCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createAppInstData(t, ctx, NewClientAppInstApi(api), testData)
 }
 
-func createAppInstData(t *testing.T, api *AppInstCommonApi, testData []edgeproto.AppInst) {
+func createAppInstData(t *testing.T, ctx context.Context, api *AppInstCommonApi, testData []edgeproto.AppInst) {
 	var err error
-	ctx := context.TODO()
 
 	for _, obj := range testData {
 		_, err = api.CreateAppInst(ctx, &obj)
@@ -436,22 +457,29 @@ func NewClientAppInstInfoApi(api edgeproto.AppInstInfoApiClient) *AppInstInfoCom
 }
 
 func InternalAppInstInfoTest(t *testing.T, test string, api edgeproto.AppInstInfoApiServer, testData []edgeproto.AppInstInfo) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalAppInstInfoTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "show":
-		basicAppInstInfoShowTest(t, NewInternalAppInstInfoApi(api), testData)
+		basicAppInstInfoShowTest(t, ctx, NewInternalAppInstInfoApi(api), testData)
 	}
 }
 
 func ClientAppInstInfoTest(t *testing.T, test string, api edgeproto.AppInstInfoApiClient, testData []edgeproto.AppInstInfo) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientAppInstInfoTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "show":
-		basicAppInstInfoShowTest(t, NewClientAppInstInfoApi(api), testData)
+		basicAppInstInfoShowTest(t, ctx, NewClientAppInstInfoApi(api), testData)
 	}
 }
 
-func basicAppInstInfoShowTest(t *testing.T, api *AppInstInfoCommonApi, testData []edgeproto.AppInstInfo) {
+func basicAppInstInfoShowTest(t *testing.T, ctx context.Context, api *AppInstInfoCommonApi, testData []edgeproto.AppInstInfo) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowAppInstInfo{}
 	show.Init()
@@ -464,9 +492,8 @@ func basicAppInstInfoShowTest(t *testing.T, api *AppInstInfoCommonApi, testData 
 	}
 }
 
-func GetAppInstInfo(t *testing.T, api *AppInstInfoCommonApi, key *edgeproto.AppInstKey, out *edgeproto.AppInstInfo) bool {
+func GetAppInstInfo(t *testing.T, ctx context.Context, api *AppInstInfoCommonApi, key *edgeproto.AppInstKey, out *edgeproto.AppInstInfo) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowAppInstInfo{}
 	show.Init()

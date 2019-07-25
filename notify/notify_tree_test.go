@@ -1,6 +1,7 @@
 package notify
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -27,6 +28,9 @@ const (
 // a balanced binary tree.
 func TestNotifyTree(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelNotify | log.DebugLevelApi)
+	log.InitTracer()
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
 
 	// override retry time
 	NotifyRetryTime = 10 * time.Millisecond
@@ -63,26 +67,26 @@ func TestNotifyTree(t *testing.T) {
 
 	// crms need to send cloudletInfo up to trigger sending of
 	// data down.
-	low21.handler.CloudletInfoCache.Update(&testutil.CloudletInfoData[0], 0)
-	low22.handler.CloudletInfoCache.Update(&testutil.CloudletInfoData[1], 0)
+	low21.handler.CloudletInfoCache.Update(ctx, &testutil.CloudletInfoData[0], 0)
+	low22.handler.CloudletInfoCache.Update(ctx, &testutil.CloudletInfoData[1], 0)
 
 	// Add data to top server
-	top.handler.FlavorCache.Update(&testutil.FlavorData[0], 0)
-	top.handler.FlavorCache.Update(&testutil.FlavorData[1], 0)
-	top.handler.FlavorCache.Update(&testutil.FlavorData[2], 0)
+	top.handler.FlavorCache.Update(ctx, &testutil.FlavorData[0], 0)
+	top.handler.FlavorCache.Update(ctx, &testutil.FlavorData[1], 0)
+	top.handler.FlavorCache.Update(ctx, &testutil.FlavorData[2], 0)
 
 	// set ClusterInst and AppInst state to CREATE_REQUESTED so they get
 	// sent to the CRM.
 	for ii, _ := range testutil.ClusterInstData {
 		testutil.ClusterInstData[ii].State = edgeproto.TrackedState_CREATE_REQUESTED
-		top.handler.ClusterInstCache.Update(&testutil.ClusterInstData[ii], 0)
+		top.handler.ClusterInstCache.Update(ctx, &testutil.ClusterInstData[ii], 0)
 	}
 	for ii, _ := range testutil.AppInstData {
 		testutil.AppInstData[ii].State = edgeproto.TrackedState_CREATE_REQUESTED
-		top.handler.AppInstCache.Update(&testutil.AppInstData[ii], 0)
+		top.handler.AppInstCache.Update(ctx, &testutil.AppInstData[ii], 0)
 	}
-	top.handler.CloudletCache.Update(&testutil.CloudletData[0], 0)
-	top.handler.CloudletCache.Update(&testutil.CloudletData[1], 0)
+	top.handler.CloudletCache.Update(ctx, &testutil.CloudletData[0], 0)
+	top.handler.CloudletCache.Update(ctx, &testutil.CloudletData[1], 0)
 	// dmes should get all app insts but no cloudlets
 	for _, n := range dmes {
 		checkClientCache(t, n, 0, 0, len(testutil.AppInstData), 0)
@@ -95,10 +99,10 @@ func TestNotifyTree(t *testing.T) {
 	checkClientCache(t, mid2, 3, 4, 4, 2)
 
 	// Add info objs to low nodes
-	low11.handler.AppInstInfoCache.Update(&testutil.AppInstInfoData[0], 0)
-	low12.handler.AppInstInfoCache.Update(&testutil.AppInstInfoData[1], 0)
-	low21.handler.AppInstInfoCache.Update(&testutil.AppInstInfoData[2], 0)
-	low22.handler.AppInstInfoCache.Update(&testutil.AppInstInfoData[3], 0)
+	low11.handler.AppInstInfoCache.Update(ctx, &testutil.AppInstInfoData[0], 0)
+	low12.handler.AppInstInfoCache.Update(ctx, &testutil.AppInstInfoData[1], 0)
+	low21.handler.AppInstInfoCache.Update(ctx, &testutil.AppInstInfoData[2], 0)
+	low22.handler.AppInstInfoCache.Update(ctx, &testutil.AppInstInfoData[3], 0)
 	// dme mid should get 0 because it doesn't want infos
 	// crm mid should get 2, 1 from each crm low
 	mid1.handler.WaitForAppInstInfo(0)

@@ -11,5 +11,8 @@ func GetSTMOpts(opts ...objstore.KVOp) []v3.OpOption {
 	if kvopts.LeaseID != 0 {
 		v3opts = append(v3opts, v3.WithLease(v3.LeaseID(kvopts.LeaseID)))
 	}
+	if kvopts.Rev != 0 {
+		v3opts = append(v3opts, v3.WithRev(kvopts.Rev))
+	}
 	return v3opts
 }

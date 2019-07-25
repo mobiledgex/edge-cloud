@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -11,6 +12,9 @@ import (
 
 func TestCloudletInfo(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
+	log.InitTracer()
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
 	objstore.InitRegion(1)
 
 	dummy := dummyEtcd{}
@@ -25,16 +29,16 @@ func TestCloudletInfo(t *testing.T) {
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
-	insertCloudletInfo(testutil.CloudletInfoData)
+	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 
 	testutil.InternalCloudletInfoTest(t, "show", &cloudletInfoApi, testutil.CloudletInfoData)
 	dummy.Stop()
 }
 
-func insertCloudletInfo(data []edgeproto.CloudletInfo) {
+func insertCloudletInfo(ctx context.Context, data []edgeproto.CloudletInfo) {
 	for ii, _ := range data {
 		in := &data[ii]
 		in.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-		cloudletInfoApi.Update(in, 0)
+		cloudletInfoApi.Update(ctx, in, 0)
 	}
 }

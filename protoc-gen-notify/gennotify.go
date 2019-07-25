@@ -12,10 +12,12 @@ import (
 
 type GenNotify struct {
 	*generator.Generator
-	support    gensupport.PluginSupport
-	tmpl       *template.Template
-	importSync bool
-	importLog  bool
+	support           gensupport.PluginSupport
+	tmpl              *template.Template
+	importSync        bool
+	importLog         bool
+	importContext     bool
+	importOpentracing bool
 }
 
 func (g *GenNotify) Name() string {
@@ -36,11 +38,19 @@ func (g *GenNotify) GenerateImports(file *generator.FileDescriptor) {
 	if g.importLog {
 		g.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
 	}
+	if g.importContext {
+		g.PrintImport("", "context")
+	}
+	if g.importOpentracing {
+		g.PrintImport("opentracing", "github.com/opentracing/opentracing-go")
+	}
 }
 
 func (g *GenNotify) Generate(file *generator.FileDescriptor) {
 	g.importSync = false
 	g.importLog = false
+	g.importContext = false
+	g.importOpentracing = false
 
 	g.support.InitFile()
 	if !g.support.GenFile(*file.FileDescriptorProto.Name) {
@@ -98,8 +108,10 @@ func (g *GenNotify) generateMessage(file *generator.FileDescriptor, desc *genera
 	g.tmpl.Execute(g.Generator.Buffer, args)
 
 	g.importSync = true
+	g.importContext = true
+	g.importLog = true
 	if args.PrintSendRecv {
-		g.importLog = true
+		g.importOpentracing = true
 	}
 }
 
@@ -118,7 +130,7 @@ type tmplArgs struct {
 var tmpl = `
 {{- if .Cache}}
 type Send{{.Name}}Handler interface {
-	GetAllKeys(keys map[{{.KeyType}}]struct{})
+	GetAllKeys(ctx context.Context, keys map[{{.KeyType}}]context.Context)
 	Get(key *{{.KeyType}}, buf *{{.NameType}}) bool
 {{- if .FilterCloudletKey}}
 	GetForCloudlet(key *edgeproto.CloudletKey, keys map[{{.KeyType}}]struct{})
@@ -126,14 +138,14 @@ type Send{{.Name}}Handler interface {
 }
 
 type Recv{{.Name}}Handler interface {
-	Update(in *{{.NameType}}, rev int64)
-	Delete(in *{{.NameType}}, rev int64)
-	Prune(keys map[{{.KeyType}}]struct{})
-	Flush(notifyId int64)
+	Update(ctx context.Context, in *{{.NameType}}, rev int64)
+	Delete(ctx context.Context, in *{{.NameType}}, rev int64)
+	Prune(ctx context.Context, keys map[{{.KeyType}}]struct{})
+	Flush(ctx context.Context, notifyId int64)
 }
 {{- else}}
 type Recv{{.Name}}Handler interface {
-	Recv(msg *{{.NameType}})
+	Recv(ctx context.Context, msg *{{.NameType}})
 }
 {{- end}}
 
@@ -142,11 +154,13 @@ type {{.Name}}Send struct {
 	MessageName string
 {{- if .Cache}}
 	handler Send{{.Name}}Handler
-	Keys map[{{.KeyType}}]struct{}
-	keysToSend map[{{.KeyType}}]struct{}
+	Keys map[{{.KeyType}}]context.Context
+	keysToSend map[{{.KeyType}}]context.Context
 {{- else}}
 	Data []*{{.NameType}}
 	dataToSend []*{{.NameType}}
+	Ctxs []context.Context
+	ctxsToSend []context.Context
 {{- end}}
 	Mux sync.Mutex
 	buf {{.NameType}}
@@ -164,7 +178,7 @@ func New{{.Name}}Send() *{{.Name}}Send {
 	send.MessageName = proto.MessageName((*{{.NameType}})(nil))
 {{- if .Cache}}
 	send.handler = handler
-	send.Keys = make(map[{{.KeyType}}]struct{})
+	send.Keys = make(map[{{.KeyType}}]context.Context)
 {{- else}}
 	send.Data = make([]*{{.NameType}}, 0)
 {{- end}}
@@ -188,7 +202,7 @@ func (s *{{.Name}}Send) GetSendCount() uint64 {
 }
 
 {{- if .Cache}}
-func (s *{{.Name}}Send) UpdateAll() {
+func (s *{{.Name}}Send) UpdateAll(ctx context.Context) {
 	if !s.sendrecv.isRemoteWanted(s.MessageName) {
 		return
 	}
@@ -198,42 +212,43 @@ func (s *{{.Name}}Send) UpdateAll() {
 	}
 {{- end}}
 	s.Mux.Lock()
-	s.handler.GetAllKeys(s.Keys)
+	s.handler.GetAllKeys(ctx, s.Keys)
 	s.Mux.Unlock()
 }
 
-func (s *{{.Name}}Send) Update(key *{{.KeyType}}, old *{{.NameType}}) {
+func (s *{{.Name}}Send) Update(ctx context.Context, key *{{.KeyType}}, old *{{.NameType}}) {
 	if !s.sendrecv.isRemoteWanted(s.MessageName) {
 		return
 	}
 {{- if .CustomUpdate}}
-	if !s.UpdateOk(key) { // to be implemented by hand
+	if !s.UpdateOk(ctx, key) { // to be implemented by hand
 		return
 	}
 {{- end}}
-	s.updateInternal(key)
+	s.updateInternal(ctx, key)
 }
 
-func (s *{{.Name}}Send) updateInternal(key *{{.KeyType}}) {
+func (s *{{.Name}}Send) updateInternal(ctx context.Context, key *{{.KeyType}}) {
 	s.Mux.Lock()
 {{- if .PrintSendRecv}}
-	log.DebugLog(log.DebugLevelNotify, "updateInternal {{.Name}}", "key", key)
+	log.SpanLog(ctx, log.DebugLevelNotify, "updateInternal {{.Name}}", "key", key)
 {{- end}}
-	s.Keys[*key] = struct{}{}
+	s.Keys[*key] = ctx
 	s.Mux.Unlock()
 	s.sendrecv.wakeup()
 }
 {{- else}}
-func (s *{{.Name}}Send) UpdateAll() {}
+func (s *{{.Name}}Send) UpdateAll(ctx context.Context) {}
 
-func (s *{{.Name}}Send) Update(msg *{{.NameType}}) bool {
+func (s *{{.Name}}Send) Update(ctx context.Context, msg *{{.NameType}}) bool {
 {{- if .CustomUpdate}}
-	if !s.UpdateOk(msg) { // to be implemented by hand
+	if !s.UpdateOk(ctx, msg) { // to be implemented by hand
 		return false
 	}
 {{- end}}
 	s.Mux.Lock()
 	s.Data = append(s.Data, msg)
+	s.Ctxs = append(s.Ctxs, ctx)
 	s.Mux.Unlock()
 	s.sendrecv.wakeup()
 	return true
@@ -248,11 +263,13 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 {{- else}}
 	data := s.dataToSend
 	s.dataToSend = nil
+	ctxs := s.ctxsToSend
+	s.ctxsToSend = nil
 {{- end}}
 	s.Mux.Unlock()
 
 {{- if .Cache}}
-	for key, _ := range keys {
+	for key, ctx := range keys {
 		found := s.handler.Get(&key, &s.buf)
 		if found {
 			notice.Action = edgeproto.NoticeAction_UPDATE
@@ -262,8 +279,9 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 		}
 		any, err := types.MarshalAny(&s.buf)
 {{- else}}
-	for _, msg := range data {
+	for ii, msg := range data {
 		any, err := types.MarshalAny(msg)
+		ctx := ctxs[ii]
 {{- end}}
 		if err != nil {
 			s.sendrecv.stats.MarshalErrors++
@@ -271,8 +289,9 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 			continue
 		}
 		notice.Any = *any
+		notice.Span = log.SpanToString(ctx)
 {{- if .PrintSendRecv}}
-		log.DebugLog(log.DebugLevelNotify,
+		log.SpanLog(ctx, log.DebugLevelNotify,
 			fmt.Sprintf("%s send {{.Name}}", s.sendrecv.cliserv),
 			"peer", peer,
 {{- if .Cache}}
@@ -300,13 +319,15 @@ func (s *{{.Name}}Send) PrepData() bool {
 {{- if .Cache}}
 	if len(s.Keys) > 0 {
 		s.keysToSend = s.Keys
-		s.Keys = make(map[{{.KeyType}}]struct{})
+		s.Keys = make(map[{{.KeyType}}]context.Context)
 		return true
 	}
 {{- else}}
 	if len(s.Data) > 0 {
 		s.dataToSend = s.Data
 		s.Data = make([]*{{.NameType}}, 0)
+		s.ctxsToSend = s.Ctxs
+		s.Ctxs = make([]context.Context, 0)
 		return true
 	}
 {{- end}}
@@ -363,20 +384,20 @@ func (s *{{.Name}}SendMany) DoneSend(peerAddr string, send NotifySend) {
 }
 
 {{- if .Cache}}
-func (s *{{.Name}}SendMany) Update(key *{{.KeyType}}, old *{{.NameType}}) {
+func (s *{{.Name}}SendMany) Update(ctx context.Context, key *{{.KeyType}}, old *{{.NameType}}) {
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 	for _, send := range s.sends {
-		send.Update(key, old)
+		send.Update(ctx, key, old)
 	}
 }
 {{- else}}
-func (s *{{.Name}}SendMany) Update(msg *{{.NameType}}) int {
+func (s *{{.Name}}SendMany) Update(ctx context.Context, msg *{{.NameType}}) int {
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 	count := 0
 	for _, send := range s.sends {
-		if send.Update(msg) {
+		if send.Update(ctx, msg) {
 			count++
 		}
 	}
@@ -421,16 +442,20 @@ func (s *{{.Name}}Recv) GetRecvCount() uint64 {
 	return s.RecvCount
 }
 
-func (s *{{.Name}}Recv) Recv(notice *edgeproto.Notice, notifyId int64, peer string) {
+func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, notifyId int64, peer string) {
+{{- if .PrintSendRecv}}
+	span := opentracing.SpanFromContext(ctx)
+	if span != nil {
+		span.SetTag("objtype", "{{.Name}}")
+	}
+{{- end}}
+
 	buf := &{{.NameType}}{}
 	err := types.UnmarshalAny(&notice.Any, buf)
 	if err != nil {
 		s.sendrecv.stats.UnmarshalErrors++
 {{- if .PrintSendRecv}}
-		log.DebugLog(log.DebugLevelNotify,
-			fmt.Sprintf("%s recv {{.Name}}", s.sendrecv.cliserv),
-			"peer", peer,
-			"action", notice.Action)
+		log.SpanLog(ctx, log.DebugLevelNotify, "err", err)
 {{- end}}
 		return
 	}
@@ -438,35 +463,33 @@ func (s *{{.Name}}Recv) Recv(notice *edgeproto.Notice, notifyId int64, peer stri
 	buf.NotifyId = notifyId
 {{- end}}
 {{- if .PrintSendRecv}}
-	log.DebugLog(log.DebugLevelNotify,
-		fmt.Sprintf("%s recv {{.Name}}", s.sendrecv.cliserv),
-		"peer", peer,
-		"action", notice.Action,
+	if span != nil {
 {{- if .Cache}}
-		"key", buf.Key)
+		span.SetTag("key", buf.Key)
 {{- else}}
-		"msg", buf)
+		span.SetTag("msg", buf)
 {{- end}}
+	}
 {{- end}}
 {{- if .Cache}}
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
-		s.handler.Update(buf, 0)
+		s.handler.Update(ctx, buf, 0)
 		s.Mux.Lock()
 		if s.sendAllKeys != nil {
 			s.sendAllKeys[buf.Key] = struct{}{}
 		}
 		s.Mux.Unlock()
 	} else if notice.Action == edgeproto.NoticeAction_DELETE {
-		s.handler.Delete(buf, 0)
+		s.handler.Delete(ctx, buf, 0)
 	}
 {{- else}}
-	s.handler.Recv(buf)
+	s.handler.Recv(ctx, buf)
 {{- end}}
 	s.sendrecv.stats.Recv++
 	// object specific counter
 	s.RecvCount++
 {{- if .RecvHook}}
-	s.RecvHook(notice, buf, peer) // to be implemented by hand
+	s.RecvHook(ctx, notice, buf, peer) // to be implemented by hand
 {{- end}}
 }
 
@@ -478,21 +501,21 @@ func (s *{{.Name}}Recv) RecvAllStart() {
 {{- end}}
 }
 
-func (s *{{.Name}}Recv) RecvAllEnd(cleanup Cleanup) {
+func (s *{{.Name}}Recv) RecvAllEnd(ctx context.Context, cleanup Cleanup) {
 {{- if .Cache}}
 	s.Mux.Lock()
 	validKeys := s.sendAllKeys
 	s.sendAllKeys = nil
 	s.Mux.Unlock()
 	if cleanup == CleanupPrune {
-		s.handler.Prune(validKeys)
+		s.handler.Prune(ctx, validKeys)
 	}
 {{- end}}
 }
 
 {{- if .Cache}}
-func (s *{{.Name}}Recv) Flush(notifyId int64) {
-	s.handler.Flush(notifyId)
+func (s *{{.Name}}Recv) Flush(ctx context.Context, notifyId int64) {
+	s.handler.Flush(ctx, notifyId)
 }
 {{- end}}
 
@@ -511,9 +534,9 @@ func (s *{{.Name}}RecvMany) NewRecv() NotifyRecv {
 	return recv
 }
 
-func (s *{{.Name}}RecvMany) Flush(notifyId int64) {
+func (s *{{.Name}}RecvMany) Flush(ctx context.Context, notifyId int64) {
 {{- if .Cache}}
-	s.handler.Flush(notifyId)
+	s.handler.Flush(ctx, notifyId)
 {{- end}}
 }
 

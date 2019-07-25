@@ -33,6 +33,8 @@ message Notice {
   repeated string want_objs = 4;
   // Filter by cloudlet key
   bool filter_cloudlet_key = 5;
+  // Opentracing span
+  string span = 6;
 }
 
 service NotifyApi {

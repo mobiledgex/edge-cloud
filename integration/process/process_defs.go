@@ -96,3 +96,7 @@ type ClusterSvc struct {
 	TLS         TLSCerts
 	cmd         *exec.Cmd
 }
+type Jaeger struct {
+	Common `yaml:",inline"`
+	cmd    *exec.Cmd
+}
