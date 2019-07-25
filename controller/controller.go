@@ -57,7 +57,7 @@ var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version h
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var ControllerId = ""
-var InfluxDBName = "metrics"
+var InfluxDBName = cloudcommon.DeveloperMetricsDbName
 
 func GetRootDir() string {
 	return *rootDir
