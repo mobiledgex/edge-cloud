@@ -7,6 +7,7 @@ import (
 	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	context "golang.org/x/net/context"
 )
 
 type AppPortV0_LintFixAppInstFields struct {
@@ -36,7 +37,7 @@ type AppInstV1_LintFixAppInstFields struct {
 // Below is an implementation of AddClusterInstKeyToAppInstKey
 // This upgrade modifies AppInstKey to include ClusterInstKey rather than CloudletKey+Id
 // This allows multiple instances of an app on the same cloudlet, but different cluster instances
-func AddClusterInstKeyToAppInstKey(objStore objstore.KVStore) error {
+func AddClusterInstKeyToAppInstKey(ctx context.Context, objStore objstore.KVStore) error {
 	// Below are the data-structures for the older version of AppInstKey and AppInst
 	type AppInstKeyV0_AddClusterInstKeyToAppInstKey struct {
 		AppKey      AppKey      `protobuf:"bytes,1,opt,name=app_key,json=appKey" json:"app_key"`
@@ -88,14 +89,14 @@ func AddClusterInstKeyToAppInstKey(objStore objstore.KVStore) error {
 		appV1.CrmOverride = appV0.CrmOverride
 		appV1.CreatedAt = appV0.CreatedAt
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded AppInstV1", "AppInstV1", appV1)
-		objStore.Delete(string(key))
+		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("AppInst", &appV1.Key)
 		val, err2 = json.Marshal(appV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appV1, "err", err2)
 			return err2
 		}
-		objStore.Put(newkey, string(val))
+		objStore.Put(ctx, newkey, string(val))
 		upgCount++
 		return nil
 	})
@@ -106,7 +107,7 @@ func AddClusterInstKeyToAppInstKey(objStore objstore.KVStore) error {
 // Below is an implementation of LintFixAppInstFields
 // This upgrade modifies takes care of lint fix for AppPort JSON field
 // The change is in effect after marshalling AppV2
-func LintFixAppInstFields(objStore objstore.KVStore) error {
+func LintFixAppInstFields(ctx context.Context, objStore objstore.KVStore) error {
 	var upgCount uint
 	log.DebugLog(log.DebugLevelUpgrade, "LintFixAppInstFields - Fix lint issue on AppInst Fields")
 	// Define a prefix for a walk
@@ -147,7 +148,7 @@ func LintFixAppInstFields(objStore objstore.KVStore) error {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", key, "obj", appV2, "err", err2)
 			return err2
 		}
-		objStore.Put(string(key), string(val))
+		objStore.Put(ctx, string(key), string(val))
 		upgCount++
 		return nil
 	})
@@ -155,7 +156,7 @@ func LintFixAppInstFields(objStore objstore.KVStore) error {
 	return err
 }
 
-func AddClusterInstDeploymentField(objStore objstore.KVStore) error {
+func AddClusterInstDeploymentField(ctx context.Context, objStore objstore.KVStore) error {
 	var upgCount uint
 	log.DebugLog(log.DebugLevelUpgrade, "AddClusterInstDeploymentField - defaults to kubernetes")
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("ClusterInst"))
@@ -176,7 +177,7 @@ func AddClusterInstDeploymentField(objStore objstore.KVStore) error {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", key, "obj", dat, "err", err2)
 			return err2
 		}
-		objStore.Put(string(key), string(val))
+		objStore.Put(ctx, string(key), string(val))
 		upgCount++
 		return nil
 	})
@@ -184,7 +185,7 @@ func AddClusterInstDeploymentField(objStore objstore.KVStore) error {
 	return err
 }
 
-func AddInternalPortsForPrometheus(objStore objstore.KVStore) error {
+func AddInternalPortsForPrometheus(ctx context.Context, objStore objstore.KVStore) error {
 	//   should upgrade the Prometheus apps only - add internal_ports as true and add accessports tcp:9090
 	log.DebugLog(log.DebugLevelUpgrade, "AddClusterInstDeploymentField - defaults to kubernetes")
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
@@ -195,7 +196,7 @@ func AddInternalPortsForPrometheus(objStore objstore.KVStore) error {
 			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2)
 			return err2
 		}
-		if app.Key.Name == "MEXPrometheusAppName"{
+		if app.Key.Name == "MEXPrometheusAppName" {
 			log.DebugLog(log.DebugLevelUpgrade, "Upgrading App", "App", app)
 			app.AccessPorts = "tcp:9090"
 			app.InternalPorts = true
@@ -204,7 +205,7 @@ func AddInternalPortsForPrometheus(objStore objstore.KVStore) error {
 				log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", key, "obj", app, "err", err2)
 				return err2
 			}
-			objStore.Put(string(key), string(val))	
+			objStore.Put(ctx, string(key), string(val))
 		}
 		return nil
 	})

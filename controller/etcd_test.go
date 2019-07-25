@@ -33,13 +33,14 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	var expRev int64 = 1
 	var rev int64
 	var err error
+	ctx := context.Background()
 
 	syncCheck := NewSyncCheck(t, objStore)
 	defer syncCheck.Stop()
 
 	// check what happens if no put is called
 	// no change is made to database, function returns current revision.
-	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+	rev, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
 		stm.Get("foo")
 		stm.Get("bar")
 		return nil
@@ -49,13 +50,13 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 
 	// test create
 	for key, val := range m {
-		rev, err := objStore.Create(key, val)
+		rev, err := objStore.Create(ctx, key, val)
 		expectNewRev(t, &expRev, rev)
 		assert.Nil(t, err, "Create failed for key %s", key)
 		assert.Equal(t, expRev, rev, "revision")
 		syncCheck.Expect(t, key, val, expRev)
 	}
-	_, err = objStore.Create(key1, val1)
+	_, err = objStore.Create(ctx, key1, val1)
 	assert.Equal(t, objstore.ErrKVStoreKeyExists, err, "Create object that already exists")
 
 	// test get and list
@@ -75,7 +76,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 
 	// test update
 	val2 := "app111"
-	rev, err = objStore.Update(key1, val2, 1)
+	rev, err = objStore.Update(ctx, key1, val2, 1)
 	expectNewRev(t, &expRev, rev)
 	assert.Equal(t, expRev, rev, "revision")
 	assert.Nil(t, err, "Update existing object")
@@ -84,20 +85,20 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	assert.Nil(t, err, "Get key %s", key1)
 	assert.Equal(t, val2, string(val), "Get key %s updated value", key1)
 	assert.EqualValues(t, 2, vers, "version for key %s", key1)
-	rev, err = objStore.Update(key1, val2, 1)
+	rev, err = objStore.Update(ctx, key1, val2, 1)
 	assert.NotNil(t, err, "Update with wrong mod value")
-	rev, err = objStore.Update(key1, val2, objstore.ObjStoreUpdateVersionAny)
+	rev, err = objStore.Update(ctx, key1, val2, objstore.ObjStoreUpdateVersionAny)
 	expectNewRev(t, &expRev, rev)
 	assert.Nil(t, err, "Update any version")
 	val, vers, _, err = objStore.Get(key1)
 	assert.Nil(t, err, "Get key %s", key1)
 	assert.EqualValues(t, 3, vers, "version for key %s", key1)
 
-	rev, err = objStore.Update("no-such-key", "", 0)
+	rev, err = objStore.Update(ctx, "no-such-key", "", 0)
 	assert.Equal(t, objstore.ErrKVStoreKeyNotFound, err, "Update non-existent key")
 
 	// test delete
-	rev, err = objStore.Delete(key1)
+	rev, err = objStore.Delete(ctx, key1)
 	expectNewRev(t, &expRev, rev)
 	assert.Nil(t, err, "Delete key %s", key1)
 	syncCheck.ExpectNil(t, key1, expRev)
@@ -114,14 +115,14 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	// test put
 	pkey := "1/foo/adslfk"
 	pval := "put value"
-	rev, err = objStore.Put(pkey, pval)
+	rev, err = objStore.Put(ctx, pkey, pval)
 	expectNewRev(t, &expRev, rev)
 	assert.Nil(t, err, "Put key %s", pkey)
 	syncCheck.Expect(t, pkey, pval, expRev)
 	val, vers, _, err = objStore.Get(pkey)
 	assert.Nil(t, err, "Get key %s", pkey)
 	assert.Equal(t, pval, string(val), "Get key %s value", pkey)
-	rev, err = objStore.Put(pkey, pval)
+	rev, err = objStore.Put(ctx, pkey, pval)
 	expectNewRev(t, &expRev, rev)
 	assert.Nil(t, err, "Put key %s again", pkey)
 
@@ -149,14 +150,14 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	// If the stm.Get + stm.Put was not equivalent to a create, then
 	// the put would have succeeded, and the apply would have succeeded
 	// and the number of tries (ii) would just be 1.
-	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+	rev, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
 		ii++
 		if stm.Get(k0) != "" {
 			return errors.New("already exists")
 		}
 
 		fmt.Println("non-stm put interference")
-		objStore.Put(k0, v0)
+		objStore.Put(ctx, k0, v0)
 		expRev++
 
 		stm.Put(k0, v0)
@@ -180,14 +181,14 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	// Note that kv pair already exists from previous test before this
 	// function starts.
 	ii = 0
-	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+	rev, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
 		ii++
 		if stm.Get(k0) == "" {
 			return errors.New("not found")
 		}
 
 		fmt.Println("non-stm delete interference")
-		objStore.Delete(k0)
+		objStore.Delete(ctx, k0)
 		expRev++
 
 		stm.Put(k0, v0)
@@ -197,7 +198,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	assert.Equal(t, 2, ii)
 
 	// test create of both at the same time.
-	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+	rev, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
 		if stm.Get(k1) != "" || stm.Get(k2) != "" {
 			return errors.New("already exists")
 		}
@@ -215,7 +216,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	assert.Equal(t, v2, string(val))
 
 	// check that create when it already exists fails
-	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+	rev, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
 		if stm.Get(k1) != "" || stm.Get(k2) != "" {
 			return errors.New("already exists")
 		}
@@ -227,7 +228,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 
 	// run update
 	newval := "some new value"
-	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+	rev, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
 		if stm.Get(k1) == "" {
 			return errors.New("does not exist")
 		}
@@ -241,7 +242,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	assert.Equal(t, newval, string(val))
 
 	// check delete
-	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+	rev, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
 		if stm.Get(k1) == "" || stm.Get(k2) == "" {
 			return errors.New("keys do not exist")
 		}
@@ -258,7 +259,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	assert.NotNil(t, err)
 
 	// check all-or-nothing.
-	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+	rev, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
 		stm.Put(k1, v1)
 		if true {
 			return errors.New("error out")
@@ -274,7 +275,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 
 	// check what happens if no put is called
 	// no change is made to database, function returns current revision.
-	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+	rev, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
 		stm.Get(k1)
 		stm.Get(k2)
 		return nil
@@ -283,7 +284,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	assert.Equal(t, expRev, rev, "revision")
 
 	// check that get after put succeeds
-	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+	rev, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
 		if stm.Get(k1) != "" || stm.Get(k2) != "" {
 			return errors.New("already exists")
 		}
@@ -338,7 +339,7 @@ func (s *SyncCheck) Stop() {
 	s.syncCancel()
 }
 
-func (s *SyncCheck) Cb(data *objstore.SyncCbData) {
+func (s *SyncCheck) Cb(ctx context.Context, data *objstore.SyncCbData) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	log.InfoLog("sync check cb", "action", objstore.SyncActionStrs[data.Action], "key", string(data.Key), "val", string(data.Value), "rev", data.Rev)

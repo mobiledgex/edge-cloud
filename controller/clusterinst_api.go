@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -115,6 +116,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 	}
+	ctx := cb.Context()
 	if in.Key.Developer == "" {
 		return fmt.Errorf("Developer cannot be empty")
 	}
@@ -174,7 +176,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		// default to shared
 		in.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
 	}
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
 				if in.State == edgeproto.TrackedState_CREATE_ERROR {
@@ -266,10 +268,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions, edgeproto.TrackedState_CREATE_ERROR, cloudcommon.CreateClusterInstTimeout, "Created successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions, edgeproto.TrackedState_CREATE_ERROR, cloudcommon.CreateClusterInstTimeout, "Created successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create ClusterInst ignoring CRM failure: %s", err.Error())})
-		s.ReplaceErrorState(in, edgeproto.TrackedState_READY)
+		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_READY)
 		cb.Send(&edgeproto.Result{Message: "Created ClusterInst successfully"})
 		err = nil
 	}
@@ -296,7 +298,8 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 }
 
 func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
-	log.DebugLog(log.DebugLevelApi, "updateClusterInstInternal", "in", in)
+	ctx := cb.Context()
+	log.SpanLog(ctx, log.DebugLevelApi, "updateClusterInstInternal")
 	if err := in.Key.Validate(); err != nil {
 		return err
 	}
@@ -335,7 +338,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 
 	var inbuf edgeproto.ClusterInst
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &inbuf) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
@@ -356,7 +359,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateClusterInstTimeout, "Updated successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateClusterInstTimeout, "Updated successfully", cb.Send)
 	return err
 }
 
@@ -373,10 +376,11 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 	}
+	ctx := cb.Context()
 
 	var prevState edgeproto.TrackedState
 	// Set state to prevent other apps from being created on ClusterInst
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
@@ -400,12 +404,12 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cb); err != nil {
 		// restore previous state since we failed pre-delete actions
 		in.State = prevState
-		s.store.Update(in, s.sync.syncWait)
+		s.store.Update(ctx, in, s.sync.syncWait)
 		return fmt.Errorf("Failed to auto-delete applications from clusterInst %s, %s",
 			in.Key.ClusterKey.Name, err.Error())
 	}
 
-	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
@@ -464,10 +468,10 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteClusterInstTransitions, edgeproto.TrackedState_DELETE_ERROR, cloudcommon.DeleteClusterInstTimeout, "Deleted ClusterInst successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteClusterInstTransitions, edgeproto.TrackedState_DELETE_ERROR, cloudcommon.DeleteClusterInstTimeout, "Deleted ClusterInst successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete ClusterInst ignoring CRM failure: %s", err.Error())})
-		s.ReplaceErrorState(in, edgeproto.TrackedState_NOT_PRESENT)
+		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
 		cb.Send(&edgeproto.Result{Message: "Deleted ClusterInst successfully"})
 		err = nil
 	}
@@ -547,9 +551,9 @@ func ignoreCRM(cctx *CallContext) bool {
 	return false
 }
 
-func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update ClusterInst from info", "key", in.Key, "state", in.State, "status", in.Status)
-	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.ClusterInstInfo) {
+	log.SpanLog(ctx, log.DebugLevelApi, "update ClusterInst", "state", in.State, "status", in.Status)
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.ClusterInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
@@ -559,7 +563,7 @@ func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
 			if inst.Status == in.Status {
 				return nil
 			} else {
-				log.DebugLog(log.DebugLevelApi, "status change only")
+				log.SpanLog(ctx, log.DebugLevelApi, "status change only")
 				inst.Status = in.Status
 				s.store.STMPut(stm, &inst)
 				return nil
@@ -567,8 +571,7 @@ func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
 		}
 		// please see state_transitions.md
 		if !crmTransitionOk(inst.State, in.State) {
-			log.DebugLog(log.DebugLevelApi, "Invalid state transition",
-				"key", &in.Key, "cur", inst.State, "next", in.State)
+			log.SpanLog(ctx, log.DebugLevelApi, "invalid state transition", "cur", inst.State, "next", in.State)
 			return nil
 		}
 		inst.State = in.State
@@ -583,9 +586,9 @@ func (s *ClusterInstApi) UpdateFromInfo(in *edgeproto.ClusterInstInfo) {
 	})
 }
 
-func (s *ClusterInstApi) DeleteFromInfo(in *edgeproto.ClusterInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Delete ClusterInst from info", "key", in.Key, "state", in.State)
-	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+func (s *ClusterInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.ClusterInstInfo) {
+	log.SpanLog(ctx, log.DebugLevelApi, "delete ClusterInst from info", "state", in.State)
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.ClusterInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
@@ -593,9 +596,7 @@ func (s *ClusterInstApi) DeleteFromInfo(in *edgeproto.ClusterInstInfo) {
 		}
 		// please see state_transitions.md
 		if inst.State != edgeproto.TrackedState_DELETING && inst.State != edgeproto.TrackedState_DELETE_REQUESTED {
-			log.DebugLog(log.DebugLevelApi, "Invalid state transition",
-				"key", &in.Key, "cur", inst.State,
-				"next", edgeproto.TrackedState_NOT_PRESENT)
+			log.SpanLog(ctx, log.DebugLevelApi, "invalid state transition", "cur", inst.State, "next", edgeproto.TrackedState_NOT_PRESENT)
 			return nil
 		}
 		s.store.STMDel(stm, &in.Key)
@@ -603,8 +604,8 @@ func (s *ClusterInstApi) DeleteFromInfo(in *edgeproto.ClusterInstInfo) {
 	})
 }
 
-func (s *ClusterInstApi) ReplaceErrorState(in *edgeproto.ClusterInst, newState edgeproto.TrackedState) {
-	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+func (s *ClusterInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.ClusterInst, newState edgeproto.TrackedState) {
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.ClusterInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime

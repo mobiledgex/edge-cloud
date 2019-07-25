@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -35,6 +37,6 @@ func initSrvNotify(notifyServer *notify.ServerMgr) {
 type CrmMetricsReceiver struct{}
 
 //just forward to controller
-func (cmr *CrmMetricsReceiver) Recv(metric *edgeproto.Metric) {
-	sendMetric.Update(metric)
+func (cmr *CrmMetricsReceiver) Recv(ctx context.Context, metric *edgeproto.Metric) {
+	sendMetric.Update(ctx, metric)
 }

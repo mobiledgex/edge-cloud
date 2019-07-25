@@ -78,7 +78,7 @@ type NotifyRecvMany interface {
 	// Allocate a new Recv object
 	NewRecv() NotifyRecv
 	// Flush stale data for the connection after disconnect
-	Flush(notifyId int64)
+	Flush(ctx context.Context, notifyId int64)
 }
 
 var ServerMgrOne ServerMgr
@@ -151,11 +151,16 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	}
 	peerAddr := peer.Addr.String()
 
+	span := log.StartSpan(log.DebugLevelNotify, "StreamNotice start")
+	span.SetTag("peer", peerAddr)
+	spctx := log.ContextWithSpan(ctx, span)
+
 	server := Server{}
 	server.peerAddr = peerAddr
 	server.running = make(chan struct{})
 	server.sendrecv.init(mgr.name)
 	server.sendrecv.peerAddr = peerAddr
+	server.sendrecv.cliserv = "server"
 
 	mgr.mux.Lock()
 	for _, sendMany := range mgr.sends {
@@ -171,8 +176,9 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	// do initial version exchange
 	err := server.negotiate(stream)
 	if err != nil {
-		server.logDisconnect(err)
+		server.logDisconnect(spctx, err)
 		close(server.running)
+		span.Finish()
 		return err
 	}
 
@@ -182,6 +188,8 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	server.notifyId = mgr.notifyId
 	mgr.notifyId++
 	mgr.mux.Unlock()
+
+	span.Finish()
 
 	server.sendrecv.started = true
 	server.sendrecv.sendRunning = make(chan struct{})
@@ -193,7 +201,10 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	// to reduce number of threads, send is run inline
 	server.sendrecv.send(stream)
 	<-server.sendrecv.recvRunning
-	server.logDisconnect(stream.Context().Err())
+
+	span = log.StartSpan(log.DebugLevelNotify, "StreamNotice done")
+	spctx = log.ContextWithSpan(ctx, span)
+	server.logDisconnect(spctx, stream.Context().Err())
 
 	mgr.mux.Lock()
 	for ii, _ := range mgr.sends {
@@ -213,10 +224,11 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	// will have a new NotifyId, so will not be flushed.
 	log.DebugLog(log.DebugLevelNotify, "Flush", "notifyId", server.notifyId)
 	for _, recvMany := range mgr.recvs {
-		recvMany.Flush(server.notifyId)
+		recvMany.Flush(spctx, server.notifyId)
 	}
 
 	close(server.running)
+	span.Finish()
 	return err
 }
 
@@ -282,13 +294,13 @@ func (s *Server) Stop() {
 	<-s.running
 }
 
-func (s *Server) logDisconnect(err error) {
+func (s *Server) logDisconnect(ctx context.Context, err error) {
 	st, ok := status.FromError(err)
 	if err == context.Canceled || (ok && st.Code() == codes.Canceled || err == nil) {
-		log.DebugLog(log.DebugLevelNotify, "Notify server connection closed",
+		log.SpanLog(ctx, log.DebugLevelNotify, "Notify server connection closed",
 			"client", s.peerAddr, "err", err)
 	} else {
-		log.InfoLog("Notify server connection failed",
+		log.SpanLog(ctx, log.DebugLevelInfo, "Notify server connection failed",
 			"client", s.peerAddr, "err", err)
 	}
 }

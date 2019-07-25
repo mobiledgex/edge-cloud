@@ -1,6 +1,8 @@
 package notify
 
 import (
+	"context"
+
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -11,7 +13,7 @@ import (
 // cloudletkey via CloudletInfo. Then further updates (sends) are
 // filtered by cloudletkey(s).
 
-func (s *AppSend) UpdateOk(key *edgeproto.AppKey) bool {
+func (s *AppSend) UpdateOk(ctx context.Context, key *edgeproto.AppKey) bool {
 	if s.sendrecv.filterCloudletKeys {
 		// Apps gets sent with AppInst
 		return false
@@ -19,20 +21,20 @@ func (s *AppSend) UpdateOk(key *edgeproto.AppKey) bool {
 	return true
 }
 
-func (s *AppInstSend) UpdateOk(key *edgeproto.AppInstKey) bool {
+func (s *AppInstSend) UpdateOk(ctx context.Context, key *edgeproto.AppInstKey) bool {
 	if s.sendrecv.filterCloudletKeys {
 		if !s.sendrecv.hasCloudletKey(&key.ClusterInstKey.CloudletKey) {
 			return false
 		}
 		// also trigger sending app
 		if s.sendrecv.appSend != nil {
-			s.sendrecv.appSend.updateInternal(&key.AppKey)
+			s.sendrecv.appSend.updateInternal(ctx, &key.AppKey)
 		}
 	}
 	return true
 }
 
-func (s *CloudletSend) UpdateOk(key *edgeproto.CloudletKey) bool {
+func (s *CloudletSend) UpdateOk(ctx context.Context, key *edgeproto.CloudletKey) bool {
 	if s.sendrecv.filterCloudletKeys {
 		if !s.sendrecv.hasCloudletKey(key) {
 			return false
@@ -41,7 +43,7 @@ func (s *CloudletSend) UpdateOk(key *edgeproto.CloudletKey) bool {
 	return true
 }
 
-func (s *ClusterInstSend) UpdateOk(key *edgeproto.ClusterInstKey) bool {
+func (s *ClusterInstSend) UpdateOk(ctx context.Context, key *edgeproto.ClusterInstKey) bool {
 	if s.sendrecv.filterCloudletKeys {
 		if !s.sendrecv.hasCloudletKey(&key.CloudletKey) {
 			return false
@@ -50,7 +52,7 @@ func (s *ClusterInstSend) UpdateOk(key *edgeproto.ClusterInstKey) bool {
 	return true
 }
 
-func (s *ExecRequestSend) UpdateOk(msg *edgeproto.ExecRequest) bool {
+func (s *ExecRequestSend) UpdateOk(ctx context.Context, msg *edgeproto.ExecRequest) bool {
 	if s.sendrecv.filterCloudletKeys {
 		if !s.sendrecv.hasCloudletKey(&msg.AppInstKey.ClusterInstKey.CloudletKey) {
 			return false
@@ -75,7 +77,7 @@ func (s *ClusterInstSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
 }
 
-func (s *CloudletInfoRecv) RecvHook(notice *edgeproto.Notice, buf *edgeproto.CloudletInfo, peerAddr string) {
+func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notice, buf *edgeproto.CloudletInfo, peerAddr string) {
 	if !s.sendrecv.filterCloudletKeys {
 		return
 	}
@@ -84,26 +86,26 @@ func (s *CloudletInfoRecv) RecvHook(notice *edgeproto.Notice, buf *edgeproto.Clo
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
 		// trigger send of all objects related to cloudlet
 		if s.sendrecv.cloudletSend != nil {
-			s.sendrecv.cloudletSend.Update(&buf.Key, nil)
+			s.sendrecv.cloudletSend.Update(ctx, &buf.Key, nil)
 		}
 		if s.sendrecv.clusterInstSend != nil {
 			clusterInsts := make(map[edgeproto.ClusterInstKey]struct{})
 			s.sendrecv.clusterInstSend.handler.GetForCloudlet(&buf.Key, clusterInsts)
 			for k, _ := range clusterInsts {
-				s.sendrecv.clusterInstSend.Update(&k, nil)
+				s.sendrecv.clusterInstSend.Update(ctx, &k, nil)
 			}
 		}
 		if s.sendrecv.appInstSend != nil {
 			appInsts := make(map[edgeproto.AppInstKey]struct{})
 			s.sendrecv.appInstSend.handler.GetForCloudlet(&buf.Key, appInsts)
 			for k, _ := range appInsts {
-				s.sendrecv.appInstSend.Update(&k, nil)
+				s.sendrecv.appInstSend.Update(ctx, &k, nil)
 			}
 		}
 	}
 }
 
-func (s *CloudletRecv) RecvHook(notice *edgeproto.Notice, buf *edgeproto.Cloudlet, perrAddr string) {
+func (s *CloudletRecv) RecvHook(ctx context.Context, notice *edgeproto.Notice, buf *edgeproto.Cloudlet, perrAddr string) {
 	// register cloudlet key on sendrecv for CRM, otherwise the
 	// ExecRequest messages it tries to send back to the controller
 	// will get filtered by UpdateOk above.

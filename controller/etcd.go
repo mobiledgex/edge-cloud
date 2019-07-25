@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -12,8 +13,10 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 	"github.com/coreos/etcd/mvcc/mvccpb"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/opentracing/opentracing-go"
 )
 
 type EtcdClient struct {
@@ -61,14 +64,15 @@ func (e *EtcdClient) CheckConnected(tries int, retryTime time.Duration) error {
 }
 
 // create fails if key already exists
-func (e *EtcdClient) Create(key, val string) (int64, error) {
+func (e *EtcdClient) Create(ctx context.Context, key, val string) (int64, error) {
 	if e.client == nil {
 		return 0, objstore.ErrKVStoreNotInitialized
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
-	txn := e.client.Txn(ctx)
+	txnctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
+	txn := e.client.Txn(txnctx)
 	txn = txn.If(clientv3.Compare(clientv3.Version(key), "=", 0))
-	txn = txn.Then(clientv3.OpPut(key, val))
+	txn = txn.Then(clientv3.OpPut(key, val),
+		clientv3.OpPut(getSpanKey(), log.SpanToString(ctx)))
 	resp, err := txn.Commit()
 	cancel()
 	if err != nil {
@@ -82,19 +86,20 @@ func (e *EtcdClient) Create(key, val string) (int64, error) {
 }
 
 // update fails if key does not exist
-func (e *EtcdClient) Update(key, val string, version int64) (int64, error) {
+func (e *EtcdClient) Update(ctx context.Context, key, val string, version int64) (int64, error) {
 	if e.client == nil {
 		return 0, objstore.ErrKVStoreNotInitialized
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
-	txn := e.client.Txn(ctx)
+	txnctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
+	txn := e.client.Txn(txnctx)
 	if version == objstore.ObjStoreUpdateVersionAny {
 		// version 0 means it doesn't exist yet
 		txn = txn.If(clientv3.Compare(clientv3.Version(key), "!=", 0))
 	} else {
 		txn = txn.If(clientv3.Compare(clientv3.Version(key), "=", version))
 	}
-	txn = txn.Then(clientv3.OpPut(key, val))
+	txn = txn.Then(clientv3.OpPut(key, val),
+		clientv3.OpPut(getSpanKey(), log.SpanToString(ctx)))
 	resp, err := txn.Commit()
 	cancel()
 	if err != nil {
@@ -107,29 +112,34 @@ func (e *EtcdClient) Update(key, val string, version int64) (int64, error) {
 	return resp.Header.Revision, nil
 }
 
-func (e *EtcdClient) Delete(key string) (int64, error) {
+func (e *EtcdClient) Delete(ctx context.Context, key string) (int64, error) {
 	if e.client == nil {
 		return 0, objstore.ErrKVStoreNotInitialized
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
-	resp, err := e.client.Delete(ctx, key)
+	txnctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
+	txn := e.client.Txn(txnctx)
+	txn = txn.Then(clientv3.OpDelete(key),
+		clientv3.OpPut(getSpanKey(), log.SpanToString(ctx)))
+	resp, err := txn.Commit()
 	cancel()
 	if err != nil {
 		return 0, err
 	}
-	if resp.Deleted == 0 {
+	if !resp.Succeeded {
 		return 0, objstore.ErrKVStoreKeyNotFound
 	}
 	log.DebugLog(log.DebugLevelEtcd, "deleted data", "key", key, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
 }
 
-func (e *EtcdClient) Get(key string) ([]byte, int64, int64, error) {
+func (e *EtcdClient) Get(key string, ops ...objstore.KVOp) ([]byte, int64, int64, error) {
 	if e.client == nil {
 		return nil, 0, 0, objstore.ErrKVStoreNotInitialized
 	}
+	etcdOps := edgeproto.GetSTMOpts(ops...)
+
 	ctx, cancel := context.WithTimeout(context.Background(), ReadRequestTimeout)
-	resp, err := e.client.Get(ctx, key)
+	resp, err := e.client.Get(ctx, key, etcdOps...)
 	cancel()
 	if err != nil {
 		return nil, 0, 0, err
@@ -142,17 +152,17 @@ func (e *EtcdClient) Get(key string) ([]byte, int64, int64, error) {
 	return obj.Value, obj.Version, obj.ModRevision, nil
 }
 
-func (e *EtcdClient) Put(key, val string, ops ...objstore.KVOp) (int64, error) {
+func (e *EtcdClient) Put(ctx context.Context, key, val string, ops ...objstore.KVOp) (int64, error) {
 	if e.client == nil {
 		return 0, objstore.ErrKVStoreNotInitialized
 	}
-	opts := objstore.GetKVOptions(ops)
-	etcdOps := make([]clientv3.OpOption, 0)
-	if opts.LeaseID != 0 {
-		etcdOps = append(etcdOps, clientv3.WithLease(clientv3.LeaseID(opts.LeaseID)))
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
-	resp, err := e.client.Put(ctx, key, val, etcdOps...)
+	etcdOps := edgeproto.GetSTMOpts(ops...)
+
+	txnctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
+	txn := e.client.Txn(txnctx)
+	txn = txn.Then(clientv3.OpPut(key, val, etcdOps...),
+		clientv3.OpPut(getSpanKey(), log.SpanToString(ctx)))
+	resp, err := txn.Commit()
 	cancel()
 	if err != nil {
 		return 0, err
@@ -224,27 +234,30 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 	data := objstore.SyncCbData{}
 	for !done {
 		if refresh {
+			ctx := context.Background()
+			span, ctx := opentracing.StartSpanFromContext(ctx, "sync-refresh")
 			data.Action = objstore.SyncListStart
 			data.Key = nil
 			data.Value = nil
 			data.Rev = 0
-			cb(&data)
+			cb(ctx, &data)
 
 			data.Action = objstore.SyncList
 			err = e.List(key, func(key, val []byte, rev int64) error {
 				data.Key = key
 				data.Value = val
 				data.Rev = rev
-				log.DebugLog(log.DebugLevelEtcd, "sync list data", "key", string(key), "val", string(val), "rev", rev)
-				cb(&data)
+				log.SpanLog(ctx, log.DebugLevelEtcd, "sync list data", "key", string(key), "val", string(val), "rev", rev)
+				cb(ctx, &data)
 				watchRev = rev
 				return nil
 			})
 			data.Action = objstore.SyncListEnd
 			data.Key = nil
 			data.Value = nil
-			cb(&data)
+			cb(ctx, &data)
 			refresh = false
+			span.Finish()
 		}
 		err = nil
 		ch := e.client.Watch(ctx, key, clientv3.WithPrefix(), clientv3.WithRev(watchRev))
@@ -259,6 +272,9 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				err = resp.Err()
 				break
 			}
+			span := e.spanForRev(resp.Header.Revision, "etcd-watch")
+			span.SetTag("rev", resp.Header.Revision)
+			ctx := opentracing.ContextWithSpan(context.Background(), span)
 			for ii, event := range resp.Events {
 				if event.Type == mvccpb.PUT {
 					data.Action = objstore.SyncUpdate
@@ -274,9 +290,10 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				} else {
 					data.MoreEvents = true
 				}
-				log.DebugLog(log.DebugLevelEtcd, "watch data", "key", string(data.Key), "val", string(data.Value), "rev", data.Rev, "more-events", data.MoreEvents)
-				cb(&data)
+				log.SpanLog(ctx, log.DebugLevelEtcd, "watch data", "key", string(data.Key), "val", string(data.Value), "more-events", data.MoreEvents)
+				cb(ctx, &data)
 			}
+			span.Finish()
 		}
 		if err == rpctypes.ErrCompacted {
 			// history does not exist. Grab all the keys
@@ -290,11 +307,15 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 	return nil
 }
 
-func (e *EtcdClient) ApplySTM(apply func(concurrency.STM) error) (int64, error) {
-	resp, err := concurrency.NewSTM(e.client, apply)
+func (e *EtcdClient) ApplySTM(ctx context.Context, apply func(concurrency.STM) error) (int64, error) {
+	resp, err := concurrency.NewSTM(e.client, func(stm concurrency.STM) error {
+		stm.Put(getSpanKey(), log.SpanToString(ctx))
+		return apply(stm)
+	})
 	if err != nil {
 		return 0, err
 	}
+	log.SpanLog(ctx, log.DebugLevelEtcd, "apply stm", "rev", resp.Header.Revision, "resp", resp)
 	return resp.Header.Revision, nil
 }
 
@@ -334,4 +355,16 @@ func (e *EtcdClient) KeepAlive(ctx context.Context, leaseID int64) error {
 		}
 	}
 	return nil
+}
+
+func (e *EtcdClient) spanForRev(rev int64, spanName string) opentracing.Span {
+	val, _, _, err := e.Get(getSpanKey(), objstore.WithRevision(rev))
+	if err != nil {
+		return log.StartSpan(log.DebugLevelEtcd, spanName)
+	}
+	return log.SpanFromString(string(val), spanName)
+}
+
+func getSpanKey() string {
+	return fmt.Sprintf("%d/SpanEtcdKey", objstore.GetRegion())
 }

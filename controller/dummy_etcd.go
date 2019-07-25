@@ -44,7 +44,7 @@ func (e *dummyEtcd) Stop() {
 	e.vers = nil
 }
 
-func (e *dummyEtcd) Create(key, val string) (int64, error) {
+func (e *dummyEtcd) Create(ctx context.Context, key, val string) (int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
@@ -59,11 +59,11 @@ func (e *dummyEtcd) Create(key, val string) (int64, error) {
 	e.rev++
 	e.modRev[key] = e.rev
 	log.DebugLog(log.DebugLevelEtcd, "Created", "key", key, "val", val, "rev", e.rev)
-	e.triggerWatcher(objstore.SyncUpdate, key, val, e.rev)
+	e.triggerWatcher(ctx, objstore.SyncUpdate, key, val, e.rev)
 	return e.rev, nil
 }
 
-func (e *dummyEtcd) Update(key, val string, version int64) (int64, error) {
+func (e *dummyEtcd) Update(ctx context.Context, key, val string, version int64) (int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
@@ -83,11 +83,11 @@ func (e *dummyEtcd) Update(key, val string, version int64) (int64, error) {
 	e.rev++
 	e.modRev[key] = e.rev
 	log.DebugLog(log.DebugLevelEtcd, "Updated", "key", key, "val", val, "ver", ver+1, "rev", e.rev)
-	e.triggerWatcher(objstore.SyncUpdate, key, val, e.rev)
+	e.triggerWatcher(ctx, objstore.SyncUpdate, key, val, e.rev)
 	return e.rev, nil
 }
 
-func (e *dummyEtcd) Put(key, val string, ops ...objstore.KVOp) (int64, error) {
+func (e *dummyEtcd) Put(ctx context.Context, key, val string, ops ...objstore.KVOp) (int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
@@ -102,11 +102,11 @@ func (e *dummyEtcd) Put(key, val string, ops ...objstore.KVOp) (int64, error) {
 	e.rev++
 	e.modRev[key] = e.rev
 	log.DebugLog(log.DebugLevelEtcd, "Put", "key", key, "val", val, "ver", ver+1, "rev", e.rev)
-	e.triggerWatcher(objstore.SyncUpdate, key, val, e.rev)
+	e.triggerWatcher(ctx, objstore.SyncUpdate, key, val, e.rev)
 	return e.rev, nil
 }
 
-func (e *dummyEtcd) Delete(key string) (int64, error) {
+func (e *dummyEtcd) Delete(ctx context.Context, key string) (int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
@@ -117,11 +117,11 @@ func (e *dummyEtcd) Delete(key string) (int64, error) {
 	delete(e.modRev, key)
 	e.rev++
 	log.DebugLog(log.DebugLevelEtcd, "Delete", "key", key, "rev", e.rev)
-	e.triggerWatcher(objstore.SyncDelete, key, "", e.rev)
+	e.triggerWatcher(ctx, objstore.SyncDelete, key, "", e.rev)
 	return e.rev, nil
 }
 
-func (e *dummyEtcd) Get(key string) ([]byte, int64, int64, error) {
+func (e *dummyEtcd) Get(key string, opts ...objstore.KVOp) ([]byte, int64, int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
@@ -180,7 +180,7 @@ func (e *dummyEtcd) Sync(ctx context.Context, prefix string, cb objstore.SyncCb)
 	data := objstore.SyncCbData{}
 	data.Action = objstore.SyncListStart
 	data.Rev = 0
-	cb(&data)
+	cb(ctx, &data)
 	for key, val := range e.db {
 		if strings.HasPrefix(key, prefix) {
 			log.DebugLog(log.DebugLevelEtcd, "sync list data", "key", key, "val", val, "rev", e.rev)
@@ -188,13 +188,13 @@ func (e *dummyEtcd) Sync(ctx context.Context, prefix string, cb objstore.SyncCb)
 			data.Key = []byte(key)
 			data.Value = []byte(val)
 			data.Rev = e.rev
-			cb(&data)
+			cb(ctx, &data)
 		}
 	}
 	data.Action = objstore.SyncListEnd
 	data.Key = nil
 	data.Value = nil
-	cb(&data)
+	cb(ctx, &data)
 
 	e.mux.Unlock()
 	<-ctx.Done()
@@ -205,7 +205,7 @@ func (e *dummyEtcd) Sync(ctx context.Context, prefix string, cb objstore.SyncCb)
 	return nil
 }
 
-func (e *dummyEtcd) triggerWatcher(action objstore.SyncCbAction, key, val string, rev int64) {
+func (e *dummyEtcd) triggerWatcher(ctx context.Context, action objstore.SyncCbAction, key, val string, rev int64) {
 	for prefix, watch := range e.watchers {
 		if strings.HasPrefix(key, prefix) {
 			data := objstore.SyncCbData{
@@ -215,7 +215,7 @@ func (e *dummyEtcd) triggerWatcher(action objstore.SyncCbAction, key, val string
 				Rev:    rev,
 			}
 			log.DebugLog(log.DebugLevelEtcd, "watch data", "key", key, "val", val, "rev", rev)
-			watch.cb(&data)
+			watch.cb(ctx, &data)
 		}
 	}
 }
@@ -229,7 +229,7 @@ func (e *dummyEtcd) KeepAlive(ctx context.Context, leaseID int64) error {
 }
 
 // Based on clientv3/concurrency/stm.go
-func (e *dummyEtcd) ApplySTM(apply func(concurrency.STM) error) (int64, error) {
+func (e *dummyEtcd) ApplySTM(ctx context.Context, apply func(concurrency.STM) error) (int64, error) {
 	stm := dummySTM{client: e}
 	var err error
 	var rev int64 = 0
@@ -240,7 +240,7 @@ func (e *dummyEtcd) ApplySTM(apply func(concurrency.STM) error) (int64, error) {
 		if err != nil {
 			break
 		}
-		rev, err = e.commit(&stm)
+		rev, err = e.commit(ctx, &stm)
 		if err == nil {
 			break
 		}
@@ -253,7 +253,7 @@ func (e *dummyEtcd) ApplySTM(apply func(concurrency.STM) error) (int64, error) {
 	return rev, err
 }
 
-func (e *dummyEtcd) commit(stm *dummySTM) (int64, error) {
+func (e *dummyEtcd) commit(ctx context.Context, stm *dummySTM) (int64, error) {
 	// This implements etcd's SerializableSnapshot isolation model,
 	// which checks for both read and write conflicts.
 	e.mux.Lock()
@@ -304,14 +304,14 @@ func (e *dummyEtcd) commit(stm *dummySTM) (int64, error) {
 			delete(e.modRev, key)
 			log.DebugLog(log.DebugLevelEtcd, "Delete",
 				"key", key, "rev", e.rev)
-			e.triggerWatcher(objstore.SyncDelete, key, "", e.rev)
+			e.triggerWatcher(ctx, objstore.SyncDelete, key, "", e.rev)
 		} else {
 			e.db[key] = val
 			e.vers[key] = ver + 1
 			e.modRev[key] = e.rev
 			log.DebugLog(log.DebugLevelEtcd, "Commit", "key", key,
 				"val", val, "ver", ver+1, "rev", e.rev)
-			e.triggerWatcher(objstore.SyncUpdate, key, val, e.rev)
+			e.triggerWatcher(ctx, objstore.SyncUpdate, key, val, e.rev)
 		}
 	}
 	return e.rev, nil

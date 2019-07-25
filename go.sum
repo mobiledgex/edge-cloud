@@ -338,6 +338,7 @@ github.com/mobiledgex/yaml v2.1.0+incompatible/go.mod h1:GpldZ1HpZK00hDwW4RRAs95
 github.com/mobiledgex/yaml/v2 v2.2.3 h1:t2o7r7FpsizrRJ420STIxN9I5mWnZr8yYdeTYnu+8q8=
 github.com/mobiledgex/yaml/v2 v2.2.3+incompatible/go.mod h1:9xwjeLnIOTcA1fPBSAYKGRjeRy/bP/LnodFNfuZ9kqE=
 github.com/mobiledgex/yaml/v2 v2.2.3/go.mod h1:9xwjeLnIOTcA1fPBSAYKGRjeRy/bP/LnodFNfuZ9kqE=
+github.com/mobiledgex/yaml/v2 v2.2.3+incompatible/go.mod h1:9xwjeLnIOTcA1fPBSAYKGRjeRy/bP/LnodFNfuZ9kqE=
 github.com/mobiledgex/yaml/v2 v2.2.4 h1:9biPviMHWPA+THM6GVuR8Rp10JmP7rFfizgDFpSXNpA=
 github.com/mobiledgex/yaml/v2 v2.2.4/go.mod h1:9xwjeLnIOTcA1fPBSAYKGRjeRy/bP/LnodFNfuZ9kqE=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
@@ -362,6 +363,8 @@ github.com/opencontainers/image-spec v1.0.1 h1:JMemWkRwHx4Zj+fVxWoMCFm/8sYGGrUVo
 github.com/opencontainers/image-spec v1.0.1/go.mod h1:BtxoFyWECRxE4U/7sNtV5W15zMzWCbyJoFRP3s7yZA0=
 github.com/opencontainers/runc v0.1.1 h1:GlxAyO6x8rfZYN9Tt0Kti5a/cP41iuiO2yYT0IJGY8Y=
 github.com/opencontainers/runc v0.1.1/go.mod h1:qT5XzbpPznkRYVz/mWwUaVBUv2rmF59PVA73FjuZG0U=
+github.com/opentracing/opentracing-go v1.1.0 h1:pWlfV3Bxv7k65HYwkikxat0+s3pV4bsqf19k25Ur8rU=
+github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/openzipkin/zipkin-go v0.1.1/go.mod h1:NtoC/o8u3JlF1lSlyPNswIbeQH9bJTmOf0Erfk+hxe8=
 github.com/openzipkin/zipkin-go v0.1.3/go.mod h1:NtoC/o8u3JlF1lSlyPNswIbeQH9bJTmOf0Erfk+hxe8=
 github.com/openzipkin/zipkin-go v0.1.5/go.mod h1:8NDCjKHoHW1XOp/vf3lClHem0b91r4433B67KXyKXAQ=
@@ -533,6 +536,12 @@ github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UV
 github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07/go.mod h1:kDXzergiv9cbyO7IOYJZWg1U88JhDg3PB6klq9Hg2pA=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 h1:LnC5Kc/wtumK+WB441p7ynQJzVuNRJiqddSIE3IlSEQ=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
+github.com/uber/jaeger-client-go v2.16.0+incompatible h1:Q2Pp6v3QYiocMxomCaJuwQGFt7E53bPYqEgug/AoBtY=
+github.com/uber/jaeger-client-go v2.16.0+incompatible/go.mod h1:WVhlPFC8FDjOFMMWRy2pZqQJSXxYSwNYOkTr/Z6d3Kk=
+github.com/uber/jaeger-client-go v2.16.1-0.20190705220040-402bec9e6ead+incompatible h1:zW3P4647YDG+W0uJTg770BEHC9P3JRxtKMGAwq7KbvE=
+github.com/uber/jaeger-client-go v2.16.1-0.20190705220040-402bec9e6ead+incompatible/go.mod h1:WVhlPFC8FDjOFMMWRy2pZqQJSXxYSwNYOkTr/Z6d3Kk=
+github.com/uber/jaeger-lib v2.0.0+incompatible h1:iMSCV0rmXEogjNWPh2D0xk9YVKvrtGoHJNe9ebLu/pw=
+github.com/uber/jaeger-lib v2.0.0+incompatible/go.mod h1:ComeNDZlWwrWnDv8aPp0Ba6+uUTzImX/AauajbLI56U=
 github.com/uber/prototool v1.7.0 h1:Ovi+LHB4CX6p1BpDSx5HHbsUV/HJhf0B13DvM0Czvf0=
 github.com/uber/prototool v1.7.0/go.mod h1:0o3beySzHomA5oaVIGTR9z5lkPtjy4mbFuDpqIaNyT4=
 github.com/uber/prototool v1.8.0 h1:AByDUuTG5nphja3+APWR04YPUjp7Ac0fZp/St1RKHlY=

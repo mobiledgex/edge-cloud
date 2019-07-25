@@ -77,6 +77,7 @@ import "testing"
 import "context"
 import "time"
 import "github.com/stretchr/testify/require"
+import "github.com/mobiledgex/edge-cloud/log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -236,26 +237,33 @@ func NewClientAppApi(api edgeproto.AppApiClient) *AppCommonApi {
 }
 
 func InternalAppTest(t *testing.T, test string, api edgeproto.AppApiServer, testData []edgeproto.App) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalAppTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicAppCudTest(t, NewInternalAppApi(api), testData)
+		basicAppCudTest(t, ctx, NewInternalAppApi(api), testData)
 	case "show":
-		basicAppShowTest(t, NewInternalAppApi(api), testData)
+		basicAppShowTest(t, ctx, NewInternalAppApi(api), testData)
 	}
 }
 
 func ClientAppTest(t *testing.T, test string, api edgeproto.AppApiClient, testData []edgeproto.App) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientAppTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicAppCudTest(t, NewClientAppApi(api), testData)
+		basicAppCudTest(t, ctx, NewClientAppApi(api), testData)
 	case "show":
-		basicAppShowTest(t, NewClientAppApi(api), testData)
+		basicAppShowTest(t, ctx, NewClientAppApi(api), testData)
 	}
 }
 
-func basicAppShowTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) {
+func basicAppShowTest(t *testing.T, ctx context.Context, api *AppCommonApi, testData []edgeproto.App) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowApp{}
 	show.Init()
@@ -268,9 +276,8 @@ func basicAppShowTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App)
 	}
 }
 
-func GetApp(t *testing.T, api *AppCommonApi, key *edgeproto.AppKey, out *edgeproto.App) bool {
+func GetApp(t *testing.T, ctx context.Context, api *AppCommonApi, key *edgeproto.AppKey, out *edgeproto.App) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowApp{}
 	show.Init()
@@ -285,9 +292,8 @@ func GetApp(t *testing.T, api *AppCommonApi, key *edgeproto.AppKey, out *edgepro
 	return found
 }
 
-func basicAppCudTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) {
+func basicAppCudTest(t *testing.T, ctx context.Context, api *AppCommonApi, testData []edgeproto.App) {
 	var err error
-	ctx := context.TODO()
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
@@ -295,14 +301,14 @@ func basicAppCudTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) 
 	}
 
 	// test create
-	createAppData(t, api, testData)
+	createAppData(t, ctx, api, testData)
 
 	// test duplicate create - should fail
 	_, err = api.CreateApp(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate App")
 
 	// test show all items
-	basicAppShowTest(t, api, testData)
+	basicAppShowTest(t, ctx, api, testData)
 
 	// test delete
 	_, err = api.DeleteApp(ctx, &testData[0])
@@ -329,16 +335,23 @@ func basicAppCudTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) 
 }
 
 func InternalAppCreate(t *testing.T, api edgeproto.AppApiServer, testData []edgeproto.App) {
-	createAppData(t, NewInternalAppApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "InternalAppCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createAppData(t, ctx, NewInternalAppApi(api), testData)
 }
 
 func ClientAppCreate(t *testing.T, api edgeproto.AppApiClient, testData []edgeproto.App) {
-	createAppData(t, NewClientAppApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "ClientAppCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createAppData(t, ctx, NewClientAppApi(api), testData)
 }
 
-func createAppData(t *testing.T, api *AppCommonApi, testData []edgeproto.App) {
+func createAppData(t *testing.T, ctx context.Context, api *AppCommonApi, testData []edgeproto.App) {
 	var err error
-	ctx := context.TODO()
 
 	for _, obj := range testData {
 		_, err = api.CreateApp(ctx, &obj)
