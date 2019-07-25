@@ -110,7 +110,7 @@ func main() {
 	addrs := strings.Split(*notifyAddrs, ",")
 	notifyClient = notify.NewClient(addrs, *tlsCertFile)
 	notifyClient.SetFilterByCloudletKey()
-	InitNotify(notifyClient, controllerData)
+	InitClientNotify(notifyClient, controllerData)
 	notifyClient.Start()
 	defer notifyClient.Stop()
 	reflection.Register(grpcServer)
@@ -118,7 +118,7 @@ func main() {
 	//setup crm notify listener (for shepherd)
 	var notifyServer notify.ServerMgr
 	notifyServer.Init()
-	initCrmNotify(&notifyServer)
+	initSrvNotify(&notifyServer)
 	notifyServer.Start(*notifySrvAddr, *tlsCertFile)
 	defer notifyServer.Stop()
 
@@ -162,10 +162,4 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr stri
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper)
 	err := platform.Init(&pc)
 	return err
-}
-
-//shepherd only needs these two for now, will need to be able to recieve metrics later as well
-func initCrmNotify(notifyServer *notify.ServerMgr) {
-	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
-	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
 }
