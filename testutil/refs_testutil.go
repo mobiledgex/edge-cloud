@@ -10,6 +10,7 @@ import "testing"
 import "context"
 import "time"
 import "github.com/stretchr/testify/require"
+import "github.com/mobiledgex/edge-cloud/log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -139,22 +140,29 @@ func NewClientCloudletRefsApi(api edgeproto.CloudletRefsApiClient) *CloudletRefs
 }
 
 func InternalCloudletRefsTest(t *testing.T, test string, api edgeproto.CloudletRefsApiServer, testData []edgeproto.CloudletRefs) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalCloudletRefsTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "show":
-		basicCloudletRefsShowTest(t, NewInternalCloudletRefsApi(api), testData)
+		basicCloudletRefsShowTest(t, ctx, NewInternalCloudletRefsApi(api), testData)
 	}
 }
 
 func ClientCloudletRefsTest(t *testing.T, test string, api edgeproto.CloudletRefsApiClient, testData []edgeproto.CloudletRefs) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientCloudletRefsTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "show":
-		basicCloudletRefsShowTest(t, NewClientCloudletRefsApi(api), testData)
+		basicCloudletRefsShowTest(t, ctx, NewClientCloudletRefsApi(api), testData)
 	}
 }
 
-func basicCloudletRefsShowTest(t *testing.T, api *CloudletRefsCommonApi, testData []edgeproto.CloudletRefs) {
+func basicCloudletRefsShowTest(t *testing.T, ctx context.Context, api *CloudletRefsCommonApi, testData []edgeproto.CloudletRefs) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowCloudletRefs{}
 	show.Init()
@@ -167,9 +175,8 @@ func basicCloudletRefsShowTest(t *testing.T, api *CloudletRefsCommonApi, testDat
 	}
 }
 
-func GetCloudletRefs(t *testing.T, api *CloudletRefsCommonApi, key *edgeproto.CloudletKey, out *edgeproto.CloudletRefs) bool {
+func GetCloudletRefs(t *testing.T, ctx context.Context, api *CloudletRefsCommonApi, key *edgeproto.CloudletKey, out *edgeproto.CloudletRefs) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowCloudletRefs{}
 	show.Init()
@@ -298,22 +305,29 @@ func NewClientClusterRefsApi(api edgeproto.ClusterRefsApiClient) *ClusterRefsCom
 }
 
 func InternalClusterRefsTest(t *testing.T, test string, api edgeproto.ClusterRefsApiServer, testData []edgeproto.ClusterRefs) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalClusterRefsTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "show":
-		basicClusterRefsShowTest(t, NewInternalClusterRefsApi(api), testData)
+		basicClusterRefsShowTest(t, ctx, NewInternalClusterRefsApi(api), testData)
 	}
 }
 
 func ClientClusterRefsTest(t *testing.T, test string, api edgeproto.ClusterRefsApiClient, testData []edgeproto.ClusterRefs) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientClusterRefsTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "show":
-		basicClusterRefsShowTest(t, NewClientClusterRefsApi(api), testData)
+		basicClusterRefsShowTest(t, ctx, NewClientClusterRefsApi(api), testData)
 	}
 }
 
-func basicClusterRefsShowTest(t *testing.T, api *ClusterRefsCommonApi, testData []edgeproto.ClusterRefs) {
+func basicClusterRefsShowTest(t *testing.T, ctx context.Context, api *ClusterRefsCommonApi, testData []edgeproto.ClusterRefs) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowClusterRefs{}
 	show.Init()
@@ -326,9 +340,8 @@ func basicClusterRefsShowTest(t *testing.T, api *ClusterRefsCommonApi, testData 
 	}
 }
 
-func GetClusterRefs(t *testing.T, api *ClusterRefsCommonApi, key *edgeproto.ClusterInstKey, out *edgeproto.ClusterRefs) bool {
+func GetClusterRefs(t *testing.T, ctx context.Context, api *ClusterRefsCommonApi, key *edgeproto.ClusterInstKey, out *edgeproto.ClusterRefs) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowClusterRefs{}
 	show.Init()

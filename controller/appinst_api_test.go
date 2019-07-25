@@ -17,6 +17,9 @@ import (
 
 func TestAppInstApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
+	log.InitTracer()
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
 	objstore.InitRegion(1)
 	reduceInfoTimeouts()
 
@@ -41,7 +44,7 @@ func TestAppInstApi(t *testing.T) {
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
-	insertCloudletInfo(testutil.CloudletInfoData)
+	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 	testutil.InternalClusterInstCreate(t, &clusterInstApi, testutil.ClusterInstData)
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
@@ -52,7 +55,7 @@ func TestAppInstApi(t *testing.T) {
 	// create all the app insts will fail.
 	responder.SetSimulateAppCreateFailure(true)
 	for _, obj := range testutil.AppInstData {
-		err := appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
+		err := appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.NotNil(t, err, "Create app inst responder failures")
 		// make sure error matches responder
 		// if app-inst triggers auto-cluster, the error will be for a cluster
@@ -67,7 +70,7 @@ func TestAppInstApi(t *testing.T) {
 	require.Equal(t, clusterInstCnt, len(clusterInstApi.cache.Objs))
 
 	testutil.InternalAppInstTest(t, "cud", &appInstApi, testutil.AppInstData)
-	InternalAppInstCachedFieldsTest(t)
+	InternalAppInstCachedFieldsTest(t, ctx)
 	// check cluster insts created (includes explicit and auto)
 	testutil.InternalClusterInstTest(t, "show", &clusterInstApi,
 		append(testutil.ClusterInstData, testutil.ClusterInstAutoData...))
@@ -81,48 +84,48 @@ func TestAppInstApi(t *testing.T) {
 	// Set responder to fail delete.
 	responder.SetSimulateAppDeleteFailure(true)
 	obj := testutil.AppInstData[0]
-	err := appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	err := appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "Delete AppInst responder failure")
 	responder.SetSimulateAppDeleteFailure(false)
-	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_READY)
+	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
 
 	obj = testutil.AppInstData[0]
 	// check override of error DELETE_ERROR
-	err = forceAppInstState(&obj, edgeproto.TrackedState_DELETE_ERROR)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_DELETE_ERROR)
 	require.Nil(t, err, "force state")
-	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_DELETE_ERROR)
-	err = appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_DELETE_ERROR)
+	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "create overrides delete error")
-	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_READY)
+	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
 
 	// check override of error CREATE_ERROR
-	err = forceAppInstState(&obj, edgeproto.TrackedState_CREATE_ERROR)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR)
 	require.Nil(t, err, "force state")
-	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_CREATE_ERROR)
-	err = appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_CREATE_ERROR)
+	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "delete overrides create error")
-	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
+	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
 
 	// override CRM error
 	responder.SetSimulateAppCreateFailure(true)
 	responder.SetSimulateAppDeleteFailure(true)
 	obj = testutil.AppInstData[0]
 	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_ERRORS
-	err = appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "override crm error")
 	obj = testutil.AppInstData[0]
 	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_ERRORS
-	err = appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "override crm error")
 
 	// ignore CRM
 	obj = testutil.AppInstData[0]
 	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
-	err = appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "ignore crm")
 	obj = testutil.AppInstData[0]
 	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
-	err = appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "ignore crm")
 	responder.SetSimulateAppCreateFailure(false)
 	responder.SetSimulateAppDeleteFailure(false)
@@ -149,9 +152,8 @@ func TestAppInstApi(t *testing.T) {
 	dummy.Stop()
 }
 
-func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cCloudletApi *testutil.CloudletCommonApi, cAppInstApi *testutil.AppInstCommonApi) {
+func appInstCachedFieldsTest(t *testing.T, ctx context.Context, cAppApi *testutil.AppCommonApi, cCloudletApi *testutil.CloudletCommonApi, cAppInstApi *testutil.AppInstCommonApi) {
 	// test assumes test data has already been loaded
-	ctx := context.TODO()
 
 	// update app and check that app insts are updated
 	updater := edgeproto.App{}
@@ -192,22 +194,25 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 	require.True(t, len(show.Data) > 0, "number of matching app insts")
 }
 
-func InternalAppInstCachedFieldsTest(t *testing.T) {
+func InternalAppInstCachedFieldsTest(t *testing.T, ctx context.Context) {
 	cAppApi := testutil.NewInternalAppApi(&appApi)
 	cCloudletApi := testutil.NewInternalCloudletApi(&cloudletApi)
 	cAppInstApi := testutil.NewInternalAppInstApi(&appInstApi)
-	appInstCachedFieldsTest(t, cAppApi, cCloudletApi, cAppInstApi)
+	appInstCachedFieldsTest(t, ctx, cAppApi, cCloudletApi, cAppInstApi)
 }
 
-func ClientAppInstCachedFieldsTest(t *testing.T, appApi edgeproto.AppApiClient, cloudletApi edgeproto.CloudletApiClient, appInstApi edgeproto.AppInstApiClient) {
+func ClientAppInstCachedFieldsTest(t *testing.T, ctx context.Context, appApi edgeproto.AppApiClient, cloudletApi edgeproto.CloudletApiClient, appInstApi edgeproto.AppInstApiClient) {
 	cAppApi := testutil.NewClientAppApi(appApi)
 	cCloudletApi := testutil.NewClientCloudletApi(cloudletApi)
 	cAppInstApi := testutil.NewClientAppInstApi(appInstApi)
-	appInstCachedFieldsTest(t, cAppApi, cCloudletApi, cAppInstApi)
+	appInstCachedFieldsTest(t, ctx, cAppApi, cCloudletApi, cAppInstApi)
 }
 
 func TestAutoClusterInst(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
+	log.InitTracer()
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
 	objstore.InitRegion(1)
 	reduceInfoTimeouts()
 
@@ -226,20 +231,20 @@ func TestAutoClusterInst(t *testing.T) {
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
-	insertCloudletInfo(testutil.CloudletInfoData)
+	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 
 	// since cluster inst does not exist, it will be auto-created
 	copy := testutil.AppInstData[0]
 	copy.Key.ClusterInstKey.ClusterKey.Name = ClusterAutoPrefix
-	err := appInstApi.CreateAppInst(&copy, &testutil.CudStreamoutAppInst{})
+	err := appInstApi.CreateAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "create app inst")
 	clusterInst := edgeproto.ClusterInst{}
 	found := clusterInstApi.Get(&copy.Key.ClusterInstKey, &clusterInst)
 	require.True(t, found, "get auto-clusterinst")
 	require.True(t, clusterInst.Auto, "clusterinst is auto")
 	// delete appinst should also delete clusterinst
-	err = appInstApi.DeleteAppInst(&copy, &testutil.CudStreamoutAppInst{})
+	err = appInstApi.DeleteAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "delete app inst")
 	found = clusterInstApi.Get(&copy.Key.ClusterInstKey, &clusterInst)
 	require.False(t, found, "get auto-clusterinst")
@@ -247,9 +252,9 @@ func TestAutoClusterInst(t *testing.T) {
 	dummy.Stop()
 }
 
-func checkAppInstState(t *testing.T, api *testutil.AppInstCommonApi, in *edgeproto.AppInst, state edgeproto.TrackedState) {
+func checkAppInstState(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, in *edgeproto.AppInst, state edgeproto.TrackedState) {
 	out := edgeproto.AppInst{}
-	found := testutil.GetAppInst(t, api, &in.Key, &out)
+	found := testutil.GetAppInst(t, ctx, api, &in.Key, &out)
 	if state == edgeproto.TrackedState_NOT_PRESENT {
 		require.False(t, found, "get app inst")
 	} else {
@@ -258,8 +263,8 @@ func checkAppInstState(t *testing.T, api *testutil.AppInstCommonApi, in *edgepro
 	}
 }
 
-func forceAppInstState(in *edgeproto.AppInst, state edgeproto.TrackedState) error {
-	err := appInstApi.sync.ApplySTMWait(func(stm concurrency.STM) error {
+func forceAppInstState(ctx context.Context, in *edgeproto.AppInst, state edgeproto.TrackedState) error {
+	err := appInstApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		obj := edgeproto.AppInst{}
 		if !appInstApi.store.STMGet(stm, &in.Key, &obj) {
 			return objstore.ErrKVStoreKeyNotFound

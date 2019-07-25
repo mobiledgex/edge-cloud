@@ -1,6 +1,7 @@
 package crmutil
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,14 +25,14 @@ func NewExecReqHandler(cd *ControllerData) *ExecReqHandler {
 	return &ExecReqHandler{cd: cd}
 }
 
-func (s *ExecReqHandler) Recv(msg *edgeproto.ExecRequest) {
+func (s *ExecReqHandler) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
 	// spawn go process so we don't stall notify messages
 	go func() {
 		err := s.cd.ProcessExecReq(msg)
 		if err != nil {
 			msg.Err = err.Error()
 		}
-		s.cd.ExecReqSend.Update(msg)
+		s.cd.ExecReqSend.Update(ctx, msg)
 	}()
 }
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -12,6 +13,9 @@ import (
 
 func TestNotify(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelNotify)
+	log.InitTracer()
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
 	setupMatchEngine()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
@@ -31,10 +35,10 @@ func TestNotify(t *testing.T) {
 
 	// create data on server side
 	for _, app := range apps {
-		serverHandler.AppCache.Update(app, 0)
+		serverHandler.AppCache.Update(ctx, app, 0)
 	}
 	for _, appInst := range appInsts {
-		serverHandler.AppInstCache.Update(appInst, 0)
+		serverHandler.AppInstCache.Update(ctx, appInst, 0)
 	}
 	// wait for the last appInst data to show up locally
 	last := len(appInsts) - 1
@@ -44,13 +48,13 @@ func TestNotify(t *testing.T) {
 
 	// remove one appinst
 	remaining := appInsts[:last]
-	serverHandler.AppInstCache.Delete(appInsts[last], 0)
+	serverHandler.AppInstCache.Delete(ctx, appInsts[last], 0)
 	// wait for it to be gone locally
 	waitForNoAppInst(appInsts[last])
 	// check new data
 	checkAllData(t, remaining)
 	// add it back
-	serverHandler.AppInstCache.Update(appInsts[last], 0)
+	serverHandler.AppInstCache.Update(ctx, appInsts[last], 0)
 	// wait for it to be present again
 	waitForAppInst(appInsts[last])
 	checkAllData(t, appInsts)
@@ -59,7 +63,7 @@ func TestNotify(t *testing.T) {
 	// This checks that client deletes locally data
 	// that was deleted while the connection was down.
 	client.Stop()
-	serverHandler.AppInstCache.Delete(appInsts[last], 0)
+	serverHandler.AppInstCache.Delete(ctx, appInsts[last], 0)
 	client.Start()
 	waitForNoAppInst(appInsts[last])
 	checkAllData(t, remaining)

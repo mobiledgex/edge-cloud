@@ -53,12 +53,12 @@ type DmeStats struct {
 	numShards uint
 	mux       sync.Mutex
 	interval  time.Duration
-	send      func(metric *edgeproto.Metric) bool
+	send      func(ctx context.Context, metric *edgeproto.Metric) bool
 	waitGroup sync.WaitGroup
 	stop      chan struct{}
 }
 
-func NewDmeStats(interval time.Duration, numShards uint, send func(metric *edgeproto.Metric) bool) *DmeStats {
+func NewDmeStats(interval time.Duration, numShards uint, send func(ctx context.Context, metric *edgeproto.Metric) bool) *DmeStats {
 	s := DmeStats{}
 	s.shards = make([]MapShard, numShards, numShards)
 	s.numShards = numShards
@@ -107,6 +107,8 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 // stats to the controller.
 func (s *DmeStats) RunNotify() {
 	done := false
+	// for now, no tracing of stats
+	ctx := context.Background()
 	for !done {
 		select {
 		case <-time.After(s.interval):
@@ -114,7 +116,7 @@ func (s *DmeStats) RunNotify() {
 			for ii, _ := range s.shards {
 				s.shards[ii].mux.Lock()
 				for key, stat := range s.shards[ii].apiStatMap {
-					s.send(ApiStatToMetric(ts, &key, stat))
+					s.send(ctx, ApiStatToMetric(ts, &key, stat))
 				}
 				s.shards[ii].mux.Unlock()
 			}

@@ -91,7 +91,7 @@ func (s *ExecApi) SendLocalRequest(ctx context.Context, req *edgeproto.ExecReque
 	// system that matches the CloudletKey, so there should only ever
 	// be one reply.
 	var err error
-	count := execRequestSendMany.Update(req)
+	count := execRequestSendMany.Update(ctx, req)
 	if count == 0 {
 		err = fmt.Errorf("no matching CRMs")
 	} else {
@@ -114,7 +114,7 @@ func (s *ExecApi) SendLocalRequest(ctx context.Context, req *edgeproto.ExecReque
 }
 
 // Receive message from notify framework
-func (s *ExecApi) Recv(msg *edgeproto.ExecRequest) {
+func (s *ExecApi) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	sr, ok := s.requests[msg.Offer]

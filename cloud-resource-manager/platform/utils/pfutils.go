@@ -1,6 +1,7 @@
 package pfutils
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"plugin"
@@ -13,7 +14,7 @@ import (
 
 var solib = ""
 
-func GetPlatform(plat string) (pf.Platform, error) {
+func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 	// Building plugins is slow, so directly importable
 	// platforms are not built as plugins.
 	if plat == "PLATFORM_TYPE_DIND" {
@@ -26,7 +27,7 @@ func GetPlatform(plat string) (pf.Platform, error) {
 	if solib == "" {
 		solib = os.Getenv("GOPATH") + "/plugins/platforms.so"
 	}
-	log.DebugLog(log.DebugLevelMexos, "Loading plugin", "plugin", solib)
+	log.SpanLog(ctx, log.DebugLevelInfo, "Loading plugin", "plugin", solib)
 	plug, err := plugin.Open(solib)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "failed to load plugin", "plugin", solib, "platform", plat, "error", err)
@@ -34,14 +35,14 @@ func GetPlatform(plat string) (pf.Platform, error) {
 	}
 	sym, err := plug.Lookup("GetPlatform")
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "plugin does not have GetPlatform symbol", "plugin", solib)
+		log.SpanLog(ctx, log.DebugLevelInfo, "plugin does not have GetPlatform symbol", "plugin", solib)
 		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol not found", plat)
 	}
 	getPlatFunc, ok := sym.(func(plat string) (pf.Platform, error))
 	if !ok {
-		log.DebugLog(log.DebugLevelMexos, "plugin GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", "plugin", solib)
+		log.SpanLog(ctx, log.DebugLevelInfo, "plugin GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", "plugin", solib)
 		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", plat)
 	}
-	log.DebugLog(log.DebugLevelMexos, "Creating platform")
+	log.SpanLog(ctx, log.DebugLevelInfo, "Creating platform")
 	return getPlatFunc(plat)
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -20,6 +21,7 @@ var upgradeTestFilePostSuffix = "_post.etcd"
 // Walk testutils data and populate objStore
 func buildDbFromTestData(objStore objstore.KVStore, funcName string) error {
 	var key, val string
+	ctx := context.Background()
 
 	filename := upgradeTestFileLocation + "/" + funcName + upgradeTestFilePreSuffix
 	file, err := os.Open(filename)
@@ -37,7 +39,7 @@ func buildDbFromTestData(objStore objstore.KVStore, funcName string) error {
 			return fmt.Errorf("Improper formatted preupgrade .etcd file - Unmatched key, without a value.")
 		}
 		val = scanner.Text()
-		if _, err := objStore.Put(key, val); err != nil {
+		if _, err := objStore.Put(ctx, key, val); err != nil {
 			return err
 		}
 	}
@@ -130,6 +132,7 @@ func compareString(funcName, key, expected, actual string) error {
 func TestAllUpgradeFuncs(t *testing.T) {
 	objStore := dummyEtcd{}
 	objstore.InitRegion(1)
+	ctx := context.Background()
 	for ii, fn := range edgeproto.VersionHash_UpgradeFuncs {
 		if fn == nil {
 			continue
@@ -137,7 +140,7 @@ func TestAllUpgradeFuncs(t *testing.T) {
 		objStore.Start()
 		err := buildDbFromTestData(&objStore, edgeproto.VersionHash_UpgradeFuncNames[ii])
 		assert.Nil(t, err, "Unable to build db from testData")
-		err = edgeproto.RunSingleUpgrade(&objStore, fn)
+		err = edgeproto.RunSingleUpgrade(ctx, &objStore, fn)
 		assert.Nil(t, err, "Upgrade failed")
 		err = compareDbToExpected(&objStore, edgeproto.VersionHash_UpgradeFuncNames[ii])
 		assert.Nil(t, err, "Unexpected result from upgrade function")

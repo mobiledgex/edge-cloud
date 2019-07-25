@@ -15,6 +15,8 @@ func TestAppApi(t *testing.T) {
 	objstore.InitRegion(1)
 	tMode := true
 	testMode = &tMode
+	log.InitTracer()
+	defer log.FinishTracer()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -25,7 +27,7 @@ func TestAppApi(t *testing.T) {
 	defer sync.Done()
 
 	// cannot create apps without developer
-	ctx := context.TODO()
+	ctx := log.StartTestSpan(context.Background())
 	for _, obj := range testutil.AppData {
 		_, err := appApi.CreateApp(ctx, &obj)
 		require.NotNil(t, err, "Create app without developer")

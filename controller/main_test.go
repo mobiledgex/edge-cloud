@@ -25,6 +25,9 @@ func getGrpcClient(t *testing.T) (*grpc.ClientConn, error) {
 
 func TestController(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify | log.DebugLevelApi)
+	log.InitTracer()
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
 	flag.Parse() // set defaults
 	*localEtcd = true
 	*initLocalEtcd = true
@@ -46,7 +49,7 @@ func TestController(t *testing.T) {
 	NewDummyInfoResponder(&crmNotify.AppInstCache, &crmNotify.ClusterInstCache,
 		&crmNotify.AppInstInfoCache, &crmNotify.ClusterInstInfoCache)
 	for ii, _ := range testutil.CloudletInfoData {
-		crmNotify.CloudletInfoCache.Update(&testutil.CloudletInfoData[ii], 0)
+		crmNotify.CloudletInfoCache.Update(ctx, &testutil.CloudletInfoData[ii], 0)
 	}
 	go crmClient.Start()
 	defer crmClient.Stop()
@@ -84,7 +87,7 @@ func TestController(t *testing.T) {
 	require.Equal(t, len(testutil.ClusterInstData)+len(testutil.ClusterInstAutoData), len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
 	require.Equal(t, len(testutil.AppInstData), len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
 
-	ClientAppInstCachedFieldsTest(t, appClient, cloudletClient, appInstClient)
+	ClientAppInstCachedFieldsTest(t, ctx, appClient, cloudletClient, appInstClient)
 
 	WaitForCloudletInfo(len(testutil.CloudletInfoData))
 	require.Equal(t, len(testutil.CloudletInfoData), len(cloudletInfoApi.cache.Objs))
@@ -98,7 +101,6 @@ func TestController(t *testing.T) {
 	}
 
 	// test that delete checks disallow deletes of dependent objects
-	ctx := context.TODO()
 	_, err = devClient.DeleteDeveloper(ctx, &testutil.DevData[0])
 	require.NotNil(t, err)
 	_, err = operClient.DeleteOperator(ctx, &testutil.OperatorData[0])
@@ -253,7 +255,7 @@ cloudletinfos:
 	require.Nil(t, err, "create operator")
 	_, err = cloudletClient.CreateCloudlet(ctx, &data.Cloudlets[0])
 	require.Nil(t, err, "create cloudlet")
-	insertCloudletInfo(data.CloudletInfos)
+	insertCloudletInfo(ctx, data.CloudletInfos)
 
 	show := testutil.ShowApp{}
 	show.Init()

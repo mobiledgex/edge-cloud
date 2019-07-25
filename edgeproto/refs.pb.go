@@ -527,7 +527,7 @@ func NewCloudletRefsStore(kvstore objstore.KVStore) CloudletRefsStore {
 	return CloudletRefsStore{kvstore: kvstore}
 }
 
-func (s *CloudletRefsStore) Create(m *CloudletRefs, wait func(int64)) (*Result, error) {
+func (s *CloudletRefsStore) Create(ctx context.Context, m *CloudletRefs, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -537,7 +537,7 @@ func (s *CloudletRefsStore) Create(m *CloudletRefs, wait func(int64)) (*Result, 
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(ctx, key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -547,7 +547,7 @@ func (s *CloudletRefsStore) Create(m *CloudletRefs, wait func(int64)) (*Result, 
 	return &Result{}, err
 }
 
-func (s *CloudletRefsStore) Update(m *CloudletRefs, wait func(int64)) (*Result, error) {
+func (s *CloudletRefsStore) Update(ctx context.Context, m *CloudletRefs, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -558,7 +558,7 @@ func (s *CloudletRefsStore) Update(m *CloudletRefs, wait func(int64)) (*Result, 
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -568,7 +568,7 @@ func (s *CloudletRefsStore) Update(m *CloudletRefs, wait func(int64)) (*Result, 
 	return &Result{}, err
 }
 
-func (s *CloudletRefsStore) Put(m *CloudletRefs, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *CloudletRefsStore) Put(ctx context.Context, m *CloudletRefs, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -579,7 +579,7 @@ func (s *CloudletRefsStore) Put(m *CloudletRefs, wait func(int64), ops ...objsto
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val), ops...)
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}
@@ -589,13 +589,13 @@ func (s *CloudletRefsStore) Put(m *CloudletRefs, wait func(int64), ops ...objsto
 	return &Result{}, err
 }
 
-func (s *CloudletRefsStore) Delete(m *CloudletRefs, wait func(int64)) (*Result, error) {
+func (s *CloudletRefsStore) Delete(ctx context.Context, m *CloudletRefs, wait func(int64)) (*Result, error) {
 	err := m.GetKey().Validate()
 	if err != nil {
 		return nil, err
 	}
 	key := objstore.DbKeyString("CloudletRefs", m.GetKey())
-	rev, err := s.kvstore.Delete(key)
+	rev, err := s.kvstore.Delete(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -650,7 +650,7 @@ func (s *CloudletRefsStore) STMDel(stm concurrency.STM, key *CloudletKey) {
 }
 
 type CloudletRefsKeyWatcher struct {
-	cb func()
+	cb func(ctx context.Context)
 }
 
 // CloudletRefsCache caches CloudletRefs objects in memory in a hash table
@@ -659,8 +659,8 @@ type CloudletRefsCache struct {
 	Objs        map[CloudletKey]*CloudletRefs
 	Mux         util.Mutex
 	List        map[CloudletKey]struct{}
-	NotifyCb    func(obj *CloudletKey, old *CloudletRefs)
-	UpdatedCb   func(old *CloudletRefs, new *CloudletRefs)
+	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *CloudletRefs)
+	UpdatedCb   func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)
 	KeyWatchers map[CloudletKey][]*CloudletRefsKeyWatcher
 }
 
@@ -696,21 +696,21 @@ func (c *CloudletRefsCache) HasKey(key *CloudletKey) bool {
 	return found
 }
 
-func (c *CloudletRefsCache) GetAllKeys(keys map[CloudletKey]struct{}) {
+func (c *CloudletRefsCache) GetAllKeys(ctx context.Context, keys map[CloudletKey]context.Context) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
-		keys[key] = struct{}{}
+		keys[key] = ctx
 	}
 }
 
-func (c *CloudletRefsCache) Update(in *CloudletRefs, rev int64) {
-	c.UpdateModFunc(&in.Key, rev, func(old *CloudletRefs) (*CloudletRefs, bool) {
+func (c *CloudletRefsCache) Update(ctx context.Context, in *CloudletRefs, rev int64) {
+	c.UpdateModFunc(ctx, &in.Key, rev, func(old *CloudletRefs) (*CloudletRefs, bool) {
 		return in, true
 	})
 }
 
-func (c *CloudletRefsCache) UpdateModFunc(key *CloudletKey, rev int64, modFunc func(old *CloudletRefs) (new *CloudletRefs, changed bool)) {
+func (c *CloudletRefsCache) UpdateModFunc(ctx context.Context, key *CloudletKey, rev int64, modFunc func(old *CloudletRefs) (new *CloudletRefs, changed bool)) {
 	c.Mux.Lock()
 	old := c.Objs[*key]
 	new, changed := modFunc(old)
@@ -722,31 +722,33 @@ func (c *CloudletRefsCache) UpdateModFunc(key *CloudletKey, rev int64, modFunc f
 		if c.UpdatedCb != nil {
 			newCopy := &CloudletRefs{}
 			*newCopy = *new
-			defer c.UpdatedCb(old, newCopy)
+			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&new.Key, old)
+			defer c.NotifyCb(ctx, &new.Key, old)
 		}
 	}
 	c.Objs[new.Key] = new
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletRefs", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&new.Key)
+	c.TriggerKeyWatchers(ctx, &new.Key)
 }
 
-func (c *CloudletRefsCache) Delete(in *CloudletRefs, rev int64) {
+func (c *CloudletRefsCache) Delete(ctx context.Context, in *CloudletRefs, rev int64) {
 	c.Mux.Lock()
 	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	log.DebugLog(log.DebugLevelApi, "SyncDelete CloudletRefs", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key, old)
+		c.NotifyCb(ctx, &in.Key, old)
 	}
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(ctx, &in.Key)
 }
 
-func (c *CloudletRefsCache) Prune(validKeys map[CloudletKey]struct{}) {
+func (c *CloudletRefsCache) Prune(ctx context.Context, validKeys map[CloudletKey]struct{}) {
 	notify := make(map[CloudletKey]*CloudletRefs)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
@@ -760,9 +762,9 @@ func (c *CloudletRefsCache) Prune(validKeys map[CloudletKey]struct{}) {
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key, old)
+			c.NotifyCb(ctx, &key, old)
 		}
-		c.TriggerKeyWatchers(&key)
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
@@ -772,7 +774,7 @@ func (c *CloudletRefsCache) GetCount() int {
 	return len(c.Objs)
 }
 
-func (c *CloudletRefsCache) Flush(notifyId int64) {
+func (c *CloudletRefsCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *CloudletRefsCache) Show(filter *CloudletRefs, cb func(ret *CloudletRefs) error) error {
@@ -798,15 +800,15 @@ func CloudletRefsGenericNotifyCb(fn func(key *CloudletKey, old *CloudletRefs)) f
 	}
 }
 
-func (c *CloudletRefsCache) SetNotifyCb(fn func(obj *CloudletKey, old *CloudletRefs)) {
+func (c *CloudletRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *CloudletRefs)) {
 	c.NotifyCb = fn
 }
 
-func (c *CloudletRefsCache) SetUpdatedCb(fn func(old *CloudletRefs, new *CloudletRefs)) {
+func (c *CloudletRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)) {
 	c.UpdatedCb = fn
 }
 
-func (c *CloudletRefsCache) WatchKey(key *CloudletKey, cb func()) context.CancelFunc {
+func (c *CloudletRefsCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -839,7 +841,7 @@ func (c *CloudletRefsCache) WatchKey(key *CloudletKey, cb func()) context.Cancel
 	}
 }
 
-func (c *CloudletRefsCache) TriggerKeyWatchers(key *CloudletKey) {
+func (c *CloudletRefsCache) TriggerKeyWatchers(ctx context.Context, key *CloudletKey) {
 	watchers := make([]*CloudletRefsKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -847,17 +849,17 @@ func (c *CloudletRefsCache) TriggerKeyWatchers(key *CloudletKey) {
 	}
 	c.Mux.Unlock()
 	for ii, _ := range watchers {
-		watchers[ii].cb()
+		watchers[ii].cb(ctx)
 	}
 }
-func (c *CloudletRefsCache) SyncUpdate(key, val []byte, rev int64) {
+func (c *CloudletRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	obj := CloudletRefs{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse CloudletRefs data", "val", string(val))
 		return
 	}
-	c.Update(&obj, rev)
+	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.Key] = struct{}{}
@@ -865,18 +867,18 @@ func (c *CloudletRefsCache) SyncUpdate(key, val []byte, rev int64) {
 	c.Mux.Unlock()
 }
 
-func (c *CloudletRefsCache) SyncDelete(key []byte, rev int64) {
+func (c *CloudletRefsCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := CloudletRefs{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	CloudletKeyStringParse(keystr, &obj.Key)
-	c.Delete(&obj, rev)
+	c.Delete(ctx, &obj, rev)
 }
 
-func (c *CloudletRefsCache) SyncListStart() {
+func (c *CloudletRefsCache) SyncListStart(ctx context.Context) {
 	c.List = make(map[CloudletKey]struct{})
 }
 
-func (c *CloudletRefsCache) SyncListEnd() {
+func (c *CloudletRefsCache) SyncListEnd(ctx context.Context) {
 	deleted := make(map[CloudletKey]*CloudletRefs)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -889,8 +891,8 @@ func (c *CloudletRefsCache) SyncListEnd() {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(&key, val)
-			c.TriggerKeyWatchers(&key)
+			c.NotifyCb(ctx, &key, val)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 }
@@ -998,7 +1000,7 @@ func NewClusterRefsStore(kvstore objstore.KVStore) ClusterRefsStore {
 	return ClusterRefsStore{kvstore: kvstore}
 }
 
-func (s *ClusterRefsStore) Create(m *ClusterRefs, wait func(int64)) (*Result, error) {
+func (s *ClusterRefsStore) Create(ctx context.Context, m *ClusterRefs, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -1008,7 +1010,7 @@ func (s *ClusterRefsStore) Create(m *ClusterRefs, wait func(int64)) (*Result, er
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(ctx, key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -1018,7 +1020,7 @@ func (s *ClusterRefsStore) Create(m *ClusterRefs, wait func(int64)) (*Result, er
 	return &Result{}, err
 }
 
-func (s *ClusterRefsStore) Update(m *ClusterRefs, wait func(int64)) (*Result, error) {
+func (s *ClusterRefsStore) Update(ctx context.Context, m *ClusterRefs, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -1029,7 +1031,7 @@ func (s *ClusterRefsStore) Update(m *ClusterRefs, wait func(int64)) (*Result, er
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -1039,7 +1041,7 @@ func (s *ClusterRefsStore) Update(m *ClusterRefs, wait func(int64)) (*Result, er
 	return &Result{}, err
 }
 
-func (s *ClusterRefsStore) Put(m *ClusterRefs, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *ClusterRefsStore) Put(ctx context.Context, m *ClusterRefs, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -1050,7 +1052,7 @@ func (s *ClusterRefsStore) Put(m *ClusterRefs, wait func(int64), ops ...objstore
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val), ops...)
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}
@@ -1060,13 +1062,13 @@ func (s *ClusterRefsStore) Put(m *ClusterRefs, wait func(int64), ops ...objstore
 	return &Result{}, err
 }
 
-func (s *ClusterRefsStore) Delete(m *ClusterRefs, wait func(int64)) (*Result, error) {
+func (s *ClusterRefsStore) Delete(ctx context.Context, m *ClusterRefs, wait func(int64)) (*Result, error) {
 	err := m.GetKey().Validate()
 	if err != nil {
 		return nil, err
 	}
 	key := objstore.DbKeyString("ClusterRefs", m.GetKey())
-	rev, err := s.kvstore.Delete(key)
+	rev, err := s.kvstore.Delete(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -1121,7 +1123,7 @@ func (s *ClusterRefsStore) STMDel(stm concurrency.STM, key *ClusterInstKey) {
 }
 
 type ClusterRefsKeyWatcher struct {
-	cb func()
+	cb func(ctx context.Context)
 }
 
 // ClusterRefsCache caches ClusterRefs objects in memory in a hash table
@@ -1130,8 +1132,8 @@ type ClusterRefsCache struct {
 	Objs        map[ClusterInstKey]*ClusterRefs
 	Mux         util.Mutex
 	List        map[ClusterInstKey]struct{}
-	NotifyCb    func(obj *ClusterInstKey, old *ClusterRefs)
-	UpdatedCb   func(old *ClusterRefs, new *ClusterRefs)
+	NotifyCb    func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs)
+	UpdatedCb   func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)
 	KeyWatchers map[ClusterInstKey][]*ClusterRefsKeyWatcher
 }
 
@@ -1167,21 +1169,21 @@ func (c *ClusterRefsCache) HasKey(key *ClusterInstKey) bool {
 	return found
 }
 
-func (c *ClusterRefsCache) GetAllKeys(keys map[ClusterInstKey]struct{}) {
+func (c *ClusterRefsCache) GetAllKeys(ctx context.Context, keys map[ClusterInstKey]context.Context) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
-		keys[key] = struct{}{}
+		keys[key] = ctx
 	}
 }
 
-func (c *ClusterRefsCache) Update(in *ClusterRefs, rev int64) {
-	c.UpdateModFunc(&in.Key, rev, func(old *ClusterRefs) (*ClusterRefs, bool) {
+func (c *ClusterRefsCache) Update(ctx context.Context, in *ClusterRefs, rev int64) {
+	c.UpdateModFunc(ctx, &in.Key, rev, func(old *ClusterRefs) (*ClusterRefs, bool) {
 		return in, true
 	})
 }
 
-func (c *ClusterRefsCache) UpdateModFunc(key *ClusterInstKey, rev int64, modFunc func(old *ClusterRefs) (new *ClusterRefs, changed bool)) {
+func (c *ClusterRefsCache) UpdateModFunc(ctx context.Context, key *ClusterInstKey, rev int64, modFunc func(old *ClusterRefs) (new *ClusterRefs, changed bool)) {
 	c.Mux.Lock()
 	old := c.Objs[*key]
 	new, changed := modFunc(old)
@@ -1193,31 +1195,33 @@ func (c *ClusterRefsCache) UpdateModFunc(key *ClusterInstKey, rev int64, modFunc
 		if c.UpdatedCb != nil {
 			newCopy := &ClusterRefs{}
 			*newCopy = *new
-			defer c.UpdatedCb(old, newCopy)
+			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&new.Key, old)
+			defer c.NotifyCb(ctx, &new.Key, old)
 		}
 	}
 	c.Objs[new.Key] = new
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterRefs", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&new.Key)
+	c.TriggerKeyWatchers(ctx, &new.Key)
 }
 
-func (c *ClusterRefsCache) Delete(in *ClusterRefs, rev int64) {
+func (c *ClusterRefsCache) Delete(ctx context.Context, in *ClusterRefs, rev int64) {
 	c.Mux.Lock()
 	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	log.DebugLog(log.DebugLevelApi, "SyncDelete ClusterRefs", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key, old)
+		c.NotifyCb(ctx, &in.Key, old)
 	}
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(ctx, &in.Key)
 }
 
-func (c *ClusterRefsCache) Prune(validKeys map[ClusterInstKey]struct{}) {
+func (c *ClusterRefsCache) Prune(ctx context.Context, validKeys map[ClusterInstKey]struct{}) {
 	notify := make(map[ClusterInstKey]*ClusterRefs)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
@@ -1231,9 +1235,9 @@ func (c *ClusterRefsCache) Prune(validKeys map[ClusterInstKey]struct{}) {
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key, old)
+			c.NotifyCb(ctx, &key, old)
 		}
-		c.TriggerKeyWatchers(&key)
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
@@ -1243,7 +1247,7 @@ func (c *ClusterRefsCache) GetCount() int {
 	return len(c.Objs)
 }
 
-func (c *ClusterRefsCache) Flush(notifyId int64) {
+func (c *ClusterRefsCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *ClusterRefsCache) Show(filter *ClusterRefs, cb func(ret *ClusterRefs) error) error {
@@ -1269,15 +1273,15 @@ func ClusterRefsGenericNotifyCb(fn func(key *ClusterInstKey, old *ClusterRefs)) 
 	}
 }
 
-func (c *ClusterRefsCache) SetNotifyCb(fn func(obj *ClusterInstKey, old *ClusterRefs)) {
+func (c *ClusterRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs)) {
 	c.NotifyCb = fn
 }
 
-func (c *ClusterRefsCache) SetUpdatedCb(fn func(old *ClusterRefs, new *ClusterRefs)) {
+func (c *ClusterRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)) {
 	c.UpdatedCb = fn
 }
 
-func (c *ClusterRefsCache) WatchKey(key *ClusterInstKey, cb func()) context.CancelFunc {
+func (c *ClusterRefsCache) WatchKey(key *ClusterInstKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -1310,7 +1314,7 @@ func (c *ClusterRefsCache) WatchKey(key *ClusterInstKey, cb func()) context.Canc
 	}
 }
 
-func (c *ClusterRefsCache) TriggerKeyWatchers(key *ClusterInstKey) {
+func (c *ClusterRefsCache) TriggerKeyWatchers(ctx context.Context, key *ClusterInstKey) {
 	watchers := make([]*ClusterRefsKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -1318,17 +1322,17 @@ func (c *ClusterRefsCache) TriggerKeyWatchers(key *ClusterInstKey) {
 	}
 	c.Mux.Unlock()
 	for ii, _ := range watchers {
-		watchers[ii].cb()
+		watchers[ii].cb(ctx)
 	}
 }
-func (c *ClusterRefsCache) SyncUpdate(key, val []byte, rev int64) {
+func (c *ClusterRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	obj := ClusterRefs{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse ClusterRefs data", "val", string(val))
 		return
 	}
-	c.Update(&obj, rev)
+	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.Key] = struct{}{}
@@ -1336,18 +1340,18 @@ func (c *ClusterRefsCache) SyncUpdate(key, val []byte, rev int64) {
 	c.Mux.Unlock()
 }
 
-func (c *ClusterRefsCache) SyncDelete(key []byte, rev int64) {
+func (c *ClusterRefsCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := ClusterRefs{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	ClusterInstKeyStringParse(keystr, &obj.Key)
-	c.Delete(&obj, rev)
+	c.Delete(ctx, &obj, rev)
 }
 
-func (c *ClusterRefsCache) SyncListStart() {
+func (c *ClusterRefsCache) SyncListStart(ctx context.Context) {
 	c.List = make(map[ClusterInstKey]struct{})
 }
 
-func (c *ClusterRefsCache) SyncListEnd() {
+func (c *ClusterRefsCache) SyncListEnd(ctx context.Context) {
 	deleted := make(map[ClusterInstKey]*ClusterRefs)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -1360,8 +1364,8 @@ func (c *ClusterRefsCache) SyncListEnd() {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(&key, val)
-			c.TriggerKeyWatchers(&key)
+			c.NotifyCb(ctx, &key, val)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 }

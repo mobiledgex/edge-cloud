@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -140,6 +141,9 @@ func startMain(t *testing.T) (chan struct{}, error) {
 func TestCRM(t *testing.T) {
 	var err error
 	log.SetDebugLevel(log.DebugLevelNotify | log.DebugLevelMexos)
+	log.InitTracer()
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
 
 	notifyAddr := "127.0.0.1:61245"
 
@@ -173,13 +177,13 @@ func TestCRM(t *testing.T) {
 
 	// Add data to controller
 	for ii := range data.Flavors {
-		ctrlHandler.FlavorCache.Update(&data.Flavors[ii], 0)
+		ctrlHandler.FlavorCache.Update(ctx, &data.Flavors[ii], 0)
 	}
 	for ii := range data.ClusterInsts {
-		ctrlHandler.ClusterInstCache.Update(&data.ClusterInsts[ii], 0)
+		ctrlHandler.ClusterInstCache.Update(ctx, &data.ClusterInsts[ii], 0)
 	}
 	for ii := range data.AppInstances {
-		ctrlHandler.AppInstCache.Update(&data.AppInstances[ii], 0)
+		ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
 	}
 	notify.WaitFor(&controllerData.FlavorCache, 3)
 	// Note for ClusterInsts and AppInsts, only those that match
@@ -195,13 +199,13 @@ func TestCRM(t *testing.T) {
 
 	// delete
 	for ii := range data.AppInstances {
-		ctrlHandler.AppInstCache.Delete(&data.AppInstances[ii], 0)
+		ctrlHandler.AppInstCache.Delete(ctx, &data.AppInstances[ii], 0)
 	}
 	for ii := range data.ClusterInsts {
-		ctrlHandler.ClusterInstCache.Delete(&data.ClusterInsts[ii], 0)
+		ctrlHandler.ClusterInstCache.Delete(ctx, &data.ClusterInsts[ii], 0)
 	}
 	for ii := range data.Flavors {
-		ctrlHandler.FlavorCache.Delete(&data.Flavors[ii], 0)
+		ctrlHandler.FlavorCache.Delete(ctx, &data.Flavors[ii], 0)
 	}
 	notify.WaitFor(&controllerData.FlavorCache, 0)
 	notify.WaitFor(&controllerData.ClusterInstCache, 0)

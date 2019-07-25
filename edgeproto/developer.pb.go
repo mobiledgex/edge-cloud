@@ -461,7 +461,7 @@ func NewDeveloperStore(kvstore objstore.KVStore) DeveloperStore {
 	return DeveloperStore{kvstore: kvstore}
 }
 
-func (s *DeveloperStore) Create(m *Developer, wait func(int64)) (*Result, error) {
+func (s *DeveloperStore) Create(ctx context.Context, m *Developer, wait func(int64)) (*Result, error) {
 	err := m.Validate(DeveloperAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -471,7 +471,7 @@ func (s *DeveloperStore) Create(m *Developer, wait func(int64)) (*Result, error)
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(ctx, key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -481,7 +481,7 @@ func (s *DeveloperStore) Create(m *Developer, wait func(int64)) (*Result, error)
 	return &Result{}, err
 }
 
-func (s *DeveloperStore) Update(m *Developer, wait func(int64)) (*Result, error) {
+func (s *DeveloperStore) Update(ctx context.Context, m *Developer, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -505,7 +505,7 @@ func (s *DeveloperStore) Update(m *Developer, wait func(int64)) (*Result, error)
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -515,7 +515,7 @@ func (s *DeveloperStore) Update(m *Developer, wait func(int64)) (*Result, error)
 	return &Result{}, err
 }
 
-func (s *DeveloperStore) Put(m *Developer, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *DeveloperStore) Put(ctx context.Context, m *Developer, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(DeveloperAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -527,7 +527,7 @@ func (s *DeveloperStore) Put(m *Developer, wait func(int64), ops ...objstore.KVO
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val), ops...)
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}
@@ -537,13 +537,13 @@ func (s *DeveloperStore) Put(m *Developer, wait func(int64), ops ...objstore.KVO
 	return &Result{}, err
 }
 
-func (s *DeveloperStore) Delete(m *Developer, wait func(int64)) (*Result, error) {
+func (s *DeveloperStore) Delete(ctx context.Context, m *Developer, wait func(int64)) (*Result, error) {
 	err := m.GetKey().Validate()
 	if err != nil {
 		return nil, err
 	}
 	key := objstore.DbKeyString("Developer", m.GetKey())
-	rev, err := s.kvstore.Delete(key)
+	rev, err := s.kvstore.Delete(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -598,7 +598,7 @@ func (s *DeveloperStore) STMDel(stm concurrency.STM, key *DeveloperKey) {
 }
 
 type DeveloperKeyWatcher struct {
-	cb func()
+	cb func(ctx context.Context)
 }
 
 // DeveloperCache caches Developer objects in memory in a hash table
@@ -607,8 +607,8 @@ type DeveloperCache struct {
 	Objs        map[DeveloperKey]*Developer
 	Mux         util.Mutex
 	List        map[DeveloperKey]struct{}
-	NotifyCb    func(obj *DeveloperKey, old *Developer)
-	UpdatedCb   func(old *Developer, new *Developer)
+	NotifyCb    func(ctx context.Context, obj *DeveloperKey, old *Developer)
+	UpdatedCb   func(ctx context.Context, old *Developer, new *Developer)
 	KeyWatchers map[DeveloperKey][]*DeveloperKeyWatcher
 }
 
@@ -644,21 +644,21 @@ func (c *DeveloperCache) HasKey(key *DeveloperKey) bool {
 	return found
 }
 
-func (c *DeveloperCache) GetAllKeys(keys map[DeveloperKey]struct{}) {
+func (c *DeveloperCache) GetAllKeys(ctx context.Context, keys map[DeveloperKey]context.Context) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
-		keys[key] = struct{}{}
+		keys[key] = ctx
 	}
 }
 
-func (c *DeveloperCache) Update(in *Developer, rev int64) {
-	c.UpdateModFunc(&in.Key, rev, func(old *Developer) (*Developer, bool) {
+func (c *DeveloperCache) Update(ctx context.Context, in *Developer, rev int64) {
+	c.UpdateModFunc(ctx, &in.Key, rev, func(old *Developer) (*Developer, bool) {
 		return in, true
 	})
 }
 
-func (c *DeveloperCache) UpdateModFunc(key *DeveloperKey, rev int64, modFunc func(old *Developer) (new *Developer, changed bool)) {
+func (c *DeveloperCache) UpdateModFunc(ctx context.Context, key *DeveloperKey, rev int64, modFunc func(old *Developer) (new *Developer, changed bool)) {
 	c.Mux.Lock()
 	old := c.Objs[*key]
 	new, changed := modFunc(old)
@@ -670,31 +670,33 @@ func (c *DeveloperCache) UpdateModFunc(key *DeveloperKey, rev int64, modFunc fun
 		if c.UpdatedCb != nil {
 			newCopy := &Developer{}
 			*newCopy = *new
-			defer c.UpdatedCb(old, newCopy)
+			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&new.Key, old)
+			defer c.NotifyCb(ctx, &new.Key, old)
 		}
 	}
 	c.Objs[new.Key] = new
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Developer", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&new.Key)
+	c.TriggerKeyWatchers(ctx, &new.Key)
 }
 
-func (c *DeveloperCache) Delete(in *Developer, rev int64) {
+func (c *DeveloperCache) Delete(ctx context.Context, in *Developer, rev int64) {
 	c.Mux.Lock()
 	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	log.DebugLog(log.DebugLevelApi, "SyncDelete Developer", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key, old)
+		c.NotifyCb(ctx, &in.Key, old)
 	}
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(ctx, &in.Key)
 }
 
-func (c *DeveloperCache) Prune(validKeys map[DeveloperKey]struct{}) {
+func (c *DeveloperCache) Prune(ctx context.Context, validKeys map[DeveloperKey]struct{}) {
 	notify := make(map[DeveloperKey]*Developer)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
@@ -708,9 +710,9 @@ func (c *DeveloperCache) Prune(validKeys map[DeveloperKey]struct{}) {
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key, old)
+			c.NotifyCb(ctx, &key, old)
 		}
-		c.TriggerKeyWatchers(&key)
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
@@ -720,7 +722,7 @@ func (c *DeveloperCache) GetCount() int {
 	return len(c.Objs)
 }
 
-func (c *DeveloperCache) Flush(notifyId int64) {
+func (c *DeveloperCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) error {
@@ -746,15 +748,15 @@ func DeveloperGenericNotifyCb(fn func(key *DeveloperKey, old *Developer)) func(o
 	}
 }
 
-func (c *DeveloperCache) SetNotifyCb(fn func(obj *DeveloperKey, old *Developer)) {
+func (c *DeveloperCache) SetNotifyCb(fn func(ctx context.Context, obj *DeveloperKey, old *Developer)) {
 	c.NotifyCb = fn
 }
 
-func (c *DeveloperCache) SetUpdatedCb(fn func(old *Developer, new *Developer)) {
+func (c *DeveloperCache) SetUpdatedCb(fn func(ctx context.Context, old *Developer, new *Developer)) {
 	c.UpdatedCb = fn
 }
 
-func (c *DeveloperCache) WatchKey(key *DeveloperKey, cb func()) context.CancelFunc {
+func (c *DeveloperCache) WatchKey(key *DeveloperKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -787,7 +789,7 @@ func (c *DeveloperCache) WatchKey(key *DeveloperKey, cb func()) context.CancelFu
 	}
 }
 
-func (c *DeveloperCache) TriggerKeyWatchers(key *DeveloperKey) {
+func (c *DeveloperCache) TriggerKeyWatchers(ctx context.Context, key *DeveloperKey) {
 	watchers := make([]*DeveloperKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -795,17 +797,17 @@ func (c *DeveloperCache) TriggerKeyWatchers(key *DeveloperKey) {
 	}
 	c.Mux.Unlock()
 	for ii, _ := range watchers {
-		watchers[ii].cb()
+		watchers[ii].cb(ctx)
 	}
 }
-func (c *DeveloperCache) SyncUpdate(key, val []byte, rev int64) {
+func (c *DeveloperCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	obj := Developer{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Developer data", "val", string(val))
 		return
 	}
-	c.Update(&obj, rev)
+	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.Key] = struct{}{}
@@ -813,18 +815,18 @@ func (c *DeveloperCache) SyncUpdate(key, val []byte, rev int64) {
 	c.Mux.Unlock()
 }
 
-func (c *DeveloperCache) SyncDelete(key []byte, rev int64) {
+func (c *DeveloperCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := Developer{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	DeveloperKeyStringParse(keystr, &obj.Key)
-	c.Delete(&obj, rev)
+	c.Delete(ctx, &obj, rev)
 }
 
-func (c *DeveloperCache) SyncListStart() {
+func (c *DeveloperCache) SyncListStart(ctx context.Context) {
 	c.List = make(map[DeveloperKey]struct{})
 }
 
-func (c *DeveloperCache) SyncListEnd() {
+func (c *DeveloperCache) SyncListEnd(ctx context.Context) {
 	deleted := make(map[DeveloperKey]*Developer)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -837,8 +839,8 @@ func (c *DeveloperCache) SyncListEnd() {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(&key, val)
-			c.TriggerKeyWatchers(&key)
+			c.NotifyCb(ctx, &key, val)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 }

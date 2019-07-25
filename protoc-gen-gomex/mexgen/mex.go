@@ -787,7 +787,7 @@ func New{{.Name}}Store(kvstore objstore.KVStore) {{.Name}}Store {
 	return {{.Name}}Store{kvstore: kvstore}
 }
 
-func (s *{{.Name}}Store) Create(m *{{.Name}}, wait func(int64)) (*Result, error) {
+func (s *{{.Name}}Store) Create(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error) {
 {{- if (.HasFields)}}
 	err := m.Validate({{.Name}}AllFieldsMap)
 {{- else}}
@@ -797,7 +797,7 @@ func (s *{{.Name}}Store) Create(m *{{.Name}}, wait func(int64)) (*Result, error)
 	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
 	val, err := json.Marshal(m)
 	if err != nil { return nil, err }
-	rev, err := s.kvstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(ctx, key, string(val))
 	if err != nil { return nil, err }
 	if wait != nil {
 		wait(rev)
@@ -805,7 +805,7 @@ func (s *{{.Name}}Store) Create(m *{{.Name}}, wait func(int64)) (*Result, error)
 	return &Result{}, err
 }
 
-func (s *{{.Name}}Store) Update(m *{{.Name}}, wait func(int64)) (*Result, error) {
+func (s *{{.Name}}Store) Update(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error) {
 {{- if (.HasFields)}}
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
@@ -829,7 +829,7 @@ func (s *{{.Name}}Store) Update(m *{{.Name}}, wait func(int64)) (*Result, error)
 	val, err := json.Marshal(m)
 {{- end}}
 	if err != nil { return nil, err }
-	rev, err := s.kvstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
 	if err != nil { return nil, err }
 	if wait != nil {
 		wait(rev)
@@ -837,7 +837,7 @@ func (s *{{.Name}}Store) Update(m *{{.Name}}, wait func(int64)) (*Result, error)
 	return &Result{}, err
 }
 
-func (s *{{.Name}}Store) Put(m *{{.Name}}, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *{{.Name}}Store) Put(ctx context.Context, m *{{.Name}}, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 {{- if (.HasFields)}}
 	err := m.Validate({{.Name}}AllFieldsMap)
 	m.Fields = nil
@@ -849,7 +849,7 @@ func (s *{{.Name}}Store) Put(m *{{.Name}}, wait func(int64), ops ...objstore.KVO
 	var val []byte
 	val, err = json.Marshal(m)
 	if err != nil { return nil, err }
-	rev, err := s.kvstore.Put(key, string(val), ops...)
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
 	if err != nil { return nil, err }
 	if wait != nil {
 		wait(rev)
@@ -857,11 +857,11 @@ func (s *{{.Name}}Store) Put(m *{{.Name}}, wait func(int64), ops ...objstore.KVO
 	return &Result{}, err
 }
 
-func (s *{{.Name}}Store) Delete(m *{{.Name}}, wait func(int64)) (*Result, error) {
+func (s *{{.Name}}Store) Delete(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error) {
 	err := m.GetKey().Validate()
 	if err != nil { return nil, err }
 	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
-	rev, err := s.kvstore.Delete(key)
+	rev, err := s.kvstore.Delete(ctx, key)
 	if err != nil { return nil, err }
 	if wait != nil {
 		wait(rev)
@@ -926,7 +926,7 @@ type cacheTemplateArgs struct {
 
 var cacheTemplateIn = `
 type {{.Name}}KeyWatcher struct {
-	cb func()
+	cb func(ctx context.Context)
 }
 
 // {{.Name}}Cache caches {{.Name}} objects in memory in a hash table
@@ -935,8 +935,8 @@ type {{.Name}}Cache struct {
 	Objs map[{{.KeyType}}]*{{.Name}}
 	Mux util.Mutex
 	List map[{{.KeyType}}]struct{}
-	NotifyCb func(obj *{{.KeyType}}, old *{{.Name}})
-	UpdatedCb func(old *{{.Name}}, new *{{.Name}})
+	NotifyCb func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}})
+	UpdatedCb func(ctx context.Context, old *{{.Name}}, new *{{.Name}})
 	KeyWatchers map[{{.KeyType}}][]*{{.Name}}KeyWatcher
 }
 
@@ -972,21 +972,21 @@ func (c *{{.Name}}Cache) HasKey(key *{{.KeyType}}) bool {
 	return found
 }
 
-func (c *{{.Name}}Cache) GetAllKeys(keys map[{{.KeyType}}]struct{}) {
+func (c *{{.Name}}Cache) GetAllKeys(ctx context.Context, keys map[{{.KeyType}}]context.Context) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
-		keys[key] = struct{}{}
+		keys[key] = ctx
 	}
 }
 
-func (c *{{.Name}}Cache) Update(in *{{.Name}}, rev int64) {
-	c.UpdateModFunc(&in.Key, rev, func(old *{{.Name}}) (*{{.Name}}, bool) {
+func (c *{{.Name}}Cache) Update(ctx context.Context, in *{{.Name}}, rev int64) {
+	c.UpdateModFunc(ctx, &in.Key, rev, func(old *{{.Name}}) (*{{.Name}}, bool) {
 		return in, true
 	})
 }
 
-func (c *{{.Name}}Cache) UpdateModFunc(key *{{.KeyType}}, rev int64, modFunc func(old *{{.Name}}) (new *{{.Name}}, changed bool)) {
+func (c *{{.Name}}Cache) UpdateModFunc(ctx context.Context, key *{{.KeyType}}, rev int64, modFunc func(old *{{.Name}}) (new *{{.Name}}, changed bool)) {
 	c.Mux.Lock()
 	old := c.Objs[*key]
 	new, changed := modFunc(old)
@@ -998,31 +998,33 @@ func (c *{{.Name}}Cache) UpdateModFunc(key *{{.KeyType}}, rev int64, modFunc fun
 		if c.UpdatedCb != nil {
 			newCopy := &{{.Name}}{}
 			*newCopy = *new
-			defer c.UpdatedCb(old, newCopy)
+			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&new.Key, old)
+			defer c.NotifyCb(ctx, &new.Key, old)
 		}
 	}
 	c.Objs[new.Key] = new
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate {{.Name}}", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&new.Key)
+	c.TriggerKeyWatchers(ctx, &new.Key)
 }
 
-func (c *{{.Name}}Cache) Delete(in *{{.Name}}, rev int64) {
+func (c *{{.Name}}Cache) Delete(ctx context.Context, in *{{.Name}}, rev int64) {
 	c.Mux.Lock()
 	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	log.DebugLog(log.DebugLevelApi, "SyncDelete {{.Name}}", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key, old)
+		c.NotifyCb(ctx, &in.Key, old)
 	}
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(ctx, &in.Key)
 }
 
-func (c *{{.Name}}Cache) Prune(validKeys map[{{.KeyType}}]struct{}) {
+func (c *{{.Name}}Cache) Prune(ctx context.Context, validKeys map[{{.KeyType}}]struct{}) {
 	notify := make(map[{{.KeyType}}]*{{.Name}})
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
@@ -1036,9 +1038,9 @@ func (c *{{.Name}}Cache) Prune(validKeys map[{{.KeyType}}]struct{}) {
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key, old)
+			c.NotifyCb(ctx, &key, old)
 		}
-		c.TriggerKeyWatchers(&key)
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
@@ -1048,7 +1050,7 @@ func (c *{{.Name}}Cache) GetCount() int {
 	return len(c.Objs)
 }
 
-func (c *{{.Name}}Cache) Flush(notifyId int64) {
+func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
 {{- if .NotifyFlush}}
 	flushed := make(map[{{.KeyType}}]*{{.Name}})
 	c.Mux.Lock()
@@ -1063,9 +1065,9 @@ func (c *{{.Name}}Cache) Flush(notifyId int64) {
 	if len(flushed) > 0 {
 		for key, old := range flushed {
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key, old)
+				c.NotifyCb(ctx, &key, old)
 			}
-			c.TriggerKeyWatchers(&key)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 {{- end}}
@@ -1097,15 +1099,15 @@ func {{.Name}}GenericNotifyCb(fn func(key *{{.KeyType}}, old *{{.Name}})) func(o
 }
 
 
-func (c *{{.Name}}Cache) SetNotifyCb(fn func(obj *{{.KeyType}}, old *{{.Name}})) {
+func (c *{{.Name}}Cache) SetNotifyCb(fn func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}})) {
 	c.NotifyCb = fn
 }
 
-func (c *{{.Name}}Cache) SetUpdatedCb(fn func(old *{{.Name}}, new *{{.Name}})) {
+func (c *{{.Name}}Cache) SetUpdatedCb(fn func(ctx context.Context, old *{{.Name}}, new *{{.Name}})) {
 	c.UpdatedCb = fn
 }
 
-func (c *{{.Name}}Cache) WatchKey(key *{{.KeyType}}, cb func()) context.CancelFunc {
+func (c *{{.Name}}Cache) WatchKey(key *{{.KeyType}}, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -1136,7 +1138,7 @@ func (c *{{.Name}}Cache) WatchKey(key *{{.KeyType}}, cb func()) context.CancelFu
 	}
 }
 
-func (c *{{.Name}}Cache) TriggerKeyWatchers(key *{{.KeyType}}) {
+func (c *{{.Name}}Cache) TriggerKeyWatchers(ctx context.Context, key *{{.KeyType}}) {
 	watchers := make([]*{{.Name}}KeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -1144,20 +1146,20 @@ func (c *{{.Name}}Cache) TriggerKeyWatchers(key *{{.KeyType}}) {
 	}
 	c.Mux.Unlock()
 	for ii, _ := range watchers {
-		watchers[ii].cb()
+		watchers[ii].cb(ctx)
 	}
 }
 
 
 {{- if .CudCache}}
-func (c *{{.Name}}Cache) SyncUpdate(key, val []byte, rev int64) {
+func (c *{{.Name}}Cache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	obj := {{.Name}}{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse {{.Name}} data", "val", string(val))
 		return
 	}
-	c.Update(&obj, rev)
+	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.Key] = struct{}{}
@@ -1165,18 +1167,18 @@ func (c *{{.Name}}Cache) SyncUpdate(key, val []byte, rev int64) {
 	c.Mux.Unlock()
 }
 
-func (c *{{.Name}}Cache) SyncDelete(key []byte, rev int64) {
+func (c *{{.Name}}Cache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := {{.Name}}{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	{{.KeyType}}StringParse(keystr, &obj.Key)
-	c.Delete(&obj, rev)
+	c.Delete(ctx, &obj, rev)
 }
 
-func (c *{{.Name}}Cache) SyncListStart() {
+func (c *{{.Name}}Cache) SyncListStart(ctx context.Context) {
 	c.List = make(map[{{.KeyType}}]struct{})
 }
 
-func (c *{{.Name}}Cache) SyncListEnd() {
+func (c *{{.Name}}Cache) SyncListEnd(ctx context.Context) {
 	deleted := make(map[{{.KeyType}}]*{{.Name}})
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -1189,8 +1191,8 @@ func (c *{{.Name}}Cache) SyncListEnd() {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(&key, val)
-			c.TriggerKeyWatchers(&key)
+			c.NotifyCb(ctx, &key, val)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 }
@@ -1203,7 +1205,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 	failed := make(chan bool, 1)
 	var err error
 
-	cancel := c.WatchKey(key, func() {
+	cancel := c.WatchKey(key, func(ctx context.Context) {
 		info := {{.Name}}{}
 		if c.Get(key, &info) {
 			curState = info.State
@@ -1220,6 +1222,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 			}
 			send(&Result{Message: msg})
 		}
+		log.SpanLog(ctx, log.DebugLevelApi, "watch event for {{.Name}}")
 		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_CamelName[int32(curState)], "status", info.Status)
 		if curState == errorState {
 			failed <- true
