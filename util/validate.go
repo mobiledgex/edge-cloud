@@ -103,9 +103,9 @@ func GitlabGroupSanitize(name string) string {
 }
 
 func ValidOrgName(name string) error {
-	re := regexp.MustCompile("^[a-zA-Z0-9_\\-., ]*$")
+	re := regexp.MustCompile("^[a-zA-Z0-9_\\-.]*$")
 	if !re.MatchString(name) {
-		return fmt.Errorf("Name can only contain letters, digits, _ . - ,")
+		return fmt.Errorf("Name can only contain letters, digits, _ . -")
 	}
 	if !ValidLDAPName(name) {
 		return fmt.Errorf("invalid characters in Name")
