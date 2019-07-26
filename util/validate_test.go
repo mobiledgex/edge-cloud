@@ -92,3 +92,26 @@ func checkValidLDAPName(t *testing.T, name string, want bool) {
 			name, want, got)
 	}
 }
+
+func TestValidOrgName(t *testing.T) {
+	var err error
+
+	err = ValidOrgName("orgname_123.dev")
+	require.Nil(t, err, "valid org name")
+	err = ValidOrgName(".orgname_123.dev")
+	require.NotNil(t, err, "invalid org name")
+	err = ValidOrgName("-orgname_123.dev")
+	require.NotNil(t, err, "invalid org name")
+	err = ValidOrgName("orgname_123.dev.")
+	require.NotNil(t, err, "invalid org name")
+	err = ValidOrgName("orgname_123$dev")
+	require.NotNil(t, err, "invalid org name")
+	err = ValidOrgName("orgname_123dev-cache")
+	require.NotNil(t, err, "invalid org name")
+	err = ValidOrgName("orgname_123dev.")
+	require.NotNil(t, err, "invalid org name")
+	err = ValidOrgName("orgname_123dev.git")
+	require.NotNil(t, err, "invalid org name")
+	err = ValidOrgName("orgname_123dev.atom")
+	require.NotNil(t, err, "invalid org name")
+}
