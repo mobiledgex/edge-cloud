@@ -51,6 +51,7 @@ var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA 
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "http://127.0.0.1:8086", "InfluxDB listener address")
 var registryFQDN = flag.String("registryFQDN", "docker.mobiledgex.net", "mobiledgex registry FQDN")
+var artifactoryFQDN = flag.String("artifactoryFQDN", "https://artifactory.mobiledgex.net/artifactory/mc", "mobiledgex artifactory FQDN with mc tag")
 var cloudletRegistryPath = flag.String("cloudletRegistryPath", "registry.mobiledgex.net:5000/mobiledgex/edge-cloud", "edge-cloud image registry path for deploying cloudlet services")
 var cloudletVMImagePath = flag.String("cloudletVMImagePath", "https://artifactory.mobiledgex.net/artifactory/baseimages/mobiledgex-v2.0.2.qcow2#md5:51371613a81f7218c2633ce3c1814258", "mobiledgex VM image for deploying cloudlet services")
 var versionTag = flag.String("versionTag", "", "edge-cloud image tag indicating controller version")

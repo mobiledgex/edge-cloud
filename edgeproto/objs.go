@@ -73,10 +73,7 @@ func (a *ApplicationData) Sort() {
 // Validate functions to validate user input
 
 func (key *DeveloperKey) Validate() error {
-	if !util.ValidName(key.Name) {
-		return errors.New("Invalid developer name")
-	}
-	return nil
+	return util.ValidOrgName(key.Name)
 }
 
 func (s *Developer) Validate(fields map[string]struct{}) error {
