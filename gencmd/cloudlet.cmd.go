@@ -755,7 +755,6 @@ func CreateCloudlet(in *edgeproto.Cloudlet) error {
 		}
 		return fmt.Errorf("CreateCloudlet failed: %s", errstr)
 	}
-	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -764,12 +763,8 @@ func CreateCloudlet(in *edgeproto.Cloudlet) error {
 		if err != nil {
 			return fmt.Errorf("CreateCloudlet recv failed: %s", err.Error())
 		}
-		objs = append(objs, obj)
+		ResultWriteOutputOne(obj)
 	}
-	if len(objs) == 0 {
-		return nil
-	}
-	ResultWriteOutputArray(objs)
 	return nil
 }
 
@@ -869,7 +864,6 @@ func UpdateCloudlet(in *edgeproto.Cloudlet) error {
 		}
 		return fmt.Errorf("UpdateCloudlet failed: %s", errstr)
 	}
-	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -878,12 +872,8 @@ func UpdateCloudlet(in *edgeproto.Cloudlet) error {
 		if err != nil {
 			return fmt.Errorf("UpdateCloudlet recv failed: %s", err.Error())
 		}
-		objs = append(objs, obj)
+		ResultWriteOutputOne(obj)
 	}
-	if len(objs) == 0 {
-		return nil
-	}
-	ResultWriteOutputArray(objs)
 	return nil
 }
 

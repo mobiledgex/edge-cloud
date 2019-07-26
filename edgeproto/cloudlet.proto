@@ -199,6 +199,7 @@ service CloudletApi {
       post: "/create/cloudlet"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
   }
   // Delete a Cloudlet
@@ -216,6 +217,7 @@ service CloudletApi {
       post: "/update/cloudlet"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
   }
   // Show Cloudlets
