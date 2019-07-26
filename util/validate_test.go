@@ -114,4 +114,8 @@ func TestValidOrgName(t *testing.T) {
 	require.NotNil(t, err, "invalid org name")
 	err = ValidOrgName("orgname_123dev.atom")
 	require.NotNil(t, err, "invalid org name")
+	err = ValidOrgName("orgname_123dev test")
+	require.NotNil(t, err, "invalid org name")
+	err = ValidOrgName("orgname_123dev,test")
+	require.NotNil(t, err, "invalid org name")
 }
