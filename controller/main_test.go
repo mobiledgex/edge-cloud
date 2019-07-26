@@ -205,7 +205,7 @@ developers:
 apps:
 - key:
     developerkey:
-      name: acme-app-co
+      name: AcmeAppCo
     name: someApplication
     version: 1.0
   defaultflavor:
@@ -217,7 +217,7 @@ appinstances:
 - key:
     appkey:
       developerkey:
-        name: acme-app-co
+        name: AcmeAppCo
       name: someApplication
       version: 1.0
     cloudletkey:
