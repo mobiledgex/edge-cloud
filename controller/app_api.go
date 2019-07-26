@@ -132,14 +132,20 @@ func updateAppFields(in *edgeproto.App, revision int32) error {
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
 		} else if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
-			return fmt.Errorf("imagepath is required for imagetype %s", in.ImageType)
+			if in.Md5Sum == "" {
+				return fmt.Errorf("md5sum should be provided if imagepath is not specified")
+			}
+			in.ImagePath = *artifactoryFQDN + "-repo-" +
+				in.Key.DeveloperKey.Name + "/" +
+				in.Key.Name + ".qcow2#md5:" + in.Md5Sum
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
 			in.ImagePath = *registryFQDN + "/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
 				util.DockerSanitize(in.Key.Name)
 		} else {
-			in.ImagePath = "qcow path not determined yet"
+			in.ImagePath = "image path required"
 		}
+		log.DebugLog(log.DebugLevelApi, "derived imagepath", "imagepath", in.ImagePath)
 	}
 
 	if in.ScaleWithCluster && in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
