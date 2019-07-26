@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -16,18 +18,18 @@ func InitClusterInstInfoApi(sync *Sync) {
 	clusterInstInfoApi.store = edgeproto.NewClusterInstInfoStore(sync.store)
 }
 
-func (s *ClusterInstInfoApi) Update(in *edgeproto.ClusterInstInfo, rev int64) {
-	clusterInstApi.UpdateFromInfo(in)
+func (s *ClusterInstInfoApi) Update(ctx context.Context, in *edgeproto.ClusterInstInfo, rev int64) {
+	clusterInstApi.UpdateFromInfo(ctx, in)
 }
 
-func (s *ClusterInstInfoApi) Delete(in *edgeproto.ClusterInstInfo, rev int64) {
-	clusterInstApi.DeleteFromInfo(in)
+func (s *ClusterInstInfoApi) Delete(ctx context.Context, in *edgeproto.ClusterInstInfo, rev int64) {
+	clusterInstApi.DeleteFromInfo(ctx, in)
 }
 
-func (s *ClusterInstInfoApi) Flush(notifyId int64) {
+func (s *ClusterInstInfoApi) Flush(ctx context.Context, notifyId int64) {
 	// no-op
 }
 
-func (s *ClusterInstInfoApi) Prune(keys map[edgeproto.ClusterInstKey]struct{}) {
+func (s *ClusterInstInfoApi) Prune(ctx context.Context, keys map[edgeproto.ClusterInstKey]struct{}) {
 	// no-op
 }

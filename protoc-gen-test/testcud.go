@@ -27,6 +27,7 @@ type TestCud struct {
 	importTime      bool
 	importRequire   bool
 	importGrpc      bool
+	importLog       bool
 }
 
 func (t *TestCud) Name() string {
@@ -78,14 +79,22 @@ func (x *Show{{.Name}}) Send(m *{{.Pkg}}.{{.Name}}) error {
 {{- if .Streamout}}
 type CudStreamout{{.Name}} struct {
 	grpc.ServerStream
+	ctx context.Context
 }
 
 func (x *CudStreamout{{.Name}}) Send(res *{{.Pkg}}.Result) error {
 	fmt.Println(res)
 	return nil
 }
+
 func (x *CudStreamout{{.Name}}) Context() context.Context {
-	return context.TODO()
+	return x.ctx
+}
+
+func NewCudStreamout{{.Name}}(ctx context.Context) *CudStreamout{{.Name}} {
+	return &CudStreamout{{.Name}}{
+		ctx: ctx,
+	}
 }
 
 type {{.Name}}Stream interface {
@@ -194,7 +203,7 @@ func (x *{{.Name}}CommonApi) {{.Func}}{{.Name}}(ctx context.Context, in *{{.Pkg}
 	*copy = *in
 {{- if .Streamout}}
 	if x.internal_api != nil {
-		err := x.internal_api.{{.Func}}{{.Name}}(copy, &CudStreamout{{.Name}}{})
+		err := x.internal_api.{{.Func}}{{.Name}}(copy, NewCudStreamout{{.Name}}(ctx))
 		return &{{.Pkg}}.Result{}, err
 	} else {
 		stream, err := x.client_api.{{.Func}}{{.Name}}(ctx, copy)
@@ -235,30 +244,37 @@ func NewClient{{.Name}}Api(api {{.Pkg}}.{{.Name}}ApiClient) *{{.Name}}CommonApi 
 }
 
 func Internal{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
+	span := log.StartSpan(log.DebugLevelApi, "Internal{{.Name}}Test")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 {{- if not .ShowOnly}}
 	case "cud":
-		basic{{.Name}}CudTest(t, NewInternal{{.Name}}Api(api), testData)
+		basic{{.Name}}CudTest(t, ctx, NewInternal{{.Name}}Api(api), testData)
 {{- end}}
 	case "show":
-		basic{{.Name}}ShowTest(t, NewInternal{{.Name}}Api(api), testData)
+		basic{{.Name}}ShowTest(t, ctx, NewInternal{{.Name}}Api(api), testData)
 	}
 }
 
 func Client{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
+	span := log.StartSpan(log.DebugLevelApi, "Client{{.Name}}Test")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 {{- if not .ShowOnly}}
 	case "cud":
-		basic{{.Name}}CudTest(t, NewClient{{.Name}}Api(api), testData)
+		basic{{.Name}}CudTest(t, ctx, NewClient{{.Name}}Api(api), testData)
 {{- end}}
 	case "show":
-		basic{{.Name}}ShowTest(t, NewClient{{.Name}}Api(api), testData)
+		basic{{.Name}}ShowTest(t, ctx, NewClient{{.Name}}Api(api), testData)
 	}
 }
 
-func basic{{.Name}}ShowTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
+func basic{{.Name}}ShowTest(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
 	var err error
-	ctx := context.TODO()
 
 	show := Show{{.Name}}{}
 	show.Init()
@@ -271,9 +287,8 @@ func basic{{.Name}}ShowTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{
 	}
 }
 
-func Get{{.Name}}(t *testing.T, api *{{.Name}}CommonApi, key *{{.KeyName}}, out *{{.Pkg}}.{{.Name}}) bool {
+func Get{{.Name}}(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, key *{{.KeyName}}, out *{{.Pkg}}.{{.Name}}) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := Show{{.Name}}{}
 	show.Init()
@@ -289,9 +304,8 @@ func Get{{.Name}}(t *testing.T, api *{{.Name}}CommonApi, key *{{.KeyName}}, out 
 }
 
 {{ if not .ShowOnly}}
-func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
+func basic{{.Name}}CudTest(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
 	var err error
-	ctx := context.TODO()
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
@@ -299,14 +313,14 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	}
 
 	// test create
-	create{{.Name}}Data(t, api, testData)
+	create{{.Name}}Data(t, ctx, api, testData)
 
 	// test duplicate create - should fail
 	_, err = api.Create{{.Name}}(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate {{.Name}}")
 
 	// test show all items
-	basic{{.Name}}ShowTest(t, api, testData)
+	basic{{.Name}}ShowTest(t, ctx, api, testData)
 
 	// test delete
 	_, err = api.Delete{{.Name}}(ctx, &testData[0])
@@ -355,16 +369,23 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 }
 
 func Internal{{.Name}}Create(t *testing.T, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
-	create{{.Name}}Data(t, NewInternal{{.Name}}Api(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "Internal{{.Name}}Create")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	create{{.Name}}Data(t, ctx, NewInternal{{.Name}}Api(api), testData)
 }
 
 func Client{{.Name}}Create(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
-	create{{.Name}}Data(t, NewClient{{.Name}}Api(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "Client{{.Name}}Create")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	create{{.Name}}Data(t, ctx, NewClient{{.Name}}Api(api), testData)
 }
 
-func create{{.Name}}Data(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
+func create{{.Name}}Data(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
 	var err error
-	ctx := context.TODO()
 
 	for _, obj := range testData {
 		_, err = api.Create{{.Name}}(ctx, &obj)
@@ -396,6 +417,9 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 	if t.importRequire {
 		t.PrintImport("", "github.com/stretchr/testify/require")
 	}
+	if t.importLog {
+		t.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
+	}
 }
 
 func (t *TestCud) Generate(file *generator.FileDescriptor) {
@@ -406,6 +430,7 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 	t.importContext = false
 	t.importTime = false
 	t.importRequire = false
+	t.importLog = false
 	t.support.InitFile()
 	if !t.support.GenFile(*file.FileDescriptorProto.Name) {
 		return
@@ -505,6 +530,7 @@ func (t *TestCud) generateCudTest(message *descriptor.DescriptorProto) {
 	t.importContext = true
 	t.importTime = true
 	t.importRequire = true
+	t.importLog = true
 }
 
 type methodArgs struct {

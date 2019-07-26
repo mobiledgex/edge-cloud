@@ -1707,7 +1707,7 @@ func NewAppInstStore(kvstore objstore.KVStore) AppInstStore {
 	return AppInstStore{kvstore: kvstore}
 }
 
-func (s *AppInstStore) Create(m *AppInst, wait func(int64)) (*Result, error) {
+func (s *AppInstStore) Create(ctx context.Context, m *AppInst, wait func(int64)) (*Result, error) {
 	err := m.Validate(AppInstAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -1717,7 +1717,7 @@ func (s *AppInstStore) Create(m *AppInst, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(ctx, key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -1727,7 +1727,7 @@ func (s *AppInstStore) Create(m *AppInst, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-func (s *AppInstStore) Update(m *AppInst, wait func(int64)) (*Result, error) {
+func (s *AppInstStore) Update(ctx context.Context, m *AppInst, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -1751,7 +1751,7 @@ func (s *AppInstStore) Update(m *AppInst, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -1761,7 +1761,7 @@ func (s *AppInstStore) Update(m *AppInst, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-func (s *AppInstStore) Put(m *AppInst, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *AppInstStore) Put(ctx context.Context, m *AppInst, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(AppInstAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -1773,7 +1773,7 @@ func (s *AppInstStore) Put(m *AppInst, wait func(int64), ops ...objstore.KVOp) (
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val), ops...)
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}
@@ -1783,13 +1783,13 @@ func (s *AppInstStore) Put(m *AppInst, wait func(int64), ops ...objstore.KVOp) (
 	return &Result{}, err
 }
 
-func (s *AppInstStore) Delete(m *AppInst, wait func(int64)) (*Result, error) {
+func (s *AppInstStore) Delete(ctx context.Context, m *AppInst, wait func(int64)) (*Result, error) {
 	err := m.GetKey().Validate()
 	if err != nil {
 		return nil, err
 	}
 	key := objstore.DbKeyString("AppInst", m.GetKey())
-	rev, err := s.kvstore.Delete(key)
+	rev, err := s.kvstore.Delete(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -1844,7 +1844,7 @@ func (s *AppInstStore) STMDel(stm concurrency.STM, key *AppInstKey) {
 }
 
 type AppInstKeyWatcher struct {
-	cb func()
+	cb func(ctx context.Context)
 }
 
 // AppInstCache caches AppInst objects in memory in a hash table
@@ -1853,8 +1853,8 @@ type AppInstCache struct {
 	Objs        map[AppInstKey]*AppInst
 	Mux         util.Mutex
 	List        map[AppInstKey]struct{}
-	NotifyCb    func(obj *AppInstKey, old *AppInst)
-	UpdatedCb   func(old *AppInst, new *AppInst)
+	NotifyCb    func(ctx context.Context, obj *AppInstKey, old *AppInst)
+	UpdatedCb   func(ctx context.Context, old *AppInst, new *AppInst)
 	KeyWatchers map[AppInstKey][]*AppInstKeyWatcher
 }
 
@@ -1890,21 +1890,21 @@ func (c *AppInstCache) HasKey(key *AppInstKey) bool {
 	return found
 }
 
-func (c *AppInstCache) GetAllKeys(keys map[AppInstKey]struct{}) {
+func (c *AppInstCache) GetAllKeys(ctx context.Context, keys map[AppInstKey]context.Context) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
-		keys[key] = struct{}{}
+		keys[key] = ctx
 	}
 }
 
-func (c *AppInstCache) Update(in *AppInst, rev int64) {
-	c.UpdateModFunc(&in.Key, rev, func(old *AppInst) (*AppInst, bool) {
+func (c *AppInstCache) Update(ctx context.Context, in *AppInst, rev int64) {
+	c.UpdateModFunc(ctx, &in.Key, rev, func(old *AppInst) (*AppInst, bool) {
 		return in, true
 	})
 }
 
-func (c *AppInstCache) UpdateModFunc(key *AppInstKey, rev int64, modFunc func(old *AppInst) (new *AppInst, changed bool)) {
+func (c *AppInstCache) UpdateModFunc(ctx context.Context, key *AppInstKey, rev int64, modFunc func(old *AppInst) (new *AppInst, changed bool)) {
 	c.Mux.Lock()
 	old := c.Objs[*key]
 	new, changed := modFunc(old)
@@ -1916,31 +1916,33 @@ func (c *AppInstCache) UpdateModFunc(key *AppInstKey, rev int64, modFunc func(ol
 		if c.UpdatedCb != nil {
 			newCopy := &AppInst{}
 			*newCopy = *new
-			defer c.UpdatedCb(old, newCopy)
+			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&new.Key, old)
+			defer c.NotifyCb(ctx, &new.Key, old)
 		}
 	}
 	c.Objs[new.Key] = new
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInst", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&new.Key)
+	c.TriggerKeyWatchers(ctx, &new.Key)
 }
 
-func (c *AppInstCache) Delete(in *AppInst, rev int64) {
+func (c *AppInstCache) Delete(ctx context.Context, in *AppInst, rev int64) {
 	c.Mux.Lock()
 	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInst", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key, old)
+		c.NotifyCb(ctx, &in.Key, old)
 	}
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(ctx, &in.Key)
 }
 
-func (c *AppInstCache) Prune(validKeys map[AppInstKey]struct{}) {
+func (c *AppInstCache) Prune(ctx context.Context, validKeys map[AppInstKey]struct{}) {
 	notify := make(map[AppInstKey]*AppInst)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
@@ -1954,9 +1956,9 @@ func (c *AppInstCache) Prune(validKeys map[AppInstKey]struct{}) {
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key, old)
+			c.NotifyCb(ctx, &key, old)
 		}
-		c.TriggerKeyWatchers(&key)
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
@@ -1966,7 +1968,7 @@ func (c *AppInstCache) GetCount() int {
 	return len(c.Objs)
 }
 
-func (c *AppInstCache) Flush(notifyId int64) {
+func (c *AppInstCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error {
@@ -1992,15 +1994,15 @@ func AppInstGenericNotifyCb(fn func(key *AppInstKey, old *AppInst)) func(objstor
 	}
 }
 
-func (c *AppInstCache) SetNotifyCb(fn func(obj *AppInstKey, old *AppInst)) {
+func (c *AppInstCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInstKey, old *AppInst)) {
 	c.NotifyCb = fn
 }
 
-func (c *AppInstCache) SetUpdatedCb(fn func(old *AppInst, new *AppInst)) {
+func (c *AppInstCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInst, new *AppInst)) {
 	c.UpdatedCb = fn
 }
 
-func (c *AppInstCache) WatchKey(key *AppInstKey, cb func()) context.CancelFunc {
+func (c *AppInstCache) WatchKey(key *AppInstKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -2033,7 +2035,7 @@ func (c *AppInstCache) WatchKey(key *AppInstKey, cb func()) context.CancelFunc {
 	}
 }
 
-func (c *AppInstCache) TriggerKeyWatchers(key *AppInstKey) {
+func (c *AppInstCache) TriggerKeyWatchers(ctx context.Context, key *AppInstKey) {
 	watchers := make([]*AppInstKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -2041,17 +2043,17 @@ func (c *AppInstCache) TriggerKeyWatchers(key *AppInstKey) {
 	}
 	c.Mux.Unlock()
 	for ii, _ := range watchers {
-		watchers[ii].cb()
+		watchers[ii].cb(ctx)
 	}
 }
-func (c *AppInstCache) SyncUpdate(key, val []byte, rev int64) {
+func (c *AppInstCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	obj := AppInst{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse AppInst data", "val", string(val))
 		return
 	}
-	c.Update(&obj, rev)
+	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.Key] = struct{}{}
@@ -2059,18 +2061,18 @@ func (c *AppInstCache) SyncUpdate(key, val []byte, rev int64) {
 	c.Mux.Unlock()
 }
 
-func (c *AppInstCache) SyncDelete(key []byte, rev int64) {
+func (c *AppInstCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := AppInst{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	AppInstKeyStringParse(keystr, &obj.Key)
-	c.Delete(&obj, rev)
+	c.Delete(ctx, &obj, rev)
 }
 
-func (c *AppInstCache) SyncListStart() {
+func (c *AppInstCache) SyncListStart(ctx context.Context) {
 	c.List = make(map[AppInstKey]struct{})
 }
 
-func (c *AppInstCache) SyncListEnd() {
+func (c *AppInstCache) SyncListEnd(ctx context.Context) {
 	deleted := make(map[AppInstKey]*AppInst)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -2083,8 +2085,8 @@ func (c *AppInstCache) SyncListEnd() {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(&key, val)
-			c.TriggerKeyWatchers(&key)
+			c.NotifyCb(ctx, &key, val)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 }
@@ -2095,7 +2097,7 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 	failed := make(chan bool, 1)
 	var err error
 
-	cancel := c.WatchKey(key, func() {
+	cancel := c.WatchKey(key, func(ctx context.Context) {
 		info := AppInst{}
 		if c.Get(key, &info) {
 			curState = info.State
@@ -2112,6 +2114,7 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 			}
 			send(&Result{Message: msg})
 		}
+		log.SpanLog(ctx, log.DebugLevelApi, "watch event for AppInst")
 		log.DebugLog(log.DebugLevelApi, "Watch event for AppInst", "key", key, "state", TrackedState_CamelName[int32(curState)], "status", info.Status)
 		if curState == errorState {
 			failed <- true
@@ -2580,7 +2583,7 @@ func NewAppInstInfoStore(kvstore objstore.KVStore) AppInstInfoStore {
 	return AppInstInfoStore{kvstore: kvstore}
 }
 
-func (s *AppInstInfoStore) Create(m *AppInstInfo, wait func(int64)) (*Result, error) {
+func (s *AppInstInfoStore) Create(ctx context.Context, m *AppInstInfo, wait func(int64)) (*Result, error) {
 	err := m.Validate(AppInstInfoAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -2590,7 +2593,7 @@ func (s *AppInstInfoStore) Create(m *AppInstInfo, wait func(int64)) (*Result, er
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(ctx, key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -2600,7 +2603,7 @@ func (s *AppInstInfoStore) Create(m *AppInstInfo, wait func(int64)) (*Result, er
 	return &Result{}, err
 }
 
-func (s *AppInstInfoStore) Update(m *AppInstInfo, wait func(int64)) (*Result, error) {
+func (s *AppInstInfoStore) Update(ctx context.Context, m *AppInstInfo, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -2624,7 +2627,7 @@ func (s *AppInstInfoStore) Update(m *AppInstInfo, wait func(int64)) (*Result, er
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -2634,7 +2637,7 @@ func (s *AppInstInfoStore) Update(m *AppInstInfo, wait func(int64)) (*Result, er
 	return &Result{}, err
 }
 
-func (s *AppInstInfoStore) Put(m *AppInstInfo, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *AppInstInfoStore) Put(ctx context.Context, m *AppInstInfo, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(AppInstInfoAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -2646,7 +2649,7 @@ func (s *AppInstInfoStore) Put(m *AppInstInfo, wait func(int64), ops ...objstore
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val), ops...)
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}
@@ -2656,13 +2659,13 @@ func (s *AppInstInfoStore) Put(m *AppInstInfo, wait func(int64), ops ...objstore
 	return &Result{}, err
 }
 
-func (s *AppInstInfoStore) Delete(m *AppInstInfo, wait func(int64)) (*Result, error) {
+func (s *AppInstInfoStore) Delete(ctx context.Context, m *AppInstInfo, wait func(int64)) (*Result, error) {
 	err := m.GetKey().Validate()
 	if err != nil {
 		return nil, err
 	}
 	key := objstore.DbKeyString("AppInstInfo", m.GetKey())
-	rev, err := s.kvstore.Delete(key)
+	rev, err := s.kvstore.Delete(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -2717,7 +2720,7 @@ func (s *AppInstInfoStore) STMDel(stm concurrency.STM, key *AppInstKey) {
 }
 
 type AppInstInfoKeyWatcher struct {
-	cb func()
+	cb func(ctx context.Context)
 }
 
 // AppInstInfoCache caches AppInstInfo objects in memory in a hash table
@@ -2726,8 +2729,8 @@ type AppInstInfoCache struct {
 	Objs        map[AppInstKey]*AppInstInfo
 	Mux         util.Mutex
 	List        map[AppInstKey]struct{}
-	NotifyCb    func(obj *AppInstKey, old *AppInstInfo)
-	UpdatedCb   func(old *AppInstInfo, new *AppInstInfo)
+	NotifyCb    func(ctx context.Context, obj *AppInstKey, old *AppInstInfo)
+	UpdatedCb   func(ctx context.Context, old *AppInstInfo, new *AppInstInfo)
 	KeyWatchers map[AppInstKey][]*AppInstInfoKeyWatcher
 }
 
@@ -2763,21 +2766,21 @@ func (c *AppInstInfoCache) HasKey(key *AppInstKey) bool {
 	return found
 }
 
-func (c *AppInstInfoCache) GetAllKeys(keys map[AppInstKey]struct{}) {
+func (c *AppInstInfoCache) GetAllKeys(ctx context.Context, keys map[AppInstKey]context.Context) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
-		keys[key] = struct{}{}
+		keys[key] = ctx
 	}
 }
 
-func (c *AppInstInfoCache) Update(in *AppInstInfo, rev int64) {
-	c.UpdateModFunc(&in.Key, rev, func(old *AppInstInfo) (*AppInstInfo, bool) {
+func (c *AppInstInfoCache) Update(ctx context.Context, in *AppInstInfo, rev int64) {
+	c.UpdateModFunc(ctx, &in.Key, rev, func(old *AppInstInfo) (*AppInstInfo, bool) {
 		return in, true
 	})
 }
 
-func (c *AppInstInfoCache) UpdateModFunc(key *AppInstKey, rev int64, modFunc func(old *AppInstInfo) (new *AppInstInfo, changed bool)) {
+func (c *AppInstInfoCache) UpdateModFunc(ctx context.Context, key *AppInstKey, rev int64, modFunc func(old *AppInstInfo) (new *AppInstInfo, changed bool)) {
 	c.Mux.Lock()
 	old := c.Objs[*key]
 	new, changed := modFunc(old)
@@ -2789,31 +2792,33 @@ func (c *AppInstInfoCache) UpdateModFunc(key *AppInstKey, rev int64, modFunc fun
 		if c.UpdatedCb != nil {
 			newCopy := &AppInstInfo{}
 			*newCopy = *new
-			defer c.UpdatedCb(old, newCopy)
+			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&new.Key, old)
+			defer c.NotifyCb(ctx, &new.Key, old)
 		}
 	}
 	c.Objs[new.Key] = new
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInstInfo", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&new.Key)
+	c.TriggerKeyWatchers(ctx, &new.Key)
 }
 
-func (c *AppInstInfoCache) Delete(in *AppInstInfo, rev int64) {
+func (c *AppInstInfoCache) Delete(ctx context.Context, in *AppInstInfo, rev int64) {
 	c.Mux.Lock()
 	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInstInfo", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key, old)
+		c.NotifyCb(ctx, &in.Key, old)
 	}
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(ctx, &in.Key)
 }
 
-func (c *AppInstInfoCache) Prune(validKeys map[AppInstKey]struct{}) {
+func (c *AppInstInfoCache) Prune(ctx context.Context, validKeys map[AppInstKey]struct{}) {
 	notify := make(map[AppInstKey]*AppInstInfo)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
@@ -2827,9 +2832,9 @@ func (c *AppInstInfoCache) Prune(validKeys map[AppInstKey]struct{}) {
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key, old)
+			c.NotifyCb(ctx, &key, old)
 		}
-		c.TriggerKeyWatchers(&key)
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
@@ -2839,7 +2844,7 @@ func (c *AppInstInfoCache) GetCount() int {
 	return len(c.Objs)
 }
 
-func (c *AppInstInfoCache) Flush(notifyId int64) {
+func (c *AppInstInfoCache) Flush(ctx context.Context, notifyId int64) {
 	flushed := make(map[AppInstKey]*AppInstInfo)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -2853,9 +2858,9 @@ func (c *AppInstInfoCache) Flush(notifyId int64) {
 	if len(flushed) > 0 {
 		for key, old := range flushed {
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key, old)
+				c.NotifyCb(ctx, &key, old)
 			}
-			c.TriggerKeyWatchers(&key)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 }
@@ -2883,15 +2888,15 @@ func AppInstInfoGenericNotifyCb(fn func(key *AppInstKey, old *AppInstInfo)) func
 	}
 }
 
-func (c *AppInstInfoCache) SetNotifyCb(fn func(obj *AppInstKey, old *AppInstInfo)) {
+func (c *AppInstInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInstKey, old *AppInstInfo)) {
 	c.NotifyCb = fn
 }
 
-func (c *AppInstInfoCache) SetUpdatedCb(fn func(old *AppInstInfo, new *AppInstInfo)) {
+func (c *AppInstInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInstInfo, new *AppInstInfo)) {
 	c.UpdatedCb = fn
 }
 
-func (c *AppInstInfoCache) WatchKey(key *AppInstKey, cb func()) context.CancelFunc {
+func (c *AppInstInfoCache) WatchKey(key *AppInstKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -2924,7 +2929,7 @@ func (c *AppInstInfoCache) WatchKey(key *AppInstKey, cb func()) context.CancelFu
 	}
 }
 
-func (c *AppInstInfoCache) TriggerKeyWatchers(key *AppInstKey) {
+func (c *AppInstInfoCache) TriggerKeyWatchers(ctx context.Context, key *AppInstKey) {
 	watchers := make([]*AppInstInfoKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -2932,17 +2937,17 @@ func (c *AppInstInfoCache) TriggerKeyWatchers(key *AppInstKey) {
 	}
 	c.Mux.Unlock()
 	for ii, _ := range watchers {
-		watchers[ii].cb()
+		watchers[ii].cb(ctx)
 	}
 }
-func (c *AppInstInfoCache) SyncUpdate(key, val []byte, rev int64) {
+func (c *AppInstInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	obj := AppInstInfo{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse AppInstInfo data", "val", string(val))
 		return
 	}
-	c.Update(&obj, rev)
+	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.Key] = struct{}{}
@@ -2950,18 +2955,18 @@ func (c *AppInstInfoCache) SyncUpdate(key, val []byte, rev int64) {
 	c.Mux.Unlock()
 }
 
-func (c *AppInstInfoCache) SyncDelete(key []byte, rev int64) {
+func (c *AppInstInfoCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := AppInstInfo{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	AppInstKeyStringParse(keystr, &obj.Key)
-	c.Delete(&obj, rev)
+	c.Delete(ctx, &obj, rev)
 }
 
-func (c *AppInstInfoCache) SyncListStart() {
+func (c *AppInstInfoCache) SyncListStart(ctx context.Context) {
 	c.List = make(map[AppInstKey]struct{})
 }
 
-func (c *AppInstInfoCache) SyncListEnd() {
+func (c *AppInstInfoCache) SyncListEnd(ctx context.Context) {
 	deleted := make(map[AppInstKey]*AppInstInfo)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -2974,8 +2979,8 @@ func (c *AppInstInfoCache) SyncListEnd() {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(&key, val)
-			c.TriggerKeyWatchers(&key)
+			c.NotifyCb(ctx, &key, val)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 }

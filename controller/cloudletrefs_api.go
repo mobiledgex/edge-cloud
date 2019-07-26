@@ -1,6 +1,10 @@
 package main
 
-import "github.com/mobiledgex/edge-cloud/edgeproto"
+import (
+	"context"
+
+	"github.com/mobiledgex/edge-cloud/edgeproto"
+)
 
 type CloudletRefsApi struct {
 	sync  *Sync
@@ -17,9 +21,9 @@ func InitCloudletRefsApi(sync *Sync) {
 	sync.RegisterCache(&cloudletRefsApi.cache)
 }
 
-func (s *CloudletRefsApi) Delete(key *edgeproto.CloudletKey, wait func(int64)) {
+func (s *CloudletRefsApi) Delete(ctx context.Context, key *edgeproto.CloudletKey, wait func(int64)) {
 	in := edgeproto.CloudletRefs{Key: *key}
-	s.store.Delete(&in, wait)
+	s.store.Delete(ctx, &in, wait)
 }
 
 func (s *CloudletRefsApi) ShowCloudletRefs(in *edgeproto.CloudletRefs, cb edgeproto.CloudletRefsApi_ShowCloudletRefsServer) error {

@@ -10,6 +10,7 @@ import "testing"
 import "context"
 import "time"
 import "github.com/stretchr/testify/require"
+import "github.com/mobiledgex/edge-cloud/log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -169,26 +170,33 @@ func NewClientDeveloperApi(api edgeproto.DeveloperApiClient) *DeveloperCommonApi
 }
 
 func InternalDeveloperTest(t *testing.T, test string, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalDeveloperTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicDeveloperCudTest(t, NewInternalDeveloperApi(api), testData)
+		basicDeveloperCudTest(t, ctx, NewInternalDeveloperApi(api), testData)
 	case "show":
-		basicDeveloperShowTest(t, NewInternalDeveloperApi(api), testData)
+		basicDeveloperShowTest(t, ctx, NewInternalDeveloperApi(api), testData)
 	}
 }
 
 func ClientDeveloperTest(t *testing.T, test string, api edgeproto.DeveloperApiClient, testData []edgeproto.Developer) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientDeveloperTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	switch test {
 	case "cud":
-		basicDeveloperCudTest(t, NewClientDeveloperApi(api), testData)
+		basicDeveloperCudTest(t, ctx, NewClientDeveloperApi(api), testData)
 	case "show":
-		basicDeveloperShowTest(t, NewClientDeveloperApi(api), testData)
+		basicDeveloperShowTest(t, ctx, NewClientDeveloperApi(api), testData)
 	}
 }
 
-func basicDeveloperShowTest(t *testing.T, api *DeveloperCommonApi, testData []edgeproto.Developer) {
+func basicDeveloperShowTest(t *testing.T, ctx context.Context, api *DeveloperCommonApi, testData []edgeproto.Developer) {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowDeveloper{}
 	show.Init()
@@ -201,9 +209,8 @@ func basicDeveloperShowTest(t *testing.T, api *DeveloperCommonApi, testData []ed
 	}
 }
 
-func GetDeveloper(t *testing.T, api *DeveloperCommonApi, key *edgeproto.DeveloperKey, out *edgeproto.Developer) bool {
+func GetDeveloper(t *testing.T, ctx context.Context, api *DeveloperCommonApi, key *edgeproto.DeveloperKey, out *edgeproto.Developer) bool {
 	var err error
-	ctx := context.TODO()
 
 	show := ShowDeveloper{}
 	show.Init()
@@ -218,9 +225,8 @@ func GetDeveloper(t *testing.T, api *DeveloperCommonApi, key *edgeproto.Develope
 	return found
 }
 
-func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edgeproto.Developer) {
+func basicDeveloperCudTest(t *testing.T, ctx context.Context, api *DeveloperCommonApi, testData []edgeproto.Developer) {
 	var err error
-	ctx := context.TODO()
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
@@ -228,14 +234,14 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	}
 
 	// test create
-	createDeveloperData(t, api, testData)
+	createDeveloperData(t, ctx, api, testData)
 
 	// test duplicate create - should fail
 	_, err = api.CreateDeveloper(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate Developer")
 
 	// test show all items
-	basicDeveloperShowTest(t, api, testData)
+	basicDeveloperShowTest(t, ctx, api, testData)
 
 	// test delete
 	_, err = api.DeleteDeveloper(ctx, &testData[0])
@@ -262,16 +268,23 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 }
 
 func InternalDeveloperCreate(t *testing.T, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
-	createDeveloperData(t, NewInternalDeveloperApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "InternalDeveloperCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createDeveloperData(t, ctx, NewInternalDeveloperApi(api), testData)
 }
 
 func ClientDeveloperCreate(t *testing.T, api edgeproto.DeveloperApiClient, testData []edgeproto.Developer) {
-	createDeveloperData(t, NewClientDeveloperApi(api), testData)
+	span := log.StartSpan(log.DebugLevelApi, "ClientDeveloperCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	createDeveloperData(t, ctx, NewClientDeveloperApi(api), testData)
 }
 
-func createDeveloperData(t *testing.T, api *DeveloperCommonApi, testData []edgeproto.Developer) {
+func createDeveloperData(t *testing.T, ctx context.Context, api *DeveloperCommonApi, testData []edgeproto.Developer) {
 	var err error
-	ctx := context.TODO()
 
 	for _, obj := range testData {
 		_, err = api.CreateDeveloper(ctx, &obj)

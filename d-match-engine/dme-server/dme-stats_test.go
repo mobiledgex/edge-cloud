@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -22,7 +23,7 @@ func (n *testdb) Init() {
 	n.stats = make(map[StatKey]*ApiStat)
 }
 
-func (n *testdb) send(metric *edgeproto.Metric) bool {
+func (n *testdb) send(ctx context.Context, metric *edgeproto.Metric) bool {
 	key, stat := MetricToStat(metric)
 	n.mux.Lock()
 	n.stats[*key] = stat

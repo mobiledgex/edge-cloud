@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -53,10 +54,6 @@ func InitAppInstApi(sync *Sync) {
 	}
 }
 
-func (s *AppInstApi) GetAllKeys(keys map[edgeproto.AppInstKey]struct{}) {
-	s.cache.GetAllKeys(keys)
-}
-
 func (s *AppInstApi) Get(key *edgeproto.AppInstKey, val *edgeproto.AppInst) bool {
 	return s.cache.Get(key, val)
 }
@@ -83,15 +80,15 @@ func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgepr
 	return static
 }
 
-func (s *AppInstApi) updateAppInstRevision(key *edgeproto.AppInstKey, revision int32) error {
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+func (s *AppInstApi) updateAppInstRevision(ctx context.Context, key *edgeproto.AppInstKey, revision int32) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, key, &inst) {
 			// got deleted in the meantime
 			return nil
 		}
 		inst.Revision = revision
-		log.DebugLog(log.DebugLevelApi, "AppInst revision updated", "key", key, "revision", revision)
+		log.SpanLog(ctx, log.DebugLevelApi, "AppInst revision updated", "key", key, "revision", revision)
 
 		s.store.STMPut(stm, &inst)
 		return nil
@@ -269,6 +266,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return err
 		}
 	}
+	ctx := cb.Context()
 
 	var autocluster bool
 	// See if we need to create auto-cluster.
@@ -289,7 +287,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	appDeploymentType := ""
 
 	if !defaultCloudlet {
-		err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			autocluster = false
 			if s.store.STMGet(stm, &in.Key, in) {
 				if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
@@ -413,7 +411,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return fmt.Errorf("Cannot specify URI %s for non-default cloudlet", in.Uri)
 	}
 
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		buf := in
 		if !defaultCloudlet {
 			// lookup already done, don't overwrite changes
@@ -595,10 +593,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Created successfully"})
 		return nil
 	}
-	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_READY, CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR, cloudcommon.CreateAppInstTimeout, "Created successfully", cb.Send)
+	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR, cloudcommon.CreateAppInstTimeout, "Created successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create AppInst ignoring CRM failure: %s", err.Error())})
-		s.ReplaceErrorState(in, edgeproto.TrackedState_READY)
+		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_READY)
 		cb.Send(&edgeproto.Result{Message: "Created AppInst successfully"})
 		err = nil
 	}
@@ -615,14 +613,15 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	return err
 }
 
-func (s *AppInstApi) updateAppInstStore(in *edgeproto.AppInst) error {
-	_, err := s.store.Update(in, s.sync.syncWait)
+func (s *AppInstApi) updateAppInstStore(ctx context.Context, in *edgeproto.AppInst) error {
+	_, err := s.store.Update(ctx, in, s.sync.syncWait)
 	return err
 }
 
 // updateAppInstInternal returns true if the appinst updated, false otherwise.  False value with no error means no update was needed
 func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppInstKey, cb edgeproto.AppInstApi_UpdateAppInstServer, forceUpdate bool) (bool, error) {
-	log.DebugLog(log.DebugLevelApi, "updateAppInstInternal", "key", key)
+	ctx := cb.Context()
+	log.SpanLog(ctx, log.DebugLevelApi, "updateAppInstInternal", "key", key)
 
 	defaultCloudlet := false
 	updatedRevision := false
@@ -639,7 +638,7 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 
 	var app edgeproto.App
 
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		var curr edgeproto.AppInst
 
 		if !appApi.store.STMGet(stm, &key.AppKey, &app) {
@@ -676,7 +675,7 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 	if crmUpdateRequired {
 		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateAppInstTimeout, "", cb.Send)
 	}
-	return updatedRevision, s.updateAppInstRevision(&key, app.Revision)
+	return updatedRevision, s.updateAppInstRevision(ctx, &key, app.Revision)
 }
 
 func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
@@ -801,12 +800,14 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return err
 		}
 	}
+	ctx := cb.Context()
+
 	// check if we are deleting an autocluster instance we need to set the key correctly.
 	if strings.HasPrefix(in.Key.ClusterInstKey.ClusterKey.Name, ClusterAutoPrefix) && in.Key.ClusterInstKey.Developer == "" {
 		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
 	}
 	clusterInstKey := edgeproto.ClusterInstKey{}
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			if in.Key.ClusterInstKey.Developer == "" {
 				// create still allows it be unset on input,
@@ -883,10 +884,10 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
 		return nil
 	}
-	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, cloudcommon.DeleteAppInstTimeout, "Deleted AppInst successfully", cb.Send)
+	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, cloudcommon.DeleteAppInstTimeout, "Deleted AppInst successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
-		s.ReplaceErrorState(in, edgeproto.TrackedState_NOT_PRESENT)
+		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
 		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
 		err = nil
 	}
@@ -920,9 +921,9 @@ func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_
 	return err
 }
 
-func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
+func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
 	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status)
-	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
@@ -959,9 +960,9 @@ func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
 	})
 }
 
-func (s *AppInstApi) DeleteFromInfo(in *edgeproto.AppInstInfo) {
+func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
 	log.DebugLog(log.DebugLevelApi, "Delete AppInst from info", "key", in.Key, "state", in.State)
-	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
@@ -979,8 +980,8 @@ func (s *AppInstApi) DeleteFromInfo(in *edgeproto.AppInstInfo) {
 	})
 }
 
-func (s *AppInstApi) ReplaceErrorState(in *edgeproto.AppInst, newState edgeproto.TrackedState) {
-	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+func (s *AppInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.AppInst, newState edgeproto.TrackedState) {
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
