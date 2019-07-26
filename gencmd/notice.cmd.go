@@ -33,7 +33,7 @@ var NoticeActionStrings = []string{
 }
 
 func NoticeSlicer(in *edgeproto.Notice) []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	s = append(s, edgeproto.NoticeAction_CamelName[int32(in.Action)])
 	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
 	s = append(s, in.Any.TypeUrl)
@@ -46,17 +46,19 @@ func NoticeSlicer(in *edgeproto.Notice) []string {
 	}
 	s = append(s, in.WantObjs[0])
 	s = append(s, strconv.FormatBool(in.FilterCloudletKey))
+	s = append(s, in.Span)
 	return s
 }
 
 func NoticeHeaderSlicer() []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	s = append(s, "Action")
 	s = append(s, "Version")
 	s = append(s, "Any-TypeUrl")
 	s = append(s, "Any-Value")
 	s = append(s, "WantObjs")
 	s = append(s, "FilterCloudletKey")
+	s = append(s, "Span")
 	return s
 }
 

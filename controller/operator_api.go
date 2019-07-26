@@ -31,18 +31,18 @@ func (s *OperatorApi) CreateOperator(ctx context.Context, in *edgeproto.Operator
 	if in.Key.Name == cloudcommon.OperatorDeveloper {
 		return nil, errors.New("Cannot create operator with name = " + cloudcommon.OperatorDeveloper)
 	}
-	return s.store.Create(in, s.sync.syncWait)
+	return s.store.Create(ctx, in, s.sync.syncWait)
 }
 
 func (s *OperatorApi) UpdateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
-	return s.store.Update(in, s.sync.syncWait)
+	return s.store.Update(ctx, in, s.sync.syncWait)
 }
 
 func (s *OperatorApi) DeleteOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
 	if cloudletApi.UsesOperator(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Operator in use by Cloudlet")
 	}
-	return s.store.Delete(in, s.sync.syncWait)
+	return s.store.Delete(ctx, in, s.sync.syncWait)
 }
 
 func (s *OperatorApi) ShowOperator(in *edgeproto.Operator, cb edgeproto.OperatorApi_ShowOperatorServer) error {

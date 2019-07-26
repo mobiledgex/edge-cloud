@@ -97,6 +97,7 @@ type DeploymentData struct {
 	SampleApps  []*process.SampleApp  `yaml:"sampleapps"`
 	Influxs     []*process.Influx     `yaml:"influxs"`
 	ClusterSvcs []*process.ClusterSvc `yaml:"clustersvcs"`
+	Jaegers     []*process.Jaeger     `yaml:"jaegers"`
 }
 
 type errorReply struct {
@@ -132,6 +133,9 @@ func GetAllProcesses() []process.Process {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.ClusterSvcs {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.Jaegers {
 		all = append(all, p)
 	}
 	return all

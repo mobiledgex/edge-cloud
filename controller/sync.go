@@ -23,10 +23,10 @@ type Sync struct {
 }
 
 type ObjCache interface {
-	SyncUpdate(key, val []byte, rev int64)
-	SyncDelete(key []byte, rev int64)
-	SyncListStart()
-	SyncListEnd()
+	SyncUpdate(ctx context.Context, key, val []byte, rev int64)
+	SyncDelete(ctx context.Context, key []byte, rev int64)
+	SyncListStart(ctx context.Context)
+	SyncListEnd(ctx context.Context)
 	GetTypeString() string
 }
 
@@ -96,31 +96,32 @@ func (s *Sync) GetCache(key []byte) (ObjCache, bool) {
 // This thread context is the only context in which we can modify the cache
 // data, otherwise there could be race conditions against the sync data
 // coming from etcd.
-func (s *Sync) syncCb(data *objstore.SyncCbData) {
+func (s *Sync) syncCb(ctx context.Context, data *objstore.SyncCbData) {
 	log.DebugLog(log.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[data.Action], "key", string(data.Key), "value", string(data.Value), "rev", data.Rev)
 
 	s.mux.Lock()
+	defer s.mux.Unlock()
 	switch data.Action {
 	case objstore.SyncListStart:
 		for _, cache := range s.caches {
-			cache.SyncListStart()
+			cache.SyncListStart(ctx)
 		}
 	case objstore.SyncListEnd:
 		for _, cache := range s.caches {
-			cache.SyncListEnd()
+			cache.SyncListEnd(ctx)
 		}
 	case objstore.SyncList:
 		fallthrough
 	case objstore.SyncUpdate:
 		if cache, found := s.GetCache(data.Key); found {
-			cache.SyncUpdate(data.Key, data.Value, data.Rev)
+			cache.SyncUpdate(ctx, data.Key, data.Value, data.Rev)
 		}
 		if !data.MoreEvents {
 			s.rev = data.Rev
 		}
 	case objstore.SyncDelete:
 		if cache, found := s.GetCache(data.Key); found {
-			cache.SyncDelete(data.Key, data.Rev)
+			cache.SyncDelete(ctx, data.Key, data.Rev)
 		}
 		if !data.MoreEvents {
 			s.rev = data.Rev
@@ -132,7 +133,6 @@ func (s *Sync) syncCb(data *objstore.SyncCbData) {
 		s.initWait = false
 	}
 	s.cond.Broadcast()
-	s.mux.Unlock()
 }
 
 // syncWait is used by API calls to wait until data has been updated in cache
@@ -145,8 +145,8 @@ func (s *Sync) syncWait(rev int64) {
 	}
 }
 
-func (s *Sync) ApplySTMWait(apply func(concurrency.STM) error) error {
-	rev, err := s.store.ApplySTM(apply)
+func (s *Sync) ApplySTMWait(ctx context.Context, apply func(concurrency.STM) error) error {
+	rev, err := s.store.ApplySTM(ctx, apply)
 	if err == nil {
 		s.syncWait(rev)
 	}

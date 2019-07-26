@@ -1229,7 +1229,7 @@ func NewAppStore(kvstore objstore.KVStore) AppStore {
 	return AppStore{kvstore: kvstore}
 }
 
-func (s *AppStore) Create(m *App, wait func(int64)) (*Result, error) {
+func (s *AppStore) Create(ctx context.Context, m *App, wait func(int64)) (*Result, error) {
 	err := m.Validate(AppAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -1239,7 +1239,7 @@ func (s *AppStore) Create(m *App, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(ctx, key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -1249,7 +1249,7 @@ func (s *AppStore) Create(m *App, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-func (s *AppStore) Update(m *App, wait func(int64)) (*Result, error) {
+func (s *AppStore) Update(ctx context.Context, m *App, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -1273,7 +1273,7 @@ func (s *AppStore) Update(m *App, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -1283,7 +1283,7 @@ func (s *AppStore) Update(m *App, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-func (s *AppStore) Put(m *App, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *AppStore) Put(ctx context.Context, m *App, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(AppAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -1295,7 +1295,7 @@ func (s *AppStore) Put(m *App, wait func(int64), ops ...objstore.KVOp) (*Result,
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val), ops...)
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}
@@ -1305,13 +1305,13 @@ func (s *AppStore) Put(m *App, wait func(int64), ops ...objstore.KVOp) (*Result,
 	return &Result{}, err
 }
 
-func (s *AppStore) Delete(m *App, wait func(int64)) (*Result, error) {
+func (s *AppStore) Delete(ctx context.Context, m *App, wait func(int64)) (*Result, error) {
 	err := m.GetKey().Validate()
 	if err != nil {
 		return nil, err
 	}
 	key := objstore.DbKeyString("App", m.GetKey())
-	rev, err := s.kvstore.Delete(key)
+	rev, err := s.kvstore.Delete(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -1366,7 +1366,7 @@ func (s *AppStore) STMDel(stm concurrency.STM, key *AppKey) {
 }
 
 type AppKeyWatcher struct {
-	cb func()
+	cb func(ctx context.Context)
 }
 
 // AppCache caches App objects in memory in a hash table
@@ -1375,8 +1375,8 @@ type AppCache struct {
 	Objs        map[AppKey]*App
 	Mux         util.Mutex
 	List        map[AppKey]struct{}
-	NotifyCb    func(obj *AppKey, old *App)
-	UpdatedCb   func(old *App, new *App)
+	NotifyCb    func(ctx context.Context, obj *AppKey, old *App)
+	UpdatedCb   func(ctx context.Context, old *App, new *App)
 	KeyWatchers map[AppKey][]*AppKeyWatcher
 }
 
@@ -1412,21 +1412,21 @@ func (c *AppCache) HasKey(key *AppKey) bool {
 	return found
 }
 
-func (c *AppCache) GetAllKeys(keys map[AppKey]struct{}) {
+func (c *AppCache) GetAllKeys(ctx context.Context, keys map[AppKey]context.Context) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
-		keys[key] = struct{}{}
+		keys[key] = ctx
 	}
 }
 
-func (c *AppCache) Update(in *App, rev int64) {
-	c.UpdateModFunc(&in.Key, rev, func(old *App) (*App, bool) {
+func (c *AppCache) Update(ctx context.Context, in *App, rev int64) {
+	c.UpdateModFunc(ctx, &in.Key, rev, func(old *App) (*App, bool) {
 		return in, true
 	})
 }
 
-func (c *AppCache) UpdateModFunc(key *AppKey, rev int64, modFunc func(old *App) (new *App, changed bool)) {
+func (c *AppCache) UpdateModFunc(ctx context.Context, key *AppKey, rev int64, modFunc func(old *App) (new *App, changed bool)) {
 	c.Mux.Lock()
 	old := c.Objs[*key]
 	new, changed := modFunc(old)
@@ -1438,31 +1438,33 @@ func (c *AppCache) UpdateModFunc(key *AppKey, rev int64, modFunc func(old *App) 
 		if c.UpdatedCb != nil {
 			newCopy := &App{}
 			*newCopy = *new
-			defer c.UpdatedCb(old, newCopy)
+			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&new.Key, old)
+			defer c.NotifyCb(ctx, &new.Key, old)
 		}
 	}
 	c.Objs[new.Key] = new
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate App", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&new.Key)
+	c.TriggerKeyWatchers(ctx, &new.Key)
 }
 
-func (c *AppCache) Delete(in *App, rev int64) {
+func (c *AppCache) Delete(ctx context.Context, in *App, rev int64) {
 	c.Mux.Lock()
 	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	log.DebugLog(log.DebugLevelApi, "SyncDelete App", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key, old)
+		c.NotifyCb(ctx, &in.Key, old)
 	}
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(ctx, &in.Key)
 }
 
-func (c *AppCache) Prune(validKeys map[AppKey]struct{}) {
+func (c *AppCache) Prune(ctx context.Context, validKeys map[AppKey]struct{}) {
 	notify := make(map[AppKey]*App)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
@@ -1476,9 +1478,9 @@ func (c *AppCache) Prune(validKeys map[AppKey]struct{}) {
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key, old)
+			c.NotifyCb(ctx, &key, old)
 		}
-		c.TriggerKeyWatchers(&key)
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
@@ -1488,7 +1490,7 @@ func (c *AppCache) GetCount() int {
 	return len(c.Objs)
 }
 
-func (c *AppCache) Flush(notifyId int64) {
+func (c *AppCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {
@@ -1514,15 +1516,15 @@ func AppGenericNotifyCb(fn func(key *AppKey, old *App)) func(objstore.ObjKey, ob
 	}
 }
 
-func (c *AppCache) SetNotifyCb(fn func(obj *AppKey, old *App)) {
+func (c *AppCache) SetNotifyCb(fn func(ctx context.Context, obj *AppKey, old *App)) {
 	c.NotifyCb = fn
 }
 
-func (c *AppCache) SetUpdatedCb(fn func(old *App, new *App)) {
+func (c *AppCache) SetUpdatedCb(fn func(ctx context.Context, old *App, new *App)) {
 	c.UpdatedCb = fn
 }
 
-func (c *AppCache) WatchKey(key *AppKey, cb func()) context.CancelFunc {
+func (c *AppCache) WatchKey(key *AppKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -1555,7 +1557,7 @@ func (c *AppCache) WatchKey(key *AppKey, cb func()) context.CancelFunc {
 	}
 }
 
-func (c *AppCache) TriggerKeyWatchers(key *AppKey) {
+func (c *AppCache) TriggerKeyWatchers(ctx context.Context, key *AppKey) {
 	watchers := make([]*AppKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -1563,17 +1565,17 @@ func (c *AppCache) TriggerKeyWatchers(key *AppKey) {
 	}
 	c.Mux.Unlock()
 	for ii, _ := range watchers {
-		watchers[ii].cb()
+		watchers[ii].cb(ctx)
 	}
 }
-func (c *AppCache) SyncUpdate(key, val []byte, rev int64) {
+func (c *AppCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	obj := App{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse App data", "val", string(val))
 		return
 	}
-	c.Update(&obj, rev)
+	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.Key] = struct{}{}
@@ -1581,18 +1583,18 @@ func (c *AppCache) SyncUpdate(key, val []byte, rev int64) {
 	c.Mux.Unlock()
 }
 
-func (c *AppCache) SyncDelete(key []byte, rev int64) {
+func (c *AppCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := App{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	AppKeyStringParse(keystr, &obj.Key)
-	c.Delete(&obj, rev)
+	c.Delete(ctx, &obj, rev)
 }
 
-func (c *AppCache) SyncListStart() {
+func (c *AppCache) SyncListStart(ctx context.Context) {
 	c.List = make(map[AppKey]struct{})
 }
 
-func (c *AppCache) SyncListEnd() {
+func (c *AppCache) SyncListEnd(ctx context.Context) {
 	deleted := make(map[AppKey]*App)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -1605,8 +1607,8 @@ func (c *AppCache) SyncListEnd() {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(&key, val)
-			c.TriggerKeyWatchers(&key)
+			c.NotifyCb(ctx, &key, val)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 }

@@ -403,3 +403,22 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortNode))
 	return opts
 }
+
+func GetOrg(obj interface{}) string {
+	switch v := obj.(type) {
+	case *Operator:
+		return v.Key.Name
+	case *Developer:
+		return v.Key.Name
+	case *Cloudlet:
+		return v.Key.OperatorKey.Name
+	case *ClusterInst:
+		return v.Key.Developer
+	case *App:
+		return v.Key.DeveloperKey.Name
+	case *AppInst:
+		return v.Key.AppKey.DeveloperKey.Name
+	default:
+		return "mobiledgex"
+	}
+}

@@ -26,19 +26,19 @@ func InitNodeApi(sync *Sync) {
 	sync.RegisterCache(&nodeApi.cache)
 }
 
-func (s *NodeApi) Update(in *edgeproto.Node, rev int64) {
-	s.cache.Update(in, rev)
+func (s *NodeApi) Update(ctx context.Context, in *edgeproto.Node, rev int64) {
+	s.cache.Update(ctx, in, rev)
 }
 
-func (s *NodeApi) Delete(in *edgeproto.Node, rev int64) {
-	s.cache.Delete(in, rev)
+func (s *NodeApi) Delete(ctx context.Context, in *edgeproto.Node, rev int64) {
+	s.cache.Delete(ctx, in, rev)
 }
 
-func (s *NodeApi) Flush(notifyId int64) {
-	s.cache.Flush(notifyId)
+func (s *NodeApi) Flush(ctx context.Context, notifyId int64) {
+	s.cache.Flush(ctx, notifyId)
 }
 
-func (s *NodeApi) Prune(keys map[edgeproto.NodeKey]struct{}) {}
+func (s *NodeApi) Prune(ctx context.Context, keys map[edgeproto.NodeKey]struct{}) {}
 
 func (s *NodeApi) ShowNodeLocal(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeLocalServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.Node) error {

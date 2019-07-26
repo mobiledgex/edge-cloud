@@ -30,12 +30,8 @@ func (s *FlavorApi) Get(key *edgeproto.FlavorKey, buf *edgeproto.Flavor) bool {
 	return s.cache.Get(key, buf)
 }
 
-func (s *FlavorApi) GetAllKeys(keys map[edgeproto.FlavorKey]struct{}) {
-	s.cache.GetAllKeys(keys)
-}
-
 func (s *FlavorApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
-	return s.store.Create(in, s.sync.syncWait)
+	return s.store.Create(ctx, in, s.sync.syncWait)
 }
 
 func (s *FlavorApi) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
@@ -54,7 +50,7 @@ func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 	if appInstApi.UsesFlavor(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Flavor in use by App Instance")
 	}
-	res, err := s.store.Delete(in, s.sync.syncWait)
+	res, err := s.store.Delete(ctx, in, s.sync.syncWait)
 	// clean up auto-apps using flavor
 	appApi.AutoDeleteApps(ctx, &in.Key)
 	return res, err

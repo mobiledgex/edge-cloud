@@ -85,7 +85,7 @@ type exporterData struct {
 
 // Process updates from notify framework about cluster instances
 // Create app/appInst when clusterInst transitions to a 'ready' state
-func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
+func (c *ClusterInstHandler) Update(ctx context.Context, in *edgeproto.ClusterInst, rev int64) {
 	var err error
 	log.DebugLog(log.DebugLevelNotify, "cluster update", "cluster", in.Key.ClusterKey.Name,
 		"cloudlet", in.Key.CloudletKey.Name, "state", edgeproto.TrackedState_name[int32(in.State)])
@@ -102,7 +102,7 @@ func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 // Callback for clusterInst deletion - we don't need to do anything here
 // Applications created by cluster service are created as auto-delete and will be removed
 // when clusterInstance goes away
-func (c *ClusterInstHandler) Delete(in *edgeproto.ClusterInst, rev int64) {
+func (c *ClusterInstHandler) Delete(ctx context.Context, in *edgeproto.ClusterInst, rev int64) {
 	log.DebugLog(log.DebugLevelNotify, "clusterInst delete", "cluster", in.Key.ClusterKey.Name, "state",
 		edgeproto.TrackedState_name[int32(in.State)])
 	// don't need to do anything really if a cluster instance is getting deleted
@@ -110,11 +110,11 @@ func (c *ClusterInstHandler) Delete(in *edgeproto.ClusterInst, rev int64) {
 }
 
 // Don't need to do anything here - same as Delete
-func (c *ClusterInstHandler) Prune(keys map[edgeproto.ClusterInstKey]struct{}) {
+func (c *ClusterInstHandler) Prune(ctx context.Context, keys map[edgeproto.ClusterInstKey]struct{}) {
 	log.DebugLog(log.DebugLevelNotify, "clusterInst prune")
 }
 
-func (c *ClusterInstHandler) Flush(notifyId int64) {}
+func (c *ClusterInstHandler) Flush(ctx context.Context, notifyId int64) {}
 
 func init() {
 	prometheusT = template.Must(template.New("prometheus").Parse(MEXPrometheusAppHelmTemplate))
@@ -263,6 +263,7 @@ func main() {
 	var err error
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
+	log.InitTracer()
 
 	if *standalone {
 		fmt.Printf("Running in Standalone Mode with test instances\n")

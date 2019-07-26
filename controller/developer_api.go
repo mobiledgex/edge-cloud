@@ -23,11 +23,11 @@ func InitDeveloperApi(sync *Sync) {
 }
 
 func (s *DeveloperApi) CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
-	return s.store.Create(in, s.sync.syncWait)
+	return s.store.Create(ctx, in, s.sync.syncWait)
 }
 
 func (s *DeveloperApi) UpdateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
-	return s.store.Update(in, s.sync.syncWait)
+	return s.store.Update(ctx, in, s.sync.syncWait)
 }
 
 func (s *DeveloperApi) DeleteDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
@@ -36,7 +36,7 @@ func (s *DeveloperApi) DeleteDeveloper(ctx context.Context, in *edgeproto.Develo
 	}
 	// clean up auto-apps using developer
 	appApi.AutoDeleteAppsForDeveloper(ctx, &in.Key)
-	return s.store.Delete(in, s.sync.syncWait)
+	return s.store.Delete(ctx, in, s.sync.syncWait)
 }
 
 func (s *DeveloperApi) ShowDeveloper(in *edgeproto.Developer, cb edgeproto.DeveloperApi_ShowDeveloperServer) error {

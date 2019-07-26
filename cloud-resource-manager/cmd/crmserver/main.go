@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -50,6 +51,10 @@ var platform pf.Platform
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
+	log.InitTracer()
+	defer log.FinishTracer()
+	span := log.StartSpan(log.DebugLevelInfo, "main")
+	ctx := log.ContextWithSpan(context.Background(), span)
 
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
@@ -68,11 +73,11 @@ func main() {
 	if *physicalName == "" {
 		*physicalName = myCloudlet.Key.Name
 	}
-	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key, "platform", *platformName, "physicalName", physicalName)
+	log.SpanLog(ctx, log.DebugLevelInfo, "Using cloudletKey", "key", myCloudlet.Key, "platform", *platformName, "physicalName", physicalName)
 
 	// Load platform implementation.
 	var err error
-	platform, err = pfutils.GetPlatform(*platformName)
+	platform, err = pfutils.GetPlatform(ctx, *platformName)
 	if err != nil {
 		log.FatalLog(err.Error())
 	}
@@ -81,36 +86,38 @@ func main() {
 
 	creds, err := tls.GetTLSServerCreds(*tlsCertFile, true)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
 
 	go func() {
-		log.DebugLog(log.DebugLevelMexos, "starting to init platform")
+		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
 		if err := initPlatform(&myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache); err != nil {
+			span.Finish()
 			log.FatalLog("failed to init platform", "err", err)
 		}
 
-		log.DebugLog(log.DebugLevelMexos, "gathering cloudlet info")
+		log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
 		controllerData.GatherCloudletInfo(&myCloudlet)
 
-		log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
+		log.SpanLog(ctx, log.DebugLevelInfo, "sending cloudlet info cache update")
 		// trigger send of info upstream to controller
-		controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
+		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
 
 		myNode.BuildMaster = version.BuildMaster
 		myNode.BuildHead = version.BuildHead
 		myNode.BuildAuthor = version.BuildAuthor
 		myNode.Hostname = cloudcommon.Hostname()
-		controllerData.NodeCache.Update(&myNode, 0)
-		log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
+		controllerData.NodeCache.Update(ctx, &myNode, 0)
+		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 	}()
 
 	//ctl notify
 	addrs := strings.Split(*notifyAddrs, ",")
 	notifyClient = notify.NewClient(addrs, *tlsCertFile)
 	notifyClient.SetFilterByCloudletKey()
-	InitNotify(notifyClient, controllerData)
+	InitClientNotify(notifyClient, controllerData)
 	notifyClient.Start()
 	defer notifyClient.Stop()
 	reflection.Register(grpcServer)
@@ -118,17 +125,19 @@ func main() {
 	//setup crm notify listener (for shepherd)
 	var notifyServer notify.ServerMgr
 	notifyServer.Init()
-	initCrmNotify(&notifyServer)
+	initSrvNotify(&notifyServer)
 	notifyServer.Start(*notifySrvAddr, *tlsCertFile)
 	defer notifyServer.Stop()
 
 	dialOption, err := tls.GetTLSClientDialOption(*controllerAddress, *tlsCertFile, false)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed get TLS options", "error", err)
 		os.Exit(1)
 	}
 	conn, err := grpc.Dial(*controllerAddress, dialOption)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed to connect to controller",
 			"addr", *controllerAddress, "err", err)
 		os.Exit(1)
@@ -136,10 +145,12 @@ func main() {
 	defer func() {
 		err := conn.Close()
 		if err != nil {
+			span.Finish()
 			log.FatalLog("Failed to close connection", "error", err)
 			os.Exit(1)
 		}
 	}()
+	span.Finish()
 
 	if mainStarted != nil {
 		// for unit testing to detect when main is ready
@@ -162,10 +173,4 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr stri
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper)
 	err := platform.Init(&pc)
 	return err
-}
-
-//shepherd only needs these two for now, will need to be able to recieve metrics later as well
-func initCrmNotify(notifyServer *notify.ServerMgr) {
-	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
-	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
 }

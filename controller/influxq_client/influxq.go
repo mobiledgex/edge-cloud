@@ -1,6 +1,7 @@
 package influxq
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strings"
@@ -177,7 +178,7 @@ func (q *InfluxQ) RunPush() {
 	q.wg.Done()
 }
 
-func (q *InfluxQ) Recv(metric *edgeproto.Metric) {
+func (q *InfluxQ) Recv(ctx context.Context, metric *edgeproto.Metric) {
 	q.AddMetric(metric)
 }
 

@@ -37,10 +37,6 @@ func (s *AppApi) HasApp(key *edgeproto.AppKey) bool {
 	return s.cache.HasKey(key)
 }
 
-func (s *AppApi) GetAllKeys(keys map[edgeproto.AppKey]struct{}) {
-	s.cache.GetAllKeys(keys)
-}
-
 func (s *AppApi) Get(key *edgeproto.AppKey, buf *edgeproto.App) bool {
 	return s.cache.Get(key, buf)
 }
@@ -260,7 +256,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another app", in.AndroidPackageName)
 	}
 
-	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
 			return edgeproto.ErrEdgeApiFlavorNotFound
 		}
@@ -291,7 +287,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 	}
 
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.App{}
 
 		if !s.store.STMGet(stm, &in.Key, &cur) {
@@ -324,7 +320,7 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// disallow delete if static instances are present
 		return &edgeproto.Result{}, errors.New("Application in use by static Application Instance")
 	}
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		app := edgeproto.App{}
 		if !s.store.STMGet(stm, &in.Key, &app) {
 			// already deleted

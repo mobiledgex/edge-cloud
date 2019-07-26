@@ -457,7 +457,7 @@ func NewControllerStore(kvstore objstore.KVStore) ControllerStore {
 	return ControllerStore{kvstore: kvstore}
 }
 
-func (s *ControllerStore) Create(m *Controller, wait func(int64)) (*Result, error) {
+func (s *ControllerStore) Create(ctx context.Context, m *Controller, wait func(int64)) (*Result, error) {
 	err := m.Validate(ControllerAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -467,7 +467,7 @@ func (s *ControllerStore) Create(m *Controller, wait func(int64)) (*Result, erro
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(ctx, key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -477,7 +477,7 @@ func (s *ControllerStore) Create(m *Controller, wait func(int64)) (*Result, erro
 	return &Result{}, err
 }
 
-func (s *ControllerStore) Update(m *Controller, wait func(int64)) (*Result, error) {
+func (s *ControllerStore) Update(ctx context.Context, m *Controller, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -501,7 +501,7 @@ func (s *ControllerStore) Update(m *Controller, wait func(int64)) (*Result, erro
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -511,7 +511,7 @@ func (s *ControllerStore) Update(m *Controller, wait func(int64)) (*Result, erro
 	return &Result{}, err
 }
 
-func (s *ControllerStore) Put(m *Controller, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *ControllerStore) Put(ctx context.Context, m *Controller, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(ControllerAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -523,7 +523,7 @@ func (s *ControllerStore) Put(m *Controller, wait func(int64), ops ...objstore.K
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val), ops...)
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}
@@ -533,13 +533,13 @@ func (s *ControllerStore) Put(m *Controller, wait func(int64), ops ...objstore.K
 	return &Result{}, err
 }
 
-func (s *ControllerStore) Delete(m *Controller, wait func(int64)) (*Result, error) {
+func (s *ControllerStore) Delete(ctx context.Context, m *Controller, wait func(int64)) (*Result, error) {
 	err := m.GetKey().Validate()
 	if err != nil {
 		return nil, err
 	}
 	key := objstore.DbKeyString("Controller", m.GetKey())
-	rev, err := s.kvstore.Delete(key)
+	rev, err := s.kvstore.Delete(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -594,7 +594,7 @@ func (s *ControllerStore) STMDel(stm concurrency.STM, key *ControllerKey) {
 }
 
 type ControllerKeyWatcher struct {
-	cb func()
+	cb func(ctx context.Context)
 }
 
 // ControllerCache caches Controller objects in memory in a hash table
@@ -603,8 +603,8 @@ type ControllerCache struct {
 	Objs        map[ControllerKey]*Controller
 	Mux         util.Mutex
 	List        map[ControllerKey]struct{}
-	NotifyCb    func(obj *ControllerKey, old *Controller)
-	UpdatedCb   func(old *Controller, new *Controller)
+	NotifyCb    func(ctx context.Context, obj *ControllerKey, old *Controller)
+	UpdatedCb   func(ctx context.Context, old *Controller, new *Controller)
 	KeyWatchers map[ControllerKey][]*ControllerKeyWatcher
 }
 
@@ -640,21 +640,21 @@ func (c *ControllerCache) HasKey(key *ControllerKey) bool {
 	return found
 }
 
-func (c *ControllerCache) GetAllKeys(keys map[ControllerKey]struct{}) {
+func (c *ControllerCache) GetAllKeys(ctx context.Context, keys map[ControllerKey]context.Context) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
-		keys[key] = struct{}{}
+		keys[key] = ctx
 	}
 }
 
-func (c *ControllerCache) Update(in *Controller, rev int64) {
-	c.UpdateModFunc(&in.Key, rev, func(old *Controller) (*Controller, bool) {
+func (c *ControllerCache) Update(ctx context.Context, in *Controller, rev int64) {
+	c.UpdateModFunc(ctx, &in.Key, rev, func(old *Controller) (*Controller, bool) {
 		return in, true
 	})
 }
 
-func (c *ControllerCache) UpdateModFunc(key *ControllerKey, rev int64, modFunc func(old *Controller) (new *Controller, changed bool)) {
+func (c *ControllerCache) UpdateModFunc(ctx context.Context, key *ControllerKey, rev int64, modFunc func(old *Controller) (new *Controller, changed bool)) {
 	c.Mux.Lock()
 	old := c.Objs[*key]
 	new, changed := modFunc(old)
@@ -666,31 +666,33 @@ func (c *ControllerCache) UpdateModFunc(key *ControllerKey, rev int64, modFunc f
 		if c.UpdatedCb != nil {
 			newCopy := &Controller{}
 			*newCopy = *new
-			defer c.UpdatedCb(old, newCopy)
+			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&new.Key, old)
+			defer c.NotifyCb(ctx, &new.Key, old)
 		}
 	}
 	c.Objs[new.Key] = new
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Controller", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&new.Key)
+	c.TriggerKeyWatchers(ctx, &new.Key)
 }
 
-func (c *ControllerCache) Delete(in *Controller, rev int64) {
+func (c *ControllerCache) Delete(ctx context.Context, in *Controller, rev int64) {
 	c.Mux.Lock()
 	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	log.DebugLog(log.DebugLevelApi, "SyncDelete Controller", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key, old)
+		c.NotifyCb(ctx, &in.Key, old)
 	}
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(ctx, &in.Key)
 }
 
-func (c *ControllerCache) Prune(validKeys map[ControllerKey]struct{}) {
+func (c *ControllerCache) Prune(ctx context.Context, validKeys map[ControllerKey]struct{}) {
 	notify := make(map[ControllerKey]*Controller)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
@@ -704,9 +706,9 @@ func (c *ControllerCache) Prune(validKeys map[ControllerKey]struct{}) {
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key, old)
+			c.NotifyCb(ctx, &key, old)
 		}
-		c.TriggerKeyWatchers(&key)
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
@@ -716,7 +718,7 @@ func (c *ControllerCache) GetCount() int {
 	return len(c.Objs)
 }
 
-func (c *ControllerCache) Flush(notifyId int64) {
+func (c *ControllerCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *ControllerCache) Show(filter *Controller, cb func(ret *Controller) error) error {
@@ -742,15 +744,15 @@ func ControllerGenericNotifyCb(fn func(key *ControllerKey, old *Controller)) fun
 	}
 }
 
-func (c *ControllerCache) SetNotifyCb(fn func(obj *ControllerKey, old *Controller)) {
+func (c *ControllerCache) SetNotifyCb(fn func(ctx context.Context, obj *ControllerKey, old *Controller)) {
 	c.NotifyCb = fn
 }
 
-func (c *ControllerCache) SetUpdatedCb(fn func(old *Controller, new *Controller)) {
+func (c *ControllerCache) SetUpdatedCb(fn func(ctx context.Context, old *Controller, new *Controller)) {
 	c.UpdatedCb = fn
 }
 
-func (c *ControllerCache) WatchKey(key *ControllerKey, cb func()) context.CancelFunc {
+func (c *ControllerCache) WatchKey(key *ControllerKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -783,7 +785,7 @@ func (c *ControllerCache) WatchKey(key *ControllerKey, cb func()) context.Cancel
 	}
 }
 
-func (c *ControllerCache) TriggerKeyWatchers(key *ControllerKey) {
+func (c *ControllerCache) TriggerKeyWatchers(ctx context.Context, key *ControllerKey) {
 	watchers := make([]*ControllerKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -791,17 +793,17 @@ func (c *ControllerCache) TriggerKeyWatchers(key *ControllerKey) {
 	}
 	c.Mux.Unlock()
 	for ii, _ := range watchers {
-		watchers[ii].cb()
+		watchers[ii].cb(ctx)
 	}
 }
-func (c *ControllerCache) SyncUpdate(key, val []byte, rev int64) {
+func (c *ControllerCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	obj := Controller{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Controller data", "val", string(val))
 		return
 	}
-	c.Update(&obj, rev)
+	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.Key] = struct{}{}
@@ -809,18 +811,18 @@ func (c *ControllerCache) SyncUpdate(key, val []byte, rev int64) {
 	c.Mux.Unlock()
 }
 
-func (c *ControllerCache) SyncDelete(key []byte, rev int64) {
+func (c *ControllerCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := Controller{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	ControllerKeyStringParse(keystr, &obj.Key)
-	c.Delete(&obj, rev)
+	c.Delete(ctx, &obj, rev)
 }
 
-func (c *ControllerCache) SyncListStart() {
+func (c *ControllerCache) SyncListStart(ctx context.Context) {
 	c.List = make(map[ControllerKey]struct{})
 }
 
-func (c *ControllerCache) SyncListEnd() {
+func (c *ControllerCache) SyncListEnd(ctx context.Context) {
 	deleted := make(map[ControllerKey]*Controller)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -833,8 +835,8 @@ func (c *ControllerCache) SyncListEnd() {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(&key, val)
-			c.TriggerKeyWatchers(&key)
+			c.NotifyCb(ctx, &key, val)
+			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
 }
