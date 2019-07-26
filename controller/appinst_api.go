@@ -226,6 +226,11 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 }
 
 func (s *AppInstApi) setDefaultVMClusterKey(key *edgeproto.AppInstKey) {
+	// If ClusterKey.Name already exists, then don't set
+	// any default value for it
+	if key.ClusterInstKey.ClusterKey.Name != "" {
+		return
+	}
 	var app edgeproto.App
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !appApi.store.STMGet(stm, &key.AppKey, &app) {
@@ -236,8 +241,7 @@ func (s *AppInstApi) setDefaultVMClusterKey(key *edgeproto.AppInstKey) {
 	if err != nil {
 		return
 	}
-	if app.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW &&
-		key.ClusterInstKey.ClusterKey.Name == "" {
+	if app.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
 		key.ClusterInstKey.ClusterKey.Name = DefaultVMCluster
 	}
 }
@@ -780,7 +784,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 	}
 	s.setDefaultVMClusterKey(&in.Key)
-	if err := in.Key.Validate(); err != nil {
+	if err := in.Key.AppKey.Validate(); err != nil {
 		return err
 	}
 
@@ -815,6 +819,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 			// already deleted
 			return objstore.ErrKVStoreKeyNotFound
+		}
+		if err := in.Key.ClusterInstKey.Validate(); err != nil {
+			return err
 		}
 
 		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
