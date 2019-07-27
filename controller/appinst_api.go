@@ -490,6 +490,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// nothing to do
 		} else if !cloudcommon.IsClusterInstReqd(&app) {
 			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey)
+			for ii, _ := range ports {
+				ports[ii].PublicPort = ports[ii].InternalPort
+			}
 		} else if ipaccess == edgeproto.IpAccess_IP_ACCESS_SHARED && !app.InternalPorts {
 			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.ClusterInstKey.CloudletKey)
 			if cloudletRefs.RootLbPorts == nil {
