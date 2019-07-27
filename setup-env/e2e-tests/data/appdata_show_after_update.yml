@@ -248,7 +248,7 @@ apps:
   defaultflavor:
     name: x1.small
   cluster:
-    name: SomeCluster
+    name: DefaultVMCluster
   authpublickey: |
     -----BEGIN PUBLIC KEY-----
     MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij
@@ -271,7 +271,7 @@ apps:
   defaultflavor:
     name: x1.small
   cluster:
-    name: SomeCluster
+    name: DefaultVMCluster
   command: touch "/tmp/test.txt"
   deployment: vm
 
@@ -426,7 +426,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: SomeCluster
+        name: DefaultVMCluster
       cloudletkey:
         operatorkey:
           name: dmuus
@@ -447,7 +447,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: SomeCluster
+        name: DefaultVMCluster
       cloudletkey:
         operatorkey:
           name: dmuus

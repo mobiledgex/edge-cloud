@@ -289,8 +289,6 @@ appinstances:
       name: vmapp1
       version: "1.0"
     clusterinstkey:
-      clusterkey:
-        name: SomeCluster
       cloudletkey:
         operatorkey:
           name: dmuus
@@ -309,8 +307,6 @@ appinstances:
       name: vmapp2
       version: "1.0"
     clusterinstkey:
-      clusterkey:
-        name: SomeCluster
       cloudletkey:
         operatorkey:
           name: dmuus
