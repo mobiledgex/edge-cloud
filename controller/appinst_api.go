@@ -24,7 +24,10 @@ type AppInstApi struct {
 	cache edgeproto.AppInstCache
 }
 
-const RootLBSharedPortBegin int32 = 10000
+const (
+	RootLBSharedPortBegin int32  = 10000
+	DefaultVMCluster      string = "DefaultVMCluster"
+)
 
 var appInstApi = AppInstApi{}
 
@@ -219,6 +222,27 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 	return protos & (^protocolToRemove)
 }
 
+func (s *AppInstApi) setDefaultVMClusterKey(key *edgeproto.AppInstKey) {
+	// If ClusterKey.Name already exists, then don't set
+	// any default value for it
+	if key.ClusterInstKey.ClusterKey.Name != "" {
+		return
+	}
+	var app edgeproto.App
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if !appApi.store.STMGet(stm, &key.AppKey, &app) {
+			return edgeproto.ErrEdgeApiAppNotFound
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+	if app.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
+		key.ClusterInstKey.ClusterKey.Name = DefaultVMCluster
+	}
+}
+
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
@@ -228,6 +252,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 	}
+	s.setDefaultVMClusterKey(&in.Key)
 	if err := in.Key.Validate(); err != nil {
 		return err
 	}
@@ -606,6 +631,7 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 		log.DebugLog(log.DebugLevelApi, "special default cloud case", "key", key)
 		defaultCloudlet = true
 	}
+	s.setDefaultVMClusterKey(&key)
 	if err := key.Validate(); err != nil {
 		return false, err
 	}
@@ -667,6 +693,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		}
 	} else {
 		// the whole key must be present
+		s.setDefaultVMClusterKey(&in.Key)
 		if err := in.Key.Validate(); err != nil {
 			return err
 		}
@@ -755,7 +782,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 	}
-	if err := in.Key.Validate(); err != nil {
+	s.setDefaultVMClusterKey(&in.Key)
+	if err := in.Key.AppKey.Validate(); err != nil {
 		return err
 	}
 
@@ -792,6 +820,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 			// already deleted
 			return objstore.ErrKVStoreKeyNotFound
+		}
+		if err := in.Key.ClusterInstKey.Validate(); err != nil {
+			return err
 		}
 
 		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
