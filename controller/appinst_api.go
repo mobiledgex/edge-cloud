@@ -650,7 +650,7 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 		if s.store.STMGet(stm, &key, &curr) {
 			// allow UPDATE_ERROR state so updates can be retried
 			if curr.State != edgeproto.TrackedState_READY && curr.State != edgeproto.TrackedState_UPDATE_ERROR {
-				log.InfoLog("AppInst is not ready or update state for update", "state", curr.State)
+				log.InfoLog("AppInst is not ready or update_error state for update", "state", curr.State)
 				return fmt.Errorf("AppInst is not ready or update_error")
 			}
 			if curr.Revision != app.Revision {
