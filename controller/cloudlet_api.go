@@ -52,9 +52,7 @@ const (
 )
 
 func IsCloudletLocal(in *edgeproto.Cloudlet) bool {
-	if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE ||
-		in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND ||
-		in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_MEXDIND {
+	if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
 		return true
 	}
 	return false
