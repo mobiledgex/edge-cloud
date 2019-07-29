@@ -648,8 +648,10 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 			return edgeproto.ErrEdgeApiAppNotFound
 		}
 		if s.store.STMGet(stm, &key, &curr) {
-			if curr.State != edgeproto.TrackedState_READY {
-				return fmt.Errorf("AppInst is not ready")
+			// allow UPDATE_ERROR state so updates can be retried
+			if curr.State != edgeproto.TrackedState_READY && curr.State != edgeproto.TrackedState_UPDATE_ERROR {
+				log.InfoLog("AppInst is not ready or update state for update", "state", curr.State)
+				return fmt.Errorf("AppInst is not ready or update_error")
 			}
 			if curr.Revision != app.Revision {
 				crmUpdateRequired = true
@@ -676,9 +678,13 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 		return false, err
 	}
 	if crmUpdateRequired {
-		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateAppInstTimeout, "", cb.Send)
+		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateAppInstTimeout, "wait for state....", cb.Send)
 	}
-	return updatedRevision, s.updateAppInstRevision(ctx, &key, app.Revision)
+	if err != nil {
+		return false, err
+	} else {
+		return updatedRevision, s.updateAppInstRevision(ctx, &key, app.Revision)
+	}
 }
 
 func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
@@ -699,7 +705,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		// the whole key must be present
 		s.setDefaultVMClusterKey(ctx, &in.Key)
 		if err := in.Key.Validate(); err != nil {
-			return err
+			return fmt.Errorf("cluster key needed without updatemultiple option: %v", err)
 		}
 	}
 

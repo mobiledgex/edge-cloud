@@ -157,7 +157,11 @@ func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 }
 
 func UpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	return createOrUpdateAppInst(client, names, app, appInst, applyManifest)
+	err := createOrUpdateAppInst(client, names, app, appInst, applyManifest)
+	if err != nil {
+		return err
+	}
+	return WaitForAppInst(client, names, app, WaitRunning)
 }
 
 func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
