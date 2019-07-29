@@ -69,9 +69,9 @@ func (s *Platform) CreateDINDCluster(clusterName, kconfName string) error {
 	os.Setenv("DIND_LABEL", clusterName)
 	os.Setenv("CLUSTER_ID", GetClusterID(clusterID))
 	cluster := NewClusterFor(clusterName, clusterID)
-	log.DebugLog(log.DebugLevelMexos, "CreateDINDCluster via dind-cluster-v1.13.sh", "name", clusterName, "clusterid", clusterID)
+	log.DebugLog(log.DebugLevelMexos, "CreateDINDCluster via dind-cluster-v1.14.sh", "name", clusterName, "clusterid", clusterID)
 
-	out, err := sh.Command("dind-cluster-v1.13.sh", "up").Command("tee", "/tmp/dind.log").CombinedOutput()
+	out, err := sh.Command("dind-cluster-v1.14.sh", "up").Command("tee", "/tmp/dind.log").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("ERROR creating Dind Cluster: [%s] %v", out, err)
 	}
@@ -128,11 +128,11 @@ func (s *Platform) DeleteDINDCluster(name string) error {
 	os.Setenv("CLUSTER_ID", GetClusterID(cluster.ClusterID))
 	log.DebugLog(log.DebugLevelMexos, "DeleteDINDCluster", "name", name)
 
-	out, err = sh.Command("dind-cluster-v1.13.sh", "clean").CombinedOutput()
+	out, err = sh.Command("dind-cluster-v1.14.sh", "clean").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%s %v", out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "Finished dind-cluster-v1.13.sh clean", "name", name, "out", out)
+	log.DebugLog(log.DebugLevelMexos, "Finished dind-cluster-v1.14.sh clean", "name", name, "out", out)
 	return nil
 }
 
