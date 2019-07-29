@@ -135,7 +135,7 @@ func updateAppFields(in *edgeproto.App, revision int32) error {
 			if in.Md5Sum == "" {
 				return fmt.Errorf("md5sum should be provided if imagepath is not specified")
 			}
-			in.ImagePath = *artifactoryFQDN + "-repo-" +
+			in.ImagePath = *artifactoryFQDN + "repo-" +
 				in.Key.DeveloperKey.Name + "/" +
 				in.Key.Name + ".qcow2#md5:" + in.Md5Sum
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
