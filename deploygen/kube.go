@@ -131,6 +131,13 @@ func (g *kubeBasicGen) kubeApp() {
 	if g.app.Command != "" {
 		cs = strings.Split(g.app.Command, " ")
 	}
+	registrySecret := g.app.ImageHost
+	hostname := strings.Split(g.app.ImageHost, ":")
+	if len(hostname) > 1 {
+		// docker-registry secret name use for
+		// "kubectl create secret docker-registry" cannot include ":"
+		registrySecret = hostname[0] + "-" + hostname[1]
+	}
 	data := appData{
 		Name:           util.DNSSanitize(g.app.Name + "-deployment"),
 		DNSName:        util.DNSSanitize(g.app.Name),
@@ -138,7 +145,7 @@ func (g *kubeBasicGen) kubeApp() {
 		Ports:          g.ports,
 		ImagePath:      g.app.ImagePath,
 		Command:        cs,
-		RegistrySecret: g.app.ImageHost,
+		RegistrySecret: registrySecret,
 	}
 	buf := bytes.Buffer{}
 	if g.app.ScaleWithCluster {

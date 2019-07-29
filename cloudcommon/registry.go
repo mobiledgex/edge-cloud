@@ -29,6 +29,7 @@ type RegistryAuth struct {
 	Token    string `json:"token"`
 	ApiKey   string `json:"apikey"`
 	Hostname string `json:"hostname"`
+	Port     string `json:"port"`
 }
 
 type RegistryTags struct {
@@ -66,6 +67,9 @@ func GetRegistryAuth(imgUrl, vaultAddr string) (*RegistryAuth, error) {
 		return nil, err
 	}
 	auth.Hostname = hostname[0]
+	if len(hostname) > 1 {
+		auth.Port = hostname[1]
+	}
 	if auth.Username != "" && auth.Password != "" {
 		auth.AuthType = BasicAuth
 	} else if auth.Token != "" {

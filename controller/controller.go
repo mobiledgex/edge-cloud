@@ -140,6 +140,13 @@ func startServices() error {
 
 	if *externalApiAddr == "" {
 		*externalApiAddr = *apiAddr
+		hostport := strings.Split(*externalApiAddr, ":")
+		if len(hostport) == 2 && hostport[0] == "0.0.0.0" {
+			addr, err := resolveExternalAddr()
+			if err == nil {
+				*externalApiAddr = addr + ":" + hostport[1]
+			}
+		}
 	}
 	log.InitTracer()
 	span := log.StartSpan(log.DebugLevelInfo, "main")
@@ -398,4 +405,19 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(influxQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewNodeRecvMany(&nodeApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(&execApi))
+}
+
+// This is for figuring out the "external" address when
+// running under kubernetes, which is really the internal CNI
+// address that containers can use to talk to each other.
+func resolveExternalAddr() (string, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return "", err
+	}
+	addrs, err := net.LookupHost(hostname)
+	if err != nil {
+		return "", err
+	}
+	return addrs[0], nil
 }

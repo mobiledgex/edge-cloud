@@ -56,7 +56,7 @@ etcds:
 controllers:
 - name: ctrl1
   etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
-  apiaddr: "0.0.0.0:55001"
+  apiaddr: "127.0.0.1:55001"
   httpaddr: "0.0.0.0:36001"
   notifyaddr: "127.0.0.1:37001"
   tls:
@@ -68,7 +68,7 @@ controllers:
 
 - name: ctrl2
   etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
-  apiaddr: "0.0.0.0:55002"
+  apiaddr: "127.0.0.1:55002"
   httpaddr: "0.0.0.0:36002"
   notifyaddr: "127.0.0.1:37002"
   tls:
