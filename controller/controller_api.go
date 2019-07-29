@@ -89,6 +89,7 @@ func (s *ControllerApi) RunJobs(run func(arg interface{}, addr string) error, ar
 					joberr = err
 				}
 				mux.Unlock()
+				log.DebugLog(log.DebugLevelApi, "run job failed", "addr", ctrlAddr, "err", err)
 			}
 			wg.Done()
 		}(ctrl.Key.Addr)
