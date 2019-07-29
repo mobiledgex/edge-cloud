@@ -678,7 +678,7 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 		return false, err
 	}
 	if crmUpdateRequired {
-		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateAppInstTimeout, "wait for state....", cb.Send)
+		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateAppInstTimeout, "", cb.Send)
 	}
 	if err != nil {
 		return false, err
