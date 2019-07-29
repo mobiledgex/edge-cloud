@@ -85,7 +85,6 @@ func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 
 	if len(appInst.MappedPorts) > 0 {
 		log.DebugLog(log.DebugLevelMexos, "DeleteNginxProxy for dind")
-
 		if err = nginx.DeleteNginxProxy(client, names.AppName); err != nil {
 			log.DebugLog(log.DebugLevelMexos, "cannot delete nginx proxy", "name", names.AppName)
 			return err
