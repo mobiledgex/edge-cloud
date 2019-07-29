@@ -84,6 +84,9 @@ func (s *NodeApi) ShowNode(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeServ
 		defer cancel()
 
 		stream, err := cmd.ShowNodeLocal(ctx, in)
+		if err != nil {
+			return err
+		}
 		for {
 			obj, err := stream.Recv()
 			if err == io.EOF {
