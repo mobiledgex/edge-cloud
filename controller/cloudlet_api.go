@@ -173,6 +173,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	pfConfig.VaultAddr = *vaultAddr
 	pfConfig.RegistryPath = *cloudletRegistryPath
 	pfConfig.ImagePath = *cloudletVMImagePath
+	pfConfig.TestMode = *testMode
 	addrObjs := strings.Split(*notifyAddr, ":")
 	if len(addrObjs) != 2 {
 		return fmt.Errorf("unable to fetch notify addr of the controller")
