@@ -15,7 +15,6 @@ import (
 	"time"
 
 	sh "github.com/codeskyblue/go-sh"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/dind"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
@@ -238,8 +237,8 @@ func CleanupDIND() error {
 				os.Unsetenv("DIND_LABEL")
 				os.Unsetenv("CLUSTER_ID")
 			}
-			log.Printf("running %s clean clusterName: %s clusterID: %s\n", dind.DindScriptName, clusterName, clusterID)
-			out, err := sh.Command(dind.DindScriptName, "clean").CombinedOutput()
+			log.Printf("running %s clean clusterName: %s clusterID: %s\n", cloudcommon.DindScriptName, clusterName, clusterID)
+			out, err := sh.Command(cloudcommon.DindScriptName, "clean").CombinedOutput()
 			if err != nil {
 				log.Printf("Error in dind clean: %v - %v\n", out, err)
 				return fmt.Errorf("ERROR in cleanup Dind Cluster: %s", clusterName)

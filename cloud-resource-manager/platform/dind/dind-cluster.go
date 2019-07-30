@@ -11,11 +11,10 @@ import (
 	sh "github.com/codeskyblue/go-sh"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/nginx"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
-
-var DindScriptName = "dind-cluster-v1.14.sh"
 
 type DindCluster struct {
 	ClusterName string
@@ -71,9 +70,9 @@ func (s *Platform) CreateDINDCluster(clusterName, kconfName string) error {
 	os.Setenv("DIND_LABEL", clusterName)
 	os.Setenv("CLUSTER_ID", GetClusterID(clusterID))
 	cluster := NewClusterFor(clusterName, clusterID)
-	log.DebugLog(log.DebugLevelMexos, "CreateDINDCluster", "scriptName", DindScriptName, "name", clusterName, "clusterid", clusterID)
+	log.DebugLog(log.DebugLevelMexos, "CreateDINDCluster", "scriptName", cloudcommon.DindScriptName, "name", clusterName, "clusterid", clusterID)
 
-	out, err := sh.Command(DindScriptName, "up").Command("tee", "/tmp/dind.log").CombinedOutput()
+	out, err := sh.Command(cloudcommon.DindScriptName, "up").Command("tee", "/tmp/dind.log").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("ERROR creating Dind Cluster: [%s] %v", out, err)
 	}
@@ -130,11 +129,11 @@ func (s *Platform) DeleteDINDCluster(name string) error {
 	os.Setenv("CLUSTER_ID", GetClusterID(cluster.ClusterID))
 	log.DebugLog(log.DebugLevelMexos, "DeleteDINDCluster", "name", name)
 
-	out, err = sh.Command(DindScriptName, "clean").CombinedOutput()
+	out, err = sh.Command(cloudcommon.DindScriptName, "clean").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%s %v", out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "Finished dind clean", "scriptName", DindScriptName, "name", name, "out", out)
+	log.DebugLog(log.DebugLevelMexos, "Finished dind clean", "scriptName", cloudcommon.DindScriptName, "name", name, "out", out)
 	return nil
 }
 
