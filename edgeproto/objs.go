@@ -363,24 +363,20 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 			portrange := strings.Split(vals[1], "-")
 			baseport, err = strconv.ParseInt(portrange[0], 10, 32)
 			if (err != nil) {
-				fmt.Printf("unable to convert port range base value\n")
-				return nil, err	// error, not a Uint
+				return nil, fmt.Errorf("unable to convert port range base value")
 			}
 			endport, err := strconv.ParseInt(portrange[1], 10, 32)
 			if (err != nil) {
-				fmt.Printf("unable to convert port range endpoint value\n")
-				return nil, err	// error, not a Uint
+				return nil, fmt.Errorf("unable to convert port range endpoint value")
 			}
 			if (baseport < 1 || baseport > 65535) ||
 				(endport < 1 || endport > 65535) {
 				return nil, fmt.Errorf("Range ports out of range")
 			}
-
 			proto, err := GetLProto(vals[0])
 			if err != nil {
 				return nil, err
 			}
-
 			p := dme.AppPort {
 				Proto:        proto,
 				InternalPort: int32(baseport),
