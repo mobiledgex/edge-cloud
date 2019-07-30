@@ -154,10 +154,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if in.NumMasters > 1 {
 			return fmt.Errorf("NumMasters cannot be greater than 1")
 		}
-		// TODO: support zero nodes
-		if in.NumNodes == 0 {
-			return fmt.Errorf("Zero NumNodes not supported yet")
-		}
 	} else if in.Deployment == cloudcommon.AppDeploymentTypeDocker {
 		if in.NumMasters != 0 || in.NumNodes != 0 {
 			return fmt.Errorf("NumMasters and NumNodes not applicable for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
