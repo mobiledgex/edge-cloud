@@ -285,7 +285,7 @@ func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 			name, err := types.AnyMessageName(&notice.Any)
 			if notice.Span != "" {
 				spanName := fmt.Sprintf("notify-recv %s", name)
-				span := log.SpanFromString(notice.Span, spanName)
+				span := log.NewSpanFromString(log.DebugLevelNotify, notice.Span, spanName)
 				span.SetTag("action", notice.Action)
 				span.SetTag("cliserv", s.cliserv)
 				span.SetTag("peer", s.peerAddr)
