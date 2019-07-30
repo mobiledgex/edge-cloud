@@ -94,7 +94,18 @@ func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 }
 
 func (s *Platform) UpdateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
-	return fmt.Errorf("UpdateAppInst not supported for dind")
+
+	log.DebugLog(log.DebugLevelMexos, "UpdateAppInst for dind")
+	client := &pc.LocalClient{}
+	appDeploymentType := app.Deployment
+	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
+	if err != nil {
+		return err
+	}
+	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
+		return k8smgmt.UpdateAppInst(client, names, app, appInst)
+	}
+	return fmt.Errorf("UpdateAppInst not supported for deployment: %s", appDeploymentType)
 }
 
 func (s *Platform) GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
