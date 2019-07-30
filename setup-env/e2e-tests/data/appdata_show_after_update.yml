@@ -267,7 +267,7 @@ apps:
     version: "1.0"
   imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
   imagetype: ImageTypeQcow
-  accessports: tcp:80,http:443,udp:10002
+  accessports: tcp:80,http:443,udp:10002,udp:2000-2009
   defaultflavor:
     name: x1.small
   cluster:

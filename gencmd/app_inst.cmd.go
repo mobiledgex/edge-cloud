@@ -133,6 +133,7 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].PublicPort), 10))
 	s = append(s, in.MappedPorts[0].PathPrefix)
 	s = append(s, in.MappedPorts[0].FqdnPrefix)
+	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].EndPort), 10))
 	s = append(s, in.Flavor.Name)
 	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
 	if in.Errors == nil {
@@ -184,6 +185,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "MappedPorts-PublicPort")
 	s = append(s, "MappedPorts-PathPrefix")
 	s = append(s, "MappedPorts-FqdnPrefix")
+	s = append(s, "MappedPorts-EndPort")
 	s = append(s, "Flavor-Name")
 	s = append(s, "State")
 	s = append(s, "Errors")

@@ -182,7 +182,7 @@ apps:
   deployment: "vm"
   defaultflavor:
     name: x1.small
-  accessports: "tcp:80,http:443,udp:10002"
+  accessports: "tcp:80,http:443,udp:10002,udp:2000-2009"
   command: touch "/tmp/test.txt"
 
 appinstances:
