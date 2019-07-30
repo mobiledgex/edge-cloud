@@ -46,6 +46,9 @@ var NetworkSchemePrivateIP = "privateip"
 var DeveloperMetricsDbName = "metrics"
 var MEXPrometheusAppName = "MEXPrometheusAppName"
 
+// DIND script to pull from kubeadm-dind-cluster
+var DindScriptName = "dind-cluster-v1.14.sh"
+
 // TODO: these timeouts should be adjust based on target platform,
 // as some platforms (azure, etc) may take much longer.
 // These timeouts should be at least long enough for the controller and

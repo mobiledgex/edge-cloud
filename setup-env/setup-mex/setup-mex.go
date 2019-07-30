@@ -237,13 +237,13 @@ func CleanupDIND() error {
 				os.Unsetenv("DIND_LABEL")
 				os.Unsetenv("CLUSTER_ID")
 			}
-			log.Printf("running dind-cluster-v1.13.sh clean clusterName: %s clusterID: %s\n", clusterName, clusterID)
-			out, err := sh.Command("dind-cluster-v1.13.sh", "clean").CombinedOutput()
+			log.Printf("running %s clean clusterName: %s clusterID: %s\n", cloudcommon.DindScriptName, clusterName, clusterID)
+			out, err := sh.Command(cloudcommon.DindScriptName, "clean").CombinedOutput()
 			if err != nil {
-				log.Printf("Error in dind-cluster-v1.13.sh clean: %v - %v\n", out, err)
+				log.Printf("Error in dind clean: %v - %v\n", out, err)
 				return fmt.Errorf("ERROR in cleanup Dind Cluster: %s", clusterName)
 			}
-			log.Printf("done dind-cluster-v1.13.sh clean for: %s out: %s\n", clusterName, out)
+			log.Printf("done dind clean for: %s out: %s\n", clusterName, out)
 		}
 	}
 	// cleanup nginxL7.

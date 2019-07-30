@@ -62,9 +62,9 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	kubeNames.K8sNodeNameSuffix = GetK8sNodeNameSuffix(&clusterInst.Key)
 	kubeNames.AppName = NormalizeName(app.Key.Name)
 	kubeNames.AppURI = appInst.Uri
-	if appInst.Revision > 0 {
+	if app.Revision > 0 {
 		// if revision is zero, skip this for backwards compatibility
-		kubeNames.AppRevision = fmt.Sprintf("%d", appInst.Revision)
+		kubeNames.AppRevision = fmt.Sprintf("%d", app.Revision)
 	}
 	kubeNames.AppImage = NormalizeName(app.ImagePath)
 	kubeNames.OperatorName = NormalizeName(clusterInst.Key.CloudletKey.OperatorKey.Name)
