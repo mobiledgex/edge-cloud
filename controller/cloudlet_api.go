@@ -51,13 +51,6 @@ const (
 	CloudletWaitTime      = 10 * time.Second
 )
 
-func IsCloudletLocal(in *edgeproto.Cloudlet) bool {
-	if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
-		return true
-	}
-	return false
-}
-
 func InitCloudletApi(sync *Sync) {
 	cloudletApi.sync = sync
 	cloudletApi.store = edgeproto.NewCloudletStore(sync.store)
@@ -158,10 +151,6 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
 
-	if IsCloudletLocal(in) {
-		in.DeploymentLocal = true
-	}
-
 	// If notifysrvaddr is empty, set default value
 	if in.NotifySrvAddr == "" {
 		in.NotifySrvAddr = "127.0.0.1:51001"
@@ -170,7 +159,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	pfConfig := edgeproto.PlatformConfig{}
 	appRoles := VaultRoles{}
 	if err := getRolesAndSecrets(&appRoles); err != nil {
-		if !*testMode && !IsCloudletLocal(in) {
+		if !*testMode {
 			return err
 		}
 		log.DebugLog(log.DebugLevelApi, "Warning, Failed to get roleIDs - running locally",
