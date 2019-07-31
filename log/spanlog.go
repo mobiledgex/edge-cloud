@@ -3,7 +3,6 @@ package log
 import (
 	"context"
 	"runtime"
-	"time"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -154,27 +153,4 @@ func getSpanMsg(s *Span, lineno, msg string) string {
 		traceid = s.Span.SpanContext().TraceID().String()
 	}
 	return traceid + "\t" + lineno + "\t" + msg
-}
-
-// RateLimitSpan will limit spans to a certain rate limit (one per interval)
-// per name. This can be used to limit logging of certain commands that may
-// be frequent.
-func RateLimitSpan(span opentracing.Span, interval time.Duration, name string) {
-	now := time.Now()
-
-	lastLogMux.Lock()
-	defer lastLogMux.Unlock()
-
-	last, found := lastLog[name]
-	lastLog[name] = now
-	if !found {
-		return
-	}
-	if now.Sub(last) < interval {
-		NoLogSpan(span)
-	}
-}
-
-func NoLogSpan(span opentracing.Span) {
-	ext.SamplingPriority.Set(span, 0)
 }
