@@ -53,10 +53,14 @@ func (s *Sync) Start() {
 	ctx, cancel := context.WithCancel(context.Background())
 	s.syncCancel = cancel
 	go func() {
+		span := log.StartSpan(log.DebugLevelInfo, "sync-start")
+		defer span.Finish()
+		ctx := log.ContextWithSpan(ctx, span)
 		prefix := fmt.Sprintf("%d/", objstore.GetRegion())
 		err := s.store.Sync(ctx, prefix, s.syncCb)
 		if err != nil {
-			log.WarnLog("sync failed", "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfo, "sync failed", "err", err)
+			span.SetTag("level", "warn")
 		}
 		s.syncDone = true
 		s.cond.Broadcast()
@@ -79,7 +83,7 @@ func (s *Sync) Done() {
 	}
 }
 
-func (s *Sync) GetCache(key []byte) (ObjCache, bool) {
+func (s *Sync) GetCache(ctx context.Context, key []byte) (ObjCache, bool) {
 	_, typ, _, err := objstore.DbKeyPrefixParse(string(key))
 	if err != nil {
 		log.WarnLog("Failed to parse db key", "key", key, "err", err)
@@ -87,7 +91,7 @@ func (s *Sync) GetCache(key []byte) (ObjCache, bool) {
 	}
 	cache, found := s.caches[typ]
 	if !found {
-		log.DebugLog(log.DebugLevelApi, "No cache for type", "typ", typ)
+		log.SpanLog(ctx, log.DebugLevelApi, "No cache for type", "typ", typ)
 	}
 	return cache, found
 }
@@ -97,7 +101,7 @@ func (s *Sync) GetCache(key []byte) (ObjCache, bool) {
 // data, otherwise there could be race conditions against the sync data
 // coming from etcd.
 func (s *Sync) syncCb(ctx context.Context, data *objstore.SyncCbData) {
-	log.DebugLog(log.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[data.Action], "key", string(data.Key), "value", string(data.Value), "rev", data.Rev)
+	log.SpanLog(ctx, log.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[data.Action], "key", string(data.Key), "value", string(data.Value), "rev", data.Rev)
 
 	s.mux.Lock()
 	defer s.mux.Unlock()
@@ -113,14 +117,14 @@ func (s *Sync) syncCb(ctx context.Context, data *objstore.SyncCbData) {
 	case objstore.SyncList:
 		fallthrough
 	case objstore.SyncUpdate:
-		if cache, found := s.GetCache(data.Key); found {
+		if cache, found := s.GetCache(ctx, data.Key); found {
 			cache.SyncUpdate(ctx, data.Key, data.Value, data.Rev)
 		}
 		if !data.MoreEvents {
 			s.rev = data.Rev
 		}
 	case objstore.SyncDelete:
-		if cache, found := s.GetCache(data.Key); found {
+		if cache, found := s.GetCache(ctx, data.Key); found {
 			cache.SyncDelete(ctx, data.Key, data.Rev)
 		}
 		if !data.MoreEvents {
