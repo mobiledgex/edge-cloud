@@ -27,7 +27,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
-	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
@@ -152,7 +151,7 @@ func startServices() error {
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	span.SetTag("level", "init")
 	defer span.Finish()
-	ctx := opentracing.ContextWithSpan(context.Background(), span)
+	ctx := log.ContextWithSpan(context.Background(), span)
 
 	err := validateFields()
 	if err != nil {
