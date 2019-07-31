@@ -7,11 +7,14 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
+	"time"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	jaeger "github.com/uber/jaeger-client-go"
 	config "github.com/uber/jaeger-client-go/config"
+	"github.com/uber/jaeger-client-go/log/zap"
 )
 
 var tracer opentracing.Tracer
@@ -21,10 +24,14 @@ type contextKey struct{}
 
 var spanString = contextKey{}
 var noPanicOrphanedSpans bool
+var lastLog map[string]time.Time
+var lastLogMux sync.Mutex
 
 // Use JAEGER_AGEN_HOST and JAEGER_AGENT_PORT to send UDP traces
 // to different host:port (otherwise uses localhost:6831).
 func InitTracer() {
+	lastLog = make(map[string]time.Time)
+
 	name := filepath.Base(os.Args[0])
 	cfg := &config.Configuration{
 		Sampler: &config.SamplerConfig{
@@ -33,7 +40,7 @@ func InitTracer() {
 		},
 		Reporter: &config.ReporterConfig{},
 	}
-	t, closer, err := cfg.New(name)
+	t, closer, err := cfg.New(name, config.Logger(zap.NewLogger(slogger.Desugar())))
 	if err != nil {
 		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
 	}
@@ -71,7 +78,7 @@ func (t TraceData) ForeachKey(handler func(key, val string) error) error {
 }
 
 func SpanToString(ctx context.Context) string {
-	span := opentracing.SpanFromContext(ctx)
+	span := SpanFromContext(ctx)
 	if span == nil {
 		return ""
 	}
@@ -85,7 +92,7 @@ func SpanToString(ctx context.Context) string {
 	return string(val)
 }
 
-func SpanFromString(val, spanName string) opentracing.Span {
+func NewSpanFromString(lvl uint64, val, spanName string) opentracing.Span {
 	if val != "" {
 		var t TraceData
 		t = make(map[string]string)
@@ -93,9 +100,11 @@ func SpanFromString(val, spanName string) opentracing.Span {
 		if err == nil {
 			spanCtx, err := tracer.Extract(opentracing.TextMap, t)
 			if err == nil {
-				return tracer.StartSpan(spanName, ext.RPCServerOption(spanCtx))
+				// parent span exists so new lvl is ignored,
+				// lvl used for parent is honored.
+				return StartSpan(IgnoreLvl, spanName, ext.RPCServerOption(spanCtx))
 			}
 		}
 	}
-	return tracer.StartSpan(spanName)
+	return StartSpan(lvl, spanName)
 }
