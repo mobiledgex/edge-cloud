@@ -386,6 +386,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
+		in.Uri = ""
+	}
+	if _, found := tags["nocmp"]; found {
 		in.MappedPorts = nil
 	}
 	if _, found := tags["nocmp"]; found {
@@ -820,7 +823,7 @@ func init() {
 	AppInstIn.CloudletLoc.Timestamp = &distributed_match_engine.Timestamp{}
 	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CloudletLoc.Timestamp.Seconds, "cloudletloc-timestamp-seconds", 0, "CloudletLoc.Timestamp.Seconds")
 	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CloudletLoc.Timestamp.Nanos, "cloudletloc-timestamp-nanos", 0, "CloudletLoc.Timestamp.Nanos")
-	AppInstFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
 	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
@@ -924,7 +927,7 @@ func AppInstSetFields() {
 	if AppInstNoConfigFlagSet.Lookup("cloudletloc-timestamp-nanos").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.8.2")
 	}
-	if AppInstFlagSet.Lookup("uri").Changed {
+	if AppInstNoConfigFlagSet.Lookup("uri").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "4")
 	}
 	if AppInstNoConfigFlagSet.Lookup("liveness").Changed {

@@ -19,7 +19,6 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -410,10 +409,8 @@ func ValidateReplacedVars() ReadYamlOp {
 }
 
 func removeAppinstUris(appdata *edgeproto.ApplicationData) {
-	for i, ai := range appdata.AppInstances {
-		if ai.Key.ClusterInstKey.CloudletKey != cloudcommon.DefaultCloudletKey {
-			appdata.AppInstances[i].Uri = ""
-		}
+	for i := range appdata.AppInstances {
+		appdata.AppInstances[i].Uri = ""
 	}
 
 }
@@ -444,7 +441,7 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		a2.Sort()
 		// Appinstance URIs usually not provisioned, as they are inherited from the cloudlet. However
 		// they are provioned for the default appinst.  So we cannot use "nocmp".  Loop through and remove the URIs
-		// for non-defaultCloudlets so that the comparison will succeeed
+		// so that the comparison will succeeed
 		removeAppinstUris(&a1)
 		removeAppinstUris(&a2)
 		y1 = a1
