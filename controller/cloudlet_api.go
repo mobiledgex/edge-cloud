@@ -48,7 +48,7 @@ var (
 const (
 	PlatformInitTimeout   = 5 * time.Minute
 	CloudletShortWaitTime = 10 * time.Millisecond
-	CloudletWaitTime      = 10 * time.Second
+	CloudletWaitTime      = 1 * time.Second
 )
 
 func IsCloudletLocal(in *edgeproto.Cloudlet) bool {
@@ -298,6 +298,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	var cloudletInfo edgeproto.CloudletInfo
 	start := time.Now()
 	timedout := false
+	lastStatusId := uint32(0)
 	for {
 		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cloudletInfo) {
@@ -306,7 +307,18 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return nil
 		})
 		if err == nil {
-			break
+			if cloudletInfo.Status.TaskNumber != 0 &&
+				cloudletInfo.Status.TaskNumber != lastStatusId {
+				if cloudletInfo.Status.StepName != "" {
+					updateCloudletCallback(edgeproto.UpdateTask, cloudletInfo.Status.StepName)
+				} else {
+					updateCloudletCallback(edgeproto.UpdateTask, cloudletInfo.Status.TaskName)
+				}
+				lastStatusId = cloudletInfo.Status.TaskNumber
+			}
+			if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN {
+				break
+			}
 		}
 		elapsed := time.Since(start)
 		if elapsed >= (PlatformInitTimeout) {

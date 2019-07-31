@@ -89,16 +89,37 @@ func main() {
 		span.Finish()
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
+
+	updateCloudletStatus := func(updateType edgeproto.CacheUpdateType, value string) {
+		switch updateType {
+		case edgeproto.UpdateTask:
+			myCloudlet.Status.SetTask(value)
+		case edgeproto.UpdateStep:
+			myCloudlet.Status.SetStep(value)
+		}
+		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
+	}
+
+	//ctl notify
+	addrs := strings.Split(*notifyAddrs, ",")
+	notifyClient = notify.NewClient(addrs, *tlsCertFile)
+	notifyClient.SetFilterByCloudletKey()
+	InitClientNotify(notifyClient, controllerData)
+	notifyClient.Start()
+	defer notifyClient.Stop()
+
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
 
 	go func() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
-		if err := initPlatform(&myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache); err != nil {
+		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
+		if err := initPlatform(&myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
 			span.Finish()
 			log.FatalLog("failed to init platform", "err", err)
 		}
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
+		updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
 		controllerData.GatherCloudletInfo(&myCloudlet)
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "sending cloudlet info cache update")
@@ -113,13 +134,6 @@ func main() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 	}()
 
-	//ctl notify
-	addrs := strings.Split(*notifyAddrs, ",")
-	notifyClient = notify.NewClient(addrs, *tlsCertFile)
-	notifyClient.SetFilterByCloudletKey()
-	InitClientNotify(notifyClient, controllerData)
-	notifyClient.Start()
-	defer notifyClient.Stop()
 	reflection.Register(grpcServer)
 
 	//setup crm notify listener (for shepherd)
@@ -135,6 +149,7 @@ func main() {
 		log.FatalLog("Failed get TLS options", "error", err)
 		os.Exit(1)
 	}
+	updateCloudletStatus(edgeproto.UpdateTask, "Connecting to controller")
 	conn, err := grpc.Dial(*controllerAddress, dialOption)
 	if err != nil {
 		span.Finish()
@@ -162,7 +177,7 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache) error {
+func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache, updateCallback edgeproto.CacheUpdateCallback) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
 
@@ -171,6 +186,6 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr stri
 		PhysicalName: physicalName,
 		VaultAddr:    vaultAddr}
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper)
-	err := platform.Init(&pc)
+	err := platform.Init(&pc, updateCallback)
 	return err
 }

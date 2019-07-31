@@ -278,6 +278,8 @@ message CloudletInfo {
   repeated string errors = 9;
   // Supported flavors by the Cloudlet
   repeated FlavorInfo flavors = 10;
+  // status is used to reflect progress of creation or other events
+  StatusInfo status = 11 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
