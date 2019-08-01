@@ -75,6 +75,10 @@ path "secret/data/registry/*" {
 path "secret/data/$REGION/cloudlet/*" {
   capabilities = [ "read" ]
 }
+
+path "secret/data/cloudlet/openstack/mexenv.json" {
+  capabilities = [ "read" ]
+}
 EOF
 vault policy write $REGION.crm /tmp/crm-pol.hcl
 rm /tmp/crm-pol.hcl
