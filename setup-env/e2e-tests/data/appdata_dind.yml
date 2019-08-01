@@ -13,7 +13,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeDind
-  deploymentlocal: true
 flavors:
 - key:
     name: x1.tiny
