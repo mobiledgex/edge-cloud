@@ -54,6 +54,7 @@ type Crm struct {
 	cmd           *exec.Cmd
 	VaultAddr     string
 	PhysicalName  string
+	TestMode      bool
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`
