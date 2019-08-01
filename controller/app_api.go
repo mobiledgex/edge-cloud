@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -118,12 +117,8 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	return false
 }
 
-// updates fields that need manipulation on setting, or fetched remotely. Updates the revision only if something changed
+// updates fields that need manipulation on setting, or fetched remotely
 func updateAppFields(in *edgeproto.App, revision int32) error {
-
-	// keep a copy of the old app so we can see if it changed.   This could be if we specifically modified a field,
-	// or the contents that we pull from a remove manifest changed
-	var oldApp = *in
 
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
@@ -135,7 +130,7 @@ func updateAppFields(in *edgeproto.App, revision int32) error {
 			if in.Md5Sum == "" {
 				return fmt.Errorf("md5sum should be provided if imagepath is not specified")
 			}
-			in.ImagePath = *artifactoryFQDN + "-repo-" +
+			in.ImagePath = *artifactoryFQDN + "repo-" +
 				in.Key.DeveloperKey.Name + "/" +
 				in.Key.Name + ".qcow2#md5:" + in.Md5Sum
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
@@ -203,12 +198,9 @@ func updateAppFields(in *edgeproto.App, revision int32) error {
 	// if remote target is unreachable or changed at that time.
 	in.DeploymentManifest = deploymf
 
-	if reflect.DeepEqual(oldApp, *in) {
-		log.DebugLog(log.DebugLevelApi, "no changes in app, maintaining old revision")
-	} else {
-		log.DebugLog(log.DebugLevelApi, "app was modified, updating revision", "revision", revision)
-		in.Revision = revision
-	}
+	log.DebugLog(log.DebugLevelApi, "setting app revision", "revision", revision)
+	in.Revision = revision
+
 	return nil
 }
 
@@ -299,6 +291,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				return fmt.Errorf("UpdateApp not supported for deployment: %s when AppInstances exist", cur.Deployment)
 			}
 		}
+
 		cur.CopyInFields(in)
 		newRevision := cur.Revision + 1
 		if err := updateAppFields(&cur, newRevision); err != nil {

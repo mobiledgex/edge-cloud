@@ -29,7 +29,7 @@ func createDockerComposeFile(client pc.PlatformClient, app *edgeproto.App, appIn
 
 func CreateAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	image := app.ImagePath
-	name := app.Key.Name
+	name := util.DNSSanitize(app.Key.Name)
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", name, image, app.Command)
 		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
@@ -57,7 +57,7 @@ func CreateAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgepr
 func DeleteAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 
 	if app.DeploymentManifest == "" {
-		name := app.Key.Name
+		name := util.DNSSanitize(app.Key.Name)
 		cmd := fmt.Sprintf("docker stop %s", name)
 		log.DebugLog(log.DebugLevelMexos, "running docker stop ", "cmd", cmd)
 
@@ -89,6 +89,16 @@ func DeleteAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgepr
 	}
 
 	return nil
+}
+
+func UpdateAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	log.DebugLog(log.DebugLevelMexos, "UpdateAppInst", "appkey", app.Key, "ImagePath", app.ImagePath)
+
+	err := DeleteAppInst(client, app, appInst)
+	if err != nil {
+		log.InfoLog("DeleteAppInst failed, proceeding with create", "appkey", app.Key, "err", err)
+	}
+	return CreateAppInst(client, app, appInst)
 }
 
 func GetAppInstRuntime(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {

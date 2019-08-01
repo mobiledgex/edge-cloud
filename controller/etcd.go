@@ -234,28 +234,28 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 	data := objstore.SyncCbData{}
 	for !done {
 		if refresh {
-			ctx := context.Background()
-			span, ctx := opentracing.StartSpanFromContext(ctx, "sync-refresh")
+			span := log.StartSpan(log.DebugLevelEtcd, "sync-refresh")
+			spctx := log.ContextWithSpan(ctx, span)
 			data.Action = objstore.SyncListStart
 			data.Key = nil
 			data.Value = nil
 			data.Rev = 0
-			cb(ctx, &data)
+			cb(spctx, &data)
 
 			data.Action = objstore.SyncList
 			err = e.List(key, func(key, val []byte, rev int64) error {
 				data.Key = key
 				data.Value = val
 				data.Rev = rev
-				log.SpanLog(ctx, log.DebugLevelEtcd, "sync list data", "key", string(key), "val", string(val), "rev", rev)
-				cb(ctx, &data)
+				log.SpanLog(spctx, log.DebugLevelEtcd, "sync list data", "key", string(key), "val", string(val), "rev", rev)
+				cb(spctx, &data)
 				watchRev = rev
 				return nil
 			})
 			data.Action = objstore.SyncListEnd
 			data.Key = nil
 			data.Value = nil
-			cb(ctx, &data)
+			cb(spctx, &data)
 			refresh = false
 			span.Finish()
 		}
@@ -274,7 +274,7 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 			}
 			span := e.spanForRev(resp.Header.Revision, "etcd-watch")
 			span.SetTag("rev", resp.Header.Revision)
-			ctx := opentracing.ContextWithSpan(context.Background(), span)
+			spctx := log.ContextWithSpan(ctx, span)
 			for ii, event := range resp.Events {
 				if event.Type == mvccpb.PUT {
 					data.Action = objstore.SyncUpdate
@@ -290,8 +290,8 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				} else {
 					data.MoreEvents = true
 				}
-				log.SpanLog(ctx, log.DebugLevelEtcd, "watch data", "key", string(data.Key), "val", string(data.Value), "more-events", data.MoreEvents)
-				cb(ctx, &data)
+				log.SpanLog(spctx, log.DebugLevelEtcd, "watch data", "key", string(data.Key), "val", string(data.Value), "more-events", data.MoreEvents)
+				cb(spctx, &data)
 			}
 			span.Finish()
 		}
@@ -362,7 +362,7 @@ func (e *EtcdClient) spanForRev(rev int64, spanName string) opentracing.Span {
 	if err != nil {
 		return log.StartSpan(log.DebugLevelEtcd, spanName)
 	}
-	return log.SpanFromString(string(val), spanName)
+	return log.NewSpanFromString(log.DebugLevelEtcd, string(val), spanName)
 }
 
 func getSpanKey() string {

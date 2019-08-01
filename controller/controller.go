@@ -27,7 +27,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
-	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
@@ -51,7 +50,7 @@ var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA 
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "http://127.0.0.1:8086", "InfluxDB listener address")
 var registryFQDN = flag.String("registryFQDN", "docker.mobiledgex.net", "mobiledgex registry FQDN")
-var artifactoryFQDN = flag.String("artifactoryFQDN", "https://artifactory.mobiledgex.net/artifactory/mc", "mobiledgex artifactory FQDN with mc tag")
+var artifactoryFQDN = flag.String("artifactoryFQDN", "https://artifactory.mobiledgex.net/artifactory/", "mobiledgex artifactory FQDN")
 var cloudletRegistryPath = flag.String("cloudletRegistryPath", "registry.mobiledgex.net:5000/mobiledgex/edge-cloud", "edge-cloud image registry path for deploying cloudlet services")
 var cloudletVMImagePath = flag.String("cloudletVMImagePath", "https://artifactory.mobiledgex.net/artifactory/baseimages/mobiledgex-v2.0.2.qcow2#md5:51371613a81f7218c2633ce3c1814258", "mobiledgex VM image for deploying cloudlet services")
 var versionTag = flag.String("versionTag", "", "edge-cloud image tag indicating controller version")
@@ -140,12 +139,19 @@ func startServices() error {
 
 	if *externalApiAddr == "" {
 		*externalApiAddr = *apiAddr
+		hostport := strings.Split(*externalApiAddr, ":")
+		if len(hostport) == 2 && hostport[0] == "0.0.0.0" {
+			addr, err := resolveExternalAddr()
+			if err == nil {
+				*externalApiAddr = addr + ":" + hostport[1]
+			}
+		}
 	}
 	log.InitTracer()
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	span.SetTag("level", "init")
 	defer span.Finish()
-	ctx := opentracing.ContextWithSpan(context.Background(), span)
+	ctx := log.ContextWithSpan(context.Background(), span)
 
 	err := validateFields()
 	if err != nil {
@@ -398,4 +404,19 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(influxQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewNodeRecvMany(&nodeApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(&execApi))
+}
+
+// This is for figuring out the "external" address when
+// running under kubernetes, which is really the internal CNI
+// address that containers can use to talk to each other.
+func resolveExternalAddr() (string, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return "", err
+	}
+	addrs, err := net.LookupHost(hostname)
+	if err != nil {
+		return "", err
+	}
+	return addrs[0], nil
 }
