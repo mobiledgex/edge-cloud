@@ -390,7 +390,7 @@ func CloudletInfraPropertiesWriteOutputOne(obj *edgeproto.CloudletInfraPropertie
 	}
 }
 func PlatformConfigSlicer(in *edgeproto.PlatformConfig) []string {
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 9)
 	s = append(s, in.RegistryPath)
 	s = append(s, in.ImagePath)
 	s = append(s, in.NotifyCtrlAddrs)
@@ -399,11 +399,12 @@ func PlatformConfigSlicer(in *edgeproto.PlatformConfig) []string {
 	s = append(s, in.CrmRoleId)
 	s = append(s, in.CrmSecretId)
 	s = append(s, in.PlatformTag)
+	s = append(s, strconv.FormatBool(in.TestMode))
 	return s
 }
 
 func PlatformConfigHeaderSlicer() []string {
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 9)
 	s = append(s, "RegistryPath")
 	s = append(s, "ImagePath")
 	s = append(s, "NotifyCtrlAddrs")
@@ -412,6 +413,7 @@ func PlatformConfigHeaderSlicer() []string {
 	s = append(s, "CrmRoleId")
 	s = append(s, "CrmSecretId")
 	s = append(s, "PlatformTag")
+	s = append(s, "TestMode")
 	return s
 }
 

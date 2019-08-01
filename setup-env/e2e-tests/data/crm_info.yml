@@ -19,7 +19,7 @@ cloudlets:
     updateappinsttimeout: 2000000000
     deleteappinsttimeout: 2000000000
   state: Ready
-  deploymentlocal: true
+  deploymentlocal: false
   notifysrvaddr: 127.0.0.1:51001
   flavor:
     name: x1.medium
@@ -40,7 +40,7 @@ cloudlets:
     updateappinsttimeout: 2000000000
     deleteappinsttimeout: 2000000000
   state: Ready
-  deploymentlocal: true
+  deploymentlocal: false
   notifysrvaddr: 127.0.0.1:51002
   flavor:
     name: x1.medium
