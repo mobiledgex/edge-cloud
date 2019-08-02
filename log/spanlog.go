@@ -154,3 +154,11 @@ func getSpanMsg(s *Span, lineno, msg string) string {
 	}
 	return traceid + "\t" + lineno + "\t" + msg
 }
+
+func NoLogSpan(span opentracing.Span) {
+	ext.SamplingPriority.Set(span, 0)
+}
+
+func ForceLogSpan(span opentracing.Span) {
+	ext.SamplingPriority.Set(span, 1)
+}

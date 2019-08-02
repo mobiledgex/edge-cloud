@@ -26,13 +26,14 @@ var spanString = contextKey{}
 var noPanicOrphanedSpans bool
 var lastLog map[string]time.Time
 var lastLogMux sync.Mutex
+var SpanServiceName string
 
 // Use JAEGER_AGEN_HOST and JAEGER_AGENT_PORT to send UDP traces
 // to different host:port (otherwise uses localhost:6831).
 func InitTracer() {
 	lastLog = make(map[string]time.Time)
 
-	name := filepath.Base(os.Args[0])
+	SpanServiceName = filepath.Base(os.Args[0])
 	cfg := &config.Configuration{
 		Sampler: &config.SamplerConfig{
 			Type:  jaeger.SamplerTypeProbabilistic,
@@ -40,7 +41,7 @@ func InitTracer() {
 		},
 		Reporter: &config.ReporterConfig{},
 	}
-	t, closer, err := cfg.New(name, config.Logger(zap.NewLogger(slogger.Desugar())))
+	t, closer, err := cfg.New(SpanServiceName, config.Logger(zap.NewLogger(slogger.Desugar())))
 	if err != nil {
 		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
 	}
