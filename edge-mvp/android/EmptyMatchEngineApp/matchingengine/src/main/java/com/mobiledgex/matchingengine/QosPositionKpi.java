@@ -83,16 +83,6 @@ public class QosPositionKpi implements Callable {
 
             response = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .getQosPositionKpi(mQosPositionKpiRequest);
-        } catch (MatchingEngineKeyStoreException mkse) {
-            throw new ExecutionException("Exception calling QueryQosKpi: ", mkse);
-        } catch (MatchingEngineTrustStoreException mtse) {
-            throw new ExecutionException("Exception calling QueryQosKpi: ", mtse);
-        } catch (KeyManagementException kme) {
-            throw new ExecutionException("Exception calling QueryQosKpi: ", kme);
-        } catch (NoSuchAlgorithmException nsa) {
-            throw new ExecutionException("Exception calling QueryQosKpi: ", nsa);
-        } catch (IOException ioe) {
-            throw new ExecutionException("Exception calling QueryQosKpi: ", ioe);
         } finally {
             if (nm != null) {
                 nm.resetNetworkToDefault();

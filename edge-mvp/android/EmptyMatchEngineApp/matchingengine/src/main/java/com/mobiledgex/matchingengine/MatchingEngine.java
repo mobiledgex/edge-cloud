@@ -13,14 +13,7 @@ import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 
 import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.util.Iterator;
+
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -88,7 +81,6 @@ public class MatchingEngine {
     private LocOuterClass.Loc mMatchEngineLocation;
 
     private boolean isSSLEnabled = true;
-    private SSLSocketFactory mMutualAuthSocketFactory;
 
     private Context mContext;
 
@@ -975,105 +967,23 @@ public class MatchingEngine {
         isSSLEnabled = SSLEnabled;
     }
 
-    public SSLSocketFactory getMutualAuthSSLSocketFactoryInstance()
-            throws IOException, MatchingEngineKeyStoreException,
-            KeyManagementException, KeyStoreException, NoSuchAlgorithmException {
-        if (mMutualAuthSocketFactory != null) {
-            return mMutualAuthSocketFactory;
-        }
-
-        // FIXME: Add link to instructions on how to create the .bks and .p12 files from existing cert/key files.
-        // FIXME: Still need to see about securing the BKS and P12 files with passwords, then securing those passwords too.
-        String serverBksFileName = "mexcerts/mex-ca.bks";
-        String clientKeyPairFileName = "mexcerts/mex-client.p12";
-        char[] serverBksPassword = "".toCharArray();
-        char[] clientKeyPairPassword = "".toCharArray();
-
-        try {
-            mMutualAuthSocketFactory = getMutualAuthSSLSocketFactoryInstance(serverBksFileName,
-                    clientKeyPairFileName, serverBksPassword, clientKeyPairPassword);
-        } catch (CertificateException ce) {
-            throw new MatchingEngineKeyStoreException("MatchingEngineKeyStoreException: ", ce);
-        } catch (UnrecoverableKeyException uke) {
-            throw new MatchingEngineKeyStoreException("MatchingEngineKeyStoreException: ", uke);
-        }
-
-        return mMutualAuthSocketFactory;
-    }
-
     /**
-     * This method creates an SSL Socket Factory using a server certificate Key Store in .bks
-     * (Bouncy Castle) format, and a client cert/key pair in .p12 (pkcs12) format.
-     *
-     * @param serverBksFileName  Server certificate Key Store in .bks format.
-     * @param clientKeyPairFileName  Client cert/key pair in .p12 format.
-     * @param serverBksPassword  Password for server certificate Key Store.
-     * @param clientKeyPairPassword  Password for client cert/key pair.
-     * @return
-     * @throws IOException
-     * @throws KeyManagementException
-     * @throws KeyStoreException
-     * @throws NoSuchAlgorithmException
-     * @throws CertificateException
-     * @throws UnrecoverableKeyException
-     */
-    public SSLSocketFactory getMutualAuthSSLSocketFactoryInstance(String serverBksFileName,
-                                                                  String clientKeyPairFileName,
-                                                                  char[] serverBksPassword,
-                                                                  char[] clientKeyPairPassword)
-            throws IOException, KeyManagementException, KeyStoreException, NoSuchAlgorithmException,
-                CertificateException, UnrecoverableKeyException {
-        if (mMutualAuthSocketFactory != null) {
-            return mMutualAuthSocketFactory;
-        }
-
-        KeyStore trustStore = KeyStore.getInstance("bks");
-        trustStore.load(mContext.getAssets().open(serverBksFileName), serverBksPassword);
-
-        KeyStore keyStore = KeyStore.getInstance("pkcs12");
-        keyStore.load(null, null);
-        keyStore.load(mContext.getAssets().open(clientKeyPairFileName), clientKeyPairPassword);
-
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
-        trustManagerFactory.init(trustStore);
-        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("X509");
-        keyManagerFactory.init(keyStore, null);
-
-        SSLContext ctx  = SSLContext.getInstance("TLS");
-        ctx.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
-        mMutualAuthSocketFactory = ctx.getSocketFactory();
-
-        return mMutualAuthSocketFactory;
-    }
-
-    /**
-     * Helper function to return a channel that handles SSL Mutual Authentication,
+     * Helper function to return a channel that handles SSL,
      * or returns a more basic ManagedChannelBuilder.
      * @param host
      * @param port
      * @return
-     * @throws MatchingEngineKeyStoreException
-     * @throws MatchingEngineTrustStoreException
-     * @throws KeyManagementException
-     * @throws NoSuchAlgorithmException
      */
-    ManagedChannel channelPicker(String host, int port)
-            throws IOException, MatchingEngineKeyStoreException, MatchingEngineTrustStoreException, KeyManagementException, NoSuchAlgorithmException {
-
-        try {
-            if (isSSLEnabled()) {
-                return OkHttpChannelBuilder
-                        .forAddress(host, port)
-                        .sslSocketFactory(getMutualAuthSSLSocketFactoryInstance())
-                        .build();
-            } else {
-                return ManagedChannelBuilder
-                        .forAddress(host, port)
-                        .usePlaintext()
-                        .build();
-            }
-        } catch (KeyStoreException kse) {
-            throw new MatchingEngineKeyStoreException("MexKeyStoreException: ", kse);
+    ManagedChannel channelPicker(String host, int port) {
+        if (isSSLEnabled()) {
+            return OkHttpChannelBuilder // Public certs only.
+                    .forAddress(host, port)
+                    .build();
+        } else {
+            return ManagedChannelBuilder
+                    .forAddress(host, port)
+                    .usePlaintext()
+                    .build();
         }
     }
 

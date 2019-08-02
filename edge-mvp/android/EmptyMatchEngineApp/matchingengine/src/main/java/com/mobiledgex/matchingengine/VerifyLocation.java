@@ -124,18 +124,6 @@ public class VerifyLocation implements Callable {
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .verifyLocation(grpcRequest);
-
-            // Nothing a sdk user can do below but read the exception cause:
-        } catch (MatchingEngineKeyStoreException mkse) {
-            throw new ExecutionException("Exception calling VerifyLocation: ", mkse);
-        } catch (MatchingEngineTrustStoreException mtse) {
-            throw new ExecutionException("Exception calling VerifyLocation: ", mtse);
-        } catch (KeyManagementException kme) {
-            throw new ExecutionException("Exception calling VerifyLocation: ", kme);
-        } catch (NoSuchAlgorithmException nsa) {
-            throw new ExecutionException("Exception calling VerifyLocation: ", nsa);
-        } catch (IOException ioe) {
-            throw new ExecutionException("Exception calling VerifyLocation: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();
