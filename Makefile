@@ -38,6 +38,7 @@ build-linux:
 	make -C d-match-engine linux
 
 build-docker:
+	rsync --checksum .dockerignore ../.dockerignore
 	docker build --build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d')" \
 		-t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud ..
 	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
@@ -53,16 +54,8 @@ install:
 install-linux:
 	${LINUX_XCOMPILE_ENV} go install ./...
 
-PROTOBUF	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/golang/protobuf)
-GOGOPROTO	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
-GRPCGATEWAY	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
-
 tools:
-	go install ${PROTOBUF}/protoc-gen-go
-	go install ${GOGOPROTO}/protoc-gen-gogo
-	go install ${GOGOPROTO}/protoc-gen-gogofast
-	go install ${GRPCGATEWAY}/protoc-gen-grpc-gateway
-	go get github.com/uber/prototool/cmd/prototool
+	make -f Makefile.tools
 
 doc:
 	make -C edgeproto doc
