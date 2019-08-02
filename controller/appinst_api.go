@@ -418,7 +418,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return errors.New("Specified cloudlet not found")
 		}
 		in.CloudletLoc = cloudlet.Location
-		in.CloudletLoc = dme.Loc{}
 
 		var app edgeproto.App
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {

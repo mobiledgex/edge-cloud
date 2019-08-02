@@ -10,7 +10,6 @@ flavors:
   vcpus: 2
   disk: 2
 
-clusters:
 
 clusterinsts:
 - key:
@@ -518,6 +517,7 @@ apps:
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication1:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
+  officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
     name: x1.small
   authpublickey: |
@@ -532,7 +532,6 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication1
-  permitsplatformapps: true
 - key:
     developerkey:
       name: AcmeAppCo
@@ -541,6 +540,7 @@ apps:
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication2:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
+  officialfqdn: someapplication2.acmeappco.com
   defaultflavor:
     name: x1.small
   authpublickey: |
@@ -555,7 +555,6 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication2
-  permitsplatformapps: true
 
 appinstances:
 - key:
@@ -618,24 +617,6 @@ appinstances:
     latitude: 1
     longitude: 7
   uri: tmus-cloud-7.tmus.mobiledgex.net
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: Samsung
-      name: SamsungEnablingLayer
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-      developer: Samsung
-  uri: default.samsungenablement.samsung.com
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -741,24 +722,6 @@ appinstances:
     latitude: 1
     longitude: 8
   uri: tmus-cloud-8.tmus.mobiledgex.net
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-      developer: AcmeAppCo
-  uri: default.someapplication1.AcmeAppCo.com
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -885,24 +848,6 @@ appinstances:
     latitude: 1
     longitude: 10
   uri: acmeappcosomeapplication210.autoclustersomeapplication2.gcp-cloud-10.gcp.mobiledgex.net
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-      developer: AcmeAppCo
-  uri: default.someapplication2.AcmeAppCo.com
   liveness: LivenessStatic
   flavor:
     name: x1.small

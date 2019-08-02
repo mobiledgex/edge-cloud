@@ -15,12 +15,6 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusters:
-- key:
-    name: SmallCluster
-  defaultflavor:
-    name: x1.small
-
 clusterinsts:
 - key:
     clusterkey:
@@ -157,6 +151,7 @@ apps:
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
+  officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
     name: x1.small
   cluster:
@@ -173,7 +168,6 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
-  permitsplatformapps: true
 - key:
     developerkey:
       name: AcmeAppCo
@@ -197,7 +191,6 @@ apps:
     -----END PUBLIC KEY-----
   deployment: helm
   androidpackagename: com.acme.helmApplication
-  permitsplatformapps: true
 - key:
     developerkey:
       name: Samsung
@@ -338,42 +331,6 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-      developer: AcmeAppCo
-  uri: someapp1.acmeappco.com
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: Samsung
-      name: SamsungEnablingLayer
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-      developer: Samsung
-  uri: default.samsungenablement.samsung.com
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
 - key:
     appkey:
       developerkey:
