@@ -10,7 +10,6 @@ flavors:
   vcpus: 2
   disk: 2
 
-clusters:
 
 clusterinsts:
 - key:
@@ -518,6 +517,7 @@ apps:
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication1:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
+  officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
     name: x1.small
   authpublickey: |
@@ -532,7 +532,6 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication1
-  permitsplatformapps: true
 - key:
     developerkey:
       name: AcmeAppCo
@@ -541,6 +540,7 @@ apps:
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication2:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
+  officialfqdn: someapplication2.acmeappco.com
   defaultflavor:
     name: x1.small
   authpublickey: |
@@ -555,7 +555,6 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication2
-  permitsplatformapps: true
 
 appinstances:
 - key:
@@ -575,7 +574,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 4
-  uri: tmus-cloud-4.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -596,7 +594,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 4
-  uri: tmus-cloud-4.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -617,25 +614,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
-  uri: tmus-cloud-7.tmus.mobiledgex.net
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: Samsung
-      name: SamsungEnablingLayer
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-      developer: Samsung
-  uri: default.samsungenablement.samsung.com
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -656,7 +634,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -677,7 +654,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -698,7 +674,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 3
-  uri: tmus-cloud-3.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -719,7 +694,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 6
-  uri: tmus-cloud-6.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -740,25 +714,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 8
-  uri: tmus-cloud-8.tmus.mobiledgex.net
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-      developer: AcmeAppCo
-  uri: default.someapplication1.AcmeAppCo.com
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -779,7 +734,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 3
-  uri: tmus-cloud-3.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -800,7 +754,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 5
-  uri: tmus-cloud-5.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -821,7 +774,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 6
-  uri: tmus-cloud-6.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -842,7 +794,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 9
-  uri: acmeappcosomeapplication210.autoclustersomeapplication2.azure-cloud-9.azure.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -863,7 +814,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 10
-  uri: acmeappcosomeapplication110.autoclustersomeapplication1.gcp-cloud-10.gcp.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -884,25 +834,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 10
-  uri: acmeappcosomeapplication210.autoclustersomeapplication2.gcp-cloud-10.gcp.mobiledgex.net
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-      developer: AcmeAppCo
-  uri: default.someapplication2.AcmeAppCo.com
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -923,7 +854,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -944,7 +874,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -965,7 +894,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 9
-  uri: acmeappcosomeapplication110.autoclustersomeapplication1.azure-cloud-9.azure.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -986,7 +914,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 5
-  uri: tmus-cloud-5.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -1007,7 +934,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
-  uri: tmus-cloud-7.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -1028,7 +954,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 8
-  uri: tmus-cloud-8.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small

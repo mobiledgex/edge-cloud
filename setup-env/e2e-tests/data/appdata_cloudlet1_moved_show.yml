@@ -16,12 +16,6 @@ flavors:
   disk: 4
 
 
-clusters:
-- key:
-    name: SmallCluster
-  defaultflavor:
-    name: x1.small
-
 clusterinsts:
 - key:
     clusterkey:
@@ -176,6 +170,7 @@ apps:
   imagetype: ImageTypeDocker
   deployment: kubernetes
   accessports: tcp:80,http:443,udp:10002
+  officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
     name: x1.small
   cluster:
@@ -191,7 +186,6 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   androidpackagename: com.acme.someapplication1
-  permitsplatformapps: true
 - key:
     developerkey:
       name: AcmeAppCo
@@ -215,7 +209,6 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   androidpackagename: com.acme.helmApplication
-  permitsplatformapps: true
 - key:
     developerkey:
       name: MobiledgeX
@@ -297,7 +290,6 @@ appinstances:
   cloudletloc:
     latitude: 40
     longitude: -99
-  uri: acmeappcosomeapplication110.tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -318,25 +310,6 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: acmeappcosomeapplication110.tmus-cloud-2.tmus.mobiledgex.net
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-      developer: AcmeAppCo
-  uri: someapp1.acmeappco.com
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -357,25 +330,6 @@ appinstances:
   cloudletloc:
     latitude: 40
     longitude: -99
-  uri: helmAppication.acmeappco.com
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: Samsung
-      name: SamsungEnablingLayer
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-      developer: Samsung
-  uri: default.samsungenablement.samsung.com
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -396,7 +350,6 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -417,7 +370,6 @@ appinstances:
   cloudletloc:
     latitude: 40
     longitude: -99
-  uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.medium

@@ -131,6 +131,7 @@ apps:
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication1:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
+  officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
     name: x1.small
   authpublickey: |
@@ -154,24 +155,6 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: default
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-      developer: AcmeAppCo
-  uri: default.someapplication1.AcmeAppCo.com
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
@@ -181,7 +164,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -202,7 +184,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -223,7 +204,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -244,7 +224,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.medium
