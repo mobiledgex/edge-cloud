@@ -686,7 +686,7 @@ func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
 		"-p", "16686:16686",
 		"-p", "14268:14268",
 		"-p", "9411:9411",
-		"jaegertracing/all-in-one:1.12",
+		"jaegertracing/all-in-one:1.13",
 	}
 	var err error
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
