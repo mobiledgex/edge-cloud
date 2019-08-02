@@ -340,6 +340,9 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--physicalName")
 		args = append(args, p.PhysicalName)
 	}
+	if p.TestMode {
+		args = append(args, "-testMode")
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {

@@ -22,12 +22,14 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	notifyCtrlAddrs := ""
 	tlsCertFile := ""
 	vaultAddr := ""
+	testMode := false
 	if pfConfig != nil {
 		envVars["VAULT_ROLE_ID"] = pfConfig.CrmRoleId
 		envVars["VAULT_SECRET_ID"] = pfConfig.CrmSecretId
 		notifyCtrlAddrs = pfConfig.NotifyCtrlAddrs
 		tlsCertFile = pfConfig.TlsCertFile
 		vaultAddr = pfConfig.VaultAddr
+		testMode = pfConfig.TestMode
 	}
 
 	opts = append(opts, process.WithDebug("api,mexos,notify"))
@@ -46,6 +48,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		},
 		VaultAddr:    vaultAddr,
 		PhysicalName: cloudlet.PhysicalName,
+		TestMode:     testMode,
 	}, opts, nil
 }
 
