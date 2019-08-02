@@ -35,6 +35,7 @@ var hostname = flag.String("hostname", "", "Unique hostname within Cloudlet")
 var platformName = flag.String("platform", "", "Platform type of Cloudlet")
 var solib = flag.String("plugin", "", "plugin file")
 var region = flag.String("region", "local", "region name")
+var testMode = flag.Bool("testMode", false, "Run CRM in test mode")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
@@ -184,8 +185,9 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr stri
 	pc := pf.PlatformConfig{
 		CloudletKey:  &cloudlet.Key,
 		PhysicalName: physicalName,
-		VaultAddr:    vaultAddr}
-	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper)
+		VaultAddr:    vaultAddr,
+		TestMode:     *testMode}
+	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
 	err := platform.Init(&pc, updateCallback)
 	return err
 }

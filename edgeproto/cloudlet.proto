@@ -125,6 +125,8 @@ message PlatformConfig {
   string crm_secret_id = 7;
   // Tag of edge-cloud image
   string platform_tag = 8;
+  // Internal Test Flag
+  bool test_mode = 9;
 }
 
 // PlatformType is the supported list of cloudlet types

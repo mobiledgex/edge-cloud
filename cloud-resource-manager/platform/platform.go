@@ -11,6 +11,7 @@ type PlatformConfig struct {
 	CloudletKey  *edgeproto.CloudletKey
 	PhysicalName string
 	VaultAddr    string
+	TestMode     bool
 }
 
 // Platform abstracts the underlying cloudlet platform.
