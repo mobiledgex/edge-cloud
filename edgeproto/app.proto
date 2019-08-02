@@ -84,9 +84,6 @@ message ConfigFile {
   string deployment_generator = 17 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Android package name used to match the App name from the Android package
   string android_package_name = 18;
-  // Indicates whether or not platform apps are allowed to perform actions
-  // on behalf of this app, such as FindCloudlet
-  bool permits_platform_apps = 19;
   // Override actions to Controller
   DeleteType del_opt = 20 [(protogen.hidetag) = "nocmp"];
   // Customization files passed through to implementing services

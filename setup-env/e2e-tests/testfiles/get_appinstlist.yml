@@ -34,7 +34,6 @@ tests:
      yaml2: "{{datadir}}/get_appinstlist_result_app1.yml"
      filetype: getappinstlist
 
-- includefile: delete_default_appinst.yml
 
 - name: get appinstlist, expect app1 
   actions: [dmeapi-getappinstlist]
@@ -52,6 +51,4 @@ tests:
     yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
 
-- includefile: create_default_appinst.yml
 
-- includefile: delete_default_appinst_withdeps.yml

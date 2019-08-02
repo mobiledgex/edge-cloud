@@ -190,7 +190,7 @@ func ConfigFileWriteOutputOne(obj *edgeproto.ConfigFile) {
 	}
 }
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 21)
+	s := make([]string, 0, 20)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -209,7 +209,6 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.DeploymentManifest)
 	s = append(s, in.DeploymentGenerator)
 	s = append(s, in.AndroidPackageName)
-	s = append(s, strconv.FormatBool(in.PermitsPlatformApps))
 	s = append(s, edgeproto.DeleteType_CamelName[int32(in.DelOpt)])
 	if in.Configs == nil {
 		in.Configs = make([]*edgeproto.ConfigFile, 1)
@@ -228,7 +227,7 @@ func AppSlicer(in *edgeproto.App) []string {
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 21)
+	s := make([]string, 0, 20)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
@@ -244,7 +243,6 @@ func AppHeaderSlicer() []string {
 	s = append(s, "DeploymentManifest")
 	s = append(s, "DeploymentGenerator")
 	s = append(s, "AndroidPackageName")
-	s = append(s, "PermitsPlatformApps")
 	s = append(s, "DelOpt")
 	s = append(s, "Configs-Kind")
 	s = append(s, "Configs-Config")
@@ -518,7 +516,6 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.DeploymentManifest, "deploymentmanifest", "", "DeploymentManifest")
 	AppFlagSet.StringVar(&AppIn.DeploymentGenerator, "deploymentgenerator", "", "DeploymentGenerator")
 	AppFlagSet.StringVar(&AppIn.AndroidPackageName, "androidpackagename", "", "AndroidPackageName")
-	AppFlagSet.BoolVar(&AppIn.PermitsPlatformApps, "permitsplatformapps", false, "PermitsPlatformApps")
 	AppFlagSet.StringVar(&AppInDelOpt, "delopt", "", "one of [NoAutoDelete AutoDelete]")
 	AppFlagSet.BoolVar(&AppIn.ScaleWithCluster, "scalewithcluster", false, "ScaleWithCluster")
 	AppFlagSet.BoolVar(&AppIn.InternalPorts, "internalports", false, "InternalPorts")
@@ -581,9 +578,6 @@ func AppSetFields() {
 	}
 	if AppFlagSet.Lookup("androidpackagename").Changed {
 		AppIn.Fields = append(AppIn.Fields, "18")
-	}
-	if AppFlagSet.Lookup("permitsplatformapps").Changed {
-		AppIn.Fields = append(AppIn.Fields, "19")
 	}
 	if AppFlagSet.Lookup("delopt").Changed {
 		AppIn.Fields = append(AppIn.Fields, "20")

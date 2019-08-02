@@ -244,6 +244,7 @@ flavors:
 sub genApp{
   my $app = shift;
   my $androidpackagename = lc("com.$Developer.$app");
+  my $fqdn = lc("$app.$Developer.com");
   print(
 "- key:
     developerkey:
@@ -253,12 +254,13 @@ sub genApp{
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.small
-  accessports: tcp:80,http:443,udp:10002");
+  accessports: tcp:80,http:443,udp:10002
+  officialfqdn: $fqdn");
+
   # if this is a platrfom app we need to add android package
   if ($GenplatosApp) {
     print("
-  androidpackagename: $androidpackagename
-  permitsplatformapps: true");
+  androidpackagename: $androidpackagename");
   }
   print("
   authpublickey: \"-----BEGIN PUBLIC KEY-----\\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\\n/QIDAQAB\\n-----END PUBLIC KEY-----\\n\"
@@ -266,47 +268,6 @@ sub genApp{
 }
 
 
-sub genDefaultAppInst{
-   my $app = shift;
-
-   print(
-"- key:
-    appkey:
-      developerkey:
-        name: $Developer
-      name: $app
-      version: \"1.0\"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      developer: $Developer
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-  uri: default.$app.$Developer.com
-\n")
-}
-
-sub genplatosAppInst{
-   print(
-"- key:
-    appkey:
-      developerkey:
-        name: platos
-      name: PlatosEnablingLayer
-      version: \"1.0\"
-    clusterinstkey:
-      clusterkey:
-        name: default
-      developer: platos
-      cloudletkey:
-        operatorkey:
-          name: developer
-        name: default
-  uri: default.platosenablement.platos.com
-\n")
-}
 
 sub genplatosApp{
 print(
@@ -370,9 +331,3 @@ foreach my $app(@apps){
 }
 genLatLongs("appinstances");
 
-foreach my $app(@apps){
-   genDefaultAppInst($app);
-}
-if ($GenplatosApp) {
-  genplatosAppInst();
-}

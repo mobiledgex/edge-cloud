@@ -1,50 +1,3 @@
-operators:
-- key:
-    name: dmuus
-cloudlets:
-- key:
-    operatorkey:
-      name: dmuus
-    name: dmuus-cloud-1
-  location:
-    latitude: 31
-    longitude: -91
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-  timelimits:
-    createclusterinsttimeout: 3000000000
-    updateclusterinsttimeout: 2000000000
-    deleteclusterinsttimeout: 2000000000
-    createappinsttimeout: 3000000000
-    updateappinsttimeout: 2000000000
-    deleteappinsttimeout: 2000000000
-  state: Ready
-  deploymentlocal: false
-  notifysrvaddr: 127.0.0.1:51001
-  flavor:
-    name: x1.medium
-- key:
-    operatorkey:
-      name: dmuus
-    name: dmuus-cloud-2
-  location:
-    latitude: 35
-    longitude: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-  timelimits:
-    createclusterinsttimeout: 3000000000
-    updateclusterinsttimeout: 2000000000
-    deleteclusterinsttimeout: 2000000000
-    createappinsttimeout: 3000000000
-    updateappinsttimeout: 2000000000
-    deleteappinsttimeout: 2000000000
-  state: Ready
-  deploymentlocal: false
-  notifysrvaddr: 127.0.0.1:51002
-  flavor:
-    name: x1.medium
-
 flavors:
 - key:
     name: x1.tiny
@@ -61,6 +14,7 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
+
 clusterinsts:
 - key:
     clusterkey:
@@ -116,13 +70,57 @@ clusterinsts:
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
+
+operators:
+- key:
+    name: dmuus
+
 developers:
 - key:
     name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: dmuus
+    name: dmuus-cloud-1
+  location:
+    latitude: 31
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  timelimits:
+    createclusterinsttimeout: 3000000000
+    updateclusterinsttimeout: 2000000000
+    deleteclusterinsttimeout: 2000000000
+    createappinsttimeout: 3000000000
+    updateappinsttimeout: 2000000000
+    deleteappinsttimeout: 2000000000
+  state: Ready
+  notifysrvaddr: 127.0.0.1:51001
+  flavor:
+    name: x1.medium
+- key:
+    operatorkey:
+      name: dmuus
+    name: dmuus-cloud-2
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  timelimits:
+    createclusterinsttimeout: 3000000000
+    updateclusterinsttimeout: 2000000000
+    deleteclusterinsttimeout: 2000000000
+    createappinsttimeout: 3000000000
+    updateappinsttimeout: 2000000000
+    deleteappinsttimeout: 2000000000
+  state: Ready
+  notifysrvaddr: 127.0.0.1:51002
+  flavor:
+    name: x1.medium
+
 apps:
 - key:
     developerkey:
@@ -279,7 +277,6 @@ apps:
     version: "1.0"
   imagepath: stable/prometheus-operator
   accessports: tcp:9090
-  internalports: true
   defaultflavor:
     name: x1.medium
   deployment: helm
@@ -298,6 +295,8 @@ apps:
           ## https://github.com/coreos/prometheus-operator/issues/926
           ##
           https: true
+  internalports: true
+
 appinstances:
 - key:
     appkey:
@@ -346,12 +345,12 @@ appinstances:
       cloudletkey:
         operatorkey:
           name: dmuus
-        name: dmuus-cloud-1
+        name: dmuus-cloud-2
       developer: AcmeAppCo
   cloudletloc:
-    latitude: 31
-    longitude: -91
-  uri: dmuus-cloud-1.dmuus.mobiledgex.net
+    latitude: 35
+    longitude: -95
+  uri: autoclustersomeapplication1.dmuus-cloud-2.dmuus.mobiledgex.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -368,7 +367,33 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication1
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  uri: autoclustersomeapplication2.dmuus-cloud-2.dmuus.mobiledgex.net
+  liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
+  flavor:
+    name: x1.medium
+  state: Ready
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: dmuus
@@ -378,13 +403,18 @@ appinstances:
     latitude: 35
     longitude: -95
   uri: dmuus-cloud-2.dmuus.mobiledgex.net
+  liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
-    internalport: 9090
-    publicport: 9090
-  liveness: LivenessStatic
+    internalport: 22
+    publicport: 10000
+    fqdnprefix: someapplication2-tcp.
+  - proto: LProtoUdp
+    internalport: 10003
+    publicport: 10003
+    fqdnprefix: someapplication2-udp.
   flavor:
-    name: x1.medium
+    name: x1.small
   state: Ready
 - key:
     appkey:
@@ -424,52 +454,21 @@ appinstances:
 - key:
     appkey:
       developerkey:
-        name: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication2
-      cloudletkey:
-        operatorkey:
-          name: dmuus
-        name: dmuus-cloud-2
-      developer: AcmeAppCo
-  cloudletloc:
-    latitude: 35
-    longitude: -95
-  uri: dmuus-cloud-2.dmuus.mobiledgex.net
-  liveness: LivenessStatic
-  mappedports:
-  - proto: LProtoTcp
-    internalport: 22
-    publicport: 10000
-    fqdnprefix: someapplication2-tcp.
-  - proto: LProtoUdp
-    internalport: 10003
-    publicport: 10003
-    fqdnprefix: someapplication2-udp.
-  flavor:
-    name: x1.small
-  state: Ready
-- key:
-    appkey:
-      developerkey:
         name: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication2
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: dmuus
-        name: dmuus-cloud-2
+        name: dmuus-cloud-1
       developer: AcmeAppCo
   cloudletloc:
-    latitude: 35
-    longitude: -95
-  uri: dmuus-cloud-2.dmuus.mobiledgex.net
+    latitude: 31
+    longitude: -91
+  uri: autoclustersomeapplication1.dmuus-cloud-1.dmuus.mobiledgex.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -478,3 +477,4 @@ appinstances:
   flavor:
     name: x1.medium
   state: Ready
+
