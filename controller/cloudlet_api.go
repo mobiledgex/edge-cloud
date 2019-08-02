@@ -283,73 +283,91 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	}
 
 	// Wait for CRM to connect to controller
-	var cloudletInfo edgeproto.CloudletInfo
-	start := time.Now()
-	timedout := false
-	lastStatusId := uint32(0)
-	for {
-		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cloudletInfo) {
-				return objstore.ErrKVStoreKeyNotFound
-			}
-			return nil
-		})
-		if err == nil {
-			if cloudletInfo.Status.TaskNumber != 0 &&
-				cloudletInfo.Status.TaskNumber != lastStatusId {
-				if cloudletInfo.Status.StepName != "" {
-					updateCloudletCallback(edgeproto.UpdateTask, cloudletInfo.Status.StepName)
-				} else {
-					updateCloudletCallback(edgeproto.UpdateTask, cloudletInfo.Status.TaskName)
-				}
-				lastStatusId = cloudletInfo.Status.TaskNumber
-			}
-			if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN {
-				break
-			}
-		}
-		elapsed := time.Since(start)
-		if elapsed >= (PlatformInitTimeout) {
-			timedout = true
-			break
-		}
-		// Wait till timeout
-		if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
-			// Fake cloudlets connected faster to controller as it
-			// only has to start cloudlet services
-			// This will speedup testing
-			time.Sleep(CloudletShortWaitTime)
-		} else {
-			time.Sleep(CloudletWaitTime)
-		}
-	}
+	err = WaitForCloudlet(ctx, &in.Key, PlatformInitTimeout, updateCloudletCallback)
 
-	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err1 := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		updatedCloudlet := edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, &updatedCloudlet) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if timedout {
-			updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
-			updateCloudletCallback(edgeproto.UpdateTask, "platform bringup timed out")
+		if err == nil {
+			updatedCloudlet.State = edgeproto.TrackedState_READY
 		} else {
-			if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cloudletInfo) {
-				updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
-				updateCloudletCallback(edgeproto.UpdateTask, "unable to fetch cloudlet info")
-			} else {
-				if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-					updatedCloudlet.State = edgeproto.TrackedState_READY
-					updateCloudletCallback(edgeproto.UpdateTask, "Cloudlet created successfully")
-				} else {
-					updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
-					updateCloudletCallback(edgeproto.UpdateTask, "cloudlet state is not ready: "+cloudletInfo.State.String())
-				}
-			}
+			updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
 		}
 
 		s.store.STMPut(stm, &updatedCloudlet)
 		return nil
 	})
+	return err1
+}
+
+func WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, timeout time.Duration, updateCallback edgeproto.CacheUpdateCallback) error {
+	curState := edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+	lastStatusId := uint32(0)
+	done := make(chan bool, 1)
+	failed := make(chan bool, 1)
+
+	var err error
+
+	cancel := cloudletInfoApi.cache.WatchKey(key, func(ctx context.Context) {
+		info := edgeproto.CloudletInfo{}
+		if !cloudletInfoApi.cache.Get(key, &info) {
+			return
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "watch event for CloudletInfo")
+		curState = info.State
+		if info.Status.TaskNumber != 0 &&
+			info.Status.TaskNumber != lastStatusId {
+			if info.Status.StepName != "" {
+				updateCallback(edgeproto.UpdateTask, info.Status.StepName)
+			} else {
+				updateCallback(edgeproto.UpdateTask, info.Status.TaskName)
+			}
+			lastStatusId = info.Status.TaskNumber
+		}
+		if curState == edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN {
+			// Complete details is yet to arrive
+			return
+		}
+		if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			done <- true
+		} else {
+			failed <- true
+		}
+	})
+	// After setting up watch, check current state,
+	// as it may have already changed to target state
+	info := edgeproto.CloudletInfo{}
+	if cloudletInfoApi.cache.Get(key, &info) {
+		curState = info.State
+		if curState != edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN {
+			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+				done <- true
+			} else {
+				failed <- true
+			}
+		}
+	}
+
+	select {
+	case <-done:
+		err = nil
+		updateCallback(edgeproto.UpdateTask, "Cloudlet created successfully")
+	case <-failed:
+		err = fmt.Errorf("Encountered failures")
+		if cloudletInfoApi.cache.Get(key, &info) {
+			updateCallback(edgeproto.UpdateTask, "cloudlet state is not ready: "+info.State.String())
+		} else {
+			updateCallback(edgeproto.UpdateTask, "unable to fetch cloudlet info")
+		}
+		updateCallback(edgeproto.UpdateTask, "cloudlet state is not ready: "+info.State.String())
+	case <-time.After(timeout):
+		err = fmt.Errorf("Timedout")
+		updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
+	}
+	cancel()
+	// note: do not close done/failed, garbage collector will deal with it.
 	return err
 }
 

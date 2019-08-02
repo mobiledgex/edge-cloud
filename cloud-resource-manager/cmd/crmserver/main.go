@@ -23,7 +23,6 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of controller API")
 var vaultAddr = flag.String("vaultAddr", "", "Address to vault")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var notifySrvAddr = flag.String("notifySrvAddr", "127.0.0.1:51001", "Address for the CRM notify listener to run on")
@@ -110,6 +109,7 @@ func main() {
 	defer notifyClient.Stop()
 
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
+	reflection.Register(grpcServer)
 
 	go func() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
@@ -135,8 +135,6 @@ func main() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 	}()
 
-	reflection.Register(grpcServer)
-
 	//setup crm notify listener (for shepherd)
 	var notifyServer notify.ServerMgr
 	notifyServer.Init()
@@ -144,28 +142,6 @@ func main() {
 	notifyServer.Start(*notifySrvAddr, *tlsCertFile)
 	defer notifyServer.Stop()
 
-	dialOption, err := tls.GetTLSClientDialOption(*controllerAddress, *tlsCertFile, false)
-	if err != nil {
-		span.Finish()
-		log.FatalLog("Failed get TLS options", "error", err)
-		os.Exit(1)
-	}
-	updateCloudletStatus(edgeproto.UpdateTask, "Connecting to controller")
-	conn, err := grpc.Dial(*controllerAddress, dialOption)
-	if err != nil {
-		span.Finish()
-		log.FatalLog("Failed to connect to controller",
-			"addr", *controllerAddress, "err", err)
-		os.Exit(1)
-	}
-	defer func() {
-		err := conn.Close()
-		if err != nil {
-			span.Finish()
-			log.FatalLog("Failed to close connection", "error", err)
-			os.Exit(1)
-		}
-	}()
 	span.Finish()
 
 	if mainStarted != nil {
