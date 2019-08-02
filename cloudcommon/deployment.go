@@ -67,7 +67,7 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 			return fmt.Errorf("parse kubernetes deployment yaml failed, %v", err)
 		}
 		// check that any ports specified on App are part of manifest
-		objPorts := make(map[dme.AppPort]struct{})
+		objPorts := make(map[string]struct{})
 		for _, obj := range objs {
 			ksvc, ok := obj.(*v1.Service)
 			if !ok {
@@ -81,7 +81,7 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 					continue
 				}
 				appPort.InternalPort = int32(kp.TargetPort.IntValue())
-				objPorts[appPort] = struct{}{}
+				objPorts[appPort.String()] = struct{}{}
 			}
 		}
 		missingPorts := []string{}
@@ -90,7 +90,7 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 			if appPort.Proto == dme.LProto_L_PROTO_HTTP {
 				appPort.Proto = dme.LProto_L_PROTO_TCP
 			}
-			if _, found := objPorts[appPort]; found {
+			if _, found := objPorts[appPort.String()]; found {
 				continue
 			}
 			protoStr, _ := edgeproto.LProtoStr(appPort.Proto)

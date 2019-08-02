@@ -357,7 +357,7 @@ func RunParseCheck(g *generator.Generator, file *generator.FileDescriptor) {
 	}
 	content := g.Buffer
 	g.Buffer = new(bytes.Buffer)
-	g.P("package ", file.PackageName())
+	g.P("package ", file.FileDescriptorProto.GetPackage())
 	g.Write(content.Bytes())
 
 	fset := token.NewFileSet()
