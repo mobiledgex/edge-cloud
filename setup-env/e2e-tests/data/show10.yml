@@ -574,7 +574,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 4
-  uri: tmus-cloud-4.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -595,7 +594,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 4
-  uri: tmus-cloud-4.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -616,7 +614,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
-  uri: tmus-cloud-7.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -637,7 +634,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -658,7 +654,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -679,7 +674,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 3
-  uri: tmus-cloud-3.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -700,7 +694,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 6
-  uri: tmus-cloud-6.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -721,7 +714,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 8
-  uri: tmus-cloud-8.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -742,7 +734,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 3
-  uri: tmus-cloud-3.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -763,7 +754,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 5
-  uri: tmus-cloud-5.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -784,7 +774,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 6
-  uri: tmus-cloud-6.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -805,7 +794,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 9
-  uri: acmeappcosomeapplication210.autoclustersomeapplication2.azure-cloud-9.azure.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -826,7 +814,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 10
-  uri: acmeappcosomeapplication110.autoclustersomeapplication1.gcp-cloud-10.gcp.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -847,7 +834,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 10
-  uri: acmeappcosomeapplication210.autoclustersomeapplication2.gcp-cloud-10.gcp.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -868,7 +854,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -889,7 +874,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -910,7 +894,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 9
-  uri: acmeappcosomeapplication110.autoclustersomeapplication1.azure-cloud-9.azure.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -931,7 +914,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 5
-  uri: tmus-cloud-5.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -952,7 +934,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
-  uri: tmus-cloud-7.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -973,7 +954,6 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 8
-  uri: tmus-cloud-8.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small

@@ -379,7 +379,12 @@ func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 		}
 		if a.officialFqdn != "" {
 			fqdns := strings.Split(a.officialFqdn, ",")
-			aq := dme.AppFqdn{AppName: a.appKey.Name, DevName: a.appKey.DeveloperKey.Name, AppVers: a.appKey.Version, Fqdns: fqdns, AndroidPackageName: a.androidPackageName}
+			aq := dme.AppFqdn{
+				AppName:            a.appKey.Name,
+				DevName:            a.appKey.DeveloperKey.Name,
+				AppVers:            a.appKey.Version,
+				Fqdns:              fqdns,
+				AndroidPackageName: a.androidPackageName}
 			clist.AppFqdns = append(clist.AppFqdns, &aq)
 		}
 	}

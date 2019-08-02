@@ -216,7 +216,6 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -237,7 +236,6 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.medium

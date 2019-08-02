@@ -408,13 +408,6 @@ func ValidateReplacedVars() ReadYamlOp {
 	}
 }
 
-func removeAppinstUris(appdata *edgeproto.ApplicationData) {
-	for i := range appdata.AppInstances {
-		appdata.AppInstances[i].Uri = ""
-	}
-
-}
-
 //compares two yaml files for equivalence
 //TODO need to handle different types of interfaces besides appdata, currently using
 //that to sort
@@ -439,11 +432,6 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err2 = ReadYamlFile(secondYamlFile, &a2)
 		a1.Sort()
 		a2.Sort()
-		// Appinstance URIs usually not provisioned, as they are inherited from the cloudlet. However
-		// they are provioned for the default appinst.  So we cannot use "nocmp".  Loop through and remove the URIs
-		// so that the comparison will succeeed
-		removeAppinstUris(&a1)
-		removeAppinstUris(&a2)
 		y1 = a1
 		y2 = a2
 	} else if fileType == "findcloudlet" {

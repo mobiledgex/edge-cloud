@@ -290,7 +290,6 @@ appinstances:
   cloudletloc:
     latitude: 40
     longitude: -99
-  uri: acmeappcosomeapplication110.tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -311,7 +310,6 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: acmeappcosomeapplication110.tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -332,7 +330,6 @@ appinstances:
   cloudletloc:
     latitude: 40
     longitude: -99
-  uri: helmAppication.acmeappco.com
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -353,7 +350,6 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -374,7 +370,6 @@ appinstances:
   cloudletloc:
     latitude: 40
     longitude: -99
-  uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.medium
