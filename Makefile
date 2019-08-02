@@ -54,6 +54,9 @@ install:
 install-linux:
 	${LINUX_XCOMPILE_ENV} go install ./...
 
+GOGOPROTO	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
+GRPCGATEWAY	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
+
 tools:
 	make -f Makefile.tools
 
