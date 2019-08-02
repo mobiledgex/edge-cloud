@@ -55,9 +55,7 @@ var FindCloudletData = []FindCloudletRR{
 			GpsLocation: &dme.Loc{Latitude: 52.65, Longitude: 10.341},
 		},
 		Reply: dme.FindCloudletReply{
-			Fqdn:             Cloudlets[4].Uri,
-			CloudletLocation: &Cloudlets[4].Location,
-			Status:           1,
+			Status: 2,
 		},
 	},
 	FindCloudletRR{

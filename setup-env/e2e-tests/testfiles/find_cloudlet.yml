@@ -16,19 +16,7 @@ tests:
 
 - includefile: register_app_not_found.yml
 
-- name: create default_appinst appinst
-  apifile: "{{datadir}}/appdata_default_appinst_withdeps.yml"
-  actions: [ctrlapi-create,ctrlapi-show]
- 
 - includefile: register_app1.yml
-
-- name: find cloudlet with default_appinst appinst only
-  apifile: "{{datadir}}/find_cloudlet_app1.yml"
-  actions: [dmeapi-findcloudlet]
-  compareyaml:
-    yaml1: "{{outputdir}}/findcloudlet.yml"
-    yaml2: "{{datadir}}/find-cloudlet-response-default_appinst.yml"
-    filetype: findcloudlet
 
 - name: create appinst1 
   apifile: "{{datadir}}/appinst1.yml"
@@ -57,10 +45,6 @@ tests:
     yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
     filetype: findcloudlet
-
-- name: create platos enabling layer
-  apifile: "{{datadir}}/appinst_platos.yml"
-  actions: [ctrlapi-create]
 
 - name: register with platos enabling layer
   apifile: "{{datadir}}/register_platos.yml"
