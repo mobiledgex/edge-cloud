@@ -395,8 +395,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		// lookup already done, don't overwrite changes
-		var buf *edgeproto.AppInst
-		if s.store.STMGet(stm, &in.Key, buf) {
+		if s.store.STMGet(stm, &in.Key, nil) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR {
 				if in.State == edgeproto.TrackedState_CREATE_ERROR {
 					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
