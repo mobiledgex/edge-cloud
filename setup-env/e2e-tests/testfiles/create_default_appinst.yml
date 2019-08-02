@@ -1,7 +1,0 @@
-##
-
-tests:
-
-- name: create default appinst
-  apifile: "{{datadir}}/appdata_default_appinst_withdeps.yml"
-  actions: [ctrlapi-create,ctrlapi-show]

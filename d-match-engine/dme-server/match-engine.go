@@ -36,11 +36,11 @@ type dmeAppInsts struct {
 
 type dmeApp struct {
 	sync.RWMutex
-	appKey              edgeproto.AppKey
-	carriers            map[string]*dmeAppInsts
-	authPublicKey       string
-	androidPackageName  string
-	permitsPlatformApps bool
+	appKey             edgeproto.AppKey
+	carriers           map[string]*dmeAppInsts
+	authPublicKey      string
+	androidPackageName string
+	officialFqdn       string
 }
 
 type dmeApps struct {
@@ -74,13 +74,13 @@ func addApp(in *edgeproto.App) {
 		log.DebugLog(log.DebugLevelDmedb, "Adding app",
 			"key", in.Key,
 			"package", in.AndroidPackageName,
-			"PermitsPlatformApps", in.PermitsPlatformApps)
+			"OfficialFqdn", in.OfficialFqdn)
 	}
 	app.Lock()
 	defer app.Unlock()
 	app.authPublicKey = in.AuthPublicKey
 	app.androidPackageName = in.AndroidPackageName
-	app.permitsPlatformApps = in.PermitsPlatformApps
+	app.officialFqdn = in.OfficialFqdn
 }
 
 func addAppInst(appInst *edgeproto.AppInst) {
@@ -289,8 +289,8 @@ func requestedAppPermitsRegisteredApp(requestedApp edgeproto.AppKey, registeredA
 	// now find the app and see if it permits platform apps
 	tbl.Lock()
 	defer tbl.Unlock()
-	app, ok := tbl.apps[requestedApp]
-	return ok && app.permitsPlatformApps
+	_, ok := tbl.apps[requestedApp]
+	return ok
 }
 
 func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mreply *dme.FindCloudletReply) error {
@@ -349,16 +349,6 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 			bestDistance = gcpDistance
 		}
 	}
-	if mreply.Status == dme.FindCloudletReply_FIND_NOTFOUND {
-		// default cloudlet is at lat:0, long:0.  Look at any distance distance
-		_, updated := findClosestForCarrier(cloudcommon.OperatorDeveloper, appkey, mreq.GpsLocation, dmecommon.InfiniteDistance, mreply)
-		if updated {
-			log.DebugLog(log.DebugLevelDmereq, "found default operator cloudlet", "Fqdn", mreply.Fqdn)
-			bestDistance = -1 //not used except in log
-		} else {
-			log.DebugLog(log.DebugLevelDmedb, "no default operator cloudlet for app", "appkey", appkey)
-		}
-	}
 
 	if mreply.Status == dme.FindCloudletReply_FIND_FOUND {
 		log.DebugLog(log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", bestDistance)
@@ -371,8 +361,7 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 
 func isPublicCarrier(carriername string) bool {
 	if carriername == cloudcommon.OperatorAzure ||
-		carriername == cloudcommon.OperatorGCP ||
-		carriername == cloudcommon.OperatorDeveloper {
+		carriername == cloudcommon.OperatorGCP {
 		return true
 	}
 	return false
@@ -388,21 +377,15 @@ func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 		if cloudcommon.IsPlatformApp(a.appKey.DeveloperKey.Name, a.appKey.Name) {
 			continue
 		}
-		// if the app does not permit platform apps to access it, skip it
-		if !a.permitsPlatformApps {
-			log.DebugLog(log.DebugLevelDmereq, "skipping non permitted app for getFqdnList", "appkey", a.appKey)
-			continue
-		}
-
-		c, defaultCarrierFound := a.carriers[cloudcommon.OperatorDeveloper]
-		if defaultCarrierFound {
-			for _, i := range c.insts {
-				if i.clusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
-					fqdns := strings.Split(i.uri, ",")
-					aq := dme.AppFqdn{AppName: a.appKey.Name, DevName: a.appKey.DeveloperKey.Name, AppVers: a.appKey.Version, Fqdns: fqdns, AndroidPackageName: a.androidPackageName}
-					clist.AppFqdns = append(clist.AppFqdns, &aq)
-				}
-			}
+		if a.officialFqdn != "" {
+			fqdns := strings.Split(a.officialFqdn, ",")
+			aq := dme.AppFqdn{
+				AppName:            a.appKey.Name,
+				DevName:            a.appKey.DeveloperKey.Name,
+				AppVers:            a.appKey.Version,
+				Fqdns:              fqdns,
+				AndroidPackageName: a.androidPackageName}
+			clist.AppFqdns = append(clist.AppFqdns, &aq)
 		}
 	}
 	clist.Status = dme.FqdnListReply_FL_SUCCESS
@@ -437,10 +420,6 @@ func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, cli
 					cloc = new(dme.CloudletLocation)
 					var d float64
 
-					// do not return the default instance
-					if i.clusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
-						continue
-					}
 					d = dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
 					cloc.GpsLocation = &i.location
 					cloc.CarrierName = i.clusterInstKey.CloudletKey.OperatorKey.Name

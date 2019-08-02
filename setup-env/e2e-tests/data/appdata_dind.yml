@@ -70,7 +70,6 @@ apps:
     name: AppCluster
   deployment: kubernetes
   androidpackagename: com.mobiledgex.sdkdemo
-  permitsplatformapps: true
 - key:
     developerkey:
       name: MobiledgeX
@@ -85,7 +84,6 @@ apps:
     name: AppCluster
   deployment: kubernetes
   androidpackagename: com.mobiledgex.facedemo
-  permitsplatformapps: true
   configs:
   - kind: envVarsYaml
     config: |

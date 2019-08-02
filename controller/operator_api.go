@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -28,9 +27,6 @@ func (s *OperatorApi) HasOperator(key *edgeproto.OperatorKey) bool {
 }
 
 func (s *OperatorApi) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
-	if in.Key.Name == cloudcommon.OperatorDeveloper {
-		return nil, errors.New("Cannot create operator with name = " + cloudcommon.OperatorDeveloper)
-	}
 	return s.store.Create(ctx, in, s.sync.syncWait)
 }
 

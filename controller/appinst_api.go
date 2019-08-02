@@ -272,13 +272,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// See if we need to create auto-cluster.
 	// This also sets up the correct ClusterInstKey in "in".
 
-	// indicates special default cloudlet maintained by the developer
-	var defaultCloudlet bool
-
-	if in.Key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
-		log.DebugLog(log.DebugLevelApi, "special default public cloud case", "appinst", in)
-		defaultCloudlet = true
-	}
 	if in.Key.AppKey.DeveloperKey.Name != cloudcommon.DeveloperMobiledgeX &&
 		in.Key.AppKey.DeveloperKey.Name != in.Key.ClusterInstKey.Developer {
 		// both are specified, make sure they match
@@ -286,85 +279,83 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 	appDeploymentType := ""
 
-	if !defaultCloudlet {
-		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			autocluster = false
-			if s.store.STMGet(stm, &in.Key, in) {
-				if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
-					if in.State == edgeproto.TrackedState_CREATE_ERROR {
-						cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
-						cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
-					}
-					return objstore.ErrKVStoreKeyExists
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		autocluster = false
+		if s.store.STMGet(stm, &in.Key, in) {
+			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
+				if in.State == edgeproto.TrackedState_CREATE_ERROR {
+					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
+					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
 				}
-				in.Errors = nil
-				if !defaultCloudlet {
-					// must reset Uri
-					in.Uri = ""
-				}
-			} else {
-				err := in.Validate(edgeproto.AppInstAllFieldsMap)
-				if err != nil {
-					return err
-				}
+				return objstore.ErrKVStoreKeyExists
 			}
-			// make sure cloudlet exists
-			if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, nil) {
-				return errors.New("Specified cloudlet not found")
-			}
+			in.Errors = nil
+			// must reset Uri
+			in.Uri = ""
 
-			cikey := &in.Key.ClusterInstKey
-			// Explicit auto-cluster requirement
-			if cikey.ClusterKey.Name == "" {
-				return fmt.Errorf("No cluster name specified. Create one first or use \"%s\" as the name to automatically create a ClusterInst", ClusterAutoPrefix)
+		} else {
+			err := in.Validate(edgeproto.AppInstAllFieldsMap)
+			if err != nil {
+				return err
 			}
-			var app edgeproto.App
-			if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
-				return edgeproto.ErrEdgeApiAppNotFound
+		}
+		// make sure cloudlet exists
+		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, nil) {
+			return errors.New("Specified cloudlet not found")
+		}
+
+		cikey := &in.Key.ClusterInstKey
+		// Explicit auto-cluster requirement
+		if cikey.ClusterKey.Name == "" {
+			return fmt.Errorf("No cluster name specified. Create one first or use \"%s\" as the name to automatically create a ClusterInst", ClusterAutoPrefix)
+		}
+		var app edgeproto.App
+		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+			return edgeproto.ErrEdgeApiAppNotFound
+		}
+		in.Revision = app.Revision
+		appDeploymentType = app.Deployment
+		// Check if specified ClusterInst exists
+		if !strings.HasPrefix(cikey.ClusterKey.Name, ClusterAutoPrefix) && cloudcommon.IsClusterInstReqd(&app) {
+			found := clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil)
+			if !found && in.Key.ClusterInstKey.Developer == "" {
+				// developer may not be specified
+				// in clusterinst.
+				in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+				found = clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil)
+				if found {
+					cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
+				}
 			}
-			in.Revision = app.Revision
-			appDeploymentType = app.Deployment
-			// Check if specified ClusterInst exists
-			if !strings.HasPrefix(cikey.ClusterKey.Name, ClusterAutoPrefix) && cloudcommon.IsClusterInstReqd(&app) {
-				found := clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil)
-				if !found && in.Key.ClusterInstKey.Developer == "" {
-					// developer may not be specified
-					// in clusterinst.
-					in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
-					found = clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil)
-					if found {
-						cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
-					}
-				}
-				if !found {
-					return errors.New("Specified ClusterInst not found")
-				}
-				// cluster inst exists so we're good.
+			if !found {
+				return errors.New("Specified ClusterInst not found")
+			}
+			// cluster inst exists so we're good.
+			return nil
+		}
+		if cloudcommon.IsClusterInstReqd(&app) {
+			// Auto-cluster
+			if clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil) {
+				// if it already exists, this means we just want to spawn more apps into it
 				return nil
 			}
-			if cloudcommon.IsClusterInstReqd(&app) {
-				// Auto-cluster
-				if clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil) {
-					// if it already exists, this means we just want to spawn more apps into it
-					return nil
-				}
-				cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
-				if cikey.Developer == "" {
-					cikey.Developer = in.Key.AppKey.DeveloperKey.Name
-				}
-				autocluster = true
+			cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
+			if cikey.Developer == "" {
+				cikey.Developer = in.Key.AppKey.DeveloperKey.Name
 			}
-
-			if in.Flavor.Name == "" {
-				// find flavor from app
-				in.Flavor = app.DefaultFlavor
-			}
-			return nil
-		})
-		if err != nil {
-			return err
+			autocluster = true
 		}
+
+		if in.Flavor.Name == "" {
+			// find flavor from app
+			in.Flavor = app.DefaultFlavor
+		}
+		return nil
+	})
+	if err != nil {
+		return err
 	}
+
 	if autocluster {
 		// auto-create cluster inst
 		clusterInst := edgeproto.ClusterInst{}
@@ -402,22 +393,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}()
 	}
 
-	// these checks cannot be in ApplySTMWait funcs since
-	// that func may run several times if the database changes while
-	// it is running, and the stm func modifies in.Uri.
-	if in.Uri == "" && defaultCloudlet {
-		return errors.New("URI (Public Fqdn) is required for default cloudlet")
-	} else if in.Uri != "" && !defaultCloudlet {
-		return fmt.Errorf("Cannot specify URI %s for non-default cloudlet", in.Uri)
-	}
-
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		buf := in
-		if !defaultCloudlet {
-			// lookup already done, don't overwrite changes
-			buf = nil
-		}
-		if s.store.STMGet(stm, &in.Key, buf) {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		// lookup already done, don't overwrite changes
+		if s.store.STMGet(stm, &in.Key, nil) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR {
 				if in.State == edgeproto.TrackedState_CREATE_ERROR {
 					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
@@ -435,15 +413,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		// cache location of cloudlet in app inst
 		var cloudlet edgeproto.Cloudlet
-
-		if !defaultCloudlet {
-			if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
-				return errors.New("Specified cloudlet not found")
-			}
-			in.CloudletLoc = cloudlet.Location
-		} else {
-			in.CloudletLoc = dme.Loc{}
+		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
+			return errors.New("Specified cloudlet not found")
 		}
+		in.CloudletLoc = cloudlet.Location
 
 		var app edgeproto.App
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
@@ -460,7 +433,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		var clusterKey *edgeproto.ClusterKey
 		ipaccess := edgeproto.IpAccess_IP_ACCESS_SHARED
-		if !defaultCloudlet && cloudcommon.IsClusterInstReqd(&app) {
+		if cloudcommon.IsClusterInstReqd(&app) {
 			clusterInst := edgeproto.ClusterInst{}
 			if !clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst) {
 				return errors.New("Cluster instance does not exist for app")
@@ -486,9 +459,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
-		if defaultCloudlet {
-			// nothing to do
-		} else if !cloudcommon.IsClusterInstReqd(&app) {
+		if !cloudcommon.IsClusterInstReqd(&app) {
 			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey)
 			for ii, _ := range ports {
 				ports[ii].PublicPort = ports[ii].InternalPort
@@ -570,9 +541,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		if len(ports) > 0 {
 			in.MappedPorts = ports
-			if !defaultCloudlet {
-				setPortFQDNPrefixes(in, &app)
-			}
+			setPortFQDNPrefixes(in, &app)
 		}
 
 		// TODO: Make sure resources are available
@@ -581,7 +550,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
 
-		if ignoreCRM(cctx) || defaultCloudlet {
+		if ignoreCRM(cctx) {
 			in.State = edgeproto.TrackedState_READY
 		} else {
 			in.State = edgeproto.TrackedState_CREATE_REQUESTED
@@ -592,7 +561,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if err != nil {
 		return err
 	}
-	if ignoreCRM(cctx) || defaultCloudlet {
+	if ignoreCRM(cctx) {
 		cb.Send(&edgeproto.Result{Message: "Created successfully"})
 		return nil
 	}
@@ -626,14 +595,9 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "updateAppInstInternal", "key", key)
 
-	defaultCloudlet := false
 	updatedRevision := false
 	crmUpdateRequired := false
 
-	if key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
-		log.DebugLog(log.DebugLevelApi, "special default cloud case", "key", key)
-		defaultCloudlet = true
-	}
 	s.setDefaultVMClusterKey(ctx, &key)
 	if err := key.Validate(); err != nil {
 		return false, err
@@ -665,7 +629,7 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 		} else {
 			return edgeproto.ErrEdgeApiAppInstNotFound
 		}
-		if ignoreCRM(cctx) || defaultCloudlet {
+		if ignoreCRM(cctx) {
 			crmUpdateRequired = false
 		} else {
 			curr.State = edgeproto.TrackedState_UPDATE_REQUESTED
@@ -783,8 +747,6 @@ func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 
 func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
 	cctx.SetOverride(&in.CrmOverride)
-
-	var defaultCloudlet bool
 	ctx := cb.Context()
 
 	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "appinst", in)
@@ -796,14 +758,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	s.setDefaultVMClusterKey(ctx, &in.Key)
 	if err := in.Key.AppKey.Validate(); err != nil {
 		return err
-	}
-
-	if in.Key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
-		log.DebugLog(log.DebugLevelApi, "special default cloud case", "appinst", in)
-		defaultCloudlet = true
-		if in.Key.ClusterInstKey.Developer == "" {
-			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
-		}
 	}
 
 	if !ignoreCRM(cctx) {
@@ -840,43 +794,43 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		var cloudlet edgeproto.Cloudlet
-		if !defaultCloudlet {
-			if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
-				return errors.New("Specified cloudlet not found")
-			}
 
-			cloudletRefs := edgeproto.CloudletRefs{}
-			cloudletRefsChanged := false
-			if cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudletRefs) {
-				// shared root load balancer
-				for ii, _ := range in.MappedPorts {
-					if in.MappedPorts[ii].Proto == dme.LProto_L_PROTO_HTTP {
-						continue
-					}
+		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
+			return errors.New("Specified cloudlet not found")
+		}
 
-					p := in.MappedPorts[ii].PublicPort
-					protocol, err := getProtocolBitMap(in.MappedPorts[ii].Proto)
-
-					if err != nil {
-						return err
-					}
-					protos, _ := cloudletRefs.RootLbPorts[p]
-					if cloudletRefs.RootLbPorts != nil {
-						cloudletRefs.RootLbPorts[p] = removeProtocol(protos, protocol)
-						if cloudletRefs.RootLbPorts[p] == 0 {
-							delete(cloudletRefs.RootLbPorts, p)
-						}
-					}
-					cloudletRefsChanged = true
+		cloudletRefs := edgeproto.CloudletRefs{}
+		cloudletRefsChanged := false
+		if cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudletRefs) {
+			// shared root load balancer
+			for ii, _ := range in.MappedPorts {
+				if in.MappedPorts[ii].Proto == dme.LProto_L_PROTO_HTTP {
+					continue
 				}
-			}
-			clusterInstKey = in.Key.ClusterInstKey
-			if cloudletRefsChanged {
-				cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
+
+				p := in.MappedPorts[ii].PublicPort
+				protocol, err := getProtocolBitMap(in.MappedPorts[ii].Proto)
+
+				if err != nil {
+					return err
+				}
+				protos, _ := cloudletRefs.RootLbPorts[p]
+				if cloudletRefs.RootLbPorts != nil {
+					cloudletRefs.RootLbPorts[p] = removeProtocol(protos, protocol)
+					if cloudletRefs.RootLbPorts[p] == 0 {
+						delete(cloudletRefs.RootLbPorts, p)
+					}
+				}
+				cloudletRefsChanged = true
 			}
 		}
+		clusterInstKey = in.Key.ClusterInstKey
+		if cloudletRefsChanged {
+			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
+		}
+
 		// delete app inst
-		if ignoreCRM(cctx) || defaultCloudlet {
+		if ignoreCRM(cctx) {
 			// CRM state should be the same as before the
 			// operation failed, so just need to clean up
 			// controller state.
@@ -890,7 +844,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if err != nil {
 		return err
 	}
-	if ignoreCRM(cctx) || defaultCloudlet {
+	if ignoreCRM(cctx) {
 		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
 		return nil
 	}
