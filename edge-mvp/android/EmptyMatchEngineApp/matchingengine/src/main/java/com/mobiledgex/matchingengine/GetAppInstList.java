@@ -72,20 +72,6 @@ public class GetAppInstList implements Callable {
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .getAppInstList(mRequest);
-
-
-
-            // Nothing a sdk user can do below but read the exception cause:
-        } catch (MatchingEngineKeyStoreException mkse) {
-            throw new ExecutionException("Exception calling GetAppInstList: ", mkse);
-        } catch (MatchingEngineTrustStoreException mtse) {
-            throw new ExecutionException("Exception calling GetAppInstList: ", mtse);
-        } catch (KeyManagementException kme) {
-            throw new ExecutionException("Exception calling GetAppInstList: ", kme);
-        } catch (NoSuchAlgorithmException nsa) {
-            throw new ExecutionException("Exception calling GetAppInstList: ", nsa);
-        } catch (IOException ioe) {
-            throw new ExecutionException("Exception calling GetAppInstList: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();

@@ -36,7 +36,7 @@ allprojects {
                 username artifactory_user
                 password artifactory_password
             }
-            url "https://artifactory.mobiledgex.net/maven-releases/"
+            url "https://artifactory.mobiledgex.net/artifactory/maven-releases/"
         }
         mavenLocal()
         google()

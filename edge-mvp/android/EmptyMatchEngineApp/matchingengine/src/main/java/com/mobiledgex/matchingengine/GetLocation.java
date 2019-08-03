@@ -73,18 +73,6 @@ public class GetLocation implements Callable {
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .getLocation(mRequest);
-
-            // Nothing a sdk user can do below but read the exception cause:
-        } catch (MatchingEngineKeyStoreException mkse) {
-            throw new ExecutionException("Exception calling GetLocation: ", mkse);
-        } catch (MatchingEngineTrustStoreException mtse) {
-            throw new ExecutionException("Exception calling GetLocation: ", mtse);
-        } catch (KeyManagementException kme) {
-            throw new ExecutionException("Exception calling GetLocation: ", kme);
-        } catch (NoSuchAlgorithmException nsa) {
-            throw new ExecutionException("Exception calling GetLocation: ", nsa);
-        } catch (IOException ioe) {
-            throw new ExecutionException("Exception calling GetLocation: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();
