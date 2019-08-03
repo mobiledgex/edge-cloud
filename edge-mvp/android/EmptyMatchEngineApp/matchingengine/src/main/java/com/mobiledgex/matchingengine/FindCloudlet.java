@@ -72,17 +72,6 @@ public class FindCloudlet implements Callable {
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .findCloudlet(mRequest);
-            // Nothing a sdk user can do below but read the exception cause:
-        } catch (MatchingEngineKeyStoreException mkse) {
-            throw new ExecutionException("Exception calling FindCloudlet: ", mkse);
-        } catch (MatchingEngineTrustStoreException mtse) {
-            throw new ExecutionException("Exception calling FindCloudlet: ", mtse);
-        } catch (KeyManagementException kme) {
-            throw new ExecutionException("Exception calling FindCloudlet: ", kme);
-        } catch (NoSuchAlgorithmException nsa) {
-            throw new ExecutionException("Exception calling FindCloudlet: ", nsa);
-        } catch (IOException ioe) {
-            throw new ExecutionException("Exception calling FindCloudlet: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();

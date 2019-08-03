@@ -74,18 +74,6 @@ public class RegisterClient implements Callable {
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .registerClient(mRequest);
-
-            // Nothing a sdk user can do below but read the exception cause:
-        } catch (MatchingEngineKeyStoreException mkse) {
-            throw new ExecutionException("Exception calling RegisterClient: ", mkse);
-        } catch (MatchingEngineTrustStoreException mtse) {
-            throw new ExecutionException("Exception calling RegisterClient: ", mtse);
-        } catch (KeyManagementException kme) {
-            throw new ExecutionException("Exception calling RegisterClient: ", kme);
-        } catch (NoSuchAlgorithmException nsa) {
-            throw new ExecutionException("Exception calling RegisterClient: ", nsa);
-        } catch (IOException ioe) {
-            throw new ExecutionException("Exception calling RegisterClient: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();
