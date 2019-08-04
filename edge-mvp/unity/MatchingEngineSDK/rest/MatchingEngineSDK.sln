@@ -22,6 +22,6 @@ Global
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		description = MatchingEngineSDK Library based on REST backend
-		version = 1.4.7
+		version = 1.4.8
 	EndGlobalSection
 EndGlobal
