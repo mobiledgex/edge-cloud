@@ -1,0 +1,18 @@
+# Because multiple repos are needed to build,
+# the docker build context is the mobiledgex root,
+# which may include other repos that aren't needed
+# (like abc-priv, secrets, grpc-gateway, golang-ssh, etc).
+# Only edge-cloud and edge-cloud-infra are needed.
+*
+!edge-cloud
+!edge-cloud-infra
+
+# etcd data comes from unit tests
+edge-cloud/controller/etcdLocal_data
+edge-cloud/edge-mvp
+
+edge-cloud-infra/terraform
+
+# postgres comes from unit tests
+edge-cloud-infra/mc/orm/.postgres
+edge-cloud-infra/openstack-tenant/agent/build
