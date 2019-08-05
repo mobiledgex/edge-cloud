@@ -127,6 +127,8 @@ message PlatformConfig {
   string platform_tag = 8;
   // Internal Test Flag
   bool test_mode = 9;
+  // Span string
+  string span = 10;
 }
 
 // PlatformType is the supported list of cloudlet types

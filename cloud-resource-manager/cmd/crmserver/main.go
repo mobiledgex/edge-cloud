@@ -19,6 +19,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/version"
+	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -35,6 +36,7 @@ var platformName = flag.String("platform", "", "Platform type of Cloudlet")
 var solib = flag.String("plugin", "", "plugin file")
 var region = flag.String("region", "local", "region name")
 var testMode = flag.Bool("testMode", false, "Run CRM in test mode")
+var parentSpan = flag.String("span", "", "Use parent span for logging")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
@@ -53,7 +55,13 @@ func main() {
 	log.SetDebugLevelStrs(*debugLevels)
 	log.InitTracer()
 	defer log.FinishTracer()
-	span := log.StartSpan(log.DebugLevelInfo, "main")
+
+	var span opentracing.Span
+	if *parentSpan != "" {
+		span = log.NewSpanFromString(log.DebugLevelInfo, *parentSpan, "main")
+	} else {
+		span = log.StartSpan(log.DebugLevelInfo, "main")
+	}
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	sigChan = make(chan os.Signal, 1)
@@ -79,6 +87,7 @@ func main() {
 	var err error
 	platform, err = pfutils.GetPlatform(ctx, *platformName)
 	if err != nil {
+		span.Finish()
 		log.FatalLog(err.Error())
 	}
 

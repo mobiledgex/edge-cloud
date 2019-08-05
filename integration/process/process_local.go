@@ -340,6 +340,10 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--physicalName")
 		args = append(args, p.PhysicalName)
 	}
+	if p.Span != "" {
+		args = append(args, "--span")
+		args = append(args, p.Span)
+	}
 	if p.TestMode {
 		args = append(args, "-testMode")
 	}
