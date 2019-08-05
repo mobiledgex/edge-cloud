@@ -71,18 +71,6 @@ public class AddUserToGroup implements Callable {
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .addUserToGroup(mRequest);
-
-            // Nothing a sdk user can do below but read the exception cause:
-        } catch (MatchingEngineKeyStoreException mkse) {
-            throw new ExecutionException("Exception calling AddUserToGroup: ", mkse);
-        } catch (MatchingEngineTrustStoreException mtse) {
-            throw new ExecutionException("Exception calling AddUserToGroup: ", mtse);
-        } catch (KeyManagementException kme) {
-            throw new ExecutionException("Exception calling AddUserToGroup: ", kme);
-        } catch (NoSuchAlgorithmException nsa) {
-            throw new ExecutionException("Exception calling AddUserToGroup: ", nsa);
-        } catch (IOException ioe) {
-            throw new ExecutionException("Exception calling AddUserToGroup: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();
