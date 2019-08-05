@@ -135,16 +135,18 @@ message PlatformConfig {
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
+  // Fake Infa Cloudlet
+  PLATFORM_TYPE_FAKEINFRA = 1;
   // DIND Cloudlet
-  PLATFORM_TYPE_DIND = 1;
+  PLATFORM_TYPE_DIND = 2;
   // Openstack Cloudlet
-  PLATFORM_TYPE_OPENSTACK = 2;
+  PLATFORM_TYPE_OPENSTACK = 3;
   // Azure Cloudlet
-  PLATFORM_TYPE_AZURE = 3;
+  PLATFORM_TYPE_AZURE = 4;
   // GCP Cloudlet
-  PLATFORM_TYPE_GCP = 4;
+  PLATFORM_TYPE_GCP = 5;
   // MEXDIND Cloudlet
-  PLATFORM_TYPE_MEXDIND = 5;
+  PLATFORM_TYPE_MEXDIND = 6;
 }
 
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator. 
