@@ -29,7 +29,7 @@ func createDockerComposeFile(client pc.PlatformClient, app *edgeproto.App, appIn
 
 func CreateAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	image := app.ImagePath
-	name := util.DNSSanitize(app.Key.Name)
+	name := util.DockerSanitize(app.Key.Name)
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", name, image, app.Command)
 		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
@@ -57,7 +57,7 @@ func CreateAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgepr
 func DeleteAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 
 	if app.DeploymentManifest == "" {
-		name := util.DNSSanitize(app.Key.Name)
+		name := util.DockerSanitize(app.Key.Name)
 		cmd := fmt.Sprintf("docker stop %s", name)
 		log.DebugLog(log.DebugLevelMexos, "running docker stop ", "cmd", cmd)
 
@@ -106,7 +106,7 @@ func GetAppInstRuntime(client pc.PlatformClient, app *edgeproto.App, appInst *ed
 	rt.ContainerIds = make([]string, 0)
 	if app.DeploymentManifest == "" {
 		//  just one container identified by the appinst uri
-		name := app.Key.Name
+		name := util.DockerSanitize(app.Key.Name)
 		rt.ContainerIds = append(rt.ContainerIds, name)
 	} else {
 		filename := getDockerComposeFileName(client, app, appInst)
@@ -137,6 +137,6 @@ func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App,
 		}
 		req.ContainerId = appInst.RuntimeInfo.ContainerIds[0]
 	}
-	cmdStr := fmt.Sprintf("docker exec -it %s -- %s", req.ContainerId, req.Command)
+	cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, req.Command)
 	return cmdStr, nil
 }
