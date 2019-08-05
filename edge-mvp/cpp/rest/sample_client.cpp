@@ -5,9 +5,6 @@
 
 #include <nlohmann/json.hpp>
 
-// Test only credentials.
-#include "test_credentials.hpp"
-
 using namespace std;
 using namespace std::chrono;
 using namespace nlohmann;
@@ -31,18 +28,7 @@ class MexRestClient {
     const string appName = "MobiledgeX SDK Demo"; // Your application name
     const string appVersionStr = "1.0";
 
-    // SSL files:
-    unique_ptr<test_credentials> test_creds;
-    string caCrtFile = "../../../tls/out/mex-ca.crt";
-    string clientCrtFile = "../../../tls/out/mex-client.crt";
-    string clientKeyFile = "../../../tls/out/mex-client.key";
-
-
-    MexRestClient() {
-        this->test_creds = unique_ptr<test_credentials>(
-            new test_credentials(caCrtFile, clientCrtFile, clientKeyFile));
-    }
-
+    MexRestClient() { }
     // Retrieve the carrier name of the cellular network interface.
     string getCarrierName() {
         return carrierNameDefault;
@@ -149,12 +135,6 @@ class MexRestClient {
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, responseCallback);
 
-            // SSL Setup:
-            curl_easy_setopt(curl, CURLOPT_SSLCERT, clientCrtFile.c_str());
-            curl_easy_setopt(curl, CURLOPT_SSLKEY, clientKeyFile.c_str());
-            // CA:
-            curl_easy_setopt(curl, CURLOPT_CAINFO, caCrtFile.c_str());
-
             // verify peer or disconnect
             curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
 
@@ -247,11 +227,6 @@ class MexRestClient {
         curl_easy_setopt(curl, CURLOPT_HEADERDATA, &(this->token));
         curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, token_header_callback);
 
-        // SSL Setup:
-        curl_easy_setopt(curl, CURLOPT_SSLCERT, clientCrtFile.c_str());
-        curl_easy_setopt(curl, CURLOPT_SSLKEY, clientKeyFile.c_str());
-        // CA:
-        curl_easy_setopt(curl, CURLOPT_CAINFO, caCrtFile.c_str());
         // verify peer or disconnect
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
 
