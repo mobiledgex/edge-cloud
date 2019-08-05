@@ -44,7 +44,7 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 			// connect to remote node
 			conn, err := ControllerConnect(addr)
 			if err != nil {
-				return nil
+				return err
 			}
 			defer conn.Close()
 
