@@ -12,7 +12,7 @@ LDFLAGS += -L/usr/local/lib \
 
 all: sample_client
 
-sample_client: ../common/test_credentials.o sample_client.o
+sample_client: sample_client.o
 	$(CXX) $^ $(LDFLAGS) $(CPPFLAGS) -L. -o $@
 
 clean:
