@@ -62,7 +62,8 @@ message ConfigFile {
   string image_path = 4 [(protogen.backend) = true];
   // Image type (see ImageType)
   ImageType image_type = 5;
-  // Comma separated list of protocol:port pairs that the App listens on 
+  // Comma separated list of protocol:port pairs that the App listens on.
+  // Numerical values must be decimal format.
   // i.e. tcp:80,udp:10002,http:443
   string access_ports = 7;
   // Default flavor for the App, which may be overridden by the AppInst
