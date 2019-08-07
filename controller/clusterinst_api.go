@@ -116,7 +116,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 	}
-
 	ctx := cb.Context()
 	if in.Key.Developer == "" {
 		return fmt.Errorf("Developer cannot be empty")
