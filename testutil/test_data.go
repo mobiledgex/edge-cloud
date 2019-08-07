@@ -148,7 +148,7 @@ var AppData = []edgeproto.App{
 			Version:      "0.0.2",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessPorts:   "tcp:80,udp:8001",
+		AccessPorts:   "tcp:80,udp:8001,tcp:065535",
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{
