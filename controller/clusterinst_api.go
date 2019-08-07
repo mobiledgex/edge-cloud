@@ -200,7 +200,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
 			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
-				return errors.New("Only kubernetes apps can be deployed in Azure or GCP")
+				return errors.New("Only kubernetes clusters can be deployed in Azure or GCP")
 			}
 		}
 		info := edgeproto.CloudletInfo{}
