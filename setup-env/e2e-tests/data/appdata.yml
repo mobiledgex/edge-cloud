@@ -183,6 +183,17 @@ apps:
     name: x1.small
   accessports: "tcp:80,http:443,udp:10002"
   command: touch "/tmp/test.txt"
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: NoPortsApp
+    version: "1.0"
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/noportsapp:1.0
+  imagetype: ImageTypeDocker
+  deployment: "kubernetes"
+  defaultflavor:
+    name: x1.small
+  officialfqdn: noportsapp.acmeappco.com
 
 appinstances:
 - key:
@@ -275,6 +286,26 @@ appinstances:
           name: dmuus
         name: dmuus-cloud-2
       developer: AcmeAppCo1
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: NoPortsApp
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91

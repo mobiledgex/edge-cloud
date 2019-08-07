@@ -271,6 +271,17 @@ apps:
     name: DefaultVMCluster
   command: touch "/tmp/test.txt"
   deployment: vm
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: NoPortsApp
+    version: "1.0"
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/noportsapp:1.0
+  imagetype: ImageTypeDocker
+  defaultflavor:
+    name: x1.small
+  deployment: kubernetes
+  officialfqdn: noportsapp.acmeappco.com
 
 appinstances:
 - key:
@@ -291,6 +302,19 @@ appinstances:
     latitude: 40
     longitude: -99
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 80
+    publicport: 80
+    fqdnprefix: someapplication1-tcp.
+  - proto: LProtoHttp
+    internalport: 443
+    publicport: 443
+    pathprefix: acmeappco/someapplication110/p443
+  - proto: LProtoUdp
+    internalport: 10002
+    publicport: 10002
+    fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
 - key:
@@ -311,6 +335,19 @@ appinstances:
     latitude: 35
     longitude: -95
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 80
+    publicport: 80
+    fqdnprefix: someapplication1-tcp.
+  - proto: LProtoHttp
+    internalport: 443
+    publicport: 443
+    pathprefix: acmeappco/someapplication110/p443
+  - proto: LProtoUdp
+    internalport: 10002
+    publicport: 10002
+    fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
 - key:
@@ -331,6 +368,10 @@ appinstances:
     latitude: 40
     longitude: -99
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoUdp
+    internalport: 20002
+    publicport: 20002
   flavor:
     name: x1.small
 - key:
@@ -351,6 +392,10 @@ appinstances:
     latitude: 35
     longitude: -95
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
   flavor:
     name: x1.medium
 - key:
@@ -371,6 +416,10 @@ appinstances:
     latitude: 40
     longitude: -99
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
   flavor:
     name: x1.medium
 - key:
@@ -391,6 +440,16 @@ appinstances:
     latitude: 40
     longitude: -99
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 80
+    publicport: 80
+  - proto: LProtoHttp
+    internalport: 443
+    publicport: 443
+  - proto: LProtoUdp
+    internalport: 10002
+    publicport: 10002
   flavor:
     name: x1.small
 - key:
@@ -410,6 +469,36 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
+  liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 80
+    publicport: 80
+  - proto: LProtoHttp
+    internalport: 443
+    publicport: 443
+  - proto: LProtoUdp
+    internalport: 10002
+    publicport: 10002
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: NoPortsApp
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-1
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 40
+    longitude: -99
   liveness: LivenessStatic
   flavor:
     name: x1.small
