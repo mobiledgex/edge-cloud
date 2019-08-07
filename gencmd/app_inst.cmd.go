@@ -388,8 +388,7 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.Uri = ""
 	}
-	if _, found := tags["nocmp"]; found {
-		in.MappedPorts = nil
+	for i0 := 0; i0 < len(in.MappedPorts); i0++ {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.State = 0

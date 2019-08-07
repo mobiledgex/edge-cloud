@@ -42,7 +42,7 @@ message AppInst {
   // For instances accessible via a shared load balancer, defines the external
   // ports on the shared load balancer that map to the internal ports
   // External ports should be appended to the Uri for L4 access.
-  repeated distributed_match_engine.AppPort mapped_ports = 9 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  repeated distributed_match_engine.AppPort mapped_ports = 9 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Flavor defining resource requirements
   FlavorKey flavor = 12 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Current state of the AppInst on the Cloudlet

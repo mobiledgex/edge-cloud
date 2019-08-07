@@ -125,5 +125,9 @@ appinstances:
     latitude: 31
     longitude: -91
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
   flavor:
     name: x1.medium
