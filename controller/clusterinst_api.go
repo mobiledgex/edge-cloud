@@ -116,6 +116,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 	}
+
 	ctx := cb.Context()
 	if in.Key.Developer == "" {
 		return fmt.Errorf("Developer cannot be empty")
@@ -197,6 +198,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
+		}
+		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
+			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+				return errors.New("Only kubernetes apps can be deployed in Azure or GCP")
+			}
 		}
 		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
