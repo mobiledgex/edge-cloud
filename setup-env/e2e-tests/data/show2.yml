@@ -165,6 +165,19 @@ appinstances:
     latitude: 1
     longitude: 1
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 80
+    publicport: 80
+    fqdnprefix: someapplication1-tcp.
+  - proto: LProtoHttp
+    internalport: 443
+    publicport: 443
+    pathprefix: acmeappco/someapplication110/p443
+  - proto: LProtoUdp
+    internalport: 10002
+    publicport: 10002
+    fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
 - key:
@@ -185,6 +198,19 @@ appinstances:
     latitude: 1
     longitude: 2
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 80
+    publicport: 80
+    fqdnprefix: someapplication1-tcp.
+  - proto: LProtoHttp
+    internalport: 443
+    publicport: 443
+    pathprefix: acmeappco/someapplication110/p443
+  - proto: LProtoUdp
+    internalport: 10002
+    publicport: 10002
+    fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
 - key:
@@ -205,6 +231,10 @@ appinstances:
     latitude: 1
     longitude: 2
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
   flavor:
     name: x1.medium
 - key:
@@ -225,6 +255,10 @@ appinstances:
     latitude: 1
     longitude: 1
   liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
   flavor:
     name: x1.medium
 
