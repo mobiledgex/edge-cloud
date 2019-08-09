@@ -148,8 +148,17 @@ var AppData = []edgeproto.App{
 			Version:      "0.0.2",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessPorts:   "tcp:80,udp:8001",
+		AccessPorts:   "tcp:80,udp:8001,tcp:065535",
 		DefaultFlavor: FlavorData[1].Key,
+	},
+	edgeproto.App{
+		Key: edgeproto.AppKey{
+			DeveloperKey: DevData[0].Key,
+			Name:         "NoPorts",
+			Version:      "1.0.0",
+		},
+		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		DefaultFlavor: FlavorData[0].Key,
 	},
 }
 var OperatorData = []edgeproto.Operator{
@@ -423,6 +432,13 @@ var AppInstData = []edgeproto.AppInst{
 		CloudletLoc:         CloudletData[2].Location,
 		AutoClusterIpAccess: edgeproto.IpAccess_IP_ACCESS_DEDICATED,
 	},
+	edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey:         AppData[6].Key,
+			ClusterInstKey: ClusterInstData[0].Key,
+		},
+		CloudletLoc: CloudletData[0].Location,
+	},
 }
 var AppInstInfoData = []edgeproto.AppInstInfo{
 	edgeproto.AppInstInfo{
@@ -442,6 +458,9 @@ var AppInstInfoData = []edgeproto.AppInstInfo{
 	},
 	edgeproto.AppInstInfo{
 		Key: AppInstData[5].Key,
+	},
+	edgeproto.AppInstInfo{
+		Key: AppInstData[6].Key,
 	},
 }
 var CloudletInfoData = []edgeproto.CloudletInfo{

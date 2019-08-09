@@ -198,6 +198,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
+		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
+			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+				return errors.New("Only kubernetes clusters can be deployed in Azure or GCP")
+			}
+		}
 		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
 			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.CloudletKey)

@@ -113,6 +113,22 @@ func GetDefaultDeploymentType(imageType edgeproto.ImageType) (string, error) {
 	return "", fmt.Errorf("unknown image type %s", imageType)
 }
 
+func GetImageTypeForDeployment(deployment string) (edgeproto.ImageType, error) {
+	switch deployment {
+	case AppDeploymentTypeDocker:
+		fallthrough
+	case AppDeploymentTypeKubernetes:
+		return edgeproto.ImageType_IMAGE_TYPE_DOCKER, nil
+	case AppDeploymentTypeHelm:
+		return edgeproto.ImageType_IMAGE_TYPE_UNKNOWN, nil
+	case AppDeploymentTypeVM:
+		// could be different formats
+		fallthrough
+	default:
+		return edgeproto.ImageType_IMAGE_TYPE_UNKNOWN, nil
+	}
+}
+
 // GetAppDeploymentManifest gets the deployment-specific manifest.
 func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
 	if app.DeploymentManifest != "" {

@@ -49,7 +49,7 @@ PROTO_INCLUDE_FLAGS += $(addprefix --proto_path ,$(PROTO_INCLUDE_DIRECTORIES))
 
 all: system-check libmexgrpc.so sample_client
 
-sample_client: ../common/test_credentials.o sample_client.o
+sample_client: sample_client.o
 	$(CXX) $^ $(LDFLAGS) -I. -L. -lmexgrpc -o $@
 
 libmexgrpc.so: google/api/http.pb.o google/api/http.grpc.pb.o google/api/annotations.pb.o google/api/annotations.grpc.pb.o appcommon.pb.o appcommon.grpc.pb.o loc.pb.o loc.grpc.pb.o app-client.pb.o app-client.grpc.pb.o dynamic-location-group.pb.o dynamic-location-group.grpc.pb.o

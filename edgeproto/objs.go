@@ -352,6 +352,9 @@ func L4ProtoStr(proto dme.LProto) (string, error) {
 
 func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	appports := make([]dme.AppPort, 0)
+	if ports == "" {
+		return appports, nil
+	}
 	strs := strings.Split(ports, ",")
 	for _, str := range strs {
 		vals := strings.Split(str, ":")

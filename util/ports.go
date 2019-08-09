@@ -28,7 +28,7 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 		}
 		portSpec := PortSpec{
 			Proto: pp[0],
-			Port:  pp[1],
+			Port:  strconv.FormatInt(port, 10),
 		}
 		ports = append(ports, portSpec)
 	}

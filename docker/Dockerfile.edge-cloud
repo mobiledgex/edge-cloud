@@ -16,15 +16,23 @@ ENV GOPATH=/go
 ENV PATH="/go/bin:${PATH}"
 ENV GO111MODULE=on
 WORKDIR /go/src/github.com/mobiledgex
+# Do dependencies first so they can be cached
+COPY edge-cloud/go.mod edge-cloud/go.mod
+COPY edge-cloud/go.sum edge-cloud/go.sum
+COPY edge-cloud/Makefile.tools edge-cloud/Makefile.tools
+COPY edge-cloud-infra/go.mod edge-cloud-infra/go.mod
+COPY edge-cloud-infra/go.sum edge-cloud-infra/go.sum
+WORKDIR /go/src/github.com/mobiledgex/edge-cloud
+RUN go mod download
+RUN make -f Makefile.tools
+WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
+RUN go mod download
+RUN go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger; exit 0
+WORKDIR /go/src/github.com/mobiledgex
 COPY edge-cloud edge-cloud
 COPY edge-cloud-infra edge-cloud-infra
-WORKDIR /go/src/github.com/mobiledgex/edge-cloud
-RUN go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger; exit 0
-RUN go mod download
-RUN make tools
-RUN make clean
-ENV CGO_ENABLED=1
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
+ENV CGO_ENABLED=1
 RUN make
 
 FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v0.0.14-19-g8e21a4c
