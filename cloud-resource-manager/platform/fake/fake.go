@@ -18,8 +18,9 @@ func (s *Platform) GetType() string {
 	return "fake"
 }
 
-func (s *Platform) Init(platformConfig *platform.PlatformConfig) error {
+func (s *Platform) Init(platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.DebugLog(log.DebugLevelMexos, "running in fake cloudlet mode")
+	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
 	return nil
 }
 
