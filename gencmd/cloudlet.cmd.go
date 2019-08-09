@@ -390,7 +390,7 @@ func CloudletInfraPropertiesWriteOutputOne(obj *edgeproto.CloudletInfraPropertie
 	}
 }
 func PlatformConfigSlicer(in *edgeproto.PlatformConfig) []string {
-	s := make([]string, 0, 9)
+	s := make([]string, 0, 10)
 	s = append(s, in.RegistryPath)
 	s = append(s, in.ImagePath)
 	s = append(s, in.NotifyCtrlAddrs)
@@ -400,11 +400,12 @@ func PlatformConfigSlicer(in *edgeproto.PlatformConfig) []string {
 	s = append(s, in.CrmSecretId)
 	s = append(s, in.PlatformTag)
 	s = append(s, strconv.FormatBool(in.TestMode))
+	s = append(s, in.Span)
 	return s
 }
 
 func PlatformConfigHeaderSlicer() []string {
-	s := make([]string, 0, 9)
+	s := make([]string, 0, 10)
 	s = append(s, "RegistryPath")
 	s = append(s, "ImagePath")
 	s = append(s, "NotifyCtrlAddrs")
@@ -414,6 +415,7 @@ func PlatformConfigHeaderSlicer() []string {
 	s = append(s, "CrmSecretId")
 	s = append(s, "PlatformTag")
 	s = append(s, "TestMode")
+	s = append(s, "Span")
 	return s
 }
 
@@ -595,7 +597,7 @@ func FlavorInfoWriteOutputOne(obj *edgeproto.FlavorInfo) {
 	}
 }
 func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
-	s := make([]string, 0, 10)
+	s := make([]string, 0, 11)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -622,11 +624,15 @@ func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
 	s = append(s, strconv.FormatUint(uint64(in.Flavors[0].Vcpus), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Flavors[0].Ram), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Flavors[0].Disk), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
+	s = append(s, in.Status.TaskName)
+	s = append(s, in.Status.StepName)
 	return s
 }
 
 func CloudletInfoHeaderSlicer() []string {
-	s := make([]string, 0, 10)
+	s := make([]string, 0, 11)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
@@ -641,6 +647,10 @@ func CloudletInfoHeaderSlicer() []string {
 	s = append(s, "Flavors-Vcpus")
 	s = append(s, "Flavors-Ram")
 	s = append(s, "Flavors-Disk")
+	s = append(s, "Status-TaskNumber")
+	s = append(s, "Status-MaxTasks")
+	s = append(s, "Status-TaskName")
+	s = append(s, "Status-StepName")
 	return s
 }
 
@@ -1217,6 +1227,10 @@ func init() {
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxRam, "osmaxram", 0, "OsMaxRam")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVcores, "osmaxvcores", 0, "OsMaxVcores")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVolGb, "osmaxvolgb", 0, "OsMaxVolGb")
+	CloudletInfoFlagSet.Uint32Var(&CloudletInfoIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
+	CloudletInfoFlagSet.Uint32Var(&CloudletInfoIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
+	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
+	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Status.StepName, "status-stepname", "", "Status.StepName")
 	CloudletMetricsFlagSet.Uint64Var(&CloudletMetricsIn.Foo, "foo", 0, "Foo")
 	CreateCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	DeleteCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
@@ -1370,6 +1384,18 @@ func CloudletInfoSetFields() {
 	}
 	if CloudletInfoFlagSet.Lookup("osmaxvolgb").Changed {
 		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "8")
+	}
+	if CloudletInfoNoConfigFlagSet.Lookup("status-tasknumber").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "11.1")
+	}
+	if CloudletInfoNoConfigFlagSet.Lookup("status-maxtasks").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "11.2")
+	}
+	if CloudletInfoNoConfigFlagSet.Lookup("status-taskname").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "11.3")
+	}
+	if CloudletInfoNoConfigFlagSet.Lookup("status-stepname").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "11.4")
 	}
 }
 
