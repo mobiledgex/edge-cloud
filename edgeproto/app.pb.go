@@ -195,7 +195,8 @@ type App struct {
 	ImagePath string `protobuf:"bytes,4,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`
 	// Image type (see ImageType)
 	ImageType ImageType `protobuf:"varint,5,opt,name=image_type,json=imageType,proto3,enum=edgeproto.ImageType" json:"image_type,omitempty"`
-	// Comma separated list of protocol:port pairs that the App listens on
+	// Comma separated list of protocol:port pairs that the App listens on.
+	// Numerical values must be decimal format.
 	// i.e. tcp:80,udp:10002,http:443
 	AccessPorts string `protobuf:"bytes,7,opt,name=access_ports,json=accessPorts,proto3" json:"access_ports,omitempty"`
 	// Default flavor for the App, which may be overridden by the AppInst
