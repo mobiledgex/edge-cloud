@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -13,8 +14,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
-
-const RequestTimeout = 5 * time.Second
 
 const (
 	BasicAuth  = "basic"
@@ -83,8 +82,22 @@ func GetRegistryAuth(imgUrl, vaultAddr string) (*RegistryAuth, error) {
 func SendHTTPReq(method, fileUrlPath string, auth *RegistryAuth) (*http.Response, error) {
 	log.DebugLog(log.DebugLevelApi, "send http request", "method", method, "url", fileUrlPath)
 	client := &http.Client{
-		Timeout: RequestTimeout,
+		Transport: &http.Transport{
+			// Connection Timeout
+			DialContext: (&net.Dialer{
+				Timeout:   10 * time.Second,
+				KeepAlive: 10 * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout: 10 * time.Second,
+
+			// Response Header Timeout
+			ExpectContinueTimeout: 5 * time.Second,
+			ResponseHeaderTimeout: 5 * time.Second,
+		},
+		// Prevent endless redirects
+		Timeout: 10 * time.Minute,
 	}
+
 	req, err := http.NewRequest(method, fileUrlPath, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed sending request %v", err)
