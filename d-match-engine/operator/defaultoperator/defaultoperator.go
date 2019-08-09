@@ -3,10 +3,10 @@ package defaultoperator
 import (
 	"fmt"
 
-	simulatedqos "github.com/mobiledgex/edge-cloud-infra/operator-api-gw/defaultoperator/simulated-qos"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	operator "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
+	simulatedqos "github.com/mobiledgex/edge-cloud/d-match-engine/operator/simulated-qos"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
