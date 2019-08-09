@@ -22,6 +22,7 @@ import (
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	op "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
 	operator "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
+	"github.com/mobiledgex/edge-cloud/d-match-engine/operator/defaultoperator"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	log "github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -270,7 +271,10 @@ func (s *server) GetQosPositionKpi(req *dme.QosPositionKpiRequest, getQosSvr dme
 
 }
 
-func initPlugin(operatorName string) (op.OperatorApiGw, error) {
+func initOperator(operatorName string) (op.OperatorApiGw, error) {
+	if operatorName == "" {
+		return &defaultoperator.OperatorApiGw{}, nil
+	}
 	if *solib == "" {
 		*solib = os.Getenv("GOPATH") + "/plugins/platforms.so"
 	}
@@ -302,7 +306,7 @@ func main() {
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudletKey)
 	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NODE_DME, &myCloudletKey, &myNode.Key)
 	var err error
-	operatorApiGw, err = initPlugin(*carrier)
+	operatorApiGw, err = initOperator(*carrier)
 	if err != nil {
 		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
 	}
