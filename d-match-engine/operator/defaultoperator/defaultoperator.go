@@ -1,12 +1,12 @@
 package defaultoperator
 
 import (
-	"fmt"
-
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+
 	operator "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
-	simulatedqos "github.com/mobiledgex/edge-cloud/d-match-engine/operator/simulated-qos"
+	simulatedloc "github.com/mobiledgex/edge-cloud/d-match-engine/operator/defaultoperator/simulated-location"
+	simulatedqos "github.com/mobiledgex/edge-cloud/d-match-engine/operator/defaultoperator/simulated-qos"
+
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
@@ -26,8 +26,12 @@ func (o *OperatorApiGw) Init(operatorName string, servers *operator.OperatorApiG
 	return nil
 }
 
-func (*OperatorApiGw) VerifyLocation(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply, ckey *dmecommon.CookieKey) (*dme.VerifyLocationReply, error) {
-	return nil, fmt.Errorf("Verify Location not supported for this operator")
+func (*OperatorApiGw) VerifyLocation(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply) error {
+	return simulatedloc.VerifySimulatedClientLoc(mreq, mreply)
+}
+
+func (*OperatorApiGw) GetLocation(mreq *dme.GetLocationRequest, mreply *dme.GetLocationReply) error {
+	return simulatedloc.GetSimulatedClientLoc(mreq, mreply)
 }
 
 func (*OperatorApiGw) GetQOSPositionKPI(mreq *dme.QosPositionKpiRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {

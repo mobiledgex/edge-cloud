@@ -141,30 +141,32 @@ func (s *server) VerifyLocation(ctx context.Context,
 
 	reply := new(dme.VerifyLocationReply)
 
-	ckey, ok := dmecommon.CookieFromContext(ctx)
-	if !ok {
-		return reply, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
+	reply.GpsLocationStatus = dme.VerifyLocationReply_LOC_UNKNOWN
+	reply.GpsLocationAccuracyKm = -1
+
+	log.DebugLog(log.DebugLevelDmereq, "Received Verify Location",
+		"VerifyLocToken", req.VerifyLocToken,
+		"GpsLocation", req.GpsLocation)
+
+	if req.GpsLocation == nil || (req.GpsLocation.Latitude == 0 && req.GpsLocation.Longitude == 0) {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
+		return reply, grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
-	err := VerifyClientLoc(req, reply, *carrier, ckey, *locVerUrl, *tokSrvUrl)
-	if err != nil {
-		return nil, err
+
+	if !util.IsLatitudeValid(req.GpsLocation.Latitude) || !util.IsLongitudeValid(req.GpsLocation.Longitude) {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
+		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
 	}
-	return reply, nil
+	err := operatorApiGw.VerifyLocation(req, reply)
+	return reply, err
+
 }
 
 func (s *server) GetLocation(ctx context.Context,
 	req *dme.GetLocationRequest) (*dme.GetLocationReply, error) {
-
 	reply := new(dme.GetLocationReply)
-
-	GetClientLoc(req, reply)
-	if reply.Status == dme.GetLocationReply_LOC_FOUND {
-		fmt.Printf("GetLocation: Found Location\n")
-	} else {
-		fmt.Printf("GetLocation: Location NOT Found\n")
-	}
-
-	return reply, nil
+	err := operatorApiGw.GetLocation(req, reply)
+	return reply, err
 }
 
 func getAuthPublicKey(devname string, appname string, appvers string) (string, error) {
@@ -272,7 +274,7 @@ func (s *server) GetQosPositionKpi(req *dme.QosPositionKpiRequest, getQosSvr dme
 }
 
 func initOperator(operatorName string) (op.OperatorApiGw, error) {
-	if operatorName == "" {
+	if operatorName == "" || operatorName == "standalone" {
 		return &defaultoperator.OperatorApiGw{}, nil
 	}
 	if *solib == "" {
