@@ -94,6 +94,7 @@ func WaitForProcesses(processName string, procs []process.Process) bool {
 		rc := <-c
 		log.Println(rc.Text)
 		if !rc.Success {
+			log.Printf("Error: connect failed: %s", rc.Text)
 			allpass = false
 		}
 	}
@@ -117,6 +118,7 @@ func ensureProcesses(processName string, procs []process.Process) bool {
 		args := p.LookupArgs()
 		log.Printf("Looking for host %v processexe %v processargs %v\n", p.GetHostname(), exeName, args)
 		if !process.EnsureProcessesByName(exeName, args) {
+			log.Printf("Error: ensure process failed: %s", exeName)
 			ensured = false
 		}
 	}

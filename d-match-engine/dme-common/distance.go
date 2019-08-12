@@ -31,7 +31,7 @@ type LocationResult struct {
 
 // it has been agreed that mappings between location result integer and distances
 // in kilometers should be flexible.  These are the default mappings
-var DefaultTDGLocationRangeMap = map[uint32]LocationResult{
+var DefaultLocationRangeMap = map[uint32]LocationResult{
 	LocationUnknown:                {-1, dme.VerifyLocationReply_LOC_UNKNOWN},                  // unknown = negative distance (unverified)
 	LocationVerifiedNear:           {2, dme.VerifyLocationReply_LOC_VERIFIED},                  // within 2km
 	LocationVerifiedMedium:         {10, dme.VerifyLocationReply_LOC_VERIFIED},                 // within 10km
@@ -46,9 +46,9 @@ var DefaultTDGLocationRangeMap = map[uint32]LocationResult{
 // GetDistanceAndStatusForLocationResult - Given a value returned by TDG API GW, map that into a
 // distance and DME return status.
 func GetDistanceAndStatusForLocationResult(locationResult uint32) LocationResult {
-	l, ok := DefaultTDGLocationRangeMap[locationResult]
+	l, ok := DefaultLocationRangeMap[locationResult]
 	if !ok {
-		return DefaultTDGLocationRangeMap[LocationUnknown]
+		return DefaultLocationRangeMap[LocationUnknown]
 	}
 	return l
 }
@@ -60,7 +60,7 @@ func GetLocationResultForDistance(distance float64) uint32 {
 	closestDistance := float64(999999)
 	rc := LocationMismatchSameCountry
 
-	for l, m := range DefaultTDGLocationRangeMap {
+	for l, m := range DefaultLocationRangeMap {
 		if m.DistanceRange >= 0 && m.DistanceRange < closestDistance && m.DistanceRange > distance {
 			rc = l
 			closestDistance = m.DistanceRange
