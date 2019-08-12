@@ -1196,6 +1196,7 @@ const AppInstFieldMappedPortsInternalPort = "9.2"
 const AppInstFieldMappedPortsPublicPort = "9.3"
 const AppInstFieldMappedPortsPathPrefix = "9.4"
 const AppInstFieldMappedPortsFqdnPrefix = "9.5"
+const AppInstFieldMappedPortsEndPort = "9.6"
 const AppInstFieldFlavor = "12"
 const AppInstFieldFlavorName = "12.1"
 const AppInstFieldState = "14"
@@ -1241,6 +1242,7 @@ var AppInstAllFields = []string{
 	AppInstFieldMappedPortsPublicPort,
 	AppInstFieldMappedPortsPathPrefix,
 	AppInstFieldMappedPortsFqdnPrefix,
+	AppInstFieldMappedPortsEndPort,
 	AppInstFieldFlavorName,
 	AppInstFieldState,
 	AppInstFieldErrors,
@@ -1283,6 +1285,7 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldMappedPortsPublicPort:                       struct{}{},
 	AppInstFieldMappedPortsPathPrefix:                       struct{}{},
 	AppInstFieldMappedPortsFqdnPrefix:                       struct{}{},
+	AppInstFieldMappedPortsEndPort:                          struct{}{},
 	AppInstFieldFlavorName:                                  struct{}{},
 	AppInstFieldState:                                       struct{}{},
 	AppInstFieldErrors:                                      struct{}{},
@@ -1325,6 +1328,7 @@ var AppInstAllFieldsStringMap = map[string]string{
 	AppInstFieldMappedPortsPublicPort:                       "App Inst Field Mapped Ports Public Port",
 	AppInstFieldMappedPortsPathPrefix:                       "App Inst Field Mapped Ports Path Prefix",
 	AppInstFieldMappedPortsFqdnPrefix:                       "App Inst Field Mapped Ports Fqdn Prefix",
+	AppInstFieldMappedPortsEndPort:                          "App Inst Field Mapped Ports End Port",
 	AppInstFieldFlavorName:                                  "App Inst Field Flavor Name",
 	AppInstFieldState:                                       "App Inst Field State",
 	AppInstFieldErrors:                                      "App Inst Field Errors",
@@ -1456,6 +1460,10 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 			}
 			if m.MappedPorts[i0].FqdnPrefix != o.MappedPorts[i0].FqdnPrefix {
 				fields[AppInstFieldMappedPortsFqdnPrefix] = struct{}{}
+				fields[AppInstFieldMappedPorts] = struct{}{}
+			}
+			if m.MappedPorts[i0].EndPort != o.MappedPorts[i0].EndPort {
+				fields[AppInstFieldMappedPortsEndPort] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
 		}
@@ -1628,6 +1636,9 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 			}
 			if _, set := fmap["9.5"]; set {
 				m.MappedPorts[i0].FqdnPrefix = src.MappedPorts[i0].FqdnPrefix
+			}
+			if _, set := fmap["9.6"]; set {
+				m.MappedPorts[i0].EndPort = src.MappedPorts[i0].EndPort
 			}
 		}
 	}

@@ -27,22 +27,24 @@ var LProtoStrings = []string{
 }
 
 func AppPortSlicer(in *distributed_match_engine.AppPort) []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	s = append(s, distributed_match_engine.LProto_CamelName[int32(in.Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.PublicPort), 10))
 	s = append(s, in.PathPrefix)
 	s = append(s, in.FqdnPrefix)
+	s = append(s, strconv.FormatUint(uint64(in.EndPort), 10))
 	return s
 }
 
 func AppPortHeaderSlicer() []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	s = append(s, "Proto")
 	s = append(s, "InternalPort")
 	s = append(s, "PublicPort")
 	s = append(s, "PathPrefix")
 	s = append(s, "FqdnPrefix")
+	s = append(s, "EndPort")
 	return s
 }
 

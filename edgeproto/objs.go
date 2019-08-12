@@ -351,6 +351,7 @@ func L4ProtoStr(proto dme.LProto) (string, error) {
 }
 
 func ParseAppPorts(ports string) ([]dme.AppPort, error) {
+	var baseport int64
 	appports := make([]dme.AppPort, 0)
 	if ports == "" {
 		return appports, nil
@@ -358,25 +359,61 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	strs := strings.Split(ports, ",")
 	for _, str := range strs {
 		vals := strings.Split(str, ":")
-		if len(vals) != 2 {
-			return nil, fmt.Errorf("Invalid Access Ports format, expected proto:port but was %s", vals[0])
+		// within each vals, we may have a hypenated range of ports ex: udp:M-N inclusive
+		if strings.Contains(vals[1], "-") {
+			var err error
+			portrange := strings.Split(vals[1], "-")
+			baseport, err = strconv.ParseInt(portrange[0], 10, 32)
+			if (err != nil) {
+				return nil, fmt.Errorf("unable to convert port range base value")
+			}
+			endport, err := strconv.ParseInt(portrange[1], 10, 32)
+			if (err != nil) {
+				return nil, fmt.Errorf("unable to convert port range endpoint value")
+			}
+			if (baseport < 1 || baseport > 65535) ||
+				(endport < 1 || endport > 65535) {
+				return nil, fmt.Errorf("Range ports out of range")
+			}
+			if baseport == endport { // ex: tcp:5000-5000 huh?
+				endport = 0
+			}
+			if endport < baseport { // ex: udp:2000-1000 who thinks like this?
+				tmp := baseport
+				baseport = endport
+				endport = tmp
+			}
+			proto, err := GetLProto(vals[0])
+			if err != nil {
+				return nil, err
+			}
+			p := dme.AppPort {
+				Proto:        proto,
+				InternalPort: int32(baseport),
+				EndPort: int32(endport),
+			}
+			appports = append(appports, p)
+		} else {
+			if len(vals) != 2 {
+				return nil, fmt.Errorf("Invalid Access Ports format, expected proto:port but was %s", vals[0])
+			}
+			proto, err := GetLProto(vals[0])
+			if err != nil {
+				return nil, err
+			}
+			port, err := strconv.ParseInt(vals[1], 10, 32)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to convert port %s to integer: %s", vals[1], err)
+			}
+			if port < 1 || port > 65535 {
+				return nil, fmt.Errorf("Port %s out of range", vals[1])
+			}
+			p := dme.AppPort{
+				Proto:        proto,
+				InternalPort: int32(port),
+			}
+			appports = append(appports, p)
 		}
-		proto, err := GetLProto(vals[0])
-		if err != nil {
-			return nil, err
-		}
-		port, err := strconv.ParseInt(vals[1], 10, 32)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to convert port %s to integer: %s", vals[1], err)
-		}
-		if port < 1 || port > 65535 {
-			return nil, fmt.Errorf("Port %s out of range", vals[1])
-		}
-		p := dme.AppPort{
-			Proto:        proto,
-			InternalPort: int32(port),
-		}
-		appports = append(appports, p)
 	}
 	return appports, nil
 }

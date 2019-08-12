@@ -27,4 +27,5 @@ message AppPort {
   string path_prefix = 4;
   // FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.
   string fqdn_prefix = 5;
+  int32 end_port = 6;
 }

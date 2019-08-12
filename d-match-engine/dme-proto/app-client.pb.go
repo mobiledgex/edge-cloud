@@ -2096,6 +2096,7 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) {
 			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
 			m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
 			m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
+			m.Ports[i0].EndPort = src.Ports[i0].EndPort
 		}
 	}
 	if src.CloudletLocation != nil {
@@ -2267,6 +2268,7 @@ func (m *Appinstance) CopyInFields(src *Appinstance) {
 			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
 			m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
 			m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
+			m.Ports[i0].EndPort = src.Ports[i0].EndPort
 		}
 	}
 }
@@ -2320,6 +2322,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 					m.Appinstances[i0].Ports[i1].PublicPort = src.Appinstances[i0].Ports[i1].PublicPort
 					m.Appinstances[i0].Ports[i1].PathPrefix = src.Appinstances[i0].Ports[i1].PathPrefix
 					m.Appinstances[i0].Ports[i1].FqdnPrefix = src.Appinstances[i0].Ports[i1].FqdnPrefix
+					m.Appinstances[i0].Ports[i1].EndPort = src.Appinstances[i0].Ports[i1].EndPort
 				}
 			}
 		}
@@ -2386,6 +2389,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix
+							m.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort
 						}
 					}
 				}
