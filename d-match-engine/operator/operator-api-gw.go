@@ -1,7 +1,6 @@
 package operator
 
 import (
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
 
@@ -18,8 +17,10 @@ type OperatorApiGw interface {
 	GetOperatorName() string
 	// Init is called once during startup.
 	Init(operatorName string, servers *OperatorApiGwServers) error
-	// VerifyLocation verifies a clien's location against the coordinates provided
-	VerifyLocation(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply, ckey *dmecommon.CookieKey) (*dme.VerifyLocationReply, error)
+	// VerifyLocation verifies a client's location against the coordinates provided
+	VerifyLocation(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply) error
+	// GetLocation gets the client location
+	GetLocation(mreq *dme.GetLocationRequest, mreply *dme.GetLocationReply) error
 	// GetQOSPositionKPI gets QOS KPIs for GPS positions
 	GetQOSPositionKPI(req *dme.QosPositionKpiRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error
 }
