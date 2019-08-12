@@ -98,7 +98,6 @@ func (c *dmeRestClient) GetLocation(ctx context.Context, in *dmeproto.GetLocatio
 	return out, nil
 }
 
-
 func (c *dmeRestClient) GetQosPositionKpi(ctx context.Context, in *dmeproto.QosPositionKpiRequest, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_GetQosPositionKpiClient, error) {
 	return nil, fmt.Errorf("GetQosPositionKpi not supported yet in E2E via REST")
 }
@@ -246,26 +245,28 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 	case "verifylocation":
 		tokSrvUrl := registerStatus.Reply.TokenServerUri
 		log.Printf("found token server url from register response %s\n", tokSrvUrl)
-
+		token := ""
 		if tokSrvUrl == "" {
-			log.Printf("no token service URL in register response")
-			return false
-		}
-		//override the token server path if specified in the request.  This is used
-		//for testcases like expired token
-		if apiRequest.TokenServerPath != "" {
-			//remove the original path and replace with the one in the test
-			u, err := url.Parse(tokSrvUrl)
-			if err != nil {
-				log.Printf("unable to parse tokserv url %s -- %v\n", tokSrvUrl, err)
+			// this is OK for the simulated case
+			log.Printf("notice: no token service URL in register response")
+		} else {
+			//override the token server path if specified in the request.  This is used
+			//for testcases like expired token
+			if apiRequest.TokenServerPath != "" {
+				//remove the original path and replace with the one in the test
+				u, err := url.Parse(tokSrvUrl)
+				if err != nil {
+					log.Printf("unable to parse tokserv url %s -- %v\n", tokSrvUrl, err)
+					return false
+				}
+				u.Path = apiRequest.TokenServerPath
+				tokSrvUrl = u.String()
+			}
+			token = GetTokenFromTokSrv(tokSrvUrl)
+			if token == "" {
+				log.Printf("fail to get token from token server")
 				return false
 			}
-			u.Path = apiRequest.TokenServerPath
-			tokSrvUrl = u.String()
-		}
-		token := GetTokenFromTokSrv(tokSrvUrl)
-		if token == "" {
-			return false
 		}
 		apiRequest.Vlreq.SessionCookie = sessionCookie
 		apiRequest.Vlreq.VerifyLocToken = token
