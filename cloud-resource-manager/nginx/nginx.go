@@ -79,6 +79,13 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 			"nginx %s can't create file %s", name, errlogFile)
 		return err
 	}
+	accesslogFile := dir + "/access.log"
+	err = pc.Run(client, "touch "+accesslogFile)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos,
+			"nginx %s can't create file %s", name, accesslogFile)
+		return err
+	}
 	nconfName := dir + "/nginx.conf"
 	err = createNginxConf(client, nconfName, name, l7dir, originIP, ports, useTLS)
 	if err != nil {
@@ -119,6 +126,7 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 		"-v", dir + ":/var/www/.cache",
 		"-v", "/etc/ssl/certs:/etc/ssl/certs",
 		"-v", errlogFile + ":/var/log/nginx/error.log",
+		"-v", accesslogFile + ":/var/log/nginx/access.log",
 		"-v", nconfName + ":/etc/nginx/nginx.conf",
 		"nginx"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
