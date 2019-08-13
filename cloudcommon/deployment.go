@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"strconv"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/deploygen"
@@ -88,26 +87,27 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 		missingPorts := []string{}
 		for _, appPort := range ports {
 			// http is mapped to tcp
-			if (appPort.EndPort != 0) { // we have a range-port notation on the dme.AppPort
-				                   // while our manifest exhaustively enumerates each as a kubePort
+			if (appPort.EndPort != 0) {
+				// We have a range-port notation on the dme.AppPort
+				// while our manifest exhaustively enumerates each as a kubePort
 				start := appPort.InternalPort
 				end   := appPort.EndPort
-				for i := start; i<=end; i++ {   // expand short hand notation to test membership in map
-					strPort := strconv.Itoa(int(i))
+				for i := start; i<=end; i++ {
+					// expand short hand notation to test membership in map
 					tp := dme.AppPort {
 						Proto: appPort.Proto,
 						InternalPort: int32(i),
 						EndPort: int32(0),
 					}
-					if _, found := objPorts[tp.String()]; found {		
-						continue
-					} else {
-						if appPort.Proto == dme.LProto_L_PROTO_HTTP {
-							appPort.Proto = dme.LProto_L_PROTO_TCP
-						}
-						protoStr, _ := edgeproto.LProtoStr(appPort.Proto)						
-						missingPorts = append(missingPorts, fmt.Sprintf("%s:%s", protoStr, strPort))
+					if appPort.Proto == dme.LProto_L_PROTO_HTTP {
+						appPort.Proto = dme.LProto_L_PROTO_TCP
 					}
+
+					if _, found := objPorts[tp.String()]; found {
+						continue
+					}
+					protoStr, _ := edgeproto.LProtoStr(appPort.Proto)
+					missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, tp.InternalPort))
 				}
 				continue
 			}
@@ -118,11 +118,9 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 				continue
 			}
 			protoStr, _ := edgeproto.LProtoStr(appPort.Proto)
-			fmt.Printf("IsValid-E-add missing port %s:%d game over\n", protoStr, appPort.InternalPort)
 			missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, appPort.InternalPort))
 		}
 		if len(missingPorts) > 0 {
-			fmt.Printf("IsValid-E-num missing ports: %d\n", len(missingPorts))
 			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest (note http is mapped to tcp)", strings.Join(missingPorts, ","))
 		}
 	}
@@ -156,7 +154,7 @@ func GetImageTypeForDeployment(deployment string) (edgeproto.ImageType, error) {
 }
 
 // GetAppDeploymentManifest gets the deployment-specific manifest.
-func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
+:func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
 	if app.DeploymentManifest != "" {
 		return GetDeploymentManifest(app.DeploymentManifest)
 	} else if app.DeploymentGenerator != "" {

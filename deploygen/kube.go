@@ -5,7 +5,6 @@ import (
 	"strings"
 	"strconv"
 	"text/template"
-	"fmt" // mfw debug XXX
 
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -70,7 +69,6 @@ func setKubePorts(ports []util.PortSpec) []kubePort {
 			for i := start; i <= end; i++ {
 
 				p := strconv.Itoa(int(i))
-				fmt.Printf("\n\t setKubePorts: next i %d as str: %s \n", i, p)
 				kp =  kubePort {
 					Proto: strings.ToLower(port.Proto),
 					Port: p,
@@ -86,7 +84,8 @@ func setKubePorts(ports []util.PortSpec) []kubePort {
 				kports = append(kports, kp)
 			}
 
-		} else { // nomial non-range
+		} else {
+			// nominal non-range
 			kp = kubePort{
 				Proto: strings.ToLower(port.Proto),
 				Port:  port.Port,
