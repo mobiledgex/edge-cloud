@@ -160,6 +160,18 @@ var AppData = []edgeproto.App{
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
+
+	edgeproto.App{
+		Key: edgeproto.AppKey{
+			DeveloperKey: DevData[0].Key,
+			Name:         "PortRangeApp",
+			Version:      "1.0.0",
+		},
+		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessPorts: "tcp:80,http:443,udp:10002,tcp:5000-5002", // new port range notation
+		DefaultFlavor: FlavorData[0].Key,
+	},
+
 }
 var OperatorData = []edgeproto.Operator{
 	edgeproto.Operator{
@@ -439,6 +451,14 @@ var AppInstData = []edgeproto.AppInst{
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
+
+	edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey:         AppData[7].Key,
+			ClusterInstKey: ClusterInstData[0].Key,
+		},
+		CloudletLoc: CloudletData[0].Location,
+	},
 }
 var AppInstInfoData = []edgeproto.AppInstInfo{
 	edgeproto.AppInstInfo{
@@ -461,6 +481,9 @@ var AppInstInfoData = []edgeproto.AppInstInfo{
 	},
 	edgeproto.AppInstInfo{
 		Key: AppInstData[6].Key,
+	},
+	edgeproto.AppInstInfo{
+		Key: AppInstData[7].Key,
 	},
 }
 var CloudletInfoData = []edgeproto.CloudletInfo{

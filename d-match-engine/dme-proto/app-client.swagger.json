@@ -402,6 +402,10 @@
         "fqdn_prefix": {
           "type": "string",
           "description": "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty."
+        },
+        "end_port": {
+          "type": "integer",
+          "format": "int32"
         }
       },
       "description": "AppPort describes an L4 or L7 public access port/path mapping. This is used to track external to internal mappings for access via a shared load balancer or reverse proxy."
