@@ -3,6 +3,7 @@ package deploygen
 import (
 	"bytes"
 	"strings"
+	"strconv"
 	"text/template"
 
 	"github.com/mobiledgex/edge-cloud/util"
@@ -47,22 +48,59 @@ func kubeBasic(app *AppSpec) (string, error) {
 
 }
 
+// Translate PortSpec objects to the KubePort representation.
+// util.PortSpec supports port range short hand, as does dme.AppPort.
+// KubePort does not, not yet anyway. So for now, to
+// preserve the LBs current notion of reality, we detect the
+// presence of a port range, and if found exhaustive enumerate
+// each port in range with a suitable KubePort object.
+//
 func setKubePorts(ports []util.PortSpec) []kubePort {
 	kports := []kubePort{}
+	var kp kubePort
 	for _, port := range ports {
-		kp := kubePort{
-			Proto: strings.ToLower(port.Proto),
-			Port:  port.Port,
+
+		endPort, _ := strconv.ParseInt(port.EndPort, 10, 32)
+		if endPort != 0 { // PortSpec port-range short hand notation,
+			// exhaustively enumerate each as a kp
+			start, _ := strconv.ParseInt(port.Port, 10, 32) // we sanitized in objs.go
+			end, _ := strconv.ParseInt(port.EndPort, 10, 32)
+
+			for i := start; i <= end; i++ {
+
+				p := strconv.Itoa(int(i))
+				kp =  kubePort {
+					Proto: strings.ToLower(port.Proto),
+					Port: p,
+				}
+				switch port.Proto {
+				case "tcp":
+					fallthrough
+				case "http":
+					kp.KubeProto = "TCP"
+				case "udp":
+					kp.KubeProto = "UDP"
+				}
+				kports = append(kports, kp)
+			}
+
+		} else {
+			// nominal non-range
+			kp = kubePort{
+				Proto: strings.ToLower(port.Proto),
+				Port:  port.Port,
+			}
+
+			switch port.Proto {
+			case "tcp":
+				fallthrough
+			case "http":
+				kp.KubeProto = "TCP"
+			case "udp":
+				kp.KubeProto = "UDP"
+			}
+			kports = append(kports, kp)
 		}
-		switch port.Proto {
-		case "tcp":
-			fallthrough
-		case "http":
-			kp.KubeProto = "TCP"
-		case "udp":
-			kp.KubeProto = "UDP"
-		}
-		kports = append(kports, kp)
 	}
 	return kports
 }
