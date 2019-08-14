@@ -154,7 +154,7 @@ func GetImageTypeForDeployment(deployment string) (edgeproto.ImageType, error) {
 }
 
 // GetAppDeploymentManifest gets the deployment-specific manifest.
-:func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
+func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
 	if app.DeploymentManifest != "" {
 		return GetDeploymentManifest(app.DeploymentManifest)
 	} else if app.DeploymentGenerator != "" {
