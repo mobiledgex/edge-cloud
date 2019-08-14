@@ -87,6 +87,30 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 		missingPorts := []string{}
 		for _, appPort := range ports {
 			// http is mapped to tcp
+			if (appPort.EndPort != 0) {
+				// We have a range-port notation on the dme.AppPort
+				// while our manifest exhaustively enumerates each as a kubePort
+				start := appPort.InternalPort
+				end   := appPort.EndPort
+				for i := start; i<=end; i++ {
+					// expand short hand notation to test membership in map
+					tp := dme.AppPort {
+						Proto: appPort.Proto,
+						InternalPort: int32(i),
+						EndPort: int32(0),
+					}
+					if appPort.Proto == dme.LProto_L_PROTO_HTTP {
+						appPort.Proto = dme.LProto_L_PROTO_TCP
+					}
+
+					if _, found := objPorts[tp.String()]; found {
+						continue
+					}
+					protoStr, _ := edgeproto.LProtoStr(appPort.Proto)
+					missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, tp.InternalPort))
+				}
+				continue
+			}
 			if appPort.Proto == dme.LProto_L_PROTO_HTTP {
 				appPort.Proto = dme.LProto_L_PROTO_TCP
 			}
@@ -130,7 +154,7 @@ func GetImageTypeForDeployment(deployment string) (edgeproto.ImageType, error) {
 }
 
 // GetAppDeploymentManifest gets the deployment-specific manifest.
-func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
+:func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
 	if app.DeploymentManifest != "" {
 		return GetDeploymentManifest(app.DeploymentManifest)
 	} else if app.DeploymentGenerator != "" {
