@@ -320,6 +320,7 @@ func FindCloudletReplySlicer(in *distributed_match_engine.FindCloudletReply) []s
 	s = append(s, strconv.FormatUint(uint64(in.Ports[0].PublicPort), 10))
 	s = append(s, in.Ports[0].PathPrefix)
 	s = append(s, in.Ports[0].FqdnPrefix)
+	s = append(s, strconv.FormatUint(uint64(in.Ports[0].EndPort), 10))
 	if in.CloudletLocation == nil {
 		in.CloudletLocation = &distributed_match_engine.Loc{}
 	}
@@ -348,6 +349,7 @@ func FindCloudletReplyHeaderSlicer() []string {
 	s = append(s, "Ports-PublicPort")
 	s = append(s, "Ports-PathPrefix")
 	s = append(s, "Ports-FqdnPrefix")
+	s = append(s, "Ports-EndPort")
 	s = append(s, "CloudletLocation-Latitude")
 	s = append(s, "CloudletLocation-Longitude")
 	s = append(s, "CloudletLocation-HorizontalAccuracy")
@@ -672,6 +674,7 @@ func AppinstanceSlicer(in *distributed_match_engine.Appinstance) []string {
 	s = append(s, strconv.FormatUint(uint64(in.Ports[0].PublicPort), 10))
 	s = append(s, in.Ports[0].PathPrefix)
 	s = append(s, in.Ports[0].FqdnPrefix)
+	s = append(s, strconv.FormatUint(uint64(in.Ports[0].EndPort), 10))
 	return s
 }
 
@@ -685,6 +688,7 @@ func AppinstanceHeaderSlicer() []string {
 	s = append(s, "Ports-PublicPort")
 	s = append(s, "Ports-PathPrefix")
 	s = append(s, "Ports-FqdnPrefix")
+	s = append(s, "Ports-EndPort")
 	return s
 }
 
@@ -751,6 +755,7 @@ func CloudletLocationSlicer(in *distributed_match_engine.CloudletLocation) []str
 	s = append(s, strconv.FormatUint(uint64(in.Appinstances[0].Ports[0].PublicPort), 10))
 	s = append(s, in.Appinstances[0].Ports[0].PathPrefix)
 	s = append(s, in.Appinstances[0].Ports[0].FqdnPrefix)
+	s = append(s, strconv.FormatUint(uint64(in.Appinstances[0].Ports[0].EndPort), 10))
 	return s
 }
 
@@ -776,6 +781,7 @@ func CloudletLocationHeaderSlicer() []string {
 	s = append(s, "Appinstances-Ports-PublicPort")
 	s = append(s, "Appinstances-Ports-PathPrefix")
 	s = append(s, "Appinstances-Ports-FqdnPrefix")
+	s = append(s, "Appinstances-Ports-EndPort")
 	return s
 }
 
@@ -850,6 +856,7 @@ func AppInstListReplySlicer(in *distributed_match_engine.AppInstListReply) []str
 	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].Appinstances[0].Ports[0].PublicPort), 10))
 	s = append(s, in.Cloudlets[0].Appinstances[0].Ports[0].PathPrefix)
 	s = append(s, in.Cloudlets[0].Appinstances[0].Ports[0].FqdnPrefix)
+	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].Appinstances[0].Ports[0].EndPort), 10))
 	return s
 }
 
@@ -877,6 +884,7 @@ func AppInstListReplyHeaderSlicer() []string {
 	s = append(s, "Cloudlets-Appinstances-Ports-PublicPort")
 	s = append(s, "Cloudlets-Appinstances-Ports-PathPrefix")
 	s = append(s, "Cloudlets-Appinstances-Ports-FqdnPrefix")
+	s = append(s, "Cloudlets-Appinstances-Ports-EndPort")
 	return s
 }
 

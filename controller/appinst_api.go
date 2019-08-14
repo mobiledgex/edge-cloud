@@ -470,7 +470,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefs.RootLbPorts = make(map[int32]int32)
 			}
 
-			for ii, _ := range ports {
+			for ii, port := range ports {
+				if port.EndPort != 0 && ipaccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+					return fmt.Errorf("Shared IP access with port range not allowed")
+				}
 				if setL7Port(&ports[ii], &in.Key) {
 					log.DebugLog(log.DebugLevelApi,
 						"skip L7 port", "port", ports[ii])
