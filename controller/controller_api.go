@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -100,7 +101,18 @@ func (s *ControllerApi) RunJobs(run func(arg interface{}, addr string) error, ar
 }
 
 func ControllerConnect(addr string) (*grpc.ClientConn, error) {
-	dialOption, err := tls.GetTLSClientDialOption(addr, *tlsCertFile, false)
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return nil, err
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		// This is an IP address. Within kubernetes,
+		// controllers will need to connect to each other via
+		// IP address, which will not be a SAN defined on the cert.
+		// So set the hostname(SNI) on the TLS query to a valid SAN.
+		host = "ctrl.mobiledgex.net"
+	}
+	dialOption, err := tls.GetTLSClientDialOption(host, *tlsCertFile, false)
 	if err != nil {
 		return nil, err
 	}
