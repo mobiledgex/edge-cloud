@@ -405,7 +405,8 @@
         },
         "end_port": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "description": "If end_port != 0 then AppPort is a port range from internl_port -\u003e end_port inclusive."
         }
       },
       "description": "AppPort describes an L4 or L7 public access port/path mapping. This is used to track external to internal mappings for access via a shared load balancer or reverse proxy."

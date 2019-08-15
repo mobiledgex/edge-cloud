@@ -28,7 +28,7 @@ const (
 // a balanced binary tree.
 func TestNotifyTree(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelNotify | log.DebugLevelApi)
-	log.InitTracer()
+	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 

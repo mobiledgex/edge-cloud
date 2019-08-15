@@ -100,5 +100,11 @@ type ClusterSvc struct {
 }
 type Jaeger struct {
 	Common `yaml:",inline"`
+	TLS    TLSCerts
+	cmd    *exec.Cmd
+}
+type Traefik struct {
+	Common `yaml:",inline"`
+	TLS    TLSCerts
 	cmd    *exec.Cmd
 }
