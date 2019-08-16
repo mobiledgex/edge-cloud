@@ -466,6 +466,11 @@ func StartProcesses(processName string, outputDir string) bool {
 			return false
 		}
 	}
+	for _, p := range util.Deployment.Traefiks {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
 	for _, p := range util.Deployment.Controllers {
 		opts = append(opts, process.WithDebug("etcd,api,notify"))
 		if !StartLocal(processName, outputDir, p, opts...) {

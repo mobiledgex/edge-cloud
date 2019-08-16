@@ -13,7 +13,7 @@ import (
 
 func TestNotify(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelNotify)
-	log.InitTracer()
+	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	setupMatchEngine()

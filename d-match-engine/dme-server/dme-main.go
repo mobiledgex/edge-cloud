@@ -300,7 +300,7 @@ func initOperator(operatorName string) (op.OperatorApiGw, error) {
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer()
+	log.InitTracer(*tlsCertFile)
 	defer log.FinishTracer()
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	ctx := log.ContextWithSpan(context.Background(), span)
