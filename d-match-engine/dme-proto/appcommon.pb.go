@@ -63,7 +63,8 @@ type AppPort struct {
 	PathPrefix string `protobuf:"bytes,4,opt,name=path_prefix,json=pathPrefix,proto3" json:"path_prefix,omitempty"`
 	// FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.
 	FqdnPrefix string `protobuf:"bytes,5,opt,name=fqdn_prefix,json=fqdnPrefix,proto3" json:"fqdn_prefix,omitempty"`
-	EndPort    int32  `protobuf:"varint,6,opt,name=end_port,json=endPort,proto3" json:"end_port,omitempty"`
+	// If end_port != 0 then AppPort is a port range from internl_port -> end_port inclusive.
+	EndPort int32 `protobuf:"varint,6,opt,name=end_port,json=endPort,proto3" json:"end_port,omitempty"`
 }
 
 func (m *AppPort) Reset()                    { *m = AppPort{} }

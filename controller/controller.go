@@ -147,7 +147,7 @@ func startServices() error {
 			}
 		}
 	}
-	log.InitTracer()
+	log.InitTracer(*tlsCertFile)
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	span.SetTag("level", "init")
 	defer span.Finish()

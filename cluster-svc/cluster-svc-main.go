@@ -263,7 +263,7 @@ func main() {
 	var err error
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer()
+	log.InitTracer(*tlsCertFile)
 
 	if *standalone {
 		fmt.Printf("Running in Standalone Mode with test instances\n")

@@ -15,7 +15,7 @@ func TestAppApi(t *testing.T) {
 	objstore.InitRegion(1)
 	tMode := true
 	testMode = &tMode
-	log.InitTracer()
+	log.InitTracer("")
 	defer log.FinishTracer()
 
 	dummy := dummyEtcd{}
