@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
-	"sync"
-	"time"
 
+	"github.com/mobiledgex/edge-cloud/tls"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	jaeger "github.com/uber/jaeger-client-go"
@@ -24,24 +24,58 @@ type contextKey struct{}
 
 var spanString = contextKey{}
 var noPanicOrphanedSpans bool
-var lastLog map[string]time.Time
-var lastLogMux sync.Mutex
 var SpanServiceName string
 
-// Use JAEGER_AGEN_HOST and JAEGER_AGENT_PORT to send UDP traces
-// to different host:port (otherwise uses localhost:6831).
-func InitTracer() {
-	lastLog = make(map[string]time.Time)
-
+// InitTracer configures the Jaeger OpenTracing client to log traces.
+// Set JAEGER_ENDPOINT to http://<jaegerhost>:14268/api/traces to
+// specify the Jaeger server.
+func InitTracer(tlsCertFile string) {
 	SpanServiceName = filepath.Base(os.Args[0])
+
+	jaegerEndpoint := os.Getenv("JAEGER_ENDPOINT")
+	if jaegerEndpoint == "" {
+		jaegerEndpoint = "http://localhost:14268/api/traces"
+	}
+	ur, err := url.Parse(jaegerEndpoint)
+	if err != nil {
+		panic(fmt.Sprintf("ERROR: failed to parse jaeger endpoint %s, %v", jaegerEndpoint, err))
+	}
+
+	// Set up client-side TLS
+	skipVerify := false
+	tlsConfig, err := tls.GetTLSClientConfig(ur.Host, tlsCertFile, "", skipVerify)
+	if err != nil {
+		panic(fmt.Sprintf("ERROR: failed to init TLS client config for cert %s, %v", tlsCertFile, err))
+	}
+	if tlsConfig == nil {
+		ur.Scheme = "http"
+	} else {
+		ur.Scheme = "https"
+	}
+	jaegerEndpoint = ur.String()
+
+	// Configure Jaeger client
+	// Note that we create the Reporter manually to be able to do mTLS
+	rc := &config.ReporterConfig{
+		CollectorEndpoint: jaegerEndpoint,
+	}
+	logger := zap.NewLogger(slogger.Desugar())
+	reporter := NewReporter(SpanServiceName, tlsConfig, rc, logger)
+
 	cfg := &config.Configuration{
+		ServiceName: SpanServiceName,
 		Sampler: &config.SamplerConfig{
 			Type:  jaeger.SamplerTypeProbabilistic,
 			Param: 0.001,
 		},
-		Reporter: &config.ReporterConfig{},
 	}
-	t, closer, err := cfg.New(SpanServiceName, config.Logger(zap.NewLogger(slogger.Desugar())))
+
+	// Create tracer
+	t, closer, err := cfg.NewTracer(
+		config.Logger(logger),
+		config.Reporter(reporter),
+		config.MaxTagValueLength(4096),
+	)
 	if err != nil {
 		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
 	}
