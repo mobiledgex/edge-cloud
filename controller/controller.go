@@ -139,11 +139,14 @@ func startServices() error {
 
 	if *externalApiAddr == "" {
 		*externalApiAddr = *apiAddr
-		hostport := strings.Split(*externalApiAddr, ":")
-		if len(hostport) == 2 && hostport[0] == "0.0.0.0" {
+		host, port, err := net.SplitHostPort(*externalApiAddr)
+		if err != nil {
+			return fmt.Errorf("Failed to parse externalApiAddr %s, %v", *externalApiAddr, err)
+		}
+		if host == "0.0.0.0" {
 			addr, err := resolveExternalAddr()
 			if err == nil {
-				*externalApiAddr = addr + ":" + hostport[1]
+				*externalApiAddr = addr + ":" + port
 			}
 		}
 	}
