@@ -1,6 +1,7 @@
 package process
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
@@ -14,9 +15,11 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
+	"text/template"
 	"time"
 
 	ct "github.com/daviddengcn/go-colortext"
@@ -32,6 +35,7 @@ import (
 type TLSCerts struct {
 	ServerCert string
 	ServerKey  string
+	CACert     string
 	ClientCert string
 	ApiCert    string
 	ApiKey     string
@@ -679,19 +683,174 @@ func (p *Vault) StartLocalRoles() (*VaultRoles, error) {
 	return &roles, nil
 }
 
-func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
-	args := []string{
-		"run", "--rm", "--name", "jaeger",
-		"-e", "COLLECTOR_ZIPKIN_HTTP_PORT=9411",
-		"-p", "5775:5775/udp",
-		"-p", "6831:6831/udp",
-		"-p", "6832:6832/udp",
-		"-p", "5778:5778",
-		"-p", "16686:16686",
-		"-p", "14268:14268",
-		"-p", "9411:9411",
-		"jaegertracing/all-in-one:1.13",
+func (p *Traefik) StartLocal(logfile string, opts ...StartOp) error {
+	configDir := path.Dir(logfile) + "/traefik"
+	if err := os.MkdirAll(configDir, 0777); err != nil {
+		return err
 	}
+	certsDir := ""
+	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" && p.TLS.CACert != "" {
+		certsDir = path.Dir(p.TLS.ServerCert)
+	}
+
+	args := []string{
+		"run", "--rm", "--name", p.Name,
+		"-p", "8080:8080", // web UI
+		"-p", "443:443", // generic web tls
+		"-p", "14268:14268", // jaeger collector
+		"-p", "16686:16686", // jeager UI
+		"-p", "16687:16687", // jeager UI insecure (for local debugging)
+		"-v", "/var/run/docker.sock:/var/run/docker.sock",
+		"-v", fmt.Sprintf("%s:/etc/traefik", configDir),
+	}
+	if certsDir != "" {
+		args = append(args, "-v", fmt.Sprintf("%s:/certs", certsDir))
+	}
+	args = append(args, "traefik:v2.0")
+
+	staticArgs := TraefikStaticArgs{}
+
+	// Traefik consists of a Static Config file, and zero or more
+	// dynamic config files. Dynamic config files can be hot-reloaded.
+	// The allowed contents of each type are different.
+	// Entry points are configured statically, while routers, services,
+	// etc are configured dynmically, either through a file provider
+	// or docker provider (snooping on docker events).
+
+	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" && p.TLS.CACert != "" {
+		certsDir = path.Dir(p.TLS.ServerCert)
+		args = append(args, "-v", fmt.Sprintf("%s:/certs", certsDir))
+		dynArgs := TraefikDynArgs{
+			ServerCert: path.Base(p.TLS.ServerCert),
+			ServerKey:  path.Base(p.TLS.ServerKey),
+			CACert:     path.Base(p.TLS.CACert),
+		}
+		dynFile := "dyn.yml"
+		tmpl := template.Must(template.New("dyn").Parse(TraefikDynFile))
+		f, err := os.Create(configDir + "/" + dynFile)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		out := bufio.NewWriter(f)
+		err = tmpl.Execute(out, dynArgs)
+		if err != nil {
+			return err
+		}
+		out.Flush()
+		staticArgs.DynFile = dynFile
+	}
+
+	tmpl := template.Must(template.New("st").Parse(TraefikStaticFile))
+	f, err := os.Create(configDir + "/traefik.yml")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	out := bufio.NewWriter(f)
+	err = tmpl.Execute(out, staticArgs)
+	if err != nil {
+		return err
+	}
+	out.Flush()
+
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	return err
+}
+
+func (p *Traefik) StopLocal() {
+	StopLocal(p.cmd)
+}
+
+func (p *Traefik) GetExeName() string { return "docker" }
+
+func (p *Traefik) LookupArgs() string { return p.Name }
+
+type TraefikStaticArgs struct {
+	DynFile string
+}
+
+var TraefikStaticFile = `
+providers:
+  docker: {}
+{{- if ne .DynFile ""}}
+  file:
+    watch: true
+    filename: /etc/traefik/{{.DynFile}}
+{{- end}}
+log:
+  level: debug
+api:
+  dashboard: true
+  debug: true
+entryPoints:
+  web-secure:
+    address: :443
+  jaeger-collector:
+    address: :14268
+  jaeger-ui:
+    address: :16686
+  jaeger-ui-insecure:
+    address: :16687
+`
+
+type TraefikDynArgs struct {
+	ServerCert string
+	ServerKey  string
+	CACert     string
+}
+
+var TraefikDynFile = `
+tls:
+  certificates:
+  - certFile: /certs/{{.ServerCert}}
+    keyFile: /certs/{{.ServerKey}}
+  options:
+    default:
+      clientAuth:
+        caFiles:
+        - /certs/{{.CACert}}
+        clientAuthType: RequireAndVerifyClientCert
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/{{.ServerCert}}
+        keyFile: /certs/{{.ServerKey}}
+`
+
+func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
+	// Jaeger does not support TLS, so we use traefik
+	// as a sidecar reverse proxy to implement mTLS.
+	// No Jaeger ports are exposed because traefik proxies requests
+	// to Jaeger on the internal docker network.
+	// However, in order for traefik to understand how to do so,
+	// it checks the labels set on the Jaeger docker process.
+	labels := []string{
+		"traefik.http.routers.jaeger-ui.entrypoints=jaeger-ui",
+		"traefik.http.routers.jaeger-ui.rule=PathPrefix(`/`)",
+		"traefik.http.routers.jaeger-ui.service=jaeger-ui",
+		"traefik.http.routers.jaeger-ui.tls=true",
+		"traefik.http.routers.jaeger-c.entrypoints=jaeger-collector",
+		"traefik.http.routers.jaeger-c.rule=PathPrefix(`/`)",
+		"traefik.http.routers.jaeger-c.service=jaeger-c",
+		"traefik.http.routers.jaeger-c.tls=true",
+		"traefik.http.routers.jaeger-ui-notls.entrypoints=jaeger-ui-insecure",
+		"traefik.http.routers.jaeger-ui-notls.rule=PathPrefix(`/`)",
+		"traefik.http.routers.jaeger-ui-notls.service=jaeger-ui-notls",
+		"traefik.http.services.jaeger-ui.loadbalancer.server.port=16686",
+		"traefik.http.services.jaeger-c.loadbalancer.server.port=14268",
+		"traefik.http.services.jaeger-ui-notls.loadbalancer.server.port=16686",
+	}
+	args := []string{
+		"run", "--rm", "--name", p.Name,
+	}
+	for _, l := range labels {
+		args = append(args, "-l", l)
+	}
+	args = append(args, "jaegertracing/all-in-one:1.13")
+
 	var err error
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	return err
@@ -703,7 +862,7 @@ func (p *Jaeger) StopLocal() {
 
 func (p *Jaeger) GetExeName() string { return "docker" }
 
-func (p *Jaeger) LookupArgs() string { return "jaeger" }
+func (p *Jaeger) LookupArgs() string { return p.Name }
 
 // Support funcs
 

@@ -25,7 +25,7 @@ func getGrpcClient(t *testing.T) (*grpc.ClientConn, error) {
 
 func TestController(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify | log.DebugLevelApi)
-	log.InitTracer()
+	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	flag.Parse() // set defaults

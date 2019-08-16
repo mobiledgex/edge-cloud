@@ -53,7 +53,7 @@ var platform pf.Platform
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer()
+	log.InitTracer(*tlsCertFile)
 	defer log.FinishTracer()
 
 	var span opentracing.Span

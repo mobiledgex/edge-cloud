@@ -16,7 +16,7 @@ import (
 
 func TestClusterInstApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify)
-	log.InitTracer()
+	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	objstore.InitRegion(1)
