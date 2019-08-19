@@ -27,6 +27,7 @@ build: check-vers
 	go install ./protoc-gen-notify
 	make -C ./protoc-gen-cmd
 	make -C ./log
+	make -C d-match-engine/dme-proto
 	make -C edgeproto
 	make -C testgen
 	make -C d-match-engine
