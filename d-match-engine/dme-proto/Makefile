@@ -18,4 +18,4 @@ swagger: $(PROTOS)
 	protoc ${INCLUDE} --swagger_out=logtostderr=true,allow_merge=true,merge_file_name=app-client:. *.proto
 
 $(PROTOS):
-	ln -s ${DMEDIR}/$@ $@
+	ln -sf ${DMEDIR}/$@ $@
