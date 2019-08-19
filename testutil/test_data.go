@@ -117,7 +117,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
 		ImagePath:     "http://somerepo/image/path/ai/1.2.0#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
-		AccessPorts:   "http:8080",
+		AccessPorts:   "tcp:8080",
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{
@@ -168,10 +168,9 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.0",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessPorts: "tcp:80,http:443,udp:10002,tcp:5000-5002", // new port range notation
+		AccessPorts:   "tcp:80,http:443,udp:10002,tcp:5000-5002", // new port range notation
 		DefaultFlavor: FlavorData[0].Key,
 	},
-
 }
 var OperatorData = []edgeproto.Operator{
 	edgeproto.Operator{
