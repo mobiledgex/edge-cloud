@@ -31,6 +31,7 @@ RUN go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger; exit 0
 WORKDIR /go/src/github.com/mobiledgex
 COPY edge-cloud edge-cloud
 COPY edge-cloud-infra edge-cloud-infra
+COPY edge-proto edge-proto
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 ENV CGO_ENABLED=1
 RUN make

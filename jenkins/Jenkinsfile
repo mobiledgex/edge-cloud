@@ -9,6 +9,9 @@ pipeline {
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     checkout scm
                 }
+                dir(path: 'go/src/github.com/mobiledgex/edge-proto') {
+                    git url: 'git@github.com:mobiledgex/edge-proto.git'
+                }
             }
         }
         stage('Build') {

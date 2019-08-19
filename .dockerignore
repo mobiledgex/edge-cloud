@@ -2,10 +2,11 @@
 # the docker build context is the mobiledgex root,
 # which may include other repos that aren't needed
 # (like abc-priv, secrets, grpc-gateway, golang-ssh, etc).
-# Only edge-cloud and edge-cloud-infra are needed.
+# Only edge-cloud, edge-cloud-infra, and edge-proto are needed.
 *
 !edge-cloud
 !edge-cloud-infra
+!edge-proto
 
 # etcd data comes from unit tests
 edge-cloud/controller/etcdLocal_data
