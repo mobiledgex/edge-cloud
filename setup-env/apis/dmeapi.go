@@ -29,7 +29,7 @@ type dmeApiRequest struct {
 	Dlreq           dmeproto.DynamicLocGroupRequest `yaml:"dynamiclocgrouprequest"`
 	Aireq           dmeproto.AppInstListRequest     `yaml:"appinstlistrequest"`
 	Fqreq           dmeproto.FqdnListRequest        `yaml:"fqdnlistrequest"`
-	Qosreq          dmeproto.QosPositionKpiRequest  `yaml:"qospositionkpirequest"`
+	Qosreq          dmeproto.QosPositionRequest     `yaml:"qospositionrequest"`
 	TokenServerPath string                          `yaml:"token-server-path"`
 	ErrorExpected   string                          `yaml:"error-expected"`
 }
@@ -98,7 +98,11 @@ func (c *dmeRestClient) GetLocation(ctx context.Context, in *dmeproto.GetLocatio
 	return out, nil
 }
 
-func (c *dmeRestClient) GetQosPositionKpi(ctx context.Context, in *dmeproto.QosPositionKpiRequest, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_GetQosPositionKpiClient, error) {
+func (c *dmeRestClient) GetQosPositionKpi(ctx context.Context, in *dmeproto.QosPositionRequest, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_GetQosPositionKpiClient, error) {
+	return nil, fmt.Errorf("GetQosPositionKpi not supported yet in E2E via REST")
+}
+
+func (c *dmeRestClient) GetQosPositionClassifier(ctx context.Context, in *dmeproto.QosPositionRequest, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_GetQosPositionClassifierClient, error) {
 	return nil, fmt.Errorf("GetQosPositionKpi not supported yet in E2E via REST")
 }
 
@@ -307,6 +311,14 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		apiRequest.Qosreq.SessionCookie = sessionCookie
 		log.Printf("getqospositionkpi request: %+v\n", apiRequest.Qosreq)
 		resp, err := client.GetQosPositionKpi(ctx, &apiRequest.Qosreq)
+		if err == nil {
+			dmereply, err = resp.Recv()
+		}
+		dmeerror = err
+	case "getqospositionclassifier":
+		apiRequest.Qosreq.SessionCookie = sessionCookie
+		log.Printf("getqospositionclassifier request: %+v\n", apiRequest.Qosreq)
+		resp, err := client.GetQosPositionClassifier(ctx, &apiRequest.Qosreq)
 		if err == nil {
 			dmereply, err = resp.Recv()
 		}

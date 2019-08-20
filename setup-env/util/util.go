@@ -454,7 +454,7 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		}
 		y1 = f1
 		y2 = f2
-	} else if fileType == "getqosposition" {
+	} else if fileType == "getqospositionkpi" {
 		var q1 dmeproto.QosPositionKpiReply
 		var q2 dmeproto.QosPositionKpiReply
 

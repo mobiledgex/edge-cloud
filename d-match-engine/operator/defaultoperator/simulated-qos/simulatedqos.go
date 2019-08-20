@@ -23,8 +23,8 @@ func randomInRange(baseval int) float32 {
 	return float32(result) + rand.Float32()
 }
 
-// getQosResults currently just returns some fake results
-func getQosResults(qosres *dme.QosPositionResult) {
+// getKpiResults currently just returns some fake results
+func getKpiResults(qosres *dme.QosPositionKpiResult) {
 	qosres.DluserthroughputMin = randomInRange(1)
 	qosres.DluserthroughputMax = randomInRange(100)
 	qosres.DluserthroughputAvg = randomInRange(50)
@@ -36,8 +36,15 @@ func getQosResults(qosres *dme.QosPositionResult) {
 	qosres.LatencyAvg = randomInRange(40)
 }
 
+// getClassifierResults returns 2 (average) for everything
+func getClassifierResults(qosres *dme.QosPositionClassifierResult) {
+	qosres.UluserthroughputClass = 2
+	qosres.DluserthroughputClass = 2
+	qosres.LatencyClass = 2
+}
+
 // GetSimulatedQOSPositionKPI gets fake QOS Position KPIs
-func GetSimulatedQOSPositionKPI(mreq *dme.QosPositionKpiRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {
+func GetSimulatedQOSPositionKPI(mreq *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {
 	log.DebugLog(log.DebugLevelDmereq, "getQosPositionKpi", "request", mreq)
 
 	var mreply dme.QosPositionKpiReply
@@ -46,13 +53,35 @@ func GetSimulatedQOSPositionKPI(mreq *dme.QosPositionKpiRequest, getQosSvr dme.M
 
 	for _, p := range mreq.Positions {
 		pid := p.Positionid
-		var qosres dme.QosPositionResult
+		var qosres dme.QosPositionKpiResult
 
 		qosres.Positionid = pid
 		qosres.GpsLocation = p.GpsLocation
-		getQosResults(&qosres)
+		getKpiResults(&qosres)
 		log.DebugLog(log.DebugLevelDmereq, "Position", "pid", pid, "qosres", qosres)
+		mreply.PositionResults = append(mreply.PositionResults, &qosres)
+	}
 
+	getQosSvr.Send(&mreply)
+	return nil
+
+}
+
+// GetSimulatedQOSPositionKPI gets fake QOS Position classifier results
+func GetSimulatedQOSPositionClassifier(mreq *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionClassifierServer) error {
+	log.DebugLog(log.DebugLevelDmereq, "getQosPositionClassifier", "request", mreq)
+
+	var mreply dme.QosPositionClassifierReply
+	mreply.Status = dme.ReplyStatus_RS_SUCCESS
+
+	for _, p := range mreq.Positions {
+		pid := p.Positionid
+		var qosres dme.QosPositionClassifierResult
+
+		qosres.Positionid = pid
+		qosres.GpsLocation = p.GpsLocation
+		getClassifierResults(&qosres)
+		log.DebugLog(log.DebugLevelDmereq, "Position", "pid", pid, "qosres", qosres)
 		mreply.PositionResults = append(mreply.PositionResults, &qosres)
 	}
 

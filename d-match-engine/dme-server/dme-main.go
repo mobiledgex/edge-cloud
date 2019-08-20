@@ -265,12 +265,14 @@ func (s *server) AddUserToGroup(ctx context.Context,
 	return mreq, nil
 }
 
-func (s *server) GetQosPositionKpi(req *dme.QosPositionKpiRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {
+func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {
 	log.DebugLog(log.DebugLevelDmereq, "GetQosPositionKpi", "request", req)
-
 	return operatorApiGw.GetQOSPositionKPI(req, getQosSvr)
-	//return getQosPositionKpi(req, getQosSvr)
+}
 
+func (s *server) GetQosPositionClassifier(req *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionClassifierServer) error {
+	log.DebugLog(log.DebugLevelDmereq, "GetQosPositionKpi", "request", req)
+	return operatorApiGw.GetQOSPositionClassifier(req, getQosSvr)
 }
 
 func initOperator(operatorName string) (op.OperatorApiGw, error) {
