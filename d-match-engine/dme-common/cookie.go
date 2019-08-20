@@ -27,7 +27,7 @@ func InitVault(addr, region string) {
 	secretID := os.Getenv("VAULT_SECRET_ID")
 
 	Jwks.Init(addr, region, "dme", roleID, secretID)
-	Jwks.GoUpdate()
+	Jwks.GoUpdate(nil)
 }
 
 type CookieKey struct {
