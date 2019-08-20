@@ -271,7 +271,7 @@ func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.Ma
 }
 
 func (s *server) GetQosPositionClassifier(req *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionClassifierServer) error {
-	log.DebugLog(log.DebugLevelDmereq, "GetQosPositionKpi", "request", req)
+	log.DebugLog(log.DebugLevelDmereq, "GetQosPositionClassifier", "request", req)
 	return operatorApiGw.GetQOSPositionClassifier(req, getQosSvr)
 }
 
