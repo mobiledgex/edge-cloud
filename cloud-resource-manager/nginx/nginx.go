@@ -173,7 +173,6 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 			spec.UDPSpec = append(spec.UDPSpec, &udpPort)
 			spec.L4 = true
 		}
-		spec.MetricPort = p.PublicPort + 1
 	}
 
 	if name == NginxL7Name {
@@ -234,13 +233,12 @@ func reloadNginxL7(client pc.PlatformClient) error {
 }
 
 type ProxySpec struct {
-	Name       string
-	L4, L7     bool
-	UDPSpec    []*UDPSpecDetail
-	TCPSpec    []*TCPSpecDetail
-	L7Port     int32
-	MetricPort int32
-	UseTLS     bool
+	Name    string
+	L4, L7  bool
+	UDPSpec []*UDPSpecDetail
+	TCPSpec []*TCPSpecDetail
+	L7Port  int32
+	UseTLS  bool
 }
 
 type TCPSpecDetail struct {
@@ -287,7 +285,16 @@ http {
         ssl_certificate_key    /etc/ssl/certs/server.key;
 {{- end}}
         include /etc/nginx/L7/*.conf;
-    }
+	}
+	server {
+		listen 127.0.0.1:8080;
+		server_name 127.0.0.1:8080;
+		location /nginx_metrics {
+			stub_status;
+			allow 127.0.0.1;
+			deny all;
+		}
+	}
 }
 {{- end}}
 
@@ -308,12 +315,12 @@ stream {
 }
 http {
 	server {
-		listen 80;
-		server_name localhost;
-	    location /nginx_status {
-        	stub_status;
+		listen 127.0.0.1:8080;
+		server_name 127.0.0.1:8080;
+	    location /nginx_metrics {
+			stub_status;
 			allow 127.0.0.1;
-			allow 4.78.242.50;
+			deny all;
     	}
 	}
 }
