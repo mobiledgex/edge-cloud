@@ -67,7 +67,10 @@ func (s *JWKS) Init(addr, region, name, roleID, secretID string) {
 }
 
 // GoUpdate starts a go thread to keep the JKWS up to date.
-func (s *JWKS) GoUpdate() {
+// A chan struct can be passed in which will be closed once
+// the first iteration is done and the key set was downloaded
+// from Vault.
+func (s *JWKS) GoUpdate(done chan struct{}) {
 	go func() {
 		first := true
 		for {
@@ -78,6 +81,9 @@ func (s *JWKS) GoUpdate() {
 			}
 
 			err := s.updateKeys()
+			if done != nil {
+				close(done)
+			}
 			if err != nil {
 				log.InfoLog("jwks update keys", "path", s.Path, "metapath", s.Metapath, "err", err)
 				continue
