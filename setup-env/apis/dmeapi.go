@@ -103,7 +103,7 @@ func (c *dmeRestClient) GetQosPositionKpi(ctx context.Context, in *dmeproto.QosP
 }
 
 func (c *dmeRestClient) GetQosPositionClassifier(ctx context.Context, in *dmeproto.QosPositionRequest, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_GetQosPositionClassifierClient, error) {
-	return nil, fmt.Errorf("GetQosPositionKpi not supported yet in E2E via REST")
+	return nil, fmt.Errorf("GetQosPositionClassifier not supported yet in E2E via REST")
 }
 
 func (c *dmeRestClient) AddUserToGroup(ctx context.Context, in *dmeproto.DynamicLocGroupRequest, opts ...grpc.CallOption) (*dmeproto.DynamicLocGroupReply, error) {
