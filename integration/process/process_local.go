@@ -684,7 +684,7 @@ func (p *Vault) StartLocalRoles() (*VaultRoles, error) {
 }
 
 func (p *Traefik) StartLocal(logfile string, opts ...StartOp) error {
-	configDir := path.Dir("/tmp/e2e-test-out") + "/traefik"
+	configDir := path.Dir(logfile) + "/traefik"
 	if err := os.MkdirAll(configDir, 0777); err != nil {
 		return err
 	}
