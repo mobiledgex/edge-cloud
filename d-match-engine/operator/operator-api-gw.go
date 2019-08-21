@@ -22,5 +22,5 @@ type OperatorApiGw interface {
 	// GetLocation gets the client location
 	GetLocation(mreq *dme.GetLocationRequest, mreply *dme.GetLocationReply) error
 	// GetQOSPositionKPI gets QOS KPIs for GPS positions
-	GetQOSPositionKPI(req *dme.QosPositionKpiRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error
+	GetQOSPositionKPI(req *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error
 }

@@ -29,7 +29,7 @@ type dmeApiRequest struct {
 	Dlreq           dmeproto.DynamicLocGroupRequest `yaml:"dynamiclocgrouprequest"`
 	Aireq           dmeproto.AppInstListRequest     `yaml:"appinstlistrequest"`
 	Fqreq           dmeproto.FqdnListRequest        `yaml:"fqdnlistrequest"`
-	Qosreq          dmeproto.QosPositionKpiRequest  `yaml:"qospositionkpirequest"`
+	Qosreq          dmeproto.QosPositionRequest     `yaml:"qospositionrequest"`
 	TokenServerPath string                          `yaml:"token-server-path"`
 	ErrorExpected   string                          `yaml:"error-expected"`
 }
@@ -98,7 +98,7 @@ func (c *dmeRestClient) GetLocation(ctx context.Context, in *dmeproto.GetLocatio
 	return out, nil
 }
 
-func (c *dmeRestClient) GetQosPositionKpi(ctx context.Context, in *dmeproto.QosPositionKpiRequest, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_GetQosPositionKpiClient, error) {
+func (c *dmeRestClient) GetQosPositionKpi(ctx context.Context, in *dmeproto.QosPositionRequest, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_GetQosPositionKpiClient, error) {
 	return nil, fmt.Errorf("GetQosPositionKpi not supported yet in E2E via REST")
 }
 

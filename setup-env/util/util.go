@@ -334,7 +334,7 @@ func PrintToYamlFile(fname, outputDir string, data interface{}, truncate bool) {
 //output from the script itself will all go there if specified
 func CreateOutputDir(useTimestamp bool, outputDir string, logFileName string) string {
 	if useTimestamp {
-		startTimestamp := time.Now().Format("2006-01-02T15:04:05")
+		startTimestamp := time.Now().Format("2006-01-02T150405")
 		outputDir = outputDir + "/" + startTimestamp
 	}
 	fmt.Printf("Creating output dir: %s\n", outputDir)
@@ -454,7 +454,7 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		}
 		y1 = f1
 		y2 = f2
-	} else if fileType == "getqosposition" {
+	} else if fileType == "getqospositionkpi" {
 		var q1 dmeproto.QosPositionKpiReply
 		var q2 dmeproto.QosPositionKpiReply
 
