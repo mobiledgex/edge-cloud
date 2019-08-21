@@ -29,8 +29,9 @@ It has these top-level messages:
 	DynamicLocGroupRequest
 	DynamicLocGroupReply
 	QosPosition
-	QosPositionKpiRequest
-	QosPositionResult
+	BandSelection
+	QosPositionRequest
+	QosPositionKpiResult
 	QosPositionKpiReply
 	AppPort
 	DlgMessage
@@ -80,9 +81,9 @@ var FqdnListRequestNoConfigFlagSet = pflag.NewFlagSet("FqdnListRequestNoConfig",
 var GetLocationRequestIn distributed_match_engine.GetLocationRequest
 var GetLocationRequestFlagSet = pflag.NewFlagSet("GetLocationRequest", pflag.ExitOnError)
 var GetLocationRequestNoConfigFlagSet = pflag.NewFlagSet("GetLocationRequestNoConfig", pflag.ExitOnError)
-var QosPositionKpiRequestIn distributed_match_engine.QosPositionKpiRequest
-var QosPositionKpiRequestFlagSet = pflag.NewFlagSet("QosPositionKpiRequest", pflag.ExitOnError)
-var QosPositionKpiRequestNoConfigFlagSet = pflag.NewFlagSet("QosPositionKpiRequestNoConfig", pflag.ExitOnError)
+var QosPositionRequestIn distributed_match_engine.QosPositionRequest
+var QosPositionRequestFlagSet = pflag.NewFlagSet("QosPositionRequest", pflag.ExitOnError)
+var QosPositionRequestNoConfigFlagSet = pflag.NewFlagSet("QosPositionRequestNoConfig", pflag.ExitOnError)
 var RegisterClientRequestIn distributed_match_engine.RegisterClientRequest
 var RegisterClientRequestFlagSet = pflag.NewFlagSet("RegisterClientRequest", pflag.ExitOnError)
 var RegisterClientRequestNoConfigFlagSet = pflag.NewFlagSet("RegisterClientRequestNoConfig", pflag.ExitOnError)
@@ -1193,8 +1194,61 @@ func QosPositionWriteOutputOne(obj *distributed_match_engine.QosPosition) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
-func QosPositionKpiRequestSlicer(in *distributed_match_engine.QosPositionKpiRequest) []string {
-	s := make([]string, 0, 3)
+func BandSelectionSlicer(in *distributed_match_engine.BandSelection) []string {
+	s := make([]string, 0, 4)
+	if in.Rat_2G == nil {
+		in.Rat_2G = make([]string, 1)
+	}
+	s = append(s, in.Rat_2G[0])
+	if in.Rat_3G == nil {
+		in.Rat_3G = make([]string, 1)
+	}
+	s = append(s, in.Rat_3G[0])
+	if in.Rat_4G == nil {
+		in.Rat_4G = make([]string, 1)
+	}
+	s = append(s, in.Rat_4G[0])
+	if in.Rat_5G == nil {
+		in.Rat_5G = make([]string, 1)
+	}
+	s = append(s, in.Rat_5G[0])
+	return s
+}
+
+func BandSelectionHeaderSlicer() []string {
+	s := make([]string, 0, 4)
+	s = append(s, "Rat_2G")
+	s = append(s, "Rat_3G")
+	s = append(s, "Rat_4G")
+	s = append(s, "Rat_5G")
+	return s
+}
+
+func BandSelectionWriteOutputArray(objs []*distributed_match_engine.BandSelection) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(BandSelectionHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(BandSelectionSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func BandSelectionWriteOutputOne(obj *distributed_match_engine.BandSelection) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(BandSelectionHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(BandSelectionSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func QosPositionRequestSlicer(in *distributed_match_engine.QosPositionRequest) []string {
+	s := make([]string, 0, 5)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, in.SessionCookie)
 	if in.Positions == nil {
@@ -1219,11 +1273,31 @@ func QosPositionKpiRequestSlicer(in *distributed_match_engine.QosPositionKpiRequ
 	}
 	s = append(s, strconv.FormatUint(uint64(in.Positions[0].GpsLocation.Timestamp.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Positions[0].GpsLocation.Timestamp.Nanos), 10))
+	s = append(s, strconv.FormatUint(uint64(in.LteCategory), 10))
+	if in.BandSelection == nil {
+		in.BandSelection = &distributed_match_engine.BandSelection{}
+	}
+	if in.BandSelection.Rat_2G == nil {
+		in.BandSelection.Rat_2G = make([]string, 1)
+	}
+	s = append(s, in.BandSelection.Rat_2G[0])
+	if in.BandSelection.Rat_3G == nil {
+		in.BandSelection.Rat_3G = make([]string, 1)
+	}
+	s = append(s, in.BandSelection.Rat_3G[0])
+	if in.BandSelection.Rat_4G == nil {
+		in.BandSelection.Rat_4G = make([]string, 1)
+	}
+	s = append(s, in.BandSelection.Rat_4G[0])
+	if in.BandSelection.Rat_5G == nil {
+		in.BandSelection.Rat_5G = make([]string, 1)
+	}
+	s = append(s, in.BandSelection.Rat_5G[0])
 	return s
 }
 
-func QosPositionKpiRequestHeaderSlicer() []string {
-	s := make([]string, 0, 3)
+func QosPositionRequestHeaderSlicer() []string {
+	s := make([]string, 0, 5)
 	s = append(s, "Ver")
 	s = append(s, "SessionCookie")
 	s = append(s, "Positions-Positionid")
@@ -1236,15 +1310,20 @@ func QosPositionKpiRequestHeaderSlicer() []string {
 	s = append(s, "Positions-GpsLocation-Speed")
 	s = append(s, "Positions-GpsLocation-Timestamp-Seconds")
 	s = append(s, "Positions-GpsLocation-Timestamp-Nanos")
+	s = append(s, "LteCategory")
+	s = append(s, "BandSelection-Rat_2G")
+	s = append(s, "BandSelection-Rat_3G")
+	s = append(s, "BandSelection-Rat_4G")
+	s = append(s, "BandSelection-Rat_5G")
 	return s
 }
 
-func QosPositionKpiRequestWriteOutputArray(objs []*distributed_match_engine.QosPositionKpiRequest) {
+func QosPositionRequestWriteOutputArray(objs []*distributed_match_engine.QosPositionRequest) {
 	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
 		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(QosPositionKpiRequestHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(QosPositionRequestHeaderSlicer(), "\t"))
 		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(QosPositionKpiRequestSlicer(obj), "\t"))
+			fmt.Fprintln(output, strings.Join(QosPositionRequestSlicer(obj), "\t"))
 		}
 		output.Flush()
 	} else {
@@ -1252,17 +1331,17 @@ func QosPositionKpiRequestWriteOutputArray(objs []*distributed_match_engine.QosP
 	}
 }
 
-func QosPositionKpiRequestWriteOutputOne(obj *distributed_match_engine.QosPositionKpiRequest) {
+func QosPositionRequestWriteOutputOne(obj *distributed_match_engine.QosPositionRequest) {
 	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
 		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(QosPositionKpiRequestHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(QosPositionKpiRequestSlicer(obj), "\t"))
+		fmt.Fprintln(output, strings.Join(QosPositionRequestHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(QosPositionRequestSlicer(obj), "\t"))
 		output.Flush()
 	} else {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
-func QosPositionResultSlicer(in *distributed_match_engine.QosPositionResult) []string {
+func QosPositionKpiResultSlicer(in *distributed_match_engine.QosPositionKpiResult) []string {
 	s := make([]string, 0, 11)
 	s = append(s, strconv.FormatUint(uint64(in.Positionid), 10))
 	if in.GpsLocation == nil {
@@ -1292,7 +1371,7 @@ func QosPositionResultSlicer(in *distributed_match_engine.QosPositionResult) []s
 	return s
 }
 
-func QosPositionResultHeaderSlicer() []string {
+func QosPositionKpiResultHeaderSlicer() []string {
 	s := make([]string, 0, 11)
 	s = append(s, "Positionid")
 	s = append(s, "GpsLocation-Latitude")
@@ -1316,12 +1395,12 @@ func QosPositionResultHeaderSlicer() []string {
 	return s
 }
 
-func QosPositionResultWriteOutputArray(objs []*distributed_match_engine.QosPositionResult) {
+func QosPositionKpiResultWriteOutputArray(objs []*distributed_match_engine.QosPositionKpiResult) {
 	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
 		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(QosPositionResultHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(QosPositionKpiResultHeaderSlicer(), "\t"))
 		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(QosPositionResultSlicer(obj), "\t"))
+			fmt.Fprintln(output, strings.Join(QosPositionKpiResultSlicer(obj), "\t"))
 		}
 		output.Flush()
 	} else {
@@ -1329,11 +1408,11 @@ func QosPositionResultWriteOutputArray(objs []*distributed_match_engine.QosPosit
 	}
 }
 
-func QosPositionResultWriteOutputOne(obj *distributed_match_engine.QosPositionResult) {
+func QosPositionKpiResultWriteOutputOne(obj *distributed_match_engine.QosPositionKpiResult) {
 	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
 		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(QosPositionResultHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(QosPositionResultSlicer(obj), "\t"))
+		fmt.Fprintln(output, strings.Join(QosPositionKpiResultHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(QosPositionKpiResultSlicer(obj), "\t"))
 		output.Flush()
 	} else {
 		cmdsup.WriteOutputGeneric(obj)
@@ -1344,10 +1423,10 @@ func QosPositionKpiReplySlicer(in *distributed_match_engine.QosPositionKpiReply)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.ReplyStatus_CamelName[int32(in.Status)])
 	if in.PositionResults == nil {
-		in.PositionResults = make([]*distributed_match_engine.QosPositionResult, 1)
+		in.PositionResults = make([]*distributed_match_engine.QosPositionKpiResult, 1)
 	}
 	if in.PositionResults[0] == nil {
-		in.PositionResults[0] = &distributed_match_engine.QosPositionResult{}
+		in.PositionResults[0] = &distributed_match_engine.QosPositionKpiResult{}
 	}
 	s = append(s, strconv.FormatUint(uint64(in.PositionResults[0].Positionid), 10))
 	if in.PositionResults[0].GpsLocation == nil {
@@ -1723,11 +1802,11 @@ var GetQosPositionKpiCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		return GetQosPositionKpi(&QosPositionKpiRequestIn)
+		return GetQosPositionKpi(&QosPositionRequestIn)
 	},
 }
 
-func GetQosPositionKpi(in *distributed_match_engine.QosPositionKpiRequest) error {
+func GetQosPositionKpi(in *distributed_match_engine.QosPositionRequest) error {
 	if MatchEngineApiCmd == nil {
 		return fmt.Errorf("MatchEngineApi client not initialized")
 	}
@@ -1759,7 +1838,7 @@ func GetQosPositionKpi(in *distributed_match_engine.QosPositionKpiRequest) error
 	return nil
 }
 
-func GetQosPositionKpis(data []distributed_match_engine.QosPositionKpiRequest, err *error) {
+func GetQosPositionKpis(data []distributed_match_engine.QosPositionRequest, err *error) {
 	if *err != nil {
 		return
 	}
@@ -1847,8 +1926,10 @@ func init() {
 	DynamicLocGroupRequestFlagSet.Uint64Var(&DynamicLocGroupRequestIn.LgId, "lgid", 0, "LgId")
 	DynamicLocGroupRequestFlagSet.StringVar(&DynamicLocGroupRequestInCommType, "commtype", "", "one of [DlgUndefined DlgSecure DlgOpen]")
 	DynamicLocGroupRequestFlagSet.StringVar(&DynamicLocGroupRequestIn.UserData, "userdata", "", "UserData")
-	QosPositionKpiRequestFlagSet.Uint32Var(&QosPositionKpiRequestIn.Ver, "ver", 0, "Ver")
-	QosPositionKpiRequestFlagSet.StringVar(&QosPositionKpiRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
+	QosPositionRequestFlagSet.Uint32Var(&QosPositionRequestIn.Ver, "ver", 0, "Ver")
+	QosPositionRequestFlagSet.StringVar(&QosPositionRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
+	QosPositionRequestFlagSet.Int32Var(&QosPositionRequestIn.LteCategory, "ltecategory", 0, "LteCategory")
+	QosPositionRequestIn.BandSelection = &distributed_match_engine.BandSelection{}
 	RegisterClientCmd.Flags().AddFlagSet(RegisterClientRequestFlagSet)
 	FindCloudletCmd.Flags().AddFlagSet(FindCloudletRequestFlagSet)
 	VerifyLocationCmd.Flags().AddFlagSet(VerifyLocationRequestFlagSet)
@@ -1856,7 +1937,7 @@ func init() {
 	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupRequestFlagSet)
 	GetAppInstListCmd.Flags().AddFlagSet(AppInstListRequestFlagSet)
 	GetFqdnListCmd.Flags().AddFlagSet(FqdnListRequestFlagSet)
-	GetQosPositionKpiCmd.Flags().AddFlagSet(QosPositionKpiRequestFlagSet)
+	GetQosPositionKpiCmd.Flags().AddFlagSet(QosPositionRequestFlagSet)
 }
 
 func MatchEngineApiAllowNoConfig() {
@@ -1867,7 +1948,7 @@ func MatchEngineApiAllowNoConfig() {
 	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupRequestNoConfigFlagSet)
 	GetAppInstListCmd.Flags().AddFlagSet(AppInstListRequestNoConfigFlagSet)
 	GetFqdnListCmd.Flags().AddFlagSet(FqdnListRequestNoConfigFlagSet)
-	GetQosPositionKpiCmd.Flags().AddFlagSet(QosPositionKpiRequestNoConfigFlagSet)
+	GetQosPositionKpiCmd.Flags().AddFlagSet(QosPositionRequestNoConfigFlagSet)
 }
 
 func parseDynamicLocGroupRequestEnums() error {

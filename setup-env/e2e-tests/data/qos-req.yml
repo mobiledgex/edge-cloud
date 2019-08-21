@@ -1,4 +1,4 @@
-qospositionkpirequest:
+qospositionrequest:
   positions: 
      - positionid: 1
        gpslocation:
