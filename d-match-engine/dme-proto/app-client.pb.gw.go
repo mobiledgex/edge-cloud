@@ -148,7 +148,7 @@ func request_MatchEngineApi_GetFqdnList_0(ctx context.Context, marshaler runtime
 }
 
 func request_MatchEngineApi_GetQosPositionKpi_0(ctx context.Context, marshaler runtime.Marshaler, client MatchEngineApiClient, req *http.Request, pathParams map[string]string) (MatchEngineApi_GetQosPositionKpiClient, runtime.ServerMetadata, error) {
-	var protoReq QosPositionKpiRequest
+	var protoReq QosPositionRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)

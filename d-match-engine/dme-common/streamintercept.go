@@ -46,7 +46,7 @@ func (a ServerStreamWrapper) RecvMsg(m interface{}) error {
 
 	err := a.inner.RecvMsg(m)
 	switch typ := m.(type) {
-	case *dme.QosPositionKpiRequest:
+	case *dme.QosPositionRequest:
 		cookie = typ.SessionCookie
 		// Verify session cookie
 		ckey, err := VerifyCookie(cookie)

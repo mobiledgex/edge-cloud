@@ -6,14 +6,13 @@ tests:
 
 - includefile: register.yml
 
-- name: send a position qos request and compare results
+- name: send a position qos kpi request and compare results
   apifile: "{{datadir}}/qos-req.yml"
   actions: [dmeapi-getqospositionkpi]
   compareyaml:
     yaml1: "{{outputdir}}/getqospositionkpi.yml"
-    yaml2: "{{datadir}}/qos-resp.yml"
-    filetype: getqosposition
-
+    yaml2: "{{datadir}}/qos-kpi-resp.yml"
+    filetype: getqospositionkpi
 
 - name: Delete provisioning
   apifile: "{{datadir}}/appdata.yml"
