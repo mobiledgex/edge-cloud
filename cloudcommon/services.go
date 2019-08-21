@@ -1,14 +1,21 @@
 package cloudcommon
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 )
+
+func GetCloudletLogFile(key *edgeproto.CloudletKey) string {
+	return "/tmp/" + key.Name + ".log"
+}
 
 func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) (*process.Crm, []process.StartOp, error) {
 	opts := []process.StartOp{}
@@ -70,7 +77,7 @@ func StartCRMService(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformC
 		return err
 	}
 
-	err = crmProc.StartLocal("/tmp/"+cloudlet.Key.Name+".log", opts...)
+	err = crmProc.StartLocal(GetCloudletLogFile(&cloudlet.Key), opts...)
 	if err != nil {
 		return err
 	}
@@ -99,4 +106,32 @@ func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
 
 	log.DebugLog(log.DebugLevelMexos, "stopped crmserver", "msg", <-c)
 	return nil
+}
+
+// Parses cloudlet logfile and fetches FatalLog output
+func GetCloudletLog(key *edgeproto.CloudletKey) (string, error) {
+	file, err := os.Open(GetCloudletLogFile(key))
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	out := ""
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "FATAL") {
+			fields := strings.Fields(line)
+			if len(fields) > 3 {
+				out += strings.Join(fields[3:], " ")
+			}
+			break
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+
+	return out, nil
 }

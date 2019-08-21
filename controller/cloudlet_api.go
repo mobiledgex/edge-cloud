@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -43,6 +45,8 @@ var (
 		Ram:   4096,
 		Disk:  20,
 	}
+
+	sigChld chan os.Signal
 )
 
 const (
@@ -239,6 +243,9 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return nil
 	}
 
+	sigChld = make(chan os.Signal, 1)
+	signal.Notify(sigChld, os.Interrupt, syscall.SIGCHLD)
+
 	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
@@ -364,6 +371,12 @@ func WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, timeout ti
 			updateCallback(edgeproto.UpdateTask, "unable to fetch cloudlet info")
 		}
 		updateCallback(edgeproto.UpdateTask, "cloudlet state is not ready: "+info.State.String())
+	case <-sigChld:
+		out, err := cloudcommon.GetCloudletLog(key)
+		if err != nil || out == "" {
+			out = fmt.Sprintf("Please look at %s for more details", cloudcommon.GetCloudletLogFile(key))
+		}
+		updateCallback(edgeproto.UpdateTask, fmt.Sprintf("Failure: %s", out))
 	case <-time.After(timeout):
 		err = fmt.Errorf("Timedout")
 		updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
