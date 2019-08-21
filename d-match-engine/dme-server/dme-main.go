@@ -270,11 +270,6 @@ func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.Ma
 	return operatorApiGw.GetQOSPositionKPI(req, getQosSvr)
 }
 
-func (s *server) GetQosPositionClassifier(req *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionClassifierServer) error {
-	log.DebugLog(log.DebugLevelDmereq, "GetQosPositionClassifier", "request", req)
-	return operatorApiGw.GetQOSPositionClassifier(req, getQosSvr)
-}
-
 func initOperator(operatorName string) (op.OperatorApiGw, error) {
 	if operatorName == "" || operatorName == "standalone" {
 		return &defaultoperator.OperatorApiGw{}, nil

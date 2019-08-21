@@ -14,14 +14,6 @@ tests:
     yaml2: "{{datadir}}/qos-kpi-resp.yml"
     filetype: getqospositionkpi
 
-- name: send a position classifier kpi request and compare results
-  apifile: "{{datadir}}/qos-req.yml"
-  actions: [dmeapi-getqospositionclassifier]
-  compareyaml:
-    yaml1: "{{outputdir}}/getqospositionclassifier.yml"
-    yaml2: "{{datadir}}/qos-classifier-resp.yml"
-    filetype: getqospositionclassifier
-
 - name: Delete provisioning
   apifile: "{{datadir}}/appdata.yml"
   actions: [ctrlapi-delete]

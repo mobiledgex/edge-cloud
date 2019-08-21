@@ -102,10 +102,6 @@ func (c *dmeRestClient) GetQosPositionKpi(ctx context.Context, in *dmeproto.QosP
 	return nil, fmt.Errorf("GetQosPositionKpi not supported yet in E2E via REST")
 }
 
-func (c *dmeRestClient) GetQosPositionClassifier(ctx context.Context, in *dmeproto.QosPositionRequest, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_GetQosPositionClassifierClient, error) {
-	return nil, fmt.Errorf("GetQosPositionClassifier not supported yet in E2E via REST")
-}
-
 func (c *dmeRestClient) AddUserToGroup(ctx context.Context, in *dmeproto.DynamicLocGroupRequest, opts ...grpc.CallOption) (*dmeproto.DynamicLocGroupReply, error) {
 	out := new(dmeproto.DynamicLocGroupReply)
 	err := util.CallRESTPost("https://"+c.addr+"/v1/addusertogroup",
@@ -311,14 +307,6 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		apiRequest.Qosreq.SessionCookie = sessionCookie
 		log.Printf("getqospositionkpi request: %+v\n", apiRequest.Qosreq)
 		resp, err := client.GetQosPositionKpi(ctx, &apiRequest.Qosreq)
-		if err == nil {
-			dmereply, err = resp.Recv()
-		}
-		dmeerror = err
-	case "getqospositionclassifier":
-		apiRequest.Qosreq.SessionCookie = sessionCookie
-		log.Printf("getqospositionclassifier request: %+v\n", apiRequest.Qosreq)
-		resp, err := client.GetQosPositionClassifier(ctx, &apiRequest.Qosreq)
 		if err == nil {
 			dmereply, err = resp.Recv()
 		}

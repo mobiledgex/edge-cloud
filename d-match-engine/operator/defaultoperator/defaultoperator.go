@@ -38,8 +38,3 @@ func (*OperatorApiGw) GetQOSPositionKPI(mreq *dme.QosPositionRequest, getQosSvr 
 	log.DebugLog(log.DebugLevelDmereq, "getting simulated results for operator with no QOS Pos implementation")
 	return simulatedqos.GetSimulatedQOSPositionKPI(mreq, getQosSvr)
 }
-
-func (*OperatorApiGw) GetQOSPositionClassifier(mreq *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionClassifierServer) error {
-	log.DebugLog(log.DebugLevelDmereq, "getting simulated results for operator with no QOS Pos implementation")
-	return simulatedqos.GetSimulatedQOSPositionClassifier(mreq, getQosSvr)
-}
