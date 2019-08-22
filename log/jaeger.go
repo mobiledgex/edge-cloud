@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/tls"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -68,6 +69,10 @@ func InitTracer(tlsCertFile string) {
 			Type:  jaeger.SamplerTypeProbabilistic,
 			Param: 0.001,
 		},
+	}
+	if strings.HasSuffix(os.Args[0], ".test") {
+		// unit test, don't bother reporting
+		reporter = jaeger.NewNullReporter()
 	}
 
 	// Create tracer
