@@ -71,7 +71,10 @@ func GetCRMCmd(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig)
 	return crmProc.String(opts...), &crmProc.Common.EnvVars, nil
 }
 
+var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
+
 func StartCRMService(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) error {
+	trackedProcess[cloudlet.Key] = nil
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
 	if err != nil {
 		return err
@@ -82,6 +85,7 @@ func StartCRMService(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformC
 		return err
 	}
 	log.DebugLog(log.DebugLevelMexos, "started "+crmProc.GetExeName())
+	trackedProcess[cloudlet.Key] = crmProc
 
 	return nil
 }
@@ -105,6 +109,7 @@ func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
 	go process.KillProcessesByName("crmserver", maxwait, args, c)
 
 	log.DebugLog(log.DebugLevelMexos, "stopped crmserver", "msg", <-c)
+	delete(trackedProcess, cloudlet.Key)
 	return nil
 }
 
@@ -134,4 +139,13 @@ func GetCloudletLog(key *edgeproto.CloudletKey) (string, error) {
 	}
 
 	return out, nil
+}
+
+func CrmServiceWait(key edgeproto.CloudletKey) error {
+	if _, ok := trackedProcess[key]; ok {
+		trackedProcess[key].Wait()
+		delete(trackedProcess, key)
+		return fmt.Errorf("Crm Service Stopped")
+	}
+	return nil
 }
