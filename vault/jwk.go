@@ -83,6 +83,7 @@ func (s *JWKS) GoUpdate(done chan struct{}) {
 			err := s.updateKeys()
 			if done != nil {
 				close(done)
+				done = nil
 			}
 			if err != nil {
 				log.InfoLog("jwks update keys", "path", s.Path, "metapath", s.Metapath, "err", err)
