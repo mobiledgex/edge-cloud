@@ -38,7 +38,7 @@ func (s *ExecReqHandler) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
 
 func (cd *ControllerData) ProcessExecReq(req *edgeproto.ExecRequest) error {
 	appInst := edgeproto.AppInst{}
-	found := cd.AppInstCache.Get(req.AppInstKey, &appInst)
+	found := cd.AppInstCache.Get(&req.AppInstKey, &appInst)
 	if !found {
 		return fmt.Errorf("app inst %s not found",
 			req.AppInstKey.GetKeyString())
