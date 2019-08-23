@@ -33,9 +33,6 @@ var ExecRequestNoConfigFlagSet = pflag.NewFlagSet("ExecRequestNoConfig", pflag.E
 
 func ExecRequestSlicer(in *edgeproto.ExecRequest) []string {
 	s := make([]string, 0, 6)
-	if in.AppInstKey == nil {
-		in.AppInstKey = &edgeproto.AppInstKey{}
-	}
 	s = append(s, in.AppInstKey.AppKey.DeveloperKey.Name)
 	s = append(s, in.AppInstKey.AppKey.Name)
 	s = append(s, in.AppInstKey.AppKey.Version)
@@ -197,7 +194,6 @@ var ExecApiCmds = []*cobra.Command{
 }
 
 func init() {
-	ExecRequestIn.AppInstKey = &edgeproto.AppInstKey{}
 	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.AppKey.DeveloperKey.Name, "appinstkey-appkey-developerkey-name", "", "AppInstKey.AppKey.DeveloperKey.Name")
 	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.AppKey.Name, "appinstkey-appkey-name", "", "AppInstKey.AppKey.Name")
 	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.AppKey.Version, "appinstkey-appkey-version", "", "AppInstKey.AppKey.Version")

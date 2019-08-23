@@ -9,7 +9,7 @@ import "app_inst.proto";
 
 message ExecRequest {
   // Target AppInst
-  AppInstKey app_inst_key = 1;
+  AppInstKey app_inst_key = 1 [(gogoproto.nullable) = false];
   // Command or Shell
   string command = 2;
   // ContainerID is the name of the target container, if applicable
