@@ -318,9 +318,9 @@ http {
 		listen 127.0.0.1:8080;
 		server_name 127.0.0.1:8080;
 	    location /nginx_metrics {
-			stub_status;
 			allow 127.0.0.1;
 			deny all;
+			stub_status;
     	}
 	}
 }
