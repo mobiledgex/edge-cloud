@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"strings"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/dockermgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -87,18 +88,7 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 
 	cmdArgs := []string{"run", "-d", "--restart=unless-stopped", "--name", name}
 	if opts.DockerPublishPorts {
-		for _, p := range ports {
-			if p.Proto == dme.LProto_L_PROTO_HTTP {
-				// L7 is handled by the L7 instance
-				continue
-			}
-			proto := "tcp"
-			if p.Proto == dme.LProto_L_PROTO_UDP {
-				proto = "udp"
-			}
-			pstr := fmt.Sprintf("%d:%d/%s", p.PublicPort, p.PublicPort, proto)
-			cmdArgs = append(cmdArgs, "-p", pstr)
-		}
+		cmdArgs = append(cmdArgs, " ", dockermgmt.GetDockerPortString(ports))
 		if name == NginxL7Name {
 			// Special case. When the L7 nginx instance is created,
 			// there are no configs yet for L7. Expose the L7 port manually.

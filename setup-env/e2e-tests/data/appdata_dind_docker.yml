@@ -1,0 +1,125 @@
+operators:
+- key:
+    name: mexdev
+cloudlets:
+- key:
+    operatorkey:
+      name: mexdev
+    name: localtest
+  accessuri: localtest.tmo
+  location:
+    latitude: 31
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeDind
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+clusters:
+- key:
+    name: AppCluster
+  defaultflavor:
+    name: x1.medium
+clusterinsts:
+- key:
+    clusterkey:
+      name: AppCluster
+    cloudletkey:
+      operatorkey:
+        name: mexdev
+      name: localtest
+    developer: MobiledgeX
+  deployment: docker
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
+developers:
+- key:
+    name: MobiledgeX
+  username: mex
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 123 Maple Street, Gainesville, FL 32604
+  email: acmeapp@xxxx.com
+apps:
+- key:
+    developerkey:
+      name: MobiledgeX
+    name: MobiledgeX SDK Demo
+    version: "1.0"
+  imagepath: docker.mobiledgex.net/mobiledgex/mobiledgex_public/mobiledgexsdkdemo
+  imagetype: ImageTypeDocker
+  accessports: tcp:7777
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: AppCluster
+  deployment: docker
+  androidpackagename: com.mobiledgex.sdkdemo
+- key:
+    developerkey:
+      name: MobiledgeX
+    name: Face Detection Demo
+    version: "1.0"
+  imagepath: docker.mobiledgex.net/mobiledgex/mobiledgex_public/facedetection
+  imagetype: ImageTypeDocker
+  accessports: tcp:8008
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: AppCluster
+  deployment: docker
+  androidpackagename: com.mobiledgex.facedemo
+  configs:
+  - kind: envVarsYaml
+    config: |
+      - name: SOME_ENV1
+        value: value1
+      - name: SOME_ENV2
+        valueFrom:
+          configMapKeyRef:
+            key: CloudletName
+            name: mexcluster-info
+            optional: true
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: AppCluster
+      cloudletkey:
+        operatorkey:
+          name: mexdev
+        name: localtest
+      developer: MobiledgeX
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX
+      name: Face Detection Demo
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: AppCluster
+      cloudletkey:
+        operatorkey:
+          name: mexdev
+        name: localtest
+      developer: MobiledgeX
