@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -17,29 +18,29 @@ type AppInstHandler struct {
 }
 
 func (s *AppHandler) Update(ctx context.Context, in *edgeproto.App, rev int64) {
-	addApp(in)
+	dmecommon.AddApp(in)
 }
 
 func (s *AppHandler) Delete(ctx context.Context, in *edgeproto.App, rev int64) {
-	removeApp(in)
+	dmecommon.RemoveApp(in)
 }
 
 func (s *AppHandler) Prune(ctx context.Context, keys map[edgeproto.AppKey]struct{}) {
-	pruneApps(keys)
+	dmecommon.PruneApps(keys)
 }
 
 func (s *AppHandler) Flush(ctx context.Context, notifyId int64) {}
 
 func (s *AppInstHandler) Update(ctx context.Context, in *edgeproto.AppInst, rev int64) {
-	addAppInst(in)
+	dmecommon.AddAppInst(in)
 }
 
 func (s *AppInstHandler) Delete(ctx context.Context, in *edgeproto.AppInst, rev int64) {
-	removeAppInst(in)
+	dmecommon.RemoveAppInst(in)
 }
 
 func (s *AppInstHandler) Prune(ctx context.Context, keys map[edgeproto.AppInstKey]struct{}) {
-	pruneAppInsts(keys)
+	dmecommon.PruneAppInsts(keys)
 }
 
 func (s *AppInstHandler) Flush(ctx context.Context, notifyId int64) {}

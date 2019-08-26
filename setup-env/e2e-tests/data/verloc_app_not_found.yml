@@ -1,0 +1,10 @@
+registerclientrequest:
+  devname: AcmeAppCo
+  appname: someapplication1
+  appvers: "1.0"
+verifylocationrequest:
+  carriername: tmus
+  gpslocation:
+    latitude: 32.8510877
+    longitude: -96.8014146
+error-expected: "app not found"
