@@ -1,0 +1,6 @@
+verifylocationrequest:
+  carriername: dmuus
+  gpslocation:
+    latitude: 32.8510877
+    longitude: -96.8014146
+error-expected: "app not found"

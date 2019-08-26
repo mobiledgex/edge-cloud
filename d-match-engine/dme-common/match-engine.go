@@ -1,4 +1,4 @@
-package main
+package dmecommon
 
 import (
 	"math"
@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -16,7 +15,7 @@ import (
 )
 
 // AppInst within a cloudlet
-type dmeAppInst struct {
+type DmeAppInst struct {
 	// Unique identifier key for the clusterInst
 	clusterInstKey edgeproto.ClusterInstKey
 	// URI to connect to app inst in this cloudlet
@@ -30,29 +29,29 @@ type dmeAppInst struct {
 	ports []dme.AppPort
 }
 
-type dmeAppInsts struct {
-	insts map[edgeproto.ClusterInstKey]*dmeAppInst
+type DmeAppInsts struct {
+	Insts map[edgeproto.ClusterInstKey]*DmeAppInst
 }
 
-type dmeApp struct {
+type DmeApp struct {
 	sync.RWMutex
-	appKey             edgeproto.AppKey
-	carriers           map[string]*dmeAppInsts
-	authPublicKey      string
-	androidPackageName string
-	officialFqdn       string
+	AppKey             edgeproto.AppKey
+	Carriers           map[string]*DmeAppInsts
+	AuthPublicKey      string
+	AndroidPackageName string
+	OfficialFqdn       string
 }
 
-type dmeApps struct {
+type DmeApps struct {
 	sync.RWMutex
-	apps map[edgeproto.AppKey]*dmeApp
+	Apps map[edgeproto.AppKey]*DmeApp
 }
 
-var dmeAppTbl *dmeApps
+var DmeAppTbl *DmeApps
 
-func setupMatchEngine() {
-	dmeAppTbl = new(dmeApps)
-	dmeAppTbl.apps = make(map[edgeproto.AppKey]*dmeApp)
+func SetupMatchEngine() {
+	DmeAppTbl = new(DmeApps)
+	DmeAppTbl.Apps = make(map[edgeproto.AppKey]*DmeApp)
 }
 
 // TODO: Have protoc auto-generate Equal functions.
@@ -60,17 +59,17 @@ func cloudletKeyEqual(key1 *edgeproto.CloudletKey, key2 *edgeproto.CloudletKey) 
 	return key1.GetKeyString() == key2.GetKeyString()
 }
 
-func addApp(in *edgeproto.App) {
-	tbl := dmeAppTbl
+func AddApp(in *edgeproto.App) {
+	tbl := DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
-	app, ok := tbl.apps[in.Key]
+	app, ok := tbl.Apps[in.Key]
 	if !ok {
 		// Key doesn't exists
-		app = new(dmeApp)
-		app.carriers = make(map[string]*dmeAppInsts)
-		app.appKey = in.Key
-		tbl.apps[in.Key] = app
+		app = new(DmeApp)
+		app.Carriers = make(map[string]*DmeAppInsts)
+		app.AppKey = in.Key
+		tbl.Apps[in.Key] = app
 		log.DebugLog(log.DebugLevelDmedb, "Adding app",
 			"key", in.Key,
 			"package", in.AndroidPackageName,
@@ -78,53 +77,53 @@ func addApp(in *edgeproto.App) {
 	}
 	app.Lock()
 	defer app.Unlock()
-	app.authPublicKey = in.AuthPublicKey
-	app.androidPackageName = in.AndroidPackageName
-	app.officialFqdn = in.OfficialFqdn
+	app.AuthPublicKey = in.AuthPublicKey
+	app.AndroidPackageName = in.AndroidPackageName
+	app.OfficialFqdn = in.OfficialFqdn
 }
 
-func addAppInst(appInst *edgeproto.AppInst) {
-	var cNew *dmeAppInst
+func AddAppInst(appInst *edgeproto.AppInst) {
+	var cNew *DmeAppInst
 
 	carrierName := appInst.Key.ClusterInstKey.CloudletKey.OperatorKey.Name
 
-	tbl := dmeAppTbl
+	tbl := DmeAppTbl
 	appkey := appInst.Key.AppKey
 	tbl.Lock()
 	defer tbl.Unlock()
-	app, ok := tbl.apps[appkey]
+	app, ok := tbl.Apps[appkey]
 	if !ok {
 		log.DebugLog(log.DebugLevelDmedb, "addAppInst: app not found", "key", appInst.Key)
 		return
 	}
 	app.Lock()
-	if _, foundCarrier := app.carriers[carrierName]; foundCarrier {
+	if _, foundCarrier := app.Carriers[carrierName]; foundCarrier {
 		log.DebugLog(log.DebugLevelDmedb, "carrier already exists", "carrierName", carrierName)
 	} else {
 		log.DebugLog(log.DebugLevelDmedb, "adding carrier for app", "carrierName", carrierName)
-		app.carriers[carrierName] = new(dmeAppInsts)
-		app.carriers[carrierName].insts = make(map[edgeproto.ClusterInstKey]*dmeAppInst)
+		app.Carriers[carrierName] = new(DmeAppInsts)
+		app.Carriers[carrierName].Insts = make(map[edgeproto.ClusterInstKey]*DmeAppInst)
 	}
-	if cl, foundAppInst := app.carriers[carrierName].insts[appInst.Key.ClusterInstKey]; foundAppInst {
+	if cl, foundAppInst := app.Carriers[carrierName].Insts[appInst.Key.ClusterInstKey]; foundAppInst {
 		// update existing app inst
 		cl.uri = appInst.Uri
 		cl.location = appInst.CloudletLoc
 		cl.ports = appInst.MappedPorts
 		log.DebugLog(log.DebugLevelDmedb, "Updating app inst",
-			"appName", app.appKey.Name,
-			"appVersion", app.appKey.Version,
+			"appName", app.AppKey.Name,
+			"appVersion", app.AppKey.Version,
 			"latitude", appInst.CloudletLoc.Latitude,
 			"longitude", appInst.CloudletLoc.Longitude)
 	} else {
-		cNew = new(dmeAppInst)
+		cNew = new(DmeAppInst)
 		cNew.clusterInstKey = appInst.Key.ClusterInstKey
 		cNew.uri = appInst.Uri
 		cNew.location = appInst.CloudletLoc
 		cNew.ports = appInst.MappedPorts
-		app.carriers[carrierName].insts[cNew.clusterInstKey] = cNew
+		app.Carriers[carrierName].Insts[cNew.clusterInstKey] = cNew
 		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
-			"appName", app.appKey.Name,
-			"appVersion", app.appKey.Version,
+			"appName", app.AppKey.Name,
+			"appVersion", app.AppKey.Version,
 			"cloudletKey", appInst.Key.ClusterInstKey.CloudletKey,
 			"uri", appInst.Uri,
 			"latitude", cNew.location.Latitude,
@@ -133,41 +132,41 @@ func addAppInst(appInst *edgeproto.AppInst) {
 	app.Unlock()
 }
 
-func removeApp(in *edgeproto.App) {
-	tbl := dmeAppTbl
+func RemoveApp(in *edgeproto.App) {
+	tbl := DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
-	app, ok := tbl.apps[in.Key]
+	app, ok := tbl.Apps[in.Key]
 	if ok {
 		app.Lock()
-		delete(tbl.apps, in.Key)
+		delete(tbl.Apps, in.Key)
 		app.Unlock()
 	}
 }
 
-func removeAppInst(appInst *edgeproto.AppInst) {
-	var app *dmeApp
-	var tbl *dmeApps
+func RemoveAppInst(appInst *edgeproto.AppInst) {
+	var app *DmeApp
+	var tbl *DmeApps
 
-	tbl = dmeAppTbl
+	tbl = DmeAppTbl
 	appkey := appInst.Key.AppKey
 	carrierName := appInst.Key.ClusterInstKey.CloudletKey.OperatorKey.Name
 	tbl.Lock()
 	defer tbl.Unlock()
-	app, ok := tbl.apps[appkey]
+	app, ok := tbl.Apps[appkey]
 	if ok {
 		app.Lock()
-		if c, foundCarrier := app.carriers[carrierName]; foundCarrier {
-			if cl, foundAppInst := c.insts[appInst.Key.ClusterInstKey]; foundAppInst {
-				delete(app.carriers[carrierName].insts, appInst.Key.ClusterInstKey)
+		if c, foundCarrier := app.Carriers[carrierName]; foundCarrier {
+			if cl, foundAppInst := c.Insts[appInst.Key.ClusterInstKey]; foundAppInst {
+				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
 				log.DebugLog(log.DebugLevelDmedb, "Removing app inst",
 					"appName", appkey.Name,
 					"appVersion", appkey.Version,
 					"latitude", cl.location.Latitude,
 					"longitude", cl.location.Longitude)
 			}
-			if len(app.carriers[carrierName].insts) == 0 {
-				delete(tbl.apps[appkey].carriers, carrierName)
+			if len(app.Carriers[carrierName].Insts) == 0 {
+				delete(tbl.Apps[appkey].Carriers, carrierName)
 				log.DebugLog(log.DebugLevelDmedb, "Removing carrier for app",
 					"carrier", carrierName,
 					"appName", appkey.Name,
@@ -179,42 +178,42 @@ func removeAppInst(appInst *edgeproto.AppInst) {
 }
 
 // pruneApps removes any data that was not sent by the controller.
-func pruneApps(apps map[edgeproto.AppKey]struct{}) {
-	tbl := dmeAppTbl
+func PruneApps(apps map[edgeproto.AppKey]struct{}) {
+	tbl := DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
-	for key, app := range tbl.apps {
+	for key, app := range tbl.Apps {
 		app.Lock()
 		if _, found := apps[key]; !found {
-			delete(tbl.apps, key)
+			delete(tbl.Apps, key)
 		}
 		app.Unlock()
 	}
 }
 
 // pruneApps removes any data that was not sent by the controller.
-func pruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
+func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 	var key edgeproto.AppInstKey
 
 	log.DebugLog(log.DebugLevelDmereq, "pruneAppInsts called")
 
-	tbl := dmeAppTbl
+	tbl := DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
-	for _, app := range tbl.apps {
+	for _, app := range tbl.Apps {
 		app.Lock()
-		for c, carr := range app.carriers {
-			for _, inst := range carr.insts {
-				key.AppKey = app.appKey
+		for c, carr := range app.Carriers {
+			for _, inst := range carr.Insts {
+				key.AppKey = app.AppKey
 				key.ClusterInstKey = inst.clusterInstKey
 				if _, foundAppInst := appInsts[key]; !foundAppInst {
 					log.DebugLog(log.DebugLevelDmereq, "pruning app", "key", key)
-					delete(carr.insts, key.ClusterInstKey)
+					delete(carr.Insts, key.ClusterInstKey)
 				}
 			}
-			if len(carr.insts) == 0 {
+			if len(carr.Insts) == 0 {
 				log.DebugLog(log.DebugLevelDmereq, "pruneAppInsts delete carriers")
-				delete(app.carriers, c)
+				delete(app.Carriers, c)
 			}
 		}
 		app.Unlock()
@@ -224,22 +223,22 @@ func pruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 // given the carrier, update the reply if we find a cloudlet closer
 // than the max distance.  Return the distance and whether or not response was updated
 func findClosestForCarrier(carrierName string, key edgeproto.AppKey, loc *dme.Loc, maxDistance float64, mreply *dme.FindCloudletReply) (float64, bool) {
-	tbl := dmeAppTbl
+	tbl := DmeAppTbl
 	var d float64
 	var updated = false
-	var found *dmeAppInst
+	var found *DmeAppInst
 	tbl.RLock()
 	defer tbl.RUnlock()
-	app, ok := tbl.apps[key]
+	app, ok := tbl.Apps[key]
 	if !ok {
 		return maxDistance, updated
 	}
 
 	log.DebugLog(log.DebugLevelDmereq, "Find Closest", "appkey", key, "carrierName", carrierName)
 
-	if c, carrierFound := app.carriers[carrierName]; carrierFound {
-		for _, i := range c.insts {
-			d = dmecommon.DistanceBetween(*loc, i.location)
+	if c, carrierFound := app.Carriers[carrierName]; carrierFound {
+		for _, i := range c.Insts {
+			d = DistanceBetween(*loc, i.location)
 			log.DebugLog(log.DebugLevelDmereq, "found cloudlet at",
 				"latitude", i.location.Latitude,
 				"longitude", i.location.Longitude,
@@ -277,8 +276,8 @@ func findClosestForCarrier(carrierName string, key edgeproto.AppKey, loc *dme.Lo
 // access APIs on its behalf
 func requestedAppPermitsRegisteredApp(requestedApp edgeproto.AppKey, registeredApp edgeproto.AppKey) bool {
 	// if the 2 apps match, allow it.  It means the client requested the same app as was registered
-	var tbl *dmeApps
-	tbl = dmeAppTbl
+	var tbl *DmeApps
+	tbl = DmeAppTbl
 
 	if requestedApp == registeredApp {
 		return true
@@ -289,11 +288,11 @@ func requestedAppPermitsRegisteredApp(requestedApp edgeproto.AppKey, registeredA
 	// now find the app and see if it permits platform apps
 	tbl.Lock()
 	defer tbl.Unlock()
-	_, ok := tbl.apps[requestedApp]
+	_, ok := tbl.Apps[requestedApp]
 	return ok
 }
 
-func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mreply *dme.FindCloudletReply) error {
+func FindCloudlet(ckey *CookieKey, mreq *dme.FindCloudletRequest, mreply *dme.FindCloudletReply) error {
 	var appkey edgeproto.AppKey
 	publicCloudPadding := 100.0 // public clouds have to be this much closer in km
 	appkey.DeveloperKey.Name = ckey.DevName
@@ -325,7 +324,7 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", mreq.CarrierName, "app", appkey.Name, "developer", appkey.DeveloperKey.Name, "version", appkey.Version)
 
 	// first find carrier cloudlet
-	bestDistance, updated := findClosestForCarrier(mreq.CarrierName, appkey, mreq.GpsLocation, dmecommon.InfiniteDistance, mreply)
+	bestDistance, updated := findClosestForCarrier(mreq.CarrierName, appkey, mreq.GpsLocation, InfiniteDistance, mreply)
 
 	if updated {
 		log.DebugLog(log.DebugLevelDmereq, "found carrier cloudlet", "Fqdn", mreply.Fqdn, "distance", bestDistance)
@@ -367,33 +366,33 @@ func isPublicCarrier(carriername string) bool {
 	return false
 }
 
-func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
-	var tbl *dmeApps
-	tbl = dmeAppTbl
+func GetFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
+	var tbl *DmeApps
+	tbl = DmeAppTbl
 	tbl.RLock()
 	defer tbl.RUnlock()
-	for _, a := range tbl.apps {
+	for _, a := range tbl.Apps {
 		// if the app itself is a platform app, it is not returned here
-		if cloudcommon.IsPlatformApp(a.appKey.DeveloperKey.Name, a.appKey.Name) {
+		if cloudcommon.IsPlatformApp(a.AppKey.DeveloperKey.Name, a.AppKey.Name) {
 			continue
 		}
-		if a.officialFqdn != "" {
-			fqdns := strings.Split(a.officialFqdn, ",")
+		if a.OfficialFqdn != "" {
+			fqdns := strings.Split(a.OfficialFqdn, ",")
 			aq := dme.AppFqdn{
-				AppName:            a.appKey.Name,
-				DevName:            a.appKey.DeveloperKey.Name,
-				AppVers:            a.appKey.Version,
+				AppName:            a.AppKey.Name,
+				DevName:            a.AppKey.DeveloperKey.Name,
+				AppVers:            a.AppKey.Version,
 				Fqdns:              fqdns,
-				AndroidPackageName: a.androidPackageName}
+				AndroidPackageName: a.AndroidPackageName}
 			clist.AppFqdns = append(clist.AppFqdns, &aq)
 		}
 	}
 	clist.Status = dme.FqdnListReply_FL_SUCCESS
 }
 
-func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
-	var tbl *dmeApps
-	tbl = dmeAppTbl
+func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
+	var tbl *DmeApps
+	tbl = DmeAppTbl
 	foundCloudlets := make(map[edgeproto.CloudletKey]*dme.CloudletLocation)
 
 	tbl.RLock()
@@ -401,34 +400,34 @@ func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, cli
 
 	// find all the unique cloudlets, and the app instances for each.  the data is
 	//stored as appinst->cloudlet and we need the opposite mapping.
-	for _, a := range tbl.apps {
+	for _, a := range tbl.Apps {
 
 		//if the app name or version was provided, only look for cloudlets for that app
-		if (ckey.AppName != "" && ckey.AppName != a.appKey.Name) ||
-			(ckey.AppVers != "" && ckey.AppVers != a.appKey.Version) {
+		if (ckey.AppName != "" && ckey.AppName != a.AppKey.Name) ||
+			(ckey.AppVers != "" && ckey.AppVers != a.AppKey.Version) {
 			continue
 		}
-		for cname, c := range a.carriers {
+		for cname, c := range a.Carriers {
 			//if the carrier name was provided, only look for cloudlets for that carrier, or for public cloudlets
 			if mreq.CarrierName != "" && !isPublicCarrier(cname) && mreq.CarrierName != cname {
 				log.DebugLog(log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "mreq.CarrierName", mreq.CarrierName, "i.cloudletKey.OperatorKey.Name", cname)
 				continue
 			}
-			for _, i := range c.insts {
+			for _, i := range c.Insts {
 				cloc, exists := foundCloudlets[i.clusterInstKey.CloudletKey]
 				if !exists {
 					cloc = new(dme.CloudletLocation)
 					var d float64
 
-					d = dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
+					d = DistanceBetween(*mreq.GpsLocation, i.location)
 					cloc.GpsLocation = &i.location
 					cloc.CarrierName = i.clusterInstKey.CloudletKey.OperatorKey.Name
 					cloc.CloudletName = i.clusterInstKey.CloudletKey.Name
 					cloc.Distance = d
 				}
 				ai := dme.Appinstance{}
-				ai.AppName = a.appKey.Name
-				ai.AppVers = a.appKey.Version
+				ai.AppName = a.AppKey.Name
+				ai.AppVers = a.AppKey.Version
 				ai.Fqdn = i.uri
 				ai.Ports = copyPorts(i)
 				cloc.Appinstances = append(cloc.Appinstances, &ai)
@@ -442,26 +441,26 @@ func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, cli
 	clist.Status = dme.AppInstListReply_AI_SUCCESS
 }
 
-func listAppinstTbl() {
-	var app *dmeApp
-	var inst *dmeAppInst
-	var tbl *dmeApps
+func ListAppinstTbl() {
+	var app *DmeApp
+	var inst *DmeAppInst
+	var tbl *DmeApps
 
-	tbl = dmeAppTbl
+	tbl = DmeAppTbl
 	tbl.RLock()
 	defer tbl.RUnlock()
 
-	for a := range tbl.apps {
-		app = tbl.apps[a]
+	for a := range tbl.Apps {
+		app = tbl.Apps[a]
 		log.DebugLog(log.DebugLevelDmedb, "app",
-			"Name", app.appKey.Name,
-			"Ver", app.appKey.Version)
-		for cname, c := range app.carriers {
-			for _ = range c.insts {
+			"Name", app.AppKey.Name,
+			"Ver", app.AppKey.Version)
+		for cname, c := range app.Carriers {
+			for _ = range c.Insts {
 				log.DebugLog(log.DebugLevelDmedb, "app",
-					"Name", app.appKey.Name,
+					"Name", app.AppKey.Name,
 					"carrier", cname,
-					"Ver", app.appKey.Version,
+					"Ver", app.AppKey.Version,
 					"Latitude", inst.location.Latitude,
 					"Longitude", inst.location.Longitude)
 			}
@@ -469,7 +468,7 @@ func listAppinstTbl() {
 	}
 }
 
-func copyPorts(cappInst *dmeAppInst) []*dme.AppPort {
+func copyPorts(cappInst *DmeAppInst) []*dme.AppPort {
 	if cappInst.ports == nil || len(cappInst.ports) == 0 {
 		return nil
 	}
@@ -480,4 +479,36 @@ func copyPorts(cappInst *dmeAppInst) []*dme.AppPort {
 		ports[ii] = &p
 	}
 	return ports
+}
+
+func GetAuthPublicKey(devname string, appname string, appvers string) (string, error) {
+	var key edgeproto.AppKey
+	var tbl *DmeApps
+	tbl = DmeAppTbl
+
+	key.DeveloperKey.Name = devname
+	key.Name = appname
+	key.Version = appvers
+	tbl.Lock()
+	defer tbl.Unlock()
+
+	app, ok := tbl.Apps[key]
+	if ok {
+		return app.AuthPublicKey, nil
+	}
+	return "", grpc.Errorf(codes.NotFound, "app not found")
+}
+
+func AppExists(devname string, appname string, appvers string) bool {
+	var key edgeproto.AppKey
+	key.DeveloperKey.Name = devname
+	key.Name = appname
+	key.Version = appvers
+
+	var tbl *DmeApps
+	tbl = DmeAppTbl
+	tbl.RLock()
+	defer tbl.RUnlock()
+	_, ok := tbl.Apps[key]
+	return ok
 }
