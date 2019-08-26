@@ -1,7 +1,3 @@
-registerclientrequest:
-  devname: AcmeAppCo
-  appname: someapplication1
-  appvers: "1.0"
 verifylocationrequest:
   carriername: tmus
   gpslocation:
