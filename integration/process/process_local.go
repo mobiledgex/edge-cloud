@@ -372,6 +372,10 @@ func (p *Crm) StopLocal() {
 	StopLocal(p.cmd)
 }
 
+func (p *Crm) Wait() error {
+	return p.cmd.Wait()
+}
+
 func (p *Crm) GetExeName() string { return "crmserver" }
 
 func (p *Crm) LookupArgs() string { return "--cloudletKey " + p.CloudletKey }
