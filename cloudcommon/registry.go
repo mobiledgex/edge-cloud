@@ -44,6 +44,9 @@ func getVaultRegistryPath(registry, vaultAddr string) string {
 }
 
 func GetRegistryAuth(imgUrl, vaultAddr string) (*RegistryAuth, error) {
+	if vaultAddr == "" {
+		return nil, fmt.Errorf("missing vaultAddr")
+	}
 	urlObj, err := util.ImagePathParse(imgUrl)
 	if err != nil {
 		return nil, err
@@ -79,8 +82,8 @@ func GetRegistryAuth(imgUrl, vaultAddr string) (*RegistryAuth, error) {
 	return auth, nil
 }
 
-func SendHTTPReq(method, fileUrlPath string, auth *RegistryAuth) (*http.Response, error) {
-	log.DebugLog(log.DebugLevelApi, "send http request", "method", method, "url", fileUrlPath)
+func SendHTTPReqAuth(method, regUrl string, auth *RegistryAuth) (*http.Response, error) {
+	log.DebugLog(log.DebugLevelApi, "send http request", "method", method, "url", regUrl)
 	client := &http.Client{
 		Transport: &http.Transport{
 			// Connection Timeout
@@ -98,10 +101,11 @@ func SendHTTPReq(method, fileUrlPath string, auth *RegistryAuth) (*http.Response
 		Timeout: 10 * time.Minute,
 	}
 
-	req, err := http.NewRequest(method, fileUrlPath, nil)
+	req, err := http.NewRequest(method, regUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed sending request %v", err)
 	}
+
 	if auth != nil {
 		switch auth.AuthType {
 		case BasicAuth:
@@ -112,9 +116,90 @@ func SendHTTPReq(method, fileUrlPath string, auth *RegistryAuth) (*http.Response
 			req.Header.Set("X-JFrog-Art-Api", auth.ApiKey)
 		}
 	}
+
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed fetching response %v", err)
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func getAuthToken(regUrl, authHeader string, auth *RegistryAuth) *RegistryAuth {
+	log.DebugLog(log.DebugLevelApi, "get auth token", "regUrl", regUrl, "authHeader", authHeader)
+	authURL := ""
+	if strings.HasPrefix(authHeader, "Bearer") {
+		parts := strings.Split(strings.Replace(authHeader, "Bearer ", "", 1), ",")
+
+		m := map[string]string{}
+		for _, part := range parts {
+			if splits := strings.Split(part, "="); len(splits) == 2 {
+				m[splits[0]] = strings.Replace(splits[1], "\"", "", 2)
+			}
+		}
+		if _, ok := m["realm"]; !ok {
+			return nil
+		}
+
+		authURL = m["realm"]
+		if v, ok := m["service"]; ok {
+			authURL += "?service=" + v
+		}
+		if v, ok := m["scope"]; ok {
+			authURL += "&scope=" + v
+		}
+		resp, err := SendHTTPReqAuth("GET", authURL, auth)
+		if err != nil {
+			return nil
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			authTok := RegistryAuth{}
+			json.NewDecoder(resp.Body).Decode(&authTok)
+			authTok.AuthType = TokenAuth
+			return &authTok
+		}
+	}
+	return nil
+}
+
+func SendHTTPReq(method, regUrl string, vaultAddr string) (*http.Response, error) {
+	resp, err := SendHTTPReqAuth(method, regUrl, nil)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusUnauthorized {
+		auth, err := GetRegistryAuth(regUrl, vaultAddr)
+		if err != nil {
+			log.DebugLog(log.DebugLevelMexos, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
+		}
+		resp, err = SendHTTPReqAuth(method, regUrl, auth)
+		if err != nil {
+			return nil, fmt.Errorf("Access denied to registry path")
+		}
+		if resp.StatusCode == http.StatusUnauthorized {
+			// close respone body as we will retry with authtoken
+			resp.Body.Close()
+			authHeader := resp.Header.Get("Www-Authenticate")
+			if authHeader != "" {
+				// fetch authorization token to access tags
+				authTok := getAuthToken(regUrl, authHeader, auth)
+				if authTok == nil {
+					return nil, fmt.Errorf("Access denied to registry path")
+				}
+				// retry with token
+				resp, err = SendHTTPReqAuth(method, regUrl, authTok)
+				if err != nil || resp.StatusCode != http.StatusOK {
+					if resp != nil {
+						resp.Body.Close()
+					}
+					return nil, fmt.Errorf("Access denied to registry path")
+				}
+			} else {
+				fmt.Println(">>>>", resp, err)
+				return nil, fmt.Errorf("Access denied to registry path")
+			}
+		}
 	}
 	return resp, nil
 }
@@ -147,36 +232,9 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	regUrl = fmt.Sprintf("%s://%s/%s%s/tags/list", urlObj.Scheme, urlObj.Host, version, regPath)
 	log.DebugLog(log.DebugLevelApi, "registry api url", "url", regUrl)
 
-	auth, err := GetRegistryAuth(regUrl, vaultAddr)
+	resp, err := SendHTTPReq("GET", regUrl, vaultAddr)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "warning, cannot get docker registry secret from vault - assume public registry", "err", err)
-	}
-
-	resp, err := SendHTTPReq("GET", regUrl, auth)
-	if err != nil {
-		return fmt.Errorf("Invalid registry path")
-	}
-	if resp.StatusCode == http.StatusUnauthorized {
-		// close respone body as we will retry with authtoken
-		resp.Body.Close()
-		authHeader := resp.Header.Get("Www-Authenticate")
-		if authHeader != "" {
-			// fetch authorization token to access tags
-			authTok := getAuthToken(regUrl, authHeader, auth)
-			if authTok == nil {
-				return fmt.Errorf("Access denied to registry path")
-			}
-			// retry with token
-			resp, err = SendHTTPReq("GET", regUrl, authTok)
-			if err != nil || resp.StatusCode != http.StatusOK {
-				if resp != nil {
-					resp.Body.Close()
-				}
-				return fmt.Errorf("Access denied to registry path")
-			}
-		} else {
-			return fmt.Errorf("Access denied to registry path")
-		}
+		return fmt.Errorf("Invalid registry path: %s", err.Error())
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
@@ -197,45 +255,7 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 		}
 		return fmt.Errorf("Invalid registry tag: %s does not exist", matchTag)
 	}
-	return fmt.Errorf("Invalid registry path: %s", http.StatusText(resp.StatusCode))
-}
-
-func getAuthToken(regUrl, authHeader string, auth *RegistryAuth) *RegistryAuth {
-	log.DebugLog(log.DebugLevelApi, "get auth token", "regUrl", regUrl, "authHeader", authHeader)
-	authURL := ""
-	if strings.HasPrefix(authHeader, "Bearer") {
-		parts := strings.Split(strings.Replace(authHeader, "Bearer ", "", 1), ",")
-
-		m := map[string]string{}
-		for _, part := range parts {
-			if splits := strings.Split(part, "="); len(splits) == 2 {
-				m[splits[0]] = strings.Replace(splits[1], "\"", "", 2)
-			}
-		}
-		if _, ok := m["realm"]; !ok {
-			return nil
-		}
-
-		authURL = m["realm"]
-		if v, ok := m["service"]; ok {
-			authURL += "?service=" + v
-		}
-		if v, ok := m["scope"]; ok {
-			authURL += "&scope=" + v
-		}
-		resp, err := SendHTTPReq("GET", authURL, auth)
-		if err != nil {
-			return nil
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
-			authTok := RegistryAuth{}
-			json.NewDecoder(resp.Body).Decode(&authTok)
-			authTok.AuthType = TokenAuth
-			return &authTok
-		}
-	}
-	return nil
+	return fmt.Errorf("Invalid registry path (%s)", http.StatusText(resp.StatusCode))
 }
 
 func ValidateVMRegistryPath(imgUrl, vaultAddr string) error {
@@ -244,18 +264,13 @@ func ValidateVMRegistryPath(imgUrl, vaultAddr string) error {
 		return fmt.Errorf("image path is empty")
 	}
 
-	auth, err := GetRegistryAuth(imgUrl, vaultAddr)
+	resp, err := SendHTTPReq("GET", imgUrl, vaultAddr)
 	if err != nil {
 		return err
-	}
-
-	resp, err := SendHTTPReq("GET", imgUrl, auth)
-	if err != nil {
-		return fmt.Errorf("Invalid image path")
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
 		return nil
 	}
-	return fmt.Errorf("Invalid image path: %s", http.StatusText(resp.StatusCode))
+	return fmt.Errorf("Invalid image path (%s)", http.StatusText(resp.StatusCode))
 }

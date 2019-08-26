@@ -228,7 +228,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, fmt.Errorf("deployment is not valid for image type")
 	}
 	if in.Deployment == cloudcommon.AppDeploymentTypeDocker || in.Deployment == cloudcommon.AppDeploymentTypeVM {
-		if strings.Contains(in.AccessPorts, "http") {
+		if strings.Contains(strings.ToLower(in.AccessPorts), "http") {
 			return &edgeproto.Result{}, fmt.Errorf("Deployment Type and HTTP access ports are incompatible")
 		}
 	}
