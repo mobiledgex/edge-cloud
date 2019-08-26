@@ -44,3 +44,7 @@ tests:
     yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
 
+- name: verify location again, expect not found 
+  apifile: "{{datadir}}/verloc_app_not_found.yml"
+  actions: [dmeapi-verifylocation]
+  

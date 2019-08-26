@@ -19,7 +19,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	op "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
 	operator "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
 	"github.com/mobiledgex/edge-cloud/d-match-engine/operator/defaultoperator"
@@ -39,7 +38,6 @@ var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var apiAddr = flag.String("apiAddr", "localhost:50051", "API listener address")
 var httpAddr = flag.String("httpAddr", "127.0.0.1:38001", "HTTP listener address")
-var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
@@ -59,7 +57,7 @@ var solib = flag.String("plugin", "", "plugin file")
 // TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
 // verify location API behavior and e2e test setups.
-var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for internal DME")
+var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for no external APIs")
 
 var operatorApiGw op.OperatorApiGw
 
@@ -95,7 +93,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
 	}
 
-	err := findCloudlet(ckey, req, reply)
+	err := dmecommon.FindCloudlet(ckey, req, reply)
 	log.DebugLog(log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -113,7 +111,7 @@ func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dm
 		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.DevName, ckey.AppName)
 	}
 
-	getFqdnList(req, flist)
+	dmecommon.GetFqdnList(req, flist)
 	log.DebugLog(log.DebugLevelDmereq, "GetFqdnList returns", "status", flist.Status)
 	return flist, nil
 }
@@ -131,7 +129,7 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 		return nil, grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
 	alist := new(dme.AppInstListReply)
-	getAppInstList(ckey, req, alist)
+	dmecommon.GetAppInstList(ckey, req, alist)
 	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList returns", "status", alist.Status)
 	return alist, nil
 }
@@ -169,24 +167,6 @@ func (s *server) GetLocation(ctx context.Context,
 	return reply, err
 }
 
-func getAuthPublicKey(devname string, appname string, appvers string) (string, error) {
-	var key edgeproto.AppKey
-	var tbl *dmeApps
-	tbl = dmeAppTbl
-
-	key.DeveloperKey.Name = devname
-	key.Name = appname
-	key.Version = appvers
-	tbl.Lock()
-	defer tbl.Unlock()
-
-	app, ok := tbl.apps[key]
-	if ok {
-		return app.authPublicKey, nil
-	}
-	return "", grpc.Errorf(codes.NotFound, "app not found")
-}
-
 func (s *server) RegisterClient(ctx context.Context,
 	req *dme.RegisterClientRequest) (*dme.RegisterClientReply, error) {
 
@@ -209,7 +189,7 @@ func (s *server) RegisterClient(ctx context.Context,
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
 		return mstatus, grpc.Errorf(codes.InvalidArgument, "AppVers cannot be empty")
 	}
-	authkey, err := getAuthPublicKey(req.DevName, req.AppName, req.AppVers)
+	authkey, err := dmecommon.GetAuthPublicKey(req.DevName, req.AppName, req.AppVers)
 	if err != nil {
 		log.DebugLog(log.DebugLevelDmereq, "fail to get public key", "err", err)
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
@@ -302,7 +282,7 @@ func main() {
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudletKey)
+	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &myCloudletKey)
 	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NODE_DME, &myCloudletKey, &myNode.Key)
 	var err error
 	operatorApiGw, err = initOperator(*carrier)
@@ -319,34 +299,24 @@ func main() {
 
 	dmecommon.InitVault(*vaultAddr, *region)
 
-	setupMatchEngine()
+	dmecommon.SetupMatchEngine()
 	grpcOpts := make([]grpc.ServerOption, 0)
 
-	if *standalone {
-		fmt.Printf("Running in Standalone Mode with test instances\n")
-		for _, app := range dmetest.GenerateApps() {
-			addApp(app)
-		}
-		for _, inst := range dmetest.GenerateAppInsts() {
-			addAppInst(inst)
-		}
-		listAppinstTbl()
-	} else {
-		notifyClient := initNotifyClient(*notifyAddrs, *tlsCertFile)
-		sendMetric := notify.NewMetricSend()
-		notifyClient.RegisterSend(sendMetric)
+	notifyClient := initNotifyClient(*notifyAddrs, *tlsCertFile)
+	sendMetric := notify.NewMetricSend()
+	notifyClient.RegisterSend(sendMetric)
 
-		notifyClient.Start()
-		defer notifyClient.Stop()
+	notifyClient.Start()
+	defer notifyClient.Stop()
 
-		interval := time.Duration(*statsInterval) * time.Second
-		stats := NewDmeStats(interval, *statsShards, sendMetric.Update)
-		stats.Start()
-		defer stats.Stop()
-		grpcOpts = append(grpcOpts,
-			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
-			grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))
-	}
+	interval := time.Duration(*statsInterval) * time.Second
+	stats := NewDmeStats(interval, *statsShards, sendMetric.Update)
+	stats.Start()
+	defer stats.Stop()
+	grpcOpts = append(grpcOpts,
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))
+
 	myNode.BuildMaster = version.BuildMaster
 	myNode.BuildHead = version.BuildHead
 	myNode.BuildAuthor = version.BuildAuthor
@@ -368,12 +338,6 @@ func main() {
 	s := grpc.NewServer(grpcOpts...)
 
 	dme.RegisterMatchEngineApiServer(s, &server{})
-
-	if *standalone {
-		saServer := standaloneServer{}
-		edgeproto.RegisterAppApiServer(s, &saServer)
-		edgeproto.RegisterAppInstApiServer(s, &saServer)
-	}
 
 	// Register reflection service on gRPC server.
 	reflection.Register(s)

@@ -14,16 +14,16 @@ import (
 
 func TestVerifyLoc(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq)
-	setupMatchEngine()
+	dmecommon.SetupMatchEngine()
 	operatorApiGw, _ = initOperator("standalone")
 	setupJwks()
 
 	// add all data
 	for _, app := range dmetest.GenerateApps() {
-		addApp(app)
+		dmecommon.AddApp(app)
 	}
 	for _, inst := range dmetest.GenerateAppInsts() {
-		addAppInst(inst)
+		dmecommon.AddAppInst(inst)
 	}
 	serv := server{}
 	// test verify location
