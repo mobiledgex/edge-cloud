@@ -109,7 +109,11 @@ func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
 	go process.KillProcessesByName("crmserver", maxwait, args, c)
 
 	log.DebugLog(log.DebugLevelMexos, "stopped crmserver", "msg", <-c)
-	delete(trackedProcess, cloudlet.Key)
+	if cloudlet != nil {
+		delete(trackedProcess, cloudlet.Key)
+	} else {
+		trackedProcess = make(map[edgeproto.CloudletKey]*process.Crm)
+	}
 	return nil
 }
 
