@@ -1,14 +1,21 @@
 package cloudcommon
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 )
+
+func GetCloudletLogFile(key *edgeproto.CloudletKey) string {
+	return "/tmp/" + key.Name + ".log"
+}
 
 func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) (*process.Crm, []process.StartOp, error) {
 	opts := []process.StartOp{}
@@ -64,17 +71,21 @@ func GetCRMCmd(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig)
 	return crmProc.String(opts...), &crmProc.Common.EnvVars, nil
 }
 
+var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
+
 func StartCRMService(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) error {
+	trackedProcess[cloudlet.Key] = nil
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
 	if err != nil {
 		return err
 	}
 
-	err = crmProc.StartLocal("/tmp/"+cloudlet.Key.Name+".log", opts...)
+	err = crmProc.StartLocal(GetCloudletLogFile(&cloudlet.Key), opts...)
 	if err != nil {
 		return err
 	}
 	log.DebugLog(log.DebugLevelMexos, "started "+crmProc.GetExeName())
+	trackedProcess[cloudlet.Key] = crmProc
 
 	return nil
 }
@@ -98,5 +109,43 @@ func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
 	go process.KillProcessesByName("crmserver", maxwait, args, c)
 
 	log.DebugLog(log.DebugLevelMexos, "stopped crmserver", "msg", <-c)
+	delete(trackedProcess, cloudlet.Key)
+	return nil
+}
+
+// Parses cloudlet logfile and fetches FatalLog output
+func GetCloudletLog(key *edgeproto.CloudletKey) (string, error) {
+	file, err := os.Open(GetCloudletLogFile(key))
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	out := ""
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "FATAL") {
+			fields := strings.Fields(line)
+			if len(fields) > 3 {
+				out += strings.Join(fields[3:], " ")
+			}
+			break
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+
+	return out, nil
+}
+
+func CrmServiceWait(key edgeproto.CloudletKey) error {
+	if _, ok := trackedProcess[key]; ok {
+		trackedProcess[key].Wait()
+		delete(trackedProcess, key)
+		return fmt.Errorf("Crm Service Stopped")
+	}
 	return nil
 }
