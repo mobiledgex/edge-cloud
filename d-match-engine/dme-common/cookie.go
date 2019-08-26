@@ -74,6 +74,7 @@ func VerifyCookie(cookie string) (*CookieKey, error) {
 		return nil, errors.New("invalid or expired cookie")
 	}
 	// It is possible that the App was deleted after this cookie was issued.  If so, the cookie is no longer valid
+	// Note that returning an error from from here will result in an Unauthorized error code, rather than a NotFound
 	if !AppExists(claims.Key.DevName, claims.Key.AppName, claims.Key.AppVers) {
 		return nil, fmt.Errorf("app not found -- developer: %s, app: %s, appvers: %s", claims.Key.DevName, claims.Key.AppName, claims.Key.AppVers)
 	}
