@@ -1,35 +1,31 @@
 package main
 
-import (
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"golang.org/x/net/context"
-)
-
+/*
 type standaloneServer struct{}
 
 func (s *standaloneServer) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
-	addApp(in)
+	dmecommon.AddApp(in)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *standaloneServer) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
-	removeApp(in)
+	dmecommon.RemoveApp(in)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *standaloneServer) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
-	addApp(in)
+	dmecommon.AddApp(in)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *standaloneServer) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) error {
 	app := edgeproto.App{}
 
-	tbl := dmeAppTbl
+	tbl := dmecommon.DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
 
-	for key, a := range tbl.apps {
+	for key, a := range tbl.Apps {
 		a.Lock()
 		app.Key = key
 		app.AuthPublicKey = a.authPublicKey
@@ -61,7 +57,7 @@ func (s *standaloneServer) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.App
 func (s *standaloneServer) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_ShowAppInstServer) error {
 	appInst := edgeproto.AppInst{}
 
-	tbl := dmeAppTbl
+	tbl := dmecommon.DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
 
@@ -81,3 +77,4 @@ func (s *standaloneServer) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppIn
 	}
 	return nil
 }
+*/

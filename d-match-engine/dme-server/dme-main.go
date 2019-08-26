@@ -95,7 +95,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
 	}
 
-	err := findCloudlet(ckey, req, reply)
+	err := dmecommon.FindCloudlet(ckey, req, reply)
 	log.DebugLog(log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -113,7 +113,7 @@ func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dm
 		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.DevName, ckey.AppName)
 	}
 
-	getFqdnList(req, flist)
+	dmecommon.GetFqdnList(req, flist)
 	log.DebugLog(log.DebugLevelDmereq, "GetFqdnList returns", "status", flist.Status)
 	return flist, nil
 }
@@ -131,7 +131,7 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 		return nil, grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
 	alist := new(dme.AppInstListReply)
-	getAppInstList(ckey, req, alist)
+	dmecommon.GetAppInstList(ckey, req, alist)
 	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList returns", "status", alist.Status)
 	return alist, nil
 }
@@ -169,24 +169,6 @@ func (s *server) GetLocation(ctx context.Context,
 	return reply, err
 }
 
-func getAuthPublicKey(devname string, appname string, appvers string) (string, error) {
-	var key edgeproto.AppKey
-	var tbl *dmeApps
-	tbl = dmeAppTbl
-
-	key.DeveloperKey.Name = devname
-	key.Name = appname
-	key.Version = appvers
-	tbl.Lock()
-	defer tbl.Unlock()
-
-	app, ok := tbl.apps[key]
-	if ok {
-		return app.authPublicKey, nil
-	}
-	return "", grpc.Errorf(codes.NotFound, "app not found")
-}
-
 func (s *server) RegisterClient(ctx context.Context,
 	req *dme.RegisterClientRequest) (*dme.RegisterClientReply, error) {
 
@@ -209,7 +191,7 @@ func (s *server) RegisterClient(ctx context.Context,
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
 		return mstatus, grpc.Errorf(codes.InvalidArgument, "AppVers cannot be empty")
 	}
-	authkey, err := getAuthPublicKey(req.DevName, req.AppName, req.AppVers)
+	authkey, err := dmecommon.GetAuthPublicKey(req.DevName, req.AppName, req.AppVers)
 	if err != nil {
 		log.DebugLog(log.DebugLevelDmereq, "fail to get public key", "err", err)
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
@@ -319,18 +301,18 @@ func main() {
 
 	dmecommon.InitVault(*vaultAddr, *region)
 
-	setupMatchEngine()
+	dmecommon.SetupMatchEngine()
 	grpcOpts := make([]grpc.ServerOption, 0)
 
 	if *standalone {
 		fmt.Printf("Running in Standalone Mode with test instances\n")
 		for _, app := range dmetest.GenerateApps() {
-			addApp(app)
+			dmecommon.AddApp(app)
 		}
 		for _, inst := range dmetest.GenerateAppInsts() {
-			addAppInst(inst)
+			dmecommon.AddAppInst(inst)
 		}
-		listAppinstTbl()
+		dmecommon.ListAppinstTbl()
 	} else {
 		notifyClient := initNotifyClient(*notifyAddrs, *tlsCertFile)
 		sendMetric := notify.NewMetricSend()
@@ -369,11 +351,12 @@ func main() {
 
 	dme.RegisterMatchEngineApiServer(s, &server{})
 
-	if *standalone {
-		saServer := standaloneServer{}
-		edgeproto.RegisterAppApiServer(s, &saServer)
-		edgeproto.RegisterAppInstApiServer(s, &saServer)
-	}
+	/*
+		if *standalone {
+			saServer := standaloneServer{}
+			edgeproto.RegisterAppApiServer(s, &saServer)
+			edgeproto.RegisterAppInstApiServer(s, &saServer)
+		}*/
 
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
