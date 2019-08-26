@@ -13,22 +13,22 @@ import (
 
 // Helper function that generates the ports string for docker command
 // Example : "-p 80:80/http -p 7777:7777/tcp"
-func GetDockerPortString(ports []dme.AppPort) string {
+func GetDockerPortString(ports []dme.AppPort) []string {
 	var cmdArgs []string
 
 	for _, p := range ports {
 		if p.Proto == dme.LProto_L_PROTO_HTTP {
-			// L7 is handled by the L7 instance
+			// L7 not allowed for docker
 			continue
 		}
-		proto := "tcp"
-		if p.Proto == dme.LProto_L_PROTO_UDP {
-			proto = "udp"
+		proto, err := edgeproto.LProtoStr(p.Proto)
+		if err != nil {
+			continue
 		}
 		pstr := fmt.Sprintf("%d:%d/%s", p.PublicPort, p.PublicPort, proto)
 		cmdArgs = append(cmdArgs, "-p", pstr)
 	}
-	return strings.Join(cmdArgs, " ")
+	return cmdArgs
 }
 
 func getDockerComposeFileName(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) string {
@@ -56,7 +56,7 @@ func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *e
 	name := util.DockerSanitize(app.Key.Name)
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --name=%s %s %s %s", name,
-			GetDockerPortString(appInst.MappedPorts), image, app.Command)
+			strings.Join(GetDockerPortString(appInst.MappedPorts), " "), image, app.Command)
 		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 
 		out, err := client.Output(cmd)

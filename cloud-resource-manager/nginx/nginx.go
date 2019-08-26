@@ -88,7 +88,7 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 
 	cmdArgs := []string{"run", "-d", "--restart=unless-stopped", "--name", name}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, " ", dockermgmt.GetDockerPortString(ports))
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports)...)
 		if name == NginxL7Name {
 			// Special case. When the L7 nginx instance is created,
 			// there are no configs yet for L7. Expose the L7 port manually.

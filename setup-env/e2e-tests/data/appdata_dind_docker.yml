@@ -29,11 +29,6 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
-clusters:
-- key:
-    name: AppCluster
-  defaultflavor:
-    name: x1.medium
 clusterinsts:
 - key:
     clusterkey:

@@ -20,13 +20,15 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	appDeploymentType := app.Deployment
 	// Support for local docker appInst
 	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
+		log.DebugLog(log.DebugLevelMexos, "run docker create app for dind")
 		err = dockermgmt.CreateAppInstLocal(client, app, appInst)
 		if err != nil {
 			return fmt.Errorf("CreateAppInstLocal error for docker %v", err)
 		}
 		return nil
 	}
-	//Now for helm and k8s apps
+	// Now for helm and k8s apps
+	log.DebugLog(log.DebugLevelMexos, "run kubectl create app for dind")
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
 		return err
@@ -82,7 +84,7 @@ func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 		}
 		return nil
 	}
-	//Now for helm and k8s apps
+	// Now for helm and k8s apps
 	log.DebugLog(log.DebugLevelMexos, "run kubectl delete app for dind")
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
