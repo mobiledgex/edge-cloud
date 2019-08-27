@@ -121,15 +121,18 @@ func SendHTTPReqAuth(method, regUrl string, auth *RegistryAuth) (*http.Response,
 	if err != nil {
 		return nil, err
 	}
-
 	return resp, nil
 }
 
-func getAuthToken(regUrl, authHeader string, auth *RegistryAuth) *RegistryAuth {
-	log.DebugLog(log.DebugLevelApi, "get auth token", "regUrl", regUrl, "authHeader", authHeader)
+func handleWWWAuth(method, regUrl, authHeader string, auth *RegistryAuth) (*http.Response, error) {
+	log.DebugLog(
+		log.DebugLevelApi, "handling www-auth for Docker Registry v2 Authentication",
+		"regUrl", regUrl,
+		"authHeader", authHeader,
+	)
 	authURL := ""
 	if strings.HasPrefix(authHeader, "Bearer") {
-		parts := strings.Split(strings.Replace(authHeader, "Bearer ", "", 1), ",")
+		parts := strings.Split(strings.TrimPrefix(authHeader, "Bearer "), ",")
 
 		m := map[string]string{}
 		for _, part := range parts {
@@ -138,7 +141,7 @@ func getAuthToken(regUrl, authHeader string, auth *RegistryAuth) *RegistryAuth {
 			}
 		}
 		if _, ok := m["realm"]; !ok {
-			return nil
+			return nil, fmt.Errorf("unable to find realm")
 		}
 
 		authURL = m["realm"]
@@ -150,55 +153,71 @@ func getAuthToken(regUrl, authHeader string, auth *RegistryAuth) *RegistryAuth {
 		}
 		resp, err := SendHTTPReqAuth("GET", authURL, auth)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
 			authTok := RegistryAuth{}
 			json.NewDecoder(resp.Body).Decode(&authTok)
 			authTok.AuthType = TokenAuth
-			return &authTok
+
+			log.DebugLog(log.DebugLevelApi, "retrying request with auth-token")
+			resp, err = SendHTTPReqAuth(method, regUrl, &authTok)
+			if err != nil {
+				return nil, err
+			}
+			if resp.StatusCode != http.StatusOK {
+				if resp != nil {
+					resp.Body.Close()
+				}
+				return nil, fmt.Errorf(http.StatusText(resp.StatusCode))
+			}
+			return resp, nil
 		}
 	}
-	return nil
+	return nil, fmt.Errorf("unable to find bearer token")
 }
 
+/*
+ * Sends HTTP request to regUrl
+ * Checks if any Auth Credentials is needed by doing a lookup to Vault path
+ *  - If it finds auth details, then HTTP request is sent with auth details set in HTTP Header
+ *  - else, we assume it to be a public registry which requires no authentication
+ * Following is the flow for Docker Registry v2 authentication:
+ * - Send HTTP request to regUrl with auth (if found in Vault) or else without auth
+ * - If the registry requires authorization, it will return a 401 Unauthorized response with a
+ *   WWW-Authenticate header detailing how to authenticate to this registry
+ * - We then make a request to the authorization service for a Bearer token
+ * - The authorization service returns an opaque Bearer token representing the client’s authorized access
+ * - Retry the original request with the Bearer token embedded in the request’s Authorization header
+ * - The Registry authorizes the client by validating the Bearer token and the claim set embedded within
+ *   it and begins the session as usual
+ */
 func SendHTTPReq(method, regUrl string, vaultAddr string) (*http.Response, error) {
-	resp, err := SendHTTPReqAuth(method, regUrl, nil)
+	auth, err := GetRegistryAuth(regUrl, vaultAddr)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
+	}
+	resp, err := SendHTTPReqAuth(method, regUrl, auth)
 	if err != nil {
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusUnauthorized {
-		auth, err := GetRegistryAuth(regUrl, vaultAddr)
-		if err != nil {
-			log.DebugLog(log.DebugLevelMexos, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
-		}
-		resp, err = SendHTTPReqAuth(method, regUrl, auth)
-		if err != nil {
-			return nil, fmt.Errorf("Access denied to registry path")
-		}
 		if resp.StatusCode == http.StatusUnauthorized {
-			// close respone body as we will retry with authtoken
+			// Following is valid only for Docker Registry v2 Authentication
+			// close response body as we will retry with authtoken
 			resp.Body.Close()
 			authHeader := resp.Header.Get("Www-Authenticate")
 			if authHeader != "" {
 				// fetch authorization token to access tags
-				authTok := getAuthToken(regUrl, authHeader, auth)
-				if authTok == nil {
-					return nil, fmt.Errorf("Access denied to registry path")
+				resp, err := handleWWWAuth(method, regUrl, authHeader, auth)
+				if err != nil {
+					log.DebugLog(log.DebugLevelApi, "unable to handle www-auth", "err", err)
+					return nil, fmt.Errorf("Access denied to registry path: %v", err)
 				}
-				// retry with token
-				resp, err = SendHTTPReqAuth(method, regUrl, authTok)
-				if err != nil || resp.StatusCode != http.StatusOK {
-					if resp != nil {
-						resp.Body.Close()
-					}
-					return nil, fmt.Errorf("Access denied to registry path")
-				}
-			} else {
-				fmt.Println(">>>>", resp, err)
-				return nil, fmt.Errorf("Access denied to registry path")
+				return resp, nil
 			}
+			return nil, fmt.Errorf("Access denied to registry path")
 		}
 	}
 	return resp, nil
@@ -255,7 +274,7 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 		}
 		return fmt.Errorf("Invalid registry tag: %s does not exist", matchTag)
 	}
-	return fmt.Errorf("Invalid registry path (%s)", http.StatusText(resp.StatusCode))
+	return fmt.Errorf("Invalid registry path: %s", http.StatusText(resp.StatusCode))
 }
 
 func ValidateVMRegistryPath(imgUrl, vaultAddr string) error {
@@ -272,5 +291,5 @@ func ValidateVMRegistryPath(imgUrl, vaultAddr string) error {
 	if resp.StatusCode == http.StatusOK {
 		return nil
 	}
-	return fmt.Errorf("Invalid image path (%s)", http.StatusText(resp.StatusCode))
+	return fmt.Errorf("Invalid image path: %s", http.StatusText(resp.StatusCode))
 }
