@@ -13,8 +13,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func GetCloudletLogFile(key *edgeproto.CloudletKey) string {
-	return "/tmp/" + key.Name + ".log"
+func GetCloudletLogFile(filePrefix string) string {
+	return "/tmp/" + filePrefix + ".log"
 }
 
 func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) (*process.Crm, []process.StartOp, error) {
@@ -80,7 +80,7 @@ func StartCRMService(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformC
 		return err
 	}
 
-	err = crmProc.StartLocal(GetCloudletLogFile(&cloudlet.Key), opts...)
+	err = crmProc.StartLocal(GetCloudletLogFile(cloudlet.Key.Name), opts...)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
 
 // Parses cloudlet logfile and fetches FatalLog output
 func GetCloudletLog(key *edgeproto.CloudletKey) (string, error) {
-	file, err := os.Open(GetCloudletLogFile(key))
+	file, err := os.Open(GetCloudletLogFile(key.Name))
 	if err != nil {
 		return "", err
 	}

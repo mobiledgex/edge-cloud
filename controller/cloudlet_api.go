@@ -299,7 +299,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if err != nil {
 		cb.Send(&edgeproto.Result{Message: "DELETING cloudlet due to failures"})
-		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), &updatedCloudlet, cb)
+		undoErr := s.deleteCloudletInternal(cctx, &updatedCloudlet, cb)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create cloudlet", "undoErr", undoErr)
 		}
@@ -378,7 +378,7 @@ func WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, timeout ti
 		out := ""
 		out, err = cloudcommon.GetCloudletLog(key)
 		if err != nil || out == "" {
-			out = fmt.Sprintf("Please look at %s for more details", cloudcommon.GetCloudletLogFile(key))
+			out = fmt.Sprintf("Please look at %s for more details", cloudcommon.GetCloudletLogFile(key.Name))
 		} else {
 			out = fmt.Sprintf("Failure: %s", out)
 		}
@@ -486,13 +486,27 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return nil
 	}
 
+	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
+		switch updateType {
+		case edgeproto.UpdateTask:
+			log.SpanLog(ctx, log.DebugLevelApi, "SetStatusTask", "key", in.Key, "taskName", value)
+			in.Status.SetTask(value)
+			cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
+		case edgeproto.UpdateStep:
+			log.SpanLog(ctx, log.DebugLevelApi, "SetStatusStep", "key", in.Key, "stepName", value)
+			in.Status.SetStep(value)
+			cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
+		}
+	}
+
 	if in.DeploymentLocal {
+		updateCloudletCallback(edgeproto.UpdateTask, "Stopping CRMServer")
 		err = cloudcommon.StopCRMService(in)
 	} else {
 		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 		if err == nil {
-			err = cloudletPlatform.DeleteCloudlet(in)
+			err = cloudletPlatform.DeleteCloudlet(in, updateCloudletCallback)
 		}
 	}
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
