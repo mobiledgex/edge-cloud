@@ -174,6 +174,12 @@ func handleWWWAuth(method, regUrl, authHeader string, auth *RegistryAuth) (*http
 			}
 			return resp, nil
 		}
+		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+			if auth == nil {
+				return nil, fmt.Errorf("Unable to find hostname in Vault")
+			}
+		}
+		return nil, fmt.Errorf(http.StatusText(resp.StatusCode))
 	}
 	return nil, fmt.Errorf("unable to find bearer token")
 }
@@ -203,22 +209,21 @@ func SendHTTPReq(method, regUrl string, vaultAddr string) (*http.Response, error
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusUnauthorized {
-		if resp.StatusCode == http.StatusUnauthorized {
-			// Following is valid only for Docker Registry v2 Authentication
-			// close response body as we will retry with authtoken
-			resp.Body.Close()
-			authHeader := resp.Header.Get("Www-Authenticate")
-			if authHeader != "" {
-				// fetch authorization token to access tags
-				resp, err := handleWWWAuth(method, regUrl, authHeader, auth)
-				if err != nil {
-					log.DebugLog(log.DebugLevelApi, "unable to handle www-auth", "err", err)
-					return nil, fmt.Errorf("Access denied to registry path: %v", err)
-				}
+		// Following is valid only for Docker Registry v2 Authentication
+		// close response body as we will retry with authtoken
+		resp.Body.Close()
+		authHeader := resp.Header.Get("Www-Authenticate")
+		if authHeader != "" {
+			// fetch authorization token to access tags
+			resp, err = handleWWWAuth(method, regUrl, authHeader, auth)
+			if err == nil {
 				return resp, nil
 			}
-			return nil, fmt.Errorf("Access denied to registry path")
+			log.DebugLog(log.DebugLevelApi, "unable to handle www-auth", "err", err)
+		} else {
+			err = fmt.Errorf("Access denied to registry path")
 		}
+		return nil, err
 	}
 	return resp, nil
 }
@@ -253,7 +258,7 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 
 	resp, err := SendHTTPReq("GET", regUrl, vaultAddr)
 	if err != nil {
-		return fmt.Errorf("Invalid registry path: %s", err.Error())
+		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
