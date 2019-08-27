@@ -512,13 +512,14 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete Cloudlet ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
-		cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
 		err = nil
 	}
 
 	if err != nil {
 		return err
 	}
+
+	cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		s.store.STMDel(stm, &in.Key)
