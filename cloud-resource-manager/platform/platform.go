@@ -44,5 +44,5 @@ type Platform interface {
 	// Create Cloudlet
 	CreateCloudlet(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet
-	DeleteCloudlet(cloudlet *edgeproto.Cloudlet) error
+	DeleteCloudlet(cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error
 }

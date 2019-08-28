@@ -19,8 +19,10 @@ func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, pfConfig *edgepr
 	return nil
 }
 
-func (s *Platform) DeleteCloudlet(cloudlet *edgeproto.Cloudlet) error {
+func (s *Platform) DeleteCloudlet(cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.DebugLog(log.DebugLevelMexos, "delete cloudlet for dind")
+	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")
+	updateCallback(edgeproto.UpdateTask, "Stopping CRMServer")
 	err := cloudcommon.StopCRMService(cloudlet)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "dind cloudlet delete failed", "err", err)
