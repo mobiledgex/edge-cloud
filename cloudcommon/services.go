@@ -132,9 +132,8 @@ func GetCloudletLog(key *edgeproto.CloudletKey) (string, error) {
 		if strings.Contains(line, "FATAL") {
 			fields := strings.Fields(line)
 			if len(fields) > 3 {
-				out += strings.Join(fields[3:], " ")
+				out = strings.Join(fields[3:], " ")
 			}
-			break
 		}
 	}
 
