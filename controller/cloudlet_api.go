@@ -316,7 +316,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if err != nil {
 		cb.Send(&edgeproto.Result{Message: "DELETING cloudlet due to failures"})
-		undoErr := s.deleteCloudletInternal(cctx, &updatedCloudlet, cb)
+		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), &updatedCloudlet, cb)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create cloudlet", "undoErr", undoErr)
 		}

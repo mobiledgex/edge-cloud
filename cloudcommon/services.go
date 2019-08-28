@@ -109,9 +109,19 @@ func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
 	go process.KillProcessesByName("crmserver", maxwait, args, c)
 
 	log.DebugLog(log.DebugLevelMexos, "stopped crmserver", "msg", <-c)
+
+	// After above, processes will be in Zombie state. Hence use wait to cleanup the processes
 	if cloudlet != nil {
-		delete(trackedProcess, cloudlet.Key)
+		if cmdProc, ok := trackedProcess[cloudlet.Key]; ok {
+			// Wait is in a goroutine as it is blocking call if
+			// process is not killed for some reasons
+			go cmdProc.Wait()
+			delete(trackedProcess, cloudlet.Key)
+		}
 	} else {
+		for _, v := range trackedProcess {
+			go v.Wait()
+		}
 		trackedProcess = make(map[edgeproto.CloudletKey]*process.Crm)
 	}
 	return nil
