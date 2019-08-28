@@ -13,8 +13,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func GetCloudletLogFile(key *edgeproto.CloudletKey) string {
-	return "/tmp/" + key.Name + ".log"
+func GetCloudletLogFile(filePrefix string) string {
+	return "/tmp/" + filePrefix + ".log"
 }
 
 func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) (*process.Crm, []process.StartOp, error) {
@@ -80,7 +80,7 @@ func StartCRMService(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformC
 		return err
 	}
 
-	err = crmProc.StartLocal(GetCloudletLogFile(&cloudlet.Key), opts...)
+	err = crmProc.StartLocal(GetCloudletLogFile(cloudlet.Key.Name), opts...)
 	if err != nil {
 		return err
 	}
@@ -109,9 +109,19 @@ func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
 	go process.KillProcessesByName("crmserver", maxwait, args, c)
 
 	log.DebugLog(log.DebugLevelMexos, "stopped crmserver", "msg", <-c)
+
+	// After above, processes will be in Zombie state. Hence use wait to cleanup the processes
 	if cloudlet != nil {
-		delete(trackedProcess, cloudlet.Key)
+		if cmdProc, ok := trackedProcess[cloudlet.Key]; ok {
+			// Wait is in a goroutine as it is blocking call if
+			// process is not killed for some reasons
+			go cmdProc.Wait()
+			delete(trackedProcess, cloudlet.Key)
+		}
 	} else {
+		for _, v := range trackedProcess {
+			go v.Wait()
+		}
 		trackedProcess = make(map[edgeproto.CloudletKey]*process.Crm)
 	}
 	return nil
@@ -119,7 +129,7 @@ func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
 
 // Parses cloudlet logfile and fetches FatalLog output
 func GetCloudletLog(key *edgeproto.CloudletKey) (string, error) {
-	file, err := os.Open(GetCloudletLogFile(key))
+	file, err := os.Open(GetCloudletLogFile(key.Name))
 	if err != nil {
 		return "", err
 	}
@@ -132,9 +142,8 @@ func GetCloudletLog(key *edgeproto.CloudletKey) (string, error) {
 		if strings.Contains(line, "FATAL") {
 			fields := strings.Fields(line)
 			if len(fields) > 3 {
-				out += strings.Join(fields[3:], " ")
+				out = strings.Join(fields[3:], " ")
 			}
-			break
 		}
 	}
 
