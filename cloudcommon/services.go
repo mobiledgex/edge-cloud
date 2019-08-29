@@ -75,7 +75,7 @@ func GetCRMCmd(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig)
 var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
 
 func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "start crmserver", "cloudlet", cloudlet)
+	log.SpanLog(ctx, log.DebugLevelApi, "start crmserver", "cloudlet", cloudlet.Key)
 
 	trackedProcess[cloudlet.Key] = nil
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
@@ -96,7 +96,7 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 // StopCRMService stops the crmserver on the specified cloudlet, or kills any
 // crm process if the cloudlet specified is nil
 func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "stop crmserver", "cloudlet", cloudlet)
+	log.SpanLog(ctx, log.DebugLevelApi, "stop crmserver", "cloudlet", cloudlet.Key)
 	args := ""
 	if cloudlet != nil {
 		crmProc, _, err := getCrmProc(cloudlet, nil)
