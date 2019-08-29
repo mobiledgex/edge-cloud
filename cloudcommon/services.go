@@ -96,9 +96,9 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 // StopCRMService stops the crmserver on the specified cloudlet, or kills any
 // crm process if the cloudlet specified is nil
 func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "stop crmserver", "cloudlet", cloudlet.Key)
 	args := ""
 	if cloudlet != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "stop crmserver", "cloudlet", cloudlet.Key)
 		crmProc, _, err := getCrmProc(cloudlet, nil)
 		if err != nil {
 			return err
