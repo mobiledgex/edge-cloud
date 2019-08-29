@@ -2,6 +2,7 @@ package cloudcommon
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -73,7 +74,9 @@ func GetCRMCmd(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig)
 
 var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
 
-func StartCRMService(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) error {
+func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "start crmservice", "cloudlet", cloudlet)
+
 	trackedProcess[cloudlet.Key] = nil
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
 	if err != nil {
@@ -84,7 +87,7 @@ func StartCRMService(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformC
 	if err != nil {
 		return err
 	}
-	log.DebugLog(log.DebugLevelMexos, "started "+crmProc.GetExeName())
+	log.SpanLog(ctx, log.DebugLevelApi, "started "+crmProc.GetExeName())
 	trackedProcess[cloudlet.Key] = crmProc
 
 	return nil
@@ -92,7 +95,8 @@ func StartCRMService(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformC
 
 // StopCRMService stops the crmserver on the specified cloudlet, or kills any
 // crm process if the cloudlet specified is nil
-func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
+func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "stop crmserver", "cloudlet", cloudlet)
 	args := ""
 	if cloudlet != nil {
 		crmProc, _, err := getCrmProc(cloudlet, nil)
@@ -108,7 +112,7 @@ func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
 	c := make(chan string)
 	go process.KillProcessesByName("crmserver", maxwait, args, c)
 
-	log.DebugLog(log.DebugLevelMexos, "stopped crmserver", "msg", <-c)
+	log.SpanLog(ctx, log.DebugLevelApi, "stopped crmserver", "msg", <-c)
 	if cloudlet != nil {
 		delete(trackedProcess, cloudlet.Key)
 	} else {
@@ -118,8 +122,11 @@ func StopCRMService(cloudlet *edgeproto.Cloudlet) error {
 }
 
 // Parses cloudlet logfile and fetches FatalLog output
-func GetCloudletLog(key *edgeproto.CloudletKey) (string, error) {
-	file, err := os.Open(GetCloudletLogFile(key))
+func GetCloudletLog(ctx context.Context, key *edgeproto.CloudletKey) (string, error) {
+	logFile := GetCloudletLogFile(key)
+	log.SpanLog(ctx, log.DebugLevelApi, fmt.Sprintf("parse cloudlet logfile %s to fetch crash details", logFile))
+
+	file, err := os.Open(logFile)
 	if err != nil {
 		return "", err
 	}

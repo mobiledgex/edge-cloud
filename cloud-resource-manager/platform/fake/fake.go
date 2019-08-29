@@ -1,6 +1,7 @@
 package fake
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -12,6 +13,11 @@ import (
 )
 
 type Platform struct {
+	ctx context.Context
+}
+
+func (s *Platform) SetContext(ctx context.Context) {
+	s.ctx = ctx
 }
 
 func (s *Platform) GetType() string {
@@ -19,7 +25,7 @@ func (s *Platform) GetType() string {
 }
 
 func (s *Platform) Init(platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.DebugLog(log.DebugLevelMexos, "running in fake cloudlet mode")
+	log.SpanLog(s.ctx, log.DebugLevelMexos, "running in fake cloudlet mode")
 	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
 	return nil
 }
@@ -45,23 +51,23 @@ func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst, updateC
 func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	updateCallback(edgeproto.UpdateTask, "First Create Task")
 	updateCallback(edgeproto.UpdateTask, "Second Create Task")
-	log.DebugLog(log.DebugLevelMexos, "fake ClusterInst ready")
+	log.SpanLog(s.ctx, log.DebugLevelMexos, "fake ClusterInst ready")
 	return nil
 }
 
 func (s *Platform) DeleteClusterInst(clusterInst *edgeproto.ClusterInst) error {
-	log.DebugLog(log.DebugLevelMexos, "fake ClusterInst deleted")
+	log.SpanLog(s.ctx, log.DebugLevelMexos, "fake ClusterInst deleted")
 	return nil
 }
 
 func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "Creating App Inst")
-	log.DebugLog(log.DebugLevelMexos, "fake AppInst ready")
+	log.SpanLog(s.ctx, log.DebugLevelMexos, "fake AppInst ready")
 	return nil
 }
 
 func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	log.DebugLog(log.DebugLevelMexos, "fake AppInst deleted")
+	log.SpanLog(s.ctx, log.DebugLevelMexos, "fake AppInst deleted")
 	return nil
 }
 
@@ -83,23 +89,23 @@ func (s *Platform) GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *
 }
 
 func (s *Platform) CreateCloudlet(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.DebugLog(log.DebugLevelMexos, "create fake cloudlet", "key", cloudlet.Key)
+	log.SpanLog(s.ctx, log.DebugLevelMexos, "create fake cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
-	err := cloudcommon.StartCRMService(cloudlet, pfConfig)
+	err := cloudcommon.StartCRMService(s.ctx, cloudlet, pfConfig)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "fake cloudlet create failed", "err", err)
+		log.SpanLog(s.ctx, log.DebugLevelMexos, "fake cloudlet create failed", "err", err)
 		return err
 	}
 	return nil
 }
 
 func (s *Platform) DeleteCloudlet(cloudlet *edgeproto.Cloudlet) error {
-	log.DebugLog(log.DebugLevelMexos, "delete fake Cloudlet", "key", cloudlet.Key)
-	err := cloudcommon.StopCRMService(cloudlet)
+	log.SpanLog(s.ctx, log.DebugLevelMexos, "delete fake Cloudlet", "key", cloudlet.Key)
+	err := cloudcommon.StopCRMService(s.ctx, cloudlet)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "fake cloudlet delete failed", "err", err)
+		log.SpanLog(s.ctx, log.DebugLevelMexos, "fake cloudlet delete failed", "err", err)
 		return err
 	}
 

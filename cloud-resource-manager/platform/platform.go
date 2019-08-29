@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"context"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
@@ -16,6 +17,8 @@ type PlatformConfig struct {
 
 // Platform abstracts the underlying cloudlet platform.
 type Platform interface {
+	// GetType Returns the Cloudlet's stack type, i.e. Openstack, Azure, etc.
+	SetContext(ctx context.Context)
 	// GetType Returns the Cloudlet's stack type, i.e. Openstack, Azure, etc.
 	GetType() string
 	// Init is called once during CRM startup.

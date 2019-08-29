@@ -254,7 +254,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if in.DeploymentLocal {
 		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
-		err = cloudcommon.StartCRMService(in, pfConfig)
+		err = cloudcommon.StartCRMService(ctx, in, pfConfig)
 	} else {
 		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
@@ -376,7 +376,7 @@ func WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, timeout ti
 		}
 	case <-fatal:
 		out := ""
-		out, err = cloudcommon.GetCloudletLog(key)
+		out, err = cloudcommon.GetCloudletLog(ctx, key)
 		if err != nil || out == "" {
 			out = fmt.Sprintf("Please look at %s for more details", cloudcommon.GetCloudletLogFile(key))
 		} else {
@@ -487,7 +487,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	}
 
 	if in.DeploymentLocal {
-		err = cloudcommon.StopCRMService(in)
+		err = cloudcommon.StopCRMService(ctx, in)
 	} else {
 		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())

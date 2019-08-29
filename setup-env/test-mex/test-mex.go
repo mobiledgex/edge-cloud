@@ -4,6 +4,7 @@ package main
    controller or DME api, or a setup-mex function to deploy, start, or stop a process */
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"reflect"
 	"strings"
 
+	log "github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/e2eapi"
 	setupmex "github.com/mobiledgex/edge-cloud/setup-env/setup-mex"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
@@ -106,6 +108,11 @@ func validateArgs(config *e2eapi.TestConfig, spec *setupmex.TestSpec) {
 
 func main() {
 	flag.Parse()
+	log.InitTracer("")
+	defer log.FinishTracer()
+	span := log.StartSpan(log.DebugLevelInfo, "main")
+	ctx := log.ContextWithSpan(context.Background(), span)
+
 	config := e2eapi.TestConfig{}
 	spec := setupmex.TestSpec{}
 	mods := []string{}
@@ -142,7 +149,7 @@ func main() {
 	ranTest := false
 	for _, a := range spec.Actions {
 		util.PrintStepBanner("running action: " + a)
-		errs := setupmex.RunAction(a, outputDir, &spec, mods)
+		errs := setupmex.RunAction(ctx, a, outputDir, &spec, mods)
 		errors = append(errors, errs...)
 		ranTest = true
 	}
