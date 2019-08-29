@@ -1,6 +1,7 @@
 package defaultoperator
 
 import (
+	"context"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 
 	operator "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
@@ -12,7 +13,12 @@ import (
 
 //OperatorApiGw respresent an Operator API Gateway
 type OperatorApiGw struct {
+	ctx     context.Context
 	Servers *operator.OperatorApiGwServers
+}
+
+func (o *OperatorApiGw) SetContext(ctx context.Context) {
+	o.ctx = ctx
 }
 
 func (OperatorApiGw) GetOperatorName() string {

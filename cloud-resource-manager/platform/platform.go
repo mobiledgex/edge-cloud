@@ -17,7 +17,7 @@ type PlatformConfig struct {
 
 // Platform abstracts the underlying cloudlet platform.
 type Platform interface {
-	// GetType Returns the Cloudlet's stack type, i.e. Openstack, Azure, etc.
+	// Set context for Span logging
 	SetContext(ctx context.Context)
 	// GetType Returns the Cloudlet's stack type, i.e. Openstack, Azure, etc.
 	GetType() string

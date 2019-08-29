@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"context"
+
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
 
@@ -13,6 +15,8 @@ type OperatorApiGwServers struct {
 
 // OperatorApiGw implements operator specific APIs.
 type OperatorApiGw interface {
+	// Set context for Span logging
+	SetContext(ctx context.Context)
 	// GetOperator Returns the operator name
 	GetOperatorName() string
 	// Init is called once during startup.
