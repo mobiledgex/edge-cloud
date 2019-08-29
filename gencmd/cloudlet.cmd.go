@@ -50,7 +50,6 @@ var CloudletMetricsFlagSet = pflag.NewFlagSet("CloudletMetrics", pflag.ExitOnErr
 var CloudletMetricsNoConfigFlagSet = pflag.NewFlagSet("CloudletMetricsNoConfig", pflag.ExitOnError)
 var PlatformTypeStrings = []string{
 	"PlatformTypeFake",
-	"PlatformTypeFakeinfra",
 	"PlatformTypeDind",
 	"PlatformTypeOpenstack",
 	"PlatformTypeAzure",
@@ -1215,7 +1214,7 @@ func init() {
 	CloudletFlagSet.StringVar(&CloudletInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	CloudletFlagSet.StringVar(&CloudletInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCrmErrors IgnoreCrm IgnoreTransientState IgnoreCrmAndTransientState]")
 	CloudletFlagSet.BoolVar(&CloudletIn.DeploymentLocal, "deploymentlocal", false, "DeploymentLocal")
-	CloudletFlagSet.StringVar(&CloudletInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeFakeinfra PlatformTypeDind PlatformTypeOpenstack PlatformTypeAzure PlatformTypeGcp PlatformTypeMexdind]")
+	CloudletFlagSet.StringVar(&CloudletInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeDind PlatformTypeOpenstack PlatformTypeAzure PlatformTypeGcp PlatformTypeMexdind]")
 	CloudletFlagSet.StringVar(&CloudletIn.NotifySrvAddr, "notifysrvaddr", "", "NotifySrvAddr")
 	CloudletIn.Flavor = &edgeproto.FlavorKey{}
 	CloudletFlagSet.StringVar(&CloudletIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
@@ -1465,18 +1464,16 @@ func parseCloudletEnums() error {
 		switch CloudletInPlatformType {
 		case "PlatformTypeFake":
 			CloudletIn.PlatformType = edgeproto.PlatformType(0)
-		case "PlatformTypeFakeinfra":
-			CloudletIn.PlatformType = edgeproto.PlatformType(1)
 		case "PlatformTypeDind":
-			CloudletIn.PlatformType = edgeproto.PlatformType(2)
+			CloudletIn.PlatformType = edgeproto.PlatformType(1)
 		case "PlatformTypeOpenstack":
-			CloudletIn.PlatformType = edgeproto.PlatformType(3)
+			CloudletIn.PlatformType = edgeproto.PlatformType(2)
 		case "PlatformTypeAzure":
-			CloudletIn.PlatformType = edgeproto.PlatformType(4)
+			CloudletIn.PlatformType = edgeproto.PlatformType(3)
 		case "PlatformTypeGcp":
-			CloudletIn.PlatformType = edgeproto.PlatformType(5)
+			CloudletIn.PlatformType = edgeproto.PlatformType(4)
 		case "PlatformTypeMexdind":
-			CloudletIn.PlatformType = edgeproto.PlatformType(6)
+			CloudletIn.PlatformType = edgeproto.PlatformType(5)
 		default:
 			return errors.New("Invalid value for CloudletInPlatformType")
 		}
