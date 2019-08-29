@@ -14,30 +14,30 @@ import (
 
 func TestAddRemove(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq)
-	setupMatchEngine()
+	dmecommon.SetupMatchEngine()
 	setupJwks()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
 
-	tbl := dmeAppTbl
+	tbl := dmecommon.DmeAppTbl
 
 	// add all data, check that number of instances matches
 	for _, inst := range apps {
-		addApp(inst)
+		dmecommon.AddApp(inst)
 	}
 	for _, inst := range appInsts {
-		addAppInst(inst)
+		dmecommon.AddAppInst(inst)
 	}
 	checkAllData(t, appInsts)
 
 	// re-add data, counts should remain unchanged
 	for _, inst := range appInsts {
-		addAppInst(inst)
+		dmecommon.AddAppInst(inst)
 	}
 	checkAllData(t, appInsts)
 
 	// delete one data, check new counts
-	removeAppInst(appInsts[0])
+	dmecommon.RemoveAppInst(appInsts[0])
 	remaining := appInsts[1:]
 	checkAllData(t, remaining)
 	serv := server{}
@@ -67,9 +67,9 @@ func TestAddRemove(t *testing.T) {
 
 	// delete all data
 	for _, app := range apps {
-		removeApp(app)
+		dmecommon.RemoveApp(app)
 	}
-	assert.Equal(t, 0, len(tbl.apps))
+	assert.Equal(t, 0, len(tbl.Apps))
 }
 
 type dummyDmeApp struct {
@@ -77,7 +77,7 @@ type dummyDmeApp struct {
 }
 
 func checkAllData(t *testing.T, appInsts []*edgeproto.AppInst) {
-	tbl := dmeAppTbl
+	tbl := dmecommon.DmeAppTbl
 
 	appsCheck := make(map[edgeproto.AppKey]*dummyDmeApp)
 	for _, inst := range appInsts {
@@ -89,16 +89,16 @@ func checkAllData(t *testing.T, appInsts []*edgeproto.AppInst) {
 		}
 		app.insts[inst.Key.ClusterInstKey.CloudletKey] = struct{}{}
 	}
-	assert.Equal(t, len(appsCheck), len(tbl.apps), "Number of apps")
+	assert.Equal(t, len(appsCheck), len(tbl.Apps), "Number of apps")
 	totalInstances := 0
-	for k, app := range tbl.apps {
+	for k, app := range tbl.Apps {
 		_, found := appsCheck[k]
 		assert.True(t, found, "found app %s", k)
 		if !found {
 			continue
 		}
-		for cname := range app.carriers {
-			totalInstances += len(app.carriers[cname].insts)
+		for cname := range app.Carriers {
+			totalInstances += len(app.Carriers[cname].Insts)
 		}
 	}
 	assert.Equal(t, totalInstances, len(appInsts), "Number of appInstances")

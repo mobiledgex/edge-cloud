@@ -37,6 +37,10 @@ case "$1" in
 	shift
 	mc $*
 	;;
+    mcctl)
+	shift
+	mcctl $*
+	;;
     tok-srv-sim)
 	shift
 	tok-srv-sim $*

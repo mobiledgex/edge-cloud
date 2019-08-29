@@ -51,6 +51,33 @@ const (
 	CloudletWaitTime      = 1 * time.Second
 )
 
+type updateCloudletCallback struct {
+	in       *edgeproto.Cloudlet
+	callback edgeproto.CloudletApi_CreateCloudletServer
+}
+
+func (s *updateCloudletCallback) cb(updateType edgeproto.CacheUpdateType, value string) {
+	ctx := s.callback.Context()
+	switch updateType {
+	case edgeproto.UpdateTask:
+		log.SpanLog(ctx, log.DebugLevelApi, "SetStatusTask", "key", s.in.Key, "taskName", value)
+		s.in.Status.SetTask(value)
+		s.callback.Send(&edgeproto.Result{Message: s.in.Status.ToString()})
+	case edgeproto.UpdateStep:
+		log.SpanLog(ctx, log.DebugLevelApi, "SetStatusStep", "key", s.in.Key, "stepName", value)
+		s.in.Status.SetStep(value)
+		s.callback.Send(&edgeproto.Result{Message: s.in.Status.ToString()})
+	}
+}
+
+func ignoreCRMState(cctx *CallContext) bool {
+	if cctx.Override == edgeproto.CRMOverride_IGNORE_CRM ||
+		cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
+		return true
+	}
+	return false
+}
+
 func InitCloudletApi(sync *Sync) {
 	cloudletApi.sync = sync
 	cloudletApi.store = edgeproto.NewCloudletStore(sync.store)
@@ -130,6 +157,7 @@ func getRolesAndSecrets(appRoles *VaultRoles) error {
 	//Once we integrate DME add dme roles to the same structure
 	return nil
 }
+
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_UNKNOWN {
 		in.IpSupport = edgeproto.IpSupport_IP_SUPPORT_DYNAMIC
@@ -200,7 +228,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
-			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
+			if !cctx.Undo {
 				if in.State == edgeproto.TrackedState_CREATE_ERROR {
 					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
 					cb.Send(&edgeproto.Result{Message: "Use DeleteCloudlet to remove and try again"})
@@ -222,7 +250,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return err
 		}
 
-		if ignoreCRM(cctx) {
+		if ignoreCRMState(cctx) {
 			in.State = edgeproto.TrackedState_READY
 		} else {
 			in.State = edgeproto.TrackedState_CREATING
@@ -235,31 +263,20 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return err
 	}
 
-	if ignoreCRM(cctx) {
+	if ignoreCRMState(cctx) {
 		return nil
 	}
 
-	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
-		switch updateType {
-		case edgeproto.UpdateTask:
-			log.SpanLog(ctx, log.DebugLevelApi, "SetStatusTask", "key", in.Key, "taskName", value)
-			in.Status.SetTask(value)
-			cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
-		case edgeproto.UpdateStep:
-			log.SpanLog(ctx, log.DebugLevelApi, "SetStatusStep", "key", in.Key, "stepName", value)
-			in.Status.SetStep(value)
-			cb.Send(&edgeproto.Result{Message: in.Status.ToString()})
-		}
-	}
+	updatecb := updateCloudletCallback{in, cb}
 
 	if in.DeploymentLocal {
-		updateCloudletCallback(edgeproto.UpdateTask, "Starting CRMServer")
+		updatecb.cb(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(ctx, in, pfConfig)
 	} else {
 		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 		if err == nil {
-			err = cloudletPlatform.CreateCloudlet(in, pfConfig, &pfFlavor, updateCloudletCallback)
+			err = cloudletPlatform.CreateCloudlet(in, pfConfig, &pfFlavor, updatecb.cb)
 		}
 	}
 
@@ -272,7 +289,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if err == nil {
 		// Wait for CRM to connect to controller
-		err = WaitForCloudlet(ctx, &in.Key, PlatformInitTimeout, updateCloudletCallback)
+		err = WaitForCloudlet(ctx, &in.Key, PlatformInitTimeout, updatecb.cb)
 	} else {
 		cb.Send(&edgeproto.Result{Message: err.Error()})
 	}
@@ -378,7 +395,7 @@ func WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, timeout ti
 		out := ""
 		out, err = cloudcommon.GetCloudletLog(ctx, key)
 		if err != nil || out == "" {
-			out = fmt.Sprintf("Please look at %s for more details", cloudcommon.GetCloudletLogFile(key))
+			out = fmt.Sprintf("Please look at %s for more details", cloudcommon.GetCloudletLogFile(key.Name))
 		} else {
 			out = fmt.Sprintf("Failure: %s", out)
 		}
@@ -407,18 +424,13 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return errors.New("Cannot specify less than one dynamic IP unless Ip Support Static is specified")
 		}
 	}
-	if _, found := fmap[edgeproto.CloudletFieldLocationLatitude]; found {
-		if in.Location.Latitude == 0 {
-			return errors.New("Invalid latitude value of 0")
-		}
-	}
-	if _, found := fmap[edgeproto.CloudletFieldLocationLongitude]; found {
-		if in.Location.Longitude == 0 {
-			return errors.New("Invalid longitude value of 0")
-		}
+
+	err := in.Validate(fmap)
+	if err != nil {
+		return err
 	}
 
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, cur) {
 			return objstore.ErrKVStoreKeyNotFound
@@ -457,22 +469,25 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cctx.SetOverride(&in.CrmOverride)
 
-	// Set state to prevent other apps from being created on ClusterInst
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if ignoreCRM(cctx) {
+		if ignoreCRMState(cctx) {
 			s.store.STMDel(stm, &in.Key)
 			cloudletRefsApi.store.STMDel(stm, &in.Key)
 			return nil
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR {
+		if !cctx.Undo {
 			if in.State == edgeproto.TrackedState_DELETE_ERROR {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
 				cb.Send(&edgeproto.Result{Message: "Use CreateCloudlet to rebuild, and try again"})
 			}
-			return errors.New("Cloudlet busy, cannot delete")
+			if in.State == edgeproto.TrackedState_DELETE_REQUESTED ||
+				in.State == edgeproto.TrackedState_DELETING ||
+				in.State == edgeproto.TrackedState_DELETE_PREPARE {
+				return errors.New("Cloudlet busy, already under deletion")
+			}
 		}
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
 		s.store.STMPut(stm, in)
@@ -482,29 +497,33 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return err
 	}
 
-	if ignoreCRM(cctx) {
+	if ignoreCRMState(cctx) {
 		return nil
 	}
 
+	updatecb := updateCloudletCallback{in, cb}
+
 	if in.DeploymentLocal {
+		updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
 		err = cloudcommon.StopCRMService(ctx, in)
 	} else {
 		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 		if err == nil {
-			err = cloudletPlatform.DeleteCloudlet(in)
+			err = cloudletPlatform.DeleteCloudlet(in, updatecb.cb)
 		}
 	}
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete Cloudlet ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
-		cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
 		err = nil
 	}
 
 	if err != nil {
 		return err
 	}
+
+	cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		s.store.STMDel(stm, &in.Key)
