@@ -42,16 +42,12 @@ func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 		log.SpanLog(ctx, log.DebugLevelInfo, "plugin does not have GetPlatform symbol", "plugin", solib)
 		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol not found", plat)
 	}
-	getPlatFunc, ok := sym.(func(plat string) (pf.Platform, error))
+	getPlatFunc, ok := sym.(func(ctx context.Context, plat string) (pf.Platform, error))
 	if !ok {
-		log.SpanLog(ctx, log.DebugLevelInfo, "plugin GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", "plugin", solib)
-		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", plat)
+		log.SpanLog(ctx, log.DebugLevelInfo, "plugin GetPlatform symbol does not implement func(ctx context.Context, plat string) (platform.Platform, error)", "plugin", solib)
+		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol does not implement func(ctx context.Context, plat string) (platform.Platform, error)", plat)
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "Creating platform")
 
-	outPlatform, err := getPlatFunc(plat)
-	if err != nil {
-		outPlatform.SetContext(ctx)
-	}
-	return outPlatform, err
+	return getPlatFunc(ctx, plat)
 }
