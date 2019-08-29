@@ -73,7 +73,13 @@ func (a *ApplicationData) Sort() {
 // Validate functions to validate user input
 
 func (key *DeveloperKey) Validate() error {
-	return util.ValidOrgName(key.Name)
+	if err := util.ValidOrgName(key.Name); err != nil {
+		errstring := err.Error()
+		//lowercase the first letter of the error message
+		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
+		return fmt.Errorf("Developer " + errstring)
+	}
+	return nil
 }
 
 func (s *Developer) Validate(fields map[string]struct{}) error {
