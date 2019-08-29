@@ -287,8 +287,8 @@ http {
         include /etc/nginx/L7/*.conf;
 	}
 	server {
-		listen 127.0.0.1:8080;
-		server_name 127.0.0.1:8080;
+		listen 127.0.0.1:65121;
+		server_name 127.0.0.1:65121;
 		location /nginx_metrics {
 			stub_status;
 			allow 127.0.0.1;
@@ -315,8 +315,8 @@ stream {
 }
 http {
 	server {
-		listen 127.0.0.1:9091;
-		server_name 127.0.0.1:9091;
+		listen 127.0.0.1:65121;
+		server_name 127.0.0.1:65121;
 	    location /nginx_metrics {
 			allow 127.0.0.1;
 			deny all;
@@ -325,7 +325,7 @@ http {
 	}
 }
 {{- end}}
-` //make sure port 9091 is the one we want to allocate for this
+`
 
 var nginxL7Conf = `
 {{- range .}}
