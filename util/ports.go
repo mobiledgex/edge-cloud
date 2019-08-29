@@ -7,14 +7,14 @@ import (
 )
 
 type PortSpec struct {
-	Proto string
-	Port  string
+	Proto   string
+	Port    string
 	EndPort string // mfw XXX ? why two type and parse rtns for AppPort? (3 actually kube.go is another)
 }
 
 func ParsePorts(accessPorts string) ([]PortSpec, error) {
 	var baseport int64
-	var endport  int64
+	var endport int64
 	var err error
 
 	ports := []PortSpec{}
@@ -30,16 +30,16 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 		// len of portrange is 2 if a range 1 if simple port value
 		// in either case, baseport is the first elem of portrange
 		baseport, err = strconv.ParseInt(portrange[0], 10, 32)
-		if (err != nil) {
+		if err != nil {
 			return nil, fmt.Errorf("unable to convert port range base value")
 		}
 		if len(portrange) == 2 {
 			endport, err = strconv.ParseInt(portrange[1], 10, 32)
-			if (err != nil) {
+			if err != nil {
 				return nil, fmt.Errorf("unable to convert port range base value")
 			}
 		} else {
-			endport = baseport;
+			endport = baseport
 		}
 
 		if (baseport < 1 || baseport > 65535) ||
@@ -57,8 +57,8 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 		}
 
 		portSpec := PortSpec{
-			Proto: pp[0],
-			Port:  strconv.FormatInt(baseport, 10),
+			Proto:   strings.ToLower(pp[0]),
+			Port:    strconv.FormatInt(baseport, 10),
 			EndPort: strconv.FormatInt(endport, 10),
 		}
 		ports = append(ports, portSpec)
