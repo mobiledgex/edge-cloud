@@ -1,7 +1,6 @@
 package defaultoperator
 
 import (
-	"context"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 
 	operator "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
@@ -21,17 +20,17 @@ func (OperatorApiGw) GetOperatorName() string {
 }
 
 // Init is called once during startup.
-func (o *OperatorApiGw) Init(ctx context.Context, operatorName string, servers *operator.OperatorApiGwServers) error {
-	log.SpanLog(ctx, log.DebugLevelDmereq, "init for default operator", "operatorName", operatorName)
+func (o *OperatorApiGw) Init(operatorName string, servers *operator.OperatorApiGwServers) error {
+	log.DebugLog(log.DebugLevelDmereq, "init for default operator", "operatorName", operatorName)
 	o.Servers = servers
 	return nil
 }
 
-func (*OperatorApiGw) VerifyLocation(ctx context.Context, mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply) error {
+func (*OperatorApiGw) VerifyLocation(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply) error {
 	return simulatedloc.VerifySimulatedClientLoc(mreq, mreply)
 }
 
-func (*OperatorApiGw) GetLocation(ctx context.Context, mreq *dme.GetLocationRequest, mreply *dme.GetLocationReply) error {
+func (*OperatorApiGw) GetLocation(mreq *dme.GetLocationRequest, mreply *dme.GetLocationReply) error {
 	return simulatedloc.GetSimulatedClientLoc(mreq, mreply)
 }
 

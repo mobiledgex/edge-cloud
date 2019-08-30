@@ -155,7 +155,7 @@ func (s *server) VerifyLocation(ctx context.Context,
 		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
 	}
-	err := operatorApiGw.VerifyLocation(ctx, req, reply)
+	err := operatorApiGw.VerifyLocation(req, reply)
 	return reply, err
 
 }
@@ -163,7 +163,7 @@ func (s *server) VerifyLocation(ctx context.Context,
 func (s *server) GetLocation(ctx context.Context,
 	req *dme.GetLocationRequest) (*dme.GetLocationReply, error) {
 	reply := new(dme.GetLocationReply)
-	err := operatorApiGw.GetLocation(ctx, req, reply)
+	err := operatorApiGw.GetLocation(req, reply)
 	return reply, err
 }
 
@@ -290,7 +290,7 @@ func main() {
 		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
 	}
 	var servers = operator.OperatorApiGwServers{VaultAddr: *vaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl}
-	err = operatorApiGw.Init(ctx, *carrier, &servers)
+	err = operatorApiGw.Init(*carrier, &servers)
 	if err != nil {
 		log.FatalLog("Unable to init API GW", "err", err)
 
