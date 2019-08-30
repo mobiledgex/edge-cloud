@@ -28,7 +28,7 @@ func NewExecReqHandler(cd *ControllerData) *ExecReqHandler {
 func (s *ExecReqHandler) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
 	// spawn go process so we don't stall notify messages
 	go func() {
-		err := s.cd.ProcessExecReq(msg)
+		err := s.cd.ProcessExecReq(ctx, msg)
 		if err != nil {
 			msg.Err = err.Error()
 		}
@@ -36,7 +36,7 @@ func (s *ExecReqHandler) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
 	}()
 }
 
-func (cd *ControllerData) ProcessExecReq(req *edgeproto.ExecRequest) error {
+func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.ExecRequest) error {
 	appInst := edgeproto.AppInst{}
 	found := cd.AppInstCache.Get(&req.AppInstKey, &appInst)
 	if !found {
@@ -61,12 +61,12 @@ func (cd *ControllerData) ProcessExecReq(req *edgeproto.ExecRequest) error {
 	}
 	var err error
 
-	run.contcmd, err = cd.platform.GetContainerCommand(&clusterInst, &app, &appInst, req)
+	run.contcmd, err = cd.platform.GetContainerCommand(ctx, &clusterInst, &app, &appInst, req)
 	if err != nil {
 		return err
 	}
 
-	run.client, err = cd.platform.GetPlatformClient(&clusterInst)
+	run.client, err = cd.platform.GetPlatformClient(ctx, &clusterInst)
 	if err != nil {
 		return err
 	}

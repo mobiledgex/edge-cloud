@@ -1,6 +1,7 @@
 package dind
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
@@ -11,8 +12,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.SpanLog(s.ctx, log.DebugLevelMexos, "call runKubectlCreateApp for dind")
+func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "call runKubectlCreateApp for dind")
 
 	var err error
 	client := &pc.LocalClient{}
@@ -24,7 +25,7 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	}
 	// NOTE: for DIND we don't check whether this is internal
 	if len(appInst.MappedPorts) > 0 {
-		log.SpanLog(s.ctx, log.DebugLevelMexos, "AddNginxProxy for dind", "ports", appInst.MappedPorts)
+		log.SpanLog(ctx, log.DebugLevelMexos, "AddNginxProxy for dind", "ports", appInst.MappedPorts)
 		cluster, err := FindCluster(names.ClusterName)
 		if err != nil {
 			return err
@@ -38,7 +39,7 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 			nginx.WithDockerNetwork(network),
 			nginx.WithDockerPublishPorts())
 		if err != nil {
-			log.SpanLog(s.ctx, log.DebugLevelMexos, "cannot add nginx proxy", "appName", names.AppName, "ports", appInst.MappedPorts)
+			log.SpanLog(ctx, log.DebugLevelMexos, "cannot add nginx proxy", "appName", names.AppName, "ports", appInst.MappedPorts)
 			return err
 		}
 	}
@@ -54,14 +55,14 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
 	}
 	if err != nil {
-		log.SpanLog(s.ctx, log.DebugLevelMexos, "error creating dind app")
+		log.SpanLog(ctx, log.DebugLevelMexos, "error creating dind app")
 		return err
 	}
 	return nil
 }
 
-func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	log.SpanLog(s.ctx, log.DebugLevelMexos, "run kubectl delete app for dind")
+func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "run kubectl delete app for dind")
 
 	var err error
 	client := &pc.LocalClient{}
@@ -84,18 +85,18 @@ func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	}
 
 	if len(appInst.MappedPorts) > 0 {
-		log.SpanLog(s.ctx, log.DebugLevelMexos, "DeleteNginxProxy for dind")
+		log.SpanLog(ctx, log.DebugLevelMexos, "DeleteNginxProxy for dind")
 		if err = nginx.DeleteNginxProxy(client, names.AppName); err != nil {
-			log.SpanLog(s.ctx, log.DebugLevelMexos, "cannot delete nginx proxy", "name", names.AppName)
+			log.SpanLog(ctx, log.DebugLevelMexos, "cannot delete nginx proxy", "name", names.AppName)
 			return err
 		}
 	}
 	return nil
 }
 
-func (s *Platform) UpdateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
 
-	log.SpanLog(s.ctx, log.DebugLevelMexos, "UpdateAppInst for dind")
+	log.SpanLog(ctx, log.DebugLevelMexos, "UpdateAppInst for dind")
 	client := &pc.LocalClient{}
 	appDeploymentType := app.Deployment
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
@@ -108,8 +109,8 @@ func (s *Platform) UpdateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	return fmt.Errorf("UpdateAppInst not supported for deployment: %s", appDeploymentType)
 }
 
-func (s *Platform) GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
-	client, err := s.GetPlatformClient(clusterInst)
+func (s *Platform) GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
+	client, err := s.GetPlatformClient(ctx, clusterInst)
 	if err != nil {
 		return nil, err
 	}
@@ -121,6 +122,6 @@ func (s *Platform) GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *ed
 	return k8smgmt.GetAppInstRuntime(client, names, app, appInst)
 }
 
-func (s *Platform) GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
+func (s *Platform) GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
 	return k8smgmt.GetContainerCommand(clusterInst, app, appInst, req)
 }

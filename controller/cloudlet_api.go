@@ -276,7 +276,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 		if err == nil {
-			err = cloudletPlatform.CreateCloudlet(in, pfConfig, &pfFlavor, updatecb.cb)
+			err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, updatecb.cb)
 		}
 	}
 
@@ -510,7 +510,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 		if err == nil {
-			err = cloudletPlatform.DeleteCloudlet(in, updatecb.cb)
+			err = cloudletPlatform.DeleteCloudlet(ctx, in, updatecb.cb)
 		}
 	}
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {

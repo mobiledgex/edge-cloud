@@ -18,13 +18,9 @@ func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 	// Building plugins is slow, so directly importable
 	// platforms are not built as plugins.
 	if plat == "PLATFORM_TYPE_DIND" {
-		outPlatform := &dind.Platform{}
-		outPlatform.SetContext(ctx)
-		return outPlatform, nil
+		return &dind.Platform{}, nil
 	} else if plat == "PLATFORM_TYPE_FAKE" {
-		outPlatform := &fake.Platform{}
-		outPlatform.SetContext(ctx)
-		return outPlatform, nil
+		return &fake.Platform{}, nil
 	}
 
 	// Load platform from plugin
@@ -42,12 +38,12 @@ func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 		log.SpanLog(ctx, log.DebugLevelInfo, "plugin does not have GetPlatform symbol", "plugin", solib)
 		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol not found", plat)
 	}
-	getPlatFunc, ok := sym.(func(ctx context.Context, plat string) (pf.Platform, error))
+	getPlatFunc, ok := sym.(func(plat string) (pf.Platform, error))
 	if !ok {
-		log.SpanLog(ctx, log.DebugLevelInfo, "plugin GetPlatform symbol does not implement func(ctx context.Context, plat string) (platform.Platform, error)", "plugin", solib)
-		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol does not implement func(ctx context.Context, plat string) (platform.Platform, error)", plat)
+		log.SpanLog(ctx, log.DebugLevelInfo, "plugin GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", "plugin", solib)
+		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", plat)
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "Creating platform")
 
-	return getPlatFunc(ctx, plat)
+	return getPlatFunc(plat)
 }
