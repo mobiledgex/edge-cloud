@@ -1,6 +1,7 @@
 package cloudcommon
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -43,7 +44,7 @@ func getVaultRegistryPath(registry, vaultAddr string) string {
 	)
 }
 
-func GetRegistryAuth(imgUrl, vaultAddr string) (*RegistryAuth, error) {
+func GetRegistryAuth(ctx context.Context, imgUrl, vaultAddr string) (*RegistryAuth, error) {
 	if vaultAddr == "" {
 		return nil, fmt.Errorf("missing vaultAddr")
 	}
@@ -57,7 +58,7 @@ func GetRegistryAuth(imgUrl, vaultAddr string) (*RegistryAuth, error) {
 		return nil, fmt.Errorf("empty hostname")
 	}
 	vaultPath := getVaultRegistryPath(hostname[0], vaultAddr)
-	log.DebugLog(log.DebugLevelApi, "get registry auth", "vault-path", vaultPath)
+	log.SpanLog(ctx, log.DebugLevelApi, "get registry auth", "vault-path", vaultPath)
 
 	data, err := vault.GetVaultData(vaultPath)
 	if err != nil {
@@ -82,8 +83,8 @@ func GetRegistryAuth(imgUrl, vaultAddr string) (*RegistryAuth, error) {
 	return auth, nil
 }
 
-func SendHTTPReqAuth(method, regUrl string, auth *RegistryAuth) (*http.Response, error) {
-	log.DebugLog(log.DebugLevelApi, "send http request", "method", method, "url", regUrl)
+func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryAuth) (*http.Response, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "send http request", "method", method, "url", regUrl)
 	client := &http.Client{
 		Transport: &http.Transport{
 			// Connection Timeout
@@ -124,8 +125,8 @@ func SendHTTPReqAuth(method, regUrl string, auth *RegistryAuth) (*http.Response,
 	return resp, nil
 }
 
-func handleWWWAuth(method, regUrl, authHeader string, auth *RegistryAuth) (*http.Response, error) {
-	log.DebugLog(
+func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth *RegistryAuth) (*http.Response, error) {
+	log.SpanLog(ctx,
 		log.DebugLevelApi, "handling www-auth for Docker Registry v2 Authentication",
 		"regUrl", regUrl,
 		"authHeader", authHeader,
@@ -151,7 +152,7 @@ func handleWWWAuth(method, regUrl, authHeader string, auth *RegistryAuth) (*http
 		if v, ok := m["scope"]; ok {
 			authURL += "&scope=" + v
 		}
-		resp, err := SendHTTPReqAuth("GET", authURL, auth)
+		resp, err := SendHTTPReqAuth(ctx, "GET", authURL, auth)
 		if err != nil {
 			return nil, err
 		}
@@ -161,8 +162,8 @@ func handleWWWAuth(method, regUrl, authHeader string, auth *RegistryAuth) (*http
 			json.NewDecoder(resp.Body).Decode(&authTok)
 			authTok.AuthType = TokenAuth
 
-			log.DebugLog(log.DebugLevelApi, "retrying request with auth-token")
-			resp, err = SendHTTPReqAuth(method, regUrl, &authTok)
+			log.SpanLog(ctx, log.DebugLevelApi, "retrying request with auth-token")
+			resp, err = SendHTTPReqAuth(ctx, method, regUrl, &authTok)
 			if err != nil {
 				return nil, err
 			}
@@ -199,12 +200,12 @@ func handleWWWAuth(method, regUrl, authHeader string, auth *RegistryAuth) (*http
  * - The Registry authorizes the client by validating the Bearer token and the claim set embedded within
  *   it and begins the session as usual
  */
-func SendHTTPReq(method, regUrl string, vaultAddr string) (*http.Response, error) {
-	auth, err := GetRegistryAuth(regUrl, vaultAddr)
+func SendHTTPReq(ctx context.Context, method, regUrl string, vaultAddr string) (*http.Response, error) {
+	auth, err := GetRegistryAuth(ctx, regUrl, vaultAddr)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
+		log.SpanLog(ctx, log.DebugLevelApi, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
 	}
-	resp, err := SendHTTPReqAuth(method, regUrl, auth)
+	resp, err := SendHTTPReqAuth(ctx, method, regUrl, auth)
 	if err != nil {
 		return nil, err
 	}
@@ -215,11 +216,11 @@ func SendHTTPReq(method, regUrl string, vaultAddr string) (*http.Response, error
 		authHeader := resp.Header.Get("Www-Authenticate")
 		if authHeader != "" {
 			// fetch authorization token to access tags
-			resp, err = handleWWWAuth(method, regUrl, authHeader, auth)
+			resp, err = handleWWWAuth(ctx, method, regUrl, authHeader, auth)
 			if err == nil {
 				return resp, nil
 			}
-			log.DebugLog(log.DebugLevelApi, "unable to handle www-auth", "err", err)
+			log.SpanLog(ctx, log.DebugLevelApi, "unable to handle www-auth", "err", err)
 		} else {
 			err = fmt.Errorf("Access denied to registry path")
 		}
@@ -228,8 +229,8 @@ func SendHTTPReq(method, regUrl string, vaultAddr string) (*http.Response, error
 	return resp, nil
 }
 
-func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
-	log.DebugLog(log.DebugLevelApi, "validate registry path", "path", regUrl)
+func ValidateDockerRegistryPath(ctx context.Context, regUrl, vaultAddr string) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "validate registry path", "path", regUrl)
 
 	if regUrl == "" {
 		return fmt.Errorf("registry path is empty")
@@ -254,9 +255,9 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	}
 
 	regUrl = fmt.Sprintf("%s://%s/%s%s/tags/list", urlObj.Scheme, urlObj.Host, version, regPath)
-	log.DebugLog(log.DebugLevelApi, "registry api url", "url", regUrl)
+	log.SpanLog(ctx, log.DebugLevelApi, "registry api url", "url", regUrl)
 
-	resp, err := SendHTTPReq("GET", regUrl, vaultAddr)
+	resp, err := SendHTTPReq(ctx, "GET", regUrl, vaultAddr)
 	if err != nil {
 		return err
 	}
@@ -267,7 +268,7 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 		if err != nil {
 			return fmt.Errorf("Failed to read response body, %v", err)
 		}
-		log.DebugLog(log.DebugLevelApi, "list tags", "resp", string(body))
+		log.SpanLog(ctx, log.DebugLevelApi, "list tags", "resp", string(body))
 		err = json.Unmarshal(body, &tagsList)
 		if err != nil {
 			return err
@@ -282,13 +283,13 @@ func ValidateDockerRegistryPath(regUrl, vaultAddr string) error {
 	return fmt.Errorf("Invalid registry path: %s", http.StatusText(resp.StatusCode))
 }
 
-func ValidateVMRegistryPath(imgUrl, vaultAddr string) error {
-	log.DebugLog(log.DebugLevelApi, "validate vm-image path", "path", imgUrl)
+func ValidateVMRegistryPath(ctx context.Context, imgUrl, vaultAddr string) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "validate vm-image path", "path", imgUrl)
 	if imgUrl == "" {
 		return fmt.Errorf("image path is empty")
 	}
 
-	resp, err := SendHTTPReq("GET", imgUrl, vaultAddr)
+	resp, err := SendHTTPReq(ctx, "GET", imgUrl, vaultAddr)
 	if err != nil {
 		return err
 	}
