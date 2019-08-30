@@ -295,7 +295,7 @@ func main() {
 		log.FatalLog("Unable to init API GW", "err", err)
 
 	}
-	log.DebugLog(log.DebugLevelInfo, "plugin init done", "operatorApiGw", operatorApiGw)
+	log.SpanLog(ctx, log.DebugLevelInfo, "plugin init done", "operatorApiGw", operatorApiGw)
 
 	dmecommon.InitVault(*vaultAddr, *region)
 
@@ -396,7 +396,7 @@ func main() {
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	log.DebugLog(log.DebugLevelInfo, "Ready")
+	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	span.Finish()
 
 	// wait until process in killed/interrupted
