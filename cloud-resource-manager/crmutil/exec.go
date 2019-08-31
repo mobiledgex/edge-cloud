@@ -10,6 +10,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
+	opentracing "github.com/opentracing/opentracing-go"
 	webrtc "github.com/pion/webrtc/v2"
 )
 
@@ -28,6 +29,8 @@ func NewExecReqHandler(cd *ControllerData) *ExecReqHandler {
 func (s *ExecReqHandler) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
 	// spawn go process so we don't stall notify messages
 	go func() {
+		cspan := log.StartSpan(log.DebugLevelApi, "process exec req", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+		defer cspan.Finish()
 		err := s.cd.ProcessExecReq(ctx, msg)
 		if err != nil {
 			msg.Err = err.Error()

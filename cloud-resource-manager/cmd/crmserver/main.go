@@ -121,9 +121,11 @@ func main() {
 	reflection.Register(grpcServer)
 
 	go func() {
+		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		if err := initPlatform(ctx, &myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
+			cspan.Finish()
 			span.Finish()
 			log.FatalLog("failed to init platform", "err", err)
 		}
@@ -142,6 +144,7 @@ func main() {
 		myNode.Hostname = cloudcommon.Hostname()
 		controllerData.NodeCache.Update(ctx, &myNode, 0)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
+		cspan.Finish()
 	}()
 
 	//setup crm notify listener (for shepherd)
