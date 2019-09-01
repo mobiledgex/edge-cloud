@@ -485,9 +485,6 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, strconv.FormatBool(in.DeploymentLocal))
 	s = append(s, edgeproto.PlatformType_CamelName[int32(in.PlatformType)])
 	s = append(s, in.NotifySrvAddr)
-	if in.Flavor == nil {
-		in.Flavor = &edgeproto.FlavorKey{}
-	}
 	s = append(s, in.Flavor.Name)
 	s = append(s, in.PhysicalName)
 	return s
@@ -1216,7 +1213,6 @@ func init() {
 	CloudletFlagSet.BoolVar(&CloudletIn.DeploymentLocal, "deploymentlocal", false, "DeploymentLocal")
 	CloudletFlagSet.StringVar(&CloudletInPlatformType, "platformtype", "", "one of [PlatformTypeFake PlatformTypeDind PlatformTypeOpenstack PlatformTypeAzure PlatformTypeGcp PlatformTypeMexdind]")
 	CloudletFlagSet.StringVar(&CloudletIn.NotifySrvAddr, "notifysrvaddr", "", "NotifySrvAddr")
-	CloudletIn.Flavor = &edgeproto.FlavorKey{}
 	CloudletFlagSet.StringVar(&CloudletIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.PhysicalName, "physicalname", "", "PhysicalName")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
