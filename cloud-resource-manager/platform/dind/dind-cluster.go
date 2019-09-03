@@ -26,7 +26,16 @@ type DindCluster struct {
 func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	var err error
 
-	updateCallback(edgeproto.UpdateTask, "Create DIND Cluster")
+	switch clusterInst.Deployment {
+	case cloudcommon.AppDeploymentTypeDocker:
+		updateCallback(edgeproto.UpdateTask, "Create done for Docker Cluster on DIND")
+		return nil
+	case cloudcommon.AppDeploymentTypeKubernetes:
+		updateCallback(edgeproto.UpdateTask, "Create DIND Cluster")
+	default:
+		return fmt.Errorf("Only K8s and Docker clusters are supported on DIND")
+	}
+	// Create K8s cluster
 	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
 	log.DebugLog(log.DebugLevelMexos, "creating local dind cluster", "clusterName", clusterName)
 
