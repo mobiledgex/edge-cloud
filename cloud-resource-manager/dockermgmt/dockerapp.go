@@ -5,10 +5,31 @@ import (
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
 )
+
+// Helper function that generates the ports string for docker command
+// Example : "-p 80:80/http -p 7777:7777/tcp"
+func GetDockerPortString(ports []dme.AppPort) []string {
+	var cmdArgs []string
+
+	for _, p := range ports {
+		if p.Proto == dme.LProto_L_PROTO_HTTP {
+			// L7 not allowed for docker
+			continue
+		}
+		proto, err := edgeproto.LProtoStr(p.Proto)
+		if err != nil {
+			continue
+		}
+		pstr := fmt.Sprintf("%d:%d/%s", p.PublicPort, p.PublicPort, proto)
+		cmdArgs = append(cmdArgs, "-p", pstr)
+	}
+	return cmdArgs
+}
 
 func getDockerComposeFileName(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) string {
 	return util.DNSSanitize("docker-compose-"+app.Key.Name+app.Key.Version) + ".yml"
@@ -25,6 +46,37 @@ func createDockerComposeFile(client pc.PlatformClient, app *edgeproto.App, appIn
 		return "", err
 	}
 	return filename, nil
+}
+
+// Local Docker AppInst create is different due to fact that MacOS doesn't like '--network=host' option.
+// Instead on MacOS docker needs to have port mapping  explicity specified with '-p' option.
+// As a result we have a separate function specifically for a docker app creation on a MacOS laptop
+func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	image := app.ImagePath
+	name := util.DockerSanitize(app.Key.Name)
+	if app.DeploymentManifest == "" {
+		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --name=%s %s %s %s", name,
+			strings.Join(GetDockerPortString(appInst.MappedPorts), " "), image, app.Command)
+		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
+
+		out, err := client.Output(cmd)
+		if err != nil {
+			return fmt.Errorf("error running app, %s, %v", out, err)
+		}
+		log.DebugLog(log.DebugLevelMexos, "done docker run ")
+	} else {
+		filename, err := createDockerComposeFile(client, app, appInst)
+		if err != nil {
+			return err
+		}
+		cmd := fmt.Sprintf("docker-compose -f %s up -d", filename)
+		log.DebugLog(log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
+		out, err := client.Output(cmd)
+		if err != nil {
+			return fmt.Errorf("error running docker compose up, %s, %v", out, err)
+		}
+	}
+	return nil
 }
 
 func CreateAppInst(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
