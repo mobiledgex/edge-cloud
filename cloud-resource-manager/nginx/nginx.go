@@ -80,6 +80,13 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 			"nginx %s can't create file %s", name, errlogFile)
 		return err
 	}
+	accesslogFile := dir + "/access.log"
+	err = pc.Run(client, "touch "+accesslogFile)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos,
+			"nginx %s can't create file %s", name, accesslogFile)
+		return err
+	}
 	nconfName := dir + "/nginx.conf"
 	err = createNginxConf(client, nconfName, name, l7dir, originIP, ports, useTLS)
 	if err != nil {
@@ -109,6 +116,7 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 		"-v", dir + ":/var/www/.cache",
 		"-v", "/etc/ssl/certs:/etc/ssl/certs",
 		"-v", errlogFile + ":/var/log/nginx/error.log",
+		"-v", accesslogFile + ":/var/log/nginx/access.log",
 		"-v", nconfName + ":/etc/nginx/nginx.conf",
 		"nginx"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
@@ -124,8 +132,9 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 
 func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP string, ports []dme.AppPort, useTLS bool) error {
 	spec := ProxySpec{
-		Name:   name,
-		UseTLS: useTLS,
+		Name:   	name,
+		UseTLS: 	useTLS,
+		MetricPort: cloudcommon.NginxMetricsPort,
 	}
 	httpPorts := []HTTPSpecDetail{}
 
@@ -215,12 +224,13 @@ func reloadNginxL7(client pc.PlatformClient) error {
 }
 
 type ProxySpec struct {
-	Name    string
-	L4, L7  bool
-	UDPSpec []*UDPSpecDetail
-	TCPSpec []*TCPSpecDetail
-	L7Port  int32
-	UseTLS  bool
+	Name    	string
+	L4, L7  	bool
+	UDPSpec 	[]*UDPSpecDetail
+	TCPSpec 	[]*TCPSpecDetail
+	L7Port  	int32
+	UseTLS  	bool
+	MetricPort  int32
 }
 
 type TCPSpecDetail struct {
@@ -267,7 +277,16 @@ http {
         ssl_certificate_key    /etc/ssl/certs/server.key;
 {{- end}}
         include /etc/nginx/L7/*.conf;
-    }
+	}
+	server {
+		listen 127.0.0.1:{{.MetricPort}};
+		server_name 127.0.0.1:{{.MetricPort}};
+		location /nginx_metrics {
+			stub_status;
+			allow 127.0.0.1;
+			deny all;
+		}
+	}
 }
 {{- end}}
 
@@ -285,6 +304,17 @@ stream {
 		proxy_pass {{.Origin}};
 	}
 	{{- end}}
+}
+http {
+	server {
+		listen 127.0.0.1:{{.MetricPort}};
+		server_name 127.0.0.1:{{.MetricPort}};
+	    location /nginx_metrics {
+			allow 127.0.0.1;
+			deny all;
+			stub_status;
+    	}
+	}
 }
 {{- end}}
 `

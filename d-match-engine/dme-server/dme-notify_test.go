@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -16,7 +17,7 @@ func TestNotify(t *testing.T) {
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	setupMatchEngine()
+	dmecommon.SetupMatchEngine()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
 
@@ -73,13 +74,13 @@ func TestNotify(t *testing.T) {
 }
 
 func waitForAppInst(appInst *edgeproto.AppInst) {
-	tbl := dmeAppTbl
+	tbl := dmecommon.DmeAppTbl
 
 	appkey := appInst.Key.AppKey
 	for i := 0; i < 10; i++ {
-		if app, found := tbl.apps[appkey]; found {
-			for _, c := range app.carriers {
-				if _, found := c.insts[appInst.Key.ClusterInstKey]; found {
+		if app, found := tbl.Apps[appkey]; found {
+			for _, c := range app.Carriers {
+				if _, found := c.Insts[appInst.Key.ClusterInstKey]; found {
 					break
 				}
 			}
@@ -89,16 +90,16 @@ func waitForAppInst(appInst *edgeproto.AppInst) {
 }
 
 func waitForNoAppInst(appInst *edgeproto.AppInst) {
-	tbl := dmeAppTbl
+	tbl := dmecommon.DmeAppTbl
 
 	appkey := appInst.Key.AppKey
 	for i := 0; i < 10; i++ {
-		app, found := tbl.apps[appkey]
+		app, found := tbl.Apps[appkey]
 		if !found {
 			break
 		}
-		for _, c := range app.carriers {
-			if _, found := c.insts[appInst.Key.ClusterInstKey]; !found {
+		for _, c := range app.Carriers {
+			if _, found := c.Insts[appInst.Key.ClusterInstKey]; !found {
 				break
 			}
 		}

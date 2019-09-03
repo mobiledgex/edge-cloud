@@ -44,6 +44,8 @@ build-docker:
 		-t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud ..
 	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
+	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
 	for ADDLTAG in ${ADDLTAGS}; do \
 		docker tag mobiledgex/edge-cloud:${TAG} $$ADDLTAG; \
 		docker push $$ADDLTAG; \

@@ -493,8 +493,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					// rootLB has its own ports it uses
 					// before any apps are even present.
 					iport := ports[ii].InternalPort
-					if iport != 22 &&
-						iport != cloudcommon.RootLBL7Port {
+					if iport != 22 && iport != cloudcommon.RootLBL7Port && iport != cloudcommon.NginxMetricsPort{
 						eport = iport
 					}
 				}

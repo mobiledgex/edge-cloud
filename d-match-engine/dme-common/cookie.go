@@ -58,6 +58,7 @@ func (d *dmeClaims) SetKid(kid int) {
 
 // returns Peer IP or Error
 func VerifyCookie(cookie string) (*CookieKey, error) {
+
 	claims := dmeClaims{}
 	token, err := Jwks.VerifyCookie(cookie, &claims)
 	if err != nil {
@@ -71,6 +72,11 @@ func VerifyCookie(cookie string) (*CookieKey, error) {
 	if !token.Valid {
 		log.InfoLog("cookie is invalid or expired", "cookie", cookie, "claims", claims)
 		return nil, errors.New("invalid or expired cookie")
+	}
+	// It is possible that the App was deleted after this cookie was issued.  If so, the cookie is no longer valid
+	// Note that returning an error from from here will result in an Unauthorized error code, rather than a NotFound
+	if !AppExists(claims.Key.DevName, claims.Key.AppName, claims.Key.AppVers) {
+		return nil, fmt.Errorf("app not found -- developer: %s, app: %s, appvers: %s", claims.Key.DevName, claims.Key.AppName, claims.Key.AppVers)
 	}
 	log.DebugLog(log.DebugLevelDmereq, "verified cookie", "cookie", cookie, "expires", claims.ExpiresAt)
 	return claims.Key, nil
