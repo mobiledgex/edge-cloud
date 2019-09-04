@@ -49,6 +49,10 @@ func TestAppApi(t *testing.T) {
 	_, err = appApi.CreateApp(ctx, &vmapp)
 	require.NotNil(t, err, "Create vmapp with http port")
 	require.Contains(t, err.Error(), "Deployment Type and HTTP access ports are incompatible")
+	vmapp.AccessPorts = "HTTP:443"
+	_, err = appApi.CreateApp(ctx, &vmapp)
+	require.NotNil(t, err, "Create vmapp with http port")
+	require.Contains(t, err.Error(), "Deployment Type and HTTP access ports are incompatible")
 
 	dummy.Stop()
 }

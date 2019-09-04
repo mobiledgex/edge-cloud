@@ -3,6 +3,7 @@ package setupmex
 // consists of utilities used to deploy, start, stop MEX processes either locally or remotely via Ansible.
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -521,15 +522,15 @@ func StartProcesses(processName string, outputDir string) bool {
 	return true
 }
 
-func Cleanup() error {
-	err := cloudcommon.StopCRMService(nil)
+func Cleanup(ctx context.Context) error {
+	err := cloudcommon.StopCRMService(ctx, nil)
 	if err != nil {
 		return err
 	}
 	return CleanupDIND()
 }
 
-func RunAction(actionSpec, outputDir string, spec *TestSpec, mods []string) []string {
+func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec, mods []string) []string {
 	act, actionParam := GetActionParam(actionSpec)
 	action, actionSubtype := GetActionSubtype(act)
 
@@ -587,7 +588,7 @@ func RunAction(actionSpec, outputDir string, spec *TestSpec, mods []string) []st
 			errors = append(errors, "dme api failed")
 		}
 	case "cleanup":
-		err := Cleanup()
+		err := Cleanup(ctx)
 		if err != nil {
 			errors = append(errors, err.Error())
 		}

@@ -118,7 +118,7 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 }
 
 // updates fields that need manipulation on setting, or fetched remotely
-func updateAppFields(in *edgeproto.App, revision int32) error {
+func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) error {
 
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
@@ -162,10 +162,10 @@ func updateAppFields(in *edgeproto.App, revision int32) error {
 		if err != nil {
 			return err
 		}
-		err = cloudcommon.ValidateVMRegistryPath(in.ImagePath, *vaultAddr)
+		err = cloudcommon.ValidateVMRegistryPath(ctx, in.ImagePath, *vaultAddr)
 		if err != nil {
 			if *testMode {
-				log.DebugLog(log.DebugLevelApi, "Warning, could not validate VM registry path.", "err", err)
+				log.SpanLog(ctx, log.DebugLevelApi, "Warning, could not validate VM registry path.", "err", err)
 			} else {
 				return err
 			}
@@ -174,10 +174,10 @@ func updateAppFields(in *edgeproto.App, revision int32) error {
 
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER &&
 		!cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) {
-		err := cloudcommon.ValidateDockerRegistryPath(in.ImagePath, *vaultAddr)
+		err := cloudcommon.ValidateDockerRegistryPath(ctx, in.ImagePath, *vaultAddr)
 		if err != nil {
 			if *testMode {
-				log.DebugLog(log.DebugLevelApi, "Warning, could not validate docker registry path.", "err", err)
+				log.SpanLog(ctx, log.DebugLevelApi, "Warning, could not validate docker registry path.", "err", err)
 			} else {
 				return err
 			}
@@ -228,11 +228,11 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, fmt.Errorf("deployment is not valid for image type")
 	}
 	if in.Deployment == cloudcommon.AppDeploymentTypeDocker || in.Deployment == cloudcommon.AppDeploymentTypeVM {
-		if strings.Contains(in.AccessPorts, "http") {
+		if strings.Contains(strings.ToLower(in.AccessPorts), "http") {
 			return &edgeproto.Result{}, fmt.Errorf("Deployment Type and HTTP access ports are incompatible")
 		}
 	}
-	err = updateAppFields(in, 0)
+	err = updateAppFields(ctx, in, 0)
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
@@ -297,7 +297,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 
 		cur.CopyInFields(in)
 		newRevision := cur.Revision + 1
-		if err := updateAppFields(&cur, newRevision); err != nil {
+		if err := updateAppFields(ctx, &cur, newRevision); err != nil {
 			return err
 		}
 		s.store.STMPut(stm, &cur)
