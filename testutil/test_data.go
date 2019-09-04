@@ -194,6 +194,7 @@ var OperatorData = []edgeproto.Operator{
 		},
 	},
 }
+
 var CloudletData = []edgeproto.Cloudlet{
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -207,7 +208,7 @@ var CloudletData = []edgeproto.Cloudlet{
 			Longitude: -121.886330,
 		},
 		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
-		Flavor:        &FlavorData[0].Key,
+		Flavor:        FlavorData[0].Key,
 		NotifySrvAddr: "127.0.0.1:51001",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
 	},
@@ -223,7 +224,7 @@ var CloudletData = []edgeproto.Cloudlet{
 			Longitude: -74.005974,
 		},
 		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
-		Flavor:        &FlavorData[0].Key,
+		Flavor:        FlavorData[0].Key,
 		NotifySrvAddr: "127.0.0.1:51002",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
 	},
@@ -238,7 +239,7 @@ var CloudletData = []edgeproto.Cloudlet{
 			Latitude:  37.774929,
 			Longitude: -122.419418,
 		},
-		Flavor:        &FlavorData[0].Key,
+		Flavor:        FlavorData[0].Key,
 		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
 		NotifySrvAddr: "127.0.0.1:51003",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
@@ -254,7 +255,7 @@ var CloudletData = []edgeproto.Cloudlet{
 			Latitude:  21.306944,
 			Longitude: -157.858337,
 		},
-		Flavor:        &FlavorData[0].Key,
+		Flavor:        FlavorData[0].Key,
 		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
 		NotifySrvAddr: "127.0.0.1:51004",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,

@@ -180,7 +180,7 @@ message Cloudlet {
   // Address for the CRM notify listener to run on
   string notify_srv_addr = 16;
   // Min system resource requirements for platform
-  FlavorKey flavor = 17;
+  FlavorKey flavor = 17 [(gogoproto.nullable) = false];
   // Physical infrastructure cloudlet name
   string physical_name = 18;
 

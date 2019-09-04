@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/dockermgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/nginx"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
@@ -18,7 +19,17 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	var err error
 	client := &pc.LocalClient{}
 	appDeploymentType := app.Deployment
-
+	// Support for local docker appInst
+	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
+		log.SpanLog(ctx, log.DebugLevelMexos, "run docker create app for dind")
+		err = dockermgmt.CreateAppInstLocal(client, app, appInst)
+		if err != nil {
+			return fmt.Errorf("CreateAppInstLocal error for docker %v", err)
+		}
+		return nil
+	}
+	// Now for helm and k8s apps
+	log.SpanLog(ctx, log.DebugLevelMexos, "run kubectl create app for dind")
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
 		return err
@@ -62,12 +73,20 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 }
 
 func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "run kubectl delete app for dind")
-
 	var err error
 	client := &pc.LocalClient{}
 	appDeploymentType := app.Deployment
-
+	// Support for local docker appInst
+	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
+		log.SpanLog(ctx, log.DebugLevelMexos, "run docker delete app for dind")
+		err = dockermgmt.DeleteAppInst(client, app, appInst)
+		if err != nil {
+			return fmt.Errorf("DeleteAppInst error for docker %v", err)
+		}
+		return nil
+	}
+	// Now for helm and k8s apps
+	log.SpanLog(ctx, log.DebugLevelMexos, "run kubectl delete app for dind")
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
 		return err
