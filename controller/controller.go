@@ -97,7 +97,7 @@ func main() {
 	fmt.Println(sig)
 }
 
-func validateFields() error {
+func validateFields(ctx context.Context) error {
 	if *testMode {
 		return nil
 	}
@@ -120,7 +120,7 @@ func validateFields() error {
 			return fmt.Errorf("Invalid registry path")
 		}
 		platform_registry_path := *cloudletRegistryPath + ":" + strings.TrimSpace(string(*versionTag))
-		err = cloudcommon.ValidateDockerRegistryPath(platform_registry_path, *vaultAddr)
+		err = cloudcommon.ValidateDockerRegistryPath(ctx, platform_registry_path, *vaultAddr)
 		if err != nil {
 			return err
 		}
@@ -156,7 +156,7 @@ func startServices() error {
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	err := validateFields()
+	err := validateFields(ctx)
 	if err != nil {
 		return err
 	}

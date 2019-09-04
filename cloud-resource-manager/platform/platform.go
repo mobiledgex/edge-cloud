@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"context"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
@@ -19,30 +20,30 @@ type Platform interface {
 	// GetType Returns the Cloudlet's stack type, i.e. Openstack, Azure, etc.
 	GetType() string
 	// Init is called once during CRM startup.
-	Init(platformConfig *PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
+	Init(ctx context.Context, platformConfig *PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Gather information about the cloudlet platform.
 	// This includes available resources, flavors, etc.
-	GatherCloudletInfo(info *edgeproto.CloudletInfo) error
+	GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error
 	// Create a Kubernetes Cluster on the cloudlet.
-	CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error
+	CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error
 	// Delete a Kuberentes Cluster on the cloudlet.
-	DeleteClusterInst(clusterInst *edgeproto.ClusterInst) error
+	DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst) error
 	// Update the cluster
-	UpdateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
+	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Create an AppInst on a Cluster
-	CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
+	CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete an AppInst on a Cluster
-	DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error
+	DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error
 	// Update an AppInst
-	UpdateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
+	UpdateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Get AppInst runtime information
-	GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error)
+	GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error)
 	// Get the Platform Client to run commands against
-	GetPlatformClient(clusterInst *edgeproto.ClusterInst) (pc.PlatformClient, error)
+	GetPlatformClient(ctx context.Context, clusterInst *edgeproto.ClusterInst) (pc.PlatformClient, error)
 	// Get the command to pass to PlatformClient for the container command
-	GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error)
+	GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error)
 	// Create Cloudlet
-	CreateCloudlet(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
+	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet
-	DeleteCloudlet(cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error
+	DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error
 }

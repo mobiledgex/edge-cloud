@@ -1,6 +1,7 @@
 package dind
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -23,7 +24,7 @@ type DindCluster struct {
 	KContext    string
 }
 
-func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
+func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	var err error
 
 	switch clusterInst.Deployment {
@@ -37,27 +38,27 @@ func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst, updateC
 	}
 	// Create K8s cluster
 	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
-	log.DebugLog(log.DebugLevelMexos, "creating local dind cluster", "clusterName", clusterName)
+	log.SpanLog(ctx, log.DebugLevelMexos, "creating local dind cluster", "clusterName", clusterName)
 
 	kconfName := k8smgmt.GetKconfName(clusterInst)
-	if err = s.CreateDINDCluster(clusterName, kconfName); err != nil {
+	if err = s.CreateDINDCluster(ctx, clusterName, kconfName); err != nil {
 		return err
 	}
-	log.DebugLog(log.DebugLevelMexos, "created dind", "name", clusterName)
+	log.SpanLog(ctx, log.DebugLevelMexos, "created dind", "name", clusterName)
 	return nil
 }
 
-func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	return fmt.Errorf("update cluster not supported for DIND")
 }
 
-func (s *Platform) DeleteClusterInst(clusterInst *edgeproto.ClusterInst) error {
+func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst) error {
 	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
-	return s.DeleteDINDCluster(clusterName)
+	return s.DeleteDINDCluster(ctx, clusterName)
 }
 
 //CreateDINDCluster creates kubernetes cluster on local mac
-func (s *Platform) CreateDINDCluster(clusterName, kconfName string) error {
+func (s *Platform) CreateDINDCluster(ctx context.Context, clusterName, kconfName string) error {
 	clusters, err := GetClusters()
 	if err != nil {
 		return err
@@ -79,13 +80,13 @@ func (s *Platform) CreateDINDCluster(clusterName, kconfName string) error {
 	os.Setenv("DIND_LABEL", clusterName)
 	os.Setenv("CLUSTER_ID", GetClusterID(clusterID))
 	cluster := NewClusterFor(clusterName, clusterID)
-	log.DebugLog(log.DebugLevelMexos, "CreateDINDCluster", "scriptName", cloudcommon.DindScriptName, "name", clusterName, "clusterid", clusterID)
+	log.SpanLog(ctx, log.DebugLevelMexos, "CreateDINDCluster", "scriptName", cloudcommon.DindScriptName, "name", clusterName, "clusterid", clusterID)
 
 	out, err := sh.Command(cloudcommon.DindScriptName, "up").Command("tee", "/tmp/dind.log").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("ERROR creating Dind Cluster: [%s] %v", out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "Finished CreateDINDCluster", "name", clusterName)
+	log.SpanLog(ctx, log.DebugLevelMexos, "Finished CreateDINDCluster", "name", clusterName)
 	//race condition exists where the config file is not ready until just after the cluster create is done
 	time.Sleep(3 * time.Second)
 
@@ -95,7 +96,7 @@ func (s *Platform) CreateDINDCluster(clusterName, kconfName string) error {
 		return fmt.Errorf("ERROR setting kube config context: [%s] %v", out, err)
 	}
 	//copy kubeconfig locally
-	log.DebugLog(log.DebugLevelMexos, "locally copying kubeconfig", "kconfName", kconfName)
+	log.SpanLog(ctx, log.DebugLevelMexos, "locally copying kubeconfig", "kconfName", kconfName)
 	home := os.Getenv("HOME")
 	out, err = sh.Command("cp", home+"/.kube/config", kconfName).CombinedOutput()
 	if err != nil {
@@ -109,7 +110,7 @@ func (s *Platform) CreateDINDCluster(clusterName, kconfName string) error {
 		err = nil
 	}
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "cannot connect nginx network",
+		log.SpanLog(ctx, log.DebugLevelMexos, "cannot connect nginx network",
 			"cluster", cluster, "out", out, "err", err)
 		return fmt.Errorf("failed to connect nginxL7 network, %s, %v", out, err)
 	}
@@ -117,7 +118,7 @@ func (s *Platform) CreateDINDCluster(clusterName, kconfName string) error {
 }
 
 //DeleteDINDCluster creates kubernetes cluster on local mac
-func (s *Platform) DeleteDINDCluster(name string) error {
+func (s *Platform) DeleteDINDCluster(ctx context.Context, name string) error {
 	cluster, err := FindCluster(name)
 	if err != nil {
 		return fmt.Errorf("ERROR - Cluster %s not found, %v", name, err)
@@ -136,13 +137,13 @@ func (s *Platform) DeleteDINDCluster(name string) error {
 
 	os.Setenv("DIND_LABEL", cluster.ClusterName)
 	os.Setenv("CLUSTER_ID", GetClusterID(cluster.ClusterID))
-	log.DebugLog(log.DebugLevelMexos, "DeleteDINDCluster", "name", name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "DeleteDINDCluster", "name", name)
 
 	out, err = sh.Command(cloudcommon.DindScriptName, "clean").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%s %v", out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "Finished dind clean", "scriptName", cloudcommon.DindScriptName, "name", name, "out", out)
+	log.SpanLog(ctx, log.DebugLevelMexos, "Finished dind clean", "scriptName", cloudcommon.DindScriptName, "name", name, "out", out)
 	return nil
 }
 
