@@ -184,6 +184,12 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.NotifySrvAddr = "127.0.0.1:51001"
 	}
 
+	if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK {
+		if in.PhysicalName == "" {
+			return errors.New("Must specify physicalname for Openstack deployment")
+		}
+	}
+
 	pfConfig := edgeproto.PlatformConfig{}
 	appRoles := VaultRoles{}
 	if err := getRolesAndSecrets(&appRoles); err != nil {
