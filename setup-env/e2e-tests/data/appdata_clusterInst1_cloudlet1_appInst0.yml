@@ -65,6 +65,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51001
   flavor:
     name: DefaultPlatformFlavor
+  physicalname: tmus-cloud-1
 
 apps:
 - key:
