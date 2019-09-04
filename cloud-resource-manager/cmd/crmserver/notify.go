@@ -29,9 +29,9 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 }
 
 func initSrvNotify(notifyServer *notify.ServerMgr) {
+	notifyServer.RegisterSendAppCache(&controllerData.AppCache)
 	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
 	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
-	notifyServer.RegisterSendAppCache(&controllerData.AppCache)
 	notifyServer.RegisterRecv(notify.NewMetricRecvMany(&CrmMetricsReceiver{}))
 }
 
