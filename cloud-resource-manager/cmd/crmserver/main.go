@@ -121,16 +121,18 @@ func main() {
 	reflection.Register(grpcServer)
 
 	go func() {
+		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err := initPlatform(&myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
+		if err := initPlatform(ctx, &myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
+			cspan.Finish()
 			span.Finish()
 			log.FatalLog("failed to init platform", "err", err)
 		}
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
 		updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
-		controllerData.GatherCloudletInfo(&myCloudlet)
+		controllerData.GatherCloudletInfo(ctx, &myCloudlet)
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "sending cloudlet info cache update")
 		// trigger send of info upstream to controller
@@ -142,6 +144,7 @@ func main() {
 		myNode.Hostname = cloudcommon.Hostname()
 		controllerData.NodeCache.Update(ctx, &myNode, 0)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
+		cspan.Finish()
 	}()
 
 	//setup crm notify listener (for shepherd)
@@ -163,7 +166,7 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache, updateCallback edgeproto.CacheUpdateCallback) error {
+func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache, updateCallback edgeproto.CacheUpdateCallback) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
 
@@ -173,6 +176,6 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr stri
 		VaultAddr:    vaultAddr,
 		TestMode:     *testMode}
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
-	err := platform.Init(&pc, updateCallback)
+	err := platform.Init(ctx, &pc, updateCallback)
 	return err
 }
