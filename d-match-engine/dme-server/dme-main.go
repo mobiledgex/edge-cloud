@@ -250,7 +250,7 @@ func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.Ma
 	return operatorApiGw.GetQOSPositionKPI(req, getQosSvr)
 }
 
-func initOperator(operatorName string) (op.OperatorApiGw, error) {
+func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, error) {
 	if operatorName == "" || operatorName == "standalone" {
 		return &defaultoperator.OperatorApiGw{}, nil
 	}
@@ -267,11 +267,11 @@ func initOperator(operatorName string) (op.OperatorApiGw, error) {
 	if err != nil {
 		log.FatalLog("plugin does not have GetOperatorApiGw symbol", "plugin", *solib)
 	}
-	getOperatorFunc, ok := sym.(func(operatorName string) (op.OperatorApiGw, error))
+	getOperatorFunc, ok := sym.(func(ctx context.Context, operatorName string) (op.OperatorApiGw, error))
 	if !ok {
-		log.FatalLog("plugin GetOperatorApiGw symbol does not implement func(opername string) (op.OperatorApiGw, error)", "plugin", *solib)
+		log.FatalLog("plugin GetOperatorApiGw symbol does not implement func(ctx context.Context, opername string) (op.OperatorApiGw, error)", "plugin", *solib)
 	}
-	return getOperatorFunc(operatorName)
+	return getOperatorFunc(ctx, operatorName)
 }
 
 func main() {
@@ -285,7 +285,7 @@ func main() {
 	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &myCloudletKey)
 	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NODE_DME, &myCloudletKey, &myNode.Key)
 	var err error
-	operatorApiGw, err = initOperator(*carrier)
+	operatorApiGw, err = initOperator(ctx, *carrier)
 	if err != nil {
 		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
 	}
