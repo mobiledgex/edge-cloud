@@ -176,7 +176,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		err = cd.platform.UpdateClusterInst(ctx, new, updateClusterCacheCallback)
 		if err != nil {
 			str := fmt.Sprintf("update failed: %s", err)
-			cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str)
+			cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str)
 			return
 		}
 
