@@ -346,8 +346,12 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		if inbuf.NumMasters == 0 {
 			return fmt.Errorf("cannot modify single node clusters")
 		}
-		if inbuf.State != edgeproto.TrackedState_READY {
-			return fmt.Errorf("cluster is not ready")
+		if !cctx.Undo && inbuf.State != edgeproto.TrackedState_READY && inbuf.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, inbuf.State) {
+			if inbuf.State == edgeproto.TrackedState_UPDATE_ERROR {
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("previous update failed, %v, trying again", inbuf.Errors)})
+			} else {
+				return errors.New("ClusterInst busy, cannot update")
+			}
 		}
 		inbuf.CopyInFields(in)
 		inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
