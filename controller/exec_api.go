@@ -31,6 +31,9 @@ func InitExecApi() {
 }
 
 func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+	if !appInstApi.HasKey(&req.AppInstKey) {
+		return nil, edgeproto.ErrEdgeApiAppInstNotFound
+	}
 	// Forward the offer.
 	// Currently we don't know which controller has the CRM connected
 	// (or if it's even present), so just broadcast to all.
