@@ -100,6 +100,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51001
   flavor:
     name: x1.medium
+  physicalname: tmus-cloud-1
 - key:
     operatorkey:
       name: tmus
@@ -120,6 +121,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51002
   flavor:
     name: x1.medium
+  physicalname: tmus-cloud-2
 
 apps:
 - key:

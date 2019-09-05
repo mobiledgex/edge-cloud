@@ -211,6 +211,7 @@ var CloudletData = []edgeproto.Cloudlet{
 		Flavor:        FlavorData[0].Key,
 		NotifySrvAddr: "127.0.0.1:51001",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
+		PhysicalName:  "SanJoseSite",
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -227,6 +228,7 @@ var CloudletData = []edgeproto.Cloudlet{
 		Flavor:        FlavorData[0].Key,
 		NotifySrvAddr: "127.0.0.1:51002",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
+		PhysicalName:  "NewYorkSite",
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -243,6 +245,7 @@ var CloudletData = []edgeproto.Cloudlet{
 		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
 		NotifySrvAddr: "127.0.0.1:51003",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
+		PhysicalName:  "SanFranciscoSite",
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -259,6 +262,7 @@ var CloudletData = []edgeproto.Cloudlet{
 		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
 		NotifySrvAddr: "127.0.0.1:51004",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
+		PhysicalName:  "HawaiiSite",
 	},
 }
 var ClusterInstData = []edgeproto.ClusterInst{
