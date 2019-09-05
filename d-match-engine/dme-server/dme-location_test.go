@@ -14,8 +14,12 @@ import (
 
 func TestVerifyLoc(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq)
+	log.InitTracer("")
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
 	dmecommon.SetupMatchEngine()
-	operatorApiGw, _ = initOperator("standalone")
+	operatorApiGw, _ = initOperator(ctx, "standalone")
 	setupJwks()
 
 	// add all data

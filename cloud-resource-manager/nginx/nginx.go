@@ -118,7 +118,7 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 		"-v", errlogFile + ":/var/log/nginx/error.log",
 		"-v", accesslogFile + ":/var/log/nginx/access.log",
 		"-v", nconfName + ":/etc/nginx/nginx.conf",
-		"nginx"}...)
+		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/nginx-with-curl"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
 	log.DebugLog(log.DebugLevelMexos, "nginx docker command", "name", name,
 		"cmd", cmd)
@@ -132,8 +132,8 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 
 func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP string, ports []dme.AppPort, useTLS bool) error {
 	spec := ProxySpec{
-		Name:   	name,
-		UseTLS: 	useTLS,
+		Name:       name,
+		UseTLS:     useTLS,
 		MetricPort: cloudcommon.NginxMetricsPort,
 	}
 	httpPorts := []HTTPSpecDetail{}
@@ -224,13 +224,13 @@ func reloadNginxL7(client pc.PlatformClient) error {
 }
 
 type ProxySpec struct {
-	Name    	string
-	L4, L7  	bool
-	UDPSpec 	[]*UDPSpecDetail
-	TCPSpec 	[]*TCPSpecDetail
-	L7Port  	int32
-	UseTLS  	bool
-	MetricPort  int32
+	Name       string
+	L4, L7     bool
+	UDPSpec    []*UDPSpecDetail
+	TCPSpec    []*TCPSpecDetail
+	L7Port     int32
+	UseTLS     bool
+	MetricPort int32
 }
 
 type TCPSpecDetail struct {
