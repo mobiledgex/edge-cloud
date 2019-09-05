@@ -16,6 +16,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51001
   flavor:
     name: DefaultPlatformFlavor
+  physicalname: dmuus-cloud-1
 flavors:
 - key:
     name: x1.tiny
