@@ -104,7 +104,7 @@ class show_status:
          msg = ""
          req = urllib2.Request("http://"+uri, msg, headers)
          print ("posting to %s\n" % uri)
-         response = urllib2.urlopen(req, timeout=3)
+         response = urllib2.urlopen(req, timeout=2)
          print ("got response from %s\n" % uri)
          return type,name,uri,"OK"
        except urllib2.HTTPError, e:
@@ -118,9 +118,10 @@ class show_status:
           print("unknown on post to url: %s -- %s" % (uri,e2))
           return type,name,uri,"FAIL - %s" % e2
 
-   def getUrisForApp(self, appname):
+   def getUrisForApp(self, ctrl, appname):
+       print("Get Uris for controller: %s" % ctrl)
        ## todo: configurable endpoints
-       p = subprocess.Popen(["/usr/local/bin/edgectl --addr mexdemo.ctrl.mobiledgex.net:55001 --tls /root/tls/mex-client.crt controller ShowAppInst --key-appkey-name \""+appname+"\""], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+       p = subprocess.Popen(["/usr/local/bin/edgectl --addr "+ctrl+" --tls /root/tls/mex-client.crt controller ShowAppInst --key-appkey-name \""+appname+"\""], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
        
        uris = []
        out,err = p.communicate()
@@ -145,19 +146,27 @@ class show_status:
         pool = ThreadPool(20)
 
         itemsToCheck = []
-        
+        ctrls = ("US|mexdemo-us.ctrl.mobiledgex.net:55001",
+                 "US old|mexdemo.ctrl.mobiledgex.net:55001",
+                 "EU|mexdemo-eu-cluster.ctrl.mobiledgex.net:55001",
+                 "KR|mexdemo-kr.ctrl.mobiledgex.net:55001")
+
         for appname in appnames:
            try:
-             uris = self.getUrisForApp(appname)
-             for uri in uris:
-               itemsToCheck.append("App Instances|"+appname+"|"+uri) 
+             for ctrl in ctrls:
+                region,cname = ctrl.split("|")
+                uris = self.getUrisForApp(cname,appname)
+                for uri in uris:
+                   itemsToCheck.append("App Instances "+region+"|"+appname+"|"+uri) 
            except Exception as e:
               print "Exception getting app uris for %s - %s " % (appname, e)
         ## todo: remove hardcoded endpoints
         gws = ("Token Simulator|mexdemo.tok.mobiledgex.net:9999", 
                "Location API Simulator|mexdemo.locsim.mobiledgex.net:8888",
                "DME - platos|platos.dme.mobiledgex.net:50051", 
-               "DME - Demo|mexdemo.dme.mobiledgex.net:50051")
+               "DME - EU Demo|eu-mexdemo.dme.mobiledgex.net:50051",
+               "DME - US Demo|us-mexdemo.dme.mobiledgex.net:50051", 
+               "DME - Old Demo|mexdemo.dme.mobiledgex.net:50051")
         
         for gw in gws:
            gwname,uri = gw.split("|")
