@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
 type FlavorApi struct {
@@ -41,6 +42,10 @@ func (s *FlavorApi) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 }
 
 func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	if !flavorApi.HasFlavor(&in.Key) {
+		// key doesn't exist
+		return &edgeproto.Result{}, objstore.ErrKVStoreKeyNotFound
+	}
 	if clusterInstApi.UsesFlavor(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Flavor in use by Cluster")
 	}
