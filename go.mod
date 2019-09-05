@@ -21,8 +21,6 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf // indirect
 	github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
-	github.com/casbin/casbin v1.6.0
-	github.com/casbin/gorm-adapter v0.0.0-20171006093545-e56c6daebd5e
 	github.com/cenkalti/backoff v2.1.1+incompatible // indirect
 	github.com/cespare/xxhash v1.0.0
 	github.com/cloudflare/cloudflare-go v0.8.5
