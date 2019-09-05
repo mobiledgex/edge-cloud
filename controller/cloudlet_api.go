@@ -184,6 +184,10 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.NotifySrvAddr = "127.0.0.1:51001"
 	}
 
+	if in.PhysicalName == "" {
+		in.PhysicalName = in.Key.Name
+	}
+
 	pfConfig := edgeproto.PlatformConfig{}
 	appRoles := VaultRoles{}
 	if err := getRolesAndSecrets(&appRoles); err != nil {
