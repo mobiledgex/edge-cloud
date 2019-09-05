@@ -370,6 +370,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51002
   flavor:
     name: x1.tiny
+  physicalname: tmus-cloud-2
 - key:
     operatorkey:
       name: tmus
@@ -384,6 +385,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51005
   flavor:
     name: x1.tiny
+  physicalname: tmus-cloud-5
 - key:
     operatorkey:
       name: tmus
@@ -398,6 +400,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51006
   flavor:
     name: x1.tiny
+  physicalname: tmus-cloud-6
 - key:
     operatorkey:
       name: azure
@@ -412,6 +415,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51009
   flavor:
     name: x1.tiny
+  physicalname: azure-cloud-9
 - key:
     operatorkey:
       name: gcp
@@ -426,6 +430,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51010
   flavor:
     name: x1.tiny
+  physicalname: gcp-cloud-10
 - key:
     operatorkey:
       name: tmus
@@ -440,6 +445,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51001
   flavor:
     name: x1.tiny
+  physicalname: tmus-cloud-1
 - key:
     operatorkey:
       name: tmus
@@ -454,6 +460,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51003
   flavor:
     name: x1.tiny
+  physicalname: tmus-cloud-3
 - key:
     operatorkey:
       name: tmus
@@ -468,6 +475,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51004
   flavor:
     name: x1.tiny
+  physicalname: tmus-cloud-4
 - key:
     operatorkey:
       name: tmus
@@ -482,6 +490,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51007
   flavor:
     name: x1.tiny
+  physicalname: tmus-cloud-7
 - key:
     operatorkey:
       name: tmus
@@ -496,6 +505,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51008
   flavor:
     name: x1.tiny
+  physicalname: tmus-cloud-8
 
 apps:
 - key:
