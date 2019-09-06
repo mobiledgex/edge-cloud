@@ -41,6 +41,9 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		testMode = pfConfig.TestMode
 		span = pfConfig.Span
 	}
+	for envKey, envVal := range cloudlet.EnvVars {
+		envVars[envKey] = envVal
+	}
 
 	opts = append(opts, process.WithDebug("api,mexos,notify,info"))
 

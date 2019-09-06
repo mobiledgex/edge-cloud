@@ -183,6 +183,8 @@ message Cloudlet {
   FlavorKey flavor = 17 [(gogoproto.nullable) = false];
   // Physical infrastructure cloudlet name
   string physical_name = 18;
+  // Comma separated list of env variables i.e. key1=val1,key2=val2
+  map<string, string> env_vars = 19;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

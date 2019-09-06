@@ -446,23 +446,21 @@ func (g *GenCmd) generateVarFlags(msgName string, parents, enumParents []string,
 		}
 		mapType := g.support.GetMapType(g.Generator, field)
 		if mapType != nil {
-			// not supported
-			continue
-		}
-		// XXX repeated fields currently mess up show commands
-		// because if we create a size 1 array to hold a possible
-		// user input, the show command tries to match this size-1
-		// array against the back-end data. In reality we should not
-		// create any array (array should be nil) unless the user
-		// specifies some arg. For now just skip repeated fields.
-		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			if !mapType.ValIsMap {
+				// not supported
+				continue
+			}
+		} else if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			// XXX repeated fields currently mess up show commands
+			// because if we create a size 1 array to hold a possible
+			// user input, the show command tries to match this size-1
+			// array against the back-end data. In reality we should not
+			// create any array (array should be nil) unless the user
+			// specifies some arg. For now just skip repeated fields.
 			continue
 		}
 
 		idx := ""
-		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-			idx = "[0]"
-		}
 
 		name := generator.CamelCase(*field.Name)
 		if name == "Fields" {
@@ -482,6 +480,17 @@ func (g *GenCmd) generateVarFlags(msgName string, parents, enumParents []string,
 			fargs.MsgName = msgName + "NoConfig"
 			g.noconfigFields[hierField] = struct{}{}
 		}
+		if mapType != nil && mapType.ValIsMap {
+			fargs.Type = "StringToString"
+			fargs.DefValue = "map[string]string{}"
+			err := g.fieldTmpl.Execute(g, fargs)
+			if err != nil {
+				g.Fail("Failed to execute flag template for ", msgName, ", field ", name, ": ", err.Error(), "\n")
+				return
+			}
+			return
+		}
+
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := g.GetDesc(field.GetTypeName())

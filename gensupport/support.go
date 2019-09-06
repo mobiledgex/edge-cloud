@@ -321,6 +321,7 @@ type MapType struct {
 	KeyType      string
 	ValType      string
 	ValIsMessage bool
+	ValIsMap     bool
 }
 
 func (s *PluginSupport) GetMapType(g *generator.Generator, field *descriptor.FieldDescriptorProto) *MapType {
@@ -336,6 +337,11 @@ func (s *PluginSupport) GetMapType(g *generator.Generator, field *descriptor.Fie
 	m.ValField = desc.Field[1]
 	m.KeyType = s.GoType(g, m.KeyField)
 	m.ValType = s.GoType(g, m.ValField)
+	if *m.ValField.Type == descriptor.FieldDescriptorProto_TYPE_STRING &&
+		*m.KeyField.Type == descriptor.FieldDescriptorProto_TYPE_STRING {
+		m.ValIsMap = true
+		return &m
+	}
 	if *m.ValField.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 		m.ValIsMessage = true
 	}
