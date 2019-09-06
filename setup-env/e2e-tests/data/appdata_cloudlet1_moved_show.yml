@@ -91,6 +91,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51105
   flavor:
     name: DefaultPlatformFlavor
+  physicalname: gcp-cloud-5
 - key:
     operatorkey:
       name: tmus
@@ -105,6 +106,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51101
   flavor:
     name: DefaultPlatformFlavor
+  physicalname: tmus-cloud-1
 - key:
     operatorkey:
       name: tmus
@@ -119,6 +121,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51102
   flavor:
     name: DefaultPlatformFlavor
+  physicalname: tmus-cloud-2
 - key:
     operatorkey:
       name: tmus
@@ -132,6 +135,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51103
   flavor:
     name: DefaultPlatformFlavor
+  physicalname: tmus-cloud-3
 - key:
     operatorkey:
       name: azure
@@ -146,6 +150,7 @@ cloudlets:
   notifysrvaddr: 127.0.0.1:51104
   flavor:
     name: DefaultPlatformFlavor
+  physicalname: azure-cloud-4
 
 apps:
 - key:
