@@ -166,7 +166,8 @@ func UpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 
 func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.DebugLog(log.DebugLevelMexos, "deleting app", "name", names.AppName)
-	cmd := fmt.Sprintf("%s kubectl delete -f %s.yaml", names.KconfEnv, names.AppName)
+	file := names.AppName + names.AppRevision + ".yaml"
+	cmd := fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, file)
 	out, err := client.Output(cmd)
 	if err != nil {
 		if strings.Contains(string(out), "not found") {
