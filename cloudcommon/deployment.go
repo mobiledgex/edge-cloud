@@ -87,17 +87,17 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 		missingPorts := []string{}
 		for _, appPort := range ports {
 			// http is mapped to tcp
-			if (appPort.EndPort != 0) {
+			if appPort.EndPort != 0 {
 				// We have a range-port notation on the dme.AppPort
 				// while our manifest exhaustively enumerates each as a kubePort
 				start := appPort.InternalPort
-				end   := appPort.EndPort
-				for i := start; i<=end; i++ {
+				end := appPort.EndPort
+				for i := start; i <= end; i++ {
 					// expand short hand notation to test membership in map
-					tp := dme.AppPort {
-						Proto: appPort.Proto,
+					tp := dme.AppPort{
+						Proto:        appPort.Proto,
 						InternalPort: int32(i),
-						EndPort: int32(0),
+						EndPort:      int32(0),
 					}
 					if appPort.Proto == dme.LProto_L_PROTO_HTTP {
 						appPort.Proto = dme.LProto_L_PROTO_TCP
@@ -175,6 +175,11 @@ func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
 func GetDeploymentManifest(manifest string) (string, error) {
 	// manifest may be remote target or inline json/yaml
 	if strings.HasPrefix(manifest, "http://") || strings.HasPrefix(manifest, "https://") {
+		if strings.HasSuffix(manifest, ".zip") {
+			// don't expand this into a string, CRM will have to unzip it
+			log.DebugLog(log.DebugLevelApi, "zipfile manifest found", "manifest", manifest)
+			return manifest, nil
+		}
 		mf, err := GetRemoteManifest(manifest)
 		if err != nil {
 			return "", fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
