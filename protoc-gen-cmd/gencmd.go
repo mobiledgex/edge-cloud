@@ -446,7 +446,7 @@ func (g *GenCmd) generateVarFlags(msgName string, parents, enumParents []string,
 		}
 		mapType := g.support.GetMapType(g.Generator, field)
 		if mapType != nil {
-			if !mapType.ValIsMap {
+			if mapType.FlagType == "" {
 				// not supported
 				continue
 			}
@@ -480,9 +480,9 @@ func (g *GenCmd) generateVarFlags(msgName string, parents, enumParents []string,
 			fargs.MsgName = msgName + "NoConfig"
 			g.noconfigFields[hierField] = struct{}{}
 		}
-		if mapType != nil && mapType.ValIsMap {
-			fargs.Type = "StringToString"
-			fargs.DefValue = "map[string]string{}"
+		if mapType != nil && mapType.FlagType != "" {
+			fargs.Type = mapType.FlagType
+			fargs.DefValue = mapType.DefValue
 			err := g.fieldTmpl.Execute(g, fargs)
 			if err != nil {
 				g.Fail("Failed to execute flag template for ", msgName, ", field ", name, ": ", err.Error(), "\n")
