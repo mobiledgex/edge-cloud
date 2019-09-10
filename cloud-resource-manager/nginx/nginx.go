@@ -278,17 +278,15 @@ http {
 {{- end}}
         include /etc/nginx/L7/*.conf;
 	}
-	# Temp fix for EDGECLOUD-1267.  Metrics port has to be unique for 
-	# each nginx instance.
-	#server {
-	#	listen 127.0.0.1:{{.MetricPort}};
-	#	server_name 127.0.0.1:{{.MetricPort}};
-	#	location /nginx_metrics {
-	#		stub_status;
-	#		allow 127.0.0.1;
-	#		deny all;
-	#	}
-	#}
+	server {
+		listen 127.0.0.1:{{.MetricPort}};
+		server_name 127.0.0.1:{{.MetricPort}};
+		location /nginx_metrics {
+			stub_status;
+			allow 127.0.0.1;
+			deny all;
+		}
+	}
 }
 {{- end}}
 
@@ -307,19 +305,17 @@ stream {
 	}
 	{{- end}}
 }
-# Temp fix for EDGECLOUD-1266.  Metrics port has to be unique for
-# each nginx instance
-#http {
-	#server {
-	#	listen 127.0.0.1:{{.MetricPort}};
-	#	server_name 127.0.0.1:{{.MetricPort}};
-	#	location /nginx_metrics {
-	#		allow 127.0.0.1;
-	#		deny all;
-	#		stub_status;
-	#	}
-	#}
-#}
+http {
+	server {
+		listen 127.0.0.1:{{.MetricPort}};
+		server_name 127.0.0.1:{{.MetricPort}};
+		location /nginx_metrics {
+			allow 127.0.0.1;
+			deny all;
+			stub_status;
+		}
+	}
+}
 {{- end}}
 `
 
