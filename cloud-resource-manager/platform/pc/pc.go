@@ -47,7 +47,7 @@ func DeleteDir(ctx context.Context, client PlatformClient, dir string) error {
 	cmd := fmt.Sprintf("rm -rf %s", dir)
 	out, err := client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("error dir %s, %s, %v", cmd, out, err)
+		return fmt.Errorf("error deleting dir %s, %s, %v", cmd, out, err)
 	}
 	return nil
 }

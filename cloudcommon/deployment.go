@@ -228,9 +228,6 @@ func GetDeploymentManifest(manifest string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
 		}
-		if err != nil {
-			return "", fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
-		}
 		return mf, nil
 	}
 	// inline manifest

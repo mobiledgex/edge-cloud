@@ -281,12 +281,15 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 
 	// if the app is already deployed, there are restrictions on what can be changed.
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
+
 	appInstExists := false
-	if appInstApi.UsesApp(&in.Key, dynInsts) {
-		appInstExists = true
-		for _, field := range in.Fields {
-			if field == edgeproto.AppFieldAccessPorts ||
-				field == edgeproto.AppFieldDeployment {
+	for _, field := range in.Fields {
+		if field == edgeproto.AppFieldDeployment {
+			return &edgeproto.Result{}, fmt.Errorf("Field cannot be modified")
+		}
+		if appInstApi.UsesApp(&in.Key, dynInsts) {
+			appInstExists = true
+			if field == edgeproto.AppFieldAccessPorts {
 				return &edgeproto.Result{}, fmt.Errorf("Field cannot be modified when AppInstances exist")
 			}
 		}
