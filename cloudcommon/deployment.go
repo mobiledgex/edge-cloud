@@ -1,15 +1,19 @@
 package cloudcommon
 
 import (
+	"archive/zip"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	yaml "github.com/mobiledgex/yaml/v2"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -23,6 +27,10 @@ var ValidDeployments = []string{
 	AppDeploymentTypeVM,
 	AppDeploymentTypeHelm,
 	AppDeploymentTypeDocker,
+}
+
+type DockerManifest struct {
+	DockerComposeFiles []string
 }
 
 func IsValidDeploymentType(appDeploymentType string) bool {
@@ -172,15 +180,54 @@ func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
 	return "", nil
 }
 
+func validateRemoteZipManifest(manifest string) error {
+	zipfile := "/tmp/temp.zip"
+	err := GetRemoteManifestToFile(manifest, zipfile)
+	if err != nil {
+		return fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
+	}
+	defer os.Remove(zipfile)
+	r, err := zip.OpenReader(zipfile)
+	if err != nil {
+		return fmt.Errorf("cannot read zipfile from manifest %s, %v", manifest, err)
+	}
+	defer r.Close()
+	foundManifest := false
+	for _, f := range r.File {
+		if f.Name == "manifest.yml" {
+			foundManifest = true
+			var dm DockerManifest
+			rc, err := f.Open()
+			if err != nil {
+				return fmt.Errorf("cannot open manifest.yml in zipfile: %v", err)
+			}
+			buf := new(bytes.Buffer)
+			buf.ReadFrom(rc)
+			rc.Close()
+			err = yaml.Unmarshal(buf.Bytes(), &dm)
+			if err != nil {
+				return fmt.Errorf("unmarshalling manifest.yml: %v", err)
+			}
+		}
+	}
+	if !foundManifest {
+		return fmt.Errorf("no manifest.yml in zipfile %s", manifest)
+	}
+	return nil
+}
+
 func GetDeploymentManifest(manifest string) (string, error) {
 	// manifest may be remote target or inline json/yaml
 	if strings.HasPrefix(manifest, "http://") || strings.HasPrefix(manifest, "https://") {
+
 		if strings.HasSuffix(manifest, ".zip") {
-			// don't expand this into a string, CRM will have to unzip it
 			log.DebugLog(log.DebugLevelApi, "zipfile manifest found", "manifest", manifest)
-			return manifest, nil
+			return manifest, validateRemoteZipManifest(manifest)
 		}
 		mf, err := GetRemoteManifest(manifest)
+		if err != nil {
+			return "", fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
+		}
 		if err != nil {
 			return "", fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
 		}
@@ -218,4 +265,20 @@ func GetRemoteManifest(target string) (string, error) {
 		return "", err
 	}
 	return string(manifestBytes), nil
+}
+
+func GetRemoteManifestToFile(target string, filename string) error {
+	resp, err := http.Get(target)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("bad response from remote manifest %d", resp.StatusCode)
+	}
+	manifestBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename, manifestBytes, 0644)
 }

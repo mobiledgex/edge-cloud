@@ -264,6 +264,16 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	return &edgeproto.Result{}, err
 }
 
+func getDockerDeployType(manifest string) string {
+	if manifest == "" {
+		return "docker"
+	}
+	if strings.HasSuffix(manifest, ".zip") {
+		return "docker-compose-zip"
+	}
+	return "docker-compose"
+}
+
 func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	if s.AndroidPackageConflicts(in) {
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another app", in.AndroidPackageName)
@@ -292,6 +302,14 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			if cur.Deployment != cloudcommon.AppDeploymentTypeKubernetes &&
 				cur.Deployment != cloudcommon.AppDeploymentTypeDocker {
 				return fmt.Errorf("UpdateApp not supported for deployment: %s when AppInstances exist", cur.Deployment)
+			}
+			// don't allow change from regular docker to docker-compose or docker-compose zip if instances exist
+			if cur.Deployment == cloudcommon.AppDeploymentTypeDocker {
+				curType := getDockerDeployType(cur.DeploymentManifest)
+				newType := getDockerDeployType(in.DeploymentManifest)
+				if curType != newType {
+					return fmt.Errorf("Cannot change app manifest from : %s to: %s when AppInstances exist", curType, newType)
+				}
 			}
 		}
 
