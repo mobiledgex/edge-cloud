@@ -193,10 +193,12 @@ func validateRemoteZipManifest(manifest string) error {
 	}
 	defer r.Close()
 	foundManifest := false
+	var filesInManifest = make(map[string]bool)
+	var dm DockerManifest
 	for _, f := range r.File {
+		filesInManifest[f.Name] = true
 		if f.Name == "manifest.yml" {
 			foundManifest = true
-			var dm DockerManifest
 			rc, err := f.Open()
 			if err != nil {
 				return fmt.Errorf("cannot open manifest.yml in zipfile: %v", err)
@@ -212,6 +214,12 @@ func validateRemoteZipManifest(manifest string) error {
 	}
 	if !foundManifest {
 		return fmt.Errorf("no manifest.yml in zipfile %s", manifest)
+	}
+	for _, dc := range dm.DockerComposeFiles {
+		_, ok := filesInManifest[dc]
+		if !ok {
+			return fmt.Errorf("docker-compose file specified in manifest but not in zip: %s", dc)
+		}
 	}
 	return nil
 }
