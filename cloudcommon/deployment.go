@@ -1,15 +1,19 @@
 package cloudcommon
 
 import (
+	"archive/zip"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	yaml "github.com/mobiledgex/yaml/v2"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -23,6 +27,10 @@ var ValidDeployments = []string{
 	AppDeploymentTypeVM,
 	AppDeploymentTypeHelm,
 	AppDeploymentTypeDocker,
+}
+
+type DockerManifest struct {
+	DockerComposeFiles []string
 }
 
 func IsValidDeploymentType(appDeploymentType string) bool {
@@ -87,17 +95,17 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 		missingPorts := []string{}
 		for _, appPort := range ports {
 			// http is mapped to tcp
-			if (appPort.EndPort != 0) {
+			if appPort.EndPort != 0 {
 				// We have a range-port notation on the dme.AppPort
 				// while our manifest exhaustively enumerates each as a kubePort
 				start := appPort.InternalPort
-				end   := appPort.EndPort
-				for i := start; i<=end; i++ {
+				end := appPort.EndPort
+				for i := start; i <= end; i++ {
 					// expand short hand notation to test membership in map
-					tp := dme.AppPort {
-						Proto: appPort.Proto,
+					tp := dme.AppPort{
+						Proto:        appPort.Proto,
 						InternalPort: int32(i),
-						EndPort: int32(0),
+						EndPort:      int32(0),
 					}
 					if appPort.Proto == dme.LProto_L_PROTO_HTTP {
 						appPort.Proto = dme.LProto_L_PROTO_TCP
@@ -172,9 +180,58 @@ func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
 	return "", nil
 }
 
+func validateRemoteZipManifest(manifest string) error {
+	zipfile := "/tmp/temp.zip"
+	err := GetRemoteManifestToFile(manifest, zipfile)
+	if err != nil {
+		return fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
+	}
+	defer os.Remove(zipfile)
+	r, err := zip.OpenReader(zipfile)
+	if err != nil {
+		return fmt.Errorf("cannot read zipfile from manifest %s, %v", manifest, err)
+	}
+	defer r.Close()
+	foundManifest := false
+	var filesInManifest = make(map[string]bool)
+	var dm DockerManifest
+	for _, f := range r.File {
+		filesInManifest[f.Name] = true
+		if f.Name == "manifest.yml" {
+			foundManifest = true
+			rc, err := f.Open()
+			if err != nil {
+				return fmt.Errorf("cannot open manifest.yml in zipfile: %v", err)
+			}
+			buf := new(bytes.Buffer)
+			buf.ReadFrom(rc)
+			rc.Close()
+			err = yaml.Unmarshal(buf.Bytes(), &dm)
+			if err != nil {
+				return fmt.Errorf("unmarshalling manifest.yml: %v", err)
+			}
+		}
+	}
+	if !foundManifest {
+		return fmt.Errorf("no manifest.yml in zipfile %s", manifest)
+	}
+	for _, dc := range dm.DockerComposeFiles {
+		_, ok := filesInManifest[dc]
+		if !ok {
+			return fmt.Errorf("docker-compose file specified in manifest but not in zip: %s", dc)
+		}
+	}
+	return nil
+}
+
 func GetDeploymentManifest(manifest string) (string, error) {
 	// manifest may be remote target or inline json/yaml
 	if strings.HasPrefix(manifest, "http://") || strings.HasPrefix(manifest, "https://") {
+
+		if strings.HasSuffix(manifest, ".zip") {
+			log.DebugLog(log.DebugLevelApi, "zipfile manifest found", "manifest", manifest)
+			return manifest, validateRemoteZipManifest(manifest)
+		}
 		mf, err := GetRemoteManifest(manifest)
 		if err != nil {
 			return "", fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
@@ -213,4 +270,20 @@ func GetRemoteManifest(target string) (string, error) {
 		return "", err
 	}
 	return string(manifestBytes), nil
+}
+
+func GetRemoteManifestToFile(target string, filename string) error {
+	resp, err := http.Get(target)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("bad response from remote manifest %d", resp.StatusCode)
+	}
+	manifestBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename, manifestBytes, 0644)
 }

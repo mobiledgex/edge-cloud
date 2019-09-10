@@ -1,6 +1,7 @@
 package pc
 
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -38,6 +39,16 @@ func WriteFile(client PlatformClient, file string, contents string, kind string)
 		return fmt.Errorf("error writing %s, %s, %s, %v", kind, cmd, out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "wrote file", "kind", kind)
+	return nil
+}
+
+func DeleteDir(ctx context.Context, client PlatformClient, dir string) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "deleting directory", "dir", dir)
+	cmd := fmt.Sprintf("rm -rf %s", dir)
+	out, err := client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error deleting dir %s, %s, %v", cmd, out, err)
+	}
 	return nil
 }
 
