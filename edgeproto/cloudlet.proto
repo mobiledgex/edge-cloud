@@ -183,6 +183,8 @@ message Cloudlet {
   FlavorKey flavor = 17 [(gogoproto.nullable) = false];
   // Physical infrastructure cloudlet name
   string physical_name = 18;
+  // Single Key-Value pair of env var to be passed to CRM
+  map<string, string> env_var = 19;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
