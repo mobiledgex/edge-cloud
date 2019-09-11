@@ -364,7 +364,11 @@ func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 	var err error
 
 	args := p.GetArgs(opts...)
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	envVars := []string{}
+	for k, v := range p.GetEnvVars() {
+		envVars = append(envVars, fmt.Sprintf("%s=%s", k, v))
+	}
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envVars, logfile)
 	return err
 }
 
