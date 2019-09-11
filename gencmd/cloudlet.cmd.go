@@ -443,7 +443,7 @@ func PlatformConfigWriteOutputOne(obj *edgeproto.PlatformConfig) {
 	}
 }
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
-	s := make([]string, 0, 17)
+	s := make([]string, 0, 18)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -491,7 +491,7 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 }
 
 func CloudletHeaderSlicer() []string {
-	s := make([]string, 0, 17)
+	s := make([]string, 0, 18)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
@@ -1215,6 +1215,8 @@ func init() {
 	CloudletFlagSet.StringVar(&CloudletIn.NotifySrvAddr, "notifysrvaddr", "", "NotifySrvAddr")
 	CloudletFlagSet.StringVar(&CloudletIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.PhysicalName, "physicalname", "", "PhysicalName")
+	envvarFlag := (*StringToString)(&CloudletIn.EnvVar)
+	CloudletFlagSet.Var(envvarFlag, "envvar", "EnvVar")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [CloudletStateUnknown CloudletStateErrors CloudletStateReady CloudletStateOffline CloudletStateNotPresent]")
