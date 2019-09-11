@@ -34,6 +34,7 @@ type GenCmd struct {
 	tmpl               *template.Template
 	outTmpl            *template.Template
 	fieldTmpl          *template.Template
+	customFieldTmpl    *template.Template
 	inMessages         map[string]*generator.Descriptor
 	enumArgs           map[string][]*EnumArg
 	hideTags           map[string]struct{}
@@ -63,6 +64,7 @@ func (g *GenCmd) Init(gen *generator.Generator) {
 	g.tmpl = template.Must(template.New("cmd").Parse(tmpl))
 	g.outTmpl = template.Must(template.New("out").Parse(outTmpl))
 	g.fieldTmpl = template.Must(template.New("field").Parse(fieldTmpl))
+	g.customFieldTmpl = template.Must(template.New("customField").Parse(customFieldTmpl))
 }
 
 func (g *GenCmd) GenerateImports(file *generator.FileDescriptor) {
@@ -431,6 +433,9 @@ type fieldArgs struct {
 
 var fieldTmpl = `{{.MsgName}}FlagSet.{{.Type}}Var({{.Ref}}, "{{.Arg}}", {{.DefValue}}, {{.Usage}})
 `
+var customFieldTmpl = `{{.Arg}}Flag := (*{{.Type}})({{.Ref}})
+{{.MsgName}}FlagSet.Var({{.Arg}}Flag, "{{.Arg}}", {{.Usage}})
+`
 
 func (g *GenCmd) generateVarFlags(msgName string, parents, enumParents []string, desc *generator.Descriptor, noconfig map[string]struct{}, visited []*generator.Descriptor, parentNoConfig bool) {
 	if gensupport.WasVisited(desc, visited) {
@@ -446,23 +451,21 @@ func (g *GenCmd) generateVarFlags(msgName string, parents, enumParents []string,
 		}
 		mapType := g.support.GetMapType(g.Generator, field)
 		if mapType != nil {
-			// not supported
-			continue
-		}
-		// XXX repeated fields currently mess up show commands
-		// because if we create a size 1 array to hold a possible
-		// user input, the show command tries to match this size-1
-		// array against the back-end data. In reality we should not
-		// create any array (array should be nil) unless the user
-		// specifies some arg. For now just skip repeated fields.
-		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			if mapType.FlagType == "" {
+				// not supported
+				continue
+			}
+		} else if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			// XXX repeated fields currently mess up show commands
+			// because if we create a size 1 array to hold a possible
+			// user input, the show command tries to match this size-1
+			// array against the back-end data. In reality we should not
+			// create any array (array should be nil) unless the user
+			// specifies some arg. For now just skip repeated fields.
 			continue
 		}
 
 		idx := ""
-		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-			idx = "[0]"
-		}
 
 		name := generator.CamelCase(*field.Name)
 		if name == "Fields" {
@@ -482,6 +485,17 @@ func (g *GenCmd) generateVarFlags(msgName string, parents, enumParents []string,
 			fargs.MsgName = msgName + "NoConfig"
 			g.noconfigFields[hierField] = struct{}{}
 		}
+		if mapType != nil && mapType.FlagType != "" {
+			fargs.Type = mapType.FlagType
+			fargs.DefValue = mapType.DefValue
+			err := g.customFieldTmpl.Execute(g, fargs)
+			if err != nil {
+				g.Fail("Failed to execute flag template for ", msgName, ", field ", name, ": ", err.Error(), "\n")
+				return
+			}
+			return
+		}
+
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := g.GetDesc(field.GetTypeName())
