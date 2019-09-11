@@ -41,7 +41,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		testMode = pfConfig.TestMode
 		span = pfConfig.Span
 	}
-	for envKey, envVal := range cloudlet.EnvVars {
+	for envKey, envVal := range cloudlet.EnvVar {
 		envVars[envKey] = envVal
 	}
 
