@@ -40,33 +40,37 @@ type PlatformType int32
 const (
 	// Fake Cloudlet
 	PlatformType_PLATFORM_TYPE_FAKE PlatformType = 0
+	// Fake Infra Cloudlet
+	PlatformType_PLATFORM_TYPE_FAKEINFRA PlatformType = 1
 	// DIND Cloudlet
-	PlatformType_PLATFORM_TYPE_DIND PlatformType = 1
+	PlatformType_PLATFORM_TYPE_DIND PlatformType = 2
 	// Openstack Cloudlet
-	PlatformType_PLATFORM_TYPE_OPENSTACK PlatformType = 2
+	PlatformType_PLATFORM_TYPE_OPENSTACK PlatformType = 3
 	// Azure Cloudlet
-	PlatformType_PLATFORM_TYPE_AZURE PlatformType = 3
+	PlatformType_PLATFORM_TYPE_AZURE PlatformType = 4
 	// GCP Cloudlet
-	PlatformType_PLATFORM_TYPE_GCP PlatformType = 4
+	PlatformType_PLATFORM_TYPE_GCP PlatformType = 5
 	// MEXDIND Cloudlet
-	PlatformType_PLATFORM_TYPE_MEXDIND PlatformType = 5
+	PlatformType_PLATFORM_TYPE_MEXDIND PlatformType = 6
 )
 
 var PlatformType_name = map[int32]string{
 	0: "PLATFORM_TYPE_FAKE",
-	1: "PLATFORM_TYPE_DIND",
-	2: "PLATFORM_TYPE_OPENSTACK",
-	3: "PLATFORM_TYPE_AZURE",
-	4: "PLATFORM_TYPE_GCP",
-	5: "PLATFORM_TYPE_MEXDIND",
+	1: "PLATFORM_TYPE_FAKEINFRA",
+	2: "PLATFORM_TYPE_DIND",
+	3: "PLATFORM_TYPE_OPENSTACK",
+	4: "PLATFORM_TYPE_AZURE",
+	5: "PLATFORM_TYPE_GCP",
+	6: "PLATFORM_TYPE_MEXDIND",
 }
 var PlatformType_value = map[string]int32{
 	"PLATFORM_TYPE_FAKE":      0,
-	"PLATFORM_TYPE_DIND":      1,
-	"PLATFORM_TYPE_OPENSTACK": 2,
-	"PLATFORM_TYPE_AZURE":     3,
-	"PLATFORM_TYPE_GCP":       4,
-	"PLATFORM_TYPE_MEXDIND":   5,
+	"PLATFORM_TYPE_FAKEINFRA": 1,
+	"PLATFORM_TYPE_DIND":      2,
+	"PLATFORM_TYPE_OPENSTACK": 3,
+	"PLATFORM_TYPE_AZURE":     4,
+	"PLATFORM_TYPE_GCP":       5,
+	"PLATFORM_TYPE_MEXDIND":   6,
 }
 
 func (x PlatformType) String() string {
@@ -4280,6 +4284,7 @@ func (m *CloudletMetrics) ValidateEnums() error {
 
 var PlatformTypeStrings = []string{
 	"PLATFORM_TYPE_FAKE",
+	"PLATFORM_TYPE_FAKEINFRA",
 	"PLATFORM_TYPE_DIND",
 	"PLATFORM_TYPE_OPENSTACK",
 	"PLATFORM_TYPE_AZURE",
@@ -4289,34 +4294,38 @@ var PlatformTypeStrings = []string{
 
 const (
 	PlatformTypePLATFORM_TYPE_FAKE      uint64 = 1 << 0
-	PlatformTypePLATFORM_TYPE_DIND      uint64 = 1 << 1
-	PlatformTypePLATFORM_TYPE_OPENSTACK uint64 = 1 << 2
-	PlatformTypePLATFORM_TYPE_AZURE     uint64 = 1 << 3
-	PlatformTypePLATFORM_TYPE_GCP       uint64 = 1 << 4
-	PlatformTypePLATFORM_TYPE_MEXDIND   uint64 = 1 << 5
+	PlatformTypePLATFORM_TYPE_FAKEINFRA uint64 = 1 << 1
+	PlatformTypePLATFORM_TYPE_DIND      uint64 = 1 << 2
+	PlatformTypePLATFORM_TYPE_OPENSTACK uint64 = 1 << 3
+	PlatformTypePLATFORM_TYPE_AZURE     uint64 = 1 << 4
+	PlatformTypePLATFORM_TYPE_GCP       uint64 = 1 << 5
+	PlatformTypePLATFORM_TYPE_MEXDIND   uint64 = 1 << 6
 )
 
 var PlatformType_CamelName = map[int32]string{
 	// PLATFORM_TYPE_FAKE -> PlatformTypeFake
 	0: "PlatformTypeFake",
+	// PLATFORM_TYPE_FAKEINFRA -> PlatformTypeFakeinfra
+	1: "PlatformTypeFakeinfra",
 	// PLATFORM_TYPE_DIND -> PlatformTypeDind
-	1: "PlatformTypeDind",
+	2: "PlatformTypeDind",
 	// PLATFORM_TYPE_OPENSTACK -> PlatformTypeOpenstack
-	2: "PlatformTypeOpenstack",
+	3: "PlatformTypeOpenstack",
 	// PLATFORM_TYPE_AZURE -> PlatformTypeAzure
-	3: "PlatformTypeAzure",
+	4: "PlatformTypeAzure",
 	// PLATFORM_TYPE_GCP -> PlatformTypeGcp
-	4: "PlatformTypeGcp",
+	5: "PlatformTypeGcp",
 	// PLATFORM_TYPE_MEXDIND -> PlatformTypeMexdind
-	5: "PlatformTypeMexdind",
+	6: "PlatformTypeMexdind",
 }
 var PlatformType_CamelValue = map[string]int32{
 	"PlatformTypeFake":      0,
-	"PlatformTypeDind":      1,
-	"PlatformTypeOpenstack": 2,
-	"PlatformTypeAzure":     3,
-	"PlatformTypeGcp":       4,
-	"PlatformTypeMexdind":   5,
+	"PlatformTypeFakeinfra": 1,
+	"PlatformTypeDind":      2,
+	"PlatformTypeOpenstack": 3,
+	"PlatformTypeAzure":     4,
+	"PlatformTypeGcp":       5,
+	"PlatformTypeMexdind":   6,
 }
 
 func (e *PlatformType) UnmarshalYAML(unmarshal func(interface{}) error) error {
