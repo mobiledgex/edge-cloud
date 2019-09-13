@@ -4,11 +4,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/gensupport"
-	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 	"github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/spf13/cobra"
 )
@@ -332,7 +330,7 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 		FQOutType:            g.FQTypeName(out),
 		ServerStream:         gensupport.ServerStreaming(method),
 		HasEnums:             hasEnums,
-		StreamOutIncremental: GetStreamOutIncremental(method),
+		StreamOutIncremental: gensupport.GetStreamOutIncremental(method),
 	}
 	if strings.HasPrefix(*method.Name, "Show") {
 		cmd.Show = true
@@ -428,12 +426,4 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 		return true
 	}
 	return false
-}
-
-func GetNoConfig(message *descriptor.DescriptorProto) string {
-	return gensupport.GetStringExtension(message.Options, protocmd.E_Noconfig, "")
-}
-
-func GetStreamOutIncremental(method *descriptor.MethodDescriptorProto) bool {
-	return proto.GetBoolExtension(method.Options, protocmd.E_StreamOutIncremental, false)
 }

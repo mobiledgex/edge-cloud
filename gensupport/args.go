@@ -7,7 +7,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
+	"github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
@@ -199,17 +199,17 @@ func removeNewLines(r rune) rune {
 }
 
 func GetStreamOutIncremental(method *descriptor.MethodDescriptorProto) bool {
-	return proto.GetBoolExtension(method.Options, protocmd.E_StreamOutIncremental, false)
+	return proto.GetBoolExtension(method.Options, protogen.E_StreamOutIncremental, false)
 }
 
 func GetNoConfig(message *descriptor.DescriptorProto) string {
-	return GetStringExtension(message.Options, protocmd.E_Noconfig, "")
+	return GetStringExtension(message.Options, protogen.E_Noconfig, "")
 }
 
 func GetNotreq(message *descriptor.DescriptorProto) string {
-	return GetStringExtension(message.Options, protocmd.E_Notreq, "")
+	return GetStringExtension(message.Options, protogen.E_NotRequired, "")
 }
 
 func GetAlias(message *descriptor.DescriptorProto) string {
-	return GetStringExtension(message.Options, protocmd.E_Alias, "")
+	return GetStringExtension(message.Options, protogen.E_Alias, "")
 }
