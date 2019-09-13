@@ -3,11 +3,6 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "os"
-import "text/tabwriter"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -22,40 +17,12 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-func ClusterKeySlicer(in *edgeproto.ClusterKey) []string {
-	s := make([]string, 0, 1)
-	s = append(s, in.Name)
-	return s
+var ClusterKeyRequiredArgs = []string{}
+var ClusterKeyOptionalArgs = []string{
+	"name",
 }
-
-func ClusterKeyHeaderSlicer() []string {
-	s := make([]string, 0, 1)
-	s = append(s, "Name")
-	return s
+var ClusterKeyAliasArgs = []string{}
+var ClusterKeyComments = map[string]string{
+	"name": "Cluster name",
 }
-
-func ClusterKeyWriteOutputArray(objs []*edgeproto.ClusterKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ClusterKeyHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(ClusterKeySlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func ClusterKeyWriteOutputOne(obj *edgeproto.ClusterKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ClusterKeyHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(ClusterKeySlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func init() {
-}
+var ClusterKeySpecialArgs = map[string]string{}

@@ -32,6 +32,7 @@ var _ = math.Inf
 
 // FlavorKey uniquely identifies a Flavor.
 type FlavorKey struct {
+	// Flavor name
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 

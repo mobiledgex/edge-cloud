@@ -105,7 +105,7 @@ message ConfigFile {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
-  option (protocmd.alias) = "appname=Key.Name,appvers=Key.Version,developer=Key.DeveloperKey.Name";
+  option (protocmd.alias) = "appname=Key.Name,appvers=Key.Version,developer=Key.DeveloperKey.Name,defaultflavor=DefaultFlavor.Name";
   option (protocmd.noconfig) = "Revision";
 }
 

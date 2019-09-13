@@ -476,14 +476,14 @@ func RunControllerCLI(api string, ctrlname string, apiFile string, outputDir str
 	log.Printf("Using controller %v at address %v", ctrl.Name, ctrl.ApiAddr)
 	switch api {
 	case "create":
-		out, err := util.ControllerCLI(ctrl, "Create", "-f", apiFile)
+		out, err := util.ControllerCLI(ctrl, "Create", "--datafile", apiFile)
 		log.Println(string(out))
 		if err != nil {
 			log.Printf("Error running Create CLI %v\n", err)
 			return false
 		}
 	case "delete":
-		out, err := util.ControllerCLI(ctrl, "Delete", "-f", apiFile)
+		out, err := util.ControllerCLI(ctrl, "Delete", "--datafile", apiFile)
 		log.Println(string(out))
 		if err != nil {
 			log.Printf("Error running Delete CLI %v\n", err)
@@ -514,14 +514,14 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 	req := &data.Request
 
 	args := []string{"RunCommand"}
-	args = append(args, "--appinstkey-appkey-developerkey-name", req.AppInstKey.AppKey.DeveloperKey.Name)
-	args = append(args, "--appinstkey-appkey-name", req.AppInstKey.AppKey.Name)
-	args = append(args, "--appinstkey-appkey-version", req.AppInstKey.AppKey.Version)
-	args = append(args, "--appinstkey-clusterinstkey-cloudletkey-name", req.AppInstKey.ClusterInstKey.CloudletKey.Name)
-	args = append(args, "--appinstkey-clusterinstkey-cloudletkey-operatorkey-name", req.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name)
-	args = append(args, "--appinstkey-clusterinstkey-clusterkey-name", req.AppInstKey.ClusterInstKey.ClusterKey.Name)
-	args = append(args, "--appinstkey-clusterinstkey-developer", req.AppInstKey.ClusterInstKey.Developer)
-	args = append(args, "--command", req.Command)
+	args = append(args, "developer="+req.AppInstKey.AppKey.DeveloperKey.Name)
+	args = append(args, "appname="+req.AppInstKey.AppKey.Name)
+	args = append(args, "appvers="+req.AppInstKey.AppKey.Version)
+	args = append(args, "cloudlet="+req.AppInstKey.ClusterInstKey.CloudletKey.Name)
+	args = append(args, "operator="+req.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	args = append(args, "cluster="+req.AppInstKey.ClusterInstKey.ClusterKey.Name)
+	args = append(args, "clusterdeveloper="+req.AppInstKey.ClusterInstKey.Developer)
+	args = append(args, "command=\""+req.Command+"\"")
 	out, err := util.ControllerCLI(ctrl, args...)
 	if err != nil {
 		log.Printf("Error running RunCommand API %v\n", err)

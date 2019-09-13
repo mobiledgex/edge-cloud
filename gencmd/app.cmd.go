@@ -72,15 +72,10 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "strconv"
 import "github.com/spf13/cobra"
 import "context"
-import "os"
 import "io"
-import "text/tabwriter"
-import "github.com/spf13/pflag"
-import "errors"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -96,193 +91,12 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var AppApiCmd edgeproto.AppApiClient
-var AppIn edgeproto.App
-var AppFlagSet = pflag.NewFlagSet("App", pflag.ExitOnError)
-var AppNoConfigFlagSet = pflag.NewFlagSet("AppNoConfig", pflag.ExitOnError)
-var AppInImageType string
-var AppInDelOpt string
-var ImageTypeStrings = []string{
-	"ImageTypeUnknown",
-	"ImageTypeDocker",
-	"ImageTypeQcow",
-}
-
-var DeleteTypeStrings = []string{
-	"NoAutoDelete",
-	"AutoDelete",
-}
-
-func AppKeySlicer(in *edgeproto.AppKey) []string {
-	s := make([]string, 0, 3)
-	s = append(s, in.DeveloperKey.Name)
-	s = append(s, in.Name)
-	s = append(s, in.Version)
-	return s
-}
-
-func AppKeyHeaderSlicer() []string {
-	s := make([]string, 0, 3)
-	s = append(s, "DeveloperKey-Name")
-	s = append(s, "Name")
-	s = append(s, "Version")
-	return s
-}
-
-func AppKeyWriteOutputArray(objs []*edgeproto.AppKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppKeyHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(AppKeySlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func AppKeyWriteOutputOne(obj *edgeproto.AppKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppKeyHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(AppKeySlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func ConfigFileSlicer(in *edgeproto.ConfigFile) []string {
-	s := make([]string, 0, 2)
-	s = append(s, in.Kind)
-	s = append(s, in.Config)
-	return s
-}
-
-func ConfigFileHeaderSlicer() []string {
-	s := make([]string, 0, 2)
-	s = append(s, "Kind")
-	s = append(s, "Config")
-	return s
-}
-
-func ConfigFileWriteOutputArray(objs []*edgeproto.ConfigFile) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ConfigFileHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(ConfigFileSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func ConfigFileWriteOutputOne(obj *edgeproto.ConfigFile) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ConfigFileHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(ConfigFileSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 20)
-	if in.Fields == nil {
-		in.Fields = make([]string, 1)
-	}
-	s = append(s, in.Fields[0])
-	s = append(s, in.Key.DeveloperKey.Name)
-	s = append(s, in.Key.Name)
-	s = append(s, in.Key.Version)
-	s = append(s, in.ImagePath)
-	s = append(s, edgeproto.ImageType_CamelName[int32(in.ImageType)])
-	s = append(s, in.AccessPorts)
-	s = append(s, in.DefaultFlavor.Name)
-	s = append(s, in.AuthPublicKey)
-	s = append(s, in.Command)
-	s = append(s, in.Annotations)
-	s = append(s, in.Deployment)
-	s = append(s, in.DeploymentManifest)
-	s = append(s, in.DeploymentGenerator)
-	s = append(s, in.AndroidPackageName)
-	s = append(s, edgeproto.DeleteType_CamelName[int32(in.DelOpt)])
-	if in.Configs == nil {
-		in.Configs = make([]*edgeproto.ConfigFile, 1)
-	}
-	if in.Configs[0] == nil {
-		in.Configs[0] = &edgeproto.ConfigFile{}
-	}
-	s = append(s, in.Configs[0].Kind)
-	s = append(s, in.Configs[0].Config)
-	s = append(s, strconv.FormatBool(in.ScaleWithCluster))
-	s = append(s, strconv.FormatBool(in.InternalPorts))
-	s = append(s, strconv.FormatUint(uint64(in.Revision), 10))
-	s = append(s, in.OfficialFqdn)
-	s = append(s, in.Md5Sum)
-	return s
-}
-
-func AppHeaderSlicer() []string {
-	s := make([]string, 0, 20)
-	s = append(s, "Fields")
-	s = append(s, "Key-DeveloperKey-Name")
-	s = append(s, "Key-Name")
-	s = append(s, "Key-Version")
-	s = append(s, "ImagePath")
-	s = append(s, "ImageType")
-	s = append(s, "AccessPorts")
-	s = append(s, "DefaultFlavor-Name")
-	s = append(s, "AuthPublicKey")
-	s = append(s, "Command")
-	s = append(s, "Annotations")
-	s = append(s, "Deployment")
-	s = append(s, "DeploymentManifest")
-	s = append(s, "DeploymentGenerator")
-	s = append(s, "AndroidPackageName")
-	s = append(s, "DelOpt")
-	s = append(s, "Configs-Kind")
-	s = append(s, "Configs-Config")
-	s = append(s, "ScaleWithCluster")
-	s = append(s, "InternalPorts")
-	s = append(s, "Revision")
-	s = append(s, "OfficialFqdn")
-	s = append(s, "Md5Sum")
-	return s
-}
-
-func AppWriteOutputArray(objs []*edgeproto.App) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(AppSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func AppWriteOutputOne(obj *edgeproto.App) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(AppSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
 func AppHideTags(in *edgeproto.App) {
-	if cmdsup.HideTags == "" {
+	if cli.HideTags == "" {
 		return
 	}
 	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
@@ -298,20 +112,30 @@ func AppHideTags(in *edgeproto.App) {
 	}
 }
 
-var CreateAppCmd = &cobra.Command{
-	Use: "CreateApp",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseAppEnums()
-		if err != nil {
-			return fmt.Errorf("CreateApp failed: %s", err.Error())
-		}
-		return CreateApp(&AppIn)
-	},
+var AppApiCmd edgeproto.AppApiClient
+
+var CreateAppCmd = &cli.Command{
+	Use:          "CreateApp",
+	RequiredArgs: strings.Join(AppRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppAliasArgs, " "),
+	SpecialArgs:  &AppSpecialArgs,
+	Comments:     AppComments,
+	ReqData:      &edgeproto.App{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runCreateApp,
 }
 
-func CreateApp(in *edgeproto.App) error {
+func runCreateApp(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.App)
+	return CreateApp(c, obj)
+}
+
+func CreateApp(c *cli.Command, in *edgeproto.App) error {
 	if AppApiCmd == nil {
 		return fmt.Errorf("AppApi client not initialized")
 	}
@@ -325,17 +149,18 @@ func CreateApp(in *edgeproto.App) error {
 		}
 		return fmt.Errorf("CreateApp failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func CreateApps(data []edgeproto.App, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func CreateApps(c *cli.Command, data []edgeproto.App, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("CreateApp %v\n", data[ii])
-		myerr := CreateApp(&data[ii])
+		myerr := CreateApp(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -343,20 +168,28 @@ func CreateApps(data []edgeproto.App, err *error) {
 	}
 }
 
-var DeleteAppCmd = &cobra.Command{
-	Use: "DeleteApp",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseAppEnums()
-		if err != nil {
-			return fmt.Errorf("DeleteApp failed: %s", err.Error())
-		}
-		return DeleteApp(&AppIn)
-	},
+var DeleteAppCmd = &cli.Command{
+	Use:          "DeleteApp",
+	RequiredArgs: strings.Join(AppRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppAliasArgs, " "),
+	SpecialArgs:  &AppSpecialArgs,
+	Comments:     AppComments,
+	ReqData:      &edgeproto.App{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runDeleteApp,
 }
 
-func DeleteApp(in *edgeproto.App) error {
+func runDeleteApp(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.App)
+	return DeleteApp(c, obj)
+}
+
+func DeleteApp(c *cli.Command, in *edgeproto.App) error {
 	if AppApiCmd == nil {
 		return fmt.Errorf("AppApi client not initialized")
 	}
@@ -370,17 +203,18 @@ func DeleteApp(in *edgeproto.App) error {
 		}
 		return fmt.Errorf("DeleteApp failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func DeleteApps(data []edgeproto.App, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func DeleteApps(c *cli.Command, data []edgeproto.App, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("DeleteApp %v\n", data[ii])
-		myerr := DeleteApp(&data[ii])
+		myerr := DeleteApp(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -388,21 +222,28 @@ func DeleteApps(data []edgeproto.App, err *error) {
 	}
 }
 
-var UpdateAppCmd = &cobra.Command{
-	Use: "UpdateApp",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseAppEnums()
-		if err != nil {
-			return fmt.Errorf("UpdateApp failed: %s", err.Error())
-		}
-		AppSetFields()
-		return UpdateApp(&AppIn)
-	},
+var UpdateAppCmd = &cli.Command{
+	Use:          "UpdateApp",
+	RequiredArgs: strings.Join(AppRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppAliasArgs, " "),
+	SpecialArgs:  &AppSpecialArgs,
+	Comments:     AppComments,
+	ReqData:      &edgeproto.App{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runUpdateApp,
 }
 
-func UpdateApp(in *edgeproto.App) error {
+func runUpdateApp(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.App)
+	return UpdateApp(c, obj)
+}
+
+func UpdateApp(c *cli.Command, in *edgeproto.App) error {
 	if AppApiCmd == nil {
 		return fmt.Errorf("AppApi client not initialized")
 	}
@@ -416,17 +257,18 @@ func UpdateApp(in *edgeproto.App) error {
 		}
 		return fmt.Errorf("UpdateApp failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func UpdateApps(data []edgeproto.App, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func UpdateApps(c *cli.Command, data []edgeproto.App, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("UpdateApp %v\n", data[ii])
-		myerr := UpdateApp(&data[ii])
+		myerr := UpdateApp(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -434,20 +276,27 @@ func UpdateApps(data []edgeproto.App, err *error) {
 	}
 }
 
-var ShowAppCmd = &cobra.Command{
-	Use: "ShowApp",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseAppEnums()
-		if err != nil {
-			return fmt.Errorf("ShowApp failed: %s", err.Error())
-		}
-		return ShowApp(&AppIn)
-	},
+var ShowAppCmd = &cli.Command{
+	Use:          "ShowApp",
+	OptionalArgs: strings.Join(append(AppRequiredArgs, AppOptionalArgs...), " "),
+	AliasArgs:    strings.Join(AppAliasArgs, " "),
+	SpecialArgs:  &AppSpecialArgs,
+	Comments:     AppComments,
+	ReqData:      &edgeproto.App{},
+	ReplyData:    &edgeproto.App{},
+	Run:          runShowApp,
 }
 
-func ShowApp(in *edgeproto.App) error {
+func runShowApp(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.App)
+	return ShowApp(c, obj)
+}
+
+func ShowApp(c *cli.Command, in *edgeproto.App) error {
 	if AppApiCmd == nil {
 		return fmt.Errorf("AppApi client not initialized")
 	}
@@ -476,17 +325,18 @@ func ShowApp(in *edgeproto.App) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	AppWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowApps(data []edgeproto.App, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowApps(c *cli.Command, data []edgeproto.App, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowApp %v\n", data[ii])
-		myerr := ShowApp(&data[ii])
+		myerr := ShowApp(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -495,132 +345,89 @@ func ShowApps(data []edgeproto.App, err *error) {
 }
 
 var AppApiCmds = []*cobra.Command{
-	CreateAppCmd,
-	DeleteAppCmd,
-	UpdateAppCmd,
-	ShowAppCmd,
+	CreateAppCmd.GenCmd(),
+	DeleteAppCmd.GenCmd(),
+	UpdateAppCmd.GenCmd(),
+	ShowAppCmd.GenCmd(),
 }
 
-func init() {
-	AppFlagSet.StringVar(&AppIn.Key.DeveloperKey.Name, "key-developerkey-name", "", "Key.DeveloperKey.Name")
-	AppFlagSet.StringVar(&AppIn.Key.Name, "key-name", "", "Key.Name")
-	AppFlagSet.StringVar(&AppIn.Key.Version, "key-version", "", "Key.Version")
-	AppFlagSet.StringVar(&AppIn.ImagePath, "imagepath", "", "ImagePath")
-	AppFlagSet.StringVar(&AppInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQcow]")
-	AppFlagSet.StringVar(&AppIn.AccessPorts, "accessports", "", "AccessPorts")
-	AppFlagSet.StringVar(&AppIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
-	AppFlagSet.StringVar(&AppIn.AuthPublicKey, "authpublickey", "", "AuthPublicKey")
-	AppFlagSet.StringVar(&AppIn.Command, "command", "", "Command")
-	AppFlagSet.StringVar(&AppIn.Annotations, "annotations", "", "Annotations")
-	AppFlagSet.StringVar(&AppIn.Deployment, "deployment", "", "Deployment")
-	AppFlagSet.StringVar(&AppIn.DeploymentManifest, "deploymentmanifest", "", "DeploymentManifest")
-	AppFlagSet.StringVar(&AppIn.DeploymentGenerator, "deploymentgenerator", "", "DeploymentGenerator")
-	AppFlagSet.StringVar(&AppIn.AndroidPackageName, "androidpackagename", "", "AndroidPackageName")
-	AppFlagSet.StringVar(&AppInDelOpt, "delopt", "", "one of [NoAutoDelete AutoDelete]")
-	AppFlagSet.BoolVar(&AppIn.ScaleWithCluster, "scalewithcluster", false, "ScaleWithCluster")
-	AppFlagSet.BoolVar(&AppIn.InternalPorts, "internalports", false, "InternalPorts")
-	AppNoConfigFlagSet.Int32Var(&AppIn.Revision, "revision", 0, "Revision")
-	AppFlagSet.StringVar(&AppIn.OfficialFqdn, "officialfqdn", "", "OfficialFqdn")
-	AppFlagSet.StringVar(&AppIn.Md5Sum, "md5sum", "", "Md5Sum")
-	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
-	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
-	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
-	ShowAppCmd.Flags().AddFlagSet(AppFlagSet)
+var AppKeyRequiredArgs = []string{}
+var AppKeyOptionalArgs = []string{
+	"developerkey.name",
+	"name",
+	"version",
 }
-
-func AppApiAllowNoConfig() {
-	CreateAppCmd.Flags().AddFlagSet(AppNoConfigFlagSet)
-	DeleteAppCmd.Flags().AddFlagSet(AppNoConfigFlagSet)
-	UpdateAppCmd.Flags().AddFlagSet(AppNoConfigFlagSet)
-	ShowAppCmd.Flags().AddFlagSet(AppNoConfigFlagSet)
+var AppKeyAliasArgs = []string{}
+var AppKeyComments = map[string]string{
+	"developerkey.name": "Organization or Company Name that a Developer is part of",
+	"name":              "App name",
+	"version":           "App version",
 }
-
-func AppSetFields() {
-	AppIn.Fields = make([]string, 0)
-	if AppFlagSet.Lookup("key-developerkey-name").Changed {
-		AppIn.Fields = append(AppIn.Fields, "2.1.2")
-	}
-	if AppFlagSet.Lookup("key-name").Changed {
-		AppIn.Fields = append(AppIn.Fields, "2.2")
-	}
-	if AppFlagSet.Lookup("key-version").Changed {
-		AppIn.Fields = append(AppIn.Fields, "2.3")
-	}
-	if AppFlagSet.Lookup("imagepath").Changed {
-		AppIn.Fields = append(AppIn.Fields, "4")
-	}
-	if AppFlagSet.Lookup("imagetype").Changed {
-		AppIn.Fields = append(AppIn.Fields, "5")
-	}
-	if AppFlagSet.Lookup("accessports").Changed {
-		AppIn.Fields = append(AppIn.Fields, "7")
-	}
-	if AppFlagSet.Lookup("defaultflavor-name").Changed {
-		AppIn.Fields = append(AppIn.Fields, "9.1")
-	}
-	if AppFlagSet.Lookup("authpublickey").Changed {
-		AppIn.Fields = append(AppIn.Fields, "12")
-	}
-	if AppFlagSet.Lookup("command").Changed {
-		AppIn.Fields = append(AppIn.Fields, "13")
-	}
-	if AppFlagSet.Lookup("annotations").Changed {
-		AppIn.Fields = append(AppIn.Fields, "14")
-	}
-	if AppFlagSet.Lookup("deployment").Changed {
-		AppIn.Fields = append(AppIn.Fields, "15")
-	}
-	if AppFlagSet.Lookup("deploymentmanifest").Changed {
-		AppIn.Fields = append(AppIn.Fields, "16")
-	}
-	if AppFlagSet.Lookup("deploymentgenerator").Changed {
-		AppIn.Fields = append(AppIn.Fields, "17")
-	}
-	if AppFlagSet.Lookup("androidpackagename").Changed {
-		AppIn.Fields = append(AppIn.Fields, "18")
-	}
-	if AppFlagSet.Lookup("delopt").Changed {
-		AppIn.Fields = append(AppIn.Fields, "20")
-	}
-	if AppFlagSet.Lookup("scalewithcluster").Changed {
-		AppIn.Fields = append(AppIn.Fields, "22")
-	}
-	if AppFlagSet.Lookup("internalports").Changed {
-		AppIn.Fields = append(AppIn.Fields, "23")
-	}
-	if AppNoConfigFlagSet.Lookup("revision").Changed {
-		AppIn.Fields = append(AppIn.Fields, "24")
-	}
-	if AppFlagSet.Lookup("officialfqdn").Changed {
-		AppIn.Fields = append(AppIn.Fields, "25")
-	}
-	if AppFlagSet.Lookup("md5sum").Changed {
-		AppIn.Fields = append(AppIn.Fields, "26")
-	}
+var AppKeySpecialArgs = map[string]string{}
+var ConfigFileRequiredArgs = []string{}
+var ConfigFileOptionalArgs = []string{
+	"kind",
+	"config",
 }
-
-func parseAppEnums() error {
-	if AppInImageType != "" {
-		switch AppInImageType {
-		case "ImageTypeUnknown":
-			AppIn.ImageType = edgeproto.ImageType(0)
-		case "ImageTypeDocker":
-			AppIn.ImageType = edgeproto.ImageType(1)
-		case "ImageTypeQcow":
-			AppIn.ImageType = edgeproto.ImageType(2)
-		default:
-			return errors.New("Invalid value for AppInImageType")
-		}
-	}
-	if AppInDelOpt != "" {
-		switch AppInDelOpt {
-		case "NoAutoDelete":
-			AppIn.DelOpt = edgeproto.DeleteType(0)
-		case "AutoDelete":
-			AppIn.DelOpt = edgeproto.DeleteType(1)
-		default:
-			return errors.New("Invalid value for AppInDelOpt")
-		}
-	}
-	return nil
+var ConfigFileAliasArgs = []string{}
+var ConfigFileComments = map[string]string{
+	"kind":   "kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config",
+	"config": "config file contents or URI reference",
 }
+var ConfigFileSpecialArgs = map[string]string{}
+var AppRequiredArgs = []string{
+	"developer",
+	"appname",
+	"appvers",
+}
+var AppOptionalArgs = []string{
+	"imagepath",
+	"imagetype",
+	"accessports",
+	"defaultflavor",
+	"authpublickey",
+	"command",
+	"annotations",
+	"deployment",
+	"deploymentmanifest",
+	"deploymentgenerator",
+	"androidpackagename",
+	"delopt",
+	"configs.kind",
+	"configs.config",
+	"scalewithcluster",
+	"internalports",
+	"officialfqdn",
+	"md5sum",
+}
+var AppAliasArgs = []string{
+	"developer=key.developerkey.name",
+	"appname=key.name",
+	"appvers=key.version",
+	"defaultflavor=defaultflavor.name",
+}
+var AppComments = map[string]string{
+	"developer":           "Organization or Company Name that a Developer is part of",
+	"appname":             "App name",
+	"appvers":             "App version",
+	"imagepath":           "URI of where image resides",
+	"imagetype":           "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow",
+	"accessports":         "Comma separated list of protocol:port pairs that the App listens on. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
+	"defaultflavor":       "Flavor name",
+	"authpublickey":       "public key used for authentication",
+	"command":             "Command that the container runs to start service",
+	"annotations":         "Annotations is a comma separated map of arbitrary key value pairs, for example: key1=val1,key2=val2,key3=val 3",
+	"deployment":          "Deployment type (kubernetes, docker, or vm)",
+	"deploymentmanifest":  "Deployment manifest is the deployment specific manifest file/config For docker deployment, this can be a docker-compose or docker run file For kubernetes deployment, this can be a kubernetes yaml or helm chart file",
+	"deploymentgenerator": "Deployment generator target to generate a basic deployment manifest",
+	"androidpackagename":  "Android package name used to match the App name from the Android package",
+	"delopt":              "Override actions to Controller, one of NoAutoDelete, AutoDelete",
+	"configs.kind":        "kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config",
+	"configs.config":      "config file contents or URI reference",
+	"scalewithcluster":    "Option to run App on all nodes of the cluster",
+	"internalports":       "Should this app have access to outside world?",
+	"revision":            "Revision increments each time the App is updated",
+	"officialfqdn":        "Official FQDN is the FQDN that the app uses to connect by default",
+	"md5sum":              "MD5Sum of the VM-based app image",
+}
+var AppSpecialArgs = map[string]string{}

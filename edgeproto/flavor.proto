@@ -13,6 +13,7 @@ import "gogoproto/gogo.proto";
 
 // FlavorKey uniquely identifies a Flavor.
 message FlavorKey {
+  // Flavor name
   string name = 1;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;

@@ -5,14 +5,10 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "strconv"
 import "github.com/spf13/cobra"
 import "context"
-import "os"
 import "io"
-import "text/tabwriter"
-import "github.com/spf13/pflag"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -29,133 +25,28 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var CloudletRefsApiCmd edgeproto.CloudletRefsApiClient
-var ClusterRefsApiCmd edgeproto.ClusterRefsApiClient
-var CloudletRefsIn edgeproto.CloudletRefs
-var CloudletRefsFlagSet = pflag.NewFlagSet("CloudletRefs", pflag.ExitOnError)
-var CloudletRefsNoConfigFlagSet = pflag.NewFlagSet("CloudletRefsNoConfig", pflag.ExitOnError)
-var ClusterRefsIn edgeproto.ClusterRefs
-var ClusterRefsFlagSet = pflag.NewFlagSet("ClusterRefs", pflag.ExitOnError)
-var ClusterRefsNoConfigFlagSet = pflag.NewFlagSet("ClusterRefsNoConfig", pflag.ExitOnError)
 
-func CloudletRefsSlicer(in *edgeproto.CloudletRefs) []string {
-	s := make([]string, 0, 8)
-	s = append(s, in.Key.OperatorKey.Name)
-	s = append(s, in.Key.Name)
-	if in.Clusters == nil {
-		in.Clusters = make([]edgeproto.ClusterKey, 1)
+var ShowCloudletRefsCmd = &cli.Command{
+	Use:          "ShowCloudletRefs",
+	OptionalArgs: strings.Join(append(CloudletRefsRequiredArgs, CloudletRefsOptionalArgs...), " "),
+	AliasArgs:    strings.Join(CloudletRefsAliasArgs, " "),
+	SpecialArgs:  &CloudletRefsSpecialArgs,
+	Comments:     CloudletRefsComments,
+	ReqData:      &edgeproto.CloudletRefs{},
+	ReplyData:    &edgeproto.CloudletRefs{},
+	Run:          runShowCloudletRefs,
+}
+
+func runShowCloudletRefs(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
 	}
-	s = append(s, in.Clusters[0].Name)
-	s = append(s, strconv.FormatUint(uint64(in.UsedRam), 10))
-	s = append(s, strconv.FormatUint(uint64(in.UsedVcores), 10))
-	s = append(s, strconv.FormatUint(uint64(in.UsedDisk), 10))
-	s = append(s, strconv.FormatUint(uint64(in.UsedDynamicIps), 10))
-	s = append(s, in.UsedStaticIps)
-	return s
+	obj := c.ReqData.(*edgeproto.CloudletRefs)
+	return ShowCloudletRefs(c, obj)
 }
 
-func CloudletRefsHeaderSlicer() []string {
-	s := make([]string, 0, 8)
-	s = append(s, "Key-OperatorKey-Name")
-	s = append(s, "Key-Name")
-	s = append(s, "Clusters-Name")
-	s = append(s, "UsedRam")
-	s = append(s, "UsedVcores")
-	s = append(s, "UsedDisk")
-	s = append(s, "UsedDynamicIps")
-	s = append(s, "UsedStaticIps")
-	return s
-}
-
-func CloudletRefsWriteOutputArray(objs []*edgeproto.CloudletRefs) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(CloudletRefsHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(CloudletRefsSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func CloudletRefsWriteOutputOne(obj *edgeproto.CloudletRefs) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(CloudletRefsHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(CloudletRefsSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func ClusterRefsSlicer(in *edgeproto.ClusterRefs) []string {
-	s := make([]string, 0, 5)
-	s = append(s, in.Key.ClusterKey.Name)
-	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
-	s = append(s, in.Key.CloudletKey.Name)
-	s = append(s, in.Key.Developer)
-	if in.Apps == nil {
-		in.Apps = make([]edgeproto.AppKey, 1)
-	}
-	s = append(s, in.Apps[0].DeveloperKey.Name)
-	s = append(s, in.Apps[0].Name)
-	s = append(s, in.Apps[0].Version)
-	s = append(s, strconv.FormatUint(uint64(in.UsedRam), 10))
-	s = append(s, strconv.FormatUint(uint64(in.UsedVcores), 10))
-	s = append(s, strconv.FormatUint(uint64(in.UsedDisk), 10))
-	return s
-}
-
-func ClusterRefsHeaderSlicer() []string {
-	s := make([]string, 0, 5)
-	s = append(s, "Key-ClusterKey-Name")
-	s = append(s, "Key-CloudletKey-OperatorKey-Name")
-	s = append(s, "Key-CloudletKey-Name")
-	s = append(s, "Key-Developer")
-	s = append(s, "Apps-DeveloperKey-Name")
-	s = append(s, "Apps-Name")
-	s = append(s, "Apps-Version")
-	s = append(s, "UsedRam")
-	s = append(s, "UsedVcores")
-	s = append(s, "UsedDisk")
-	return s
-}
-
-func ClusterRefsWriteOutputArray(objs []*edgeproto.ClusterRefs) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ClusterRefsHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(ClusterRefsSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func ClusterRefsWriteOutputOne(obj *edgeproto.ClusterRefs) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ClusterRefsHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(ClusterRefsSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-
-var ShowCloudletRefsCmd = &cobra.Command{
-	Use: "ShowCloudletRefs",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return ShowCloudletRefs(&CloudletRefsIn)
-	},
-}
-
-func ShowCloudletRefs(in *edgeproto.CloudletRefs) error {
+func ShowCloudletRefs(c *cli.Command, in *edgeproto.CloudletRefs) error {
 	if CloudletRefsApiCmd == nil {
 		return fmt.Errorf("CloudletRefsApi client not initialized")
 	}
@@ -183,17 +74,18 @@ func ShowCloudletRefs(in *edgeproto.CloudletRefs) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	CloudletRefsWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowCloudletRefss(data []edgeproto.CloudletRefs, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowCloudletRefss(c *cli.Command, data []edgeproto.CloudletRefs, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowCloudletRefs %v\n", data[ii])
-		myerr := ShowCloudletRefs(&data[ii])
+		myerr := ShowCloudletRefs(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -202,19 +94,32 @@ func ShowCloudletRefss(data []edgeproto.CloudletRefs, err *error) {
 }
 
 var CloudletRefsApiCmds = []*cobra.Command{
-	ShowCloudletRefsCmd,
+	ShowCloudletRefsCmd.GenCmd(),
 }
 
-var ShowClusterRefsCmd = &cobra.Command{
-	Use: "ShowClusterRefs",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return ShowClusterRefs(&ClusterRefsIn)
-	},
+var ClusterRefsApiCmd edgeproto.ClusterRefsApiClient
+
+var ShowClusterRefsCmd = &cli.Command{
+	Use:          "ShowClusterRefs",
+	OptionalArgs: strings.Join(append(ClusterRefsRequiredArgs, ClusterRefsOptionalArgs...), " "),
+	AliasArgs:    strings.Join(ClusterRefsAliasArgs, " "),
+	SpecialArgs:  &ClusterRefsSpecialArgs,
+	Comments:     ClusterRefsComments,
+	ReqData:      &edgeproto.ClusterRefs{},
+	ReplyData:    &edgeproto.ClusterRefs{},
+	Run:          runShowClusterRefs,
 }
 
-func ShowClusterRefs(in *edgeproto.ClusterRefs) error {
+func runShowClusterRefs(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.ClusterRefs)
+	return ShowClusterRefs(c, obj)
+}
+
+func ShowClusterRefs(c *cli.Command, in *edgeproto.ClusterRefs) error {
 	if ClusterRefsApiCmd == nil {
 		return fmt.Errorf("ClusterRefsApi client not initialized")
 	}
@@ -242,17 +147,18 @@ func ShowClusterRefs(in *edgeproto.ClusterRefs) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	ClusterRefsWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowClusterRefss(data []edgeproto.ClusterRefs, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowClusterRefss(c *cli.Command, data []edgeproto.ClusterRefs, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowClusterRefs %v\n", data[ii])
-		myerr := ShowClusterRefs(&data[ii])
+		myerr := ShowClusterRefs(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -261,32 +167,68 @@ func ShowClusterRefss(data []edgeproto.ClusterRefs, err *error) {
 }
 
 var ClusterRefsApiCmds = []*cobra.Command{
-	ShowClusterRefsCmd,
+	ShowClusterRefsCmd.GenCmd(),
 }
 
-func init() {
-	CloudletRefsFlagSet.StringVar(&CloudletRefsIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
-	CloudletRefsFlagSet.StringVar(&CloudletRefsIn.Key.Name, "key-name", "", "Key.Name")
-	CloudletRefsFlagSet.Uint64Var(&CloudletRefsIn.UsedRam, "usedram", 0, "UsedRam")
-	CloudletRefsFlagSet.Uint64Var(&CloudletRefsIn.UsedVcores, "usedvcores", 0, "UsedVcores")
-	CloudletRefsFlagSet.Uint64Var(&CloudletRefsIn.UsedDisk, "useddisk", 0, "UsedDisk")
-	CloudletRefsFlagSet.Int32Var(&CloudletRefsIn.UsedDynamicIps, "useddynamicips", 0, "UsedDynamicIps")
-	CloudletRefsFlagSet.StringVar(&CloudletRefsIn.UsedStaticIps, "usedstaticips", "", "UsedStaticIps")
-	ClusterRefsFlagSet.StringVar(&ClusterRefsIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
-	ClusterRefsFlagSet.StringVar(&ClusterRefsIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
-	ClusterRefsFlagSet.StringVar(&ClusterRefsIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
-	ClusterRefsFlagSet.StringVar(&ClusterRefsIn.Key.Developer, "key-developer", "", "Key.Developer")
-	ClusterRefsFlagSet.Uint64Var(&ClusterRefsIn.UsedRam, "usedram", 0, "UsedRam")
-	ClusterRefsFlagSet.Uint64Var(&ClusterRefsIn.UsedVcores, "usedvcores", 0, "UsedVcores")
-	ClusterRefsFlagSet.Uint64Var(&ClusterRefsIn.UsedDisk, "useddisk", 0, "UsedDisk")
-	ShowCloudletRefsCmd.Flags().AddFlagSet(CloudletRefsFlagSet)
-	ShowClusterRefsCmd.Flags().AddFlagSet(ClusterRefsFlagSet)
+var CloudletRefsRequiredArgs = []string{
+	"key.operatorkey.name",
+	"key.name",
 }
-
-func CloudletRefsApiAllowNoConfig() {
-	ShowCloudletRefsCmd.Flags().AddFlagSet(CloudletRefsNoConfigFlagSet)
+var CloudletRefsOptionalArgs = []string{
+	"clusters.name",
+	"usedram",
+	"usedvcores",
+	"useddisk",
+	"rootlbports.key",
+	"rootlbports.value",
+	"useddynamicips",
+	"usedstaticips",
 }
-
-func ClusterRefsApiAllowNoConfig() {
-	ShowClusterRefsCmd.Flags().AddFlagSet(ClusterRefsNoConfigFlagSet)
+var CloudletRefsAliasArgs = []string{}
+var CloudletRefsComments = map[string]string{
+	"key.operatorkey.name": "Company or Organization name of the operator",
+	"key.name":             "Name of the cloudlet",
+	"clusters.name":        "Cluster name",
+	"usedram":              "Used RAM in MB",
+	"usedvcores":           "Used VCPU cores",
+	"useddisk":             "Used disk in GB",
+	"useddynamicips":       "Used dynamic IPs",
+	"usedstaticips":        "Used static IPs",
 }
+var CloudletRefsSpecialArgs = map[string]string{}
+var RootLbPortsEntryRequiredArgs = []string{}
+var RootLbPortsEntryOptionalArgs = []string{
+	"key",
+	"value",
+}
+var RootLbPortsEntryAliasArgs = []string{}
+var RootLbPortsEntryComments = map[string]string{}
+var RootLbPortsEntrySpecialArgs = map[string]string{}
+var ClusterRefsRequiredArgs = []string{
+	"key.clusterkey.name",
+	"key.cloudletkey.operatorkey.name",
+	"key.cloudletkey.name",
+	"key.developer",
+}
+var ClusterRefsOptionalArgs = []string{
+	"apps.developerkey.name",
+	"apps.name",
+	"apps.version",
+	"usedram",
+	"usedvcores",
+	"useddisk",
+}
+var ClusterRefsAliasArgs = []string{}
+var ClusterRefsComments = map[string]string{
+	"key.clusterkey.name":              "Cluster name",
+	"key.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"key.cloudletkey.name":             "Name of the cloudlet",
+	"key.developer":                    "Name of Developer that this cluster belongs to",
+	"apps.developerkey.name":           "Organization or Company Name that a Developer is part of",
+	"apps.name":                        "App name",
+	"apps.version":                     "App version",
+	"usedram":                          "Used RAM in MB",
+	"usedvcores":                       "Used VCPU cores",
+	"useddisk":                         "Used disk in GB",
+}
+var ClusterRefsSpecialArgs = map[string]string{}
