@@ -272,7 +272,9 @@ var TestGenComments = map[string]string{
 	"repeatedlocnonnull.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"unused":                                "xxx win import of strings. xxx",
 }
-var TestGenSpecialArgs = map[string]string{}
+var TestGenSpecialArgs = map[string]string{
+	"names": "StringArray",
+}
 var InnerMessageRequiredArgs = []string{}
 var InnerMessageOptionalArgs = []string{
 	"url",

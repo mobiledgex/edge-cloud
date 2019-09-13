@@ -744,7 +744,7 @@ func (s *NodeStore) Put(ctx context.Context, m *Node, wait func(int64), ops ...o
 }
 
 func (s *NodeStore) Delete(ctx context.Context, m *Node, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,7 @@
 		app.proto
 		app_inst.proto
 		cloudlet.proto
+		cloudletpool.proto
 		cluster.proto
 		clusterinst.proto
 		common.proto
@@ -44,6 +45,10 @@
 		FlavorInfo
 		CloudletInfo
 		CloudletMetrics
+		CloudletPoolKey
+		CloudletPool
+		CloudletPoolMember
+		CloudletPoolList
 		ClusterKey
 		ClusterInstKey
 		ClusterInst
@@ -1276,7 +1281,7 @@ func (s *AppStore) Put(ctx context.Context, m *App, wait func(int64), ops ...obj
 }
 
 func (s *AppStore) Delete(ctx context.Context, m *App, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}

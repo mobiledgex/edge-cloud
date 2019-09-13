@@ -538,7 +538,7 @@ func (s *OperatorStore) Put(ctx context.Context, m *Operator, wait func(int64), 
 }
 
 func (s *OperatorStore) Delete(ctx context.Context, m *Operator, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}

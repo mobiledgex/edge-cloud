@@ -1279,7 +1279,7 @@ func (s *ClusterInstStore) Put(ctx context.Context, m *ClusterInst, wait func(in
 }
 
 func (s *ClusterInstStore) Delete(ctx context.Context, m *ClusterInst, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}
@@ -2026,7 +2026,7 @@ func (s *ClusterInstInfoStore) Put(ctx context.Context, m *ClusterInstInfo, wait
 }
 
 func (s *ClusterInstInfoStore) Delete(ctx context.Context, m *ClusterInstInfo, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}

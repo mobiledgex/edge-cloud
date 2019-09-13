@@ -896,7 +896,9 @@ var AppFqdnComments = map[string]string{
 	"fqdns":              "App FQDN",
 	"androidpackagename": "optional android package name",
 }
-var AppFqdnSpecialArgs = map[string]string{}
+var AppFqdnSpecialArgs = map[string]string{
+	"fqdns": "StringArray",
+}
 var FqdnListReplyRequiredArgs = []string{}
 var FqdnListReplyOptionalArgs = []string{
 	"ver",
@@ -917,7 +919,9 @@ var FqdnListReplyComments = map[string]string{
 	"appfqdns.androidpackagename": "optional android package name",
 	"status":                      ", one of FlUndefined, FlSuccess, FlFail",
 }
-var FqdnListReplySpecialArgs = map[string]string{}
+var FqdnListReplySpecialArgs = map[string]string{
+	"appfqdns.fqdns": "StringArray",
+}
 var DynamicLocGroupRequestRequiredArgs = []string{}
 var DynamicLocGroupRequestOptionalArgs = []string{
 	"ver",
@@ -984,7 +988,12 @@ var BandSelectionAliasArgs = []string{}
 var BandSelectionComments = map[string]string{
 	"rat_2g": "Radio Access Technologies",
 }
-var BandSelectionSpecialArgs = map[string]string{}
+var BandSelectionSpecialArgs = map[string]string{
+	"rat_2g": "StringArray",
+	"rat_3g": "StringArray",
+	"rat_4g": "StringArray",
+	"rat_5g": "StringArray",
+}
 var QosPositionRequestRequiredArgs = []string{}
 var QosPositionRequestOptionalArgs = []string{
 	"ver",
@@ -1020,7 +1029,12 @@ var QosPositionRequestComments = map[string]string{
 	"ltecategory":                              "clients device LTE category number, optional",
 	"bandselection.rat_2g":                     "Radio Access Technologies",
 }
-var QosPositionRequestSpecialArgs = map[string]string{}
+var QosPositionRequestSpecialArgs = map[string]string{
+	"bandselection.rat_4g": "StringArray",
+	"bandselection.rat_5g": "StringArray",
+	"bandselection.rat_2g": "StringArray",
+	"bandselection.rat_3g": "StringArray",
+}
 var QosPositionKpiResultRequiredArgs = []string{}
 var QosPositionKpiResultOptionalArgs = []string{
 	"positionid",

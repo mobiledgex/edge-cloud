@@ -619,3 +619,19 @@ func (s *CloudletApi) UpdateAppInstLocations(ctx context.Context, in *edgeproto.
 		}
 	}
 }
+
+func (s *CloudletApi) showCloudletsByKeys(keys map[string]struct{}, cb func(obj *edgeproto.Cloudlet) error) error {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+
+	for key, obj := range s.cache.Objs {
+		if _, found := keys[key.GetKeyString()]; !found {
+			continue
+		}
+		err := cb(obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

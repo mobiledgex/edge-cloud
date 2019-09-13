@@ -72,7 +72,7 @@ func (a *ApplicationData) Sort() {
 
 // Validate functions to validate user input
 
-func (key *DeveloperKey) Validate() error {
+func (key *DeveloperKey) ValidateKey() error {
 	if err := util.ValidOrgName(key.Name); err != nil {
 		errstring := err.Error()
 		//lowercase the first letter of the error message
@@ -83,10 +83,10 @@ func (key *DeveloperKey) Validate() error {
 }
 
 func (s *Developer) Validate(fields map[string]struct{}) error {
-	return s.GetKey().Validate()
+	return s.GetKey().ValidateKey()
 }
 
-func (key *OperatorKey) Validate() error {
+func (key *OperatorKey) ValidateKey() error {
 	if !util.ValidName(key.Name) {
 		return errors.New("Invalid operator name")
 	}
@@ -94,31 +94,31 @@ func (key *OperatorKey) Validate() error {
 }
 
 func (s *Operator) Validate(fields map[string]struct{}) error {
-	return s.GetKey().Validate()
+	return s.GetKey().ValidateKey()
 }
 
-func (key *ClusterKey) Validate() error {
+func (key *ClusterKey) ValidateKey() error {
 	if !util.ValidKubernetesName(key.Name) {
 		return errors.New("Invalid cluster name")
 	}
 	return nil
 }
 
-func (key *ClusterInstKey) Validate() error {
-	if err := key.ClusterKey.Validate(); err != nil {
+func (key *ClusterInstKey) ValidateKey() error {
+	if err := key.ClusterKey.ValidateKey(); err != nil {
 		return err
 	}
-	if err := key.CloudletKey.Validate(); err != nil {
+	if err := key.CloudletKey.ValidateKey(); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (s *ClusterInst) Validate(fields map[string]struct{}) error {
-	return s.GetKey().Validate()
+	return s.GetKey().ValidateKey()
 }
 
-func (key *FlavorKey) Validate() error {
+func (key *FlavorKey) ValidateKey() error {
 	if !util.ValidName(key.Name) {
 		return errors.New("Invalid flavor name")
 	}
@@ -126,7 +126,7 @@ func (key *FlavorKey) Validate() error {
 }
 
 func (s *Flavor) Validate(fields map[string]struct{}) error {
-	err := s.GetKey().Validate()
+	err := s.GetKey().ValidateKey()
 	if err != nil {
 		return err
 	}
@@ -142,14 +142,14 @@ func (s *Flavor) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (key *AppKey) Validate() error {
+func (key *AppKey) ValidateKey() error {
 	if !util.ValidName(key.Name) {
 		return errors.New("Invalid app name")
 	}
 	if !util.ValidName(key.Version) {
 		return errors.New("Invalid app version string")
 	}
-	if err := key.DeveloperKey.Validate(); err != nil {
+	if err := key.DeveloperKey.ValidateKey(); err != nil {
 		return err
 	}
 	return nil
@@ -157,7 +157,7 @@ func (key *AppKey) Validate() error {
 
 func (s *App) Validate(fields map[string]struct{}) error {
 	var err error
-	if err = s.GetKey().Validate(); err != nil {
+	if err = s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
 	if err = s.ValidateEnums(); err != nil {
@@ -179,8 +179,8 @@ func (s *App) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (key *CloudletKey) Validate() error {
-	if err := key.OperatorKey.Validate(); err != nil {
+func (key *CloudletKey) ValidateKey() error {
+	if err := key.OperatorKey.ValidateKey(); err != nil {
 		return err
 	}
 	if !util.ValidName(key.Name) {
@@ -190,7 +190,7 @@ func (key *CloudletKey) Validate() error {
 }
 
 func (s *Cloudlet) Validate(fields map[string]struct{}) error {
-	if err := s.GetKey().Validate(); err != nil {
+	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
 	if _, found := fields[CloudletFieldLocationLatitude]; found {
@@ -214,24 +214,52 @@ func (s *CloudletInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (key *AppInstKey) Validate() error {
-	if err := key.AppKey.Validate(); err != nil {
+func (key *CloudletPoolKey) ValidateKey() error {
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid Cloudlet Pool name")
+	}
+	return nil
+}
+
+func (s *CloudletPool) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
-	if err := key.ClusterInstKey.Validate(); err != nil {
+	return nil
+}
+
+func (key *CloudletPoolMember) ValidateKey() error {
+	if err := key.CloudletKey.ValidateKey(); err != nil {
+		return err
+	}
+	if err := key.PoolKey.ValidateKey(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *CloudletPoolMember) Validate(fields map[string]struct{}) error {
+	return s.ValidateKey()
+}
+
+func (key *AppInstKey) ValidateKey() error {
+	if err := key.AppKey.ValidateKey(); err != nil {
+		return err
+	}
+	if err := key.ClusterInstKey.ValidateKey(); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (s *AppInst) Validate(fields map[string]struct{}) error {
-	if err := s.GetKey().Validate(); err != nil {
+	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (key *ControllerKey) Validate() error {
+func (key *ControllerKey) ValidateKey() error {
 	if key.Addr == "" {
 		return errors.New("Invalid address")
 	}
@@ -239,18 +267,18 @@ func (key *ControllerKey) Validate() error {
 }
 
 func (s *Controller) Validate(fields map[string]struct{}) error {
-	return s.GetKey().Validate()
+	return s.GetKey().ValidateKey()
 }
 
-func (key *NodeKey) Validate() error {
+func (key *NodeKey) ValidateKey() error {
 	if key.Name == "" {
 		return errors.New("Invalid node name")
 	}
-	return key.CloudletKey.Validate()
+	return key.CloudletKey.ValidateKey()
 }
 
 func (s *Node) Validate(fields map[string]struct{}) error {
-	return s.GetKey().Validate()
+	return s.GetKey().ValidateKey()
 }
 
 func (s *AppInstInfo) Validate(fields map[string]struct{}) error {
@@ -370,7 +398,7 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 		vals := strings.Split(str, ":")
 		// within each vals, we may have a hyphenated range of ports ex: udp:M-N inclusive
 		if len(vals) != 2 {
-			// either case len is 2 if a valid string ex: udp:4500[-500] 
+			// either case len is 2 if a valid string ex: udp:4500[-500]
 			return nil, fmt.Errorf("Invalid Access Ports format, expected proto:port[-endport] but was %s", vals[0])
 		}
 		// within each pp[1], we may have a hyphenated range of ports ex: udp:M-N inclusive
@@ -381,12 +409,12 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 		baseport, err = strconv.ParseInt(portrange[0], 10, 32)
 		if len(portrange) == 2 {
 			endport, err = strconv.ParseInt(portrange[1], 10, 32)
-			if (err != nil) {
+			if err != nil {
 				return nil, fmt.Errorf("unable to convert port range base value")
 			}
 		} else {
 			// accomodate tests below
-			endport = baseport;
+			endport = baseport
 		}
 
 		if (baseport < 1 || baseport > 65535) ||
@@ -406,10 +434,10 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 		if err != nil {
 			return nil, err
 		}
-		p := dme.AppPort {
+		p := dme.AppPort{
 			Proto:        proto,
 			InternalPort: int32(baseport),
-			EndPort: int32(endport),
+			EndPort:      int32(endport),
 		}
 		appports = append(appports, p)
 	}

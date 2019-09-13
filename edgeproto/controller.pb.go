@@ -533,7 +533,7 @@ func (s *ControllerStore) Put(ctx context.Context, m *Controller, wait func(int6
 }
 
 func (s *ControllerStore) Delete(ctx context.Context, m *Controller, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}

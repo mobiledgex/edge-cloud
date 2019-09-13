@@ -30,6 +30,7 @@ var _ = math.Inf
 type ShowAppInst struct {
 	Data map[string]edgeproto.AppInst
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *ShowAppInst) Init() {
@@ -37,13 +38,19 @@ func (x *ShowAppInst) Init() {
 }
 
 func (x *ShowAppInst) Send(m *edgeproto.AppInst) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
 
+func (x *ShowAppInst) Context() context.Context {
+	return x.Ctx
+}
+
+var AppInstShowExtraCount = 0
+
 type CudStreamoutAppInst struct {
 	grpc.ServerStream
-	ctx context.Context
+	Ctx context.Context
 }
 
 func (x *CudStreamoutAppInst) Send(res *edgeproto.Result) error {
@@ -52,12 +59,12 @@ func (x *CudStreamoutAppInst) Send(res *edgeproto.Result) error {
 }
 
 func (x *CudStreamoutAppInst) Context() context.Context {
-	return x.ctx
+	return x.Ctx
 }
 
 func NewCudStreamoutAppInst(ctx context.Context) *CudStreamoutAppInst {
 	return &CudStreamoutAppInst{
-		ctx: ctx,
+		Ctx: ctx,
 	}
 }
 
@@ -94,31 +101,31 @@ func (x *ShowAppInst) ReadStream(stream edgeproto.AppInstApi_ShowAppInstClient, 
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowAppInst) CheckFound(obj *edgeproto.AppInst) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *ShowAppInst) AssertFound(t *testing.T, obj *edgeproto.AppInst) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find AppInst %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find AppInst %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "AppInst are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *ShowAppInst) AssertNotFound(t *testing.T, obj *edgeproto.AppInst) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find AppInst %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find AppInst %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFoundAppInst(t *testing.T, api edgeproto.AppInstApiClient, obj *edgeproto.AppInst, count int, retry time.Duration) {
@@ -171,19 +178,6 @@ func (x *AppInstCommonApi) CreateAppInst(ctx context.Context, in *edgeproto.AppI
 	}
 }
 
-func (x *AppInstCommonApi) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
-	copy := &edgeproto.AppInst{}
-	*copy = *in
-	if x.internal_api != nil {
-		err := x.internal_api.UpdateAppInst(copy, NewCudStreamoutAppInst(ctx))
-		return &edgeproto.Result{}, err
-	} else {
-		stream, err := x.client_api.UpdateAppInst(ctx, copy)
-		err = AppInstReadResultStream(stream, err)
-		return &edgeproto.Result{}, err
-	}
-}
-
 func (x *AppInstCommonApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
 	copy := &edgeproto.AppInst{}
 	*copy = *in
@@ -197,8 +191,22 @@ func (x *AppInstCommonApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppI
 	}
 }
 
+func (x *AppInstCommonApi) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+	copy := &edgeproto.AppInst{}
+	*copy = *in
+	if x.internal_api != nil {
+		err := x.internal_api.UpdateAppInst(copy, NewCudStreamoutAppInst(ctx))
+		return &edgeproto.Result{}, err
+	} else {
+		stream, err := x.client_api.UpdateAppInst(ctx, copy)
+		err = AppInstReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
+	}
+}
+
 func (x *AppInstCommonApi) ShowAppInst(ctx context.Context, filter *edgeproto.AppInst, showData *ShowAppInst) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.ShowAppInst(filter, showData)
 	} else {
 		stream, err := x.client_api.ShowAppInst(ctx, filter)
@@ -253,7 +261,7 @@ func basicAppInstShowTest(t *testing.T, ctx context.Context, api *AppInstCommonA
 	filterNone := edgeproto.AppInst{}
 	err = api.ShowAppInst(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData)+AppInstShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -284,31 +292,31 @@ func basicAppInstCudTest(t *testing.T, ctx context.Context, api *AppInstCommonAp
 	}
 
 	// test create
-	createAppInstData(t, ctx, api, testData)
+	CreateAppInstData(t, ctx, api, testData)
 
-	// test duplicate create - should fail
+	// test duplicate Create - should fail
 	_, err = api.CreateAppInst(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate AppInst")
 
 	// test show all items
 	basicAppInstShowTest(t, ctx, api, testData)
 
-	// test delete
+	// test Delete
 	_, err = api.DeleteAppInst(ctx, &testData[0])
-	require.Nil(t, err, "delete AppInst %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Delete AppInst %s", testData[0].GetKey().GetKeyString())
 	show := ShowAppInst{}
 	show.Init()
 	filterNone := edgeproto.AppInst{}
 	err = api.ShowAppInst(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData)-1, len(show.Data), "Show count")
+	require.Equal(t, len(testData)-1+AppInstShowExtraCount, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateAppInst(ctx, &testData[0])
 	require.NotNil(t, err, "Update missing object")
-	// create it back
+	// Create it back
 	_, err = api.CreateAppInst(ctx, &testData[0])
-	require.Nil(t, err, "Create AppInst %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Create AppInst %s", testData[0].GetKey().GetKeyString())
 
 	// test invalid keys
 	bad := edgeproto.AppInst{}
@@ -322,7 +330,7 @@ func InternalAppInstCreate(t *testing.T, api edgeproto.AppInstApiServer, testDat
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createAppInstData(t, ctx, NewInternalAppInstApi(api), testData)
+	CreateAppInstData(t, ctx, NewInternalAppInstApi(api), testData)
 }
 
 func ClientAppInstCreate(t *testing.T, api edgeproto.AppInstApiClient, testData []edgeproto.AppInst) {
@@ -330,21 +338,31 @@ func ClientAppInstCreate(t *testing.T, api edgeproto.AppInstApiClient, testData 
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createAppInstData(t, ctx, NewClientAppInstApi(api), testData)
+	CreateAppInstData(t, ctx, NewClientAppInstApi(api), testData)
 }
 
-func createAppInstData(t *testing.T, ctx context.Context, api *AppInstCommonApi, testData []edgeproto.AppInst) {
+func CreateAppInstData(t *testing.T, ctx context.Context, api *AppInstCommonApi, testData []edgeproto.AppInst) {
 	var err error
 
 	for _, obj := range testData {
 		_, err = api.CreateAppInst(ctx, &obj)
-		require.Nil(t, err, "Create AppInst %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "Create AppInst %s", obj.GetKey().GetKeyString())
 	}
+}
+
+func FindAppInstData(key *edgeproto.AppInstKey, testData []edgeproto.AppInst) (*edgeproto.AppInst, bool) {
+	for ii, _ := range testData {
+		if testData[ii].Key.Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
 }
 
 type ShowAppInstInfo struct {
 	Data map[string]edgeproto.AppInstInfo
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *ShowAppInstInfo) Init() {
@@ -352,9 +370,15 @@ func (x *ShowAppInstInfo) Init() {
 }
 
 func (x *ShowAppInstInfo) Send(m *edgeproto.AppInstInfo) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
+
+func (x *ShowAppInstInfo) Context() context.Context {
+	return x.Ctx
+}
+
+var AppInstInfoShowExtraCount = 0
 
 func (x *ShowAppInstInfo) ReadStream(stream edgeproto.AppInstInfoApi_ShowAppInstInfoClient, err error) {
 	x.Data = make(map[string]edgeproto.AppInstInfo)
@@ -369,31 +393,31 @@ func (x *ShowAppInstInfo) ReadStream(stream edgeproto.AppInstInfoApi_ShowAppInst
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowAppInstInfo) CheckFound(obj *edgeproto.AppInstInfo) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *ShowAppInstInfo) AssertFound(t *testing.T, obj *edgeproto.AppInstInfo) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find AppInstInfo %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find AppInstInfo %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "AppInstInfo are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *ShowAppInstInfo) AssertNotFound(t *testing.T, obj *edgeproto.AppInstInfo) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find AppInstInfo %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find AppInstInfo %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFoundAppInstInfo(t *testing.T, api edgeproto.AppInstInfoApiClient, obj *edgeproto.AppInstInfo, count int, retry time.Duration) {
@@ -435,6 +459,7 @@ type AppInstInfoCommonApi struct {
 
 func (x *AppInstInfoCommonApi) ShowAppInstInfo(ctx context.Context, filter *edgeproto.AppInstInfo, showData *ShowAppInstInfo) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.ShowAppInstInfo(filter, showData)
 	} else {
 		stream, err := x.client_api.ShowAppInstInfo(ctx, filter)
@@ -485,7 +510,7 @@ func basicAppInstInfoShowTest(t *testing.T, ctx context.Context, api *AppInstInf
 	filterNone := edgeproto.AppInstInfo{}
 	err = api.ShowAppInstInfo(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData)+AppInstInfoShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -505,6 +530,15 @@ func GetAppInstInfo(t *testing.T, ctx context.Context, api *AppInstInfoCommonApi
 		*out = obj
 	}
 	return found
+}
+
+func FindAppInstInfoData(key *edgeproto.AppInstKey, testData []edgeproto.AppInstInfo) (*edgeproto.AppInstInfo, bool) {
+	for ii, _ := range testData {
+		if testData[ii].Key.Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
 }
 
 func (s *DummyServer) CreateAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_CreateAppInstServer) error {

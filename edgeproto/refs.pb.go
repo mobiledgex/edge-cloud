@@ -589,7 +589,7 @@ func (s *CloudletRefsStore) Put(ctx context.Context, m *CloudletRefs, wait func(
 }
 
 func (s *CloudletRefsStore) Delete(ctx context.Context, m *CloudletRefs, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}
@@ -1062,7 +1062,7 @@ func (s *ClusterRefsStore) Put(ctx context.Context, m *ClusterRefs, wait func(in
 }
 
 func (s *ClusterRefsStore) Delete(ctx context.Context, m *ClusterRefs, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}

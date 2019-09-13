@@ -19,6 +19,7 @@ import (
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	"github.com/gogo/protobuf/vanity"
 	"github.com/gogo/protobuf/vanity/command"
+	"github.com/mobiledgex/edge-cloud/protogen"
 )
 
 const AutoGenComment = "// Auto-generated code: DO NOT EDIT"
@@ -308,6 +309,10 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 	return false
 }
 
+func GetObjAndKey(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_ObjAndKey, false)
+}
+
 func HasHideTags(g *generator.Generator, desc *generator.Descriptor, hideTag *proto.ExtensionDesc, visited []*generator.Descriptor) bool {
 	if WasVisited(desc, visited) {
 		return false
@@ -340,12 +345,14 @@ func GetMessageKey(message *descriptor.DescriptorProto) *descriptor.FieldDescrip
 	return nil
 }
 
-func (s *PluginSupport) GetMessageKeyName(g *generator.Generator, message *descriptor.DescriptorProto) (string, error) {
-	field := GetMessageKey(message)
-	if field == nil {
-		return "", fmt.Errorf("No Key field for %s", *message.Name)
+func (s *PluginSupport) GetMessageKeyType(g *generator.Generator, desc *generator.Descriptor) (string, error) {
+	message := desc.DescriptorProto
+	if field := GetMessageKey(message); field != nil {
+		return s.GoType(g, field), nil
+	} else if GetObjAndKey(message) {
+		return s.FQTypeName(g, desc), nil
 	}
-	return s.GoType(g, field), nil
+	return "", fmt.Errorf("No Key field for %s", *message.Name)
 }
 
 type MapType struct {

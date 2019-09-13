@@ -537,7 +537,7 @@ func (s *DeveloperStore) Put(ctx context.Context, m *Developer, wait func(int64)
 }
 
 func (s *DeveloperStore) Delete(ctx context.Context, m *Developer, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}

@@ -1794,7 +1794,7 @@ func (s *AppInstStore) Put(ctx context.Context, m *AppInst, wait func(int64), op
 }
 
 func (s *AppInstStore) Delete(ctx context.Context, m *AppInst, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}
@@ -2670,7 +2670,7 @@ func (s *AppInstInfoStore) Put(ctx context.Context, m *AppInstInfo, wait func(in
 }
 
 func (s *AppInstInfoStore) Delete(ctx context.Context, m *AppInstInfo, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}
