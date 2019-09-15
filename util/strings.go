@@ -1,5 +1,9 @@
 package util
 
+import (
+	"strings"
+)
+
 func isASCIILower(c byte) bool {
 	return 'a' <= c && c <= 'z'
 }
@@ -41,4 +45,10 @@ func CamelCase(s string) string {
 		}
 	}
 	return t
+}
+
+func EscapeJson(jsoninput string) string {
+	r := strings.NewReplacer(
+		`{`, `\{`, `}`, `\}`)
+	return r.Replace(jsoninput)
 }
