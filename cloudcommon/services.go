@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
 func GetCloudletLogFile(filePrefix string) string {
@@ -106,7 +107,7 @@ func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet) error {
 		if err != nil {
 			return err
 		}
-		args = crmProc.LookupArgs()
+		args = util.EscapeJson(crmProc.LookupArgs())
 	}
 
 	// max wait time for process to go down gracefully, after which it is killed forcefully
