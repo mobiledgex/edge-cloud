@@ -3,12 +3,6 @@
 
 package gencmd
 
-import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import "strings"
-import "strconv"
-import "os"
-import "text/tabwriter"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -19,57 +13,22 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var LProtoStrings = []string{
-	"LProtoUnknown",
-	"LProtoTcp",
-	"LProtoUdp",
-	"LProtoHttp",
+var AppPortRequiredArgs = []string{}
+var AppPortOptionalArgs = []string{
+	"proto",
+	"internalport",
+	"publicport",
+	"pathprefix",
+	"fqdnprefix",
+	"endport",
 }
-
-func AppPortSlicer(in *distributed_match_engine.AppPort) []string {
-	s := make([]string, 0, 6)
-	s = append(s, distributed_match_engine.LProto_CamelName[int32(in.Proto)])
-	s = append(s, strconv.FormatUint(uint64(in.InternalPort), 10))
-	s = append(s, strconv.FormatUint(uint64(in.PublicPort), 10))
-	s = append(s, in.PathPrefix)
-	s = append(s, in.FqdnPrefix)
-	s = append(s, strconv.FormatUint(uint64(in.EndPort), 10))
-	return s
+var AppPortAliasArgs = []string{}
+var AppPortComments = map[string]string{
+	"proto":        "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
+	"internalport": "Container port",
+	"publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
+	"pathprefix":   "Public facing path for HTTP L7 access.",
+	"fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
+	"endport":      "A non-zero end port indicates this is a port range from internal port to end port, inclusive.",
 }
-
-func AppPortHeaderSlicer() []string {
-	s := make([]string, 0, 6)
-	s = append(s, "Proto")
-	s = append(s, "InternalPort")
-	s = append(s, "PublicPort")
-	s = append(s, "PathPrefix")
-	s = append(s, "FqdnPrefix")
-	s = append(s, "EndPort")
-	return s
-}
-
-func AppPortWriteOutputArray(objs []*distributed_match_engine.AppPort) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppPortHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(AppPortSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func AppPortWriteOutputOne(obj *distributed_match_engine.AppPort) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppPortHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(AppPortSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func init() {
-}
+var AppPortSpecialArgs = map[string]string{}

@@ -7,11 +7,8 @@ import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
 import "github.com/spf13/cobra"
 import "context"
-import "os"
 import "io"
-import "text/tabwriter"
-import "github.com/spf13/pflag"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -19,7 +16,6 @@ import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/gogo/protobuf/gogoproto"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -27,100 +23,12 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var ControllerApiCmd edgeproto.ControllerApiClient
-var ControllerIn edgeproto.Controller
-var ControllerFlagSet = pflag.NewFlagSet("Controller", pflag.ExitOnError)
-var ControllerNoConfigFlagSet = pflag.NewFlagSet("ControllerNoConfig", pflag.ExitOnError)
-
-func ControllerKeySlicer(in *edgeproto.ControllerKey) []string {
-	s := make([]string, 0, 1)
-	s = append(s, in.Addr)
-	return s
-}
-
-func ControllerKeyHeaderSlicer() []string {
-	s := make([]string, 0, 1)
-	s = append(s, "Addr")
-	return s
-}
-
-func ControllerKeyWriteOutputArray(objs []*edgeproto.ControllerKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ControllerKeyHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(ControllerKeySlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func ControllerKeyWriteOutputOne(obj *edgeproto.ControllerKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ControllerKeyHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(ControllerKeySlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func ControllerSlicer(in *edgeproto.Controller) []string {
-	s := make([]string, 0, 6)
-	if in.Fields == nil {
-		in.Fields = make([]string, 1)
-	}
-	s = append(s, in.Fields[0])
-	s = append(s, in.Key.Addr)
-	s = append(s, in.BuildMaster)
-	s = append(s, in.BuildHead)
-	s = append(s, in.BuildAuthor)
-	s = append(s, in.Hostname)
-	return s
-}
-
-func ControllerHeaderSlicer() []string {
-	s := make([]string, 0, 6)
-	s = append(s, "Fields")
-	s = append(s, "Key-Addr")
-	s = append(s, "BuildMaster")
-	s = append(s, "BuildHead")
-	s = append(s, "BuildAuthor")
-	s = append(s, "Hostname")
-	return s
-}
-
-func ControllerWriteOutputArray(objs []*edgeproto.Controller) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ControllerHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(ControllerSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func ControllerWriteOutputOne(obj *edgeproto.Controller) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ControllerHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(ControllerSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
 func ControllerHideTags(in *edgeproto.Controller) {
-	if cmdsup.HideTags == "" {
+	if cli.HideTags == "" {
 		return
 	}
 	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
@@ -137,16 +45,29 @@ func ControllerHideTags(in *edgeproto.Controller) {
 	}
 }
 
-var ShowControllerCmd = &cobra.Command{
-	Use: "ShowController",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return ShowController(&ControllerIn)
-	},
+var ControllerApiCmd edgeproto.ControllerApiClient
+
+var ShowControllerCmd = &cli.Command{
+	Use:          "ShowController",
+	OptionalArgs: strings.Join(append(ControllerRequiredArgs, ControllerOptionalArgs...), " "),
+	AliasArgs:    strings.Join(ControllerAliasArgs, " "),
+	SpecialArgs:  &ControllerSpecialArgs,
+	Comments:     ControllerComments,
+	ReqData:      &edgeproto.Controller{},
+	ReplyData:    &edgeproto.Controller{},
+	Run:          runShowController,
 }
 
-func ShowController(in *edgeproto.Controller) error {
+func runShowController(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.Controller)
+	return ShowController(c, obj)
+}
+
+func ShowController(c *cli.Command, in *edgeproto.Controller) error {
 	if ControllerApiCmd == nil {
 		return fmt.Errorf("ControllerApi client not initialized")
 	}
@@ -175,17 +96,18 @@ func ShowController(in *edgeproto.Controller) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	ControllerWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowControllers(data []edgeproto.Controller, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowControllers(c *cli.Command, data []edgeproto.Controller, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowController %v\n", data[ii])
-		myerr := ShowController(&data[ii])
+		myerr := ShowController(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -194,37 +116,33 @@ func ShowControllers(data []edgeproto.Controller, err *error) {
 }
 
 var ControllerApiCmds = []*cobra.Command{
-	ShowControllerCmd,
+	ShowControllerCmd.GenCmd(),
 }
 
-func init() {
-	ControllerFlagSet.StringVar(&ControllerIn.Key.Addr, "key-addr", "", "Key.Addr")
-	ControllerFlagSet.StringVar(&ControllerIn.BuildMaster, "buildmaster", "", "BuildMaster")
-	ControllerFlagSet.StringVar(&ControllerIn.BuildHead, "buildhead", "", "BuildHead")
-	ControllerFlagSet.StringVar(&ControllerIn.BuildAuthor, "buildauthor", "", "BuildAuthor")
-	ControllerFlagSet.StringVar(&ControllerIn.Hostname, "hostname", "", "Hostname")
-	ShowControllerCmd.Flags().AddFlagSet(ControllerFlagSet)
+var ControllerKeyRequiredArgs = []string{}
+var ControllerKeyOptionalArgs = []string{
+	"addr",
 }
-
-func ControllerApiAllowNoConfig() {
-	ShowControllerCmd.Flags().AddFlagSet(ControllerNoConfigFlagSet)
+var ControllerKeyAliasArgs = []string{}
+var ControllerKeyComments = map[string]string{
+	"addr": "external API address",
 }
-
-func ControllerSetFields() {
-	ControllerIn.Fields = make([]string, 0)
-	if ControllerFlagSet.Lookup("key-addr").Changed {
-		ControllerIn.Fields = append(ControllerIn.Fields, "2.1")
-	}
-	if ControllerFlagSet.Lookup("buildmaster").Changed {
-		ControllerIn.Fields = append(ControllerIn.Fields, "4")
-	}
-	if ControllerFlagSet.Lookup("buildhead").Changed {
-		ControllerIn.Fields = append(ControllerIn.Fields, "5")
-	}
-	if ControllerFlagSet.Lookup("buildauthor").Changed {
-		ControllerIn.Fields = append(ControllerIn.Fields, "6")
-	}
-	if ControllerFlagSet.Lookup("hostname").Changed {
-		ControllerIn.Fields = append(ControllerIn.Fields, "7")
-	}
+var ControllerKeySpecialArgs = map[string]string{}
+var ControllerRequiredArgs = []string{
+	"key.addr",
 }
+var ControllerOptionalArgs = []string{
+	"buildmaster",
+	"buildhead",
+	"buildauthor",
+	"hostname",
+}
+var ControllerAliasArgs = []string{}
+var ControllerComments = map[string]string{
+	"key.addr":    "external API address",
+	"buildmaster": "Build Master Version",
+	"buildhead":   "Build Head Version",
+	"buildauthor": "Build Author",
+	"hostname":    "Hostname",
+}
+var ControllerSpecialArgs = map[string]string{}
