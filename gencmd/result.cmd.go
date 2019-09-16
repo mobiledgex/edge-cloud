@@ -3,12 +3,6 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "strconv"
-import "os"
-import "text/tabwriter"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -20,42 +14,14 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-func ResultSlicer(in *edgeproto.Result) []string {
-	s := make([]string, 0, 2)
-	s = append(s, in.Message)
-	s = append(s, strconv.FormatUint(uint64(in.Code), 10))
-	return s
+var ResultRequiredArgs = []string{}
+var ResultOptionalArgs = []string{
+	"message",
+	"code",
 }
-
-func ResultHeaderSlicer() []string {
-	s := make([]string, 0, 2)
-	s = append(s, "Message")
-	s = append(s, "Code")
-	return s
+var ResultAliasArgs = []string{}
+var ResultComments = map[string]string{
+	"message": "Message, may be success or failure message",
+	"code":    "Error code, 0 indicates success, non-zero indicates failure (not implemented)",
 }
-
-func ResultWriteOutputArray(objs []*edgeproto.Result) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(ResultSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func ResultWriteOutputOne(obj *edgeproto.Result) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(ResultSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func init() {
-}
+var ResultSpecialArgs = map[string]string{}

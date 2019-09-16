@@ -6,7 +6,6 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "developer.proto";
 import "flavor.proto";
 import "gogoproto/gogo.proto";
@@ -105,8 +104,8 @@ message ConfigFile {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
-  option (protocmd.alias) = "appname=Key.Name,appvers=Key.Version,developer=Key.DeveloperKey.Name";
-  option (protocmd.noconfig) = "Revision";
+  option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,developer=Key.DeveloperKey.Name,defaultflavor=DefaultFlavor.Name";
+  option (protogen.noconfig) = "Revision";
 }
 
 service AppApi {

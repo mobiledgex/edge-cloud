@@ -5,21 +5,16 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "strconv"
 import "github.com/spf13/cobra"
 import "context"
-import "os"
 import "io"
-import "text/tabwriter"
-import "github.com/spf13/pflag"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -29,102 +24,29 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var FlavorApiCmd edgeproto.FlavorApiClient
-var FlavorIn edgeproto.Flavor
-var FlavorFlagSet = pflag.NewFlagSet("Flavor", pflag.ExitOnError)
-var FlavorNoConfigFlagSet = pflag.NewFlagSet("FlavorNoConfig", pflag.ExitOnError)
 
-func FlavorKeySlicer(in *edgeproto.FlavorKey) []string {
-	s := make([]string, 0, 1)
-	s = append(s, in.Name)
-	return s
+var CreateFlavorCmd = &cli.Command{
+	Use:          "CreateFlavor",
+	RequiredArgs: strings.Join(FlavorRequiredArgs, " "),
+	OptionalArgs: strings.Join(FlavorOptionalArgs, " "),
+	AliasArgs:    strings.Join(FlavorAliasArgs, " "),
+	SpecialArgs:  &FlavorSpecialArgs,
+	Comments:     FlavorComments,
+	ReqData:      &edgeproto.Flavor{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runCreateFlavor,
 }
 
-func FlavorKeyHeaderSlicer() []string {
-	s := make([]string, 0, 1)
-	s = append(s, "Name")
-	return s
-}
-
-func FlavorKeyWriteOutputArray(objs []*edgeproto.FlavorKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(FlavorKeyHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(FlavorKeySlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
+func runCreateFlavor(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
 	}
+	obj := c.ReqData.(*edgeproto.Flavor)
+	return CreateFlavor(c, obj)
 }
 
-func FlavorKeyWriteOutputOne(obj *edgeproto.FlavorKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(FlavorKeyHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(FlavorKeySlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func FlavorSlicer(in *edgeproto.Flavor) []string {
-	s := make([]string, 0, 5)
-	if in.Fields == nil {
-		in.Fields = make([]string, 1)
-	}
-	s = append(s, in.Fields[0])
-	s = append(s, in.Key.Name)
-	s = append(s, strconv.FormatUint(uint64(in.Ram), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Vcpus), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Disk), 10))
-	return s
-}
-
-func FlavorHeaderSlicer() []string {
-	s := make([]string, 0, 5)
-	s = append(s, "Fields")
-	s = append(s, "Key-Name")
-	s = append(s, "Ram")
-	s = append(s, "Vcpus")
-	s = append(s, "Disk")
-	return s
-}
-
-func FlavorWriteOutputArray(objs []*edgeproto.Flavor) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(FlavorHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(FlavorSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func FlavorWriteOutputOne(obj *edgeproto.Flavor) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(FlavorHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(FlavorSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-
-var CreateFlavorCmd = &cobra.Command{
-	Use: "CreateFlavor",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return CreateFlavor(&FlavorIn)
-	},
-}
-
-func CreateFlavor(in *edgeproto.Flavor) error {
+func CreateFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 	if FlavorApiCmd == nil {
 		return fmt.Errorf("FlavorApi client not initialized")
 	}
@@ -138,17 +60,18 @@ func CreateFlavor(in *edgeproto.Flavor) error {
 		}
 		return fmt.Errorf("CreateFlavor failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func CreateFlavors(data []edgeproto.Flavor, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func CreateFlavors(c *cli.Command, data []edgeproto.Flavor, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("CreateFlavor %v\n", data[ii])
-		myerr := CreateFlavor(&data[ii])
+		myerr := CreateFlavor(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -156,16 +79,28 @@ func CreateFlavors(data []edgeproto.Flavor, err *error) {
 	}
 }
 
-var DeleteFlavorCmd = &cobra.Command{
-	Use: "DeleteFlavor",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return DeleteFlavor(&FlavorIn)
-	},
+var DeleteFlavorCmd = &cli.Command{
+	Use:          "DeleteFlavor",
+	RequiredArgs: strings.Join(FlavorRequiredArgs, " "),
+	OptionalArgs: strings.Join(FlavorOptionalArgs, " "),
+	AliasArgs:    strings.Join(FlavorAliasArgs, " "),
+	SpecialArgs:  &FlavorSpecialArgs,
+	Comments:     FlavorComments,
+	ReqData:      &edgeproto.Flavor{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runDeleteFlavor,
 }
 
-func DeleteFlavor(in *edgeproto.Flavor) error {
+func runDeleteFlavor(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.Flavor)
+	return DeleteFlavor(c, obj)
+}
+
+func DeleteFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 	if FlavorApiCmd == nil {
 		return fmt.Errorf("FlavorApi client not initialized")
 	}
@@ -179,17 +114,18 @@ func DeleteFlavor(in *edgeproto.Flavor) error {
 		}
 		return fmt.Errorf("DeleteFlavor failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func DeleteFlavors(data []edgeproto.Flavor, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func DeleteFlavors(c *cli.Command, data []edgeproto.Flavor, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("DeleteFlavor %v\n", data[ii])
-		myerr := DeleteFlavor(&data[ii])
+		myerr := DeleteFlavor(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -197,17 +133,28 @@ func DeleteFlavors(data []edgeproto.Flavor, err *error) {
 	}
 }
 
-var UpdateFlavorCmd = &cobra.Command{
-	Use: "UpdateFlavor",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		FlavorSetFields()
-		return UpdateFlavor(&FlavorIn)
-	},
+var UpdateFlavorCmd = &cli.Command{
+	Use:          "UpdateFlavor",
+	RequiredArgs: strings.Join(FlavorRequiredArgs, " "),
+	OptionalArgs: strings.Join(FlavorOptionalArgs, " "),
+	AliasArgs:    strings.Join(FlavorAliasArgs, " "),
+	SpecialArgs:  &FlavorSpecialArgs,
+	Comments:     FlavorComments,
+	ReqData:      &edgeproto.Flavor{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runUpdateFlavor,
 }
 
-func UpdateFlavor(in *edgeproto.Flavor) error {
+func runUpdateFlavor(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.Flavor)
+	return UpdateFlavor(c, obj)
+}
+
+func UpdateFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 	if FlavorApiCmd == nil {
 		return fmt.Errorf("FlavorApi client not initialized")
 	}
@@ -221,17 +168,18 @@ func UpdateFlavor(in *edgeproto.Flavor) error {
 		}
 		return fmt.Errorf("UpdateFlavor failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func UpdateFlavors(data []edgeproto.Flavor, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func UpdateFlavors(c *cli.Command, data []edgeproto.Flavor, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("UpdateFlavor %v\n", data[ii])
-		myerr := UpdateFlavor(&data[ii])
+		myerr := UpdateFlavor(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -239,16 +187,27 @@ func UpdateFlavors(data []edgeproto.Flavor, err *error) {
 	}
 }
 
-var ShowFlavorCmd = &cobra.Command{
-	Use: "ShowFlavor",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return ShowFlavor(&FlavorIn)
-	},
+var ShowFlavorCmd = &cli.Command{
+	Use:          "ShowFlavor",
+	OptionalArgs: strings.Join(append(FlavorRequiredArgs, FlavorOptionalArgs...), " "),
+	AliasArgs:    strings.Join(FlavorAliasArgs, " "),
+	SpecialArgs:  &FlavorSpecialArgs,
+	Comments:     FlavorComments,
+	ReqData:      &edgeproto.Flavor{},
+	ReplyData:    &edgeproto.Flavor{},
+	Run:          runShowFlavor,
 }
 
-func ShowFlavor(in *edgeproto.Flavor) error {
+func runShowFlavor(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.Flavor)
+	return ShowFlavor(c, obj)
+}
+
+func ShowFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 	if FlavorApiCmd == nil {
 		return fmt.Errorf("FlavorApi client not initialized")
 	}
@@ -276,17 +235,18 @@ func ShowFlavor(in *edgeproto.Flavor) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	FlavorWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowFlavors(data []edgeproto.Flavor, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowFlavors(c *cli.Command, data []edgeproto.Flavor, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowFlavor %v\n", data[ii])
-		myerr := ShowFlavor(&data[ii])
+		myerr := ShowFlavor(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -295,42 +255,36 @@ func ShowFlavors(data []edgeproto.Flavor, err *error) {
 }
 
 var FlavorApiCmds = []*cobra.Command{
-	CreateFlavorCmd,
-	DeleteFlavorCmd,
-	UpdateFlavorCmd,
-	ShowFlavorCmd,
+	CreateFlavorCmd.GenCmd(),
+	DeleteFlavorCmd.GenCmd(),
+	UpdateFlavorCmd.GenCmd(),
+	ShowFlavorCmd.GenCmd(),
 }
 
-func init() {
-	FlavorFlagSet.StringVar(&FlavorIn.Key.Name, "key-name", "", "Key.Name")
-	FlavorFlagSet.Uint64Var(&FlavorIn.Ram, "ram", 0, "Ram")
-	FlavorFlagSet.Uint64Var(&FlavorIn.Vcpus, "vcpus", 0, "Vcpus")
-	FlavorFlagSet.Uint64Var(&FlavorIn.Disk, "disk", 0, "Disk")
-	CreateFlavorCmd.Flags().AddFlagSet(FlavorFlagSet)
-	DeleteFlavorCmd.Flags().AddFlagSet(FlavorFlagSet)
-	UpdateFlavorCmd.Flags().AddFlagSet(FlavorFlagSet)
-	ShowFlavorCmd.Flags().AddFlagSet(FlavorFlagSet)
+var FlavorKeyRequiredArgs = []string{}
+var FlavorKeyOptionalArgs = []string{
+	"name",
 }
-
-func FlavorApiAllowNoConfig() {
-	CreateFlavorCmd.Flags().AddFlagSet(FlavorNoConfigFlagSet)
-	DeleteFlavorCmd.Flags().AddFlagSet(FlavorNoConfigFlagSet)
-	UpdateFlavorCmd.Flags().AddFlagSet(FlavorNoConfigFlagSet)
-	ShowFlavorCmd.Flags().AddFlagSet(FlavorNoConfigFlagSet)
+var FlavorKeyAliasArgs = []string{}
+var FlavorKeyComments = map[string]string{
+	"name": "Flavor name",
 }
-
-func FlavorSetFields() {
-	FlavorIn.Fields = make([]string, 0)
-	if FlavorFlagSet.Lookup("key-name").Changed {
-		FlavorIn.Fields = append(FlavorIn.Fields, "2.1")
-	}
-	if FlavorFlagSet.Lookup("ram").Changed {
-		FlavorIn.Fields = append(FlavorIn.Fields, "3")
-	}
-	if FlavorFlagSet.Lookup("vcpus").Changed {
-		FlavorIn.Fields = append(FlavorIn.Fields, "4")
-	}
-	if FlavorFlagSet.Lookup("disk").Changed {
-		FlavorIn.Fields = append(FlavorIn.Fields, "5")
-	}
+var FlavorKeySpecialArgs = map[string]string{}
+var FlavorRequiredArgs = []string{
+	"name",
 }
+var FlavorOptionalArgs = []string{
+	"ram",
+	"vcpus",
+	"disk",
+}
+var FlavorAliasArgs = []string{
+	"name=key.name",
+}
+var FlavorComments = map[string]string{
+	"name":  "Flavor name",
+	"ram":   "RAM in megabytes",
+	"vcpus": "Number of virtual CPUs",
+	"disk":  "Amount of disk space in gigabytes",
+}
+var FlavorSpecialArgs = map[string]string{}
