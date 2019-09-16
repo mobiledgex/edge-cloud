@@ -6,7 +6,6 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "app.proto";
 import "flavor.proto";
 import "clusterinst.proto";
@@ -74,9 +73,9 @@ message AppInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protocmd.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,ClusterInstKey.CloudletKey,CreatedAt,Status,Revision";
-  option (protocmd.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,developer=Key.AppKey.DeveloperKey.Name,cluster=Key.ClusterInstKey.ClusterKey.Name,clusterdeveloper=Key.ClusterInstKey.Developer,cloudlet=Key.ClusterInstKey.CloudletKey.Name,operator=Key.ClusterInstKey.CloudletKey.OperatorKey.Name";
-  option (protocmd.notreq) = "Key.ClusterInstKey.Developer";
+  option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,ClusterInstKey.CloudletKey,CreatedAt,Status,Revision";
+  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,developer=Key.AppKey.DeveloperKey.Name,cluster=Key.ClusterInstKey.ClusterKey.Name,clusterdeveloper=Key.ClusterInstKey.Developer,cloudlet=Key.ClusterInstKey.CloudletKey.Name,operator=Key.ClusterInstKey.CloudletKey.OperatorKey.Name";
+  option (protogen.not_required) = "Key.ClusterInstKey.Developer";
 }
 
 message AppInstRuntime {
@@ -93,7 +92,7 @@ service AppInstApi {
       post: "/create/appinst"
       body: "*"
     };
-    option (protocmd.stream_out_incremental) = true;
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
   }
   // Delete an application instance
@@ -102,7 +101,7 @@ service AppInstApi {
       post: "/delete/appinst"
       body: "*"
     };
-    option (protocmd.stream_out_incremental) = true;
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
   }
   // Update an application instance
@@ -111,7 +110,7 @@ service AppInstApi {
       post: "/update/appinst"
       body: "*"
     };
-    option (protocmd.stream_out_incremental) = true;
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
   }
   // Show application instances. Any fields specified will be used to filter results.

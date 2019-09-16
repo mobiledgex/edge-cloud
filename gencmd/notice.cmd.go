@@ -4,11 +4,6 @@
 package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "strconv"
-import "os"
-import "text/tabwriter"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -24,69 +19,24 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var NotifyApiCmd edgeproto.NotifyApiClient
-var NoticeActionStrings = []string{
-	"None",
-	"Update",
-	"Delete",
-	"Version",
-	"SendallEnd",
+var NoticeRequiredArgs = []string{}
+var NoticeOptionalArgs = []string{
+	"action",
+	"version",
+	"any.typeurl",
+	"any.value",
+	"wantobjs",
+	"filtercloudletkey",
+	"span",
 }
-
-func NoticeSlicer(in *edgeproto.Notice) []string {
-	s := make([]string, 0, 6)
-	s = append(s, edgeproto.NoticeAction_CamelName[int32(in.Action)])
-	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
-	s = append(s, in.Any.TypeUrl)
-	s = append(s, "")
-	for _, b := range in.Any.Value {
-		s[len(s)-1] += fmt.Sprintf("%v", b)
-	}
-	if in.WantObjs == nil {
-		in.WantObjs = make([]string, 1)
-	}
-	s = append(s, in.WantObjs[0])
-	s = append(s, strconv.FormatBool(in.FilterCloudletKey))
-	s = append(s, in.Span)
-	return s
+var NoticeAliasArgs = []string{}
+var NoticeComments = map[string]string{
+	"action":            "Action to perform, one of None, Update, Delete, Version, SendallEnd",
+	"version":           "Protocol version supported by sender",
+	"any.typeurl":       "A URL/resource name whose content describes the type of the serialized protocol buffer message. For URLs which use the scheme `http`, `https`, or no scheme, the following restrictions and interpretations apply: * If no scheme is provided, `https` is assumed. * The last segment of the URLs path must represent the fully   qualified name of the type (as in `path/google.protobuf.Duration`).   The name should be in a canonical form (e.g., leading . is   not accepted). * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.) Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics.",
+	"any.value":         "Must be a valid serialized protocol buffer of the above specified type.",
+	"wantobjs":          "Wanted Objects",
+	"filtercloudletkey": "Filter by cloudlet key",
+	"span":              "Opentracing span",
 }
-
-func NoticeHeaderSlicer() []string {
-	s := make([]string, 0, 6)
-	s = append(s, "Action")
-	s = append(s, "Version")
-	s = append(s, "Any-TypeUrl")
-	s = append(s, "Any-Value")
-	s = append(s, "WantObjs")
-	s = append(s, "FilterCloudletKey")
-	s = append(s, "Span")
-	return s
-}
-
-func NoticeWriteOutputArray(objs []*edgeproto.Notice) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(NoticeHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(NoticeSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func NoticeWriteOutputOne(obj *edgeproto.Notice) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(NoticeHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(NoticeSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func init() {
-}
-
-func NotifyApiAllowNoConfig() {
-}
+var NoticeSpecialArgs = map[string]string{}

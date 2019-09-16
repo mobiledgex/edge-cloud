@@ -7,18 +7,14 @@ import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
 import "github.com/spf13/cobra"
 import "context"
-import "os"
 import "io"
-import "text/tabwriter"
-import "github.com/spf13/pflag"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -28,96 +24,29 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var DeveloperApiCmd edgeproto.DeveloperApiClient
-var DeveloperIn edgeproto.Developer
-var DeveloperFlagSet = pflag.NewFlagSet("Developer", pflag.ExitOnError)
-var DeveloperNoConfigFlagSet = pflag.NewFlagSet("DeveloperNoConfig", pflag.ExitOnError)
 
-func DeveloperKeySlicer(in *edgeproto.DeveloperKey) []string {
-	s := make([]string, 0, 1)
-	s = append(s, in.Name)
-	return s
+var CreateDeveloperCmd = &cli.Command{
+	Use:          "CreateDeveloper",
+	RequiredArgs: strings.Join(DeveloperRequiredArgs, " "),
+	OptionalArgs: strings.Join(DeveloperOptionalArgs, " "),
+	AliasArgs:    strings.Join(DeveloperAliasArgs, " "),
+	SpecialArgs:  &DeveloperSpecialArgs,
+	Comments:     DeveloperComments,
+	ReqData:      &edgeproto.Developer{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runCreateDeveloper,
 }
 
-func DeveloperKeyHeaderSlicer() []string {
-	s := make([]string, 0, 1)
-	s = append(s, "Name")
-	return s
-}
-
-func DeveloperKeyWriteOutputArray(objs []*edgeproto.DeveloperKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(DeveloperKeyHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(DeveloperKeySlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
+func runCreateDeveloper(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
 	}
+	obj := c.ReqData.(*edgeproto.Developer)
+	return CreateDeveloper(c, obj)
 }
 
-func DeveloperKeyWriteOutputOne(obj *edgeproto.DeveloperKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(DeveloperKeyHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(DeveloperKeySlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func DeveloperSlicer(in *edgeproto.Developer) []string {
-	s := make([]string, 0, 2)
-	if in.Fields == nil {
-		in.Fields = make([]string, 1)
-	}
-	s = append(s, in.Fields[0])
-	s = append(s, in.Key.Name)
-	return s
-}
-
-func DeveloperHeaderSlicer() []string {
-	s := make([]string, 0, 2)
-	s = append(s, "Fields")
-	s = append(s, "Key-Name")
-	return s
-}
-
-func DeveloperWriteOutputArray(objs []*edgeproto.Developer) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(DeveloperHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(DeveloperSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func DeveloperWriteOutputOne(obj *edgeproto.Developer) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(DeveloperHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(DeveloperSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-
-var CreateDeveloperCmd = &cobra.Command{
-	Use: "CreateDeveloper",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return CreateDeveloper(&DeveloperIn)
-	},
-}
-
-func CreateDeveloper(in *edgeproto.Developer) error {
+func CreateDeveloper(c *cli.Command, in *edgeproto.Developer) error {
 	if DeveloperApiCmd == nil {
 		return fmt.Errorf("DeveloperApi client not initialized")
 	}
@@ -131,17 +60,18 @@ func CreateDeveloper(in *edgeproto.Developer) error {
 		}
 		return fmt.Errorf("CreateDeveloper failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func CreateDevelopers(data []edgeproto.Developer, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func CreateDevelopers(c *cli.Command, data []edgeproto.Developer, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("CreateDeveloper %v\n", data[ii])
-		myerr := CreateDeveloper(&data[ii])
+		myerr := CreateDeveloper(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -149,16 +79,28 @@ func CreateDevelopers(data []edgeproto.Developer, err *error) {
 	}
 }
 
-var DeleteDeveloperCmd = &cobra.Command{
-	Use: "DeleteDeveloper",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return DeleteDeveloper(&DeveloperIn)
-	},
+var DeleteDeveloperCmd = &cli.Command{
+	Use:          "DeleteDeveloper",
+	RequiredArgs: strings.Join(DeveloperRequiredArgs, " "),
+	OptionalArgs: strings.Join(DeveloperOptionalArgs, " "),
+	AliasArgs:    strings.Join(DeveloperAliasArgs, " "),
+	SpecialArgs:  &DeveloperSpecialArgs,
+	Comments:     DeveloperComments,
+	ReqData:      &edgeproto.Developer{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runDeleteDeveloper,
 }
 
-func DeleteDeveloper(in *edgeproto.Developer) error {
+func runDeleteDeveloper(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.Developer)
+	return DeleteDeveloper(c, obj)
+}
+
+func DeleteDeveloper(c *cli.Command, in *edgeproto.Developer) error {
 	if DeveloperApiCmd == nil {
 		return fmt.Errorf("DeveloperApi client not initialized")
 	}
@@ -172,17 +114,18 @@ func DeleteDeveloper(in *edgeproto.Developer) error {
 		}
 		return fmt.Errorf("DeleteDeveloper failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func DeleteDevelopers(data []edgeproto.Developer, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func DeleteDevelopers(c *cli.Command, data []edgeproto.Developer, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("DeleteDeveloper %v\n", data[ii])
-		myerr := DeleteDeveloper(&data[ii])
+		myerr := DeleteDeveloper(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -190,17 +133,28 @@ func DeleteDevelopers(data []edgeproto.Developer, err *error) {
 	}
 }
 
-var UpdateDeveloperCmd = &cobra.Command{
-	Use: "UpdateDeveloper",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		DeveloperSetFields()
-		return UpdateDeveloper(&DeveloperIn)
-	},
+var UpdateDeveloperCmd = &cli.Command{
+	Use:          "UpdateDeveloper",
+	RequiredArgs: strings.Join(DeveloperRequiredArgs, " "),
+	OptionalArgs: strings.Join(DeveloperOptionalArgs, " "),
+	AliasArgs:    strings.Join(DeveloperAliasArgs, " "),
+	SpecialArgs:  &DeveloperSpecialArgs,
+	Comments:     DeveloperComments,
+	ReqData:      &edgeproto.Developer{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runUpdateDeveloper,
 }
 
-func UpdateDeveloper(in *edgeproto.Developer) error {
+func runUpdateDeveloper(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.Developer)
+	return UpdateDeveloper(c, obj)
+}
+
+func UpdateDeveloper(c *cli.Command, in *edgeproto.Developer) error {
 	if DeveloperApiCmd == nil {
 		return fmt.Errorf("DeveloperApi client not initialized")
 	}
@@ -214,17 +168,18 @@ func UpdateDeveloper(in *edgeproto.Developer) error {
 		}
 		return fmt.Errorf("UpdateDeveloper failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func UpdateDevelopers(data []edgeproto.Developer, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func UpdateDevelopers(c *cli.Command, data []edgeproto.Developer, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("UpdateDeveloper %v\n", data[ii])
-		myerr := UpdateDeveloper(&data[ii])
+		myerr := UpdateDeveloper(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -232,16 +187,27 @@ func UpdateDevelopers(data []edgeproto.Developer, err *error) {
 	}
 }
 
-var ShowDeveloperCmd = &cobra.Command{
-	Use: "ShowDeveloper",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return ShowDeveloper(&DeveloperIn)
-	},
+var ShowDeveloperCmd = &cli.Command{
+	Use:          "ShowDeveloper",
+	OptionalArgs: strings.Join(append(DeveloperRequiredArgs, DeveloperOptionalArgs...), " "),
+	AliasArgs:    strings.Join(DeveloperAliasArgs, " "),
+	SpecialArgs:  &DeveloperSpecialArgs,
+	Comments:     DeveloperComments,
+	ReqData:      &edgeproto.Developer{},
+	ReplyData:    &edgeproto.Developer{},
+	Run:          runShowDeveloper,
 }
 
-func ShowDeveloper(in *edgeproto.Developer) error {
+func runShowDeveloper(c *cli.Command, args []string) error {
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj := c.ReqData.(*edgeproto.Developer)
+	return ShowDeveloper(c, obj)
+}
+
+func ShowDeveloper(c *cli.Command, in *edgeproto.Developer) error {
 	if DeveloperApiCmd == nil {
 		return fmt.Errorf("DeveloperApi client not initialized")
 	}
@@ -269,17 +235,18 @@ func ShowDeveloper(in *edgeproto.Developer) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	DeveloperWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowDevelopers(data []edgeproto.Developer, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowDevelopers(c *cli.Command, data []edgeproto.Developer, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowDeveloper %v\n", data[ii])
-		myerr := ShowDeveloper(&data[ii])
+		myerr := ShowDeveloper(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -288,30 +255,29 @@ func ShowDevelopers(data []edgeproto.Developer, err *error) {
 }
 
 var DeveloperApiCmds = []*cobra.Command{
-	CreateDeveloperCmd,
-	DeleteDeveloperCmd,
-	UpdateDeveloperCmd,
-	ShowDeveloperCmd,
+	CreateDeveloperCmd.GenCmd(),
+	DeleteDeveloperCmd.GenCmd(),
+	UpdateDeveloperCmd.GenCmd(),
+	ShowDeveloperCmd.GenCmd(),
 }
 
-func init() {
-	DeveloperFlagSet.StringVar(&DeveloperIn.Key.Name, "key-name", "", "Key.Name")
-	CreateDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
-	DeleteDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
-	UpdateDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
-	ShowDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
+var DeveloperKeyRequiredArgs = []string{}
+var DeveloperKeyOptionalArgs = []string{
+	"name",
 }
-
-func DeveloperApiAllowNoConfig() {
-	CreateDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
-	DeleteDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
-	UpdateDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
-	ShowDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
+var DeveloperKeyAliasArgs = []string{}
+var DeveloperKeyComments = map[string]string{
+	"name": "Organization or Company Name that a Developer is part of",
 }
-
-func DeveloperSetFields() {
-	DeveloperIn.Fields = make([]string, 0)
-	if DeveloperFlagSet.Lookup("key-name").Changed {
-		DeveloperIn.Fields = append(DeveloperIn.Fields, "2.2")
-	}
+var DeveloperKeySpecialArgs = map[string]string{}
+var DeveloperRequiredArgs = []string{
+	"name",
 }
+var DeveloperOptionalArgs = []string{}
+var DeveloperAliasArgs = []string{
+	"name=key.name",
+}
+var DeveloperComments = map[string]string{
+	"name": "Organization or Company Name that a Developer is part of",
+}
+var DeveloperSpecialArgs = map[string]string{}

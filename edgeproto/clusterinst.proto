@@ -5,7 +5,6 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "result.proto";
 import "flavor.proto";
 import "cluster.proto";
@@ -68,9 +67,9 @@ message ClusterInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protocmd.noconfig) = "Liveness,Auto,MasterFlavor,NodeFlavor,AllocatedIp,Status";
+  option (protogen.noconfig) = "Liveness,Auto,MasterFlavor,NodeFlavor,AllocatedIp,Status";
   option (protogen.generate_wait_for_state) = "TrackedState";
-  option (protocmd.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,operator=Key.CloudletKey.OperatorKey.Name,developer=Key.Developer,flavor=Flavor.Name";
+  option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,operator=Key.CloudletKey.OperatorKey.Name,developer=Key.Developer,flavor=Flavor.Name";
 }
 
 service ClusterInstApi {
@@ -80,7 +79,7 @@ service ClusterInstApi {
       post: "/create/clusterinst"
       body: "*"
     };
-    option (protocmd.stream_out_incremental) = true;
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
   }
   // Delete a Cluster instance
@@ -89,7 +88,7 @@ service ClusterInstApi {
       post: "/delete/clusterinst"
       body: "*"
     };
-    option (protocmd.stream_out_incremental) = true;
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
   }
   // Update a Cluster instance
@@ -98,7 +97,7 @@ service ClusterInstApi {
       post: "/update/clusterinst"
       body: "*"
     };
-    option (protocmd.stream_out_incremental) = true;
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
   }
   // Show Cluster instances
