@@ -7,12 +7,12 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "result.proto";
 import "gogoproto/gogo.proto";
 
 // FlavorKey uniquely identifies a Flavor.
 message FlavorKey {
+  // Flavor name
   string name = 1;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
@@ -39,7 +39,7 @@ message Flavor {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protocmd.alias) = "name=Key.Name";
+  option (protogen.alias) = "name=Key.Name";
 }
 
 service FlavorApi {
