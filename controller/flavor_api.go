@@ -27,10 +27,6 @@ func (s *FlavorApi) HasFlavor(key *edgeproto.FlavorKey) bool {
 	return s.cache.HasKey(key)
 }
 
-func (s *FlavorApi) Get(key *edgeproto.FlavorKey, buf *edgeproto.Flavor) bool {
-	return s.cache.Get(key, buf)
-}
-
 func (s *FlavorApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
 	return s.store.Create(ctx, in, s.sync.syncWait)
 }
