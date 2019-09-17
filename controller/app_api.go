@@ -303,7 +303,8 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		if appInstExists {
 			if cur.Deployment != cloudcommon.AppDeploymentTypeKubernetes &&
-				cur.Deployment != cloudcommon.AppDeploymentTypeDocker {
+				cur.Deployment != cloudcommon.AppDeploymentTypeDocker &&
+				cur.Deployment != cloudcommon.AppDeploymentTypeHelm {
 				return fmt.Errorf("UpdateApp not supported for deployment: %s when AppInstances exist", cur.Deployment)
 			}
 			// don't allow change from regular docker to docker-compose or docker-compose zip if instances exist

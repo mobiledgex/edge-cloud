@@ -36,8 +36,8 @@ var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics co
 var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc applications")
 
 var exporterT *template.Template
-
 var prometheusT *template.Template
+
 var MEXPrometheusAppHelmTemplate = `prometheus:
   prometheusSpec:
     scrapeInterval: "{{.Interval}}"
@@ -49,24 +49,30 @@ kubelet:
     ## https://github.com/coreos/prometheus-operator/issues/926
     ##
     https: true
+grafana:
+  enabled: false
 `
 
 var MEXPrometheusAppName = cloudcommon.MEXPrometheusAppName
 var MEXPrometheusAppVer = "1.0"
+var MEXPrometheusAppRevision = int32(1)
+
+var MEXPrometheusAppKey = edgeproto.AppKey{
+	Name:    MEXPrometheusAppName,
+	Version: MEXPrometheusAppVer,
+	DeveloperKey: edgeproto.DeveloperKey{
+		Name: cloudcommon.DeveloperMobiledgeX,
+	},
+}
 
 var MEXPrometheusApp = edgeproto.App{
-	Key: edgeproto.AppKey{
-		Name:    MEXPrometheusAppName,
-		Version: MEXPrometheusAppVer,
-		DeveloperKey: edgeproto.DeveloperKey{
-			Name: cloudcommon.DeveloperMobiledgeX,
-		},
-	},
+	Key:           MEXPrometheusAppKey,
 	ImagePath:     "stable/prometheus-operator",
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,
 	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
+	Revision:      MEXPrometheusAppRevision,
 }
 
 var dialOpts grpc.DialOption
@@ -259,6 +265,54 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App) error {
 	return nil
 }
 
+// Check if we are running the correct revision of prometheus app, and if not, upgrade it
+func validatePrometheusRevision() error {
+	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
+	if err != nil {
+		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
+	}
+	defer conn.Close()
+
+	apiClient := edgeproto.NewAppApiClient(conn)
+	ctx := context.TODO()
+	stream, err := apiClient.ShowApp(ctx, &edgeproto.App{
+		Key: MEXPrometheusAppKey,
+	})
+	if err != nil {
+		return err
+	}
+
+	// There should only be one app
+	res, err := stream.Recv()
+	if err == io.EOF {
+		// No app exists yet - just create it when we need to
+		log.DebugLog(log.DebugLevelMexos, "app doesn't exist", "app", MEXPrometheusAppKey)
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	// we should match only one prometheus operator
+	if res.Revision < MEXPrometheusAppRevision {
+		app := &MEXPrometheusApp
+		// add app customizations
+		if err = fillAppConfigs(app); err != nil {
+			return err
+		}
+		_, err := apiClient.UpdateApp(ctx, app)
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateApp failed: %s", errstr)
+		}
+		log.DebugLog(log.DebugLevelMexos, "update app", "app", app.String(), "result", res.String())
+	}
+	return nil
+}
+
 func main() {
 	var err error
 	flag.Parse()
@@ -283,6 +337,9 @@ func main() {
 	dialOpts, err = tls.GetTLSClientDialOption(*ctrlAddr, *tlsCertFile, false)
 	if err != nil {
 		log.FatalLog("get TLS Credentials", "error", err)
+	}
+	if err = validatePrometheusRevision(); err != nil {
+		log.FatalLog("Validate Prometheus version", "error", err)
 	}
 	log.InfoLog("Ready")
 	// wait until process in killed/interrupted
