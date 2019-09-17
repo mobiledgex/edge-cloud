@@ -22,10 +22,6 @@ func InitOperatorApi(sync *Sync) {
 	sync.RegisterCache(&operatorApi.cache)
 }
 
-func (s *OperatorApi) HasOperator(key *edgeproto.OperatorKey) bool {
-	return s.cache.HasKey(key)
-}
-
 func (s *OperatorApi) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
 	return s.store.Create(ctx, in, s.sync.syncWait)
 }
