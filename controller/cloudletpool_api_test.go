@@ -42,7 +42,7 @@ func TestCloudletPoolApi(t *testing.T) {
 	testutil.CloudletPoolShowExtraCount = 1
 	testutil.InternalCloudletPoolTest(t, "cud", &cloudletPoolApi, testutil.CloudletPoolData)
 
-	testutil.InternalCloudletPoolMemberTest(t, "cud", &cloudletPoolApi, testutil.CloudletPoolMemberData)
+	testutil.InternalCloudletPoolMemberTest(t, "cud", &cloudletPoolMemberApi, testutil.CloudletPoolMemberData)
 
 	// test pools for cloudlets api
 	for _, cloudlet := range testutil.CloudletData {
@@ -50,7 +50,7 @@ func TestCloudletPoolApi(t *testing.T) {
 		show := testutil.ShowCloudletPool{}
 		show.Init()
 		show.Ctx = ctx
-		err := cloudletPoolApi.ShowPoolsForCloudlet(&cloudlet.Key, &show)
+		err := cloudletPoolMemberApi.ShowPoolsForCloudlet(&cloudlet.Key, &show)
 		require.Nil(t, err, "show pools for cloudlet key %v", cloudlet.Key)
 		require.Equal(t, len(expected), len(show.Data), "num pools for cloudlet key %v", cloudlet.Key)
 		for _, pool := range expected {
@@ -64,7 +64,7 @@ func TestCloudletPoolApi(t *testing.T) {
 		show := testutil.ShowCloudlet{}
 		show.Init()
 		show.Ctx = ctx
-		err := cloudletPoolApi.ShowCloudletsForPool(&pool.Key, &show)
+		err := cloudletPoolMemberApi.ShowCloudletsForPool(&pool.Key, &show)
 		require.Nil(t, err, "show cloudlets for pool %v", pool.Key)
 		require.Equal(t, len(expected), len(show.Data), "num cloudlets for pool key %v", pool.Key)
 		for _, cloudlet := range expected {
@@ -84,12 +84,38 @@ func TestCloudletPoolApi(t *testing.T) {
 		show := testutil.ShowCloudlet{}
 		show.Init()
 		show.Ctx = ctx
-		err := cloudletPoolApi.ShowCloudletsForPoolList(&poolList, &show)
+		err := cloudletPoolMemberApi.ShowCloudletsForPoolList(&poolList, &show)
 		require.Nil(t, err, "show cloudlets for pool %v", poolList)
 		require.Equal(t, len(expected), len(show.Data), "num cloudlets for pool key %v", poolList)
 		for _, cloudlet := range expected {
 			show.AssertFound(t, cloudlet)
 		}
+	}
+
+	// delete cloudlet, check that it cleans up members
+	{
+		in := testutil.CloudletData[0]
+		// first check that there's something to clean up
+		count := countMembersForCloudlet(t, ctx, &in.Key)
+		require.True(t, count > 0, "members exist to clean up")
+
+		out := testutil.NewCudStreamoutCloudlet(ctx)
+		err := cloudletApi.DeleteCloudlet(&in, out)
+		require.Nil(t, err, "delete cloudlet")
+		count = countMembersForCloudlet(t, ctx, &in.Key)
+		require.Equal(t, 0, count, "members deleted")
+	}
+	// delete pool, check that it cleans up members
+	{
+		in := testutil.CloudletPoolData[0]
+		// first check that there's something to clean up
+		count := countMembersForPool(t, ctx, &in.Key)
+		require.True(t, count > 0, "members exist to clean up")
+
+		_, err := cloudletPoolApi.DeleteCloudletPool(ctx, &in)
+		require.Nil(t, err, "delete cloudlet pool")
+		count = countMembersForPool(t, ctx, &in.Key)
+		require.Equal(t, 0, count, "members deleted")
 	}
 }
 
@@ -127,4 +153,28 @@ func expectedCloudletsForPools(t *testing.T, poolKeys ...edgeproto.CloudletPoolK
 		cloudlets[cloudlet.Key] = cloudlet
 	}
 	return cloudlets
+}
+
+func countMembersForCloudlet(t *testing.T, ctx context.Context, key *edgeproto.CloudletKey) int {
+	show := testutil.ShowCloudletPoolMember{}
+	show.Init()
+	show.Ctx = ctx
+	filter := edgeproto.CloudletPoolMember{
+		CloudletKey: *key,
+	}
+	err := cloudletPoolMemberApi.ShowCloudletPoolMember(&filter, &show)
+	require.Nil(t, err, "show cloudlet pool member")
+	return len(show.Data)
+}
+
+func countMembersForPool(t *testing.T, ctx context.Context, key *edgeproto.CloudletPoolKey) int {
+	show := testutil.ShowCloudletPoolMember{}
+	show.Init()
+	show.Ctx = ctx
+	filter := edgeproto.CloudletPoolMember{
+		PoolKey: *key,
+	}
+	err := cloudletPoolMemberApi.ShowCloudletPoolMember(&filter, &show)
+	require.Nil(t, err, "show cloudlet pool member")
+	return len(show.Data)
 }

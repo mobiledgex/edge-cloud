@@ -265,7 +265,7 @@ func startServices() error {
 	edgeproto.RegisterNodeApiServer(server, &nodeApi)
 	edgeproto.RegisterExecApiServer(server, &execApi)
 	edgeproto.RegisterCloudletPoolApiServer(server, &cloudletPoolApi)
-	edgeproto.RegisterCloudletPoolMemberApiServer(server, &cloudletPoolApi)
+	edgeproto.RegisterCloudletPoolMemberApiServer(server, &cloudletPoolMemberApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -397,6 +397,7 @@ func InitApis(sync *Sync) {
 	InitControllerApi(sync)
 	InitNodeApi(sync)
 	InitCloudletPoolApi(sync)
+	InitCloudletPoolMemberApi(sync)
 	InitExecApi()
 	hostname, err := os.Hostname()
 	if err != nil {

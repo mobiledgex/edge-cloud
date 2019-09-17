@@ -592,6 +592,14 @@ func (s *ControllerStore) STMDel(stm concurrency.STM, key *ControllerKey) {
 	stm.Del(keystr)
 }
 
+func (m *Controller) getKey() *ControllerKey {
+	return &m.Key
+}
+
+func (m *Controller) getKeyVal() ControllerKey {
+	return m.Key
+}
+
 type ControllerKeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -648,7 +656,7 @@ func (c *ControllerCache) GetAllKeys(ctx context.Context, keys map[ControllerKey
 }
 
 func (c *ControllerCache) Update(ctx context.Context, in *Controller, rev int64) {
-	c.UpdateModFunc(ctx, &in.Key, rev, func(old *Controller) (*Controller, bool) {
+	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *Controller) (*Controller, bool) {
 		return in, true
 	})
 }
@@ -668,27 +676,27 @@ func (c *ControllerCache) UpdateModFunc(ctx context.Context, key *ControllerKey,
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, &new.Key, old)
+			defer c.NotifyCb(ctx, new.getKey(), old)
 		}
 	}
-	c.Objs[new.Key] = new
+	c.Objs[new.getKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Controller", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, &new.Key)
+	c.TriggerKeyWatchers(ctx, new.getKey())
 }
 
 func (c *ControllerCache) Delete(ctx context.Context, in *Controller, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.Key]
-	delete(c.Objs, in.Key)
+	old := c.Objs[in.getKeyVal()]
+	delete(c.Objs, in.getKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Controller", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Controller", "key", in.getKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, &in.Key, old)
+		c.NotifyCb(ctx, in.getKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, &in.Key)
+	c.TriggerKeyWatchers(ctx, in.getKey())
 }
 
 func (c *ControllerCache) Prune(ctx context.Context, validKeys map[ControllerKey]struct{}) {
@@ -805,7 +813,7 @@ func (c *ControllerCache) SyncUpdate(ctx context.Context, key, val []byte, rev i
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.Key] = struct{}{}
+		c.List[obj.getKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -813,7 +821,7 @@ func (c *ControllerCache) SyncUpdate(ctx context.Context, key, val []byte, rev i
 func (c *ControllerCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := Controller{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	ControllerKeyStringParse(keystr, &obj.Key)
+	ControllerKeyStringParse(keystr, obj.getKey())
 	c.Delete(ctx, &obj, rev)
 }
 

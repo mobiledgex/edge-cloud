@@ -22,8 +22,6 @@ message CloudletPool {
   repeated string fields = 1;
   // CloudletPool key
   CloudletPoolKey key = 2 [(gogoproto.nullable) = false];
-  // Pool members
-  map<string,string> members = 3;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -44,7 +42,7 @@ message CloudletPoolMember {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_test_update) = false;
-  option (protogen.generate_addrm_test) = true;
+  option (protogen.generate_cache) = true;
   option (protogen.alias) = "pool=PoolKey.Name,cloudlet=CloudletKey.Name,operator=CloudletKey.OperatorKey.Name";
 }
 
@@ -83,7 +81,7 @@ service CloudletPoolApi {
 service CloudletPoolMemberApi {
   option (protogen.dummy_server) = false;
   // Add a Cloudlet to a CloudletPool
-  rpc AddCloudletPoolMember(CloudletPoolMember) returns (Result) {
+  rpc CreateCloudletPoolMember(CloudletPoolMember) returns (Result) {
     option (google.api.http) = {
       post: "/add/cloudletpoolmember"
       body: "*"
@@ -91,13 +89,14 @@ service CloudletPoolMemberApi {
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
   }
   // Remove a Cloudlet from a CloudletPool
-  rpc RemoveCloudletPoolMember(CloudletPoolMember) returns (Result) {
+  rpc DeleteCloudletPoolMember(CloudletPoolMember) returns (Result) {
     option (google.api.http) = {
       post: "/remove/cloudletpoolmember"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
   }
+  // Show the Cloudlet to CloudletPool relationships
   rpc ShowCloudletPoolMember(CloudletPoolMember) returns (stream CloudletPoolMember) {
     option (google.api.http) = {
       post: "/show/cloudletpoolmember"

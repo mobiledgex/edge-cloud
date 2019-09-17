@@ -306,6 +306,9 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err == nil {
 			updatedCloudlet.State = edgeproto.TrackedState_READY
 		} else {
+			if updatedCloudlet.Errors == nil {
+				updatedCloudlet.Errors = make([]string, 0)
+			}
 			updatedCloudlet.Errors = append(updatedCloudlet.Errors, err.Error())
 			updatedCloudlet.State = edgeproto.TrackedState_CREATE_ERROR
 		}
@@ -313,19 +316,18 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		s.store.STMPut(stm, &updatedCloudlet)
 		return nil
 	})
-
 	if err1 != nil {
 		return err1
 	}
 
 	if err != nil {
-		cb.Send(&edgeproto.Result{Message: "DELETING cloudlet due to failures"})
-		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), &updatedCloudlet, cb)
+		cb.Send(&edgeproto.Result{Message: "Deleting cloudlet due to failures"})
+		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create cloudlet", "undoErr", undoErr)
 		}
 	}
-	return nil
+	return err
 }
 
 func WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, timeout time.Duration, updateCallback edgeproto.CacheUpdateCallback) error {
@@ -360,13 +362,9 @@ func WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, timeout ti
 			}
 			lastStatusId = info.Status.TaskNumber
 		}
-		if curState == edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN {
-			// Complete details is yet to arrive
-			return
-		}
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 			done <- true
-		} else {
+		} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
 		}
 	})
@@ -375,12 +373,10 @@ func WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, timeout ti
 	info := edgeproto.CloudletInfo{}
 	if cloudletInfoApi.cache.Get(key, &info) {
 		curState = info.State
-		if curState != edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN {
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-				done <- true
-			} else {
-				failed <- true
-			}
+		if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			done <- true
+		} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
+			failed <- true
 		}
 	}
 
@@ -389,11 +385,11 @@ func WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, timeout ti
 		err = nil
 		updateCallback(edgeproto.UpdateTask, "Cloudlet created successfully")
 	case <-failed:
-		err = fmt.Errorf("Encountered failures")
 		if cloudletInfoApi.cache.Get(key, &info) {
-			updateCallback(edgeproto.UpdateTask, "cloudlet state is not ready: "+info.State.String())
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
 		} else {
-			updateCallback(edgeproto.UpdateTask, "unable to fetch cloudlet info")
+			err = fmt.Errorf("Unknown failure")
 		}
 	case <-fatal:
 		out := ""
@@ -406,7 +402,7 @@ func WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, timeout ti
 		updateCallback(edgeproto.UpdateTask, out)
 		err = errors.New(out)
 	case <-time.After(timeout):
-		err = fmt.Errorf("Timedout")
+		err = fmt.Errorf("Timed out waiting for Cloud Resource Manager to become Ready")
 		updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
 	}
 	cancel()
@@ -478,8 +474,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return objstore.ErrKVStoreKeyNotFound
 		}
 		if ignoreCRMState(cctx) {
-			s.store.STMDel(stm, &in.Key)
-			cloudletRefsApi.store.STMDel(stm, &in.Key)
+			// delete happens later, this STM just checks for existence
 			return nil
 		}
 		if !cctx.Undo {
@@ -501,30 +496,27 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return err
 	}
 
-	if ignoreCRMState(cctx) {
-		return nil
-	}
+	if !ignoreCRMState(cctx) {
+		updatecb := updateCloudletCallback{in, cb}
 
-	updatecb := updateCloudletCallback{in, cb}
-
-	if in.DeploymentLocal {
-		updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
-		err = cloudcommon.StopCRMService(ctx, in)
-	} else {
-		var cloudletPlatform pf.Platform
-		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
-		if err == nil {
-			err = cloudletPlatform.DeleteCloudlet(ctx, in, updatecb.cb)
+		if in.DeploymentLocal {
+			updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
+			err = cloudcommon.StopCRMService(ctx, in)
+		} else {
+			var cloudletPlatform pf.Platform
+			cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
+			if err == nil {
+				err = cloudletPlatform.DeleteCloudlet(ctx, in, updatecb.cb)
+			}
 		}
-	}
-	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
-		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete Cloudlet ignoring CRM failure: %s", err.Error())})
-		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
-		err = nil
-	}
-
-	if err != nil {
-		return err
+		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete Cloudlet ignoring CRM failure: %s", err.Error())})
+			s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
+			err = nil
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
@@ -532,10 +524,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		s.store.STMDel(stm, &in.Key)
 		cloudletRefsApi.store.STMDel(stm, &in.Key)
-		cloudletInfoApi.store.STMDel(stm, &in.Key)
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}
@@ -568,6 +558,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 		}
 	}
+	cloudletPoolMemberApi.cloudletDeleted(ctx, &in.Key)
 	return err
 }
 
@@ -620,12 +611,12 @@ func (s *CloudletApi) UpdateAppInstLocations(ctx context.Context, in *edgeproto.
 	}
 }
 
-func (s *CloudletApi) showCloudletsByKeys(keys map[string]struct{}, cb func(obj *edgeproto.Cloudlet) error) error {
+func (s *CloudletApi) showCloudletsByKeys(keys map[edgeproto.CloudletKey]struct{}, cb func(obj *edgeproto.Cloudlet) error) error {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 
 	for key, obj := range s.cache.Objs {
-		if _, found := keys[key.GetKeyString()]; !found {
+		if _, found := keys[key]; !found {
 			continue
 		}
 		err := cb(obj)

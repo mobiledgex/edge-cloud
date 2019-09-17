@@ -1853,6 +1853,14 @@ func (s *AppInstStore) STMDel(stm concurrency.STM, key *AppInstKey) {
 	stm.Del(keystr)
 }
 
+func (m *AppInst) getKey() *AppInstKey {
+	return &m.Key
+}
+
+func (m *AppInst) getKeyVal() AppInstKey {
+	return m.Key
+}
+
 type AppInstKeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -1909,7 +1917,7 @@ func (c *AppInstCache) GetAllKeys(ctx context.Context, keys map[AppInstKey]conte
 }
 
 func (c *AppInstCache) Update(ctx context.Context, in *AppInst, rev int64) {
-	c.UpdateModFunc(ctx, &in.Key, rev, func(old *AppInst) (*AppInst, bool) {
+	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *AppInst) (*AppInst, bool) {
 		return in, true
 	})
 }
@@ -1929,27 +1937,27 @@ func (c *AppInstCache) UpdateModFunc(ctx context.Context, key *AppInstKey, rev i
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, &new.Key, old)
+			defer c.NotifyCb(ctx, new.getKey(), old)
 		}
 	}
-	c.Objs[new.Key] = new
+	c.Objs[new.getKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInst", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, &new.Key)
+	c.TriggerKeyWatchers(ctx, new.getKey())
 }
 
 func (c *AppInstCache) Delete(ctx context.Context, in *AppInst, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.Key]
-	delete(c.Objs, in.Key)
+	old := c.Objs[in.getKeyVal()]
+	delete(c.Objs, in.getKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInst", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInst", "key", in.getKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, &in.Key, old)
+		c.NotifyCb(ctx, in.getKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, &in.Key)
+	c.TriggerKeyWatchers(ctx, in.getKey())
 }
 
 func (c *AppInstCache) Prune(ctx context.Context, validKeys map[AppInstKey]struct{}) {
@@ -2066,7 +2074,7 @@ func (c *AppInstCache) SyncUpdate(ctx context.Context, key, val []byte, rev int6
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.Key] = struct{}{}
+		c.List[obj.getKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -2074,7 +2082,7 @@ func (c *AppInstCache) SyncUpdate(ctx context.Context, key, val []byte, rev int6
 func (c *AppInstCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := AppInst{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	AppInstKeyStringParse(keystr, &obj.Key)
+	AppInstKeyStringParse(keystr, obj.getKey())
 	c.Delete(ctx, &obj, rev)
 }
 
@@ -2729,6 +2737,14 @@ func (s *AppInstInfoStore) STMDel(stm concurrency.STM, key *AppInstKey) {
 	stm.Del(keystr)
 }
 
+func (m *AppInstInfo) getKey() *AppInstKey {
+	return &m.Key
+}
+
+func (m *AppInstInfo) getKeyVal() AppInstKey {
+	return m.Key
+}
+
 type AppInstInfoKeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -2785,7 +2801,7 @@ func (c *AppInstInfoCache) GetAllKeys(ctx context.Context, keys map[AppInstKey]c
 }
 
 func (c *AppInstInfoCache) Update(ctx context.Context, in *AppInstInfo, rev int64) {
-	c.UpdateModFunc(ctx, &in.Key, rev, func(old *AppInstInfo) (*AppInstInfo, bool) {
+	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *AppInstInfo) (*AppInstInfo, bool) {
 		return in, true
 	})
 }
@@ -2805,27 +2821,27 @@ func (c *AppInstInfoCache) UpdateModFunc(ctx context.Context, key *AppInstKey, r
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, &new.Key, old)
+			defer c.NotifyCb(ctx, new.getKey(), old)
 		}
 	}
-	c.Objs[new.Key] = new
+	c.Objs[new.getKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInstInfo", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, &new.Key)
+	c.TriggerKeyWatchers(ctx, new.getKey())
 }
 
 func (c *AppInstInfoCache) Delete(ctx context.Context, in *AppInstInfo, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.Key]
-	delete(c.Objs, in.Key)
+	old := c.Objs[in.getKeyVal()]
+	delete(c.Objs, in.getKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInstInfo", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInstInfo", "key", in.getKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, &in.Key, old)
+		c.NotifyCb(ctx, in.getKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, &in.Key)
+	c.TriggerKeyWatchers(ctx, in.getKey())
 }
 
 func (c *AppInstInfoCache) Prune(ctx context.Context, validKeys map[AppInstKey]struct{}) {
@@ -2960,7 +2976,7 @@ func (c *AppInstInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev 
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.Key] = struct{}{}
+		c.List[obj.getKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -2968,7 +2984,7 @@ func (c *AppInstInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev 
 func (c *AppInstInfoCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := AppInstInfo{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	AppInstKeyStringParse(keystr, &obj.Key)
+	AppInstKeyStringParse(keystr, obj.getKey())
 	c.Delete(ctx, &obj, rev)
 }
 

@@ -87,7 +87,7 @@ func request_CloudletPoolApi_ShowCloudletPool_0(ctx context.Context, marshaler r
 
 }
 
-func request_CloudletPoolMemberApi_AddCloudletPoolMember_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletPoolMemberApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CloudletPoolMemberApi_CreateCloudletPoolMember_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletPoolMemberApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq CloudletPoolMember
 	var metadata runtime.ServerMetadata
 
@@ -99,12 +99,12 @@ func request_CloudletPoolMemberApi_AddCloudletPoolMember_0(ctx context.Context, 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AddCloudletPoolMember(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.CreateCloudletPoolMember(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_CloudletPoolMemberApi_RemoveCloudletPoolMember_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletPoolMemberApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CloudletPoolMemberApi_DeleteCloudletPoolMember_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletPoolMemberApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq CloudletPoolMember
 	var metadata runtime.ServerMetadata
 
@@ -116,7 +116,7 @@ func request_CloudletPoolMemberApi_RemoveCloudletPoolMember_0(ctx context.Contex
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.RemoveCloudletPoolMember(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.DeleteCloudletPoolMember(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -376,7 +376,7 @@ func RegisterCloudletPoolMemberApiHandler(ctx context.Context, mux *runtime.Serv
 // "CloudletPoolMemberApiClient" to call the correct interceptors.
 func RegisterCloudletPoolMemberApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, client CloudletPoolMemberApiClient) error {
 
-	mux.Handle("POST", pattern_CloudletPoolMemberApi_AddCloudletPoolMember_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_CloudletPoolMemberApi_CreateCloudletPoolMember_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -385,18 +385,18 @@ func RegisterCloudletPoolMemberApiHandlerClient(ctx context.Context, mux *runtim
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_CloudletPoolMemberApi_AddCloudletPoolMember_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CloudletPoolMemberApi_CreateCloudletPoolMember_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CloudletPoolMemberApi_AddCloudletPoolMember_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletPoolMemberApi_CreateCloudletPoolMember_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_CloudletPoolMemberApi_RemoveCloudletPoolMember_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_CloudletPoolMemberApi_DeleteCloudletPoolMember_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -405,14 +405,14 @@ func RegisterCloudletPoolMemberApiHandlerClient(ctx context.Context, mux *runtim
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_CloudletPoolMemberApi_RemoveCloudletPoolMember_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CloudletPoolMemberApi_DeleteCloudletPoolMember_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CloudletPoolMemberApi_RemoveCloudletPoolMember_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletPoolMemberApi_DeleteCloudletPoolMember_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -500,9 +500,9 @@ func RegisterCloudletPoolMemberApiHandlerClient(ctx context.Context, mux *runtim
 }
 
 var (
-	pattern_CloudletPoolMemberApi_AddCloudletPoolMember_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"add", "cloudletpoolmember"}, ""))
+	pattern_CloudletPoolMemberApi_CreateCloudletPoolMember_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"add", "cloudletpoolmember"}, ""))
 
-	pattern_CloudletPoolMemberApi_RemoveCloudletPoolMember_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"remove", "cloudletpoolmember"}, ""))
+	pattern_CloudletPoolMemberApi_DeleteCloudletPoolMember_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"remove", "cloudletpoolmember"}, ""))
 
 	pattern_CloudletPoolMemberApi_ShowCloudletPoolMember_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudletpoolmember"}, ""))
 
@@ -514,9 +514,9 @@ var (
 )
 
 var (
-	forward_CloudletPoolMemberApi_AddCloudletPoolMember_0 = runtime.ForwardResponseMessage
+	forward_CloudletPoolMemberApi_CreateCloudletPoolMember_0 = runtime.ForwardResponseMessage
 
-	forward_CloudletPoolMemberApi_RemoveCloudletPoolMember_0 = runtime.ForwardResponseMessage
+	forward_CloudletPoolMemberApi_DeleteCloudletPoolMember_0 = runtime.ForwardResponseMessage
 
 	forward_CloudletPoolMemberApi_ShowCloudletPoolMember_0 = runtime.ForwardResponseStream
 

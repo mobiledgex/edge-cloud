@@ -929,9 +929,27 @@ type cacheTemplateArgs struct {
 	NotifyCache  bool
 	NotifyFlush  bool
 	WaitForState string
+	ObjAndKey    bool
 }
 
 var cacheTemplateIn = `
+
+func (m * {{.Name}}) getKey() *{{.KeyType}} {
+{{- if .ObjAndKey}}
+	return m
+{{- else}}
+	return &m.Key
+{{- end}}
+}
+
+func (m *{{.Name}}) getKeyVal() {{.KeyType}} {
+{{- if .ObjAndKey}}
+	return *m
+{{- else}}
+	return m.Key
+{{- end}}
+}
+
 type {{.Name}}KeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -988,7 +1006,7 @@ func (c *{{.Name}}Cache) GetAllKeys(ctx context.Context, keys map[{{.KeyType}}]c
 }
 
 func (c *{{.Name}}Cache) Update(ctx context.Context, in *{{.Name}}, rev int64) {
-	c.UpdateModFunc(ctx, &in.Key, rev, func(old *{{.Name}}) (*{{.Name}}, bool) {
+	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *{{.Name}}) (*{{.Name}}, bool) {
 		return in, true
 	})
 }
@@ -1008,27 +1026,27 @@ func (c *{{.Name}}Cache) UpdateModFunc(ctx context.Context, key *{{.KeyType}}, r
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, &new.Key, old)
+			defer c.NotifyCb(ctx, new.getKey(), old)
 		}
 	}
-	c.Objs[new.Key] = new
+	c.Objs[new.getKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate {{.Name}}", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, &new.Key)
+	c.TriggerKeyWatchers(ctx, new.getKey())
 }
 
 func (c *{{.Name}}Cache) Delete(ctx context.Context, in *{{.Name}}, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.Key]
-	delete(c.Objs, in.Key)
+	old := c.Objs[in.getKeyVal()]
+	delete(c.Objs, in.getKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete {{.Name}}", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete {{.Name}}", "key", in.getKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, &in.Key, old)
+		c.NotifyCb(ctx, in.getKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, &in.Key)
+	c.TriggerKeyWatchers(ctx, in.getKey())
 }
 
 func (c *{{.Name}}Cache) Prune(ctx context.Context, validKeys map[{{.KeyType}}]struct{}) {
@@ -1169,7 +1187,7 @@ func (c *{{.Name}}Cache) SyncUpdate(ctx context.Context, key, val []byte, rev in
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.Key] = struct{}{}
+		c.List[obj.getKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -1177,7 +1195,7 @@ func (c *{{.Name}}Cache) SyncUpdate(ctx context.Context, key, val []byte, rev in
 func (c *{{.Name}}Cache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := {{.Name}}{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	{{.KeyType}}StringParse(keystr, &obj.Key)
+	{{.KeyType}}StringParse(keystr, obj.getKey())
 	c.Delete(ctx, &obj, rev)
 }
 
@@ -1411,6 +1429,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			NotifyCache:  GetNotifyCache(message),
 			NotifyFlush:  GetNotifyFlush(message),
 			WaitForState: GetGenerateWaitForState(message),
+			ObjAndKey:    objAndKey,
 		}
 		if keyField != nil {
 			args.KeyType = m.support.GoType(m.gen, keyField)

@@ -650,8 +650,8 @@ var AppInstInfoComments = map[string]string{
 	"runtimeinfo.consoleurl":                          "URL to access VM console",
 }
 var AppInstInfoSpecialArgs = map[string]string{
-	"errors":                   "StringArray",
 	"runtimeinfo.containerids": "StringArray",
+	"errors":                   "StringArray",
 }
 var AppInstMetricsRequiredArgs = []string{}
 var AppInstMetricsOptionalArgs = []string{

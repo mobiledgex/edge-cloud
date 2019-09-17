@@ -1340,6 +1340,14 @@ func (s *AppStore) STMDel(stm concurrency.STM, key *AppKey) {
 	stm.Del(keystr)
 }
 
+func (m *App) getKey() *AppKey {
+	return &m.Key
+}
+
+func (m *App) getKeyVal() AppKey {
+	return m.Key
+}
+
 type AppKeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -1396,7 +1404,7 @@ func (c *AppCache) GetAllKeys(ctx context.Context, keys map[AppKey]context.Conte
 }
 
 func (c *AppCache) Update(ctx context.Context, in *App, rev int64) {
-	c.UpdateModFunc(ctx, &in.Key, rev, func(old *App) (*App, bool) {
+	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *App) (*App, bool) {
 		return in, true
 	})
 }
@@ -1416,27 +1424,27 @@ func (c *AppCache) UpdateModFunc(ctx context.Context, key *AppKey, rev int64, mo
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, &new.Key, old)
+			defer c.NotifyCb(ctx, new.getKey(), old)
 		}
 	}
-	c.Objs[new.Key] = new
+	c.Objs[new.getKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate App", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, &new.Key)
+	c.TriggerKeyWatchers(ctx, new.getKey())
 }
 
 func (c *AppCache) Delete(ctx context.Context, in *App, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.Key]
-	delete(c.Objs, in.Key)
+	old := c.Objs[in.getKeyVal()]
+	delete(c.Objs, in.getKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete App", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete App", "key", in.getKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, &in.Key, old)
+		c.NotifyCb(ctx, in.getKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, &in.Key)
+	c.TriggerKeyWatchers(ctx, in.getKey())
 }
 
 func (c *AppCache) Prune(ctx context.Context, validKeys map[AppKey]struct{}) {
@@ -1553,7 +1561,7 @@ func (c *AppCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.Key] = struct{}{}
+		c.List[obj.getKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -1561,7 +1569,7 @@ func (c *AppCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 func (c *AppCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := App{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	AppKeyStringParse(keystr, &obj.Key)
+	AppKeyStringParse(keystr, obj.getKey())
 	c.Delete(ctx, &obj, rev)
 }
 

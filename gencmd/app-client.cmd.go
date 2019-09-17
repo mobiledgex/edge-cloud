@@ -1030,10 +1030,10 @@ var QosPositionRequestComments = map[string]string{
 	"bandselection.rat_2g":                     "Radio Access Technologies",
 }
 var QosPositionRequestSpecialArgs = map[string]string{
-	"bandselection.rat_4g": "StringArray",
-	"bandselection.rat_5g": "StringArray",
 	"bandselection.rat_2g": "StringArray",
 	"bandselection.rat_3g": "StringArray",
+	"bandselection.rat_4g": "StringArray",
+	"bandselection.rat_5g": "StringArray",
 }
 var QosPositionKpiResultRequiredArgs = []string{}
 var QosPositionKpiResultOptionalArgs = []string{
