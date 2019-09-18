@@ -34,6 +34,7 @@ var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA 
 var externalPorts = flag.String("prometheus-ports", "tcp:9090", "ports to expose in form \"tcp:123,udp:123\"")
 var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics collection interval")
 var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc applications")
+var upgradeInstances = flag.Bool("updateAll", false, "Upgrade all Instances of Prometheus operator")
 
 var exporterT *template.Template
 var prometheusT *template.Template
@@ -55,7 +56,7 @@ grafana:
 
 var MEXPrometheusAppName = cloudcommon.MEXPrometheusAppName
 var MEXPrometheusAppVer = "1.0"
-var MEXPrometheusAppRevision = int32(1)
+var MEXPrometheusAppRevision = int32(3)
 
 var MEXPrometheusAppKey = edgeproto.AppKey{
 	Name:    MEXPrometheusAppName,
@@ -152,6 +153,25 @@ func appInstCreateApi(apiClient edgeproto.AppInstApiClient, appInst edgeproto.Ap
 	return res, err
 }
 
+func appInstUpdateApi(apiClient edgeproto.AppInstApiClient, appInst edgeproto.AppInst) (*edgeproto.Result, error) {
+	ctx := context.TODO()
+	stream, err := apiClient.UpdateAppInst(ctx, &appInst)
+	var res *edgeproto.Result
+	if err == nil {
+		for {
+			res, err = stream.Recv()
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			if err != nil {
+				break
+			}
+		}
+	}
+	return res, err
+}
+
 // create an appInst as a clustersvc
 func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, app *edgeproto.App) error {
 	//update flavor
@@ -207,6 +227,11 @@ func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
 	var secs = int(scrapeInterval.Seconds()) //round it to the second
 	var scrapeStr = strconv.Itoa(secs) + "s"
 	return scrapeStr
+}
+
+func setPrometheusAppFields(app *edgeproto.App) {
+	app.Fields = append(app.Fields, edgeproto.AppFieldImagePath, edgeproto.AppFieldRevision,
+		edgeproto.AppFieldConfigsConfig, edgeproto.AppFieldConfigsKind, edgeproto.AppFieldConfigsConfig)
 }
 
 func fillAppConfigs(app *edgeproto.App) error {
@@ -293,12 +318,15 @@ func validatePrometheusRevision() error {
 		return err
 	}
 	// we should match only one prometheus operator
+	// TODO: Compare if it the content is equal
 	if res.Revision < MEXPrometheusAppRevision {
 		app := &MEXPrometheusApp
 		// add app customizations
 		if err = fillAppConfigs(app); err != nil {
 			return err
 		}
+		// Set the fields we want to update
+		setPrometheusAppFields(app)
 		_, err := apiClient.UpdateApp(ctx, app)
 		if err != nil {
 			errstr := err.Error()
@@ -310,6 +338,21 @@ func validatePrometheusRevision() error {
 		}
 		log.DebugLog(log.DebugLevelMexos, "update app", "app", app.String(), "result", res.String())
 	}
+	// Update all appInstances of the Prometheus App
+	if *upgradeInstances {
+		apiClient := edgeproto.NewAppInstApiClient(conn)
+		appInst := edgeproto.AppInst{
+			Key: edgeproto.AppInstKey{
+				AppKey: MEXPrometheusAppKey,
+			},
+			UpdateMultiple: true,
+		}
+		res, err := appInstUpdateApi(apiClient, appInst)
+		if err != nil {
+			return err
+		}
+		log.DebugLog(log.DebugLevelMexos, "update appinst", "appinst", appInst.String(), "result", res.String())
+	}
 	return nil
 }
 
@@ -319,6 +362,15 @@ func main() {
 	log.SetDebugLevelStrs(*debugLevels)
 	log.InitTracer(*tlsCertFile)
 	defer log.FinishTracer()
+
+	dialOpts, err = tls.GetTLSClientDialOption(*ctrlAddr, *tlsCertFile, false)
+	if err != nil {
+		log.FatalLog("get TLS Credentials", "error", err)
+	}
+
+	if err = validatePrometheusRevision(); err != nil {
+		log.FatalLog("Validate Prometheus version", "error", err)
+	}
 
 	if *standalone {
 		fmt.Printf("Running in Standalone Mode with test instances\n")
@@ -334,13 +386,6 @@ func main() {
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	dialOpts, err = tls.GetTLSClientDialOption(*ctrlAddr, *tlsCertFile, false)
-	if err != nil {
-		log.FatalLog("get TLS Credentials", "error", err)
-	}
-	if err = validatePrometheusRevision(); err != nil {
-		log.FatalLog("Validate Prometheus version", "error", err)
-	}
 	log.InfoLog("Ready")
 	// wait until process in killed/interrupted
 	sig := <-sigChan

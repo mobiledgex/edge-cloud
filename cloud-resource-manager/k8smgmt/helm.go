@@ -11,6 +11,21 @@ import (
 
 const AppConfigHelmYaml = "hemlCustomizationYaml"
 
+func getHelmOpts(client pc.PlatformClient, appName string, configs []*edgeproto.ConfigFile) (string, error) {
+	// Walk the Configs in the App and generate the yaml files from the helm customization ones
+	var ymls []string
+	for ii, v := range configs {
+		if v.Kind == AppConfigHelmYaml {
+			file := fmt.Sprintf("%s%d", appName, ii)
+			err := pc.WriteFile(client, file, v.Config, v.Kind)
+			if err != nil {
+				return "", err
+			}
+			ymls = append(ymls, file)
+		}
+	}
+	return getHelmYamlOpt(ymls), nil
+}
 func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.DebugLog(log.DebugLevelMexos, "create kubernetes helm app", "clusterInst", clusterInst, "kubeNames", names)
 
@@ -24,19 +39,10 @@ func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *
 		}
 	}
 
-	// Walk the Configs in the App and generate the yaml files from the helm customization ones
-	var ymls []string
-	for ii, v := range app.Configs {
-		if v.Kind == AppConfigHelmYaml {
-			file := fmt.Sprintf("%s%d", names.AppName, ii)
-			err := pc.WriteFile(client, file, v.Config, v.Kind)
-			if err != nil {
-				return err
-			}
-			ymls = append(ymls, file)
-		}
+	helmOpts, err := getHelmOpts(client, names.AppName, app.Configs)
+	if err != nil {
+		return err
 	}
-	helmOpts := getHelmYamlOpt(ymls)
 	log.DebugLog(log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
 	cmd = fmt.Sprintf("%s helm install %s --name %s %s", names.KconfEnv, names.AppImage, names.AppName, helmOpts)
 	out, err = client.Output(cmd)
@@ -44,6 +50,22 @@ func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *
 		return fmt.Errorf("error deploying helm chart, %s, %s, %v", cmd, out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "applied helm chart")
+	return nil
+}
+
+func UpdateHelmAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	log.DebugLog(log.DebugLevelMexos, "update kubernetes helm app", "app", app, "kubeNames", names)
+	helmOpts, err := getHelmOpts(client, names.AppName, app.Configs)
+	if err != nil {
+		return err
+	}
+	log.DebugLog(log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
+	cmd := fmt.Sprintf("%s helm upgrade %s %s %s", names.KconfEnv, helmOpts, names.AppName, names.AppImage)
+	out, err := client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error updating helm chart, %s, %s, %v", cmd, out, err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "updated helm chart")
 	return nil
 }
 

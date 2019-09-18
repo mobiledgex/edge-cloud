@@ -493,7 +493,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					// rootLB has its own ports it uses
 					// before any apps are even present.
 					iport := ports[ii].InternalPort
-					if iport != 22 && iport != cloudcommon.RootLBL7Port && iport != cloudcommon.NginxMetricsPort{
+					if iport != 22 && iport != cloudcommon.RootLBL7Port && iport != cloudcommon.NginxMetricsPort {
 						eport = iport
 					}
 				}
@@ -656,18 +656,18 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
 	ctx := cb.Context()
 
-	// populate the clusterinst developer from the app developer if not already present
-	if in.Key.ClusterInstKey.Developer == "" {
-		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
-		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
-	}
-
 	if in.UpdateMultiple {
 		// if UpdateMuliple flag is specified, then only the appkey must be present
 		if err := in.Key.AppKey.Validate(); err != nil {
 			return err
 		}
 	} else {
+		// populate the clusterinst developer from the app developer if not already present
+		if in.Key.ClusterInstKey.Developer == "" {
+			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+			cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
+		}
+
 		// the whole key must be present
 		s.setDefaultVMClusterKey(ctx, &in.Key)
 		if err := in.Key.Validate(); err != nil {
