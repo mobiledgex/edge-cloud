@@ -56,7 +56,6 @@ grafana:
 
 var MEXPrometheusAppName = cloudcommon.MEXPrometheusAppName
 var MEXPrometheusAppVer = "1.0"
-var MEXPrometheusAppRevision = int32(3)
 
 var MEXPrometheusAppKey = edgeproto.AppKey{
 	Name:    MEXPrometheusAppName,
@@ -73,7 +72,6 @@ var MEXPrometheusApp = edgeproto.App{
 	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
-	Revision:      MEXPrometheusAppRevision,
 }
 
 var dialOpts grpc.DialOption
@@ -229,9 +227,14 @@ func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
 	return scrapeStr
 }
 
-func setPrometheusAppFields(app *edgeproto.App) {
-	app.Fields = append(app.Fields, edgeproto.AppFieldImagePath, edgeproto.AppFieldRevision,
-		edgeproto.AppFieldConfigsConfig, edgeproto.AppFieldConfigsKind, edgeproto.AppFieldConfigsConfig)
+func setPrometheusAppFields(fields map[string]struct{}, app *edgeproto.App) {
+	if _, found := fields[edgeproto.AppFieldImagePath]; found {
+		app.Fields = append(app.Fields, edgeproto.AppFieldImagePath)
+	}
+	if _, found := fields[edgeproto.AppFieldConfigs]; found {
+		app.Fields = append(app.Fields, edgeproto.AppFieldConfigs,
+			edgeproto.AppFieldConfigsKind, edgeproto.AppFieldConfigsConfig)
+	}
 }
 
 func fillAppConfigs(app *edgeproto.App) error {
@@ -317,16 +320,18 @@ func validatePrometheusRevision() error {
 	if err != nil {
 		return err
 	}
-	// we should match only one prometheus operator
-	// TODO: Compare if it the content is equal
-	if res.Revision < MEXPrometheusAppRevision {
-		app := &MEXPrometheusApp
-		// add app customizations
-		if err = fillAppConfigs(app); err != nil {
-			return err
-		}
-		// Set the fields we want to update
-		setPrometheusAppFields(app)
+	// we should match only one prometheus operator, so res is it.
+	app := &MEXPrometheusApp
+	// add app customizations
+	if err = fillAppConfigs(app); err != nil {
+		return err
+	}
+
+	diffFields := make(map[string]struct{})
+	res.DiffFields(app, diffFields)
+	// Set the fields we want to update
+	setPrometheusAppFields(diffFields, app)
+	if len(app.Fields) > 0 {
 		_, err := apiClient.UpdateApp(ctx, app)
 		if err != nil {
 			errstr := err.Error()
