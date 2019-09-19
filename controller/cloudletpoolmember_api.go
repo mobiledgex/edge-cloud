@@ -115,9 +115,7 @@ func (s *CloudletPoolMemberApi) cloudletDeleted(ctx context.Context, in *edgepro
 	members := make(map[edgeproto.CloudletPoolMember]struct{})
 	s.cache.Mux.Lock()
 	for member, _ := range s.cache.Objs {
-		log.DebugLog(log.DebugLevelApi, "check obj", "key", member.CloudletKey)
 		if member.CloudletKey.Matches(in) {
-			log.DebugLog(log.DebugLevelApi, "obj matches")
 			members[member] = struct{}{}
 		}
 	}
