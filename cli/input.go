@@ -269,10 +269,17 @@ func setKeyVal(dat map[string]interface{}, key string, val interface{}, argType 
 			// have spaces will be quoted.
 			if readVal, ok := val.(string); ok {
 				valnew, err := strconv.Unquote(readVal)
-				if err == nil {
-					dat[part] = valnew
+				if err != nil {
+					valnew = readVal
+				}
+				if argType == "StringArray" {
+					if _, ok := dat[part]; !ok {
+						dat[part] = make([]string, 0)
+					}
+					strarr := dat[part].([]string)
+					dat[part] = append(strarr, valnew)
 				} else {
-					dat[part] = readVal
+					dat[part] = valnew
 				}
 			} else {
 				if argType == "StringToString" {

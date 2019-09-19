@@ -457,7 +457,9 @@ var ClusterInstComments = map[string]string{
 	"nummasters":  "Number of k8s masters (In case of docker deployment, this field is not required)",
 	"numnodes":    "Number of k8s nodes (In case of docker deployment, this field is not required)",
 }
-var ClusterInstSpecialArgs = map[string]string{}
+var ClusterInstSpecialArgs = map[string]string{
+	"errors": "StringArray",
+}
 var ClusterInstInfoRequiredArgs = []string{
 	"key.clusterkey.name",
 	"key.cloudletkey.operatorkey.name",
@@ -483,4 +485,6 @@ var ClusterInstInfoComments = map[string]string{
 	"state":                            "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare",
 	"errors":                           "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
 }
-var ClusterInstInfoSpecialArgs = map[string]string{}
+var ClusterInstInfoSpecialArgs = map[string]string{
+	"errors": "StringArray",
+}
