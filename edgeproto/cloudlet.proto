@@ -21,6 +21,7 @@ message CloudletKey {
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
+  option (protogen.alias) = "operator=OperatorKey.Name";
 }
 
 // time limits for cloudlet create, update and delete operations
