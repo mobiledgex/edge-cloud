@@ -28,6 +28,7 @@ var _ = math.Inf
 type ShowDeveloper struct {
 	Data map[string]edgeproto.Developer
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *ShowDeveloper) Init() {
@@ -35,9 +36,15 @@ func (x *ShowDeveloper) Init() {
 }
 
 func (x *ShowDeveloper) Send(m *edgeproto.Developer) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
+
+func (x *ShowDeveloper) Context() context.Context {
+	return x.Ctx
+}
+
+var DeveloperShowExtraCount = 0
 
 func (x *ShowDeveloper) ReadStream(stream edgeproto.DeveloperApi_ShowDeveloperClient, err error) {
 	x.Data = make(map[string]edgeproto.Developer)
@@ -52,31 +59,31 @@ func (x *ShowDeveloper) ReadStream(stream edgeproto.DeveloperApi_ShowDeveloperCl
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowDeveloper) CheckFound(obj *edgeproto.Developer) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *ShowDeveloper) AssertFound(t *testing.T, obj *edgeproto.Developer) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find Developer %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find Developer %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "Developer are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *ShowDeveloper) AssertNotFound(t *testing.T, obj *edgeproto.Developer) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find Developer %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find Developer %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFoundDeveloper(t *testing.T, api edgeproto.DeveloperApiClient, obj *edgeproto.Developer, count int, retry time.Duration) {
@@ -126,16 +133,6 @@ func (x *DeveloperCommonApi) CreateDeveloper(ctx context.Context, in *edgeproto.
 	}
 }
 
-func (x *DeveloperCommonApi) UpdateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
-	copy := &edgeproto.Developer{}
-	*copy = *in
-	if x.internal_api != nil {
-		return x.internal_api.UpdateDeveloper(ctx, copy)
-	} else {
-		return x.client_api.UpdateDeveloper(ctx, copy)
-	}
-}
-
 func (x *DeveloperCommonApi) DeleteDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
 	copy := &edgeproto.Developer{}
 	*copy = *in
@@ -146,8 +143,19 @@ func (x *DeveloperCommonApi) DeleteDeveloper(ctx context.Context, in *edgeproto.
 	}
 }
 
+func (x *DeveloperCommonApi) UpdateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	copy := &edgeproto.Developer{}
+	*copy = *in
+	if x.internal_api != nil {
+		return x.internal_api.UpdateDeveloper(ctx, copy)
+	} else {
+		return x.client_api.UpdateDeveloper(ctx, copy)
+	}
+}
+
 func (x *DeveloperCommonApi) ShowDeveloper(ctx context.Context, filter *edgeproto.Developer, showData *ShowDeveloper) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.ShowDeveloper(filter, showData)
 	} else {
 		stream, err := x.client_api.ShowDeveloper(ctx, filter)
@@ -202,7 +210,7 @@ func basicDeveloperShowTest(t *testing.T, ctx context.Context, api *DeveloperCom
 	filterNone := edgeproto.Developer{}
 	err = api.ShowDeveloper(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData)+DeveloperShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -233,31 +241,31 @@ func basicDeveloperCudTest(t *testing.T, ctx context.Context, api *DeveloperComm
 	}
 
 	// test create
-	createDeveloperData(t, ctx, api, testData)
+	CreateDeveloperData(t, ctx, api, testData)
 
-	// test duplicate create - should fail
+	// test duplicate Create - should fail
 	_, err = api.CreateDeveloper(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate Developer")
 
 	// test show all items
 	basicDeveloperShowTest(t, ctx, api, testData)
 
-	// test delete
+	// test Delete
 	_, err = api.DeleteDeveloper(ctx, &testData[0])
-	require.Nil(t, err, "delete Developer %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Delete Developer %s", testData[0].GetKey().GetKeyString())
 	show := ShowDeveloper{}
 	show.Init()
 	filterNone := edgeproto.Developer{}
 	err = api.ShowDeveloper(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData)-1, len(show.Data), "Show count")
+	require.Equal(t, len(testData)-1+DeveloperShowExtraCount, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateDeveloper(ctx, &testData[0])
 	require.NotNil(t, err, "Update missing object")
-	// create it back
+	// Create it back
 	_, err = api.CreateDeveloper(ctx, &testData[0])
-	require.Nil(t, err, "Create Developer %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Create Developer %s", testData[0].GetKey().GetKeyString())
 
 	// test invalid keys
 	bad := edgeproto.Developer{}
@@ -271,7 +279,7 @@ func InternalDeveloperCreate(t *testing.T, api edgeproto.DeveloperApiServer, tes
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createDeveloperData(t, ctx, NewInternalDeveloperApi(api), testData)
+	CreateDeveloperData(t, ctx, NewInternalDeveloperApi(api), testData)
 }
 
 func ClientDeveloperCreate(t *testing.T, api edgeproto.DeveloperApiClient, testData []edgeproto.Developer) {
@@ -279,16 +287,25 @@ func ClientDeveloperCreate(t *testing.T, api edgeproto.DeveloperApiClient, testD
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createDeveloperData(t, ctx, NewClientDeveloperApi(api), testData)
+	CreateDeveloperData(t, ctx, NewClientDeveloperApi(api), testData)
 }
 
-func createDeveloperData(t *testing.T, ctx context.Context, api *DeveloperCommonApi, testData []edgeproto.Developer) {
+func CreateDeveloperData(t *testing.T, ctx context.Context, api *DeveloperCommonApi, testData []edgeproto.Developer) {
 	var err error
 
 	for _, obj := range testData {
 		_, err = api.CreateDeveloper(ctx, &obj)
-		require.Nil(t, err, "Create Developer %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "Create Developer %s", obj.GetKey().GetKeyString())
 	}
+}
+
+func FindDeveloperData(key *edgeproto.DeveloperKey, testData []edgeproto.Developer) (*edgeproto.Developer, bool) {
+	for ii, _ := range testData {
+		if testData[ii].Key.Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
 }
 
 func (s *DummyServer) CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
@@ -320,20 +337,22 @@ func (s *DummyServer) ShowDeveloper(in *edgeproto.Developer, server edgeproto.De
 }
 
 type DummyServer struct {
-	Developers       []edgeproto.Developer
-	Flavors          []edgeproto.Flavor
-	Apps             []edgeproto.App
-	Operators        []edgeproto.Operator
-	Cloudlets        []edgeproto.Cloudlet
-	CloudletInfos    []edgeproto.CloudletInfo
-	ClusterInsts     []edgeproto.ClusterInst
-	ClusterInstInfos []edgeproto.ClusterInstInfo
-	AppInsts         []edgeproto.AppInst
-	AppInstInfos     []edgeproto.AppInstInfo
-	Controllers      []edgeproto.Controller
-	Nodes            []edgeproto.Node
-	CloudletRefss    []edgeproto.CloudletRefs
-	ClusterRefss     []edgeproto.ClusterRefs
+	Developers          []edgeproto.Developer
+	Flavors             []edgeproto.Flavor
+	Apps                []edgeproto.App
+	Operators           []edgeproto.Operator
+	Cloudlets           []edgeproto.Cloudlet
+	CloudletInfos       []edgeproto.CloudletInfo
+	ClusterInsts        []edgeproto.ClusterInst
+	ClusterInstInfos    []edgeproto.ClusterInstInfo
+	AppInsts            []edgeproto.AppInst
+	AppInstInfos        []edgeproto.AppInstInfo
+	CloudletPools       []edgeproto.CloudletPool
+	CloudletPoolMembers []edgeproto.CloudletPoolMember
+	Controllers         []edgeproto.Controller
+	Nodes               []edgeproto.Node
+	CloudletRefss       []edgeproto.CloudletRefs
+	ClusterRefss        []edgeproto.ClusterRefs
 }
 
 func RegisterDummyServer(server *grpc.Server) *DummyServer {
@@ -348,6 +367,8 @@ func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	d.ClusterInstInfos = make([]edgeproto.ClusterInstInfo, 0)
 	d.AppInsts = make([]edgeproto.AppInst, 0)
 	d.AppInstInfos = make([]edgeproto.AppInstInfo, 0)
+	d.CloudletPools = make([]edgeproto.CloudletPool, 0)
+	d.CloudletPoolMembers = make([]edgeproto.CloudletPoolMember, 0)
 	d.Controllers = make([]edgeproto.Controller, 0)
 	d.Nodes = make([]edgeproto.Node, 0)
 	d.CloudletRefss = make([]edgeproto.CloudletRefs, 0)
@@ -362,6 +383,7 @@ func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	edgeproto.RegisterClusterInstInfoApiServer(server, d)
 	edgeproto.RegisterAppInstApiServer(server, d)
 	edgeproto.RegisterAppInstInfoApiServer(server, d)
+	edgeproto.RegisterCloudletPoolApiServer(server, d)
 	edgeproto.RegisterControllerApiServer(server, d)
 	edgeproto.RegisterNodeApiServer(server, d)
 	edgeproto.RegisterCloudletRefsApiServer(server, d)

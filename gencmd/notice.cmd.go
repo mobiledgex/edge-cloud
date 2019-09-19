@@ -39,4 +39,6 @@ var NoticeComments = map[string]string{
 	"filtercloudletkey": "Filter by cloudlet key",
 	"span":              "Opentracing span",
 }
-var NoticeSpecialArgs = map[string]string{}
+var NoticeSpecialArgs = map[string]string{
+	"wantobjs": "StringArray",
+}

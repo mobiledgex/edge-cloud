@@ -94,7 +94,7 @@ type ObjKey interface {
 	GetKeyString() string
 	// Validate checks that the key object fields do not contain
 	// invalid or missing data.
-	Validate() error
+	ValidateKey() error
 }
 
 type KVOptions struct {

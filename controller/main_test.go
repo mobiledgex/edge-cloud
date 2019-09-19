@@ -126,17 +126,19 @@ func TestController(t *testing.T) {
 		require.Nil(t, err)
 	}
 	for _, obj := range testutil.CloudletData {
-		_, err = cloudletClient.DeleteCloudlet(ctx, &obj)
-		require.Nil(t, err)
-	}
-	for _, obj := range testutil.DevData {
-		_, err = devClient.DeleteDeveloper(ctx, &obj)
+		stream, err := cloudletClient.DeleteCloudlet(ctx, &obj)
+		err = testutil.CloudletReadResultStream(stream, err)
 		require.Nil(t, err)
 	}
 	for _, obj := range testutil.OperatorData {
 		_, err = operClient.DeleteOperator(ctx, &obj)
 		require.Nil(t, err)
 	}
+	for _, obj := range testutil.DevData {
+		_, err = devClient.DeleteDeveloper(ctx, &obj)
+		require.Nil(t, err)
+	}
+
 	// make sure dynamic app insts were deleted along with Apps
 	dmeNotify.WaitForAppInsts(0)
 	require.Equal(t, 0, len(dmeNotify.AppInstCache.Objs), "num appinsts")
