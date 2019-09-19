@@ -225,11 +225,19 @@ var {{.Method}}Cmd = &cli.Command{
 }
 
 func run{{.Method}}(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*{{.FQInType}})
+{{- if .SetFields}}
+	jsonMap, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+{{- else}}
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*{{.FQInType}})
+{{- end}}
 	return {{.Method}}(c, obj)
 }
 
@@ -337,7 +345,7 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 	if strings.HasPrefix(*method.Name, "Show") {
 		cmd.Show = true
 	}
-	if strings.HasPrefix(*method.Name, "Update"+cmd.InType) && HasGrpcFields(in.DescriptorProto) {
+	if strings.HasPrefix(*method.Name, "Update"+cmd.InType) && gensupport.HasGrpcFields(in.DescriptorProto) {
 		cmd.SetFields = true
 	}
 	if _, found := g.hideTags[*out.DescriptorProto.Name]; found {
@@ -421,11 +429,4 @@ func strFixer(r rune) rune {
 		return '_'
 	}
 	return r
-}
-
-func HasGrpcFields(message *descriptor.DescriptorProto) bool {
-	if message.Field != nil && len(message.Field) > 0 && *message.Field[0].Name == "fields" && *message.Field[0].Type == descriptor.FieldDescriptorProto_TYPE_STRING {
-		return true
-	}
-	return false
 }

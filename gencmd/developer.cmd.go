@@ -38,11 +38,11 @@ var CreateDeveloperCmd = &cli.Command{
 }
 
 func runCreateDeveloper(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Developer)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Developer)
 	return CreateDeveloper(c, obj)
 }
 
@@ -92,11 +92,11 @@ var DeleteDeveloperCmd = &cli.Command{
 }
 
 func runDeleteDeveloper(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Developer)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Developer)
 	return DeleteDeveloper(c, obj)
 }
 
@@ -146,11 +146,12 @@ var UpdateDeveloperCmd = &cli.Command{
 }
 
 func runUpdateDeveloper(c *cli.Command, args []string) error {
-	_, err := c.ParseInput(args)
+	obj := c.ReqData.(*edgeproto.Developer)
+	jsonMap, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Developer)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
 	return UpdateDeveloper(c, obj)
 }
 
@@ -199,11 +200,11 @@ var ShowDeveloperCmd = &cli.Command{
 }
 
 func runShowDeveloper(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Developer)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Developer)
 	return ShowDeveloper(c, obj)
 }
 

@@ -53,11 +53,11 @@ var RunCommandCmd = &cli.Command{
 }
 
 func runRunCommand(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ExecRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.ExecRequest)
 	return RunCommand(c, obj)
 }
 
@@ -108,11 +108,11 @@ var SendLocalRequestCmd = &cli.Command{
 }
 
 func runSendLocalRequest(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ExecRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.ExecRequest)
 	return SendLocalRequest(c, obj)
 }
 
