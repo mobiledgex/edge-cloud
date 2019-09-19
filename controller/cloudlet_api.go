@@ -320,7 +320,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if err != nil {
 		cb.Send(&edgeproto.Result{Message: "DELETING cloudlet due to failures"})
-		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), &updatedCloudlet, cb)
+		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), &updatedCloudlet, pfConfig, cb)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create cloudlet", "undoErr", undoErr)
 		}
@@ -455,10 +455,12 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 }
 
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
-	return s.deleteCloudletInternal(DefCallContext(), in, cb)
+	pfConfig := edgeproto.PlatformConfig{}
+	pfConfig.VaultAddr = *vaultAddr
+	return s.deleteCloudletInternal(DefCallContext(), in, &pfConfig, cb)
 }
 
-func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
+func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
 	ctx := cb.Context()
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
 	if appInstApi.UsesCloudlet(&in.Key, dynInsts) {
@@ -514,7 +516,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 		if err == nil {
-			err = cloudletPlatform.DeleteCloudlet(ctx, in, updatecb.cb)
+			err = cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, updatecb.cb)
 		}
 	}
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
