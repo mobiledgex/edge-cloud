@@ -227,18 +227,8 @@ func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
 	return scrapeStr
 }
 
-func setPrometheusAppFields(fields map[string]struct{}, app *edgeproto.App) {
-	if _, found := fields[edgeproto.AppFieldImagePath]; found {
-		app.Fields = append(app.Fields, edgeproto.AppFieldImagePath)
-	}
-	if _, found := fields[edgeproto.AppFieldConfigs]; found {
-		app.Fields = append(app.Fields, edgeproto.AppFieldConfigs,
-			edgeproto.AppFieldConfigsKind, edgeproto.AppFieldConfigsConfig)
-	}
-}
-
-func fillAppConfigs(app *edgeproto.App) error {
-	var scrapeStr = scrapeIntervalInSeconds(*scrapeInterval)
+func fillAppConfigs(app *edgeproto.App, interval time.Duration) error {
+	var scrapeStr = scrapeIntervalInSeconds(interval)
 	switch app.Key.Name {
 	case MEXPrometheusAppName:
 		ex := exporterData{
@@ -270,7 +260,7 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App) error {
 	defer conn.Close()
 
 	// add app customizations
-	if err = fillAppConfigs(app); err != nil {
+	if err = fillAppConfigs(app, *scrapeInterval); err != nil {
 		return err
 	}
 	apiClient := edgeproto.NewAppApiClient(conn)
@@ -293,6 +283,39 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App) error {
 	return nil
 }
 
+func getPrometheusAppFromController(ctx context.Context, apiClient edgeproto.AppApiClient) (*edgeproto.App, error) {
+	stream, err := apiClient.ShowApp(ctx, &edgeproto.App{
+		Key: MEXPrometheusAppKey,
+	})
+	if err != nil {
+		return nil, err
+	}
+	// There should only be one app
+	return stream.Recv()
+}
+
+func getPrometheusAppFromClusterSvc() (*edgeproto.App, error) {
+	app := MEXPrometheusApp
+	// add app customizations
+	if err := fillAppConfigs(&app, *scrapeInterval); err != nil {
+		return nil, err
+	}
+	return &app, nil
+}
+
+func setPrometheusAppDiffFields(src *edgeproto.App, dst *edgeproto.App) {
+	fields := make(map[string]struct{})
+	src.DiffFields(dst, fields)
+
+	if _, found := fields[edgeproto.AppFieldImagePath]; found {
+		dst.Fields = append(dst.Fields, edgeproto.AppFieldImagePath)
+	}
+	if _, found := fields[edgeproto.AppFieldConfigs]; found {
+		dst.Fields = append(dst.Fields, edgeproto.AppFieldConfigs,
+			edgeproto.AppFieldConfigsKind, edgeproto.AppFieldConfigsConfig)
+	}
+}
+
 // Check if we are running the correct revision of prometheus app, and if not, upgrade it
 func validatePrometheusRevision() error {
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
@@ -300,18 +323,11 @@ func validatePrometheusRevision() error {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
 	}
 	defer conn.Close()
-
-	apiClient := edgeproto.NewAppApiClient(conn)
 	ctx := context.TODO()
-	stream, err := apiClient.ShowApp(ctx, &edgeproto.App{
-		Key: MEXPrometheusAppKey,
-	})
-	if err != nil {
-		return err
-	}
+	apiClient := edgeproto.NewAppApiClient(conn)
 
-	// There should only be one app
-	res, err := stream.Recv()
+	// Get Exusting prometheus App
+	currentApp, err := getPrometheusAppFromController(ctx, apiClient)
 	if err == io.EOF {
 		// No app exists yet - just create it when we need to
 		log.DebugLog(log.DebugLevelMexos, "app doesn't exist", "app", MEXPrometheusAppKey)
@@ -320,19 +336,16 @@ func validatePrometheusRevision() error {
 	if err != nil {
 		return err
 	}
-	// we should match only one prometheus operator, so res is it.
-	app := &MEXPrometheusApp
-	// add app customizations
-	if err = fillAppConfigs(app); err != nil {
+
+	newApp, err := getPrometheusAppFromClusterSvc()
+	if err != nil {
 		return err
 	}
 
-	diffFields := make(map[string]struct{})
-	res.DiffFields(app, diffFields)
 	// Set the fields we want to update
-	setPrometheusAppFields(diffFields, app)
-	if len(app.Fields) > 0 {
-		_, err := apiClient.UpdateApp(ctx, app)
+	setPrometheusAppDiffFields(currentApp, newApp)
+	if len(newApp.Fields) > 0 {
+		_, err := apiClient.UpdateApp(ctx, newApp)
 		if err != nil {
 			errstr := err.Error()
 			st, ok := status.FromError(err)
@@ -341,7 +354,7 @@ func validatePrometheusRevision() error {
 			}
 			return fmt.Errorf("UpdateApp failed: %s", errstr)
 		}
-		log.DebugLog(log.DebugLevelMexos, "update app", "app", app.String(), "result", res.String())
+		log.DebugLog(log.DebugLevelMexos, "update app", "app", newApp.String(), "result", currentApp.String())
 	}
 	// Update all appInstances of the Prometheus App
 	if *upgradeInstances {

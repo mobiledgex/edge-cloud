@@ -1,0 +1,44 @@
+#
+##
+description: adds provisioning, and restarts cluster-svc to make sure the Prometheus app gets updated
+
+tests:
+
+- name: Add and show provisioning
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+
+- name: compare results of show provisioning
+  compareyaml: 
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
+    filetype: appdata
+
+- name: stop cluster-svc
+  actions: [stop=cluster-svc1]
+
+- name: start cluster-svc with a different scrapeInterval
+  actions: [start-argument=cluster-svc1 scrapeInterval=30s ]
+
+- name: show provisioning after 
+  actions: [ctrlapi-show]
+
+- name: compare results of ctrl1 show provisioning
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_show_prometheus_30s_interval.yml"
+    filetype: appdata
+  
+- name: stop cluster-svc
+  actions: [stop=cluster-svc1]
+
+- name: start cluster-svc with an original scrapeInterval
+  actions: [start=cluster-svc1]
+
+- name: delete and show provisioning, verify it is empty
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
