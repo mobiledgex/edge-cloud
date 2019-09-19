@@ -989,10 +989,10 @@ var BandSelectionComments = map[string]string{
 	"rat_2g": "Radio Access Technologies",
 }
 var BandSelectionSpecialArgs = map[string]string{
-	"rat_4g": "StringArray",
-	"rat_5g": "StringArray",
 	"rat_2g": "StringArray",
 	"rat_3g": "StringArray",
+	"rat_4g": "StringArray",
+	"rat_5g": "StringArray",
 }
 var QosPositionRequestRequiredArgs = []string{}
 var QosPositionRequestOptionalArgs = []string{

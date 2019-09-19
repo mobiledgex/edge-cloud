@@ -18,7 +18,7 @@ tests:
   actions: [stop=cluster-svc1]
 
 - name: start cluster-svc with a different scrapeInterval
-  actions: [start-argument=cluster-svc1 scrapeInterval=30s ]
+  actions: [start-argument=cluster-svc1 scrapeInterval=30s]
 
 - name: show provisioning after 
   actions: [ctrlapi-show]
