@@ -8,6 +8,7 @@ It is generated from these files:
 	app.proto
 	app_inst.proto
 	cloudlet.proto
+	cloudletpool.proto
 	cluster.proto
 	clusterinst.proto
 	common.proto
@@ -44,6 +45,10 @@ It has these top-level messages:
 	FlavorInfo
 	CloudletInfo
 	CloudletMetrics
+	CloudletPoolKey
+	CloudletPool
+	CloudletPoolMember
+	CloudletPoolList
 	ClusterKey
 	ClusterInstKey
 	ClusterInst

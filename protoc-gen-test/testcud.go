@@ -54,17 +54,22 @@ type tmplArgs struct {
 	Pkg         string
 	Name        string
 	KeyName     string
+	HasUpdate   bool
 	UpdateField string
 	UpdateValue string
 	ShowOnly    bool
 	Streamout   bool
+	Create      string
+	Delete      string
 	CudFuncs    []cudFunc
+	ObjAndKey   bool
 }
 
 var tmpl = `
 type Show{{.Name}} struct {
 	Data map[string]{{.Pkg}}.{{.Name}}
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *Show{{.Name}}) Init() {
@@ -72,14 +77,20 @@ func (x *Show{{.Name}}) Init() {
 }
 
 func (x *Show{{.Name}}) Send(m *{{.Pkg}}.{{.Name}}) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
+
+func (x *Show{{.Name}}) Context() context.Context {
+	return x.Ctx
+}
+
+var {{.Name}}ShowExtraCount = 0
 
 {{- if .Streamout}}
 type CudStreamout{{.Name}} struct {
 	grpc.ServerStream
-	ctx context.Context
+	Ctx context.Context
 }
 
 func (x *CudStreamout{{.Name}}) Send(res *{{.Pkg}}.Result) error {
@@ -88,12 +99,12 @@ func (x *CudStreamout{{.Name}}) Send(res *{{.Pkg}}.Result) error {
 }
 
 func (x *CudStreamout{{.Name}}) Context() context.Context {
-	return x.ctx
+	return x.Ctx
 }
 
 func NewCudStreamout{{.Name}}(ctx context.Context) *CudStreamout{{.Name}} {
 	return &CudStreamout{{.Name}}{
-		ctx: ctx,
+		Ctx: ctx,
 	}
 }
 
@@ -132,31 +143,31 @@ func (x *Show{{.Name}}) ReadStream(stream {{.Pkg}}.{{.Name}}Api_Show{{.Name}}Cli
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *Show{{.Name}}) CheckFound(obj *{{.Pkg}}.{{.Name}}) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *Show{{.Name}}) AssertFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find {{.Name}} %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find {{.Name}} %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, {{.Pkg}}.MatchIgnoreBackend(), {{.Pkg}}.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "{{.Name}} are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *Show{{.Name}}) AssertNotFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find {{.Name}} %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find {{.Name}} %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFound{{.Name}}(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, obj *{{.Pkg}}.{{.Name}}, count int, retry time.Duration) {
@@ -223,6 +234,7 @@ func (x *{{.Name}}CommonApi) {{.Func}}{{.Name}}(ctx context.Context, in *{{.Pkg}
 
 func (x *{{.Name}}CommonApi) Show{{.Name}}(ctx context.Context, filter *{{.Pkg}}.{{.Name}}, showData *Show{{.Name}}) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.Show{{.Name}}(filter, showData)
 	} else {
 		stream, err := x.client_api.Show{{.Name}}(ctx, filter)
@@ -281,7 +293,7 @@ func basic{{.Name}}ShowTest(t *testing.T, ctx context.Context, api *{{.Name}}Com
 	filterNone := {{.Pkg}}.{{.Name}}{}
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData) + {{.Name}}ShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -293,7 +305,11 @@ func Get{{.Name}}(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, ke
 	show := Show{{.Name}}{}
 	show.Init()
 	filter := {{.Pkg}}.{{.Name}}{}
+{{- if (.ObjAndKey)}}
+	filter = *key
+{{- else}}
 	filter.Key = *key
+{{- end}}
 	err = api.Show{{.Name}}(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -313,36 +329,38 @@ func basic{{.Name}}CudTest(t *testing.T, ctx context.Context, api *{{.Name}}Comm
 	}
 
 	// test create
-	create{{.Name}}Data(t, ctx, api, testData)
+	{{.Create}}{{.Name}}Data(t, ctx, api, testData)
 
-	// test duplicate create - should fail
-	_, err = api.Create{{.Name}}(ctx, &testData[0])
-	require.NotNil(t, err, "Create duplicate {{.Name}}")
+	// test duplicate {{.Create}} - should fail
+	_, err = api.{{.Create}}{{.Name}}(ctx, &testData[0])
+	require.NotNil(t, err, "{{.Create}} duplicate {{.Name}}")
 
 	// test show all items
 	basic{{.Name}}ShowTest(t, ctx, api, testData)
 
-	// test delete
-	_, err = api.Delete{{.Name}}(ctx, &testData[0])
-	require.Nil(t, err, "delete {{.Name}} %s", testData[0].Key.GetKeyString())
+	// test {{.Delete}}
+	_, err = api.{{.Delete}}{{.Name}}(ctx, &testData[0])
+	require.Nil(t, err, "{{.Delete}} {{.Name}} %s", testData[0].GetKey().GetKeyString())
 	show := Show{{.Name}}{}
 	show.Init()
 	filterNone := {{.Pkg}}.{{.Name}}{}
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData) - 1, len(show.Data), "Show count")
+	require.Equal(t, len(testData) - 1 + {{.Name}}ShowExtraCount, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
+{{- if .HasUpdate}}
 	// test update of missing object
 	_, err = api.Update{{.Name}}(ctx, &testData[0])
 	require.NotNil(t, err, "Update missing object")
-	// create it back
-	_, err = api.Create{{.Name}}(ctx, &testData[0])
-	require.Nil(t, err, "Create {{.Name}} %s", testData[0].Key.GetKeyString())
+{{- end}}
+	// {{.Create}} it back
+	_, err = api.{{.Create}}{{.Name}}(ctx, &testData[0])
+	require.Nil(t, err, "{{.Create}} {{.Name}} %s", testData[0].GetKey().GetKeyString())
 
 	// test invalid keys
 	bad := {{.Pkg}}.{{.Name}}{}
-	_, err = api.Create{{.Name}}(ctx, &bad)
-	require.NotNil(t, err, "Create {{.Name}} with no key info")
+	_, err = api.{{.Create}}{{.Name}}(ctx, &bad)
+	require.NotNil(t, err, "{{.Create}} {{.Name}} with no key info")
 
 {{if .UpdateField}}
 	// test update
@@ -352,7 +370,7 @@ func basic{{.Name}}CudTest(t *testing.T, ctx context.Context, api *{{.Name}}Comm
 	updater.Fields = make([]string, 0)
 	updater.Fields = append(updater.Fields, {{.Pkg}}.{{.Name}}Field{{.UpdateField}})
 	_, err = api.Update{{.Name}}(ctx, &updater)
-	require.Nil(t, err, "Update {{.Name}} %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Update {{.Name}} %s", testData[0].GetKey().GetKeyString())
 
 	show.Init()
 	updater = testData[0]
@@ -368,31 +386,44 @@ func basic{{.Name}}CudTest(t *testing.T, ctx context.Context, api *{{.Name}}Comm
 {{- end}}
 }
 
-func Internal{{.Name}}Create(t *testing.T, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
-	span := log.StartSpan(log.DebugLevelApi, "Internal{{.Name}}Create")
+func Internal{{.Name}}{{.Create}}(t *testing.T, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
+	span := log.StartSpan(log.DebugLevelApi, "Internal{{.Name}}{{.Create}}")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	create{{.Name}}Data(t, ctx, NewInternal{{.Name}}Api(api), testData)
+	{{.Create}}{{.Name}}Data(t, ctx, NewInternal{{.Name}}Api(api), testData)
 }
 
-func Client{{.Name}}Create(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
-	span := log.StartSpan(log.DebugLevelApi, "Client{{.Name}}Create")
+func Client{{.Name}}{{.Create}}(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
+	span := log.StartSpan(log.DebugLevelApi, "Client{{.Name}}{{.Create}}")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	create{{.Name}}Data(t, ctx, NewClient{{.Name}}Api(api), testData)
+	{{.Create}}{{.Name}}Data(t, ctx, NewClient{{.Name}}Api(api), testData)
 }
 
-func create{{.Name}}Data(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
+func {{.Create}}{{.Name}}Data(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
 	var err error
 
 	for _, obj := range testData {
-		_, err = api.Create{{.Name}}(ctx, &obj)
-		require.Nil(t, err, "Create {{.Name}} %s", obj.Key.GetKeyString())
+		_, err = api.{{.Create}}{{.Name}}(ctx, &obj)
+		require.Nil(t, err, "{{.Create}} {{.Name}} %s", obj.GetKey().GetKeyString())
 	}
 }
 {{- end}}
+
+func Find{{.Name}}Data(key *{{.KeyName}}, testData []{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.{{.Name}}, bool) {
+	for ii, _ := range testData {
+{{- if .ObjAndKey}}
+		if testData[ii].Matches(key) {
+{{- else}}
+		if testData[ii].Key.Matches(key) {
+{{- end}}
+			return &testData[ii], true
+		}
+	}
+	return nil, false
+}
 `
 
 func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
@@ -465,7 +496,7 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 	for _, msg := range file.Messages() {
 		if GetGenerateCudTest(msg.DescriptorProto) ||
 			GetGenerateShowTest(msg.DescriptorProto) {
-			t.generateCudTest(msg.DescriptorProto)
+			t.generateCudTest(msg)
 		}
 	}
 	if len(file.FileDescriptorProto.Service) != 0 {
@@ -484,8 +515,9 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 	}
 }
 
-func (t *TestCud) generateCudTest(message *descriptor.DescriptorProto) {
-	keystr, err := t.support.GetMessageKeyName(t.Generator, message)
+func (t *TestCud) generateCudTest(desc *generator.Descriptor) {
+	message := desc.DescriptorProto
+	keystr, err := t.support.GetMessageKeyType(t.Generator, desc)
 	if err != nil {
 		keystr = "key not found"
 	}
@@ -495,9 +527,24 @@ func (t *TestCud) generateCudTest(message *descriptor.DescriptorProto) {
 		KeyName:   keystr,
 		ShowOnly:  GetGenerateShowTest(message),
 		Streamout: GetGenerateCudStreamout(message),
+		HasUpdate: GetGenerateCudTestUpdate(message),
+		ObjAndKey: gensupport.GetObjAndKey(message),
+	}
+	fncs := []string{}
+	if GetGenerateAddrmTest(message) {
+		args.Create = "Add"
+		args.Delete = "Remove"
+		fncs = []string{"Add", "Remove"}
+	} else {
+		args.Create = "Create"
+		args.Delete = "Delete"
+		fncs = []string{"Create", "Delete"}
+	}
+	if args.HasUpdate {
+		fncs = append(fncs, "Update")
 	}
 	cudFuncs := make([]cudFunc, 0)
-	for _, str := range []string{"Create", "Update", "Delete"} {
+	for _, str := range fncs {
 		cf := cudFunc{
 			Func:      str,
 			Pkg:       args.Pkg,
@@ -630,6 +677,9 @@ func (t *TestCud) genDummyServer() {
 			if len(service.Method) == 0 {
 				continue
 			}
+			if !GetDummyServer(service) {
+				continue
+			}
 			hasCudMethod := false
 			for _, method := range service.Method {
 				in := gensupport.GetDesc(t.Generator,
@@ -659,6 +709,10 @@ func GetGenerateCudTest(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCudTest, false)
 }
 
+func GetGenerateCudTestUpdate(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCudTestUpdate, true)
+}
+
 func GetGenerateCudStreamout(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCudStreamout, false)
 }
@@ -669,4 +723,12 @@ func GetGenerateShowTest(message *descriptor.DescriptorProto) bool {
 
 func GetTestUpdate(field *descriptor.FieldDescriptorProto) bool {
 	return proto.GetBoolExtension(field.Options, protogen.E_TestUpdate, false)
+}
+
+func GetDummyServer(service *descriptor.ServiceDescriptorProto) bool {
+	return proto.GetBoolExtension(service.Options, protogen.E_DummyServer, true)
+}
+
+func GetGenerateAddrmTest(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateAddrmTest, false)
 }

@@ -704,13 +704,57 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	},
 }
 
-func FindFlavorData(key *edgeproto.FlavorKey) *edgeproto.Flavor {
-	for ii, _ := range FlavorData {
-		if FlavorData[ii].Key.Matches(key) {
-			return &FlavorData[ii]
-		}
-	}
-	return nil
+var CloudletPoolData = []edgeproto.CloudletPool{
+	edgeproto.CloudletPool{
+		Key: edgeproto.CloudletPoolKey{
+			Name: "private",
+		},
+	},
+	edgeproto.CloudletPool{
+		Key: edgeproto.CloudletPoolKey{
+			Name: "test-and-dev",
+		},
+	},
+	edgeproto.CloudletPool{
+		Key: edgeproto.CloudletPoolKey{
+			Name: "enterprise",
+		},
+	},
+}
+
+var CloudletPoolMemberData = []edgeproto.CloudletPoolMember{
+	// Because of import cycle, public cloudlet pool name below
+	// must match one defined in cloudcommon/names.go
+	edgeproto.CloudletPoolMember{
+		PoolKey: edgeproto.CloudletPoolKey{
+			Name: "Public",
+		},
+		CloudletKey: CloudletData[0].Key,
+	},
+	edgeproto.CloudletPoolMember{
+		PoolKey: edgeproto.CloudletPoolKey{
+			Name: "Public",
+		},
+		CloudletKey: CloudletData[1].Key,
+	},
+	edgeproto.CloudletPoolMember{
+		PoolKey: edgeproto.CloudletPoolKey{
+			Name: "Public",
+		},
+		CloudletKey: CloudletData[2].Key,
+	},
+	edgeproto.CloudletPoolMember{
+		PoolKey:     CloudletPoolData[0].Key, // private
+		CloudletKey: CloudletData[3].Key,
+	},
+	edgeproto.CloudletPoolMember{
+		PoolKey:     CloudletPoolData[1].Key, // test-and-dev
+		CloudletKey: CloudletData[2].Key,
+	},
+	edgeproto.CloudletPoolMember{
+		PoolKey:     CloudletPoolData[2].Key, // enterprise
+		CloudletKey: CloudletData[3].Key,
+	},
 }
 
 func GetCloudletUsedRam(indices ...int) uint64 {
@@ -723,7 +767,7 @@ func GetCloudletUsedRam(indices ...int) uint64 {
 		}
 		clinst := data[idx]
 		clflavor := data[idx].Flavor
-		flavor := FindFlavorData(&clflavor)
+		flavor, _ := FindFlavorData(&clflavor, FlavorData)
 		ram += flavor.Ram * uint64(clinst.NumNodes+clinst.NumMasters)
 	}
 	return ram
@@ -739,7 +783,7 @@ func GetCloudletUsedVcores(indices ...int) uint64 {
 		}
 		clinst := data[idx]
 		clflavor := data[idx].Flavor
-		flavor := FindFlavorData(&clflavor)
+		flavor, _ := FindFlavorData(&clflavor, FlavorData)
 		vcores += flavor.Vcpus * uint64(clinst.NumNodes+clinst.NumMasters)
 	}
 	return vcores
@@ -755,7 +799,7 @@ func GetCloudletUsedDisk(indices ...int) uint64 {
 		}
 		clinst := data[idx]
 		clflavor := data[idx].Flavor
-		flavor := FindFlavorData(&clflavor)
+		flavor, _ := FindFlavorData(&clflavor, FlavorData)
 		disk += flavor.Disk * uint64(clinst.NumNodes+clinst.NumMasters)
 	}
 	return disk

@@ -219,6 +219,11 @@ func startServices() error {
 	if err != nil {
 		return fmt.Errorf("Failed to register controller, %v", err)
 	}
+	err = cloudletPoolApi.registerPublicPool(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to register public cloudlet pool, %v", err)
+	}
+
 	// get influxDB credentials from vault
 	influxAuth := &cloudcommon.InfluxCreds{}
 	influxAuth, err = cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
@@ -259,6 +264,8 @@ func startServices() error {
 	edgeproto.RegisterControllerApiServer(server, &controllerApi)
 	edgeproto.RegisterNodeApiServer(server, &nodeApi)
 	edgeproto.RegisterExecApiServer(server, &execApi)
+	edgeproto.RegisterCloudletPoolApiServer(server, &cloudletPoolApi)
+	edgeproto.RegisterCloudletPoolMemberApiServer(server, &cloudletPoolMemberApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -285,6 +292,8 @@ func startServices() error {
 			edgeproto.RegisterClusterInstApiHandler,
 			edgeproto.RegisterControllerApiHandler,
 			edgeproto.RegisterNodeApiHandler,
+			edgeproto.RegisterCloudletPoolApiHandler,
+			edgeproto.RegisterCloudletPoolMemberApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -387,6 +396,8 @@ func InitApis(sync *Sync) {
 	InitCloudletRefsApi(sync)
 	InitControllerApi(sync)
 	InitNodeApi(sync)
+	InitCloudletPoolApi(sync)
+	InitCloudletPoolMemberApi(sync)
 	InitExecApi()
 	hostname, err := os.Hostname()
 	if err != nil {

@@ -28,6 +28,7 @@ var _ = math.Inf
 type ShowClusterInst struct {
 	Data map[string]edgeproto.ClusterInst
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *ShowClusterInst) Init() {
@@ -35,13 +36,19 @@ func (x *ShowClusterInst) Init() {
 }
 
 func (x *ShowClusterInst) Send(m *edgeproto.ClusterInst) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
 
+func (x *ShowClusterInst) Context() context.Context {
+	return x.Ctx
+}
+
+var ClusterInstShowExtraCount = 0
+
 type CudStreamoutClusterInst struct {
 	grpc.ServerStream
-	ctx context.Context
+	Ctx context.Context
 }
 
 func (x *CudStreamoutClusterInst) Send(res *edgeproto.Result) error {
@@ -50,12 +57,12 @@ func (x *CudStreamoutClusterInst) Send(res *edgeproto.Result) error {
 }
 
 func (x *CudStreamoutClusterInst) Context() context.Context {
-	return x.ctx
+	return x.Ctx
 }
 
 func NewCudStreamoutClusterInst(ctx context.Context) *CudStreamoutClusterInst {
 	return &CudStreamoutClusterInst{
-		ctx: ctx,
+		Ctx: ctx,
 	}
 }
 
@@ -92,31 +99,31 @@ func (x *ShowClusterInst) ReadStream(stream edgeproto.ClusterInstApi_ShowCluster
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowClusterInst) CheckFound(obj *edgeproto.ClusterInst) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *ShowClusterInst) AssertFound(t *testing.T, obj *edgeproto.ClusterInst) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find ClusterInst %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find ClusterInst %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "ClusterInst are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *ShowClusterInst) AssertNotFound(t *testing.T, obj *edgeproto.ClusterInst) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find ClusterInst %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find ClusterInst %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFoundClusterInst(t *testing.T, api edgeproto.ClusterInstApiClient, obj *edgeproto.ClusterInst, count int, retry time.Duration) {
@@ -169,19 +176,6 @@ func (x *ClusterInstCommonApi) CreateClusterInst(ctx context.Context, in *edgepr
 	}
 }
 
-func (x *ClusterInstCommonApi) UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
-	copy := &edgeproto.ClusterInst{}
-	*copy = *in
-	if x.internal_api != nil {
-		err := x.internal_api.UpdateClusterInst(copy, NewCudStreamoutClusterInst(ctx))
-		return &edgeproto.Result{}, err
-	} else {
-		stream, err := x.client_api.UpdateClusterInst(ctx, copy)
-		err = ClusterInstReadResultStream(stream, err)
-		return &edgeproto.Result{}, err
-	}
-}
-
 func (x *ClusterInstCommonApi) DeleteClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
 	copy := &edgeproto.ClusterInst{}
 	*copy = *in
@@ -195,8 +189,22 @@ func (x *ClusterInstCommonApi) DeleteClusterInst(ctx context.Context, in *edgepr
 	}
 }
 
+func (x *ClusterInstCommonApi) UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
+	copy := &edgeproto.ClusterInst{}
+	*copy = *in
+	if x.internal_api != nil {
+		err := x.internal_api.UpdateClusterInst(copy, NewCudStreamoutClusterInst(ctx))
+		return &edgeproto.Result{}, err
+	} else {
+		stream, err := x.client_api.UpdateClusterInst(ctx, copy)
+		err = ClusterInstReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
+	}
+}
+
 func (x *ClusterInstCommonApi) ShowClusterInst(ctx context.Context, filter *edgeproto.ClusterInst, showData *ShowClusterInst) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.ShowClusterInst(filter, showData)
 	} else {
 		stream, err := x.client_api.ShowClusterInst(ctx, filter)
@@ -251,7 +259,7 @@ func basicClusterInstShowTest(t *testing.T, ctx context.Context, api *ClusterIns
 	filterNone := edgeproto.ClusterInst{}
 	err = api.ShowClusterInst(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData)+ClusterInstShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -282,31 +290,31 @@ func basicClusterInstCudTest(t *testing.T, ctx context.Context, api *ClusterInst
 	}
 
 	// test create
-	createClusterInstData(t, ctx, api, testData)
+	CreateClusterInstData(t, ctx, api, testData)
 
-	// test duplicate create - should fail
+	// test duplicate Create - should fail
 	_, err = api.CreateClusterInst(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate ClusterInst")
 
 	// test show all items
 	basicClusterInstShowTest(t, ctx, api, testData)
 
-	// test delete
+	// test Delete
 	_, err = api.DeleteClusterInst(ctx, &testData[0])
-	require.Nil(t, err, "delete ClusterInst %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Delete ClusterInst %s", testData[0].GetKey().GetKeyString())
 	show := ShowClusterInst{}
 	show.Init()
 	filterNone := edgeproto.ClusterInst{}
 	err = api.ShowClusterInst(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData)-1, len(show.Data), "Show count")
+	require.Equal(t, len(testData)-1+ClusterInstShowExtraCount, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateClusterInst(ctx, &testData[0])
 	require.NotNil(t, err, "Update missing object")
-	// create it back
+	// Create it back
 	_, err = api.CreateClusterInst(ctx, &testData[0])
-	require.Nil(t, err, "Create ClusterInst %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Create ClusterInst %s", testData[0].GetKey().GetKeyString())
 
 	// test invalid keys
 	bad := edgeproto.ClusterInst{}
@@ -320,7 +328,7 @@ func InternalClusterInstCreate(t *testing.T, api edgeproto.ClusterInstApiServer,
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createClusterInstData(t, ctx, NewInternalClusterInstApi(api), testData)
+	CreateClusterInstData(t, ctx, NewInternalClusterInstApi(api), testData)
 }
 
 func ClientClusterInstCreate(t *testing.T, api edgeproto.ClusterInstApiClient, testData []edgeproto.ClusterInst) {
@@ -328,21 +336,31 @@ func ClientClusterInstCreate(t *testing.T, api edgeproto.ClusterInstApiClient, t
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createClusterInstData(t, ctx, NewClientClusterInstApi(api), testData)
+	CreateClusterInstData(t, ctx, NewClientClusterInstApi(api), testData)
 }
 
-func createClusterInstData(t *testing.T, ctx context.Context, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
+func CreateClusterInstData(t *testing.T, ctx context.Context, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
 	var err error
 
 	for _, obj := range testData {
 		_, err = api.CreateClusterInst(ctx, &obj)
-		require.Nil(t, err, "Create ClusterInst %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "Create ClusterInst %s", obj.GetKey().GetKeyString())
 	}
+}
+
+func FindClusterInstData(key *edgeproto.ClusterInstKey, testData []edgeproto.ClusterInst) (*edgeproto.ClusterInst, bool) {
+	for ii, _ := range testData {
+		if testData[ii].Key.Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
 }
 
 type ShowClusterInstInfo struct {
 	Data map[string]edgeproto.ClusterInstInfo
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *ShowClusterInstInfo) Init() {
@@ -350,9 +368,15 @@ func (x *ShowClusterInstInfo) Init() {
 }
 
 func (x *ShowClusterInstInfo) Send(m *edgeproto.ClusterInstInfo) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
+
+func (x *ShowClusterInstInfo) Context() context.Context {
+	return x.Ctx
+}
+
+var ClusterInstInfoShowExtraCount = 0
 
 func (x *ShowClusterInstInfo) ReadStream(stream edgeproto.ClusterInstInfoApi_ShowClusterInstInfoClient, err error) {
 	x.Data = make(map[string]edgeproto.ClusterInstInfo)
@@ -367,31 +391,31 @@ func (x *ShowClusterInstInfo) ReadStream(stream edgeproto.ClusterInstInfoApi_Sho
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowClusterInstInfo) CheckFound(obj *edgeproto.ClusterInstInfo) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *ShowClusterInstInfo) AssertFound(t *testing.T, obj *edgeproto.ClusterInstInfo) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find ClusterInstInfo %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find ClusterInstInfo %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "ClusterInstInfo are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *ShowClusterInstInfo) AssertNotFound(t *testing.T, obj *edgeproto.ClusterInstInfo) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find ClusterInstInfo %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find ClusterInstInfo %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFoundClusterInstInfo(t *testing.T, api edgeproto.ClusterInstInfoApiClient, obj *edgeproto.ClusterInstInfo, count int, retry time.Duration) {
@@ -433,6 +457,7 @@ type ClusterInstInfoCommonApi struct {
 
 func (x *ClusterInstInfoCommonApi) ShowClusterInstInfo(ctx context.Context, filter *edgeproto.ClusterInstInfo, showData *ShowClusterInstInfo) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.ShowClusterInstInfo(filter, showData)
 	} else {
 		stream, err := x.client_api.ShowClusterInstInfo(ctx, filter)
@@ -483,7 +508,7 @@ func basicClusterInstInfoShowTest(t *testing.T, ctx context.Context, api *Cluste
 	filterNone := edgeproto.ClusterInstInfo{}
 	err = api.ShowClusterInstInfo(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData)+ClusterInstInfoShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -503,6 +528,15 @@ func GetClusterInstInfo(t *testing.T, ctx context.Context, api *ClusterInstInfoC
 		*out = obj
 	}
 	return found
+}
+
+func FindClusterInstInfoData(key *edgeproto.ClusterInstKey, testData []edgeproto.ClusterInstInfo) (*edgeproto.ClusterInstInfo, bool) {
+	for ii, _ := range testData {
+		if testData[ii].Key.Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
 }
 
 func (s *DummyServer) CreateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_CreateClusterInstServer) error {
