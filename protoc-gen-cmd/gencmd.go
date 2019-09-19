@@ -204,12 +204,13 @@ type tmplArgs struct {
 	OutHideTags          bool
 	StreamOutIncremental bool
 	Show                 bool
+	InputRequired        bool
 }
 
 var tmpl = `
 var {{.Method}}Cmd = &cli.Command{
 	Use: "{{.Method}}",
-{{- if .Show}}
+{{- if and .Show (not .InputRequired)}}
 	OptionalArgs: strings.Join(append({{.InType}}RequiredArgs, {{.InType}}OptionalArgs...), " "),
 {{- else}}
 	RequiredArgs: strings.Join({{.InType}}RequiredArgs, " "),
@@ -331,6 +332,7 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 		ServerStream:         gensupport.ServerStreaming(method),
 		HasEnums:             hasEnums,
 		StreamOutIncremental: gensupport.GetStreamOutIncremental(method),
+		InputRequired:        gensupport.GetInputRequired(method),
 	}
 	if strings.HasPrefix(*method.Name, "Show") {
 		cmd.Show = true

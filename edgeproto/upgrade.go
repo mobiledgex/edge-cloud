@@ -47,8 +47,8 @@ func UpgradeToLatest(fromVersion string, objStore objstore.KVStore) error {
 		}
 		name := VersionHash_UpgradeFuncNames[nextVer]
 
-		uspan := span.Tracer().StartSpan(name)
-		uctx := opentracing.ContextWithSpan(context.Background(), uspan)
+		uspan := log.StartSpan(log.DebugLevelInfo, name, opentracing.ChildOf(span.Context()))
+		uctx := log.ContextWithSpan(context.Background(), uspan)
 		if fn != nil {
 			// Call the upgrade with an appropriate callback
 			if err := RunSingleUpgrade(uctx, objStore, fn); err != nil {

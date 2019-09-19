@@ -254,7 +254,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 	}
 	s.setDefaultVMClusterKey(ctx, &in.Key)
-	if err := in.Key.Validate(); err != nil {
+	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
 
@@ -601,7 +601,7 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 	crmUpdateRequired := false
 
 	s.setDefaultVMClusterKey(ctx, &key)
-	if err := key.Validate(); err != nil {
+	if err := key.ValidateKey(); err != nil {
 		return false, err
 	}
 
@@ -658,7 +658,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 
 	if in.UpdateMultiple {
 		// if UpdateMuliple flag is specified, then only the appkey must be present
-		if err := in.Key.AppKey.Validate(); err != nil {
+		if err := in.Key.AppKey.ValidateKey(); err != nil {
 			return err
 		}
 	} else {
@@ -670,7 +670,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 
 		// the whole key must be present
 		s.setDefaultVMClusterKey(ctx, &in.Key)
-		if err := in.Key.Validate(); err != nil {
+		if err := in.Key.ValidateKey(); err != nil {
 			return fmt.Errorf("cluster key needed without updatemultiple option: %v", err)
 		}
 	}
@@ -758,7 +758,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 	}
 	s.setDefaultVMClusterKey(ctx, &in.Key)
-	if err := in.Key.AppKey.Validate(); err != nil {
+	if err := in.Key.AppKey.ValidateKey(); err != nil {
 		return err
 	}
 
@@ -787,7 +787,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// already deleted
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if err := in.Key.ClusterInstKey.Validate(); err != nil {
+		if err := in.Key.ClusterInstKey.ValidateKey(); err != nil {
 			return err
 		}
 

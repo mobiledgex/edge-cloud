@@ -40,6 +40,11 @@ func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *g
 	for _, nr := range strings.Split(notreq, ",") {
 		notreqMap[nr] = struct{}{}
 	}
+	alsoreq := GetAlsoRequired(message)
+	alsoreqMap := make(map[string]struct{})
+	for _, ar := range strings.Split(alsoreq, ",") {
+		alsoreqMap[ar] = struct{}{}
+	}
 
 	// find all possible args
 	allargs, specialArgs := GetArgs(g, support, []string{}, desc)
@@ -48,14 +53,16 @@ func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *g
 	requiredMap := make(map[string]struct{})
 	g.P("var ", message.Name, "RequiredArgs = []string{")
 	for _, arg := range allargs {
-		if !strings.HasPrefix(arg.Name, "Key.") {
+		if argSpecified(arg.Name, notreqMap) {
+			// explicity not required
 			continue
-		}
-		if _, found := notreqMap[arg.Name]; found {
-			continue
-		}
-		parts := strings.Split(arg.Name, ".")
-		if _, found := notreqMap[parts[0]]; found {
+		} else if argSpecified(arg.Name, alsoreqMap) {
+			// explicity required
+		} else if strings.HasPrefix(arg.Name, "Key.") || GetObjAndKey(message) {
+			// key field, or entire struct is key, so all fields
+			// are implicitly required
+		} else {
+			// default: implicitly not required
 			continue
 		}
 
@@ -185,6 +192,9 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 			arg.Comment = arg.Comment + ", " + text + " " + strings.Join(strs, ", ")
 			allargs = append(allargs, arg)
 		} else {
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED && *field.Type == descriptor.FieldDescriptorProto_TYPE_STRING && name != "Fields" {
+				specialArgs[hierName] = "StringArray"
+			}
 			allargs = append(allargs, arg)
 		}
 	}
@@ -198,6 +208,20 @@ func removeNewLines(r rune) rune {
 	return r
 }
 
+// arg is hierarchical name, A.B.C. The map may contain the full
+// path or a parent, so A.B.C or A.B or A, all of which specify
+// A.B.C.
+func argSpecified(arg string, entries map[string]struct{}) bool {
+	parts := strings.Split(arg, ".")
+	for ii := 1; ii <= len(parts); ii++ {
+		sub := strings.Join(parts[:ii], ".")
+		if _, found := entries[sub]; found {
+			return true
+		}
+	}
+	return false
+}
+
 func GetStreamOutIncremental(method *descriptor.MethodDescriptorProto) bool {
 	return proto.GetBoolExtension(method.Options, protogen.E_StreamOutIncremental, false)
 }
@@ -208,6 +232,14 @@ func GetNoConfig(message *descriptor.DescriptorProto) string {
 
 func GetNotreq(message *descriptor.DescriptorProto) string {
 	return GetStringExtension(message.Options, protogen.E_NotRequired, "")
+}
+
+func GetAlsoRequired(message *descriptor.DescriptorProto) string {
+	return GetStringExtension(message.Options, protogen.E_AlsoRequired, "")
+}
+
+func GetInputRequired(method *descriptor.MethodDescriptorProto) bool {
+	return proto.GetBoolExtension(method.Options, protogen.E_InputRequired, false)
 }
 
 func GetAlias(message *descriptor.DescriptorProto) string {

@@ -35,6 +35,10 @@ extend google.protobuf.MessageOptions {
   string noconfig = 51026;
   string alias = 51027;
   string not_required = 51028; // override required key values
+  bool generate_cud_test_update = 51030;
+  bool generate_addrm_test = 51031;
+  bool obj_and_key = 51032;
+  string also_required = 51033; // add required key values
 }
 
 extend google.protobuf.EnumOptions {
@@ -64,5 +68,9 @@ extend google.protobuf.MethodOptions {
   // collecting them into one output format. Only applies to commands
   // that return a stream.
   bool stream_out_incremental = 51029;
+  bool input_required = 51033; // require input for show commands
+}
 
+extend google.protobuf.ServiceOptions {
+  bool dummy_server = 51026;
 }

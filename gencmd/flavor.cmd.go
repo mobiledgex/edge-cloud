@@ -272,12 +272,11 @@ var FlavorKeyComments = map[string]string{
 var FlavorKeySpecialArgs = map[string]string{}
 var FlavorRequiredArgs = []string{
 	"name",
-}
-var FlavorOptionalArgs = []string{
 	"ram",
 	"vcpus",
 	"disk",
 }
+var FlavorOptionalArgs = []string{}
 var FlavorAliasArgs = []string{
 	"name=key.name",
 }
