@@ -40,6 +40,7 @@ message Flavor {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.alias) = "name=Key.Name";
+  option (protogen.also_required) = "Ram,Vcpus,Disk";
 }
 
 service FlavorApi {

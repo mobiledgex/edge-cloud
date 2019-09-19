@@ -576,13 +576,15 @@ var CloudletMetricsApiCmds = []*cobra.Command{
 
 var CloudletKeyRequiredArgs = []string{}
 var CloudletKeyOptionalArgs = []string{
-	"operatorkey.name",
+	"operator",
 	"name",
 }
-var CloudletKeyAliasArgs = []string{}
+var CloudletKeyAliasArgs = []string{
+	"operator=operatorkey.name",
+}
 var CloudletKeyComments = map[string]string{
-	"operatorkey.name": "Company or Organization name of the operator",
-	"name":             "Name of the cloudlet",
+	"operator": "Company or Organization name of the operator",
+	"name":     "Name of the cloudlet",
 }
 var CloudletKeySpecialArgs = map[string]string{}
 var OperationTimeLimitsRequiredArgs = []string{}
@@ -809,6 +811,7 @@ var CloudletComments = map[string]string{
 	"envvar":                              "Single Key-Value pair of env var to be passed to CRM",
 }
 var CloudletSpecialArgs = map[string]string{
+	"errors": "StringArray",
 	"envvar": "StringToString",
 }
 var EnvVarEntryRequiredArgs = []string{}
@@ -874,7 +877,9 @@ var CloudletInfoComments = map[string]string{
 	"flavors.ram":   "Ram in MB on the Cloudlet",
 	"flavors.disk":  "Amount of disk in GB on the Cloudlet",
 }
-var CloudletInfoSpecialArgs = map[string]string{}
+var CloudletInfoSpecialArgs = map[string]string{
+	"errors": "StringArray",
+}
 var CloudletMetricsRequiredArgs = []string{}
 var CloudletMetricsOptionalArgs = []string{
 	"foo",

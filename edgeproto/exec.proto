@@ -23,6 +23,7 @@ message ExecRequest {
   option (protogen.notify_custom_update) = true;
   option (protogen.noconfig) = "Offer,Answer,Err";
   option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name";
+  option (protogen.also_required) = "AppInstKey,Command";
 }
 
 service ExecApi {

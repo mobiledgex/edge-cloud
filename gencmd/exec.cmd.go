@@ -155,8 +155,7 @@ var ExecApiCmds = []*cobra.Command{
 	SendLocalRequestCmd.GenCmd(),
 }
 
-var ExecRequestRequiredArgs = []string{}
-var ExecRequestOptionalArgs = []string{
+var ExecRequestRequiredArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
@@ -165,6 +164,8 @@ var ExecRequestOptionalArgs = []string{
 	"cloudlet",
 	"clusterdeveloper",
 	"command",
+}
+var ExecRequestOptionalArgs = []string{
 	"containerid",
 }
 var ExecRequestAliasArgs = []string{
