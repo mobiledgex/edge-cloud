@@ -37,11 +37,11 @@ var ShowCloudletRefsCmd = &cli.Command{
 }
 
 func runShowCloudletRefs(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletRefs)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletRefs)
 	return ShowCloudletRefs(c, obj)
 }
 
@@ -110,11 +110,11 @@ var ShowClusterRefsCmd = &cli.Command{
 }
 
 func runShowClusterRefs(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ClusterRefs)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.ClusterRefs)
 	return ShowClusterRefs(c, obj)
 }
 

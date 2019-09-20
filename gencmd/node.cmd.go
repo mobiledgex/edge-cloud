@@ -78,11 +78,11 @@ var ShowNodeLocalCmd = &cli.Command{
 }
 
 func runShowNodeLocal(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Node)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Node)
 	return ShowNodeLocal(c, obj)
 }
 
@@ -146,11 +146,11 @@ var ShowNodeCmd = &cli.Command{
 }
 
 func runShowNode(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Node)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Node)
 	return ShowNode(c, obj)
 }
 

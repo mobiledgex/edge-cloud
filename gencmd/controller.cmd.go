@@ -59,11 +59,11 @@ var ShowControllerCmd = &cli.Command{
 }
 
 func runShowController(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Controller)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Controller)
 	return ShowController(c, obj)
 }
 

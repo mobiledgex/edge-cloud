@@ -74,11 +74,11 @@ var RegisterClientCmd = &cli.Command{
 }
 
 func runRegisterClient(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*distributed_match_engine.RegisterClientRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*distributed_match_engine.RegisterClientRequest)
 	return RegisterClient(c, obj)
 }
 
@@ -128,11 +128,11 @@ var FindCloudletCmd = &cli.Command{
 }
 
 func runFindCloudlet(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*distributed_match_engine.FindCloudletRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*distributed_match_engine.FindCloudletRequest)
 	return FindCloudlet(c, obj)
 }
 
@@ -182,11 +182,11 @@ var VerifyLocationCmd = &cli.Command{
 }
 
 func runVerifyLocation(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*distributed_match_engine.VerifyLocationRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*distributed_match_engine.VerifyLocationRequest)
 	return VerifyLocation(c, obj)
 }
 
@@ -236,11 +236,11 @@ var GetLocationCmd = &cli.Command{
 }
 
 func runGetLocation(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*distributed_match_engine.GetLocationRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*distributed_match_engine.GetLocationRequest)
 	return GetLocation(c, obj)
 }
 
@@ -290,11 +290,11 @@ var AddUserToGroupCmd = &cli.Command{
 }
 
 func runAddUserToGroup(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*distributed_match_engine.DynamicLocGroupRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*distributed_match_engine.DynamicLocGroupRequest)
 	return AddUserToGroup(c, obj)
 }
 
@@ -344,11 +344,11 @@ var GetAppInstListCmd = &cli.Command{
 }
 
 func runGetAppInstList(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*distributed_match_engine.AppInstListRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*distributed_match_engine.AppInstListRequest)
 	return GetAppInstList(c, obj)
 }
 
@@ -398,11 +398,11 @@ var GetFqdnListCmd = &cli.Command{
 }
 
 func runGetFqdnList(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*distributed_match_engine.FqdnListRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*distributed_match_engine.FqdnListRequest)
 	return GetFqdnList(c, obj)
 }
 
@@ -452,11 +452,11 @@ var GetQosPositionKpiCmd = &cli.Command{
 }
 
 func runGetQosPositionKpi(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*distributed_match_engine.QosPositionRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*distributed_match_engine.QosPositionRequest)
 	return GetQosPositionKpi(c, obj)
 }
 
@@ -989,10 +989,10 @@ var BandSelectionComments = map[string]string{
 	"rat_2g": "Radio Access Technologies",
 }
 var BandSelectionSpecialArgs = map[string]string{
-	"rat_4g": "StringArray",
-	"rat_5g": "StringArray",
 	"rat_2g": "StringArray",
 	"rat_3g": "StringArray",
+	"rat_4g": "StringArray",
+	"rat_5g": "StringArray",
 }
 var QosPositionRequestRequiredArgs = []string{}
 var QosPositionRequestOptionalArgs = []string{

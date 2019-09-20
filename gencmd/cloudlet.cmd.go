@@ -67,11 +67,11 @@ var CreateCloudletCmd = &cli.Command{
 }
 
 func runCreateCloudlet(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Cloudlet)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Cloudlet)
 	return CreateCloudlet(c, obj)
 }
 
@@ -130,11 +130,11 @@ var DeleteCloudletCmd = &cli.Command{
 }
 
 func runDeleteCloudlet(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Cloudlet)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Cloudlet)
 	return DeleteCloudlet(c, obj)
 }
 
@@ -193,11 +193,12 @@ var UpdateCloudletCmd = &cli.Command{
 }
 
 func runUpdateCloudlet(c *cli.Command, args []string) error {
-	_, err := c.ParseInput(args)
+	obj := c.ReqData.(*edgeproto.Cloudlet)
+	jsonMap, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Cloudlet)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
 	return UpdateCloudlet(c, obj)
 }
 
@@ -255,11 +256,11 @@ var ShowCloudletCmd = &cli.Command{
 }
 
 func runShowCloudlet(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Cloudlet)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Cloudlet)
 	return ShowCloudlet(c, obj)
 }
 
@@ -332,11 +333,11 @@ var ShowCloudletInfoCmd = &cli.Command{
 }
 
 func runShowCloudletInfo(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletInfo)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletInfo)
 	return ShowCloudletInfo(c, obj)
 }
 
@@ -400,11 +401,11 @@ var InjectCloudletInfoCmd = &cli.Command{
 }
 
 func runInjectCloudletInfo(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletInfo)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletInfo)
 	return InjectCloudletInfo(c, obj)
 }
 
@@ -454,11 +455,11 @@ var EvictCloudletInfoCmd = &cli.Command{
 }
 
 func runEvictCloudletInfo(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletInfo)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletInfo)
 	return EvictCloudletInfo(c, obj)
 }
 
@@ -515,11 +516,11 @@ var ShowCloudletMetricsCmd = &cli.Command{
 }
 
 func runShowCloudletMetrics(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletMetrics)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletMetrics)
 	return ShowCloudletMetrics(c, obj)
 }
 
