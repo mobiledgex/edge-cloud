@@ -169,8 +169,14 @@ func (c *Command) runE(cmd *cobra.Command, args []string) error {
 }
 
 // ParseInput converts args to generic map.
-func (c *Command) ParseInput(args []string) (interface{}, error) {
-	var in interface{}
+// Input can come in 3 flavors, arg=value lists, yaml data, or json data.
+// The output is generic map[string]interface{} holding the data,
+// but normally each input format would have slightly different values
+// for the map keys (field names) due to json or yaml tags being different
+// from the go struct field name and each other. So we settle on the
+// output map using json field names for consistency.
+func (c *Command) ParseInput(args []string) (map[string]interface{}, error) {
+	var in map[string]interface{}
 	if Datafile != "" {
 		byt, err := ioutil.ReadFile(Datafile)
 		if err != nil {
@@ -181,16 +187,27 @@ func (c *Command) ParseInput(args []string) (interface{}, error) {
 	if Data != "" {
 		in = make(map[string]interface{})
 		err := json.Unmarshal([]byte(Data), &in)
-		if err != nil {
+		if err == nil && c.ReqData != nil {
+			err = json.Unmarshal([]byte(Data), c.ReqData)
+			if err != nil {
+				return nil, err
+			}
+		} else {
 			// try yaml
-			// we need to use the actual reqData object
-			// since postJson will try to convert to json,
-			// so effectively we need to convert from
-			// yaml tags to json tags via the object.
-			in = c.ReqData
-			err2 := yaml.Unmarshal([]byte(Data), in)
+			err2 := yaml.Unmarshal([]byte(Data), &in)
 			if err2 != nil {
 				return nil, fmt.Errorf("unable to unmarshal json or yaml data, %v, %v", err, err2)
+			}
+			// convert yaml map to json map
+			in, err = JsonMap(in, c.ReqData, YamlNamespace)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert yaml map to json map, %v", err)
+			}
+			if c.ReqData != nil {
+				err = yaml.Unmarshal([]byte(Data), c.ReqData)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	} else {
@@ -214,15 +231,15 @@ func (c *Command) ParseInput(args []string) (interface{}, error) {
 		}
 		if c.ReqData != nil {
 			// convert to json map
-			in, err = JsonMap(argsMap, c.ReqData)
+			in, err = JsonMap(argsMap, c.ReqData, StructNamespace)
 			if err != nil {
 				return nil, err
 			}
+			if Debug {
+				fmt.Printf("jsonmap: %v\n", in)
+			}
 		} else {
 			in = argsMap
-		}
-		if Debug {
-			fmt.Printf("jsonmap: %v\n", in)
 		}
 	}
 	return in, nil

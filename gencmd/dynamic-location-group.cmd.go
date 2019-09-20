@@ -34,11 +34,11 @@ var SendToGroupCmd = &cli.Command{
 }
 
 func runSendToGroup(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*distributed_match_engine.DlgMessage)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*distributed_match_engine.DlgMessage)
 	return SendToGroup(c, obj)
 }
 

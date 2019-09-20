@@ -131,11 +131,11 @@ var CreateAppCmd = &cli.Command{
 }
 
 func runCreateApp(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.App)
 	return CreateApp(c, obj)
 }
 
@@ -185,11 +185,11 @@ var DeleteAppCmd = &cli.Command{
 }
 
 func runDeleteApp(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.App)
 	return DeleteApp(c, obj)
 }
 
@@ -239,11 +239,12 @@ var UpdateAppCmd = &cli.Command{
 }
 
 func runUpdateApp(c *cli.Command, args []string) error {
-	_, err := c.ParseInput(args)
+	obj := c.ReqData.(*edgeproto.App)
+	jsonMap, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.App)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
 	return UpdateApp(c, obj)
 }
 
@@ -292,11 +293,11 @@ var ShowAppCmd = &cli.Command{
 }
 
 func runShowApp(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.App)
 	return ShowApp(c, obj)
 }
 

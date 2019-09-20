@@ -38,11 +38,11 @@ var CreateFlavorCmd = &cli.Command{
 }
 
 func runCreateFlavor(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Flavor)
 	return CreateFlavor(c, obj)
 }
 
@@ -92,11 +92,11 @@ var DeleteFlavorCmd = &cli.Command{
 }
 
 func runDeleteFlavor(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Flavor)
 	return DeleteFlavor(c, obj)
 }
 
@@ -146,11 +146,12 @@ var UpdateFlavorCmd = &cli.Command{
 }
 
 func runUpdateFlavor(c *cli.Command, args []string) error {
-	_, err := c.ParseInput(args)
+	obj := c.ReqData.(*edgeproto.Flavor)
+	jsonMap, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Flavor)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
 	return UpdateFlavor(c, obj)
 }
 
@@ -199,11 +200,11 @@ var ShowFlavorCmd = &cli.Command{
 }
 
 func runShowFlavor(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Flavor)
 	return ShowFlavor(c, obj)
 }
 

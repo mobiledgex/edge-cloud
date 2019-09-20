@@ -38,11 +38,11 @@ var CreateCloudletPoolCmd = &cli.Command{
 }
 
 func runCreateCloudletPool(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletPool)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletPool)
 	return CreateCloudletPool(c, obj)
 }
 
@@ -92,11 +92,11 @@ var DeleteCloudletPoolCmd = &cli.Command{
 }
 
 func runDeleteCloudletPool(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletPool)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletPool)
 	return DeleteCloudletPool(c, obj)
 }
 
@@ -145,11 +145,11 @@ var ShowCloudletPoolCmd = &cli.Command{
 }
 
 func runShowCloudletPool(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletPool)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletPool)
 	return ShowCloudletPool(c, obj)
 }
 
@@ -221,11 +221,11 @@ var CreateCloudletPoolMemberCmd = &cli.Command{
 }
 
 func runCreateCloudletPoolMember(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
 	return CreateCloudletPoolMember(c, obj)
 }
 
@@ -275,11 +275,11 @@ var DeleteCloudletPoolMemberCmd = &cli.Command{
 }
 
 func runDeleteCloudletPoolMember(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
 	return DeleteCloudletPoolMember(c, obj)
 }
 
@@ -328,11 +328,11 @@ var ShowCloudletPoolMemberCmd = &cli.Command{
 }
 
 func runShowCloudletPoolMember(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
 	return ShowCloudletPoolMember(c, obj)
 }
 
@@ -396,11 +396,11 @@ var ShowPoolsForCloudletCmd = &cli.Command{
 }
 
 func runShowPoolsForCloudlet(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletKey)
 	return ShowPoolsForCloudlet(c, obj)
 }
 
@@ -464,11 +464,11 @@ var ShowCloudletsForPoolCmd = &cli.Command{
 }
 
 func runShowCloudletsForPool(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletPoolKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletPoolKey)
 	return ShowCloudletsForPool(c, obj)
 }
 
@@ -532,11 +532,11 @@ var ShowCloudletsForPoolListCmd = &cli.Command{
 }
 
 func runShowCloudletsForPoolList(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletPoolList)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.CloudletPoolList)
 	return ShowCloudletsForPoolList(c, obj)
 }
 
