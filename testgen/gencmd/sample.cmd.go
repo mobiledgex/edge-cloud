@@ -78,11 +78,11 @@ var RequestCmd = &cli.Command{
 }
 
 func runRequest(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*testgen.TestGen)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*testgen.TestGen)
 	return Request(c, obj)
 }
 

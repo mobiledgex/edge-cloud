@@ -153,27 +153,40 @@ func WeakDecode(input, output interface{}, hook mapstructure.DecodeHookFunc) ([]
 	return config.Metadata.Unused, err
 }
 
+// FieldNamespace describes the format of field names used in generic
+// map[string]interface{} data, whether they correspond to the go struct's
+// field names, yaml tag names, or json tag names.
+type FieldNamespace int
+
+const (
+	StructNamespace FieldNamespace = iota
+	YamlNamespace
+	JsonNamespace
+)
+
 // JsonMap takes as input the generic args map from ParseArgs
 // corresponding to obj, and uses the json tags in obj to generate
-// a map with json names for the data.
-func JsonMap(args map[string]interface{}, obj interface{}) (map[string]interface{}, error) {
+// a map with field names in the JSON namespace.
+func JsonMap(args map[string]interface{}, obj interface{}, inputNS FieldNamespace) (map[string]interface{}, error) {
+	if inputNS == JsonNamespace {
+		// already json
+		return args, nil
+	}
 	js := make(map[string]interface{})
-	err := MapJsonNamesT(args, js, reflect.TypeOf(obj))
+	err := MapJsonNamesT(args, js, reflect.TypeOf(obj), inputNS)
 	if err != nil {
 		return nil, err
 	}
 	return js, nil
 }
 
-func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type) error {
+func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS FieldNamespace) error {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
 	for key, val := range args {
 		// get the StructField to get the json tag
-		sf, ok := t.FieldByNameFunc(func(name string) bool {
-			return strings.ToLower(name) == strings.ToLower(key)
-		})
+		sf, ok := FindField(t, key, inputNS)
 		if !ok {
 			continue
 		}
@@ -195,28 +208,48 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type) error {
 			} else {
 				subjson = getSubMap(js, jsonName)
 			}
-			err := MapJsonNamesT(subargs, subjson, sf.Type)
+			err := MapJsonNamesT(subargs, subjson, sf.Type, inputNS)
 			if err != nil {
 				return err
 			}
-		} else {
-			// note: arrays/maps not handled, so this is a value.
-			// allocate an object of type (gives us a pointer to it)
-			v := reflect.New(sf.Type)
-			// let yaml deal with converting the string to the
-			// field's type. The only special case is string types
-			// may need quotes around string values in case there
-			// are special characters in the string.
-			strval := fmt.Sprintf("%v", val)
-			if v.Elem().Kind() == reflect.String {
-				strval = strconv.Quote(strval)
+		} else if list, ok := val.([]interface{}); ok {
+			if sf.Type.Kind() != reflect.Slice {
+				return fmt.Errorf("key %s value is an array but type %v is not", key, sf.Type)
 			}
+			elemt := sf.Type.Elem()
+			jslist := make([]interface{}, 0, len(list))
+			for ii, _ := range list {
+				if item, ok := list[ii].(map[string]interface{}); ok {
+					// struct in list
+					out := make(map[string]interface{})
+					err := MapJsonNamesT(item, out, elemt, inputNS)
+					if err != nil {
+						return err
+					}
+					jslist = append(jslist, out)
+				} else {
+					jslist = append(jslist, list[ii])
+				}
+			}
+			js[jsonName] = jslist
+		} else {
 			if sf.Type.Kind() == reflect.Map {
+				// must be map of basic built-in types
 				js[jsonName] = val
 			} else {
+				// allocate an object of type (gives us a pointer to it)
+				v := reflect.New(sf.Type)
+				// let yaml deal with converting the string to the
+				// field's type. The only special case is string types
+				// may need quotes around string values in case there
+				// are special characters in the string.
+				strval := fmt.Sprintf("%v", val)
+				if v.Elem().Kind() == reflect.String {
+					strval = strconv.Quote(strval)
+				}
 				err := yaml.Unmarshal([]byte(strval), v.Interface())
 				if err != nil {
-					return fmt.Errorf("unmarshal err on %s, %v", key, err)
+					return fmt.Errorf("unmarshal err on %s, %s, %v, %v", key, strval, v.Elem().Kind(), err)
 				}
 				// elem to dereference it
 				js[jsonName] = v.Elem().Interface()
@@ -224,6 +257,37 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type) error {
 		}
 	}
 	return nil
+}
+
+func FindField(t reflect.Type, name string, ns FieldNamespace) (reflect.StructField, bool) {
+	if ns == StructNamespace {
+		return t.FieldByNameFunc(func(n string) bool {
+			return strings.ToLower(n) == strings.ToLower(name)
+		})
+	} else {
+		for ii := 0; ii < t.NumField(); ii++ {
+			sf := t.Field(ii)
+
+			var tag string
+			if ns == JsonNamespace {
+				tag = sf.Tag.Get("json")
+			} else if ns == YamlNamespace {
+				tag = sf.Tag.Get("yaml")
+			}
+			tagvals := strings.Split(tag, ",")
+			tagName := ""
+			if len(tagvals) > 0 {
+				tagName = tagvals[0]
+			}
+			if tagName == "" {
+				tagName = strings.ToLower(sf.Name)
+			}
+			if tagName == name {
+				return sf, true
+			}
+		}
+		return reflect.StructField{}, false
+	}
 }
 
 func getSubMap(cur map[string]interface{}, key string) map[string]interface{} {

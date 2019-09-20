@@ -38,11 +38,11 @@ var CreateOperatorCmd = &cli.Command{
 }
 
 func runCreateOperator(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Operator)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Operator)
 	return CreateOperator(c, obj)
 }
 
@@ -92,11 +92,11 @@ var DeleteOperatorCmd = &cli.Command{
 }
 
 func runDeleteOperator(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Operator)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Operator)
 	return DeleteOperator(c, obj)
 }
 
@@ -146,11 +146,12 @@ var UpdateOperatorCmd = &cli.Command{
 }
 
 func runUpdateOperator(c *cli.Command, args []string) error {
-	_, err := c.ParseInput(args)
+	obj := c.ReqData.(*edgeproto.Operator)
+	jsonMap, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Operator)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
 	return UpdateOperator(c, obj)
 }
 
@@ -199,11 +200,11 @@ var ShowOperatorCmd = &cli.Command{
 }
 
 func runShowOperator(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Operator)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.Operator)
 	return ShowOperator(c, obj)
 }
 

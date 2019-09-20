@@ -7,6 +7,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/testutil"
+	yaml "github.com/mobiledgex/yaml/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -99,7 +100,7 @@ func testParseArgs(t *testing.T, input *Input, args []string, expected, buf1, bu
 	fmt.Printf("argsmap: %v\n", dat)
 
 	// convert args to json
-	jsmap, err := JsonMap(dat, buf1)
+	jsmap, err := JsonMap(dat, buf1, StructNamespace)
 	require.Nil(t, err)
 	fmt.Printf("jsonamp: %v\n", jsmap)
 
@@ -156,7 +157,7 @@ func testConversion(t *testing.T, obj interface{}, buf, buf2 interface{}) {
 	fmt.Printf("argsmap: %v\n", dat)
 
 	// convert args map to json map
-	jsmap, err := JsonMap(dat, obj)
+	jsmap, err := JsonMap(dat, obj, StructNamespace)
 	require.Nil(t, err, "json map")
 	fmt.Printf("jsonmap: %s\n", jsmap)
 
@@ -166,4 +167,177 @@ func testConversion(t *testing.T, obj interface{}, buf, buf2 interface{}) {
 	err = json.Unmarshal(byt, buf2)
 	require.Nil(t, err, "unmarshal")
 	require.Equal(t, obj, buf2)
+}
+
+type mapTest struct {
+	yamlData string
+	jsonData string
+	obj1     interface{}
+	obj2     interface{}
+	obj3     interface{}
+	obj4     interface{}
+}
+
+var mapTestData = []*mapTest{
+	&mapTest{
+		yamlData: `
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-1
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessStatic
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 2
+
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-2
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessStatic
+  ipaccess: IpAccessDedicated
+  nummasters: 1
+  numnodes: 2
+`,
+		jsonData: `
+{
+   "flavors": [
+      {
+         "key": {
+            "name": "x1.tiny"
+         },
+         "ram": 1024,
+         "vcpus": 1,
+         "disk": 1
+      },
+      {
+         "key": {
+            "name": "x1.small"
+         },
+         "ram": 2048,
+         "vcpus": 2,
+         "disk": 2
+      },
+      {
+         "key": {
+            "name": "x1.medium"
+         },
+         "ram": 4096,
+         "vcpus": 4,
+         "disk": 4
+      }
+   ],
+   "clusterinsts": [
+      {
+         "key": {
+            "cluster_key": {
+               "name": "SmallCluster"
+            },
+            "cloudlet_key": {
+               "operator_key": {
+                  "name": "tmus"
+               },
+               "name": "tmus-cloud-1"
+            },
+            "developer": "AcmeAppCo"
+         },
+         "flavor": {
+            "name": "x1.small"
+         },
+         "liveness": "LivenessStatic",
+         "ip_access": "IpAccessShared",
+         "num_masters": 1,
+         "num_nodes": 2
+      },
+      {
+         "key": {
+            "cluster_key": {
+               "name": "SmallCluster"
+            },
+            "cloudlet_key": {
+               "operator_key": {
+                  "name": "tmus"
+               },
+               "name": "tmus-cloud-2"
+            },
+            "developer": "AcmeAppCo"
+         },
+         "flavor": {
+            "name": "x1.small"
+         },
+         "liveness": "LivenessStatic",
+         "ip_access": "IpAccessDedicated",
+         "num_masters": 1,
+         "num_nodes": 2
+      }
+   ]
+}`,
+		obj1: &edgeproto.ApplicationData{},
+		obj2: &edgeproto.ApplicationData{},
+		obj3: &edgeproto.ApplicationData{},
+		obj4: &edgeproto.ApplicationData{},
+	},
+}
+
+func TestJsonMapFromYaml(t *testing.T) {
+	for ii, d := range mapTestData {
+		// check that test data yaml and json are equivalent
+		err := yaml.Unmarshal([]byte(d.yamlData), d.obj1)
+		require.Nil(t, err, "%d: unmarshal yaml to obj", ii)
+		err = json.Unmarshal([]byte(d.jsonData), d.obj2)
+		require.Nil(t, err, "unmarshal json to obj")
+		require.Equal(t, d.obj1, d.obj2, "%d: objects equal", ii)
+
+		// convert yaml/json to generic map[string]interface{}
+		yamlMap := make(map[string]interface{})
+		err = yaml.Unmarshal([]byte(d.yamlData), &yamlMap)
+		require.Nil(t, err, "%d: unmarshal yaml to map", ii)
+		jsonMap := make(map[string]interface{})
+		err = json.Unmarshal([]byte(d.jsonData), &jsonMap)
+		require.Nil(t, err, "%d: unmarshal json to map", ii)
+
+		// convert yaml map to json map (this is the focus of the test)
+		jsonMapFromYaml, err := JsonMap(jsonMap, d.obj3, YamlNamespace)
+		require.Nil(t, err, "%d: jsonMap conversion")
+
+		// Due to difference with enums and numeric types
+		// (int vs float), the jsonMap and jsonMapFromYaml are not
+		// directly comparable to each other. So we decode into
+		// objects and compare the objects to verify.
+		_, err = WeakDecode(jsonMap, d.obj3, edgeproto.EnumDecodeHook)
+		require.Nil(t, err, "%d: decode jsonMap")
+		_, err = WeakDecode(jsonMapFromYaml, d.obj4, edgeproto.EnumDecodeHook)
+		require.Nil(t, err, "%d: decode jsonMapFromYaml")
+		require.Equal(t, d.obj3, d.obj4, "%d: objects equal after mapping")
+	}
 }

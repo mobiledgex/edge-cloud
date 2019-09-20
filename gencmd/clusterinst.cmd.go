@@ -76,11 +76,11 @@ var CreateClusterInstCmd = &cli.Command{
 }
 
 func runCreateClusterInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ClusterInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.ClusterInst)
 	return CreateClusterInst(c, obj)
 }
 
@@ -139,11 +139,11 @@ var DeleteClusterInstCmd = &cli.Command{
 }
 
 func runDeleteClusterInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ClusterInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.ClusterInst)
 	return DeleteClusterInst(c, obj)
 }
 
@@ -202,11 +202,12 @@ var UpdateClusterInstCmd = &cli.Command{
 }
 
 func runUpdateClusterInst(c *cli.Command, args []string) error {
-	_, err := c.ParseInput(args)
+	obj := c.ReqData.(*edgeproto.ClusterInst)
+	jsonMap, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.ClusterInst)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
 	return UpdateClusterInst(c, obj)
 }
 
@@ -264,11 +265,11 @@ var ShowClusterInstCmd = &cli.Command{
 }
 
 func runShowClusterInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ClusterInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.ClusterInst)
 	return ShowClusterInst(c, obj)
 }
 
@@ -341,11 +342,11 @@ var ShowClusterInstInfoCmd = &cli.Command{
 }
 
 func runShowClusterInstInfo(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ClusterInstInfo)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.ClusterInstInfo)
 	return ShowClusterInstInfo(c, obj)
 }
 
