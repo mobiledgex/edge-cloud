@@ -44,11 +44,11 @@ var EnableDebugLevelsCmd = &cli.Command{
 }
 
 func runEnableDebugLevels(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*log.DebugLevels)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*log.DebugLevels)
 	return EnableDebugLevels(c, obj)
 }
 
@@ -98,11 +98,11 @@ var DisableDebugLevelsCmd = &cli.Command{
 }
 
 func runDisableDebugLevels(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*log.DebugLevels)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*log.DebugLevels)
 	return DisableDebugLevels(c, obj)
 }
 
@@ -151,11 +151,11 @@ var ShowDebugLevelsCmd = &cli.Command{
 }
 
 func runShowDebugLevels(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*log.DebugLevels)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*log.DebugLevels)
 	return ShowDebugLevels(c, obj)
 }
 
