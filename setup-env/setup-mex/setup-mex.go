@@ -56,7 +56,7 @@ func GetActionParam(a string) (string, string) {
 
 // Change "cluster-svc1 scrapeInterval=30s updateAll" int []{"cluster-svc1", "scrapeInterval=30s", "updateApp"}
 func GetActionArgs(a string) []string {
-	argSlice := strings.Split(a, " ")
+	argSlice := strings.Fields(a)
 	return argSlice
 }
 

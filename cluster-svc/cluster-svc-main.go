@@ -326,7 +326,7 @@ func validatePrometheusRevision() error {
 	ctx := context.TODO()
 	apiClient := edgeproto.NewAppApiClient(conn)
 
-	// Get Exusting prometheus App
+	// Get existing prometheus App
 	currentApp, err := getPrometheusAppFromController(ctx, apiClient)
 	if err == io.EOF {
 		// No app exists yet - just create it when we need to
