@@ -28,7 +28,6 @@ import (
 var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var ctrlAddr = flag.String("ctrlAddrs", "127.0.0.1:55001", "address to connect to")
-var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var externalPorts = flag.String("prometheus-ports", "tcp:9090", "ports to expose in form \"tcp:123,udp:123\"")
@@ -94,7 +93,7 @@ func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgepro
 	if new.State == edgeproto.TrackedState_READY {
 		// Create Prometheus on the cluster after creation
 		if err = createMEXPromInst(ctx, dialOpts, new.Key); err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "Prometheus-operator inst create failed", "cluster",
+			log.SpanLog(ctx, log.DebugLevelApi, "Prometheus-operator inst create failed", "cluster",
 				new.Key.ClusterKey.Name, "error", err.Error())
 		}
 	}
@@ -172,15 +171,15 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, instKey 
 	if err != nil {
 		// Handle non-fatal errors
 		if strings.Contains(err.Error(), objstore.ErrKVStoreKeyExists.Error()) {
-			log.SpanLog(ctx, log.DebugLevelMexos, "appinst already exists", "app", app.String(), "cluster", instKey.String())
+			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "app", app.String(), "cluster", instKey.String())
 			return nil
 		}
 		if strings.Contains(err.Error(), edgeproto.ErrEdgeApiAppNotFound.Error()) {
-			log.SpanLog(ctx, log.DebugLevelMexos, "app doesn't exist, create it first", "app", app.String())
+			log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist, create it first", "app", app.String())
 			// Create the app
 			if err = createAppCommon(ctx, dialOpts, app); err == nil {
 				if res, err = appInstCreateApi(apiClient, appInst); err == nil {
-					log.SpanLog(ctx, log.DebugLevelMexos, "create appinst", "appinst", appInst.String(), "result", res.String())
+					log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", appInst.String(), "result", res.String())
 					return nil
 				}
 			}
@@ -192,7 +191,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, instKey 
 		}
 		return fmt.Errorf("CreateAppInst failed: %s", errstr)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "create appinst", "appinst", appInst.String(), "result", res.String())
+	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", appInst.String(), "result", res.String())
 	return nil
 
 }
@@ -248,7 +247,7 @@ func createAppCommon(ctx context.Context, dialOpts grpc.DialOption, app *edgepro
 	if err != nil {
 		// Handle non-fatal errors
 		if strings.Contains(err.Error(), objstore.ErrKVStoreKeyExists.Error()) {
-			log.SpanLog(ctx, log.DebugLevelMexos, "app already exists", "app", app.String())
+			log.SpanLog(ctx, log.DebugLevelApi, "app already exists", "app", app.String())
 			return nil
 		}
 		errstr := err.Error()
@@ -258,7 +257,7 @@ func createAppCommon(ctx context.Context, dialOpts grpc.DialOption, app *edgepro
 		}
 		return fmt.Errorf("CreateApp failed: %s", errstr)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "create app", "app", app.String(), "result", res.String())
+	log.SpanLog(ctx, log.DebugLevelApi, "create app", "app", app.String(), "result", res.String())
 	return nil
 }
 
@@ -295,6 +294,33 @@ func setPrometheusAppDiffFields(src *edgeproto.App, dst *edgeproto.App) {
 	}
 }
 
+func updatePrometheusInsts() {
+	ctx := log.StartTestSpan(context.Background())
+	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "Connect to server failed", "server", *ctrlAddr, "error", err.Error())
+		return
+	}
+	defer conn.Close()
+
+	// Update all appInstances of the Prometheus App
+	if *upgradeInstances {
+		apiClient := edgeproto.NewAppInstApiClient(conn)
+		appInst := edgeproto.AppInst{
+			Key: edgeproto.AppInstKey{
+				AppKey: MEXPrometheusAppKey,
+			},
+			UpdateMultiple: true,
+		}
+		res, err := appInstUpdateApi(apiClient, appInst)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Unable to update appinst",
+				"appinst", appInst, "error", err.Error())
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "update appinst", "appinst", appInst.String(), "result", res.String())
+	}
+}
+
 // Check if we are running the correct revision of prometheus app, and if not, upgrade it
 func validatePrometheusRevision(ctx context.Context) error {
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
@@ -308,7 +334,7 @@ func validatePrometheusRevision(ctx context.Context) error {
 	currentApp, err := getPrometheusAppFromController(ctx, apiClient)
 	if err == io.EOF {
 		// No app exists yet - just create it when we need to
-		log.SpanLog(ctx, log.DebugLevelMexos, "app doesn't exist", "app", MEXPrometheusAppKey)
+		log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist", "app", MEXPrometheusAppKey)
 		return nil
 	}
 	if err != nil {
@@ -332,22 +358,7 @@ func validatePrometheusRevision(ctx context.Context) error {
 			}
 			return fmt.Errorf("UpdateApp failed: %s", errstr)
 		}
-		log.SpanLog(ctx, log.DebugLevelMexos, "update app", "app", newApp.String(), "result", currentApp.String())
-	}
-	// Update all appInstances of the Prometheus App
-	if *upgradeInstances {
-		apiClient := edgeproto.NewAppInstApiClient(conn)
-		appInst := edgeproto.AppInst{
-			Key: edgeproto.AppInstKey{
-				AppKey: MEXPrometheusAppKey,
-			},
-			UpdateMultiple: true,
-		}
-		res, err := appInstUpdateApi(apiClient, appInst)
-		if err != nil {
-			return err
-		}
-		log.SpanLog(ctx, log.DebugLevelMexos, "update appinst", "appinst", appInst.String(), "result", res.String())
+		log.SpanLog(ctx, log.DebugLevelApi, "update app", "app", newApp.String(), "result", currentApp.String())
 	}
 	return nil
 }
@@ -369,19 +380,14 @@ func main() {
 	if err = validatePrometheusRevision(ctx); err != nil {
 		log.FatalLog("Validate Prometheus version", "error", err)
 	}
+	// Update prometheus instances in a separate go routine
+	go updatePrometheusInsts()
 
-	if *standalone {
-		fmt.Printf("Running in Standalone Mode with test instances\n")
-	} else {
-		notifyClient := initNotifyClient(ctx, *notifyAddrs, *tlsCertFile)
-		notifyClient.RegisterRecvClusterInstCache(&ClusterInstCache)
-		notifyClient.Start()
-		defer notifyClient.Stop()
-	}
+	notifyClient := initNotifyClient(ctx, *notifyAddrs, *tlsCertFile)
+	notifyClient.RegisterRecvClusterInstCache(&ClusterInstCache)
+	notifyClient.Start()
+	defer notifyClient.Stop()
 
-	if *standalone {
-		// TODO - unit tests see cluster-svc_test.go
-	}
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 

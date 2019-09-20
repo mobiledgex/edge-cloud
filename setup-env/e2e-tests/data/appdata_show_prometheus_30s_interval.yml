@@ -311,6 +311,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.medium
+  revision: 1
 - key:
     appkey:
       developerkey:
@@ -368,6 +369,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.medium
+  revision: 1
 - key:
     appkey:
       developerkey:
