@@ -187,7 +187,7 @@ func (c *Command) ParseInput(args []string) (map[string]interface{}, error) {
 	if Data != "" {
 		in = make(map[string]interface{})
 		err := json.Unmarshal([]byte(Data), &in)
-		if err == nil {
+		if err == nil && c.ReqData != nil {
 			err = json.Unmarshal([]byte(Data), c.ReqData)
 			if err != nil {
 				return nil, err
@@ -203,9 +203,11 @@ func (c *Command) ParseInput(args []string) (map[string]interface{}, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert yaml map to json map, %v", err)
 			}
-			err = yaml.Unmarshal([]byte(Data), c.ReqData)
-			if err != nil {
-				return nil, err
+			if c.ReqData != nil {
+				err = yaml.Unmarshal([]byte(Data), c.ReqData)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	} else {
@@ -227,13 +229,17 @@ func (c *Command) ParseInput(args []string) (map[string]interface{}, error) {
 		if Debug {
 			fmt.Printf("argsmap: %v\n", argsMap)
 		}
-		// convert to json map
-		in, err = JsonMap(argsMap, c.ReqData, StructNamespace)
-		if err != nil {
-			return nil, err
-		}
-		if Debug {
-			fmt.Printf("jsonmap: %v\n", in)
+		if c.ReqData != nil {
+			// convert to json map
+			in, err = JsonMap(argsMap, c.ReqData, StructNamespace)
+			if err != nil {
+				return nil, err
+			}
+			if Debug {
+				fmt.Printf("jsonmap: %v\n", in)
+			}
+		} else {
+			in = argsMap
 		}
 	}
 	return in, nil
