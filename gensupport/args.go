@@ -2,6 +2,7 @@ package gensupport
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
@@ -145,7 +146,13 @@ func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *g
 
 	// generate special args
 	g.P("var ", message.Name, "SpecialArgs = map[string]string{")
-	for arg, argType := range specialArgs {
+	keys := make([]string, 0, len(specialArgs))
+	for arg, _ := range specialArgs {
+		keys = append(keys, arg)
+	}
+	sort.Strings(keys)
+	for _, arg := range keys {
+		argType := specialArgs[arg]
 		g.P("\"", strings.ToLower(arg), "\": \"", argType, "\",")
 	}
 	g.P("}")
