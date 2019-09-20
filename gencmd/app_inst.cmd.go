@@ -115,11 +115,11 @@ var CreateAppInstCmd = &cli.Command{
 }
 
 func runCreateAppInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.AppInst)
 	return CreateAppInst(c, obj)
 }
 
@@ -178,11 +178,11 @@ var DeleteAppInstCmd = &cli.Command{
 }
 
 func runDeleteAppInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.AppInst)
 	return DeleteAppInst(c, obj)
 }
 
@@ -241,11 +241,12 @@ var UpdateAppInstCmd = &cli.Command{
 }
 
 func runUpdateAppInst(c *cli.Command, args []string) error {
-	_, err := c.ParseInput(args)
+	obj := c.ReqData.(*edgeproto.AppInst)
+	jsonMap, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.AppInst)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
 	return UpdateAppInst(c, obj)
 }
 
@@ -303,11 +304,11 @@ var ShowAppInstCmd = &cli.Command{
 }
 
 func runShowAppInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.AppInst)
 	return ShowAppInst(c, obj)
 }
 
@@ -380,11 +381,11 @@ var ShowAppInstInfoCmd = &cli.Command{
 }
 
 func runShowAppInstInfo(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInstInfo)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.AppInstInfo)
 	return ShowAppInstInfo(c, obj)
 }
 
@@ -454,11 +455,11 @@ var ShowAppInstMetricsCmd = &cli.Command{
 }
 
 func runShowAppInstMetrics(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInstMetrics)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	obj := c.ReqData.(*edgeproto.AppInstMetrics)
 	return ShowAppInstMetrics(c, obj)
 }
 
@@ -598,8 +599,8 @@ var AppInstComments = map[string]string{
 	"updatemultiple":                 "Allow multiple instances to be updated at once",
 }
 var AppInstSpecialArgs = map[string]string{
-	"runtimeinfo.containerids": "StringArray",
 	"errors":                   "StringArray",
+	"runtimeinfo.containerids": "StringArray",
 }
 var AppInstRuntimeRequiredArgs = []string{}
 var AppInstRuntimeOptionalArgs = []string{
@@ -650,8 +651,8 @@ var AppInstInfoComments = map[string]string{
 	"runtimeinfo.consoleurl":                          "URL to access VM console",
 }
 var AppInstInfoSpecialArgs = map[string]string{
-	"runtimeinfo.containerids": "StringArray",
 	"errors":                   "StringArray",
+	"runtimeinfo.containerids": "StringArray",
 }
 var AppInstMetricsRequiredArgs = []string{}
 var AppInstMetricsOptionalArgs = []string{
