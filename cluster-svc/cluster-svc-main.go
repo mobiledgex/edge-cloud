@@ -78,57 +78,37 @@ var dialOpts grpc.DialOption
 
 var sigChan chan os.Signal
 
-type ClusterInstHandler struct {
-}
+var ClusterInstCache edgeproto.ClusterInstCache
 
-type exporterData struct {
-	InfluxDBAddr string
-	InfluxDBUser string
-	InfluxDBPass string
-	Interval     string
+type promCustomizations struct {
+	Interval string
 }
 
 // Process updates from notify framework about cluster instances
 // Create app/appInst when clusterInst transitions to a 'ready' state
-func (c *ClusterInstHandler) Update(ctx context.Context, in *edgeproto.ClusterInst, rev int64) {
+func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {
 	var err error
-	log.SpanLog(ctx, log.DebugLevelNotify, "cluster update", "cluster", in.Key.ClusterKey.Name,
-		"cloudlet", in.Key.CloudletKey.Name, "state", edgeproto.TrackedState_name[int32(in.State)])
+	log.SpanLog(ctx, log.DebugLevelNotify, "cluster update", "cluster", new.Key.ClusterKey.Name,
+		"cloudlet", new.Key.CloudletKey.Name, "state", edgeproto.TrackedState_name[int32(new.State)])
 	// Need to create a connection to server, as passed to us by commands
-	if in.State == edgeproto.TrackedState_READY {
+	if new.State == edgeproto.TrackedState_READY {
 		// Create Prometheus on the cluster after creation
-		if err = createMEXPromInst(ctx, dialOpts, in.Key); err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "Prometheus-operator inst create failed", "cluster", in.Key.ClusterKey.Name,
-				"error", err.Error())
+		if err = createMEXPromInst(ctx, dialOpts, new.Key); err != nil {
+			log.SpanLog(ctx, log.DebugLevelMexos, "Prometheus-operator inst create failed", "cluster",
+				new.Key.ClusterKey.Name, "error", err.Error())
 		}
 	}
 }
-
-// Callback for clusterInst deletion - we don't need to do anything here
-// Applications created by cluster service are created as auto-delete and will be removed
-// when clusterInstance goes away
-func (c *ClusterInstHandler) Delete(ctx context.Context, in *edgeproto.ClusterInst, rev int64) {
-	log.SpanLog(ctx, log.DebugLevelNotify, "clusterInst delete", "cluster", in.Key.ClusterKey.Name, "state",
-		edgeproto.TrackedState_name[int32(in.State)])
-	// don't need to do anything really if a cluster instance is getting deleted
-	// - all the pods in the cluster will be stopped anyways
-}
-
-// Don't need to do anything here - same as Delete
-func (c *ClusterInstHandler) Prune(ctx context.Context, keys map[edgeproto.ClusterInstKey]struct{}) {
-	log.SpanLog(ctx, log.DebugLevelNotify, "clusterInst prune")
-}
-
-func (c *ClusterInstHandler) Flush(ctx context.Context, notifyId int64) {}
 
 func init() {
 	prometheusT = template.Must(template.New("prometheus").Parse(MEXPrometheusAppHelmTemplate))
 }
 
-func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
+func initNotifyClient(ctx context.Context, addrs string, tlsCertFile string) *notify.Client {
 	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
-	notifyClient.RegisterRecv(notify.NewClusterInstRecv(&ClusterInstHandler{}))
-	log.InfoLog("notify client to", "addrs", addrs)
+	edgeproto.InitClusterInstCache(&ClusterInstCache)
+	ClusterInstCache.SetUpdatedCb(clusterInstCb)
+	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient
 }
 
@@ -231,7 +211,7 @@ func fillAppConfigs(app *edgeproto.App, interval time.Duration) error {
 	var scrapeStr = scrapeIntervalInSeconds(interval)
 	switch app.Key.Name {
 	case MEXPrometheusAppName:
-		ex := exporterData{
+		ex := promCustomizations{
 			Interval: scrapeStr,
 		}
 		buf := bytes.Buffer{}
@@ -393,7 +373,8 @@ func main() {
 	if *standalone {
 		fmt.Printf("Running in Standalone Mode with test instances\n")
 	} else {
-		notifyClient := initNotifyClient(*notifyAddrs, *tlsCertFile)
+		notifyClient := initNotifyClient(ctx, *notifyAddrs, *tlsCertFile)
+		notifyClient.RegisterRecvClusterInstCache(&ClusterInstCache)
 		notifyClient.Start()
 		defer notifyClient.Stop()
 	}
@@ -404,7 +385,8 @@ func main() {
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	log.InfoLog("Ready")
+	log.SpanLog(ctx, log.DebugLevelMetrics, "Ready")
+	span.Finish()
 	// wait until process in killed/interrupted
 	sig := <-sigChan
 	fmt.Println(sig)
