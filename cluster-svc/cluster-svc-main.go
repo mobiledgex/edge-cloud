@@ -295,7 +295,9 @@ func setPrometheusAppDiffFields(src *edgeproto.App, dst *edgeproto.App) {
 }
 
 func updatePrometheusInsts() {
-	ctx := log.StartTestSpan(context.Background())
+	span := log.StartSpan(log.DebugLevelApi, "updatePrometheusInsts")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "Connect to server failed", "server", *ctrlAddr, "error", err.Error())
