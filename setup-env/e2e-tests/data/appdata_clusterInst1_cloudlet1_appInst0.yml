@@ -106,6 +106,8 @@ apps:
           ## https://github.com/coreos/prometheus-operator/issues/926
           ##
           https: true
+      grafana:
+        enabled: false
 
 appinstances:
 - key:
