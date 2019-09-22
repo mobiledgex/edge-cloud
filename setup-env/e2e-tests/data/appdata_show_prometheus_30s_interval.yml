@@ -15,12 +15,6 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusters:
-- key:
-    name: SmallCluster
-  defaultflavor:
-    name: x1.small
-
 clusterinsts:
 - key:
     clusterkey:
@@ -159,7 +153,7 @@ apps:
       name: AcmeAppCo
     name: someapplication1
     version: "1.0"
-  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:2.0
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
   officialfqdn: someapplication1.acmeappco.com
@@ -179,7 +173,6 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
-  revision: 1
 - key:
     developerkey:
       name: AcmeAppCo
@@ -232,7 +225,7 @@ apps:
     config: |
       prometheus:
         prometheusSpec:
-          scrapeInterval: "15s"
+          scrapeInterval: "30s"
         service:
           type: LoadBalancer
       kubelet:
@@ -243,6 +236,7 @@ apps:
           https: true
       grafana:
         enabled: false
+  revision: 1
 - key:
     developerkey:
       name: AcmeAppCo1
@@ -317,6 +311,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.medium
+  revision: 1
 - key:
     appkey:
       developerkey:
@@ -350,7 +345,6 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  revision: 1
 - key:
     appkey:
       developerkey:
@@ -375,6 +369,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.medium
+  revision: 1
 - key:
     appkey:
       developerkey:
