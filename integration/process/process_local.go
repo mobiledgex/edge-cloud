@@ -504,6 +504,16 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
+	// Append extra args convert from [arg1=val1, arg2] into ["-arg1", "val1", "-arg2"]
+	if len(options.ExtraArgs) > 0 {
+		for _, v := range options.ExtraArgs {
+			tmp := strings.Split(v, "=")
+			args = append(args, "-"+tmp[0])
+			if len(tmp) > 1 {
+				args = append(args, tmp[1])
+			}
+		}
+	}
 
 	var err error
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
