@@ -539,11 +539,11 @@ var AppInstRequiredArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
+}
+var AppInstOptionalArgs = []string{
 	"cluster",
 	"operator",
 	"cloudlet",
-}
-var AppInstOptionalArgs = []string{
 	"clusterdeveloper",
 	"flavor.name",
 	"state",

@@ -75,7 +75,7 @@ message AppInst {
   option (protogen.notify_filter_cloudlet_key) = true;
   option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,ClusterInstKey.CloudletKey,CreatedAt,Status,Revision";
   option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,developer=Key.AppKey.DeveloperKey.Name,cluster=Key.ClusterInstKey.ClusterKey.Name,clusterdeveloper=Key.ClusterInstKey.Developer,cloudlet=Key.ClusterInstKey.CloudletKey.Name,operator=Key.ClusterInstKey.CloudletKey.OperatorKey.Name";
-  option (protogen.not_required) = "Key.ClusterInstKey.Developer";
+  option (protogen.not_required) = "Key.ClusterInstKey";
 }
 
 message AppInstRuntime {
