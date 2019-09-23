@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
+	"net/url"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -12,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
 	opentracing "github.com/opentracing/opentracing-go"
 	webrtc "github.com/pion/webrtc/v2"
+	"github.com/xtaci/smux"
 )
 
 // ExecReqHandler just satisfies the Recv() function for the
@@ -40,38 +43,47 @@ func (s *ExecReqHandler) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
 }
 
 func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.ExecRequest) error {
-	appInst := edgeproto.AppInst{}
-	found := cd.AppInstCache.Get(&req.AppInstKey, &appInst)
-	if !found {
-		return fmt.Errorf("app inst %s not found",
-			req.AppInstKey.GetKeyString())
-	}
-	app := edgeproto.App{}
-	found = cd.AppCache.Get(&req.AppInstKey.AppKey, &app)
-	if !found {
-		return fmt.Errorf("app %s not found",
-			req.AppInstKey.AppKey.GetKeyString())
-	}
-	clusterInst := edgeproto.ClusterInst{}
-	found = cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
-	if !found {
-		return fmt.Errorf("cluster inst %s not found",
-			appInst.Key.ClusterInstKey.GetKeyString())
-	}
+	var err error
 
 	run := &WebrtcExec{
 		req: req,
 	}
-	var err error
 
-	run.contcmd, err = cd.platform.GetContainerCommand(ctx, &clusterInst, &app, &appInst, req)
-	if err != nil {
-		return err
+	app := edgeproto.App{}
+	found := cd.AppCache.Get(&req.AppInstKey.AppKey, &app)
+	if found {
+		return fmt.Errorf("app %s not found",
+			req.AppInstKey.AppKey.GetKeyString())
 	}
 
-	run.client, err = cd.platform.GetPlatformClient(ctx, &clusterInst)
-	if err != nil {
-		return err
+	if req.Console {
+		req.ConsoleUrl, err = cd.platform.GetConsoleUrl(ctx, &app)
+		if err != nil {
+			return err
+		}
+	} else {
+		appInst := edgeproto.AppInst{}
+		found = cd.AppInstCache.Get(&req.AppInstKey, &appInst)
+		if found {
+			return fmt.Errorf("app inst %s not found",
+				req.AppInstKey.GetKeyString())
+		}
+		clusterInst := edgeproto.ClusterInst{}
+		found = cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
+		if found {
+			return fmt.Errorf("cluster inst %s not found",
+				appInst.Key.ClusterInstKey.GetKeyString())
+		}
+
+		run.contcmd, err = cd.platform.GetContainerCommand(ctx, &clusterInst, &app, &appInst, req)
+		if err != nil {
+			return err
+		}
+
+		run.client, err = cd.platform.GetPlatformClient(ctx, &clusterInst)
+		if err != nil {
+			return err
+		}
 	}
 
 	offer := webrtc.SessionDescription{}
@@ -99,7 +111,11 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 	}
 
 	// register handlers
-	peerConn.OnDataChannel(run.DataChannel)
+	if req.Console {
+		peerConn.OnDataChannel(run.RTCTunnel)
+	} else {
+		peerConn.OnDataChannel(run.DataChannel)
+	}
 
 	// set remote description
 	err = peerConn.SetRemoteDescription(offer)
@@ -161,5 +177,74 @@ func (s *WebrtcExec) DataChannel(d *webrtc.DataChannel) {
 		s.sin.Write(msg.Data)
 	})
 	d.OnClose(func() {
+	})
+}
+
+func (s *WebrtcExec) RTCTunnel(d *webrtc.DataChannel) {
+	var sess *smux.Session
+	d.OnOpen(func() {
+		urlObj, err := url.Parse(s.req.ConsoleUrl)
+		if err != nil {
+			log.DebugLog(log.DebugLevelApi, "failed to parse console url", "url", s.req.ConsoleUrl, "err", err)
+			return
+		}
+		dcconn, err := webrtcutil.WrapDataChannel(d)
+		if err != nil {
+			log.DebugLog(log.DebugLevelApi, "failed to wrap webrtc datachannel", "err", err)
+			return
+		}
+		sess, err = smux.Server(dcconn, nil)
+		if err != nil {
+			log.DebugLog(log.DebugLevelApi, "failed to setup smux server", "err", err)
+			return
+		}
+		for {
+			stream, err := sess.AcceptStream()
+			if err != nil {
+				log.DebugLog(log.DebugLevelApi, "failed to setup smux acceptstream", "err", err)
+				return
+			}
+			var server net.Conn
+			if urlObj.Scheme == "http" {
+				server, err = net.Dial("tcp", urlObj.Host)
+				if err != nil {
+					log.DebugLog(log.DebugLevelApi, "failed to get console", "err", err)
+					return
+				}
+			} else {
+				log.DebugLog(log.DebugLevelApi, "unsupported scheme", "scheme", urlObj.Scheme)
+				return
+			}
+			go func(server net.Conn, stream *smux.Stream) {
+				buf := make([]byte, 1500)
+				for {
+					n, err := stream.Read(buf)
+					if err != nil {
+						break
+					}
+					server.Write(buf[:n])
+				}
+				stream.Close()
+				server.Close()
+			}(server, stream)
+
+			go func(server net.Conn, stream *smux.Stream) {
+				buf := make([]byte, 1500)
+				for {
+					n, err := server.Read(buf)
+					if err != nil {
+						break
+					}
+					stream.Write(buf[:n])
+				}
+				stream.Close()
+				server.Close()
+			}(server, stream)
+		}
+	})
+	d.OnClose(func() {
+		if sess != nil {
+			sess.Close()
+		}
 	})
 }

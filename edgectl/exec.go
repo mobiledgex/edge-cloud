@@ -30,31 +30,31 @@ func runExecRequest(req *edgeproto.ExecRequest) error {
 	if execApiCmd == nil {
 		return fmt.Errorf("ExecApi client not initialized")
 	}
-	exchangeFunc := func(offer webrtc.SessionDescription) (*webrtc.SessionDescription, error) {
+	exchangeFunc := func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error) {
 		offerBytes, err := json.Marshal(&offer)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		req.Offer = string(offerBytes)
 
 		ctx := context.Background()
 		reply, err := execApiCmd.RunCommand(ctx, req)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if reply.Err != "" {
-			return nil, fmt.Errorf("%s", reply.Err)
+			return nil, nil, fmt.Errorf("%s", reply.Err)
 		}
 		if reply.Answer == "" {
-			return nil, fmt.Errorf("empty answer")
+			return nil, nil, fmt.Errorf("empty answer")
 		}
 		answer := webrtc.SessionDescription{}
 		err = json.Unmarshal([]byte(reply.Answer), &answer)
 		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal answer %s, %v",
+			return nil, nil, fmt.Errorf("unable to unmarshal answer %s, %v",
 				reply.Answer, err)
 		}
-		return &answer, nil
+		return reply, &answer, nil
 	}
-	return cli.RunWebrtcShell(exchangeFunc)
+	return cli.RunWebrtc(req, exchangeFunc)
 }

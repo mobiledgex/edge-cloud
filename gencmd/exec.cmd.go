@@ -5,6 +5,7 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
+import "strconv"
 import "github.com/spf13/cobra"
 import "context"
 import "os"
@@ -32,7 +33,7 @@ var ExecRequestFlagSet = pflag.NewFlagSet("ExecRequest", pflag.ExitOnError)
 var ExecRequestNoConfigFlagSet = pflag.NewFlagSet("ExecRequestNoConfig", pflag.ExitOnError)
 
 func ExecRequestSlicer(in *edgeproto.ExecRequest) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 8)
 	s = append(s, in.AppInstKey.AppKey.DeveloperKey.Name)
 	s = append(s, in.AppInstKey.AppKey.Name)
 	s = append(s, in.AppInstKey.AppKey.Version)
@@ -45,11 +46,13 @@ func ExecRequestSlicer(in *edgeproto.ExecRequest) []string {
 	s = append(s, in.Offer)
 	s = append(s, in.Answer)
 	s = append(s, in.Err)
+	s = append(s, strconv.FormatBool(in.Console))
+	s = append(s, in.ConsoleUrl)
 	return s
 }
 
 func ExecRequestHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 8)
 	s = append(s, "AppInstKey-AppKey-DeveloperKey-Name")
 	s = append(s, "AppInstKey-AppKey-Name")
 	s = append(s, "AppInstKey-AppKey-Version")
@@ -62,6 +65,8 @@ func ExecRequestHeaderSlicer() []string {
 	s = append(s, "Offer")
 	s = append(s, "Answer")
 	s = append(s, "Err")
+	s = append(s, "Console")
+	s = append(s, "ConsoleUrl")
 	return s
 }
 
@@ -101,6 +106,9 @@ func ExecRequestHideTags(in *edgeproto.ExecRequest) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Answer = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.ConsoleUrl = ""
 	}
 }
 
@@ -206,6 +214,8 @@ func init() {
 	ExecRequestNoConfigFlagSet.StringVar(&ExecRequestIn.Offer, "offer", "", "Offer")
 	ExecRequestNoConfigFlagSet.StringVar(&ExecRequestIn.Answer, "answer", "", "Answer")
 	ExecRequestNoConfigFlagSet.StringVar(&ExecRequestIn.Err, "err", "", "Err")
+	ExecRequestFlagSet.BoolVar(&ExecRequestIn.Console, "console", false, "Console")
+	ExecRequestNoConfigFlagSet.StringVar(&ExecRequestIn.ConsoleUrl, "consoleurl", "", "ConsoleUrl")
 	RunCommandCmd.Flags().AddFlagSet(ExecRequestFlagSet)
 	SendLocalRequestCmd.Flags().AddFlagSet(ExecRequestFlagSet)
 }
