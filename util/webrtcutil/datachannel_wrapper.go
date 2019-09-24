@@ -64,7 +64,6 @@ func (dc *DataChannel) Write(b []byte) (n int, err error) {
 }
 
 func (dc *DataChannel) Close() error {
-	//TODO: how do we close the datachannel?
 	dc.rr.Close()
 	return nil
 }
