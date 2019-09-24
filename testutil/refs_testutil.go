@@ -16,7 +16,6 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -29,6 +28,7 @@ var _ = math.Inf
 type ShowCloudletRefs struct {
 	Data map[string]edgeproto.CloudletRefs
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *ShowCloudletRefs) Init() {
@@ -36,9 +36,15 @@ func (x *ShowCloudletRefs) Init() {
 }
 
 func (x *ShowCloudletRefs) Send(m *edgeproto.CloudletRefs) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
+
+func (x *ShowCloudletRefs) Context() context.Context {
+	return x.Ctx
+}
+
+var CloudletRefsShowExtraCount = 0
 
 func (x *ShowCloudletRefs) ReadStream(stream edgeproto.CloudletRefsApi_ShowCloudletRefsClient, err error) {
 	x.Data = make(map[string]edgeproto.CloudletRefs)
@@ -53,31 +59,31 @@ func (x *ShowCloudletRefs) ReadStream(stream edgeproto.CloudletRefsApi_ShowCloud
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowCloudletRefs) CheckFound(obj *edgeproto.CloudletRefs) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *ShowCloudletRefs) AssertFound(t *testing.T, obj *edgeproto.CloudletRefs) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find CloudletRefs %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find CloudletRefs %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "CloudletRefs are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *ShowCloudletRefs) AssertNotFound(t *testing.T, obj *edgeproto.CloudletRefs) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find CloudletRefs %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find CloudletRefs %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFoundCloudletRefs(t *testing.T, api edgeproto.CloudletRefsApiClient, obj *edgeproto.CloudletRefs, count int, retry time.Duration) {
@@ -119,6 +125,7 @@ type CloudletRefsCommonApi struct {
 
 func (x *CloudletRefsCommonApi) ShowCloudletRefs(ctx context.Context, filter *edgeproto.CloudletRefs, showData *ShowCloudletRefs) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.ShowCloudletRefs(filter, showData)
 	} else {
 		stream, err := x.client_api.ShowCloudletRefs(ctx, filter)
@@ -169,7 +176,7 @@ func basicCloudletRefsShowTest(t *testing.T, ctx context.Context, api *CloudletR
 	filterNone := edgeproto.CloudletRefs{}
 	err = api.ShowCloudletRefs(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData)+CloudletRefsShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -191,9 +198,19 @@ func GetCloudletRefs(t *testing.T, ctx context.Context, api *CloudletRefsCommonA
 	return found
 }
 
+func FindCloudletRefsData(key *edgeproto.CloudletKey, testData []edgeproto.CloudletRefs) (*edgeproto.CloudletRefs, bool) {
+	for ii, _ := range testData {
+		if testData[ii].Key.Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
+}
+
 type ShowClusterRefs struct {
 	Data map[string]edgeproto.ClusterRefs
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *ShowClusterRefs) Init() {
@@ -201,9 +218,15 @@ func (x *ShowClusterRefs) Init() {
 }
 
 func (x *ShowClusterRefs) Send(m *edgeproto.ClusterRefs) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
+
+func (x *ShowClusterRefs) Context() context.Context {
+	return x.Ctx
+}
+
+var ClusterRefsShowExtraCount = 0
 
 func (x *ShowClusterRefs) ReadStream(stream edgeproto.ClusterRefsApi_ShowClusterRefsClient, err error) {
 	x.Data = make(map[string]edgeproto.ClusterRefs)
@@ -218,31 +241,31 @@ func (x *ShowClusterRefs) ReadStream(stream edgeproto.ClusterRefsApi_ShowCluster
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowClusterRefs) CheckFound(obj *edgeproto.ClusterRefs) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *ShowClusterRefs) AssertFound(t *testing.T, obj *edgeproto.ClusterRefs) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find ClusterRefs %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find ClusterRefs %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "ClusterRefs are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *ShowClusterRefs) AssertNotFound(t *testing.T, obj *edgeproto.ClusterRefs) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find ClusterRefs %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find ClusterRefs %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFoundClusterRefs(t *testing.T, api edgeproto.ClusterRefsApiClient, obj *edgeproto.ClusterRefs, count int, retry time.Duration) {
@@ -284,6 +307,7 @@ type ClusterRefsCommonApi struct {
 
 func (x *ClusterRefsCommonApi) ShowClusterRefs(ctx context.Context, filter *edgeproto.ClusterRefs, showData *ShowClusterRefs) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.ShowClusterRefs(filter, showData)
 	} else {
 		stream, err := x.client_api.ShowClusterRefs(ctx, filter)
@@ -334,7 +358,7 @@ func basicClusterRefsShowTest(t *testing.T, ctx context.Context, api *ClusterRef
 	filterNone := edgeproto.ClusterRefs{}
 	err = api.ShowClusterRefs(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData)+ClusterRefsShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -354,6 +378,15 @@ func GetClusterRefs(t *testing.T, ctx context.Context, api *ClusterRefsCommonApi
 		*out = obj
 	}
 	return found
+}
+
+func FindClusterRefsData(key *edgeproto.ClusterInstKey, testData []edgeproto.ClusterRefs) (*edgeproto.ClusterRefs, bool) {
+	for ii, _ := range testData {
+		if testData[ii].Key.Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
 }
 
 func (s *DummyServer) ShowCloudletRefs(in *edgeproto.CloudletRefs, server edgeproto.CloudletRefsApi_ShowCloudletRefsServer) error {

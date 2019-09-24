@@ -5,7 +5,6 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "flavor.proto";
 import "operator.proto";
 import "result.proto";
@@ -22,6 +21,7 @@ message CloudletKey {
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
+  option (protogen.alias) = "operator=OperatorKey.Name";
 }
 
 // time limits for cloudlet create, update and delete operations
@@ -194,8 +194,8 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status";
-  option (protocmd.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status";
+  option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }
 
 service CloudletApi {
@@ -205,7 +205,7 @@ service CloudletApi {
       post: "/create/cloudlet"
       body: "*"
     };
-    option (protocmd.stream_out_incremental) = true;
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
   }
   // Delete a Cloudlet
@@ -214,7 +214,7 @@ service CloudletApi {
       post: "/delete/cloudet"
       body: "*"
     };
-    option (protocmd.stream_out_incremental) = true;
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
   }
   // Update a Cloudlet
@@ -223,7 +223,7 @@ service CloudletApi {
       post: "/update/cloudlet"
       body: "*"
     };
-    option (protocmd.stream_out_incremental) = true;
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
   }
   // Show Cloudlets
@@ -293,7 +293,7 @@ message CloudletInfo {
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protocmd.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
+  option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }
 
 service CloudletInfoApi {

@@ -45,13 +45,19 @@ var tlsOutDir = ""
 // some actions have sub arguments associated after equal sign,
 // e.g.--actions stop=ctrl1
 func GetActionParam(a string) (string, string) {
-	argslice := strings.Split(a, "=")
+	argslice := strings.SplitN(a, "=", 2)
 	action := argslice[0]
 	actionParam := ""
 	if len(argslice) > 1 {
 		actionParam = argslice[1]
 	}
 	return action, actionParam
+}
+
+// Change "cluster-svc1 scrapeInterval=30s updateAll" int []{"cluster-svc1", "scrapeInterval=30s", "updateApp"}
+func GetActionArgs(a string) []string {
+	argSlice := strings.Fields(a)
+	return argSlice
 }
 
 // actions can be split with a dash like ctrlapi-show
@@ -433,7 +439,7 @@ func StartLocal(processName, outputDir string, p process.Process, opts ...proces
 	return true
 }
 
-func StartProcesses(processName string, outputDir string) bool {
+func StartProcesses(processName string, args []string, outputDir string) bool {
 	if outputDir == "" {
 		outputDir = "."
 	}
@@ -444,6 +450,9 @@ func StartProcesses(processName string, outputDir string) bool {
 	if processName == "" {
 		// full start of all processes, do clean start
 		opts = append(opts, process.WithCleanStartup())
+	}
+	if len(args) > 0 {
+		opts = append(opts, process.WithExtraArgs(args))
 	}
 
 	for _, p := range util.Deployment.Influxs {
@@ -486,7 +495,7 @@ func StartProcesses(processName string, outputDir string) bool {
 		}
 	}
 	for _, p := range util.Deployment.ClusterSvcs {
-		opts = append(opts, process.WithDebug("notify,mexos"))
+		opts = append(opts, process.WithDebug("notify,mexos,api"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
@@ -531,6 +540,8 @@ func Cleanup(ctx context.Context) error {
 }
 
 func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec, mods []string) []string {
+	var actionArgs []string
+
 	act, actionParam := GetActionParam(actionSpec)
 	action, actionSubtype := GetActionSubtype(act)
 
@@ -549,7 +560,13 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 	case "start":
 		startFailed := false
 		allprocs := util.GetAllProcesses()
-		if !StartProcesses(actionParam, outputDir) {
+		if actionSubtype == "argument" {
+			// extract the action param and action args
+			actionArgs = GetActionArgs(actionParam)
+			actionParam = actionArgs[0]
+			actionArgs = actionArgs[1:]
+		}
+		if !StartProcesses(actionParam, actionArgs, outputDir) {
 			startFailed = true
 			errors = append(errors, "start failed")
 		}

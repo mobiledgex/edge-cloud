@@ -7,18 +7,14 @@ import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
 import "github.com/spf13/cobra"
 import "context"
-import "os"
 import "io"
-import "text/tabwriter"
-import "github.com/spf13/pflag"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -28,96 +24,29 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var OperatorApiCmd edgeproto.OperatorApiClient
-var OperatorIn edgeproto.Operator
-var OperatorFlagSet = pflag.NewFlagSet("Operator", pflag.ExitOnError)
-var OperatorNoConfigFlagSet = pflag.NewFlagSet("OperatorNoConfig", pflag.ExitOnError)
 
-func OperatorKeySlicer(in *edgeproto.OperatorKey) []string {
-	s := make([]string, 0, 1)
-	s = append(s, in.Name)
-	return s
+var CreateOperatorCmd = &cli.Command{
+	Use:          "CreateOperator",
+	RequiredArgs: strings.Join(OperatorRequiredArgs, " "),
+	OptionalArgs: strings.Join(OperatorOptionalArgs, " "),
+	AliasArgs:    strings.Join(OperatorAliasArgs, " "),
+	SpecialArgs:  &OperatorSpecialArgs,
+	Comments:     OperatorComments,
+	ReqData:      &edgeproto.Operator{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runCreateOperator,
 }
 
-func OperatorKeyHeaderSlicer() []string {
-	s := make([]string, 0, 1)
-	s = append(s, "Name")
-	return s
-}
-
-func OperatorKeyWriteOutputArray(objs []*edgeproto.OperatorKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(OperatorKeyHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(OperatorKeySlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
+func runCreateOperator(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Operator)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
 	}
+	return CreateOperator(c, obj)
 }
 
-func OperatorKeyWriteOutputOne(obj *edgeproto.OperatorKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(OperatorKeyHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(OperatorKeySlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func OperatorSlicer(in *edgeproto.Operator) []string {
-	s := make([]string, 0, 2)
-	if in.Fields == nil {
-		in.Fields = make([]string, 1)
-	}
-	s = append(s, in.Fields[0])
-	s = append(s, in.Key.Name)
-	return s
-}
-
-func OperatorHeaderSlicer() []string {
-	s := make([]string, 0, 2)
-	s = append(s, "Fields")
-	s = append(s, "Key-Name")
-	return s
-}
-
-func OperatorWriteOutputArray(objs []*edgeproto.Operator) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(OperatorHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(OperatorSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func OperatorWriteOutputOne(obj *edgeproto.Operator) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(OperatorHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(OperatorSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-
-var CreateOperatorCmd = &cobra.Command{
-	Use: "CreateOperator",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return CreateOperator(&OperatorIn)
-	},
-}
-
-func CreateOperator(in *edgeproto.Operator) error {
+func CreateOperator(c *cli.Command, in *edgeproto.Operator) error {
 	if OperatorApiCmd == nil {
 		return fmt.Errorf("OperatorApi client not initialized")
 	}
@@ -131,17 +60,18 @@ func CreateOperator(in *edgeproto.Operator) error {
 		}
 		return fmt.Errorf("CreateOperator failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func CreateOperators(data []edgeproto.Operator, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func CreateOperators(c *cli.Command, data []edgeproto.Operator, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("CreateOperator %v\n", data[ii])
-		myerr := CreateOperator(&data[ii])
+		myerr := CreateOperator(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -149,16 +79,28 @@ func CreateOperators(data []edgeproto.Operator, err *error) {
 	}
 }
 
-var DeleteOperatorCmd = &cobra.Command{
-	Use: "DeleteOperator",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return DeleteOperator(&OperatorIn)
-	},
+var DeleteOperatorCmd = &cli.Command{
+	Use:          "DeleteOperator",
+	RequiredArgs: strings.Join(OperatorRequiredArgs, " "),
+	OptionalArgs: strings.Join(OperatorOptionalArgs, " "),
+	AliasArgs:    strings.Join(OperatorAliasArgs, " "),
+	SpecialArgs:  &OperatorSpecialArgs,
+	Comments:     OperatorComments,
+	ReqData:      &edgeproto.Operator{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runDeleteOperator,
 }
 
-func DeleteOperator(in *edgeproto.Operator) error {
+func runDeleteOperator(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Operator)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return DeleteOperator(c, obj)
+}
+
+func DeleteOperator(c *cli.Command, in *edgeproto.Operator) error {
 	if OperatorApiCmd == nil {
 		return fmt.Errorf("OperatorApi client not initialized")
 	}
@@ -172,17 +114,18 @@ func DeleteOperator(in *edgeproto.Operator) error {
 		}
 		return fmt.Errorf("DeleteOperator failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func DeleteOperators(data []edgeproto.Operator, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func DeleteOperators(c *cli.Command, data []edgeproto.Operator, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("DeleteOperator %v\n", data[ii])
-		myerr := DeleteOperator(&data[ii])
+		myerr := DeleteOperator(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -190,17 +133,29 @@ func DeleteOperators(data []edgeproto.Operator, err *error) {
 	}
 }
 
-var UpdateOperatorCmd = &cobra.Command{
-	Use: "UpdateOperator",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		OperatorSetFields()
-		return UpdateOperator(&OperatorIn)
-	},
+var UpdateOperatorCmd = &cli.Command{
+	Use:          "UpdateOperator",
+	RequiredArgs: strings.Join(OperatorRequiredArgs, " "),
+	OptionalArgs: strings.Join(OperatorOptionalArgs, " "),
+	AliasArgs:    strings.Join(OperatorAliasArgs, " "),
+	SpecialArgs:  &OperatorSpecialArgs,
+	Comments:     OperatorComments,
+	ReqData:      &edgeproto.Operator{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runUpdateOperator,
 }
 
-func UpdateOperator(in *edgeproto.Operator) error {
+func runUpdateOperator(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Operator)
+	jsonMap, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	return UpdateOperator(c, obj)
+}
+
+func UpdateOperator(c *cli.Command, in *edgeproto.Operator) error {
 	if OperatorApiCmd == nil {
 		return fmt.Errorf("OperatorApi client not initialized")
 	}
@@ -214,17 +169,18 @@ func UpdateOperator(in *edgeproto.Operator) error {
 		}
 		return fmt.Errorf("UpdateOperator failed: %s", errstr)
 	}
-	ResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func UpdateOperators(data []edgeproto.Operator, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func UpdateOperators(c *cli.Command, data []edgeproto.Operator, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("UpdateOperator %v\n", data[ii])
-		myerr := UpdateOperator(&data[ii])
+		myerr := UpdateOperator(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -232,16 +188,27 @@ func UpdateOperators(data []edgeproto.Operator, err *error) {
 	}
 }
 
-var ShowOperatorCmd = &cobra.Command{
-	Use: "ShowOperator",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return ShowOperator(&OperatorIn)
-	},
+var ShowOperatorCmd = &cli.Command{
+	Use:          "ShowOperator",
+	OptionalArgs: strings.Join(append(OperatorRequiredArgs, OperatorOptionalArgs...), " "),
+	AliasArgs:    strings.Join(OperatorAliasArgs, " "),
+	SpecialArgs:  &OperatorSpecialArgs,
+	Comments:     OperatorComments,
+	ReqData:      &edgeproto.Operator{},
+	ReplyData:    &edgeproto.Operator{},
+	Run:          runShowOperator,
 }
 
-func ShowOperator(in *edgeproto.Operator) error {
+func runShowOperator(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Operator)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowOperator(c, obj)
+}
+
+func ShowOperator(c *cli.Command, in *edgeproto.Operator) error {
 	if OperatorApiCmd == nil {
 		return fmt.Errorf("OperatorApi client not initialized")
 	}
@@ -269,17 +236,18 @@ func ShowOperator(in *edgeproto.Operator) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	OperatorWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowOperators(data []edgeproto.Operator, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowOperators(c *cli.Command, data []edgeproto.Operator, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowOperator %v\n", data[ii])
-		myerr := ShowOperator(&data[ii])
+		myerr := ShowOperator(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -288,30 +256,29 @@ func ShowOperators(data []edgeproto.Operator, err *error) {
 }
 
 var OperatorApiCmds = []*cobra.Command{
-	CreateOperatorCmd,
-	DeleteOperatorCmd,
-	UpdateOperatorCmd,
-	ShowOperatorCmd,
+	CreateOperatorCmd.GenCmd(),
+	DeleteOperatorCmd.GenCmd(),
+	UpdateOperatorCmd.GenCmd(),
+	ShowOperatorCmd.GenCmd(),
 }
 
-func init() {
-	OperatorFlagSet.StringVar(&OperatorIn.Key.Name, "key-name", "", "Key.Name")
-	CreateOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
-	DeleteOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
-	UpdateOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
-	ShowOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
+var OperatorKeyRequiredArgs = []string{}
+var OperatorKeyOptionalArgs = []string{
+	"name",
 }
-
-func OperatorApiAllowNoConfig() {
-	CreateOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
-	DeleteOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
-	UpdateOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
-	ShowOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
+var OperatorKeyAliasArgs = []string{}
+var OperatorKeyComments = map[string]string{
+	"name": "Company or Organization name of the operator",
 }
-
-func OperatorSetFields() {
-	OperatorIn.Fields = make([]string, 0)
-	if OperatorFlagSet.Lookup("key-name").Changed {
-		OperatorIn.Fields = append(OperatorIn.Fields, "2.1")
-	}
+var OperatorKeySpecialArgs = map[string]string{}
+var OperatorRequiredArgs = []string{
+	"name",
 }
+var OperatorOptionalArgs = []string{}
+var OperatorAliasArgs = []string{
+	"name=key.name",
+}
+var OperatorComments = map[string]string{
+	"name": "Company or Organization name of the operator",
+}
+var OperatorSpecialArgs = map[string]string{}

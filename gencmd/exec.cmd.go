@@ -5,20 +5,15 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "strconv"
 import "github.com/spf13/cobra"
 import "context"
-import "os"
-import "text/tabwriter"
-import "github.com/spf13/pflag"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -27,78 +22,12 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var ExecApiCmd edgeproto.ExecApiClient
-var ExecRequestIn edgeproto.ExecRequest
-var ExecRequestFlagSet = pflag.NewFlagSet("ExecRequest", pflag.ExitOnError)
-var ExecRequestNoConfigFlagSet = pflag.NewFlagSet("ExecRequestNoConfig", pflag.ExitOnError)
-
-func ExecRequestSlicer(in *edgeproto.ExecRequest) []string {
-	s := make([]string, 0, 8)
-	s = append(s, in.AppInstKey.AppKey.DeveloperKey.Name)
-	s = append(s, in.AppInstKey.AppKey.Name)
-	s = append(s, in.AppInstKey.AppKey.Version)
-	s = append(s, in.AppInstKey.ClusterInstKey.ClusterKey.Name)
-	s = append(s, in.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name)
-	s = append(s, in.AppInstKey.ClusterInstKey.CloudletKey.Name)
-	s = append(s, in.AppInstKey.ClusterInstKey.Developer)
-	s = append(s, in.Command)
-	s = append(s, in.ContainerId)
-	s = append(s, in.Offer)
-	s = append(s, in.Answer)
-	s = append(s, in.Err)
-	s = append(s, strconv.FormatBool(in.Console))
-	s = append(s, in.ConsoleUrl)
-	return s
-}
-
-func ExecRequestHeaderSlicer() []string {
-	s := make([]string, 0, 8)
-	s = append(s, "AppInstKey-AppKey-DeveloperKey-Name")
-	s = append(s, "AppInstKey-AppKey-Name")
-	s = append(s, "AppInstKey-AppKey-Version")
-	s = append(s, "AppInstKey-ClusterInstKey-ClusterKey-Name")
-	s = append(s, "AppInstKey-ClusterInstKey-CloudletKey-OperatorKey-Name")
-	s = append(s, "AppInstKey-ClusterInstKey-CloudletKey-Name")
-	s = append(s, "AppInstKey-ClusterInstKey-Developer")
-	s = append(s, "Command")
-	s = append(s, "ContainerId")
-	s = append(s, "Offer")
-	s = append(s, "Answer")
-	s = append(s, "Err")
-	s = append(s, "Console")
-	s = append(s, "ConsoleUrl")
-	return s
-}
-
-func ExecRequestWriteOutputArray(objs []*edgeproto.ExecRequest) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ExecRequestHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(ExecRequestSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func ExecRequestWriteOutputOne(obj *edgeproto.ExecRequest) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ExecRequestHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(ExecRequestSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
 func ExecRequestHideTags(in *edgeproto.ExecRequest) {
-	if cmdsup.HideTags == "" {
+	if cli.HideTags == "" {
 		return
 	}
 	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
@@ -112,16 +41,30 @@ func ExecRequestHideTags(in *edgeproto.ExecRequest) {
 	}
 }
 
-var RunCommandCmd = &cobra.Command{
-	Use: "RunCommand",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return RunCommand(&ExecRequestIn)
-	},
+var ExecApiCmd edgeproto.ExecApiClient
+
+var RunCommandCmd = &cli.Command{
+	Use:          "RunCommand",
+	RequiredArgs: strings.Join(ExecRequestRequiredArgs, " "),
+	OptionalArgs: strings.Join(ExecRequestOptionalArgs, " "),
+	AliasArgs:    strings.Join(ExecRequestAliasArgs, " "),
+	SpecialArgs:  &ExecRequestSpecialArgs,
+	Comments:     ExecRequestComments,
+	ReqData:      &edgeproto.ExecRequest{},
+	ReplyData:    &edgeproto.ExecRequest{},
+	Run:          runRunCommand,
 }
 
-func RunCommand(in *edgeproto.ExecRequest) error {
+func runRunCommand(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ExecRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RunCommand(c, obj)
+}
+
+func RunCommand(c *cli.Command, in *edgeproto.ExecRequest) error {
 	if ExecApiCmd == nil {
 		return fmt.Errorf("ExecApi client not initialized")
 	}
@@ -136,17 +79,18 @@ func RunCommand(in *edgeproto.ExecRequest) error {
 		return fmt.Errorf("RunCommand failed: %s", errstr)
 	}
 	ExecRequestHideTags(obj)
-	ExecRequestWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func RunCommands(data []edgeproto.ExecRequest, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func RunCommands(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("RunCommand %v\n", data[ii])
-		myerr := RunCommand(&data[ii])
+		myerr := RunCommand(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -154,16 +98,28 @@ func RunCommands(data []edgeproto.ExecRequest, err *error) {
 	}
 }
 
-var SendLocalRequestCmd = &cobra.Command{
-	Use: "SendLocalRequest",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return SendLocalRequest(&ExecRequestIn)
-	},
+var SendLocalRequestCmd = &cli.Command{
+	Use:          "SendLocalRequest",
+	RequiredArgs: strings.Join(ExecRequestRequiredArgs, " "),
+	OptionalArgs: strings.Join(ExecRequestOptionalArgs, " "),
+	AliasArgs:    strings.Join(ExecRequestAliasArgs, " "),
+	SpecialArgs:  &ExecRequestSpecialArgs,
+	Comments:     ExecRequestComments,
+	ReqData:      &edgeproto.ExecRequest{},
+	ReplyData:    &edgeproto.ExecRequest{},
+	Run:          runSendLocalRequest,
 }
 
-func SendLocalRequest(in *edgeproto.ExecRequest) error {
+func runSendLocalRequest(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ExecRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return SendLocalRequest(c, obj)
+}
+
+func SendLocalRequest(c *cli.Command, in *edgeproto.ExecRequest) error {
 	if ExecApiCmd == nil {
 		return fmt.Errorf("ExecApi client not initialized")
 	}
@@ -178,17 +134,18 @@ func SendLocalRequest(in *edgeproto.ExecRequest) error {
 		return fmt.Errorf("SendLocalRequest failed: %s", errstr)
 	}
 	ExecRequestHideTags(obj)
-	ExecRequestWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func SendLocalRequests(data []edgeproto.ExecRequest, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func SendLocalRequests(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("SendLocalRequest %v\n", data[ii])
-		myerr := SendLocalRequest(&data[ii])
+		myerr := SendLocalRequest(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -197,30 +154,47 @@ func SendLocalRequests(data []edgeproto.ExecRequest, err *error) {
 }
 
 var ExecApiCmds = []*cobra.Command{
-	RunCommandCmd,
-	SendLocalRequestCmd,
+	RunCommandCmd.GenCmd(),
+	SendLocalRequestCmd.GenCmd(),
 }
 
-func init() {
-	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.AppKey.DeveloperKey.Name, "appinstkey-appkey-developerkey-name", "", "AppInstKey.AppKey.DeveloperKey.Name")
-	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.AppKey.Name, "appinstkey-appkey-name", "", "AppInstKey.AppKey.Name")
-	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.AppKey.Version, "appinstkey-appkey-version", "", "AppInstKey.AppKey.Version")
-	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.ClusterInstKey.ClusterKey.Name, "appinstkey-clusterinstkey-clusterkey-name", "", "AppInstKey.ClusterInstKey.ClusterKey.Name")
-	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name, "appinstkey-clusterinstkey-cloudletkey-operatorkey-name", "", "AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name")
-	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.ClusterInstKey.CloudletKey.Name, "appinstkey-clusterinstkey-cloudletkey-name", "", "AppInstKey.ClusterInstKey.CloudletKey.Name")
-	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.ClusterInstKey.Developer, "appinstkey-clusterinstkey-developer", "", "AppInstKey.ClusterInstKey.Developer")
-	ExecRequestFlagSet.StringVar(&ExecRequestIn.Command, "command", "", "Command")
-	ExecRequestFlagSet.StringVar(&ExecRequestIn.ContainerId, "containerid", "", "ContainerId")
-	ExecRequestNoConfigFlagSet.StringVar(&ExecRequestIn.Offer, "offer", "", "Offer")
-	ExecRequestNoConfigFlagSet.StringVar(&ExecRequestIn.Answer, "answer", "", "Answer")
-	ExecRequestNoConfigFlagSet.StringVar(&ExecRequestIn.Err, "err", "", "Err")
-	ExecRequestFlagSet.BoolVar(&ExecRequestIn.Console, "console", false, "Console")
-	ExecRequestNoConfigFlagSet.StringVar(&ExecRequestIn.ConsoleUrl, "consoleurl", "", "ConsoleUrl")
-	RunCommandCmd.Flags().AddFlagSet(ExecRequestFlagSet)
-	SendLocalRequestCmd.Flags().AddFlagSet(ExecRequestFlagSet)
+var ExecRequestRequiredArgs = []string{
+	"developer",
+	"appname",
+	"appvers",
+	"cluster",
+	"operator",
+	"cloudlet",
+	"clusterdeveloper",
+	"command",
 }
-
-func ExecApiAllowNoConfig() {
-	RunCommandCmd.Flags().AddFlagSet(ExecRequestNoConfigFlagSet)
-	SendLocalRequestCmd.Flags().AddFlagSet(ExecRequestNoConfigFlagSet)
+var ExecRequestOptionalArgs = []string{
+	"containerid",
+	"console",
 }
+var ExecRequestAliasArgs = []string{
+	"developer=appinstkey.appkey.developerkey.name",
+	"appname=appinstkey.appkey.name",
+	"appvers=appinstkey.appkey.version",
+	"cluster=appinstkey.clusterinstkey.clusterkey.name",
+	"operator=appinstkey.clusterinstkey.cloudletkey.operatorkey.name",
+	"cloudlet=appinstkey.clusterinstkey.cloudletkey.name",
+	"clusterdeveloper=appinstkey.clusterinstkey.developer",
+}
+var ExecRequestComments = map[string]string{
+	"developer":        "Organization or Company Name that a Developer is part of",
+	"appname":          "App name",
+	"appvers":          "App version",
+	"cluster":          "Cluster name",
+	"operator":         "Company or Organization name of the operator",
+	"cloudlet":         "Name of the cloudlet",
+	"clusterdeveloper": "Name of Developer that this cluster belongs to",
+	"command":          "Command or Shell",
+	"containerid":      "ContainerID is the name of the target container, if applicable",
+	"offer":            "WebRTC Offer",
+	"answer":           "WebRTC Answer",
+	"err":              "Any error message",
+	"console":          "VM Console",
+	"consoleurl":       "VM Console URL",
+}
+var ExecRequestSpecialArgs = map[string]string{}

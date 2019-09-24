@@ -5,22 +5,16 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "strconv"
 import "github.com/spf13/cobra"
 import "context"
-import "os"
 import "io"
-import "text/tabwriter"
-import "github.com/spf13/pflag"
-import "errors"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -29,211 +23,12 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var ClusterInstApiCmd edgeproto.ClusterInstApiClient
-var ClusterInstInfoApiCmd edgeproto.ClusterInstInfoApiClient
-var ClusterInstIn edgeproto.ClusterInst
-var ClusterInstFlagSet = pflag.NewFlagSet("ClusterInst", pflag.ExitOnError)
-var ClusterInstNoConfigFlagSet = pflag.NewFlagSet("ClusterInstNoConfig", pflag.ExitOnError)
-var ClusterInstInLiveness string
-var ClusterInstInState string
-var ClusterInstInCrmOverride string
-var ClusterInstInIpAccess string
-var ClusterInstInfoIn edgeproto.ClusterInstInfo
-var ClusterInstInfoFlagSet = pflag.NewFlagSet("ClusterInstInfo", pflag.ExitOnError)
-var ClusterInstInfoNoConfigFlagSet = pflag.NewFlagSet("ClusterInstInfoNoConfig", pflag.ExitOnError)
-var ClusterInstInfoInState string
-
-func ClusterInstKeySlicer(in *edgeproto.ClusterInstKey) []string {
-	s := make([]string, 0, 3)
-	s = append(s, in.ClusterKey.Name)
-	s = append(s, in.CloudletKey.OperatorKey.Name)
-	s = append(s, in.CloudletKey.Name)
-	s = append(s, in.Developer)
-	return s
-}
-
-func ClusterInstKeyHeaderSlicer() []string {
-	s := make([]string, 0, 3)
-	s = append(s, "ClusterKey-Name")
-	s = append(s, "CloudletKey-OperatorKey-Name")
-	s = append(s, "CloudletKey-Name")
-	s = append(s, "Developer")
-	return s
-}
-
-func ClusterInstKeyWriteOutputArray(objs []*edgeproto.ClusterInstKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ClusterInstKeyHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(ClusterInstKeySlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func ClusterInstKeyWriteOutputOne(obj *edgeproto.ClusterInstKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ClusterInstKeyHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(ClusterInstKeySlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
-	s := make([]string, 0, 15)
-	if in.Fields == nil {
-		in.Fields = make([]string, 1)
-	}
-	s = append(s, in.Fields[0])
-	s = append(s, in.Key.ClusterKey.Name)
-	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
-	s = append(s, in.Key.CloudletKey.Name)
-	s = append(s, in.Key.Developer)
-	s = append(s, in.Flavor.Name)
-	s = append(s, edgeproto.Liveness_CamelName[int32(in.Liveness)])
-	s = append(s, strconv.FormatBool(in.Auto))
-	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
-	if in.Errors == nil {
-		in.Errors = make([]string, 1)
-	}
-	s = append(s, in.Errors[0])
-	s = append(s, edgeproto.CRMOverride_CamelName[int32(in.CrmOverride)])
-	s = append(s, edgeproto.IpAccess_CamelName[int32(in.IpAccess)])
-	s = append(s, in.AllocatedIp)
-	s = append(s, in.NodeFlavor)
-	s = append(s, in.Deployment)
-	s = append(s, strconv.FormatUint(uint64(in.NumMasters), 10))
-	s = append(s, strconv.FormatUint(uint64(in.NumNodes), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
-	s = append(s, in.Status.TaskName)
-	s = append(s, in.Status.StepName)
-	return s
-}
-
-func ClusterInstHeaderSlicer() []string {
-	s := make([]string, 0, 15)
-	s = append(s, "Fields")
-	s = append(s, "Key-ClusterKey-Name")
-	s = append(s, "Key-CloudletKey-OperatorKey-Name")
-	s = append(s, "Key-CloudletKey-Name")
-	s = append(s, "Key-Developer")
-	s = append(s, "Flavor-Name")
-	s = append(s, "Liveness")
-	s = append(s, "Auto")
-	s = append(s, "State")
-	s = append(s, "Errors")
-	s = append(s, "CrmOverride")
-	s = append(s, "IpAccess")
-	s = append(s, "AllocatedIp")
-	s = append(s, "NodeFlavor")
-	s = append(s, "Deployment")
-	s = append(s, "NumMasters")
-	s = append(s, "NumNodes")
-	s = append(s, "Status-TaskNumber")
-	s = append(s, "Status-MaxTasks")
-	s = append(s, "Status-TaskName")
-	s = append(s, "Status-StepName")
-	return s
-}
-
-func ClusterInstWriteOutputArray(objs []*edgeproto.ClusterInst) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ClusterInstHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(ClusterInstSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func ClusterInstWriteOutputOne(obj *edgeproto.ClusterInst) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ClusterInstHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(ClusterInstSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func ClusterInstInfoSlicer(in *edgeproto.ClusterInstInfo) []string {
-	s := make([]string, 0, 6)
-	if in.Fields == nil {
-		in.Fields = make([]string, 1)
-	}
-	s = append(s, in.Fields[0])
-	s = append(s, in.Key.ClusterKey.Name)
-	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
-	s = append(s, in.Key.CloudletKey.Name)
-	s = append(s, in.Key.Developer)
-	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
-	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
-	if in.Errors == nil {
-		in.Errors = make([]string, 1)
-	}
-	s = append(s, in.Errors[0])
-	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
-	s = append(s, in.Status.TaskName)
-	s = append(s, in.Status.StepName)
-	return s
-}
-
-func ClusterInstInfoHeaderSlicer() []string {
-	s := make([]string, 0, 6)
-	s = append(s, "Fields")
-	s = append(s, "Key-ClusterKey-Name")
-	s = append(s, "Key-CloudletKey-OperatorKey-Name")
-	s = append(s, "Key-CloudletKey-Name")
-	s = append(s, "Key-Developer")
-	s = append(s, "NotifyId")
-	s = append(s, "State")
-	s = append(s, "Errors")
-	s = append(s, "Status-TaskNumber")
-	s = append(s, "Status-MaxTasks")
-	s = append(s, "Status-TaskName")
-	s = append(s, "Status-StepName")
-	return s
-}
-
-func ClusterInstInfoWriteOutputArray(objs []*edgeproto.ClusterInstInfo) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ClusterInstInfoHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(ClusterInstInfoSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func ClusterInstInfoWriteOutputOne(obj *edgeproto.ClusterInstInfo) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(ClusterInstInfoHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(ClusterInstInfoSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
 func ClusterInstHideTags(in *edgeproto.ClusterInst) {
-	if cmdsup.HideTags == "" {
+	if cli.HideTags == "" {
 		return
 	}
 	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
@@ -254,11 +49,11 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 }
 
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
-	if cmdsup.HideTags == "" {
+	if cli.HideTags == "" {
 		return
 	}
 	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
@@ -266,20 +61,30 @@ func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
 	}
 }
 
-var CreateClusterInstCmd = &cobra.Command{
-	Use: "CreateClusterInst",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseClusterInstEnums()
-		if err != nil {
-			return fmt.Errorf("CreateClusterInst failed: %s", err.Error())
-		}
-		return CreateClusterInst(&ClusterInstIn)
-	},
+var ClusterInstApiCmd edgeproto.ClusterInstApiClient
+
+var CreateClusterInstCmd = &cli.Command{
+	Use:          "CreateClusterInst",
+	RequiredArgs: strings.Join(ClusterInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(ClusterInstOptionalArgs, " "),
+	AliasArgs:    strings.Join(ClusterInstAliasArgs, " "),
+	SpecialArgs:  &ClusterInstSpecialArgs,
+	Comments:     ClusterInstComments,
+	ReqData:      &edgeproto.ClusterInst{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runCreateClusterInst,
 }
 
-func CreateClusterInst(in *edgeproto.ClusterInst) error {
+func runCreateClusterInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ClusterInst)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return CreateClusterInst(c, obj)
+}
+
+func CreateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 	if ClusterInstApiCmd == nil {
 		return fmt.Errorf("ClusterInstApi client not initialized")
 	}
@@ -301,18 +106,19 @@ func CreateClusterInst(in *edgeproto.ClusterInst) error {
 		if err != nil {
 			return fmt.Errorf("CreateClusterInst recv failed: %s", err.Error())
 		}
-		ResultWriteOutputOne(obj)
+		c.WriteOutput(obj, cli.OutputFormat)
 	}
 	return nil
 }
 
-func CreateClusterInsts(data []edgeproto.ClusterInst, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func CreateClusterInsts(c *cli.Command, data []edgeproto.ClusterInst, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("CreateClusterInst %v\n", data[ii])
-		myerr := CreateClusterInst(&data[ii])
+		myerr := CreateClusterInst(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -320,20 +126,28 @@ func CreateClusterInsts(data []edgeproto.ClusterInst, err *error) {
 	}
 }
 
-var DeleteClusterInstCmd = &cobra.Command{
-	Use: "DeleteClusterInst",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseClusterInstEnums()
-		if err != nil {
-			return fmt.Errorf("DeleteClusterInst failed: %s", err.Error())
-		}
-		return DeleteClusterInst(&ClusterInstIn)
-	},
+var DeleteClusterInstCmd = &cli.Command{
+	Use:          "DeleteClusterInst",
+	RequiredArgs: strings.Join(ClusterInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(ClusterInstOptionalArgs, " "),
+	AliasArgs:    strings.Join(ClusterInstAliasArgs, " "),
+	SpecialArgs:  &ClusterInstSpecialArgs,
+	Comments:     ClusterInstComments,
+	ReqData:      &edgeproto.ClusterInst{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runDeleteClusterInst,
 }
 
-func DeleteClusterInst(in *edgeproto.ClusterInst) error {
+func runDeleteClusterInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ClusterInst)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return DeleteClusterInst(c, obj)
+}
+
+func DeleteClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 	if ClusterInstApiCmd == nil {
 		return fmt.Errorf("ClusterInstApi client not initialized")
 	}
@@ -355,18 +169,19 @@ func DeleteClusterInst(in *edgeproto.ClusterInst) error {
 		if err != nil {
 			return fmt.Errorf("DeleteClusterInst recv failed: %s", err.Error())
 		}
-		ResultWriteOutputOne(obj)
+		c.WriteOutput(obj, cli.OutputFormat)
 	}
 	return nil
 }
 
-func DeleteClusterInsts(data []edgeproto.ClusterInst, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func DeleteClusterInsts(c *cli.Command, data []edgeproto.ClusterInst, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("DeleteClusterInst %v\n", data[ii])
-		myerr := DeleteClusterInst(&data[ii])
+		myerr := DeleteClusterInst(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -374,21 +189,29 @@ func DeleteClusterInsts(data []edgeproto.ClusterInst, err *error) {
 	}
 }
 
-var UpdateClusterInstCmd = &cobra.Command{
-	Use: "UpdateClusterInst",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseClusterInstEnums()
-		if err != nil {
-			return fmt.Errorf("UpdateClusterInst failed: %s", err.Error())
-		}
-		ClusterInstSetFields()
-		return UpdateClusterInst(&ClusterInstIn)
-	},
+var UpdateClusterInstCmd = &cli.Command{
+	Use:          "UpdateClusterInst",
+	RequiredArgs: strings.Join(ClusterInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(ClusterInstOptionalArgs, " "),
+	AliasArgs:    strings.Join(ClusterInstAliasArgs, " "),
+	SpecialArgs:  &ClusterInstSpecialArgs,
+	Comments:     ClusterInstComments,
+	ReqData:      &edgeproto.ClusterInst{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runUpdateClusterInst,
 }
 
-func UpdateClusterInst(in *edgeproto.ClusterInst) error {
+func runUpdateClusterInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ClusterInst)
+	jsonMap, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	return UpdateClusterInst(c, obj)
+}
+
+func UpdateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 	if ClusterInstApiCmd == nil {
 		return fmt.Errorf("ClusterInstApi client not initialized")
 	}
@@ -410,18 +233,19 @@ func UpdateClusterInst(in *edgeproto.ClusterInst) error {
 		if err != nil {
 			return fmt.Errorf("UpdateClusterInst recv failed: %s", err.Error())
 		}
-		ResultWriteOutputOne(obj)
+		c.WriteOutput(obj, cli.OutputFormat)
 	}
 	return nil
 }
 
-func UpdateClusterInsts(data []edgeproto.ClusterInst, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func UpdateClusterInsts(c *cli.Command, data []edgeproto.ClusterInst, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("UpdateClusterInst %v\n", data[ii])
-		myerr := UpdateClusterInst(&data[ii])
+		myerr := UpdateClusterInst(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -429,20 +253,27 @@ func UpdateClusterInsts(data []edgeproto.ClusterInst, err *error) {
 	}
 }
 
-var ShowClusterInstCmd = &cobra.Command{
-	Use: "ShowClusterInst",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseClusterInstEnums()
-		if err != nil {
-			return fmt.Errorf("ShowClusterInst failed: %s", err.Error())
-		}
-		return ShowClusterInst(&ClusterInstIn)
-	},
+var ShowClusterInstCmd = &cli.Command{
+	Use:          "ShowClusterInst",
+	OptionalArgs: strings.Join(append(ClusterInstRequiredArgs, ClusterInstOptionalArgs...), " "),
+	AliasArgs:    strings.Join(ClusterInstAliasArgs, " "),
+	SpecialArgs:  &ClusterInstSpecialArgs,
+	Comments:     ClusterInstComments,
+	ReqData:      &edgeproto.ClusterInst{},
+	ReplyData:    &edgeproto.ClusterInst{},
+	Run:          runShowClusterInst,
 }
 
-func ShowClusterInst(in *edgeproto.ClusterInst) error {
+func runShowClusterInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ClusterInst)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowClusterInst(c, obj)
+}
+
+func ShowClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 	if ClusterInstApiCmd == nil {
 		return fmt.Errorf("ClusterInstApi client not initialized")
 	}
@@ -471,17 +302,18 @@ func ShowClusterInst(in *edgeproto.ClusterInst) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	ClusterInstWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowClusterInsts(data []edgeproto.ClusterInst, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowClusterInsts(c *cli.Command, data []edgeproto.ClusterInst, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowClusterInst %v\n", data[ii])
-		myerr := ShowClusterInst(&data[ii])
+		myerr := ShowClusterInst(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -490,26 +322,35 @@ func ShowClusterInsts(data []edgeproto.ClusterInst, err *error) {
 }
 
 var ClusterInstApiCmds = []*cobra.Command{
-	CreateClusterInstCmd,
-	DeleteClusterInstCmd,
-	UpdateClusterInstCmd,
-	ShowClusterInstCmd,
+	CreateClusterInstCmd.GenCmd(),
+	DeleteClusterInstCmd.GenCmd(),
+	UpdateClusterInstCmd.GenCmd(),
+	ShowClusterInstCmd.GenCmd(),
 }
 
-var ShowClusterInstInfoCmd = &cobra.Command{
-	Use: "ShowClusterInstInfo",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseClusterInstInfoEnums()
-		if err != nil {
-			return fmt.Errorf("ShowClusterInstInfo failed: %s", err.Error())
-		}
-		return ShowClusterInstInfo(&ClusterInstInfoIn)
-	},
+var ClusterInstInfoApiCmd edgeproto.ClusterInstInfoApiClient
+
+var ShowClusterInstInfoCmd = &cli.Command{
+	Use:          "ShowClusterInstInfo",
+	OptionalArgs: strings.Join(append(ClusterInstInfoRequiredArgs, ClusterInstInfoOptionalArgs...), " "),
+	AliasArgs:    strings.Join(ClusterInstInfoAliasArgs, " "),
+	SpecialArgs:  &ClusterInstInfoSpecialArgs,
+	Comments:     ClusterInstInfoComments,
+	ReqData:      &edgeproto.ClusterInstInfo{},
+	ReplyData:    &edgeproto.ClusterInstInfo{},
+	Run:          runShowClusterInstInfo,
 }
 
-func ShowClusterInstInfo(in *edgeproto.ClusterInstInfo) error {
+func runShowClusterInstInfo(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ClusterInstInfo)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowClusterInstInfo(c, obj)
+}
+
+func ShowClusterInstInfo(c *cli.Command, in *edgeproto.ClusterInstInfo) error {
 	if ClusterInstInfoApiCmd == nil {
 		return fmt.Errorf("ClusterInstInfoApi client not initialized")
 	}
@@ -538,17 +379,18 @@ func ShowClusterInstInfo(in *edgeproto.ClusterInstInfo) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	ClusterInstInfoWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowClusterInstInfos(data []edgeproto.ClusterInstInfo, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowClusterInstInfos(c *cli.Command, data []edgeproto.ClusterInstInfo, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowClusterInstInfo %v\n", data[ii])
-		myerr := ShowClusterInstInfo(&data[ii])
+		myerr := ShowClusterInstInfo(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -557,262 +399,93 @@ func ShowClusterInstInfos(data []edgeproto.ClusterInstInfo, err *error) {
 }
 
 var ClusterInstInfoApiCmds = []*cobra.Command{
-	ShowClusterInstInfoCmd,
+	ShowClusterInstInfoCmd.GenCmd(),
 }
 
-func init() {
-	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
-	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
-	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
-	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.Developer, "key-developer", "", "Key.Developer")
-	ClusterInstFlagSet.StringVar(&ClusterInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
-	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
-	ClusterInstNoConfigFlagSet.BoolVar(&ClusterInstIn.Auto, "auto", false, "Auto")
-	ClusterInstFlagSet.StringVar(&ClusterInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
-	ClusterInstFlagSet.StringVar(&ClusterInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCrmErrors IgnoreCrm IgnoreTransientState IgnoreCrmAndTransientState]")
-	ClusterInstFlagSet.StringVar(&ClusterInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
-	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
-	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.NodeFlavor, "nodeflavor", "", "NodeFlavor")
-	ClusterInstFlagSet.StringVar(&ClusterInstIn.Deployment, "deployment", "", "Deployment")
-	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumMasters, "nummasters", 0, "NumMasters")
-	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumNodes, "numnodes", 0, "NumNodes")
-	ClusterInstNoConfigFlagSet.Uint32Var(&ClusterInstIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
-	ClusterInstNoConfigFlagSet.Uint32Var(&ClusterInstIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
-	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
-	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.Status.StepName, "status-stepname", "", "Status.StepName")
-	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
-	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
-	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
-	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.Developer, "key-developer", "", "Key.Developer")
-	ClusterInstInfoFlagSet.Int64Var(&ClusterInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
-	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
-	ClusterInstInfoFlagSet.Uint32Var(&ClusterInstInfoIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
-	ClusterInstInfoFlagSet.Uint32Var(&ClusterInstInfoIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
-	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
-	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Status.StepName, "status-stepname", "", "Status.StepName")
-	CreateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
-	DeleteClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
-	UpdateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
-	ShowClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
-	ShowClusterInstInfoCmd.Flags().AddFlagSet(ClusterInstInfoFlagSet)
+var ClusterInstKeyRequiredArgs = []string{}
+var ClusterInstKeyOptionalArgs = []string{
+	"clusterkey.name",
+	"cloudletkey.operatorkey.name",
+	"cloudletkey.name",
+	"developer",
 }
-
-func ClusterInstApiAllowNoConfig() {
-	CreateClusterInstCmd.Flags().AddFlagSet(ClusterInstNoConfigFlagSet)
-	DeleteClusterInstCmd.Flags().AddFlagSet(ClusterInstNoConfigFlagSet)
-	UpdateClusterInstCmd.Flags().AddFlagSet(ClusterInstNoConfigFlagSet)
-	ShowClusterInstCmd.Flags().AddFlagSet(ClusterInstNoConfigFlagSet)
+var ClusterInstKeyAliasArgs = []string{}
+var ClusterInstKeyComments = map[string]string{
+	"clusterkey.name":              "Cluster name",
+	"cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"cloudletkey.name":             "Name of the cloudlet",
+	"developer":                    "Name of Developer that this cluster belongs to",
 }
-
-func ClusterInstInfoApiAllowNoConfig() {
-	ShowClusterInstInfoCmd.Flags().AddFlagSet(ClusterInstInfoNoConfigFlagSet)
+var ClusterInstKeySpecialArgs = map[string]string{}
+var ClusterInstRequiredArgs = []string{
+	"cluster",
+	"operator",
+	"cloudlet",
+	"developer",
 }
-
-func ClusterInstSetFields() {
-	ClusterInstIn.Fields = make([]string, 0)
-	if ClusterInstFlagSet.Lookup("key-clusterkey-name").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "2.1.1")
-	}
-	if ClusterInstFlagSet.Lookup("key-cloudletkey-operatorkey-name").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "2.2.1.1")
-	}
-	if ClusterInstFlagSet.Lookup("key-cloudletkey-name").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "2.2.2")
-	}
-	if ClusterInstFlagSet.Lookup("key-developer").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "2.3")
-	}
-	if ClusterInstFlagSet.Lookup("flavor-name").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "3.1")
-	}
-	if ClusterInstNoConfigFlagSet.Lookup("liveness").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "9")
-	}
-	if ClusterInstNoConfigFlagSet.Lookup("auto").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "10")
-	}
-	if ClusterInstFlagSet.Lookup("state").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "4")
-	}
-	if ClusterInstFlagSet.Lookup("crmoverride").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "6")
-	}
-	if ClusterInstFlagSet.Lookup("ipaccess").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "7")
-	}
-	if ClusterInstNoConfigFlagSet.Lookup("allocatedip").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "8")
-	}
-	if ClusterInstNoConfigFlagSet.Lookup("nodeflavor").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "11")
-	}
-	if ClusterInstFlagSet.Lookup("deployment").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "15")
-	}
-	if ClusterInstFlagSet.Lookup("nummasters").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "13")
-	}
-	if ClusterInstFlagSet.Lookup("numnodes").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "14")
-	}
-	if ClusterInstNoConfigFlagSet.Lookup("status-tasknumber").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "16.1")
-	}
-	if ClusterInstNoConfigFlagSet.Lookup("status-maxtasks").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "16.2")
-	}
-	if ClusterInstNoConfigFlagSet.Lookup("status-taskname").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "16.3")
-	}
-	if ClusterInstNoConfigFlagSet.Lookup("status-stepname").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "16.4")
-	}
+var ClusterInstOptionalArgs = []string{
+	"flavor",
+	"state",
+	"errors",
+	"crmoverride",
+	"ipaccess",
+	"deployment",
+	"nummasters",
+	"numnodes",
 }
-
-func ClusterInstInfoSetFields() {
-	ClusterInstInfoIn.Fields = make([]string, 0)
-	if ClusterInstInfoFlagSet.Lookup("key-clusterkey-name").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "2.1.1")
-	}
-	if ClusterInstInfoFlagSet.Lookup("key-cloudletkey-operatorkey-name").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "2.2.1.1")
-	}
-	if ClusterInstInfoFlagSet.Lookup("key-cloudletkey-name").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "2.2.2")
-	}
-	if ClusterInstInfoFlagSet.Lookup("key-developer").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "2.3")
-	}
-	if ClusterInstInfoFlagSet.Lookup("notifyid").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "3")
-	}
-	if ClusterInstInfoFlagSet.Lookup("state").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "4")
-	}
-	if ClusterInstInfoNoConfigFlagSet.Lookup("status-tasknumber").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "6.1")
-	}
-	if ClusterInstInfoNoConfigFlagSet.Lookup("status-maxtasks").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "6.2")
-	}
-	if ClusterInstInfoNoConfigFlagSet.Lookup("status-taskname").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "6.3")
-	}
-	if ClusterInstInfoNoConfigFlagSet.Lookup("status-stepname").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "6.4")
-	}
+var ClusterInstAliasArgs = []string{
+	"cluster=key.clusterkey.name",
+	"operator=key.cloudletkey.operatorkey.name",
+	"cloudlet=key.cloudletkey.name",
+	"developer=key.developer",
+	"flavor=flavor.name",
 }
-
-func parseClusterInstEnums() error {
-	if ClusterInstInLiveness != "" {
-		switch ClusterInstInLiveness {
-		case "LivenessUnknown":
-			ClusterInstIn.Liveness = edgeproto.Liveness(0)
-		case "LivenessStatic":
-			ClusterInstIn.Liveness = edgeproto.Liveness(1)
-		case "LivenessDynamic":
-			ClusterInstIn.Liveness = edgeproto.Liveness(2)
-		default:
-			return errors.New("Invalid value for ClusterInstInLiveness")
-		}
-	}
-	if ClusterInstInState != "" {
-		switch ClusterInstInState {
-		case "TrackedStateUnknown":
-			ClusterInstIn.State = edgeproto.TrackedState(0)
-		case "NotPresent":
-			ClusterInstIn.State = edgeproto.TrackedState(1)
-		case "CreateRequested":
-			ClusterInstIn.State = edgeproto.TrackedState(2)
-		case "Creating":
-			ClusterInstIn.State = edgeproto.TrackedState(3)
-		case "CreateError":
-			ClusterInstIn.State = edgeproto.TrackedState(4)
-		case "Ready":
-			ClusterInstIn.State = edgeproto.TrackedState(5)
-		case "UpdateRequested":
-			ClusterInstIn.State = edgeproto.TrackedState(6)
-		case "Updating":
-			ClusterInstIn.State = edgeproto.TrackedState(7)
-		case "UpdateError":
-			ClusterInstIn.State = edgeproto.TrackedState(8)
-		case "DeleteRequested":
-			ClusterInstIn.State = edgeproto.TrackedState(9)
-		case "Deleting":
-			ClusterInstIn.State = edgeproto.TrackedState(10)
-		case "DeleteError":
-			ClusterInstIn.State = edgeproto.TrackedState(11)
-		case "DeletePrepare":
-			ClusterInstIn.State = edgeproto.TrackedState(12)
-		default:
-			return errors.New("Invalid value for ClusterInstInState")
-		}
-	}
-	if ClusterInstInCrmOverride != "" {
-		switch ClusterInstInCrmOverride {
-		case "NoOverride":
-			ClusterInstIn.CrmOverride = edgeproto.CRMOverride(0)
-		case "IgnoreCrmErrors":
-			ClusterInstIn.CrmOverride = edgeproto.CRMOverride(1)
-		case "IgnoreCrm":
-			ClusterInstIn.CrmOverride = edgeproto.CRMOverride(2)
-		case "IgnoreTransientState":
-			ClusterInstIn.CrmOverride = edgeproto.CRMOverride(3)
-		case "IgnoreCrmAndTransientState":
-			ClusterInstIn.CrmOverride = edgeproto.CRMOverride(4)
-		default:
-			return errors.New("Invalid value for ClusterInstInCrmOverride")
-		}
-	}
-	if ClusterInstInIpAccess != "" {
-		switch ClusterInstInIpAccess {
-		case "IpAccessUnknown":
-			ClusterInstIn.IpAccess = edgeproto.IpAccess(0)
-		case "IpAccessDedicated":
-			ClusterInstIn.IpAccess = edgeproto.IpAccess(1)
-		case "IpAccessDedicatedOrShared":
-			ClusterInstIn.IpAccess = edgeproto.IpAccess(2)
-		case "IpAccessShared":
-			ClusterInstIn.IpAccess = edgeproto.IpAccess(3)
-		default:
-			return errors.New("Invalid value for ClusterInstInIpAccess")
-		}
-	}
-	return nil
+var ClusterInstComments = map[string]string{
+	"cluster":     "Cluster name",
+	"operator":    "Company or Organization name of the operator",
+	"cloudlet":    "Name of the cloudlet",
+	"developer":   "Name of Developer that this cluster belongs to",
+	"flavor":      "Flavor name",
+	"liveness":    "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
+	"auto":        "Auto is set to true when automatically created by back-end (internal use only)",
+	"state":       "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare",
+	"errors":      "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
+	"crmoverride": "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+	"ipaccess":    "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessDedicatedOrShared, IpAccessShared",
+	"allocatedip": "Allocated IP for dedicated access",
+	"nodeflavor":  "Cloudlet specific node flavor",
+	"deployment":  "Deployment type (kubernetes or docker)",
+	"nummasters":  "Number of k8s masters (In case of docker deployment, this field is not required)",
+	"numnodes":    "Number of k8s nodes (In case of docker deployment, this field is not required)",
 }
-
-func parseClusterInstInfoEnums() error {
-	if ClusterInstInfoInState != "" {
-		switch ClusterInstInfoInState {
-		case "TrackedStateUnknown":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(0)
-		case "NotPresent":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(1)
-		case "CreateRequested":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(2)
-		case "Creating":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(3)
-		case "CreateError":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(4)
-		case "Ready":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(5)
-		case "UpdateRequested":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(6)
-		case "Updating":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(7)
-		case "UpdateError":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(8)
-		case "DeleteRequested":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(9)
-		case "Deleting":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(10)
-		case "DeleteError":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(11)
-		case "DeletePrepare":
-			ClusterInstInfoIn.State = edgeproto.TrackedState(12)
-		default:
-			return errors.New("Invalid value for ClusterInstInfoInState")
-		}
-	}
-	return nil
+var ClusterInstSpecialArgs = map[string]string{
+	"errors": "StringArray",
+}
+var ClusterInstInfoRequiredArgs = []string{
+	"key.clusterkey.name",
+	"key.cloudletkey.operatorkey.name",
+	"key.cloudletkey.name",
+	"key.developer",
+}
+var ClusterInstInfoOptionalArgs = []string{
+	"notifyid",
+	"state",
+	"errors",
+	"status.tasknumber",
+	"status.maxtasks",
+	"status.taskname",
+	"status.stepname",
+}
+var ClusterInstInfoAliasArgs = []string{}
+var ClusterInstInfoComments = map[string]string{
+	"key.clusterkey.name":              "Cluster name",
+	"key.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"key.cloudletkey.name":             "Name of the cloudlet",
+	"key.developer":                    "Name of Developer that this cluster belongs to",
+	"notifyid":                         "Id of client assigned by server (internal use only)",
+	"state":                            "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare",
+	"errors":                           "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
+}
+var ClusterInstInfoSpecialArgs = map[string]string{
+	"errors": "StringArray",
 }

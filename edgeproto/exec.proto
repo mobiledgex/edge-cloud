@@ -3,7 +3,6 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "gogoproto/gogo.proto";
 import "app_inst.proto";
 
@@ -26,8 +25,9 @@ message ExecRequest {
   string console_url = 8 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
-  option (protocmd.noconfig) = "Offer,Answer,Err,ConsoleUrl";
-  option (protocmd.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name";
+  option (protogen.noconfig) = "Offer,Answer,Err,ConsoleUrl";
+  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name";
+  option (protogen.also_required) = "AppInstKey,Command";
 }
 
 service ExecApi {

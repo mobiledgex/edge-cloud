@@ -10,6 +10,7 @@ import (
 	"path"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
@@ -18,6 +19,7 @@ import (
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	"github.com/gogo/protobuf/vanity"
 	"github.com/gogo/protobuf/vanity/command"
+	"github.com/mobiledgex/edge-cloud/protogen"
 )
 
 const AutoGenComment = "// Auto-generated code: DO NOT EDIT"
@@ -46,6 +48,8 @@ type PluginSupport struct {
 	// For plugins that are generating files to separate directory
 	// and package, this is not needed.
 	PbGoPackage string
+	// Lookup by file and location of comments
+	Comments map[string]map[string]*descriptor.SourceCodeInfo_Location
 }
 
 func (s *PluginSupport) Init(req *plugin.CodeGeneratorRequest) {
@@ -63,6 +67,7 @@ func (s *PluginSupport) Init(req *plugin.CodeGeneratorRequest) {
 	s.ProtoFiles = make([]*descriptor.FileDescriptorProto, 0)
 	s.ProtoFilesGen = make(map[string]struct{})
 	s.MessageTypesGen = make(map[string]struct{})
+	s.Comments = make(map[string]map[string]*descriptor.SourceCodeInfo_Location)
 	if req != nil {
 		for _, filename := range req.FileToGenerate {
 			s.ProtoFilesGen[filename] = struct{}{}
@@ -73,6 +78,21 @@ func (s *PluginSupport) Init(req *plugin.CodeGeneratorRequest) {
 				for _, desc := range protofile.GetMessageType() {
 					s.MessageTypesGen["."+*protofile.Package+"."+*desc.Name] = struct{}{}
 				}
+			}
+			comments := make(map[string]*descriptor.SourceCodeInfo_Location)
+			// This replicates what is done in the generator, but
+			// allows us access to comments from all files, which
+			// the generator does not provide.
+			s.Comments[protofile.GetName()] = comments
+			for _, loc := range protofile.GetSourceCodeInfo().GetLocation() {
+				if loc.LeadingComments == nil {
+					continue
+				}
+				var p []string
+				for _, n := range loc.Path {
+					p = append(p, strconv.Itoa(int(n)))
+				}
+				comments[strings.Join(p, ",")] = loc
 			}
 		}
 	}
@@ -144,6 +164,20 @@ func (s *PluginSupport) PrintUsedImports(g *generator.Generator) {
 		}
 		g.PrintImport(pkg, ipath)
 	}
+}
+
+// See generator.GetComments(). The path is a comma separated list of integers.
+func (s *PluginSupport) GetComments(file *descriptor.FileDescriptorProto, path string) string {
+	comments, ok := s.Comments[file.GetName()]
+	if !ok {
+		return ""
+	}
+	loc, ok := comments[path]
+	if !ok {
+		return ""
+	}
+	text := strings.TrimSuffix(loc.GetLeadingComments(), "\n")
+	return text
 }
 
 // GetDesc returns the Descriptor based on the protoc type name
@@ -275,6 +309,10 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 	return false
 }
 
+func GetObjAndKey(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_ObjAndKey, false)
+}
+
 func HasHideTags(g *generator.Generator, desc *generator.Descriptor, hideTag *proto.ExtensionDesc, visited []*generator.Descriptor) bool {
 	if WasVisited(desc, visited) {
 		return false
@@ -307,12 +345,14 @@ func GetMessageKey(message *descriptor.DescriptorProto) *descriptor.FieldDescrip
 	return nil
 }
 
-func (s *PluginSupport) GetMessageKeyName(g *generator.Generator, message *descriptor.DescriptorProto) (string, error) {
-	field := GetMessageKey(message)
-	if field == nil {
-		return "", fmt.Errorf("No Key field for %s", *message.Name)
+func (s *PluginSupport) GetMessageKeyType(g *generator.Generator, desc *generator.Descriptor) (string, error) {
+	message := desc.DescriptorProto
+	if field := GetMessageKey(message); field != nil {
+		return s.GoType(g, field), nil
+	} else if GetObjAndKey(message) {
+		return s.FQTypeName(g, desc), nil
 	}
-	return s.GoType(g, field), nil
+	return "", fmt.Errorf("No Key field for %s", *message.Name)
 }
 
 type MapType struct {

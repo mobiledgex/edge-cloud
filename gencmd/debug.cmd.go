@@ -15,14 +15,9 @@ package gencmd
 
 import log "github.com/mobiledgex/edge-cloud/log"
 import "strings"
-import "strconv"
 import "github.com/spf13/cobra"
 import "context"
-import "os"
-import "text/tabwriter"
-import "github.com/spf13/pflag"
-import "errors"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -35,114 +30,29 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var DebugApiCmd log.DebugApiClient
-var DebugLevelsIn log.DebugLevels
-var DebugLevelsFlagSet = pflag.NewFlagSet("DebugLevels", pflag.ExitOnError)
-var DebugLevelsNoConfigFlagSet = pflag.NewFlagSet("DebugLevelsNoConfig", pflag.ExitOnError)
-var DebugLevelsInLevels string
-var DebugLevelStrings = []string{
-	"Etcd",
-	"Api",
-	"Notify",
-	"Dmedb",
-	"Dmereq",
-	"Locapi",
-	"Mexos",
-	"Metrics",
-	"Upgrade",
-	"Info",
-	"Sampled",
+
+var EnableDebugLevelsCmd = &cli.Command{
+	Use:          "EnableDebugLevels",
+	RequiredArgs: strings.Join(DebugLevelsRequiredArgs, " "),
+	OptionalArgs: strings.Join(DebugLevelsOptionalArgs, " "),
+	AliasArgs:    strings.Join(DebugLevelsAliasArgs, " "),
+	SpecialArgs:  &DebugLevelsSpecialArgs,
+	Comments:     DebugLevelsComments,
+	ReqData:      &log.DebugLevels{},
+	ReplyData:    &log.DebugResult{},
+	Run:          runEnableDebugLevels,
 }
 
-func DebugLevelsSlicer(in *log.DebugLevels) []string {
-	s := make([]string, 0, 1)
-	if in.Levels == nil {
-		in.Levels = make([]log.DebugLevel, 1)
+func runEnableDebugLevels(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*log.DebugLevels)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
 	}
-	s = append(s, log.DebugLevel_CamelName[int32(in.Levels[0])])
-	return s
+	return EnableDebugLevels(c, obj)
 }
 
-func DebugLevelsHeaderSlicer() []string {
-	s := make([]string, 0, 1)
-	s = append(s, "Levels")
-	return s
-}
-
-func DebugLevelsWriteOutputArray(objs []*log.DebugLevels) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(DebugLevelsHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(DebugLevelsSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func DebugLevelsWriteOutputOne(obj *log.DebugLevels) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(DebugLevelsHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(DebugLevelsSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func DebugResultSlicer(in *log.DebugResult) []string {
-	s := make([]string, 0, 2)
-	s = append(s, in.Status)
-	s = append(s, strconv.FormatUint(uint64(in.Code), 10))
-	return s
-}
-
-func DebugResultHeaderSlicer() []string {
-	s := make([]string, 0, 2)
-	s = append(s, "Status")
-	s = append(s, "Code")
-	return s
-}
-
-func DebugResultWriteOutputArray(objs []*log.DebugResult) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(DebugResultHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(DebugResultSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func DebugResultWriteOutputOne(obj *log.DebugResult) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(DebugResultHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(DebugResultSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-
-var EnableDebugLevelsCmd = &cobra.Command{
-	Use: "EnableDebugLevels",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseDebugLevelsEnums()
-		if err != nil {
-			return fmt.Errorf("EnableDebugLevels failed: %s", err.Error())
-		}
-		return EnableDebugLevels(&DebugLevelsIn)
-	},
-}
-
-func EnableDebugLevels(in *log.DebugLevels) error {
+func EnableDebugLevels(c *cli.Command, in *log.DebugLevels) error {
 	if DebugApiCmd == nil {
 		return fmt.Errorf("DebugApi client not initialized")
 	}
@@ -156,17 +66,18 @@ func EnableDebugLevels(in *log.DebugLevels) error {
 		}
 		return fmt.Errorf("EnableDebugLevels failed: %s", errstr)
 	}
-	DebugResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func EnableDebugLevelss(data []log.DebugLevels, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func EnableDebugLevelss(c *cli.Command, data []log.DebugLevels, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("EnableDebugLevels %v\n", data[ii])
-		myerr := EnableDebugLevels(&data[ii])
+		myerr := EnableDebugLevels(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -174,20 +85,28 @@ func EnableDebugLevelss(data []log.DebugLevels, err *error) {
 	}
 }
 
-var DisableDebugLevelsCmd = &cobra.Command{
-	Use: "DisableDebugLevels",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseDebugLevelsEnums()
-		if err != nil {
-			return fmt.Errorf("DisableDebugLevels failed: %s", err.Error())
-		}
-		return DisableDebugLevels(&DebugLevelsIn)
-	},
+var DisableDebugLevelsCmd = &cli.Command{
+	Use:          "DisableDebugLevels",
+	RequiredArgs: strings.Join(DebugLevelsRequiredArgs, " "),
+	OptionalArgs: strings.Join(DebugLevelsOptionalArgs, " "),
+	AliasArgs:    strings.Join(DebugLevelsAliasArgs, " "),
+	SpecialArgs:  &DebugLevelsSpecialArgs,
+	Comments:     DebugLevelsComments,
+	ReqData:      &log.DebugLevels{},
+	ReplyData:    &log.DebugResult{},
+	Run:          runDisableDebugLevels,
 }
 
-func DisableDebugLevels(in *log.DebugLevels) error {
+func runDisableDebugLevels(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*log.DebugLevels)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return DisableDebugLevels(c, obj)
+}
+
+func DisableDebugLevels(c *cli.Command, in *log.DebugLevels) error {
 	if DebugApiCmd == nil {
 		return fmt.Errorf("DebugApi client not initialized")
 	}
@@ -201,17 +120,18 @@ func DisableDebugLevels(in *log.DebugLevels) error {
 		}
 		return fmt.Errorf("DisableDebugLevels failed: %s", errstr)
 	}
-	DebugResultWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func DisableDebugLevelss(data []log.DebugLevels, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func DisableDebugLevelss(c *cli.Command, data []log.DebugLevels, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("DisableDebugLevels %v\n", data[ii])
-		myerr := DisableDebugLevels(&data[ii])
+		myerr := DisableDebugLevels(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -219,20 +139,27 @@ func DisableDebugLevelss(data []log.DebugLevels, err *error) {
 	}
 }
 
-var ShowDebugLevelsCmd = &cobra.Command{
-	Use: "ShowDebugLevels",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseDebugLevelsEnums()
-		if err != nil {
-			return fmt.Errorf("ShowDebugLevels failed: %s", err.Error())
-		}
-		return ShowDebugLevels(&DebugLevelsIn)
-	},
+var ShowDebugLevelsCmd = &cli.Command{
+	Use:          "ShowDebugLevels",
+	OptionalArgs: strings.Join(append(DebugLevelsRequiredArgs, DebugLevelsOptionalArgs...), " "),
+	AliasArgs:    strings.Join(DebugLevelsAliasArgs, " "),
+	SpecialArgs:  &DebugLevelsSpecialArgs,
+	Comments:     DebugLevelsComments,
+	ReqData:      &log.DebugLevels{},
+	ReplyData:    &log.DebugLevels{},
+	Run:          runShowDebugLevels,
 }
 
-func ShowDebugLevels(in *log.DebugLevels) error {
+func runShowDebugLevels(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*log.DebugLevels)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowDebugLevels(c, obj)
+}
+
+func ShowDebugLevels(c *cli.Command, in *log.DebugLevels) error {
 	if DebugApiCmd == nil {
 		return fmt.Errorf("DebugApi client not initialized")
 	}
@@ -246,17 +173,18 @@ func ShowDebugLevels(in *log.DebugLevels) error {
 		}
 		return fmt.Errorf("ShowDebugLevels failed: %s", errstr)
 	}
-	DebugLevelsWriteOutputOne(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
-func ShowDebugLevelss(data []log.DebugLevels, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowDebugLevelss(c *cli.Command, data []log.DebugLevels, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowDebugLevels %v\n", data[ii])
-		myerr := ShowDebugLevels(&data[ii])
+		myerr := ShowDebugLevels(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -265,53 +193,25 @@ func ShowDebugLevelss(data []log.DebugLevels, err *error) {
 }
 
 var DebugApiCmds = []*cobra.Command{
-	EnableDebugLevelsCmd,
-	DisableDebugLevelsCmd,
-	ShowDebugLevelsCmd,
+	EnableDebugLevelsCmd.GenCmd(),
+	DisableDebugLevelsCmd.GenCmd(),
+	ShowDebugLevelsCmd.GenCmd(),
 }
 
-func init() {
-	EnableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsFlagSet)
-	DisableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsFlagSet)
-	ShowDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsFlagSet)
+var DebugLevelsRequiredArgs = []string{}
+var DebugLevelsOptionalArgs = []string{
+	"levels",
 }
-
-func DebugApiAllowNoConfig() {
-	EnableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsNoConfigFlagSet)
-	DisableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsNoConfigFlagSet)
-	ShowDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsNoConfigFlagSet)
+var DebugLevelsAliasArgs = []string{}
+var DebugLevelsComments = map[string]string{
+	"levels": "comma separated list of debug level names, comma-separated list of Etcd, Api, Notify, Dmedb, Dmereq, Locapi, Mexos, Metrics, Upgrade, Info, Sampled",
 }
-
-func parseDebugLevelsEnums() error {
-	if DebugLevelsInLevels != "" {
-		for _, str := range strings.Split(DebugLevelsInLevels, ",") {
-			switch str {
-			case "Etcd":
-				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(0))
-			case "Api":
-				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(1))
-			case "Notify":
-				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(2))
-			case "Dmedb":
-				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(3))
-			case "Dmereq":
-				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(4))
-			case "Locapi":
-				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(5))
-			case "Mexos":
-				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(6))
-			case "Metrics":
-				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(7))
-			case "Upgrade":
-				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(8))
-			case "Info":
-				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(9))
-			case "Sampled":
-				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(10))
-			default:
-				return errors.New("Invalid value for DebugLevelsInLevels")
-			}
-		}
-	}
-	return nil
+var DebugLevelsSpecialArgs = map[string]string{}
+var DebugResultRequiredArgs = []string{}
+var DebugResultOptionalArgs = []string{
+	"status",
+	"code",
 }
+var DebugResultAliasArgs = []string{}
+var DebugResultComments = map[string]string{}
+var DebugResultSpecialArgs = map[string]string{}

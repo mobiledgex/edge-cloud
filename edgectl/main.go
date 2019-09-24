@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/mobiledgex/edge-cloud/cli"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/gencmd"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -76,6 +76,8 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.DebugApiCmd = log.NewDebugApiClient(conn)
 	gencmd.ControllerApiCmd = edgeproto.NewControllerApiClient(conn)
 	gencmd.NodeApiCmd = edgeproto.NewNodeApiClient(conn)
+	gencmd.CloudletPoolApiCmd = edgeproto.NewCloudletPoolApiClient(conn)
+	gencmd.CloudletPoolMemberApiCmd = edgeproto.NewCloudletPoolMemberApiClient(conn)
 	execApiCmd = edgeproto.NewExecApiClient(conn)
 	return nil
 }
@@ -87,12 +89,6 @@ func close(cmd *cobra.Command, args []string) error {
 
 func main() {
 	cobra.EnableCommandSorting = false
-	// unfortunately can't mix normal flags and pflags, so no way to
-	// control which pflags are enabled on the command line.
-	// So use a file instead.
-	if _, err := os.Stat("allownoconfig"); err == nil {
-		allowNoConfig()
-	}
 
 	rootCmd.AddCommand(controllerCmd)
 	rootCmd.AddCommand(dmeCmd)
@@ -100,8 +96,10 @@ func main() {
 	rootCmd.AddCommand(completionCmd)
 	rootCmd.PersistentFlags().StringVar(&addr, "addr", "127.0.0.1:55001", "address to connect to")
 	rootCmd.PersistentFlags().StringVar(&tlsCertFile, "tls", "", "tls cert file")
-	cmdsup.AddOutputFormatFlag(rootCmd.PersistentFlags())
-	cmdsup.AddHideTagsFormatFlag(rootCmd.PersistentFlags())
+	cli.AddInputFlags(rootCmd.PersistentFlags())
+	cli.AddOutputFlags(rootCmd.PersistentFlags())
+	cli.AddDebugFlag(rootCmd.PersistentFlags())
+	cli.AddHideTagsFormatFlag(rootCmd.PersistentFlags())
 
 	controllerCmd.AddCommand(gencmd.DeveloperApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppApiCmds...)
@@ -114,10 +112,13 @@ func main() {
 	controllerCmd.AddCommand(gencmd.CloudletInfoApiCmds...)
 	controllerCmd.AddCommand(gencmd.ControllerApiCmds...)
 	controllerCmd.AddCommand(gencmd.NodeApiCmds...)
+	controllerCmd.AddCommand(gencmd.CloudletPoolApiCmds...)
+	controllerCmd.AddCommand(gencmd.CloudletPoolMemberApiCmds...)
 
-	controllerCmd.AddCommand(createCmd)
-	controllerCmd.AddCommand(deleteCmd)
-	controllerCmd.AddCommand(NewExecRequestCmd())
+	controllerCmd.AddCommand(createCmd.GenCmd())
+	controllerCmd.AddCommand(deleteCmd.GenCmd())
+	gencmd.RunCommandCmd.Run = runExecRequest
+	controllerCmd.AddCommand(gencmd.RunCommandCmd.GenCmd())
 
 	dmeCmd.AddCommand(gencmd.MatchEngineApiCmds...)
 	dmeCmd.AddCommand(gencmd.DebugApiCmds...)
@@ -130,9 +131,4 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
-}
-
-func allowNoConfig() {
-	gencmd.ClusterInstApiAllowNoConfig()
-	gencmd.AppInstApiAllowNoConfig()
 }

@@ -3,18 +3,11 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "time"
-import "os"
-import "text/tabwriter"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 import _ "github.com/gogo/protobuf/types"
 
@@ -24,133 +17,42 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-func MetricTagSlicer(in *edgeproto.MetricTag) []string {
-	s := make([]string, 0, 2)
-	s = append(s, in.Name)
-	s = append(s, in.Val)
-	return s
+var MetricTagRequiredArgs = []string{}
+var MetricTagOptionalArgs = []string{
+	"name",
+	"val",
 }
-
-func MetricTagHeaderSlicer() []string {
-	s := make([]string, 0, 2)
-	s = append(s, "Name")
-	s = append(s, "Val")
-	return s
+var MetricTagAliasArgs = []string{}
+var MetricTagComments = map[string]string{
+	"name": "Metric tag name",
+	"val":  "Metric tag value",
 }
-
-func MetricTagWriteOutputArray(objs []*edgeproto.MetricTag) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(MetricTagHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(MetricTagSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
+var MetricTagSpecialArgs = map[string]string{}
+var MetricValRequiredArgs = []string{}
+var MetricValOptionalArgs = []string{
+	"name",
 }
-
-func MetricTagWriteOutputOne(obj *edgeproto.MetricTag) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(MetricTagHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(MetricTagSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
+var MetricValAliasArgs = []string{}
+var MetricValComments = map[string]string{
+	"name": "Name of the value",
 }
-func MetricValSlicer(in *edgeproto.MetricVal) []string {
-	s := make([]string, 0, 3)
-	s = append(s, in.Name)
-	return s
+var MetricValSpecialArgs = map[string]string{}
+var MetricRequiredArgs = []string{}
+var MetricOptionalArgs = []string{
+	"name",
+	"timestamp.seconds",
+	"timestamp.nanos",
+	"tags.name",
+	"tags.val",
+	"vals.name",
 }
-
-func MetricValHeaderSlicer() []string {
-	s := make([]string, 0, 3)
-	s = append(s, "Name")
-	return s
+var MetricAliasArgs = []string{}
+var MetricComments = map[string]string{
+	"name":              "Metric name",
+	"timestamp.seconds": "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"timestamp.nanos":   "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"tags.name":         "Metric tag name",
+	"tags.val":          "Metric tag value",
+	"vals.name":         "Name of the value",
 }
-
-func MetricValWriteOutputArray(objs []*edgeproto.MetricVal) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(MetricValHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(MetricValSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func MetricValWriteOutputOne(obj *edgeproto.MetricVal) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(MetricValHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(MetricValSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func MetricSlicer(in *edgeproto.Metric) []string {
-	s := make([]string, 0, 4)
-	s = append(s, in.Name)
-	_TimestampTime := time.Unix(in.Timestamp.Seconds, int64(in.Timestamp.Nanos))
-	s = append(s, _TimestampTime.String())
-	if in.Tags == nil {
-		in.Tags = make([]*edgeproto.MetricTag, 1)
-	}
-	if in.Tags[0] == nil {
-		in.Tags[0] = &edgeproto.MetricTag{}
-	}
-	s = append(s, in.Tags[0].Name)
-	s = append(s, in.Tags[0].Val)
-	if in.Vals == nil {
-		in.Vals = make([]*edgeproto.MetricVal, 1)
-	}
-	if in.Vals[0] == nil {
-		in.Vals[0] = &edgeproto.MetricVal{}
-	}
-	s = append(s, in.Vals[0].Name)
-	return s
-}
-
-func MetricHeaderSlicer() []string {
-	s := make([]string, 0, 4)
-	s = append(s, "Name")
-	s = append(s, "Timestamp")
-	s = append(s, "Tags-Name")
-	s = append(s, "Tags-Val")
-	s = append(s, "Vals-Name")
-	return s
-}
-
-func MetricWriteOutputArray(objs []*edgeproto.Metric) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(MetricHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(MetricSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func MetricWriteOutputOne(obj *edgeproto.Metric) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(MetricHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(MetricSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func init() {
-}
+var MetricSpecialArgs = map[string]string{}

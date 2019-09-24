@@ -6,22 +6,16 @@ package gencmd
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "strconv"
 import "github.com/spf13/cobra"
 import "context"
-import "os"
 import "io"
-import "text/tabwriter"
-import "github.com/spf13/pflag"
-import "errors"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import _ "github.com/gogo/protobuf/gogoproto"
@@ -32,353 +26,12 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var AppInstApiCmd edgeproto.AppInstApiClient
-var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient
-var AppInstMetricsApiCmd edgeproto.AppInstMetricsApiClient
-var AppInstIn edgeproto.AppInst
-var AppInstFlagSet = pflag.NewFlagSet("AppInst", pflag.ExitOnError)
-var AppInstNoConfigFlagSet = pflag.NewFlagSet("AppInstNoConfig", pflag.ExitOnError)
-var AppInstInLiveness string
-var AppInstInMappedPortsProto string
-var AppInstInState string
-var AppInstInCrmOverride string
-var AppInstInAutoClusterIpAccess string
-var AppInstInfoIn edgeproto.AppInstInfo
-var AppInstInfoFlagSet = pflag.NewFlagSet("AppInstInfo", pflag.ExitOnError)
-var AppInstInfoNoConfigFlagSet = pflag.NewFlagSet("AppInstInfoNoConfig", pflag.ExitOnError)
-var AppInstInfoInState string
-var AppInstMetricsIn edgeproto.AppInstMetrics
-var AppInstMetricsFlagSet = pflag.NewFlagSet("AppInstMetrics", pflag.ExitOnError)
-var AppInstMetricsNoConfigFlagSet = pflag.NewFlagSet("AppInstMetricsNoConfig", pflag.ExitOnError)
-
-func AppInstKeySlicer(in *edgeproto.AppInstKey) []string {
-	s := make([]string, 0, 2)
-	s = append(s, in.AppKey.DeveloperKey.Name)
-	s = append(s, in.AppKey.Name)
-	s = append(s, in.AppKey.Version)
-	s = append(s, in.ClusterInstKey.ClusterKey.Name)
-	s = append(s, in.ClusterInstKey.CloudletKey.OperatorKey.Name)
-	s = append(s, in.ClusterInstKey.CloudletKey.Name)
-	s = append(s, in.ClusterInstKey.Developer)
-	return s
-}
-
-func AppInstKeyHeaderSlicer() []string {
-	s := make([]string, 0, 2)
-	s = append(s, "AppKey-DeveloperKey-Name")
-	s = append(s, "AppKey-Name")
-	s = append(s, "AppKey-Version")
-	s = append(s, "ClusterInstKey-ClusterKey-Name")
-	s = append(s, "ClusterInstKey-CloudletKey-OperatorKey-Name")
-	s = append(s, "ClusterInstKey-CloudletKey-Name")
-	s = append(s, "ClusterInstKey-Developer")
-	return s
-}
-
-func AppInstKeyWriteOutputArray(objs []*edgeproto.AppInstKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppInstKeyHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(AppInstKeySlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppInstKeyHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(AppInstKeySlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 17)
-	if in.Fields == nil {
-		in.Fields = make([]string, 1)
-	}
-	s = append(s, in.Fields[0])
-	s = append(s, in.Key.AppKey.DeveloperKey.Name)
-	s = append(s, in.Key.AppKey.Name)
-	s = append(s, in.Key.AppKey.Version)
-	s = append(s, in.Key.ClusterInstKey.ClusterKey.Name)
-	s = append(s, in.Key.ClusterInstKey.CloudletKey.OperatorKey.Name)
-	s = append(s, in.Key.ClusterInstKey.CloudletKey.Name)
-	s = append(s, in.Key.ClusterInstKey.Developer)
-	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Latitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Longitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.HorizontalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.VerticalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Altitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Course), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Speed), 'e', -1, 32))
-	if in.CloudletLoc.Timestamp == nil {
-		in.CloudletLoc.Timestamp = &distributed_match_engine.Timestamp{}
-	}
-	s = append(s, strconv.FormatUint(uint64(in.CloudletLoc.Timestamp.Seconds), 10))
-	s = append(s, strconv.FormatUint(uint64(in.CloudletLoc.Timestamp.Nanos), 10))
-	s = append(s, in.Uri)
-	s = append(s, edgeproto.Liveness_CamelName[int32(in.Liveness)])
-	if in.MappedPorts == nil {
-		in.MappedPorts = make([]distributed_match_engine.AppPort, 1)
-	}
-	s = append(s, distributed_match_engine.LProto_CamelName[int32(in.MappedPorts[0].Proto)])
-	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].InternalPort), 10))
-	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].PublicPort), 10))
-	s = append(s, in.MappedPorts[0].PathPrefix)
-	s = append(s, in.MappedPorts[0].FqdnPrefix)
-	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].EndPort), 10))
-	s = append(s, in.Flavor.Name)
-	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
-	if in.Errors == nil {
-		in.Errors = make([]string, 1)
-	}
-	s = append(s, in.Errors[0])
-	s = append(s, edgeproto.CRMOverride_CamelName[int32(in.CrmOverride)])
-	if in.RuntimeInfo.ContainerIds == nil {
-		in.RuntimeInfo.ContainerIds = make([]string, 1)
-	}
-	s = append(s, in.RuntimeInfo.ContainerIds[0])
-	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Seconds), 10))
-	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Nanos), 10))
-	s = append(s, edgeproto.IpAccess_CamelName[int32(in.AutoClusterIpAccess)])
-	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
-	s = append(s, in.Status.TaskName)
-	s = append(s, in.Status.StepName)
-	s = append(s, strconv.FormatUint(uint64(in.Revision), 10))
-	s = append(s, strconv.FormatBool(in.ForceUpdate))
-	s = append(s, strconv.FormatBool(in.UpdateMultiple))
-	return s
-}
-
-func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 17)
-	s = append(s, "Fields")
-	s = append(s, "Key-AppKey-DeveloperKey-Name")
-	s = append(s, "Key-AppKey-Name")
-	s = append(s, "Key-AppKey-Version")
-	s = append(s, "Key-ClusterInstKey-ClusterKey-Name")
-	s = append(s, "Key-ClusterInstKey-CloudletKey-OperatorKey-Name")
-	s = append(s, "Key-ClusterInstKey-CloudletKey-Name")
-	s = append(s, "Key-ClusterInstKey-Developer")
-	s = append(s, "CloudletLoc-Latitude")
-	s = append(s, "CloudletLoc-Longitude")
-	s = append(s, "CloudletLoc-HorizontalAccuracy")
-	s = append(s, "CloudletLoc-VerticalAccuracy")
-	s = append(s, "CloudletLoc-Altitude")
-	s = append(s, "CloudletLoc-Course")
-	s = append(s, "CloudletLoc-Speed")
-	s = append(s, "CloudletLoc-Timestamp-Seconds")
-	s = append(s, "CloudletLoc-Timestamp-Nanos")
-	s = append(s, "Uri")
-	s = append(s, "Liveness")
-	s = append(s, "MappedPorts-Proto")
-	s = append(s, "MappedPorts-InternalPort")
-	s = append(s, "MappedPorts-PublicPort")
-	s = append(s, "MappedPorts-PathPrefix")
-	s = append(s, "MappedPorts-FqdnPrefix")
-	s = append(s, "MappedPorts-EndPort")
-	s = append(s, "Flavor-Name")
-	s = append(s, "State")
-	s = append(s, "Errors")
-	s = append(s, "CrmOverride")
-	s = append(s, "RuntimeInfo-ContainerIds")
-	s = append(s, "CreatedAt-Seconds")
-	s = append(s, "CreatedAt-Nanos")
-	s = append(s, "AutoClusterIpAccess")
-	s = append(s, "Status-TaskNumber")
-	s = append(s, "Status-MaxTasks")
-	s = append(s, "Status-TaskName")
-	s = append(s, "Status-StepName")
-	s = append(s, "Revision")
-	s = append(s, "ForceUpdate")
-	s = append(s, "UpdateMultiple")
-	return s
-}
-
-func AppInstWriteOutputArray(objs []*edgeproto.AppInst) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppInstHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(AppInstSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func AppInstWriteOutputOne(obj *edgeproto.AppInst) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppInstHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(AppInstSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func AppInstRuntimeSlicer(in *edgeproto.AppInstRuntime) []string {
-	s := make([]string, 0, 1)
-	if in.ContainerIds == nil {
-		in.ContainerIds = make([]string, 1)
-	}
-	s = append(s, in.ContainerIds[0])
-	return s
-}
-
-func AppInstRuntimeHeaderSlicer() []string {
-	s := make([]string, 0, 1)
-	s = append(s, "ContainerIds")
-	return s
-}
-
-func AppInstRuntimeWriteOutputArray(objs []*edgeproto.AppInstRuntime) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppInstRuntimeHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(AppInstRuntimeSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func AppInstRuntimeWriteOutputOne(obj *edgeproto.AppInstRuntime) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppInstRuntimeHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(AppInstRuntimeSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
-	s := make([]string, 0, 7)
-	if in.Fields == nil {
-		in.Fields = make([]string, 1)
-	}
-	s = append(s, in.Fields[0])
-	s = append(s, in.Key.AppKey.DeveloperKey.Name)
-	s = append(s, in.Key.AppKey.Name)
-	s = append(s, in.Key.AppKey.Version)
-	s = append(s, in.Key.ClusterInstKey.ClusterKey.Name)
-	s = append(s, in.Key.ClusterInstKey.CloudletKey.OperatorKey.Name)
-	s = append(s, in.Key.ClusterInstKey.CloudletKey.Name)
-	s = append(s, in.Key.ClusterInstKey.Developer)
-	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
-	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
-	if in.Errors == nil {
-		in.Errors = make([]string, 1)
-	}
-	s = append(s, in.Errors[0])
-	if in.RuntimeInfo.ContainerIds == nil {
-		in.RuntimeInfo.ContainerIds = make([]string, 1)
-	}
-	s = append(s, in.RuntimeInfo.ContainerIds[0])
-	s = append(s, strconv.FormatUint(uint64(in.Status.TaskNumber), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Status.MaxTasks), 10))
-	s = append(s, in.Status.TaskName)
-	s = append(s, in.Status.StepName)
-	return s
-}
-
-func AppInstInfoHeaderSlicer() []string {
-	s := make([]string, 0, 7)
-	s = append(s, "Fields")
-	s = append(s, "Key-AppKey-DeveloperKey-Name")
-	s = append(s, "Key-AppKey-Name")
-	s = append(s, "Key-AppKey-Version")
-	s = append(s, "Key-ClusterInstKey-ClusterKey-Name")
-	s = append(s, "Key-ClusterInstKey-CloudletKey-OperatorKey-Name")
-	s = append(s, "Key-ClusterInstKey-CloudletKey-Name")
-	s = append(s, "Key-ClusterInstKey-Developer")
-	s = append(s, "NotifyId")
-	s = append(s, "State")
-	s = append(s, "Errors")
-	s = append(s, "RuntimeInfo-ContainerIds")
-	s = append(s, "Status-TaskNumber")
-	s = append(s, "Status-MaxTasks")
-	s = append(s, "Status-TaskName")
-	s = append(s, "Status-StepName")
-	return s
-}
-
-func AppInstInfoWriteOutputArray(objs []*edgeproto.AppInstInfo) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppInstInfoHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(AppInstInfoSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func AppInstInfoWriteOutputOne(obj *edgeproto.AppInstInfo) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppInstInfoHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(AppInstInfoSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func AppInstMetricsSlicer(in *edgeproto.AppInstMetrics) []string {
-	s := make([]string, 0, 1)
-	s = append(s, strconv.FormatUint(uint64(in.Something), 10))
-	return s
-}
-
-func AppInstMetricsHeaderSlicer() []string {
-	s := make([]string, 0, 1)
-	s = append(s, "Something")
-	return s
-}
-
-func AppInstMetricsWriteOutputArray(objs []*edgeproto.AppInstMetrics) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppInstMetricsHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(AppInstMetricsSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func AppInstMetricsWriteOutputOne(obj *edgeproto.AppInstMetrics) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppInstMetricsHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(AppInstMetricsSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
 func AppInstHideTags(in *edgeproto.AppInst) {
-	if cmdsup.HideTags == "" {
+	if cli.HideTags == "" {
 		return
 	}
 	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
@@ -410,11 +63,11 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 }
 
 func AppInstRuntimeHideTags(in *edgeproto.AppInstRuntime) {
-	if cmdsup.HideTags == "" {
+	if cli.HideTags == "" {
 		return
 	}
 	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
@@ -423,11 +76,11 @@ func AppInstRuntimeHideTags(in *edgeproto.AppInstRuntime) {
 }
 
 func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
-	if cmdsup.HideTags == "" {
+	if cli.HideTags == "" {
 		return
 	}
 	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
@@ -438,20 +91,30 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	}
 }
 
-var CreateAppInstCmd = &cobra.Command{
-	Use: "CreateAppInst",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseAppInstEnums()
-		if err != nil {
-			return fmt.Errorf("CreateAppInst failed: %s", err.Error())
-		}
-		return CreateAppInst(&AppInstIn)
-	},
+var AppInstApiCmd edgeproto.AppInstApiClient
+
+var CreateAppInstCmd = &cli.Command{
+	Use:          "CreateAppInst",
+	RequiredArgs: strings.Join(AppInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppInstOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
+	SpecialArgs:  &AppInstSpecialArgs,
+	Comments:     AppInstComments,
+	ReqData:      &edgeproto.AppInst{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runCreateAppInst,
 }
 
-func CreateAppInst(in *edgeproto.AppInst) error {
+func runCreateAppInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInst)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return CreateAppInst(c, obj)
+}
+
+func CreateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 	if AppInstApiCmd == nil {
 		return fmt.Errorf("AppInstApi client not initialized")
 	}
@@ -473,18 +136,19 @@ func CreateAppInst(in *edgeproto.AppInst) error {
 		if err != nil {
 			return fmt.Errorf("CreateAppInst recv failed: %s", err.Error())
 		}
-		ResultWriteOutputOne(obj)
+		c.WriteOutput(obj, cli.OutputFormat)
 	}
 	return nil
 }
 
-func CreateAppInsts(data []edgeproto.AppInst, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func CreateAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("CreateAppInst %v\n", data[ii])
-		myerr := CreateAppInst(&data[ii])
+		myerr := CreateAppInst(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -492,20 +156,28 @@ func CreateAppInsts(data []edgeproto.AppInst, err *error) {
 	}
 }
 
-var DeleteAppInstCmd = &cobra.Command{
-	Use: "DeleteAppInst",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseAppInstEnums()
-		if err != nil {
-			return fmt.Errorf("DeleteAppInst failed: %s", err.Error())
-		}
-		return DeleteAppInst(&AppInstIn)
-	},
+var DeleteAppInstCmd = &cli.Command{
+	Use:          "DeleteAppInst",
+	RequiredArgs: strings.Join(AppInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppInstOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
+	SpecialArgs:  &AppInstSpecialArgs,
+	Comments:     AppInstComments,
+	ReqData:      &edgeproto.AppInst{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runDeleteAppInst,
 }
 
-func DeleteAppInst(in *edgeproto.AppInst) error {
+func runDeleteAppInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInst)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return DeleteAppInst(c, obj)
+}
+
+func DeleteAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 	if AppInstApiCmd == nil {
 		return fmt.Errorf("AppInstApi client not initialized")
 	}
@@ -527,18 +199,19 @@ func DeleteAppInst(in *edgeproto.AppInst) error {
 		if err != nil {
 			return fmt.Errorf("DeleteAppInst recv failed: %s", err.Error())
 		}
-		ResultWriteOutputOne(obj)
+		c.WriteOutput(obj, cli.OutputFormat)
 	}
 	return nil
 }
 
-func DeleteAppInsts(data []edgeproto.AppInst, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func DeleteAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("DeleteAppInst %v\n", data[ii])
-		myerr := DeleteAppInst(&data[ii])
+		myerr := DeleteAppInst(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -546,21 +219,29 @@ func DeleteAppInsts(data []edgeproto.AppInst, err *error) {
 	}
 }
 
-var UpdateAppInstCmd = &cobra.Command{
-	Use: "UpdateAppInst",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseAppInstEnums()
-		if err != nil {
-			return fmt.Errorf("UpdateAppInst failed: %s", err.Error())
-		}
-		AppInstSetFields()
-		return UpdateAppInst(&AppInstIn)
-	},
+var UpdateAppInstCmd = &cli.Command{
+	Use:          "UpdateAppInst",
+	RequiredArgs: strings.Join(AppInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppInstOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
+	SpecialArgs:  &AppInstSpecialArgs,
+	Comments:     AppInstComments,
+	ReqData:      &edgeproto.AppInst{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runUpdateAppInst,
 }
 
-func UpdateAppInst(in *edgeproto.AppInst) error {
+func runUpdateAppInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInst)
+	jsonMap, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	return UpdateAppInst(c, obj)
+}
+
+func UpdateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 	if AppInstApiCmd == nil {
 		return fmt.Errorf("AppInstApi client not initialized")
 	}
@@ -582,18 +263,19 @@ func UpdateAppInst(in *edgeproto.AppInst) error {
 		if err != nil {
 			return fmt.Errorf("UpdateAppInst recv failed: %s", err.Error())
 		}
-		ResultWriteOutputOne(obj)
+		c.WriteOutput(obj, cli.OutputFormat)
 	}
 	return nil
 }
 
-func UpdateAppInsts(data []edgeproto.AppInst, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func UpdateAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("UpdateAppInst %v\n", data[ii])
-		myerr := UpdateAppInst(&data[ii])
+		myerr := UpdateAppInst(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -601,20 +283,27 @@ func UpdateAppInsts(data []edgeproto.AppInst, err *error) {
 	}
 }
 
-var ShowAppInstCmd = &cobra.Command{
-	Use: "ShowAppInst",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseAppInstEnums()
-		if err != nil {
-			return fmt.Errorf("ShowAppInst failed: %s", err.Error())
-		}
-		return ShowAppInst(&AppInstIn)
-	},
+var ShowAppInstCmd = &cli.Command{
+	Use:          "ShowAppInst",
+	OptionalArgs: strings.Join(append(AppInstRequiredArgs, AppInstOptionalArgs...), " "),
+	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
+	SpecialArgs:  &AppInstSpecialArgs,
+	Comments:     AppInstComments,
+	ReqData:      &edgeproto.AppInst{},
+	ReplyData:    &edgeproto.AppInst{},
+	Run:          runShowAppInst,
 }
 
-func ShowAppInst(in *edgeproto.AppInst) error {
+func runShowAppInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInst)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowAppInst(c, obj)
+}
+
+func ShowAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 	if AppInstApiCmd == nil {
 		return fmt.Errorf("AppInstApi client not initialized")
 	}
@@ -643,17 +332,18 @@ func ShowAppInst(in *edgeproto.AppInst) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	AppInstWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowAppInsts(data []edgeproto.AppInst, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowAppInst %v\n", data[ii])
-		myerr := ShowAppInst(&data[ii])
+		myerr := ShowAppInst(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -662,26 +352,35 @@ func ShowAppInsts(data []edgeproto.AppInst, err *error) {
 }
 
 var AppInstApiCmds = []*cobra.Command{
-	CreateAppInstCmd,
-	DeleteAppInstCmd,
-	UpdateAppInstCmd,
-	ShowAppInstCmd,
+	CreateAppInstCmd.GenCmd(),
+	DeleteAppInstCmd.GenCmd(),
+	UpdateAppInstCmd.GenCmd(),
+	ShowAppInstCmd.GenCmd(),
 }
 
-var ShowAppInstInfoCmd = &cobra.Command{
-	Use: "ShowAppInstInfo",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseAppInstInfoEnums()
-		if err != nil {
-			return fmt.Errorf("ShowAppInstInfo failed: %s", err.Error())
-		}
-		return ShowAppInstInfo(&AppInstInfoIn)
-	},
+var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient
+
+var ShowAppInstInfoCmd = &cli.Command{
+	Use:          "ShowAppInstInfo",
+	OptionalArgs: strings.Join(append(AppInstInfoRequiredArgs, AppInstInfoOptionalArgs...), " "),
+	AliasArgs:    strings.Join(AppInstInfoAliasArgs, " "),
+	SpecialArgs:  &AppInstInfoSpecialArgs,
+	Comments:     AppInstInfoComments,
+	ReqData:      &edgeproto.AppInstInfo{},
+	ReplyData:    &edgeproto.AppInstInfo{},
+	Run:          runShowAppInstInfo,
 }
 
-func ShowAppInstInfo(in *edgeproto.AppInstInfo) error {
+func runShowAppInstInfo(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInstInfo)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowAppInstInfo(c, obj)
+}
+
+func ShowAppInstInfo(c *cli.Command, in *edgeproto.AppInstInfo) error {
 	if AppInstInfoApiCmd == nil {
 		return fmt.Errorf("AppInstInfoApi client not initialized")
 	}
@@ -710,17 +409,18 @@ func ShowAppInstInfo(in *edgeproto.AppInstInfo) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	AppInstInfoWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowAppInstInfos(data []edgeproto.AppInstInfo, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowAppInstInfos(c *cli.Command, data []edgeproto.AppInstInfo, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowAppInstInfo %v\n", data[ii])
-		myerr := ShowAppInstInfo(&data[ii])
+		myerr := ShowAppInstInfo(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -729,19 +429,32 @@ func ShowAppInstInfos(data []edgeproto.AppInstInfo, err *error) {
 }
 
 var AppInstInfoApiCmds = []*cobra.Command{
-	ShowAppInstInfoCmd,
+	ShowAppInstInfoCmd.GenCmd(),
 }
 
-var ShowAppInstMetricsCmd = &cobra.Command{
-	Use: "ShowAppInstMetrics",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		return ShowAppInstMetrics(&AppInstMetricsIn)
-	},
+var AppInstMetricsApiCmd edgeproto.AppInstMetricsApiClient
+
+var ShowAppInstMetricsCmd = &cli.Command{
+	Use:          "ShowAppInstMetrics",
+	OptionalArgs: strings.Join(append(AppInstMetricsRequiredArgs, AppInstMetricsOptionalArgs...), " "),
+	AliasArgs:    strings.Join(AppInstMetricsAliasArgs, " "),
+	SpecialArgs:  &AppInstMetricsSpecialArgs,
+	Comments:     AppInstMetricsComments,
+	ReqData:      &edgeproto.AppInstMetrics{},
+	ReplyData:    &edgeproto.AppInstMetrics{},
+	Run:          runShowAppInstMetrics,
 }
 
-func ShowAppInstMetrics(in *edgeproto.AppInstMetrics) error {
+func runShowAppInstMetrics(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInstMetrics)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowAppInstMetrics(c, obj)
+}
+
+func ShowAppInstMetrics(c *cli.Command, in *edgeproto.AppInstMetrics) error {
 	if AppInstMetricsApiCmd == nil {
 		return fmt.Errorf("AppInstMetricsApi client not initialized")
 	}
@@ -769,17 +482,18 @@ func ShowAppInstMetrics(in *edgeproto.AppInstMetrics) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	AppInstMetricsWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowAppInstMetricss(data []edgeproto.AppInstMetrics, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowAppInstMetricss(c *cli.Command, data []edgeproto.AppInstMetrics, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowAppInstMetrics %v\n", data[ii])
-		myerr := ShowAppInstMetrics(&data[ii])
+		myerr := ShowAppInstMetrics(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -788,343 +502,149 @@ func ShowAppInstMetricss(data []edgeproto.AppInstMetrics, err *error) {
 }
 
 var AppInstMetricsApiCmds = []*cobra.Command{
-	ShowAppInstMetricsCmd,
+	ShowAppInstMetricsCmd.GenCmd(),
 }
 
-func init() {
-	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
-	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
-	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
-	AppInstFlagSet.StringVar(&AppInstIn.Key.ClusterInstKey.ClusterKey.Name, "key-clusterinstkey-clusterkey-name", "", "Key.ClusterInstKey.ClusterKey.Name")
-	AppInstFlagSet.StringVar(&AppInstIn.Key.ClusterInstKey.CloudletKey.OperatorKey.Name, "key-clusterinstkey-cloudletkey-operatorkey-name", "", "Key.ClusterInstKey.CloudletKey.OperatorKey.Name")
-	AppInstFlagSet.StringVar(&AppInstIn.Key.ClusterInstKey.CloudletKey.Name, "key-clusterinstkey-cloudletkey-name", "", "Key.ClusterInstKey.CloudletKey.Name")
-	AppInstFlagSet.StringVar(&AppInstIn.Key.ClusterInstKey.Developer, "key-clusterinstkey-developer", "", "Key.ClusterInstKey.Developer")
-	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Latitude, "cloudletloc-latitude", 0, "CloudletLoc.Latitude")
-	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Longitude, "cloudletloc-longitude", 0, "CloudletLoc.Longitude")
-	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.HorizontalAccuracy, "cloudletloc-horizontalaccuracy", 0, "CloudletLoc.HorizontalAccuracy")
-	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.VerticalAccuracy, "cloudletloc-verticalaccuracy", 0, "CloudletLoc.VerticalAccuracy")
-	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Altitude, "cloudletloc-altitude", 0, "CloudletLoc.Altitude")
-	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Course, "cloudletloc-course", 0, "CloudletLoc.Course")
-	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Speed, "cloudletloc-speed", 0, "CloudletLoc.Speed")
-	AppInstIn.CloudletLoc.Timestamp = &distributed_match_engine.Timestamp{}
-	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CloudletLoc.Timestamp.Seconds, "cloudletloc-timestamp-seconds", 0, "CloudletLoc.Timestamp.Seconds")
-	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CloudletLoc.Timestamp.Nanos, "cloudletloc-timestamp-nanos", 0, "CloudletLoc.Timestamp.Nanos")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
-	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
-	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
-	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
-	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCrmErrors IgnoreCrm IgnoreTransientState IgnoreCrmAndTransientState]")
-	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
-	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
-	AppInstFlagSet.StringVar(&AppInstInAutoClusterIpAccess, "autoclusteripaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
-	AppInstNoConfigFlagSet.Uint32Var(&AppInstIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
-	AppInstNoConfigFlagSet.Uint32Var(&AppInstIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Status.StepName, "status-stepname", "", "Status.StepName")
-	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.Revision, "revision", 0, "Revision")
-	AppInstFlagSet.BoolVar(&AppInstIn.ForceUpdate, "forceupdate", false, "ForceUpdate")
-	AppInstFlagSet.BoolVar(&AppInstIn.UpdateMultiple, "updatemultiple", false, "UpdateMultiple")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.ClusterInstKey.ClusterKey.Name, "key-clusterinstkey-clusterkey-name", "", "Key.ClusterInstKey.ClusterKey.Name")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.ClusterInstKey.CloudletKey.OperatorKey.Name, "key-clusterinstkey-cloudletkey-operatorkey-name", "", "Key.ClusterInstKey.CloudletKey.OperatorKey.Name")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.ClusterInstKey.CloudletKey.Name, "key-clusterinstkey-cloudletkey-name", "", "Key.ClusterInstKey.CloudletKey.Name")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.ClusterInstKey.Developer, "key-clusterinstkey-developer", "", "Key.ClusterInstKey.Developer")
-	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
-	AppInstInfoFlagSet.Uint32Var(&AppInstInfoIn.Status.TaskNumber, "status-tasknumber", 0, "Status.TaskNumber")
-	AppInstInfoFlagSet.Uint32Var(&AppInstInfoIn.Status.MaxTasks, "status-maxtasks", 0, "Status.MaxTasks")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Status.TaskName, "status-taskname", "", "Status.TaskName")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Status.StepName, "status-stepname", "", "Status.StepName")
-	AppInstMetricsFlagSet.Uint64Var(&AppInstMetricsIn.Something, "something", 0, "Something")
-	CreateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
-	DeleteAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
-	UpdateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
-	ShowAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
-	ShowAppInstInfoCmd.Flags().AddFlagSet(AppInstInfoFlagSet)
-	ShowAppInstMetricsCmd.Flags().AddFlagSet(AppInstMetricsFlagSet)
+var AppInstKeyRequiredArgs = []string{}
+var AppInstKeyOptionalArgs = []string{
+	"appkey.developerkey.name",
+	"appkey.name",
+	"appkey.version",
+	"clusterinstkey.clusterkey.name",
+	"clusterinstkey.cloudletkey.operatorkey.name",
+	"clusterinstkey.cloudletkey.name",
+	"clusterinstkey.developer",
 }
-
-func AppInstApiAllowNoConfig() {
-	CreateAppInstCmd.Flags().AddFlagSet(AppInstNoConfigFlagSet)
-	DeleteAppInstCmd.Flags().AddFlagSet(AppInstNoConfigFlagSet)
-	UpdateAppInstCmd.Flags().AddFlagSet(AppInstNoConfigFlagSet)
-	ShowAppInstCmd.Flags().AddFlagSet(AppInstNoConfigFlagSet)
+var AppInstKeyAliasArgs = []string{}
+var AppInstKeyComments = map[string]string{
+	"appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
+	"appkey.name":                                 "App name",
+	"appkey.version":                              "App version",
+	"clusterinstkey.clusterkey.name":              "Cluster name",
+	"clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
+	"clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
 }
-
-func AppInstInfoApiAllowNoConfig() {
-	ShowAppInstInfoCmd.Flags().AddFlagSet(AppInstInfoNoConfigFlagSet)
+var AppInstKeySpecialArgs = map[string]string{}
+var AppInstRequiredArgs = []string{
+	"developer",
+	"appname",
+	"appvers",
+	"cluster",
+	"operator",
+	"cloudlet",
 }
-
-func AppInstMetricsApiAllowNoConfig() {
-	ShowAppInstMetricsCmd.Flags().AddFlagSet(AppInstMetricsNoConfigFlagSet)
+var AppInstOptionalArgs = []string{
+	"clusterdeveloper",
+	"flavor.name",
+	"state",
+	"errors",
+	"crmoverride",
+	"runtimeinfo.containerids",
+	"autoclusteripaccess",
+	"forceupdate",
+	"updatemultiple",
 }
-
-func AppInstSetFields() {
-	AppInstIn.Fields = make([]string, 0)
-	if AppInstFlagSet.Lookup("key-appkey-developerkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.1.1.2")
-	}
-	if AppInstFlagSet.Lookup("key-appkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.1.2")
-	}
-	if AppInstFlagSet.Lookup("key-appkey-version").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.1.3")
-	}
-	if AppInstFlagSet.Lookup("key-clusterinstkey-clusterkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.1.1")
-	}
-	if AppInstFlagSet.Lookup("key-clusterinstkey-cloudletkey-operatorkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.2.1.1")
-	}
-	if AppInstFlagSet.Lookup("key-clusterinstkey-cloudletkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.2.2")
-	}
-	if AppInstFlagSet.Lookup("key-clusterinstkey-developer").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.3")
-	}
-	if AppInstNoConfigFlagSet.Lookup("cloudletloc-latitude").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "3.1")
-	}
-	if AppInstNoConfigFlagSet.Lookup("cloudletloc-longitude").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "3.2")
-	}
-	if AppInstNoConfigFlagSet.Lookup("cloudletloc-horizontalaccuracy").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "3.3")
-	}
-	if AppInstNoConfigFlagSet.Lookup("cloudletloc-verticalaccuracy").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "3.4")
-	}
-	if AppInstNoConfigFlagSet.Lookup("cloudletloc-altitude").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "3.5")
-	}
-	if AppInstNoConfigFlagSet.Lookup("cloudletloc-course").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "3.6")
-	}
-	if AppInstNoConfigFlagSet.Lookup("cloudletloc-speed").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "3.7")
-	}
-	if AppInstNoConfigFlagSet.Lookup("cloudletloc-timestamp-seconds").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "3.8.1")
-	}
-	if AppInstNoConfigFlagSet.Lookup("cloudletloc-timestamp-nanos").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "3.8.2")
-	}
-	if AppInstNoConfigFlagSet.Lookup("uri").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "4")
-	}
-	if AppInstNoConfigFlagSet.Lookup("liveness").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "6")
-	}
-	if AppInstFlagSet.Lookup("flavor-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "12.1")
-	}
-	if AppInstFlagSet.Lookup("state").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "14")
-	}
-	if AppInstFlagSet.Lookup("crmoverride").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "16")
-	}
-	if AppInstNoConfigFlagSet.Lookup("createdat-seconds").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "21.1")
-	}
-	if AppInstNoConfigFlagSet.Lookup("createdat-nanos").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "21.2")
-	}
-	if AppInstFlagSet.Lookup("autoclusteripaccess").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "22")
-	}
-	if AppInstNoConfigFlagSet.Lookup("status-tasknumber").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "23.1")
-	}
-	if AppInstNoConfigFlagSet.Lookup("status-maxtasks").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "23.2")
-	}
-	if AppInstNoConfigFlagSet.Lookup("status-taskname").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "23.3")
-	}
-	if AppInstNoConfigFlagSet.Lookup("status-stepname").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "23.4")
-	}
-	if AppInstNoConfigFlagSet.Lookup("revision").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "24")
-	}
-	if AppInstFlagSet.Lookup("forceupdate").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "25")
-	}
-	if AppInstFlagSet.Lookup("updatemultiple").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "26")
-	}
+var AppInstAliasArgs = []string{
+	"developer=key.appkey.developerkey.name",
+	"appname=key.appkey.name",
+	"appvers=key.appkey.version",
+	"cluster=key.clusterinstkey.clusterkey.name",
+	"operator=key.clusterinstkey.cloudletkey.operatorkey.name",
+	"cloudlet=key.clusterinstkey.cloudletkey.name",
+	"clusterdeveloper=key.clusterinstkey.developer",
 }
-
-func AppInstInfoSetFields() {
-	AppInstInfoIn.Fields = make([]string, 0)
-	if AppInstInfoFlagSet.Lookup("key-appkey-developerkey-name").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.1.1.2")
-	}
-	if AppInstInfoFlagSet.Lookup("key-appkey-name").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.1.2")
-	}
-	if AppInstInfoFlagSet.Lookup("key-appkey-version").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.1.3")
-	}
-	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-clusterkey-name").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.1.1")
-	}
-	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-cloudletkey-operatorkey-name").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.2.1.1")
-	}
-	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-cloudletkey-name").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.2.2")
-	}
-	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-developer").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.3")
-	}
-	if AppInstInfoFlagSet.Lookup("notifyid").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "3")
-	}
-	if AppInstInfoFlagSet.Lookup("state").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "4")
-	}
-	if AppInstInfoNoConfigFlagSet.Lookup("status-tasknumber").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "7.1")
-	}
-	if AppInstInfoNoConfigFlagSet.Lookup("status-maxtasks").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "7.2")
-	}
-	if AppInstInfoNoConfigFlagSet.Lookup("status-taskname").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "7.3")
-	}
-	if AppInstInfoNoConfigFlagSet.Lookup("status-stepname").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "7.4")
-	}
+var AppInstComments = map[string]string{
+	"developer":                      "Organization or Company Name that a Developer is part of",
+	"appname":                        "App name",
+	"appvers":                        "App version",
+	"cluster":                        "Cluster name",
+	"operator":                       "Company or Organization name of the operator",
+	"cloudlet":                       "Name of the cloudlet",
+	"clusterdeveloper":               "Name of Developer that this cluster belongs to",
+	"cloudletloc.latitude":           "latitude in WGS 84 coordinates",
+	"cloudletloc.longitude":          "longitude in WGS 84 coordinates",
+	"cloudletloc.horizontalaccuracy": "horizontal accuracy (radius in meters)",
+	"cloudletloc.verticalaccuracy":   "veritical accuracy (meters)",
+	"cloudletloc.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"cloudletloc.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"cloudletloc.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+	"uri":                            "Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.",
+	"liveness":                       "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
+	"mappedports.proto":              "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
+	"mappedports.internalport":       "Container port",
+	"mappedports.publicport":         "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
+	"mappedports.pathprefix":         "Public facing path for HTTP L7 access.",
+	"mappedports.fqdnprefix":         "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
+	"mappedports.endport":            "A non-zero end port indicates this is a port range from internal port to end port, inclusive.",
+	"flavor.name":                    "Flavor name",
+	"state":                          "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare",
+	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
+	"crmoverride":                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+	"runtimeinfo.containerids":       "List of container names",
+	"autoclusteripaccess":            "IpAccess for auto-clusters. Ignored otherwise., one of IpAccessUnknown, IpAccessDedicated, IpAccessDedicatedOrShared, IpAccessShared",
+	"revision":                       "Revision increments each time the App is updated.  Updating the App Instance will sync the revision with that of the App",
+	"forceupdate":                    "Force Appinst update when UpdateAppInst is done if revision matches",
+	"updatemultiple":                 "Allow multiple instances to be updated at once",
 }
-
-func parseAppInstEnums() error {
-	if AppInstInLiveness != "" {
-		switch AppInstInLiveness {
-		case "LivenessUnknown":
-			AppInstIn.Liveness = edgeproto.Liveness(0)
-		case "LivenessStatic":
-			AppInstIn.Liveness = edgeproto.Liveness(1)
-		case "LivenessDynamic":
-			AppInstIn.Liveness = edgeproto.Liveness(2)
-		default:
-			return errors.New("Invalid value for AppInstInLiveness")
-		}
-	}
-	if AppInstInMappedPortsProto != "" {
-		switch AppInstInMappedPortsProto {
-		case "LProtoUnknown":
-			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(0)
-		case "LProtoTcp":
-			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(1)
-		case "LProtoUdp":
-			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(2)
-		case "LProtoHttp":
-			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(3)
-		default:
-			return errors.New("Invalid value for AppInstInMappedPortsProto")
-		}
-	}
-	if AppInstInState != "" {
-		switch AppInstInState {
-		case "TrackedStateUnknown":
-			AppInstIn.State = edgeproto.TrackedState(0)
-		case "NotPresent":
-			AppInstIn.State = edgeproto.TrackedState(1)
-		case "CreateRequested":
-			AppInstIn.State = edgeproto.TrackedState(2)
-		case "Creating":
-			AppInstIn.State = edgeproto.TrackedState(3)
-		case "CreateError":
-			AppInstIn.State = edgeproto.TrackedState(4)
-		case "Ready":
-			AppInstIn.State = edgeproto.TrackedState(5)
-		case "UpdateRequested":
-			AppInstIn.State = edgeproto.TrackedState(6)
-		case "Updating":
-			AppInstIn.State = edgeproto.TrackedState(7)
-		case "UpdateError":
-			AppInstIn.State = edgeproto.TrackedState(8)
-		case "DeleteRequested":
-			AppInstIn.State = edgeproto.TrackedState(9)
-		case "Deleting":
-			AppInstIn.State = edgeproto.TrackedState(10)
-		case "DeleteError":
-			AppInstIn.State = edgeproto.TrackedState(11)
-		case "DeletePrepare":
-			AppInstIn.State = edgeproto.TrackedState(12)
-		default:
-			return errors.New("Invalid value for AppInstInState")
-		}
-	}
-	if AppInstInCrmOverride != "" {
-		switch AppInstInCrmOverride {
-		case "NoOverride":
-			AppInstIn.CrmOverride = edgeproto.CRMOverride(0)
-		case "IgnoreCrmErrors":
-			AppInstIn.CrmOverride = edgeproto.CRMOverride(1)
-		case "IgnoreCrm":
-			AppInstIn.CrmOverride = edgeproto.CRMOverride(2)
-		case "IgnoreTransientState":
-			AppInstIn.CrmOverride = edgeproto.CRMOverride(3)
-		case "IgnoreCrmAndTransientState":
-			AppInstIn.CrmOverride = edgeproto.CRMOverride(4)
-		default:
-			return errors.New("Invalid value for AppInstInCrmOverride")
-		}
-	}
-	if AppInstInAutoClusterIpAccess != "" {
-		switch AppInstInAutoClusterIpAccess {
-		case "IpAccessUnknown":
-			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(0)
-		case "IpAccessDedicated":
-			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(1)
-		case "IpAccessDedicatedOrShared":
-			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(2)
-		case "IpAccessShared":
-			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(3)
-		default:
-			return errors.New("Invalid value for AppInstInAutoClusterIpAccess")
-		}
-	}
-	return nil
+var AppInstSpecialArgs = map[string]string{
+	"errors":                   "StringArray",
+	"runtimeinfo.containerids": "StringArray",
 }
-
-func parseAppInstInfoEnums() error {
-	if AppInstInfoInState != "" {
-		switch AppInstInfoInState {
-		case "TrackedStateUnknown":
-			AppInstInfoIn.State = edgeproto.TrackedState(0)
-		case "NotPresent":
-			AppInstInfoIn.State = edgeproto.TrackedState(1)
-		case "CreateRequested":
-			AppInstInfoIn.State = edgeproto.TrackedState(2)
-		case "Creating":
-			AppInstInfoIn.State = edgeproto.TrackedState(3)
-		case "CreateError":
-			AppInstInfoIn.State = edgeproto.TrackedState(4)
-		case "Ready":
-			AppInstInfoIn.State = edgeproto.TrackedState(5)
-		case "UpdateRequested":
-			AppInstInfoIn.State = edgeproto.TrackedState(6)
-		case "Updating":
-			AppInstInfoIn.State = edgeproto.TrackedState(7)
-		case "UpdateError":
-			AppInstInfoIn.State = edgeproto.TrackedState(8)
-		case "DeleteRequested":
-			AppInstInfoIn.State = edgeproto.TrackedState(9)
-		case "Deleting":
-			AppInstInfoIn.State = edgeproto.TrackedState(10)
-		case "DeleteError":
-			AppInstInfoIn.State = edgeproto.TrackedState(11)
-		case "DeletePrepare":
-			AppInstInfoIn.State = edgeproto.TrackedState(12)
-		default:
-			return errors.New("Invalid value for AppInstInfoInState")
-		}
-	}
-	return nil
+var AppInstRuntimeRequiredArgs = []string{}
+var AppInstRuntimeOptionalArgs = []string{
+	"containerids",
 }
+var AppInstRuntimeAliasArgs = []string{}
+var AppInstRuntimeComments = map[string]string{
+	"containerids": "List of container names",
+}
+var AppInstRuntimeSpecialArgs = map[string]string{
+	"containerids": "StringArray",
+}
+var AppInstInfoRequiredArgs = []string{
+	"key.appkey.developerkey.name",
+	"key.appkey.name",
+	"key.appkey.version",
+	"key.clusterinstkey.clusterkey.name",
+	"key.clusterinstkey.cloudletkey.operatorkey.name",
+	"key.clusterinstkey.cloudletkey.name",
+	"key.clusterinstkey.developer",
+}
+var AppInstInfoOptionalArgs = []string{
+	"notifyid",
+	"state",
+	"errors",
+	"runtimeinfo.containerids",
+	"status.tasknumber",
+	"status.maxtasks",
+	"status.taskname",
+	"status.stepname",
+}
+var AppInstInfoAliasArgs = []string{}
+var AppInstInfoComments = map[string]string{
+	"key.appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
+	"key.appkey.name":                                 "App name",
+	"key.appkey.version":                              "App version",
+	"key.clusterinstkey.clusterkey.name":              "Cluster name",
+	"key.clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"key.clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
+	"key.clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
+	"notifyid":                                        "Id of client assigned by server (internal use only)",
+	"state":                                           "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare",
+	"errors":                                          "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
+	"runtimeinfo.containerids":                        "List of container names",
+}
+var AppInstInfoSpecialArgs = map[string]string{
+	"errors":                   "StringArray",
+	"runtimeinfo.containerids": "StringArray",
+}
+var AppInstMetricsRequiredArgs = []string{}
+var AppInstMetricsOptionalArgs = []string{
+	"something",
+}
+var AppInstMetricsAliasArgs = []string{}
+var AppInstMetricsComments = map[string]string{
+	"something": "what goes here? Note that metrics for grpc calls can be done by a prometheus interceptor in grpc, so adding call metrics here may be redundant unless theyre needed for billing.",
+}
+var AppInstMetricsSpecialArgs = map[string]string{}

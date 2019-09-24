@@ -25,6 +25,7 @@ tests:
     loops: 2
   - includefile: restarts_2ctrls.yml
     loops: 2
+  - includefile: clustersvc_update.yml
   - includefile: verify_loc.yml
     loops: 1
   - includefile: verify_loc.yml

@@ -5,15 +5,10 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "strconv"
 import "github.com/spf13/cobra"
 import "context"
-import "os"
 import "io"
-import "text/tabwriter"
-import "github.com/spf13/pflag"
-import "errors"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -21,7 +16,6 @@ import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/gogo/protobuf/gogoproto"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -29,121 +23,12 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var NodeApiCmd edgeproto.NodeApiClient
-var NodeIn edgeproto.Node
-var NodeFlagSet = pflag.NewFlagSet("Node", pflag.ExitOnError)
-var NodeNoConfigFlagSet = pflag.NewFlagSet("NodeNoConfig", pflag.ExitOnError)
-var NodeInKeyNodeType string
-var NodeTypeStrings = []string{
-	"NodeUnknown",
-	"NodeDme",
-	"NodeCrm",
-	"NodeController",
-}
-
-func NodeKeySlicer(in *edgeproto.NodeKey) []string {
-	s := make([]string, 0, 3)
-	s = append(s, in.Name)
-	s = append(s, edgeproto.NodeType_CamelName[int32(in.NodeType)])
-	s = append(s, in.CloudletKey.OperatorKey.Name)
-	s = append(s, in.CloudletKey.Name)
-	return s
-}
-
-func NodeKeyHeaderSlicer() []string {
-	s := make([]string, 0, 3)
-	s = append(s, "Name")
-	s = append(s, "NodeType")
-	s = append(s, "CloudletKey-OperatorKey-Name")
-	s = append(s, "CloudletKey-Name")
-	return s
-}
-
-func NodeKeyWriteOutputArray(objs []*edgeproto.NodeKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(NodeKeyHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(NodeKeySlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func NodeKeyWriteOutputOne(obj *edgeproto.NodeKey) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(NodeKeyHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(NodeKeySlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func NodeSlicer(in *edgeproto.Node) []string {
-	s := make([]string, 0, 7)
-	if in.Fields == nil {
-		in.Fields = make([]string, 1)
-	}
-	s = append(s, in.Fields[0])
-	s = append(s, in.Key.Name)
-	s = append(s, edgeproto.NodeType_CamelName[int32(in.Key.NodeType)])
-	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
-	s = append(s, in.Key.CloudletKey.Name)
-	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
-	s = append(s, in.BuildMaster)
-	s = append(s, in.BuildHead)
-	s = append(s, in.BuildAuthor)
-	s = append(s, in.Hostname)
-	return s
-}
-
-func NodeHeaderSlicer() []string {
-	s := make([]string, 0, 7)
-	s = append(s, "Fields")
-	s = append(s, "Key-Name")
-	s = append(s, "Key-NodeType")
-	s = append(s, "Key-CloudletKey-OperatorKey-Name")
-	s = append(s, "Key-CloudletKey-Name")
-	s = append(s, "NotifyId")
-	s = append(s, "BuildMaster")
-	s = append(s, "BuildHead")
-	s = append(s, "BuildAuthor")
-	s = append(s, "Hostname")
-	return s
-}
-
-func NodeWriteOutputArray(objs []*edgeproto.Node) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(NodeHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(NodeSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func NodeWriteOutputOne(obj *edgeproto.Node) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(NodeHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(NodeSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
 func NodeKeyHideTags(in *edgeproto.NodeKey) {
-	if cmdsup.HideTags == "" {
+	if cli.HideTags == "" {
 		return
 	}
 	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
@@ -152,11 +37,11 @@ func NodeKeyHideTags(in *edgeproto.NodeKey) {
 }
 
 func NodeHideTags(in *edgeproto.Node) {
-	if cmdsup.HideTags == "" {
+	if cli.HideTags == "" {
 		return
 	}
 	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
@@ -179,20 +64,29 @@ func NodeHideTags(in *edgeproto.Node) {
 	}
 }
 
-var ShowNodeLocalCmd = &cobra.Command{
-	Use: "ShowNodeLocal",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseNodeEnums()
-		if err != nil {
-			return fmt.Errorf("ShowNodeLocal failed: %s", err.Error())
-		}
-		return ShowNodeLocal(&NodeIn)
-	},
+var NodeApiCmd edgeproto.NodeApiClient
+
+var ShowNodeLocalCmd = &cli.Command{
+	Use:          "ShowNodeLocal",
+	OptionalArgs: strings.Join(append(NodeRequiredArgs, NodeOptionalArgs...), " "),
+	AliasArgs:    strings.Join(NodeAliasArgs, " "),
+	SpecialArgs:  &NodeSpecialArgs,
+	Comments:     NodeComments,
+	ReqData:      &edgeproto.Node{},
+	ReplyData:    &edgeproto.Node{},
+	Run:          runShowNodeLocal,
 }
 
-func ShowNodeLocal(in *edgeproto.Node) error {
+func runShowNodeLocal(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Node)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowNodeLocal(c, obj)
+}
+
+func ShowNodeLocal(c *cli.Command, in *edgeproto.Node) error {
 	if NodeApiCmd == nil {
 		return fmt.Errorf("NodeApi client not initialized")
 	}
@@ -221,17 +115,18 @@ func ShowNodeLocal(in *edgeproto.Node) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	NodeWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowNodeLocals(data []edgeproto.Node, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowNodeLocals(c *cli.Command, data []edgeproto.Node, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowNodeLocal %v\n", data[ii])
-		myerr := ShowNodeLocal(&data[ii])
+		myerr := ShowNodeLocal(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -239,20 +134,27 @@ func ShowNodeLocals(data []edgeproto.Node, err *error) {
 	}
 }
 
-var ShowNodeCmd = &cobra.Command{
-	Use: "ShowNode",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// if we got this far, usage has been met.
-		cmd.SilenceUsage = true
-		err := parseNodeEnums()
-		if err != nil {
-			return fmt.Errorf("ShowNode failed: %s", err.Error())
-		}
-		return ShowNode(&NodeIn)
-	},
+var ShowNodeCmd = &cli.Command{
+	Use:          "ShowNode",
+	OptionalArgs: strings.Join(append(NodeRequiredArgs, NodeOptionalArgs...), " "),
+	AliasArgs:    strings.Join(NodeAliasArgs, " "),
+	SpecialArgs:  &NodeSpecialArgs,
+	Comments:     NodeComments,
+	ReqData:      &edgeproto.Node{},
+	ReplyData:    &edgeproto.Node{},
+	Run:          runShowNode,
 }
 
-func ShowNode(in *edgeproto.Node) error {
+func runShowNode(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Node)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowNode(c, obj)
+}
+
+func ShowNode(c *cli.Command, in *edgeproto.Node) error {
 	if NodeApiCmd == nil {
 		return fmt.Errorf("NodeApi client not initialized")
 	}
@@ -281,17 +183,18 @@ func ShowNode(in *edgeproto.Node) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	NodeWriteOutputArray(objs)
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
-func ShowNodes(data []edgeproto.Node, err *error) {
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowNodes(c *cli.Command, data []edgeproto.Node, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("ShowNode %v\n", data[ii])
-		myerr := ShowNode(&data[ii])
+		myerr := ShowNode(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -300,74 +203,48 @@ func ShowNodes(data []edgeproto.Node, err *error) {
 }
 
 var NodeApiCmds = []*cobra.Command{
-	ShowNodeLocalCmd,
-	ShowNodeCmd,
+	ShowNodeLocalCmd.GenCmd(),
+	ShowNodeCmd.GenCmd(),
 }
 
-func init() {
-	NodeFlagSet.StringVar(&NodeIn.Key.Name, "key-name", "", "Key.Name")
-	NodeFlagSet.StringVar(&NodeInKeyNodeType, "key-nodetype", "", "one of [NodeUnknown NodeDme NodeCrm NodeController]")
-	NodeFlagSet.StringVar(&NodeIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
-	NodeFlagSet.StringVar(&NodeIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
-	NodeFlagSet.Int64Var(&NodeIn.NotifyId, "notifyid", 0, "NotifyId")
-	NodeFlagSet.StringVar(&NodeIn.BuildMaster, "buildmaster", "", "BuildMaster")
-	NodeFlagSet.StringVar(&NodeIn.BuildHead, "buildhead", "", "BuildHead")
-	NodeFlagSet.StringVar(&NodeIn.BuildAuthor, "buildauthor", "", "BuildAuthor")
-	NodeFlagSet.StringVar(&NodeIn.Hostname, "hostname", "", "Hostname")
-	ShowNodeLocalCmd.Flags().AddFlagSet(NodeFlagSet)
-	ShowNodeCmd.Flags().AddFlagSet(NodeFlagSet)
+var NodeKeyRequiredArgs = []string{}
+var NodeKeyOptionalArgs = []string{
+	"name",
+	"nodetype",
+	"cloudletkey.operatorkey.name",
+	"cloudletkey.name",
 }
-
-func NodeApiAllowNoConfig() {
-	ShowNodeLocalCmd.Flags().AddFlagSet(NodeNoConfigFlagSet)
-	ShowNodeCmd.Flags().AddFlagSet(NodeNoConfigFlagSet)
+var NodeKeyAliasArgs = []string{}
+var NodeKeyComments = map[string]string{
+	"name":                         "Name or hostname of node",
+	"nodetype":                     "Node type, one of NodeUnknown, NodeDme, NodeCrm, NodeController",
+	"cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"cloudletkey.name":             "Name of the cloudlet",
 }
-
-func NodeSetFields() {
-	NodeIn.Fields = make([]string, 0)
-	if NodeFlagSet.Lookup("key-name").Changed {
-		NodeIn.Fields = append(NodeIn.Fields, "2.1")
-	}
-	if NodeFlagSet.Lookup("key-nodetype").Changed {
-		NodeIn.Fields = append(NodeIn.Fields, "2.2")
-	}
-	if NodeFlagSet.Lookup("key-cloudletkey-operatorkey-name").Changed {
-		NodeIn.Fields = append(NodeIn.Fields, "2.3.1.1")
-	}
-	if NodeFlagSet.Lookup("key-cloudletkey-name").Changed {
-		NodeIn.Fields = append(NodeIn.Fields, "2.3.2")
-	}
-	if NodeFlagSet.Lookup("notifyid").Changed {
-		NodeIn.Fields = append(NodeIn.Fields, "3")
-	}
-	if NodeFlagSet.Lookup("buildmaster").Changed {
-		NodeIn.Fields = append(NodeIn.Fields, "4")
-	}
-	if NodeFlagSet.Lookup("buildhead").Changed {
-		NodeIn.Fields = append(NodeIn.Fields, "5")
-	}
-	if NodeFlagSet.Lookup("buildauthor").Changed {
-		NodeIn.Fields = append(NodeIn.Fields, "6")
-	}
-	if NodeFlagSet.Lookup("hostname").Changed {
-		NodeIn.Fields = append(NodeIn.Fields, "7")
-	}
+var NodeKeySpecialArgs = map[string]string{}
+var NodeRequiredArgs = []string{
+	"key.name",
+	"key.nodetype",
+	"key.cloudletkey.operatorkey.name",
+	"key.cloudletkey.name",
 }
-
-func parseNodeEnums() error {
-	if NodeInKeyNodeType != "" {
-		switch NodeInKeyNodeType {
-		case "NodeUnknown":
-			NodeIn.Key.NodeType = edgeproto.NodeType(0)
-		case "NodeDme":
-			NodeIn.Key.NodeType = edgeproto.NodeType(1)
-		case "NodeCrm":
-			NodeIn.Key.NodeType = edgeproto.NodeType(2)
-		case "NodeController":
-			NodeIn.Key.NodeType = edgeproto.NodeType(3)
-		default:
-			return errors.New("Invalid value for NodeInKeyNodeType")
-		}
-	}
-	return nil
+var NodeOptionalArgs = []string{
+	"notifyid",
+	"buildmaster",
+	"buildhead",
+	"buildauthor",
+	"hostname",
 }
+var NodeAliasArgs = []string{}
+var NodeComments = map[string]string{
+	"key.name":                         "Name or hostname of node",
+	"key.nodetype":                     "Node type, one of NodeUnknown, NodeDme, NodeCrm, NodeController",
+	"key.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"key.cloudletkey.name":             "Name of the cloudlet",
+	"notifyid":                         "Id of client assigned by server (internal use only)",
+	"buildmaster":                      "Build Master Version",
+	"buildhead":                        "Build Head Version",
+	"buildauthor":                      "Build Author",
+	"hostname":                         "Hostname",
+}
+var NodeSpecialArgs = map[string]string{}

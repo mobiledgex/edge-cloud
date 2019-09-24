@@ -16,7 +16,6 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -29,6 +28,7 @@ var _ = math.Inf
 type ShowFlavor struct {
 	Data map[string]edgeproto.Flavor
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *ShowFlavor) Init() {
@@ -36,9 +36,15 @@ func (x *ShowFlavor) Init() {
 }
 
 func (x *ShowFlavor) Send(m *edgeproto.Flavor) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
+
+func (x *ShowFlavor) Context() context.Context {
+	return x.Ctx
+}
+
+var FlavorShowExtraCount = 0
 
 func (x *ShowFlavor) ReadStream(stream edgeproto.FlavorApi_ShowFlavorClient, err error) {
 	x.Data = make(map[string]edgeproto.Flavor)
@@ -53,31 +59,31 @@ func (x *ShowFlavor) ReadStream(stream edgeproto.FlavorApi_ShowFlavorClient, err
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowFlavor) CheckFound(obj *edgeproto.Flavor) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *ShowFlavor) AssertFound(t *testing.T, obj *edgeproto.Flavor) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find Flavor %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find Flavor %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "Flavor are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *ShowFlavor) AssertNotFound(t *testing.T, obj *edgeproto.Flavor) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find Flavor %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find Flavor %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFoundFlavor(t *testing.T, api edgeproto.FlavorApiClient, obj *edgeproto.Flavor, count int, retry time.Duration) {
@@ -127,16 +133,6 @@ func (x *FlavorCommonApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor
 	}
 }
 
-func (x *FlavorCommonApi) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
-	copy := &edgeproto.Flavor{}
-	*copy = *in
-	if x.internal_api != nil {
-		return x.internal_api.UpdateFlavor(ctx, copy)
-	} else {
-		return x.client_api.UpdateFlavor(ctx, copy)
-	}
-}
-
 func (x *FlavorCommonApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
 	copy := &edgeproto.Flavor{}
 	*copy = *in
@@ -147,8 +143,19 @@ func (x *FlavorCommonApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor
 	}
 }
 
+func (x *FlavorCommonApi) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	copy := &edgeproto.Flavor{}
+	*copy = *in
+	if x.internal_api != nil {
+		return x.internal_api.UpdateFlavor(ctx, copy)
+	} else {
+		return x.client_api.UpdateFlavor(ctx, copy)
+	}
+}
+
 func (x *FlavorCommonApi) ShowFlavor(ctx context.Context, filter *edgeproto.Flavor, showData *ShowFlavor) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.ShowFlavor(filter, showData)
 	} else {
 		stream, err := x.client_api.ShowFlavor(ctx, filter)
@@ -203,7 +210,7 @@ func basicFlavorShowTest(t *testing.T, ctx context.Context, api *FlavorCommonApi
 	filterNone := edgeproto.Flavor{}
 	err = api.ShowFlavor(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData)+FlavorShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -234,31 +241,31 @@ func basicFlavorCudTest(t *testing.T, ctx context.Context, api *FlavorCommonApi,
 	}
 
 	// test create
-	createFlavorData(t, ctx, api, testData)
+	CreateFlavorData(t, ctx, api, testData)
 
-	// test duplicate create - should fail
+	// test duplicate Create - should fail
 	_, err = api.CreateFlavor(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate Flavor")
 
 	// test show all items
 	basicFlavorShowTest(t, ctx, api, testData)
 
-	// test delete
+	// test Delete
 	_, err = api.DeleteFlavor(ctx, &testData[0])
-	require.Nil(t, err, "delete Flavor %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Delete Flavor %s", testData[0].GetKey().GetKeyString())
 	show := ShowFlavor{}
 	show.Init()
 	filterNone := edgeproto.Flavor{}
 	err = api.ShowFlavor(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData)-1, len(show.Data), "Show count")
+	require.Equal(t, len(testData)-1+FlavorShowExtraCount, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateFlavor(ctx, &testData[0])
 	require.NotNil(t, err, "Update missing object")
-	// create it back
+	// Create it back
 	_, err = api.CreateFlavor(ctx, &testData[0])
-	require.Nil(t, err, "Create Flavor %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Create Flavor %s", testData[0].GetKey().GetKeyString())
 
 	// test invalid keys
 	bad := edgeproto.Flavor{}
@@ -272,7 +279,7 @@ func InternalFlavorCreate(t *testing.T, api edgeproto.FlavorApiServer, testData 
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createFlavorData(t, ctx, NewInternalFlavorApi(api), testData)
+	CreateFlavorData(t, ctx, NewInternalFlavorApi(api), testData)
 }
 
 func ClientFlavorCreate(t *testing.T, api edgeproto.FlavorApiClient, testData []edgeproto.Flavor) {
@@ -280,16 +287,25 @@ func ClientFlavorCreate(t *testing.T, api edgeproto.FlavorApiClient, testData []
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createFlavorData(t, ctx, NewClientFlavorApi(api), testData)
+	CreateFlavorData(t, ctx, NewClientFlavorApi(api), testData)
 }
 
-func createFlavorData(t *testing.T, ctx context.Context, api *FlavorCommonApi, testData []edgeproto.Flavor) {
+func CreateFlavorData(t *testing.T, ctx context.Context, api *FlavorCommonApi, testData []edgeproto.Flavor) {
 	var err error
 
 	for _, obj := range testData {
 		_, err = api.CreateFlavor(ctx, &obj)
-		require.Nil(t, err, "Create Flavor %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "Create Flavor %s", obj.GetKey().GetKeyString())
 	}
+}
+
+func FindFlavorData(key *edgeproto.FlavorKey, testData []edgeproto.Flavor) (*edgeproto.Flavor, bool) {
+	for ii, _ := range testData {
+		if testData[ii].Key.Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
 }
 
 func (s *DummyServer) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {

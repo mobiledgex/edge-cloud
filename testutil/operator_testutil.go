@@ -16,7 +16,6 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -29,6 +28,7 @@ var _ = math.Inf
 type ShowOperator struct {
 	Data map[string]edgeproto.Operator
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *ShowOperator) Init() {
@@ -36,9 +36,15 @@ func (x *ShowOperator) Init() {
 }
 
 func (x *ShowOperator) Send(m *edgeproto.Operator) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
+
+func (x *ShowOperator) Context() context.Context {
+	return x.Ctx
+}
+
+var OperatorShowExtraCount = 0
 
 func (x *ShowOperator) ReadStream(stream edgeproto.OperatorApi_ShowOperatorClient, err error) {
 	x.Data = make(map[string]edgeproto.Operator)
@@ -53,31 +59,31 @@ func (x *ShowOperator) ReadStream(stream edgeproto.OperatorApi_ShowOperatorClien
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowOperator) CheckFound(obj *edgeproto.Operator) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *ShowOperator) AssertFound(t *testing.T, obj *edgeproto.Operator) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find Operator %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find Operator %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "Operator are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *ShowOperator) AssertNotFound(t *testing.T, obj *edgeproto.Operator) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find Operator %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find Operator %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFoundOperator(t *testing.T, api edgeproto.OperatorApiClient, obj *edgeproto.Operator, count int, retry time.Duration) {
@@ -127,16 +133,6 @@ func (x *OperatorCommonApi) CreateOperator(ctx context.Context, in *edgeproto.Op
 	}
 }
 
-func (x *OperatorCommonApi) UpdateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
-	copy := &edgeproto.Operator{}
-	*copy = *in
-	if x.internal_api != nil {
-		return x.internal_api.UpdateOperator(ctx, copy)
-	} else {
-		return x.client_api.UpdateOperator(ctx, copy)
-	}
-}
-
 func (x *OperatorCommonApi) DeleteOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
 	copy := &edgeproto.Operator{}
 	*copy = *in
@@ -147,8 +143,19 @@ func (x *OperatorCommonApi) DeleteOperator(ctx context.Context, in *edgeproto.Op
 	}
 }
 
+func (x *OperatorCommonApi) UpdateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	copy := &edgeproto.Operator{}
+	*copy = *in
+	if x.internal_api != nil {
+		return x.internal_api.UpdateOperator(ctx, copy)
+	} else {
+		return x.client_api.UpdateOperator(ctx, copy)
+	}
+}
+
 func (x *OperatorCommonApi) ShowOperator(ctx context.Context, filter *edgeproto.Operator, showData *ShowOperator) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.ShowOperator(filter, showData)
 	} else {
 		stream, err := x.client_api.ShowOperator(ctx, filter)
@@ -203,7 +210,7 @@ func basicOperatorShowTest(t *testing.T, ctx context.Context, api *OperatorCommo
 	filterNone := edgeproto.Operator{}
 	err = api.ShowOperator(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData)+OperatorShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -234,31 +241,31 @@ func basicOperatorCudTest(t *testing.T, ctx context.Context, api *OperatorCommon
 	}
 
 	// test create
-	createOperatorData(t, ctx, api, testData)
+	CreateOperatorData(t, ctx, api, testData)
 
-	// test duplicate create - should fail
+	// test duplicate Create - should fail
 	_, err = api.CreateOperator(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate Operator")
 
 	// test show all items
 	basicOperatorShowTest(t, ctx, api, testData)
 
-	// test delete
+	// test Delete
 	_, err = api.DeleteOperator(ctx, &testData[0])
-	require.Nil(t, err, "delete Operator %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Delete Operator %s", testData[0].GetKey().GetKeyString())
 	show := ShowOperator{}
 	show.Init()
 	filterNone := edgeproto.Operator{}
 	err = api.ShowOperator(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData)-1, len(show.Data), "Show count")
+	require.Equal(t, len(testData)-1+OperatorShowExtraCount, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateOperator(ctx, &testData[0])
 	require.NotNil(t, err, "Update missing object")
-	// create it back
+	// Create it back
 	_, err = api.CreateOperator(ctx, &testData[0])
-	require.Nil(t, err, "Create Operator %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Create Operator %s", testData[0].GetKey().GetKeyString())
 
 	// test invalid keys
 	bad := edgeproto.Operator{}
@@ -272,7 +279,7 @@ func InternalOperatorCreate(t *testing.T, api edgeproto.OperatorApiServer, testD
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createOperatorData(t, ctx, NewInternalOperatorApi(api), testData)
+	CreateOperatorData(t, ctx, NewInternalOperatorApi(api), testData)
 }
 
 func ClientOperatorCreate(t *testing.T, api edgeproto.OperatorApiClient, testData []edgeproto.Operator) {
@@ -280,16 +287,25 @@ func ClientOperatorCreate(t *testing.T, api edgeproto.OperatorApiClient, testDat
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createOperatorData(t, ctx, NewClientOperatorApi(api), testData)
+	CreateOperatorData(t, ctx, NewClientOperatorApi(api), testData)
 }
 
-func createOperatorData(t *testing.T, ctx context.Context, api *OperatorCommonApi, testData []edgeproto.Operator) {
+func CreateOperatorData(t *testing.T, ctx context.Context, api *OperatorCommonApi, testData []edgeproto.Operator) {
 	var err error
 
 	for _, obj := range testData {
 		_, err = api.CreateOperator(ctx, &obj)
-		require.Nil(t, err, "Create Operator %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "Create Operator %s", obj.GetKey().GetKeyString())
 	}
+}
+
+func FindOperatorData(key *edgeproto.OperatorKey, testData []edgeproto.Operator) (*edgeproto.Operator, bool) {
+	for ii, _ := range testData {
+		if testData[ii].Key.Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
 }
 
 func (s *DummyServer) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {

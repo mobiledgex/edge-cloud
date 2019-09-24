@@ -124,6 +124,8 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	}
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 		return k8smgmt.UpdateAppInst(client, names, app, appInst)
+	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
+		return k8smgmt.UpdateHelmAppInst(client, names, app, appInst)
 	}
 	return fmt.Errorf("UpdateAppInst not supported for deployment: %s", appDeploymentType)
 }

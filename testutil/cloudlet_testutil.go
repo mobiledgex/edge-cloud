@@ -16,7 +16,6 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import _ "github.com/gogo/protobuf/gogoproto"
 
@@ -30,6 +29,7 @@ var _ = math.Inf
 type ShowCloudlet struct {
 	Data map[string]edgeproto.Cloudlet
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *ShowCloudlet) Init() {
@@ -37,13 +37,19 @@ func (x *ShowCloudlet) Init() {
 }
 
 func (x *ShowCloudlet) Send(m *edgeproto.Cloudlet) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
 
+func (x *ShowCloudlet) Context() context.Context {
+	return x.Ctx
+}
+
+var CloudletShowExtraCount = 0
+
 type CudStreamoutCloudlet struct {
 	grpc.ServerStream
-	ctx context.Context
+	Ctx context.Context
 }
 
 func (x *CudStreamoutCloudlet) Send(res *edgeproto.Result) error {
@@ -52,12 +58,12 @@ func (x *CudStreamoutCloudlet) Send(res *edgeproto.Result) error {
 }
 
 func (x *CudStreamoutCloudlet) Context() context.Context {
-	return x.ctx
+	return x.Ctx
 }
 
 func NewCudStreamoutCloudlet(ctx context.Context) *CudStreamoutCloudlet {
 	return &CudStreamoutCloudlet{
-		ctx: ctx,
+		Ctx: ctx,
 	}
 }
 
@@ -94,31 +100,31 @@ func (x *ShowCloudlet) ReadStream(stream edgeproto.CloudletApi_ShowCloudletClien
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowCloudlet) CheckFound(obj *edgeproto.Cloudlet) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *ShowCloudlet) AssertFound(t *testing.T, obj *edgeproto.Cloudlet) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find Cloudlet %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find Cloudlet %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "Cloudlet are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *ShowCloudlet) AssertNotFound(t *testing.T, obj *edgeproto.Cloudlet) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find Cloudlet %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find Cloudlet %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFoundCloudlet(t *testing.T, api edgeproto.CloudletApiClient, obj *edgeproto.Cloudlet, count int, retry time.Duration) {
@@ -171,19 +177,6 @@ func (x *CloudletCommonApi) CreateCloudlet(ctx context.Context, in *edgeproto.Cl
 	}
 }
 
-func (x *CloudletCommonApi) UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
-	copy := &edgeproto.Cloudlet{}
-	*copy = *in
-	if x.internal_api != nil {
-		err := x.internal_api.UpdateCloudlet(copy, NewCudStreamoutCloudlet(ctx))
-		return &edgeproto.Result{}, err
-	} else {
-		stream, err := x.client_api.UpdateCloudlet(ctx, copy)
-		err = CloudletReadResultStream(stream, err)
-		return &edgeproto.Result{}, err
-	}
-}
-
 func (x *CloudletCommonApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
 	copy := &edgeproto.Cloudlet{}
 	*copy = *in
@@ -197,8 +190,22 @@ func (x *CloudletCommonApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cl
 	}
 }
 
+func (x *CloudletCommonApi) UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+	copy := &edgeproto.Cloudlet{}
+	*copy = *in
+	if x.internal_api != nil {
+		err := x.internal_api.UpdateCloudlet(copy, NewCudStreamoutCloudlet(ctx))
+		return &edgeproto.Result{}, err
+	} else {
+		stream, err := x.client_api.UpdateCloudlet(ctx, copy)
+		err = CloudletReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
+	}
+}
+
 func (x *CloudletCommonApi) ShowCloudlet(ctx context.Context, filter *edgeproto.Cloudlet, showData *ShowCloudlet) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.ShowCloudlet(filter, showData)
 	} else {
 		stream, err := x.client_api.ShowCloudlet(ctx, filter)
@@ -253,7 +260,7 @@ func basicCloudletShowTest(t *testing.T, ctx context.Context, api *CloudletCommo
 	filterNone := edgeproto.Cloudlet{}
 	err = api.ShowCloudlet(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData)+CloudletShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -284,31 +291,31 @@ func basicCloudletCudTest(t *testing.T, ctx context.Context, api *CloudletCommon
 	}
 
 	// test create
-	createCloudletData(t, ctx, api, testData)
+	CreateCloudletData(t, ctx, api, testData)
 
-	// test duplicate create - should fail
+	// test duplicate Create - should fail
 	_, err = api.CreateCloudlet(ctx, &testData[0])
 	require.NotNil(t, err, "Create duplicate Cloudlet")
 
 	// test show all items
 	basicCloudletShowTest(t, ctx, api, testData)
 
-	// test delete
+	// test Delete
 	_, err = api.DeleteCloudlet(ctx, &testData[0])
-	require.Nil(t, err, "delete Cloudlet %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Delete Cloudlet %s", testData[0].GetKey().GetKeyString())
 	show := ShowCloudlet{}
 	show.Init()
 	filterNone := edgeproto.Cloudlet{}
 	err = api.ShowCloudlet(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData)-1, len(show.Data), "Show count")
+	require.Equal(t, len(testData)-1+CloudletShowExtraCount, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateCloudlet(ctx, &testData[0])
 	require.NotNil(t, err, "Update missing object")
-	// create it back
+	// Create it back
 	_, err = api.CreateCloudlet(ctx, &testData[0])
-	require.Nil(t, err, "Create Cloudlet %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Create Cloudlet %s", testData[0].GetKey().GetKeyString())
 
 	// test invalid keys
 	bad := edgeproto.Cloudlet{}
@@ -322,7 +329,7 @@ func basicCloudletCudTest(t *testing.T, ctx context.Context, api *CloudletCommon
 	updater.Fields = make([]string, 0)
 	updater.Fields = append(updater.Fields, edgeproto.CloudletFieldAccessCredentials)
 	_, err = api.UpdateCloudlet(ctx, &updater)
-	require.Nil(t, err, "Update Cloudlet %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Update Cloudlet %s", testData[0].GetKey().GetKeyString())
 
 	show.Init()
 	updater = testData[0]
@@ -342,7 +349,7 @@ func InternalCloudletCreate(t *testing.T, api edgeproto.CloudletApiServer, testD
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createCloudletData(t, ctx, NewInternalCloudletApi(api), testData)
+	CreateCloudletData(t, ctx, NewInternalCloudletApi(api), testData)
 }
 
 func ClientCloudletCreate(t *testing.T, api edgeproto.CloudletApiClient, testData []edgeproto.Cloudlet) {
@@ -350,21 +357,31 @@ func ClientCloudletCreate(t *testing.T, api edgeproto.CloudletApiClient, testDat
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	createCloudletData(t, ctx, NewClientCloudletApi(api), testData)
+	CreateCloudletData(t, ctx, NewClientCloudletApi(api), testData)
 }
 
-func createCloudletData(t *testing.T, ctx context.Context, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
+func CreateCloudletData(t *testing.T, ctx context.Context, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
 	var err error
 
 	for _, obj := range testData {
 		_, err = api.CreateCloudlet(ctx, &obj)
-		require.Nil(t, err, "Create Cloudlet %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "Create Cloudlet %s", obj.GetKey().GetKeyString())
 	}
+}
+
+func FindCloudletData(key *edgeproto.CloudletKey, testData []edgeproto.Cloudlet) (*edgeproto.Cloudlet, bool) {
+	for ii, _ := range testData {
+		if testData[ii].Key.Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
 }
 
 type ShowCloudletInfo struct {
 	Data map[string]edgeproto.CloudletInfo
 	grpc.ServerStream
+	Ctx context.Context
 }
 
 func (x *ShowCloudletInfo) Init() {
@@ -372,9 +389,15 @@ func (x *ShowCloudletInfo) Init() {
 }
 
 func (x *ShowCloudletInfo) Send(m *edgeproto.CloudletInfo) error {
-	x.Data[m.Key.GetKeyString()] = *m
+	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
+
+func (x *ShowCloudletInfo) Context() context.Context {
+	return x.Ctx
+}
+
+var CloudletInfoShowExtraCount = 0
 
 func (x *ShowCloudletInfo) ReadStream(stream edgeproto.CloudletInfoApi_ShowCloudletInfoClient, err error) {
 	x.Data = make(map[string]edgeproto.CloudletInfo)
@@ -389,31 +412,31 @@ func (x *ShowCloudletInfo) ReadStream(stream edgeproto.CloudletInfoApi_ShowCloud
 		if err != nil {
 			break
 		}
-		x.Data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.GetKey().GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowCloudletInfo) CheckFound(obj *edgeproto.CloudletInfo) bool {
-	_, found := x.Data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
 func (x *ShowCloudletInfo) AssertFound(t *testing.T, obj *edgeproto.CloudletInfo) {
-	check, found := x.Data[obj.Key.GetKeyString()]
-	require.True(t, found, "find CloudletInfo %s", obj.Key.GetKeyString())
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find CloudletInfo %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		require.Equal(t, *obj, check, "CloudletInfo are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
 		// same object cannot be used again
-		delete(x.Data, obj.Key.GetKeyString())
+		delete(x.Data, obj.GetKey().GetKeyString())
 	}
 }
 
 func (x *ShowCloudletInfo) AssertNotFound(t *testing.T, obj *edgeproto.CloudletInfo) {
-	_, found := x.Data[obj.Key.GetKeyString()]
-	require.False(t, found, "do not find CloudletInfo %s", obj.Key.GetKeyString())
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find CloudletInfo %s", obj.GetKey().GetKeyString())
 }
 
 func WaitAssertFoundCloudletInfo(t *testing.T, api edgeproto.CloudletInfoApiClient, obj *edgeproto.CloudletInfo, count int, retry time.Duration) {
@@ -455,6 +478,7 @@ type CloudletInfoCommonApi struct {
 
 func (x *CloudletInfoCommonApi) ShowCloudletInfo(ctx context.Context, filter *edgeproto.CloudletInfo, showData *ShowCloudletInfo) error {
 	if x.internal_api != nil {
+		showData.Ctx = ctx
 		return x.internal_api.ShowCloudletInfo(filter, showData)
 	} else {
 		stream, err := x.client_api.ShowCloudletInfo(ctx, filter)
@@ -505,7 +529,7 @@ func basicCloudletInfoShowTest(t *testing.T, ctx context.Context, api *CloudletI
 	filterNone := edgeproto.CloudletInfo{}
 	err = api.ShowCloudletInfo(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Equal(t, len(testData)+CloudletInfoShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -525,6 +549,15 @@ func GetCloudletInfo(t *testing.T, ctx context.Context, api *CloudletInfoCommonA
 		*out = obj
 	}
 	return found
+}
+
+func FindCloudletInfoData(key *edgeproto.CloudletKey, testData []edgeproto.CloudletInfo) (*edgeproto.CloudletInfo, bool) {
+	for ii, _ := range testData {
+		if testData[ii].Key.Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
 }
 
 func (s *DummyServer) CreateCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_CreateCloudletServer) error {
