@@ -49,9 +49,15 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		req: req,
 	}
 
+	appInst := edgeproto.AppInst{}
+	found := cd.AppInstCache.Get(&req.AppInstKey, &appInst)
+	if !found {
+		return fmt.Errorf("app inst %s not found",
+			req.AppInstKey.GetKeyString())
+	}
 	app := edgeproto.App{}
-	found := cd.AppCache.Get(&req.AppInstKey.AppKey, &app)
-	if found {
+	found = cd.AppCache.Get(&req.AppInstKey.AppKey, &app)
+	if !found {
 		return fmt.Errorf("app %s not found",
 			req.AppInstKey.AppKey.GetKeyString())
 	}
@@ -62,15 +68,9 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			return err
 		}
 	} else {
-		appInst := edgeproto.AppInst{}
-		found = cd.AppInstCache.Get(&req.AppInstKey, &appInst)
-		if found {
-			return fmt.Errorf("app inst %s not found",
-				req.AppInstKey.GetKeyString())
-		}
 		clusterInst := edgeproto.ClusterInst{}
 		found = cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
-		if found {
+		if !found {
 			return fmt.Errorf("cluster inst %s not found",
 				appInst.Key.ClusterInstKey.GetKeyString())
 		}
@@ -181,7 +181,6 @@ func (s *WebrtcExec) DataChannel(d *webrtc.DataChannel) {
 }
 
 func (s *WebrtcExec) RTCTunnel(d *webrtc.DataChannel) {
-	var sess *smux.Session
 	d.OnOpen(func() {
 		urlObj, err := url.Parse(s.req.ConsoleUrl)
 		if err != nil {
@@ -193,11 +192,13 @@ func (s *WebrtcExec) RTCTunnel(d *webrtc.DataChannel) {
 			log.DebugLog(log.DebugLevelApi, "failed to wrap webrtc datachannel", "err", err)
 			return
 		}
-		sess, err = smux.Server(dcconn, nil)
+		sess, err := smux.Server(dcconn, nil)
 		if err != nil {
 			log.DebugLog(log.DebugLevelApi, "failed to setup smux server", "err", err)
 			return
 		}
+		defer sess.Close()
+		log.DebugLog(log.DebugLevelApi, "Successfully started console proxy")
 		for {
 			stream, err := sess.AcceptStream()
 			if err != nil {
@@ -243,8 +244,5 @@ func (s *WebrtcExec) RTCTunnel(d *webrtc.DataChannel) {
 		}
 	})
 	d.OnClose(func() {
-		if sess != nil {
-			sess.Close()
-		}
 	})
 }

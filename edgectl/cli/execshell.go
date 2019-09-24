@@ -16,7 +16,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, done chan bool, errchan chan error) error {
+func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, errchan chan error, openurl chan bool) error {
 	var sess *smux.Session
 	dataChan.OnOpen(func() {
 		dcconn, err := webrtcutil.WrapDataChannel(dataChan)
@@ -29,6 +29,8 @@ func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, done chan boo
 			errchan <- fmt.Errorf("failed to create smux client, %v", err)
 			return
 		}
+
+		openurl <- true
 
 		go func() {
 			for {
@@ -47,7 +49,6 @@ func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, done chan boo
 					for {
 						n, err := stream.Read(buf)
 						if err != nil {
-							errchan <- err
 							break
 						}
 						client.Write(buf[:n])
@@ -61,7 +62,6 @@ func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, done chan boo
 					for {
 						n, err := client.Read(buf)
 						if err != nil {
-							errchan <- err
 							break
 						}
 						stream.Write(buf[:n])
@@ -77,13 +77,13 @@ func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, done chan boo
 		if sess != nil {
 			sess.Close()
 		}
-		done <- true
+		errchan <- nil
 	})
 
 	return nil
 }
 
-func WebrtcShell(dataChan *webrtc.DataChannel, done chan bool, errchan chan error) error {
+func WebrtcShell(dataChan *webrtc.DataChannel, errchan chan error) error {
 	interactive := false
 	if terminal.IsTerminal(int(os.Stdin.Fd())) {
 		// Set stdin and Stdout to raw
@@ -124,7 +124,7 @@ func WebrtcShell(dataChan *webrtc.DataChannel, done chan bool, errchan chan erro
 		os.Stdout.Write(msg.Data)
 	})
 	dataChan.OnClose(func() {
-		done <- true
+		errchan <- nil
 	})
 
 	return nil
@@ -151,18 +151,13 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 		return fmt.Errorf("failed to establish peer connection, %v", err)
 	}
 
-	timeout := uint16(10000)
-	dataChannelOptions := webrtc.DataChannelInit{
-		MaxPacketLifeTime: &timeout, // in milliseconds
-	}
-
-	dataChan, err := peerConn.CreateDataChannel("data", &dataChannelOptions)
+	dataChan, err := peerConn.CreateDataChannel("data", nil)
 	if err != nil {
 		return fmt.Errorf("failed to create data channel, %v", err)
 	}
 
-	done := make(chan bool, 1)
 	errchan := make(chan error, 1)
+	openurl := make(chan bool, 1)
 	connAddr := ""
 
 	if req.Console {
@@ -172,9 +167,11 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 		}
 		defer conn.Close()
 		connAddr = conn.Addr().String()
-		err = WebrtcTunnel(conn, dataChan, done, errchan)
+		ports := strings.Split(connAddr, ":")
+		connAddr = "127.0.0.1:" + ports[len(ports)-1]
+		err = WebrtcTunnel(conn, dataChan, errchan, openurl)
 	} else {
-		err = WebrtcShell(dataChan, done, errchan)
+		err = WebrtcShell(dataChan, errchan)
 	}
 	if err != nil {
 		return err
@@ -184,6 +181,7 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 	if err != nil {
 		return err
 	}
+
 	err = peerConn.SetLocalDescription(offer)
 	if err != nil {
 		return err
@@ -210,17 +208,12 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 		if err != nil {
 			return fmt.Errorf("unable to parse console url, %s, %v", reply.ConsoleUrl, err)
 		}
-		util.OpenUrl(strings.Replace(reply.ConsoleUrl, urlObj.Host, connAddr, 1))
+		go func() {
+			<-openurl
+			util.OpenUrl(strings.Replace(reply.ConsoleUrl, urlObj.Host, connAddr, 1))
+		}()
 	}
 
 	// wait for connection to complete
-	var outerr error
-	select {
-	case <-done:
-		err = nil
-	case outerr = <-errchan:
-		err = outerr
-	}
-
-	return err
+	return <-errchan
 }
