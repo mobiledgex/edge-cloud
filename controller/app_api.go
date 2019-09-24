@@ -152,7 +152,8 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 			parts := strings.Split(in.ImagePath, "/")
 			// Append default registry address for internal image paths
 			if len(parts) < 2 || !strings.Contains(parts[0], ".") {
-				return fmt.Errorf("imagepath should be full registry URL: <domain-name>/<registry-path>")
+				in.ImagePath = cloudcommon.DockerHub + "/" + in.ImagePath
+				log.SpanLog(ctx, log.DebugLevelApi, "Using default docker registry", "ImagePath", in.ImagePath)
 			}
 		}
 	}
