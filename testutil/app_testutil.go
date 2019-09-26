@@ -48,7 +48,6 @@ It has these top-level messages:
 	CloudletPoolKey
 	CloudletPool
 	CloudletPoolMember
-	CloudletPoolList
 	ClusterKey
 	ClusterInstKey
 	ClusterInst
@@ -381,29 +380,40 @@ func FindAppData(key *edgeproto.AppKey, testData []edgeproto.App) (*edgeproto.Ap
 }
 
 func (s *DummyServer) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.AppCache.Update(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.AppCache.Delete(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.AppCache.Update(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) ShowApp(in *edgeproto.App, server edgeproto.AppApi_ShowAppServer) error {
+	var err error
 	obj := &edgeproto.App{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
-		server.Send(&edgeproto.App{})
-		server.Send(&edgeproto.App{})
-		server.Send(&edgeproto.App{})
-	}
-	for _, out := range s.Apps {
-		if !out.Matches(in, edgeproto.MatchFilter()) {
-			continue
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.App{})
 		}
-		server.Send(&out)
 	}
-	return nil
+	err = s.AppCache.Show(in, func(obj *edgeproto.App) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
 }

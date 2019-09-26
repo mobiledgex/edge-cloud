@@ -146,7 +146,7 @@ func request_CloudletPoolMemberApi_ShowCloudletPoolMember_0(ctx context.Context,
 
 }
 
-func request_CloudletPoolMemberApi_ShowPoolsForCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletPoolMemberApiClient, req *http.Request, pathParams map[string]string) (CloudletPoolMemberApi_ShowPoolsForCloudletClient, runtime.ServerMetadata, error) {
+func request_CloudletPoolShowApi_ShowPoolsForCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletPoolShowApiClient, req *http.Request, pathParams map[string]string) (CloudletPoolShowApi_ShowPoolsForCloudletClient, runtime.ServerMetadata, error) {
 	var protoReq CloudletKey
 	var metadata runtime.ServerMetadata
 
@@ -171,7 +171,7 @@ func request_CloudletPoolMemberApi_ShowPoolsForCloudlet_0(ctx context.Context, m
 
 }
 
-func request_CloudletPoolMemberApi_ShowCloudletsForPool_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletPoolMemberApiClient, req *http.Request, pathParams map[string]string) (CloudletPoolMemberApi_ShowCloudletsForPoolClient, runtime.ServerMetadata, error) {
+func request_CloudletPoolShowApi_ShowCloudletsForPool_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletPoolShowApiClient, req *http.Request, pathParams map[string]string) (CloudletPoolShowApi_ShowCloudletsForPoolClient, runtime.ServerMetadata, error) {
 	var protoReq CloudletPoolKey
 	var metadata runtime.ServerMetadata
 
@@ -184,31 +184,6 @@ func request_CloudletPoolMemberApi_ShowCloudletsForPool_0(ctx context.Context, m
 	}
 
 	stream, err := client.ShowCloudletsForPool(ctx, &protoReq)
-	if err != nil {
-		return nil, metadata, err
-	}
-	header, err := stream.Header()
-	if err != nil {
-		return nil, metadata, err
-	}
-	metadata.HeaderMD = header
-	return stream, metadata, nil
-
-}
-
-func request_CloudletPoolMemberApi_ShowCloudletsForPoolList_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletPoolMemberApiClient, req *http.Request, pathParams map[string]string) (CloudletPoolMemberApi_ShowCloudletsForPoolListClient, runtime.ServerMetadata, error) {
-	var protoReq CloudletPoolList
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	stream, err := client.ShowCloudletsForPoolList(ctx, &protoReq)
 	if err != nil {
 		return nil, metadata, err
 	}
@@ -436,66 +411,6 @@ func RegisterCloudletPoolMemberApiHandlerClient(ctx context.Context, mux *runtim
 
 	})
 
-	mux.Handle("POST", pattern_CloudletPoolMemberApi_ShowPoolsForCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_CloudletPoolMemberApi_ShowPoolsForCloudlet_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_CloudletPoolMemberApi_ShowPoolsForCloudlet_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("POST", pattern_CloudletPoolMemberApi_ShowCloudletsForPool_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_CloudletPoolMemberApi_ShowCloudletsForPool_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_CloudletPoolMemberApi_ShowCloudletsForPool_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("POST", pattern_CloudletPoolMemberApi_ShowCloudletsForPoolList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_CloudletPoolMemberApi_ShowCloudletsForPoolList_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_CloudletPoolMemberApi_ShowCloudletsForPoolList_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-
-	})
-
 	return nil
 }
 
@@ -505,12 +420,6 @@ var (
 	pattern_CloudletPoolMemberApi_DeleteCloudletPoolMember_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"remove", "cloudletpoolmember"}, ""))
 
 	pattern_CloudletPoolMemberApi_ShowCloudletPoolMember_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudletpoolmember"}, ""))
-
-	pattern_CloudletPoolMemberApi_ShowPoolsForCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "poolsforcloudlet"}, ""))
-
-	pattern_CloudletPoolMemberApi_ShowCloudletsForPool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudletsforpool"}, ""))
-
-	pattern_CloudletPoolMemberApi_ShowCloudletsForPoolList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudletsforpoollist"}, ""))
 )
 
 var (
@@ -519,10 +428,97 @@ var (
 	forward_CloudletPoolMemberApi_DeleteCloudletPoolMember_0 = runtime.ForwardResponseMessage
 
 	forward_CloudletPoolMemberApi_ShowCloudletPoolMember_0 = runtime.ForwardResponseStream
+)
 
-	forward_CloudletPoolMemberApi_ShowPoolsForCloudlet_0 = runtime.ForwardResponseStream
+// RegisterCloudletPoolShowApiHandlerFromEndpoint is same as RegisterCloudletPoolShowApiHandler but
+// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
+func RegisterCloudletPoolShowApiHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.Dial(endpoint, opts...)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
 
-	forward_CloudletPoolMemberApi_ShowCloudletsForPool_0 = runtime.ForwardResponseStream
+	return RegisterCloudletPoolShowApiHandler(ctx, mux, conn)
+}
 
-	forward_CloudletPoolMemberApi_ShowCloudletsForPoolList_0 = runtime.ForwardResponseStream
+// RegisterCloudletPoolShowApiHandler registers the http handlers for service CloudletPoolShowApi to "mux".
+// The handlers forward requests to the grpc endpoint over "conn".
+func RegisterCloudletPoolShowApiHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterCloudletPoolShowApiHandlerClient(ctx, mux, NewCloudletPoolShowApiClient(conn))
+}
+
+// RegisterCloudletPoolShowApiHandlerClient registers the http handlers for service CloudletPoolShowApi
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "CloudletPoolShowApiClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "CloudletPoolShowApiClient"
+// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
+// "CloudletPoolShowApiClient" to call the correct interceptors.
+func RegisterCloudletPoolShowApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, client CloudletPoolShowApiClient) error {
+
+	mux.Handle("POST", pattern_CloudletPoolShowApi_ShowPoolsForCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_CloudletPoolShowApi_ShowPoolsForCloudlet_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CloudletPoolShowApi_ShowPoolsForCloudlet_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_CloudletPoolShowApi_ShowCloudletsForPool_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_CloudletPoolShowApi_ShowCloudletsForPool_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CloudletPoolShowApi_ShowCloudletsForPool_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
+}
+
+var (
+	pattern_CloudletPoolShowApi_ShowPoolsForCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "poolsforcloudlet"}, ""))
+
+	pattern_CloudletPoolShowApi_ShowCloudletsForPool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudletsforpool"}, ""))
+)
+
+var (
+	forward_CloudletPoolShowApi_ShowPoolsForCloudlet_0 = runtime.ForwardResponseStream
+
+	forward_CloudletPoolShowApi_ShowCloudletsForPool_0 = runtime.ForwardResponseStream
 )

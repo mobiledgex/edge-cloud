@@ -3,6 +3,7 @@
 package main
 
 import (
+	"strings"
 	"text/template"
 
 	"github.com/gogo/protobuf/proto"
@@ -587,34 +588,45 @@ type methodArgs struct {
 	OutName   string
 	Outstream bool
 	OutList   bool
+	HasCache  bool
+	Show      bool
+	CacheFunc string
 }
 
 var methodTmpl = `
 {{- if .Outstream}}
 func (s *DummyServer) {{.Method}}(in *edgeproto.{{.InName}}, server edgeproto.{{.Service}}_{{.Method}}Server) error {
+	var err error
+{{- if .CacheFunc}}
+	s.{{.InName}}Cache.{{.CacheFunc}}(server.Context(), in, 0)
+{{- end}}
 {{- if (eq .InName .OutName)}}
 	obj := &edgeproto.{{.OutName}}{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
 {{- else}}
 	if true {
 {{- end}}
-		server.Send(&edgeproto.{{.OutName}}{})
-		server.Send(&edgeproto.{{.OutName}}{})
-		server.Send(&edgeproto.{{.OutName}}{})
-	}
-{{- if .OutList}}
-	for _, out := range s.{{.OutName}}s {
-		if !out.Matches(in, edgeproto.MatchFilter()) {
-			continue
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.{{.OutName}}{})
 		}
-		server.Send(&out)
 	}
+{{- if and .OutList .HasCache}}
+	err = s.{{.InName}}Cache.Show(in, func(obj *edgeproto.{{.InName}}) error {
+		err := server.Send(obj)
+		return err
+	})
 {{- end}}
-	return nil
+	return err
 }
 {{- else}}
 func (s *DummyServer) {{.Method}}(ctx context.Context, in *edgeproto.{{.InName}}) (*edgeproto.{{.OutName}}, error) {
-	return &edgeproto.{{.OutName}}{}, nil
+	if s.CudNoop {
+		return &edgeproto.{{.OutName}}{}, nil	
+	}
+{{- if .CacheFunc}}
+	s.{{.InName}}Cache.{{.CacheFunc}}(ctx, in, 0)
+{{- end}}
+	return &edgeproto.{{.OutName}}{}, nil	
 }
 {{- end}}
 
@@ -633,6 +645,17 @@ func (t *TestCud) genDummyMethod(service string, method *descriptor.MethodDescri
 		OutName:   *out.DescriptorProto.Name,
 		Outstream: gensupport.ServerStreaming(method),
 		OutList:   GetGenerateCud(out.DescriptorProto),
+		HasCache:  GetGenerateCache(in.DescriptorProto),
+		Show:      strings.HasPrefix(*method.Name, "Show"),
+	}
+	if args.HasCache {
+		if strings.HasPrefix(*method.Name, "Create") {
+			args.CacheFunc = "Update"
+		} else if strings.HasPrefix(*method.Name, "Delete") {
+			args.CacheFunc = "Delete"
+		} else if strings.HasPrefix(*method.Name, "Update") {
+			args.CacheFunc = "Update"
+		}
 	}
 	err := t.methodTmpl.Execute(t, &args)
 	if err != nil {
@@ -652,9 +675,14 @@ func (t *TestCud) genDummyServer() {
 			if !GetGenerateCud(desc) {
 				continue
 			}
-			t.P(desc.Name, "s []edgeproto.", desc.Name)
+			if !GetGenerateCache(desc) {
+				continue
+			}
+			t.P(desc.Name, "Cache edgeproto.", desc.Name, "Cache")
 		}
 	}
+	t.P("ShowDummyCount int")
+	t.P("CudNoop bool")
 	t.P("}")
 	t.P()
 
@@ -666,7 +694,10 @@ func (t *TestCud) genDummyServer() {
 			if !GetGenerateCud(desc) {
 				continue
 			}
-			t.P("d.", desc.Name, "s = make([]edgeproto.", desc.Name, ", 0)")
+			if !GetGenerateCache(desc) {
+				continue
+			}
+			t.P("edgeproto.Init", desc.Name, "Cache(&d.", desc.Name, "Cache)")
 		}
 	}
 	for _, file := range t.Generator.Request.ProtoFile {
@@ -731,4 +762,8 @@ func GetDummyServer(service *descriptor.ServiceDescriptorProto) bool {
 
 func GetGenerateAddrmTest(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateAddrmTest, false)
+}
+
+func GetGenerateCache(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCache, false)
 }

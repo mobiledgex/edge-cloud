@@ -91,7 +91,7 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	if err != nil {
 		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "started "+crmProc.GetExeName())
+	log.SpanLog(ctx, log.DebugLevelApi, "started "+crmProc.GetExeName(), "pfConfig", pfConfig)
 	trackedProcess[cloudlet.Key] = crmProc
 
 	return nil

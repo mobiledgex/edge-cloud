@@ -46,11 +46,6 @@ message CloudletPoolMember {
   option (protogen.alias) = "pool=PoolKey.Name,cloudlet=CloudletKey.Name,operator=CloudletKey.OperatorKey.Name";
 }
 
-message CloudletPoolList {
-  // Name of Cloudlet Pool (may be repeated)
-  repeated string pool_name = 1;
-}
-
 service CloudletPoolApi {
   // Create a CloudletPool
   rpc CreateCloudletPool(CloudletPool) returns (Result) {
@@ -79,7 +74,6 @@ service CloudletPoolApi {
 }
 
 service CloudletPoolMemberApi {
-  option (protogen.dummy_server) = false;
   // Add a Cloudlet to a CloudletPool
   rpc CreateCloudletPoolMember(CloudletPoolMember) returns (Result) {
     option (google.api.http) = {
@@ -104,6 +98,10 @@ service CloudletPoolMemberApi {
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionView,";
   }
+}
+
+service CloudletPoolShowApi {
+  option (protogen.dummy_server) = false;
   // Show CloudletPools that have Cloudlet as a member
   rpc ShowPoolsForCloudlet(CloudletKey) returns (stream CloudletPool) {
     option (google.api.http) = {
@@ -122,13 +120,4 @@ service CloudletPoolMemberApi {
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionView,";
     option (protogen.input_required) = true;
   }
-  // Show Cloudlets that belong to listed Pools
-  rpc ShowCloudletsForPoolList(CloudletPoolList) returns (stream Cloudlet) {
-    option (google.api.http) = {
-      post: "/show/cloudletsforpoollist"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionView,";
-    option (protogen.input_required) = true;
-  }  
 }

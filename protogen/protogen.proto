@@ -39,6 +39,7 @@ extend google.protobuf.MessageOptions {
   bool generate_addrm_test = 51031;
   bool obj_and_key = 51032;
   string also_required = 51033; // add required key values
+  string mc2_target_cloudlet = 51035;
 }
 
 extend google.protobuf.EnumOptions {
@@ -69,6 +70,7 @@ extend google.protobuf.MethodOptions {
   // that return a stream.
   bool stream_out_incremental = 51029;
   bool input_required = 51033; // require input for show commands
+  bool mc2_custom_authz = 51034;
 }
 
 extend google.protobuf.ServiceOptions {
