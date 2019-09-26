@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -66,6 +67,9 @@ var DeleteClusterInstTimeout = 20 * time.Minute
 var platformApps = map[string]bool{
 	DeveloperSamsung + ":" + SamsungEnablingLayer: true,
 }
+
+// Common regular expression for quoted strings parse
+var QuotedStringRegex = regexp.MustCompile(`"(.*?)"`)
 
 // IsPlatformApp true if the developer/app combo is a platform app
 func IsPlatformApp(devname string, appname string) bool {
