@@ -2,6 +2,7 @@ package k8smgmt
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
@@ -28,25 +29,32 @@ func getHelmOpts(client pc.PlatformClient, appName string, configs []*edgeproto.
 }
 
 // helm chart install options are passed as app annotations.
-// Example: "verion=1.2.2,wait=true,timeout=60" would result in "--version 1.2.2 --wait --timeout 60"
+// Example: "version=1.2.2,wait=true,timeout=60" would result in "--version 1.2.2 --wait --timeout 60"
 func getHelmInstallOptsString(annotations string) (string, error) {
 	outArr := []string{}
 	if annotations == "" {
 		return "", nil
+	}
+	// Prevent possible cross-scripting
+	invalidChar := strings.IndexAny(annotations, ";`")
+	if invalidChar != -1 {
+		return "", fmt.Errorf("\"%c\" not allowed in annotations", annotations[invalidChar])
 	}
 	opts := strings.Split(annotations, ",")
 	for _, v := range opts {
 		// split by '='
 		nameVal := strings.Split(v, "=")
 		if len(nameVal) < 2 {
-			return "", fmt.Errorf("Invalid annotations stirng <%s>", annotations)
+			return "", fmt.Errorf("Invalid annotations string <%s>", annotations)
 		}
 		// case of "wait=true", true, should not be passed
 		if nameVal[1] == "true" {
 			nameVal = nameVal[:1]
+		} else {
+			nameVal[1] = strings.TrimSpace(nameVal[1])
 		}
 		// prepend '--' to the flag
-		nameVal[0] = "--" + nameVal[0]
+		nameVal[0] = "--" + strings.TrimSpace(nameVal[0])
 		outArr = append(outArr, nameVal...)
 	}
 	return strings.Join(outArr, " "), nil
@@ -58,28 +66,30 @@ func getHelmInstallOptsString(annotations string) (string, error) {
 //   - external: "https://resources.gigaspaces.com/helm-charts:gigaspaces/insightedge"
 //      - repo name is "gigaspaces" and path is "https://resources.gigaspaces.com/helm-charts"
 func getHelmRepoAndChart(imagePath string) (string, string, error) {
-	if strings.HasPrefix(imagePath, "http://") || strings.HasPrefix(imagePath, "https://") {
-		paths := strings.Split(imagePath, ":")
-		// [http]:[//resources.gigaspaces.com/helm-charts]:[gigaspaces/insitedge]
-		if len(paths) != 3 {
-			return "", "", fmt.Errorf("Could not parse the repository url: <%s>", imagePath)
-		}
-		// split [gigaspaces/insitedge]
-		chart := strings.Split(paths[2], "/")
-		if len(chart) < 2 {
-			return "", "", fmt.Errorf("Could not parse the chart: <%s>", paths[2])
-		}
-		// return string "gigaspaces https://resources.gigaspaces.com/helm-charts"
-		return chart[0] + " " + paths[0] + ":" + paths[1], paths[2], nil
+	var chart = ""
+	// scheme + host + first part of path gives repo path
+	chartUrl, err := url.Parse(imagePath)
+	if err != nil {
+		return "", "", err
+	}
+	sepIndex := strings.IndexByte(chartUrl.Path, ':')
+	if sepIndex < 0 {
+		chart = chartUrl.Path
+	} else {
+		// split path into path, and chart
+		chart = chartUrl.Path[sepIndex+1:]
+		chartUrl.Path = chartUrl.Path[0:sepIndex]
 	}
 
-	// validate a simple chart image path
-	chart := strings.Split(imagePath, "/")
-	if len(chart) < 2 {
+	chartParts := strings.Split(chart, "/")
+	if len(chartParts) != 2 {
 		return "", "", fmt.Errorf("Could not parse the chart: <%s>", imagePath)
 	}
 
-	return "", imagePath, nil
+	if chartUrl.Hostname() != "" {
+		return chartParts[0] + " " + chartUrl.String(), chart, nil
+	}
+	return "", chart, nil
 }
 
 func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
