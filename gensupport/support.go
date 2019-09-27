@@ -298,6 +298,25 @@ func GetStringExtension(pb proto.Message, extension *proto.ExtensionDesc, def st
 	return def
 }
 
+func FindStringExtension(pb proto.Message, extension *proto.ExtensionDesc) (string, bool) {
+	if reflect.ValueOf(pb).IsNil() {
+		return "", false
+	}
+	value, err := proto.GetExtension(pb, extension)
+	if err == nil && value.(*string) != nil {
+		return *(value.(*string)), true
+	}
+	return "", false
+}
+
+func HasExtension(pb proto.Message, extension *proto.ExtensionDesc) bool {
+	if reflect.ValueOf(pb).IsNil() {
+		return false
+	}
+	value, err := proto.GetExtension(pb, extension)
+	return err == nil && value != nil
+}
+
 func IsRepeated(field *descriptor.FieldDescriptorProto) bool {
 	return *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
 }
