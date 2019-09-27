@@ -26,6 +26,62 @@ func getHelmOpts(client pc.PlatformClient, appName string, configs []*edgeproto.
 	}
 	return getHelmYamlOpt(ymls), nil
 }
+
+// helm chart install options are passed as app annotations.
+// Example: "verion=1.2.2,wait=true,timeout=60" would result in "--version 1.2.2 --wait --timeout 60"
+func getHelmInstallOptsString(annotations string) (string, error) {
+	outArr := []string{}
+	if annotations == "" {
+		return "", nil
+	}
+	opts := strings.Split(annotations, ",")
+	for _, v := range opts {
+		// split by '='
+		nameVal := strings.Split(v, "=")
+		if len(nameVal) < 2 {
+			return "", fmt.Errorf("Invalid annotations stirng <%s>", annotations)
+		}
+		// case of "wait=true", true, should not be passed
+		if nameVal[1] == "true" {
+			nameVal = nameVal[:1]
+		}
+		// prepend '--' to the flag
+		nameVal[0] = "--" + nameVal[0]
+		outArr = append(outArr, nameVal...)
+	}
+	return strings.Join(outArr, " "), nil
+}
+
+// helm chart repositories are encoded in image path
+// There are two types of charts:
+//   - standard: "stable/prometheus-operator" which come from the default repo
+//   - external: "https://resources.gigaspaces.com/helm-charts:gigaspaces/insightedge"
+//      - repo name is "gigaspaces" and path is "https://resources.gigaspaces.com/helm-charts"
+func getHelmRepoAndChart(imagePath string) (string, string, error) {
+	if strings.HasPrefix(imagePath, "http://") || strings.HasPrefix(imagePath, "https://") {
+		paths := strings.Split(imagePath, ":")
+		// [http]:[//resources.gigaspaces.com/helm-charts]:[gigaspaces/insitedge]
+		if len(paths) != 3 {
+			return "", "", fmt.Errorf("Could not parse the repository url: <%s>", imagePath)
+		}
+		// split [gigaspaces/insitedge]
+		chart := strings.Split(paths[2], "/")
+		if len(chart) < 2 {
+			return "", "", fmt.Errorf("Could not parse the chart: <%s>", paths[2])
+		}
+		// return string "gigaspaces https://resources.gigaspaces.com/helm-charts"
+		return chart[0] + " " + paths[0] + ":" + paths[1], paths[2], nil
+	}
+
+	// validate a simple chart image path
+	chart := strings.Split(imagePath, "/")
+	if len(chart) < 2 {
+		return "", "", fmt.Errorf("Could not parse the chart: <%s>", imagePath)
+	}
+
+	return "", imagePath, nil
+}
+
 func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.DebugLog(log.DebugLevelMexos, "create kubernetes helm app", "clusterInst", clusterInst, "kubeNames", names)
 
@@ -39,12 +95,31 @@ func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *
 		}
 	}
 
+	// get helm repository config for the app
+	helmRepo, chart, err := getHelmRepoAndChart(app.ImagePath)
+	if err != nil {
+		return err
+	}
+	// Need to add helm repository first
+	if helmRepo != "" {
+		cmd = fmt.Sprintf("%s helm repo add %s", names.KconfEnv, helmRepo)
+		out, err = client.Output(cmd)
+		if err != nil {
+			return fmt.Errorf("error adding helm repo, %s, %s, %v", cmd, out, err)
+		}
+		log.DebugLog(log.DebugLevelMexos, "added helm repository")
+	}
+	helmArgs, err := getHelmInstallOptsString(app.Annotations)
+	if err != nil {
+		return err
+	}
 	helmOpts, err := getHelmOpts(client, names.AppName, app.Configs)
 	if err != nil {
 		return err
 	}
 	log.DebugLog(log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
-	cmd = fmt.Sprintf("%s helm install %s --name %s %s", names.KconfEnv, names.AppImage, names.AppName, helmOpts)
+	cmd = fmt.Sprintf("%s helm install %s %s --name %s %s", names.KconfEnv, chart, helmArgs,
+		names.AppName, helmOpts)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deploying helm chart, %s, %s, %v", cmd, out, err)
