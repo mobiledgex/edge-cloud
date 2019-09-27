@@ -69,6 +69,9 @@ extend google.protobuf.MethodOptions {
   // that return a stream.
   bool stream_out_incremental = 51029;
   bool input_required = 51033; // require input for show commands
+  string method_noconfig = 51035; // override message setting
+  string method_also_required = 51036; // override message setting
+  string method_not_required = 51037; // override message setting
 }
 
 extend google.protobuf.ServiceOptions {
