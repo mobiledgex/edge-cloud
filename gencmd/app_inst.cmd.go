@@ -104,8 +104,8 @@ var AppInstApiCmd edgeproto.AppInstApiClient
 
 var CreateAppInstCmd = &cli.Command{
 	Use:          "CreateAppInst",
-	RequiredArgs: strings.Join(AppInstRequiredArgs, " "),
-	OptionalArgs: strings.Join(AppInstOptionalArgs, " "),
+	RequiredArgs: strings.Join(CreateAppInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(CreateAppInstOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
 	SpecialArgs:  &AppInstSpecialArgs,
 	Comments:     AppInstComments,
@@ -230,8 +230,8 @@ func DeleteAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 
 var UpdateAppInstCmd = &cli.Command{
 	Use:          "UpdateAppInst",
-	RequiredArgs: strings.Join(AppInstRequiredArgs, " "),
-	OptionalArgs: strings.Join(AppInstOptionalArgs, " "),
+	RequiredArgs: strings.Join(UpdateAppInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(UpdateAppInstOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
 	SpecialArgs:  &AppInstSpecialArgs,
 	Comments:     AppInstComments,
@@ -545,12 +545,9 @@ var AppInstRequiredArgs = []string{
 }
 var AppInstOptionalArgs = []string{
 	"clusterdeveloper",
-	"flavor.name",
+	"flavor",
 	"state",
-	"errors",
 	"crmoverride",
-	"runtimeinfo.containerids",
-	"runtimeinfo.consoleurl",
 	"autoclusteripaccess",
 	"forceupdate",
 	"updatemultiple",
@@ -563,6 +560,7 @@ var AppInstAliasArgs = []string{
 	"operator=key.clusterinstkey.cloudletkey.operatorkey.name",
 	"cloudlet=key.clusterinstkey.cloudletkey.name",
 	"clusterdeveloper=key.clusterinstkey.developer",
+	"flavor=flavor.name",
 }
 var AppInstComments = map[string]string{
 	"developer":                      "Organization or Company Name that a Developer is part of",
@@ -587,7 +585,7 @@ var AppInstComments = map[string]string{
 	"mappedports.pathprefix":         "Public facing path for HTTP L7 access.",
 	"mappedports.fqdnprefix":         "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"mappedports.endport":            "A non-zero end port indicates this is a port range from internal port to end port, inclusive.",
-	"flavor.name":                    "Flavor name",
+	"flavor":                         "Flavor name",
 	"state":                          "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare",
 	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"crmoverride":                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
@@ -663,3 +661,33 @@ var AppInstMetricsComments = map[string]string{
 	"something": "what goes here? Note that metrics for grpc calls can be done by a prometheus interceptor in grpc, so adding call metrics here may be redundant unless theyre needed for billing.",
 }
 var AppInstMetricsSpecialArgs = map[string]string{}
+var CreateAppInstRequiredArgs = []string{
+	"developer",
+	"appname",
+	"appvers",
+	"cluster",
+	"operator",
+	"cloudlet",
+}
+var CreateAppInstOptionalArgs = []string{
+	"clusterdeveloper",
+	"flavor",
+	"state",
+	"crmoverride",
+	"autoclusteripaccess",
+	"forceupdate",
+}
+var UpdateAppInstRequiredArgs = []string{
+	"developer",
+	"appname",
+	"appvers",
+}
+var UpdateAppInstOptionalArgs = []string{
+	"cluster",
+	"operator",
+	"cloudlet",
+	"clusterdeveloper",
+	"crmoverride",
+	"forceupdate",
+	"updatemultiple",
+}
