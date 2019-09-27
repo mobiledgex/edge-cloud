@@ -17,9 +17,11 @@ import (
 )
 
 const (
-	BasicAuth  = "basic"
-	TokenAuth  = "token"
-	ApiKeyAuth = "apikey"
+	BasicAuth         = "basic"
+	TokenAuth         = "token"
+	ApiKeyAuth        = "apikey"
+	DockerHub         = "docker.io"
+	DockerHubRegistry = "registry-1.docker.io"
 )
 
 type RegistryAuth struct {
@@ -253,7 +255,11 @@ func ValidateDockerRegistryPath(ctx context.Context, regUrl, vaultAddr string) e
 	} else {
 		return fmt.Errorf("Invalid tag in registry path")
 	}
-
+	if urlObj.Host == DockerHub {
+		// Even though public images are typically pulled from docker.io, the API v2 calls must be made to registry-1.docker.io
+		urlObj.Host = DockerHubRegistry
+		log.SpanLog(ctx, log.DebugLevelApi, "substituting docker hub registry for docker hub", "host", urlObj.Host)
+	}
 	regUrl = fmt.Sprintf("%s://%s/%s%s/tags/list", urlObj.Scheme, urlObj.Host, version, regPath)
 	log.SpanLog(ctx, log.DebugLevelApi, "registry api url", "url", regUrl)
 
