@@ -3,12 +3,22 @@ package k8smgmt
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
+
+// this is an initial set of supported helm install options
+var validHelmInstallOpts = map[string]struct{}{
+	"version":  struct{}{},
+	"timeout":  struct{}{},
+	"wait":     struct{}{},
+	"verify":   struct{}{},
+	"username": struct{}{},
+}
 
 const AppConfigHelmYaml = "hemlCustomizationYaml"
 
@@ -51,10 +61,19 @@ func getHelmInstallOptsString(annotations string) (string, error) {
 		if nameVal[1] == "true" {
 			nameVal = nameVal[:1]
 		} else {
+			// make sure that all strings are quoted
 			nameVal[1] = strings.TrimSpace(nameVal[1])
+			if _, err := strconv.ParseFloat(nameVal[1], 64); err != nil {
+				nameVal[1] = strconv.Quote(nameVal[1])
+			}
+		}
+		nameVal[0] = strings.TrimSpace(nameVal[0])
+		// validate that the option is one of the supported ones
+		if _, found := validHelmInstallOpts[nameVal[0]]; !found {
+			return "", fmt.Errorf("Invalid install option passed <%s>", nameVal[0])
 		}
 		// prepend '--' to the flag
-		nameVal[0] = "--" + strings.TrimSpace(nameVal[0])
+		nameVal[0] = "--" + nameVal[0]
 		outArr = append(outArr, nameVal...)
 	}
 	return strings.Join(outArr, " "), nil

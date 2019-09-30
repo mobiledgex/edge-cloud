@@ -7,8 +7,8 @@ import (
 )
 
 var testCustomizationFileList = []string{"file1.yml", "file2.yml", "file3.yml"}
-var testInvalidBooleanAnnotationStr = "opt1=val1.2,opt2"
-var testValidBooleanAnnotationStr = "opt1=val1.2,opt2=true"
+var testInvalidBooleanAnnotationStr = "version=val1.2,timeout"
+var testValidBooleanAnnotationStr = "version=val1.2,wait=true,timeout=60"
 var testInvalidAnnotationsVal = "version=1.2.2;rm -Rf /"
 var testInvalidAnnotationsOpt = "version`rm -Rf /`;rm -Rf /=1.2.2"
 
@@ -45,7 +45,7 @@ func TestHelm(t *testing.T) {
 
 	str, err = getHelmInstallOptsString(testValidBooleanAnnotationStr)
 	require.Nil(t, err)
-	require.Equal(t, "--opt1 val1.2 --opt2", str, "Invalid options string returned")
+	require.Equal(t, "--version \"val1.2\" --wait --timeout 60", str, "Invalid options string returned")
 
 	repo, chart, err := getHelmRepoAndChart(testHemlExistingRepoChart)
 	require.Nil(t, err)
