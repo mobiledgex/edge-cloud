@@ -49,5 +49,5 @@ func runExecRequest(c *cli.Command, args []string) error {
 		}
 		return reply, &answer, nil
 	}
-	return webrtcshell.RunWebrtc(req, exchangeFunc)
+	return webrtcshell.RunWebrtc(req, tlsCertFile, exchangeFunc)
 }

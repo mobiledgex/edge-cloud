@@ -2,6 +2,7 @@ package crmutil
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -181,6 +182,7 @@ func (s *WebrtcExec) DataChannel(d *webrtc.DataChannel) {
 }
 
 func (s *WebrtcExec) RTCTunnel(d *webrtc.DataChannel) {
+	var sess *smux.Session
 	d.OnOpen(func() {
 		urlObj, err := url.Parse(s.req.ConsoleUrl)
 		if err != nil {
@@ -192,22 +194,31 @@ func (s *WebrtcExec) RTCTunnel(d *webrtc.DataChannel) {
 			log.DebugLog(log.DebugLevelApi, "failed to wrap webrtc datachannel", "err", err)
 			return
 		}
-		sess, err := smux.Server(dcconn, nil)
+		sess, err = smux.Server(dcconn, nil)
 		if err != nil {
 			log.DebugLog(log.DebugLevelApi, "failed to setup smux server", "err", err)
 			return
 		}
-		defer sess.Close()
 		log.DebugLog(log.DebugLevelApi, "Successfully started console proxy")
 		for {
 			stream, err := sess.AcceptStream()
 			if err != nil {
-				log.DebugLog(log.DebugLevelApi, "failed to setup smux acceptstream", "err", err)
+				if err.Error() != io.ErrClosedPipe.Error() {
+					log.DebugLog(log.DebugLevelApi, "failed to setup smux acceptstream", "err", err)
+				}
 				return
 			}
 			var server net.Conn
 			if urlObj.Scheme == "http" {
 				server, err = net.Dial("tcp", urlObj.Host)
+				if err != nil {
+					log.DebugLog(log.DebugLevelApi, "failed to get console", "err", err)
+					return
+				}
+			} else if urlObj.Scheme == "https" {
+				server, err = tls.Dial("tcp", urlObj.Host, &tls.Config{
+					InsecureSkipVerify: true,
+				})
 				if err != nil {
 					log.DebugLog(log.DebugLevelApi, "failed to get console", "err", err)
 					return
@@ -244,5 +255,8 @@ func (s *WebrtcExec) RTCTunnel(d *webrtc.DataChannel) {
 		}
 	})
 	d.OnClose(func() {
+		if sess != nil {
+			sess.Close()
+		}
 	})
 }

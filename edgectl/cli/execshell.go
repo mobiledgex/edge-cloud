@@ -1,14 +1,17 @@
 package cli
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
 	"net/url"
 	"os"
+	"os/signal"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	mextls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
 	webrtc "github.com/pion/webrtc/v2"
@@ -130,7 +133,10 @@ func WebrtcShell(dataChan *webrtc.DataChannel, errchan chan error) error {
 	return nil
 }
 
-func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error)) error {
+func RunWebrtc(req *edgeproto.ExecRequest, tlsCertFile string, exchangeFunc func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error)) error {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+
 	// hard code config for now
 	config := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
@@ -156,27 +162,6 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 		return fmt.Errorf("failed to create data channel, %v", err)
 	}
 
-	errchan := make(chan error, 1)
-	openurl := make(chan bool, 1)
-	connAddr := ""
-
-	if req.Console {
-		conn, err := net.Listen("tcp", "0.0.0.0:0")
-		if err != nil {
-			return fmt.Errorf("failed to start server, %v", err)
-		}
-		defer conn.Close()
-		connAddr = conn.Addr().String()
-		ports := strings.Split(connAddr, ":")
-		connAddr = "127.0.0.1:" + ports[len(ports)-1]
-		err = WebrtcTunnel(conn, dataChan, errchan, openurl)
-	} else {
-		err = WebrtcShell(dataChan, errchan)
-	}
-	if err != nil {
-		return err
-	}
-
 	offer, err := peerConn.CreateOffer(nil)
 	if err != nil {
 		return err
@@ -197,10 +182,10 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 		return err
 	}
 
+	errchan := make(chan error, 1)
+	openurl := make(chan bool, 1)
+
 	if req.Console {
-		if connAddr == "" {
-			return fmt.Errorf("unable to fetch server address")
-		}
 		if reply.ConsoleUrl == "" {
 			return fmt.Errorf("unable to fetch console URL from webrtc reply")
 		}
@@ -208,11 +193,43 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 		if err != nil {
 			return fmt.Errorf("unable to parse console url, %s, %v", reply.ConsoleUrl, err)
 		}
+		tlsConfig, err := mextls.GetTLSServerConfig(tlsCertFile, false)
+		if err != nil {
+			return fmt.Errorf("unable to fetch tls server config, %v", err)
+		}
+
+		conn, err := tls.Listen("tcp", "0.0.0.0:0", tlsConfig)
+		if err != nil {
+			return fmt.Errorf("failed to start server, %v", err)
+		}
+		defer conn.Close()
+
+		connAddr := conn.Addr().String()
+		ports := strings.Split(connAddr, ":")
+		connAddr = "127.0.0.1:" + ports[len(ports)-1]
+
+		err = WebrtcTunnel(conn, dataChan, errchan, openurl)
+		if err != nil {
+			return err
+		}
 		go func() {
 			<-openurl
-			util.OpenUrl(strings.Replace(reply.ConsoleUrl, urlObj.Host, connAddr, 1))
+			proxyUrl := strings.Replace(reply.ConsoleUrl, urlObj.Host, connAddr, 1)
+			proxyUrl = strings.Replace(proxyUrl, "http:", "https:", 1)
+			util.OpenUrl(proxyUrl)
+			fmt.Println("Press Ctrl-C to exit")
 		}()
+	} else {
+		err = WebrtcShell(dataChan, errchan)
+		if err != nil {
+			return err
+		}
 	}
+
+	go func() {
+		<-signalChan
+		dataChan.Close()
+	}()
 
 	// wait for connection to complete
 	return <-errchan

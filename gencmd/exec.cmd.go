@@ -166,9 +166,9 @@ var ExecRequestRequiredArgs = []string{
 	"operator",
 	"cloudlet",
 	"clusterdeveloper",
-	"command",
 }
 var ExecRequestOptionalArgs = []string{
+	"command",
 	"containerid",
 	"console",
 }
