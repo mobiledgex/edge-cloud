@@ -9,8 +9,8 @@ import (
 var testCustomizationFileList = []string{"file1.yml", "file2.yml", "file3.yml"}
 var testInvalidBooleanAnnotationStr = "version=val1.2,timeout"
 var testValidBooleanAnnotationStr = "version=val1.2,wait=true,timeout=60"
-var testInvalidAnnotationsVal = "version=1.2.2;rm -Rf /"
-var testInvalidAnnotationsOpt = "version`rm -Rf /`;rm -Rf /=1.2.2"
+var testInvalidAnnotationsVal = "version=1.2.2;touch /tmp/broken"
+var testInvalidAnnotationsOpt = "version`touch /tmp/broken`;ls -lf /tmp/broken=1.2.2"
 
 var testHemlExistingRepoChart = "existing/testchart"
 var testHemlNewRepoChart = "testcharts/testchart"
