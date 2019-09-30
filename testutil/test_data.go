@@ -723,26 +723,6 @@ var CloudletPoolData = []edgeproto.CloudletPool{
 }
 
 var CloudletPoolMemberData = []edgeproto.CloudletPoolMember{
-	// Because of import cycle, public cloudlet pool name below
-	// must match one defined in cloudcommon/names.go
-	edgeproto.CloudletPoolMember{
-		PoolKey: edgeproto.CloudletPoolKey{
-			Name: "Public",
-		},
-		CloudletKey: CloudletData[0].Key,
-	},
-	edgeproto.CloudletPoolMember{
-		PoolKey: edgeproto.CloudletPoolKey{
-			Name: "Public",
-		},
-		CloudletKey: CloudletData[1].Key,
-	},
-	edgeproto.CloudletPoolMember{
-		PoolKey: edgeproto.CloudletPoolKey{
-			Name: "Public",
-		},
-		CloudletKey: CloudletData[2].Key,
-	},
 	edgeproto.CloudletPoolMember{
 		PoolKey:     CloudletPoolData[0].Key, // private
 		CloudletKey: CloudletData[3].Key,

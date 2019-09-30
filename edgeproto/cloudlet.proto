@@ -232,7 +232,8 @@ service CloudletApi {
       post: "/show/cloudlet"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,skipenforce";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+    option (protogen.mc2_custom_authz) = true;
   }
 }
 

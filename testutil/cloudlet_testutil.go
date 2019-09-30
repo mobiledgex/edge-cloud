@@ -561,68 +561,78 @@ func FindCloudletInfoData(key *edgeproto.CloudletKey, testData []edgeproto.Cloud
 }
 
 func (s *DummyServer) CreateCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_CreateCloudletServer) error {
+	var err error
+	s.CloudletCache.Update(server.Context(), in, 0)
 	if true {
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
 	}
-	return nil
+	return err
 }
 
 func (s *DummyServer) DeleteCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_DeleteCloudletServer) error {
+	var err error
+	s.CloudletCache.Delete(server.Context(), in, 0)
 	if true {
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
 	}
-	return nil
+	return err
 }
 
 func (s *DummyServer) UpdateCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_UpdateCloudletServer) error {
+	var err error
+	s.CloudletCache.Update(server.Context(), in, 0)
 	if true {
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
 	}
-	return nil
+	return err
 }
 
 func (s *DummyServer) ShowCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_ShowCloudletServer) error {
+	var err error
 	obj := &edgeproto.Cloudlet{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
-		server.Send(&edgeproto.Cloudlet{})
-		server.Send(&edgeproto.Cloudlet{})
-		server.Send(&edgeproto.Cloudlet{})
-	}
-	for _, out := range s.Cloudlets {
-		if !out.Matches(in, edgeproto.MatchFilter()) {
-			continue
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Cloudlet{})
 		}
-		server.Send(&out)
 	}
-	return nil
+	err = s.CloudletCache.Show(in, func(obj *edgeproto.Cloudlet) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
 }
 
 func (s *DummyServer) ShowCloudletInfo(in *edgeproto.CloudletInfo, server edgeproto.CloudletInfoApi_ShowCloudletInfoServer) error {
+	var err error
 	obj := &edgeproto.CloudletInfo{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
-		server.Send(&edgeproto.CloudletInfo{})
-		server.Send(&edgeproto.CloudletInfo{})
-		server.Send(&edgeproto.CloudletInfo{})
-	}
-	for _, out := range s.CloudletInfos {
-		if !out.Matches(in, edgeproto.MatchFilter()) {
-			continue
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.CloudletInfo{})
 		}
-		server.Send(&out)
 	}
-	return nil
+	err = s.CloudletInfoCache.Show(in, func(obj *edgeproto.CloudletInfo) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
 }
 
 func (s *DummyServer) InjectCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) EvictCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
 	return &edgeproto.Result{}, nil
 }

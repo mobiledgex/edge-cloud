@@ -309,70 +309,83 @@ func FindDeveloperData(key *edgeproto.DeveloperKey, testData []edgeproto.Develop
 }
 
 func (s *DummyServer) CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.DeveloperCache.Update(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) DeleteDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.DeveloperCache.Delete(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) UpdateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.DeveloperCache.Update(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) ShowDeveloper(in *edgeproto.Developer, server edgeproto.DeveloperApi_ShowDeveloperServer) error {
+	var err error
 	obj := &edgeproto.Developer{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
-		server.Send(&edgeproto.Developer{})
-		server.Send(&edgeproto.Developer{})
-		server.Send(&edgeproto.Developer{})
-	}
-	for _, out := range s.Developers {
-		if !out.Matches(in, edgeproto.MatchFilter()) {
-			continue
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Developer{})
 		}
-		server.Send(&out)
 	}
-	return nil
+	err = s.DeveloperCache.Show(in, func(obj *edgeproto.Developer) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
 }
 
 type DummyServer struct {
-	Developers          []edgeproto.Developer
-	Flavors             []edgeproto.Flavor
-	Apps                []edgeproto.App
-	Operators           []edgeproto.Operator
-	Cloudlets           []edgeproto.Cloudlet
-	CloudletInfos       []edgeproto.CloudletInfo
-	ClusterInsts        []edgeproto.ClusterInst
-	ClusterInstInfos    []edgeproto.ClusterInstInfo
-	AppInsts            []edgeproto.AppInst
-	AppInstInfos        []edgeproto.AppInstInfo
-	CloudletPools       []edgeproto.CloudletPool
-	CloudletPoolMembers []edgeproto.CloudletPoolMember
-	Controllers         []edgeproto.Controller
-	Nodes               []edgeproto.Node
-	CloudletRefss       []edgeproto.CloudletRefs
-	ClusterRefss        []edgeproto.ClusterRefs
+	DeveloperCache          edgeproto.DeveloperCache
+	FlavorCache             edgeproto.FlavorCache
+	AppCache                edgeproto.AppCache
+	OperatorCache           edgeproto.OperatorCache
+	CloudletCache           edgeproto.CloudletCache
+	CloudletInfoCache       edgeproto.CloudletInfoCache
+	ClusterInstCache        edgeproto.ClusterInstCache
+	ClusterInstInfoCache    edgeproto.ClusterInstInfoCache
+	AppInstCache            edgeproto.AppInstCache
+	AppInstInfoCache        edgeproto.AppInstInfoCache
+	CloudletPoolCache       edgeproto.CloudletPoolCache
+	CloudletPoolMemberCache edgeproto.CloudletPoolMemberCache
+	ControllerCache         edgeproto.ControllerCache
+	NodeCache               edgeproto.NodeCache
+	CloudletRefsCache       edgeproto.CloudletRefsCache
+	ClusterRefsCache        edgeproto.ClusterRefsCache
+	ShowDummyCount          int
+	CudNoop                 bool
 }
 
 func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	d := &DummyServer{}
-	d.Developers = make([]edgeproto.Developer, 0)
-	d.Flavors = make([]edgeproto.Flavor, 0)
-	d.Apps = make([]edgeproto.App, 0)
-	d.Operators = make([]edgeproto.Operator, 0)
-	d.Cloudlets = make([]edgeproto.Cloudlet, 0)
-	d.CloudletInfos = make([]edgeproto.CloudletInfo, 0)
-	d.ClusterInsts = make([]edgeproto.ClusterInst, 0)
-	d.ClusterInstInfos = make([]edgeproto.ClusterInstInfo, 0)
-	d.AppInsts = make([]edgeproto.AppInst, 0)
-	d.AppInstInfos = make([]edgeproto.AppInstInfo, 0)
-	d.CloudletPools = make([]edgeproto.CloudletPool, 0)
-	d.CloudletPoolMembers = make([]edgeproto.CloudletPoolMember, 0)
-	d.Controllers = make([]edgeproto.Controller, 0)
-	d.Nodes = make([]edgeproto.Node, 0)
-	d.CloudletRefss = make([]edgeproto.CloudletRefs, 0)
-	d.ClusterRefss = make([]edgeproto.ClusterRefs, 0)
+	edgeproto.InitDeveloperCache(&d.DeveloperCache)
+	edgeproto.InitFlavorCache(&d.FlavorCache)
+	edgeproto.InitAppCache(&d.AppCache)
+	edgeproto.InitOperatorCache(&d.OperatorCache)
+	edgeproto.InitCloudletCache(&d.CloudletCache)
+	edgeproto.InitCloudletInfoCache(&d.CloudletInfoCache)
+	edgeproto.InitClusterInstCache(&d.ClusterInstCache)
+	edgeproto.InitClusterInstInfoCache(&d.ClusterInstInfoCache)
+	edgeproto.InitAppInstCache(&d.AppInstCache)
+	edgeproto.InitAppInstInfoCache(&d.AppInstInfoCache)
+	edgeproto.InitCloudletPoolCache(&d.CloudletPoolCache)
+	edgeproto.InitCloudletPoolMemberCache(&d.CloudletPoolMemberCache)
+	edgeproto.InitControllerCache(&d.ControllerCache)
+	edgeproto.InitNodeCache(&d.NodeCache)
+	edgeproto.InitCloudletRefsCache(&d.CloudletRefsCache)
+	edgeproto.InitClusterRefsCache(&d.ClusterRefsCache)
 	edgeproto.RegisterDeveloperApiServer(server, d)
 	edgeproto.RegisterFlavorApiServer(server, d)
 	edgeproto.RegisterAppApiServer(server, d)
@@ -384,6 +397,7 @@ func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	edgeproto.RegisterAppInstApiServer(server, d)
 	edgeproto.RegisterAppInstInfoApiServer(server, d)
 	edgeproto.RegisterCloudletPoolApiServer(server, d)
+	edgeproto.RegisterCloudletPoolMemberApiServer(server, d)
 	edgeproto.RegisterControllerApiServer(server, d)
 	edgeproto.RegisterNodeApiServer(server, d)
 	edgeproto.RegisterCloudletRefsApiServer(server, d)

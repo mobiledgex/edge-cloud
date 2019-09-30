@@ -390,33 +390,31 @@ func FindClusterRefsData(key *edgeproto.ClusterInstKey, testData []edgeproto.Clu
 }
 
 func (s *DummyServer) ShowCloudletRefs(in *edgeproto.CloudletRefs, server edgeproto.CloudletRefsApi_ShowCloudletRefsServer) error {
+	var err error
 	obj := &edgeproto.CloudletRefs{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
-		server.Send(&edgeproto.CloudletRefs{})
-		server.Send(&edgeproto.CloudletRefs{})
-		server.Send(&edgeproto.CloudletRefs{})
-	}
-	for _, out := range s.CloudletRefss {
-		if !out.Matches(in, edgeproto.MatchFilter()) {
-			continue
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.CloudletRefs{})
 		}
-		server.Send(&out)
 	}
-	return nil
+	err = s.CloudletRefsCache.Show(in, func(obj *edgeproto.CloudletRefs) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
 }
 
 func (s *DummyServer) ShowClusterRefs(in *edgeproto.ClusterRefs, server edgeproto.ClusterRefsApi_ShowClusterRefsServer) error {
+	var err error
 	obj := &edgeproto.ClusterRefs{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
-		server.Send(&edgeproto.ClusterRefs{})
-		server.Send(&edgeproto.ClusterRefs{})
-		server.Send(&edgeproto.ClusterRefs{})
-	}
-	for _, out := range s.ClusterRefss {
-		if !out.Matches(in, edgeproto.MatchFilter()) {
-			continue
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.ClusterRefs{})
 		}
-		server.Send(&out)
 	}
-	return nil
+	err = s.ClusterRefsCache.Show(in, func(obj *edgeproto.ClusterRefs) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
 }
