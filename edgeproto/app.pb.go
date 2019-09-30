@@ -48,7 +48,6 @@
 		CloudletPoolKey
 		CloudletPool
 		CloudletPoolMember
-		CloudletPoolList
 		ClusterKey
 		ClusterInstKey
 		ClusterInst

@@ -309,29 +309,40 @@ func FindOperatorData(key *edgeproto.OperatorKey, testData []edgeproto.Operator)
 }
 
 func (s *DummyServer) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.OperatorCache.Update(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) DeleteOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.OperatorCache.Delete(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) UpdateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.OperatorCache.Update(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) ShowOperator(in *edgeproto.Operator, server edgeproto.OperatorApi_ShowOperatorServer) error {
+	var err error
 	obj := &edgeproto.Operator{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
-		server.Send(&edgeproto.Operator{})
-		server.Send(&edgeproto.Operator{})
-		server.Send(&edgeproto.Operator{})
-	}
-	for _, out := range s.Operators {
-		if !out.Matches(in, edgeproto.MatchFilter()) {
-			continue
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Operator{})
 		}
-		server.Send(&out)
 	}
-	return nil
+	err = s.OperatorCache.Show(in, func(obj *edgeproto.Operator) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
 }

@@ -64,7 +64,7 @@ func (s *CloudletPoolMemberApi) ShowCloudletPoolMember(in *edgeproto.CloudletPoo
 	return err
 }
 
-func (s *CloudletPoolMemberApi) ShowPoolsForCloudlet(in *edgeproto.CloudletKey, cb edgeproto.CloudletPoolMemberApi_ShowPoolsForCloudletServer) error {
+func (s *CloudletPoolMemberApi) ShowPoolsForCloudlet(in *edgeproto.CloudletKey, cb edgeproto.CloudletPoolShowApi_ShowPoolsForCloudletServer) error {
 	poolKeys := make(map[edgeproto.CloudletPoolKey]struct{})
 	filter := edgeproto.CloudletPoolMember{
 		CloudletKey: *in,
@@ -79,17 +79,8 @@ func (s *CloudletPoolMemberApi) ShowPoolsForCloudlet(in *edgeproto.CloudletKey, 
 	return cloudletPoolApi.showPoolsByKeys(poolKeys, cb.Send)
 }
 
-func (s *CloudletPoolMemberApi) ShowCloudletsForPool(in *edgeproto.CloudletPoolKey, cb edgeproto.CloudletPoolMemberApi_ShowCloudletsForPoolServer) error {
+func (s *CloudletPoolMemberApi) ShowCloudletsForPool(in *edgeproto.CloudletPoolKey, cb edgeproto.CloudletPoolShowApi_ShowCloudletsForPoolServer) error {
 	keys := s.getCloudletKeysForPools(in.Name)
-	return cloudletApi.showCloudletsByKeys(keys, cb.Send)
-}
-
-func (s *CloudletPoolMemberApi) ShowCloudletsForPoolList(in *edgeproto.CloudletPoolList, cb edgeproto.CloudletPoolMemberApi_ShowCloudletsForPoolListServer) error {
-	if len(in.PoolName) == 0 {
-		return fmt.Errorf("No pool names specified")
-	}
-
-	keys := s.getCloudletKeysForPools(in.PoolName...)
 	return cloudletApi.showCloudletsByKeys(keys, cb.Send)
 }
 
