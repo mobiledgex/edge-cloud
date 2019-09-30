@@ -71,6 +71,9 @@ extend google.protobuf.MethodOptions {
   bool stream_out_incremental = 51029;
   bool input_required = 51033; // require input for show commands
   bool mc2_custom_authz = 51034;
+  string method_noconfig = 51035; // override message setting
+  string method_also_required = 51036; // override message setting
+  string method_not_required = 51037; // override message setting
 }
 
 extend google.protobuf.ServiceOptions {
