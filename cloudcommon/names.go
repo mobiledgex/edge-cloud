@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -47,8 +48,6 @@ var NginxMetricsPort = int32(65121)
 // DIND script to pull from kubeadm-dind-cluster
 var DindScriptName = "dind-cluster-v1.14.sh"
 
-var PublicCloudletPool = "Public"
-
 // TODO: these timeouts should be adjust based on target platform,
 // as some platforms (azure, etc) may take much longer.
 // These timeouts should be at least long enough for the controller and
@@ -66,6 +65,9 @@ var DeleteClusterInstTimeout = 20 * time.Minute
 var platformApps = map[string]bool{
 	DeveloperSamsung + ":" + SamsungEnablingLayer: true,
 }
+
+// Common regular expression for quoted strings parse
+var QuotedStringRegex = regexp.MustCompile(`"(.*?)"`)
 
 // IsPlatformApp true if the developer/app combo is a platform app
 func IsPlatformApp(devname string, appname string) bool {

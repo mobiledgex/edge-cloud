@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -30,16 +29,11 @@ func TestCloudletPoolApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	err := cloudletPoolApi.registerPublicPool(ctx)
-	require.Nil(t, err, "register public pool")
-
 	// create supporting data
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 
-	// extra count for "Public" pool created by default
-	testutil.CloudletPoolShowExtraCount = 1
 	testutil.InternalCloudletPoolTest(t, "cud", &cloudletPoolApi, testutil.CloudletPoolData)
 
 	testutil.InternalCloudletPoolMemberTest(t, "cud", &cloudletPoolMemberApi, testutil.CloudletPoolMemberData)
@@ -71,30 +65,10 @@ func TestCloudletPoolApi(t *testing.T) {
 			show.AssertFound(t, cloudlet)
 		}
 	}
-	// test ShowCloudletsForPoolList api
-	{
-		expected := expectedCloudletsForPools(t,
-			testutil.CloudletPoolData[0].Key,
-			testutil.CloudletPoolData[2].Key)
-		poolList := edgeproto.CloudletPoolList{}
-		poolList.PoolName = []string{
-			testutil.CloudletPoolData[0].Key.Name,
-			testutil.CloudletPoolData[2].Key.Name,
-		}
-		show := testutil.ShowCloudlet{}
-		show.Init()
-		show.Ctx = ctx
-		err := cloudletPoolMemberApi.ShowCloudletsForPoolList(&poolList, &show)
-		require.Nil(t, err, "show cloudlets for pool %v", poolList)
-		require.Equal(t, len(expected), len(show.Data), "num cloudlets for pool key %v", poolList)
-		for _, cloudlet := range expected {
-			show.AssertFound(t, cloudlet)
-		}
-	}
 
 	// delete cloudlet, check that it cleans up members
 	{
-		in := testutil.CloudletData[0]
+		in := testutil.CloudletData[3]
 		// first check that there's something to clean up
 		count := countMembersForCloudlet(t, ctx, &in.Key)
 		require.True(t, count > 0, "members exist to clean up")
@@ -107,7 +81,7 @@ func TestCloudletPoolApi(t *testing.T) {
 	}
 	// delete pool, check that it cleans up members
 	{
-		in := testutil.CloudletPoolData[0]
+		in := testutil.CloudletPoolData[1]
 		// first check that there's something to clean up
 		count := countMembersForPool(t, ctx, &in.Key)
 		require.True(t, count > 0, "members exist to clean up")
@@ -126,12 +100,6 @@ func expectedPoolsForCloudlet(t *testing.T, cloudletKey *edgeproto.CloudletKey) 
 			continue
 		}
 		pool, found := testutil.FindCloudletPoolData(&member.PoolKey, testutil.CloudletPoolData)
-		// special case for "Public" pool which is created by controller
-		if !found && member.PoolKey.Name == cloudcommon.PublicCloudletPool {
-			pool = &edgeproto.CloudletPool{}
-			pool.Key.Name = cloudcommon.PublicCloudletPool
-			found = true
-		}
 		require.True(t, found, "find cloudlet pool %v", &member.PoolKey)
 		pools[pool.Key] = pool
 	}

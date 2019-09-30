@@ -48,7 +48,6 @@ It has these top-level messages:
 	CloudletPoolKey
 	CloudletPool
 	CloudletPoolMember
-	CloudletPoolList
 	ClusterKey
 	ClusterInstKey
 	ClusterInst

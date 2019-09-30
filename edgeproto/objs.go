@@ -20,17 +20,19 @@ var ErrEdgeApiAppInstNotFound = errors.New("Specified app instance not found")
 
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
-	Operators        []Operator        `yaml:"operators"`
-	Cloudlets        []Cloudlet        `yaml:"cloudlets"`
-	Flavors          []Flavor          `yaml:"flavors"`
-	ClusterInsts     []ClusterInst     `yaml:"clusterinsts"`
-	Developers       []Developer       `yaml:"developers"`
-	Applications     []App             `yaml:"apps"`
-	AppInstances     []AppInst         `yaml:"appinstances"`
-	CloudletInfos    []CloudletInfo    `yaml:"cloudletinfos"`
-	AppInstInfos     []AppInstInfo     `yaml:"appinstinfos"`
-	ClusterInstInfos []ClusterInstInfo `yaml:"clusterinstinfos"`
-	Nodes            []Node            `yaml:"nodes"`
+	Operators           []Operator           `yaml:"operators"`
+	Cloudlets           []Cloudlet           `yaml:"cloudlets"`
+	Flavors             []Flavor             `yaml:"flavors"`
+	ClusterInsts        []ClusterInst        `yaml:"clusterinsts"`
+	Developers          []Developer          `yaml:"developers"`
+	Applications        []App                `yaml:"apps"`
+	AppInstances        []AppInst            `yaml:"appinstances"`
+	CloudletInfos       []CloudletInfo       `yaml:"cloudletinfos"`
+	AppInstInfos        []AppInstInfo        `yaml:"appinstinfos"`
+	ClusterInstInfos    []ClusterInstInfo    `yaml:"clusterinstinfos"`
+	Nodes               []Node               `yaml:"nodes"`
+	CloudletPools       []CloudletPool       `yaml:"cloudletpools"`
+	CloudletPoolMembers []CloudletPoolMember `yaml:"cloudletpoolmembers"`
 }
 
 // sort each slice by key
@@ -67,6 +69,12 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.Nodes[:], func(i, j int) bool {
 		return a.Nodes[i].Key.GetKeyString() < a.Nodes[j].Key.GetKeyString()
+	})
+	sort.Slice(a.CloudletPools[:], func(i, j int) bool {
+		return a.CloudletPools[i].Key.GetKeyString() < a.CloudletPools[j].Key.GetKeyString()
+	})
+	sort.Slice(a.CloudletPoolMembers[:], func(i, j int) bool {
+		return a.CloudletPoolMembers[i].GetKeyString() < a.CloudletPoolMembers[j].GetKeyString()
 	})
 }
 
@@ -467,6 +475,8 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortAppInstInfo))
 	opts = append(opts, cmpopts.SortSlices(CmpSortClusterInstInfo))
 	opts = append(opts, cmpopts.SortSlices(CmpSortNode))
+	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPool))
+	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPoolMember))
 	return opts
 }
 

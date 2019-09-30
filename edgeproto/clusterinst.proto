@@ -70,6 +70,7 @@ message ClusterInst {
   option (protogen.noconfig) = "Liveness,Auto,MasterFlavor,NodeFlavor,AllocatedIp,Status";
   option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,operator=Key.CloudletKey.OperatorKey.Name,developer=Key.Developer,flavor=Flavor.Name";
+  option (protogen.mc2_target_cloudlet) = "Key.CloudletKey";
 }
 
 service ClusterInstApi {
@@ -81,6 +82,7 @@ service ClusterInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Delete a Cluster instance
   rpc DeleteClusterInst(ClusterInst) returns (stream Result) {
