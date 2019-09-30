@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/objstore"
 )
@@ -25,20 +23,6 @@ func InitCloudletPoolApi(sync *Sync) {
 	sync.RegisterCache(&cloudletPoolApi.cache)
 }
 
-func (s *CloudletPoolApi) registerPublicPool(ctx context.Context) error {
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		pool := edgeproto.CloudletPool{}
-		pool.Key.Name = cloudcommon.PublicCloudletPool
-		if s.store.STMGet(stm, &pool.Key, &pool) {
-			// already present
-			return nil
-		}
-		s.store.STMPut(stm, &pool)
-		return nil
-	})
-	return err
-}
-
 func (s *CloudletPoolApi) CreateCloudletPool(ctx context.Context, in *edgeproto.CloudletPool) (*edgeproto.Result, error) {
 	if err := in.Validate(edgeproto.CloudletPoolAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
@@ -55,9 +39,6 @@ func (s *CloudletPoolApi) CreateCloudletPool(ctx context.Context, in *edgeproto.
 }
 
 func (s *CloudletPoolApi) DeleteCloudletPool(ctx context.Context, in *edgeproto.CloudletPool) (*edgeproto.Result, error) {
-	if in.Key.Name == cloudcommon.PublicCloudletPool {
-		return &edgeproto.Result{}, fmt.Errorf("cannot delete Public pool")
-	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, nil) {
 			return objstore.ErrKVStoreKeyNotFound

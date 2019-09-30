@@ -383,6 +383,14 @@ func ShowCloudletPoolMembers(c *cli.Command, data []edgeproto.CloudletPoolMember
 	}
 }
 
+var CloudletPoolMemberApiCmds = []*cobra.Command{
+	CreateCloudletPoolMemberCmd.GenCmd(),
+	DeleteCloudletPoolMemberCmd.GenCmd(),
+	ShowCloudletPoolMemberCmd.GenCmd(),
+}
+
+var CloudletPoolShowApiCmd edgeproto.CloudletPoolShowApiClient
+
 var ShowPoolsForCloudletCmd = &cli.Command{
 	Use:          "ShowPoolsForCloudlet",
 	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
@@ -405,11 +413,11 @@ func runShowPoolsForCloudlet(c *cli.Command, args []string) error {
 }
 
 func ShowPoolsForCloudlet(c *cli.Command, in *edgeproto.CloudletKey) error {
-	if CloudletPoolMemberApiCmd == nil {
-		return fmt.Errorf("CloudletPoolMemberApi client not initialized")
+	if CloudletPoolShowApiCmd == nil {
+		return fmt.Errorf("CloudletPoolShowApi client not initialized")
 	}
 	ctx := context.Background()
-	stream, err := CloudletPoolMemberApiCmd.ShowPoolsForCloudlet(ctx, in)
+	stream, err := CloudletPoolShowApiCmd.ShowPoolsForCloudlet(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -473,11 +481,11 @@ func runShowCloudletsForPool(c *cli.Command, args []string) error {
 }
 
 func ShowCloudletsForPool(c *cli.Command, in *edgeproto.CloudletPoolKey) error {
-	if CloudletPoolMemberApiCmd == nil {
-		return fmt.Errorf("CloudletPoolMemberApi client not initialized")
+	if CloudletPoolShowApiCmd == nil {
+		return fmt.Errorf("CloudletPoolShowApi client not initialized")
 	}
 	ctx := context.Background()
-	stream, err := CloudletPoolMemberApiCmd.ShowCloudletsForPool(ctx, in)
+	stream, err := CloudletPoolShowApiCmd.ShowCloudletsForPool(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -519,81 +527,9 @@ func ShowCloudletsForPools(c *cli.Command, data []edgeproto.CloudletPoolKey, err
 	}
 }
 
-var ShowCloudletsForPoolListCmd = &cli.Command{
-	Use:          "ShowCloudletsForPoolList",
-	RequiredArgs: strings.Join(CloudletPoolListRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletPoolListOptionalArgs, " "),
-	AliasArgs:    strings.Join(CloudletPoolListAliasArgs, " "),
-	SpecialArgs:  &CloudletPoolListSpecialArgs,
-	Comments:     CloudletPoolListComments,
-	ReqData:      &edgeproto.CloudletPoolList{},
-	ReplyData:    &edgeproto.Cloudlet{},
-	Run:          runShowCloudletsForPoolList,
-}
-
-func runShowCloudletsForPoolList(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.CloudletPoolList)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return ShowCloudletsForPoolList(c, obj)
-}
-
-func ShowCloudletsForPoolList(c *cli.Command, in *edgeproto.CloudletPoolList) error {
-	if CloudletPoolMemberApiCmd == nil {
-		return fmt.Errorf("CloudletPoolMemberApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := CloudletPoolMemberApiCmd.ShowCloudletsForPoolList(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("ShowCloudletsForPoolList failed: %s", errstr)
-	}
-	objs := make([]*edgeproto.Cloudlet, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("ShowCloudletsForPoolList recv failed: %s", err.Error())
-		}
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(objs, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func ShowCloudletsForPoolLists(c *cli.Command, data []edgeproto.CloudletPoolList, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("ShowCloudletsForPoolList %v\n", data[ii])
-		myerr := ShowCloudletsForPoolList(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var CloudletPoolMemberApiCmds = []*cobra.Command{
-	CreateCloudletPoolMemberCmd.GenCmd(),
-	DeleteCloudletPoolMemberCmd.GenCmd(),
-	ShowCloudletPoolMemberCmd.GenCmd(),
+var CloudletPoolShowApiCmds = []*cobra.Command{
 	ShowPoolsForCloudletCmd.GenCmd(),
 	ShowCloudletsForPoolCmd.GenCmd(),
-	ShowCloudletsForPoolListCmd.GenCmd(),
 }
 
 var CloudletPoolKeyRequiredArgs = []string{}
@@ -633,14 +569,3 @@ var CloudletPoolMemberComments = map[string]string{
 	"cloudlet": "Name of the cloudlet",
 }
 var CloudletPoolMemberSpecialArgs = map[string]string{}
-var CloudletPoolListRequiredArgs = []string{}
-var CloudletPoolListOptionalArgs = []string{
-	"poolname",
-}
-var CloudletPoolListAliasArgs = []string{}
-var CloudletPoolListComments = map[string]string{
-	"poolname": "Name of Cloudlet Pool (may be repeated)",
-}
-var CloudletPoolListSpecialArgs = map[string]string{
-	"poolname": "StringArray",
-}
