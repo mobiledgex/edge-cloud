@@ -248,7 +248,17 @@ func TestAutoClusterInst(t *testing.T) {
 	require.Nil(t, err, "delete app inst")
 	found = clusterInstApi.Get(&copy.Key.ClusterInstKey, &clusterInst)
 	require.False(t, found, "get auto-clusterinst")
-
+	// Autocluster AppInst with AutoDelete delete option should fail
+	autoDeleteAppInst := edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey:         testutil.AppData[9].Key,
+			ClusterInstKey: testutil.ClusterInstData[0].Key,
+		},
+	}
+	autoDeleteAppInst.Key.ClusterInstKey.ClusterKey.Name = ClusterAutoPrefix
+	err = appInstApi.CreateAppInst(&autoDeleteAppInst, testutil.NewCudStreamoutAppInst(ctx))
+	require.NotNil(t, err, "create autodelete apppInst")
+	require.Contains(t, err.Error(), "requires an existing cluster instance")
 	dummy.Stop()
 }
 
