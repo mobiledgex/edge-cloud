@@ -339,6 +339,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				// if it already exists, this means we just want to spawn more apps into it
 				return nil
 			}
+			// If this is an autodelete app, we should only allow those in existing cluster instances
+			if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
+				return fmt.Errorf("Autodelete app %s requires an existing cluster instance", app.Key.Name)
+			}
 			cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
 			if cikey.Developer == "" {
 				cikey.Developer = in.Key.AppKey.DeveloperKey.Name
