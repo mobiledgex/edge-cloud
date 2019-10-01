@@ -171,6 +171,17 @@ var AppData = []edgeproto.App{
 		AccessPorts:   "tcp:80,http:443,udp:10002,tcp:5000-5002", // new port range notation
 		DefaultFlavor: FlavorData[0].Key,
 	},
+
+	edgeproto.App{
+		Key: edgeproto.AppKey{
+			DeveloperKey: DevData[0].Key,
+			Name:         "AutoDeleteApp",
+			Version:      "1.0.0",
+		},
+		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		DefaultFlavor: FlavorData[0].Key,
+		DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
+	},
 }
 var OperatorData = []edgeproto.Operator{
 	edgeproto.Operator{
