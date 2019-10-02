@@ -48,8 +48,6 @@ var NginxMetricsPort = int32(65121)
 // DIND script to pull from kubeadm-dind-cluster
 var DindScriptName = "dind-cluster-v1.14.sh"
 
-var PublicCloudletPool = "Public"
-
 // TODO: these timeouts should be adjust based on target platform,
 // as some platforms (azure, etc) may take much longer.
 // These timeouts should be at least long enough for the controller and

@@ -2,12 +2,23 @@ package k8smgmt
 
 import (
 	"fmt"
+	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
+
+// this is an initial set of supported helm install options
+var validHelmInstallOpts = map[string]struct{}{
+	"version":  struct{}{},
+	"timeout":  struct{}{},
+	"wait":     struct{}{},
+	"verify":   struct{}{},
+	"username": struct{}{},
+}
 
 const AppConfigHelmYaml = "hemlCustomizationYaml"
 
@@ -26,6 +37,80 @@ func getHelmOpts(client pc.PlatformClient, appName string, configs []*edgeproto.
 	}
 	return getHelmYamlOpt(ymls), nil
 }
+
+// helm chart install options are passed as app annotations.
+// Example: "version=1.2.2,wait=true,timeout=60" would result in "--version 1.2.2 --wait --timeout 60"
+func getHelmInstallOptsString(annotations string) (string, error) {
+	outArr := []string{}
+	if annotations == "" {
+		return "", nil
+	}
+	// Prevent possible cross-scripting
+	invalidChar := strings.IndexAny(annotations, ";`")
+	if invalidChar != -1 {
+		return "", fmt.Errorf("\"%c\" not allowed in annotations", annotations[invalidChar])
+	}
+	opts := strings.Split(annotations, ",")
+	for _, v := range opts {
+		// split by '='
+		nameVal := strings.Split(v, "=")
+		if len(nameVal) < 2 {
+			return "", fmt.Errorf("Invalid annotations string <%s>", annotations)
+		}
+		// case of "wait=true", true, should not be passed
+		if nameVal[1] == "true" {
+			nameVal = nameVal[:1]
+		} else {
+			// make sure that all strings are quoted
+			nameVal[1] = strings.TrimSpace(nameVal[1])
+			if _, err := strconv.ParseFloat(nameVal[1], 64); err != nil {
+				nameVal[1] = strconv.Quote(nameVal[1])
+			}
+		}
+		nameVal[0] = strings.TrimSpace(nameVal[0])
+		// validate that the option is one of the supported ones
+		if _, found := validHelmInstallOpts[nameVal[0]]; !found {
+			return "", fmt.Errorf("Invalid install option passed <%s>", nameVal[0])
+		}
+		// prepend '--' to the flag
+		nameVal[0] = "--" + nameVal[0]
+		outArr = append(outArr, nameVal...)
+	}
+	return strings.Join(outArr, " "), nil
+}
+
+// helm chart repositories are encoded in image path
+// There are two types of charts:
+//   - standard: "stable/prometheus-operator" which come from the default repo
+//   - external: "https://resources.gigaspaces.com/helm-charts:gigaspaces/insightedge"
+//      - repo name is "gigaspaces" and path is "https://resources.gigaspaces.com/helm-charts"
+func getHelmRepoAndChart(imagePath string) (string, string, error) {
+	var chart = ""
+	// scheme + host + first part of path gives repo path
+	chartUrl, err := url.Parse(imagePath)
+	if err != nil {
+		return "", "", err
+	}
+	sepIndex := strings.IndexByte(chartUrl.Path, ':')
+	if sepIndex < 0 {
+		chart = chartUrl.Path
+	} else {
+		// split path into path, and chart
+		chart = chartUrl.Path[sepIndex+1:]
+		chartUrl.Path = chartUrl.Path[0:sepIndex]
+	}
+
+	chartParts := strings.Split(chart, "/")
+	if len(chartParts) != 2 {
+		return "", "", fmt.Errorf("Could not parse the chart: <%s>", imagePath)
+	}
+
+	if chartUrl.Hostname() != "" {
+		return chartParts[0] + " " + chartUrl.String(), chart, nil
+	}
+	return "", chart, nil
+}
+
 func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.DebugLog(log.DebugLevelMexos, "create kubernetes helm app", "clusterInst", clusterInst, "kubeNames", names)
 
@@ -39,12 +124,31 @@ func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *
 		}
 	}
 
+	// get helm repository config for the app
+	helmRepo, chart, err := getHelmRepoAndChart(app.ImagePath)
+	if err != nil {
+		return err
+	}
+	// Need to add helm repository first
+	if helmRepo != "" {
+		cmd = fmt.Sprintf("%s helm repo add %s", names.KconfEnv, helmRepo)
+		out, err = client.Output(cmd)
+		if err != nil {
+			return fmt.Errorf("error adding helm repo, %s, %s, %v", cmd, out, err)
+		}
+		log.DebugLog(log.DebugLevelMexos, "added helm repository")
+	}
+	helmArgs, err := getHelmInstallOptsString(app.Annotations)
+	if err != nil {
+		return err
+	}
 	helmOpts, err := getHelmOpts(client, names.AppName, app.Configs)
 	if err != nil {
 		return err
 	}
 	log.DebugLog(log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
-	cmd = fmt.Sprintf("%s helm install %s --name %s %s", names.KconfEnv, names.AppImage, names.AppName, helmOpts)
+	cmd = fmt.Sprintf("%s helm install %s %s --name %s %s", names.KconfEnv, chart, helmArgs,
+		names.AppName, helmOpts)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deploying helm chart, %s, %s, %v", cmd, out, err)

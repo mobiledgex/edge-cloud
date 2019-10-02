@@ -309,29 +309,40 @@ func FindFlavorData(key *edgeproto.FlavorKey, testData []edgeproto.Flavor) (*edg
 }
 
 func (s *DummyServer) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.FlavorCache.Update(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.FlavorCache.Delete(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.FlavorCache.Update(ctx, in, 0)
 	return &edgeproto.Result{}, nil
 }
 
 func (s *DummyServer) ShowFlavor(in *edgeproto.Flavor, server edgeproto.FlavorApi_ShowFlavorServer) error {
+	var err error
 	obj := &edgeproto.Flavor{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
-		server.Send(&edgeproto.Flavor{})
-		server.Send(&edgeproto.Flavor{})
-		server.Send(&edgeproto.Flavor{})
-	}
-	for _, out := range s.Flavors {
-		if !out.Matches(in, edgeproto.MatchFilter()) {
-			continue
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Flavor{})
 		}
-		server.Send(&out)
 	}
-	return nil
+	err = s.FlavorCache.Show(in, func(obj *edgeproto.Flavor) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
 }

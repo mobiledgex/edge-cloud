@@ -18,7 +18,23 @@ type Arg struct {
 }
 
 func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *generator.Descriptor, prefixMessageToAlias bool, count int) {
+	generateArgs(g, support, desc, nil, prefixMessageToAlias, count)
+}
+
+func GenerateMethodArgs(g *generator.Generator, support *PluginSupport, method *descriptor.MethodDescriptorProto, prefixMessageToAlias bool, count int) {
+	if !HasMethodArgs(method) {
+		return
+	}
+	desc := GetDesc(g, method.GetInputType())
+	generateArgs(g, support, desc, method, prefixMessageToAlias, count)
+}
+
+func generateArgs(g *generator.Generator, support *PluginSupport, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto, prefixMessageToAlias bool, count int) {
 	message := desc.DescriptorProto
+	msgname := *message.Name
+	if method != nil {
+		msgname = *method.Name
+	}
 
 	aliasSpec := GetAlias(message)
 	aliasMap := make(map[string]string)
@@ -31,17 +47,17 @@ func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *g
 		// real -> alias
 		aliasMap[kv[1]] = kv[0]
 	}
-	noconfig := GetNoConfig(message)
+	noconfig := GetNoConfig(message, method)
 	noconfigMap := make(map[string]struct{})
 	for _, nc := range strings.Split(noconfig, ",") {
 		noconfigMap[nc] = struct{}{}
 	}
-	notreq := GetNotreq(message)
+	notreq := GetNotreq(message, method)
 	notreqMap := make(map[string]struct{})
 	for _, nr := range strings.Split(notreq, ",") {
 		notreqMap[nr] = struct{}{}
 	}
-	alsoreq := GetAlsoRequired(message)
+	alsoreq := GetAlsoRequired(message, method)
 	alsoreqMap := make(map[string]struct{})
 	for _, ar := range strings.Split(alsoreq, ",") {
 		alsoreqMap[ar] = struct{}{}
@@ -52,7 +68,7 @@ func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *g
 
 	// generate required args (set by Key)
 	requiredMap := make(map[string]struct{})
-	g.P("var ", message.Name, "RequiredArgs = []string{")
+	g.P("var ", msgname, "RequiredArgs = []string{")
 	for _, arg := range allargs {
 		if argSpecified(arg.Name, notreqMap) {
 			// explicity not required
@@ -78,7 +94,7 @@ func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *g
 	g.P("}")
 
 	// generate optional args
-	g.P("var ", message.Name, "OptionalArgs = []string{")
+	g.P("var ", msgname, "OptionalArgs = []string{")
 	for _, arg := range allargs {
 		if arg.Name == "Fields" {
 			continue
@@ -101,8 +117,13 @@ func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *g
 	}
 	g.P("}")
 
+	if method != nil {
+		// aliases, comments, etc should be same for methods
+		return
+	}
+
 	// generate aliases
-	g.P("var ", message.Name, "AliasArgs = []string{")
+	g.P("var ", msgname, "AliasArgs = []string{")
 	for _, arg := range allargs {
 		if arg.Name == "Fields" {
 			continue
@@ -130,7 +151,7 @@ func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *g
 	g.P("}")
 
 	// generate comments
-	g.P("var ", message.Name, "Comments = map[string]string{")
+	g.P("var ", msgname, "Comments = map[string]string{")
 	for _, arg := range allargs {
 		if arg.Name == "Fields" || arg.Comment == "" {
 			continue
@@ -145,7 +166,7 @@ func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *g
 	g.P("}")
 
 	// generate special args
-	g.P("var ", message.Name, "SpecialArgs = map[string]string{")
+	g.P("var ", msgname, "SpecialArgs = map[string]string{")
 	keys := make([]string, 0, len(specialArgs))
 	for arg, _ := range specialArgs {
 		keys = append(keys, arg)
@@ -229,19 +250,46 @@ func argSpecified(arg string, entries map[string]struct{}) bool {
 	return false
 }
 
+func HasMethodArgs(method *descriptor.MethodDescriptorProto) bool {
+	if HasExtension(method.Options, protogen.E_MethodNoconfig) ||
+		HasExtension(method.Options, protogen.E_MethodNotRequired) ||
+		HasExtension(method.Options, protogen.E_MethodAlsoRequired) {
+		return true
+	}
+	return false
+}
+
 func GetStreamOutIncremental(method *descriptor.MethodDescriptorProto) bool {
 	return proto.GetBoolExtension(method.Options, protogen.E_StreamOutIncremental, false)
 }
 
-func GetNoConfig(message *descriptor.DescriptorProto) string {
+func GetNoConfig(message *descriptor.DescriptorProto, method *descriptor.MethodDescriptorProto) string {
+	if method != nil {
+		str, found := FindStringExtension(method.Options, protogen.E_MethodNoconfig)
+		if found {
+			return str
+		}
+	}
 	return GetStringExtension(message.Options, protogen.E_Noconfig, "")
 }
 
-func GetNotreq(message *descriptor.DescriptorProto) string {
+func GetNotreq(message *descriptor.DescriptorProto, method *descriptor.MethodDescriptorProto) string {
+	if method != nil {
+		str, found := FindStringExtension(method.Options, protogen.E_MethodNotRequired)
+		if found {
+			return str
+		}
+	}
 	return GetStringExtension(message.Options, protogen.E_NotRequired, "")
 }
 
-func GetAlsoRequired(message *descriptor.DescriptorProto) string {
+func GetAlsoRequired(message *descriptor.DescriptorProto, method *descriptor.MethodDescriptorProto) string {
+	if method != nil {
+		str, found := FindStringExtension(method.Options, protogen.E_MethodAlsoRequired)
+		if found {
+			return str
+		}
+	}
 	return GetStringExtension(message.Options, protogen.E_AlsoRequired, "")
 }
 

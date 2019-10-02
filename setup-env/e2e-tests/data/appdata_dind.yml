@@ -95,6 +95,18 @@ apps:
             key: CloudletName
             name: mexcluster-info
             optional: true
+- key:
+    developerkey:
+      name: MobiledgeX
+    name: insightedge
+    version: "1.0"
+  imagepath: https://resources.gigaspaces.com/helm-charts:gigaspaces/insightedge
+  deployment: helm
+  annotations: version=14.5.0
+  defaultflavor:
+    name: x1.small
+  accessports: udp:3000,tcp:3000
+  androidpackagename: com.mobiledgex.node
 appinstances:
 - key:
     appkey:

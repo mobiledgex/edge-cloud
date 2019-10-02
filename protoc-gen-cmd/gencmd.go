@@ -153,6 +153,16 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		}
 		gensupport.GenerateMessageArgs(g.Generator, &g.support, desc, false, ii)
 	}
+	if len(file.FileDescriptorProto.Service) > 0 {
+		for _, service := range file.FileDescriptorProto.Service {
+			if len(service.Method) == 0 {
+				continue
+			}
+			for ii, method := range service.Method {
+				gensupport.GenerateMethodArgs(g.Generator, &g.support, method, false, ii)
+			}
+		}
+	}
 }
 
 func (g *GenCmd) generateServiceVars(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {
@@ -205,6 +215,7 @@ type tmplArgs struct {
 	StreamOutIncremental bool
 	Show                 bool
 	InputRequired        bool
+	HasMethodArgs        bool
 }
 
 var tmpl = `
@@ -212,6 +223,9 @@ var {{.Method}}Cmd = &cli.Command{
 	Use: "{{.Method}}",
 {{- if and .Show (not .InputRequired)}}
 	OptionalArgs: strings.Join(append({{.InType}}RequiredArgs, {{.InType}}OptionalArgs...), " "),
+{{- else if .HasMethodArgs}}
+	RequiredArgs: strings.Join({{.Method}}RequiredArgs, " "),
+	OptionalArgs: strings.Join({{.Method}}OptionalArgs, " "),
 {{- else}}
 	RequiredArgs: strings.Join({{.InType}}RequiredArgs, " "),
 	OptionalArgs: strings.Join({{.InType}}OptionalArgs, " "),
@@ -341,6 +355,7 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 		HasEnums:             hasEnums,
 		StreamOutIncremental: gensupport.GetStreamOutIncremental(method),
 		InputRequired:        gensupport.GetInputRequired(method),
+		HasMethodArgs:        gensupport.HasMethodArgs(method),
 	}
 	if strings.HasPrefix(*method.Name, "Show") {
 		cmd.Show = true

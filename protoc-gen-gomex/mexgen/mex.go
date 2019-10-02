@@ -1482,6 +1482,11 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("return m")
 		m.P("}")
 		m.P("")
+
+		m.P("func CmpSort", message.Name, "(a ", message.Name, ", b ", message.Name, ") bool {")
+		m.P("return a.GetKeyString() < b.GetKeyString()")
+		m.P("}")
+		m.P("")
 	}
 
 	//Generate enum values validation

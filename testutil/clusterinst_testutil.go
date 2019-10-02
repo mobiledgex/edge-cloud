@@ -540,60 +540,64 @@ func FindClusterInstInfoData(key *edgeproto.ClusterInstKey, testData []edgeproto
 }
 
 func (s *DummyServer) CreateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_CreateClusterInstServer) error {
+	var err error
+	s.ClusterInstCache.Update(server.Context(), in, 0)
 	if true {
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
 	}
-	return nil
+	return err
 }
 
 func (s *DummyServer) DeleteClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
+	var err error
+	s.ClusterInstCache.Delete(server.Context(), in, 0)
 	if true {
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
 	}
-	return nil
+	return err
 }
 
 func (s *DummyServer) UpdateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
+	var err error
+	s.ClusterInstCache.Update(server.Context(), in, 0)
 	if true {
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
-		server.Send(&edgeproto.Result{})
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
 	}
-	return nil
+	return err
 }
 
 func (s *DummyServer) ShowClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_ShowClusterInstServer) error {
+	var err error
 	obj := &edgeproto.ClusterInst{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
-		server.Send(&edgeproto.ClusterInst{})
-		server.Send(&edgeproto.ClusterInst{})
-		server.Send(&edgeproto.ClusterInst{})
-	}
-	for _, out := range s.ClusterInsts {
-		if !out.Matches(in, edgeproto.MatchFilter()) {
-			continue
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.ClusterInst{})
 		}
-		server.Send(&out)
 	}
-	return nil
+	err = s.ClusterInstCache.Show(in, func(obj *edgeproto.ClusterInst) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
 }
 
 func (s *DummyServer) ShowClusterInstInfo(in *edgeproto.ClusterInstInfo, server edgeproto.ClusterInstInfoApi_ShowClusterInstInfoServer) error {
+	var err error
 	obj := &edgeproto.ClusterInstInfo{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
-		server.Send(&edgeproto.ClusterInstInfo{})
-		server.Send(&edgeproto.ClusterInstInfo{})
-		server.Send(&edgeproto.ClusterInstInfo{})
-	}
-	for _, out := range s.ClusterInstInfos {
-		if !out.Matches(in, edgeproto.MatchFilter()) {
-			continue
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.ClusterInstInfo{})
 		}
-		server.Send(&out)
 	}
-	return nil
+	err = s.ClusterInstInfoCache.Show(in, func(obj *edgeproto.ClusterInstInfo) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
 }
