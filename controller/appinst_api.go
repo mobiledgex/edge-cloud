@@ -537,9 +537,21 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			} else {
 				//dedicated access in which IP is that of the LB
 				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.ClusterInstKey.CloudletKey, clusterKey)
+				// Docker deployments do not need an L7 reverse
+				// proxy (because they all bind to ports on the
+				// same VM, so multiple containers trying to bind
+				// to port 80 would fail, and if they're binding
+				// to different ports, then they don't need the
+				// L7 proxy).
+				// Kubernetes deployments may want it, but so far
+				// no devs are using L7, and if they did, they
+				// probably would have an ingress controller
+				// built into their k8s manifest. So for now,
+				// do not support http on k8s either. If we see
+				// demand/use cases for it we can add it in later.
 				for ii, _ := range ports {
-					if setL7Port(&ports[ii], &in.Key) {
-						continue
+					if ports[ii].Proto == dme.LProto_L_PROTO_HTTP {
+						ports[ii].Proto = dme.LProto_L_PROTO_TCP
 					}
 					ports[ii].PublicPort = ports[ii].InternalPort
 				}
