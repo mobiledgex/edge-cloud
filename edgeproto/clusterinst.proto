@@ -58,6 +58,8 @@ message ClusterInst {
   uint32 num_nodes = 14;
   // status is used to reflect progress of creation or other events
   StatusInfo status = 16 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  // Size of external volume to be attached to nodes
+  uint64 external_volume_size = 17 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -67,7 +69,7 @@ message ClusterInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "Liveness,Auto,MasterFlavor,NodeFlavor,AllocatedIp,Status";
+  option (protogen.noconfig) = "Liveness,Auto,MasterFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status";
   option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,operator=Key.CloudletKey.OperatorKey.Name,developer=Key.Developer,flavor=Flavor.Name";
   option (protogen.mc2_target_cloudlet) = "Key.CloudletKey";
