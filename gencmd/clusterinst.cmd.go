@@ -46,6 +46,9 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["nocmp"]; found {
 		in.NodeFlavor = ""
 	}
+	if _, found := tags["nocmp"]; found {
+		in.ExternalVolumeSize = 0
+	}
 }
 
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
@@ -441,22 +444,23 @@ var ClusterInstAliasArgs = []string{
 	"flavor=flavor.name",
 }
 var ClusterInstComments = map[string]string{
-	"cluster":     "Cluster name",
-	"operator":    "Company or Organization name of the operator",
-	"cloudlet":    "Name of the cloudlet",
-	"developer":   "Name of Developer that this cluster belongs to",
-	"flavor":      "Flavor name",
-	"liveness":    "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
-	"auto":        "Auto is set to true when automatically created by back-end (internal use only)",
-	"state":       "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare",
-	"errors":      "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
-	"crmoverride": "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
-	"ipaccess":    "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessDedicatedOrShared, IpAccessShared",
-	"allocatedip": "Allocated IP for dedicated access",
-	"nodeflavor":  "Cloudlet specific node flavor",
-	"deployment":  "Deployment type (kubernetes or docker)",
-	"nummasters":  "Number of k8s masters (In case of docker deployment, this field is not required)",
-	"numnodes":    "Number of k8s nodes (In case of docker deployment, this field is not required)",
+	"cluster":            "Cluster name",
+	"operator":           "Company or Organization name of the operator",
+	"cloudlet":           "Name of the cloudlet",
+	"developer":          "Name of Developer that this cluster belongs to",
+	"flavor":             "Flavor name",
+	"liveness":           "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
+	"auto":               "Auto is set to true when automatically created by back-end (internal use only)",
+	"state":              "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare",
+	"errors":             "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
+	"crmoverride":        "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+	"ipaccess":           "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessDedicatedOrShared, IpAccessShared",
+	"allocatedip":        "Allocated IP for dedicated access",
+	"nodeflavor":         "Cloudlet specific node flavor",
+	"deployment":         "Deployment type (kubernetes or docker)",
+	"nummasters":         "Number of k8s masters (In case of docker deployment, this field is not required)",
+	"numnodes":           "Number of k8s nodes (In case of docker deployment, this field is not required)",
+	"externalvolumesize": "Size of external volume to be attached to nodes",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors": "StringArray",
