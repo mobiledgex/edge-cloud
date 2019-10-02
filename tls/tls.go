@@ -109,9 +109,14 @@ func GetGrpcDialOption(config *tls.Config) grpc.DialOption {
 	return grpc.WithTransportCredentials(transportCreds)
 }
 
-func GetTLSServerConfig(tlsCertFile string, mutualAuth bool) (*tls.Config, error) {
+// GetTLSServerCreds gets grpc credentials for the server for
+// mutual authentication.
+// Returns nil credentials is the TLS cert file name is blank
+func GetTLSServerCreds(tlsCertFile string, mutualAuth bool) (credentials.TransportCredentials, error) {
+
 	if tlsCertFile == "" {
-		return nil, fmt.Errorf("no server TLS cert")
+		fmt.Printf("no server TLS credentials\n")
+		return nil, nil
 	}
 
 	dir := path.Dir(tlsCertFile)
@@ -140,20 +145,6 @@ func GetTLSServerConfig(tlsCertFile string, mutualAuth bool) (*tls.Config, error
 	if err != nil {
 		return nil, fmt.Errorf("could not load server key pair: %s", err)
 	}
-	return &tls.Config{
-		Certificates: []tls.Certificate{certificate},
-		RootCAs:      certPool,
-	}, nil
-}
-
-// GetTLSServerCreds gets grpc credentials for the server for
-// mutual authentication.
-// Returns nil credentials is the TLS cert file name is blank
-func GetTLSServerCreds(tlsCertFile string, mutualAuth bool) (credentials.TransportCredentials, error) {
-	tlsConfig, err := GetTLSServerConfig(tlsCertFile, mutualAuth)
-	if err != nil {
-		return nil, err
-	}
 
 	// Create the TLS credentials
 	var creds credentials.TransportCredentials
@@ -161,13 +152,13 @@ func GetTLSServerCreds(tlsCertFile string, mutualAuth bool) (credentials.Transpo
 	if mutualAuth {
 		creds = credentials.NewTLS(&tls.Config{
 			ClientAuth:   tls.RequireAndVerifyClientCert,
-			Certificates: tlsConfig.Certificates,
-			ClientCAs:    tlsConfig.RootCAs})
+			Certificates: []tls.Certificate{certificate},
+			ClientCAs:    certPool})
 	} else {
 		creds = credentials.NewTLS(&tls.Config{
 			ClientAuth:   tls.NoClientCert,
-			Certificates: tlsConfig.Certificates,
-			ClientCAs:    tlsConfig.RootCAs})
+			Certificates: []tls.Certificate{certificate},
+			ClientCAs:    certPool})
 	}
 	return creds, nil
 }

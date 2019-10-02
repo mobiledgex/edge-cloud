@@ -133,7 +133,7 @@ func WebrtcShell(dataChan *webrtc.DataChannel, errchan chan error) error {
 	return nil
 }
 
-func RunWebrtc(req *edgeproto.ExecRequest, tlsCertFile string, exchangeFunc func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error)) error {
+func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error)) error {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 
@@ -193,9 +193,9 @@ func RunWebrtc(req *edgeproto.ExecRequest, tlsCertFile string, exchangeFunc func
 		if err != nil {
 			return fmt.Errorf("unable to parse console url, %s, %v", reply.ConsoleUrl, err)
 		}
-		tlsConfig, err := mextls.GetTLSServerConfig(tlsCertFile, false)
+		tlsConfig, err := mextls.GetLocalTLSConfig()
 		if err != nil {
-			return fmt.Errorf("unable to fetch tls server config, %v", err)
+			return fmt.Errorf("unable to fetch tls local server config, %v", err)
 		}
 
 		conn, err := tls.Listen("tcp", "0.0.0.0:0", tlsConfig)
