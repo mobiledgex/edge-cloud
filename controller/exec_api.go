@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -21,9 +22,16 @@ type ExecReq struct {
 	done chan bool
 }
 
+const (
+	// For K8s/Docker based Apps
+	ShortTimeout = 6 * time.Second
+	// For VM based Apps
+	LongTimeout = 20 * time.Second
+)
+
 var execApi = ExecApi{}
 var execRequestSendMany *notify.ExecRequestSendMany
-var execRequestTimeout = 6 * time.Second
+var execRequestTimeout = ShortTimeout
 
 func InitExecApi() {
 	execApi.requests = make(map[string]*ExecReq)
@@ -33,6 +41,13 @@ func InitExecApi() {
 func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
 	if !appInstApi.HasKey(&req.AppInstKey) {
 		return nil, edgeproto.ErrEdgeApiAppInstNotFound
+	}
+	app := edgeproto.App{}
+	if !appApi.Get(&req.AppInstKey.AppKey, &app) {
+		return nil, edgeproto.ErrEdgeApiAppNotFound
+	}
+	if app.Deployment == cloudcommon.AppDeploymentTypeVM {
+		execRequestTimeout = LongTimeout
 	}
 	// Forward the offer.
 	// Currently we don't know which controller has the CRM connected
@@ -59,6 +74,7 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 		if err == nil && reply != nil {
 			req.Answer = reply.Answer
 			req.Err = reply.Err
+			req.ConsoleUrl = reply.ConsoleUrl
 		}
 		return nil
 	}, nil)
@@ -127,5 +143,6 @@ func (s *ExecApi) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
 	}
 	sr.req.Answer = msg.Answer
 	sr.req.Err = msg.Err
+	sr.req.ConsoleUrl = msg.ConsoleUrl
 	sr.done <- true
 }

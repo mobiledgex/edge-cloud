@@ -19,11 +19,15 @@ message ExecRequest {
   string answer = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Any error message
   string err = 6;
+  // VM Console
+  bool console = 7;
+  // VM Console URL
+  string console_url = 8 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
-  option (protogen.noconfig) = "Offer,Answer,Err";
+  option (protogen.noconfig) = "Offer,Answer,Err,ConsoleUrl";
   option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name";
-  option (protogen.also_required) = "AppInstKey,Command";
+  option (protogen.also_required) = "AppInstKey";
 }
 
 service ExecApi {

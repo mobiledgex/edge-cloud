@@ -83,6 +83,10 @@ func (s *Platform) GetContainerCommand(ctx context.Context, clusterInst *edgepro
 	return req.Command, nil
 }
 
+func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error) {
+	return "", nil
+}
+
 func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "create fake cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
