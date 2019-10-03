@@ -64,6 +64,32 @@ func TestAddRemove(t *testing.T) {
 				"findCloudletData[%d]", ii)
 		}
 	}
+	// disable one cloudlet and check the newly found cloudlet
+	cloudlet := edgeproto.CloudletKey{
+		OperatorKey: edgeproto.OperatorKey{
+			Name: dmetest.Cloudlets[2].CarrierName,
+		},
+		Name: dmetest.Cloudlets[2].Name,
+	}
+	dmecommon.SetInstStateForCloudlet(&cloudlet, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN)
+	ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123)
+
+	regReply, err := serv.RegisterClient(ctx, &dmetest.DisabledCloudletRR.Reg)
+	assert.Nil(t, err, "register client")
+	ckey, err := dmecommon.VerifyCookie(regReply.SessionCookie)
+	assert.Nil(t, err, "verify cookie")
+	ctx = dmecommon.NewCookieContext(ctx, ckey)
+
+	reply, err := serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
+	assert.Nil(t, err, "find cloudlet")
+	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Status, reply.Status)
+	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Fqdn, reply.Fqdn)
+	// re-enable and check that the results is now what original findCloudlet[3] is
+	dmecommon.SetInstStateForCloudlet(&cloudlet, edgeproto.TrackedState_READY)
+	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
+	assert.Nil(t, err, "find cloudlet")
+	assert.Equal(t, dmetest.FindCloudletData[3].Reply.Status, reply.Status)
+	assert.Equal(t, dmetest.FindCloudletData[3].Reply.Fqdn, reply.Fqdn)
 
 	// delete all data
 	for _, app := range apps {

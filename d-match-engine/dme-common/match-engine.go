@@ -27,6 +27,7 @@ type DmeAppInst struct {
 	id       uint64
 	// Ports and L7 Paths
 	ports []dme.AppPort
+	state edgeproto.TrackedState
 }
 
 type DmeAppInsts struct {
@@ -109,6 +110,7 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 		cl.uri = appInst.Uri
 		cl.location = appInst.CloudletLoc
 		cl.ports = appInst.MappedPorts
+		cl.state = edgeproto.TrackedState_READY
 		log.DebugLog(log.DebugLevelDmedb, "Updating app inst",
 			"appName", app.AppKey.Name,
 			"appVersion", app.AppKey.Version,
@@ -120,6 +122,7 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 		cNew.uri = appInst.Uri
 		cNew.location = appInst.CloudletLoc
 		cNew.ports = appInst.MappedPorts
+		cNew.state = edgeproto.TrackedState_READY
 		app.Carriers[carrierName].Insts[cNew.clusterInstKey] = cNew
 		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.AppKey.Name,
@@ -220,6 +223,26 @@ func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 	}
 }
 
+// SetInstStateForCloudlet - Sets the current state of the appInstances for a cloudle
+// This gets called when a cloudlet goes offline, or comes back online
+func SetInstStateForCloudlet(key *edgeproto.CloudletKey, state edgeproto.TrackedState) {
+	carrier := key.OperatorKey.Name
+	tbl := DmeAppTbl
+	tbl.RLock()
+	defer tbl.RUnlock()
+	for _, app := range tbl.Apps {
+		if c, found := app.Carriers[carrier]; found {
+			for i, _ := range c.Insts {
+				if cloudletKeyEqual(&c.Insts[i].clusterInstKey.CloudletKey, key) {
+					app.Lock()
+					c.Insts[i].state = state
+					app.Unlock()
+				}
+			}
+		}
+	}
+}
+
 // given the carrier, update the reply if we find a cloudlet closer
 // than the max distance.  Return the distance and whether or not response was updated
 func findClosestForCarrier(carrierName string, key edgeproto.AppKey, loc *dme.Loc, maxDistance float64, mreply *dme.FindCloudletReply) (float64, bool) {
@@ -244,7 +267,7 @@ func findClosestForCarrier(carrierName string, key edgeproto.AppKey, loc *dme.Lo
 				"longitude", i.location.Longitude,
 				"maxDistance", maxDistance,
 				"this-dist", d)
-			if d < maxDistance {
+			if d < maxDistance && (i.state == edgeproto.TrackedState_READY) {
 				log.DebugLog(log.DebugLevelDmereq, "closer cloudlet", "uri", i.uri)
 				updated = true
 				maxDistance = d
@@ -414,6 +437,10 @@ func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.Ap
 				continue
 			}
 			for _, i := range c.Insts {
+				// skip disabled appInstances
+				if i.state != edgeproto.TrackedState_READY {
+					continue
+				}
 				cloc, exists := foundCloudlets[i.clusterInstKey.CloudletKey]
 				if !exists {
 					cloc = new(dme.CloudletLocation)
@@ -456,7 +483,7 @@ func ListAppinstTbl() {
 			"Name", app.AppKey.Name,
 			"Ver", app.AppKey.Version)
 		for cname, c := range app.Carriers {
-			for _ = range c.Insts {
+			for _, inst = range c.Insts {
 				log.DebugLog(log.DebugLevelDmedb, "app",
 					"Name", app.AppKey.Name,
 					"carrier", cname,

@@ -17,6 +17,9 @@ type AppHandler struct {
 type AppInstHandler struct {
 }
 
+type CloudletInfoHandler struct {
+}
+
 func (s *AppHandler) Update(ctx context.Context, in *edgeproto.App, rev int64) {
 	dmecommon.AddApp(in)
 }
@@ -45,14 +48,33 @@ func (s *AppInstHandler) Prune(ctx context.Context, keys map[edgeproto.AppInstKe
 
 func (s *AppInstHandler) Flush(ctx context.Context, notifyId int64) {}
 
+func (s *CloudletInfoHandler) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
+	// If the cloudlet went offline we need to prevent clients from being directed to this cloudlet
+	if in.State == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+		dmecommon.SetInstStateForCloudlet(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN)
+	} else if in.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+		// re-enable the AppInstances on that cloudlet
+		dmecommon.SetInstStateForCloudlet(&in.Key, edgeproto.TrackedState_READY)
+	}
+}
+
+func (s *CloudletInfoHandler) Delete(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {}
+
+func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.CloudletKey]struct{}) {}
+
+func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
+
 var nodeCache edgeproto.NodeCache
+var cloudletInfoCache edgeproto.CloudletInfoCache
 
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
+	edgeproto.InitCloudletInfoCache(&cloudletInfoCache)
 	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
 	notifyClient.RegisterRecv(notify.NewAppRecv(&AppHandler{}))
 	notifyClient.RegisterRecv(notify.NewAppInstRecv(&AppInstHandler{}))
 	notifyClient.RegisterSendNodeCache(&nodeCache)
+	notifyClient.RegisterRecvCloudletInfoCache(&cloudletInfoCache)
 	log.InfoLog("notify client to", "addrs", addrs)
 	return notifyClient
 }

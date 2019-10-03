@@ -123,3 +123,21 @@ var FindCloudletData = []FindCloudletRR{
 		},
 	},
 }
+
+// copy of FindCloudletData[3] with a changed reply to Munich cloudlet
+var DisabledCloudletRR = FindCloudletRR{
+	Reg: dme.RegisterClientRequest{
+		DevName: "1000realities",
+		AppName: "1000realities",
+		AppVers: "1.1",
+	},
+	Req: dme.FindCloudletRequest{
+		CarrierName: "TDG",
+		GpsLocation: &dme.Loc{Latitude: 50.75, Longitude: 7.9050},
+	},
+	Reply: dme.FindCloudletReply{
+		Fqdn:             Cloudlets[1].Uri,
+		CloudletLocation: &Cloudlets[1].Location,
+		Status:           1,
+	},
+}
