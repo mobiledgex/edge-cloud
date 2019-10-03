@@ -42,6 +42,8 @@ type Platform interface {
 	GetPlatformClient(ctx context.Context, clusterInst *edgeproto.ClusterInst) (pc.PlatformClient, error)
 	// Get the command to pass to PlatformClient for the container command
 	GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error)
+	// Get the console URL of the VM app
+	GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error)
 	// Create Cloudlet
 	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet

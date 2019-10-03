@@ -110,11 +110,12 @@ require (
 	github.com/uber/jaeger-client-go v2.16.1-0.20190705220040-402bec9e6ead+incompatible
 	github.com/uber/jaeger-lib v2.0.0+incompatible // indirect
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
+	github.com/xtaci/smux v1.3.6
 	go.etcd.io/bbolt v1.3.2 // indirect
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0
-	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
+	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421 // indirect
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
