@@ -7,13 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	flavor "github.com/mobiledgex/edge-cloud/flavor"
-
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/vmspec"
 )
 
 type ClusterInstApi struct {
@@ -221,15 +220,18 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
 		var err error
-		in.NodeFlavor, err = flavor.GetClosestFlavor(info.Flavors, nodeFlavor)
+		vmspec, err := vmspec.GetVMSpec(info.Flavors, nodeFlavor)
 		if err != nil {
 			return err
 		}
-		log.InfoLog("Selected Cloudlet Flavor", "Node Flavor", in.NodeFlavor)
+		in.NodeFlavor = vmspec.FlavorName
+		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
+
+		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Flavor", "vmspec", vmspec)
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
 		refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)
-		refs.UsedDisk += nodeFlavor.Disk * uint64(in.NumNodes+in.NumMasters)
+		refs.UsedDisk += (nodeFlavor.Disk + vmspec.ExternalVolumeSize) * uint64(in.NumNodes+in.NumMasters)
 		// XXX For now just track, don't enforce.
 		if false {
 			// XXX what is static overhead?
