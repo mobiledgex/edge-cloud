@@ -51,9 +51,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.RuntimeInfo.ContainerIds = nil
 	}
-	if _, found := tags["nocmp"]; found {
-		in.RuntimeInfo.ConsoleUrl = ""
-	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
@@ -76,9 +73,6 @@ func AppInstRuntimeHideTags(in *edgeproto.AppInstRuntime) {
 	if _, found := tags["nocmp"]; found {
 		in.ContainerIds = nil
 	}
-	if _, found := tags["nocmp"]; found {
-		in.ConsoleUrl = ""
-	}
 }
 
 func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
@@ -94,9 +88,6 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.RuntimeInfo.ContainerIds = nil
-	}
-	if _, found := tags["nocmp"]; found {
-		in.RuntimeInfo.ConsoleUrl = ""
 	}
 }
 
@@ -590,7 +581,6 @@ var AppInstComments = map[string]string{
 	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"crmoverride":                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"runtimeinfo.containerids":       "List of container names",
-	"runtimeinfo.consoleurl":         "URL to access VM console",
 	"autoclusteripaccess":            "IpAccess for auto-clusters. Ignored otherwise., one of IpAccessUnknown, IpAccessDedicated, IpAccessDedicatedOrShared, IpAccessShared",
 	"revision":                       "Revision increments each time the App is updated.  Updating the App Instance will sync the revision with that of the App",
 	"forceupdate":                    "Force Appinst update when UpdateAppInst is done if revision matches",
@@ -603,12 +593,10 @@ var AppInstSpecialArgs = map[string]string{
 var AppInstRuntimeRequiredArgs = []string{}
 var AppInstRuntimeOptionalArgs = []string{
 	"containerids",
-	"consoleurl",
 }
 var AppInstRuntimeAliasArgs = []string{}
 var AppInstRuntimeComments = map[string]string{
 	"containerids": "List of container names",
-	"consoleurl":   "URL to access VM console",
 }
 var AppInstRuntimeSpecialArgs = map[string]string{
 	"containerids": "StringArray",
@@ -627,7 +615,6 @@ var AppInstInfoOptionalArgs = []string{
 	"state",
 	"errors",
 	"runtimeinfo.containerids",
-	"runtimeinfo.consoleurl",
 	"status.tasknumber",
 	"status.maxtasks",
 	"status.taskname",
@@ -646,7 +633,6 @@ var AppInstInfoComments = map[string]string{
 	"state":                                           "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare",
 	"errors":                                          "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"runtimeinfo.containerids":                        "List of container names",
-	"runtimeinfo.consoleurl":                          "URL to access VM console",
 }
 var AppInstInfoSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
