@@ -230,7 +230,7 @@ func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 	}
 }
 
-// SetInstStateForCloudlet - Sets the current state of the appInstances for a cloudle
+// SetInstStateForCloudlet - Sets the current state of the appInstances for the cloudlet
 // This gets called when a cloudlet goes offline, or comes back online
 func SetInstStateForCloudlet(key *edgeproto.CloudletKey, state edgeproto.TrackedState) {
 	log.DebugLog(log.DebugLevelDmereq, "SetInstStateForCloudlet called", "cloudlet", key, "state", state)
