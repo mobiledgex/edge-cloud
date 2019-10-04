@@ -55,6 +55,13 @@ func SetupMatchEngine() {
 	DmeAppTbl.Apps = make(map[edgeproto.AppKey]*DmeApp)
 }
 
+func GetDmeAppInstState(appInst *DmeAppInst) edgeproto.TrackedState {
+	if appInst == nil {
+		return edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
+	}
+	return appInst.state
+}
+
 // TODO: Have protoc auto-generate Equal functions.
 func cloudletKeyEqual(key1 *edgeproto.CloudletKey, key2 *edgeproto.CloudletKey) bool {
 	return key1.GetKeyString() == key2.GetKeyString()
@@ -226,16 +233,17 @@ func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 // SetInstStateForCloudlet - Sets the current state of the appInstances for a cloudle
 // This gets called when a cloudlet goes offline, or comes back online
 func SetInstStateForCloudlet(key *edgeproto.CloudletKey, state edgeproto.TrackedState) {
+	log.DebugLog(log.DebugLevelDmereq, "SetInstStateForCloudlet called", "cloudlet", key, "state", state)
 	carrier := key.OperatorKey.Name
 	tbl := DmeAppTbl
 	tbl.RLock()
 	defer tbl.RUnlock()
 	for _, app := range tbl.Apps {
 		if c, found := app.Carriers[carrier]; found {
-			for i, _ := range c.Insts {
-				if cloudletKeyEqual(&c.Insts[i].clusterInstKey.CloudletKey, key) {
+			for clusterInstKey, _ := range c.Insts {
+				if cloudletKeyEqual(&clusterInstKey.CloudletKey, key) {
 					app.Lock()
-					c.Insts[i].state = state
+					c.Insts[clusterInstKey].state = state
 					app.Unlock()
 				}
 			}

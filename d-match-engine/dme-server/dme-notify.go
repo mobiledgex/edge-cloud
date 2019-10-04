@@ -65,16 +65,14 @@ func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.Clou
 func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
 
 var nodeCache edgeproto.NodeCache
-var cloudletInfoCache edgeproto.CloudletInfoCache
 
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
-	edgeproto.InitCloudletInfoCache(&cloudletInfoCache)
 	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
 	notifyClient.RegisterRecv(notify.NewAppRecv(&AppHandler{}))
 	notifyClient.RegisterRecv(notify.NewAppInstRecv(&AppInstHandler{}))
 	notifyClient.RegisterSendNodeCache(&nodeCache)
-	notifyClient.RegisterRecvCloudletInfoCache(&cloudletInfoCache)
+	notifyClient.RegisterRecv(notify.NewCloudletInfoRecv(&CloudletInfoHandler{}))
 	log.InfoLog("notify client to", "addrs", addrs)
 	return notifyClient
 }

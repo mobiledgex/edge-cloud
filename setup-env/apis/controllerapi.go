@@ -5,16 +5,19 @@ package apis
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"google.golang.org/grpc"
+	"gopkg.in/yaml.v2"
 )
 
 var appData edgeproto.ApplicationData
@@ -534,4 +537,69 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 		return false
 	}
 	return true
+}
+
+func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, outputDir string) error {
+	if apiFile == "" {
+		log.Println("Error: Cannot run RunCommand API without API file")
+		return fmt.Errorf("Error: Cannot run controller APIs without API file")
+	}
+	readAppDataFile(apiFile)
+
+	ctrl := util.GetController("")
+
+	for _, c := range appData.Cloudlets {
+		if c.NotifySrvAddr == "" {
+			c.NotifySrvAddr = "127.0.0.1:51001"
+		}
+
+		if c.PhysicalName == "" {
+			c.PhysicalName = c.Key.Name
+		}
+
+		pfConfig := edgeproto.PlatformConfig{}
+
+		rolesfile := outputDir + "/roles.yaml"
+		dat, err := ioutil.ReadFile(rolesfile)
+		if err != nil {
+			return err
+		}
+		roles := process.VaultRoles{}
+		err = yaml.Unmarshal(dat, &roles)
+		if err != nil {
+			return err
+		}
+		pfConfig.CrmRoleId = roles.CRMRoleID
+		pfConfig.CrmSecretId = roles.CRMSecretID
+
+		// Defaults
+		pfConfig.PlatformTag = ""
+		pfConfig.TlsCertFile = ctrl.TLS.ServerCert
+		pfConfig.VaultAddr = "http://127.0.0.1:8200"
+		pfConfig.RegistryPath = "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
+		pfConfig.ImagePath = ""
+		pfConfig.TestMode = true
+		pfConfig.NotifyCtrlAddrs = ctrl.NotifyAddr
+
+		if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Walk through all the secified cloudlets and stop CRM procecess for them
+func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string) error {
+	if apiFile == "" {
+		log.Println("Error: Cannot run RunCommand API without API file")
+		return fmt.Errorf("Error: Cannot run controller APIs without API file")
+	}
+	readAppDataFile(apiFile)
+
+	for _, c := range appData.Cloudlets {
+		if err := cloudcommon.StopCRMService(ctx, &c); err != nil {
+			return err
+		}
+	}
+	return nil
 }
