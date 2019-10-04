@@ -113,6 +113,7 @@ func GetGrpcDialOption(config *tls.Config) grpc.DialOption {
 // mutual authentication.
 // Returns nil credentials is the TLS cert file name is blank
 func GetTLSServerCreds(tlsCertFile string, mutualAuth bool) (credentials.TransportCredentials, error) {
+
 	if tlsCertFile == "" {
 		fmt.Printf("no server TLS credentials\n")
 		return nil, nil

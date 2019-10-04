@@ -36,6 +36,9 @@ func ExecRequestHideTags(in *edgeproto.ExecRequest) {
 	if _, found := tags["nocmp"]; found {
 		in.Answer = ""
 	}
+	if _, found := tags["nocmp"]; found {
+		in.ConsoleUrl = ""
+	}
 }
 
 var ExecApiCmd edgeproto.ExecApiClient
@@ -163,10 +166,11 @@ var ExecRequestRequiredArgs = []string{
 	"operator",
 	"cloudlet",
 	"clusterdeveloper",
-	"command",
 }
 var ExecRequestOptionalArgs = []string{
+	"command",
 	"containerid",
+	"console",
 }
 var ExecRequestAliasArgs = []string{
 	"developer=appinstkey.appkey.developerkey.name",
@@ -190,5 +194,7 @@ var ExecRequestComments = map[string]string{
 	"offer":            "WebRTC Offer",
 	"answer":           "WebRTC Answer",
 	"err":              "Any error message",
+	"console":          "VM Console",
+	"consoleurl":       "VM Console URL",
 }
 var ExecRequestSpecialArgs = map[string]string{}
