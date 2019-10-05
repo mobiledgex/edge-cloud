@@ -49,18 +49,14 @@ func (s *AppInstHandler) Prune(ctx context.Context, keys map[edgeproto.AppInstKe
 func (s *AppInstHandler) Flush(ctx context.Context, notifyId int64) {}
 
 func (s *CloudletInfoHandler) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
-	// If the cloudlet went offline we need to prevent clients from being directed to this cloudlet
-	if in.State == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
-		dmecommon.SetInstStateForCloudlet(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN)
-	} else if in.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-		// re-enable the AppInstances on that cloudlet
-		dmecommon.SetInstStateForCloudlet(&in.Key, edgeproto.TrackedState_READY)
-	}
+	dmecommon.SetInstStateForCloudlet(in)
 }
 
 func (s *CloudletInfoHandler) Delete(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {}
 
-func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.CloudletKey]struct{}) {}
+func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.CloudletKey]struct{}) {
+	dmecommon.PruneCloudlets(keys)
+}
 
 func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
 

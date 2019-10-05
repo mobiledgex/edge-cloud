@@ -18,8 +18,14 @@ func TestAddRemove(t *testing.T) {
 	setupJwks()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
+	cloudlets := dmetest.GenerateClouldlets()
 
 	tbl := dmecommon.DmeAppTbl
+
+	// Add cloudlets first as we check the state via cloudlets
+	for _, cloudlet := range cloudlets {
+		dmecommon.SetInstStateForCloudlet(cloudlet)
+	}
 
 	// add all data, check that number of instances matches
 	for _, inst := range apps {
@@ -65,13 +71,16 @@ func TestAddRemove(t *testing.T) {
 		}
 	}
 	// disable one cloudlet and check the newly found cloudlet
-	cloudlet := edgeproto.CloudletKey{
-		OperatorKey: edgeproto.OperatorKey{
-			Name: dmetest.Cloudlets[2].CarrierName,
+	cloudletInfo := edgeproto.CloudletInfo{
+		Key: edgeproto.CloudletKey{
+			OperatorKey: edgeproto.OperatorKey{
+				Name: dmetest.Cloudlets[2].CarrierName,
+			},
+			Name: dmetest.Cloudlets[2].Name,
 		},
-		Name: dmetest.Cloudlets[2].Name,
+		State: edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN,
 	}
-	dmecommon.SetInstStateForCloudlet(&cloudlet, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN)
+	dmecommon.SetInstStateForCloudlet(&cloudletInfo)
 	ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123)
 
 	regReply, err := serv.RegisterClient(ctx, &dmetest.DisabledCloudletRR.Reg)
@@ -85,7 +94,8 @@ func TestAddRemove(t *testing.T) {
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Status, reply.Status)
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Fqdn, reply.Fqdn)
 	// re-enable and check that the results is now what original findCloudlet[3] is
-	dmecommon.SetInstStateForCloudlet(&cloudlet, edgeproto.TrackedState_READY)
+	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+	dmecommon.SetInstStateForCloudlet(&cloudletInfo)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")
 	assert.Equal(t, dmetest.FindCloudletData[3].Reply.Status, reply.Status)

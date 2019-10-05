@@ -27,7 +27,8 @@ type DmeAppInst struct {
 	id       uint64
 	// Ports and L7 Paths
 	ports []dme.AppPort
-	state edgeproto.TrackedState
+	// State of the cloudlet - copy of the DmeCloudlet
+	cloudletState edgeproto.CloudletState
 }
 
 type DmeAppInsts struct {
@@ -43,9 +44,16 @@ type DmeApp struct {
 	OfficialFqdn       string
 }
 
+type DmeCloudlet struct {
+	// No need for a mutex - protected under DmeApps mutex
+	CloudletKey edgeproto.CloudletKey
+	State       edgeproto.CloudletState
+}
+
 type DmeApps struct {
 	sync.RWMutex
-	Apps map[edgeproto.AppKey]*DmeApp
+	Apps      map[edgeproto.AppKey]*DmeApp
+	Cloudlets map[edgeproto.CloudletKey]*DmeCloudlet
 }
 
 var DmeAppTbl *DmeApps
@@ -53,13 +61,17 @@ var DmeAppTbl *DmeApps
 func SetupMatchEngine() {
 	DmeAppTbl = new(DmeApps)
 	DmeAppTbl.Apps = make(map[edgeproto.AppKey]*DmeApp)
+	DmeAppTbl.Cloudlets = make(map[edgeproto.CloudletKey]*DmeCloudlet)
 }
 
 func GetDmeAppInstState(appInst *DmeAppInst) edgeproto.TrackedState {
 	if appInst == nil {
 		return edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
 	}
-	return appInst.state
+	if appInst.cloudletState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+		return edgeproto.TrackedState_READY
+	}
+	return edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
 }
 
 // TODO: Have protoc auto-generate Equal functions.
@@ -117,7 +129,11 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 		cl.uri = appInst.Uri
 		cl.location = appInst.CloudletLoc
 		cl.ports = appInst.MappedPorts
-		cl.state = edgeproto.TrackedState_READY
+		if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
+			cl.cloudletState = cloudlet.State
+		} else {
+			cl.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+		}
 		log.DebugLog(log.DebugLevelDmedb, "Updating app inst",
 			"appName", app.AppKey.Name,
 			"appVersion", app.AppKey.Version,
@@ -129,7 +145,11 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 		cNew.uri = appInst.Uri
 		cNew.location = appInst.CloudletLoc
 		cNew.ports = appInst.MappedPorts
-		cNew.state = edgeproto.TrackedState_READY
+		if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
+			cNew.cloudletState = cloudlet.State
+		} else {
+			cNew.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+		}
 		app.Carriers[carrierName].Insts[cNew.clusterInstKey] = cNew
 		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.AppKey.Name,
@@ -230,24 +250,39 @@ func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 	}
 }
 
+// Remove any Cloudlets we track that no longer exist and reset the state for the AppInsts
+func PruneCloudlets(appInsts map[edgeproto.CloudletKey]struct{}) {
+	log.DebugLog(log.DebugLevelDmereq, "PruneCloudlets called")
+}
+
 // SetInstStateForCloudlet - Sets the current state of the appInstances for the cloudlet
 // This gets called when a cloudlet goes offline, or comes back online
-func SetInstStateForCloudlet(key *edgeproto.CloudletKey, state edgeproto.TrackedState) {
-	log.DebugLog(log.DebugLevelDmereq, "SetInstStateForCloudlet called", "cloudlet", key, "state", state)
-	carrier := key.OperatorKey.Name
+func SetInstStateForCloudlet(info *edgeproto.CloudletInfo) {
+	log.DebugLog(log.DebugLevelDmereq, "SetInstStateForCloudlet called", "cloudlet", info)
+	carrier := info.Key.OperatorKey.Name
 	tbl := DmeAppTbl
-	tbl.RLock()
-	defer tbl.RUnlock()
+	tbl.Lock()
+	defer tbl.Unlock()
+	// Update the state in the cloudlet table
+	if cloudlet, foundCloudlet := tbl.Cloudlets[info.Key]; foundCloudlet {
+		cloudlet.State = info.State
+	} else {
+		cNew := new(DmeCloudlet)
+		cNew.CloudletKey = info.Key
+		cNew.State = info.State
+		tbl.Cloudlets[info.Key] = cNew
+	}
 	for _, app := range tbl.Apps {
+		app.Lock()
 		if c, found := app.Carriers[carrier]; found {
 			for clusterInstKey, _ := range c.Insts {
-				if cloudletKeyEqual(&clusterInstKey.CloudletKey, key) {
-					app.Lock()
-					c.Insts[clusterInstKey].state = state
-					app.Unlock()
+				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
+					c.Insts[clusterInstKey].cloudletState = info.State
+
 				}
 			}
 		}
+		app.Unlock()
 	}
 }
 
@@ -275,7 +310,7 @@ func findClosestForCarrier(carrierName string, key edgeproto.AppKey, loc *dme.Lo
 				"longitude", i.location.Longitude,
 				"maxDistance", maxDistance,
 				"this-dist", d)
-			if d < maxDistance && (i.state == edgeproto.TrackedState_READY) {
+			if d < maxDistance && (GetDmeAppInstState(i) == edgeproto.TrackedState_READY) {
 				log.DebugLog(log.DebugLevelDmereq, "closer cloudlet", "uri", i.uri)
 				updated = true
 				maxDistance = d
@@ -446,7 +481,7 @@ func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.Ap
 			}
 			for _, i := range c.Insts {
 				// skip disabled appInstances
-				if i.state != edgeproto.TrackedState_READY {
+				if GetDmeAppInstState(i) != edgeproto.TrackedState_READY {
 					continue
 				}
 				cloc, exists := foundCloudlets[i.clusterInstKey.CloudletKey]
