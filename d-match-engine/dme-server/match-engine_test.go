@@ -71,16 +71,9 @@ func TestAddRemove(t *testing.T) {
 		}
 	}
 	// disable one cloudlet and check the newly found cloudlet
-	cloudletInfo := edgeproto.CloudletInfo{
-		Key: edgeproto.CloudletKey{
-			OperatorKey: edgeproto.OperatorKey{
-				Name: dmetest.Cloudlets[2].CarrierName,
-			},
-			Name: dmetest.Cloudlets[2].Name,
-		},
-		State: edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN,
-	}
-	dmecommon.SetInstStateForCloudlet(&cloudletInfo)
+	cloudletInfo := cloudlets[2]
+	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+	dmecommon.SetInstStateForCloudlet(cloudletInfo)
 	ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123)
 
 	regReply, err := serv.RegisterClient(ctx, &dmetest.DisabledCloudletRR.Reg)
@@ -95,7 +88,7 @@ func TestAddRemove(t *testing.T) {
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Fqdn, reply.Fqdn)
 	// re-enable and check that the results is now what original findCloudlet[3] is
 	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-	dmecommon.SetInstStateForCloudlet(&cloudletInfo)
+	dmecommon.SetInstStateForCloudlet(cloudletInfo)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")
 	assert.Equal(t, dmetest.FindCloudletData[3].Reply.Status, reply.Status)

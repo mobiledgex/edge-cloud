@@ -251,8 +251,31 @@ func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 }
 
 // Remove any Cloudlets we track that no longer exist and reset the state for the AppInsts
-func PruneCloudlets(appInsts map[edgeproto.CloudletKey]struct{}) {
+func PruneCloudlets(cloudlets map[edgeproto.CloudletKey]struct{}) {
+	// TODO - Walk cloudletInfos call SetInstStateForCloudlet and delete the cloudletInfo from the table
 	log.DebugLog(log.DebugLevelDmereq, "PruneCloudlets called")
+
+	tbl := DmeAppTbl
+	tbl.Lock()
+	defer tbl.Unlock()
+
+	for _, app := range tbl.Apps {
+		app.Lock()
+		for _, carr := range app.Carriers {
+			for clusterInstKey, _ := range carr.Insts {
+				if _, found := cloudlets[clusterInstKey.CloudletKey]; !found {
+					carr.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+				}
+			}
+		}
+		app.Unlock()
+	}
+	for cloudlet, _ := range cloudlets {
+		if _, foundInfo := tbl.Cloudlets[cloudlet]; !foundInfo {
+			log.DebugLog(log.DebugLevelDmereq, "pruning cloudletInfo", "key", cloudlet)
+			delete(tbl.Cloudlets, cloudlet)
+		}
+	}
 }
 
 // SetInstStateForCloudlet - Sets the current state of the appInstances for the cloudlet
