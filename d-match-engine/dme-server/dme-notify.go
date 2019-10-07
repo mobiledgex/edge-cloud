@@ -52,7 +52,9 @@ func (s *CloudletInfoHandler) Update(ctx context.Context, in *edgeproto.Cloudlet
 	dmecommon.SetInstStateForCloudlet(in)
 }
 
-func (s *CloudletInfoHandler) Delete(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {}
+func (s *CloudletInfoHandler) Delete(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
+	dmecommon.DeleteCloudletInfo(in)
+}
 
 func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.CloudletKey]struct{}) {
 	dmecommon.PruneCloudlets(keys)

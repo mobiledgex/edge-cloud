@@ -250,11 +250,22 @@ func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 	}
 }
 
+func DeleteCloudletInfo(info *edgeproto.CloudletInfo) {
+	log.DebugLog(log.DebugLevelDmereq, "DeleteCloudletInfo called")
+	tbl := DmeAppTbl
+	tbl.Lock()
+	defer tbl.Unlock()
+
+	// Don't need to walk appInsts as the state change got set in an Update callback
+	if _, found := tbl.Cloudlets[info.Key]; found {
+		log.DebugLog(log.DebugLevelDmereq, "delete cloudletInfo", "key", info.Key)
+		delete(tbl.Cloudlets, info.Key)
+	}
+}
+
 // Remove any Cloudlets we track that no longer exist and reset the state for the AppInsts
 func PruneCloudlets(cloudlets map[edgeproto.CloudletKey]struct{}) {
-	// TODO - Walk cloudletInfos call SetInstStateForCloudlet and delete the cloudletInfo from the table
 	log.DebugLog(log.DebugLevelDmereq, "PruneCloudlets called")
-
 	tbl := DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
