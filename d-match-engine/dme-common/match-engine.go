@@ -253,10 +253,22 @@ func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 func DeleteCloudletInfo(info *edgeproto.CloudletInfo) {
 	log.DebugLog(log.DebugLevelDmereq, "DeleteCloudletInfo called")
 	tbl := DmeAppTbl
+	carrier := info.Key.OperatorKey.Name
 	tbl.Lock()
 	defer tbl.Unlock()
 
-	// Don't need to walk appInsts as the state change got set in an Update callback
+	// If there are still appInsts on that cloudlet they should be disabled
+	for _, app := range tbl.Apps {
+		app.Lock()
+		if c, found := app.Carriers[carrier]; found {
+			for clusterInstKey, _ := range c.Insts {
+				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
+					c.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+				}
+			}
+		}
+		app.Unlock()
+	}
 	if _, found := tbl.Cloudlets[info.Key]; found {
 		log.DebugLog(log.DebugLevelDmereq, "delete cloudletInfo", "key", info.Key)
 		delete(tbl.Cloudlets, info.Key)
