@@ -221,18 +221,26 @@ func DeleteAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto
 		cmd := fmt.Sprintf("docker stop %s", name)
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker stop ", "cmd", cmd)
 
+		removeContainer := true
 		out, err := client.Output(cmd)
 		if err != nil {
-			return fmt.Errorf("error stopping docker app, %s, %v", out, err)
+			if strings.Contains(out, "No such container") {
+				log.SpanLog(ctx, log.DebugLevelMexos, "container already removed", "cmd", cmd)
+				removeContainer = false
+			} else {
+				return fmt.Errorf("error stopping docker app, %s, %v", out, err)
+			}
 		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "done docker stop")
 
-		cmd = fmt.Sprintf("docker rm %s", name)
-		log.SpanLog(ctx, log.DebugLevelMexos, "running docker rm ", "cmd", cmd)
+		if removeContainer {
+			cmd = fmt.Sprintf("docker rm %s", name)
+			log.SpanLog(ctx, log.DebugLevelMexos, "running docker rm ", "cmd", cmd)
 
-		out, err = client.Output(cmd)
-		if err != nil {
-			return fmt.Errorf("error removing docker app, %s, %v", out, err)
+			out, err = client.Output(cmd)
+			if err != nil {
+				return fmt.Errorf("error removing docker app, %s, %v", out, err)
+			}
 		}
 	} else {
 		if strings.HasSuffix(app.DeploymentManifest, ".zip") {
