@@ -480,7 +480,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return nil
 		}
 		if !cctx.Undo {
-			if in.State == edgeproto.TrackedState_DELETE_ERROR {
+			if in.State == edgeproto.TrackedState_DELETE_ERROR &&
+				cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
 				cb.Send(&edgeproto.Result{Message: "Use CreateCloudlet to rebuild, and try again"})
 			}
@@ -516,18 +517,27 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
 			err = nil
 		}
-		if err != nil {
-			return err
-		}
 	}
 
-	cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
-
-	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	updateCloudlet := edgeproto.Cloudlet{}
+	err1 := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &updateCloudlet) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		if err != nil {
+			updateCloudlet.State = edgeproto.TrackedState_DELETE_ERROR
+			s.store.STMPut(stm, &updateCloudlet)
+			return nil
+		}
 		s.store.STMDel(stm, &in.Key)
 		cloudletRefsApi.store.STMDel(stm, &in.Key)
+		cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
 		return nil
 	})
+	if err1 != nil {
+		return err1
+	}
+
 	if err != nil {
 		return err
 	}
