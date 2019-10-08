@@ -17,6 +17,9 @@ type AppHandler struct {
 type AppInstHandler struct {
 }
 
+type CloudletInfoHandler struct {
+}
+
 func (s *AppHandler) Update(ctx context.Context, in *edgeproto.App, rev int64) {
 	dmecommon.AddApp(in)
 }
@@ -45,6 +48,20 @@ func (s *AppInstHandler) Prune(ctx context.Context, keys map[edgeproto.AppInstKe
 
 func (s *AppInstHandler) Flush(ctx context.Context, notifyId int64) {}
 
+func (s *CloudletInfoHandler) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
+	dmecommon.SetInstStateForCloudlet(in)
+}
+
+func (s *CloudletInfoHandler) Delete(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
+	dmecommon.DeleteCloudletInfo(in)
+}
+
+func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.CloudletKey]struct{}) {
+	dmecommon.PruneCloudlets(keys)
+}
+
+func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
+
 var nodeCache edgeproto.NodeCache
 
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
@@ -53,6 +70,7 @@ func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	notifyClient.RegisterRecv(notify.NewAppRecv(&AppHandler{}))
 	notifyClient.RegisterRecv(notify.NewAppInstRecv(&AppInstHandler{}))
 	notifyClient.RegisterSendNodeCache(&nodeCache)
+	notifyClient.RegisterRecv(notify.NewCloudletInfoRecv(&CloudletInfoHandler{}))
 	log.InfoLog("notify client to", "addrs", addrs)
 	return notifyClient
 }
