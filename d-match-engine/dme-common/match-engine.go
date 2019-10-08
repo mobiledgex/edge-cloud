@@ -27,6 +27,8 @@ type DmeAppInst struct {
 	id       uint64
 	// Ports and L7 Paths
 	ports []dme.AppPort
+	// State of the cloudlet - copy of the DmeCloudlet
+	cloudletState edgeproto.CloudletState
 }
 
 type DmeAppInsts struct {
@@ -42,9 +44,16 @@ type DmeApp struct {
 	OfficialFqdn       string
 }
 
+type DmeCloudlet struct {
+	// No need for a mutex - protected under DmeApps mutex
+	CloudletKey edgeproto.CloudletKey
+	State       edgeproto.CloudletState
+}
+
 type DmeApps struct {
 	sync.RWMutex
-	Apps map[edgeproto.AppKey]*DmeApp
+	Apps      map[edgeproto.AppKey]*DmeApp
+	Cloudlets map[edgeproto.CloudletKey]*DmeCloudlet
 }
 
 var DmeAppTbl *DmeApps
@@ -52,6 +61,17 @@ var DmeAppTbl *DmeApps
 func SetupMatchEngine() {
 	DmeAppTbl = new(DmeApps)
 	DmeAppTbl.Apps = make(map[edgeproto.AppKey]*DmeApp)
+	DmeAppTbl.Cloudlets = make(map[edgeproto.CloudletKey]*DmeCloudlet)
+}
+
+func GetDmeAppInstState(appInst *DmeAppInst) edgeproto.TrackedState {
+	if appInst == nil {
+		return edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
+	}
+	if appInst.cloudletState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+		return edgeproto.TrackedState_READY
+	}
+	return edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
 }
 
 // TODO: Have protoc auto-generate Equal functions.
@@ -109,6 +129,11 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 		cl.uri = appInst.Uri
 		cl.location = appInst.CloudletLoc
 		cl.ports = appInst.MappedPorts
+		if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
+			cl.cloudletState = cloudlet.State
+		} else {
+			cl.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+		}
 		log.DebugLog(log.DebugLevelDmedb, "Updating app inst",
 			"appName", app.AppKey.Name,
 			"appVersion", app.AppKey.Version,
@@ -120,6 +145,11 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 		cNew.uri = appInst.Uri
 		cNew.location = appInst.CloudletLoc
 		cNew.ports = appInst.MappedPorts
+		if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
+			cNew.cloudletState = cloudlet.State
+		} else {
+			cNew.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+		}
 		app.Carriers[carrierName].Insts[cNew.clusterInstKey] = cNew
 		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.AppKey.Name,
@@ -220,6 +250,88 @@ func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 	}
 }
 
+func DeleteCloudletInfo(info *edgeproto.CloudletInfo) {
+	log.DebugLog(log.DebugLevelDmereq, "DeleteCloudletInfo called")
+	tbl := DmeAppTbl
+	carrier := info.Key.OperatorKey.Name
+	tbl.Lock()
+	defer tbl.Unlock()
+
+	// If there are still appInsts on that cloudlet they should be disabled
+	for _, app := range tbl.Apps {
+		app.Lock()
+		if c, found := app.Carriers[carrier]; found {
+			for clusterInstKey, _ := range c.Insts {
+				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
+					c.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+				}
+			}
+		}
+		app.Unlock()
+	}
+	if _, found := tbl.Cloudlets[info.Key]; found {
+		log.DebugLog(log.DebugLevelDmereq, "delete cloudletInfo", "key", info.Key)
+		delete(tbl.Cloudlets, info.Key)
+	}
+}
+
+// Remove any Cloudlets we track that no longer exist and reset the state for the AppInsts
+func PruneCloudlets(cloudlets map[edgeproto.CloudletKey]struct{}) {
+	log.DebugLog(log.DebugLevelDmereq, "PruneCloudlets called")
+	tbl := DmeAppTbl
+	tbl.Lock()
+	defer tbl.Unlock()
+
+	for _, app := range tbl.Apps {
+		app.Lock()
+		for _, carr := range app.Carriers {
+			for clusterInstKey, _ := range carr.Insts {
+				if _, found := cloudlets[clusterInstKey.CloudletKey]; !found {
+					carr.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+				}
+			}
+		}
+		app.Unlock()
+	}
+	for cloudlet, _ := range cloudlets {
+		if _, foundInfo := tbl.Cloudlets[cloudlet]; !foundInfo {
+			log.DebugLog(log.DebugLevelDmereq, "pruning cloudletInfo", "key", cloudlet)
+			delete(tbl.Cloudlets, cloudlet)
+		}
+	}
+}
+
+// SetInstStateForCloudlet - Sets the current state of the appInstances for the cloudlet
+// This gets called when a cloudlet goes offline, or comes back online
+func SetInstStateForCloudlet(info *edgeproto.CloudletInfo) {
+	log.DebugLog(log.DebugLevelDmereq, "SetInstStateForCloudlet called", "cloudlet", info)
+	carrier := info.Key.OperatorKey.Name
+	tbl := DmeAppTbl
+	tbl.Lock()
+	defer tbl.Unlock()
+	// Update the state in the cloudlet table
+	if cloudlet, foundCloudlet := tbl.Cloudlets[info.Key]; foundCloudlet {
+		cloudlet.State = info.State
+	} else {
+		cNew := new(DmeCloudlet)
+		cNew.CloudletKey = info.Key
+		cNew.State = info.State
+		tbl.Cloudlets[info.Key] = cNew
+	}
+	for _, app := range tbl.Apps {
+		app.Lock()
+		if c, found := app.Carriers[carrier]; found {
+			for clusterInstKey, _ := range c.Insts {
+				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
+					c.Insts[clusterInstKey].cloudletState = info.State
+
+				}
+			}
+		}
+		app.Unlock()
+	}
+}
+
 // given the carrier, update the reply if we find a cloudlet closer
 // than the max distance.  Return the distance and whether or not response was updated
 func findClosestForCarrier(carrierName string, key edgeproto.AppKey, loc *dme.Loc, maxDistance float64, mreply *dme.FindCloudletReply) (float64, bool) {
@@ -244,7 +356,7 @@ func findClosestForCarrier(carrierName string, key edgeproto.AppKey, loc *dme.Lo
 				"longitude", i.location.Longitude,
 				"maxDistance", maxDistance,
 				"this-dist", d)
-			if d < maxDistance {
+			if d < maxDistance && (GetDmeAppInstState(i) == edgeproto.TrackedState_READY) {
 				log.DebugLog(log.DebugLevelDmereq, "closer cloudlet", "uri", i.uri)
 				updated = true
 				maxDistance = d
@@ -414,6 +526,10 @@ func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.Ap
 				continue
 			}
 			for _, i := range c.Insts {
+				// skip disabled appInstances
+				if GetDmeAppInstState(i) != edgeproto.TrackedState_READY {
+					continue
+				}
 				cloc, exists := foundCloudlets[i.clusterInstKey.CloudletKey]
 				if !exists {
 					cloc = new(dme.CloudletLocation)
@@ -456,7 +572,7 @@ func ListAppinstTbl() {
 			"Name", app.AppKey.Name,
 			"Ver", app.AppKey.Version)
 		for cname, c := range app.Carriers {
-			for _ = range c.Insts {
+			for _, inst = range c.Insts {
 				log.DebugLog(log.DebugLevelDmedb, "app",
 					"Name", app.AppKey.Name,
 					"carrier", cname,
