@@ -1,7 +1,9 @@
 package dmetest
 
-import "github.com/mobiledgex/edge-cloud/edgeproto"
-import dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+import (
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
+)
 
 type App struct {
 	Id        uint64
@@ -104,6 +106,14 @@ func MakeAppInst(a *App, c *Cloudlet) *edgeproto.AppInst {
 	return &inst
 }
 
+func MakeCloudletInfo(c *Cloudlet) *edgeproto.CloudletInfo {
+	info := edgeproto.CloudletInfo{}
+	info.Key.OperatorKey.Name = c.CarrierName
+	info.Key.Name = c.Name
+	info.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+	return &info
+}
+
 func GenerateApps() []*edgeproto.App {
 	apps := make([]*edgeproto.App, 0)
 	for _, a := range Apps {
@@ -124,4 +134,13 @@ func GenerateAppInsts() []*edgeproto.AppInst {
 		}
 	}
 	return insts
+}
+
+func GenerateClouldlets() []*edgeproto.CloudletInfo {
+	infos := make([]*edgeproto.CloudletInfo, 0)
+	for _, c := range Cloudlets {
+		infos = append(infos, MakeCloudletInfo(&c))
+	}
+	return infos
+
 }

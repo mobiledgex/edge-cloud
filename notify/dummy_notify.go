@@ -38,6 +38,7 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendAppCache(&s.AppCache)
 	mgr.RegisterSendAppInstCache(&s.AppInstCache)
 	mgr.RegisterSendCloudletCache(&s.CloudletCache)
+	mgr.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
 	mgr.RegisterSendFlavorCache(&s.FlavorCache)
 	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
 

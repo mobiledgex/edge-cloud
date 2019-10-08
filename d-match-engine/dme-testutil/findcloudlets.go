@@ -123,3 +123,21 @@ var FindCloudletData = []FindCloudletRR{
 		},
 	},
 }
+
+// copy of FindCloudletData[3] with a changed reply to Sunnydale cloudlet
+var DisabledCloudletRR = FindCloudletRR{
+	Reg: dme.RegisterClientRequest{
+		DevName: "Untomt",
+		AppName: "Untomt",
+		AppVers: "1.1",
+	},
+	Req: dme.FindCloudletRequest{
+		CarrierName: "GDDT",
+		GpsLocation: &dme.Loc{Latitude: 50.75, Longitude: 7.9050},
+	},
+	Reply: dme.FindCloudletReply{
+		Fqdn:             Cloudlets[1].Uri,
+		CloudletLocation: &Cloudlets[1].Location,
+		Status:           1,
+	},
+}
