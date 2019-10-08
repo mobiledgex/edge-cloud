@@ -58,6 +58,30 @@ tests:
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
     filetype: findcloudlet
 
+- name: disable tmus-cloud-2 cloudlet
+  apifile: "{{datadir}}/find_cloudlet_tmus-cloud-2.yml"
+  actions: [stop-crm=tmus-cloud-2,sleep=1]
+
+- name: find cloudlet for app1, expect to see tmus-cloud-1
+  apifile: "{{datadir}}/find_cloudlet_platform_app1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
+    filetype: findcloudlet
+
+- name: enable tmus-cloud-2 cloudlet
+  apifile: "{{datadir}}/find_cloudlet_tmus-cloud-2.yml"
+  actions: [start-crm=tmus-cloud-2,sleep=1]
+
+- name: find cloudlet for app1, expect to see cloudlet2
+  apifile: "{{datadir}}/find_cloudlet_platform_app1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
+    filetype: findcloudlet
+
 - name: find between cloudlet1 and azure, expect cloudlet1
   apifile: "{{datadir}}/find_cloudlet_between_cl1_azure.yml"
   actions: [dmeapi-findcloudlet]
