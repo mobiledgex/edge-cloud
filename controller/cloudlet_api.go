@@ -243,7 +243,11 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 		if in.Flavor.Name != "" {
 			if !flavorApi.store.STMGet(stm, &in.Flavor, &pfFlavor) {
-				return fmt.Errorf("Platform flavor %s not found", in.Flavor.Name)
+				if in.Flavor.Name == DefaultPlatformFlavor.Key.Name {
+					pfFlavor = DefaultPlatformFlavor
+				} else {
+					return fmt.Errorf("Platform flavor %s not found", in.Flavor.Name)
+				}
 			}
 		} else {
 			in.Flavor = DefaultPlatformFlavor.Key
