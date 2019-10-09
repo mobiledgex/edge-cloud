@@ -48,6 +48,19 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 	}
 	if app.Deployment == cloudcommon.AppDeploymentTypeVM {
 		execRequestTimeout = LongTimeout
+		if !req.Console {
+			return nil, fmt.Errorf("invalid argument, console must be set to true for VM based Apps")
+		}
+		if req.Command != "" || req.ContainerId != "" {
+			return nil, fmt.Errorf("invalid argument, command/containerid is not supported for VM based Apps")
+		}
+	} else {
+		if req.Console {
+			return nil, fmt.Errorf("invalid argument, console is only supported for VM based Apps")
+		}
+		if req.Command == "" {
+			return nil, fmt.Errorf("command argument is mandatory for %s based Apps", app.Deployment)
+		}
 	}
 	// Forward the offer.
 	// Currently we don't know which controller has the CRM connected
