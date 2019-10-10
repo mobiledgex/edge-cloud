@@ -122,6 +122,9 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
+			if *registryFQDN == "" {
+				return fmt.Errorf("registryFQDN is required to fetch docker image path")
+			}
 			in.ImagePath = *registryFQDN + "/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
@@ -130,10 +133,16 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 			if in.Md5Sum == "" {
 				return fmt.Errorf("md5sum should be provided if imagepath is not specified")
 			}
+			if *artifactoryFQDN == "" {
+				return fmt.Errorf("artifactoryFQDN is required to fetch VM baseimage path")
+			}
 			in.ImagePath = *artifactoryFQDN + "repo-" +
 				in.Key.DeveloperKey.Name + "/" +
 				in.Key.Name + ".qcow2#md5:" + in.Md5Sum
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
+			if *registryFQDN == "" {
+				return fmt.Errorf("registryFQDN is required to fetch helm based docker image path")
+			}
 			in.ImagePath = *registryFQDN + "/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
 				util.DockerSanitize(in.Key.Name)
