@@ -714,7 +714,6 @@ func (p *Traefik) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{
 		"run", "--rm", "--name", p.Name,
 		"-p", "8080:8080", // web UI
-		"-p", "443:443", // generic web tls
 		"-p", "14268:14268", // jaeger collector
 		"-p", "16686:16686", // jeager UI
 		"-p", "16687:16687", // jeager UI insecure (for local debugging)
@@ -804,8 +803,6 @@ api:
   dashboard: true
   debug: true
 entryPoints:
-  web-secure:
-    address: :443
   jaeger-collector:
     address: :14268
   jaeger-ui:

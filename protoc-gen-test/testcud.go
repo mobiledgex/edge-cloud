@@ -306,11 +306,7 @@ func Get{{.Name}}(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, ke
 	show := Show{{.Name}}{}
 	show.Init()
 	filter := {{.Pkg}}.{{.Name}}{}
-{{- if (.ObjAndKey)}}
-	filter = *key
-{{- else}}
-	filter.Key = *key
-{{- end}}
+	filter.SetKey(key)
 	err = api.Show{{.Name}}(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -415,11 +411,7 @@ func {{.Create}}{{.Name}}Data(t *testing.T, ctx context.Context, api *{{.Name}}C
 
 func Find{{.Name}}Data(key *{{.KeyName}}, testData []{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.{{.Name}}, bool) {
 	for ii, _ := range testData {
-{{- if .ObjAndKey}}
-		if testData[ii].Matches(key) {
-{{- else}}
-		if testData[ii].Key.Matches(key) {
-{{- end}}
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}
@@ -514,6 +506,7 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 		t.genDummyServer()
 		t.firstFile = false
 	}
+	gensupport.RunParseCheck(t.Generator, file)
 }
 
 func (t *TestCud) generateCudTest(desc *generator.Descriptor) {

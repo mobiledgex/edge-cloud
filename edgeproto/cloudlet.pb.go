@@ -2616,14 +2616,6 @@ func (s *CloudletStore) STMDel(stm concurrency.STM, key *CloudletKey) {
 	stm.Del(keystr)
 }
 
-func (m *Cloudlet) getKey() *CloudletKey {
-	return &m.Key
-}
-
-func (m *Cloudlet) getKeyVal() CloudletKey {
-	return m.Key
-}
-
 type CloudletKeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -2680,7 +2672,7 @@ func (c *CloudletCache) GetAllKeys(ctx context.Context, keys map[CloudletKey]con
 }
 
 func (c *CloudletCache) Update(ctx context.Context, in *Cloudlet, rev int64) {
-	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *Cloudlet) (*Cloudlet, bool) {
+	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Cloudlet) (*Cloudlet, bool) {
 		return in, true
 	})
 }
@@ -2700,27 +2692,27 @@ func (c *CloudletCache) UpdateModFunc(ctx context.Context, key *CloudletKey, rev
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.getKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old)
 		}
 	}
-	c.Objs[new.getKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cloudlet", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, new.getKey())
+	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
 func (c *CloudletCache) Delete(ctx context.Context, in *Cloudlet, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.getKeyVal()]
-	delete(c.Objs, in.getKeyVal())
+	old := c.Objs[in.GetKeyVal()]
+	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Cloudlet", "key", in.getKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Cloudlet", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.getKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, in.getKey())
+	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *CloudletCache) Prune(ctx context.Context, validKeys map[CloudletKey]struct{}) {
@@ -2837,7 +2829,7 @@ func (c *CloudletCache) SyncUpdate(ctx context.Context, key, val []byte, rev int
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.getKeyVal()] = struct{}{}
+		c.List[obj.GetKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -2845,7 +2837,7 @@ func (c *CloudletCache) SyncUpdate(ctx context.Context, key, val []byte, rev int
 func (c *CloudletCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := Cloudlet{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	CloudletKeyStringParse(keystr, obj.getKey())
+	CloudletKeyStringParse(keystr, obj.GetKey())
 	c.Delete(ctx, &obj, rev)
 }
 
@@ -2872,8 +2864,20 @@ func (c *CloudletCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (m *Cloudlet) GetKey() objstore.ObjKey {
+func (m *Cloudlet) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *Cloudlet) GetKey() *CloudletKey {
 	return &m.Key
+}
+
+func (m *Cloudlet) GetKeyVal() CloudletKey {
+	return m.Key
+}
+
+func (m *Cloudlet) SetKey(key *CloudletKey) {
+	m.Key = *key
 }
 
 func CmpSortCloudlet(a Cloudlet, b Cloudlet) bool {
@@ -3405,14 +3409,6 @@ func (s *CloudletInfoStore) STMDel(stm concurrency.STM, key *CloudletKey) {
 	stm.Del(keystr)
 }
 
-func (m *CloudletInfo) getKey() *CloudletKey {
-	return &m.Key
-}
-
-func (m *CloudletInfo) getKeyVal() CloudletKey {
-	return m.Key
-}
-
 type CloudletInfoKeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -3469,7 +3465,7 @@ func (c *CloudletInfoCache) GetAllKeys(ctx context.Context, keys map[CloudletKey
 }
 
 func (c *CloudletInfoCache) Update(ctx context.Context, in *CloudletInfo, rev int64) {
-	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *CloudletInfo) (*CloudletInfo, bool) {
+	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *CloudletInfo) (*CloudletInfo, bool) {
 		return in, true
 	})
 }
@@ -3489,27 +3485,27 @@ func (c *CloudletInfoCache) UpdateModFunc(ctx context.Context, key *CloudletKey,
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.getKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old)
 		}
 	}
-	c.Objs[new.getKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletInfo", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, new.getKey())
+	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
 func (c *CloudletInfoCache) Delete(ctx context.Context, in *CloudletInfo, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.getKeyVal()]
-	delete(c.Objs, in.getKeyVal())
+	old := c.Objs[in.GetKeyVal()]
+	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete CloudletInfo", "key", in.getKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete CloudletInfo", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.getKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, in.getKey())
+	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *CloudletInfoCache) Prune(ctx context.Context, validKeys map[CloudletKey]struct{}) {
@@ -3644,7 +3640,7 @@ func (c *CloudletInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.getKeyVal()] = struct{}{}
+		c.List[obj.GetKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -3652,7 +3648,7 @@ func (c *CloudletInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev
 func (c *CloudletInfoCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := CloudletInfo{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	CloudletKeyStringParse(keystr, obj.getKey())
+	CloudletKeyStringParse(keystr, obj.GetKey())
 	c.Delete(ctx, &obj, rev)
 }
 
@@ -3679,8 +3675,20 @@ func (c *CloudletInfoCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (m *CloudletInfo) GetKey() objstore.ObjKey {
+func (m *CloudletInfo) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *CloudletInfo) GetKey() *CloudletKey {
 	return &m.Key
+}
+
+func (m *CloudletInfo) GetKeyVal() CloudletKey {
+	return m.Key
+}
+
+func (m *CloudletInfo) SetKey(key *CloudletKey) {
+	m.Key = *key
 }
 
 func CmpSortCloudletInfo(a CloudletInfo, b CloudletInfo) bool {

@@ -19,6 +19,7 @@ type DummyHandler struct {
 	AppInstInfoCache     edgeproto.AppInstInfoCache
 	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
 	CloudletInfoCache    edgeproto.CloudletInfoCache
+	AlertCache           edgeproto.AlertCache
 }
 
 func NewDummyHandler() *DummyHandler {
@@ -31,6 +32,7 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitCloudletInfoCache(&h.CloudletInfoCache)
 	edgeproto.InitFlavorCache(&h.FlavorCache)
 	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
+	edgeproto.InitAlertCache(&h.AlertCache)
 	return h
 }
 
@@ -45,6 +47,7 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterRecvAppInstInfoCache(&s.AppInstInfoCache)
 	mgr.RegisterRecvClusterInstInfoCache(&s.ClusterInstInfoCache)
 	mgr.RegisterRecvCloudletInfoCache(&s.CloudletInfoCache)
+	mgr.RegisterRecvAlertCache(&s.AlertCache)
 }
 
 func (s *DummyHandler) RegisterCRMClient(cl *Client) {
@@ -52,6 +55,7 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 	cl.RegisterSendAppInstInfoCache(&s.AppInstInfoCache)
 	cl.RegisterSendClusterInstInfoCache(&s.ClusterInstInfoCache)
 	cl.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
+	cl.RegisterSendAlertCache(&s.AlertCache)
 
 	cl.RegisterRecvAppCache(&s.AppCache)
 	cl.RegisterRecvAppInstCache(&s.AppInstCache)
@@ -76,6 +80,7 @@ const (
 	AppInstInfoType
 	ClusterInstInfoType
 	CloudletInfoType
+	AlertType
 )
 
 type WaitForCache interface {
@@ -83,6 +88,11 @@ type WaitForCache interface {
 }
 
 func (s *DummyHandler) WaitFor(typ CacheType, count int) {
+	cache := s.GetCache(typ)
+	WaitFor(cache, count)
+}
+
+func (s *DummyHandler) GetCache(typ CacheType) WaitForCache {
 	var cache WaitForCache
 	switch typ {
 	case AppType:
@@ -101,8 +111,34 @@ func (s *DummyHandler) WaitFor(typ CacheType, count int) {
 		cache = &s.ClusterInstInfoCache
 	case CloudletInfoType:
 		cache = &s.CloudletInfoCache
+	case AlertType:
+		cache = &s.AlertCache
 	}
-	WaitFor(cache, count)
+	return cache
+}
+
+func (c CacheType) String() string {
+	switch c {
+	case AppType:
+		return "AppCache"
+	case AppInstType:
+		return "AppInstCache"
+	case CloudletType:
+		return "CloudletCache"
+	case FlavorType:
+		return "FlavorCache"
+	case ClusterInstType:
+		return "ClusterInstCache"
+	case AppInstInfoType:
+		return "AppInstCache"
+	case ClusterInstInfoType:
+		return "ClusterInstCache"
+	case CloudletInfoType:
+		return "CloudletInfoCache"
+	case AlertType:
+		return "AlertCache"
+	}
+	return "unknown cache type"
 }
 
 func WaitFor(cache WaitForCache, count int) {
@@ -147,6 +183,10 @@ func (s *DummyHandler) WaitForFlavors(count int) {
 
 func (s *DummyHandler) WaitForClusterInsts(count int) {
 	WaitFor(&s.ClusterInstCache, count)
+}
+
+func (s *DummyHandler) WaitForAlerts(count int) {
+	s.WaitFor(AlertType, count)
 }
 
 func (s *Client) WaitForConnect(connect uint64) {

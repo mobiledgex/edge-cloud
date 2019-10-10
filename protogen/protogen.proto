@@ -40,6 +40,7 @@ extend google.protobuf.MessageOptions {
   bool obj_and_key = 51032;
   string also_required = 51033; // add required key values
   string mc2_target_cloudlet = 51035;
+  string custom_key_type = 51038;
 }
 
 extend google.protobuf.EnumOptions {
