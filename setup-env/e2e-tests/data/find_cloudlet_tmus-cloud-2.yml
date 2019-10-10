@@ -1,0 +1,15 @@
+cloudlets:
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-2
+  accessuri: cloud2.tmo
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+  notifysrvaddr: 127.0.0.1:51102
+  flavor:
+    name: x1.small
