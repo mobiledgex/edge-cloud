@@ -229,6 +229,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	in.TimeLimits.DeleteAppInstTimeout = int64(cloudcommon.DeleteAppInstTimeout)
 
 	pfFlavor := edgeproto.Flavor{}
+	if in.Flavor.Name == "" {
+		in.Flavor = DefaultPlatformFlavor.Key
+		pfFlavor = DefaultPlatformFlavor
+	}
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
@@ -241,13 +245,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 			in.Errors = nil
 		}
-		if in.Flavor.Name != "" {
+		if in.Flavor.Name != "" && in.Flavor.Name != DefaultPlatformFlavor.Key.Name {
 			if !flavorApi.store.STMGet(stm, &in.Flavor, &pfFlavor) {
 				return fmt.Errorf("Platform flavor %s not found", in.Flavor.Name)
 			}
-		} else {
-			in.Flavor = DefaultPlatformFlavor.Key
-			pfFlavor = DefaultPlatformFlavor
 		}
 		err := in.Validate(edgeproto.CloudletAllFieldsMap)
 		if err != nil {
