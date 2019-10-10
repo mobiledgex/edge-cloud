@@ -18,8 +18,14 @@ func TestAddRemove(t *testing.T) {
 	setupJwks()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
+	cloudlets := dmetest.GenerateClouldlets()
 
 	tbl := dmecommon.DmeAppTbl
+
+	// Add cloudlets first as we check the state via cloudlets
+	for _, cloudlet := range cloudlets {
+		dmecommon.SetInstStateForCloudlet(cloudlet)
+	}
 
 	// add all data, check that number of instances matches
 	for _, inst := range apps {
@@ -64,6 +70,29 @@ func TestAddRemove(t *testing.T) {
 				"findCloudletData[%d]", ii)
 		}
 	}
+	// disable one cloudlet and check the newly found cloudlet
+	cloudletInfo := cloudlets[2]
+	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+	dmecommon.SetInstStateForCloudlet(cloudletInfo)
+	ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123)
+
+	regReply, err := serv.RegisterClient(ctx, &dmetest.DisabledCloudletRR.Reg)
+	assert.Nil(t, err, "register client")
+	ckey, err := dmecommon.VerifyCookie(regReply.SessionCookie)
+	assert.Nil(t, err, "verify cookie")
+	ctx = dmecommon.NewCookieContext(ctx, ckey)
+
+	reply, err := serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
+	assert.Nil(t, err, "find cloudlet")
+	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Status, reply.Status)
+	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Fqdn, reply.Fqdn)
+	// re-enable and check that the results is now what original findCloudlet[3] is
+	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+	dmecommon.SetInstStateForCloudlet(cloudletInfo)
+	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
+	assert.Nil(t, err, "find cloudlet")
+	assert.Equal(t, dmetest.FindCloudletData[3].Reply.Status, reply.Status)
+	assert.Equal(t, dmetest.FindCloudletData[3].Reply.Fqdn, reply.Fqdn)
 
 	// delete all data
 	for _, app := range apps {

@@ -566,6 +566,14 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 			actionParam = actionArgs[0]
 			actionArgs = actionArgs[1:]
 		}
+		if actionSubtype == "crm" {
+			// read the apifile and start crm with the details
+			err := apis.StartCrmsLocal(ctx, actionParam, spec.ApiFile, outputDir)
+			if err != nil {
+				errors = append(errors, err.Error())
+			}
+			break
+		}
 		if !StartProcesses(actionParam, actionArgs, outputDir) {
 			startFailed = true
 			errors = append(errors, "start failed")
@@ -585,9 +593,15 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 			errors = append(errors, "wait for process failed")
 		}
 	case "stop":
-		allprocs := util.GetAllProcesses()
-		if !StopProcesses(actionParam, allprocs) {
-			errors = append(errors, "stop failed")
+		if actionSubtype == "crm" {
+			if err := apis.StopCrmsLocal(ctx, actionParam, spec.ApiFile); err != nil {
+				errors = append(errors, err.Error())
+			}
+		} else {
+			allprocs := util.GetAllProcesses()
+			if !StopProcesses(actionParam, allprocs) {
+				errors = append(errors, "stop failed")
+			}
 		}
 	case "ctrlapi":
 		if !apis.RunControllerAPI(actionSubtype, actionParam, spec.ApiFile, outputDir, mods) {
