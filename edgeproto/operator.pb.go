@@ -597,14 +597,6 @@ func (s *OperatorStore) STMDel(stm concurrency.STM, key *OperatorKey) {
 	stm.Del(keystr)
 }
 
-func (m *Operator) getKey() *OperatorKey {
-	return &m.Key
-}
-
-func (m *Operator) getKeyVal() OperatorKey {
-	return m.Key
-}
-
 type OperatorKeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -661,7 +653,7 @@ func (c *OperatorCache) GetAllKeys(ctx context.Context, keys map[OperatorKey]con
 }
 
 func (c *OperatorCache) Update(ctx context.Context, in *Operator, rev int64) {
-	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *Operator) (*Operator, bool) {
+	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Operator) (*Operator, bool) {
 		return in, true
 	})
 }
@@ -681,27 +673,27 @@ func (c *OperatorCache) UpdateModFunc(ctx context.Context, key *OperatorKey, rev
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.getKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old)
 		}
 	}
-	c.Objs[new.getKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Operator", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, new.getKey())
+	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
 func (c *OperatorCache) Delete(ctx context.Context, in *Operator, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.getKeyVal()]
-	delete(c.Objs, in.getKeyVal())
+	old := c.Objs[in.GetKeyVal()]
+	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Operator", "key", in.getKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Operator", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.getKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, in.getKey())
+	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *OperatorCache) Prune(ctx context.Context, validKeys map[OperatorKey]struct{}) {
@@ -818,7 +810,7 @@ func (c *OperatorCache) SyncUpdate(ctx context.Context, key, val []byte, rev int
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.getKeyVal()] = struct{}{}
+		c.List[obj.GetKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -826,7 +818,7 @@ func (c *OperatorCache) SyncUpdate(ctx context.Context, key, val []byte, rev int
 func (c *OperatorCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := Operator{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	OperatorKeyStringParse(keystr, obj.getKey())
+	OperatorKeyStringParse(keystr, obj.GetKey())
 	c.Delete(ctx, &obj, rev)
 }
 
@@ -853,8 +845,20 @@ func (c *OperatorCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (m *Operator) GetKey() objstore.ObjKey {
+func (m *Operator) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *Operator) GetKey() *OperatorKey {
 	return &m.Key
+}
+
+func (m *Operator) GetKeyVal() OperatorKey {
+	return m.Key
+}
+
+func (m *Operator) SetKey(key *OperatorKey) {
+	m.Key = *key
 }
 
 func CmpSortOperator(a Operator, b Operator) bool {

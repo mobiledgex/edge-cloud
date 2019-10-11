@@ -273,7 +273,7 @@ func GetAppInst(t *testing.T, ctx context.Context, api *AppInstCommonApi, key *e
 	show := ShowAppInst{}
 	show.Init()
 	filter := edgeproto.AppInst{}
-	filter.Key = *key
+	filter.SetKey(key)
 	err = api.ShowAppInst(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -352,7 +352,7 @@ func CreateAppInstData(t *testing.T, ctx context.Context, api *AppInstCommonApi,
 
 func FindAppInstData(key *edgeproto.AppInstKey, testData []edgeproto.AppInst) (*edgeproto.AppInst, bool) {
 	for ii, _ := range testData {
-		if testData[ii].Key.Matches(key) {
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}
@@ -522,7 +522,7 @@ func GetAppInstInfo(t *testing.T, ctx context.Context, api *AppInstInfoCommonApi
 	show := ShowAppInstInfo{}
 	show.Init()
 	filter := edgeproto.AppInstInfo{}
-	filter.Key = *key
+	filter.SetKey(key)
 	err = api.ShowAppInstInfo(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -534,7 +534,7 @@ func GetAppInstInfo(t *testing.T, ctx context.Context, api *AppInstInfoCommonApi
 
 func FindAppInstInfoData(key *edgeproto.AppInstKey, testData []edgeproto.AppInstInfo) (*edgeproto.AppInstInfo, bool) {
 	for ii, _ := range testData {
-		if testData[ii].Key.Matches(key) {
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}
