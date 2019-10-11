@@ -122,10 +122,7 @@ func (s *PluginSupport) SetPbGoPackage(pkgName string) {
 	s.PbGoPackage = pkgName
 }
 
-// FQTypeName returns the fully qualified type name (includes package
-// and parents for nested definitions) for the given generator.Object.
-// This also adds the package to a list of used packages for PrintUsedImports().
-func (s *PluginSupport) FQTypeName(g *generator.Generator, obj generator.Object) string {
+func (s *PluginSupport) GetPackage(obj generator.Object) string {
 	pkg := *obj.File().Package
 	if pkg == s.PbGoPackage {
 		pkg = ""
@@ -135,6 +132,14 @@ func (s *PluginSupport) FQTypeName(g *generator.Generator, obj generator.Object)
 		s.UsedPkgs[pkg] = obj.File()
 		pkg += "."
 	}
+	return pkg
+}
+
+// FQTypeName returns the fully qualified type name (includes package
+// and parents for nested definitions) for the given generator.Object.
+// This also adds the package to a list of used packages for PrintUsedImports().
+func (s *PluginSupport) FQTypeName(g *generator.Generator, obj generator.Object) string {
+	pkg := s.GetPackage(obj)
 	return pkg + generator.CamelCaseSlice(obj.TypeName())
 }
 
@@ -332,6 +337,10 @@ func GetObjAndKey(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_ObjAndKey, false)
 }
 
+func GetCustomKeyType(message *descriptor.DescriptorProto) string {
+	return GetStringExtension(message.Options, protogen.E_CustomKeyType, "")
+}
+
 func HasHideTags(g *generator.Generator, desc *generator.Descriptor, hideTag *proto.ExtensionDesc, visited []*generator.Descriptor) bool {
 	if WasVisited(desc, visited) {
 		return false
@@ -368,10 +377,13 @@ func (s *PluginSupport) GetMessageKeyType(g *generator.Generator, desc *generato
 	message := desc.DescriptorProto
 	if field := GetMessageKey(message); field != nil {
 		return s.GoType(g, field), nil
+	} else if typ := GetCustomKeyType(message); typ != "" {
+		pkg := s.GetPackage(desc)
+		return pkg + typ, nil
 	} else if GetObjAndKey(message) {
 		return s.FQTypeName(g, desc), nil
 	}
-	return "", fmt.Errorf("No Key field for %s", *message.Name)
+	return "", fmt.Errorf("No Key field for %s, use field named Key or protogen.obj_and_key option or protogen.custom_key_type option", *message.Name)
 }
 
 type MapType struct {

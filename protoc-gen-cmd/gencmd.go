@@ -163,6 +163,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 			}
 		}
 	}
+	gensupport.RunParseCheck(g.Generator, file)
 }
 
 func (g *GenCmd) generateServiceVars(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {

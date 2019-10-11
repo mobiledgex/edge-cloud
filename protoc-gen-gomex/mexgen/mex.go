@@ -35,6 +35,7 @@ type mex struct {
 	cudTemplate   *template.Template
 	enumTemplate  *template.Template
 	cacheTemplate *template.Template
+	keysTemplate  *template.Template
 	importUtil    bool
 	importLog     bool
 	importStrings bool
@@ -60,6 +61,7 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.cudTemplate = template.Must(template.New("cud").Parse(cudTemplateIn))
 	m.enumTemplate = template.Must(template.New("enum").Parse(enumTemplateIn))
 	m.cacheTemplate = template.Must(template.New("cache").Parse(cacheTemplateIn))
+	m.keysTemplate = template.Must(template.New("keys").Parse(keysTemplateIn))
 	m.support.Init(gen.Request)
 	m.firstFile = gensupport.GetFirstFile(gen)
 }
@@ -923,33 +925,17 @@ func (s *{{.Name}}Store) STMDel(stm concurrency.STM, key *{{.KeyType}}) {
 `
 
 type cacheTemplateArgs struct {
-	Name         string
-	KeyType      string
-	CudCache     bool
-	NotifyCache  bool
-	NotifyFlush  bool
-	WaitForState string
-	ObjAndKey    bool
+	Name          string
+	KeyType       string
+	CudCache      bool
+	NotifyCache   bool
+	NotifyFlush   bool
+	WaitForState  string
+	ObjAndKey     bool
+	CustomKeyType string
 }
 
 var cacheTemplateIn = `
-
-func (m * {{.Name}}) getKey() *{{.KeyType}} {
-{{- if .ObjAndKey}}
-	return m
-{{- else}}
-	return &m.Key
-{{- end}}
-}
-
-func (m *{{.Name}}) getKeyVal() {{.KeyType}} {
-{{- if .ObjAndKey}}
-	return *m
-{{- else}}
-	return m.Key
-{{- end}}
-}
-
 type {{.Name}}KeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -1006,7 +992,7 @@ func (c *{{.Name}}Cache) GetAllKeys(ctx context.Context, keys map[{{.KeyType}}]c
 }
 
 func (c *{{.Name}}Cache) Update(ctx context.Context, in *{{.Name}}, rev int64) {
-	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *{{.Name}}) (*{{.Name}}, bool) {
+	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *{{.Name}}) (*{{.Name}}, bool) {
 		return in, true
 	})
 }
@@ -1026,27 +1012,27 @@ func (c *{{.Name}}Cache) UpdateModFunc(ctx context.Context, key *{{.KeyType}}, r
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.getKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old)
 		}
 	}
-	c.Objs[new.getKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate {{.Name}}", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, new.getKey())
+	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
 func (c *{{.Name}}Cache) Delete(ctx context.Context, in *{{.Name}}, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.getKeyVal()]
-	delete(c.Objs, in.getKeyVal())
+	old := c.Objs[in.GetKeyVal()]
+	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete {{.Name}}", "key", in.getKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete {{.Name}}", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.getKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, in.getKey())
+	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *{{.Name}}Cache) Prune(ctx context.Context, validKeys map[{{.KeyType}}]struct{}) {
@@ -1187,7 +1173,7 @@ func (c *{{.Name}}Cache) SyncUpdate(ctx context.Context, key, val []byte, rev in
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.getKeyVal()] = struct{}{}
+		c.List[obj.GetKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -1195,7 +1181,11 @@ func (c *{{.Name}}Cache) SyncUpdate(ctx context.Context, key, val []byte, rev in
 func (c *{{.Name}}Cache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := {{.Name}}{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	{{.KeyType}}StringParse(keystr, obj.getKey())
+{{- if .CustomKeyType}}
+	{{.KeyType}}StringParse(keystr, &obj)
+{{- else}}
+	{{.KeyType}}StringParse(keystr, obj.GetKey())
+{{- end}}
 	c.Delete(ctx, &obj, rev)
 }
 
@@ -1310,6 +1300,52 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 
 `
 
+type keysTemplateArgs struct {
+	Name      string
+	KeyType   string
+	ObjAndKey bool
+}
+
+var keysTemplateIn = `
+func (m *{{.Name}}) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *{{.Name}}) GetKey() *{{.KeyType}} {
+{{- if .ObjAndKey}}
+	return m
+{{- else}}
+	return &m.Key
+{{- end}}
+}
+
+func (m *{{.Name}}) GetKeyVal() {{.KeyType}} {
+{{- if .ObjAndKey}}
+	return *m
+{{- else}}
+	return m.Key
+{{- end}}
+}
+
+func (m *{{.Name}}) SetKey(key *{{.KeyType}}) {
+{{- if .ObjAndKey}}
+	*m = *key
+{{- else}}
+	m.Key = *key
+{{- end}}
+}
+
+func CmpSort{{.Name}}(a {{.Name}}, b {{.Name}}) bool {
+{{- if .ObjAndKey}}
+	return a.GetKeyString() < b.GetKeyString()
+{{- else}}
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+{{- end}}
+}
+
+
+`
+
 type ugpradeError struct {
 	CurHash        string
 	CurHashEnumVal int32
@@ -1399,42 +1435,33 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	m.P("")
 
 	if GetGenerateCud(message) {
-		keyField := gensupport.GetMessageKey(message)
-		objAndKey := gensupport.GetObjAndKey(message)
-		if keyField == nil && !objAndKey {
-			m.gen.Fail("message", *message.Name, "needs a unique key field named key of type", *message.Name+"Key or needs protogen.obj_and_key option for option generate_cud")
+		keyType, err := m.support.GetMessageKeyType(m.gen, desc)
+		if err != nil {
+			m.gen.Fail(err.Error())
 		}
 		args := cudTemplateArgs{
 			Name:      *message.Name,
 			CudName:   *message.Name + "Cud",
 			HasFields: gensupport.HasGrpcFields(message),
-			ObjAndKey: objAndKey,
-		}
-		if keyField != nil {
-			args.KeyType = m.support.GoType(m.gen, keyField)
-		} else {
-			args.KeyType = *message.Name
+			ObjAndKey: gensupport.GetObjAndKey(message),
+			KeyType:   keyType,
 		}
 		m.cudTemplate.Execute(m.gen.Buffer, args)
 	}
 	if GetGenerateCache(message) {
-		keyField := gensupport.GetMessageKey(message)
-		objAndKey := gensupport.GetObjAndKey(message)
-		if keyField == nil && !objAndKey {
-			m.gen.Fail("message", *message.Name, "needs a unique key field named key of type", *message.Name+"Key or needs protogen.obj_and_key option for option generate_cud")
+		keyType, err := m.support.GetMessageKeyType(m.gen, desc)
+		if err != nil {
+			m.gen.Fail(err.Error())
 		}
 		args := cacheTemplateArgs{
-			Name:         *message.Name,
-			CudCache:     GetGenerateCud(message),
-			NotifyCache:  GetNotifyCache(message),
-			NotifyFlush:  GetNotifyFlush(message),
-			WaitForState: GetGenerateWaitForState(message),
-			ObjAndKey:    objAndKey,
-		}
-		if keyField != nil {
-			args.KeyType = m.support.GoType(m.gen, keyField)
-		} else {
-			args.KeyType = *message.Name
+			Name:          *message.Name,
+			CudCache:      GetGenerateCud(message),
+			NotifyCache:   GetNotifyCache(message),
+			NotifyFlush:   GetNotifyFlush(message),
+			WaitForState:  GetGenerateWaitForState(message),
+			ObjAndKey:     gensupport.GetObjAndKey(message),
+			CustomKeyType: gensupport.GetCustomKeyType(message),
+			KeyType:       keyType,
 		}
 		m.cacheTemplate.Execute(m.gen.Buffer, args)
 		m.importUtil = true
@@ -1446,6 +1473,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		}
 	}
 	if GetObjKey(message) || gensupport.GetObjAndKey(message) {
+		// this is a key object
 		m.P("func (m *", message.Name, ") GetKeyString() string {")
 		m.P("key, err := json.Marshal(m)")
 		m.P("if err != nil {")
@@ -1465,28 +1493,18 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.importJson = true
 		m.importLog = true
 	}
-	if field := gensupport.GetMessageKey(message); field != nil {
-		//m.P("func (m *", message.Name, ") GetKey() *", m.support.GoType(m.gen, field), " {")
-		m.P("func (m *", message.Name, ") GetKey() objstore.ObjKey {")
-		m.P("return &m.Key")
-		m.P("}")
-		m.P("")
-
-		m.P("func CmpSort", message.Name, "(a ", message.Name, ", b ", message.Name, ") bool {")
-		m.P("return a.Key.GetKeyString() < b.Key.GetKeyString()")
-		m.P("}")
-		m.P("")
-	}
-	if gensupport.GetObjAndKey(message) {
-		m.P("func (m *", message.Name, ") GetKey() objstore.ObjKey {")
-		m.P("return m")
-		m.P("}")
-		m.P("")
-
-		m.P("func CmpSort", message.Name, "(a ", message.Name, ", b ", message.Name, ") bool {")
-		m.P("return a.GetKeyString() < b.GetKeyString()")
-		m.P("}")
-		m.P("")
+	if gensupport.GetMessageKey(message) != nil || gensupport.GetObjAndKey(message) {
+		// this is an object that has a key field
+		keyType, err := m.support.GetMessageKeyType(m.gen, desc)
+		if err != nil {
+			m.gen.Fail(err.Error())
+		}
+		args := keysTemplateArgs{
+			Name:      *message.Name,
+			KeyType:   keyType,
+			ObjAndKey: gensupport.GetObjAndKey(message),
+		}
+		m.keysTemplate.Execute(m.gen.Buffer, args)
 	}
 
 	//Generate enum values validation

@@ -272,7 +272,7 @@ func GetCloudlet(t *testing.T, ctx context.Context, api *CloudletCommonApi, key 
 	show := ShowCloudlet{}
 	show.Init()
 	filter := edgeproto.Cloudlet{}
-	filter.Key = *key
+	filter.SetKey(key)
 	err = api.ShowCloudlet(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -371,7 +371,7 @@ func CreateCloudletData(t *testing.T, ctx context.Context, api *CloudletCommonAp
 
 func FindCloudletData(key *edgeproto.CloudletKey, testData []edgeproto.Cloudlet) (*edgeproto.Cloudlet, bool) {
 	for ii, _ := range testData {
-		if testData[ii].Key.Matches(key) {
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}
@@ -541,7 +541,7 @@ func GetCloudletInfo(t *testing.T, ctx context.Context, api *CloudletInfoCommonA
 	show := ShowCloudletInfo{}
 	show.Init()
 	filter := edgeproto.CloudletInfo{}
-	filter.Key = *key
+	filter.SetKey(key)
 	err = api.ShowCloudletInfo(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -553,7 +553,7 @@ func GetCloudletInfo(t *testing.T, ctx context.Context, api *CloudletInfoCommonA
 
 func FindCloudletInfoData(key *edgeproto.CloudletKey, testData []edgeproto.CloudletInfo) (*edgeproto.CloudletInfo, bool) {
 	for ii, _ := range testData {
-		if testData[ii].Key.Matches(key) {
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}
