@@ -182,7 +182,6 @@ apps:
   defaultflavor:
     name: x1.small
   accessports: "tcp:80,tcp:443,udp:10002"
-  command: touch "/tmp/test.txt"
 - key:
     developerkey:
       name: AcmeAppCo
