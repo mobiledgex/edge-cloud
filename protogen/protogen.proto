@@ -15,68 +15,121 @@ import "google/protobuf/descriptor.proto";
 // MethodOptions
 
 extend google.protobuf.MessageOptions {
+  // Generate a matches function to determine if two objects are equal,
+  // or for show filtering, if filter fields match existing object.
   bool generate_matches = 51005;
+  // Generate store object with various CUD apis for interfacing to etcd.
   bool generate_cud = 51006;
+  // Declare message as a key for another message that may be stored in etcd.
+  // Required for messages that are keys for other messages.
   bool obj_key = 51007;
+  // Generate a cache struct (hash table) for this message type. Caches
+  // are used to store objects in memory and interact with the notify framework
+  // for persistent objects.
   bool generate_cache = 51008;
+  // Generate interfaces and objects to use message cache in the notify framework.
+  // requires generate_cache to be set true.
   bool notify_cache = 51010;
+  // Generate test funcs for create/update/delete/show.
   bool generate_cud_test = 51011;
+  // Generate or suppress show test func
   bool generate_show_test = 51012;
+  // For test code generation, denote that CUD apis output is a stream.
   bool generate_cud_streamout = 51014;
+  // Generate a wait for state function for cache objects. String value is
+  // the state variable type.
   string generate_wait_for_state = 51015;
+  // Generate interfaces and objects to use message in the notify framework.
+  // Messages do not use a cache, but use a queue instead.
   bool notify_message = 51016;
+  // Add hook to notify update function, to determine if object should be sent or not.
   bool notify_custom_update = 51017;
+  // Add hook to notify receive path.
   bool notify_recv_hook = 51018;
+  // Add func to check cloudlet key of message to determine if message should be sent.
   bool notify_filter_cloudlet_key = 51019;
+  // Set false to make the cache flush function a no-op.
   bool notify_flush = 51020;
+  // Set false to avoid adding log messages to notify functions.
   bool notify_print_send_recv = 51022;
-  // comma separated list of hierarchical paths for fields to
+  // Comma separated list of hierarchical paths for fields to
   // not generate argument flags for Create/Delete/Update commands.
   string noconfig = 51026;
+  // Comma separated list of name=value pairs for CLI to avoid having to
+  // type full hierarchical path of fields, for example:
+  // "appname=Key.Name,appvers=Key.Version"
+  // The target (right side of equals) should use the go format field name.
   string alias = 51027;
-  string not_required = 51028; // override required key values
+  // Comma separated list of fields that are not required for CLI commands.
+  // Primarily used to override key fields which are considered required by default.
+  string not_required = 51028;
+  // Set false to avoid generating update test. Only has effect if generate_cud_test is true.
   bool generate_cud_test_update = 51030;
+  // Change create/delete to add/remove for test code.
   bool generate_addrm_test = 51031;
+  // Mark the message as both an object and a key for cache and etcd interactions.
+  // The entire message becomes the key for itself in caches and etcd.
   bool obj_and_key = 51032;
-  string also_required = 51033; // add required key values
+  // Comma separate list of fields for CLI that are also required for all CUD APIs. 
+  string also_required = 51033;
+  // Field in the message that specifies the target cloudlet.
   string mc2_target_cloudlet = 51035;
+  // Type name to be used as key for this message. Overrides the default behavior
+  // that assumes a field named "Key" exists in the message that is the key.
   string custom_key_type = 51038;
 }
 
 extend google.protobuf.EnumOptions {
-  // This enum has hashes of the model version
+  // This enum has hashes of the model version.
   bool version_hash = 51023;
+  // Modify salt to generate a new hash even if the data structures have not changed.
   string version_hash_salt = 51024;
 }
 
 extend google.protobuf.EnumValueOptions {
+  // Specify the upgrade function associated with the version hash value that
+  // will be used to upgrade the etcd database. Only used on enum values of
+  // the enum with version_hash set to true.
   string upgrade_func = 51025;
 }
 
 extend google.protobuf.FieldOptions {
+  // Use this field as the target for Update test code.
   bool test_update = 51009;
-  // backend defines a field that is filled in by the back-end,
+  // Backend defines a field that is filled in by the back-end,
   // not by the user.
   bool backend = 51013;
-  // hidetag is a string that can be used to hide fields on output objects.
+  // Hidetag is a string that can be used to hide fields on output objects.
   // it will zero-out the field before generating output, which typically
   // hides it (for json and our custom yaml)
   string hidetag = 52002;
 }
 
 extend google.protobuf.MethodOptions {
+  // Comma separated list of three strings: resource name, action, org field path.
+  // These are used in RBAC for Master Controller. Example:
+  // ResourceApps,ActionManage,Key.DeveloperKey.Name
   string mc2_api = 51021;
   // show stream output objects incrementally as they come, rather than
   // collecting them into one output format. Only applies to commands
   // that return a stream.
   bool stream_out_incremental = 51029;
-  bool input_required = 51033; // require input for show commands
+  // For CLI generation, none of the input fields are required.
+  // Typically used for additional show commands that the generator
+  // does not recognize as the Show API for a CUD API set.
+  bool input_required = 51033;
+  // Generate a hook function for customing the authorization behavior of the
+  // API in MC.
   bool mc2_custom_authz = 51034;
-  string method_noconfig = 51035; // override message setting
-  string method_also_required = 51036; // override message setting
-  string method_not_required = 51037; // override message setting
+  // Same as noconfig option for Message, but overrides it for this API.
+  string method_noconfig = 51035;
+  // Same as also_required option for Message, but overrides it for this API.
+  string method_also_required = 51036;
+  // Same as not_required option for the Message, but overrides it for this API.
+  string method_not_required = 51037;
 }
 
 extend google.protobuf.ServiceOptions {
+  // For test code, add message to dummy server (typically for CUDs/caches)
   bool dummy_server = 51026;
 }
