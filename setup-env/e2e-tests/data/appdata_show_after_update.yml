@@ -278,7 +278,6 @@ apps:
     name: x1.small
   cluster:
     name: DefaultVMCluster
-  command: touch "/tmp/test.txt"
   deployment: vm
 - key:
     developerkey:
