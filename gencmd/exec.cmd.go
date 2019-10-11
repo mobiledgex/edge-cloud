@@ -170,7 +170,6 @@ var ExecRequestRequiredArgs = []string{
 var ExecRequestOptionalArgs = []string{
 	"command",
 	"containerid",
-	"console",
 }
 var ExecRequestAliasArgs = []string{
 	"developer=appinstkey.appkey.developerkey.name",
