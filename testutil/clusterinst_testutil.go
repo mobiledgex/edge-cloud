@@ -271,7 +271,7 @@ func GetClusterInst(t *testing.T, ctx context.Context, api *ClusterInstCommonApi
 	show := ShowClusterInst{}
 	show.Init()
 	filter := edgeproto.ClusterInst{}
-	filter.Key = *key
+	filter.SetKey(key)
 	err = api.ShowClusterInst(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -350,7 +350,7 @@ func CreateClusterInstData(t *testing.T, ctx context.Context, api *ClusterInstCo
 
 func FindClusterInstData(key *edgeproto.ClusterInstKey, testData []edgeproto.ClusterInst) (*edgeproto.ClusterInst, bool) {
 	for ii, _ := range testData {
-		if testData[ii].Key.Matches(key) {
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}
@@ -520,7 +520,7 @@ func GetClusterInstInfo(t *testing.T, ctx context.Context, api *ClusterInstInfoC
 	show := ShowClusterInstInfo{}
 	show.Init()
 	filter := edgeproto.ClusterInstInfo{}
-	filter.Key = *key
+	filter.SetKey(key)
 	err = api.ShowClusterInstInfo(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -532,7 +532,7 @@ func GetClusterInstInfo(t *testing.T, ctx context.Context, api *ClusterInstInfoC
 
 func FindClusterInstInfoData(key *edgeproto.ClusterInstKey, testData []edgeproto.ClusterInstInfo) (*edgeproto.ClusterInstInfo, bool) {
 	for ii, _ := range testData {
-		if testData[ii].Key.Matches(key) {
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}

@@ -25,6 +25,7 @@ type ControllerData struct {
 	CloudletInfoCache    edgeproto.CloudletInfoCache
 	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
 	NodeCache            edgeproto.NodeCache
+	AlertCache           edgeproto.AlertCache
 	ExecReqHandler       *ExecReqHandler
 	ExecReqSend          *notify.ExecRequestSend
 }
@@ -42,6 +43,7 @@ func NewControllerData(pf platform.Platform) *ControllerData {
 	edgeproto.InitFlavorCache(&cd.FlavorCache)
 	edgeproto.InitClusterInstCache(&cd.ClusterInstCache)
 	edgeproto.InitNodeCache(&cd.NodeCache)
+	edgeproto.InitAlertCache(&cd.AlertCache)
 	cd.ExecReqHandler = NewExecReqHandler(cd)
 	cd.ExecReqSend = notify.NewExecRequestSend()
 	// set callbacks to trigger changes

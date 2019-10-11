@@ -803,14 +803,6 @@ func (s *NodeStore) STMDel(stm concurrency.STM, key *NodeKey) {
 	stm.Del(keystr)
 }
 
-func (m *Node) getKey() *NodeKey {
-	return &m.Key
-}
-
-func (m *Node) getKeyVal() NodeKey {
-	return m.Key
-}
-
 type NodeKeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -867,7 +859,7 @@ func (c *NodeCache) GetAllKeys(ctx context.Context, keys map[NodeKey]context.Con
 }
 
 func (c *NodeCache) Update(ctx context.Context, in *Node, rev int64) {
-	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *Node) (*Node, bool) {
+	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Node) (*Node, bool) {
 		return in, true
 	})
 }
@@ -887,27 +879,27 @@ func (c *NodeCache) UpdateModFunc(ctx context.Context, key *NodeKey, rev int64, 
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.getKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old)
 		}
 	}
-	c.Objs[new.getKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Node", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, new.getKey())
+	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
 func (c *NodeCache) Delete(ctx context.Context, in *Node, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.getKeyVal()]
-	delete(c.Objs, in.getKeyVal())
+	old := c.Objs[in.GetKeyVal()]
+	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Node", "key", in.getKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Node", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.getKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, in.getKey())
+	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *NodeCache) Prune(ctx context.Context, validKeys map[NodeKey]struct{}) {
@@ -1042,7 +1034,7 @@ func (c *NodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) 
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.getKeyVal()] = struct{}{}
+		c.List[obj.GetKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -1050,7 +1042,7 @@ func (c *NodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) 
 func (c *NodeCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := Node{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	NodeKeyStringParse(keystr, obj.getKey())
+	NodeKeyStringParse(keystr, obj.GetKey())
 	c.Delete(ctx, &obj, rev)
 }
 
@@ -1077,8 +1069,20 @@ func (c *NodeCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (m *Node) GetKey() objstore.ObjKey {
+func (m *Node) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *Node) GetKey() *NodeKey {
 	return &m.Key
+}
+
+func (m *Node) GetKeyVal() NodeKey {
+	return m.Key
+}
+
+func (m *Node) SetKey(key *NodeKey) {
+	m.Key = *key
 }
 
 func CmpSortNode(a Node, b Node) bool {

@@ -188,7 +188,7 @@ func GetCloudletRefs(t *testing.T, ctx context.Context, api *CloudletRefsCommonA
 	show := ShowCloudletRefs{}
 	show.Init()
 	filter := edgeproto.CloudletRefs{}
-	filter.Key = *key
+	filter.SetKey(key)
 	err = api.ShowCloudletRefs(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -200,7 +200,7 @@ func GetCloudletRefs(t *testing.T, ctx context.Context, api *CloudletRefsCommonA
 
 func FindCloudletRefsData(key *edgeproto.CloudletKey, testData []edgeproto.CloudletRefs) (*edgeproto.CloudletRefs, bool) {
 	for ii, _ := range testData {
-		if testData[ii].Key.Matches(key) {
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}
@@ -370,7 +370,7 @@ func GetClusterRefs(t *testing.T, ctx context.Context, api *ClusterRefsCommonApi
 	show := ShowClusterRefs{}
 	show.Init()
 	filter := edgeproto.ClusterRefs{}
-	filter.Key = *key
+	filter.SetKey(key)
 	err = api.ShowClusterRefs(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -382,7 +382,7 @@ func GetClusterRefs(t *testing.T, ctx context.Context, api *ClusterRefsCommonApi
 
 func FindClusterRefsData(key *edgeproto.ClusterInstKey, testData []edgeproto.ClusterRefs) (*edgeproto.ClusterRefs, bool) {
 	for ii, _ := range testData {
-		if testData[ii].Key.Matches(key) {
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}
