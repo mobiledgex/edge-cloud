@@ -158,6 +158,33 @@ func getRolesAndSecrets(appRoles *VaultRoles) error {
 	return nil
 }
 
+func getPlatformConfig() (*edgeproto.PlatformConfig, error) {
+	pfConfig := edgeproto.PlatformConfig{}
+	appRoles := VaultRoles{}
+	if err := getRolesAndSecrets(&appRoles); err != nil {
+		if !*testMode {
+			return nil, err
+		}
+		log.DebugLog(log.DebugLevelApi, "Warning, Failed to get roleIDs - running locally",
+			"err", err)
+	} else {
+		pfConfig.CrmRoleId = appRoles.CRMRoleID
+		pfConfig.CrmSecretId = appRoles.CRMSecretID
+	}
+	pfConfig.PlatformTag = *versionTag
+	pfConfig.TlsCertFile = *tlsCertFile
+	pfConfig.VaultAddr = *vaultAddr
+	pfConfig.RegistryPath = *cloudletRegistryPath
+	pfConfig.ImagePath = *cloudletVMImagePath
+	pfConfig.TestMode = *testMode
+	addrObjs := strings.Split(*notifyAddr, ":")
+	if len(addrObjs) != 2 {
+		return nil, fmt.Errorf("unable to fetch notify addr of the controller")
+	}
+	pfConfig.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
+	return &pfConfig, nil
+}
+
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_UNKNOWN {
 		in.IpSupport = edgeproto.IpSupport_IP_SUPPORT_DYNAMIC
@@ -188,31 +215,12 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.PhysicalName = in.Key.Name
 	}
 
-	pfConfig := edgeproto.PlatformConfig{}
-	appRoles := VaultRoles{}
-	if err := getRolesAndSecrets(&appRoles); err != nil {
-		if !*testMode {
-			return err
-		}
-		log.DebugLog(log.DebugLevelApi, "Warning, Failed to get roleIDs - running locally",
-			"err", err)
-	} else {
-		pfConfig.CrmRoleId = appRoles.CRMRoleID
-		pfConfig.CrmSecretId = appRoles.CRMSecretID
+	pfConfig, err := getPlatformConfig()
+	if err != nil {
+		return err
 	}
-	pfConfig.PlatformTag = *versionTag
-	pfConfig.TlsCertFile = *tlsCertFile
-	pfConfig.VaultAddr = *vaultAddr
-	pfConfig.RegistryPath = *cloudletRegistryPath
-	pfConfig.ImagePath = *cloudletVMImagePath
-	pfConfig.TestMode = *testMode
-	addrObjs := strings.Split(*notifyAddr, ":")
-	if len(addrObjs) != 2 {
-		return fmt.Errorf("unable to fetch notify addr of the controller")
-	}
-	pfConfig.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
 
-	return s.createCloudletInternal(DefCallContext(), in, &pfConfig, cb)
+	return s.createCloudletInternal(DefCallContext(), in, pfConfig, cb)
 }
 
 func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_CreateCloudletServer) error {
@@ -448,6 +456,78 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	// after the cloudlet change is committed, if the location changed,
 	// update app insts as well.
 	s.UpdateAppInstLocations(ctx, in)
+
+	if in.Upgrade {
+		err = s.UpgradeCloudlet(ctx, in, cb)
+	}
+
+	return err
+}
+
+func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
+	cloudlet := &edgeproto.Cloudlet{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, cloudlet) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		cloudlet.State = edgeproto.TrackedState_UPDATING
+		s.store.STMPut(stm, cloudlet)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	updatecb := updateCloudletCallback{in, cb}
+	pfConfig, err := getPlatformConfig()
+	if err != nil {
+		return err
+	}
+
+	if in.DeploymentLocal {
+		return fmt.Errorf("Upgrade is not support for local deployments")
+	} else {
+		var cloudletPlatform pf.Platform
+		cloudletPlatform, err = pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+		if err == nil {
+			err = cloudletPlatform.UpdateCloudlet(ctx, cloudlet, pfConfig, updatecb.cb)
+		}
+	}
+
+	if err == nil {
+		// Wait for new CRM to connect to controller
+		err = WaitForCloudlet(ctx, &in.Key, PlatformInitTimeout, updatecb.cb)
+	} else {
+		cb.Send(&edgeproto.Result{Message: err.Error()})
+	}
+
+	updatedCloudlet := edgeproto.Cloudlet{}
+	err1 := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &updatedCloudlet) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		if err == nil {
+			updatedCloudlet.State = edgeproto.TrackedState_READY
+			// Delete Old Container
+		} else {
+			if updatedCloudlet.Errors == nil {
+				updatedCloudlet.Errors = make([]string, 0)
+			}
+			updatedCloudlet.Errors = append(updatedCloudlet.Errors, err.Error())
+			updatedCloudlet.State = edgeproto.TrackedState_UPDATE_ERROR
+		}
+
+		s.store.STMPut(stm, &updatedCloudlet)
+		return nil
+	})
+	if err1 != nil {
+		return err1
+	}
+
+	if err != nil {
+		// Handle this case
+	}
+
 	return err
 }
 

@@ -776,6 +776,7 @@ var CloudletOptionalArgs = []string{
 	"flavor.name",
 	"physicalname",
 	"envvar",
+	"upgrade",
 }
 var CloudletAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -810,6 +811,7 @@ var CloudletComments = map[string]string{
 	"flavor.name":                         "Flavor name",
 	"physicalname":                        "Physical infrastructure cloudlet name",
 	"envvar":                              "Single Key-Value pair of env var to be passed to CRM",
+	"upgrade":                             "Upgrade cloudlet services",
 }
 var CloudletSpecialArgs = map[string]string{
 	"envvar": "StringToString",
