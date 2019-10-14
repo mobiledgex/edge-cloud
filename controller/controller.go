@@ -104,6 +104,12 @@ func validateFields(ctx context.Context) error {
 	if *versionTag == "" {
 		return fmt.Errorf("Version tag is required")
 	}
+	if *registryFQDN == "" {
+		return fmt.Errorf("registryFQDN is required")
+	}
+	if *artifactoryFQDN == "" {
+		return fmt.Errorf("artifactoryFQDN is required")
+	}
 	if *cloudletRegistryPath != "" {
 		parts := strings.Split(*cloudletRegistryPath, "/")
 		if len(parts) < 2 || !strings.Contains(parts[0], ".") {
@@ -124,12 +130,16 @@ func validateFields(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		return fmt.Errorf("cloudletRegistryPath is required")
 	}
 	if *cloudletVMImagePath != "" {
 		err := util.ValidateImagePath(*cloudletVMImagePath)
 		if err != nil {
 			return err
 		}
+	} else {
+		return fmt.Errorf("cloudletVMImagePath is required")
 	}
 	return nil
 }

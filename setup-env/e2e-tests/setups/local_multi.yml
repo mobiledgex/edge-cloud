@@ -48,6 +48,10 @@ controllers:
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   shorttimeouts: true
   hostname: "127.0.0.1"
+  registryFQDN: "docker.mobiledgex.net"
+  artifactoryFQDN: "https://artifactory.mobiledgex.net/artifactory/"
+  cloudletRegistryPath: "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
+  cloudletVMImagePath: "https://artifactory.mobiledgex.net/artifactory/baseimages/mobiledgex-v2.0.3.qcow2#md5:fc13f750dd69c389dc7641ff8e6619ce"
   testmode: true
 
 - name: ctrl2

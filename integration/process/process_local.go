@@ -102,6 +102,22 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
 	}
+	if p.RegistryFQDN != "" {
+		args = append(args, "--registryFQDN")
+		args = append(args, p.RegistryFQDN)
+	}
+	if p.ArtifactoryFQDN != "" {
+		args = append(args, "--artifactoryFQDN")
+		args = append(args, p.ArtifactoryFQDN)
+	}
+	if p.CloudletRegistryPath != "" {
+		args = append(args, "--cloudletRegistryPath")
+		args = append(args, p.CloudletRegistryPath)
+	}
+	if p.CloudletVMImagePath != "" {
+		args = append(args, "--cloudletVMImagePath")
+		args = append(args, p.CloudletVMImagePath)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
