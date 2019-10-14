@@ -242,6 +242,9 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			return &edgeproto.Result{}, fmt.Errorf("Deployment Type and HTTP access ports are incompatible")
 		}
 	}
+	if in.Deployment == cloudcommon.AppDeploymentTypeVM && in.Command != "" {
+		return &edgeproto.Result{}, fmt.Errorf("invalid argument, command is not supported for VM based deployments")
+	}
 	err = updateAppFields(ctx, in, 0)
 	if err != nil {
 		return &edgeproto.Result{}, err

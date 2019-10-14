@@ -118,6 +118,24 @@ func TestNotifyTree(t *testing.T) {
 	top.handler.WaitForCloudletInfo(2)
 	require.Equal(t, 2, len(top.handler.AppInstInfoCache.Objs), "AppInstInfos")
 	require.Equal(t, 2, len(top.handler.CloudletInfoCache.Objs), "CloudletInfos")
+	// add alerts
+	checkCache(t, top, AlertType, 0)
+	checkCache(t, mid1, AlertType, 0)
+	checkCache(t, mid2, AlertType, 0)
+	checkCache(t, low11, AlertType, 0)
+	checkCache(t, low12, AlertType, 0)
+	checkCache(t, low21, AlertType, 0)
+	checkCache(t, low22, AlertType, 0)
+	low21.handler.AlertCache.Update(ctx, &testutil.AlertData[0], 0)
+	low21.handler.AlertCache.Update(ctx, &testutil.AlertData[1], 0)
+	low22.handler.AlertCache.Update(ctx, &testutil.AlertData[2], 0)
+	checkCache(t, top, AlertType, 3)
+	checkCache(t, mid1, AlertType, 0)
+	checkCache(t, mid2, AlertType, 3)
+	checkCache(t, low11, AlertType, 0)
+	checkCache(t, low12, AlertType, 0)
+	checkCache(t, low21, AlertType, 2)
+	checkCache(t, low22, AlertType, 1)
 
 	// Check flush functionality
 	// Disconnecting one of the low nodes should flush both mid and top
@@ -142,6 +160,11 @@ func TestNotifyTree(t *testing.T) {
 	require.False(t, found, "disconnected AppInstInfo")
 	_, found = top.handler.CloudletInfoCache.Objs[testutil.CloudletInfoData[0].Key]
 	require.False(t, found, "disconnected CloudletInfo")
+
+	checkCache(t, top, AlertType, 1)
+	checkCache(t, mid1, AlertType, 0)
+	checkCache(t, mid2, AlertType, 1)
+
 	fmt.Println("========== done")
 
 	for _, n := range clients {
@@ -169,6 +192,11 @@ func checkClientCache(t *testing.T, n *node, flavors int, clusterInsts int, appI
 	require.Equal(t, clusterInsts, len(n.handler.ClusterInstCache.Objs), "num clusterinsts")
 	require.Equal(t, appInsts, len(n.handler.AppInstCache.Objs), "num appinsts")
 	require.Equal(t, cloudlets, len(n.handler.CloudletCache.Objs), "num cloudlets")
+}
+
+func checkCache(t *testing.T, n *node, typ CacheType, count int) {
+	n.handler.WaitFor(typ, count)
+	require.Equal(t, count, n.handler.GetCache(typ).GetCount(), "count mismatch for %s", typ.String())
 }
 
 type node struct {

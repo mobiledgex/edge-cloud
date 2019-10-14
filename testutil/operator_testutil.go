@@ -222,7 +222,7 @@ func GetOperator(t *testing.T, ctx context.Context, api *OperatorCommonApi, key 
 	show := ShowOperator{}
 	show.Init()
 	filter := edgeproto.Operator{}
-	filter.Key = *key
+	filter.SetKey(key)
 	err = api.ShowOperator(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -301,7 +301,7 @@ func CreateOperatorData(t *testing.T, ctx context.Context, api *OperatorCommonAp
 
 func FindOperatorData(key *edgeproto.OperatorKey, testData []edgeproto.Operator) (*edgeproto.Operator, bool) {
 	for ii, _ := range testData {
-		if testData[ii].Key.Matches(key) {
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}

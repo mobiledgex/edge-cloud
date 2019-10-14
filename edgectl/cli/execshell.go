@@ -185,7 +185,7 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 	errchan := make(chan error, 1)
 	openurl := make(chan bool, 1)
 
-	if req.Console {
+	if reply.Console {
 		if reply.ConsoleUrl == "" {
 			return fmt.Errorf("unable to fetch console URL from webrtc reply")
 		}

@@ -273,6 +273,7 @@ func startServices() error {
 	edgeproto.RegisterCloudletPoolApiServer(server, &cloudletPoolApi)
 	edgeproto.RegisterCloudletPoolMemberApiServer(server, &cloudletPoolMemberApi)
 	edgeproto.RegisterCloudletPoolShowApiServer(server, &cloudletPoolMemberApi)
+	edgeproto.RegisterAlertApiServer(server, &alertApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -302,6 +303,7 @@ func startServices() error {
 			edgeproto.RegisterCloudletPoolApiHandler,
 			edgeproto.RegisterCloudletPoolMemberApiHandler,
 			edgeproto.RegisterCloudletPoolShowApiHandler,
+			edgeproto.RegisterAlertApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -407,6 +409,7 @@ func InitApis(sync *Sync) {
 	InitCloudletPoolApi(sync)
 	InitCloudletPoolMemberApi(sync)
 	InitExecApi()
+	InitAlertApi(sync)
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "nohostname"
@@ -429,6 +432,7 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(influxQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewNodeRecvMany(&nodeApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(&execApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAlertRecvMany(&alertApi))
 }
 
 // This is for figuring out the "external" address when
