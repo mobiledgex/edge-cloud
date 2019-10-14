@@ -102,16 +102,13 @@ func GitlabGroupSanitize(name string) string {
 	}, name)
 }
 
-func ValidOrgName(name string) error {
+func ValidObjName(name string) error {
 	re := regexp.MustCompile("^[a-zA-Z0-9_\\-.]*$")
 	if !re.MatchString(name) {
 		return fmt.Errorf("Name can only contain letters, digits, _ . -")
 	}
 	if !ValidLDAPName(name) {
 		return fmt.Errorf("invalid characters in Name")
-	}
-	if strings.Contains(name, "::") {
-		return fmt.Errorf("Name cannot contain ::")
 	}
 	if strings.HasPrefix(name, ".") {
 		return fmt.Errorf("Name cannot start with '.'")

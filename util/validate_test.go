@@ -93,29 +93,33 @@ func checkValidLDAPName(t *testing.T, name string, want bool) {
 	}
 }
 
-func TestValidOrgName(t *testing.T) {
+func TestValidObjName(t *testing.T) {
 	var err error
 
-	err = ValidOrgName("orgname_123.dev")
+	err = ValidObjName("orgname_123.dev")
 	require.Nil(t, err, "valid org name")
-	err = ValidOrgName(".orgname_123.dev")
+	err = ValidObjName(".orgname_123.dev")
 	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("-orgname_123.dev")
+	err = ValidObjName("-orgname_123.dev")
 	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123.dev.")
+	err = ValidObjName("orgname_123.dev.")
 	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123$dev")
+	err = ValidObjName("orgname_123$dev")
 	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev-cache")
+	err = ValidObjName("orgname_123dev-cache")
 	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev.")
+	err = ValidObjName("orgname_123dev.")
 	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev.git")
+	err = ValidObjName("orgname_123dev.git")
 	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev.atom")
+	err = ValidObjName("orgname_123dev.atom")
 	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev test")
+	err = ValidObjName("orgname_123dev test")
 	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev,test")
+	err = ValidObjName("orgname_123dev,test")
 	require.NotNil(t, err, "invalid org name")
+	err = ValidObjName("username_123dev::test")
+	require.NotNil(t, err, "invalid user name")
+	err = ValidObjName("username_123dev&test")
+	require.NotNil(t, err, "invalid user name")
 }
