@@ -80,9 +80,6 @@ func TestValidLDAPName(t *testing.T) {
 	split := strings.Split(user+","+org, ",")
 	require.Equal(t, "jon,user", UnescapeLDAPName(split[0]))
 	require.Equal(t, "foo, Inc.", UnescapeLDAPName(split[1]))
-
-	gname := GitlabGroupSanitize("niantic, inc.")
-	require.Equal(t, "niantic--inc", gname)
 }
 
 func checkValidLDAPName(t *testing.T, name string, want bool) {
@@ -93,29 +90,15 @@ func checkValidLDAPName(t *testing.T, name string, want bool) {
 	}
 }
 
-func TestValidOrgName(t *testing.T) {
+func TestValidObjName(t *testing.T) {
 	var err error
 
-	err = ValidOrgName("orgname_123.dev")
-	require.Nil(t, err, "valid org name")
-	err = ValidOrgName(".orgname_123.dev")
-	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("-orgname_123.dev")
-	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123.dev.")
-	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123$dev")
-	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev-cache")
-	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev.")
-	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev.git")
-	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev.atom")
-	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev test")
-	require.NotNil(t, err, "invalid org name")
-	err = ValidOrgName("orgname_123dev,test")
-	require.NotNil(t, err, "invalid org name")
+	err = ValidObjName("objname_123.dev")
+	require.Nil(t, err, "valid name")
+	err = ValidObjName("objname_123$dev")
+	require.NotNil(t, err, "invalid name")
+	err = ValidObjName("objname_123dev test")
+	require.NotNil(t, err, "invalid name")
+	err = ValidObjName("objname_123dev,test")
+	require.NotNil(t, err, "invalid name")
 }
