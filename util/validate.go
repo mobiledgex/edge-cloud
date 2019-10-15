@@ -88,12 +88,6 @@ func ValidObjName(name string) error {
 	if !ValidLDAPName(name) {
 		return fmt.Errorf("invalid characters in Name")
 	}
-	if strings.Contains(name, "::") {
-		return fmt.Errorf("Name cannot contain ::")
-	}
-	if strings.Contains(name, "&") {
-		return fmt.Errorf("Name cannot contain &")
-	}
 	return nil
 }
 

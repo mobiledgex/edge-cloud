@@ -101,8 +101,4 @@ func TestValidObjName(t *testing.T) {
 	require.NotNil(t, err, "invalid name")
 	err = ValidObjName("objname_123dev,test")
 	require.NotNil(t, err, "invalid name")
-	err = ValidObjName("username_123dev::test")
-	require.NotNil(t, err, "invalid name")
-	err = ValidObjName("username_123dev&test")
-	require.NotNil(t, err, "invalid name")
 }
