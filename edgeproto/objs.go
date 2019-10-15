@@ -81,7 +81,7 @@ func (a *ApplicationData) Sort() {
 // Validate functions to validate user input
 
 func (key *DeveloperKey) ValidateKey() error {
-	if err := util.ValidOrgName(key.Name); err != nil {
+	if err := util.ValidObjName(key.Name); err != nil {
 		errstring := err.Error()
 		//lowercase the first letter of the error message
 		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
