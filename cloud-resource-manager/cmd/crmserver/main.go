@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
@@ -122,9 +123,25 @@ func main() {
 
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
+		var cloudlet edgeproto.Cloudlet
+		// Fetch cloudlet cache from controller
+		// Below also ensures that crm is able to communicate to controller via Notify Channel
+		found := false
+		log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudlet.Key)
+		for i := 0; i < 10; i++ {
+			if controllerData.CloudletCache.Get(&myCloudlet.Key, &cloudlet) {
+				found = true
+				break
+			}
+			time.Sleep(1 * time.Second)
+		}
+		if !found {
+			log.FatalLog("failed to fetch cloudlet cache from controller")
+		}
+		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
+
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err := initPlatform(ctx, &myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
+		if err := initPlatform(ctx, &cloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
 			cspan.Finish()
 			span.Finish()
 			log.FatalLog("failed to init platform", "err", err)
@@ -166,7 +183,7 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache, updateCallback edgeproto.CacheUpdateCallback) error {
+func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache, updateCallback edgeproto.CacheUpdateCallback) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
 
@@ -174,7 +191,9 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physica
 		CloudletKey:  &cloudlet.Key,
 		PhysicalName: physicalName,
 		VaultAddr:    vaultAddr,
-		TestMode:     *testMode}
+		EnvVars:      cloudlet.EnvVar,
+		TestMode:     *testMode,
+	}
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
 	err := platform.Init(ctx, &pc, updateCallback)
 	return err

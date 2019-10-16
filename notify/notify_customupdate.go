@@ -70,7 +70,7 @@ func (s *AppInstSend) UpdateAllOk() bool {
 }
 
 func (s *CloudletSend) UpdateAllOk() bool {
-	return !s.sendrecv.filterCloudletKeys
+	return true
 }
 
 func (s *ClusterInstSend) UpdateAllOk() bool {
