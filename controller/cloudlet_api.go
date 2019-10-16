@@ -158,6 +158,13 @@ func getRolesAndSecrets(appRoles *VaultRoles) error {
 	return nil
 }
 
+func isOperatorInfraCloudlet(in *edgeproto.Cloudlet) bool {
+	if !in.DeploymentLocal && in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK {
+		return true
+	}
+	return false
+}
+
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_UNKNOWN {
 		in.IpSupport = edgeproto.IpSupport_IP_SUPPORT_DYNAMIC
@@ -200,6 +207,16 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		pfConfig.CrmRoleId = appRoles.CRMRoleID
 		pfConfig.CrmSecretId = appRoles.CRMSecretID
 	}
+
+	if isOperatorInfraCloudlet(in) {
+		if *cloudletVMImagePath == "" {
+			return fmt.Errorf("cloudletVMImagePath is required for cloudlet bringup on Operator infra")
+		}
+		if *cloudletRegistryPath == "" {
+			return fmt.Errorf("cloudletRegistryPath is required for cloudlet bringup on Operator infra")
+		}
+	}
+
 	pfConfig.PlatformTag = *versionTag
 	pfConfig.TlsCertFile = *tlsCertFile
 	pfConfig.VaultAddr = *vaultAddr

@@ -46,13 +46,13 @@ var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener a
 var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
 var publicAddr = flag.String("publicAddr", "127.0.0.1", "Public facing address/hostname of controller")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
-var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
+var tlsCertFile = flag.String("tls", "", "server tls cert file. Keyfile and CA file must be in same directory")
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "http://127.0.0.1:8086", "InfluxDB listener address")
-var registryFQDN = flag.String("registryFQDN", "docker.mobiledgex.net", "mobiledgex registry FQDN")
-var artifactoryFQDN = flag.String("artifactoryFQDN", "https://artifactory.mobiledgex.net/artifactory/", "mobiledgex artifactory FQDN")
-var cloudletRegistryPath = flag.String("cloudletRegistryPath", "registry.mobiledgex.net:5000/mobiledgex/edge-cloud", "edge-cloud image registry path for deploying cloudlet services")
-var cloudletVMImagePath = flag.String("cloudletVMImagePath", "https://artifactory.mobiledgex.net/artifactory/baseimages/mobiledgex-v2.0.3.qcow2#md5:fc13f750dd69c389dc7641ff8e6619ce", "mobiledgex VM image for deploying cloudlet services")
+var registryFQDN = flag.String("registryFQDN", "", "default docker image registry FQDN")
+var artifactoryFQDN = flag.String("artifactoryFQDN", "", "default VM image registry (artifactory) FQDN")
+var cloudletRegistryPath = flag.String("cloudletRegistryPath", "", "edge-cloud image registry path for deploying cloudlet services")
+var cloudletVMImagePath = flag.String("cloudletVMImagePath", "", "VM image for deploying cloudlet services")
 var versionTag = flag.String("versionTag", "", "edge-cloud image tag indicating controller version")
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
@@ -104,6 +104,12 @@ func validateFields(ctx context.Context) error {
 	if *versionTag == "" {
 		return fmt.Errorf("Version tag is required")
 	}
+	if *registryFQDN == "" {
+		return fmt.Errorf("registryFQDN is required")
+	}
+	if *artifactoryFQDN == "" {
+		return fmt.Errorf("artifactoryFQDN is required")
+	}
 	if *cloudletRegistryPath != "" {
 		parts := strings.Split(*cloudletRegistryPath, "/")
 		if len(parts) < 2 || !strings.Contains(parts[0], ".") {
@@ -124,12 +130,16 @@ func validateFields(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		return fmt.Errorf("cloudletRegistryPath is required")
 	}
 	if *cloudletVMImagePath != "" {
 		err := util.ValidateImagePath(*cloudletVMImagePath)
 		if err != nil {
 			return err
 		}
+	} else {
+		return fmt.Errorf("cloudletVMImagePath is required")
 	}
 	return nil
 }
