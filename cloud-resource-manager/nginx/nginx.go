@@ -184,7 +184,7 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 	if err != nil {
 		return err
 	}
-	err = pc.WriteFile(client, confname, buf.String(), "nginx.conf")
+	err = pc.WriteFile(client, confname, buf.String(), "nginx.conf", false)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "write nginx.conf failed",
 			"name", name, "err", err)
@@ -199,7 +199,7 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 		if err != nil {
 			return err
 		}
-		err = pc.WriteFile(client, l7dir+"/"+name+".conf", buf.String(), "nginx L7 conf")
+		err = pc.WriteFile(client, l7dir+"/"+name+".conf", buf.String(), "nginx L7 conf", false)
 		if err != nil {
 			log.DebugLog(log.DebugLevelMexos,
 				"write nginx L7 conf failed",

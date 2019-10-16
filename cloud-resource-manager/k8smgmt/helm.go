@@ -28,7 +28,7 @@ func getHelmOpts(client pc.PlatformClient, appName string, configs []*edgeproto.
 	for ii, v := range configs {
 		if v.Kind == AppConfigHelmYaml {
 			file := fmt.Sprintf("%s%d", appName, ii)
-			err := pc.WriteFile(client, file, v.Config, v.Kind)
+			err := pc.WriteFile(client, file, v.Config, v.Kind, false)
 			if err != nil {
 				return "", err
 			}
