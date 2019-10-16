@@ -30,10 +30,14 @@ type PlatformClient interface {
 
 // Some utility functions
 
-func WriteFile(client PlatformClient, file string, contents string, kind string) error {
+func WriteFile(client PlatformClient, file string, contents string, kind string, sudo bool) error {
 	log.DebugLog(log.DebugLevelMexos, "write file", "kind", kind)
 
-	cmd := fmt.Sprintf("cat <<'EOF'> %s \n%s\nEOF", file, contents)
+	cmd := fmt.Sprintf("cat <<EOF > %s \n%s\nEOF", file, contents)
+	if sudo {
+		cmd = fmt.Sprintf("sudo bash -c '%s'", cmd)
+	}
+
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error writing %s, %s, %s, %v", kind, cmd, out, err)
