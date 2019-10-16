@@ -102,6 +102,22 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
 	}
+	if p.RegistryFQDN != "" {
+		args = append(args, "--registryFQDN")
+		args = append(args, p.RegistryFQDN)
+	}
+	if p.ArtifactoryFQDN != "" {
+		args = append(args, "--artifactoryFQDN")
+		args = append(args, p.ArtifactoryFQDN)
+	}
+	if p.CloudletRegistryPath != "" {
+		args = append(args, "--cloudletRegistryPath")
+		args = append(args, p.CloudletRegistryPath)
+	}
+	if p.CloudletVMImagePath != "" {
+		args = append(args, "--cloudletVMImagePath")
+		args = append(args, p.CloudletVMImagePath)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -714,7 +730,6 @@ func (p *Traefik) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{
 		"run", "--rm", "--name", p.Name,
 		"-p", "8080:8080", // web UI
-		"-p", "443:443", // generic web tls
 		"-p", "14268:14268", // jaeger collector
 		"-p", "16686:16686", // jeager UI
 		"-p", "16687:16687", // jeager UI insecure (for local debugging)
@@ -804,8 +819,6 @@ api:
   dashboard: true
   debug: true
 entryPoints:
-  web-secure:
-    address: :443
   jaeger-collector:
     address: :14268
   jaeger-ui:

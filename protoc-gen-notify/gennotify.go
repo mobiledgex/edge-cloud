@@ -88,11 +88,11 @@ func (g *GenNotify) generateMessage(file *generator.FileDescriptor, desc *genera
 		Name: *message.Name,
 	}
 	if GetNotifyCache(message) {
-		keyField := gensupport.GetMessageKey(message)
-		if keyField == nil {
-			g.Fail("message", *message.Name, "needs a unique key field named key of type ", *message.Name+"Key", "for option notify_cache")
+		keyType, err := g.support.GetMessageKeyType(g.Generator, desc)
+		if err != nil {
+			g.Fail(err.Error())
 		}
-		args.KeyType = g.support.GoType(g.Generator, keyField)
+		args.KeyType = keyType
 		args.Cache = true
 	} else if GetNotifyMessage(message) {
 		args.Cache = false
@@ -275,7 +275,7 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 			notice.Action = edgeproto.NoticeAction_UPDATE
 		} else {
 			notice.Action = edgeproto.NoticeAction_DELETE
-			s.buf.Key = key
+			s.buf.SetKey(&key)
 		}
 		any, err := types.MarshalAny(&s.buf)
 {{- else}}
@@ -465,7 +465,7 @@ func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, noti
 {{- if .PrintSendRecv}}
 	if span != nil {
 {{- if .Cache}}
-		span.SetTag("key", buf.Key)
+		span.SetTag("key", buf.GetKey())
 {{- else}}
 		span.SetTag("msg", buf)
 {{- end}}
@@ -476,7 +476,7 @@ func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, noti
 		s.handler.Update(ctx, buf, 0)
 		s.Mux.Lock()
 		if s.sendAllKeys != nil {
-			s.sendAllKeys[buf.Key] = struct{}{}
+			s.sendAllKeys[buf.GetKeyVal()] = struct{}{}
 		}
 		s.Mux.Unlock()
 	} else if notice.Action == edgeproto.NoticeAction_DELETE {

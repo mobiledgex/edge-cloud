@@ -9,8 +9,9 @@ import (
 )
 
 var sendMetric *notify.MetricSend
+var sendAlert *notify.AlertSend
 
-//NewNotifyHandler instantiates new notify handler
+// NewNotifyHandler instantiates new notify handler
 func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	client.RegisterRecvFlavorCache(&cd.FlavorCache)
 	client.RegisterRecvAppCache(&cd.AppCache)
@@ -26,6 +27,7 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	client.RegisterSend(cd.ExecReqSend)
 	sendMetric = notify.NewMetricSend()
 	client.RegisterSend(sendMetric)
+	client.RegisterSendAlertCache(&cd.AlertCache)
 }
 
 func initSrvNotify(notifyServer *notify.ServerMgr) {
@@ -33,11 +35,12 @@ func initSrvNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
 	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
 	notifyServer.RegisterRecv(notify.NewMetricRecvMany(&CrmMetricsReceiver{}))
+	notifyServer.RegisterRecvAlertCache(&controllerData.AlertCache)
 }
 
 type CrmMetricsReceiver struct{}
 
-//just forward to controller
-func (cmr *CrmMetricsReceiver) Recv(ctx context.Context, metric *edgeproto.Metric) {
+// forward to controller
+func (r *CrmMetricsReceiver) Recv(ctx context.Context, metric *edgeproto.Metric) {
 	sendMetric.Update(ctx, metric)
 }

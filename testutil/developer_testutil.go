@@ -222,7 +222,7 @@ func GetDeveloper(t *testing.T, ctx context.Context, api *DeveloperCommonApi, ke
 	show := ShowDeveloper{}
 	show.Init()
 	filter := edgeproto.Developer{}
-	filter.Key = *key
+	filter.SetKey(key)
 	err = api.ShowDeveloper(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -301,7 +301,7 @@ func CreateDeveloperData(t *testing.T, ctx context.Context, api *DeveloperCommon
 
 func FindDeveloperData(key *edgeproto.DeveloperKey, testData []edgeproto.Developer) (*edgeproto.Developer, bool) {
 	for ii, _ := range testData {
-		if testData[ii].Key.Matches(key) {
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}
@@ -345,62 +345,4 @@ func (s *DummyServer) ShowDeveloper(in *edgeproto.Developer, server edgeproto.De
 		return err
 	})
 	return err
-}
-
-type DummyServer struct {
-	DeveloperCache          edgeproto.DeveloperCache
-	FlavorCache             edgeproto.FlavorCache
-	AppCache                edgeproto.AppCache
-	OperatorCache           edgeproto.OperatorCache
-	CloudletCache           edgeproto.CloudletCache
-	CloudletInfoCache       edgeproto.CloudletInfoCache
-	ClusterInstCache        edgeproto.ClusterInstCache
-	ClusterInstInfoCache    edgeproto.ClusterInstInfoCache
-	AppInstCache            edgeproto.AppInstCache
-	AppInstInfoCache        edgeproto.AppInstInfoCache
-	CloudletPoolCache       edgeproto.CloudletPoolCache
-	CloudletPoolMemberCache edgeproto.CloudletPoolMemberCache
-	ControllerCache         edgeproto.ControllerCache
-	NodeCache               edgeproto.NodeCache
-	CloudletRefsCache       edgeproto.CloudletRefsCache
-	ClusterRefsCache        edgeproto.ClusterRefsCache
-	ShowDummyCount          int
-	CudNoop                 bool
-}
-
-func RegisterDummyServer(server *grpc.Server) *DummyServer {
-	d := &DummyServer{}
-	edgeproto.InitDeveloperCache(&d.DeveloperCache)
-	edgeproto.InitFlavorCache(&d.FlavorCache)
-	edgeproto.InitAppCache(&d.AppCache)
-	edgeproto.InitOperatorCache(&d.OperatorCache)
-	edgeproto.InitCloudletCache(&d.CloudletCache)
-	edgeproto.InitCloudletInfoCache(&d.CloudletInfoCache)
-	edgeproto.InitClusterInstCache(&d.ClusterInstCache)
-	edgeproto.InitClusterInstInfoCache(&d.ClusterInstInfoCache)
-	edgeproto.InitAppInstCache(&d.AppInstCache)
-	edgeproto.InitAppInstInfoCache(&d.AppInstInfoCache)
-	edgeproto.InitCloudletPoolCache(&d.CloudletPoolCache)
-	edgeproto.InitCloudletPoolMemberCache(&d.CloudletPoolMemberCache)
-	edgeproto.InitControllerCache(&d.ControllerCache)
-	edgeproto.InitNodeCache(&d.NodeCache)
-	edgeproto.InitCloudletRefsCache(&d.CloudletRefsCache)
-	edgeproto.InitClusterRefsCache(&d.ClusterRefsCache)
-	edgeproto.RegisterDeveloperApiServer(server, d)
-	edgeproto.RegisterFlavorApiServer(server, d)
-	edgeproto.RegisterAppApiServer(server, d)
-	edgeproto.RegisterOperatorApiServer(server, d)
-	edgeproto.RegisterCloudletApiServer(server, d)
-	edgeproto.RegisterCloudletInfoApiServer(server, d)
-	edgeproto.RegisterClusterInstApiServer(server, d)
-	edgeproto.RegisterClusterInstInfoApiServer(server, d)
-	edgeproto.RegisterAppInstApiServer(server, d)
-	edgeproto.RegisterAppInstInfoApiServer(server, d)
-	edgeproto.RegisterCloudletPoolApiServer(server, d)
-	edgeproto.RegisterCloudletPoolMemberApiServer(server, d)
-	edgeproto.RegisterControllerApiServer(server, d)
-	edgeproto.RegisterNodeApiServer(server, d)
-	edgeproto.RegisterCloudletRefsApiServer(server, d)
-	edgeproto.RegisterClusterRefsApiServer(server, d)
-	return d
 }

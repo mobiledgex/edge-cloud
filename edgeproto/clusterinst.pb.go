@@ -1364,14 +1364,6 @@ func (s *ClusterInstStore) STMDel(stm concurrency.STM, key *ClusterInstKey) {
 	stm.Del(keystr)
 }
 
-func (m *ClusterInst) getKey() *ClusterInstKey {
-	return &m.Key
-}
-
-func (m *ClusterInst) getKeyVal() ClusterInstKey {
-	return m.Key
-}
-
 type ClusterInstKeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -1428,7 +1420,7 @@ func (c *ClusterInstCache) GetAllKeys(ctx context.Context, keys map[ClusterInstK
 }
 
 func (c *ClusterInstCache) Update(ctx context.Context, in *ClusterInst, rev int64) {
-	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *ClusterInst) (*ClusterInst, bool) {
+	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *ClusterInst) (*ClusterInst, bool) {
 		return in, true
 	})
 }
@@ -1448,27 +1440,27 @@ func (c *ClusterInstCache) UpdateModFunc(ctx context.Context, key *ClusterInstKe
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.getKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old)
 		}
 	}
-	c.Objs[new.getKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterInst", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, new.getKey())
+	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
 func (c *ClusterInstCache) Delete(ctx context.Context, in *ClusterInst, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.getKeyVal()]
-	delete(c.Objs, in.getKeyVal())
+	old := c.Objs[in.GetKeyVal()]
+	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete ClusterInst", "key", in.getKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete ClusterInst", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.getKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, in.getKey())
+	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *ClusterInstCache) Prune(ctx context.Context, validKeys map[ClusterInstKey]struct{}) {
@@ -1585,7 +1577,7 @@ func (c *ClusterInstCache) SyncUpdate(ctx context.Context, key, val []byte, rev 
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.getKeyVal()] = struct{}{}
+		c.List[obj.GetKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -1593,7 +1585,7 @@ func (c *ClusterInstCache) SyncUpdate(ctx context.Context, key, val []byte, rev 
 func (c *ClusterInstCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := ClusterInst{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	ClusterInstKeyStringParse(keystr, obj.getKey())
+	ClusterInstKeyStringParse(keystr, obj.GetKey())
 	c.Delete(ctx, &obj, rev)
 }
 
@@ -1703,8 +1695,20 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 	return err
 }
 
-func (m *ClusterInst) GetKey() objstore.ObjKey {
+func (m *ClusterInst) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *ClusterInst) GetKey() *ClusterInstKey {
 	return &m.Key
+}
+
+func (m *ClusterInst) GetKeyVal() ClusterInstKey {
+	return m.Key
+}
+
+func (m *ClusterInst) SetKey(key *ClusterInstKey) {
+	m.Key = *key
 }
 
 func CmpSortClusterInst(a ClusterInst, b ClusterInst) bool {
@@ -2122,14 +2126,6 @@ func (s *ClusterInstInfoStore) STMDel(stm concurrency.STM, key *ClusterInstKey) 
 	stm.Del(keystr)
 }
 
-func (m *ClusterInstInfo) getKey() *ClusterInstKey {
-	return &m.Key
-}
-
-func (m *ClusterInstInfo) getKeyVal() ClusterInstKey {
-	return m.Key
-}
-
 type ClusterInstInfoKeyWatcher struct {
 	cb func(ctx context.Context)
 }
@@ -2186,7 +2182,7 @@ func (c *ClusterInstInfoCache) GetAllKeys(ctx context.Context, keys map[ClusterI
 }
 
 func (c *ClusterInstInfoCache) Update(ctx context.Context, in *ClusterInstInfo, rev int64) {
-	c.UpdateModFunc(ctx, in.getKey(), rev, func(old *ClusterInstInfo) (*ClusterInstInfo, bool) {
+	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *ClusterInstInfo) (*ClusterInstInfo, bool) {
 		return in, true
 	})
 }
@@ -2206,27 +2202,27 @@ func (c *ClusterInstInfoCache) UpdateModFunc(ctx context.Context, key *ClusterIn
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.getKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old)
 		}
 	}
-	c.Objs[new.getKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = new
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterInstInfo", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, new.getKey())
+	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
 func (c *ClusterInstInfoCache) Delete(ctx context.Context, in *ClusterInstInfo, rev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.getKeyVal()]
-	delete(c.Objs, in.getKeyVal())
+	old := c.Objs[in.GetKeyVal()]
+	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete ClusterInstInfo", "key", in.getKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete ClusterInstInfo", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.getKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old)
 	}
-	c.TriggerKeyWatchers(ctx, in.getKey())
+	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *ClusterInstInfoCache) Prune(ctx context.Context, validKeys map[ClusterInstKey]struct{}) {
@@ -2361,7 +2357,7 @@ func (c *ClusterInstInfoCache) SyncUpdate(ctx context.Context, key, val []byte, 
 	c.Update(ctx, &obj, rev)
 	c.Mux.Lock()
 	if c.List != nil {
-		c.List[obj.getKeyVal()] = struct{}{}
+		c.List[obj.GetKeyVal()] = struct{}{}
 	}
 	c.Mux.Unlock()
 }
@@ -2369,7 +2365,7 @@ func (c *ClusterInstInfoCache) SyncUpdate(ctx context.Context, key, val []byte, 
 func (c *ClusterInstInfoCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
 	obj := ClusterInstInfo{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	ClusterInstKeyStringParse(keystr, obj.getKey())
+	ClusterInstKeyStringParse(keystr, obj.GetKey())
 	c.Delete(ctx, &obj, rev)
 }
 
@@ -2396,8 +2392,20 @@ func (c *ClusterInstInfoCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (m *ClusterInstInfo) GetKey() objstore.ObjKey {
+func (m *ClusterInstInfo) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *ClusterInstInfo) GetKey() *ClusterInstKey {
 	return &m.Key
+}
+
+func (m *ClusterInstInfo) GetKeyVal() ClusterInstKey {
+	return m.Key
+}
+
+func (m *ClusterInstInfo) SetKey(key *ClusterInstKey) {
+	m.Key = *key
 }
 
 func CmpSortClusterInstInfo(a ClusterInstInfo, b ClusterInstInfo) bool {

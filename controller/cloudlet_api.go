@@ -158,6 +158,13 @@ func getRolesAndSecrets(appRoles *VaultRoles) error {
 	return nil
 }
 
+func isOperatorInfraCloudlet(in *edgeproto.Cloudlet) bool {
+	if !in.DeploymentLocal && in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK {
+		return true
+	}
+	return false
+}
+
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_UNKNOWN {
 		in.IpSupport = edgeproto.IpSupport_IP_SUPPORT_DYNAMIC
@@ -200,6 +207,16 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		pfConfig.CrmRoleId = appRoles.CRMRoleID
 		pfConfig.CrmSecretId = appRoles.CRMSecretID
 	}
+
+	if isOperatorInfraCloudlet(in) {
+		if *cloudletVMImagePath == "" {
+			return fmt.Errorf("cloudletVMImagePath is required for cloudlet bringup on Operator infra")
+		}
+		if *cloudletRegistryPath == "" {
+			return fmt.Errorf("cloudletRegistryPath is required for cloudlet bringup on Operator infra")
+		}
+	}
+
 	pfConfig.PlatformTag = *versionTag
 	pfConfig.TlsCertFile = *tlsCertFile
 	pfConfig.VaultAddr = *vaultAddr
@@ -229,6 +246,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	in.TimeLimits.DeleteAppInstTimeout = int64(cloudcommon.DeleteAppInstTimeout)
 
 	pfFlavor := edgeproto.Flavor{}
+	if in.Flavor.Name == "" {
+		in.Flavor = DefaultPlatformFlavor.Key
+		pfFlavor = DefaultPlatformFlavor
+	}
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
@@ -241,13 +262,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 			in.Errors = nil
 		}
-		if in.Flavor.Name != "" {
+		if in.Flavor.Name != "" && in.Flavor.Name != DefaultPlatformFlavor.Key.Name {
 			if !flavorApi.store.STMGet(stm, &in.Flavor, &pfFlavor) {
 				return fmt.Errorf("Platform flavor %s not found", in.Flavor.Name)
 			}
-		} else {
-			in.Flavor = DefaultPlatformFlavor.Key
-			pfFlavor = DefaultPlatformFlavor
 		}
 		err := in.Validate(edgeproto.CloudletAllFieldsMap)
 		if err != nil {
@@ -480,7 +498,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return nil
 		}
 		if !cctx.Undo {
-			if in.State == edgeproto.TrackedState_DELETE_ERROR {
+			if in.State == edgeproto.TrackedState_DELETE_ERROR &&
+				cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
 				cb.Send(&edgeproto.Result{Message: "Use CreateCloudlet to rebuild, and try again"})
 			}
@@ -516,18 +535,27 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
 			err = nil
 		}
-		if err != nil {
-			return err
-		}
 	}
 
-	cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
-
-	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	updateCloudlet := edgeproto.Cloudlet{}
+	err1 := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &updateCloudlet) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		if err != nil {
+			updateCloudlet.State = edgeproto.TrackedState_DELETE_ERROR
+			s.store.STMPut(stm, &updateCloudlet)
+			return nil
+		}
 		s.store.STMDel(stm, &in.Key)
 		cloudletRefsApi.store.STMDel(stm, &in.Key)
+		cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
 		return nil
 	})
+	if err1 != nil {
+		return err1
+	}
+
 	if err != nil {
 		return err
 	}
