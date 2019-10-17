@@ -123,6 +123,7 @@ func main() {
 
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
 
 		myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_INIT
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
