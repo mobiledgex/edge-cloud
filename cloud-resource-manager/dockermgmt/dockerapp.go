@@ -143,9 +143,9 @@ func handleDockerZipfile(ctx context.Context, client pc.PlatformClient, app *edg
 //createDockerComposeFile creates a docker compose file and returns the file name
 func createDockerComposeFile(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) (string, error) {
 	filename := getDockerComposeFileName(client, app, appInst)
-	log.DebugLog(log.DebugLevelMexos, "creating docker compose file", "filename", pc.NoSudo)
+	log.DebugLog(log.DebugLevelMexos, "creating docker compose file", "filename", filename)
 
-	err := pc.WriteFile(client, filename, app.DeploymentManifest, "Docker compose file", false)
+	err := pc.WriteFile(client, filename, app.DeploymentManifest, "Docker compose file", pc.NoSudo)
 	if err != nil {
 		log.DebugLog(log.DebugLevelInfo, "Error writing docker compose file", "err", err)
 		return "", err
