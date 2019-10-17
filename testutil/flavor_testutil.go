@@ -222,7 +222,7 @@ func GetFlavor(t *testing.T, ctx context.Context, api *FlavorCommonApi, key *edg
 	show := ShowFlavor{}
 	show.Init()
 	filter := edgeproto.Flavor{}
-	filter.Key = *key
+	filter.SetKey(key)
 	err = api.ShowFlavor(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
@@ -301,7 +301,7 @@ func CreateFlavorData(t *testing.T, ctx context.Context, api *FlavorCommonApi, t
 
 func FindFlavorData(key *edgeproto.FlavorKey, testData []edgeproto.Flavor) (*edgeproto.Flavor, bool) {
 	for ii, _ := range testData {
-		if testData[ii].Key.Matches(key) {
+		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
 		}
 	}

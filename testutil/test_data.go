@@ -795,3 +795,63 @@ func GetCloudletUsedDisk(indices ...int) uint64 {
 	}
 	return disk
 }
+
+var AlertData = []edgeproto.Alert{
+	edgeproto.Alert{
+		Labels: map[string]string{
+			"alertname": "Scale Cluster Up",
+			"operator":  ClusterInstData[0].Key.CloudletKey.OperatorKey.Name,
+			"cloudlet":  ClusterInstData[0].Key.CloudletKey.Name,
+			"cluster":   ClusterInstData[0].Key.ClusterKey.Name,
+			"dev":       ClusterInstData[0].Key.Developer,
+			"severity":  "none",
+		},
+		Annotations: map[string]string{
+			"message": "Policy threshold to scale up cluster reached",
+		},
+		State: "firing",
+		ActiveAt: dme.Timestamp{
+			Seconds: 1257894000,
+			Nanos:   2343569,
+		},
+		Value: 1,
+	},
+	edgeproto.Alert{
+		Labels: map[string]string{
+			"alertname": "Scale Cluster Down",
+			"operator":  ClusterInstData[0].Key.CloudletKey.OperatorKey.Name,
+			"cloudlet":  ClusterInstData[0].Key.CloudletKey.Name,
+			"cluster":   ClusterInstData[0].Key.ClusterKey.Name,
+			"dev":       ClusterInstData[0].Key.Developer,
+			"severity":  "none",
+		},
+		Annotations: map[string]string{
+			"message": "Policy threshold to scale down cluster reached",
+		},
+		State: "pending",
+		ActiveAt: dme.Timestamp{
+			Seconds: 1257894001,
+			Nanos:   642398,
+		},
+		Value: 1,
+	},
+	edgeproto.Alert{
+		Labels: map[string]string{
+			"alertname": "Cluster Offline",
+			"operator":  ClusterInstData[1].Key.CloudletKey.OperatorKey.Name,
+			"cloudlet":  ClusterInstData[1].Key.CloudletKey.Name,
+			"cluster":   ClusterInstData[1].Key.ClusterKey.Name,
+			"dev":       ClusterInstData[1].Key.Developer,
+			"severity":  "critical",
+		},
+		Annotations: map[string]string{
+			"message": "Cluster offline",
+		},
+		State: "firing",
+		ActiveAt: dme.Timestamp{
+			Seconds: 1257894002,
+			Nanos:   42398457,
+		},
+		Value: 1,
+	},
+}

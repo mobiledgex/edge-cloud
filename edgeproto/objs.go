@@ -81,7 +81,7 @@ func (a *ApplicationData) Sort() {
 // Validate functions to validate user input
 
 func (key *DeveloperKey) ValidateKey() error {
-	if err := util.ValidOrgName(key.Name); err != nil {
+	if err := util.ValidObjName(key.Name); err != nil {
 		errstring := err.Error()
 		//lowercase the first letter of the error message
 		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
@@ -286,6 +286,17 @@ func (key *NodeKey) ValidateKey() error {
 }
 
 func (s *Node) Validate(fields map[string]struct{}) error {
+	return s.GetKey().ValidateKey()
+}
+
+func (key *AlertKey) ValidateKey() error {
+	if len(string(*key)) == 0 {
+		return errors.New("Invalid empty string AlertKey")
+	}
+	return nil
+}
+
+func (s *Alert) Validate(fields map[string]struct{}) error {
 	return s.GetKey().ValidateKey()
 }
 
