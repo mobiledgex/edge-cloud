@@ -249,6 +249,8 @@ enum CloudletState {
   CLOUDLET_STATE_OFFLINE = 3;
   // Cloudlet is not present
   CLOUDLET_STATE_NOT_PRESENT = 4;
+  // Cloudlet is initializing
+  CLOUDLET_STATE_INIT = 5;
 }
 
 // Flavor details from the Cloudlet

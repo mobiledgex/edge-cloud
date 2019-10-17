@@ -866,7 +866,7 @@ var CloudletInfoAliasArgs = []string{
 var CloudletInfoComments = map[string]string{
 	"operator":      "Company or Organization name of the operator",
 	"name":          "Name of the cloudlet",
-	"state":         "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent",
+	"state":         "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit",
 	"notifyid":      "Id of client assigned by server (internal use only)",
 	"controller":    "Connected controller unique id",
 	"osmaxram":      "Maximum Ram in MB on the Cloudlet",

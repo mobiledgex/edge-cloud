@@ -123,6 +123,10 @@ func main() {
 
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+
+		myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_INIT
+		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
+
 		var cloudlet edgeproto.Cloudlet
 		// Fetch cloudlet cache from controller
 		// Below also ensures that crm is able to communicate to controller via Notify Channel
