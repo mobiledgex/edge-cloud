@@ -63,8 +63,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
 		err = k8smgmt.CreateHelmAppInst(client, names, clusterInst, app, appInst)
 	} else {
-		//		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
-		err = nil
+		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
 	}
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos, "error creating dind app")
@@ -98,8 +97,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
 		err = k8smgmt.DeleteHelmAppInst(client, names, clusterInst)
 	} else {
-		//		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
-		err = nil
+		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
 	}
 	if err != nil {
 		return err
