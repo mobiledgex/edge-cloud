@@ -136,7 +136,7 @@ func createOrUpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edge
 	}
 	log.DebugLog(log.DebugLevelMexos, "writing config file", "kubeManifest", mf)
 	file := names.AppName + names.AppRevision + ".yaml"
-	err = pc.WriteFile(client, file, mf, "K8s Deployment", false)
+	err = pc.WriteFile(client, file, mf, "K8s Deployment", pc.NoSudo)
 	if err != nil {
 		return err
 	}

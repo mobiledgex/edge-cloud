@@ -28,9 +28,19 @@ type PlatformClient interface {
 	Wait() error
 }
 
+// Sudo is a toggle for executing as superuser
+type Sudo bool
+
+// SudoOn means run in sudo mode
+var SudoOn Sudo = true
+
+// NoSudo means dont run in sudo mode
+var NoSudo Sudo = true
+
 // Some utility functions
 
-func WriteFile(client PlatformClient, file string, contents string, kind string, sudo bool) error {
+// WriteFile writes the file contents optionally in sudo mode
+func WriteFile(client PlatformClient, file string, contents string, kind string, sudo Sudo) error {
 	log.DebugLog(log.DebugLevelMexos, "write file", "kind", kind)
 
 	cmd := fmt.Sprintf("cat <<EOF > %s \n%s\nEOF", file, contents)
