@@ -24,10 +24,7 @@ type AppInstApi struct {
 	cache edgeproto.AppInstCache
 }
 
-const (
-	RootLBSharedPortBegin int32  = 10000
-	DefaultVMCluster      string = "DefaultVMCluster"
-)
+const RootLBSharedPortBegin int32 = 10000
 
 var appInstApi = AppInstApi{}
 
@@ -239,7 +236,7 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 		return
 	}
 	if app.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
-		key.ClusterInstKey.ClusterKey.Name = DefaultVMCluster
+		key.ClusterInstKey.ClusterKey.Name = cloudcommon.DefaultVMCluster
 	}
 }
 
