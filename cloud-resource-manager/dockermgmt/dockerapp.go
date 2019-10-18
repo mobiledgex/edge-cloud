@@ -145,7 +145,7 @@ func createDockerComposeFile(client pc.PlatformClient, app *edgeproto.App, appIn
 	filename := getDockerComposeFileName(client, app, appInst)
 	log.DebugLog(log.DebugLevelMexos, "creating docker compose file", "filename", filename)
 
-	err := pc.WriteFile(client, filename, app.DeploymentManifest, "Docker compose file")
+	err := pc.WriteFile(client, filename, app.DeploymentManifest, "Docker compose file", pc.NoSudo)
 	if err != nil {
 		log.DebugLog(log.DebugLevelInfo, "Error writing docker compose file", "err", err)
 		return "", err
