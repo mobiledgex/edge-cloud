@@ -23,6 +23,8 @@ var OperatorAzure = "azure"
 var Developerplatos = "platos"
 var DeveloperMobiledgeX = "MobiledgeX"
 
+const DefaultVMCluster string = "DefaultVMCluster"
+
 // platform apps
 var PlatosEnablingLayer = "PlatosEnablingLayer"
 
