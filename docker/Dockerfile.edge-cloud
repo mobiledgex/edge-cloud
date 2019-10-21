@@ -36,7 +36,7 @@ WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 ENV CGO_ENABLED=1
 RUN make
 
-FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v0.0.14-340-gb55d362
+FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v0.0.14-339-g20a71c7
 
 # Will be overridden during build from the command line
 ARG BUILD_TAG=latest
