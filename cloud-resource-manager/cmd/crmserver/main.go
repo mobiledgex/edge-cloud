@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
@@ -122,7 +123,28 @@ func main() {
 
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
+		myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_INIT
+		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
+
+		var cloudlet edgeproto.Cloudlet
+		// Fetch cloudlet cache from controller
+		// Below also ensures that crm is able to communicate to controller via Notify Channel
+		found := false
+		log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudlet.Key)
+		for i := 0; i < 10; i++ {
+			if controllerData.CloudletCache.Get(&myCloudlet.Key, &cloudlet) {
+				found = true
+				break
+			}
+			time.Sleep(1 * time.Second)
+		}
+		if !found {
+			log.FatalLog("failed to fetch cloudlet cache from controller")
+		}
+		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
+
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		if err := initPlatform(ctx, &myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
 			cspan.Finish()
@@ -132,9 +154,25 @@ func main() {
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
 		updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
-		controllerData.GatherCloudletInfo(ctx, &myCloudlet)
+		err := controllerData.GatherCloudletInfo(ctx, &myCloudlet)
+
+		if err != nil {
+			myCloudlet.Errors = append(myCloudlet.Errors, err.Error())
+			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
+		} else {
+			if cloudlet.State == edgeproto.TrackedState_UPDATING {
+				controllerData.CleanupOldCloudlet(ctx, &cloudlet, updateCloudletStatus)
+			}
+			updateCloudletStatus(edgeproto.UpdateTask, "Done Gathering Cloudlet myCloudlet")
+
+			// Is the cloudlet ready at this point?
+			myCloudlet.Errors = nil
+			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+			log.DebugLog(log.DebugLevelMexos, "cloudlet state ready", "myCloudlet", myCloudlet)
+		}
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "sending cloudlet info cache update")
+
 		// trigger send of info upstream to controller
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
 
@@ -142,8 +180,16 @@ func main() {
 		myNode.BuildHead = version.BuildHead
 		myNode.BuildAuthor = version.BuildAuthor
 		myNode.Hostname = cloudcommon.Hostname()
+		vers, err := cloudcommon.GetDockerBaseImageVersion()
+		if err == nil {
+			myNode.ImageVersion = vers
+		} else {
+			log.SpanLog(ctx, log.DebugLevelInfo, "unable to fetch docker image version", "err", err)
+		}
+
 		controllerData.NodeCache.Update(ctx, &myNode, 0)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
+
 		cspan.Finish()
 	}()
 
@@ -174,7 +220,8 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physica
 		CloudletKey:  &cloudlet.Key,
 		PhysicalName: physicalName,
 		VaultAddr:    vaultAddr,
-		TestMode:     *testMode}
+		TestMode:     *testMode,
+	}
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
 	err := platform.Init(ctx, &pc, updateCallback)
 	return err

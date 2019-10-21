@@ -2,6 +2,7 @@ package cloudcommon
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -27,4 +28,16 @@ func GetFileName(fileUrlPath string) (string, error) {
 		return "", err
 	}
 	return strings.TrimSuffix(fileName, filepath.Ext(fileName)), nil
+}
+
+func GetDockerBaseImageVersion() (string, error) {
+	dat, err := ioutil.ReadFile("/version.txt")
+	if err != nil {
+		return "", err
+	}
+	out := strings.Fields(string(dat))
+	if len(out) != 2 {
+		return "", fmt.Errorf("invalid version details: %s", out)
+	}
+	return out[1], nil
 }

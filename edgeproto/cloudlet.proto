@@ -187,6 +187,8 @@ message Cloudlet {
   map<string, string> env_var = 19;
   // Upgrade cloudlet services
   bool upgrade = 20;
+  // Platform Config Info
+  PlatformConfig config = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -196,7 +198,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status,Config";
   option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }
 
@@ -251,8 +253,10 @@ enum CloudletState {
   CLOUDLET_STATE_OFFLINE = 3;
   // Cloudlet is not present
   CLOUDLET_STATE_NOT_PRESENT = 4;
+  // Cloudlet is initializing
+  CLOUDLET_STATE_INIT = 5;
   // Cloudlet is upgrading
-  CLOUDLET_STATE_UPGRADE = 5;
+  CLOUDLET_STATE_UPGRADE = 6;
 }
 
 // Flavor details from the Cloudlet

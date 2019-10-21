@@ -3,6 +3,8 @@ package fake
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
@@ -115,5 +117,37 @@ func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 
 func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "fake cloudlet updated")
+	// Get non-conflicting port for NotifySrvAddr
+	ipobj := strings.Split(cloudlet.NotifySrvAddr, ":")
+	if len(ipobj) != 2 {
+		return fmt.Errorf("invalid notifysrvaddr")
+	}
+	newport := ""
+	if ipobj[1] == "51001" {
+		newport = "51002"
+	} else if ipobj[1] == "51002" {
+		newport = "51002"
+	} else {
+		newport = "51001"
+	}
+	cloudlet.NotifySrvAddr = strings.Join([]string{ipobj[0], newport}, ":")
+	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet create failed", "err", err)
+		return err
+	}
+	time.Sleep(10 * time.Second)
+	return nil
+}
+
+func (s *Platform) CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+	// Stops outdated cloudlet service running locally
+	process, err := os.FindProcess(os.Getppid())
+	if err == nil {
+		//kill gracefully
+		log.SpanLog(ctx, log.DebugLevelMexos, fmt.Sprintf("Sending interrupt to pid %v\n", os.Getppid()))
+		process.Signal(os.Interrupt)
+		updateCallback(edgeproto.UpdateTask, "Fake cloudlet cleaned up successfully")
+	}
 	return nil
 }

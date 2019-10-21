@@ -135,19 +135,3 @@ func (s *CloudletInfoApi) checkCloudletReady(key *edgeproto.CloudletKey) error {
 	return fmt.Errorf("Cloudlet %v not ready, state is %s", key,
 		edgeproto.CloudletState_name[int32(state)])
 }
-
-func (s *CloudletInfoApi) SetCloudletInfoState(in *edgeproto.Cloudlet) error {
-	info := edgeproto.CloudletInfo{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, &info) {
-			return objstore.ErrKVStoreKeyNotFound
-		}
-		info.State = edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE
-		log.DebugLog(log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "notifyid", notifyId)
-		s.store.STMPut(stm, &info, objstore.WithLease(controllerAliveLease))
-		return nil
-	})
-	if err != nil {
-		log.DebugLog(log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "err", err)
-	}
-}

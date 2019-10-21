@@ -167,9 +167,12 @@ func GetCloudletLog(ctx context.Context, key *edgeproto.CloudletKey) (string, er
 
 func CrmServiceWait(key edgeproto.CloudletKey) error {
 	if _, ok := trackedProcess[key]; ok {
-		trackedProcess[key].Wait()
+		err := trackedProcess[key].Wait()
+		if err != nil && strings.Contains(err.Error(), "Wait was already called") {
+			return nil
+		}
 		delete(trackedProcess, key)
-		return fmt.Errorf("Crm Service Stopped")
+		return fmt.Errorf("Crm Service Stopped: %v", err)
 	}
 	return nil
 }
