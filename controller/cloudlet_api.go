@@ -208,7 +208,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	// If notifysrvaddr is empty, set default value
 	if in.NotifySrvAddr == "" {
-		in.NotifySrvAddr = "127.0.0.1:51001"
+		in.NotifySrvAddr = "127.0.0.1:0"
 	}
 
 	if in.PhysicalName == "" {

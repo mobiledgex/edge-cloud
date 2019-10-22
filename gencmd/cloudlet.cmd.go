@@ -775,7 +775,6 @@ var CloudletOptionalArgs = []string{
 	"crmoverride",
 	"deploymentlocal",
 	"platformtype",
-	"notifysrvaddr",
 	"flavor.name",
 	"physicalname",
 	"envvar",

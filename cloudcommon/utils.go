@@ -3,6 +3,7 @@ package cloudcommon
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -40,4 +41,18 @@ func GetDockerBaseImageVersion() (string, error) {
 		return "", fmt.Errorf("invalid version details: %s", out)
 	}
 	return out[1], nil
+}
+
+func GetAvailablePort() (int, error) {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		return 0, err
+	}
+
+	l, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		return 0, err
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port, nil
 }

@@ -81,6 +81,19 @@ var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
 func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "start crmserver", "cloudlet", cloudlet.Key)
 
+	// Get non-conflicting port for NotifySrvAddr if actual port is 0
+	ipobj := strings.Split(cloudlet.NotifySrvAddr, ":")
+	if len(ipobj) != 2 {
+		return fmt.Errorf("invalid notifysrvaddr format")
+	}
+	if ipobj[1] == "0" {
+		port, err := GetAvailablePort()
+		if err != nil {
+			return fmt.Errorf("no ports available for CRM")
+		}
+		cloudlet.NotifySrvAddr = fmt.Sprintf("%s:%d", ipobj[0], port)
+	}
+
 	trackedProcess[cloudlet.Key] = nil
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
 	if err != nil {
