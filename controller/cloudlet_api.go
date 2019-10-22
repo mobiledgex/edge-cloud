@@ -414,7 +414,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		case <-upgrade:
 			err := updateCloudletState(edgeproto.TrackedState_UPDATING)
 			if err == nil {
-				// Cloudlet started upgraded, now wait for it to be Ready
+				// Cloudlet started upgrading, now wait for it to be Ready
 				continue
 			}
 		case <-failed:
@@ -520,7 +520,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
 	updatecb := updateCloudletCallback{in, cb}
 
-	updatecb.cb(edgeproto.UpdateTask, "Fetching Platform Config")
+	log.SpanLog(ctx, log.DebugLevelApi, "fetch platform config")
 	pfConfig, err := getPlatformConfig()
 	if err != nil {
 		return err

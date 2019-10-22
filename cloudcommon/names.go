@@ -60,8 +60,6 @@ var CreateClusterInstTimeout = 30 * time.Minute
 var UpdateClusterInstTimeout = 20 * time.Minute
 var DeleteClusterInstTimeout = 20 * time.Minute
 
-var UpdateCloudletTimeout = 30 * time.Minute
-
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
 var platformApps = map[string]bool{

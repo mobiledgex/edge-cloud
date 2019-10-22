@@ -123,8 +123,8 @@ func main() {
 
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
+
 		myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_INIT
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
 
@@ -163,7 +163,6 @@ func main() {
 			if cloudlet.State == edgeproto.TrackedState_UPDATING {
 				controllerData.CleanupOldCloudlet(ctx, &cloudlet, updateCloudletStatus)
 			}
-			updateCloudletStatus(edgeproto.UpdateTask, "Done Gathering Cloudlet myCloudlet")
 
 			// Is the cloudlet ready at this point?
 			myCloudlet.Errors = nil
@@ -172,7 +171,6 @@ func main() {
 		}
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "sending cloudlet info cache update")
-
 		// trigger send of info upstream to controller
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
 
@@ -189,7 +187,6 @@ func main() {
 
 		controllerData.NodeCache.Update(ctx, &myNode, 0)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
-
 		cspan.Finish()
 	}()
 
@@ -220,8 +217,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physica
 		CloudletKey:  &cloudlet.Key,
 		PhysicalName: physicalName,
 		VaultAddr:    vaultAddr,
-		TestMode:     *testMode,
-	}
+		TestMode:     *testMode}
 	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
 	err := platform.Init(ctx, &pc, updateCallback)
 	return err

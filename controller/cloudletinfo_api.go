@@ -125,6 +125,17 @@ func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) edgeproto
 }
 
 func (s *CloudletInfoApi) checkCloudletReady(key *edgeproto.CloudletKey) error {
+	// Get tracked state, it could be that cloudlet has initiated
+	// upgrade but cloudletInfo is yet to transition to it
+	cloudlet := edgeproto.Cloudlet{}
+	if !cloudletApi.cache.Get(key, &cloudlet) {
+		return objstore.ErrKVStoreKeyNotFound
+	}
+	if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
+		cloudlet.State == edgeproto.TrackedState_UPDATING {
+		return fmt.Errorf("Cloudlet %v is updating", key)
+	}
+
 	// For testing, state is Errors due to openstack limits not found.
 	// Errors state does indicate it is online, so consider it ok.
 	state := s.getCloudletState(key)
