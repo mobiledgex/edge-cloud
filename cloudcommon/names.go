@@ -23,6 +23,8 @@ var OperatorAzure = "azure"
 var DeveloperSamsung = "Samsung"
 var DeveloperMobiledgeX = "MobiledgeX"
 
+const DefaultVMCluster string = "DefaultVMCluster"
+
 // platform apps
 var SamsungEnablingLayer = "SamsungEnablingLayer"
 

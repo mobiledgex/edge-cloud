@@ -182,7 +182,15 @@ func getPlatformConfig() (*edgeproto.PlatformConfig, error) {
 		return nil, fmt.Errorf("unable to fetch notify addr of the controller")
 	}
 	pfConfig.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
+
 	return &pfConfig, nil
+}
+
+func isOperatorInfraCloudlet(in *edgeproto.Cloudlet) bool {
+	if !in.DeploymentLocal && in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK {
+		return true
+	}
+	return false
 }
 
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
@@ -213,6 +221,15 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	if in.PhysicalName == "" {
 		in.PhysicalName = in.Key.Name
+	}
+
+	if isOperatorInfraCloudlet(in) {
+		if *cloudletVMImagePath == "" {
+			return fmt.Errorf("cloudletVMImagePath is required for cloudlet bringup on Operator infra")
+		}
+		if *cloudletRegistryPath == "" {
+			return fmt.Errorf("cloudletRegistryPath is required for cloudlet bringup on Operator infra")
+		}
 	}
 
 	pfConfig, err := getPlatformConfig()
