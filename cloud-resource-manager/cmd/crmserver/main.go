@@ -133,12 +133,12 @@ func main() {
 		// Below also ensures that crm is able to communicate to controller via Notify Channel
 		found := false
 		log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudlet.Key)
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 1000; i++ {
 			if controllerData.CloudletCache.Get(&myCloudlet.Key, &cloudlet) {
 				found = true
 				break
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(10 * time.Millisecond)
 		}
 		if !found {
 			log.FatalLog("failed to fetch cloudlet cache from controller")
