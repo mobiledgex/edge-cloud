@@ -17,6 +17,7 @@ It is generated from these files:
 	developer.proto
 	exec.proto
 	flavor.proto
+	gputagtable.proto
 	metric.proto
 	node.proto
 	notice.proto
@@ -62,6 +63,8 @@ It has these top-level messages:
 	ExecRequest
 	FlavorKey
 	Flavor
+	GpuTagTableKey
+	GpuTagTable
 	MetricTag
 	MetricVal
 	Metric

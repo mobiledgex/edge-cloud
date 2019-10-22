@@ -277,7 +277,9 @@ var FlavorRequiredArgs = []string{
 	"vcpus",
 	"disk",
 }
-var FlavorOptionalArgs = []string{}
+var FlavorOptionalArgs = []string{
+	"gpus",
+}
 var FlavorAliasArgs = []string{
 	"name=key.name",
 }
@@ -286,5 +288,6 @@ var FlavorComments = map[string]string{
 	"ram":   "RAM in megabytes",
 	"vcpus": "Number of virtual CPUs",
 	"disk":  "Amount of disk space in gigabytes",
+	"gpus":  "Number of GPU/vGPU resources requested",
 }
 var FlavorSpecialArgs = map[string]string{}

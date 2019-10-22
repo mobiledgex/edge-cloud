@@ -33,6 +33,7 @@ type ApplicationData struct {
 	Nodes               []Node               `yaml:"nodes"`
 	CloudletPools       []CloudletPool       `yaml:"cloudletpools"`
 	CloudletPoolMembers []CloudletPoolMember `yaml:"cloudletpoolmembers"`
+	GpuTagTables        []GpuTagTable        `ymal:"gputagtables"`
 }
 
 // sort each slice by key
@@ -75,6 +76,9 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.CloudletPoolMembers[:], func(i, j int) bool {
 		return a.CloudletPoolMembers[i].GetKeyString() < a.CloudletPoolMembers[j].GetKeyString()
+	})
+	sort.Slice(a.GpuTagTables[:], func(i, j int) bool {
+		return a.GpuTagTables[i].Key.GetKeyString() < a.GpuTagTables[j].Key.GetKeyString()
 	})
 }
 
@@ -248,6 +252,20 @@ func (key *CloudletPoolMember) ValidateKey() error {
 
 func (s *CloudletPoolMember) Validate(fields map[string]struct{}) error {
 	return s.ValidateKey()
+}
+
+func (key *GpuTagTableKey) ValidateKey() error {
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid GpuTagTable name")
+	}
+	return nil
+}
+
+func (s *GpuTagTable) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (key *AppInstKey) ValidateKey() error {

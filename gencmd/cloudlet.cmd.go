@@ -829,13 +829,15 @@ var FlavorInfoOptionalArgs = []string{
 	"vcpus",
 	"ram",
 	"disk",
+	"properties",
 }
 var FlavorInfoAliasArgs = []string{}
 var FlavorInfoComments = map[string]string{
-	"name":  "Name of the flavor on the Cloudlet",
-	"vcpus": "Number of VCPU cores on the Cloudlet",
-	"ram":   "Ram in MB on the Cloudlet",
-	"disk":  "Amount of disk in GB on the Cloudlet",
+	"name":       "Name of the flavor on the Cloudlet",
+	"vcpus":      "Number of VCPU cores on the Cloudlet",
+	"ram":        "Ram in MB on the Cloudlet",
+	"disk":       "Amount of disk in GB on the Cloudlet",
+	"properties": "OS flavor properties if any",
 }
 var FlavorInfoSpecialArgs = map[string]string{}
 var CloudletInfoRequiredArgs = []string{
@@ -854,6 +856,7 @@ var CloudletInfoOptionalArgs = []string{
 	"flavors.vcpus",
 	"flavors.ram",
 	"flavors.disk",
+	"flavors.properties",
 	"status.tasknumber",
 	"status.maxtasks",
 	"status.taskname",
@@ -864,19 +867,20 @@ var CloudletInfoAliasArgs = []string{
 	"name=key.name",
 }
 var CloudletInfoComments = map[string]string{
-	"operator":      "Company or Organization name of the operator",
-	"name":          "Name of the cloudlet",
-	"state":         "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent",
-	"notifyid":      "Id of client assigned by server (internal use only)",
-	"controller":    "Connected controller unique id",
-	"osmaxram":      "Maximum Ram in MB on the Cloudlet",
-	"osmaxvcores":   "Maximum number of VCPU cores on the Cloudlet",
-	"osmaxvolgb":    "Maximum amount of disk in GB on the Cloudlet",
-	"errors":        "Any errors encountered while making changes to the Cloudlet",
-	"flavors.name":  "Name of the flavor on the Cloudlet",
-	"flavors.vcpus": "Number of VCPU cores on the Cloudlet",
-	"flavors.ram":   "Ram in MB on the Cloudlet",
-	"flavors.disk":  "Amount of disk in GB on the Cloudlet",
+	"operator":           "Company or Organization name of the operator",
+	"name":               "Name of the cloudlet",
+	"state":              "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent",
+	"notifyid":           "Id of client assigned by server (internal use only)",
+	"controller":         "Connected controller unique id",
+	"osmaxram":           "Maximum Ram in MB on the Cloudlet",
+	"osmaxvcores":        "Maximum number of VCPU cores on the Cloudlet",
+	"osmaxvolgb":         "Maximum amount of disk in GB on the Cloudlet",
+	"errors":             "Any errors encountered while making changes to the Cloudlet",
+	"flavors.name":       "Name of the flavor on the Cloudlet",
+	"flavors.vcpus":      "Number of VCPU cores on the Cloudlet",
+	"flavors.ram":        "Ram in MB on the Cloudlet",
+	"flavors.disk":       "Amount of disk in GB on the Cloudlet",
+	"flavors.properties": "OS flavor properties if any",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors": "StringArray",

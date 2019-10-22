@@ -34,6 +34,8 @@ message Flavor {
   uint64 vcpus = 4;
   // Amount of disk space in gigabytes
   uint64 disk = 5;
+  // Number of GPU/vGPU resources requested
+  uint32 gpus = 6;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

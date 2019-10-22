@@ -16,6 +16,7 @@ enum VersionHash {
   HASH_2b79f0b6e402045ee5f68d697b9386ae = 5 [(protogen.upgrade_func) = "AddClusterInstDeploymentField"];
   HASH_536a69a5e27bf7cf5152d85eba21aa74 = 6 [(protogen.upgrade_func) = "AddInternalPortsForPrometheus"];
   HASH_caedcdeef911bc00d5dceacf8e55890a = 7;
+  HASH_a95689fb0b8c3fef96be817d69eedbe4 = 8;
   option (protogen.version_hash) = true;
   option (protogen.version_hash_salt) = "0";
 }

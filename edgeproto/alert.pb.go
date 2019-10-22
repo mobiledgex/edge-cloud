@@ -17,6 +17,7 @@
 		developer.proto
 		exec.proto
 		flavor.proto
+		gputagtable.proto
 		metric.proto
 		node.proto
 		notice.proto
@@ -62,6 +63,8 @@
 		ExecRequest
 		FlavorKey
 		Flavor
+		GpuTagTableKey
+		GpuTagTable
 		MetricTag
 		MetricVal
 		Metric

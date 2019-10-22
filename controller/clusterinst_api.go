@@ -219,19 +219,35 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
+		// We want to pass any GpuTagTable by value to prevent a race
+		// so this is a bit cumbersome as the generated GetGpuTagTable
+		// returns a pointer to the table, and a slim but non-zero
+		// chance of it changing under us exists.
+		var emptytab edgeproto.GpuTagTable
 		var err error
-		vmspec, err := vmspec.GetVMSpec(info.Flavors, nodeFlavor)
-		if err != nil {
-			return err
-		}
-		in.NodeFlavor = vmspec.FlavorName
-		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
+		var gKey edgeproto.GpuTagTableKey
+		var vspec *vmspec.VMCreationSpec
+		gKey.Name = in.Key.CloudletKey.Name // add deployment type to gKey TBI xxx
+		gpuTagTbl, e := gpuTagTableApi.GetGpuTagTable(ctx, &gKey)
 
-		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Flavor", "vmspec", vmspec)
+		if e != nil { // table not found
+			emptytab.Key.Name = ""
+			vspec, err = vmspec.GetVMSpec(info.Flavors, nodeFlavor, emptytab)
+		} else {
+			vspec, err = vmspec.GetVMSpec(info.Flavors, nodeFlavor, *gpuTagTbl)
+		}
+		if err != nil {
+			return err // no flavor matched.
+		}
+
+		in.NodeFlavor = vspec.FlavorName
+		in.ExternalVolumeSize = vspec.ExternalVolumeSize
+
+		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Flavor", "vmspec", vspec)
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
 		refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)
-		refs.UsedDisk += (nodeFlavor.Disk + vmspec.ExternalVolumeSize) * uint64(in.NumNodes+in.NumMasters)
+		refs.UsedDisk += (nodeFlavor.Disk + vspec.ExternalVolumeSize) * uint64(in.NumNodes+in.NumMasters)
 		// XXX For now just track, don't enforce.
 		if false {
 			// XXX what is static overhead?

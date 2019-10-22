@@ -274,6 +274,7 @@ func startServices() error {
 	edgeproto.RegisterCloudletPoolMemberApiServer(server, &cloudletPoolMemberApi)
 	edgeproto.RegisterCloudletPoolShowApiServer(server, &cloudletPoolMemberApi)
 	edgeproto.RegisterAlertApiServer(server, &alertApi)
+	edgeproto.RegisterGpuTagTableApiServer(server, &gpuTagTableApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -304,6 +305,7 @@ func startServices() error {
 			edgeproto.RegisterCloudletPoolMemberApiHandler,
 			edgeproto.RegisterCloudletPoolShowApiHandler,
 			edgeproto.RegisterAlertApiHandler,
+			edgeproto.RegisterGpuTagTableApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -410,6 +412,7 @@ func InitApis(sync *Sync) {
 	InitCloudletPoolMemberApi(sync)
 	InitExecApi()
 	InitAlertApi(sync)
+	InitGpuTagTableApi(sync)
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "nohostname"

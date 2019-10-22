@@ -182,6 +182,8 @@ var CloudletRefsOptionalArgs = []string{
 	"rootlbports.value",
 	"useddynamicips",
 	"usedstaticips",
+	"usedgpus",
+	"usedvgpus",
 }
 var CloudletRefsAliasArgs = []string{}
 var CloudletRefsComments = map[string]string{
@@ -193,6 +195,7 @@ var CloudletRefsComments = map[string]string{
 	"useddisk":             "Used disk in GB",
 	"useddynamicips":       "Used dynamic IPs",
 	"usedstaticips":        "Used static IPs",
+	"usedgpus":             "Until we know otherwise, assume we can count these seperately",
 }
 var CloudletRefsSpecialArgs = map[string]string{}
 var RootLbPortsEntryRequiredArgs = []string{}

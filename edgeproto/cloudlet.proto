@@ -261,6 +261,8 @@ message FlavorInfo {
   uint64 ram = 3;
   // Amount of disk in GB on the Cloudlet
   uint64 disk = 4;
+  // OS flavor properties if any
+  string properties = 5 [(protogen.backend) = true];
 }
 
 // CloudletInfo provides information from the Cloudlet Resource Manager about the state of the Cloudlet.

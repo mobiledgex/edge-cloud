@@ -39,6 +39,15 @@ var FlavorData = []edgeproto.Flavor{
 		Vcpus: 10,
 		Disk:  40,
 	},
+	edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.large-mex",
+		},
+		Ram:   8192,
+		Vcpus: 8,
+		Disk:  40,
+		Gpus:  1,
+	},
 }
 
 var DevData = []edgeproto.Developer{
@@ -533,6 +542,20 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Ram:   uint64(4096),
 				Disk:  uint64(40),
 			},
+			// gputagtable tests
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.large-gpu",
+				Vcpus: uint64(8),
+				Ram:   uint64(8192),
+				Disk:  uint64(40),
+			},
+			&edgeproto.FlavorInfo{
+				Name:       "flavor.large",
+				Vcpus:      uint64(10),
+				Ram:        uint64(8192),
+				Disk:       uint64(40),
+				Properties: "vgpu=nvidia-63",
+			},
 		},
 	},
 	edgeproto.CloudletInfo{
@@ -745,6 +768,36 @@ var CloudletPoolMemberData = []edgeproto.CloudletPoolMember{
 	edgeproto.CloudletPoolMember{
 		PoolKey:     CloudletPoolData[2].Key, // enterprise
 		CloudletKey: CloudletData[3].Key,
+	},
+}
+
+var Gputblkeys = []edgeproto.GpuTagTableKey{
+	edgeproto.GpuTagTableKey{
+		Name: "bonn-os",
+	},
+	edgeproto.GpuTagTableKey{
+		Name: "wwt-os",
+	},
+	edgeproto.GpuTagTableKey{
+		Name: "sc-os",
+	},
+}
+
+var GpuTagTableData = []edgeproto.GpuTagTable{
+
+	edgeproto.GpuTagTable{
+		Key:  Gputblkeys[0],
+		Tags: []string{"tesla-p4", "foo"},
+	},
+
+	edgeproto.GpuTagTable{
+		Key:  Gputblkeys[1],
+		Tags: []string{"vcpu", "pci-passthru"},
+	},
+
+	edgeproto.GpuTagTable{
+		Key:  Gputblkeys[2],
+		Tags: []string{"nvidia-63", "pci-passthru"},
 	},
 }
 

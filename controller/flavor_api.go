@@ -28,6 +28,12 @@ func (s *FlavorApi) HasFlavor(key *edgeproto.FlavorKey) bool {
 }
 
 func (s *FlavorApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	if in.Gpus > 1 {
+		// For now, Gpus is used as a bool. Once multiple vGPUs per VM is a reality this check shall be removed.
+		// If clients want > 1 pci_passthrough GPU revisit this limit before then.
+		return &edgeproto.Result{}, errors.New("Only 1 GPU currently supported")
+	}
+
 	return s.store.Create(ctx, in, s.sync.syncWait)
 }
 
