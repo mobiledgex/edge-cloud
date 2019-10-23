@@ -486,6 +486,25 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	return err
 }
 
+func getCloudletVersion(key *edgeproto.CloudletKey) (string, error) {
+	nodeApi.cache.Mux.Lock()
+	defer nodeApi.cache.Mux.Unlock()
+	for _, obj := range nodeApi.cache.Objs {
+		if obj.Key.NodeType != edgeproto.NodeType_NODE_CRM {
+			continue
+		}
+		if obj.Key.CloudletKey != *key {
+			continue
+		}
+		if obj.ImageVersion == "" {
+			return "", fmt.Errorf("Unable to find cloudlet version")
+		} else {
+			return obj.ImageVersion, nil
+		}
+	}
+	return "", fmt.Errorf("Unable to find cloudlet node")
+}
+
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
 	ctx := cb.Context()
 	fmap := edgeproto.MakeFieldMap(in.Fields)
@@ -506,12 +525,62 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return err
 	}
 
+	cloudletUpgraded := false
+	if in.Upgrade {
+		if in.DeploymentLocal {
+			return fmt.Errorf("Upgrade is not supported for local deployments")
+		}
+		if *versionTag == "" {
+			return fmt.Errorf("Unable to find controller version")
+		}
+		cloudletVersion, err := getCloudletVersion(&in.Key)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, fmt.Sprintf("unable to fetch cloudlet version: %v", err))
+			if !*testMode {
+				return err
+			}
+			cb.Send(&edgeproto.Result{Message: "Ignoring cloudlet version check"})
+		} else {
+			// Upgrade Version Check
+			cur_version := cloudletVersion
+			new_version := *versionTag
+			// 2nd Jan 2016
+			ref_layout := "2006-01-02"
+			cur, err := time.Parse(ref_layout, cur_version)
+			if err != nil {
+				return fmt.Errorf("failed to parse current version details: %v", err)
+			}
+			updated, err := time.Parse(ref_layout, new_version)
+			if err != nil {
+				return fmt.Errorf("failed to parse new version details: %v", err)
+			}
+			diff := cur.Sub(updated)
+			if diff > 0 {
+				return fmt.Errorf("downgrade from version %s to %s is not supported", cur_version, new_version)
+			}
+			if diff == 0 {
+				info := edgeproto.CloudletInfo{}
+				if cloudletInfoApi.cache.Get(&in.Key, &info) &&
+					info.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+					// Cloudlet must have been upgraded manually
+					cloudletUpgraded = true
+					in.Upgrade = false
+				} else {
+					return fmt.Errorf("no upgrade required")
+				}
+			}
+		}
+	}
+
+	cur := &edgeproto.Cloudlet{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cur := &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, cur) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
 		cur.CopyInFields(in)
+		if cloudletUpgraded {
+			cur.State = edgeproto.TrackedState_READY
+		}
 		s.store.STMPut(stm, cur)
 		return nil
 	})
@@ -520,26 +589,28 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return err
 	}
 
-	// after the cloudlet change is committed, if the location changed,
-	// update app insts as well.
-	s.UpdateAppInstLocations(ctx, in)
-
 	if in.Upgrade {
-		if in.DeploymentLocal {
-			return fmt.Errorf("Upgrade is not supported for local deployments")
+		err = s.UpgradeCloudlet(ctx, cur, cb)
+		if err != nil {
+			return err
 		}
-		cb.Send(&edgeproto.Result{Message: "Upgrading Cloudlet"})
-		err = s.UpgradeCloudlet(ctx, in, cb)
 	}
 
-	return err
+	// after the cloudlet change is committed, if the location changed,
+	// update app insts as well.
+	s.UpdateAppInstLocations(ctx, cur)
+
+	return nil
 }
 
 func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
 	updatecb := updateCloudletCallback{in, cb}
 
-	if err := cloudletInfoApi.checkCloudletReady(&in.Key); err != nil {
-		return err
+	// Allow upgrade even on UPDATE_ERROR, so that end-users can retry upgrade
+	if in.State != edgeproto.TrackedState_UPDATE_ERROR {
+		if err := cloudletInfoApi.checkCloudletReady(&in.Key); err != nil {
+			return err
+		}
 	}
 
 	log.SpanLog(ctx, log.DebugLevelApi, "fetch platform config")
@@ -560,6 +631,8 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	if err != nil {
 		return err
 	}
+
+	updatecb.cb(edgeproto.UpdateTask, "Upgrading Cloudlet")
 
 	// Wait for cloudlet to finish upgrading
 	err = s.WaitForCloudlet(
