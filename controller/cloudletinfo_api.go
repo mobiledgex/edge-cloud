@@ -133,7 +133,11 @@ func (s *CloudletInfoApi) checkCloudletReady(key *edgeproto.CloudletKey) error {
 	}
 	if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
 		cloudlet.State == edgeproto.TrackedState_UPDATING {
-		return fmt.Errorf("Cloudlet %v is updating", key)
+		return fmt.Errorf("Cloudlet %v is upgrading", key)
+	}
+
+	if cloudlet.State == edgeproto.TrackedState_UPDATE_ERROR {
+		return fmt.Errorf("Cloudlet %v is in failed upgrade state, please upgrade it manually", key)
 	}
 
 	// For testing, state is Errors due to openstack limits not found.

@@ -46,9 +46,7 @@ var (
 )
 
 const (
-	PlatformInitTimeout   = 5 * time.Minute
-	CloudletShortWaitTime = 10 * time.Millisecond
-	CloudletWaitTime      = 1 * time.Second
+	PlatformInitTimeout = 5 * time.Minute
 )
 
 type updateCloudletCallback struct {
@@ -158,7 +156,7 @@ func getRolesAndSecrets(appRoles *VaultRoles) error {
 	return nil
 }
 
-func getPlatformConfig() (*edgeproto.PlatformConfig, error) {
+func getPlatformConfig(ctx context.Context) (*edgeproto.PlatformConfig, error) {
 	pfConfig := edgeproto.PlatformConfig{}
 	appRoles := VaultRoles{}
 	if err := getRolesAndSecrets(&appRoles); err != nil {
@@ -182,6 +180,7 @@ func getPlatformConfig() (*edgeproto.PlatformConfig, error) {
 		return nil, fmt.Errorf("unable to fetch notify addr of the controller")
 	}
 	pfConfig.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
+	pfConfig.Span = log.SpanToString(ctx)
 
 	return &pfConfig, nil
 }
@@ -232,19 +231,17 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 	}
 
-	pfConfig, err := getPlatformConfig()
-	if err != nil {
-		return err
-	}
-
-	return s.createCloudletInternal(DefCallContext(), in, pfConfig, cb)
+	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 
-func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_CreateCloudletServer) error {
+func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := cb.Context()
 
-	pfConfig.Span = log.SpanToString(ctx)
+	pfConfig, err := getPlatformConfig(ctx)
+	if err != nil {
+		return err
+	}
 
 	in.TimeLimits.CreateClusterInstTimeout = int64(cloudcommon.CreateClusterInstTimeout)
 	in.TimeLimits.UpdateClusterInstTimeout = int64(cloudcommon.UpdateClusterInstTimeout)
@@ -259,7 +256,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		pfFlavor = DefaultPlatformFlavor
 	}
 
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
 			if !cctx.Undo {
 				if in.State == edgeproto.TrackedState_CREATE_ERROR {
@@ -395,20 +392,24 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	}
 
 	log.SpanLog(ctx, log.DebugLevelApi, "watch event for CloudletInfo")
+	skipStatus := true
 	cancel := cloudletInfoApi.cache.WatchKey(key, func(ctx context.Context) {
 		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.cache.Get(key, &info) {
 			return
 		}
 		curState = info.State
-		if info.Status.TaskNumber != 0 &&
-			info.Status.TaskNumber != lastStatusId {
-			if info.Status.StepName != "" {
-				updateCallback(edgeproto.UpdateTask, info.Status.StepName)
-			} else {
-				updateCallback(edgeproto.UpdateTask, info.Status.TaskName)
+		if info.Status.TaskNumber == 0 {
+			skipStatus = false
+		} else {
+			if !skipStatus && lastStatusId != info.Status.TaskNumber {
+				if info.Status.StepName != "" {
+					updateCallback(edgeproto.UpdateTask, info.Status.StepName)
+				} else {
+					updateCallback(edgeproto.UpdateTask, info.Status.TaskName)
+				}
+				lastStatusId = info.Status.TaskNumber
 			}
-			lastStatusId = info.Status.TaskNumber
 		}
 		checkState(curState)
 	})
@@ -537,8 +538,12 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
 	updatecb := updateCloudletCallback{in, cb}
 
+	if err := cloudletInfoApi.checkCloudletReady(&in.Key); err != nil {
+		return err
+	}
+
 	log.SpanLog(ctx, log.DebugLevelApi, "fetch platform config")
-	pfConfig, err := getPlatformConfig()
+	pfConfig, err := getPlatformConfig(ctx)
 	if err != nil {
 		return err
 	}

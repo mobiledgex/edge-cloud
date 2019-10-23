@@ -115,7 +115,9 @@ func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 }
 
 func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
-	updateCallback(edgeproto.UpdateTask, "Fake cloudlet updated")
+	// Doesn't do actual upgrade, but good enough
+	// for testing controller side code
+	log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet upgrade")
 	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet create failed", "err", err)
@@ -126,10 +128,11 @@ func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 
 func (s *Platform) CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
 	// Stops outdated cloudlet service running locally
+	// in this case, the caller is old crm
 	process, err := os.FindProcess(os.Getppid())
 	if err == nil {
 		process.Signal(os.Interrupt)
-		updateCallback(edgeproto.UpdateTask, "Fake cloudlet cleaned up successfully")
+		log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet cleaned up successfully")
 	}
 	return nil
 }

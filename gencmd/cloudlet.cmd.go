@@ -51,6 +51,12 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 		in.DeploymentLocal = false
 	}
 	if _, found := tags["nocmp"]; found {
+		in.NotifySrvAddr = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Upgrade = false
+	}
+	if _, found := tags["nocmp"]; found {
 		in.Config = edgeproto.PlatformConfig{}
 	}
 }
