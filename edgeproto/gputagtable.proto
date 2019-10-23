@@ -16,18 +16,10 @@ message GpuTagTableKey {
   option (gogoproto.gostring) = true;
 }	
 
-/*
-message GpuTag {
-
-  string tag = 1;
-}
-*/
-;
 message GpuTagTable {
   repeated string fields = 1;
   GpuTagTableKey key = 2 [(gogoproto.nullable) = false];
   // one or more string tags
-  //  repeated string table = 3;
   repeated string tags = 3;
   option (gogoproto.gostring) = true;  
   option (protogen.generate_matches) = true;
@@ -35,7 +27,6 @@ message GpuTagTable {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_test_update) = false;
   option (protogen.generate_cache) = true;
-//  option (protogen.generate_show_test) = true;  
   option (protogen.notify_cache) = true;
   option (protogen.notify_message) = true;	
   option (protogen.alias) = "name=Key.Name";
@@ -50,7 +41,7 @@ service GpuTagTableApi {
       post: "/create/gputagtbl"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceGpuTagTable, ActionManage,";
+    option (protogen.mc2_api) = "ResourceGpuTagTable,ActionManage,";
   }
   // Delete TagTable
   rpc DeleteGpuTagTable(GpuTagTable) returns (Result) {
@@ -58,7 +49,7 @@ service GpuTagTableApi {
       post: "/delete/gputagtbl"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceGpuTagTable, ActionManage,";
+    option (protogen.mc2_api) = "ResourceGpuTagTable,ActionManage,";
   }
 
   rpc UpdateGpuTagTable(GpuTagTable) returns (Result) {
@@ -66,7 +57,7 @@ service GpuTagTableApi {
       post: "/update/gputagtbl"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceGpuTagTable, ActionManage,";
+    option (protogen.mc2_api) = "ResourceGpuTagTable,ActionManage,";
   }
 
   // show TagTable
@@ -75,7 +66,7 @@ service GpuTagTableApi {
         post: "/show/gputagtbl"
         body: "*"
       };
-      option(protogen.mc2_api) = "ResourceGpuTagTable, ActionView,";
+      option(protogen.mc2_api) = "ResourceGpuTagTable,ActionView,";
   }
 // add new tag to TagTable
   rpc AddGpuTag(GpuTagTable) returns (Result) {  
@@ -84,31 +75,28 @@ service GpuTagTableApi {
         post: "/add/gputagtbl"
         body: "*"
       };
-      option(protogen.mc2_api) = "ResourceGpuTagTable, ActionManage,";
+      option(protogen.mc2_api) = "ResourceGpuTagTable,ActionManage,";
       option (protogen.input_required) = true;      
   }
 // remove existing tag from TagTable
-rpc RemoveGpuTag(GpuTagTable) returns (Result) {  
+  rpc RemoveGpuTag(GpuTagTable) returns (Result) {
     
       option (google.api.http) = {
         post: "/rm/gputagtbl"
         body: "*"
       };
-      option(protogen.mc2_api) = "ResourceGpuTagTable, ActionManage,";
+      option(protogen.mc2_api) = "ResourceGpuTagTable,ActionManage,";
       option (protogen.input_required) = true;      
 }
-
-  
+// fetch TagTable
   rpc GetGpuTagTable(GpuTagTableKey) returns (GpuTagTable) {
     option (google.api.http) = {
       post: "/get/gputagtbl"
       body: "*"
     };
-    option(protogen.mc2_api) = "ResourceGpuTagTable, ActionView,";
+    option(protogen.mc2_api) = "ResourceGpuTagTable,ActionView,";
     option (protogen.input_required) = true;   
-  }      
-
-  
+  }        
 }
 
 

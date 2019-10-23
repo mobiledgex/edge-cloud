@@ -195,7 +195,8 @@ var CloudletRefsComments = map[string]string{
 	"useddisk":             "Used disk in GB",
 	"useddynamicips":       "Used dynamic IPs",
 	"usedstaticips":        "Used static IPs",
-	"usedgpus":             "Until we know otherwise, assume we can count these seperately",
+	"usedgpus":             "Used GPUs",
+	"usedvgpus":            "Used vGPUs",
 }
 var CloudletRefsSpecialArgs = map[string]string{}
 var RootLbPortsEntryRequiredArgs = []string{}

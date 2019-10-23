@@ -444,7 +444,7 @@ var GpuTagTableAliasArgs = []string{
 	"name=key.name",
 }
 var GpuTagTableComments = map[string]string{
-	"tags": "one or more string tags  repeated string table = 3;",
+	"tags": "one or more string tags",
 }
 var GpuTagTableSpecialArgs = map[string]string{
 	"tags": "StringArray",

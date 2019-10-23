@@ -320,7 +320,7 @@ type FlavorInfo struct {
 	Ram uint64 `protobuf:"varint,3,opt,name=ram,proto3" json:"ram,omitempty"`
 	// Amount of disk in GB on the Cloudlet
 	Disk uint64 `protobuf:"varint,4,opt,name=disk,proto3" json:"disk,omitempty"`
-	// OS flavor properties if any
+	// OS flavor properties if any, comma separated key=value pairs
 	Properties string `protobuf:"bytes,5,opt,name=properties,proto3" json:"properties,omitempty"`
 }
 

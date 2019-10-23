@@ -46,8 +46,9 @@ type CloudletRefs struct {
 	UsedDynamicIps int32 `protobuf:"varint,9,opt,name=used_dynamic_ips,json=usedDynamicIps,proto3" json:"used_dynamic_ips,omitempty"`
 	// Used static IPs
 	UsedStaticIps string `protobuf:"bytes,10,opt,name=used_static_ips,json=usedStaticIps,proto3" json:"used_static_ips,omitempty"`
-	// Until we know otherwise, assume we can count these seperately
-	UsedGpus  uint32 `protobuf:"varint,11,opt,name=used_gpus,json=usedGpus,proto3" json:"used_gpus,omitempty"`
+	// Used GPUs
+	UsedGpus uint32 `protobuf:"varint,11,opt,name=used_gpus,json=usedGpus,proto3" json:"used_gpus,omitempty"`
+	// Used vGPUs
 	UsedVgpus uint32 `protobuf:"varint,12,opt,name=used_vgpus,json=usedVgpus,proto3" json:"used_vgpus,omitempty"`
 }
 

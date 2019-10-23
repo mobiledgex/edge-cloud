@@ -837,7 +837,7 @@ var FlavorInfoComments = map[string]string{
 	"vcpus":      "Number of VCPU cores on the Cloudlet",
 	"ram":        "Ram in MB on the Cloudlet",
 	"disk":       "Amount of disk in GB on the Cloudlet",
-	"properties": "OS flavor properties if any",
+	"properties": "OS flavor properties if any, comma separated key=value pairs",
 }
 var FlavorInfoSpecialArgs = map[string]string{}
 var CloudletInfoRequiredArgs = []string{
@@ -880,7 +880,7 @@ var CloudletInfoComments = map[string]string{
 	"flavors.vcpus":      "Number of VCPU cores on the Cloudlet",
 	"flavors.ram":        "Ram in MB on the Cloudlet",
 	"flavors.disk":       "Amount of disk in GB on the Cloudlet",
-	"flavors.properties": "OS flavor properties if any",
+	"flavors.properties": "OS flavor properties if any, comma separated key=value pairs",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors": "StringArray",
