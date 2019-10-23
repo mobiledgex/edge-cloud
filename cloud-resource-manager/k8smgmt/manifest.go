@@ -9,8 +9,9 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/printers"
 )
@@ -26,6 +27,21 @@ func addEnvVars(template *v1.PodTemplateSpec, envVars []v1.EnvVar) {
 	}
 }
 
+func addImagePullSecret(template *v1.PodTemplateSpec, secretName string) {
+	found := false
+	for _, s := range template.Spec.ImagePullSecrets {
+		if s.Name == secretName {
+			found = true
+		}
+	}
+	if !found {
+		var newSecret v1.LocalObjectReference
+		newSecret.Name = secretName
+		log.DebugLog(log.DebugLevelMexos, "adding imagepull secret", "secretName", secretName)
+		template.Spec.ImagePullSecrets = append(template.Spec.ImagePullSecrets, newSecret)
+	}
+}
+
 func addMexLabel(meta *metav1.ObjectMeta, label string) {
 	// Add a label so we can lookup the pods created by this
 	// deployment. Pods names are used for shell access.
@@ -33,10 +49,18 @@ func addMexLabel(meta *metav1.ObjectMeta, label string) {
 }
 
 // Merge in all the environment variables into
-func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string, error) {
+func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile, imagePath string) (string, error) {
 	var envVars []v1.EnvVar
 	var files []string
 
+	urlObj, err := util.ImagePathParse(imagePath)
+	if err != nil {
+		return "", fmt.Errorf("unable to parse image path: %v", err)
+	}
+	addSecret := false
+	if urlObj.Host == cloudcommon.MobiledgexRegistry {
+		addSecret = true
+	}
 	// Walk the Configs in the App and get all the environment variables together
 	for _, v := range configs {
 		if v.Kind == AppConfigEnvYaml {
@@ -66,9 +90,15 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string,
 		case *appsv1.Deployment:
 			addEnvVars(&obj.Spec.Template, envVars)
 			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
+			if addSecret {
+				addImagePullSecret(&obj.Spec.Template, urlObj.Host)
+			}
 		case *appsv1.DaemonSet:
 			addEnvVars(&obj.Spec.Template, envVars)
 			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
+			if addSecret {
+				addImagePullSecret(&obj.Spec.Template, urlObj.Host)
+			}
 		}
 	}
 	//marshal the objects back together and return as one string

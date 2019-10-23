@@ -17,11 +17,12 @@ import (
 )
 
 const (
-	BasicAuth         = "basic"
-	TokenAuth         = "token"
-	ApiKeyAuth        = "apikey"
-	DockerHub         = "docker.io"
-	DockerHubRegistry = "registry-1.docker.io"
+	BasicAuth          = "basic"
+	TokenAuth          = "token"
+	ApiKeyAuth         = "apikey"
+	DockerHub          = "docker.io"
+	DockerHubRegistry  = "registry-1.docker.io"
+	MobiledgexRegistry = "docker.mobiledgex.net"
 )
 
 type RegistryAuth struct {

@@ -130,7 +130,7 @@ func createOrUpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edge
 	if err != nil {
 		return err
 	}
-	mf, err = MergeEnvVars(mf, app.Configs)
+	mf, err = MergeEnvVars(mf, app.Configs, app.ImagePath)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "failed to merge env vars", "error", err)
 	}
