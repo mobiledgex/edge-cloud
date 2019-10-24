@@ -33,6 +33,7 @@ type ApplicationData struct {
 	Nodes               []Node               `yaml:"nodes"`
 	CloudletPools       []CloudletPool       `yaml:"cloudletpools"`
 	CloudletPoolMembers []CloudletPoolMember `yaml:"cloudletpoolmembers"`
+	AutoScalePolicies   []AutoScalePolicy    `yaml:"autoscalepolicies"`
 }
 
 // sort each slice by key
@@ -75,6 +76,9 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.CloudletPoolMembers[:], func(i, j int) bool {
 		return a.CloudletPoolMembers[i].GetKeyString() < a.CloudletPoolMembers[j].GetKeyString()
+	})
+	sort.Slice(a.AutoScalePolicies[:], func(i, j int) bool {
+		return a.AutoScalePolicies[i].Key.GetKeyString() < a.AutoScalePolicies[j].Key.GetKeyString()
 	})
 }
 
@@ -316,6 +320,49 @@ func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+func (key *PolicyKey) ValidateKey() error {
+	if err := util.ValidObjName(key.Developer); err != nil {
+		errstring := err.Error()
+		//lowercase the first letter of the error message
+		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
+		return fmt.Errorf("Developer " + errstring)
+	}
+	if key.Name == "" {
+		return errors.New("Invalid policy name")
+	}
+	return nil
+}
+
+// Validate fields. Note that specified fields is ignored, so this function
+// must be used only in the context when all fields are present (i.e. after
+// CopyInFields for an update).
+func (s *AutoScalePolicy) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if s.MaxNodes > 10 {
+		return errors.New("Max nodes cannot exceed 10")
+	}
+	if s.MinNodes < 1 {
+		// Taint on master is not updated during UpdateClusterInst
+		// when going up/down from 0, so min supported is 1.
+		return errors.New("Min nodes cannot be less than 1")
+	}
+	if s.ScaleUpCpuThresh < 0 || s.ScaleUpCpuThresh > 100 {
+		return errors.New("Scale up CPU threshold must be between 0 and 100")
+	}
+	if s.ScaleDownCpuThresh < 0 || s.ScaleDownCpuThresh > 100 {
+		return errors.New("Scale down CPU threshold must be between 0 and 100")
+	}
+	if s.MaxNodes <= s.MinNodes {
+		return fmt.Errorf("Max nodes must be greater than Min nodes")
+	}
+	if s.ScaleUpCpuThresh <= s.ScaleDownCpuThresh {
+		return fmt.Errorf("Scale down cpu threshold must be less than scale up cpu threshold")
+	}
+	return nil
+}
+
 func MakeFieldMap(fields []string) map[string]struct{} {
 	fmap := make(map[string]struct{})
 	if fields == nil {
@@ -488,6 +535,7 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortNode))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPool))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPoolMember))
+	opts = append(opts, cmpopts.SortSlices(CmpSortAutoScalePolicy))
 	return opts
 }
 

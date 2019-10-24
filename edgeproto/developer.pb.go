@@ -374,8 +374,13 @@ func (m *DeveloperKey) Matches(o *DeveloperKey, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *DeveloperKey) CopyInFields(src *DeveloperKey) {
-	m.Name = src.Name
+func (m *DeveloperKey) CopyInFields(src *DeveloperKey) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	return changed
 }
 
 func (m *DeveloperKey) GetKeyString() string {
@@ -439,13 +444,18 @@ func (m *Developer) DiffFields(o *Developer, fields map[string]struct{}) {
 	}
 }
 
-func (m *Developer) CopyInFields(src *Developer) {
+func (m *Developer) CopyInFields(src *Developer) int {
+	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.2"]; set {
-			m.Key.Name = src.Key.Name
+			if m.Key.Name != src.Key.Name {
+				m.Key.Name = src.Key.Name
+				changed++
+			}
 		}
 	}
+	return changed
 }
 
 func (s *Developer) HasFields() bool {
@@ -729,6 +739,7 @@ func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) 
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Developer", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}

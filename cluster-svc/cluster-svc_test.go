@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -59,4 +62,30 @@ func TestInfra(t *testing.T) {
 	require.Contains(t, newApp.Fields, edgeproto.AppFieldConfigsKind, "Missing edgeproto.AppFieldConfigsKind")
 	require.Contains(t, newApp.Fields, edgeproto.AppFieldConfigsConfig, "Missing edgeproto.AppFieldConfigsConfig")
 	require.Contains(t, newApp.Fields, edgeproto.AppFieldImagePath, "Missing edgeproto.AppFieldImagePath")
+}
+
+// TestAutoScaleT primarily checks that AutoScale template parsing works, because
+// otherwise cluster-svc could crash during runtime if template has an issue.
+func TestAutoScaleT(t *testing.T) {
+	log.InitTracer("")
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
+	edgeproto.InitAutoScalePolicyCache(&AutoScalePolicyCache)
+
+	instKey := testutil.ClusterInstData[0].Key
+
+	policy := edgeproto.AutoScalePolicy{}
+	policy.Key.Developer = instKey.Developer
+	policy.Key.Name = "test-policy"
+	policy.MinNodes = 1
+	policy.MaxNodes = 5
+	policy.ScaleUpCpuThresh = 80
+	policy.ScaleDownCpuThresh = 20
+	policy.TriggerTimeSec = 60
+
+	AutoScalePolicyCache.Update(ctx, &policy, 0)
+	configs, err := getAppInstConfigs(instKey, policy.Key.Name)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(configs))
 }

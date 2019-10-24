@@ -186,6 +186,7 @@ apps:
   internalports: true
   defaultflavor:
     name: x1.medium
+  annotations: version=6.7.3
   deployment: helm
   configs:
   - kind: hemlCustomizationYaml

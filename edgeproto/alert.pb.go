@@ -8,6 +8,7 @@
 		alert.proto
 		app.proto
 		app_inst.proto
+		autoscalepolicy.proto
 		cloudlet.proto
 		cloudletpool.proto
 		cluster.proto
@@ -35,6 +36,8 @@
 		AppInstRuntime
 		AppInstInfo
 		AppInstMetrics
+		PolicyKey
+		AutoScalePolicy
 		CloudletKey
 		OperationTimeLimits
 		CloudletInfraCommon
@@ -403,7 +406,8 @@ func (m *Alert) Matches(o *Alert, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *Alert) CopyInFields(src *Alert) {
+func (m *Alert) CopyInFields(src *Alert) int {
+	changed := 0
 	if src.Labels != nil {
 		m.Labels = make(map[string]string)
 		for k0, _ := range src.Labels {
@@ -416,12 +420,31 @@ func (m *Alert) CopyInFields(src *Alert) {
 			m.Annotations[k0] = src.Annotations[k0]
 		}
 	}
-	m.State = src.State
-	m.ActiveAt.Seconds = src.ActiveAt.Seconds
-	m.ActiveAt.Nanos = src.ActiveAt.Nanos
-	m.Value = src.Value
-	m.NotifyId = src.NotifyId
-	m.Controller = src.Controller
+	if m.State != src.State {
+		m.State = src.State
+		changed++
+	}
+	if m.ActiveAt.Seconds != src.ActiveAt.Seconds {
+		m.ActiveAt.Seconds = src.ActiveAt.Seconds
+		changed++
+	}
+	if m.ActiveAt.Nanos != src.ActiveAt.Nanos {
+		m.ActiveAt.Nanos = src.ActiveAt.Nanos
+		changed++
+	}
+	if m.Value != src.Value {
+		m.Value = src.Value
+		changed++
+	}
+	if m.NotifyId != src.NotifyId {
+		m.NotifyId = src.NotifyId
+		changed++
+	}
+	if m.Controller != src.Controller {
+		m.Controller = src.Controller
+		changed++
+	}
+	return changed
 }
 
 func (s *Alert) HasFields() bool {
@@ -709,6 +732,7 @@ func (c *AlertCache) Show(filter *Alert, cb func(ret *Alert) error) error {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Alert", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}

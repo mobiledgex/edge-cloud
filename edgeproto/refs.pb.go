@@ -492,26 +492,52 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *CloudletRefs) CopyInFields(src *CloudletRefs) {
-	m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
-	m.Key.Name = src.Key.Name
+func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
+	changed := 0
+	if m.Key.OperatorKey.Name != src.Key.OperatorKey.Name {
+		m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
+		changed++
+	}
+	if m.Key.Name != src.Key.Name {
+		m.Key.Name = src.Key.Name
+		changed++
+	}
 	if m.Clusters == nil || len(m.Clusters) != len(src.Clusters) {
 		m.Clusters = make([]ClusterKey, len(src.Clusters))
 	}
 	for i0 := 0; i0 < len(src.Clusters); i0++ {
-		m.Clusters[i0].Name = src.Clusters[i0].Name
+		if m.Clusters[i0].Name != src.Clusters[i0].Name {
+			m.Clusters[i0].Name = src.Clusters[i0].Name
+			changed++
+		}
 	}
-	m.UsedRam = src.UsedRam
-	m.UsedVcores = src.UsedVcores
-	m.UsedDisk = src.UsedDisk
+	if m.UsedRam != src.UsedRam {
+		m.UsedRam = src.UsedRam
+		changed++
+	}
+	if m.UsedVcores != src.UsedVcores {
+		m.UsedVcores = src.UsedVcores
+		changed++
+	}
+	if m.UsedDisk != src.UsedDisk {
+		m.UsedDisk = src.UsedDisk
+		changed++
+	}
 	if src.RootLbPorts != nil {
 		m.RootLbPorts = make(map[int32]int32)
 		for k0, _ := range src.RootLbPorts {
 			m.RootLbPorts[k0] = src.RootLbPorts[k0]
 		}
 	}
-	m.UsedDynamicIps = src.UsedDynamicIps
-	m.UsedStaticIps = src.UsedStaticIps
+	if m.UsedDynamicIps != src.UsedDynamicIps {
+		m.UsedDynamicIps = src.UsedDynamicIps
+		changed++
+	}
+	if m.UsedStaticIps != src.UsedStaticIps {
+		m.UsedStaticIps = src.UsedStaticIps
+		changed++
+	}
+	return changed
 }
 
 func (s *CloudletRefs) HasFields() bool {
@@ -781,6 +807,7 @@ func (c *CloudletRefsCache) Show(filter *CloudletRefs, cb func(ret *CloudletRefs
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare CloudletRefs", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
@@ -981,22 +1008,54 @@ func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *ClusterRefs) CopyInFields(src *ClusterRefs) {
-	m.Key.ClusterKey.Name = src.Key.ClusterKey.Name
-	m.Key.CloudletKey.OperatorKey.Name = src.Key.CloudletKey.OperatorKey.Name
-	m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
-	m.Key.Developer = src.Key.Developer
+func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
+	changed := 0
+	if m.Key.ClusterKey.Name != src.Key.ClusterKey.Name {
+		m.Key.ClusterKey.Name = src.Key.ClusterKey.Name
+		changed++
+	}
+	if m.Key.CloudletKey.OperatorKey.Name != src.Key.CloudletKey.OperatorKey.Name {
+		m.Key.CloudletKey.OperatorKey.Name = src.Key.CloudletKey.OperatorKey.Name
+		changed++
+	}
+	if m.Key.CloudletKey.Name != src.Key.CloudletKey.Name {
+		m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+		changed++
+	}
+	if m.Key.Developer != src.Key.Developer {
+		m.Key.Developer = src.Key.Developer
+		changed++
+	}
 	if m.Apps == nil || len(m.Apps) != len(src.Apps) {
 		m.Apps = make([]AppKey, len(src.Apps))
 	}
 	for i0 := 0; i0 < len(src.Apps); i0++ {
-		m.Apps[i0].DeveloperKey.Name = src.Apps[i0].DeveloperKey.Name
-		m.Apps[i0].Name = src.Apps[i0].Name
-		m.Apps[i0].Version = src.Apps[i0].Version
+		if m.Apps[i0].DeveloperKey.Name != src.Apps[i0].DeveloperKey.Name {
+			m.Apps[i0].DeveloperKey.Name = src.Apps[i0].DeveloperKey.Name
+			changed++
+		}
+		if m.Apps[i0].Name != src.Apps[i0].Name {
+			m.Apps[i0].Name = src.Apps[i0].Name
+			changed++
+		}
+		if m.Apps[i0].Version != src.Apps[i0].Version {
+			m.Apps[i0].Version = src.Apps[i0].Version
+			changed++
+		}
 	}
-	m.UsedRam = src.UsedRam
-	m.UsedVcores = src.UsedVcores
-	m.UsedDisk = src.UsedDisk
+	if m.UsedRam != src.UsedRam {
+		m.UsedRam = src.UsedRam
+		changed++
+	}
+	if m.UsedVcores != src.UsedVcores {
+		m.UsedVcores = src.UsedVcores
+		changed++
+	}
+	if m.UsedDisk != src.UsedDisk {
+		m.UsedDisk = src.UsedDisk
+		changed++
+	}
+	return changed
 }
 
 func (s *ClusterRefs) HasFields() bool {
@@ -1266,6 +1325,7 @@ func (c *ClusterRefsCache) Show(filter *ClusterRefs, cb func(ret *ClusterRefs) e
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare ClusterRefs", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}

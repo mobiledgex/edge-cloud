@@ -5,12 +5,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"html/template"
 	"io"
 	"os"
 	"os/signal"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
@@ -53,6 +53,46 @@ grafana:
   enabled: false
 `
 
+// If an auto-scale profile is set, we add two measurements and two alerts.
+// The measurements count the number of nodes that are above the high cpu
+// threshold and below the low cpu threshold. These measurements assume
+// the master node is not schedulable and other nodes are schedulable, which
+// may not be true if custom taints are used.
+// The scale up alert fires when all nodes are above the high cpu threshold,
+// and there are less than the max number of nodes.
+// The scale down alert files when any node is below the low cpu threshold,
+// and there are more than the min number of nodes.
+var MEXPrometheusAutoScaleT = `additionalPrometheusRules:
+- name: [[.AutoScalePolicy]]
+  groups:
+  - name: autoscale.rules
+    rules:
+    - expr: sum(node:node_cpu_utilisation:avg1m{node=~"[[.NodePrefix]].*"} > bool .[[.ScaleUpCpuThresh]])
+      record: 'node_cpu_high_count'
+    - expr: sum(node:node_cpu_utilisation:avg1m{node=~"[[.NodePrefix]].*"} < bool .[[.ScaleDownCpuThresh]])
+      record: 'node_cpu_low_count'
+    - expr: count(kube_node_info) - count(kube_node_spec_taint)
+      record: 'node_count'
+    - alert: [[.AutoScaleUpName]]
+      expr: node_cpu_high_count == node_count and node_count < [[.MaxNodes]]
+      for: [[.TriggerTimeSec]]s
+      labels:
+        severity: none
+      annotations:
+        message: High cpu greater than [[.ScaleUpCpuThresh]]% for all nodes
+        [[.NodeCountName]]: '{{ with query "node_count" }}{{ . | first | value | humanize }}{{ end }}'
+    - alert: [[.AutoScaleDownName]]
+      expr: node_cpu_low_count > 0 and node_count > [[.MinNodes]]
+      for: [[.TriggerTimeSec]]s
+      labels:
+        severity: none
+      annotations:
+        message: Low cpu less than [[.ScaleDownCpuThresh]]% for some nodes
+        [[.LowCpuNodeCountName]]: '{{ $value }}'
+        [[.NodeCountName]]: '{{ with query "node_count" }}{{ . | first | value | humanize }}{{ end }}'
+        [[.MinNodesName]]: '[[.MinNodes]]'
+`
+
 var MEXPrometheusAppName = cloudcommon.MEXPrometheusAppName
 var MEXPrometheusAppVer = "1.0"
 
@@ -64,6 +104,9 @@ var MEXPrometheusAppKey = edgeproto.AppKey{
 	},
 }
 
+// Define prometheus operator App.
+// Set version to avoid changes in behavior as helm and the operator
+// code are not very stable.
 var MEXPrometheusApp = edgeproto.App{
 	Key:           MEXPrometheusAppKey,
 	ImagePath:     "stable/prometheus-operator",
@@ -71,16 +114,33 @@ var MEXPrometheusApp = edgeproto.App{
 	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
+	Annotations:   "version=6.7.3",
 }
 
 var dialOpts grpc.DialOption
 
 var sigChan chan os.Signal
 
+var AutoScalePolicyCache edgeproto.AutoScalePolicyCache
 var ClusterInstCache edgeproto.ClusterInstCache
 
 type promCustomizations struct {
 	Interval string
+}
+
+type AppInstArgs struct {
+	AutoScalePolicy     string
+	AutoScaleUpName     string
+	AutoScaleDownName   string
+	ScaleUpCpuThresh    uint32
+	ScaleDownCpuThresh  uint32
+	TriggerTimeSec      uint32
+	MaxNodes            int
+	MinNodes            int
+	NodeCountName       string
+	LowCpuNodeCountName string
+	MinNodesName        string
+	NodePrefix          string // master node must have different prefix
 }
 
 // Process updates from notify framework about cluster instances
@@ -92,7 +152,7 @@ func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgepro
 	// Need to create a connection to server, as passed to us by commands
 	if new.State == edgeproto.TrackedState_READY {
 		// Create Prometheus on the cluster after creation
-		if err = createMEXPromInst(ctx, dialOpts, new.Key); err != nil {
+		if err = createMEXPromInst(ctx, dialOpts, new.Key, new.AutoScalePolicy); err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Prometheus-operator inst create failed", "cluster",
 				new.Key.ClusterKey.Name, "error", err.Error())
 		}
@@ -105,6 +165,7 @@ func init() {
 
 func initNotifyClient(ctx context.Context, addrs string, tlsCertFile string) *notify.Client {
 	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
+	edgeproto.InitAutoScalePolicyCache(&AutoScalePolicyCache)
 	edgeproto.InitClusterInstCache(&ClusterInstCache)
 	ClusterInstCache.SetUpdatedCb(clusterInstCb)
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
@@ -149,8 +210,53 @@ func appInstUpdateApi(apiClient edgeproto.AppInstApiClient, appInst edgeproto.Ap
 	return res, err
 }
 
+func getAppInstConfigs(instKey edgeproto.ClusterInstKey, autoScalePolicy string) ([]*edgeproto.ConfigFile, error) {
+	configs := []*edgeproto.ConfigFile{}
+	if autoScalePolicy != "" {
+		policy := edgeproto.AutoScalePolicy{}
+		policyKey := edgeproto.PolicyKey{}
+		policyKey.Developer = instKey.Developer
+		policyKey.Name = autoScalePolicy
+		if !AutoScalePolicyCache.Get(&policyKey, &policy) {
+			return nil, fmt.Errorf("Auto scale policy %s not found for ClusterInst %s", autoScalePolicy, instKey.GetKeyString())
+		}
+		// change delims because Prometheus triggers off of golang delims
+		t := template.Must(template.New("policy").Delims("[[", "]]").Parse(MEXPrometheusAutoScaleT))
+		args := AppInstArgs{
+			AutoScalePolicy:     autoScalePolicy,
+			AutoScaleUpName:     cloudcommon.AlertAutoScaleUp,
+			AutoScaleDownName:   cloudcommon.AlertAutoScaleDown,
+			ScaleUpCpuThresh:    policy.ScaleUpCpuThresh,
+			ScaleDownCpuThresh:  policy.ScaleDownCpuThresh,
+			TriggerTimeSec:      policy.TriggerTimeSec,
+			MaxNodes:            int(policy.MaxNodes),
+			MinNodes:            int(policy.MinNodes),
+			NodeCountName:       cloudcommon.AlertKeyNodeCount,
+			LowCpuNodeCountName: cloudcommon.AlertKeyLowCpuNodeCount,
+			MinNodesName:        cloudcommon.AlertKeyMinNodes,
+			NodePrefix:          cloudcommon.MexNodePrefix,
+		}
+		buf := bytes.Buffer{}
+		err := t.Execute(&buf, &args)
+		if err != nil {
+			return nil, err
+		}
+		policyConfig := &edgeproto.ConfigFile{
+			Kind:   k8smgmt.AppConfigHelmYaml,
+			Config: buf.String(),
+		}
+		configs = append(configs, policyConfig)
+	}
+	return configs, nil
+}
+
 // create an appInst as a clustersvc
-func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, app *edgeproto.App) error {
+func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, app *edgeproto.App, autoScalePolicy string) error {
+	configs, err := getAppInstConfigs(instKey, autoScalePolicy)
+	if err != nil {
+		return err
+	}
+
 	//update flavor
 	app.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
@@ -165,6 +271,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, instKey 
 			AppKey:         app.Key,
 			ClusterInstKey: instKey,
 		},
+		Configs: configs,
 	}
 
 	res, err := appInstCreateApi(apiClient, appInst)
@@ -196,8 +303,8 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, instKey 
 
 }
 
-func createMEXPromInst(ctx context.Context, dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey) error {
-	return createAppInstCommon(ctx, dialOpts, instKey, &MEXPrometheusApp)
+func createMEXPromInst(ctx context.Context, dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, autoScalePolicy string) error {
+	return createAppInstCommon(ctx, dialOpts, instKey, &MEXPrometheusApp, autoScalePolicy)
 }
 
 func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
@@ -387,6 +494,7 @@ func main() {
 
 	notifyClient := initNotifyClient(ctx, *notifyAddrs, *tlsCertFile)
 	notifyClient.RegisterRecvClusterInstCache(&ClusterInstCache)
+	notifyClient.RegisterRecvAutoScalePolicyCache(&AutoScalePolicyCache)
 	notifyClient.Start()
 	defer notifyClient.Stop()
 
