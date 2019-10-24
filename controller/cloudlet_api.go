@@ -354,6 +354,12 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		}
 	}()
 
+	info := edgeproto.CloudletInfo{}
+	if !cloudletInfoApi.cache.Get(key, &info) {
+		return objstore.ErrKVStoreKeyNotFound
+	}
+	lastStatusId = info.Status.TaskNumber
+
 	updateCloudletState := func(newState edgeproto.TrackedState) error {
 		cloudlet := edgeproto.Cloudlet{}
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -373,11 +379,10 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			return
 		}
 
-		if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED {
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
-				curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
-				// Intermediate state, wait for cloudlet to start upgrading
-			}
+		if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED &&
+			(curState == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
+				curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS) {
+			// Intermediate state, wait for cloudlet to start upgrading
 		} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 			done <- true
 		} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
@@ -392,7 +397,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 
 	log.SpanLog(ctx, log.DebugLevelApi, "watch event for CloudletInfo")
 	cancel := cloudletInfoApi.cache.WatchKey(key, func(ctx context.Context) {
-		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.cache.Get(key, &info) {
 			return
 		}
@@ -417,7 +421,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 
 	// After setting up watch, check current state,
 	// as it may have already changed to target state
-	info := edgeproto.CloudletInfo{}
+	info = edgeproto.CloudletInfo{}
 	if cloudletInfoApi.cache.Get(key, &info) {
 		curState = info.State
 		checkState(curState)
@@ -469,11 +473,9 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		}
 		if err == nil {
 			cloudlet.State = edgeproto.TrackedState_READY
+			cloudlet.Errors = nil
 		} else {
-			if cloudlet.Errors == nil {
-				cloudlet.Errors = make([]string, 0)
-			}
-			cloudlet.Errors = append(cloudlet.Errors, err.Error())
+			cloudlet.Errors = []string{err.Error()}
 			cloudlet.State = errorState
 		}
 
@@ -675,6 +677,12 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if ignoreCRMState(cctx) {
 			// delete happens later, this STM just checks for existence
 			return nil
+		}
+		if in.State == edgeproto.TrackedState_CREATE_REQUESTED ||
+			in.State == edgeproto.TrackedState_CREATING ||
+			in.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
+			in.State == edgeproto.TrackedState_UPDATING {
+			return errors.New("Cloudlet busy, cannot be deleted")
 		}
 		if !cctx.Undo {
 			if in.State == edgeproto.TrackedState_DELETE_ERROR &&
