@@ -472,6 +472,14 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.DebugLog(log.DebugLevelMexos, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
+		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+			// Cloudlet is already upgrading
+			return
+		}
+
+		// Reset old Status, as we will start upgrading cloudlet now
+		cd.CloudletInfoCache.StatusReset(ctx, &new.Key)
+
 		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 

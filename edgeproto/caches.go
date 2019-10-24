@@ -175,6 +175,18 @@ func (s *AppInstInfoCache) SetError(ctx context.Context, key *AppInstKey, errSta
 	s.Update(ctx, &info, 0)
 }
 
+func (s *CloudletInfoCache) StatusReset(ctx context.Context, key *CloudletKey) {
+	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
+	info := CloudletInfo{}
+	if !s.Get(key, &info) {
+		// we don't want to override the state in the cache if it is not present
+		log.InfoLog("StatusReset failed, did not find CloudletInfo in cache")
+		return
+	}
+	info.Status.StatusReset()
+	s.Update(ctx, &info, 0)
+}
+
 func (s *CloudletInfoCache) SetStatusTask(ctx context.Context, key *CloudletKey, taskName string) {
 	log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
 	info := CloudletInfo{}

@@ -118,6 +118,7 @@ func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	// Doesn't do actual upgrade, but good enough
 	// for testing controller side code
 	log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet upgrade")
+	updateCallback(edgeproto.UpdateTask, "Starting new CRMServer")
 	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet create failed", "err", err)
@@ -131,6 +132,7 @@ func (s *Platform) CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Clou
 	// in this case, the caller is old crm
 	process, err := os.FindProcess(os.Getppid())
 	if err == nil {
+		updateCallback(edgeproto.UpdateTask, "Deleting old CRMServer")
 		process.Signal(os.Interrupt)
 		log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet cleaned up successfully")
 	}

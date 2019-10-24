@@ -346,15 +346,13 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 
 	var err error
 
-	serviceWait := func() {
+	go func() {
 		err := cloudcommon.CrmServiceWait(*key)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "failed to cleanup crm service", "err", err)
 			fatal <- true
 		}
-	}
-
-	go serviceWait()
+	}()
 
 	updateCloudletState := func(newState edgeproto.TrackedState) error {
 		cloudlet := edgeproto.Cloudlet{}
@@ -375,12 +373,13 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			return
 		}
 
-		if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-			if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+		if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
+				curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 				// Intermediate state, wait for cloudlet to start upgrading
-			} else {
-				done <- true
 			}
+		} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			done <- true
 		} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
 			if cloudlet.State != edgeproto.TrackedState_UPDATING {
 				// set cloudlet state to UPDATING and watch again
@@ -392,24 +391,27 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	}
 
 	log.SpanLog(ctx, log.DebugLevelApi, "watch event for CloudletInfo")
-	skipStatus := true
 	cancel := cloudletInfoApi.cache.WatchKey(key, func(ctx context.Context) {
 		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.cache.Get(key, &info) {
 			return
 		}
+		log.SpanLog(ctx, log.DebugLevelApi, "ASHCHECK: CloudletInfo", "lastID", lastStatusId, "taskNum", info.Status.TaskNumber, "StepName", info.Status.StepName, "TaskName", info.Status.TaskName)
 		curState = info.State
+
 		if info.Status.TaskNumber == 0 {
-			skipStatus = false
-		} else {
-			if !skipStatus && lastStatusId != info.Status.TaskNumber {
-				if info.Status.StepName != "" {
-					updateCallback(edgeproto.UpdateTask, info.Status.StepName)
-				} else {
-					updateCallback(edgeproto.UpdateTask, info.Status.TaskName)
-				}
-				lastStatusId = info.Status.TaskNumber
+			lastStatusId = 0
+		} else if lastStatusId == info.Status.TaskNumber {
+			// Got repeat message
+			lastStatusId = info.Status.TaskNumber
+
+		} else if info.Status.TaskNumber > lastStatusId {
+			if info.Status.StepName != "" {
+				updateCallback(edgeproto.UpdateTask, info.Status.StepName)
+			} else {
+				updateCallback(edgeproto.UpdateTask, info.Status.TaskName)
 			}
+			lastStatusId = info.Status.TaskNumber
 		}
 		checkState(curState)
 	})
@@ -565,6 +567,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 					// Cloudlet must have been upgraded manually
 					cloudletUpgraded = true
 					in.Upgrade = false
+					cb.Send(&edgeproto.Result{Message: "no upgrade required"})
 				} else {
 					return fmt.Errorf("no upgrade required")
 				}
