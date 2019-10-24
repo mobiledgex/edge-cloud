@@ -396,7 +396,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if !cloudletInfoApi.cache.Get(key, &info) {
 			return
 		}
-		log.SpanLog(ctx, log.DebugLevelApi, "ASHCHECK: CloudletInfo", "lastID", lastStatusId, "taskNum", info.Status.TaskNumber, "StepName", info.Status.StepName, "TaskName", info.Status.TaskName)
 		curState = info.State
 
 		if info.Status.TaskNumber == 0 {
