@@ -23,6 +23,11 @@ func TestAppInstApi(t *testing.T) {
 	objstore.InitRegion(1)
 	reduceInfoTimeouts()
 
+	tMode := true
+	testMode = &tMode
+	dockerRegistry := "docker.mobiledgex.net"
+	registryFQDN = &dockerRegistry
+
 	dummy := dummyEtcd{}
 	dummy.Start()
 
