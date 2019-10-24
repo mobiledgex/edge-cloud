@@ -18,6 +18,9 @@ func TestAppApi(t *testing.T) {
 	log.InitTracer("")
 	defer log.FinishTracer()
 
+	dockerRegistry := "docker.mobiledgex.net"
+	registryFQDN = &dockerRegistry
+
 	dummy := dummyEtcd{}
 	dummy.Start()
 
