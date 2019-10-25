@@ -128,9 +128,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if in.Key.ClusterKey.Name == "" {
 		return fmt.Errorf("Cluster name cannot be empty")
 	}
-	if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
-		return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
-	}
 	// validate deployment
 	if in.Deployment == "" {
 		// assume kubernetes, because that's what we've been doing
@@ -206,6 +203,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 			if in.NumNodes == 0 {
 				return errors.New("NumNodes cannot be 0 for Azure or GCP")
+			}
+			if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
+				return fmt.Errorf("Cluster name limited to %d characters for GCP and Azure", cloudcommon.MaxClusterNameLength)
 			}
 		}
 		info := edgeproto.CloudletInfo{}
