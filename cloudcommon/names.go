@@ -62,6 +62,9 @@ var CreateClusterInstTimeout = 30 * time.Minute
 var UpdateClusterInstTimeout = 20 * time.Minute
 var DeleteClusterInstTimeout = 20 * time.Minute
 
+// GCP limits to 40, Azure has issues above 54.  For consistency go with the lower limit
+const MaxClusterNameLength = 40
+
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
 var platformApps = map[string]bool{

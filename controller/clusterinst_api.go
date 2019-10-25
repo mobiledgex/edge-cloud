@@ -201,6 +201,12 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
 				return errors.New("Only kubernetes clusters can be deployed in Azure or GCP")
 			}
+			if in.NumNodes == 0 {
+				return errors.New("NumNodes cannot be 0 for Azure or GCP")
+			}
+			if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
+				return fmt.Errorf("Cluster name limited to %d characters for GCP and Azure", cloudcommon.MaxClusterNameLength)
+			}
 		}
 		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
