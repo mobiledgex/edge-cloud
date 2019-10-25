@@ -49,7 +49,6 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 					name = deployment.ObjectMeta.Name
 				} else {
 					name = daemonset.ObjectMeta.Name
-
 				}
 				log.DebugLog(log.DebugLevelMexos, "get pods", "name", name)
 
