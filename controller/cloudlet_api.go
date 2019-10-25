@@ -377,7 +377,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if !cloudletApi.cache.Get(key, &cloudlet) {
 			return
 		}
-		log.SpanLog(ctx, log.DebugLevelApi, "ASHCHECK: CloudletInfo", "curState", curState, "cloudletState", cloudlet.State)
 
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
