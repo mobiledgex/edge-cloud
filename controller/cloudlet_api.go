@@ -569,8 +569,11 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return err
 	}
 
+	cctx := DefCallContext()
+	cctx.SetOverride(&in.CrmOverride)
+
 	cloudletUpgraded := false
-	if in.Upgrade {
+	if !ignoreCRMState(cctx) && in.Upgrade {
 		if in.DeploymentLocal {
 			return fmt.Errorf("upgrade is not supported for local deployments")
 		}
@@ -609,7 +612,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 		in.Upgrade = false
 		cur.CopyInFields(in)
-		if cloudletUpgraded {
+		if ignoreCRMState(cctx) || cloudletUpgraded {
 			cur.State = edgeproto.TrackedState_READY
 		}
 		s.store.STMPut(stm, cur)
