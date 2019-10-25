@@ -140,6 +140,17 @@ func (s *CloudletInfoApi) checkCloudletReady(key *edgeproto.CloudletKey) error {
 		return fmt.Errorf("Cloudlet %v is in failed upgrade state, please upgrade it manually", key)
 	}
 
+	upgradeReq, err := isCloudletUpgradeRequired(key)
+	if err != nil {
+		if !*testMode {
+			return fmt.Errorf("Cloudlet %v version check failed: %v", key, err)
+		}
+	}
+	// Ignore cloudlet version check in testMode
+	if !*testMode && upgradeReq {
+		return fmt.Errorf("Cloudlet %v version is outdated, please upgrade it", key)
+	}
+
 	// For testing, state is Errors due to openstack limits not found.
 	// Errors state does indicate it is online, so consider it ok.
 	state := s.getCloudletState(key)

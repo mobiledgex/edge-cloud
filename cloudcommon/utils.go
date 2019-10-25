@@ -43,16 +43,26 @@ func GetDockerBaseImageVersion() (string, error) {
 	return out[1], nil
 }
 
-func GetAvailablePort() (int, error) {
+func GetAvailablePort(ipaddr string) (string, error) {
+	// Get non-conflicting port only if actual port is 0
+	ipobj := strings.Split(ipaddr, ":")
+	if len(ipobj) != 2 {
+		return "", fmt.Errorf("invalid address format")
+	}
+	if ipobj[1] != "0" {
+		return ipaddr, nil
+	}
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
-		return 0, err
+		return "", fmt.Errorf("unable to get TCP port: %v", err)
 	}
 
 	l, err := net.ListenTCP("tcp", addr)
 	if err != nil {
-		return 0, err
+		return "", fmt.Errorf("unable to get TCP port: %v", err)
 	}
 	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port, nil
+	port := l.Addr().(*net.TCPAddr).Port
+
+	return fmt.Sprintf("%s:%d", ipobj[0], port), nil
 }
