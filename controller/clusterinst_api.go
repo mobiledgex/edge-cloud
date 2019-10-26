@@ -434,7 +434,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE && !ignoreTransient(cctx, in.State) {
+		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
 			if in.State == edgeproto.TrackedState_DELETE_ERROR {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
 				cb.Send(&edgeproto.Result{Message: "Use CreateClusterInst to rebuild, and try again"})
