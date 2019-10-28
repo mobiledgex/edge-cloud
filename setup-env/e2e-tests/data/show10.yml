@@ -367,7 +367,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51002
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-2
@@ -382,7 +381,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51005
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-5
@@ -397,7 +395,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51006
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-6
@@ -412,7 +409,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51009
   flavor:
     name: x1.tiny
   physicalname: azure-cloud-9
@@ -427,7 +423,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51010
   flavor:
     name: x1.tiny
   physicalname: gcp-cloud-10
@@ -442,7 +437,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51001
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-1
@@ -457,7 +451,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51003
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-3
@@ -472,7 +465,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51004
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-4
@@ -487,7 +479,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51007
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-7
@@ -502,7 +493,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51008
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-8

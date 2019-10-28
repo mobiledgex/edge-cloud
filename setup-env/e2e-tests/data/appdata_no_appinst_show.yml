@@ -96,7 +96,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51101
   flavor:
     name: x1.small
   physicalname: dmuus-cloud-1
@@ -111,7 +110,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51102
   flavor:
     name: x1.small
   physicalname: dmuus-cloud-2
@@ -126,7 +124,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51104
   flavor:
     name: x1.small
   physicalname: azure-cloud-4
@@ -141,7 +138,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51105
   flavor:
     name: x1.small
   physicalname: gcp-cloud-5

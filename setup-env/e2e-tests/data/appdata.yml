@@ -73,7 +73,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51101
 - key:
     operatorkey:
       name: dmuus
@@ -84,7 +83,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51102
 - key:
     operatorkey:
       name: dmuus
@@ -95,7 +93,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51103
 - key:
     operatorkey:
       name: azure
@@ -106,7 +103,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51104
 - key:
     operatorkey:
       name: gcp
@@ -117,7 +113,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51105
 
 apps:
 - key:
