@@ -79,7 +79,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51002
   flavor:
     name: x1.medium
   physicalname: dmuus-cloud-2
@@ -94,7 +93,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51001
   flavor:
     name: x1.medium
   physicalname: dmuus-cloud-1

@@ -50,23 +50,28 @@ func NewControllerData(pf platform.Platform) *ControllerData {
 	cd.ClusterInstCache.SetUpdatedCb(cd.clusterInstChanged)
 	cd.AppInstCache.SetUpdatedCb(cd.appInstChanged)
 	cd.FlavorCache.SetUpdatedCb(cd.flavorChanged)
+	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
 	return cd
 }
 
 // GatherCloudletInfo gathers all the information about the Cloudlet that
 // the controller needs to be able to manage it.
-func (cd *ControllerData) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) {
+func (cd *ControllerData) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error {
 	log.DebugLog(log.DebugLevelMexos, "attempting to gather cloudlet info")
 	err := cd.platform.GatherCloudletInfo(ctx, info)
 	if err != nil {
-		str := fmt.Sprintf("get limits failed: %s", err)
-		info.Errors = append(info.Errors, str)
-		info.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
-	} else {
-		// Is the cloudlet ready at this point?
-		info.Errors = nil
-		info.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-		log.DebugLog(log.DebugLevelMexos, "cloudlet state ready", "info", info)
+		return fmt.Errorf("get limits failed: %s", err)
+	}
+	return nil
+}
+
+// CleanupOldCloudlet cleans up old version of same cloudlet
+func (cd *ControllerData) CleanupOldCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) {
+	log.DebugLog(log.DebugLevelMexos, "attempting to cleanup outdated cloudlet services", "key", cloudlet.Key)
+
+	err := cd.platform.CleanupCloudlet(ctx, cloudlet, &cloudlet.Config, updateCallback)
+	if err != nil {
+		log.InfoLog("can't cleanup old cloudlet", "key", cloudlet.Key, "err", err)
 	}
 }
 
@@ -436,4 +441,58 @@ func (cd *ControllerData) appInstInfoCheckState(ctx context.Context, key *edgepr
 		}
 		return old, false
 	})
+}
+
+func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
+	log.DebugLog(log.DebugLevelMexos, "cloudlet changed", "key", new.Key)
+
+	info := edgeproto.Cloudlet{}
+	// Check current thread state. See comment in clusterInstChanged.
+	if infoFound := cd.CloudletCache.Get(&new.Key, &info); infoFound {
+		if info.State == edgeproto.TrackedState_CREATING || info.State == edgeproto.TrackedState_UPDATING || info.State == edgeproto.TrackedState_DELETING {
+			return
+		}
+	}
+
+	// do request
+	log.DebugLog(log.DebugLevelMexos, "cloudletChanged", "cloudlet", new)
+	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
+		switch updateType {
+		case edgeproto.UpdateTask:
+			cd.CloudletInfoCache.SetStatusTask(ctx, &new.Key, value)
+		case edgeproto.UpdateStep:
+			cd.CloudletInfoCache.SetStatusStep(ctx, &new.Key, value)
+		}
+	}
+
+	if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+		cloudletInfo := edgeproto.CloudletInfo{}
+		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
+		if !found {
+			log.DebugLog(log.DebugLevelMexos, "CloudletInfo not found for cloudlet", "key", new.Key)
+			return
+		}
+		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+			// Cloudlet is already upgrading
+			return
+		}
+
+		// Reset old Status, as we will start upgrading cloudlet now
+		cd.CloudletInfoCache.StatusReset(ctx, &new.Key)
+
+		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE
+		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+
+		err := cd.platform.UpdateCloudlet(ctx, new, &new.Config, updateCloudletCallback)
+		if err != nil {
+			errstr := fmt.Sprintf("Update Cloudlet failed: %v", err)
+			log.InfoLog("can't update cloudlet", "error", errstr, "key", new.Key)
+
+			cloudletInfo.Errors = append(cloudletInfo.Errors, errstr)
+			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
+			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+			return
+		}
+		log.DebugLog(log.DebugLevelMexos, "updated cloudlet", "cloudlet", new)
+	}
 }
