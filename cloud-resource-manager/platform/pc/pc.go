@@ -35,17 +35,17 @@ type Sudo bool
 var SudoOn Sudo = true
 
 // NoSudo means dont run in sudo mode
-var NoSudo Sudo = true
+var NoSudo Sudo = false
 
 // Some utility functions
 
 // WriteFile writes the file contents optionally in sudo mode
 func WriteFile(client PlatformClient, file string, contents string, kind string, sudo Sudo) error {
-	log.DebugLog(log.DebugLevelMexos, "write file", "kind", kind)
+	log.DebugLog(log.DebugLevelMexos, "write file", "kind", kind, "sudo", sudo)
 
 	cmd := fmt.Sprintf("cat <<EOF > %s \n%s\nEOF", file, contents)
 	if sudo {
-		cmd = fmt.Sprintf("sudo bash -c '%s'", cmd)
+		cmd = fmt.Sprintf("sudo bash -c %s", cmd)
 	}
 
 	out, err := client.Output(cmd)
