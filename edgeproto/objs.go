@@ -18,6 +18,8 @@ var ErrEdgeApiFlavorNotFound = errors.New("Specified flavor not found")
 var ErrEdgeApiAppNotFound = errors.New("Specified app not found")
 var ErrEdgeApiAppInstNotFound = errors.New("Specified app instance not found")
 
+var AutoScaleMaxNodes uint32 = 10
+
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
 	Operators           []Operator           `yaml:"operators"`
@@ -87,7 +89,7 @@ func (a *ApplicationData) Sort() {
 func (key *DeveloperKey) ValidateKey() error {
 	if err := util.ValidObjName(key.Name); err != nil {
 		errstring := err.Error()
-		//lowercase the first letter of the error message
+		// lowercase the first letter of the error message
 		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
 		return fmt.Errorf("Developer " + errstring)
 	}
@@ -323,7 +325,7 @@ func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
 func (key *PolicyKey) ValidateKey() error {
 	if err := util.ValidObjName(key.Developer); err != nil {
 		errstring := err.Error()
-		//lowercase the first letter of the error message
+		// lowercase the first letter of the error message
 		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
 		return fmt.Errorf("Developer " + errstring)
 	}
@@ -340,8 +342,8 @@ func (s *AutoScalePolicy) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
-	if s.MaxNodes > 10 {
-		return errors.New("Max nodes cannot exceed 10")
+	if s.MaxNodes > AutoScaleMaxNodes {
+		return fmt.Errorf("Max nodes cannot exceed %d", AutoScaleMaxNodes)
 	}
 	if s.MinNodes < 1 {
 		// Taint on master is not updated during UpdateClusterInst
