@@ -62,6 +62,9 @@ func NodeHideTags(in *edgeproto.Node) {
 	if _, found := tags["nocmp"]; found {
 		in.Hostname = ""
 	}
+	if _, found := tags["nocmp"]; found {
+		in.ImageVersion = ""
+	}
 }
 
 var NodeApiCmd edgeproto.NodeApiClient
@@ -234,6 +237,7 @@ var NodeOptionalArgs = []string{
 	"buildhead",
 	"buildauthor",
 	"hostname",
+	"imageversion",
 }
 var NodeAliasArgs = []string{}
 var NodeComments = map[string]string{
@@ -246,5 +250,6 @@ var NodeComments = map[string]string{
 	"buildhead":                        "Build Head Version",
 	"buildauthor":                      "Build Author",
 	"hostname":                         "Hostname",
+	"imageversion":                     "Docker edge-cloud base image version",
 }
 var NodeSpecialArgs = map[string]string{}

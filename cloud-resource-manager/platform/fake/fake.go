@@ -3,6 +3,7 @@ package fake
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
@@ -110,5 +111,36 @@ func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 		return err
 	}
 
+	return nil
+}
+
+func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+	// Doesn't do actual upgrade, but good enough
+	// for testing controller side code
+	log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet upgrade")
+
+	// Sleep is required to avoid race condition
+	// As crmservice bringup happens in an instant here,
+	// it might not give time for controller to get in appropriate state
+	time.Sleep(5 * time.Second)
+
+	updateCallback(edgeproto.UpdateTask, "Starting new CRMServer")
+	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet create failed", "err", err)
+		return err
+	}
+	return nil
+}
+
+func (s *Platform) CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+	// Stops outdated cloudlet service running locally
+	// in this case, the caller is old crm
+	process, err := os.FindProcess(os.Getppid())
+	if err == nil {
+		updateCallback(edgeproto.UpdateTask, "Deleting old CRMServer")
+		process.Signal(os.Interrupt)
+		log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet cleaned up successfully")
+	}
 	return nil
 }

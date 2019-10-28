@@ -81,6 +81,13 @@ var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
 func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "start crmserver", "cloudlet", cloudlet.Key)
 
+	// Get non-conflicting port for NotifySrvAddr if actual port is 0
+	newAddr, err := GetAvailablePort(cloudlet.NotifySrvAddr)
+	if err != nil {
+		return err
+	}
+	cloudlet.NotifySrvAddr = newAddr
+
 	trackedProcess[cloudlet.Key] = nil
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
 	if err != nil {
@@ -167,9 +174,12 @@ func GetCloudletLog(ctx context.Context, key *edgeproto.CloudletKey) (string, er
 
 func CrmServiceWait(key edgeproto.CloudletKey) error {
 	if _, ok := trackedProcess[key]; ok {
-		trackedProcess[key].Wait()
+		err := trackedProcess[key].Wait()
+		if err != nil && strings.Contains(err.Error(), "Wait was already called") {
+			return nil
+		}
 		delete(trackedProcess, key)
-		return fmt.Errorf("Crm Service Stopped")
+		return fmt.Errorf("Crm Service Stopped: %v", err)
 	}
 	return nil
 }

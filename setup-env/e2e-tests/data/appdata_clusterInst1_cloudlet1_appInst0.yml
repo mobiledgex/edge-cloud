@@ -62,7 +62,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51001
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-1

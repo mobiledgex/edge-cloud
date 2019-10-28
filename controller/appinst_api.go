@@ -618,6 +618,8 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 		return false, err
 	}
 
+	cloudletErr := cloudletInfoApi.checkCloudletReady(&key.ClusterInstKey.CloudletKey)
+
 	var app edgeproto.App
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -647,6 +649,10 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 		if ignoreCRM(cctx) {
 			crmUpdateRequired = false
 		} else {
+			// check cloudlet state before updating
+			if crmUpdateRequired && cloudletErr != nil {
+				return cloudletErr
+			}
 			curr.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
 		s.store.STMPut(stm, &curr)

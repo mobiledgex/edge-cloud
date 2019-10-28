@@ -50,6 +50,15 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	if _, found := tags["nocmp"]; found {
 		in.DeploymentLocal = false
 	}
+	if _, found := tags["nocmp"]; found {
+		in.NotifySrvAddr = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Upgrade = false
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Config = edgeproto.PlatformConfig{}
+	}
 }
 
 var CloudletApiCmd edgeproto.CloudletApiClient
@@ -772,10 +781,10 @@ var CloudletOptionalArgs = []string{
 	"crmoverride",
 	"deploymentlocal",
 	"platformtype",
-	"notifysrvaddr",
 	"flavor.name",
 	"physicalname",
 	"envvar",
+	"upgrade",
 }
 var CloudletAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -810,6 +819,17 @@ var CloudletComments = map[string]string{
 	"flavor.name":                         "Flavor name",
 	"physicalname":                        "Physical infrastructure cloudlet name",
 	"envvar":                              "Single Key-Value pair of env var to be passed to CRM",
+	"upgrade":                             "Upgrade cloudlet services",
+	"config.registrypath":                 "Path to Docker registry holding edge-cloud image",
+	"config.imagepath":                    "Path to platform base image",
+	"config.notifyctrladdrs":              "Address of controller notify port (can be multiple of these)",
+	"config.vaultaddr":                    "Vault address",
+	"config.tlscertfile":                  "TLS cert file",
+	"config.crmroleid":                    "Vault role ID for CRM",
+	"config.crmsecretid":                  "Vault secret ID for CRM",
+	"config.platformtag":                  "Tag of edge-cloud image",
+	"config.testmode":                     "Internal Test Flag",
+	"config.span":                         "Span string",
 }
 var CloudletSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -866,7 +886,7 @@ var CloudletInfoAliasArgs = []string{
 var CloudletInfoComments = map[string]string{
 	"operator":      "Company or Organization name of the operator",
 	"name":          "Name of the cloudlet",
-	"state":         "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent",
+	"state":         "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
 	"notifyid":      "Id of client assigned by server (internal use only)",
 	"controller":    "Connected controller unique id",
 	"osmaxram":      "Maximum Ram in MB on the Cloudlet",
