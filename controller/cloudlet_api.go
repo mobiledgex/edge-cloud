@@ -337,7 +337,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 }
 
 func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, updateCallback edgeproto.CacheUpdateCallback) error {
-	curState := edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
 	lastStatusId := uint32(0)
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
@@ -372,11 +371,14 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		return err
 	}
 
-	checkState := func(curState edgeproto.CloudletState) {
+	checkState := func(cloudletInfo *edgeproto.CloudletInfo) {
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.cache.Get(key, &cloudlet) {
 			return
 		}
+
+		curState := cloudletInfo.State
+		cloudletVersion := cloudletInfo.Version
 
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
@@ -397,6 +399,15 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			}
 		case edgeproto.TrackedState_UPDATING:
 			// crm upgrading itself
+			// Make sure that READY state comes from new cloudlet
+			if cloudletVersion == "" {
+				log.SpanLog(ctx, log.DebugLevelApi, "Ignoring cloudlet validity check as cloudlet version is missing")
+			} else if *versionTag == "" {
+				log.SpanLog(ctx, log.DebugLevelApi, "Ignoring cloudlet validity check as controller version is missing")
+			} else if !*testMode && *versionTag != cloudletVersion {
+				log.SpanLog(ctx, log.DebugLevelApi, "Ignoring cloudlet info from old cloudlet", "cloudletVersion", cloudletVersion, "controllerVersion", *versionTag)
+				return
+			}
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 				done <- true
 			}
@@ -408,7 +419,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if !cloudletInfoApi.cache.Get(key, &info) {
 			return
 		}
-		curState = info.State
 
 		if info.Status.TaskNumber == 0 {
 			lastStatusId = 0
@@ -424,15 +434,14 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			}
 			lastStatusId = info.Status.TaskNumber
 		}
-		checkState(curState)
+		checkState(&info)
 	})
 
 	// After setting up watch, check current state,
 	// as it may have already changed to target state
 	info = edgeproto.CloudletInfo{}
 	if cloudletInfoApi.cache.Get(key, &info) {
-		curState = info.State
-		checkState(curState)
+		checkState(&info)
 	}
 
 	for {
@@ -467,7 +476,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			updateCallback(edgeproto.UpdateTask, out)
 			err = errors.New(out)
 		case <-time.After(timeout):
-			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready") //%s", targetState)
+			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
 			updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
 		}
 		cancel()

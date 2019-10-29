@@ -878,6 +878,7 @@ var CloudletInfoOptionalArgs = []string{
 	"status.maxtasks",
 	"status.taskname",
 	"status.stepname",
+	"version",
 }
 var CloudletInfoAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -897,6 +898,7 @@ var CloudletInfoComments = map[string]string{
 	"flavors.vcpus": "Number of VCPU cores on the Cloudlet",
 	"flavors.ram":   "Ram in MB on the Cloudlet",
 	"flavors.disk":  "Amount of disk in GB on the Cloudlet",
+	"version":       "Cloudlet version",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors": "StringArray",

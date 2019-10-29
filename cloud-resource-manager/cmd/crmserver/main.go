@@ -127,7 +127,13 @@ func main() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
 
+		cloudletVersion, err := cloudcommon.GetDockerBaseImageVersion()
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "unable to fetch docker image version", "err", err)
+		}
+
 		myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_INIT
+		myCloudlet.Version = cloudletVersion
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudlet.Key)
@@ -153,7 +159,7 @@ func main() {
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
 		updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
-		err := controllerData.GatherCloudletInfo(ctx, &myCloudlet)
+		err = controllerData.GatherCloudletInfo(ctx, &myCloudlet)
 
 		if err != nil {
 			myCloudlet.Errors = append(myCloudlet.Errors, err.Error())
@@ -177,12 +183,7 @@ func main() {
 		myNode.BuildHead = version.BuildHead
 		myNode.BuildAuthor = version.BuildAuthor
 		myNode.Hostname = cloudcommon.Hostname()
-		vers, err := cloudcommon.GetDockerBaseImageVersion()
-		if err == nil {
-			myNode.ImageVersion = vers
-		} else {
-			log.SpanLog(ctx, log.DebugLevelInfo, "unable to fetch docker image version", "err", err)
-		}
+		myNode.ImageVersion = cloudletVersion
 
 		controllerData.NodeCache.Update(ctx, &myNode, 0)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
