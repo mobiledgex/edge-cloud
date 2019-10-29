@@ -40,9 +40,16 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 	}
 	for ii, _ := range objs {
 		for {
-			deployment, ok := objs[ii].(*appsv1.Deployment)
-			if ok {
-				name := deployment.ObjectMeta.Name
+			deployment, isDeployment := objs[ii].(*appsv1.Deployment)
+			daemonset, isDaemonset := objs[ii].(*appsv1.DaemonSet)
+
+			if isDeployment || isDaemonset {
+				var name string
+				if isDeployment {
+					name = deployment.ObjectMeta.Name
+				} else {
+					name = daemonset.ObjectMeta.Name
+				}
 				log.DebugLog(log.DebugLevelMexos, "get pods", "name", name)
 
 				cmd := fmt.Sprintf("%s kubectl get pods --no-headers --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
@@ -100,12 +107,12 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 				}
 				if waitFor == WaitDeleted {
 					if podCount == 0 {
-						log.DebugLog(log.DebugLevelMexos, "all pods gone", "deployment name", deployment.ObjectMeta.Name)
+						log.DebugLog(log.DebugLevelMexos, "all pods gone", "name", name)
 						break
 					}
 				} else {
 					if podCount == runningCount {
-						log.DebugLog(log.DebugLevelMexos, "all pods up", "deployment name", deployment.ObjectMeta.Name)
+						log.DebugLog(log.DebugLevelMexos, "all pods up", "name", name)
 						break
 					}
 				}
@@ -130,7 +137,7 @@ func createOrUpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edge
 	if err != nil {
 		return err
 	}
-	mf, err = MergeEnvVars(mf, app.Configs)
+	mf, err = MergeEnvVars(mf, app.Configs, names.ImagePullSecret)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "failed to merge env vars", "error", err)
 	}

@@ -84,22 +84,28 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 	s.sendrecv.updateCloudletKey(notice.Action, &buf.Key)
 
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
-		// trigger send of all objects related to cloudlet
-		if s.sendrecv.cloudletSend != nil {
-			s.sendrecv.cloudletSend.Update(ctx, &buf.Key, nil)
-		}
-		if s.sendrecv.clusterInstSend != nil {
-			clusterInsts := make(map[edgeproto.ClusterInstKey]struct{})
-			s.sendrecv.clusterInstSend.handler.GetForCloudlet(&buf.Key, clusterInsts)
-			for k, _ := range clusterInsts {
-				s.sendrecv.clusterInstSend.Update(ctx, &k, nil)
+		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
+			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
+			// trigger send of cloudlet details to cloudlet
+			if s.sendrecv.cloudletSend != nil {
+				s.sendrecv.cloudletSend.Update(ctx, &buf.Key, nil)
 			}
 		}
-		if s.sendrecv.appInstSend != nil {
-			appInsts := make(map[edgeproto.AppInstKey]struct{})
-			s.sendrecv.appInstSend.handler.GetForCloudlet(&buf.Key, appInsts)
-			for k, _ := range appInsts {
-				s.sendrecv.appInstSend.Update(ctx, &k, nil)
+		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			// trigger send of all objects related to cloudlet
+			if s.sendrecv.clusterInstSend != nil {
+				clusterInsts := make(map[edgeproto.ClusterInstKey]struct{})
+				s.sendrecv.clusterInstSend.handler.GetForCloudlet(&buf.Key, clusterInsts)
+				for k, _ := range clusterInsts {
+					s.sendrecv.clusterInstSend.Update(ctx, &k, nil)
+				}
+			}
+			if s.sendrecv.appInstSend != nil {
+				appInsts := make(map[edgeproto.AppInstKey]struct{})
+				s.sendrecv.appInstSend.handler.GetForCloudlet(&buf.Key, appInsts)
+				for k, _ := range appInsts {
+					s.sendrecv.appInstSend.Update(ctx, &k, nil)
+				}
 			}
 		}
 	}

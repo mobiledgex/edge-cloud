@@ -178,13 +178,17 @@ message Cloudlet {
   // Platform type
   PlatformType platform_type = 15;
   // Address for the CRM notify listener to run on
-  string notify_srv_addr = 16;
+  string notify_srv_addr = 16 [(protogen.hidetag) = "nocmp"];
   // Min system resource requirements for platform
   FlavorKey flavor = 17 [(gogoproto.nullable) = false];
   // Physical infrastructure cloudlet name
   string physical_name = 18;
   // Single Key-Value pair of env var to be passed to CRM
   map<string, string> env_var = 19;
+  // Upgrade cloudlet services
+  bool upgrade = 20 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Platform Config Info
+  PlatformConfig config = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -194,7 +198,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status,Config,NotifySrvAddr";
   option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }
 
@@ -249,6 +253,10 @@ enum CloudletState {
   CLOUDLET_STATE_OFFLINE = 3;
   // Cloudlet is not present
   CLOUDLET_STATE_NOT_PRESENT = 4;
+  // Cloudlet is initializing
+  CLOUDLET_STATE_INIT = 5;
+  // Cloudlet is upgrading
+  CLOUDLET_STATE_UPGRADE = 6;
 }
 
 // Flavor details from the Cloudlet

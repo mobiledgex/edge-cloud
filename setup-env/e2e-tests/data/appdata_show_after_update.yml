@@ -92,7 +92,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51101
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-1
@@ -106,7 +105,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51102
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-2
@@ -120,7 +118,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51103
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-3
@@ -134,7 +131,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51104
   flavor:
     name: DefaultPlatformFlavor
   physicalname: azure-cloud-4
@@ -148,7 +144,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  notifysrvaddr: 127.0.0.1:51105
   flavor:
     name: DefaultPlatformFlavor
   physicalname: gcp-cloud-5

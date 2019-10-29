@@ -23,6 +23,7 @@ type KubeNames struct {
 	KconfName         string
 	KconfEnv          string
 	DeploymentType    string
+	ImagePullSecret   string
 }
 
 func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
