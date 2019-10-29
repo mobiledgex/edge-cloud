@@ -51,6 +51,8 @@ var controllerData *crmutil.ControllerData
 var notifyClient *notify.Client
 var platform pf.Platform
 
+const ControllerTimeout = 20 * time.Second
+
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
@@ -128,20 +130,17 @@ func main() {
 		myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_INIT
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
 
-		var cloudlet edgeproto.Cloudlet
-		// Fetch cloudlet cache from controller
-		// Below also ensures that crm is able to communicate to controller via Notify Channel
-		found := false
 		log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudlet.Key)
-		for i := 0; i < 1000; i++ {
-			if controllerData.CloudletCache.Get(&myCloudlet.Key, &cloudlet) {
-				found = true
-				break
+		// Wait for cloudlet cache from controller
+		// This ensures that crm is able to communicate to controller via Notify Channel
+		var cloudlet edgeproto.Cloudlet
+		select {
+		case <-controllerData.ControllerWait:
+			if !controllerData.CloudletCache.Get(&myCloudlet.Key, &cloudlet) {
+				log.FatalLog("failed to fetch cloudlet cache from controller")
 			}
-			time.Sleep(10 * time.Millisecond)
-		}
-		if !found {
-			log.FatalLog("failed to fetch cloudlet cache from controller")
+		case <-time.After(ControllerTimeout):
+			log.FatalLog("Timed out waiting for cloudlet cache from controller")
 		}
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
@@ -167,7 +166,7 @@ func main() {
 			// Is the cloudlet ready at this point?
 			myCloudlet.Errors = nil
 			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-			log.DebugLog(log.DebugLevelMexos, "cloudlet state ready", "myCloudlet", myCloudlet)
+			log.SpanLog(ctx, log.DebugLevelMexos, "cloudlet state ready", "myCloudlet", myCloudlet)
 		}
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "sending cloudlet info cache update")
@@ -218,7 +217,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physica
 		PhysicalName: physicalName,
 		VaultAddr:    vaultAddr,
 		TestMode:     *testMode}
-	log.DebugLog(log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
+	log.SpanLog(ctx, log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
 	err := platform.Init(ctx, &pc, updateCallback)
 	return err
 }
