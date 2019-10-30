@@ -281,7 +281,7 @@ apps:
   accessports: tcp:9090
   defaultflavor:
     name: x1.medium
-  annotations: version=6.7.3
+  annotations: version=7.1.1
   deployment: helm
   delopt: AutoDelete
   configs:
@@ -298,7 +298,30 @@ apps:
           ## https://github.com/coreos/prometheus-operator/issues/926
           ##
           https: true
+      defaultRules:
+        create: true
+        rules:
+          alertmanager: false
+          etcd: false
+          general: false
+          k8s: true
+          kubeApiserver: false
+          kubePrometheusNodeAlerting: false
+          kubePrometheusNodeRecording: true
+          kubernetesAbsent: true
+          kubernetesApps: true
+          kubernetesResources: true
+          kubernetesStorage: true
+          kubernetesSystem: true
+          kubeScheduler: true
+          network: true
+          node: true
+          prometheus: true
+          prometheusOperator: true
+          time: true
       grafana:
+        enabled: false
+      alertmanager:
         enabled: false
   internalports: true
 
