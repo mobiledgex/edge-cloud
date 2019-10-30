@@ -1,6 +1,8 @@
 package edgeproto
 
 import (
+	"fmt"
+
 	"github.com/mobiledgex/edge-cloud/log"
 	context "golang.org/x/net/context"
 )
@@ -49,15 +51,19 @@ func (s *ClusterInstCache) GetForCloudlet(key *CloudletKey, clusterInsts map[Clu
 	}
 }
 
-func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey, state TrackedState) {
+func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey, state TrackedState) error {
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
+	}
+	if err := StateConflict(info.State, state); err != nil {
+		return err
 	}
 	info.Errors = nil
 	info.State = state
 	info.Status = StatusInfo{}
 	s.Update(ctx, &info, 0)
+	return nil
 }
 
 func (s *ClusterInstInfoCache) SetStatusTask(ctx context.Context, key *ClusterInstKey, taskName string) {
@@ -106,15 +112,51 @@ func (s *ClusterInstInfoCache) SetError(ctx context.Context, key *ClusterInstKey
 	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state TrackedState) {
+// If CRM crashes or reconnects to controller, controller will resend
+// current state. This is needed to:
+// -restart actions that were lost due to a crash
+// -update cache for dependent objects (AppInst looks up ClusterInst from
+// cache).
+// If it was a disconnect and not a restart, there may already be a
+// thread in progress. To prevent multiple conflicting threads, check
+// the state which can tell us if a thread is in progress.
+func StateConflict(oldState, newState TrackedState) error {
+	busyStates := []TrackedState{
+		TrackedState_CREATING,
+		TrackedState_UPDATING,
+		TrackedState_DELETING,
+	}
+
+	oldBusy := false
+	newBusy := false
+	for _, state := range busyStates {
+		if oldState == state {
+			oldBusy = true
+		}
+		if newState == state {
+			newBusy = true
+		}
+	}
+	if oldBusy && newBusy {
+		return fmt.Errorf("conflicting state: %s", oldState)
+	}
+	return nil
+}
+
+func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state TrackedState) error {
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
 	}
+	if err := StateConflict(info.State, state); err != nil {
+		return err
+	}
 	info.Errors = nil
 	info.State = state
 	info.Status = StatusInfo{}
+
 	s.Update(ctx, &info, 0)
+	return nil
 }
 
 func (s *AppInstInfoCache) SetStateRuntime(ctx context.Context, key *AppInstKey, state TrackedState, rt *AppInstRuntime) {

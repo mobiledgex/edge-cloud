@@ -46,7 +46,9 @@ var (
 )
 
 const (
-	PlatformInitTimeout = 5 * time.Minute
+	PlatformInitTimeout      = 5 * time.Minute
+	Outdated            bool = true
+	Current             bool = false
 )
 
 type updateCloudletCallback struct {
@@ -371,6 +373,17 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		return err
 	}
 
+	markCloudletInfo := func(outdated bool) error {
+		curInfo := edgeproto.CloudletInfo{}
+		if cloudletInfoApi.cache.Get(key, &curInfo) {
+			curInfo.Outdated = outdated
+			cloudletInfoApi.UpdateAll(ctx, &curInfo)
+		} else {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		return nil
+	}
+
 	checkState := func(cloudletInfo *edgeproto.CloudletInfo) {
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.cache.Get(key, &cloudlet) {
@@ -455,8 +468,13 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			// transition from UPDATE_REQUESTED -> UPDATING state, as crm is upgrading
 			err := updateCloudletState(edgeproto.TrackedState_UPDATING)
 			if err == nil {
-				// crm started upgrading, now wait for it to be Ready
-				continue
+				// Mark cloudletInfo to be outdated. This will be used to
+				// avoid sending updates to outdated cloudlet
+				err = markCloudletInfo(Outdated)
+				if err == nil {
+					// crm started upgrading, now wait for it to be Ready
+					continue
+				}
 			}
 		case <-failed:
 			if cloudletInfoApi.cache.Get(key, &info) {
@@ -479,6 +497,11 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
 			updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
 		}
+
+		// Either upgrade failed to succeeded. In either case,
+		// mark cloudletInfo as Current
+		markCloudletInfo(Current)
+
 		cancel()
 		break
 	}

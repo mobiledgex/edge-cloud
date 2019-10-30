@@ -81,7 +81,13 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 	if !s.sendrecv.filterCloudletKeys {
 		return
 	}
-	s.sendrecv.updateCloudletKey(notice.Action, &buf.Key)
+	cloudletInfo := edgeproto.CloudletInfo{}
+	if s.sendrecv.cloudletInfoSend.handler.Get(&buf.Key, &cloudletInfo) && cloudletInfo.Outdated {
+		// Cloudlet is outdated, do not send any updates to it
+		s.sendrecv.updateCloudletKey(edgeproto.NoticeAction_DELETE, &buf.Key)
+	} else {
+		s.sendrecv.updateCloudletKey(notice.Action, &buf.Key)
+	}
 
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
 		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
