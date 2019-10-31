@@ -86,6 +86,20 @@ func (s *ClusterInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[ed
 	return static
 }
 
+// Checks if there is some action in progress by ClusterInst on the cloudlet
+func (s *ClusterInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key, val := range s.cache.Objs {
+		if key.CloudletKey.Matches(in) {
+			if edgeproto.IsTransientState(val.State) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -543,15 +557,7 @@ func crmTransitionOk(cur edgeproto.TrackedState, next edgeproto.TrackedState) bo
 func ignoreTransient(cctx *CallContext, state edgeproto.TrackedState) bool {
 	if cctx.Override == edgeproto.CRMOverride_IGNORE_TRANSIENT_STATE ||
 		cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
-		if state == edgeproto.TrackedState_CREATING ||
-			state == edgeproto.TrackedState_CREATE_REQUESTED ||
-			state == edgeproto.TrackedState_UPDATE_REQUESTED ||
-			state == edgeproto.TrackedState_DELETE_REQUESTED ||
-			state == edgeproto.TrackedState_UPDATING ||
-			state == edgeproto.TrackedState_DELETING ||
-			state == edgeproto.TrackedState_DELETE_PREPARE {
-			return true
-		}
+		return edgeproto.IsTransientState(state)
 	}
 	return false
 }

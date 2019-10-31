@@ -297,8 +297,6 @@ message CloudletInfo {
   StatusInfo status = 11 [(gogoproto.nullable) = false];
   // Cloudlet version
   string version = 12;
-  // Cloudlet outdated
-  bool outdated = 13;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

@@ -26,6 +26,10 @@ func (s *AppInstSend) UpdateOk(ctx context.Context, key *edgeproto.AppInstKey) b
 		if !s.sendrecv.hasCloudletKey(&key.ClusterInstKey.CloudletKey) {
 			return false
 		}
+		if isCloudletUpgrading(&key.ClusterInstKey.CloudletKey, s.sendrecv.cloudletSend) {
+			// Cloudlet is upgrading, do not send any updates to it.
+			return false
+		}
 		// also trigger sending app
 		if s.sendrecv.appSend != nil {
 			s.sendrecv.appSend.updateInternal(ctx, &key.AppKey)
@@ -48,6 +52,10 @@ func (s *ClusterInstSend) UpdateOk(ctx context.Context, key *edgeproto.ClusterIn
 		if !s.sendrecv.hasCloudletKey(&key.CloudletKey) {
 			return false
 		}
+		if isCloudletUpgrading(&key.CloudletKey, s.sendrecv.cloudletSend) {
+			// Cloudlet is upgrading, do not send any updates to it.
+			return false
+		}
 	}
 	return true
 }
@@ -55,6 +63,10 @@ func (s *ClusterInstSend) UpdateOk(ctx context.Context, key *edgeproto.ClusterIn
 func (s *ExecRequestSend) UpdateOk(ctx context.Context, msg *edgeproto.ExecRequest) bool {
 	if s.sendrecv.filterCloudletKeys {
 		if !s.sendrecv.hasCloudletKey(&msg.AppInstKey.ClusterInstKey.CloudletKey) {
+			return false
+		}
+		if isCloudletUpgrading(&msg.AppInstKey.ClusterInstKey.CloudletKey, s.sendrecv.cloudletSend) {
+			// Cloudlet is upgrading, do not send any updates to it.
 			return false
 		}
 	}
@@ -77,17 +89,23 @@ func (s *ClusterInstSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
 }
 
+func isCloudletUpgrading(key *edgeproto.CloudletKey, cloudletSend *CloudletSend) bool {
+	cloudlet := edgeproto.Cloudlet{}
+	if cloudletSend != nil &&
+		cloudletSend.handler.Get(key, &cloudlet) &&
+		(cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
+			cloudlet.State == edgeproto.TrackedState_UPDATING) {
+		return true
+	}
+	return false
+}
+
 func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notice, buf *edgeproto.CloudletInfo, peerAddr string) {
 	if !s.sendrecv.filterCloudletKeys {
 		return
 	}
-	cloudletInfo := edgeproto.CloudletInfo{}
-	if s.sendrecv.cloudletInfoSend.handler.Get(&buf.Key, &cloudletInfo) && cloudletInfo.Outdated {
-		// Cloudlet is outdated, do not send any updates to it
-		s.sendrecv.updateCloudletKey(edgeproto.NoticeAction_DELETE, &buf.Key)
-	} else {
-		s.sendrecv.updateCloudletKey(notice.Action, &buf.Key)
-	}
+
+	s.sendrecv.updateCloudletKey(notice.Action, &buf.Key)
 
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
 		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
@@ -99,6 +117,11 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 		}
 		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 			// trigger send of all objects related to cloudlet
+			//
+			// Post cloudlet upgrade, when CLOUDLET_STATE_READY state
+			// is seen from upgraded CRM, then following will trigger
+			// send of all objects (which includes objects missed
+			// during upgrade)
 			if s.sendrecv.clusterInstSend != nil {
 				clusterInsts := make(map[edgeproto.ClusterInstKey]struct{})
 				s.sendrecv.clusterInstSend.handler.GetForCloudlet(&buf.Key, clusterInsts)

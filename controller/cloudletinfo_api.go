@@ -44,21 +44,9 @@ func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgepr
 	return err
 }
 
-func (s *CloudletInfoApi) UpdateAll(ctx context.Context, in *edgeproto.CloudletInfo) {
-	in.Fields = edgeproto.CloudletInfoAllFields
-	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
-}
-
 func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
 	// for now assume all fields have been specified
-	in.Fields = []string{}
-	for _, field := range edgeproto.CloudletInfoAllFields {
-		// Ignore outdated field, as it is managed by controller
-		if field == edgeproto.CloudletInfoFieldOutdated {
-			continue
-		}
-		in.Fields = append(in.Fields, field)
-	}
+	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
 	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
 }

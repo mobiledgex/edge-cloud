@@ -470,14 +470,22 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	}
 
 	if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+		// Make sure previous state was either READY or UPDATE_ERROR
+		// This ensures that UPDATE_REQUESTED is handled by old version of CRM
+		if old == nil ||
+			(old.State != edgeproto.TrackedState_READY &&
+				old.State != edgeproto.TrackedState_UPDATE_ERROR) {
+			return
+		}
 		cloudletInfo := edgeproto.CloudletInfo{}
 		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 		if !found {
 			log.SpanLog(ctx, log.DebugLevelMexos, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
-		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
-			// Cloudlet is already upgrading
+		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY &&
+			cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
+			// Cloudlet is not in a state to upgrade
 			return
 		}
 
@@ -491,9 +499,30 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		// Reset old Status, as we will start upgrading cloudlet now
 		cd.CloudletInfoCache.StatusReset(ctx, &new.Key)
 
+		// Set cloudlet state to `UPGRADE`, this will transition TrackedState to `UPDATING`
 		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
 
+	if new.State == edgeproto.TrackedState_UPDATING {
+		// Make sure previous state was UPDATE_REQUESTED
+		if old == nil || old.State != edgeproto.TrackedState_UPDATE_REQUESTED {
+			return
+		}
+		cloudletInfo := edgeproto.CloudletInfo{}
+		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelMexos, "CloudletInfo not found for cloudlet", "key", new.Key)
+			return
+		}
+		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+			// Cloudlet is not in a state to upgrade
+			return
+		}
+
+		// Now that Cloudlet knows that it has to upgrade [CLOUDLET_STATE_UPGRADE]
+		// and also Controller knows that Cloudlet will upgrade [TrackedState_UPDATING],
+		// start the upgrade
 		err := cd.platform.UpdateCloudlet(ctx, new, &new.Config, updateCloudletCallback)
 		if err != nil {
 			errstr := fmt.Sprintf("Update Cloudlet failed: %v", err)

@@ -110,7 +110,6 @@ type SendRecv struct {
 	cloudletKeys       map[edgeproto.CloudletKey]struct{}
 	appSend            *AppSend
 	cloudletSend       *CloudletSend
-	cloudletInfoSend   *CloudletInfoSend
 	clusterInstSend    *ClusterInstSend
 	appInstSend        *AppInstSend
 	sendRunning        chan struct{}
@@ -144,8 +143,6 @@ func (s *SendRecv) registerSend(send NotifySend) {
 		s.appSend = v
 	case *CloudletSend:
 		s.cloudletSend = v
-	case *CloudletInfoSend:
-		s.cloudletInfoSend = v
 	case *ClusterInstSend:
 		s.clusterInstSend = v
 	case *AppInstSend:

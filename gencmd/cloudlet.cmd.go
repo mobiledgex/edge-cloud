@@ -879,7 +879,6 @@ var CloudletInfoOptionalArgs = []string{
 	"status.taskname",
 	"status.stepname",
 	"version",
-	"outdated",
 }
 var CloudletInfoAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -900,7 +899,6 @@ var CloudletInfoComments = map[string]string{
 	"flavors.ram":   "Ram in MB on the Cloudlet",
 	"flavors.disk":  "Amount of disk in GB on the Cloudlet",
 	"version":       "Cloudlet version",
-	"outdated":      "Cloudlet outdated",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors": "StringArray",

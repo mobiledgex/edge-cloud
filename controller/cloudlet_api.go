@@ -46,9 +46,7 @@ var (
 )
 
 const (
-	PlatformInitTimeout      = 5 * time.Minute
-	Outdated            bool = true
-	Current             bool = false
+	PlatformInitTimeout = 5 * time.Minute
 )
 
 type updateCloudletCallback struct {
@@ -373,17 +371,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		return err
 	}
 
-	markCloudletInfo := func(outdated bool) error {
-		curInfo := edgeproto.CloudletInfo{}
-		if cloudletInfoApi.cache.Get(key, &curInfo) {
-			curInfo.Outdated = outdated
-			cloudletInfoApi.UpdateAll(ctx, &curInfo)
-		} else {
-			return objstore.ErrKVStoreKeyNotFound
-		}
-		return nil
-	}
-
 	checkState := func(cloudletInfo *edgeproto.CloudletInfo) {
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.cache.Get(key, &cloudlet) {
@@ -468,13 +455,8 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			// transition from UPDATE_REQUESTED -> UPDATING state, as crm is upgrading
 			err := updateCloudletState(edgeproto.TrackedState_UPDATING)
 			if err == nil {
-				// Mark cloudletInfo to be outdated. This will be used to
-				// avoid sending updates to outdated cloudlet
-				err = markCloudletInfo(Outdated)
-				if err == nil {
-					// crm started upgrading, now wait for it to be Ready
-					continue
-				}
+				// crm started upgrading, now wait for it to be Ready
+				continue
 			}
 		case <-failed:
 			if cloudletInfoApi.cache.Get(key, &info) {
@@ -497,11 +479,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
 			updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
 		}
-
-		// Either upgrade failed to succeeded. In either case,
-		// mark cloudletInfo as Current
-		markCloudletInfo(Current)
-
 		cancel()
 		break
 	}
@@ -665,6 +642,13 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
 	updatecb := updateCloudletCallback{in, cb}
 
+	if appInstApi.UsingCloudlet(&in.Key) {
+		return fmt.Errorf("AppInst is busy on the cloudlet")
+	}
+	if clusterInstApi.UsingCloudlet(&in.Key) {
+		return fmt.Errorf("ClusterInst is busy on the cloudlet")
+	}
+
 	if err := cloudletInfoApi.checkCloudletReady(&in.Key); err != nil {
 		if in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			info := edgeproto.CloudletInfo{}
@@ -691,6 +675,7 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 		}
 		cloudlet.Config = *pfConfig
 		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
+
 		s.store.STMPut(stm, &cloudlet)
 		return nil
 	})

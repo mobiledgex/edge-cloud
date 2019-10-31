@@ -52,18 +52,25 @@ func (s *ClusterInstCache) GetForCloudlet(key *CloudletKey, clusterInsts map[Clu
 }
 
 func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey, state TrackedState) error {
-	info := ClusterInstInfo{}
-	if !s.Get(key, &info) {
+	var err error
+	s.UpdateModFunc(ctx, key, 0, func(old *ClusterInstInfo) (newObj *ClusterInstInfo, changed bool) {
+
+		info := &ClusterInstInfo{}
+		if old != nil {
+			err = StateConflict(old.State, state)
+			if err != nil {
+				return old, false
+			}
+			*info = *old
+			info.Errors = nil
+			info.State = state
+			info.Status = StatusInfo{}
+			return info, true
+		}
 		info.Key = *key
-	}
-	if err := StateConflict(info.State, state); err != nil {
-		return err
-	}
-	info.Errors = nil
-	info.State = state
-	info.Status = StatusInfo{}
-	s.Update(ctx, &info, 0)
-	return nil
+		return info, true
+	})
+	return err
 }
 
 func (s *ClusterInstInfoCache) SetStatusTask(ctx context.Context, key *ClusterInstKey, taskName string) {
@@ -143,20 +150,39 @@ func StateConflict(oldState, newState TrackedState) error {
 	return nil
 }
 
-func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state TrackedState) error {
-	info := AppInstInfo{}
-	if !s.Get(key, &info) {
-		info.Key = *key
+func IsTransientState(state TrackedState) bool {
+	if state == TrackedState_CREATING ||
+		state == TrackedState_CREATE_REQUESTED ||
+		state == TrackedState_UPDATE_REQUESTED ||
+		state == TrackedState_DELETE_REQUESTED ||
+		state == TrackedState_UPDATING ||
+		state == TrackedState_DELETING ||
+		state == TrackedState_DELETE_PREPARE {
+		return true
 	}
-	if err := StateConflict(info.State, state); err != nil {
-		return err
-	}
-	info.Errors = nil
-	info.State = state
-	info.Status = StatusInfo{}
+	return false
+}
 
-	s.Update(ctx, &info, 0)
-	return nil
+func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state TrackedState) error {
+	var err error
+	s.UpdateModFunc(ctx, key, 0, func(old *AppInstInfo) (newObj *AppInstInfo, changed bool) {
+
+		info := &AppInstInfo{}
+		if old != nil {
+			err = StateConflict(old.State, state)
+			if err != nil {
+				return old, false
+			}
+			*info = *old
+			info.Errors = nil
+			info.State = state
+			info.Status = StatusInfo{}
+			return info, true
+		}
+		info.Key = *key
+		return info, true
+	})
+	return err
 }
 
 func (s *AppInstInfoCache) SetStateRuntime(ctx context.Context, key *AppInstKey, state TrackedState, rt *AppInstRuntime) {
