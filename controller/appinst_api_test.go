@@ -20,7 +20,7 @@ func TestAppInstApi(t *testing.T) {
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	objstore.InitRegion(1)
+	testinit()
 	reduceInfoTimeouts()
 
 	tMode := true
@@ -50,6 +50,7 @@ func TestAppInstApi(t *testing.T) {
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
+	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 	testutil.InternalClusterInstCreate(t, &clusterInstApi, testutil.ClusterInstData)
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)

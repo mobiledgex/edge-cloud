@@ -375,8 +375,13 @@ func (m *OperatorKey) Matches(o *OperatorKey, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *OperatorKey) CopyInFields(src *OperatorKey) {
-	m.Name = src.Name
+func (m *OperatorKey) CopyInFields(src *OperatorKey) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	return changed
 }
 
 func (m *OperatorKey) GetKeyString() string {
@@ -440,13 +445,18 @@ func (m *Operator) DiffFields(o *Operator, fields map[string]struct{}) {
 	}
 }
 
-func (m *Operator) CopyInFields(src *Operator) {
+func (m *Operator) CopyInFields(src *Operator) int {
+	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
-			m.Key.Name = src.Key.Name
+			if m.Key.Name != src.Key.Name {
+				m.Key.Name = src.Key.Name
+				changed++
+			}
 		}
 	}
+	return changed
 }
 
 func (s *Operator) HasFields() bool {
@@ -730,6 +740,7 @@ func (c *OperatorCache) Show(filter *Operator, cb func(ret *Operator) error) err
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Operator", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}

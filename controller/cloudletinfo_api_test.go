@@ -6,7 +6,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 )
 
@@ -15,7 +14,7 @@ func TestCloudletInfo(t *testing.T) {
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	objstore.InitRegion(1)
+	testinit()
 
 	dummy := dummyEtcd{}
 	dummy.Start()

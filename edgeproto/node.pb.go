@@ -441,11 +441,25 @@ func (m *NodeKey) Matches(o *NodeKey, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *NodeKey) CopyInFields(src *NodeKey) {
-	m.Name = src.Name
-	m.NodeType = src.NodeType
-	m.CloudletKey.OperatorKey.Name = src.CloudletKey.OperatorKey.Name
-	m.CloudletKey.Name = src.CloudletKey.Name
+func (m *NodeKey) CopyInFields(src *NodeKey) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	if m.NodeType != src.NodeType {
+		m.NodeType = src.NodeType
+		changed++
+	}
+	if m.CloudletKey.OperatorKey.Name != src.CloudletKey.OperatorKey.Name {
+		m.CloudletKey.OperatorKey.Name = src.CloudletKey.OperatorKey.Name
+		changed++
+	}
+	if m.CloudletKey.Name != src.CloudletKey.Name {
+		m.CloudletKey.Name = src.CloudletKey.Name
+		changed++
+	}
+	return changed
 }
 
 func (m *NodeKey) GetKeyString() string {
@@ -640,44 +654,76 @@ func (m *Node) DiffFields(o *Node, fields map[string]struct{}) {
 	}
 }
 
-func (m *Node) CopyInFields(src *Node) {
+func (m *Node) CopyInFields(src *Node) int {
+	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
-			m.Key.Name = src.Key.Name
+			if m.Key.Name != src.Key.Name {
+				m.Key.Name = src.Key.Name
+				changed++
+			}
 		}
 		if _, set := fmap["2.2"]; set {
-			m.Key.NodeType = src.Key.NodeType
+			if m.Key.NodeType != src.Key.NodeType {
+				m.Key.NodeType = src.Key.NodeType
+				changed++
+			}
 		}
 		if _, set := fmap["2.3"]; set {
 			if _, set := fmap["2.3.1"]; set {
 				if _, set := fmap["2.3.1.1"]; set {
-					m.Key.CloudletKey.OperatorKey.Name = src.Key.CloudletKey.OperatorKey.Name
+					if m.Key.CloudletKey.OperatorKey.Name != src.Key.CloudletKey.OperatorKey.Name {
+						m.Key.CloudletKey.OperatorKey.Name = src.Key.CloudletKey.OperatorKey.Name
+						changed++
+					}
 				}
 			}
 			if _, set := fmap["2.3.2"]; set {
-				m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+				if m.Key.CloudletKey.Name != src.Key.CloudletKey.Name {
+					m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+					changed++
+				}
 			}
 		}
 	}
 	if _, set := fmap["3"]; set {
-		m.NotifyId = src.NotifyId
+		if m.NotifyId != src.NotifyId {
+			m.NotifyId = src.NotifyId
+			changed++
+		}
 	}
 	if _, set := fmap["4"]; set {
-		m.BuildMaster = src.BuildMaster
+		if m.BuildMaster != src.BuildMaster {
+			m.BuildMaster = src.BuildMaster
+			changed++
+		}
 	}
 	if _, set := fmap["5"]; set {
-		m.BuildHead = src.BuildHead
+		if m.BuildHead != src.BuildHead {
+			m.BuildHead = src.BuildHead
+			changed++
+		}
 	}
 	if _, set := fmap["6"]; set {
-		m.BuildAuthor = src.BuildAuthor
+		if m.BuildAuthor != src.BuildAuthor {
+			m.BuildAuthor = src.BuildAuthor
+			changed++
+		}
 	}
 	if _, set := fmap["7"]; set {
-		m.Hostname = src.Hostname
+		if m.Hostname != src.Hostname {
+			m.Hostname = src.Hostname
+			changed++
+		}
 	}
 	if _, set := fmap["8"]; set {
-		m.ImageVersion = src.ImageVersion
+		if m.ImageVersion != src.ImageVersion {
+			m.ImageVersion = src.ImageVersion
+			changed++
+		}
 	}
+	return changed
 }
 
 func (s *Node) HasFields() bool {
@@ -979,6 +1025,7 @@ func (c *NodeCache) Show(filter *Node, cb func(ret *Node) error) error {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Node", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}

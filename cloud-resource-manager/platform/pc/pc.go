@@ -2,6 +2,7 @@ package pc
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 
@@ -43,11 +44,13 @@ var NoSudo Sudo = false
 func WriteFile(client PlatformClient, file string, contents string, kind string, sudo Sudo) error {
 	log.DebugLog(log.DebugLevelMexos, "write file", "kind", kind, "sudo", sudo)
 
-	cmd := fmt.Sprintf("cat <<EOF > %s \n%s\nEOF", file, contents)
+	// encode to avoid issues with quotes, special characters, and shell
+	// evaluation of $vars.
+	dat := base64.StdEncoding.EncodeToString([]byte(contents))
+	cmd := fmt.Sprintf("base64 -d <<< %s > %s", dat, file)
 	if sudo {
-		cmd = fmt.Sprintf("sudo bash -c %s", cmd)
+		cmd = fmt.Sprintf("sudo bash -c '%s'", cmd)
 	}
-
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error writing %s, %s, %s, %v", kind, cmd, out, err)

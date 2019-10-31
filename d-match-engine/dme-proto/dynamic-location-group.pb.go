@@ -251,13 +251,33 @@ func encodeVarintDynamicLocationGroup(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *DlgMessage) CopyInFields(src *DlgMessage) {
-	m.Ver = src.Ver
-	m.LgId = src.LgId
-	m.GroupCookie = src.GroupCookie
-	m.MessageId = src.MessageId
-	m.AckType = src.AckType
-	m.Message = src.Message
+func (m *DlgMessage) CopyInFields(src *DlgMessage) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.LgId != src.LgId {
+		m.LgId = src.LgId
+		changed++
+	}
+	if m.GroupCookie != src.GroupCookie {
+		m.GroupCookie = src.GroupCookie
+		changed++
+	}
+	if m.MessageId != src.MessageId {
+		m.MessageId = src.MessageId
+		changed++
+	}
+	if m.AckType != src.AckType {
+		m.AckType = src.AckType
+		changed++
+	}
+	if m.Message != src.Message {
+		m.Message = src.Message
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -268,10 +288,21 @@ func (m *DlgMessage) ValidateEnums() error {
 	return nil
 }
 
-func (m *DlgReply) CopyInFields(src *DlgReply) {
-	m.Ver = src.Ver
-	m.AckId = src.AckId
-	m.GroupCookie = src.GroupCookie
+func (m *DlgReply) CopyInFields(src *DlgReply) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.AckId != src.AckId {
+		m.AckId = src.AckId
+		changed++
+	}
+	if m.GroupCookie != src.GroupCookie {
+		m.GroupCookie = src.GroupCookie
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values

@@ -69,9 +69,17 @@ func encodeVarintResult(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *Result) CopyInFields(src *Result) {
-	m.Message = src.Message
-	m.Code = src.Code
+func (m *Result) CopyInFields(src *Result) int {
+	changed := 0
+	if m.Message != src.Message {
+		m.Message = src.Message
+		changed++
+	}
+	if m.Code != src.Code {
+		m.Code = src.Code
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values

@@ -18,6 +18,8 @@ var ErrEdgeApiFlavorNotFound = errors.New("Specified flavor not found")
 var ErrEdgeApiAppNotFound = errors.New("Specified app not found")
 var ErrEdgeApiAppInstNotFound = errors.New("Specified app instance not found")
 
+var AutoScaleMaxNodes uint32 = 10
+
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
 	Operators           []Operator           `yaml:"operators"`
@@ -33,6 +35,7 @@ type ApplicationData struct {
 	Nodes               []Node               `yaml:"nodes"`
 	CloudletPools       []CloudletPool       `yaml:"cloudletpools"`
 	CloudletPoolMembers []CloudletPoolMember `yaml:"cloudletpoolmembers"`
+	AutoScalePolicies   []AutoScalePolicy    `yaml:"autoscalepolicies"`
 }
 
 // sort each slice by key
@@ -76,6 +79,9 @@ func (a *ApplicationData) Sort() {
 	sort.Slice(a.CloudletPoolMembers[:], func(i, j int) bool {
 		return a.CloudletPoolMembers[i].GetKeyString() < a.CloudletPoolMembers[j].GetKeyString()
 	})
+	sort.Slice(a.AutoScalePolicies[:], func(i, j int) bool {
+		return a.AutoScalePolicies[i].Key.GetKeyString() < a.AutoScalePolicies[j].Key.GetKeyString()
+	})
 }
 
 // Validate functions to validate user input
@@ -83,7 +89,7 @@ func (a *ApplicationData) Sort() {
 func (key *DeveloperKey) ValidateKey() error {
 	if err := util.ValidObjName(key.Name); err != nil {
 		errstring := err.Error()
-		//lowercase the first letter of the error message
+		// lowercase the first letter of the error message
 		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
 		return fmt.Errorf("Developer " + errstring)
 	}
@@ -316,6 +322,49 @@ func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+func (key *PolicyKey) ValidateKey() error {
+	if err := util.ValidObjName(key.Developer); err != nil {
+		errstring := err.Error()
+		// lowercase the first letter of the error message
+		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
+		return fmt.Errorf("Developer " + errstring)
+	}
+	if key.Name == "" {
+		return errors.New("Invalid policy name")
+	}
+	return nil
+}
+
+// Validate fields. Note that specified fields is ignored, so this function
+// must be used only in the context when all fields are present (i.e. after
+// CopyInFields for an update).
+func (s *AutoScalePolicy) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if s.MaxNodes > AutoScaleMaxNodes {
+		return fmt.Errorf("Max nodes cannot exceed %d", AutoScaleMaxNodes)
+	}
+	if s.MinNodes < 1 {
+		// Taint on master is not updated during UpdateClusterInst
+		// when going up/down from 0, so min supported is 1.
+		return errors.New("Min nodes cannot be less than 1")
+	}
+	if s.ScaleUpCpuThresh < 0 || s.ScaleUpCpuThresh > 100 {
+		return errors.New("Scale up CPU threshold must be between 0 and 100")
+	}
+	if s.ScaleDownCpuThresh < 0 || s.ScaleDownCpuThresh > 100 {
+		return errors.New("Scale down CPU threshold must be between 0 and 100")
+	}
+	if s.MaxNodes <= s.MinNodes {
+		return fmt.Errorf("Max nodes must be greater than Min nodes")
+	}
+	if s.ScaleUpCpuThresh <= s.ScaleDownCpuThresh {
+		return fmt.Errorf("Scale down cpu threshold must be less than scale up cpu threshold")
+	}
+	return nil
+}
+
 func MakeFieldMap(fields []string) map[string]struct{} {
 	fmap := make(map[string]struct{})
 	if fields == nil {
@@ -488,6 +537,7 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortNode))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPool))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPoolMember))
+	opts = append(opts, cmpopts.SortSlices(CmpSortAutoScalePolicy))
 	return opts
 }
 
