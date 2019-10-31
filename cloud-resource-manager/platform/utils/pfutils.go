@@ -23,15 +23,9 @@ func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 		return &fake.Platform{}, nil
 	}
 
-	// Load platform from plugin
-	if solib == "" {
-		solib = os.Getenv("GOPATH") + "/plugins/platforms.so"
-	}
-	log.SpanLog(ctx, log.DebugLevelInfo, "Loading plugin", "plugin", solib)
-	plug, err := plugin.Open(solib)
+	plug, err := loadPlugin(ctx)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "failed to load plugin", "plugin", solib, "platform", plat, "error", err)
-		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: %v", plat, err)
+		return nil, err
 	}
 	sym, err := plug.Lookup("GetPlatform")
 	if err != nil {
@@ -46,4 +40,40 @@ func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 	log.SpanLog(ctx, log.DebugLevelInfo, "Creating platform")
 
 	return getPlatFunc(plat)
+}
+
+func GetClusterSvc(ctx context.Context, pluginRequired bool) (pf.ClusterSvc, error) {
+	plug, err := loadPlugin(ctx)
+	if err != nil {
+		if !pluginRequired {
+			log.SpanLog(ctx, log.DebugLevelInfo, "plugin not required, ignoring load plugin failure", "err", err)
+			err = nil
+		}
+		return nil, err
+	}
+	sym, err := plug.Lookup("GetClusterSvc")
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "plugin does not have GetClusterSvc symbol", "plugin", solib)
+	}
+	getClusterSvcFunc, ok := sym.(func() (pf.ClusterSvc, error))
+	if !ok {
+		log.SpanLog(ctx, log.DebugLevelInfo, "plugin GetClusterSvc symbol does not implement func() (platform.ClusterSvc, error)", "plugin", solib)
+		return nil, fmt.Errorf("failed to load plugin %s, err: GetClusterSvc symbol does not implement func() (platform.ClusterSvc, error)", solib)
+	}
+	log.SpanLog(ctx, log.DebugLevelInfo, "Creating ClusterSvc")
+	return getClusterSvcFunc()
+}
+
+func loadPlugin(ctx context.Context) (*plugin.Plugin, error) {
+	// Load platform from plugin
+	if solib == "" {
+		solib = os.Getenv("GOPATH") + "/plugins/platforms.so"
+	}
+	log.SpanLog(ctx, log.DebugLevelInfo, "Loading plugin", "plugin", solib)
+	plug, err := plugin.Open(solib)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "failed to load plugin", "plugin", solib, "error", err)
+		return nil, fmt.Errorf("failed to load plugin %s, err: %v", solib, err)
+	}
+	return plug, nil
 }

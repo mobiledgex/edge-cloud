@@ -290,11 +290,25 @@ func encodeVarintCommon(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *StatusInfo) CopyInFields(src *StatusInfo) {
-	m.TaskNumber = src.TaskNumber
-	m.MaxTasks = src.MaxTasks
-	m.TaskName = src.TaskName
-	m.StepName = src.StepName
+func (m *StatusInfo) CopyInFields(src *StatusInfo) int {
+	changed := 0
+	if m.TaskNumber != src.TaskNumber {
+		m.TaskNumber = src.TaskNumber
+		changed++
+	}
+	if m.MaxTasks != src.MaxTasks {
+		m.MaxTasks = src.MaxTasks
+		changed++
+	}
+	if m.TaskName != src.TaskName {
+		m.TaskName = src.TaskName
+		changed++
+	}
+	if m.StepName != src.StepName {
+		m.StepName = src.StepName
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values

@@ -269,20 +269,39 @@ func encodeVarintNotice(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *Notice) CopyInFields(src *Notice) {
-	m.Action = src.Action
-	m.Version = src.Version
-	m.Any.TypeUrl = src.Any.TypeUrl
+func (m *Notice) CopyInFields(src *Notice) int {
+	changed := 0
+	if m.Action != src.Action {
+		m.Action = src.Action
+		changed++
+	}
+	if m.Version != src.Version {
+		m.Version = src.Version
+		changed++
+	}
+	if m.Any.TypeUrl != src.Any.TypeUrl {
+		m.Any.TypeUrl = src.Any.TypeUrl
+		changed++
+	}
 	if m.Any.Value == nil || len(m.Any.Value) != len(src.Any.Value) {
 		m.Any.Value = make([]byte, len(src.Any.Value))
 	}
 	copy(m.Any.Value, src.Any.Value)
+	changed++
 	if m.WantObjs == nil || len(m.WantObjs) != len(src.WantObjs) {
 		m.WantObjs = make([]string, len(src.WantObjs))
 	}
 	copy(m.WantObjs, src.WantObjs)
-	m.FilterCloudletKey = src.FilterCloudletKey
-	m.Span = src.Span
+	changed++
+	if m.FilterCloudletKey != src.FilterCloudletKey {
+		m.FilterCloudletKey = src.FilterCloudletKey
+		changed++
+	}
+	if m.Span != src.Span {
+		m.Span = src.Span
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values

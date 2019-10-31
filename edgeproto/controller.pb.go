@@ -302,8 +302,13 @@ func (m *ControllerKey) Matches(o *ControllerKey, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *ControllerKey) CopyInFields(src *ControllerKey) {
-	m.Addr = src.Addr
+func (m *ControllerKey) CopyInFields(src *ControllerKey) int {
+	changed := 0
+	if m.Addr != src.Addr {
+		m.Addr = src.Addr
+		changed++
+	}
+	return changed
 }
 
 func (m *ControllerKey) GetKeyString() string {
@@ -423,25 +428,42 @@ func (m *Controller) DiffFields(o *Controller, fields map[string]struct{}) {
 	}
 }
 
-func (m *Controller) CopyInFields(src *Controller) {
+func (m *Controller) CopyInFields(src *Controller) int {
+	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
-			m.Key.Addr = src.Key.Addr
+			if m.Key.Addr != src.Key.Addr {
+				m.Key.Addr = src.Key.Addr
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["4"]; set {
-		m.BuildMaster = src.BuildMaster
+		if m.BuildMaster != src.BuildMaster {
+			m.BuildMaster = src.BuildMaster
+			changed++
+		}
 	}
 	if _, set := fmap["5"]; set {
-		m.BuildHead = src.BuildHead
+		if m.BuildHead != src.BuildHead {
+			m.BuildHead = src.BuildHead
+			changed++
+		}
 	}
 	if _, set := fmap["6"]; set {
-		m.BuildAuthor = src.BuildAuthor
+		if m.BuildAuthor != src.BuildAuthor {
+			m.BuildAuthor = src.BuildAuthor
+			changed++
+		}
 	}
 	if _, set := fmap["7"]; set {
-		m.Hostname = src.Hostname
+		if m.Hostname != src.Hostname {
+			m.Hostname = src.Hostname
+			changed++
+		}
 	}
+	return changed
 }
 
 func (s *Controller) HasFields() bool {
@@ -725,6 +747,7 @@ func (c *ControllerCache) Show(filter *Controller, cb func(ret *Controller) erro
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Controller", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}

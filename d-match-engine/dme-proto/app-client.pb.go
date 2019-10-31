@@ -2134,13 +2134,33 @@ func encodeVarintAppClient(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *RegisterClientRequest) CopyInFields(src *RegisterClientRequest) {
-	m.Ver = src.Ver
-	m.DevName = src.DevName
-	m.AppName = src.AppName
-	m.AppVers = src.AppVers
-	m.CarrierName = src.CarrierName
-	m.AuthToken = src.AuthToken
+func (m *RegisterClientRequest) CopyInFields(src *RegisterClientRequest) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.DevName != src.DevName {
+		m.DevName = src.DevName
+		changed++
+	}
+	if m.AppName != src.AppName {
+		m.AppName = src.AppName
+		changed++
+	}
+	if m.AppVers != src.AppVers {
+		m.AppVers = src.AppVers
+		changed++
+	}
+	if m.CarrierName != src.CarrierName {
+		m.CarrierName = src.CarrierName
+		changed++
+	}
+	if m.AuthToken != src.AuthToken {
+		m.AuthToken = src.AuthToken
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2148,11 +2168,25 @@ func (m *RegisterClientRequest) ValidateEnums() error {
 	return nil
 }
 
-func (m *RegisterClientReply) CopyInFields(src *RegisterClientReply) {
-	m.Ver = src.Ver
-	m.Status = src.Status
-	m.SessionCookie = src.SessionCookie
-	m.TokenServerUri = src.TokenServerUri
+func (m *RegisterClientReply) CopyInFields(src *RegisterClientReply) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.Status != src.Status {
+		m.Status = src.Status
+		changed++
+	}
+	if m.SessionCookie != src.SessionCookie {
+		m.SessionCookie = src.SessionCookie
+		changed++
+	}
+	if m.TokenServerUri != src.TokenServerUri {
+		m.TokenServerUri = src.TokenServerUri
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2163,28 +2197,75 @@ func (m *RegisterClientReply) ValidateEnums() error {
 	return nil
 }
 
-func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) {
-	m.Ver = src.Ver
-	m.SessionCookie = src.SessionCookie
-	m.CarrierName = src.CarrierName
+func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.SessionCookie != src.SessionCookie {
+		m.SessionCookie = src.SessionCookie
+		changed++
+	}
+	if m.CarrierName != src.CarrierName {
+		m.CarrierName = src.CarrierName
+		changed++
+	}
 	if src.GpsLocation != nil {
 		m.GpsLocation = &Loc{}
-		m.GpsLocation.Latitude = src.GpsLocation.Latitude
-		m.GpsLocation.Longitude = src.GpsLocation.Longitude
-		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
-		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
-		m.GpsLocation.Altitude = src.GpsLocation.Altitude
-		m.GpsLocation.Course = src.GpsLocation.Course
-		m.GpsLocation.Speed = src.GpsLocation.Speed
+		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
+			m.GpsLocation.Latitude = src.GpsLocation.Latitude
+			changed++
+		}
+		if m.GpsLocation.Longitude != src.GpsLocation.Longitude {
+			m.GpsLocation.Longitude = src.GpsLocation.Longitude
+			changed++
+		}
+		if m.GpsLocation.HorizontalAccuracy != src.GpsLocation.HorizontalAccuracy {
+			m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
+			changed++
+		}
+		if m.GpsLocation.VerticalAccuracy != src.GpsLocation.VerticalAccuracy {
+			m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
+			changed++
+		}
+		if m.GpsLocation.Altitude != src.GpsLocation.Altitude {
+			m.GpsLocation.Altitude = src.GpsLocation.Altitude
+			changed++
+		}
+		if m.GpsLocation.Course != src.GpsLocation.Course {
+			m.GpsLocation.Course = src.GpsLocation.Course
+			changed++
+		}
+		if m.GpsLocation.Speed != src.GpsLocation.Speed {
+			m.GpsLocation.Speed = src.GpsLocation.Speed
+			changed++
+		}
 		if src.GpsLocation.Timestamp != nil {
 			m.GpsLocation.Timestamp = &Timestamp{}
-			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
-			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
+				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
+				changed++
+			}
+			if m.GpsLocation.Timestamp.Nanos != src.GpsLocation.Timestamp.Nanos {
+				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+				changed++
+			}
 		}
 	}
-	m.DevName = src.DevName
-	m.AppName = src.AppName
-	m.AppVers = src.AppVers
+	if m.DevName != src.DevName {
+		m.DevName = src.DevName
+		changed++
+	}
+	if m.AppName != src.AppName {
+		m.AppName = src.AppName
+		changed++
+	}
+	if m.AppVers != src.AppVers {
+		m.AppVers = src.AppVers
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2195,39 +2276,95 @@ func (m *FindCloudletRequest) ValidateEnums() error {
 	return nil
 }
 
-func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) {
-	m.Ver = src.Ver
-	m.Status = src.Status
-	m.Fqdn = src.Fqdn
+func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.Status != src.Status {
+		m.Status = src.Status
+		changed++
+	}
+	if m.Fqdn != src.Fqdn {
+		m.Fqdn = src.Fqdn
+		changed++
+	}
 	if src.Ports != nil {
 		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
 			m.Ports = make([]*AppPort, len(src.Ports))
 		}
 		for i0 := 0; i0 < len(src.Ports); i0++ {
 			m.Ports[i0] = &AppPort{}
-			m.Ports[i0].Proto = src.Ports[i0].Proto
-			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
-			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
-			m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
-			m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
-			m.Ports[i0].EndPort = src.Ports[i0].EndPort
+			if m.Ports[i0].Proto != src.Ports[i0].Proto {
+				m.Ports[i0].Proto = src.Ports[i0].Proto
+				changed++
+			}
+			if m.Ports[i0].InternalPort != src.Ports[i0].InternalPort {
+				m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
+				changed++
+			}
+			if m.Ports[i0].PublicPort != src.Ports[i0].PublicPort {
+				m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
+				changed++
+			}
+			if m.Ports[i0].PathPrefix != src.Ports[i0].PathPrefix {
+				m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
+				changed++
+			}
+			if m.Ports[i0].FqdnPrefix != src.Ports[i0].FqdnPrefix {
+				m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
+				changed++
+			}
+			if m.Ports[i0].EndPort != src.Ports[i0].EndPort {
+				m.Ports[i0].EndPort = src.Ports[i0].EndPort
+				changed++
+			}
 		}
 	}
 	if src.CloudletLocation != nil {
 		m.CloudletLocation = &Loc{}
-		m.CloudletLocation.Latitude = src.CloudletLocation.Latitude
-		m.CloudletLocation.Longitude = src.CloudletLocation.Longitude
-		m.CloudletLocation.HorizontalAccuracy = src.CloudletLocation.HorizontalAccuracy
-		m.CloudletLocation.VerticalAccuracy = src.CloudletLocation.VerticalAccuracy
-		m.CloudletLocation.Altitude = src.CloudletLocation.Altitude
-		m.CloudletLocation.Course = src.CloudletLocation.Course
-		m.CloudletLocation.Speed = src.CloudletLocation.Speed
+		if m.CloudletLocation.Latitude != src.CloudletLocation.Latitude {
+			m.CloudletLocation.Latitude = src.CloudletLocation.Latitude
+			changed++
+		}
+		if m.CloudletLocation.Longitude != src.CloudletLocation.Longitude {
+			m.CloudletLocation.Longitude = src.CloudletLocation.Longitude
+			changed++
+		}
+		if m.CloudletLocation.HorizontalAccuracy != src.CloudletLocation.HorizontalAccuracy {
+			m.CloudletLocation.HorizontalAccuracy = src.CloudletLocation.HorizontalAccuracy
+			changed++
+		}
+		if m.CloudletLocation.VerticalAccuracy != src.CloudletLocation.VerticalAccuracy {
+			m.CloudletLocation.VerticalAccuracy = src.CloudletLocation.VerticalAccuracy
+			changed++
+		}
+		if m.CloudletLocation.Altitude != src.CloudletLocation.Altitude {
+			m.CloudletLocation.Altitude = src.CloudletLocation.Altitude
+			changed++
+		}
+		if m.CloudletLocation.Course != src.CloudletLocation.Course {
+			m.CloudletLocation.Course = src.CloudletLocation.Course
+			changed++
+		}
+		if m.CloudletLocation.Speed != src.CloudletLocation.Speed {
+			m.CloudletLocation.Speed = src.CloudletLocation.Speed
+			changed++
+		}
 		if src.CloudletLocation.Timestamp != nil {
 			m.CloudletLocation.Timestamp = &Timestamp{}
-			m.CloudletLocation.Timestamp.Seconds = src.CloudletLocation.Timestamp.Seconds
-			m.CloudletLocation.Timestamp.Nanos = src.CloudletLocation.Timestamp.Nanos
+			if m.CloudletLocation.Timestamp.Seconds != src.CloudletLocation.Timestamp.Seconds {
+				m.CloudletLocation.Timestamp.Seconds = src.CloudletLocation.Timestamp.Seconds
+				changed++
+			}
+			if m.CloudletLocation.Timestamp.Nanos != src.CloudletLocation.Timestamp.Nanos {
+				m.CloudletLocation.Timestamp.Nanos = src.CloudletLocation.Timestamp.Nanos
+				changed++
+			}
 		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2246,26 +2383,67 @@ func (m *FindCloudletReply) ValidateEnums() error {
 	return nil
 }
 
-func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) {
-	m.Ver = src.Ver
-	m.SessionCookie = src.SessionCookie
-	m.CarrierName = src.CarrierName
+func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.SessionCookie != src.SessionCookie {
+		m.SessionCookie = src.SessionCookie
+		changed++
+	}
+	if m.CarrierName != src.CarrierName {
+		m.CarrierName = src.CarrierName
+		changed++
+	}
 	if src.GpsLocation != nil {
 		m.GpsLocation = &Loc{}
-		m.GpsLocation.Latitude = src.GpsLocation.Latitude
-		m.GpsLocation.Longitude = src.GpsLocation.Longitude
-		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
-		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
-		m.GpsLocation.Altitude = src.GpsLocation.Altitude
-		m.GpsLocation.Course = src.GpsLocation.Course
-		m.GpsLocation.Speed = src.GpsLocation.Speed
+		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
+			m.GpsLocation.Latitude = src.GpsLocation.Latitude
+			changed++
+		}
+		if m.GpsLocation.Longitude != src.GpsLocation.Longitude {
+			m.GpsLocation.Longitude = src.GpsLocation.Longitude
+			changed++
+		}
+		if m.GpsLocation.HorizontalAccuracy != src.GpsLocation.HorizontalAccuracy {
+			m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
+			changed++
+		}
+		if m.GpsLocation.VerticalAccuracy != src.GpsLocation.VerticalAccuracy {
+			m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
+			changed++
+		}
+		if m.GpsLocation.Altitude != src.GpsLocation.Altitude {
+			m.GpsLocation.Altitude = src.GpsLocation.Altitude
+			changed++
+		}
+		if m.GpsLocation.Course != src.GpsLocation.Course {
+			m.GpsLocation.Course = src.GpsLocation.Course
+			changed++
+		}
+		if m.GpsLocation.Speed != src.GpsLocation.Speed {
+			m.GpsLocation.Speed = src.GpsLocation.Speed
+			changed++
+		}
 		if src.GpsLocation.Timestamp != nil {
 			m.GpsLocation.Timestamp = &Timestamp{}
-			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
-			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
+				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
+				changed++
+			}
+			if m.GpsLocation.Timestamp.Nanos != src.GpsLocation.Timestamp.Nanos {
+				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+				changed++
+			}
 		}
 	}
-	m.VerifyLocToken = src.VerifyLocToken
+	if m.VerifyLocToken != src.VerifyLocToken {
+		m.VerifyLocToken = src.VerifyLocToken
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2276,11 +2454,25 @@ func (m *VerifyLocationRequest) ValidateEnums() error {
 	return nil
 }
 
-func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) {
-	m.Ver = src.Ver
-	m.TowerStatus = src.TowerStatus
-	m.GpsLocationStatus = src.GpsLocationStatus
-	m.GpsLocationAccuracyKm = src.GpsLocationAccuracyKm
+func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.TowerStatus != src.TowerStatus {
+		m.TowerStatus = src.TowerStatus
+		changed++
+	}
+	if m.GpsLocationStatus != src.GpsLocationStatus {
+		m.GpsLocationStatus = src.GpsLocationStatus
+		changed++
+	}
+	if m.GpsLocationAccuracyKm != src.GpsLocationAccuracyKm {
+		m.GpsLocationAccuracyKm = src.GpsLocationAccuracyKm
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2294,10 +2486,21 @@ func (m *VerifyLocationReply) ValidateEnums() error {
 	return nil
 }
 
-func (m *GetLocationRequest) CopyInFields(src *GetLocationRequest) {
-	m.Ver = src.Ver
-	m.SessionCookie = src.SessionCookie
-	m.CarrierName = src.CarrierName
+func (m *GetLocationRequest) CopyInFields(src *GetLocationRequest) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.SessionCookie != src.SessionCookie {
+		m.SessionCookie = src.SessionCookie
+		changed++
+	}
+	if m.CarrierName != src.CarrierName {
+		m.CarrierName = src.CarrierName
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2305,26 +2508,67 @@ func (m *GetLocationRequest) ValidateEnums() error {
 	return nil
 }
 
-func (m *GetLocationReply) CopyInFields(src *GetLocationReply) {
-	m.Ver = src.Ver
-	m.Status = src.Status
-	m.CarrierName = src.CarrierName
-	m.Tower = src.Tower
+func (m *GetLocationReply) CopyInFields(src *GetLocationReply) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.Status != src.Status {
+		m.Status = src.Status
+		changed++
+	}
+	if m.CarrierName != src.CarrierName {
+		m.CarrierName = src.CarrierName
+		changed++
+	}
+	if m.Tower != src.Tower {
+		m.Tower = src.Tower
+		changed++
+	}
 	if src.NetworkLocation != nil {
 		m.NetworkLocation = &Loc{}
-		m.NetworkLocation.Latitude = src.NetworkLocation.Latitude
-		m.NetworkLocation.Longitude = src.NetworkLocation.Longitude
-		m.NetworkLocation.HorizontalAccuracy = src.NetworkLocation.HorizontalAccuracy
-		m.NetworkLocation.VerticalAccuracy = src.NetworkLocation.VerticalAccuracy
-		m.NetworkLocation.Altitude = src.NetworkLocation.Altitude
-		m.NetworkLocation.Course = src.NetworkLocation.Course
-		m.NetworkLocation.Speed = src.NetworkLocation.Speed
+		if m.NetworkLocation.Latitude != src.NetworkLocation.Latitude {
+			m.NetworkLocation.Latitude = src.NetworkLocation.Latitude
+			changed++
+		}
+		if m.NetworkLocation.Longitude != src.NetworkLocation.Longitude {
+			m.NetworkLocation.Longitude = src.NetworkLocation.Longitude
+			changed++
+		}
+		if m.NetworkLocation.HorizontalAccuracy != src.NetworkLocation.HorizontalAccuracy {
+			m.NetworkLocation.HorizontalAccuracy = src.NetworkLocation.HorizontalAccuracy
+			changed++
+		}
+		if m.NetworkLocation.VerticalAccuracy != src.NetworkLocation.VerticalAccuracy {
+			m.NetworkLocation.VerticalAccuracy = src.NetworkLocation.VerticalAccuracy
+			changed++
+		}
+		if m.NetworkLocation.Altitude != src.NetworkLocation.Altitude {
+			m.NetworkLocation.Altitude = src.NetworkLocation.Altitude
+			changed++
+		}
+		if m.NetworkLocation.Course != src.NetworkLocation.Course {
+			m.NetworkLocation.Course = src.NetworkLocation.Course
+			changed++
+		}
+		if m.NetworkLocation.Speed != src.NetworkLocation.Speed {
+			m.NetworkLocation.Speed = src.NetworkLocation.Speed
+			changed++
+		}
 		if src.NetworkLocation.Timestamp != nil {
 			m.NetworkLocation.Timestamp = &Timestamp{}
-			m.NetworkLocation.Timestamp.Seconds = src.NetworkLocation.Timestamp.Seconds
-			m.NetworkLocation.Timestamp.Nanos = src.NetworkLocation.Timestamp.Nanos
+			if m.NetworkLocation.Timestamp.Seconds != src.NetworkLocation.Timestamp.Seconds {
+				m.NetworkLocation.Timestamp.Seconds = src.NetworkLocation.Timestamp.Seconds
+				changed++
+			}
+			if m.NetworkLocation.Timestamp.Nanos != src.NetworkLocation.Timestamp.Nanos {
+				m.NetworkLocation.Timestamp.Nanos = src.NetworkLocation.Timestamp.Nanos
+				changed++
+			}
 		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2338,25 +2582,63 @@ func (m *GetLocationReply) ValidateEnums() error {
 	return nil
 }
 
-func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) {
-	m.Ver = src.Ver
-	m.SessionCookie = src.SessionCookie
-	m.CarrierName = src.CarrierName
+func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.SessionCookie != src.SessionCookie {
+		m.SessionCookie = src.SessionCookie
+		changed++
+	}
+	if m.CarrierName != src.CarrierName {
+		m.CarrierName = src.CarrierName
+		changed++
+	}
 	if src.GpsLocation != nil {
 		m.GpsLocation = &Loc{}
-		m.GpsLocation.Latitude = src.GpsLocation.Latitude
-		m.GpsLocation.Longitude = src.GpsLocation.Longitude
-		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
-		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
-		m.GpsLocation.Altitude = src.GpsLocation.Altitude
-		m.GpsLocation.Course = src.GpsLocation.Course
-		m.GpsLocation.Speed = src.GpsLocation.Speed
+		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
+			m.GpsLocation.Latitude = src.GpsLocation.Latitude
+			changed++
+		}
+		if m.GpsLocation.Longitude != src.GpsLocation.Longitude {
+			m.GpsLocation.Longitude = src.GpsLocation.Longitude
+			changed++
+		}
+		if m.GpsLocation.HorizontalAccuracy != src.GpsLocation.HorizontalAccuracy {
+			m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
+			changed++
+		}
+		if m.GpsLocation.VerticalAccuracy != src.GpsLocation.VerticalAccuracy {
+			m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
+			changed++
+		}
+		if m.GpsLocation.Altitude != src.GpsLocation.Altitude {
+			m.GpsLocation.Altitude = src.GpsLocation.Altitude
+			changed++
+		}
+		if m.GpsLocation.Course != src.GpsLocation.Course {
+			m.GpsLocation.Course = src.GpsLocation.Course
+			changed++
+		}
+		if m.GpsLocation.Speed != src.GpsLocation.Speed {
+			m.GpsLocation.Speed = src.GpsLocation.Speed
+			changed++
+		}
 		if src.GpsLocation.Timestamp != nil {
 			m.GpsLocation.Timestamp = &Timestamp{}
-			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
-			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
+				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
+				changed++
+			}
+			if m.GpsLocation.Timestamp.Nanos != src.GpsLocation.Timestamp.Nanos {
+				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+				changed++
+			}
 		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2367,24 +2649,53 @@ func (m *AppInstListRequest) ValidateEnums() error {
 	return nil
 }
 
-func (m *Appinstance) CopyInFields(src *Appinstance) {
-	m.AppName = src.AppName
-	m.AppVers = src.AppVers
-	m.Fqdn = src.Fqdn
+func (m *Appinstance) CopyInFields(src *Appinstance) int {
+	changed := 0
+	if m.AppName != src.AppName {
+		m.AppName = src.AppName
+		changed++
+	}
+	if m.AppVers != src.AppVers {
+		m.AppVers = src.AppVers
+		changed++
+	}
+	if m.Fqdn != src.Fqdn {
+		m.Fqdn = src.Fqdn
+		changed++
+	}
 	if src.Ports != nil {
 		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
 			m.Ports = make([]*AppPort, len(src.Ports))
 		}
 		for i0 := 0; i0 < len(src.Ports); i0++ {
 			m.Ports[i0] = &AppPort{}
-			m.Ports[i0].Proto = src.Ports[i0].Proto
-			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
-			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
-			m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
-			m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
-			m.Ports[i0].EndPort = src.Ports[i0].EndPort
+			if m.Ports[i0].Proto != src.Ports[i0].Proto {
+				m.Ports[i0].Proto = src.Ports[i0].Proto
+				changed++
+			}
+			if m.Ports[i0].InternalPort != src.Ports[i0].InternalPort {
+				m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
+				changed++
+			}
+			if m.Ports[i0].PublicPort != src.Ports[i0].PublicPort {
+				m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
+				changed++
+			}
+			if m.Ports[i0].PathPrefix != src.Ports[i0].PathPrefix {
+				m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
+				changed++
+			}
+			if m.Ports[i0].FqdnPrefix != src.Ports[i0].FqdnPrefix {
+				m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
+				changed++
+			}
+			if m.Ports[i0].EndPort != src.Ports[i0].EndPort {
+				m.Ports[i0].EndPort = src.Ports[i0].EndPort
+				changed++
+			}
 		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2397,50 +2708,115 @@ func (m *Appinstance) ValidateEnums() error {
 	return nil
 }
 
-func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
-	m.CarrierName = src.CarrierName
-	m.CloudletName = src.CloudletName
+func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
+	changed := 0
+	if m.CarrierName != src.CarrierName {
+		m.CarrierName = src.CarrierName
+		changed++
+	}
+	if m.CloudletName != src.CloudletName {
+		m.CloudletName = src.CloudletName
+		changed++
+	}
 	if src.GpsLocation != nil {
 		m.GpsLocation = &Loc{}
-		m.GpsLocation.Latitude = src.GpsLocation.Latitude
-		m.GpsLocation.Longitude = src.GpsLocation.Longitude
-		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
-		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
-		m.GpsLocation.Altitude = src.GpsLocation.Altitude
-		m.GpsLocation.Course = src.GpsLocation.Course
-		m.GpsLocation.Speed = src.GpsLocation.Speed
+		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
+			m.GpsLocation.Latitude = src.GpsLocation.Latitude
+			changed++
+		}
+		if m.GpsLocation.Longitude != src.GpsLocation.Longitude {
+			m.GpsLocation.Longitude = src.GpsLocation.Longitude
+			changed++
+		}
+		if m.GpsLocation.HorizontalAccuracy != src.GpsLocation.HorizontalAccuracy {
+			m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
+			changed++
+		}
+		if m.GpsLocation.VerticalAccuracy != src.GpsLocation.VerticalAccuracy {
+			m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
+			changed++
+		}
+		if m.GpsLocation.Altitude != src.GpsLocation.Altitude {
+			m.GpsLocation.Altitude = src.GpsLocation.Altitude
+			changed++
+		}
+		if m.GpsLocation.Course != src.GpsLocation.Course {
+			m.GpsLocation.Course = src.GpsLocation.Course
+			changed++
+		}
+		if m.GpsLocation.Speed != src.GpsLocation.Speed {
+			m.GpsLocation.Speed = src.GpsLocation.Speed
+			changed++
+		}
 		if src.GpsLocation.Timestamp != nil {
 			m.GpsLocation.Timestamp = &Timestamp{}
-			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
-			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
+				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
+				changed++
+			}
+			if m.GpsLocation.Timestamp.Nanos != src.GpsLocation.Timestamp.Nanos {
+				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+				changed++
+			}
 		}
 	}
-	m.Distance = src.Distance
+	if m.Distance != src.Distance {
+		m.Distance = src.Distance
+		changed++
+	}
 	if src.Appinstances != nil {
 		if m.Appinstances == nil || len(m.Appinstances) != len(src.Appinstances) {
 			m.Appinstances = make([]*Appinstance, len(src.Appinstances))
 		}
 		for i0 := 0; i0 < len(src.Appinstances); i0++ {
 			m.Appinstances[i0] = &Appinstance{}
-			m.Appinstances[i0].AppName = src.Appinstances[i0].AppName
-			m.Appinstances[i0].AppVers = src.Appinstances[i0].AppVers
-			m.Appinstances[i0].Fqdn = src.Appinstances[i0].Fqdn
+			if m.Appinstances[i0].AppName != src.Appinstances[i0].AppName {
+				m.Appinstances[i0].AppName = src.Appinstances[i0].AppName
+				changed++
+			}
+			if m.Appinstances[i0].AppVers != src.Appinstances[i0].AppVers {
+				m.Appinstances[i0].AppVers = src.Appinstances[i0].AppVers
+				changed++
+			}
+			if m.Appinstances[i0].Fqdn != src.Appinstances[i0].Fqdn {
+				m.Appinstances[i0].Fqdn = src.Appinstances[i0].Fqdn
+				changed++
+			}
 			if src.Appinstances[i0].Ports != nil {
 				if m.Appinstances[i0].Ports == nil || len(m.Appinstances[i0].Ports) != len(src.Appinstances[i0].Ports) {
 					m.Appinstances[i0].Ports = make([]*AppPort, len(src.Appinstances[i0].Ports))
 				}
 				for i1 := 0; i1 < len(src.Appinstances[i0].Ports); i1++ {
 					m.Appinstances[i0].Ports[i1] = &AppPort{}
-					m.Appinstances[i0].Ports[i1].Proto = src.Appinstances[i0].Ports[i1].Proto
-					m.Appinstances[i0].Ports[i1].InternalPort = src.Appinstances[i0].Ports[i1].InternalPort
-					m.Appinstances[i0].Ports[i1].PublicPort = src.Appinstances[i0].Ports[i1].PublicPort
-					m.Appinstances[i0].Ports[i1].PathPrefix = src.Appinstances[i0].Ports[i1].PathPrefix
-					m.Appinstances[i0].Ports[i1].FqdnPrefix = src.Appinstances[i0].Ports[i1].FqdnPrefix
-					m.Appinstances[i0].Ports[i1].EndPort = src.Appinstances[i0].Ports[i1].EndPort
+					if m.Appinstances[i0].Ports[i1].Proto != src.Appinstances[i0].Ports[i1].Proto {
+						m.Appinstances[i0].Ports[i1].Proto = src.Appinstances[i0].Ports[i1].Proto
+						changed++
+					}
+					if m.Appinstances[i0].Ports[i1].InternalPort != src.Appinstances[i0].Ports[i1].InternalPort {
+						m.Appinstances[i0].Ports[i1].InternalPort = src.Appinstances[i0].Ports[i1].InternalPort
+						changed++
+					}
+					if m.Appinstances[i0].Ports[i1].PublicPort != src.Appinstances[i0].Ports[i1].PublicPort {
+						m.Appinstances[i0].Ports[i1].PublicPort = src.Appinstances[i0].Ports[i1].PublicPort
+						changed++
+					}
+					if m.Appinstances[i0].Ports[i1].PathPrefix != src.Appinstances[i0].Ports[i1].PathPrefix {
+						m.Appinstances[i0].Ports[i1].PathPrefix = src.Appinstances[i0].Ports[i1].PathPrefix
+						changed++
+					}
+					if m.Appinstances[i0].Ports[i1].FqdnPrefix != src.Appinstances[i0].Ports[i1].FqdnPrefix {
+						m.Appinstances[i0].Ports[i1].FqdnPrefix = src.Appinstances[i0].Ports[i1].FqdnPrefix
+						changed++
+					}
+					if m.Appinstances[i0].Ports[i1].EndPort != src.Appinstances[i0].Ports[i1].EndPort {
+						m.Appinstances[i0].Ports[i1].EndPort = src.Appinstances[i0].Ports[i1].EndPort
+						changed++
+					}
 				}
 			}
 		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2456,60 +2832,131 @@ func (m *CloudletLocation) ValidateEnums() error {
 	return nil
 }
 
-func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
-	m.Ver = src.Ver
-	m.Status = src.Status
+func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.Status != src.Status {
+		m.Status = src.Status
+		changed++
+	}
 	if src.Cloudlets != nil {
 		if m.Cloudlets == nil || len(m.Cloudlets) != len(src.Cloudlets) {
 			m.Cloudlets = make([]*CloudletLocation, len(src.Cloudlets))
 		}
 		for i0 := 0; i0 < len(src.Cloudlets); i0++ {
 			m.Cloudlets[i0] = &CloudletLocation{}
-			m.Cloudlets[i0].CarrierName = src.Cloudlets[i0].CarrierName
-			m.Cloudlets[i0].CloudletName = src.Cloudlets[i0].CloudletName
+			if m.Cloudlets[i0].CarrierName != src.Cloudlets[i0].CarrierName {
+				m.Cloudlets[i0].CarrierName = src.Cloudlets[i0].CarrierName
+				changed++
+			}
+			if m.Cloudlets[i0].CloudletName != src.Cloudlets[i0].CloudletName {
+				m.Cloudlets[i0].CloudletName = src.Cloudlets[i0].CloudletName
+				changed++
+			}
 			if src.Cloudlets[i0].GpsLocation != nil {
 				m.Cloudlets[i0].GpsLocation = &Loc{}
-				m.Cloudlets[i0].GpsLocation.Latitude = src.Cloudlets[i0].GpsLocation.Latitude
-				m.Cloudlets[i0].GpsLocation.Longitude = src.Cloudlets[i0].GpsLocation.Longitude
-				m.Cloudlets[i0].GpsLocation.HorizontalAccuracy = src.Cloudlets[i0].GpsLocation.HorizontalAccuracy
-				m.Cloudlets[i0].GpsLocation.VerticalAccuracy = src.Cloudlets[i0].GpsLocation.VerticalAccuracy
-				m.Cloudlets[i0].GpsLocation.Altitude = src.Cloudlets[i0].GpsLocation.Altitude
-				m.Cloudlets[i0].GpsLocation.Course = src.Cloudlets[i0].GpsLocation.Course
-				m.Cloudlets[i0].GpsLocation.Speed = src.Cloudlets[i0].GpsLocation.Speed
+				if m.Cloudlets[i0].GpsLocation.Latitude != src.Cloudlets[i0].GpsLocation.Latitude {
+					m.Cloudlets[i0].GpsLocation.Latitude = src.Cloudlets[i0].GpsLocation.Latitude
+					changed++
+				}
+				if m.Cloudlets[i0].GpsLocation.Longitude != src.Cloudlets[i0].GpsLocation.Longitude {
+					m.Cloudlets[i0].GpsLocation.Longitude = src.Cloudlets[i0].GpsLocation.Longitude
+					changed++
+				}
+				if m.Cloudlets[i0].GpsLocation.HorizontalAccuracy != src.Cloudlets[i0].GpsLocation.HorizontalAccuracy {
+					m.Cloudlets[i0].GpsLocation.HorizontalAccuracy = src.Cloudlets[i0].GpsLocation.HorizontalAccuracy
+					changed++
+				}
+				if m.Cloudlets[i0].GpsLocation.VerticalAccuracy != src.Cloudlets[i0].GpsLocation.VerticalAccuracy {
+					m.Cloudlets[i0].GpsLocation.VerticalAccuracy = src.Cloudlets[i0].GpsLocation.VerticalAccuracy
+					changed++
+				}
+				if m.Cloudlets[i0].GpsLocation.Altitude != src.Cloudlets[i0].GpsLocation.Altitude {
+					m.Cloudlets[i0].GpsLocation.Altitude = src.Cloudlets[i0].GpsLocation.Altitude
+					changed++
+				}
+				if m.Cloudlets[i0].GpsLocation.Course != src.Cloudlets[i0].GpsLocation.Course {
+					m.Cloudlets[i0].GpsLocation.Course = src.Cloudlets[i0].GpsLocation.Course
+					changed++
+				}
+				if m.Cloudlets[i0].GpsLocation.Speed != src.Cloudlets[i0].GpsLocation.Speed {
+					m.Cloudlets[i0].GpsLocation.Speed = src.Cloudlets[i0].GpsLocation.Speed
+					changed++
+				}
 				if src.Cloudlets[i0].GpsLocation.Timestamp != nil {
 					m.Cloudlets[i0].GpsLocation.Timestamp = &Timestamp{}
-					m.Cloudlets[i0].GpsLocation.Timestamp.Seconds = src.Cloudlets[i0].GpsLocation.Timestamp.Seconds
-					m.Cloudlets[i0].GpsLocation.Timestamp.Nanos = src.Cloudlets[i0].GpsLocation.Timestamp.Nanos
+					if m.Cloudlets[i0].GpsLocation.Timestamp.Seconds != src.Cloudlets[i0].GpsLocation.Timestamp.Seconds {
+						m.Cloudlets[i0].GpsLocation.Timestamp.Seconds = src.Cloudlets[i0].GpsLocation.Timestamp.Seconds
+						changed++
+					}
+					if m.Cloudlets[i0].GpsLocation.Timestamp.Nanos != src.Cloudlets[i0].GpsLocation.Timestamp.Nanos {
+						m.Cloudlets[i0].GpsLocation.Timestamp.Nanos = src.Cloudlets[i0].GpsLocation.Timestamp.Nanos
+						changed++
+					}
 				}
 			}
-			m.Cloudlets[i0].Distance = src.Cloudlets[i0].Distance
+			if m.Cloudlets[i0].Distance != src.Cloudlets[i0].Distance {
+				m.Cloudlets[i0].Distance = src.Cloudlets[i0].Distance
+				changed++
+			}
 			if src.Cloudlets[i0].Appinstances != nil {
 				if m.Cloudlets[i0].Appinstances == nil || len(m.Cloudlets[i0].Appinstances) != len(src.Cloudlets[i0].Appinstances) {
 					m.Cloudlets[i0].Appinstances = make([]*Appinstance, len(src.Cloudlets[i0].Appinstances))
 				}
 				for i1 := 0; i1 < len(src.Cloudlets[i0].Appinstances); i1++ {
 					m.Cloudlets[i0].Appinstances[i1] = &Appinstance{}
-					m.Cloudlets[i0].Appinstances[i1].AppName = src.Cloudlets[i0].Appinstances[i1].AppName
-					m.Cloudlets[i0].Appinstances[i1].AppVers = src.Cloudlets[i0].Appinstances[i1].AppVers
-					m.Cloudlets[i0].Appinstances[i1].Fqdn = src.Cloudlets[i0].Appinstances[i1].Fqdn
+					if m.Cloudlets[i0].Appinstances[i1].AppName != src.Cloudlets[i0].Appinstances[i1].AppName {
+						m.Cloudlets[i0].Appinstances[i1].AppName = src.Cloudlets[i0].Appinstances[i1].AppName
+						changed++
+					}
+					if m.Cloudlets[i0].Appinstances[i1].AppVers != src.Cloudlets[i0].Appinstances[i1].AppVers {
+						m.Cloudlets[i0].Appinstances[i1].AppVers = src.Cloudlets[i0].Appinstances[i1].AppVers
+						changed++
+					}
+					if m.Cloudlets[i0].Appinstances[i1].Fqdn != src.Cloudlets[i0].Appinstances[i1].Fqdn {
+						m.Cloudlets[i0].Appinstances[i1].Fqdn = src.Cloudlets[i0].Appinstances[i1].Fqdn
+						changed++
+					}
 					if src.Cloudlets[i0].Appinstances[i1].Ports != nil {
 						if m.Cloudlets[i0].Appinstances[i1].Ports == nil || len(m.Cloudlets[i0].Appinstances[i1].Ports) != len(src.Cloudlets[i0].Appinstances[i1].Ports) {
 							m.Cloudlets[i0].Appinstances[i1].Ports = make([]*AppPort, len(src.Cloudlets[i0].Appinstances[i1].Ports))
 						}
 						for i2 := 0; i2 < len(src.Cloudlets[i0].Appinstances[i1].Ports); i2++ {
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2] = &AppPort{}
-							m.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto
-							m.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort
-							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort
-							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix
-							m.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix
-							m.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort
+							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto != src.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto {
+								m.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto
+								changed++
+							}
+							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort != src.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort {
+								m.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort
+								changed++
+							}
+							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort != src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort {
+								m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort
+								changed++
+							}
+							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix != src.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix {
+								m.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix
+								changed++
+							}
+							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix != src.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix {
+								m.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix
+								changed++
+							}
+							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort != src.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort {
+								m.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort
+								changed++
+							}
 						}
 					}
 				}
 			}
 		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2525,9 +2972,17 @@ func (m *AppInstListReply) ValidateEnums() error {
 	return nil
 }
 
-func (m *FqdnListRequest) CopyInFields(src *FqdnListRequest) {
-	m.Ver = src.Ver
-	m.SessionCookie = src.SessionCookie
+func (m *FqdnListRequest) CopyInFields(src *FqdnListRequest) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.SessionCookie != src.SessionCookie {
+		m.SessionCookie = src.SessionCookie
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2535,15 +2990,30 @@ func (m *FqdnListRequest) ValidateEnums() error {
 	return nil
 }
 
-func (m *AppFqdn) CopyInFields(src *AppFqdn) {
-	m.AppName = src.AppName
-	m.AppVers = src.AppVers
-	m.DevName = src.DevName
+func (m *AppFqdn) CopyInFields(src *AppFqdn) int {
+	changed := 0
+	if m.AppName != src.AppName {
+		m.AppName = src.AppName
+		changed++
+	}
+	if m.AppVers != src.AppVers {
+		m.AppVers = src.AppVers
+		changed++
+	}
+	if m.DevName != src.DevName {
+		m.DevName = src.DevName
+		changed++
+	}
 	if m.Fqdns == nil || len(m.Fqdns) != len(src.Fqdns) {
 		m.Fqdns = make([]string, len(src.Fqdns))
 	}
 	copy(m.Fqdns, src.Fqdns)
-	m.AndroidPackageName = src.AndroidPackageName
+	changed++
+	if m.AndroidPackageName != src.AndroidPackageName {
+		m.AndroidPackageName = src.AndroidPackageName
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2551,25 +3021,46 @@ func (m *AppFqdn) ValidateEnums() error {
 	return nil
 }
 
-func (m *FqdnListReply) CopyInFields(src *FqdnListReply) {
-	m.Ver = src.Ver
+func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
 	if src.AppFqdns != nil {
 		if m.AppFqdns == nil || len(m.AppFqdns) != len(src.AppFqdns) {
 			m.AppFqdns = make([]*AppFqdn, len(src.AppFqdns))
 		}
 		for i0 := 0; i0 < len(src.AppFqdns); i0++ {
 			m.AppFqdns[i0] = &AppFqdn{}
-			m.AppFqdns[i0].AppName = src.AppFqdns[i0].AppName
-			m.AppFqdns[i0].AppVers = src.AppFqdns[i0].AppVers
-			m.AppFqdns[i0].DevName = src.AppFqdns[i0].DevName
+			if m.AppFqdns[i0].AppName != src.AppFqdns[i0].AppName {
+				m.AppFqdns[i0].AppName = src.AppFqdns[i0].AppName
+				changed++
+			}
+			if m.AppFqdns[i0].AppVers != src.AppFqdns[i0].AppVers {
+				m.AppFqdns[i0].AppVers = src.AppFqdns[i0].AppVers
+				changed++
+			}
+			if m.AppFqdns[i0].DevName != src.AppFqdns[i0].DevName {
+				m.AppFqdns[i0].DevName = src.AppFqdns[i0].DevName
+				changed++
+			}
 			if m.AppFqdns[i0].Fqdns == nil || len(m.AppFqdns[i0].Fqdns) != len(src.AppFqdns[i0].Fqdns) {
 				m.AppFqdns[i0].Fqdns = make([]string, len(src.AppFqdns[i0].Fqdns))
 			}
 			copy(m.AppFqdns[i0].Fqdns, src.AppFqdns[i0].Fqdns)
-			m.AppFqdns[i0].AndroidPackageName = src.AppFqdns[i0].AndroidPackageName
+			changed++
+			if m.AppFqdns[i0].AndroidPackageName != src.AppFqdns[i0].AndroidPackageName {
+				m.AppFqdns[i0].AndroidPackageName = src.AppFqdns[i0].AndroidPackageName
+				changed++
+			}
 		}
 	}
-	m.Status = src.Status
+	if m.Status != src.Status {
+		m.Status = src.Status
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2585,12 +3076,29 @@ func (m *FqdnListReply) ValidateEnums() error {
 	return nil
 }
 
-func (m *DynamicLocGroupRequest) CopyInFields(src *DynamicLocGroupRequest) {
-	m.Ver = src.Ver
-	m.SessionCookie = src.SessionCookie
-	m.LgId = src.LgId
-	m.CommType = src.CommType
-	m.UserData = src.UserData
+func (m *DynamicLocGroupRequest) CopyInFields(src *DynamicLocGroupRequest) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.SessionCookie != src.SessionCookie {
+		m.SessionCookie = src.SessionCookie
+		changed++
+	}
+	if m.LgId != src.LgId {
+		m.LgId = src.LgId
+		changed++
+	}
+	if m.CommType != src.CommType {
+		m.CommType = src.CommType
+		changed++
+	}
+	if m.UserData != src.UserData {
+		m.UserData = src.UserData
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2601,11 +3109,25 @@ func (m *DynamicLocGroupRequest) ValidateEnums() error {
 	return nil
 }
 
-func (m *DynamicLocGroupReply) CopyInFields(src *DynamicLocGroupReply) {
-	m.Ver = src.Ver
-	m.Status = src.Status
-	m.ErrorCode = src.ErrorCode
-	m.GroupCookie = src.GroupCookie
+func (m *DynamicLocGroupReply) CopyInFields(src *DynamicLocGroupReply) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.Status != src.Status {
+		m.Status = src.Status
+		changed++
+	}
+	if m.ErrorCode != src.ErrorCode {
+		m.ErrorCode = src.ErrorCode
+		changed++
+	}
+	if m.GroupCookie != src.GroupCookie {
+		m.GroupCookie = src.GroupCookie
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2616,23 +3138,55 @@ func (m *DynamicLocGroupReply) ValidateEnums() error {
 	return nil
 }
 
-func (m *QosPosition) CopyInFields(src *QosPosition) {
-	m.Positionid = src.Positionid
+func (m *QosPosition) CopyInFields(src *QosPosition) int {
+	changed := 0
+	if m.Positionid != src.Positionid {
+		m.Positionid = src.Positionid
+		changed++
+	}
 	if src.GpsLocation != nil {
 		m.GpsLocation = &Loc{}
-		m.GpsLocation.Latitude = src.GpsLocation.Latitude
-		m.GpsLocation.Longitude = src.GpsLocation.Longitude
-		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
-		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
-		m.GpsLocation.Altitude = src.GpsLocation.Altitude
-		m.GpsLocation.Course = src.GpsLocation.Course
-		m.GpsLocation.Speed = src.GpsLocation.Speed
+		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
+			m.GpsLocation.Latitude = src.GpsLocation.Latitude
+			changed++
+		}
+		if m.GpsLocation.Longitude != src.GpsLocation.Longitude {
+			m.GpsLocation.Longitude = src.GpsLocation.Longitude
+			changed++
+		}
+		if m.GpsLocation.HorizontalAccuracy != src.GpsLocation.HorizontalAccuracy {
+			m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
+			changed++
+		}
+		if m.GpsLocation.VerticalAccuracy != src.GpsLocation.VerticalAccuracy {
+			m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
+			changed++
+		}
+		if m.GpsLocation.Altitude != src.GpsLocation.Altitude {
+			m.GpsLocation.Altitude = src.GpsLocation.Altitude
+			changed++
+		}
+		if m.GpsLocation.Course != src.GpsLocation.Course {
+			m.GpsLocation.Course = src.GpsLocation.Course
+			changed++
+		}
+		if m.GpsLocation.Speed != src.GpsLocation.Speed {
+			m.GpsLocation.Speed = src.GpsLocation.Speed
+			changed++
+		}
 		if src.GpsLocation.Timestamp != nil {
 			m.GpsLocation.Timestamp = &Timestamp{}
-			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
-			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
+				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
+				changed++
+			}
+			if m.GpsLocation.Timestamp.Nanos != src.GpsLocation.Timestamp.Nanos {
+				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+				changed++
+			}
 		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2643,23 +3197,29 @@ func (m *QosPosition) ValidateEnums() error {
 	return nil
 }
 
-func (m *BandSelection) CopyInFields(src *BandSelection) {
+func (m *BandSelection) CopyInFields(src *BandSelection) int {
+	changed := 0
 	if m.Rat_2G == nil || len(m.Rat_2G) != len(src.Rat_2G) {
 		m.Rat_2G = make([]string, len(src.Rat_2G))
 	}
 	copy(m.Rat_2G, src.Rat_2G)
+	changed++
 	if m.Rat_3G == nil || len(m.Rat_3G) != len(src.Rat_3G) {
 		m.Rat_3G = make([]string, len(src.Rat_3G))
 	}
 	copy(m.Rat_3G, src.Rat_3G)
+	changed++
 	if m.Rat_4G == nil || len(m.Rat_4G) != len(src.Rat_4G) {
 		m.Rat_4G = make([]string, len(src.Rat_4G))
 	}
 	copy(m.Rat_4G, src.Rat_4G)
+	changed++
 	if m.Rat_5G == nil || len(m.Rat_5G) != len(src.Rat_5G) {
 		m.Rat_5G = make([]string, len(src.Rat_5G))
 	}
 	copy(m.Rat_5G, src.Rat_5G)
+	changed++
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2667,53 +3227,98 @@ func (m *BandSelection) ValidateEnums() error {
 	return nil
 }
 
-func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) {
-	m.Ver = src.Ver
-	m.SessionCookie = src.SessionCookie
+func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.SessionCookie != src.SessionCookie {
+		m.SessionCookie = src.SessionCookie
+		changed++
+	}
 	if src.Positions != nil {
 		if m.Positions == nil || len(m.Positions) != len(src.Positions) {
 			m.Positions = make([]*QosPosition, len(src.Positions))
 		}
 		for i0 := 0; i0 < len(src.Positions); i0++ {
 			m.Positions[i0] = &QosPosition{}
-			m.Positions[i0].Positionid = src.Positions[i0].Positionid
+			if m.Positions[i0].Positionid != src.Positions[i0].Positionid {
+				m.Positions[i0].Positionid = src.Positions[i0].Positionid
+				changed++
+			}
 			if src.Positions[i0].GpsLocation != nil {
 				m.Positions[i0].GpsLocation = &Loc{}
-				m.Positions[i0].GpsLocation.Latitude = src.Positions[i0].GpsLocation.Latitude
-				m.Positions[i0].GpsLocation.Longitude = src.Positions[i0].GpsLocation.Longitude
-				m.Positions[i0].GpsLocation.HorizontalAccuracy = src.Positions[i0].GpsLocation.HorizontalAccuracy
-				m.Positions[i0].GpsLocation.VerticalAccuracy = src.Positions[i0].GpsLocation.VerticalAccuracy
-				m.Positions[i0].GpsLocation.Altitude = src.Positions[i0].GpsLocation.Altitude
-				m.Positions[i0].GpsLocation.Course = src.Positions[i0].GpsLocation.Course
-				m.Positions[i0].GpsLocation.Speed = src.Positions[i0].GpsLocation.Speed
+				if m.Positions[i0].GpsLocation.Latitude != src.Positions[i0].GpsLocation.Latitude {
+					m.Positions[i0].GpsLocation.Latitude = src.Positions[i0].GpsLocation.Latitude
+					changed++
+				}
+				if m.Positions[i0].GpsLocation.Longitude != src.Positions[i0].GpsLocation.Longitude {
+					m.Positions[i0].GpsLocation.Longitude = src.Positions[i0].GpsLocation.Longitude
+					changed++
+				}
+				if m.Positions[i0].GpsLocation.HorizontalAccuracy != src.Positions[i0].GpsLocation.HorizontalAccuracy {
+					m.Positions[i0].GpsLocation.HorizontalAccuracy = src.Positions[i0].GpsLocation.HorizontalAccuracy
+					changed++
+				}
+				if m.Positions[i0].GpsLocation.VerticalAccuracy != src.Positions[i0].GpsLocation.VerticalAccuracy {
+					m.Positions[i0].GpsLocation.VerticalAccuracy = src.Positions[i0].GpsLocation.VerticalAccuracy
+					changed++
+				}
+				if m.Positions[i0].GpsLocation.Altitude != src.Positions[i0].GpsLocation.Altitude {
+					m.Positions[i0].GpsLocation.Altitude = src.Positions[i0].GpsLocation.Altitude
+					changed++
+				}
+				if m.Positions[i0].GpsLocation.Course != src.Positions[i0].GpsLocation.Course {
+					m.Positions[i0].GpsLocation.Course = src.Positions[i0].GpsLocation.Course
+					changed++
+				}
+				if m.Positions[i0].GpsLocation.Speed != src.Positions[i0].GpsLocation.Speed {
+					m.Positions[i0].GpsLocation.Speed = src.Positions[i0].GpsLocation.Speed
+					changed++
+				}
 				if src.Positions[i0].GpsLocation.Timestamp != nil {
 					m.Positions[i0].GpsLocation.Timestamp = &Timestamp{}
-					m.Positions[i0].GpsLocation.Timestamp.Seconds = src.Positions[i0].GpsLocation.Timestamp.Seconds
-					m.Positions[i0].GpsLocation.Timestamp.Nanos = src.Positions[i0].GpsLocation.Timestamp.Nanos
+					if m.Positions[i0].GpsLocation.Timestamp.Seconds != src.Positions[i0].GpsLocation.Timestamp.Seconds {
+						m.Positions[i0].GpsLocation.Timestamp.Seconds = src.Positions[i0].GpsLocation.Timestamp.Seconds
+						changed++
+					}
+					if m.Positions[i0].GpsLocation.Timestamp.Nanos != src.Positions[i0].GpsLocation.Timestamp.Nanos {
+						m.Positions[i0].GpsLocation.Timestamp.Nanos = src.Positions[i0].GpsLocation.Timestamp.Nanos
+						changed++
+					}
 				}
 			}
 		}
 	}
-	m.LteCategory = src.LteCategory
+	if m.LteCategory != src.LteCategory {
+		m.LteCategory = src.LteCategory
+		changed++
+	}
 	if src.BandSelection != nil {
 		m.BandSelection = &BandSelection{}
 		if m.BandSelection.Rat_2G == nil || len(m.BandSelection.Rat_2G) != len(src.BandSelection.Rat_2G) {
 			m.BandSelection.Rat_2G = make([]string, len(src.BandSelection.Rat_2G))
 		}
 		copy(m.BandSelection.Rat_2G, src.BandSelection.Rat_2G)
+		changed++
 		if m.BandSelection.Rat_3G == nil || len(m.BandSelection.Rat_3G) != len(src.BandSelection.Rat_3G) {
 			m.BandSelection.Rat_3G = make([]string, len(src.BandSelection.Rat_3G))
 		}
 		copy(m.BandSelection.Rat_3G, src.BandSelection.Rat_3G)
+		changed++
 		if m.BandSelection.Rat_4G == nil || len(m.BandSelection.Rat_4G) != len(src.BandSelection.Rat_4G) {
 			m.BandSelection.Rat_4G = make([]string, len(src.BandSelection.Rat_4G))
 		}
 		copy(m.BandSelection.Rat_4G, src.BandSelection.Rat_4G)
+		changed++
 		if m.BandSelection.Rat_5G == nil || len(m.BandSelection.Rat_5G) != len(src.BandSelection.Rat_5G) {
 			m.BandSelection.Rat_5G = make([]string, len(src.BandSelection.Rat_5G))
 		}
 		copy(m.BandSelection.Rat_5G, src.BandSelection.Rat_5G)
+		changed++
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2729,32 +3334,91 @@ func (m *QosPositionRequest) ValidateEnums() error {
 	return nil
 }
 
-func (m *QosPositionKpiResult) CopyInFields(src *QosPositionKpiResult) {
-	m.Positionid = src.Positionid
+func (m *QosPositionKpiResult) CopyInFields(src *QosPositionKpiResult) int {
+	changed := 0
+	if m.Positionid != src.Positionid {
+		m.Positionid = src.Positionid
+		changed++
+	}
 	if src.GpsLocation != nil {
 		m.GpsLocation = &Loc{}
-		m.GpsLocation.Latitude = src.GpsLocation.Latitude
-		m.GpsLocation.Longitude = src.GpsLocation.Longitude
-		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
-		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
-		m.GpsLocation.Altitude = src.GpsLocation.Altitude
-		m.GpsLocation.Course = src.GpsLocation.Course
-		m.GpsLocation.Speed = src.GpsLocation.Speed
+		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
+			m.GpsLocation.Latitude = src.GpsLocation.Latitude
+			changed++
+		}
+		if m.GpsLocation.Longitude != src.GpsLocation.Longitude {
+			m.GpsLocation.Longitude = src.GpsLocation.Longitude
+			changed++
+		}
+		if m.GpsLocation.HorizontalAccuracy != src.GpsLocation.HorizontalAccuracy {
+			m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
+			changed++
+		}
+		if m.GpsLocation.VerticalAccuracy != src.GpsLocation.VerticalAccuracy {
+			m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
+			changed++
+		}
+		if m.GpsLocation.Altitude != src.GpsLocation.Altitude {
+			m.GpsLocation.Altitude = src.GpsLocation.Altitude
+			changed++
+		}
+		if m.GpsLocation.Course != src.GpsLocation.Course {
+			m.GpsLocation.Course = src.GpsLocation.Course
+			changed++
+		}
+		if m.GpsLocation.Speed != src.GpsLocation.Speed {
+			m.GpsLocation.Speed = src.GpsLocation.Speed
+			changed++
+		}
 		if src.GpsLocation.Timestamp != nil {
 			m.GpsLocation.Timestamp = &Timestamp{}
-			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
-			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
+				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
+				changed++
+			}
+			if m.GpsLocation.Timestamp.Nanos != src.GpsLocation.Timestamp.Nanos {
+				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+				changed++
+			}
 		}
 	}
-	m.DluserthroughputMin = src.DluserthroughputMin
-	m.DluserthroughputAvg = src.DluserthroughputAvg
-	m.DluserthroughputMax = src.DluserthroughputMax
-	m.UluserthroughputMin = src.UluserthroughputMin
-	m.UluserthroughputAvg = src.UluserthroughputAvg
-	m.UluserthroughputMax = src.UluserthroughputMax
-	m.LatencyMin = src.LatencyMin
-	m.LatencyAvg = src.LatencyAvg
-	m.LatencyMax = src.LatencyMax
+	if m.DluserthroughputMin != src.DluserthroughputMin {
+		m.DluserthroughputMin = src.DluserthroughputMin
+		changed++
+	}
+	if m.DluserthroughputAvg != src.DluserthroughputAvg {
+		m.DluserthroughputAvg = src.DluserthroughputAvg
+		changed++
+	}
+	if m.DluserthroughputMax != src.DluserthroughputMax {
+		m.DluserthroughputMax = src.DluserthroughputMax
+		changed++
+	}
+	if m.UluserthroughputMin != src.UluserthroughputMin {
+		m.UluserthroughputMin = src.UluserthroughputMin
+		changed++
+	}
+	if m.UluserthroughputAvg != src.UluserthroughputAvg {
+		m.UluserthroughputAvg = src.UluserthroughputAvg
+		changed++
+	}
+	if m.UluserthroughputMax != src.UluserthroughputMax {
+		m.UluserthroughputMax = src.UluserthroughputMax
+		changed++
+	}
+	if m.LatencyMin != src.LatencyMin {
+		m.LatencyMin = src.LatencyMin
+		changed++
+	}
+	if m.LatencyAvg != src.LatencyAvg {
+		m.LatencyAvg = src.LatencyAvg
+		changed++
+	}
+	if m.LatencyMax != src.LatencyMax {
+		m.LatencyMax = src.LatencyMax
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2765,42 +3429,107 @@ func (m *QosPositionKpiResult) ValidateEnums() error {
 	return nil
 }
 
-func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) {
-	m.Ver = src.Ver
-	m.Status = src.Status
+func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.Status != src.Status {
+		m.Status = src.Status
+		changed++
+	}
 	if src.PositionResults != nil {
 		if m.PositionResults == nil || len(m.PositionResults) != len(src.PositionResults) {
 			m.PositionResults = make([]*QosPositionKpiResult, len(src.PositionResults))
 		}
 		for i0 := 0; i0 < len(src.PositionResults); i0++ {
 			m.PositionResults[i0] = &QosPositionKpiResult{}
-			m.PositionResults[i0].Positionid = src.PositionResults[i0].Positionid
+			if m.PositionResults[i0].Positionid != src.PositionResults[i0].Positionid {
+				m.PositionResults[i0].Positionid = src.PositionResults[i0].Positionid
+				changed++
+			}
 			if src.PositionResults[i0].GpsLocation != nil {
 				m.PositionResults[i0].GpsLocation = &Loc{}
-				m.PositionResults[i0].GpsLocation.Latitude = src.PositionResults[i0].GpsLocation.Latitude
-				m.PositionResults[i0].GpsLocation.Longitude = src.PositionResults[i0].GpsLocation.Longitude
-				m.PositionResults[i0].GpsLocation.HorizontalAccuracy = src.PositionResults[i0].GpsLocation.HorizontalAccuracy
-				m.PositionResults[i0].GpsLocation.VerticalAccuracy = src.PositionResults[i0].GpsLocation.VerticalAccuracy
-				m.PositionResults[i0].GpsLocation.Altitude = src.PositionResults[i0].GpsLocation.Altitude
-				m.PositionResults[i0].GpsLocation.Course = src.PositionResults[i0].GpsLocation.Course
-				m.PositionResults[i0].GpsLocation.Speed = src.PositionResults[i0].GpsLocation.Speed
+				if m.PositionResults[i0].GpsLocation.Latitude != src.PositionResults[i0].GpsLocation.Latitude {
+					m.PositionResults[i0].GpsLocation.Latitude = src.PositionResults[i0].GpsLocation.Latitude
+					changed++
+				}
+				if m.PositionResults[i0].GpsLocation.Longitude != src.PositionResults[i0].GpsLocation.Longitude {
+					m.PositionResults[i0].GpsLocation.Longitude = src.PositionResults[i0].GpsLocation.Longitude
+					changed++
+				}
+				if m.PositionResults[i0].GpsLocation.HorizontalAccuracy != src.PositionResults[i0].GpsLocation.HorizontalAccuracy {
+					m.PositionResults[i0].GpsLocation.HorizontalAccuracy = src.PositionResults[i0].GpsLocation.HorizontalAccuracy
+					changed++
+				}
+				if m.PositionResults[i0].GpsLocation.VerticalAccuracy != src.PositionResults[i0].GpsLocation.VerticalAccuracy {
+					m.PositionResults[i0].GpsLocation.VerticalAccuracy = src.PositionResults[i0].GpsLocation.VerticalAccuracy
+					changed++
+				}
+				if m.PositionResults[i0].GpsLocation.Altitude != src.PositionResults[i0].GpsLocation.Altitude {
+					m.PositionResults[i0].GpsLocation.Altitude = src.PositionResults[i0].GpsLocation.Altitude
+					changed++
+				}
+				if m.PositionResults[i0].GpsLocation.Course != src.PositionResults[i0].GpsLocation.Course {
+					m.PositionResults[i0].GpsLocation.Course = src.PositionResults[i0].GpsLocation.Course
+					changed++
+				}
+				if m.PositionResults[i0].GpsLocation.Speed != src.PositionResults[i0].GpsLocation.Speed {
+					m.PositionResults[i0].GpsLocation.Speed = src.PositionResults[i0].GpsLocation.Speed
+					changed++
+				}
 				if src.PositionResults[i0].GpsLocation.Timestamp != nil {
 					m.PositionResults[i0].GpsLocation.Timestamp = &Timestamp{}
-					m.PositionResults[i0].GpsLocation.Timestamp.Seconds = src.PositionResults[i0].GpsLocation.Timestamp.Seconds
-					m.PositionResults[i0].GpsLocation.Timestamp.Nanos = src.PositionResults[i0].GpsLocation.Timestamp.Nanos
+					if m.PositionResults[i0].GpsLocation.Timestamp.Seconds != src.PositionResults[i0].GpsLocation.Timestamp.Seconds {
+						m.PositionResults[i0].GpsLocation.Timestamp.Seconds = src.PositionResults[i0].GpsLocation.Timestamp.Seconds
+						changed++
+					}
+					if m.PositionResults[i0].GpsLocation.Timestamp.Nanos != src.PositionResults[i0].GpsLocation.Timestamp.Nanos {
+						m.PositionResults[i0].GpsLocation.Timestamp.Nanos = src.PositionResults[i0].GpsLocation.Timestamp.Nanos
+						changed++
+					}
 				}
 			}
-			m.PositionResults[i0].DluserthroughputMin = src.PositionResults[i0].DluserthroughputMin
-			m.PositionResults[i0].DluserthroughputAvg = src.PositionResults[i0].DluserthroughputAvg
-			m.PositionResults[i0].DluserthroughputMax = src.PositionResults[i0].DluserthroughputMax
-			m.PositionResults[i0].UluserthroughputMin = src.PositionResults[i0].UluserthroughputMin
-			m.PositionResults[i0].UluserthroughputAvg = src.PositionResults[i0].UluserthroughputAvg
-			m.PositionResults[i0].UluserthroughputMax = src.PositionResults[i0].UluserthroughputMax
-			m.PositionResults[i0].LatencyMin = src.PositionResults[i0].LatencyMin
-			m.PositionResults[i0].LatencyAvg = src.PositionResults[i0].LatencyAvg
-			m.PositionResults[i0].LatencyMax = src.PositionResults[i0].LatencyMax
+			if m.PositionResults[i0].DluserthroughputMin != src.PositionResults[i0].DluserthroughputMin {
+				m.PositionResults[i0].DluserthroughputMin = src.PositionResults[i0].DluserthroughputMin
+				changed++
+			}
+			if m.PositionResults[i0].DluserthroughputAvg != src.PositionResults[i0].DluserthroughputAvg {
+				m.PositionResults[i0].DluserthroughputAvg = src.PositionResults[i0].DluserthroughputAvg
+				changed++
+			}
+			if m.PositionResults[i0].DluserthroughputMax != src.PositionResults[i0].DluserthroughputMax {
+				m.PositionResults[i0].DluserthroughputMax = src.PositionResults[i0].DluserthroughputMax
+				changed++
+			}
+			if m.PositionResults[i0].UluserthroughputMin != src.PositionResults[i0].UluserthroughputMin {
+				m.PositionResults[i0].UluserthroughputMin = src.PositionResults[i0].UluserthroughputMin
+				changed++
+			}
+			if m.PositionResults[i0].UluserthroughputAvg != src.PositionResults[i0].UluserthroughputAvg {
+				m.PositionResults[i0].UluserthroughputAvg = src.PositionResults[i0].UluserthroughputAvg
+				changed++
+			}
+			if m.PositionResults[i0].UluserthroughputMax != src.PositionResults[i0].UluserthroughputMax {
+				m.PositionResults[i0].UluserthroughputMax = src.PositionResults[i0].UluserthroughputMax
+				changed++
+			}
+			if m.PositionResults[i0].LatencyMin != src.PositionResults[i0].LatencyMin {
+				m.PositionResults[i0].LatencyMin = src.PositionResults[i0].LatencyMin
+				changed++
+			}
+			if m.PositionResults[i0].LatencyAvg != src.PositionResults[i0].LatencyAvg {
+				m.PositionResults[i0].LatencyAvg = src.PositionResults[i0].LatencyAvg
+				changed++
+			}
+			if m.PositionResults[i0].LatencyMax != src.PositionResults[i0].LatencyMax {
+				m.PositionResults[i0].LatencyMax = src.PositionResults[i0].LatencyMax
+				changed++
+			}
 		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values

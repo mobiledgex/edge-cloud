@@ -305,10 +305,11 @@ var ClusterInstData = []edgeproto.ClusterInst{
 			CloudletKey: CloudletData[2].Key,
 			Developer:   DevData[3].Key.Name,
 		},
-		Flavor:     FlavorData[0].Key,
-		IpAccess:   edgeproto.IpAccess_IP_ACCESS_DEDICATED_OR_SHARED,
-		NumMasters: 1,
-		NumNodes:   2,
+		Flavor:          FlavorData[0].Key,
+		IpAccess:        edgeproto.IpAccess_IP_ACCESS_DEDICATED_OR_SHARED,
+		NumMasters:      1,
+		NumNodes:        2,
+		AutoScalePolicy: AutoScalePolicyData[2].Key.Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
@@ -316,10 +317,11 @@ var ClusterInstData = []edgeproto.ClusterInst{
 			CloudletKey: CloudletData[0].Key,
 			Developer:   DevData[0].Key.Name,
 		},
-		Flavor:     FlavorData[1].Key,
-		IpAccess:   edgeproto.IpAccess_IP_ACCESS_DEDICATED,
-		NumMasters: 1,
-		NumNodes:   3,
+		Flavor:          FlavorData[1].Key,
+		IpAccess:        edgeproto.IpAccess_IP_ACCESS_DEDICATED,
+		NumMasters:      1,
+		NumNodes:        3,
+		AutoScalePolicy: AutoScalePolicyData[0].Key.Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
@@ -853,5 +855,41 @@ var AlertData = []edgeproto.Alert{
 			Nanos:   42398457,
 		},
 		Value: 1,
+	},
+}
+
+var AutoScalePolicyData = []edgeproto.AutoScalePolicy{
+	edgeproto.AutoScalePolicy{
+		Key: edgeproto.PolicyKey{
+			Name:      "auto-scale-policy",
+			Developer: DevData[0].Key.Name,
+		},
+		MinNodes:           1,
+		MaxNodes:           3,
+		ScaleUpCpuThresh:   80,
+		ScaleDownCpuThresh: 20,
+		TriggerTimeSec:     60,
+	},
+	edgeproto.AutoScalePolicy{
+		Key: edgeproto.PolicyKey{
+			Name:      "auto-scale-policy",
+			Developer: DevData[1].Key.Name,
+		},
+		MinNodes:           4,
+		MaxNodes:           8,
+		ScaleUpCpuThresh:   60,
+		ScaleDownCpuThresh: 40,
+		TriggerTimeSec:     30,
+	},
+	edgeproto.AutoScalePolicy{
+		Key: edgeproto.PolicyKey{
+			Name:      "auto-scale-policy",
+			Developer: DevData[3].Key.Name,
+		},
+		MinNodes:           1,
+		MaxNodes:           3,
+		ScaleUpCpuThresh:   90,
+		ScaleDownCpuThresh: 10,
+		TriggerTimeSec:     60,
 	},
 }

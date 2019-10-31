@@ -142,7 +142,8 @@ func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *
 	if err != nil {
 		return err
 	}
-	helmOpts, err := getHelmOpts(client, names.AppName, app.Configs)
+	configs := append(app.Configs, appInst.Configs...)
+	helmOpts, err := getHelmOpts(client, names.AppName, configs)
 	if err != nil {
 		return err
 	}
@@ -159,7 +160,8 @@ func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *
 
 func UpdateHelmAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.DebugLog(log.DebugLevelMexos, "update kubernetes helm app", "app", app, "kubeNames", names)
-	helmOpts, err := getHelmOpts(client, names.AppName, app.Configs)
+	configs := append(app.Configs, appInst.Configs...)
+	helmOpts, err := getHelmOpts(client, names.AppName, configs)
 	if err != nil {
 		return err
 	}

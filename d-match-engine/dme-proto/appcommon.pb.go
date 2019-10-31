@@ -135,13 +135,33 @@ func encodeVarintAppcommon(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *AppPort) CopyInFields(src *AppPort) {
-	m.Proto = src.Proto
-	m.InternalPort = src.InternalPort
-	m.PublicPort = src.PublicPort
-	m.PathPrefix = src.PathPrefix
-	m.FqdnPrefix = src.FqdnPrefix
-	m.EndPort = src.EndPort
+func (m *AppPort) CopyInFields(src *AppPort) int {
+	changed := 0
+	if m.Proto != src.Proto {
+		m.Proto = src.Proto
+		changed++
+	}
+	if m.InternalPort != src.InternalPort {
+		m.InternalPort = src.InternalPort
+		changed++
+	}
+	if m.PublicPort != src.PublicPort {
+		m.PublicPort = src.PublicPort
+		changed++
+	}
+	if m.PathPrefix != src.PathPrefix {
+		m.PathPrefix = src.PathPrefix
+		changed++
+	}
+	if m.FqdnPrefix != src.FqdnPrefix {
+		m.FqdnPrefix = src.FqdnPrefix
+		changed++
+	}
+	if m.EndPort != src.EndPort {
+		m.EndPort = src.EndPort
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
