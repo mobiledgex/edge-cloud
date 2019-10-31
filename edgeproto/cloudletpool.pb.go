@@ -714,8 +714,13 @@ func (m *CloudletPoolKey) Matches(o *CloudletPoolKey, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *CloudletPoolKey) CopyInFields(src *CloudletPoolKey) {
-	m.Name = src.Name
+func (m *CloudletPoolKey) CopyInFields(src *CloudletPoolKey) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	return changed
 }
 
 func (m *CloudletPoolKey) GetKeyString() string {
@@ -779,13 +784,18 @@ func (m *CloudletPool) DiffFields(o *CloudletPool, fields map[string]struct{}) {
 	}
 }
 
-func (m *CloudletPool) CopyInFields(src *CloudletPool) {
+func (m *CloudletPool) CopyInFields(src *CloudletPool) int {
+	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
-			m.Key.Name = src.Key.Name
+			if m.Key.Name != src.Key.Name {
+				m.Key.Name = src.Key.Name
+				changed++
+			}
 		}
 	}
+	return changed
 }
 
 func (s *CloudletPool) HasFields() bool {
@@ -1069,6 +1079,7 @@ func (c *CloudletPoolCache) Show(filter *CloudletPool, cb func(ret *CloudletPool
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare CloudletPool", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
@@ -1231,10 +1242,21 @@ func (m *CloudletPoolMember) Matches(o *CloudletPoolMember, fopts ...MatchOpt) b
 	return true
 }
 
-func (m *CloudletPoolMember) CopyInFields(src *CloudletPoolMember) {
-	m.PoolKey.Name = src.PoolKey.Name
-	m.CloudletKey.OperatorKey.Name = src.CloudletKey.OperatorKey.Name
-	m.CloudletKey.Name = src.CloudletKey.Name
+func (m *CloudletPoolMember) CopyInFields(src *CloudletPoolMember) int {
+	changed := 0
+	if m.PoolKey.Name != src.PoolKey.Name {
+		m.PoolKey.Name = src.PoolKey.Name
+		changed++
+	}
+	if m.CloudletKey.OperatorKey.Name != src.CloudletKey.OperatorKey.Name {
+		m.CloudletKey.OperatorKey.Name = src.CloudletKey.OperatorKey.Name
+		changed++
+	}
+	if m.CloudletKey.Name != src.CloudletKey.Name {
+		m.CloudletKey.Name = src.CloudletKey.Name
+		changed++
+	}
+	return changed
 }
 
 func (s *CloudletPoolMember) HasFields() bool {
@@ -1504,6 +1526,7 @@ func (c *CloudletPoolMemberCache) Show(filter *CloudletPoolMember, cb func(ret *
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare CloudletPoolMember", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}

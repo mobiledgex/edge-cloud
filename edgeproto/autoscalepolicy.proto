@@ -1,0 +1,80 @@
+// Policy proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
+
+message PolicyKey {
+  // Name of the Developer that this policy belongs to
+  string developer = 1;
+  // Policy name
+  string name = 2;
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+// AutoScalePolicy defines when and how ClusterInsts will have their
+// nodes scaled up or down.
+message AutoScalePolicy {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  PolicyKey key = 2 [(gogoproto.nullable) = false];
+  // Minimum number of cluster nodes
+  uint32 min_nodes = 3;
+  // Maximum number of cluster nodes
+  uint32 max_nodes = 4;
+  // Scale up cpu threshold (percentage 1 to 100)
+  uint32 scale_up_cpu_thresh = 5;
+  // Scale down cpu threshold (percentage 1 to 100)
+  uint32 scale_down_cpu_thresh = 6;
+  // Trigger time defines how long trigger threshold must be satified in seconds before acting upon it.
+  uint32 trigger_time_sec = 7 [(protogen.test_update) = true];
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.alias) = "name=Key.Name,developer=Key.Developer";
+}
+
+service AutoScalePolicyApi {
+  // Create an Auto Scale Policy
+  rpc CreateAutoScalePolicy(AutoScalePolicy) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/autoscalepolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceAutoScalePolicy,ActionManage,Key.Developer";
+    option (protogen.method_also_required) = "MinNodes,MaxNodes";
+  }
+  // Delete an Auto Scale Policy
+  rpc DeleteAutoScalePolicy(AutoScalePolicy) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/autoscalepolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceAutoScalePolicy,ActionManage,Key.Developer";
+  }
+  // Update an Auto Scale Policy
+  rpc UpdateAutoScalePolicy(AutoScalePolicy) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/autoscalepolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceAutoScalePolicy,ActionManage,Key.Developer";
+  }
+  // Show Auto Scale Policies. Any fields specified will be used to filter results.
+  rpc ShowAutoScalePolicy(AutoScalePolicy) returns (stream AutoScalePolicy) {
+    option (google.api.http) = {
+      post: "/show/autoscalepolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceAutoScalePolicy,ActionView,Key.Developer";
+  }
+}

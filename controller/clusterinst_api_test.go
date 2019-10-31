@@ -19,7 +19,7 @@ func TestClusterInstApi(t *testing.T) {
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	objstore.InitRegion(1)
+	testinit()
 	reduceInfoTimeouts()
 
 	dummy := dummyEtcd{}
@@ -43,6 +43,7 @@ func TestClusterInstApi(t *testing.T) {
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
+	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
 
 	// Set responder to fail. This should clean up the object after
 	// the fake crm returns a failure. If it doesn't, the next test to

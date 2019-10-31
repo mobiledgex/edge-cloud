@@ -165,9 +165,17 @@ func encodeVarintLoc(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *Timestamp) CopyInFields(src *Timestamp) {
-	m.Seconds = src.Seconds
-	m.Nanos = src.Nanos
+func (m *Timestamp) CopyInFields(src *Timestamp) int {
+	changed := 0
+	if m.Seconds != src.Seconds {
+		m.Seconds = src.Seconds
+		changed++
+	}
+	if m.Nanos != src.Nanos {
+		m.Nanos = src.Nanos
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -175,19 +183,48 @@ func (m *Timestamp) ValidateEnums() error {
 	return nil
 }
 
-func (m *Loc) CopyInFields(src *Loc) {
-	m.Latitude = src.Latitude
-	m.Longitude = src.Longitude
-	m.HorizontalAccuracy = src.HorizontalAccuracy
-	m.VerticalAccuracy = src.VerticalAccuracy
-	m.Altitude = src.Altitude
-	m.Course = src.Course
-	m.Speed = src.Speed
+func (m *Loc) CopyInFields(src *Loc) int {
+	changed := 0
+	if m.Latitude != src.Latitude {
+		m.Latitude = src.Latitude
+		changed++
+	}
+	if m.Longitude != src.Longitude {
+		m.Longitude = src.Longitude
+		changed++
+	}
+	if m.HorizontalAccuracy != src.HorizontalAccuracy {
+		m.HorizontalAccuracy = src.HorizontalAccuracy
+		changed++
+	}
+	if m.VerticalAccuracy != src.VerticalAccuracy {
+		m.VerticalAccuracy = src.VerticalAccuracy
+		changed++
+	}
+	if m.Altitude != src.Altitude {
+		m.Altitude = src.Altitude
+		changed++
+	}
+	if m.Course != src.Course {
+		m.Course = src.Course
+		changed++
+	}
+	if m.Speed != src.Speed {
+		m.Speed = src.Speed
+		changed++
+	}
 	if src.Timestamp != nil {
 		m.Timestamp = &Timestamp{}
-		m.Timestamp.Seconds = src.Timestamp.Seconds
-		m.Timestamp.Nanos = src.Timestamp.Nanos
+		if m.Timestamp.Seconds != src.Timestamp.Seconds {
+			m.Timestamp.Seconds = src.Timestamp.Seconds
+			changed++
+		}
+		if m.Timestamp.Nanos != src.Timestamp.Nanos {
+			m.Timestamp.Nanos = src.Timestamp.Nanos
+			changed++
+		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values

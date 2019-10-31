@@ -314,9 +314,17 @@ func encodeVarintMetric(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *MetricTag) CopyInFields(src *MetricTag) {
-	m.Name = src.Name
-	m.Val = src.Val
+func (m *MetricTag) CopyInFields(src *MetricTag) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	if m.Val != src.Val {
+		m.Val = src.Val
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -324,8 +332,13 @@ func (m *MetricTag) ValidateEnums() error {
 	return nil
 }
 
-func (m *MetricVal) CopyInFields(src *MetricVal) {
-	m.Name = src.Name
+func (m *MetricVal) CopyInFields(src *MetricVal) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -333,18 +346,34 @@ func (m *MetricVal) ValidateEnums() error {
 	return nil
 }
 
-func (m *Metric) CopyInFields(src *Metric) {
-	m.Name = src.Name
-	m.Timestamp.Seconds = src.Timestamp.Seconds
-	m.Timestamp.Nanos = src.Timestamp.Nanos
+func (m *Metric) CopyInFields(src *Metric) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	if m.Timestamp.Seconds != src.Timestamp.Seconds {
+		m.Timestamp.Seconds = src.Timestamp.Seconds
+		changed++
+	}
+	if m.Timestamp.Nanos != src.Timestamp.Nanos {
+		m.Timestamp.Nanos = src.Timestamp.Nanos
+		changed++
+	}
 	if src.Tags != nil {
 		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
 			m.Tags = make([]*MetricTag, len(src.Tags))
 		}
 		for i0 := 0; i0 < len(src.Tags); i0++ {
 			m.Tags[i0] = &MetricTag{}
-			m.Tags[i0].Name = src.Tags[i0].Name
-			m.Tags[i0].Val = src.Tags[i0].Val
+			if m.Tags[i0].Name != src.Tags[i0].Name {
+				m.Tags[i0].Name = src.Tags[i0].Name
+				changed++
+			}
+			if m.Tags[i0].Val != src.Tags[i0].Val {
+				m.Tags[i0].Val = src.Tags[i0].Val
+				changed++
+			}
 		}
 	}
 	if src.Vals != nil {
@@ -353,9 +382,13 @@ func (m *Metric) CopyInFields(src *Metric) {
 		}
 		for i0 := 0; i0 < len(src.Vals); i0++ {
 			m.Vals[i0] = &MetricVal{}
-			m.Vals[i0].Name = src.Vals[i0].Name
+			if m.Vals[i0].Name != src.Vals[i0].Name {
+				m.Vals[i0].Name = src.Vals[i0].Name
+				changed++
+			}
 		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values

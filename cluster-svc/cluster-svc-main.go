@@ -5,15 +5,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"html/template"
 	"io"
 	"os"
 	"os/signal"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
+	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -34,9 +36,12 @@ var externalPorts = flag.String("prometheus-ports", "tcp:9090", "ports to expose
 var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics collection interval")
 var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc applications")
 var upgradeInstances = flag.Bool("updateAll", false, "Upgrade all Instances of Prometheus operator")
+var pluginRequired = flag.Bool("pluginRequired", false, "Require plugin")
 
 var exporterT *template.Template
 var prometheusT *template.Template
+
+var clusterSvcPlugin pf.ClusterSvc
 
 var MEXPrometheusAppHelmTemplate = `prometheus:
   prometheusSpec:
@@ -49,7 +54,30 @@ kubelet:
     ## https://github.com/coreos/prometheus-operator/issues/926
     ##
     https: true
+defaultRules:
+  create: true
+  rules:
+    alertmanager: false
+    etcd: false
+    general: false
+    k8s: true
+    kubeApiserver: false
+    kubePrometheusNodeAlerting: false
+    kubePrometheusNodeRecording: true
+    kubernetesAbsent: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeScheduler: true
+    network: true
+    node: true
+    prometheus: true
+    prometheusOperator: true
+    time: true
 grafana:
+  enabled: false
+alertmanager:
   enabled: false
 `
 
@@ -64,6 +92,8 @@ var MEXPrometheusAppKey = edgeproto.AppKey{
 	},
 }
 
+// Define prometheus operator App.
+// Version 7.1.1 tested with helm 2.15 and kubernetes 1.16
 var MEXPrometheusApp = edgeproto.App{
 	Key:           MEXPrometheusAppKey,
 	ImagePath:     "stable/prometheus-operator",
@@ -71,12 +101,14 @@ var MEXPrometheusApp = edgeproto.App{
 	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
+	Annotations:   "version=7.1.1",
 }
 
 var dialOpts grpc.DialOption
 
 var sigChan chan os.Signal
 
+var AutoScalePolicyCache edgeproto.AutoScalePolicyCache
 var ClusterInstCache edgeproto.ClusterInstCache
 
 type promCustomizations struct {
@@ -92,7 +124,7 @@ func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgepro
 	// Need to create a connection to server, as passed to us by commands
 	if new.State == edgeproto.TrackedState_READY {
 		// Create Prometheus on the cluster after creation
-		if err = createMEXPromInst(ctx, dialOpts, new.Key); err != nil {
+		if err = createMEXPromInst(ctx, dialOpts, new); err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Prometheus-operator inst create failed", "cluster",
 				new.Key.ClusterKey.Name, "error", err.Error())
 		}
@@ -105,6 +137,7 @@ func init() {
 
 func initNotifyClient(ctx context.Context, addrs string, tlsCertFile string) *notify.Client {
 	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
+	edgeproto.InitAutoScalePolicyCache(&AutoScalePolicyCache)
 	edgeproto.InitClusterInstCache(&ClusterInstCache)
 	ClusterInstCache.SetUpdatedCb(clusterInstCb)
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
@@ -150,7 +183,7 @@ func appInstUpdateApi(apiClient edgeproto.AppInstApiClient, appInst edgeproto.Ap
 }
 
 // create an appInst as a clustersvc
-func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, app *edgeproto.App) error {
+func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterInst *edgeproto.ClusterInst, app *edgeproto.App) error {
 	//update flavor
 	app.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
@@ -163,15 +196,29 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, instKey 
 	appInst := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey:         app.Key,
-			ClusterInstKey: instKey,
+			ClusterInstKey: clusterInst.Key,
 		},
+	}
+	if clusterSvcPlugin != nil && clusterInst.AutoScalePolicy != "" {
+		policy := edgeproto.AutoScalePolicy{}
+		policyKey := edgeproto.PolicyKey{}
+		policyKey.Developer = clusterInst.Key.Developer
+		policyKey.Name = clusterInst.AutoScalePolicy
+		if !AutoScalePolicyCache.Get(&policyKey, &policy) {
+			return fmt.Errorf("Auto scale policy %s not found for ClusterInst %s", clusterInst.AutoScalePolicy, clusterInst.Key.GetKeyString())
+		}
+		configs, err := clusterSvcPlugin.GetAppInstConfigs(ctx, clusterInst, &appInst, &policy)
+		if err != nil {
+			return err
+		}
+		appInst.Configs = configs
 	}
 
 	res, err := appInstCreateApi(apiClient, appInst)
 	if err != nil {
 		// Handle non-fatal errors
 		if strings.Contains(err.Error(), objstore.ErrKVStoreKeyExists.Error()) {
-			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "app", app.String(), "cluster", instKey.String())
+			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "app", app.String(), "cluster", clusterInst.Key.String())
 			return nil
 		}
 		if strings.Contains(err.Error(), edgeproto.ErrEdgeApiAppNotFound.Error()) {
@@ -196,8 +243,8 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, instKey 
 
 }
 
-func createMEXPromInst(ctx context.Context, dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey) error {
-	return createAppInstCommon(ctx, dialOpts, instKey, &MEXPrometheusApp)
+func createMEXPromInst(ctx context.Context, dialOpts grpc.DialOption, inst *edgeproto.ClusterInst) error {
+	return createAppInstCommon(ctx, dialOpts, inst, &MEXPrometheusApp)
 }
 
 func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
@@ -292,6 +339,9 @@ func setPrometheusAppDiffFields(src *edgeproto.App, dst *edgeproto.App) {
 		dst.Fields = append(dst.Fields, edgeproto.AppFieldConfigs,
 			edgeproto.AppFieldConfigsKind, edgeproto.AppFieldConfigsConfig)
 	}
+	if _, found := fields[edgeproto.AppFieldAnnotations]; found {
+		dst.Fields = append(dst.Fields, edgeproto.AppFieldAnnotations)
+	}
 }
 
 func updatePrometheusInsts() {
@@ -374,6 +424,11 @@ func main() {
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	ctx := log.ContextWithSpan(context.Background(), span)
 
+	clusterSvcPlugin, err = pfutils.GetClusterSvc(ctx, *pluginRequired)
+	if err != nil {
+		log.FatalLog("get cluster service", "err", err)
+	}
+
 	dialOpts, err = tls.GetTLSClientDialOption(*ctrlAddr, *tlsCertFile, false)
 	if err != nil {
 		log.FatalLog("get TLS Credentials", "error", err)
@@ -387,6 +442,7 @@ func main() {
 
 	notifyClient := initNotifyClient(ctx, *notifyAddrs, *tlsCertFile)
 	notifyClient.RegisterRecvClusterInstCache(&ClusterInstCache)
+	notifyClient.RegisterRecvAutoScalePolicyCache(&AutoScalePolicyCache)
 	notifyClient.Start()
 	defer notifyClient.Stop()
 

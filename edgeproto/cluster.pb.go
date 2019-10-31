@@ -105,8 +105,13 @@ func (m *ClusterKey) Matches(o *ClusterKey, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *ClusterKey) CopyInFields(src *ClusterKey) {
-	m.Name = src.Name
+func (m *ClusterKey) CopyInFields(src *ClusterKey) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	return changed
 }
 
 func (m *ClusterKey) GetKeyString() string {
