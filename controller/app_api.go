@@ -123,7 +123,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
 			if *registryFQDN == "" {
-				return fmt.Errorf("registryFQDN is required to fetch docker image path")
+				return fmt.Errorf("No image path specified and no default registryFQDN to fall back upon. Please specify the image path")
 			}
 			in.ImagePath = *registryFQDN + "/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
@@ -134,14 +134,14 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 				return fmt.Errorf("md5sum should be provided if imagepath is not specified")
 			}
 			if *artifactoryFQDN == "" {
-				return fmt.Errorf("artifactoryFQDN is required to fetch VM baseimage path")
+				return fmt.Errorf("No image path specified and no default artifactoryFQDN to fall back upon. Please specify the image path")
 			}
 			in.ImagePath = *artifactoryFQDN + "repo-" +
 				in.Key.DeveloperKey.Name + "/" +
 				in.Key.Name + ".qcow2#md5:" + in.Md5Sum
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
 			if *registryFQDN == "" {
-				return fmt.Errorf("registryFQDN is required to fetch helm based docker image path")
+				return fmt.Errorf("No image path specified and no default registryFQDN to fall back upon. Please specify the image path")
 			}
 			in.ImagePath = *registryFQDN + "/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
@@ -150,6 +150,14 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 			in.ImagePath = "image path required"
 		}
 		log.DebugLog(log.DebugLevelApi, "derived imagepath", "imagepath", in.ImagePath)
+	}
+	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
+		if strings.HasPrefix(in.ImagePath, "http://") {
+			in.ImagePath = in.ImagePath[len("http://"):]
+		}
+		if strings.HasPrefix(in.ImagePath, "https://") {
+			in.ImagePath = in.ImagePath[len("https://"):]
+		}
 	}
 
 	if in.ScaleWithCluster && in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
