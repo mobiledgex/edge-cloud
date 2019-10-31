@@ -60,6 +60,8 @@ message ClusterInst {
   StatusInfo status = 16 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Size of external volume to be attached to nodes
   uint64 external_volume_size = 17 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
+  // Auto scale policy name
+  string auto_scale_policy = 18;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

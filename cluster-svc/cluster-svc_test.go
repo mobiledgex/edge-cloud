@@ -35,7 +35,7 @@ func TestInfra(t *testing.T) {
 	require.Nil(t, err, "getPrometheusAppFromController failed")
 	// Check that the fields that are different are correct
 	setPrometheusAppDiffFields(&oldPrometheusControllerApp, newApp)
-	require.Equal(t, 3, len(newApp.Fields), "Incorrect number of different fields")
+	require.Equal(t, 4, len(newApp.Fields), "Incorrect number of different fields")
 	require.Contains(t, newApp.Fields, edgeproto.AppFieldConfigs, "Missing edgeproto.AppFieldConfigs")
 	require.Contains(t, newApp.Fields, edgeproto.AppFieldConfigsKind, "Missing edgeproto.AppFieldConfigsKind")
 	require.Contains(t, newApp.Fields, edgeproto.AppFieldConfigsConfig, "Missing edgeproto.AppFieldConfigsConfig")
@@ -54,7 +54,7 @@ func TestInfra(t *testing.T) {
 	newApp.ImagePath = "newImagePath"
 	// Check that the fields that are different are correct
 	setPrometheusAppDiffFields(&oldPrometheusControllerApp, newApp)
-	require.Equal(t, 4, len(newApp.Fields), "Incorrect number of different fields")
+	require.Equal(t, 5, len(newApp.Fields), "Incorrect number of different fields")
 	require.Contains(t, newApp.Fields, edgeproto.AppFieldConfigs, "Missing edgeproto.AppFieldConfigs")
 	require.Contains(t, newApp.Fields, edgeproto.AppFieldConfigsKind, "Missing edgeproto.AppFieldConfigsKind")
 	require.Contains(t, newApp.Fields, edgeproto.AppFieldConfigsConfig, "Missing edgeproto.AppFieldConfigsConfig")

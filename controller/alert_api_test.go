@@ -14,10 +14,8 @@ func TestAlertApi(t *testing.T) {
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	objstore.InitRegion(1)
 
-	tMode := true
-	testMode = &tMode
+	testinit()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -33,4 +31,13 @@ func TestAlertApi(t *testing.T) {
 	testutil.InternalAlertTest(t, "show", &alertApi, testutil.AlertData)
 
 	dummy.Stop()
+}
+
+// Set up globals for API unit tests
+func testinit() {
+	objstore.InitRegion(1)
+	tMode := true
+	testMode = &tMode
+	dockerRegistry := "docker.mobiledgex.net"
+	registryFQDN = &dockerRegistry
 }

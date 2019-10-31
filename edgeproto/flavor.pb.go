@@ -394,8 +394,13 @@ func (m *FlavorKey) Matches(o *FlavorKey, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *FlavorKey) CopyInFields(src *FlavorKey) {
-	m.Name = src.Name
+func (m *FlavorKey) CopyInFields(src *FlavorKey) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	return changed
 }
 
 func (m *FlavorKey) GetKeyString() string {
@@ -495,22 +500,36 @@ func (m *Flavor) DiffFields(o *Flavor, fields map[string]struct{}) {
 	}
 }
 
-func (m *Flavor) CopyInFields(src *Flavor) {
+func (m *Flavor) CopyInFields(src *Flavor) int {
+	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
-			m.Key.Name = src.Key.Name
+			if m.Key.Name != src.Key.Name {
+				m.Key.Name = src.Key.Name
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["3"]; set {
-		m.Ram = src.Ram
+		if m.Ram != src.Ram {
+			m.Ram = src.Ram
+			changed++
+		}
 	}
 	if _, set := fmap["4"]; set {
-		m.Vcpus = src.Vcpus
+		if m.Vcpus != src.Vcpus {
+			m.Vcpus = src.Vcpus
+			changed++
+		}
 	}
 	if _, set := fmap["5"]; set {
-		m.Disk = src.Disk
+		if m.Disk != src.Disk {
+			m.Disk = src.Disk
+			changed++
+		}
 	}
+	return changed
 }
 
 func (s *Flavor) HasFields() bool {
@@ -794,6 +813,7 @@ func (c *FlavorCache) Show(filter *Flavor, cb func(ret *Flavor) error) error {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Flavor", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
