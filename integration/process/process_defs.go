@@ -93,14 +93,15 @@ type Influx struct {
 	cmd      *exec.Cmd
 }
 type ClusterSvc struct {
-	Common      `yaml:",inline"`
-	NotifyAddrs string
-	CtrlAddrs   string
-	PromPorts   string
-	InfluxDB    string
-	Interval    string
-	TLS         TLSCerts
-	cmd         *exec.Cmd
+	Common         `yaml:",inline"`
+	NotifyAddrs    string
+	CtrlAddrs      string
+	PromPorts      string
+	InfluxDB       string
+	Interval       string
+	PluginRequired bool
+	TLS            TLSCerts
+	cmd            *exec.Cmd
 }
 type Jaeger struct {
 	Common `yaml:",inline"`

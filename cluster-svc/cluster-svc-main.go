@@ -36,6 +36,7 @@ var externalPorts = flag.String("prometheus-ports", "tcp:9090", "ports to expose
 var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics collection interval")
 var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc applications")
 var upgradeInstances = flag.Bool("updateAll", false, "Upgrade all Instances of Prometheus operator")
+var pluginRequired = flag.Bool("pluginRequired", false, "Require plugin")
 
 var exporterT *template.Template
 var prometheusT *template.Template
@@ -423,7 +424,7 @@ func main() {
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	clusterSvcPlugin, err = pfutils.GetClusterSvc(ctx)
+	clusterSvcPlugin, err = pfutils.GetClusterSvc(ctx, *pluginRequired)
 	if err != nil {
 		log.FatalLog("get cluster service", "err", err)
 	}

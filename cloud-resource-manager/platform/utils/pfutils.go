@@ -42,9 +42,13 @@ func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 	return getPlatFunc(plat)
 }
 
-func GetClusterSvc(ctx context.Context) (pf.ClusterSvc, error) {
+func GetClusterSvc(ctx context.Context, pluginRequired bool) (pf.ClusterSvc, error) {
 	plug, err := loadPlugin(ctx)
 	if err != nil {
+		if !pluginRequired {
+			log.SpanLog(ctx, log.DebugLevelInfo, "plugin not required, ignoring load plugin failure", "err", err)
+			err = nil
+		}
 		return nil, err
 	}
 	sym, err := plug.Lookup("GetClusterSvc")
