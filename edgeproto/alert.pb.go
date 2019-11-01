@@ -23,6 +23,7 @@
 		notice.proto
 		operator.proto
 		refs.proto
+		restagtable.proto
 		result.proto
 		version.proto
 
@@ -75,6 +76,8 @@
 		Operator
 		CloudletRefs
 		ClusterRefs
+		ResTagTableKey
+		ResTagTable
 		Result
 */
 package edgeproto

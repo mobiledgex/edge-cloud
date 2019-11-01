@@ -321,11 +321,121 @@ func ShowCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
 	}
 }
 
+var AddCloudletResMappingCmd = &cli.Command{
+	Use:          "AddCloudletResMapping",
+	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
+	SpecialArgs:  &CloudletSpecialArgs,
+	Comments:     CloudletComments,
+	ReqData:      &edgeproto.Cloudlet{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runAddCloudletResMapping,
+}
+
+func runAddCloudletResMapping(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Cloudlet)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return AddCloudletResMapping(c, obj)
+}
+
+func AddCloudletResMapping(c *cli.Command, in *edgeproto.Cloudlet) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.AddCloudletResMapping(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AddCloudletResMapping failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func AddCloudletResMappings(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AddCloudletResMapping %v\n", data[ii])
+		myerr := AddCloudletResMapping(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var RmCloudletResMappingCmd = &cli.Command{
+	Use:          "RmCloudletResMapping",
+	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
+	SpecialArgs:  &CloudletSpecialArgs,
+	Comments:     CloudletComments,
+	ReqData:      &edgeproto.Cloudlet{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRmCloudletResMapping,
+}
+
+func runRmCloudletResMapping(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Cloudlet)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RmCloudletResMapping(c, obj)
+}
+
+func RmCloudletResMapping(c *cli.Command, in *edgeproto.Cloudlet) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.RmCloudletResMapping(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RmCloudletResMapping failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RmCloudletResMappings(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RmCloudletResMapping %v\n", data[ii])
+		myerr := RmCloudletResMapping(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var CloudletApiCmds = []*cobra.Command{
 	CreateCloudletCmd.GenCmd(),
 	DeleteCloudletCmd.GenCmd(),
 	UpdateCloudletCmd.GenCmd(),
 	ShowCloudletCmd.GenCmd(),
+	AddCloudletResMappingCmd.GenCmd(),
+	RmCloudletResMappingCmd.GenCmd(),
 }
 
 var CloudletInfoApiCmd edgeproto.CloudletInfoApiClient
@@ -785,6 +895,9 @@ var CloudletOptionalArgs = []string{
 	"physicalname",
 	"envvar",
 	"upgrade",
+	"restagmap.key",
+	"restagmap.value.name",
+	"mapping",
 }
 var CloudletAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -830,10 +943,12 @@ var CloudletComments = map[string]string{
 	"config.platformtag":                  "Tag of edge-cloud image",
 	"config.testmode":                     "Internal Test Flag",
 	"config.span":                         "Span string",
+	"mapping":                             "Resource mapping info",
 }
 var CloudletSpecialArgs = map[string]string{
-	"envvar": "StringToString",
-	"errors": "StringArray",
+	"envvar":  "StringToString",
+	"errors":  "StringArray",
+	"mapping": "StringToString",
 }
 var EnvVarEntryRequiredArgs = []string{}
 var EnvVarEntryOptionalArgs = []string{
@@ -843,12 +958,29 @@ var EnvVarEntryOptionalArgs = []string{
 var EnvVarEntryAliasArgs = []string{}
 var EnvVarEntryComments = map[string]string{}
 var EnvVarEntrySpecialArgs = map[string]string{}
+var ResTagMapEntryRequiredArgs = []string{}
+var ResTagMapEntryOptionalArgs = []string{
+	"key",
+	"value.name",
+}
+var ResTagMapEntryAliasArgs = []string{}
+var ResTagMapEntryComments = map[string]string{}
+var ResTagMapEntrySpecialArgs = map[string]string{}
+var MappingEntryRequiredArgs = []string{}
+var MappingEntryOptionalArgs = []string{
+	"key",
+	"value",
+}
+var MappingEntryAliasArgs = []string{}
+var MappingEntryComments = map[string]string{}
+var MappingEntrySpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",
 	"vcpus",
 	"ram",
 	"disk",
+	"properties",
 }
 var FlavorInfoAliasArgs = []string{}
 var FlavorInfoComments = map[string]string{
@@ -874,6 +1006,7 @@ var CloudletInfoOptionalArgs = []string{
 	"flavors.vcpus",
 	"flavors.ram",
 	"flavors.disk",
+	"flavors.properties",
 	"status.tasknumber",
 	"status.maxtasks",
 	"status.taskname",

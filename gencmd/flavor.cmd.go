@@ -277,7 +277,9 @@ var FlavorRequiredArgs = []string{
 	"vcpus",
 	"disk",
 }
-var FlavorOptionalArgs = []string{}
+var FlavorOptionalArgs = []string{
+	"gpus",
+}
 var FlavorAliasArgs = []string{
 	"name=key.name",
 }

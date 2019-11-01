@@ -873,3 +873,65 @@ func (s *CloudletApi) showCloudletsByKeys(keys map[edgeproto.CloudletKey]struct{
 	}
 	return nil
 }
+
+func (s *CloudletApi) RmCloudletResMapping(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+	// just delete all present in in.Mapping and store it
+	var err error
+	cl := edgeproto.Cloudlet{}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+
+		for resource, _ := range in.Mapping {
+			delete(cl.ResTagMap, resource)
+			delete(cl.Mapping, resource)
+		}
+		// and store the result
+		s.store.STMPut(stm, &cl)
+		return err
+	})
+	return &edgeproto.Result{}, err
+}
+
+func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+
+	fmt.Printf("\n\n\tAddCloudetResMapping-I-in: %s\n\n", in)
+	var err error
+	cl := edgeproto.Cloudlet{}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		return err
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	} else {
+		if cl.ResTagMap == nil {
+			cl.ResTagMap = make(map[string]*edgeproto.ResTagTableKey)
+		}
+	}
+
+	for resource, tblname := range in.Mapping {
+		var key edgeproto.ResTagTableKey
+		key.Name = tblname
+		tbl, err := resTagTableApi.GetResTagTable(ctx, &key)
+		if err == objstore.ErrKVStoreKeyNotFound {
+			// They've added a key with a non existing tbl, auto-create empty
+			tbl.Key = key
+			_, err = resTagTableApi.CreateResTagTable(ctx, tbl)
+			if err != nil {
+				return &edgeproto.Result{}, err
+			}
+		}
+		// fetched from store or newly created, store the resource table key in the ResTagMap
+		cl.ResTagMap[resource] = &key
+	}
+	// and finally update our cloudlet with the new key(s)
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		s.store.STMPut(stm, &cl)
+		return err
+	})
+	return &edgeproto.Result{}, err
+}

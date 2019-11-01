@@ -38,6 +38,11 @@ message CloudletRefs {
   int32 used_dynamic_ips = 9;
   // Used static IPs
   string used_static_ips = 10;
+  // Used GPUs
+  uint32 used_gpus = 11;
+  // Used vGPUs
+  uint32 used_vgpus = 12;
+
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

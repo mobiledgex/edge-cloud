@@ -85,7 +85,7 @@ func TestController(t *testing.T) {
 	crmNotify.WaitForFlavors(3)
 
 	require.Equal(t, len(testutil.AppInstData), len(dmeNotify.AppInstCache.Objs), "num appinsts")
-	require.Equal(t, 4, len(crmNotify.FlavorCache.Objs), "num flavors")
+	require.Equal(t, 5, len(crmNotify.FlavorCache.Objs), "num flavors")
 	require.Equal(t, len(testutil.ClusterInstData)+len(testutil.ClusterInstAutoData), len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
 	require.Equal(t, len(testutil.AppInstData), len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
 

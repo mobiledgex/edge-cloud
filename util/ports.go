@@ -9,7 +9,7 @@ import (
 type PortSpec struct {
 	Proto   string
 	Port    string
-	EndPort string // mfw XXX ? why two type and parse rtns for AppPort? (3 actually kube.go is another)
+	EndPort string 
 }
 
 func ParsePorts(accessPorts string) ([]PortSpec, error) {

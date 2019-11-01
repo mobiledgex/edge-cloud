@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -106,6 +107,82 @@ func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 		}
 	}
 	return false
+}
+
+func (s *ClusterInstApi) GetCloudletResourceMap(resource string, resmap map[string]*edgeproto.ResTagTableKey) (*edgeproto.ResTagTable, error) {
+
+	var ctx context.Context
+	key := resmap[resource]
+	tbl, err := resTagTableApi.GetResTagTable(ctx, key)
+	if err != nil {
+		fmt.Printf("\n\n\tGetCloudletResourceMap failed err: %s\n", err.Error())
+		return tbl, err
+	}
+	return tbl, err
+}
+
+// GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
+func (s *ClusterInstApi) GetVMSpec(flavorList []*edgeproto.FlavorInfo, nodeflavor edgeproto.Flavor, resmap map[string]*edgeproto.ResTagTableKey) (*vmspec.VMCreationSpec, error) {
+	log.InfoLog("GetVMSpec with closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
+	var vmspec vmspec.VMCreationSpec
+
+	sort.Slice(flavorList[:], func(i, j int) bool {
+		if flavorList[i].Vcpus < flavorList[j].Vcpus {
+			return true
+		}
+		if flavorList[i].Vcpus > flavorList[j].Vcpus {
+			return false
+		}
+		if flavorList[i].Ram < flavorList[j].Ram {
+			return true
+		}
+		if flavorList[i].Ram > flavorList[j].Ram {
+			return false
+		}
+
+		return flavorList[i].Disk < flavorList[j].Disk
+	})
+	for _, flavor := range flavorList {
+
+		if flavor.Vcpus < nodeflavor.Vcpus {
+			continue
+		}
+		if flavor.Ram < nodeflavor.Ram {
+			continue
+		}
+		if flavor.Disk == 0 {
+			// flavors of zero disk size mean that the volume is allocated separately
+			vmspec.ExternalVolumeSize = nodeflavor.Disk
+		} else if flavor.Disk < nodeflavor.Disk {
+			continue
+		}
+		// Good matches for flavor so far, does nodeflavor request a gpu?
+		if nodeflavor.Gpus > 0 {
+			if !strings.Contains(flavor.Name, "gpu") {
+				// now we need to fetch the tag table for the gpu resouce
+				//  using the key in this cloudlet map
+				//
+				fmt.Printf("\n\n\tGetVMSpec flavor %s fetch the gpu res table\n", flavor.Name)
+				tbl, err := /*clusterInstApi*/ s.GetCloudletResourceMap("gpu", resmap)
+
+				if err != nil || tbl == nil {
+					fmt.Printf("\n\n\t no body home from new fetch rtn...\n")
+					// gpu requested, no table, request will fail
+					continue
+				}
+				for _, tag := range tbl.Tags {
+					if strings.Contains(flavor.Properties, tag) {
+						continue
+					}
+				}
+			}
+		} // other optional resources matching e.g. nas_storage etc.
+		vmspec.FlavorName = flavor.Name
+		log.InfoLog("Found closest flavor", "flavor", flavor, "vmspec", vmspec)
+
+		return &vmspec, nil
+	}
+	return &vmspec, fmt.Errorf("no suitable platform flavor found for %s, please try a smaller flavor", nodeflavor.Key.Name)
 }
 
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
@@ -249,7 +326,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
 		var err error
-		vmspec, err := vmspec.GetVMSpec(info.Flavors, nodeFlavor)
+		vmspec, err := s.GetVMSpec(info.Flavors, nodeFlavor, cloudlet.ResTagMap)
 		if err != nil {
 			return err
 		}

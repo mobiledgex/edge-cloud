@@ -1,0 +1,118 @@
+// Resource tags table  proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "result.proto";
+import "gogoproto/gogo.proto";
+
+
+message ResTagTableKey {
+  string name = 1;
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}	
+
+message ResTagTable {
+  repeated string fields = 1;
+  ResTagTableKey key = 2 [(gogoproto.nullable) = false];
+  // one or more string tags
+  repeated string tags = 3;
+  // availability zone of resource if required
+  string azone = 4;
+  option (gogoproto.gostring) = true;  
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cud_test_update) = false;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.notify_message) = true;	
+  option (protogen.alias) = "res=Key.Name";
+}
+
+// This API should be admin-only
+service ResTagTableApi {
+  option (protogen.dummy_server) = false;
+  // Create TagTable
+  rpc CreateResTagTable(ResTagTable) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/gputagtbl"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+  }
+  // Delete TagTable
+  rpc DeleteResTagTable(ResTagTable) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/gputagtbl"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+  }
+
+  rpc UpdateResTagTable(ResTagTable) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/gputagtbl"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+  }
+  // show TagTable
+  rpc ShowResTagTable(ResTagTable) returns (stream ResTagTable) {	
+      option (google.api.http) = {
+        post: "/show/gputagtbl"
+        body: "*"
+      };
+      option(protogen.mc2_api) = "ResourceResTagTable,ActionView,";
+  }
+  // add new tag(s) to TagTable
+  rpc AddResTag(ResTagTable) returns (Result) {  
+      option (google.api.http) = {
+        post: "/add/gputagtbl"
+        body: "*"
+      };
+      option(protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+      option (protogen.input_required) = true;      
+  }
+  // remove existing tag(s) from TagTable
+  rpc RemoveResTag(ResTagTable) returns (Result) {
+      option (google.api.http) = {
+        post: "/rm/gputagtbl"
+        body: "*"
+      };
+      option(protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+      option (protogen.input_required) = true;      
+}
+  rpc AddZone(ResTagTable) returns (Result) {  
+      option (google.api.http) = {
+        post: "/addzone/gputagtbl"
+        body: "*"
+      };
+      option(protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+      option (protogen.input_required) = true;      
+  }
+  // remove existing tag(s) from TagTable
+  rpc RemoveZone(ResTagTable) returns (Result) {
+      option (google.api.http) = {
+        post: "/rmzone/gputagtbl"
+        body: "*"
+      };
+      option(protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+      option (protogen.input_required) = true;      
+}
+  // fetch TagTable
+  rpc GetResTagTable(ResTagTableKey) returns (ResTagTable) {
+    option (google.api.http) = {
+      post: "/get/gputagtbl"
+      body: "*"
+    };
+    option(protogen.mc2_api) = "ResourceResTagTable,ActionView,";
+    option (protogen.input_required) = true;   
+  }        
+}
+
+

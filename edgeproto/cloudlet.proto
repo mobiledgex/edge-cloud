@@ -8,6 +8,7 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "flavor.proto";
 import "operator.proto";
 import "result.proto";
+import "restagtable.proto";
 import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
@@ -189,6 +190,10 @@ message Cloudlet {
   bool upgrade = 20 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Platform Config Info
   PlatformConfig config = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Optional resource to restagtbl key map
+  map<string, edgeproto.ResTagTableKey> res_tag_map = 22 [(protogen.backend) = true];
+  // Resource mapping info
+  map<string, string> mapping = 23;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -239,6 +244,20 @@ service CloudletApi {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
     option (protogen.mc2_custom_authz) = true;
   }
+  rpc AddCloudletResMapping(Cloudlet) returns (Result) {
+    option (google.api.http) = {
+      post: "/addmapping/cloudletResMap"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Name";
+  }
+  rpc RmCloudletResMapping(Cloudlet) returns (Result) {
+    option (google.api.http) = {
+      post: "/rmmapping/cloudletResMap"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Name";
+  }
 }
 
 // CloudletState is the state of the Cloudlet.
@@ -269,6 +288,7 @@ message FlavorInfo {
   uint64 ram = 3;
   // Amount of disk in GB on the Cloudlet
   uint64 disk = 4;
+  string properties = 5 [(protogen.backend) = true];
 }
 
 // CloudletInfo provides information from the Cloudlet Resource Manager about the state of the Cloudlet.
