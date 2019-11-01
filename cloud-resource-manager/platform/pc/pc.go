@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"runtime"
 
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -47,7 +48,14 @@ func WriteFile(client PlatformClient, file string, contents string, kind string,
 	// encode to avoid issues with quotes, special characters, and shell
 	// evaluation of $vars.
 	dat := base64.StdEncoding.EncodeToString([]byte(contents))
-	cmd := fmt.Sprintf("base64 -d <<< %s > %s", dat, file)
+
+	// On a mac base64 command "-d" option is "-D"
+	// If we are running on a mac and we are trying to run base64 decode replace "-d" with "-D"
+	decodeCmd := "base64 -d"
+	if runtime.GOOS == "darwin" {
+		decodeCmd = "base64 -D"
+	}
+	cmd := fmt.Sprintf("%s <<< %s > %s", decodeCmd, dat, file)
 	if sudo {
 		cmd = fmt.Sprintf("sudo bash -c '%s'", cmd)
 	}
