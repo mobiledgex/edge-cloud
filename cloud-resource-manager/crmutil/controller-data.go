@@ -499,8 +499,8 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		// Reset old Status, as we will start upgrading cloudlet now
 		cd.CloudletInfoCache.StatusReset(ctx, &new.Key)
 
-		// Set cloudlet state to `UPGRADE`, this will transition TrackedState to `UPDATING`
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE
+		// Set cloudlet state to `UPGRADE_INIT`, this will transition TrackedState to `UPDATING`
+		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE_INIT
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	}
 
@@ -515,12 +515,12 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.SpanLog(ctx, log.DebugLevelMexos, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
-		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE_INIT {
 			// Cloudlet is not in a state to upgrade
 			return
 		}
 
-		// Now that Cloudlet knows that it has to upgrade [CLOUDLET_STATE_UPGRADE]
+		// Now that Cloudlet knows that it has to upgrade [CLOUDLET_STATE_UPGRADE_INIT]
 		// and also Controller knows that Cloudlet will upgrade [TrackedState_UPDATING],
 		// start the upgrade
 		err := cd.platform.UpdateCloudlet(ctx, new, &new.Config, updateCloudletCallback)
@@ -534,5 +534,20 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			return
 		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "updated cloudlet", "cloudlet", new)
+	}
+
+	if new.State == edgeproto.TrackedState_UPDATE_DONE {
+		cloudletInfo := edgeproto.CloudletInfo{}
+		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelMexos, "CloudletInfo not found for cloudlet", "key", new.Key)
+			return
+		}
+		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE_DONE {
+			// state READY is set to make sure cloudlet is ready to recv
+			// cloudlet specific objs (clusterInst/appInst/etc)
+			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+		}
 	}
 }

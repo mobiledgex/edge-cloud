@@ -811,7 +811,7 @@ var CloudletComments = map[string]string{
 	"timelimits.updateappinsttimeout":     "max time to update an app instance",
 	"timelimits.deleteappinsttimeout":     "max time to delete an app instance",
 	"errors":                              "Any errors trying to create, update, or delete the Cloudlet.",
-	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare",
+	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, UpdateDone",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"deploymentlocal":                     "Deploy cloudlet services locally",
 	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeMexdind",
@@ -887,7 +887,7 @@ var CloudletInfoAliasArgs = []string{
 var CloudletInfoComments = map[string]string{
 	"operator":      "Company or Organization name of the operator",
 	"name":          "Name of the cloudlet",
-	"state":         "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
+	"state":         "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgradeInit, CloudletStateUpgradeDone",
 	"notifyid":      "Id of client assigned by server (internal use only)",
 	"controller":    "Connected controller unique id",
 	"osmaxram":      "Maximum Ram in MB on the Cloudlet",

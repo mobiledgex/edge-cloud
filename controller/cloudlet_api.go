@@ -336,12 +336,25 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	return err
 }
 
+func controllerVersionMatches(ctx context.Context, cloudletVersion string) bool {
+	if cloudletVersion == "" {
+		log.SpanLog(ctx, log.DebugLevelApi, "Ignoring cloudlet validity check as cloudlet version is missing")
+	} else if *versionTag == "" {
+		log.SpanLog(ctx, log.DebugLevelApi, "Ignoring cloudlet validity check as controller version is missing")
+	} else if !*testMode && *versionTag != cloudletVersion {
+		log.SpanLog(ctx, log.DebugLevelApi, "Ignoring cloudlet info from old cloudlet", "cloudletVersion", cloudletVersion, "controllerVersion", *versionTag)
+		return false
+	}
+	return true
+}
+
 func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, updateCallback edgeproto.CacheUpdateCallback) error {
 	lastStatusId := uint32(0)
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	fatal := make(chan bool, 1)
-	upgrade := make(chan bool, 1)
+	upgrade_init := make(chan bool, 1)
+	upgrade_done := make(chan bool, 1)
 
 	var err error
 
@@ -393,23 +406,25 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		case edgeproto.TrackedState_UPDATE_REQUESTED:
 			// cloudletinfo starts out in "ready" state, so wait for crm to transition to
 			// upgrade before looking for ready state
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+			if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE_INIT {
 				// transition cloudlet state to updating (next case below)
-				upgrade <- true
+				upgrade_init <- true
 			}
 		case edgeproto.TrackedState_UPDATING:
 			// crm upgrading itself
-			// Make sure that READY state comes from new cloudlet
-			if cloudletVersion == "" {
-				log.SpanLog(ctx, log.DebugLevelApi, "Ignoring cloudlet validity check as cloudlet version is missing")
-			} else if *versionTag == "" {
-				log.SpanLog(ctx, log.DebugLevelApi, "Ignoring cloudlet validity check as controller version is missing")
-			} else if !*testMode && *versionTag != cloudletVersion {
-				log.SpanLog(ctx, log.DebugLevelApi, "Ignoring cloudlet info from old cloudlet", "cloudletVersion", cloudletVersion, "controllerVersion", *versionTag)
-				return
+			// Make sure that state comes from new cloudlet
+			if controllerVersionMatches(ctx, cloudletVersion) {
+				if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE_DONE {
+					upgrade_done <- true
+				}
 			}
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-				done <- true
+		case edgeproto.TrackedState_UPDATE_DONE:
+			// crm upgrade done
+			// Make sure that state comes from new cloudlet
+			if controllerVersionMatches(ctx, cloudletVersion) {
+				if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+					done <- true
+				}
 			}
 		}
 	}
@@ -451,11 +466,18 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			if successMsg != "" {
 				updateCallback(edgeproto.UpdateTask, successMsg)
 			}
-		case <-upgrade:
+		case <-upgrade_init:
 			// transition from UPDATE_REQUESTED -> UPDATING state, as crm is upgrading
 			err := updateCloudletState(edgeproto.TrackedState_UPDATING)
 			if err == nil {
-				// crm started upgrading, now wait for it to be Ready
+				// crm started upgrading, now wait for it to finish
+				continue
+			}
+		case <-upgrade_done:
+			// transition from UPDATING -> UPDATE_DONE
+			err := updateCloudletState(edgeproto.TrackedState_UPDATE_DONE)
+			if err == nil {
+				// crm finished upgraded, now wait for it to be Ready
 				continue
 			}
 		case <-failed:

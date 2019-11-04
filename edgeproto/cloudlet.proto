@@ -255,8 +255,10 @@ enum CloudletState {
   CLOUDLET_STATE_NOT_PRESENT = 4;
   // Cloudlet is initializing
   CLOUDLET_STATE_INIT = 5;
-  // Cloudlet is upgrading
-  CLOUDLET_STATE_UPGRADE = 6;
+  // Cloudlet started upgrading
+  CLOUDLET_STATE_UPGRADE_INIT = 6;
+  // Cloudlet is done upgrading
+  CLOUDLET_STATE_UPGRADE_DONE = 7;
 }
 
 // Flavor details from the Cloudlet

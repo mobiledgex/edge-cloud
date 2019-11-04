@@ -165,14 +165,14 @@ func main() {
 			myCloudlet.Errors = append(myCloudlet.Errors, err.Error())
 			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
+			myCloudlet.Errors = nil
 			if cloudlet.State == edgeproto.TrackedState_UPDATING {
 				controllerData.CleanupOldCloudlet(ctx, &cloudlet, updateCloudletStatus)
+				myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE_DONE
+			} else {
+				myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 			}
-
-			// Is the cloudlet ready at this point?
-			myCloudlet.Errors = nil
-			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-			log.SpanLog(ctx, log.DebugLevelMexos, "cloudlet state ready", "myCloudlet", myCloudlet)
+			log.SpanLog(ctx, log.DebugLevelMexos, "cloudlet state", "state", myCloudlet.State, "myCloudlet", myCloudlet)
 		}
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "sending cloudlet info cache update")

@@ -58,3 +58,47 @@ Additionally, the state machine needs to handle Controller crashing, CRM crashin
 On Controller crash or network disconnect, the CRM will still be running. Any threads still running will indicate transitional states that will be consistent with whatever Controller state was last committed, i.e. for Creating, Controller state must be CreateRequested. Therefore there is nothing special to be done for transitional states as they fall under the normal state machine transitions.
 
 On CRM crash, there will no longer be any threads running, thus after reading the current state of Openstack/k8s, the states will either be Ready, NotPresent, or possible some Errror state which is consistent with the Controller's current state. Therefore we only need to handle Ready/NotPresent in resolving the inconsistency.
+
+# State Transitions for Cloudlet Upgrade
+
+An upgrade is initiated by user from controller. During which, modifications to appInst/clusterInst is not allowed.
+
+There are three actors at play here. First is controller, via which upgrade is initiated, second is old CRM service which will be upgraded and third is new CRM service.
+Upgrade is intiated from controller, old CRM then starts new CRM service. Once new CRM service is up, it kills old CRM service.
+
+Since this needs coordination between controller and cloudlet states, there are two states at play here.
+One is TrackedState, used by controller to track actions. And other one is CloudletState, used by CRM to describe it actions.
+Because a TrackedState can trigger a change in CloudletState and vice-versa, state transitions must be in-sync for both the states.
+Also, the only trusted state is that of controller (TrackedState), as old/new CRM can crash and come up.
+
+Upgrade error is left as it is, so that it can be fixed manually by admin.
+Here we also ensures that, in error state, modifications to appInst/clusterInst is disallowed, unless it is fixed manually.
+```
++-----------------+------------------------------------+------------------+-----------------------------------------------+
+|                 |                                    |                  |         Cloudlet State Transition             |
+|    Controller   |               Actor                |    Controller    +-----------------------+-----------------------+
+|  Current State  |                                    |    Next State    |         CRMv1         |    CRMv2              |
++-------------------------------------------------------------------------------------------------------------------------+
+| Ready           | User initiated UpgradeCloudlet     | UpdateRequested  | Ready                 |                       |
++-------------------------------------------------------------------------------------------------------------------------+
+| UpdateRequested | CRMv1 response                     |                  | Ready -> UpgradeInit  |                       |
+|                 | Controller response                | Updating         |                       |                       |
+|                 +-------------------------------------------------------------------------------------------------------+
+|                 | CRMv1 error                        |                  | Ready -> Error        |                       |
+|                 | Controller response                | UpdateError      |                       |                       |
++-------------------------------------------------------------------------------------------------------------------------+
+| Updating        | CRMv1 brings up CRMv2 (success)    |                  | UpgradeInit           | Init                  |
+|                 | CRMv2 response                     |                  |                       | Init -> UpgradeDone   |
+|                 | Controller response                | UpdateDone       |                       |                       |
+|                 +-------------------------------------------------------------------------------------------------------+
+|                 | CRMv1 brings up CRMv2 (success)    |                  | UpgradeInit           | Init                  |
+|                 | CRMv2 error                        |                  |                       | Init -> Error         |
+|                 | Controller response                | UpdateError      |                       |                       |
+|                 +-------------------------------------------------------------------------------------------------------+
+|                 | CRMv1 brings up CRMv2 (failure)    |                  | UpgradeInit -> Error  |                       |
+|                 | Controller response                | UpdateError      |                       |                       |
++-------------------------------------------------------------------------------------------------------------------------+
+| UpdateDone      | CRMv2 response                     |                  |                       | UpgradeDone -> Ready  |
+|                 | Controller response                | Ready            |                       |                       |
++-----------------+------------------------------------+------------------+-----------------------+-----------------------+
+```

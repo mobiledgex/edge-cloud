@@ -109,6 +109,7 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
 		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
+			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE_DONE ||
 			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
 			// trigger send of cloudlet details to cloudlet
 			if s.sendrecv.cloudletSend != nil {

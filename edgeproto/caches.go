@@ -54,20 +54,19 @@ func (s *ClusterInstCache) GetForCloudlet(key *CloudletKey, clusterInsts map[Clu
 func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey, state TrackedState) error {
 	var err error
 	s.UpdateModFunc(ctx, key, 0, func(old *ClusterInstInfo) (newObj *ClusterInstInfo, changed bool) {
-
 		info := &ClusterInstInfo{}
-		if old != nil {
+		if old == nil {
+			info.Key = *key
+		} else {
 			err = StateConflict(old.State, state)
 			if err != nil {
 				return old, false
 			}
 			*info = *old
-			info.Errors = nil
-			info.State = state
-			info.Status = StatusInfo{}
-			return info, true
 		}
-		info.Key = *key
+		info.Errors = nil
+		info.State = state
+		info.Status = StatusInfo{}
 		return info, true
 	})
 	return err
@@ -166,20 +165,19 @@ func IsTransientState(state TrackedState) bool {
 func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state TrackedState) error {
 	var err error
 	s.UpdateModFunc(ctx, key, 0, func(old *AppInstInfo) (newObj *AppInstInfo, changed bool) {
-
 		info := &AppInstInfo{}
-		if old != nil {
+		if old == nil {
+			info.Key = *key
+		} else {
 			err = StateConflict(old.State, state)
 			if err != nil {
 				return old, false
 			}
 			*info = *old
-			info.Errors = nil
-			info.State = state
-			info.Status = StatusInfo{}
-			return info, true
 		}
-		info.Key = *key
+		info.Errors = nil
+		info.State = state
+		info.Status = StatusInfo{}
 		return info, true
 	})
 	return err
