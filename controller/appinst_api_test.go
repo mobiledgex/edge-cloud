@@ -23,11 +23,6 @@ func TestAppInstApi(t *testing.T) {
 	testinit()
 	reduceInfoTimeouts()
 
-	tMode := true
-	testMode = &tMode
-	dockerRegistry := "docker.mobiledgex.net"
-	registryFQDN = &dockerRegistry
-
 	dummy := dummyEtcd{}
 	dummy.Start()
 
