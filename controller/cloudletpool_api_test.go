@@ -6,7 +6,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 )
@@ -16,10 +15,7 @@ func TestCloudletPoolApi(t *testing.T) {
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	objstore.InitRegion(1)
-
-	tMode := true
-	testMode = &tMode
+	testinit()
 
 	dummy := dummyEtcd{}
 	dummy.Start()

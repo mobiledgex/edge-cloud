@@ -747,11 +747,16 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 		case descriptor.FieldDescriptorProto_TYPE_BYTES:
 			m.printCopyInMakeArray(hierName, desc, field)
 			m.P("copy(m.", hierName, ", src.", hierName, ")")
+			m.P("changed++")
 		default:
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 				m.P("copy(m.", hierName, ", src.", hierName, ")")
+				m.P("changed++")
 			} else {
+				m.P("if m.", hierName, " != src.", hierName, "{")
 				m.P("m.", hierName, " = src.", hierName)
+				m.P("changed++")
+				m.P("}")
 			}
 		}
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED && *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
@@ -1090,6 +1095,7 @@ func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) 
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 {{- if .CudCache}}
+		log.DebugLog(log.DebugLevelApi, "Compare {{.Name}}", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
@@ -1426,11 +1432,13 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	}
 
 	msgtyp := m.gen.TypeName(desc)
-	m.P("func (m *", msgtyp, ") CopyInFields(src *", msgtyp, ") {")
+	m.P("func (m *", msgtyp, ") CopyInFields(src *", msgtyp, ") int {")
+	m.P("changed := 0")
 	if gensupport.HasGrpcFields(message) {
 		m.P("fmap := MakeFieldMap(src.Fields)")
 	}
 	m.generateCopyIn(make([]string, 0), make([]string, 0), desc, make([]*generator.Descriptor, 0), gensupport.HasGrpcFields(message))
+	m.P("return changed")
 	m.P("}")
 	m.P("")
 

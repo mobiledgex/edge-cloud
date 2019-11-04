@@ -324,11 +324,14 @@ func encodeVarintDebug(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *DebugLevels) CopyInFields(src *DebugLevels) {
+func (m *DebugLevels) CopyInFields(src *DebugLevels) int {
+	changed := 0
 	if m.Levels == nil || len(m.Levels) != len(src.Levels) {
 		m.Levels = make([]DebugLevel, len(src.Levels))
 	}
 	copy(m.Levels, src.Levels)
+	changed++
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -341,9 +344,17 @@ func (m *DebugLevels) ValidateEnums() error {
 	return nil
 }
 
-func (m *DebugResult) CopyInFields(src *DebugResult) {
-	m.Status = src.Status
-	m.Code = src.Code
+func (m *DebugResult) CopyInFields(src *DebugResult) int {
+	changed := 0
+	if m.Status != src.Status {
+		m.Status = src.Status
+		changed++
+	}
+	if m.Code != src.Code {
+		m.Code = src.Code
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values

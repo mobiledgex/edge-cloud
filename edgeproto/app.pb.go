@@ -684,10 +684,21 @@ func (m *AppKey) Matches(o *AppKey, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *AppKey) CopyInFields(src *AppKey) {
-	m.DeveloperKey.Name = src.DeveloperKey.Name
-	m.Name = src.Name
-	m.Version = src.Version
+func (m *AppKey) CopyInFields(src *AppKey) int {
+	changed := 0
+	if m.DeveloperKey.Name != src.DeveloperKey.Name {
+		m.DeveloperKey.Name = src.DeveloperKey.Name
+		changed++
+	}
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	if m.Version != src.Version {
+		m.Version = src.Version
+		changed++
+	}
+	return changed
 }
 
 func (m *AppKey) GetKeyString() string {
@@ -713,9 +724,17 @@ func (m *AppKey) ValidateEnums() error {
 	return nil
 }
 
-func (m *ConfigFile) CopyInFields(src *ConfigFile) {
-	m.Kind = src.Kind
-	m.Config = src.Config
+func (m *ConfigFile) CopyInFields(src *ConfigFile) int {
+	changed := 0
+	if m.Kind != src.Kind {
+		m.Kind = src.Kind
+		changed++
+	}
+	if m.Config != src.Config {
+		m.Config = src.Config
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -1030,58 +1049,104 @@ func (m *App) DiffFields(o *App, fields map[string]struct{}) {
 	}
 }
 
-func (m *App) CopyInFields(src *App) {
+func (m *App) CopyInFields(src *App) int {
+	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.2"]; set {
-				m.Key.DeveloperKey.Name = src.Key.DeveloperKey.Name
+				if m.Key.DeveloperKey.Name != src.Key.DeveloperKey.Name {
+					m.Key.DeveloperKey.Name = src.Key.DeveloperKey.Name
+					changed++
+				}
 			}
 		}
 		if _, set := fmap["2.2"]; set {
-			m.Key.Name = src.Key.Name
+			if m.Key.Name != src.Key.Name {
+				m.Key.Name = src.Key.Name
+				changed++
+			}
 		}
 		if _, set := fmap["2.3"]; set {
-			m.Key.Version = src.Key.Version
+			if m.Key.Version != src.Key.Version {
+				m.Key.Version = src.Key.Version
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["4"]; set {
-		m.ImagePath = src.ImagePath
+		if m.ImagePath != src.ImagePath {
+			m.ImagePath = src.ImagePath
+			changed++
+		}
 	}
 	if _, set := fmap["5"]; set {
-		m.ImageType = src.ImageType
+		if m.ImageType != src.ImageType {
+			m.ImageType = src.ImageType
+			changed++
+		}
 	}
 	if _, set := fmap["7"]; set {
-		m.AccessPorts = src.AccessPorts
+		if m.AccessPorts != src.AccessPorts {
+			m.AccessPorts = src.AccessPorts
+			changed++
+		}
 	}
 	if _, set := fmap["9"]; set {
 		if _, set := fmap["9.1"]; set {
-			m.DefaultFlavor.Name = src.DefaultFlavor.Name
+			if m.DefaultFlavor.Name != src.DefaultFlavor.Name {
+				m.DefaultFlavor.Name = src.DefaultFlavor.Name
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["12"]; set {
-		m.AuthPublicKey = src.AuthPublicKey
+		if m.AuthPublicKey != src.AuthPublicKey {
+			m.AuthPublicKey = src.AuthPublicKey
+			changed++
+		}
 	}
 	if _, set := fmap["13"]; set {
-		m.Command = src.Command
+		if m.Command != src.Command {
+			m.Command = src.Command
+			changed++
+		}
 	}
 	if _, set := fmap["14"]; set {
-		m.Annotations = src.Annotations
+		if m.Annotations != src.Annotations {
+			m.Annotations = src.Annotations
+			changed++
+		}
 	}
 	if _, set := fmap["15"]; set {
-		m.Deployment = src.Deployment
+		if m.Deployment != src.Deployment {
+			m.Deployment = src.Deployment
+			changed++
+		}
 	}
 	if _, set := fmap["16"]; set {
-		m.DeploymentManifest = src.DeploymentManifest
+		if m.DeploymentManifest != src.DeploymentManifest {
+			m.DeploymentManifest = src.DeploymentManifest
+			changed++
+		}
 	}
 	if _, set := fmap["17"]; set {
-		m.DeploymentGenerator = src.DeploymentGenerator
+		if m.DeploymentGenerator != src.DeploymentGenerator {
+			m.DeploymentGenerator = src.DeploymentGenerator
+			changed++
+		}
 	}
 	if _, set := fmap["18"]; set {
-		m.AndroidPackageName = src.AndroidPackageName
+		if m.AndroidPackageName != src.AndroidPackageName {
+			m.AndroidPackageName = src.AndroidPackageName
+			changed++
+		}
 	}
 	if _, set := fmap["20"]; set {
-		m.DelOpt = src.DelOpt
+		if m.DelOpt != src.DelOpt {
+			m.DelOpt = src.DelOpt
+			changed++
+		}
 	}
 	if _, set := fmap["21"]; set && src.Configs != nil {
 		if m.Configs == nil || len(m.Configs) != len(src.Configs) {
@@ -1090,28 +1155,50 @@ func (m *App) CopyInFields(src *App) {
 		for i0 := 0; i0 < len(src.Configs); i0++ {
 			m.Configs[i0] = &ConfigFile{}
 			if _, set := fmap["21.1"]; set {
-				m.Configs[i0].Kind = src.Configs[i0].Kind
+				if m.Configs[i0].Kind != src.Configs[i0].Kind {
+					m.Configs[i0].Kind = src.Configs[i0].Kind
+					changed++
+				}
 			}
 			if _, set := fmap["21.2"]; set {
-				m.Configs[i0].Config = src.Configs[i0].Config
+				if m.Configs[i0].Config != src.Configs[i0].Config {
+					m.Configs[i0].Config = src.Configs[i0].Config
+					changed++
+				}
 			}
 		}
 	}
 	if _, set := fmap["22"]; set {
-		m.ScaleWithCluster = src.ScaleWithCluster
+		if m.ScaleWithCluster != src.ScaleWithCluster {
+			m.ScaleWithCluster = src.ScaleWithCluster
+			changed++
+		}
 	}
 	if _, set := fmap["23"]; set {
-		m.InternalPorts = src.InternalPorts
+		if m.InternalPorts != src.InternalPorts {
+			m.InternalPorts = src.InternalPorts
+			changed++
+		}
 	}
 	if _, set := fmap["24"]; set {
-		m.Revision = src.Revision
+		if m.Revision != src.Revision {
+			m.Revision = src.Revision
+			changed++
+		}
 	}
 	if _, set := fmap["25"]; set {
-		m.OfficialFqdn = src.OfficialFqdn
+		if m.OfficialFqdn != src.OfficialFqdn {
+			m.OfficialFqdn = src.OfficialFqdn
+			changed++
+		}
 	}
 	if _, set := fmap["26"]; set {
-		m.Md5Sum = src.Md5Sum
+		if m.Md5Sum != src.Md5Sum {
+			m.Md5Sum = src.Md5Sum
+			changed++
+		}
 	}
+	return changed
 }
 
 func (s *App) HasFields() bool {
@@ -1395,6 +1482,7 @@ func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare App", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}

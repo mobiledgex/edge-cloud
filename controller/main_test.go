@@ -31,7 +31,7 @@ func TestController(t *testing.T) {
 	flag.Parse() // set defaults
 	*localEtcd = true
 	*initLocalEtcd = true
-	*testMode = true
+	testinit()
 
 	err := startServices()
 	require.Nil(t, err, "start")
@@ -67,12 +67,14 @@ func TestController(t *testing.T) {
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
 	clusterInstClient := edgeproto.NewClusterInstApiClient(conn)
 	cloudletInfoClient := edgeproto.NewCloudletInfoApiClient(conn)
+	autoScalePolicyClient := edgeproto.NewAutoScalePolicyApiClient(conn)
 
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
 
 	testutil.ClientDeveloperTest(t, "cud", devClient, testutil.DevData)
 	testutil.ClientFlavorTest(t, "cud", flavorClient, testutil.FlavorData)
+	testutil.ClientAutoScalePolicyTest(t, "cud", autoScalePolicyClient, testutil.AutoScalePolicyData)
 	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
 	testutil.ClientOperatorTest(t, "cud", operClient, testutil.OperatorData)
 	testutil.ClientCloudletTest(t, "cud", cloudletClient, testutil.CloudletData)
@@ -110,6 +112,8 @@ func TestController(t *testing.T) {
 	require.NotNil(t, err)
 	_, err = appClient.DeleteApp(ctx, &testutil.AppData[0])
 	require.NotNil(t, err)
+	_, err = autoScalePolicyClient.DeleteAutoScalePolicy(ctx, &testutil.AutoScalePolicyData[0])
+	require.NotNil(t, err)
 	// test that delete works after removing dependencies
 	for _, inst := range testutil.AppInstData {
 		stream, err := appInstClient.DeleteAppInst(ctx, &inst)
@@ -123,6 +127,10 @@ func TestController(t *testing.T) {
 	}
 	for _, obj := range testutil.AppData {
 		_, err = appClient.DeleteApp(ctx, &obj)
+		require.Nil(t, err)
+	}
+	for _, obj := range testutil.AutoScalePolicyData {
+		_, err = autoScalePolicyClient.DeleteAutoScalePolicy(ctx, &obj)
 		require.Nil(t, err)
 	}
 	for _, obj := range testutil.CloudletData {
@@ -166,6 +174,7 @@ func TestDataGen(t *testing.T) {
 func TestEdgeCloudBug26(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify)
 	flag.Parse()
+	testinit()
 	*localEtcd = true
 	*initLocalEtcd = true
 

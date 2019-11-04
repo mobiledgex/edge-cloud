@@ -274,6 +274,7 @@ func startServices() error {
 	edgeproto.RegisterCloudletPoolMemberApiServer(server, &cloudletPoolMemberApi)
 	edgeproto.RegisterCloudletPoolShowApiServer(server, &cloudletPoolMemberApi)
 	edgeproto.RegisterAlertApiServer(server, &alertApi)
+	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -304,6 +305,7 @@ func startServices() error {
 			edgeproto.RegisterCloudletPoolMemberApiHandler,
 			edgeproto.RegisterCloudletPoolShowApiHandler,
 			edgeproto.RegisterAlertApiHandler,
+			edgeproto.RegisterAutoScalePolicyApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -410,6 +412,7 @@ func InitApis(sync *Sync) {
 	InitCloudletPoolMemberApi(sync)
 	InitExecApi()
 	InitAlertApi(sync)
+	InitAutoScalePolicyApi(sync)
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "nohostname"
@@ -421,9 +424,11 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
+	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
+	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
 	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletInfoRecvMany(&cloudletInfoApi))

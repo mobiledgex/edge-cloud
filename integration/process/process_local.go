@@ -514,6 +514,9 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--scrapeInterval")
 		args = append(args, p.Interval)
 	}
+	if p.PluginRequired {
+		args = append(args, "--pluginRequired")
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {

@@ -5,21 +5,15 @@ import (
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAppApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	objstore.InitRegion(1)
-	tMode := true
-	testMode = &tMode
+	testinit()
 	log.InitTracer("")
 	defer log.FinishTracer()
-
-	dockerRegistry := "docker.mobiledgex.net"
-	registryFQDN = &dockerRegistry
 
 	dummy := dummyEtcd{}
 	dummy.Start()

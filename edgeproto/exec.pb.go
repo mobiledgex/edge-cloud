@@ -242,21 +242,65 @@ func encodeVarintExec(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *ExecRequest) CopyInFields(src *ExecRequest) {
-	m.AppInstKey.AppKey.DeveloperKey.Name = src.AppInstKey.AppKey.DeveloperKey.Name
-	m.AppInstKey.AppKey.Name = src.AppInstKey.AppKey.Name
-	m.AppInstKey.AppKey.Version = src.AppInstKey.AppKey.Version
-	m.AppInstKey.ClusterInstKey.ClusterKey.Name = src.AppInstKey.ClusterInstKey.ClusterKey.Name
-	m.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name = src.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name
-	m.AppInstKey.ClusterInstKey.CloudletKey.Name = src.AppInstKey.ClusterInstKey.CloudletKey.Name
-	m.AppInstKey.ClusterInstKey.Developer = src.AppInstKey.ClusterInstKey.Developer
-	m.Command = src.Command
-	m.ContainerId = src.ContainerId
-	m.Offer = src.Offer
-	m.Answer = src.Answer
-	m.Err = src.Err
-	m.Console = src.Console
-	m.ConsoleUrl = src.ConsoleUrl
+func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
+	changed := 0
+	if m.AppInstKey.AppKey.DeveloperKey.Name != src.AppInstKey.AppKey.DeveloperKey.Name {
+		m.AppInstKey.AppKey.DeveloperKey.Name = src.AppInstKey.AppKey.DeveloperKey.Name
+		changed++
+	}
+	if m.AppInstKey.AppKey.Name != src.AppInstKey.AppKey.Name {
+		m.AppInstKey.AppKey.Name = src.AppInstKey.AppKey.Name
+		changed++
+	}
+	if m.AppInstKey.AppKey.Version != src.AppInstKey.AppKey.Version {
+		m.AppInstKey.AppKey.Version = src.AppInstKey.AppKey.Version
+		changed++
+	}
+	if m.AppInstKey.ClusterInstKey.ClusterKey.Name != src.AppInstKey.ClusterInstKey.ClusterKey.Name {
+		m.AppInstKey.ClusterInstKey.ClusterKey.Name = src.AppInstKey.ClusterInstKey.ClusterKey.Name
+		changed++
+	}
+	if m.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name != src.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name {
+		m.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name = src.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name
+		changed++
+	}
+	if m.AppInstKey.ClusterInstKey.CloudletKey.Name != src.AppInstKey.ClusterInstKey.CloudletKey.Name {
+		m.AppInstKey.ClusterInstKey.CloudletKey.Name = src.AppInstKey.ClusterInstKey.CloudletKey.Name
+		changed++
+	}
+	if m.AppInstKey.ClusterInstKey.Developer != src.AppInstKey.ClusterInstKey.Developer {
+		m.AppInstKey.ClusterInstKey.Developer = src.AppInstKey.ClusterInstKey.Developer
+		changed++
+	}
+	if m.Command != src.Command {
+		m.Command = src.Command
+		changed++
+	}
+	if m.ContainerId != src.ContainerId {
+		m.ContainerId = src.ContainerId
+		changed++
+	}
+	if m.Offer != src.Offer {
+		m.Offer = src.Offer
+		changed++
+	}
+	if m.Answer != src.Answer {
+		m.Answer = src.Answer
+		changed++
+	}
+	if m.Err != src.Err {
+		m.Err = src.Err
+		changed++
+	}
+	if m.Console != src.Console {
+		m.Console = src.Console
+		changed++
+	}
+	if m.ConsoleUrl != src.ConsoleUrl {
+		m.ConsoleUrl = src.ConsoleUrl
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values

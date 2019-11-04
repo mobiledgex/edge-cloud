@@ -60,6 +60,8 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.UpdateMultiple = false
 	}
+	for i0 := 0; i0 < len(in.Configs); i0++ {
+	}
 }
 
 func AppInstRuntimeHideTags(in *edgeproto.AppInstRuntime) {
@@ -542,6 +544,8 @@ var AppInstOptionalArgs = []string{
 	"autoclusteripaccess",
 	"forceupdate",
 	"updatemultiple",
+	"configs.kind",
+	"configs.config",
 }
 var AppInstAliasArgs = []string{
 	"developer=key.appkey.developerkey.name",
@@ -585,6 +589,8 @@ var AppInstComments = map[string]string{
 	"revision":                       "Revision increments each time the App is updated.  Updating the App Instance will sync the revision with that of the App",
 	"forceupdate":                    "Force Appinst update when UpdateAppInst is done if revision matches",
 	"updatemultiple":                 "Allow multiple instances to be updated at once",
+	"configs.kind":                   "kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config",
+	"configs.config":                 "config file contents or URI reference",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -662,6 +668,8 @@ var CreateAppInstOptionalArgs = []string{
 	"crmoverride",
 	"autoclusteripaccess",
 	"forceupdate",
+	"configs.kind",
+	"configs.config",
 }
 var UpdateAppInstRequiredArgs = []string{
 	"developer",
@@ -676,4 +684,6 @@ var UpdateAppInstOptionalArgs = []string{
 	"crmoverride",
 	"forceupdate",
 	"updatemultiple",
+	"configs.kind",
+	"configs.config",
 }

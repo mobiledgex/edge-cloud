@@ -70,6 +70,17 @@ func (s *ClusterInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	return false
 }
 
+func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, cluster := range s.cache.Objs {
+		if cluster.AutoScalePolicy == key.Name {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *ClusterInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgeproto.ClusterInstKey]struct{}) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -222,6 +233,18 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				return fmt.Errorf("Cluster name limited to %d characters for GCP and Azure", cloudcommon.MaxClusterNameLength)
 			}
 		}
+		if in.AutoScalePolicy != "" {
+			policy := edgeproto.AutoScalePolicy{}
+			if err := autoScalePolicyApi.STMFind(stm, in.AutoScalePolicy, in.Key.Developer, &policy); err != nil {
+				return err
+			}
+			if in.NumNodes < policy.MinNodes {
+				in.NumNodes = policy.MinNodes
+			}
+			if in.NumNodes > policy.MaxNodes {
+				in.NumNodes = policy.MaxNodes
+			}
+		}
 		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
 			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.CloudletKey)
@@ -316,7 +339,6 @@ func (s *ClusterInstApi) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgepro
 }
 
 func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
-	// Unsupported for now
 	return s.updateClusterInstInternal(DefCallContext(), in, cb)
 }
 
@@ -331,6 +353,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		return fmt.Errorf("nothing specified to update")
 	}
 	allowedFields := []string{}
+	allowedFieldsMap := make(map[string]struct{})
 	badFields := []string{}
 	for _, field := range in.Fields {
 		if field == edgeproto.ClusterInstFieldCrmOverride ||
@@ -339,6 +362,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			continue
 		} else if field == edgeproto.ClusterInstFieldNumNodes {
 			allowedFields = append(allowedFields, field)
+			allowedFieldsMap[field] = struct{}{}
 		} else {
 			badFields = append(badFields, field)
 		}
@@ -352,6 +376,9 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badstrs, ","))
 	}
 	in.Fields = allowedFields
+	if len(allowedFields) == 0 {
+		return fmt.Errorf("Nothing specified to modify")
+	}
 
 	cctx.SetOverride(&in.CrmOverride)
 	if !ignoreCRM(cctx) {
@@ -361,13 +388,16 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 
 	var inbuf edgeproto.ClusterInst
+	var changeCount int
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		changeCount = 0
 		if !s.store.STMGet(stm, &in.Key, &inbuf) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
 		if inbuf.NumMasters == 0 {
 			return fmt.Errorf("cannot modify single node clusters")
 		}
+
 		if !cctx.Undo && inbuf.State != edgeproto.TrackedState_READY && !ignoreTransient(cctx, inbuf.State) {
 			if inbuf.State == edgeproto.TrackedState_UPDATE_ERROR {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("previous update failed, %v, trying again", inbuf.Errors)})
@@ -375,13 +405,20 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 				return errors.New("ClusterInst busy, cannot update")
 			}
 		}
-		inbuf.CopyInFields(in)
+		changeCount = inbuf.CopyInFields(in)
+		if changeCount == 0 {
+			// nothing changed
+			return nil
+		}
 		inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		s.store.STMPut(stm, &inbuf)
 		return nil
 	})
 	if err != nil {
 		return err
+	}
+	if changeCount == 0 {
+		return nil
 	}
 	if ignoreCRM(cctx) {
 		return nil
@@ -411,7 +448,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE && !ignoreTransient(cctx, in.State) {
+		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
 			if in.State == edgeproto.TrackedState_DELETE_ERROR {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
 				cb.Send(&edgeproto.Result{Message: "Use CreateClusterInst to rebuild, and try again"})

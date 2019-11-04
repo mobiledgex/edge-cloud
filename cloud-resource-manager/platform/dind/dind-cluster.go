@@ -77,6 +77,11 @@ func (s *Platform) CreateDINDCluster(ctx context.Context, clusterName, kconfName
 		}
 		clusterID++
 	}
+	// if KUBECONFIG is set, then the dind-cluster script will write config
+	// to that file instead of ~/.kube/config, which is super confusing.
+	// For consistency, make sure KUBECONFIG is not set (it may be pointing
+	// to the wrong place).
+	os.Unsetenv("KUBECONFIG")
 	os.Setenv("DIND_LABEL", clusterName)
 	os.Setenv("CLUSTER_ID", GetClusterID(clusterID))
 	cluster := NewClusterFor(clusterName, clusterID)
@@ -91,10 +96,13 @@ func (s *Platform) CreateDINDCluster(ctx context.Context, clusterName, kconfName
 	time.Sleep(3 * time.Second)
 
 	//now set the k8s config
+	log.SpanLog(ctx, log.DebugLevelMexos, "set config context", "kcontext", cluster.KContext)
 	out, err = sh.Command("kubectl", "config", "use-context", cluster.KContext).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("ERROR setting kube config context: [%s] %v", out, err)
+		return fmt.Errorf("ERROR setting kube config context: [%s] %v", string(out), err)
 	}
+	log.SpanLog(ctx, log.DebugLevelMexos, "set config context output", "out", string(out), "err", err)
+
 	//copy kubeconfig locally
 	log.SpanLog(ctx, log.DebugLevelMexos, "locally copying kubeconfig", "kconfName", kconfName)
 	home := os.Getenv("HOME")
@@ -102,6 +110,8 @@ func (s *Platform) CreateDINDCluster(ctx context.Context, clusterName, kconfName
 	if err != nil {
 		return fmt.Errorf("%s %v", out, err)
 	}
+	out, err = sh.Command("cat", home+"/.kube/config").CombinedOutput()
+	log.SpanLog(ctx, log.DebugLevelMexos, "config file", "home", home, "out", string(out), "err", err)
 
 	// bridge nginxL7 network to this cluster's network
 	out, err = sh.Command("docker", "network", "connect",

@@ -1796,9 +1796,17 @@ func (m *CloudletKey) Matches(o *CloudletKey, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *CloudletKey) CopyInFields(src *CloudletKey) {
-	m.OperatorKey.Name = src.OperatorKey.Name
-	m.Name = src.Name
+func (m *CloudletKey) CopyInFields(src *CloudletKey) int {
+	changed := 0
+	if m.OperatorKey.Name != src.OperatorKey.Name {
+		m.OperatorKey.Name = src.OperatorKey.Name
+		changed++
+	}
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	return changed
 }
 
 func (m *CloudletKey) GetKeyString() string {
@@ -1824,13 +1832,33 @@ func (m *CloudletKey) ValidateEnums() error {
 	return nil
 }
 
-func (m *OperationTimeLimits) CopyInFields(src *OperationTimeLimits) {
-	m.CreateClusterInstTimeout = src.CreateClusterInstTimeout
-	m.UpdateClusterInstTimeout = src.UpdateClusterInstTimeout
-	m.DeleteClusterInstTimeout = src.DeleteClusterInstTimeout
-	m.CreateAppInstTimeout = src.CreateAppInstTimeout
-	m.UpdateAppInstTimeout = src.UpdateAppInstTimeout
-	m.DeleteAppInstTimeout = src.DeleteAppInstTimeout
+func (m *OperationTimeLimits) CopyInFields(src *OperationTimeLimits) int {
+	changed := 0
+	if m.CreateClusterInstTimeout != src.CreateClusterInstTimeout {
+		m.CreateClusterInstTimeout = src.CreateClusterInstTimeout
+		changed++
+	}
+	if m.UpdateClusterInstTimeout != src.UpdateClusterInstTimeout {
+		m.UpdateClusterInstTimeout = src.UpdateClusterInstTimeout
+		changed++
+	}
+	if m.DeleteClusterInstTimeout != src.DeleteClusterInstTimeout {
+		m.DeleteClusterInstTimeout = src.DeleteClusterInstTimeout
+		changed++
+	}
+	if m.CreateAppInstTimeout != src.CreateAppInstTimeout {
+		m.CreateAppInstTimeout = src.CreateAppInstTimeout
+		changed++
+	}
+	if m.UpdateAppInstTimeout != src.UpdateAppInstTimeout {
+		m.UpdateAppInstTimeout = src.UpdateAppInstTimeout
+		changed++
+	}
+	if m.DeleteAppInstTimeout != src.DeleteAppInstTimeout {
+		m.DeleteAppInstTimeout = src.DeleteAppInstTimeout
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -1838,15 +1866,41 @@ func (m *OperationTimeLimits) ValidateEnums() error {
 	return nil
 }
 
-func (m *CloudletInfraCommon) CopyInFields(src *CloudletInfraCommon) {
-	m.DockerRegistry = src.DockerRegistry
-	m.DnsZone = src.DnsZone
-	m.RegistryFileServer = src.RegistryFileServer
-	m.CfKey = src.CfKey
-	m.CfUser = src.CfUser
-	m.DockerRegPass = src.DockerRegPass
-	m.NetworkScheme = src.NetworkScheme
-	m.DockerRegistrySecret = src.DockerRegistrySecret
+func (m *CloudletInfraCommon) CopyInFields(src *CloudletInfraCommon) int {
+	changed := 0
+	if m.DockerRegistry != src.DockerRegistry {
+		m.DockerRegistry = src.DockerRegistry
+		changed++
+	}
+	if m.DnsZone != src.DnsZone {
+		m.DnsZone = src.DnsZone
+		changed++
+	}
+	if m.RegistryFileServer != src.RegistryFileServer {
+		m.RegistryFileServer = src.RegistryFileServer
+		changed++
+	}
+	if m.CfKey != src.CfKey {
+		m.CfKey = src.CfKey
+		changed++
+	}
+	if m.CfUser != src.CfUser {
+		m.CfUser = src.CfUser
+		changed++
+	}
+	if m.DockerRegPass != src.DockerRegPass {
+		m.DockerRegPass = src.DockerRegPass
+		changed++
+	}
+	if m.NetworkScheme != src.NetworkScheme {
+		m.NetworkScheme = src.NetworkScheme
+		changed++
+	}
+	if m.DockerRegistrySecret != src.DockerRegistrySecret {
+		m.DockerRegistrySecret = src.DockerRegistrySecret
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -1854,11 +1908,25 @@ func (m *CloudletInfraCommon) ValidateEnums() error {
 	return nil
 }
 
-func (m *AzureProperties) CopyInFields(src *AzureProperties) {
-	m.Location = src.Location
-	m.ResourceGroup = src.ResourceGroup
-	m.UserName = src.UserName
-	m.Password = src.Password
+func (m *AzureProperties) CopyInFields(src *AzureProperties) int {
+	changed := 0
+	if m.Location != src.Location {
+		m.Location = src.Location
+		changed++
+	}
+	if m.ResourceGroup != src.ResourceGroup {
+		m.ResourceGroup = src.ResourceGroup
+		changed++
+	}
+	if m.UserName != src.UserName {
+		m.UserName = src.UserName
+		changed++
+	}
+	if m.Password != src.Password {
+		m.Password = src.Password
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -1866,11 +1934,25 @@ func (m *AzureProperties) ValidateEnums() error {
 	return nil
 }
 
-func (m *GcpProperties) CopyInFields(src *GcpProperties) {
-	m.Project = src.Project
-	m.Zone = src.Zone
-	m.ServiceAccount = src.ServiceAccount
-	m.GcpAuthKeyUrl = src.GcpAuthKeyUrl
+func (m *GcpProperties) CopyInFields(src *GcpProperties) int {
+	changed := 0
+	if m.Project != src.Project {
+		m.Project = src.Project
+		changed++
+	}
+	if m.Zone != src.Zone {
+		m.Zone = src.Zone
+		changed++
+	}
+	if m.ServiceAccount != src.ServiceAccount {
+		m.ServiceAccount = src.ServiceAccount
+		changed++
+	}
+	if m.GcpAuthKeyUrl != src.GcpAuthKeyUrl {
+		m.GcpAuthKeyUrl = src.GcpAuthKeyUrl
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -1878,17 +1960,31 @@ func (m *GcpProperties) ValidateEnums() error {
 	return nil
 }
 
-func (m *OpenStackProperties) CopyInFields(src *OpenStackProperties) {
-	m.OsExternalNetworkName = src.OsExternalNetworkName
-	m.OsImageName = src.OsImageName
-	m.OsExternalRouterName = src.OsExternalRouterName
-	m.OsMexNetwork = src.OsMexNetwork
+func (m *OpenStackProperties) CopyInFields(src *OpenStackProperties) int {
+	changed := 0
+	if m.OsExternalNetworkName != src.OsExternalNetworkName {
+		m.OsExternalNetworkName = src.OsExternalNetworkName
+		changed++
+	}
+	if m.OsImageName != src.OsImageName {
+		m.OsImageName = src.OsImageName
+		changed++
+	}
+	if m.OsExternalRouterName != src.OsExternalRouterName {
+		m.OsExternalRouterName = src.OsExternalRouterName
+		changed++
+	}
+	if m.OsMexNetwork != src.OsMexNetwork {
+		m.OsMexNetwork = src.OsMexNetwork
+		changed++
+	}
 	if src.OpenRcVars != nil {
 		m.OpenRcVars = make(map[string]string)
 		for k0, _ := range src.OpenRcVars {
 			m.OpenRcVars[k0] = src.OpenRcVars[k0]
 		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -1896,15 +1992,34 @@ func (m *OpenStackProperties) ValidateEnums() error {
 	return nil
 }
 
-func (m *CloudletInfraProperties) CopyInFields(src *CloudletInfraProperties) {
-	m.CloudletKind = src.CloudletKind
-	m.MexosContainerImageName = src.MexosContainerImageName
+func (m *CloudletInfraProperties) CopyInFields(src *CloudletInfraProperties) int {
+	changed := 0
+	if m.CloudletKind != src.CloudletKind {
+		m.CloudletKind = src.CloudletKind
+		changed++
+	}
+	if m.MexosContainerImageName != src.MexosContainerImageName {
+		m.MexosContainerImageName = src.MexosContainerImageName
+		changed++
+	}
 	if src.OpenstackProperties != nil {
 		m.OpenstackProperties = &OpenStackProperties{}
-		m.OpenstackProperties.OsExternalNetworkName = src.OpenstackProperties.OsExternalNetworkName
-		m.OpenstackProperties.OsImageName = src.OpenstackProperties.OsImageName
-		m.OpenstackProperties.OsExternalRouterName = src.OpenstackProperties.OsExternalRouterName
-		m.OpenstackProperties.OsMexNetwork = src.OpenstackProperties.OsMexNetwork
+		if m.OpenstackProperties.OsExternalNetworkName != src.OpenstackProperties.OsExternalNetworkName {
+			m.OpenstackProperties.OsExternalNetworkName = src.OpenstackProperties.OsExternalNetworkName
+			changed++
+		}
+		if m.OpenstackProperties.OsImageName != src.OpenstackProperties.OsImageName {
+			m.OpenstackProperties.OsImageName = src.OpenstackProperties.OsImageName
+			changed++
+		}
+		if m.OpenstackProperties.OsExternalRouterName != src.OpenstackProperties.OsExternalRouterName {
+			m.OpenstackProperties.OsExternalRouterName = src.OpenstackProperties.OsExternalRouterName
+			changed++
+		}
+		if m.OpenstackProperties.OsMexNetwork != src.OpenstackProperties.OsMexNetwork {
+			m.OpenstackProperties.OsMexNetwork = src.OpenstackProperties.OsMexNetwork
+			changed++
+		}
 		if src.OpenstackProperties.OpenRcVars != nil {
 			m.OpenstackProperties.OpenRcVars = make(map[string]string)
 			for k1, _ := range src.OpenstackProperties.OpenRcVars {
@@ -1914,18 +2029,43 @@ func (m *CloudletInfraProperties) CopyInFields(src *CloudletInfraProperties) {
 	}
 	if src.AzureProperties != nil {
 		m.AzureProperties = &AzureProperties{}
-		m.AzureProperties.Location = src.AzureProperties.Location
-		m.AzureProperties.ResourceGroup = src.AzureProperties.ResourceGroup
-		m.AzureProperties.UserName = src.AzureProperties.UserName
-		m.AzureProperties.Password = src.AzureProperties.Password
+		if m.AzureProperties.Location != src.AzureProperties.Location {
+			m.AzureProperties.Location = src.AzureProperties.Location
+			changed++
+		}
+		if m.AzureProperties.ResourceGroup != src.AzureProperties.ResourceGroup {
+			m.AzureProperties.ResourceGroup = src.AzureProperties.ResourceGroup
+			changed++
+		}
+		if m.AzureProperties.UserName != src.AzureProperties.UserName {
+			m.AzureProperties.UserName = src.AzureProperties.UserName
+			changed++
+		}
+		if m.AzureProperties.Password != src.AzureProperties.Password {
+			m.AzureProperties.Password = src.AzureProperties.Password
+			changed++
+		}
 	}
 	if src.GcpProperties != nil {
 		m.GcpProperties = &GcpProperties{}
-		m.GcpProperties.Project = src.GcpProperties.Project
-		m.GcpProperties.Zone = src.GcpProperties.Zone
-		m.GcpProperties.ServiceAccount = src.GcpProperties.ServiceAccount
-		m.GcpProperties.GcpAuthKeyUrl = src.GcpProperties.GcpAuthKeyUrl
+		if m.GcpProperties.Project != src.GcpProperties.Project {
+			m.GcpProperties.Project = src.GcpProperties.Project
+			changed++
+		}
+		if m.GcpProperties.Zone != src.GcpProperties.Zone {
+			m.GcpProperties.Zone = src.GcpProperties.Zone
+			changed++
+		}
+		if m.GcpProperties.ServiceAccount != src.GcpProperties.ServiceAccount {
+			m.GcpProperties.ServiceAccount = src.GcpProperties.ServiceAccount
+			changed++
+		}
+		if m.GcpProperties.GcpAuthKeyUrl != src.GcpProperties.GcpAuthKeyUrl {
+			m.GcpProperties.GcpAuthKeyUrl = src.GcpProperties.GcpAuthKeyUrl
+			changed++
+		}
 	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -1942,17 +2082,49 @@ func (m *CloudletInfraProperties) ValidateEnums() error {
 	return nil
 }
 
-func (m *PlatformConfig) CopyInFields(src *PlatformConfig) {
-	m.RegistryPath = src.RegistryPath
-	m.ImagePath = src.ImagePath
-	m.NotifyCtrlAddrs = src.NotifyCtrlAddrs
-	m.VaultAddr = src.VaultAddr
-	m.TlsCertFile = src.TlsCertFile
-	m.CrmRoleId = src.CrmRoleId
-	m.CrmSecretId = src.CrmSecretId
-	m.PlatformTag = src.PlatformTag
-	m.TestMode = src.TestMode
-	m.Span = src.Span
+func (m *PlatformConfig) CopyInFields(src *PlatformConfig) int {
+	changed := 0
+	if m.RegistryPath != src.RegistryPath {
+		m.RegistryPath = src.RegistryPath
+		changed++
+	}
+	if m.ImagePath != src.ImagePath {
+		m.ImagePath = src.ImagePath
+		changed++
+	}
+	if m.NotifyCtrlAddrs != src.NotifyCtrlAddrs {
+		m.NotifyCtrlAddrs = src.NotifyCtrlAddrs
+		changed++
+	}
+	if m.VaultAddr != src.VaultAddr {
+		m.VaultAddr = src.VaultAddr
+		changed++
+	}
+	if m.TlsCertFile != src.TlsCertFile {
+		m.TlsCertFile = src.TlsCertFile
+		changed++
+	}
+	if m.CrmRoleId != src.CrmRoleId {
+		m.CrmRoleId = src.CrmRoleId
+		changed++
+	}
+	if m.CrmSecretId != src.CrmSecretId {
+		m.CrmSecretId = src.CrmSecretId
+		changed++
+	}
+	if m.PlatformTag != src.PlatformTag {
+		m.PlatformTag = src.PlatformTag
+		changed++
+	}
+	if m.TestMode != src.TestMode {
+		m.TestMode = src.TestMode
+		changed++
+	}
+	if m.Span != src.Span {
+		m.Span = src.Span
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -2484,80 +2656,144 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 	}
 }
 
-func (m *Cloudlet) CopyInFields(src *Cloudlet) {
+func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
+	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.1"]; set {
-				m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
+				if m.Key.OperatorKey.Name != src.Key.OperatorKey.Name {
+					m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
+					changed++
+				}
 			}
 		}
 		if _, set := fmap["2.2"]; set {
-			m.Key.Name = src.Key.Name
+			if m.Key.Name != src.Key.Name {
+				m.Key.Name = src.Key.Name
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["4"]; set {
-		m.AccessCredentials = src.AccessCredentials
+		if m.AccessCredentials != src.AccessCredentials {
+			m.AccessCredentials = src.AccessCredentials
+			changed++
+		}
 	}
 	if _, set := fmap["5"]; set {
 		if _, set := fmap["5.1"]; set {
-			m.Location.Latitude = src.Location.Latitude
+			if m.Location.Latitude != src.Location.Latitude {
+				m.Location.Latitude = src.Location.Latitude
+				changed++
+			}
 		}
 		if _, set := fmap["5.2"]; set {
-			m.Location.Longitude = src.Location.Longitude
+			if m.Location.Longitude != src.Location.Longitude {
+				m.Location.Longitude = src.Location.Longitude
+				changed++
+			}
 		}
 		if _, set := fmap["5.3"]; set {
-			m.Location.HorizontalAccuracy = src.Location.HorizontalAccuracy
+			if m.Location.HorizontalAccuracy != src.Location.HorizontalAccuracy {
+				m.Location.HorizontalAccuracy = src.Location.HorizontalAccuracy
+				changed++
+			}
 		}
 		if _, set := fmap["5.4"]; set {
-			m.Location.VerticalAccuracy = src.Location.VerticalAccuracy
+			if m.Location.VerticalAccuracy != src.Location.VerticalAccuracy {
+				m.Location.VerticalAccuracy = src.Location.VerticalAccuracy
+				changed++
+			}
 		}
 		if _, set := fmap["5.5"]; set {
-			m.Location.Altitude = src.Location.Altitude
+			if m.Location.Altitude != src.Location.Altitude {
+				m.Location.Altitude = src.Location.Altitude
+				changed++
+			}
 		}
 		if _, set := fmap["5.6"]; set {
-			m.Location.Course = src.Location.Course
+			if m.Location.Course != src.Location.Course {
+				m.Location.Course = src.Location.Course
+				changed++
+			}
 		}
 		if _, set := fmap["5.7"]; set {
-			m.Location.Speed = src.Location.Speed
+			if m.Location.Speed != src.Location.Speed {
+				m.Location.Speed = src.Location.Speed
+				changed++
+			}
 		}
 		if _, set := fmap["5.8"]; set && src.Location.Timestamp != nil {
 			m.Location.Timestamp = &distributed_match_engine.Timestamp{}
 			if _, set := fmap["5.8.1"]; set {
-				m.Location.Timestamp.Seconds = src.Location.Timestamp.Seconds
+				if m.Location.Timestamp.Seconds != src.Location.Timestamp.Seconds {
+					m.Location.Timestamp.Seconds = src.Location.Timestamp.Seconds
+					changed++
+				}
 			}
 			if _, set := fmap["5.8.2"]; set {
-				m.Location.Timestamp.Nanos = src.Location.Timestamp.Nanos
+				if m.Location.Timestamp.Nanos != src.Location.Timestamp.Nanos {
+					m.Location.Timestamp.Nanos = src.Location.Timestamp.Nanos
+					changed++
+				}
 			}
 		}
 	}
 	if _, set := fmap["6"]; set {
-		m.IpSupport = src.IpSupport
+		if m.IpSupport != src.IpSupport {
+			m.IpSupport = src.IpSupport
+			changed++
+		}
 	}
 	if _, set := fmap["7"]; set {
-		m.StaticIps = src.StaticIps
+		if m.StaticIps != src.StaticIps {
+			m.StaticIps = src.StaticIps
+			changed++
+		}
 	}
 	if _, set := fmap["8"]; set {
-		m.NumDynamicIps = src.NumDynamicIps
+		if m.NumDynamicIps != src.NumDynamicIps {
+			m.NumDynamicIps = src.NumDynamicIps
+			changed++
+		}
 	}
 	if _, set := fmap["9"]; set {
 		if _, set := fmap["9.1"]; set {
-			m.TimeLimits.CreateClusterInstTimeout = src.TimeLimits.CreateClusterInstTimeout
+			if m.TimeLimits.CreateClusterInstTimeout != src.TimeLimits.CreateClusterInstTimeout {
+				m.TimeLimits.CreateClusterInstTimeout = src.TimeLimits.CreateClusterInstTimeout
+				changed++
+			}
 		}
 		if _, set := fmap["9.2"]; set {
-			m.TimeLimits.UpdateClusterInstTimeout = src.TimeLimits.UpdateClusterInstTimeout
+			if m.TimeLimits.UpdateClusterInstTimeout != src.TimeLimits.UpdateClusterInstTimeout {
+				m.TimeLimits.UpdateClusterInstTimeout = src.TimeLimits.UpdateClusterInstTimeout
+				changed++
+			}
 		}
 		if _, set := fmap["9.3"]; set {
-			m.TimeLimits.DeleteClusterInstTimeout = src.TimeLimits.DeleteClusterInstTimeout
+			if m.TimeLimits.DeleteClusterInstTimeout != src.TimeLimits.DeleteClusterInstTimeout {
+				m.TimeLimits.DeleteClusterInstTimeout = src.TimeLimits.DeleteClusterInstTimeout
+				changed++
+			}
 		}
 		if _, set := fmap["9.4"]; set {
-			m.TimeLimits.CreateAppInstTimeout = src.TimeLimits.CreateAppInstTimeout
+			if m.TimeLimits.CreateAppInstTimeout != src.TimeLimits.CreateAppInstTimeout {
+				m.TimeLimits.CreateAppInstTimeout = src.TimeLimits.CreateAppInstTimeout
+				changed++
+			}
 		}
 		if _, set := fmap["9.5"]; set {
-			m.TimeLimits.UpdateAppInstTimeout = src.TimeLimits.UpdateAppInstTimeout
+			if m.TimeLimits.UpdateAppInstTimeout != src.TimeLimits.UpdateAppInstTimeout {
+				m.TimeLimits.UpdateAppInstTimeout = src.TimeLimits.UpdateAppInstTimeout
+				changed++
+			}
 		}
 		if _, set := fmap["9.6"]; set {
-			m.TimeLimits.DeleteAppInstTimeout = src.TimeLimits.DeleteAppInstTimeout
+			if m.TimeLimits.DeleteAppInstTimeout != src.TimeLimits.DeleteAppInstTimeout {
+				m.TimeLimits.DeleteAppInstTimeout = src.TimeLimits.DeleteAppInstTimeout
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["10"]; set {
@@ -2565,43 +2801,77 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) {
 			m.Errors = make([]string, len(src.Errors))
 		}
 		copy(m.Errors, src.Errors)
+		changed++
 	}
 	if _, set := fmap["11"]; set {
 		if _, set := fmap["11.1"]; set {
-			m.Status.TaskNumber = src.Status.TaskNumber
+			if m.Status.TaskNumber != src.Status.TaskNumber {
+				m.Status.TaskNumber = src.Status.TaskNumber
+				changed++
+			}
 		}
 		if _, set := fmap["11.2"]; set {
-			m.Status.MaxTasks = src.Status.MaxTasks
+			if m.Status.MaxTasks != src.Status.MaxTasks {
+				m.Status.MaxTasks = src.Status.MaxTasks
+				changed++
+			}
 		}
 		if _, set := fmap["11.3"]; set {
-			m.Status.TaskName = src.Status.TaskName
+			if m.Status.TaskName != src.Status.TaskName {
+				m.Status.TaskName = src.Status.TaskName
+				changed++
+			}
 		}
 		if _, set := fmap["11.4"]; set {
-			m.Status.StepName = src.Status.StepName
+			if m.Status.StepName != src.Status.StepName {
+				m.Status.StepName = src.Status.StepName
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["12"]; set {
-		m.State = src.State
+		if m.State != src.State {
+			m.State = src.State
+			changed++
+		}
 	}
 	if _, set := fmap["13"]; set {
-		m.CrmOverride = src.CrmOverride
+		if m.CrmOverride != src.CrmOverride {
+			m.CrmOverride = src.CrmOverride
+			changed++
+		}
 	}
 	if _, set := fmap["14"]; set {
-		m.DeploymentLocal = src.DeploymentLocal
+		if m.DeploymentLocal != src.DeploymentLocal {
+			m.DeploymentLocal = src.DeploymentLocal
+			changed++
+		}
 	}
 	if _, set := fmap["15"]; set {
-		m.PlatformType = src.PlatformType
+		if m.PlatformType != src.PlatformType {
+			m.PlatformType = src.PlatformType
+			changed++
+		}
 	}
 	if _, set := fmap["16"]; set {
-		m.NotifySrvAddr = src.NotifySrvAddr
+		if m.NotifySrvAddr != src.NotifySrvAddr {
+			m.NotifySrvAddr = src.NotifySrvAddr
+			changed++
+		}
 	}
 	if _, set := fmap["17"]; set {
 		if _, set := fmap["17.1"]; set {
-			m.Flavor.Name = src.Flavor.Name
+			if m.Flavor.Name != src.Flavor.Name {
+				m.Flavor.Name = src.Flavor.Name
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["18"]; set {
-		m.PhysicalName = src.PhysicalName
+		if m.PhysicalName != src.PhysicalName {
+			m.PhysicalName = src.PhysicalName
+			changed++
+		}
 	}
 	if _, set := fmap["19"]; set && src.EnvVar != nil {
 		m.EnvVar = make(map[string]string)
@@ -2610,40 +2880,74 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) {
 		}
 	}
 	if _, set := fmap["20"]; set {
-		m.Upgrade = src.Upgrade
+		if m.Upgrade != src.Upgrade {
+			m.Upgrade = src.Upgrade
+			changed++
+		}
 	}
 	if _, set := fmap["21"]; set {
 		if _, set := fmap["21.1"]; set {
-			m.Config.RegistryPath = src.Config.RegistryPath
+			if m.Config.RegistryPath != src.Config.RegistryPath {
+				m.Config.RegistryPath = src.Config.RegistryPath
+				changed++
+			}
 		}
 		if _, set := fmap["21.2"]; set {
-			m.Config.ImagePath = src.Config.ImagePath
+			if m.Config.ImagePath != src.Config.ImagePath {
+				m.Config.ImagePath = src.Config.ImagePath
+				changed++
+			}
 		}
 		if _, set := fmap["21.3"]; set {
-			m.Config.NotifyCtrlAddrs = src.Config.NotifyCtrlAddrs
+			if m.Config.NotifyCtrlAddrs != src.Config.NotifyCtrlAddrs {
+				m.Config.NotifyCtrlAddrs = src.Config.NotifyCtrlAddrs
+				changed++
+			}
 		}
 		if _, set := fmap["21.4"]; set {
-			m.Config.VaultAddr = src.Config.VaultAddr
+			if m.Config.VaultAddr != src.Config.VaultAddr {
+				m.Config.VaultAddr = src.Config.VaultAddr
+				changed++
+			}
 		}
 		if _, set := fmap["21.5"]; set {
-			m.Config.TlsCertFile = src.Config.TlsCertFile
+			if m.Config.TlsCertFile != src.Config.TlsCertFile {
+				m.Config.TlsCertFile = src.Config.TlsCertFile
+				changed++
+			}
 		}
 		if _, set := fmap["21.6"]; set {
-			m.Config.CrmRoleId = src.Config.CrmRoleId
+			if m.Config.CrmRoleId != src.Config.CrmRoleId {
+				m.Config.CrmRoleId = src.Config.CrmRoleId
+				changed++
+			}
 		}
 		if _, set := fmap["21.7"]; set {
-			m.Config.CrmSecretId = src.Config.CrmSecretId
+			if m.Config.CrmSecretId != src.Config.CrmSecretId {
+				m.Config.CrmSecretId = src.Config.CrmSecretId
+				changed++
+			}
 		}
 		if _, set := fmap["21.8"]; set {
-			m.Config.PlatformTag = src.Config.PlatformTag
+			if m.Config.PlatformTag != src.Config.PlatformTag {
+				m.Config.PlatformTag = src.Config.PlatformTag
+				changed++
+			}
 		}
 		if _, set := fmap["21.9"]; set {
-			m.Config.TestMode = src.Config.TestMode
+			if m.Config.TestMode != src.Config.TestMode {
+				m.Config.TestMode = src.Config.TestMode
+				changed++
+			}
 		}
 		if _, set := fmap["21.10"]; set {
-			m.Config.Span = src.Config.Span
+			if m.Config.Span != src.Config.Span {
+				m.Config.Span = src.Config.Span
+				changed++
+			}
 		}
 	}
+	return changed
 }
 
 func (s *Cloudlet) HasFields() bool {
@@ -2927,6 +3231,7 @@ func (c *CloudletCache) Show(filter *Cloudlet, cb func(ret *Cloudlet) error) err
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Cloudlet", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
@@ -3131,11 +3436,25 @@ func IgnoreCloudletFields(taglist string) cmp.Option {
 	return cmpopts.IgnoreFields(Cloudlet{}, names...)
 }
 
-func (m *FlavorInfo) CopyInFields(src *FlavorInfo) {
-	m.Name = src.Name
-	m.Vcpus = src.Vcpus
-	m.Ram = src.Ram
-	m.Disk = src.Disk
+func (m *FlavorInfo) CopyInFields(src *FlavorInfo) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	if m.Vcpus != src.Vcpus {
+		m.Vcpus = src.Vcpus
+		changed++
+	}
+	if m.Ram != src.Ram {
+		m.Ram = src.Ram
+		changed++
+	}
+	if m.Disk != src.Disk {
+		m.Disk = src.Disk
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
@@ -3391,41 +3710,67 @@ func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
 	}
 }
 
-func (m *CloudletInfo) CopyInFields(src *CloudletInfo) {
+func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
+	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.1"]; set {
-				m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
+				if m.Key.OperatorKey.Name != src.Key.OperatorKey.Name {
+					m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
+					changed++
+				}
 			}
 		}
 		if _, set := fmap["2.2"]; set {
-			m.Key.Name = src.Key.Name
+			if m.Key.Name != src.Key.Name {
+				m.Key.Name = src.Key.Name
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["3"]; set {
-		m.State = src.State
+		if m.State != src.State {
+			m.State = src.State
+			changed++
+		}
 	}
 	if _, set := fmap["4"]; set {
-		m.NotifyId = src.NotifyId
+		if m.NotifyId != src.NotifyId {
+			m.NotifyId = src.NotifyId
+			changed++
+		}
 	}
 	if _, set := fmap["5"]; set {
-		m.Controller = src.Controller
+		if m.Controller != src.Controller {
+			m.Controller = src.Controller
+			changed++
+		}
 	}
 	if _, set := fmap["6"]; set {
-		m.OsMaxRam = src.OsMaxRam
+		if m.OsMaxRam != src.OsMaxRam {
+			m.OsMaxRam = src.OsMaxRam
+			changed++
+		}
 	}
 	if _, set := fmap["7"]; set {
-		m.OsMaxVcores = src.OsMaxVcores
+		if m.OsMaxVcores != src.OsMaxVcores {
+			m.OsMaxVcores = src.OsMaxVcores
+			changed++
+		}
 	}
 	if _, set := fmap["8"]; set {
-		m.OsMaxVolGb = src.OsMaxVolGb
+		if m.OsMaxVolGb != src.OsMaxVolGb {
+			m.OsMaxVolGb = src.OsMaxVolGb
+			changed++
+		}
 	}
 	if _, set := fmap["9"]; set {
 		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
 			m.Errors = make([]string, len(src.Errors))
 		}
 		copy(m.Errors, src.Errors)
+		changed++
 	}
 	if _, set := fmap["10"]; set && src.Flavors != nil {
 		if m.Flavors == nil || len(m.Flavors) != len(src.Flavors) {
@@ -3434,36 +3779,64 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) {
 		for i0 := 0; i0 < len(src.Flavors); i0++ {
 			m.Flavors[i0] = &FlavorInfo{}
 			if _, set := fmap["10.1"]; set {
-				m.Flavors[i0].Name = src.Flavors[i0].Name
+				if m.Flavors[i0].Name != src.Flavors[i0].Name {
+					m.Flavors[i0].Name = src.Flavors[i0].Name
+					changed++
+				}
 			}
 			if _, set := fmap["10.2"]; set {
-				m.Flavors[i0].Vcpus = src.Flavors[i0].Vcpus
+				if m.Flavors[i0].Vcpus != src.Flavors[i0].Vcpus {
+					m.Flavors[i0].Vcpus = src.Flavors[i0].Vcpus
+					changed++
+				}
 			}
 			if _, set := fmap["10.3"]; set {
-				m.Flavors[i0].Ram = src.Flavors[i0].Ram
+				if m.Flavors[i0].Ram != src.Flavors[i0].Ram {
+					m.Flavors[i0].Ram = src.Flavors[i0].Ram
+					changed++
+				}
 			}
 			if _, set := fmap["10.4"]; set {
-				m.Flavors[i0].Disk = src.Flavors[i0].Disk
+				if m.Flavors[i0].Disk != src.Flavors[i0].Disk {
+					m.Flavors[i0].Disk = src.Flavors[i0].Disk
+					changed++
+				}
 			}
 		}
 	}
 	if _, set := fmap["11"]; set {
 		if _, set := fmap["11.1"]; set {
-			m.Status.TaskNumber = src.Status.TaskNumber
+			if m.Status.TaskNumber != src.Status.TaskNumber {
+				m.Status.TaskNumber = src.Status.TaskNumber
+				changed++
+			}
 		}
 		if _, set := fmap["11.2"]; set {
-			m.Status.MaxTasks = src.Status.MaxTasks
+			if m.Status.MaxTasks != src.Status.MaxTasks {
+				m.Status.MaxTasks = src.Status.MaxTasks
+				changed++
+			}
 		}
 		if _, set := fmap["11.3"]; set {
-			m.Status.TaskName = src.Status.TaskName
+			if m.Status.TaskName != src.Status.TaskName {
+				m.Status.TaskName = src.Status.TaskName
+				changed++
+			}
 		}
 		if _, set := fmap["11.4"]; set {
-			m.Status.StepName = src.Status.StepName
+			if m.Status.StepName != src.Status.StepName {
+				m.Status.StepName = src.Status.StepName
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["12"]; set {
-		m.Version = src.Version
+		if m.Version != src.Version {
+			m.Version = src.Version
+			changed++
+		}
 	}
+	return changed
 }
 
 func (s *CloudletInfo) HasFields() bool {
@@ -3765,6 +4138,7 @@ func (c *CloudletInfoCache) Show(filter *CloudletInfo, cb func(ret *CloudletInfo
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare CloudletInfo", "filter", filter, "obj", obj)
 		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
@@ -3920,8 +4294,13 @@ func (m *CloudletInfo) ValidateEnums() error {
 	return nil
 }
 
-func (m *CloudletMetrics) CopyInFields(src *CloudletMetrics) {
-	m.Foo = src.Foo
+func (m *CloudletMetrics) CopyInFields(src *CloudletMetrics) int {
+	changed := 0
+	if m.Foo != src.Foo {
+		m.Foo = src.Foo
+		changed++
+	}
+	return changed
 }
 
 // Helper method to check that enums have valid values
