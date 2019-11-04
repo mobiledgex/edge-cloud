@@ -222,15 +222,6 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.PhysicalName = in.Key.Name
 	}
 
-	if isOperatorInfraCloudlet(in) {
-		if *cloudletVMImagePath == "" {
-			return fmt.Errorf("cloudletVMImagePath is required for cloudlet bringup on Operator infra")
-		}
-		if *cloudletRegistryPath == "" {
-			return fmt.Errorf("cloudletRegistryPath is required for cloudlet bringup on Operator infra")
-		}
-	}
-
 	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 
