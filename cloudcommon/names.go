@@ -45,6 +45,7 @@ var NetworkSchemePrivateIP = "privateip"
 // Metrics common variables - TODO move to edge-cloud-infra after metrics-exporter chagnes
 var DeveloperMetricsDbName = "metrics"
 var MEXPrometheusAppName = "MEXPrometheusAppName"
+var PrometheusPort = int32(9090)
 var NginxMetricsPort = int32(65121)
 
 // DIND script to pull from kubeadm-dind-cluster
