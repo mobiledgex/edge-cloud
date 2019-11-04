@@ -396,7 +396,11 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			// nothing changed
 			return nil
 		}
-		inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		if ignoreCRM(cctx) {
+			in.State = edgeproto.TrackedState_READY
+		} else {
+			inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
 		s.store.STMPut(stm, &inbuf)
 		return nil
 	})
