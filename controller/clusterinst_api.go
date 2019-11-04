@@ -115,7 +115,6 @@ func (s *ClusterInstApi) GetCloudletResourceMap(resource string, resmap map[stri
 	key := resmap[resource]
 	tbl, err := resTagTableApi.GetResTagTable(ctx, key)
 	if err != nil {
-		fmt.Printf("\n\n\tGetCloudletResourceMap failed err: %s\n", err.Error())
 		return tbl, err
 	}
 	return tbl, err
@@ -162,11 +161,9 @@ func (s *ClusterInstApi) GetVMSpec(flavorList []*edgeproto.FlavorInfo, nodeflavo
 				// now we need to fetch the tag table for the gpu resouce
 				//  using the key in this cloudlet map
 				//
-				fmt.Printf("\n\n\tGetVMSpec flavor %s fetch the gpu res table\n", flavor.Name)
 				tbl, err := /*clusterInstApi*/ s.GetCloudletResourceMap("gpu", resmap)
 
 				if err != nil || tbl == nil {
-					fmt.Printf("\n\n\t no body home from new fetch rtn...\n")
 					// gpu requested, no table, request will fail
 					continue
 				}
