@@ -797,7 +797,7 @@ var CloudletComments = map[string]string{
 	"location.latitude":                   "latitude in WGS 84 coordinates",
 	"location.longitude":                  "longitude in WGS 84 coordinates",
 	"location.horizontalaccuracy":         "horizontal accuracy (radius in meters)",
-	"location.verticalaccuracy":           "veritical accuracy (meters)",
+	"location.verticalaccuracy":           "vertical accuracy (meters)",
 	"location.altitude":                   "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"location.course":                     "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"location.speed":                      "speed (IOS) / velocity (Android) (meters/sec)",
