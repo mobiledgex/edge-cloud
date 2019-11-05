@@ -46,7 +46,7 @@ var (
 )
 
 const (
-	PlatformInitTimeout = 5 * time.Minute
+	PlatformInitTimeout = 20 * time.Minute
 )
 
 type updateCloudletCallback struct {
@@ -699,13 +699,13 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			// delete happens later, this STM just checks for existence
 			return nil
 		}
-		if in.State == edgeproto.TrackedState_CREATE_REQUESTED ||
-			in.State == edgeproto.TrackedState_CREATING ||
-			in.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
-			in.State == edgeproto.TrackedState_UPDATING {
-			return errors.New("Cloudlet busy, cannot be deleted")
-		}
 		if !cctx.Undo {
+			if in.State == edgeproto.TrackedState_CREATE_REQUESTED ||
+				in.State == edgeproto.TrackedState_CREATING ||
+				in.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
+				in.State == edgeproto.TrackedState_UPDATING {
+				return errors.New("Cloudlet busy, cannot be deleted")
+			}
 			if in.State == edgeproto.TrackedState_DELETE_ERROR &&
 				cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
