@@ -171,6 +171,7 @@ func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state 
 		} else {
 			err = StateConflict(old.State, state)
 			if err != nil {
+				log.DebugLog(log.DebugLevelApi, "SetState conflict", "oldState", old.State, "newState", state, "err", err)
 				return old, false
 			}
 			*info = *old

@@ -486,6 +486,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY &&
 			cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			// Cloudlet is not in a state to upgrade
+			log.SpanLog(ctx, log.DebugLevelMexos, "Cloudlet is not in a state to upgrade", "key", new.Key, "state", cloudletInfo.State)
 			return
 		}
 
@@ -502,11 +503,10 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		// Set cloudlet state to `UPGRADE_INIT`, this will transition TrackedState to `UPDATING`
 		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE_INIT
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-	}
-
-	if new.State == edgeproto.TrackedState_UPDATING {
+	} else if new.State == edgeproto.TrackedState_UPDATING {
 		// Make sure previous state was UPDATE_REQUESTED
 		if old == nil || old.State != edgeproto.TrackedState_UPDATE_REQUESTED {
+			log.SpanLog(ctx, log.DebugLevelMexos, "Ignoring update request as cloudlet is already updating", "key", new.Key)
 			return
 		}
 		cloudletInfo := edgeproto.CloudletInfo{}
@@ -517,6 +517,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		}
 		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE_INIT {
 			// Cloudlet is not in a state to upgrade
+			log.SpanLog(ctx, log.DebugLevelMexos, "Cloudlet is not in a state to upgrade", "key", new.Key, "state", cloudletInfo.State)
 			return
 		}
 
@@ -534,9 +535,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			return
 		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "updated cloudlet", "cloudlet", new)
-	}
-
-	if new.State == edgeproto.TrackedState_UPDATE_DONE {
+	} else if new.State == edgeproto.TrackedState_UPDATE_DONE {
 		cloudletInfo := edgeproto.CloudletInfo{}
 		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 		if !found {
