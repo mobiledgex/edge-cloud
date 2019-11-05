@@ -765,17 +765,17 @@ var PlatformConfigSpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
 	"operator",
 	"name",
+	"location.latitude",
+	"location.longitude",
+	"numdynamicips",
 }
 var CloudletOptionalArgs = []string{
 	"accesscredentials",
-	"location.latitude",
-	"location.longitude",
 	"location.altitude",
 	"location.timestamp.seconds",
 	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
-	"numdynamicips",
 	"errors",
 	"state",
 	"crmoverride",
