@@ -33,7 +33,7 @@ func (s *FlavorApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 
 func (s *FlavorApi) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
 	// Unsupported for now
-	return &edgeproto.Result{}, errors.New("Update flavor not supported")
+	return &edgeproto.Result{}, errors.New("Update Flavor not supported")
 	//return s.store.Update(in, s.sync.syncWait)
 }
 
@@ -43,13 +43,13 @@ func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 		return &edgeproto.Result{}, objstore.ErrKVStoreKeyNotFound
 	}
 	if clusterInstApi.UsesFlavor(&in.Key) {
-		return &edgeproto.Result{}, errors.New("Flavor in use by Cluster")
+		return &edgeproto.Result{}, errors.New("Flavor in use by ClusterInst")
 	}
 	if appApi.UsesFlavor(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Flavor in use by App")
 	}
 	if appInstApi.UsesFlavor(&in.Key) {
-		return &edgeproto.Result{}, errors.New("Flavor in use by App Instance")
+		return &edgeproto.Result{}, errors.New("Flavor in use by AppInst")
 	}
 	res, err := s.store.Delete(ctx, in, s.sync.syncWait)
 	// clean up auto-apps using flavor

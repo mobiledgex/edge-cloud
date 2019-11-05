@@ -260,7 +260,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 		if in.Flavor.Name != "" && in.Flavor.Name != DefaultPlatformFlavor.Key.Name {
 			if !flavorApi.store.STMGet(stm, &in.Flavor, &pfFlavor) {
-				return fmt.Errorf("Platform flavor %s not found", in.Flavor.Name)
+				return fmt.Errorf("Platform Flavor %s not found", in.Flavor.Name)
 			}
 		}
 		err := in.Validate(edgeproto.CloudletAllFieldsMap)
@@ -310,7 +310,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		err = s.WaitForCloudlet(
 			ctx, &in.Key,
 			edgeproto.TrackedState_CREATE_ERROR, // Set error state
-			"Cloudlet created successfully",     // Set success message
+			"Created Cloudlet successfully",     // Set success message
 			PlatformInitTimeout, updatecb.cb,
 		)
 	} else {
@@ -318,10 +318,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	}
 
 	if err != nil {
-		cb.Send(&edgeproto.Result{Message: "Deleting cloudlet due to failures"})
+		cb.Send(&edgeproto.Result{Message: "Deleting Cloudlet due to failures"})
 		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, pfConfig, cb)
 		if undoErr != nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create cloudlet", "undoErr", undoErr)
+			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create Cloudlet", "undoErr", undoErr)
 		}
 	}
 	return err
@@ -500,12 +500,12 @@ func getCloudletVersion(key *edgeproto.CloudletKey) (string, error) {
 			continue
 		}
 		if obj.ImageVersion == "" {
-			return "", fmt.Errorf("Unable to find cloudlet version")
+			return "", fmt.Errorf("Unable to find Cloudlet version")
 		} else {
 			return obj.ImageVersion, nil
 		}
 	}
-	return "", fmt.Errorf("Unable to find cloudlet node")
+	return "", fmt.Errorf("Unable to find Cloudlet node")
 }
 
 func isCloudletUpgradeRequired(key *edgeproto.CloudletKey) (bool, error) {
@@ -514,7 +514,7 @@ func isCloudletUpgradeRequired(key *edgeproto.CloudletKey) (bool, error) {
 	}
 	cloudletVersion, err := getCloudletVersion(key)
 	if err != nil {
-		return false, fmt.Errorf("unable to fetch cloudlet version: %v", err)
+		return false, fmt.Errorf("unable to fetch Cloudlet version: %v", err)
 	}
 	cur_version := cloudletVersion
 	new_version := *versionTag
@@ -572,10 +572,10 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if err != nil {
 			if *testMode {
 				// Ignore cloudlet version check in testMode
-				log.SpanLog(ctx, log.DebugLevelApi, "ignore cloudlet upgrade check", "err", err)
+				log.SpanLog(ctx, log.DebugLevelApi, "ignore Cloudlet upgrade check", "err", err)
 				upgradeReq = true
 			} else {
-				return fmt.Errorf("cloudlet version check failed: %v", err)
+				return fmt.Errorf("Cloudlet version check failed: %v", err)
 			}
 		}
 		if upgradeReq {
@@ -613,6 +613,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	if err != nil {
 		return err
 	}
+	cb.Send(&edgeproto.Result{Message: "Updated Cloudlet successfully"})
 
 	// after the cloudlet change is committed, if the location changed,
 	// update app insts as well.
@@ -663,7 +664,7 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	err = s.WaitForCloudlet(
 		ctx, &in.Key,
 		edgeproto.TrackedState_UPDATE_ERROR, // Set error state
-		"Cloudlet upgraded successfully",    // Set success message
+		"Upgraded Cloudlet successfully",    // Set success message
 		PlatformInitTimeout, updatecb.cb,
 	)
 
@@ -681,12 +682,12 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
 	if appInstApi.UsesCloudlet(&in.Key, dynInsts) {
 		// disallow delete if static instances are present
-		return errors.New("Cloudlet in use by static Application Instance")
+		return errors.New("Cloudlet in use by static AppInst")
 	}
 
 	clDynInsts := make(map[edgeproto.ClusterInstKey]struct{})
 	if clusterInstApi.UsesCloudlet(&in.Key, clDynInsts) {
-		return errors.New("Cloudlet in use by static Cluster Instance")
+		return errors.New("Cloudlet in use by static ClusterInst")
 	}
 
 	cctx.SetOverride(&in.CrmOverride)
@@ -791,7 +792,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			derr := clusterInstApi.deleteClusterInstInternal(DefCallContext(), &clInst, cb)
 			if derr != nil {
 				log.DebugLog(log.DebugLevelApi,
-					"Failed to delete dynamic cluster inst",
+					"Failed to delete dynamic ClusterInst",
 					"key", key, "err", derr)
 			}
 		}
