@@ -202,6 +202,7 @@ message Cloudlet {
   option (protogen.notify_recv_hook) = true;
   option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status,Config,NotifySrvAddr";
   option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
+  option (protogen.also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
 }
 
 service CloudletApi {
