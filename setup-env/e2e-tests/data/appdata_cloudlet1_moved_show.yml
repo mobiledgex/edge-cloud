@@ -192,6 +192,7 @@ apps:
     name: helmApplication
     version: "1.0"
   imagepath: mobiledgex/AcmeAppCo/helmApplication
+  imagetype: ImageTypeHelm
   deployment: helm
   accessports: udp:20002
   defaultflavor:
