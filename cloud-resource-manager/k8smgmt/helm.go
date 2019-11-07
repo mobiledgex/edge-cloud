@@ -149,7 +149,7 @@ func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *
 	}
 	log.DebugLog(log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
 	cmd = fmt.Sprintf("%s helm install %s %s --name %s %s", names.KconfEnv, chart, helmArgs,
-		names.AppName, helmOpts)
+		names.HelmAppName, helmOpts)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deploying helm chart, %s, %s, %v", cmd, out, err)
@@ -166,7 +166,7 @@ func UpdateHelmAppInst(client pc.PlatformClient, names *KubeNames, app *edgeprot
 		return err
 	}
 	log.DebugLog(log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
-	cmd := fmt.Sprintf("%s helm upgrade %s %s %s", names.KconfEnv, helmOpts, names.AppName, names.AppImage)
+	cmd := fmt.Sprintf("%s helm upgrade %s %s %s", names.KconfEnv, helmOpts, names.HelmAppName, names.AppImage)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error updating helm chart, %s, %s, %v", cmd, out, err)
@@ -177,7 +177,7 @@ func UpdateHelmAppInst(client pc.PlatformClient, names *KubeNames, app *edgeprot
 
 func DeleteHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst) error {
 	log.DebugLog(log.DebugLevelMexos, "delete kubernetes helm app")
-	cmd := fmt.Sprintf("%s helm delete --purge %s", names.KconfEnv, names.AppName)
+	cmd := fmt.Sprintf("%s helm delete --purge %s", names.KconfEnv, names.HelmAppName)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deleting helm chart, %s, %s, %v", cmd, out, err)
