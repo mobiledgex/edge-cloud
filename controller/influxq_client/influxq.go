@@ -63,8 +63,8 @@ func (q *InfluxQ) Start(addr, tlsCert string) error {
 		Password: q.password,
 	}
 	if strings.HasPrefix(addr, "https://") {
-		// TODO: we should ideally be validating the server address here rather than		if err != nil {
-		// leaving it blank			return err
+		// TODO: we should ideally be validating the server address here rather than
+		// leaving it blank
 		creds, err := tls.GetTLSClientConfig("", tlsCert, "", false)
 		// Should not try to verify
 		if err != nil || creds == nil {
