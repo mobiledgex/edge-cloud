@@ -53,7 +53,9 @@ func WriteFile(client PlatformClient, file string, contents string, kind string,
 	// If we are running on a mac and we are trying to run base64 decode replace "-d" with "-D"
 	decodeCmd := "base64 -d"
 	if runtime.GOOS == "darwin" {
-		decodeCmd = "base64 -D"
+		if _, isLocalClient := client.(*LocalClient); isLocalClient {
+			decodeCmd = "base64 -D"
+		}
 	}
 	cmd := fmt.Sprintf("%s <<< %s > %s", decodeCmd, dat, file)
 	if sudo {
