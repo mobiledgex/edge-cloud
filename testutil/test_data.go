@@ -46,7 +46,7 @@ var FlavorData = []edgeproto.Flavor{
 		Ram:   8192,
 		Vcpus: 8,
 		Disk:  40,
-		Gpus:  1,
+		// ENOSUP: OptResMap: map[string]string{"gpu": "1", "nas": "ceph-20"},
 	},
 }
 
@@ -776,12 +776,21 @@ var CloudletPoolMemberData = []edgeproto.CloudletPoolMember{
 var Restblkeys = []edgeproto.ResTagTableKey{
 	edgeproto.ResTagTableKey{
 		Name: "gpu",
+		OperatorKey: edgeproto.OperatorKey{
+			Name: "AT&T Inc.",
+		},
 	},
 	edgeproto.ResTagTableKey{
-		Name: "nas-storage",
+		Name: "nas",
+		OperatorKey: edgeproto.OperatorKey{
+			Name: "AT&T Inc.",
+		},
 	},
 	edgeproto.ResTagTableKey{
-		Name: "nic-offload",
+		Name: "nic",
+		OperatorKey: edgeproto.OperatorKey{
+			Name: "AT&T Inc.",
+		},
 	},
 }
 

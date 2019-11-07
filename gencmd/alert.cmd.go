@@ -47,6 +47,7 @@ It has these top-level messages:
 	OpenStackProperties
 	CloudletInfraProperties
 	PlatformConfig
+	CloudletResMap
 	Cloudlet
 	FlavorInfo
 	CloudletInfo

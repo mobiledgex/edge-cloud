@@ -255,11 +255,121 @@ func ShowFlavors(c *cli.Command, data []edgeproto.Flavor, err *error) {
 	}
 }
 
+var AddFlavorResCmd = &cli.Command{
+	Use:          "AddFlavorRes",
+	RequiredArgs: strings.Join(FlavorRequiredArgs, " "),
+	OptionalArgs: strings.Join(FlavorOptionalArgs, " "),
+	AliasArgs:    strings.Join(FlavorAliasArgs, " "),
+	SpecialArgs:  &FlavorSpecialArgs,
+	Comments:     FlavorComments,
+	ReqData:      &edgeproto.Flavor{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runAddFlavorRes,
+}
+
+func runAddFlavorRes(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Flavor)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return AddFlavorRes(c, obj)
+}
+
+func AddFlavorRes(c *cli.Command, in *edgeproto.Flavor) error {
+	if FlavorApiCmd == nil {
+		return fmt.Errorf("FlavorApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := FlavorApiCmd.AddFlavorRes(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AddFlavorRes failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func AddFlavorRess(c *cli.Command, data []edgeproto.Flavor, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AddFlavorRes %v\n", data[ii])
+		myerr := AddFlavorRes(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var DelFlavorResCmd = &cli.Command{
+	Use:          "DelFlavorRes",
+	RequiredArgs: strings.Join(FlavorRequiredArgs, " "),
+	OptionalArgs: strings.Join(FlavorOptionalArgs, " "),
+	AliasArgs:    strings.Join(FlavorAliasArgs, " "),
+	SpecialArgs:  &FlavorSpecialArgs,
+	Comments:     FlavorComments,
+	ReqData:      &edgeproto.Flavor{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runDelFlavorRes,
+}
+
+func runDelFlavorRes(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.Flavor)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return DelFlavorRes(c, obj)
+}
+
+func DelFlavorRes(c *cli.Command, in *edgeproto.Flavor) error {
+	if FlavorApiCmd == nil {
+		return fmt.Errorf("FlavorApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := FlavorApiCmd.DelFlavorRes(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DelFlavorRes failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func DelFlavorRess(c *cli.Command, data []edgeproto.Flavor, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DelFlavorRes %v\n", data[ii])
+		myerr := DelFlavorRes(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var FlavorApiCmds = []*cobra.Command{
 	CreateFlavorCmd.GenCmd(),
 	DeleteFlavorCmd.GenCmd(),
 	UpdateFlavorCmd.GenCmd(),
 	ShowFlavorCmd.GenCmd(),
+	AddFlavorResCmd.GenCmd(),
+	DelFlavorResCmd.GenCmd(),
 }
 
 var FlavorKeyRequiredArgs = []string{}
@@ -278,15 +388,26 @@ var FlavorRequiredArgs = []string{
 	"disk",
 }
 var FlavorOptionalArgs = []string{
-	"gpus",
+	"optresmap",
 }
 var FlavorAliasArgs = []string{
 	"name=key.name",
 }
 var FlavorComments = map[string]string{
-	"name":  "Flavor name",
-	"ram":   "RAM in megabytes",
-	"vcpus": "Number of virtual CPUs",
-	"disk":  "Amount of disk space in gigabytes",
+	"name":      "Flavor name",
+	"ram":       "RAM in megabytes",
+	"vcpus":     "Number of virtual CPUs",
+	"disk":      "Amount of disk space in gigabytes",
+	"optresmap": "Optional Resources request, key = [gpu, nas, nic]",
 }
-var FlavorSpecialArgs = map[string]string{}
+var FlavorSpecialArgs = map[string]string{
+	"optresmap": "StringToString",
+}
+var OptResMapEntryRequiredArgs = []string{}
+var OptResMapEntryOptionalArgs = []string{
+	"key",
+	"value",
+}
+var OptResMapEntryAliasArgs = []string{}
+var OptResMapEntryComments = map[string]string{}
+var OptResMapEntrySpecialArgs = map[string]string{}

@@ -129,7 +129,7 @@ func request_CloudletApi_ShowCloudlet_0(ctx context.Context, marshaler runtime.M
 }
 
 func request_CloudletApi_AddCloudletResMapping_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Cloudlet
+	var protoReq CloudletResMap
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -145,8 +145,8 @@ func request_CloudletApi_AddCloudletResMapping_0(ctx context.Context, marshaler 
 
 }
 
-func request_CloudletApi_RmCloudletResMapping_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Cloudlet
+func request_CloudletApi_DeleteCloudletResMapping_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CloudletResMap
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -157,7 +157,7 @@ func request_CloudletApi_RmCloudletResMapping_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.RmCloudletResMapping(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.DeleteCloudletResMapping(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -350,7 +350,7 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("POST", pattern_CloudletApi_RmCloudletResMapping_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_CloudletApi_DeleteCloudletResMapping_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -359,14 +359,14 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_CloudletApi_RmCloudletResMapping_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CloudletApi_DeleteCloudletResMapping_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CloudletApi_RmCloudletResMapping_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_DeleteCloudletResMapping_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -382,9 +382,9 @@ var (
 
 	pattern_CloudletApi_ShowCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudlet"}, ""))
 
-	pattern_CloudletApi_AddCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"addmapping", "cloudletResMap"}, ""))
+	pattern_CloudletApi_AddCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"addmapping", "cloudlet"}, ""))
 
-	pattern_CloudletApi_RmCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"rmmapping", "cloudletResMap"}, ""))
+	pattern_CloudletApi_DeleteCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"rmmapping", "cloudlet"}, ""))
 )
 
 var (
@@ -398,7 +398,7 @@ var (
 
 	forward_CloudletApi_AddCloudletResMapping_0 = runtime.ForwardResponseMessage
 
-	forward_CloudletApi_RmCloudletResMapping_0 = runtime.ForwardResponseMessage
+	forward_CloudletApi_DeleteCloudletResMapping_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterCloudletInfoApiHandlerFromEndpoint is same as RegisterCloudletInfoApiHandler but

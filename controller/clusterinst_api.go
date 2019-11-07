@@ -109,17 +109,6 @@ func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	return false
 }
 
-func (s *ClusterInstApi) GetCloudletResourceMap(resource string, resmap map[string]*edgeproto.ResTagTableKey) (*edgeproto.ResTagTable, error) {
-
-	var ctx context.Context
-	key := resmap[resource]
-	tbl, err := resTagTableApi.GetResTagTable(ctx, key)
-	if err != nil {
-		return tbl, err
-	}
-	return tbl, err
-}
-
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
 func (s *ClusterInstApi) GetVMSpec(flavorList []*edgeproto.FlavorInfo, nodeflavor edgeproto.Flavor, resmap map[string]*edgeproto.ResTagTableKey) (*vmspec.VMCreationSpec, error) {
 	log.InfoLog("GetVMSpec with closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
@@ -155,25 +144,14 @@ func (s *ClusterInstApi) GetVMSpec(flavorList []*edgeproto.FlavorInfo, nodeflavo
 		} else if flavor.Disk < nodeflavor.Disk {
 			continue
 		}
-		// Good matches for flavor so far, does nodeflavor request a gpu?
-		if nodeflavor.Gpus > 0 {
-			if !strings.Contains(flavor.Name, "gpu") {
-				// now we need to fetch the tag table for the gpu resouce
-				//  using the key in this cloudlet map
-				//
-				tbl, err := /*clusterInstApi*/ s.GetCloudletResourceMap("gpu", resmap)
-
-				if err != nil || tbl == nil {
-					// gpu requested, no table, request will fail
-					continue
-				}
-				for _, tag := range tbl.Tags {
-					if strings.Contains(flavor.Properties, tag) {
-						continue
-					}
-				}
+		// Good matches for flavor so far, does nodeflavor request an
+		// optional resource? If so, it will have a non-nil OptResMap.
+		// If any specific resource fails, the flavor is rejected.
+		if nodeflavor.OptResMap != nil {
+			if _, ok := resTagTableApi.optResLookup(nodeflavor, *flavor, resmap); !ok {
+				continue
 			}
-		} // other optional resources matching e.g. nas_storage etc.
+		}
 		vmspec.FlavorName = flavor.Name
 		log.InfoLog("Found closest flavor", "flavor", flavor, "vmspec", vmspec)
 

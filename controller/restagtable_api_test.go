@@ -42,14 +42,15 @@ func TestResTagTableApi(t *testing.T) {
 
 	testags := []string{"tag1", "tag2", "tag3"}
 	multi_tag := []string{"multi-tag1", "multi-tag2", "multi-tag3"}
-	testkeys := []string{"tbl1", "tbl2", "tbl3"}
 	nonnom_multi_tag := []string{"mtag1", "mtag2", "mtag2"}
 
 	// create new table
 	var tbl edgeproto.ResTagTable
+	var tkey edgeproto.ResTagTableKey
+	tkey.Name = "gpu"
+	tkey.OperatorKey.Name = "testOp"
+	tbl.Key = tkey
 
-	//	var key edgeproto.ResTagTableKey
-	tbl.Key.Name = testkeys[0]
 	_, err = resTagTableApi.CreateResTagTable(ctx, &tbl)
 	require.Nil(t, err, "Create Res Tag Table tmus-clouldlet-1")
 
@@ -67,7 +68,7 @@ func TestResTagTableApi(t *testing.T) {
 
 	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GetResTagTable")
-	require.Equal(t, len(tbl1.Tags), 1, "Num Tags error")
+	require.Equal(t, 1, len(tbl1.Tags), "Num Tags error")
 
 	// another tag
 	tbl.Tags[0] = testags[1] // "tag2"
@@ -76,7 +77,7 @@ func TestResTagTableApi(t *testing.T) {
 
 	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GgetResTagTable")
-	require.Equal(t, len(tbl1.Tags), 2, "Num Tags error")
+	require.Equal(t, 2, len(tbl1.Tags), "Num Tags error")
 
 	tbl.Tags[0] = testags[2] // "tag3"
 
@@ -85,7 +86,7 @@ func TestResTagTableApi(t *testing.T) {
 
 	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GgetResTagTable")
-	require.Equal(t, len(tbl1.Tags), 3, "Num Tags error")
+	require.Equal(t, 3, len(tbl1.Tags), "Num Tags error")
 
 	// Non-nominal add duplicate tag
 	_, err = resTagTableApi.AddResTag(ctx, &tbl)
@@ -97,7 +98,7 @@ func TestResTagTableApi(t *testing.T) {
 
 	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GgetResTagTable")
-	require.Equal(t, len(tbl1.Tags), 2, "Num Tags error")
+	require.Equal(t, 2, len(tbl1.Tags), "Num Tags error")
 
 	// and what's left should be tag1 and tag2
 	require.Equal(t, tbl1.Tags[0], "tag1", "reamining tags")
@@ -131,5 +132,15 @@ func TestResTagTableApi(t *testing.T) {
 	require.Equal(t, "tag1", tbl1.Tags[0], "TagTab membership mismatch")
 	require.Equal(t, "tag2", tbl1.Tags[1], "TagTab membership mismatch")
 	require.Equal(t, 2, len(tbl1.Tags), "TagTab len unexpected")
+
+	// avialablity zones test our update function
+	tbl.Azone = "gpu_zone"
+
+	_, err = resTagTableApi.UpdateResTagTable(ctx, &tbl)
+	require.Nil(t, err, "UpdateResTagTable")
+
+	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
+	require.Nil(t, err, "GgetResTagTable")
+	require.Equal(t, "gpu_zone", tbl1.Azone, "UpdateResTagTable")
 
 }

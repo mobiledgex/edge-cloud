@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"errors"
+	"strings"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/objstore"
 )
@@ -28,7 +30,9 @@ func (s *FlavorApi) HasFlavor(key *edgeproto.FlavorKey) bool {
 }
 
 func (s *FlavorApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
-	return s.store.Create(ctx, in, s.sync.syncWait)
+	result, err := s.store.Create(ctx, in, s.sync.syncWait)
+	in.OptResMap = make(map[string]string)
+	return result, err
 }
 
 func (s *FlavorApi) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
@@ -63,4 +67,49 @@ func (s *FlavorApi) ShowFlavor(in *edgeproto.Flavor, cb edgeproto.FlavorApi_Show
 		return err
 	})
 	return err
+}
+
+func (s *FlavorApi) AddFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+
+	var flav edgeproto.Flavor
+	var err error
+
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &flav) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		if flav.OptResMap == nil {
+			flav.OptResMap = make(map[string]string)
+		}
+		for res, val := range in.OptResMap {
+			// validate the resname(s)
+			if err, ok := resTagTableApi.ValidateResName(res); !ok {
+				return err
+			}
+			in.Key.Name = strings.ToLower(in.Key.Name)
+			flav.OptResMap[res] = val
+		}
+		s.store.STMPut(stm, &flav)
+		return nil
+	})
+
+	return &edgeproto.Result{}, err
+}
+
+func (s *FlavorApi) DelFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	var flav edgeproto.Flavor
+	var err error
+
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &flav) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		for res, _ := range in.OptResMap {
+			delete(flav.OptResMap, res)
+		}
+		s.store.STMPut(stm, &flav)
+		return nil
+	})
+
+	return &edgeproto.Result{}, err
 }

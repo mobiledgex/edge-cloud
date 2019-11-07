@@ -34,7 +34,8 @@ message Flavor {
   uint64 vcpus = 4;
   // Amount of disk space in gigabytes
   uint64 disk = 5;
-  uint32 gpus = 6; // make map<string,string> w/add/delete for optional resources TBI
+  // Optional Resources request, key = [gpu, nas, nic]
+  map<string, string> opt_res_map = 7;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -76,5 +77,21 @@ service FlavorApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceFlavors,ActionView,skipenforce";
+  }
+  // Add Optional Resource
+  rpc AddFlavorRes(Flavor) returns (Result) {
+      option (google.api.http) = {
+      post: "/addres/flavor"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceFlavors,ActionManage,";
+  }
+  // Del Optional Resource
+  rpc DelFlavorRes(Flavor) returns (Result) {
+      option (google.api.http) = {
+      post: "/delres/flavor"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceFlavors,ActionManage,";
   }
 }

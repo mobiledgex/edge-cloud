@@ -47,6 +47,7 @@
 		OpenStackProperties
 		CloudletInfraProperties
 		PlatformConfig
+		CloudletResMap
 		Cloudlet
 		FlavorInfo
 		CloudletInfo
@@ -921,6 +922,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(DeleteType(0)):
 		if en, ok := DeleteType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(OptResNames(0)):
+		if en, ok := OptResNames_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(Liveness(0)):

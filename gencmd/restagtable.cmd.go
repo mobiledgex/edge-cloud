@@ -363,114 +363,6 @@ func RemoveResTags(c *cli.Command, data []edgeproto.ResTagTable, err *error) {
 	}
 }
 
-var AddZoneCmd = &cli.Command{
-	Use:          "AddZone",
-	RequiredArgs: strings.Join(ResTagTableRequiredArgs, " "),
-	OptionalArgs: strings.Join(ResTagTableOptionalArgs, " "),
-	AliasArgs:    strings.Join(ResTagTableAliasArgs, " "),
-	SpecialArgs:  &ResTagTableSpecialArgs,
-	Comments:     ResTagTableComments,
-	ReqData:      &edgeproto.ResTagTable{},
-	ReplyData:    &edgeproto.Result{},
-	Run:          runAddZone,
-}
-
-func runAddZone(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.ResTagTable)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return AddZone(c, obj)
-}
-
-func AddZone(c *cli.Command, in *edgeproto.ResTagTable) error {
-	if ResTagTableApiCmd == nil {
-		return fmt.Errorf("ResTagTableApi client not initialized")
-	}
-	ctx := context.Background()
-	obj, err := ResTagTableApiCmd.AddZone(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("AddZone failed: %s", errstr)
-	}
-	c.WriteOutput(obj, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func AddZones(c *cli.Command, data []edgeproto.ResTagTable, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("AddZone %v\n", data[ii])
-		myerr := AddZone(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var RemoveZoneCmd = &cli.Command{
-	Use:          "RemoveZone",
-	RequiredArgs: strings.Join(ResTagTableRequiredArgs, " "),
-	OptionalArgs: strings.Join(ResTagTableOptionalArgs, " "),
-	AliasArgs:    strings.Join(ResTagTableAliasArgs, " "),
-	SpecialArgs:  &ResTagTableSpecialArgs,
-	Comments:     ResTagTableComments,
-	ReqData:      &edgeproto.ResTagTable{},
-	ReplyData:    &edgeproto.Result{},
-	Run:          runRemoveZone,
-}
-
-func runRemoveZone(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.ResTagTable)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return RemoveZone(c, obj)
-}
-
-func RemoveZone(c *cli.Command, in *edgeproto.ResTagTable) error {
-	if ResTagTableApiCmd == nil {
-		return fmt.Errorf("ResTagTableApi client not initialized")
-	}
-	ctx := context.Background()
-	obj, err := ResTagTableApiCmd.RemoveZone(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("RemoveZone failed: %s", errstr)
-	}
-	c.WriteOutput(obj, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func RemoveZones(c *cli.Command, data []edgeproto.ResTagTable, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("RemoveZone %v\n", data[ii])
-		myerr := RemoveZone(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
 var GetResTagTableCmd = &cli.Command{
 	Use:          "GetResTagTable",
 	RequiredArgs: strings.Join(ResTagTableKeyRequiredArgs, " "),
@@ -532,31 +424,39 @@ var ResTagTableApiCmds = []*cobra.Command{
 	ShowResTagTableCmd.GenCmd(),
 	AddResTagCmd.GenCmd(),
 	RemoveResTagCmd.GenCmd(),
-	AddZoneCmd.GenCmd(),
-	RemoveZoneCmd.GenCmd(),
 	GetResTagTableCmd.GenCmd(),
 }
 
 var ResTagTableKeyRequiredArgs = []string{}
 var ResTagTableKeyOptionalArgs = []string{
 	"name",
+	"operator",
 }
-var ResTagTableKeyAliasArgs = []string{}
-var ResTagTableKeyComments = map[string]string{}
+var ResTagTableKeyAliasArgs = []string{
+	"operator=operatorkey.name",
+}
+var ResTagTableKeyComments = map[string]string{
+	"name":     "Resource Table Name",
+	"operator": "Company or Organization name of the operator",
+}
 var ResTagTableKeySpecialArgs = map[string]string{}
 var ResTagTableRequiredArgs = []string{
 	"res",
+	"operator",
+	"tags",
 }
 var ResTagTableOptionalArgs = []string{
-	"tags",
 	"azone",
 }
 var ResTagTableAliasArgs = []string{
 	"res=key.name",
+	"operator=key.operatorkey.name",
 }
 var ResTagTableComments = map[string]string{
-	"tags":  "one or more string tags",
-	"azone": "availability zone of resource if required",
+	"res":      "Resource Table Name",
+	"operator": "Company or Organization name of the operator",
+	"tags":     "one or more string tags",
+	"azone":    "availability zone(s) of resource if required",
 }
 var ResTagTableSpecialArgs = map[string]string{
 	"tags": "StringArray",

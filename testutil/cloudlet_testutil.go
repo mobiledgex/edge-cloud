@@ -608,20 +608,6 @@ func (s *DummyServer) ShowCloudlet(in *edgeproto.Cloudlet, server edgeproto.Clou
 	return err
 }
 
-func (s *DummyServer) AddCloudletResMapping(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
-	if s.CudNoop {
-		return &edgeproto.Result{}, nil
-	}
-	return &edgeproto.Result{}, nil
-}
-
-func (s *DummyServer) RmCloudletResMapping(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
-	if s.CudNoop {
-		return &edgeproto.Result{}, nil
-	}
-	return &edgeproto.Result{}, nil
-}
-
 func (s *DummyServer) ShowCloudletInfo(in *edgeproto.CloudletInfo, server edgeproto.CloudletInfoApi_ShowCloudletInfoServer) error {
 	var err error
 	obj := &edgeproto.CloudletInfo{}

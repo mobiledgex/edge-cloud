@@ -323,18 +323,18 @@ func ShowCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
 
 var AddCloudletResMappingCmd = &cli.Command{
 	Use:          "AddCloudletResMapping",
-	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
-	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
-	SpecialArgs:  &CloudletSpecialArgs,
-	Comments:     CloudletComments,
-	ReqData:      &edgeproto.Cloudlet{},
+	RequiredArgs: strings.Join(CloudletResMapRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletResMapOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletResMapAliasArgs, " "),
+	SpecialArgs:  &CloudletResMapSpecialArgs,
+	Comments:     CloudletResMapComments,
+	ReqData:      &edgeproto.CloudletResMap{},
 	ReplyData:    &edgeproto.Result{},
 	Run:          runAddCloudletResMapping,
 }
 
 func runAddCloudletResMapping(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.Cloudlet)
+	obj := c.ReqData.(*edgeproto.CloudletResMap)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
@@ -342,7 +342,7 @@ func runAddCloudletResMapping(c *cli.Command, args []string) error {
 	return AddCloudletResMapping(c, obj)
 }
 
-func AddCloudletResMapping(c *cli.Command, in *edgeproto.Cloudlet) error {
+func AddCloudletResMapping(c *cli.Command, in *edgeproto.CloudletResMap) error {
 	if CloudletApiCmd == nil {
 		return fmt.Errorf("CloudletApi client not initialized")
 	}
@@ -361,7 +361,7 @@ func AddCloudletResMapping(c *cli.Command, in *edgeproto.Cloudlet) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func AddCloudletResMappings(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
+func AddCloudletResMappings(c *cli.Command, data []edgeproto.CloudletResMap, err *error) {
 	if *err != nil {
 		return
 	}
@@ -375,53 +375,53 @@ func AddCloudletResMappings(c *cli.Command, data []edgeproto.Cloudlet, err *erro
 	}
 }
 
-var RmCloudletResMappingCmd = &cli.Command{
-	Use:          "RmCloudletResMapping",
-	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
-	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
-	SpecialArgs:  &CloudletSpecialArgs,
-	Comments:     CloudletComments,
-	ReqData:      &edgeproto.Cloudlet{},
+var DeleteCloudletResMappingCmd = &cli.Command{
+	Use:          "DeleteCloudletResMapping",
+	RequiredArgs: strings.Join(CloudletResMapRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletResMapOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletResMapAliasArgs, " "),
+	SpecialArgs:  &CloudletResMapSpecialArgs,
+	Comments:     CloudletResMapComments,
+	ReqData:      &edgeproto.CloudletResMap{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runRmCloudletResMapping,
+	Run:          runDeleteCloudletResMapping,
 }
 
-func runRmCloudletResMapping(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.Cloudlet)
+func runDeleteCloudletResMapping(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.CloudletResMap)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return RmCloudletResMapping(c, obj)
+	return DeleteCloudletResMapping(c, obj)
 }
 
-func RmCloudletResMapping(c *cli.Command, in *edgeproto.Cloudlet) error {
+func DeleteCloudletResMapping(c *cli.Command, in *edgeproto.CloudletResMap) error {
 	if CloudletApiCmd == nil {
 		return fmt.Errorf("CloudletApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := CloudletApiCmd.RmCloudletResMapping(ctx, in)
+	obj, err := CloudletApiCmd.DeleteCloudletResMapping(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("RmCloudletResMapping failed: %s", errstr)
+		return fmt.Errorf("DeleteCloudletResMapping failed: %s", errstr)
 	}
 	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func RmCloudletResMappings(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
+func DeleteCloudletResMappings(c *cli.Command, data []edgeproto.CloudletResMap, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("RmCloudletResMapping %v\n", data[ii])
-		myerr := RmCloudletResMapping(c, &data[ii])
+		fmt.Printf("DeleteCloudletResMapping %v\n", data[ii])
+		myerr := DeleteCloudletResMapping(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -435,7 +435,7 @@ var CloudletApiCmds = []*cobra.Command{
 	UpdateCloudletCmd.GenCmd(),
 	ShowCloudletCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
-	RmCloudletResMappingCmd.GenCmd(),
+	DeleteCloudletResMappingCmd.GenCmd(),
 }
 
 var CloudletInfoApiCmd edgeproto.CloudletInfoApiClient
@@ -872,6 +872,32 @@ var PlatformConfigComments = map[string]string{
 	"span":            "Span string",
 }
 var PlatformConfigSpecialArgs = map[string]string{}
+var CloudletResMapRequiredArgs = []string{
+	"operator",
+	"name",
+	"mapping",
+}
+var CloudletResMapOptionalArgs = []string{}
+var CloudletResMapAliasArgs = []string{
+	"operator=key.operatorkey.name",
+	"name=key.name",
+}
+var CloudletResMapComments = map[string]string{
+	"operator": "Company or Organization name of the operator",
+	"name":     "Name of the cloudlet",
+	"mapping":  "Resource mapping info",
+}
+var CloudletResMapSpecialArgs = map[string]string{
+	"mapping": "StringToString",
+}
+var MappingEntryRequiredArgs = []string{}
+var MappingEntryOptionalArgs = []string{
+	"key",
+	"value",
+}
+var MappingEntryAliasArgs = []string{}
+var MappingEntryComments = map[string]string{}
+var MappingEntrySpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
 	"operator",
 	"name",
@@ -897,7 +923,7 @@ var CloudletOptionalArgs = []string{
 	"upgrade",
 	"restagmap.key",
 	"restagmap.value.name",
-	"mapping",
+	"restagmap.value.operatorkey.name",
 }
 var CloudletAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -943,12 +969,12 @@ var CloudletComments = map[string]string{
 	"config.platformtag":                  "Tag of edge-cloud image",
 	"config.testmode":                     "Internal Test Flag",
 	"config.span":                         "Span string",
-	"mapping":                             "Resource mapping info",
+	"restagmap.value.name":                "Resource Table Name",
+	"restagmap.value.operatorkey.name":    "Company or Organization name of the operator",
 }
 var CloudletSpecialArgs = map[string]string{
-	"envvar":  "StringToString",
-	"errors":  "StringArray",
-	"mapping": "StringToString",
+	"envvar": "StringToString",
+	"errors": "StringArray",
 }
 var EnvVarEntryRequiredArgs = []string{}
 var EnvVarEntryOptionalArgs = []string{
@@ -962,18 +988,14 @@ var ResTagMapEntryRequiredArgs = []string{}
 var ResTagMapEntryOptionalArgs = []string{
 	"key",
 	"value.name",
+	"value.operatorkey.name",
 }
 var ResTagMapEntryAliasArgs = []string{}
-var ResTagMapEntryComments = map[string]string{}
-var ResTagMapEntrySpecialArgs = map[string]string{}
-var MappingEntryRequiredArgs = []string{}
-var MappingEntryOptionalArgs = []string{
-	"key",
-	"value",
+var ResTagMapEntryComments = map[string]string{
+	"value.name":             "Resource Table Name",
+	"value.operatorkey.name": "Company or Organization name of the operator",
 }
-var MappingEntryAliasArgs = []string{}
-var MappingEntryComments = map[string]string{}
-var MappingEntrySpecialArgs = map[string]string{}
+var ResTagMapEntrySpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",
@@ -984,10 +1006,11 @@ var FlavorInfoOptionalArgs = []string{
 }
 var FlavorInfoAliasArgs = []string{}
 var FlavorInfoComments = map[string]string{
-	"name":  "Name of the flavor on the Cloudlet",
-	"vcpus": "Number of VCPU cores on the Cloudlet",
-	"ram":   "Ram in MB on the Cloudlet",
-	"disk":  "Amount of disk in GB on the Cloudlet",
+	"name":       "Name of the flavor on the Cloudlet",
+	"vcpus":      "Number of VCPU cores on the Cloudlet",
+	"ram":        "Ram in MB on the Cloudlet",
+	"disk":       "Amount of disk in GB on the Cloudlet",
+	"properties": "OS Flavor Properties, if any",
 }
 var FlavorInfoSpecialArgs = map[string]string{}
 var CloudletInfoRequiredArgs = []string{
@@ -1017,19 +1040,20 @@ var CloudletInfoAliasArgs = []string{
 	"name=key.name",
 }
 var CloudletInfoComments = map[string]string{
-	"operator":      "Company or Organization name of the operator",
-	"name":          "Name of the cloudlet",
-	"state":         "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
-	"notifyid":      "Id of client assigned by server (internal use only)",
-	"controller":    "Connected controller unique id",
-	"osmaxram":      "Maximum Ram in MB on the Cloudlet",
-	"osmaxvcores":   "Maximum number of VCPU cores on the Cloudlet",
-	"osmaxvolgb":    "Maximum amount of disk in GB on the Cloudlet",
-	"errors":        "Any errors encountered while making changes to the Cloudlet",
-	"flavors.name":  "Name of the flavor on the Cloudlet",
-	"flavors.vcpus": "Number of VCPU cores on the Cloudlet",
-	"flavors.ram":   "Ram in MB on the Cloudlet",
-	"flavors.disk":  "Amount of disk in GB on the Cloudlet",
+	"operator":           "Company or Organization name of the operator",
+	"name":               "Name of the cloudlet",
+	"state":              "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
+	"notifyid":           "Id of client assigned by server (internal use only)",
+	"controller":         "Connected controller unique id",
+	"osmaxram":           "Maximum Ram in MB on the Cloudlet",
+	"osmaxvcores":        "Maximum number of VCPU cores on the Cloudlet",
+	"osmaxvolgb":         "Maximum amount of disk in GB on the Cloudlet",
+	"errors":             "Any errors encountered while making changes to the Cloudlet",
+	"flavors.name":       "Name of the flavor on the Cloudlet",
+	"flavors.vcpus":      "Number of VCPU cores on the Cloudlet",
+	"flavors.ram":        "Ram in MB on the Cloudlet",
+	"flavors.disk":       "Amount of disk in GB on the Cloudlet",
+	"flavors.properties": "OS Flavor Properties, if any",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors": "StringArray",
