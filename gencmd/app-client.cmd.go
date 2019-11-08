@@ -574,11 +574,11 @@ var FindCloudletRequestAliasArgs = []string{}
 var FindCloudletRequestComments = map[string]string{
 	"ver":                            "API version",
 	"sessioncookie":                  "Session Cookie from RegisterClientRequest",
-	"carriername":                    "The carrier name that user is connected to (Cellular Carrier Name)",
+	"carriername":                    "The carrier name that the user is connected to (Cellular Carrier Name)",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"gpslocation.verticalaccuracy":   "veritical accuracy (meters)",
+	"gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
@@ -612,17 +612,17 @@ var FindCloudletReplyAliasArgs = []string{}
 var FindCloudletReplyComments = map[string]string{
 	"ver":                                 "API version",
 	"status":                              "Status return, one of FindUnknown, FindFound, FindNotfound",
-	"fqdn":                                "Full Qualified Domain Name of Closest App instance",
+	"fqdn":                                "Fully Qualified Domain Name of the Closest App instance",
 	"ports.proto":                         "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
 	"ports.internalport":                  "Container port",
 	"ports.publicport":                    "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
 	"ports.pathprefix":                    "Public facing path for HTTP L7 access.",
 	"ports.fqdnprefix":                    "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"ports.endport":                       "A non-zero end port indicates this is a port range from internal port to end port, inclusive.",
+	"ports.endport":                       "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"cloudletlocation.latitude":           "latitude in WGS 84 coordinates",
 	"cloudletlocation.longitude":          "longitude in WGS 84 coordinates",
 	"cloudletlocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"cloudletlocation.verticalaccuracy":   "veritical accuracy (meters)",
+	"cloudletlocation.verticalaccuracy":   "vertical accuracy (meters)",
 	"cloudletlocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"cloudletlocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudletlocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
@@ -648,15 +648,15 @@ var VerifyLocationRequestAliasArgs = []string{}
 var VerifyLocationRequestComments = map[string]string{
 	"ver":                            "API version",
 	"sessioncookie":                  "Session Cookie from RegisterClientRequest",
-	"carriername":                    "The carrier name that user is connected to (Cellular Carrier Name)",
+	"carriername":                    "The carrier name that the user is connected to (Cellular Carrier Name)",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"gpslocation.verticalaccuracy":   "veritical accuracy (meters)",
+	"gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"verifyloctoken":                 "token used for location verification, app must retrieve from TokenServerURI",
+	"verifyloctoken":                 "token used for location verification, app must be retrieve from TokenServerURI",
 }
 var VerifyLocationRequestSpecialArgs = map[string]string{}
 var VerifyLocationReplyRequiredArgs = []string{}
@@ -671,7 +671,7 @@ var VerifyLocationReplyComments = map[string]string{
 	"ver":                   "API version",
 	"towerstatus":           ", one of TowerUnknown, ConnectedToSpecifiedTower, NotConnectedToSpecifiedTower",
 	"gpslocationstatus":     ", one of LocUnknown, LocVerified, LocMismatchSameCountry, LocMismatchOtherCountry, LocRoamingCountryMatch, LocRoamingCountryMismatch, LocErrorUnauthorized, LocErrorOther",
-	"gpslocationaccuracykm": "location accuracy, the location is verified to  be within this number of kilometers.  Negative value means no verification was done",
+	"gpslocationaccuracykm": "location accuracy, the location is verified to be within this number of kilometers.  Negative value means no verification was performed",
 }
 var VerifyLocationReplySpecialArgs = map[string]string{}
 var GetLocationRequestRequiredArgs = []string{}
@@ -684,7 +684,7 @@ var GetLocationRequestAliasArgs = []string{}
 var GetLocationRequestComments = map[string]string{
 	"ver":           "API version",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
-	"carriername":   "The carrier name that user is connected to (Cellular Carrier Name)",
+	"carriername":   "The carrier name that the user is connected to (Cellular Carrier Name)",
 }
 var GetLocationRequestSpecialArgs = map[string]string{}
 var GetLocationReplyRequiredArgs = []string{}
@@ -706,12 +706,12 @@ var GetLocationReplyOptionalArgs = []string{
 var GetLocationReplyAliasArgs = []string{}
 var GetLocationReplyComments = map[string]string{
 	"status":                             ", one of LocUnknown, LocFound, LocDenied",
-	"carriername":                        "The carrier name that user is connected to (Cellular Carrier Name)",
+	"carriername":                        "The carrier name that the user is connected to (Cellular Carrier Name)",
 	"tower":                              "The tower that user is currently connected to",
 	"networklocation.latitude":           "latitude in WGS 84 coordinates",
 	"networklocation.longitude":          "longitude in WGS 84 coordinates",
 	"networklocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"networklocation.verticalaccuracy":   "veritical accuracy (meters)",
+	"networklocation.verticalaccuracy":   "vertical accuracy (meters)",
 	"networklocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"networklocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"networklocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
@@ -736,11 +736,11 @@ var AppInstListRequestAliasArgs = []string{}
 var AppInstListRequestComments = map[string]string{
 	"ver":                            "API version",
 	"sessioncookie":                  "Session Cookie from RegisterClientRequest",
-	"carriername":                    "The carrier name that user is connected to (Cellular Carrier Name)",
+	"carriername":                    "The carrier name that the user is connected to (Cellular Carrier Name)",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"gpslocation.verticalaccuracy":   "veritical accuracy (meters)",
+	"gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
@@ -768,7 +768,7 @@ var AppinstanceComments = map[string]string{
 	"ports.publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
 	"ports.pathprefix":   "Public facing path for HTTP L7 access.",
 	"ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"ports.endport":      "A non-zero end port indicates this is a port range from internal port to end port, inclusive.",
+	"ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 }
 var AppinstanceSpecialArgs = map[string]string{}
 var CloudletLocationRequiredArgs = []string{}
@@ -797,12 +797,12 @@ var CloudletLocationOptionalArgs = []string{
 }
 var CloudletLocationAliasArgs = []string{}
 var CloudletLocationComments = map[string]string{
-	"carriername":                     "The carrier name that user is connected to (Cellular Carrier Name)",
+	"carriername":                     "The carrier name that the user is connected to (Cellular Carrier Name)",
 	"cloudletname":                    "Cloudlet Name",
 	"gpslocation.latitude":            "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":           "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy":  "horizontal accuracy (radius in meters)",
-	"gpslocation.verticalaccuracy":    "veritical accuracy (meters)",
+	"gpslocation.verticalaccuracy":    "vertical accuracy (meters)",
 	"gpslocation.altitude":            "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":              "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":               "speed (IOS) / velocity (Android) (meters/sec)",
@@ -815,7 +815,7 @@ var CloudletLocationComments = map[string]string{
 	"appinstances.ports.publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
 	"appinstances.ports.pathprefix":   "Public facing path for HTTP L7 access.",
 	"appinstances.ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"appinstances.ports.endport":      "A non-zero end port indicates this is a port range from internal port to end port, inclusive.",
+	"appinstances.ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 }
 var CloudletLocationSpecialArgs = map[string]string{}
 var AppInstListReplyRequiredArgs = []string{}
@@ -848,12 +848,12 @@ var AppInstListReplyAliasArgs = []string{}
 var AppInstListReplyComments = map[string]string{
 	"ver":                                       "API version",
 	"status":                                    ", one of AiUndefined, AiSuccess, AiFail",
-	"cloudlets.carriername":                     "The carrier name that user is connected to (Cellular Carrier Name)",
+	"cloudlets.carriername":                     "The carrier name that the user is connected to (Cellular Carrier Name)",
 	"cloudlets.cloudletname":                    "Cloudlet Name",
 	"cloudlets.gpslocation.latitude":            "latitude in WGS 84 coordinates",
 	"cloudlets.gpslocation.longitude":           "longitude in WGS 84 coordinates",
 	"cloudlets.gpslocation.horizontalaccuracy":  "horizontal accuracy (radius in meters)",
-	"cloudlets.gpslocation.verticalaccuracy":    "veritical accuracy (meters)",
+	"cloudlets.gpslocation.verticalaccuracy":    "vertical accuracy (meters)",
 	"cloudlets.gpslocation.altitude":            "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"cloudlets.gpslocation.course":              "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudlets.gpslocation.speed":               "speed (IOS) / velocity (Android) (meters/sec)",
@@ -866,7 +866,7 @@ var AppInstListReplyComments = map[string]string{
 	"cloudlets.appinstances.ports.publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
 	"cloudlets.appinstances.ports.pathprefix":   "Public facing path for HTTP L7 access.",
 	"cloudlets.appinstances.ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"cloudlets.appinstances.ports.endport":      "A non-zero end port indicates this is a port range from internal port to end port, inclusive.",
+	"cloudlets.appinstances.ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 }
 var AppInstListReplySpecialArgs = map[string]string{}
 var FqdnListRequestRequiredArgs = []string{}
@@ -971,7 +971,7 @@ var QosPositionComments = map[string]string{
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"gpslocation.verticalaccuracy":   "veritical accuracy (meters)",
+	"gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
@@ -1022,7 +1022,7 @@ var QosPositionRequestComments = map[string]string{
 	"positions.gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"positions.gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"positions.gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"positions.gpslocation.verticalaccuracy":   "veritical accuracy (meters)",
+	"positions.gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
 	"positions.gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"positions.gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"positions.gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
@@ -1063,7 +1063,7 @@ var QosPositionKpiResultComments = map[string]string{
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"gpslocation.verticalaccuracy":   "veritical accuracy (meters)",
+	"gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
@@ -1101,7 +1101,7 @@ var QosPositionKpiReplyComments = map[string]string{
 	"positionresults.gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"positionresults.gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"positionresults.gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"positionresults.gpslocation.verticalaccuracy":   "veritical accuracy (meters)",
+	"positionresults.gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
 	"positionresults.gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"positionresults.gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"positionresults.gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",

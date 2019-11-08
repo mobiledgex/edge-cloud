@@ -214,7 +214,7 @@ func TestAutoClusterInst(t *testing.T) {
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	objstore.InitRegion(1)
+	testinit()
 	reduceInfoTimeouts()
 
 	dummy := dummyEtcd{}
@@ -259,7 +259,7 @@ func TestAutoClusterInst(t *testing.T) {
 	autoDeleteAppInst.Key.ClusterInstKey.ClusterKey.Name = ClusterAutoPrefix
 	err = appInstApi.CreateAppInst(&autoDeleteAppInst, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "create autodelete apppInst")
-	require.Contains(t, err.Error(), "requires an existing cluster instance")
+	require.Contains(t, err.Error(), "requires an existing ClusterInst")
 	dummy.Stop()
 }
 

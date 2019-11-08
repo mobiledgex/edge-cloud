@@ -15,16 +15,22 @@ import (
 // Wrap Span so we can override Finish()
 type Span struct {
 	*jaeger.Span
+	suppress bool // ignore log for show commands etc
 }
 
 var IgnoreLvl uint64 = 99999
+var SuppressLvl uint64 = 99998
 
 func StartSpan(lvl uint64, operationName string, opts ...opentracing.StartSpanOption) opentracing.Span {
 	if tracer == nil {
 		panic("tracer not initialized. Use log.InitTracer()")
 	}
 	ospan := tracer.StartSpan(operationName, opts...)
-	if lvl != IgnoreLvl {
+	if lvl == SuppressLvl {
+		// log to span but not to disk, allows caller to decide
+		// right before Finish whether or not to log the whole thing.
+		ext.SamplingPriority.Set(ospan, 1)
+	} else if lvl != IgnoreLvl {
 		if DebugLevelSampled&lvl != 0 {
 			// sampled
 		} else if DebugLevelInfo&lvl != 0 || debugLevel&lvl != 0 {
@@ -41,8 +47,11 @@ func StartSpan(lvl uint64, operationName string, opts ...opentracing.StartSpanOp
 		panic("non-jaeger span not supported")
 	}
 	span := &Span{Span: jspan}
+	if lvl == SuppressLvl {
+		span.suppress = true
+	}
 
-	if jspan.SpanContext().IsSampled() {
+	if jspan.SpanContext().IsSampled() && !span.suppress {
 		ec := zapcore.NewEntryCaller(runtime.Caller(1))
 		spanlogger.Info(getSpanMsg(span, ec.TrimmedPath(), "start "+operationName))
 	}
@@ -95,7 +104,10 @@ func SpanLog(ctx context.Context, lvl uint64, msg string, keysAndValues ...inter
 	// Unfortunately zap logger and opentracing logger, although
 	// both implemented by uber, don't use the same Field struct.
 	zfields := getFields(keysAndValues)
-	spanlogger.Info(getSpanMsg(span, lineno, msg), zfields...)
+	// don't write to log file if deferring log decision
+	if !span.suppress {
+		spanlogger.Info(getSpanMsg(span, lineno, msg), zfields...)
+	}
 }
 
 func getFields(args []interface{}) []zap.Field {
@@ -123,6 +135,9 @@ func StartTestSpan(ctx context.Context) context.Context {
 }
 
 func (s *Span) Finish() {
+	if s.suppress {
+		return
+	}
 	s.Span.Finish()
 
 	jspan := s.Span
@@ -145,6 +160,14 @@ func (s *Span) Finish() {
 	}
 	msg := getSpanMsg(s, lineno, "finish "+s.OperationName())
 	spanlogger.Info(msg, fields...)
+}
+
+func Unsuppress(ospan opentracing.Span) {
+	s, ok := ospan.(*Span)
+	if !ok {
+		panic("non-edge-cloud Span not supported")
+	}
+	s.suppress = false
 }
 
 func getSpanMsg(s *Span, lineno, msg string) string {
