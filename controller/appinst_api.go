@@ -144,7 +144,7 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 	var app edgeproto.App
 	var err error
 	apps := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
-	log.DebugLog(log.DebugLevelApi, "Auto-deleting appinsts ", "cluster", key.ClusterKey.Name)
+	log.DebugLog(log.DebugLevelApi, "Auto-deleting AppInsts ", "cluster", key.ClusterKey.Name)
 	s.cache.Mux.Lock()
 	for k, val := range s.cache.Objs {
 		if k.ClusterInstKey.Matches(key) && appApi.Get(&val.Key.AppKey, &app) {
@@ -159,8 +159,8 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 	var spinTime time.Duration
 	start := time.Now()
 	for _, val := range apps {
-		log.DebugLog(log.DebugLevelApi, "Auto-deleting appinst ", "appinst", val.Key.AppKey.Name)
-		cb.Send(&edgeproto.Result{Message: "Autodeleting appinst " + val.Key.AppKey.Name})
+		log.DebugLog(log.DebugLevelApi, "Auto-deleting AppInst ", "appinst", val.Key.AppKey.Name)
+		cb.Send(&edgeproto.Result{Message: "Autodeleting AppInst " + val.Key.AppKey.Name})
 		for {
 			// ignore CRM errors when deleting dynamic apps as we will be deleting the cluster anyway
 			crmo := edgeproto.CRMOverride_IGNORE_CRM_ERRORS
@@ -170,10 +170,10 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 			if err != nil && err.Error() == "AppInst busy, cannot delete" {
 				spinTime = time.Since(start)
 				if spinTime > cloudcommon.DeleteAppInstTimeout {
-					log.DebugLog(log.DebugLevelApi, "Timeout while waiting for app", "appName", val.Key.AppKey.Name)
+					log.DebugLog(log.DebugLevelApi, "Timeout while waiting for App", "appName", val.Key.AppKey.Name)
 					return err
 				}
-				log.DebugLog(log.DebugLevelApi, "Appinst busy, retrying in 0.5s...", "appName", val.Key.AppKey.Name)
+				log.DebugLog(log.DebugLevelApi, "AppInst busy, retrying in 0.5s...", "appName", val.Key.AppKey.Name)
 				time.Sleep(500 * time.Millisecond)
 			} else { //if its anything other than an appinst busy error, break out of the spin
 				break
@@ -286,7 +286,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if in.Key.AppKey.DeveloperKey.Name != cloudcommon.DeveloperMobiledgeX &&
 		in.Key.AppKey.DeveloperKey.Name != in.Key.ClusterInstKey.Developer {
 		// both are specified, make sure they match
-		return fmt.Errorf("Developer name mismatch between app: %s and cluster inst: %s", in.Key.AppKey.DeveloperKey.Name, in.Key.ClusterInstKey.Developer)
+		return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.DeveloperKey.Name, in.Key.ClusterInstKey.Developer)
 	}
 	appDeploymentType := ""
 
@@ -312,7 +312,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		// make sure cloudlet exists
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, nil) {
-			return errors.New("Specified cloudlet not found")
+			return errors.New("Specified Cloudlet not found")
 		}
 
 		cikey := &in.Key.ClusterInstKey
@@ -352,7 +352,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 			// If this is an autodelete app, we should only allow those in existing cluster instances
 			if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
-				return fmt.Errorf("Autodelete app %s requires an existing cluster instance", app.Key.Name)
+				return fmt.Errorf("Autodelete App %s requires an existing ClusterInst", app.Key.Name)
 			}
 			cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
 			if cikey.Developer == "" {
@@ -377,9 +377,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		clusterInst.Key = in.Key.ClusterInstKey
 		clusterInst.Auto = true
 		log.DebugLog(log.DebugLevelApi,
-			"Create auto-clusterinst",
+			"Create auto-ClusterInst",
 			"key", clusterInst.Key,
-			"appinst", in)
+			"AppInst", in)
 
 		clusterInst.Flavor = in.Flavor
 		clusterInst.IpAccess = in.AutoClusterIpAccess
@@ -400,7 +400,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				undoErr := clusterInstApi.deleteClusterInstInternal(cctx.WithUndo(), &clusterInst, cb)
 				if undoErr != nil {
 					log.DebugLog(log.DebugLevelApi,
-						"Undo create auto-clusterinst failed",
+						"Undo create auto-ClusterInst failed",
 						"key", clusterInst.Key,
 						"undoErr", undoErr)
 				}
@@ -429,7 +429,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// cache location of cloudlet in app inst
 		var cloudlet edgeproto.Cloudlet
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
-			return errors.New("Specified cloudlet not found")
+			return errors.New("Specified Cloudlet not found")
 		}
 		in.CloudletLoc = cloudlet.Location
 
@@ -451,7 +451,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if cloudcommon.IsClusterInstReqd(&app) {
 			clusterInst := edgeproto.ClusterInst{}
 			if !clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst) {
-				return errors.New("Cluster instance does not exist for app")
+				return errors.New("ClusterInst does not exist for App")
 			}
 			if clusterInst.State != edgeproto.TrackedState_READY {
 				return fmt.Errorf("ClusterInst %s not ready", clusterInst.Key.GetKeyString())
@@ -591,10 +591,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return err
 	}
 	if ignoreCRM(cctx) {
-		cb.Send(&edgeproto.Result{Message: "Created successfully"})
+		cb.Send(&edgeproto.Result{Message: "Created AppInst successfully"})
 		return nil
 	}
-	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR, cloudcommon.CreateAppInstTimeout, "Created successfully", cb.Send)
+	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR, cloudcommon.CreateAppInstTimeout, "Created AppInst successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create AppInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_READY)
@@ -608,7 +608,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Deleting AppInst due to failure"})
 		undoErr := s.deleteAppInstInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
-			log.InfoLog("Undo create appinst", "undoErr", undoErr)
+			log.InfoLog("Undo create AppInst", "undoErr", undoErr)
 		}
 	}
 	return err
@@ -732,15 +732,15 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	s.cache.Mux.Unlock()
 
 	if len(instances) == 0 {
-		log.DebugLog(log.DebugLevelApi, "no app instances matched", "key", in.Key)
+		log.DebugLog(log.DebugLevelApi, "no AppInsts matched", "key", in.Key)
 		return objstore.ErrKVStoreKeyNotFound
 	}
 
-	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d App Instances", len(instances))})
+	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d AppInsts", len(instances))})
 
 	for instkey, _ := range instances {
 		go func(k edgeproto.AppInstKey) {
-			log.DebugLog(log.DebugLevelApi, "updating appinst", "key", k)
+			log.DebugLog(log.DebugLevelApi, "updating AppInst", "key", k)
 			updated, err := s.updateAppInstInternal(DefCallContext(), k, cb, in.ForceUpdate)
 			if err == nil {
 				instanceUpdateResults[k] <- updateResult{errString: "", revisionUpdated: updated}
@@ -769,10 +769,10 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		}
 		// give some intermediate status
 		if (numTotal%10 == 0) && numTotal != len(instances) {
-			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processing: %d of %d instances.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processing: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
 		}
 	}
-	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Completed: %d of %d instances.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
+	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Completed: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
 	return nil
 }
 
@@ -784,7 +784,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := cb.Context()
 
-	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "appinst", in)
+	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
 	// populate the clusterinst developer from the app developer if not already present
 	if in.Key.ClusterInstKey.Developer == "" {
 		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
@@ -831,7 +831,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		var cloudlet edgeproto.Cloudlet
 
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
-			return errors.New("Specified cloudlet not found")
+			return errors.New("Specified Cloudlet not found")
 		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}
@@ -895,17 +895,17 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Recreating AppInst due to failure"})
 		undoErr := s.createAppInstInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
-			log.InfoLog("Undo delete appinst", "undoErr", undoErr)
+			log.InfoLog("Undo delete AppInst", "undoErr", undoErr)
 		}
 		return err
 	}
 	// delete clusterinst afterwards if it was auto-created and nobody is left using it
 	clusterInst := edgeproto.ClusterInst{}
 	if clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto && !appInstApi.UsesClusterInst(&clusterInstKey) {
-		cb.Send(&edgeproto.Result{Message: "Deleting auto-cluster inst"})
+		cb.Send(&edgeproto.Result{Message: "Deleting auto-ClusterInst"})
 		autoerr := clusterInstApi.deleteClusterInstInternal(cctx, &clusterInst, cb)
 		if autoerr != nil {
-			log.InfoLog("Failed to delete auto cluster inst",
+			log.InfoLog("Failed to delete auto-ClusterInst",
 				"clusterInst", clusterInst, "err", err)
 		}
 	}

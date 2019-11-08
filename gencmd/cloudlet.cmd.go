@@ -54,9 +54,6 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 		in.NotifySrvAddr = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.Upgrade = false
-	}
-	if _, found := tags["nocmp"]; found {
 		in.Config = edgeproto.PlatformConfig{}
 	}
 }
@@ -747,6 +744,7 @@ var PlatformConfigOptionalArgs = []string{
 	"platformtag",
 	"testmode",
 	"span",
+	"controllermode",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -758,24 +756,25 @@ var PlatformConfigComments = map[string]string{
 	"crmroleid":       "Vault role ID for CRM",
 	"crmsecretid":     "Vault secret ID for CRM",
 	"platformtag":     "Tag of edge-cloud image",
-	"testmode":        "Internal Test Flag",
+	"testmode":        "Internal Test flag",
 	"span":            "Span string",
+	"controllermode":  "Internal controller flag",
 }
 var PlatformConfigSpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
 	"operator",
 	"name",
+	"location.latitude",
+	"location.longitude",
+	"numdynamicips",
 }
 var CloudletOptionalArgs = []string{
 	"accesscredentials",
-	"location.latitude",
-	"location.longitude",
 	"location.altitude",
 	"location.timestamp.seconds",
 	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
-	"numdynamicips",
 	"errors",
 	"state",
 	"crmoverride",
@@ -784,7 +783,7 @@ var CloudletOptionalArgs = []string{
 	"flavor.name",
 	"physicalname",
 	"envvar",
-	"upgrade",
+	"version",
 }
 var CloudletAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -797,7 +796,7 @@ var CloudletComments = map[string]string{
 	"location.latitude":                   "latitude in WGS 84 coordinates",
 	"location.longitude":                  "longitude in WGS 84 coordinates",
 	"location.horizontalaccuracy":         "horizontal accuracy (radius in meters)",
-	"location.verticalaccuracy":           "veritical accuracy (meters)",
+	"location.verticalaccuracy":           "vertical accuracy (meters)",
 	"location.altitude":                   "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"location.course":                     "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"location.speed":                      "speed (IOS) / velocity (Android) (meters/sec)",
@@ -811,15 +810,15 @@ var CloudletComments = map[string]string{
 	"timelimits.updateappinsttimeout":     "max time to update an app instance",
 	"timelimits.deleteappinsttimeout":     "max time to delete an app instance",
 	"errors":                              "Any errors trying to create, update, or delete the Cloudlet.",
-	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, UpdateDone",
+	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"deploymentlocal":                     "Deploy cloudlet services locally",
-	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeMexdind",
+	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeMexdind, PlatformTypeFakeinfra",
 	"notifysrvaddr":                       "Address for the CRM notify listener to run on",
 	"flavor.name":                         "Flavor name",
 	"physicalname":                        "Physical infrastructure cloudlet name",
 	"envvar":                              "Single Key-Value pair of env var to be passed to CRM",
-	"upgrade":                             "Upgrade cloudlet services",
+	"version":                             "Cloudlet version",
 	"config.registrypath":                 "Path to Docker registry holding edge-cloud image",
 	"config.imagepath":                    "Path to platform base image",
 	"config.notifyctrladdrs":              "Address of controller notify port (can be multiple of these)",
@@ -828,8 +827,9 @@ var CloudletComments = map[string]string{
 	"config.crmroleid":                    "Vault role ID for CRM",
 	"config.crmsecretid":                  "Vault secret ID for CRM",
 	"config.platformtag":                  "Tag of edge-cloud image",
-	"config.testmode":                     "Internal Test Flag",
+	"config.testmode":                     "Internal Test flag",
 	"config.span":                         "Span string",
+	"config.controllermode":               "Internal controller flag",
 }
 var CloudletSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -887,7 +887,7 @@ var CloudletInfoAliasArgs = []string{
 var CloudletInfoComments = map[string]string{
 	"operator":      "Company or Organization name of the operator",
 	"name":          "Name of the cloudlet",
-	"state":         "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgradeInit, CloudletStateUpgradeDone",
+	"state":         "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
 	"notifyid":      "Id of client assigned by server (internal use only)",
 	"controller":    "Connected controller unique id",
 	"osmaxram":      "Maximum Ram in MB on the Cloudlet",

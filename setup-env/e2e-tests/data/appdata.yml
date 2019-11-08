@@ -182,7 +182,7 @@ apps:
       name: AcmeAppCo
     name: NoPortsApp
     version: "1.0"
-  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/noportsapp:1.0
+  imagepath: http://registry.mobiledgex.net/mobiledgex_AcmeAppCo/noportsapp:1.0
   imagetype: ImageTypeDocker
   deployment: "kubernetes"
   defaultflavor:
