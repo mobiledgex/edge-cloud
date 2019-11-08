@@ -38,6 +38,7 @@ var solib = flag.String("plugin", "", "plugin file")
 var region = flag.String("region", "local", "region name")
 var testMode = flag.Bool("testMode", false, "Run CRM in test mode")
 var parentSpan = flag.String("span", "", "Use parent span for logging")
+var controllerMode = flag.Bool("controllerMode", false, "CRM started by controller")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
@@ -51,7 +52,7 @@ var controllerData *crmutil.ControllerData
 var notifyClient *notify.Client
 var platform pf.Platform
 
-const ControllerTimeout = 20 * time.Second
+const ControllerTimeout = 1 * time.Minute
 
 func main() {
 	flag.Parse()
@@ -136,19 +137,23 @@ func main() {
 		myCloudlet.Version = cloudletVersion
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
 
-		log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudlet.Key)
-		// Wait for cloudlet cache from controller
-		// This ensures that crm is able to communicate to controller via Notify Channel
 		var cloudlet edgeproto.Cloudlet
-		select {
-		case <-controllerData.ControllerWait:
-			if !controllerData.CloudletCache.Get(&myCloudlet.Key, &cloudlet) {
-				log.FatalLog("failed to fetch cloudlet cache from controller")
+		// If CRM is started manually, then controller will not send cloudlet-cache
+		// Hence avoid this check if CRM started in controller mode
+		if *controllerMode {
+			log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudlet.Key)
+			// Wait for cloudlet cache from controller
+			// This ensures that crm is able to communicate to controller via Notify Channel
+			select {
+			case <-controllerData.ControllerWait:
+				if !controllerData.CloudletCache.Get(&myCloudlet.Key, &cloudlet) {
+					log.FatalLog("failed to fetch cloudlet cache from controller")
+				}
+			case <-time.After(ControllerTimeout):
+				log.FatalLog("Timed out waiting for cloudlet cache from controller")
 			}
-		case <-time.After(ControllerTimeout):
-			log.FatalLog("Timed out waiting for cloudlet cache from controller")
+			log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 		}
-		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		if err := initPlatform(ctx, &myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
@@ -166,12 +171,11 @@ func main() {
 			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
 			myCloudlet.Errors = nil
-			if cloudlet.State == edgeproto.TrackedState_UPDATING {
+			if cloudlet.State == edgeproto.TrackedState_UPDATING ||
+				cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 				controllerData.CleanupOldCloudlet(ctx, &cloudlet, updateCloudletStatus)
-				myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE_DONE
-			} else {
-				myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 			}
+			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 			log.SpanLog(ctx, log.DebugLevelMexos, "cloudlet state", "state", myCloudlet.State, "myCloudlet", myCloudlet)
 		}
 

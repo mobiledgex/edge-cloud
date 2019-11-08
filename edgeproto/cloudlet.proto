@@ -125,10 +125,12 @@ message PlatformConfig {
   string crm_secret_id = 7;
   // Tag of edge-cloud image
   string platform_tag = 8;
-  // Internal Test Flag
+  // Internal Test flag
   bool test_mode = 9;
   // Span string
   string span = 10;
+  // Internal controller flag
+  bool controller_mode = 11;
 }
 
 // PlatformType is the supported list of cloudlet types
@@ -185,8 +187,8 @@ message Cloudlet {
   string physical_name = 18;
   // Single Key-Value pair of env var to be passed to CRM
   map<string, string> env_var = 19;
-  // Upgrade cloudlet services
-  bool upgrade = 20 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Cloudlet version 
+  string version = 20;
   // Platform Config Info
   PlatformConfig config = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
 
@@ -255,10 +257,8 @@ enum CloudletState {
   CLOUDLET_STATE_NOT_PRESENT = 4;
   // Cloudlet is initializing
   CLOUDLET_STATE_INIT = 5;
-  // Cloudlet started upgrading
-  CLOUDLET_STATE_UPGRADE_INIT = 6;
-  // Cloudlet is done upgrading
-  CLOUDLET_STATE_UPGRADE_DONE = 7;
+  // Cloudlet is upgrading
+  CLOUDLET_STATE_UPGRADE = 6;
 }
 
 // Flavor details from the Cloudlet

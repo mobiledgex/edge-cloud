@@ -62,43 +62,40 @@ On CRM crash, there will no longer be any threads running, thus after reading th
 # State Transitions for Cloudlet Upgrade
 
 An upgrade is initiated by user from controller. During which, modifications to appInst/clusterInst is not allowed.
+Cloudlet is upgraded before controller/MC
 
-There are three actors at play here. First is controller, via which upgrade is initiated, second is old CRM service which will be upgraded and third is new CRM service.
+There are three actors at play here. First is controller, via which upgrade is initiated, second is old CRM service (CRMv1) which will be upgraded and third is new CRM service (CRMv2).
 Upgrade is intiated from controller, old CRM then starts new CRM service. Once new CRM service is up, it kills old CRM service.
 
-Since this needs coordination between controller and cloudlet states, there are two states at play here.
-One is TrackedState, used by controller to track actions. And other one is CloudletState, used by CRM to describe it actions.
-Because a TrackedState can trigger a change in CloudletState and vice-versa, state transitions must be in-sync for both the states.
-Also, the only trusted state is that of controller (TrackedState), as old/new CRM can crash and come up.
+There are states under consideration, one is TrackedState maintained by controller & other one is CloudletState maintained by CRM.
+Since CRM can crash and reconnect, it cannot be completely trusted during upgrade. Hence we only use Controller state for state transitions.
+CloudletState will just be used to send the next state from CRM to controller. Also, CRM will only look at controller state to decide its actions.
 
 Upgrade error is left as it is, so that it can be fixed manually by admin.
 Here we also ensures that, in error state, modifications to appInst/clusterInst is disallowed, unless it is fixed manually.
-```
-+-----------------+------------------------------------+------------------+-----------------------------------------------+
-|                 |                                    |                  |         Cloudlet State Transition             |
-|    Controller   |               Actor                |    Controller    +-----------------------+-----------------------+
-|  Current State  |                                    |    Next State    |         CRMv1         |    CRMv2              |
-+-------------------------------------------------------------------------------------------------------------------------+
-| Ready           | User initiated UpgradeCloudlet     | UpdateRequested  | Ready                 |                       |
-+-------------------------------------------------------------------------------------------------------------------------+
-| UpdateRequested | CRMv1 response                     |                  | Ready -> UpgradeInit  |                       |
-|                 | Controller response                | Updating         |                       |                       |
-|                 +-------------------------------------------------------------------------------------------------------+
-|                 | CRMv1 error                        |                  | Ready -> Error        |                       |
-|                 | Controller response                | UpdateError      |                       |                       |
-+-------------------------------------------------------------------------------------------------------------------------+
-| Updating        | CRMv1 brings up CRMv2 (success)    |                  | UpgradeInit           | Init                  |
-|                 | CRMv2 response                     |                  |                       | Init -> UpgradeDone   |
-|                 | Controller response                | UpdateDone       |                       |                       |
-|                 +-------------------------------------------------------------------------------------------------------+
-|                 | CRMv1 brings up CRMv2 (success)    |                  | UpgradeInit           | Init                  |
-|                 | CRMv2 error                        |                  |                       | Init -> Error         |
-|                 | Controller response                | UpdateError      |                       |                       |
-|                 +-------------------------------------------------------------------------------------------------------+
-|                 | CRMv1 brings up CRMv2 (failure)    |                  | UpgradeInit -> Error  |                       |
-|                 | Controller response                | UpdateError      |                       |                       |
-+-------------------------------------------------------------------------------------------------------------------------+
-| UpdateDone      | CRMv2 response                     |                  |                       | UpgradeDone -> Ready  |
-|                 | Controller response                | Ready            |                       |                       |
-+-----------------+------------------------------------+------------------+-----------------------+-----------------------+
-```
+
+Following is state transition table for cloudlet upgrade:
+
+| State           | Actor      | Actions/Comments                                     | Next State                        |
+|-----------------|------------|------------------------------------------------------|-----------------------------------|
+| Ready           | User       | Initiates cloudlet upgrade                           | UpdateRequested                   |
+| UpdateRequested | CRMv1      | Ack start of upgrade (sends upgrade), Starts CRMv2   | Updating                          |
+|                 | Controller | CRMv2 connects (sends init), Controller ack for init | InitOk                            |
+|                 | CRMv1      | Start CRMv2 fails, CRMv1 cleans up CRMv2             | UpdateError                       |
+| Updating        | Controller | CRMv2 connects (sends init), Controller ack for init | InitOk                            |
+|                 | CRMv2      | Gather Info, Kill CRMv1                              | Ready (triggers send of all data) |
+|                 | CRMv1      | CRMv2 bringup failed, CRMv1 cleans up CRMv2          | UpdateError                       |
+| InitOk          | CRMv2      | Gather Info, Kill CRMv1                              | Ready (triggers send of all data) |
+|                 | CRMv1      | CRMv2 bringup failed, CRMv1 cleans up CRMv2          | UpdateError                       |
+| UpdateError     | CRMv1      | Continue using CRMv1 (set Ready), resend all data    | UpdateError                       |
+
+For cloudlet creation, we'll have a different table:
+
+| State             | Actor      | Actions/Comments                                       | Next State                                                                                                 |
+|-------------------|------------|--------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| Offline           | User       | Initiates cloudlet create                              | Init                                                                                                       |
+|                   | CRM        | CRM started manually                                   | Init                                                                                                       |
+| Ready/Init/InitOk | CRM        | Start up, must have new notify-id (handles CRM crash)  | Init                                                                                                       |
+| Init              | Controller | Ack cloudlet start                                     | InitOk                                                                                                     |
+| InitOk            | CRM        | Gather cloudlet data                                   | Ready (triggers send of all data)                                                                          |
+|                   | CRM        | Gather cloudlet data failed, exits                     | Offline (Controller moves to offline after disconnect, unless new CRM has reconnected with new notify id)  |

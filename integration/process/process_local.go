@@ -367,6 +367,9 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.TestMode {
 		args = append(args, "-testMode")
 	}
+	if p.ControllerMode {
+		args = append(args, "-controllerMode")
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
