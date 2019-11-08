@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"strings"
+	"net/url"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -62,10 +62,13 @@ func (q *InfluxQ) Start(addr, tlsCert string) error {
 		Username: q.user,
 		Password: q.password,
 	}
-	if strings.HasPrefix(addr, "https://") {
-		// TODO: we should ideally be validating the server address here rather than
-		// leaving it blank
-		creds, err := tls.GetTLSClientConfig("", tlsCert, "", false)
+	addrUrl, err := url.Parse(addr)
+	if err != nil {
+		return err
+	}
+
+	if addrUrl.Scheme == "https" {
+		creds, err := tls.GetTLSClientConfig(addrUrl.Hostname(), tlsCert, "", false)
 		// Should not try to verify
 		if err != nil || creds == nil {
 			conf.InsecureSkipVerify = true
