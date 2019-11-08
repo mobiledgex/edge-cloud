@@ -95,7 +95,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 		err = k8smgmt.DeleteAppInst(client, names, app, appInst)
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
-		err = k8smgmt.DeleteHelmAppInst(client, names, clusterInst, app)
+		err = k8smgmt.DeleteHelmAppInst(client, names, clusterInst)
 	} else {
 		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
 	}
