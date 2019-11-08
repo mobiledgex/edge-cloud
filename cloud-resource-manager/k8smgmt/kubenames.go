@@ -13,6 +13,7 @@ import (
 
 type KubeNames struct {
 	AppName           string
+	HelmAppName       string
 	AppURI            string
 	AppImage          string
 	AppRevision       string
@@ -62,6 +63,8 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	kubeNames.ClusterName = NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
 	kubeNames.K8sNodeNameSuffix = GetK8sNodeNameSuffix(&clusterInst.Key)
 	kubeNames.AppName = NormalizeName(app.Key.Name)
+	// Helm app name has to conform to DNS naming standards
+	kubeNames.HelmAppName = util.DNSSanitize(app.Key.Name + "v" + app.Key.Version)
 	kubeNames.AppURI = appInst.Uri
 	if app.Revision > 0 {
 		// if revision is zero, skip this for backwards compatibility
