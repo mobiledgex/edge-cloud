@@ -260,7 +260,7 @@ service CloudletApi {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
   }
   // Add Optional Resource tag table
-  rpc DeleteCloudletResMapping(CloudletResMap) returns (Result) {
+  rpc RemoveCloudletResMapping(CloudletResMap) returns (Result) {
     option (google.api.http) = {
       post: "/rmmapping/cloudlet"
       body: "*"

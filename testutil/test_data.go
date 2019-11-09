@@ -46,7 +46,6 @@ var FlavorData = []edgeproto.Flavor{
 		Ram:   8192,
 		Vcpus: 8,
 		Disk:  40,
-		// ENOSUP: OptResMap: map[string]string{"gpu": "1", "nas": "ceph-20"},
 	},
 }
 

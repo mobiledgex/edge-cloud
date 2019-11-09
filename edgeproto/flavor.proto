@@ -86,10 +86,10 @@ service FlavorApi {
     };
     option (protogen.mc2_api) = "ResourceFlavors,ActionManage,";
   }
-  // Del Optional Resource
-  rpc DelFlavorRes(Flavor) returns (Result) {
+  // Remove Optional Resource
+  rpc RemoveFlavorRes(Flavor) returns (Result) {
       option (google.api.http) = {
-      post: "/delres/flavor"
+      post: "/removeres/flavor"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceFlavors,ActionManage,";

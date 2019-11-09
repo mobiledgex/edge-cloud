@@ -3,13 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
+	"sort"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/vmspec"
+	"strconv"
+	"strings"
 )
 
 type ResTagTableApi struct {
@@ -98,14 +100,12 @@ func (s *ResTagTableApi) UpdateResTagTable(ctx context.Context, in *edgeproto.Re
 		if !s.store.STMGet(stm, &in.Key, &tbl) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		tbl.Azone = in.Azone
+		tbl.CopyInFields(in)
 		s.store.STMPut(stm, &tbl)
 		return nil
 	})
 
-	// next field supporting update...
 	return &edgeproto.Result{}, err
-
 }
 
 func (s *ResTagTableApi) validateMultiTagInput(in *edgeproto.ResTagTable) error {
@@ -233,7 +233,7 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 						return err, false
 					}
 					for _, tag := range tbl.Tags {
-						if !strings.Contains(flavor.Properties, tag) {
+						if flavor.Properties != tag {
 							return err, false
 						}
 					}
@@ -250,4 +250,55 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 		}
 	}
 	return nil, true
+}
+
+// GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
+func (s *ResTagTableApi) GetVMSpec(flavorList []*edgeproto.FlavorInfo, nodeflavor edgeproto.Flavor, resmap map[string]*edgeproto.ResTagTableKey) (*vmspec.VMCreationSpec, error) {
+	log.InfoLog("GetVMSpec with closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
+	var vmspec vmspec.VMCreationSpec
+
+	sort.Slice(flavorList[:], func(i, j int) bool {
+		if flavorList[i].Vcpus < flavorList[j].Vcpus {
+			return true
+		}
+		if flavorList[i].Vcpus > flavorList[j].Vcpus {
+			return false
+		}
+		if flavorList[i].Ram < flavorList[j].Ram {
+			return true
+		}
+		if flavorList[i].Ram > flavorList[j].Ram {
+			return false
+		}
+
+		return flavorList[i].Disk < flavorList[j].Disk
+	})
+	for _, flavor := range flavorList {
+
+		if flavor.Vcpus < nodeflavor.Vcpus {
+			continue
+		}
+		if flavor.Ram < nodeflavor.Ram {
+			continue
+		}
+		if flavor.Disk == 0 {
+			// flavors of zero disk size mean that the volume is allocated separately
+			vmspec.ExternalVolumeSize = nodeflavor.Disk
+		} else if flavor.Disk < nodeflavor.Disk {
+			continue
+		}
+		// Good matches for flavor so far, does nodeflavor request an
+		// optional resource? If so, it will have a non-nil OptResMap.
+		// If any specific resource fails, the flavor is rejected.
+		if nodeflavor.OptResMap != nil {
+			if _, ok := resTagTableApi.optResLookup(nodeflavor, *flavor, resmap); !ok {
+				continue
+			}
+		}
+		vmspec.FlavorName = flavor.Name
+		log.InfoLog("Found closest flavor", "flavor", flavor, "vmspec", vmspec)
+
+		return &vmspec, nil
+	}
+	return &vmspec, fmt.Errorf("no suitable platform flavor found for %s, please try a smaller flavor", nodeflavor.Key.Name)
 }

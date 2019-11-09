@@ -121,7 +121,7 @@ func request_FlavorApi_AddFlavorRes_0(ctx context.Context, marshaler runtime.Mar
 
 }
 
-func request_FlavorApi_DelFlavorRes_0(ctx context.Context, marshaler runtime.Marshaler, client FlavorApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_FlavorApi_RemoveFlavorRes_0(ctx context.Context, marshaler runtime.Marshaler, client FlavorApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Flavor
 	var metadata runtime.ServerMetadata
 
@@ -133,7 +133,7 @@ func request_FlavorApi_DelFlavorRes_0(ctx context.Context, marshaler runtime.Mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.DelFlavorRes(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.RemoveFlavorRes(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -276,7 +276,7 @@ func RegisterFlavorApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 
 	})
 
-	mux.Handle("POST", pattern_FlavorApi_DelFlavorRes_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_FlavorApi_RemoveFlavorRes_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -285,14 +285,14 @@ func RegisterFlavorApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_FlavorApi_DelFlavorRes_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_FlavorApi_RemoveFlavorRes_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_FlavorApi_DelFlavorRes_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_FlavorApi_RemoveFlavorRes_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -310,7 +310,7 @@ var (
 
 	pattern_FlavorApi_AddFlavorRes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"addres", "flavor"}, ""))
 
-	pattern_FlavorApi_DelFlavorRes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delres", "flavor"}, ""))
+	pattern_FlavorApi_RemoveFlavorRes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"removeres", "flavor"}, ""))
 )
 
 var (
@@ -324,5 +324,5 @@ var (
 
 	forward_FlavorApi_AddFlavorRes_0 = runtime.ForwardResponseMessage
 
-	forward_FlavorApi_DelFlavorRes_0 = runtime.ForwardResponseMessage
+	forward_FlavorApi_RemoveFlavorRes_0 = runtime.ForwardResponseMessage
 )

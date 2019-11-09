@@ -31,7 +31,6 @@ func (s *FlavorApi) HasFlavor(key *edgeproto.FlavorKey) bool {
 
 func (s *FlavorApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
 	result, err := s.store.Create(ctx, in, s.sync.syncWait)
-	in.OptResMap = make(map[string]string)
 	return result, err
 }
 
@@ -96,7 +95,7 @@ func (s *FlavorApi) AddFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*ed
 	return &edgeproto.Result{}, err
 }
 
-func (s *FlavorApi) DelFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+func (s *FlavorApi) RemoveFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
 	var flav edgeproto.Flavor
 	var err error
 

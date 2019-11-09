@@ -133,10 +133,14 @@ func TestResTagTableApi(t *testing.T) {
 	require.Equal(t, "tag2", tbl1.Tags[1], "TagTab membership mismatch")
 	require.Equal(t, 2, len(tbl1.Tags), "TagTab len unexpected")
 
-	// avialablity zones test our update function
-	tbl.Azone = "gpu_zone"
+	// test update of optional availablity zone
+	update := edgeproto.ResTagTable{}
+	update.Key = tbl.Key
+	update.Fields = make([]string, 0)
+	update.Azone = "gpu_zone"
+	update.Fields = append(update.Fields, edgeproto.ResTagTableFieldAzone)
 
-	_, err = resTagTableApi.UpdateResTagTable(ctx, &tbl)
+	_, err = resTagTableApi.UpdateResTagTable(ctx, &update)
 	require.Nil(t, err, "UpdateResTagTable")
 
 	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)

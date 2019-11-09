@@ -375,8 +375,8 @@ func AddCloudletResMappings(c *cli.Command, data []edgeproto.CloudletResMap, err
 	}
 }
 
-var DeleteCloudletResMappingCmd = &cli.Command{
-	Use:          "DeleteCloudletResMapping",
+var RemoveCloudletResMappingCmd = &cli.Command{
+	Use:          "RemoveCloudletResMapping",
 	RequiredArgs: strings.Join(CloudletResMapRequiredArgs, " "),
 	OptionalArgs: strings.Join(CloudletResMapOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletResMapAliasArgs, " "),
@@ -384,44 +384,44 @@ var DeleteCloudletResMappingCmd = &cli.Command{
 	Comments:     CloudletResMapComments,
 	ReqData:      &edgeproto.CloudletResMap{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runDeleteCloudletResMapping,
+	Run:          runRemoveCloudletResMapping,
 }
 
-func runDeleteCloudletResMapping(c *cli.Command, args []string) error {
+func runRemoveCloudletResMapping(c *cli.Command, args []string) error {
 	obj := c.ReqData.(*edgeproto.CloudletResMap)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return DeleteCloudletResMapping(c, obj)
+	return RemoveCloudletResMapping(c, obj)
 }
 
-func DeleteCloudletResMapping(c *cli.Command, in *edgeproto.CloudletResMap) error {
+func RemoveCloudletResMapping(c *cli.Command, in *edgeproto.CloudletResMap) error {
 	if CloudletApiCmd == nil {
 		return fmt.Errorf("CloudletApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := CloudletApiCmd.DeleteCloudletResMapping(ctx, in)
+	obj, err := CloudletApiCmd.RemoveCloudletResMapping(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("DeleteCloudletResMapping failed: %s", errstr)
+		return fmt.Errorf("RemoveCloudletResMapping failed: %s", errstr)
 	}
 	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func DeleteCloudletResMappings(c *cli.Command, data []edgeproto.CloudletResMap, err *error) {
+func RemoveCloudletResMappings(c *cli.Command, data []edgeproto.CloudletResMap, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("DeleteCloudletResMapping %v\n", data[ii])
-		myerr := DeleteCloudletResMapping(c, &data[ii])
+		fmt.Printf("RemoveCloudletResMapping %v\n", data[ii])
+		myerr := RemoveCloudletResMapping(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -435,7 +435,7 @@ var CloudletApiCmds = []*cobra.Command{
 	UpdateCloudletCmd.GenCmd(),
 	ShowCloudletCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
-	DeleteCloudletResMappingCmd.GenCmd(),
+	RemoveCloudletResMappingCmd.GenCmd(),
 }
 
 var CloudletInfoApiCmd edgeproto.CloudletInfoApiClient

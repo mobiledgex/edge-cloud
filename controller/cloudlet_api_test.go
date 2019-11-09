@@ -111,7 +111,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Key: edgeproto.ResTagTableKey{
 			Name: "gpumap",
 		},
-		Tags: []string{"nvidia-63"},
+		Tags: []string{"vgpu=nvidia-63"},
 	}
 	_, err := resTagTableApi.CreateResTagTable(ctx, &gputab)
 	require.Nil(t, nil, err, "CreateResTagTable")
@@ -151,7 +151,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	}
 
 	// this simple case should find the flavor with 'gpu' in the name
-	spec, vmerr := clusterInstApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, cl.ResTagMap)
+	spec, vmerr := resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, cl.ResTagMap)
 	require.Nil(t, vmerr, "GetVmSpec")
 	require.Equal(t, "flavor.large-gpu", spec.FlavorName)
 
@@ -161,13 +161,13 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	testflavor.Vcpus = 10
 	// if we can support the map in TestConversion we can use testutil.FlavorData[4] as we did pre-map
 	// this should by-pass the flavor with 'gpu' in the name, since that has 8 vcpus, and we're now requesting 10
-	spec, vmerr = clusterInstApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, cl.ResTagMap)
+	spec, vmerr = resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, cl.ResTagMap)
 	require.Nil(t, vmerr, "GetVmSpec")
 	require.Equal(t, "flavor.large", spec.FlavorName)
 
 	// and finally, make sure GetVMSpec ignores a nil tbl if none exist or desired, behavior
 	// is only a flavor with 'gpu' in the name will trigger a gpu request match.
-	spec, vmerr = clusterInstApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, nil)
+	spec, vmerr = resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, nil)
 	require.Equal(t, "no suitable platform flavor found for x1.large-mex, please try a smaller flavor", vmerr.Error(), "nil table")
 }
 
@@ -212,6 +212,7 @@ func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet
 		}
 		return err
 	})
+
 	// what's in our testcl? Check the resource map
 	tkey := testcl.ResTagMap[strings.ToLower(edgeproto.OptResNames_name[0])]
 	require.Equal(t, testutil.Restblkeys[0].Name, tkey.Name, "AddCloudletResMapKey")
@@ -230,20 +231,27 @@ func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet
 	resmap1.Mapping[strings.ToLower(edgeproto.OptResNames_name[2])] = testutil.Restblkeys[2].Name
 	resmap1.Mapping[strings.ToLower(edgeproto.OptResNames_name[1])] = testutil.Restblkeys[1].Name
 	resmap1.Key = cl.Key
-	_, err = cloudletApi.DeleteCloudletResMapping(ctx, &resmap1)
-	require.Nil(t, err, "RmCloudletResMapKey")
+
+	_, err = cloudletApi.RemoveCloudletResMapping(ctx, &resmap1)
+	require.Nil(t, err, "RemoveCloudletResMapKey")
 
 	rmcl := &edgeproto.Cloudlet{}
+	if rmcl.ResTagMap == nil {
+		rmcl.ResTagMap = make(map[string]*edgeproto.ResTagTableKey)
+	}
+	rmcl.Key = resmap1.Key
+
 	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !cloudletApi.store.STMGet(stm, &cl.Key, rmcl) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
 		return err
 	})
+
 	require.Nil(t, err, "STMGet failure")
 	// and check the maps len = 1
-	require.Equal(t, 1, len(rmcl.ResTagMap), "RmCloudletResMapKey")
+	require.Equal(t, 1, len(rmcl.ResTagMap), "RemoveCloudletResMapKey")
 	// and might as well check the key "gpu" exists
 	_, ok := rmcl.ResTagMap[testutil.Restblkeys[0].Name]
-	require.Equal(t, true, ok, "RmCloudletResMapKey")
+	require.Equal(t, true, ok, "RemoveCloudletResMapKey")
 }

@@ -32,7 +32,7 @@ func TestFlavorApi(t *testing.T) {
 	aflav.Disk = 20
 	_, err := flavorApi.CreateFlavor(ctx, &aflav)
 	require.Nil(t, err, "CreateFlavor")
-
+	aflav.OptResMap = make(map[string]string)
 	aflav.OptResMap["gpu"] = "1"
 	_, err = flavorApi.AddFlavorRes(ctx, &aflav)
 	require.Nil(t, err, "AddFlavorRes")
@@ -52,7 +52,7 @@ func TestFlavorApi(t *testing.T) {
 	delete(aflav.OptResMap, "nas")
 	// all that's left in aflav is 'gpu' so that's what should be deleted.
 	require.Equal(t, 1, len(aflav.OptResMap), "AddFlavorRes")
-	_, err = flavorApi.DelFlavorRes(ctx, &aflav)
+	_, err = flavorApi.RemoveFlavorRes(ctx, &aflav)
 	require.Nil(t, err, "DelFlavorRes")
 
 	// fetch the aflav key into dflav to test contents

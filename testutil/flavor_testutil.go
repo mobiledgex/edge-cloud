@@ -354,7 +354,7 @@ func (s *DummyServer) AddFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*
 	return &edgeproto.Result{}, nil
 }
 
-func (s *DummyServer) DelFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+func (s *DummyServer) RemoveFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
 	if s.CudNoop {
 		return &edgeproto.Result{}, nil
 	}

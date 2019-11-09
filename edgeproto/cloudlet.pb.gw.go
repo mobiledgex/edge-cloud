@@ -145,7 +145,7 @@ func request_CloudletApi_AddCloudletResMapping_0(ctx context.Context, marshaler 
 
 }
 
-func request_CloudletApi_DeleteCloudletResMapping_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CloudletApi_RemoveCloudletResMapping_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq CloudletResMap
 	var metadata runtime.ServerMetadata
 
@@ -157,7 +157,7 @@ func request_CloudletApi_DeleteCloudletResMapping_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.DeleteCloudletResMapping(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.RemoveCloudletResMapping(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -350,7 +350,7 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("POST", pattern_CloudletApi_DeleteCloudletResMapping_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_CloudletApi_RemoveCloudletResMapping_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -359,14 +359,14 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_CloudletApi_DeleteCloudletResMapping_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CloudletApi_RemoveCloudletResMapping_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CloudletApi_DeleteCloudletResMapping_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_RemoveCloudletResMapping_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -384,7 +384,7 @@ var (
 
 	pattern_CloudletApi_AddCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"addmapping", "cloudlet"}, ""))
 
-	pattern_CloudletApi_DeleteCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"rmmapping", "cloudlet"}, ""))
+	pattern_CloudletApi_RemoveCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"rmmapping", "cloudlet"}, ""))
 )
 
 var (
@@ -398,7 +398,7 @@ var (
 
 	forward_CloudletApi_AddCloudletResMapping_0 = runtime.ForwardResponseMessage
 
-	forward_CloudletApi_DeleteCloudletResMapping_0 = runtime.ForwardResponseMessage
+	forward_CloudletApi_RemoveCloudletResMapping_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterCloudletInfoApiHandlerFromEndpoint is same as RegisterCloudletInfoApiHandler but

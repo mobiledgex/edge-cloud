@@ -11,6 +11,6 @@ func (s *DummyServer) AddCloudletResMapping(ctx context.Context, in *edgeproto.C
 	return &edgeproto.Result{}, nil
 }
 
-func (s *DummyServer) DeleteCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error) {
+func (s *DummyServer) RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error) {
 	return &edgeproto.Result{}, nil
 }

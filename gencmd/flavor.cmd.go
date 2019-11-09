@@ -309,8 +309,8 @@ func AddFlavorRess(c *cli.Command, data []edgeproto.Flavor, err *error) {
 	}
 }
 
-var DelFlavorResCmd = &cli.Command{
-	Use:          "DelFlavorRes",
+var RemoveFlavorResCmd = &cli.Command{
+	Use:          "RemoveFlavorRes",
 	RequiredArgs: strings.Join(FlavorRequiredArgs, " "),
 	OptionalArgs: strings.Join(FlavorOptionalArgs, " "),
 	AliasArgs:    strings.Join(FlavorAliasArgs, " "),
@@ -318,44 +318,44 @@ var DelFlavorResCmd = &cli.Command{
 	Comments:     FlavorComments,
 	ReqData:      &edgeproto.Flavor{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runDelFlavorRes,
+	Run:          runRemoveFlavorRes,
 }
 
-func runDelFlavorRes(c *cli.Command, args []string) error {
+func runRemoveFlavorRes(c *cli.Command, args []string) error {
 	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return DelFlavorRes(c, obj)
+	return RemoveFlavorRes(c, obj)
 }
 
-func DelFlavorRes(c *cli.Command, in *edgeproto.Flavor) error {
+func RemoveFlavorRes(c *cli.Command, in *edgeproto.Flavor) error {
 	if FlavorApiCmd == nil {
 		return fmt.Errorf("FlavorApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := FlavorApiCmd.DelFlavorRes(ctx, in)
+	obj, err := FlavorApiCmd.RemoveFlavorRes(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("DelFlavorRes failed: %s", errstr)
+		return fmt.Errorf("RemoveFlavorRes failed: %s", errstr)
 	}
 	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func DelFlavorRess(c *cli.Command, data []edgeproto.Flavor, err *error) {
+func RemoveFlavorRess(c *cli.Command, data []edgeproto.Flavor, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("DelFlavorRes %v\n", data[ii])
-		myerr := DelFlavorRes(c, &data[ii])
+		fmt.Printf("RemoveFlavorRes %v\n", data[ii])
+		myerr := RemoveFlavorRes(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -369,7 +369,7 @@ var FlavorApiCmds = []*cobra.Command{
 	UpdateFlavorCmd.GenCmd(),
 	ShowFlavorCmd.GenCmd(),
 	AddFlavorResCmd.GenCmd(),
-	DelFlavorResCmd.GenCmd(),
+	RemoveFlavorResCmd.GenCmd(),
 }
 
 var FlavorKeyRequiredArgs = []string{}

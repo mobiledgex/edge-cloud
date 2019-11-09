@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/vmspec"
+	//"github.com/mobiledgex/edge-cloud/vmspec"
 )
 
 type ClusterInstApi struct {
@@ -107,57 +106,6 @@ func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 		}
 	}
 	return false
-}
-
-// GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
-func (s *ClusterInstApi) GetVMSpec(flavorList []*edgeproto.FlavorInfo, nodeflavor edgeproto.Flavor, resmap map[string]*edgeproto.ResTagTableKey) (*vmspec.VMCreationSpec, error) {
-	log.InfoLog("GetVMSpec with closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
-	var vmspec vmspec.VMCreationSpec
-
-	sort.Slice(flavorList[:], func(i, j int) bool {
-		if flavorList[i].Vcpus < flavorList[j].Vcpus {
-			return true
-		}
-		if flavorList[i].Vcpus > flavorList[j].Vcpus {
-			return false
-		}
-		if flavorList[i].Ram < flavorList[j].Ram {
-			return true
-		}
-		if flavorList[i].Ram > flavorList[j].Ram {
-			return false
-		}
-
-		return flavorList[i].Disk < flavorList[j].Disk
-	})
-	for _, flavor := range flavorList {
-
-		if flavor.Vcpus < nodeflavor.Vcpus {
-			continue
-		}
-		if flavor.Ram < nodeflavor.Ram {
-			continue
-		}
-		if flavor.Disk == 0 {
-			// flavors of zero disk size mean that the volume is allocated separately
-			vmspec.ExternalVolumeSize = nodeflavor.Disk
-		} else if flavor.Disk < nodeflavor.Disk {
-			continue
-		}
-		// Good matches for flavor so far, does nodeflavor request an
-		// optional resource? If so, it will have a non-nil OptResMap.
-		// If any specific resource fails, the flavor is rejected.
-		if nodeflavor.OptResMap != nil {
-			if _, ok := resTagTableApi.optResLookup(nodeflavor, *flavor, resmap); !ok {
-				continue
-			}
-		}
-		vmspec.FlavorName = flavor.Name
-		log.InfoLog("Found closest flavor", "flavor", flavor, "vmspec", vmspec)
-
-		return &vmspec, nil
-	}
-	return &vmspec, fmt.Errorf("no suitable platform flavor found for %s, please try a smaller flavor", nodeflavor.Key.Name)
 }
 
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
@@ -301,7 +249,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
 		var err error
-		vmspec, err := s.GetVMSpec(info.Flavors, nodeFlavor, cloudlet.ResTagMap)
+		vmspec, err := resTagTableApi.GetVMSpec(info.Flavors, nodeFlavor, cloudlet.ResTagMap)
 		if err != nil {
 			return err
 		}
