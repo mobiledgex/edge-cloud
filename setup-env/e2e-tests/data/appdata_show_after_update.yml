@@ -181,6 +181,7 @@ apps:
     name: helmApplication
     version: "1.0"
   imagepath: mobiledgex/AcmeAppCo/helmApplication
+  imagetype: ImageTypeHelm
   accessports: udp:20002
   defaultflavor:
     name: x1.small
@@ -217,6 +218,7 @@ apps:
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
+  imagetype: ImageTypeHelm
   accessports: tcp:9090
   internalports: true
   defaultflavor:

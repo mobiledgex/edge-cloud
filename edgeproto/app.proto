@@ -35,6 +35,8 @@ enum ImageType {
   IMAGE_TYPE_DOCKER = 1;
   // QCOW2 virtual machine image type
   IMAGE_TYPE_QCOW = 2;
+  // Helm chart is a separate image type
+  IMAGE_TYPE_HELM = 3;
 }
 
 enum DeleteType {
