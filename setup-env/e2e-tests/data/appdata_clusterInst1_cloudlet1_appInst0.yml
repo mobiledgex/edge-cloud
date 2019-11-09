@@ -86,6 +86,7 @@ apps:
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
+  imagetype: ImageTypeHelm
   accessports: tcp:9090
   internalports: true
   defaultflavor:

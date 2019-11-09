@@ -65,11 +65,11 @@ func TestDeployment(t *testing.T) {
 	testAppDeployment(t, app, true)
 
 	// No image type for Helm deployment
-	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_UNKNOWN
+	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_HELM
 	testValidImageDeployment(t, app, true)
 
 	// negative test - invalid image type for helm deployment
-	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_DOCKER
+	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_UNKNOWN
 	testValidImageDeployment(t, app, false)
 
 	// negative test - invalid generator

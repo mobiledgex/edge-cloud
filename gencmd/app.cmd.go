@@ -344,7 +344,7 @@ var AppComments = map[string]string{
 	"appname":             "App name",
 	"appvers":             "App version",
 	"imagepath":           "URI of where image resides",
-	"imagetype":           "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow",
+	"imagetype":           "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow, ImageTypeHelm",
 	"accessports":         "Comma separated list of protocol:port pairs that the App listens on. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
 	"defaultflavor":       "Flavor name",
 	"authpublickey":       "public key used for authentication",
