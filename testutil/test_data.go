@@ -138,6 +138,7 @@ var AppData = []edgeproto.App{
 			Version:      "0.0.1",
 		},
 		Deployment:    "helm",
+		ImageType:     edgeproto.ImageType_IMAGE_TYPE_HELM,
 		AccessPorts:   "udp:2024",
 		DefaultFlavor: FlavorData[2].Key,
 	},
