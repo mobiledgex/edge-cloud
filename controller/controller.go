@@ -27,6 +27,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/vault"
 	"google.golang.org/grpc"
 )
 
@@ -69,6 +70,7 @@ var ErrCtrlUpgradeRequired = errors.New("data mode upgrade required")
 
 var sigChan chan os.Signal
 var services Services
+var vaultConfig *vault.Config
 
 type Services struct {
 	etcdLocal       *process.Etcd
@@ -104,9 +106,6 @@ func validateFields(ctx context.Context) error {
 	if *versionTag == "" {
 		return fmt.Errorf("Version tag is required")
 	}
-	if *artifactoryFQDN == "" {
-		return fmt.Errorf("artifactoryFQDN is required")
-	}
 	if *cloudletRegistryPath != "" {
 		parts := strings.Split(*cloudletRegistryPath, "/")
 		if len(parts) < 2 || !strings.Contains(parts[0], ".") {
@@ -123,7 +122,7 @@ func validateFields(ctx context.Context) error {
 			return fmt.Errorf("Invalid registry path")
 		}
 		platform_registry_path := *cloudletRegistryPath + ":" + strings.TrimSpace(string(*versionTag))
-		err = cloudcommon.ValidateDockerRegistryPath(ctx, platform_registry_path, *vaultAddr)
+		err = cloudcommon.ValidateDockerRegistryPath(ctx, platform_registry_path, vaultConfig)
 		if err != nil {
 			return err
 		}
@@ -171,6 +170,12 @@ func startServices() error {
 	if !util.ValidRegion(*region) {
 		return fmt.Errorf("invalid region name")
 	}
+
+	vaultConfig, err = vault.BestConfig(*vaultAddr)
+	if err != nil && !*testMode {
+		return err
+	}
+	log.SpanLog(ctx, log.DebugLevelInfo, "vault auth", "type", vaultConfig.Auth.Type())
 
 	if *localEtcd {
 		opts := []process.StartOp{}
@@ -225,7 +230,7 @@ func startServices() error {
 
 	// get influxDB credentials from vault
 	influxAuth := &cloudcommon.InfluxCreds{}
-	influxAuth, err = cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
+	influxAuth, err = cloudcommon.GetInfluxDataAuth(vaultConfig, *region)
 	// Default to empty credentials if in test mode
 	if *testMode && err != nil {
 		influxAuth = &cloudcommon.InfluxCreds{}
