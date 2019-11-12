@@ -51,6 +51,11 @@ build-docker:
 		docker push $$ADDLTAG; \
 	done
 
+build-support-docker:
+	docker build -t registry.mobiledgex.net:5000/mobiledgex/build-support:${TAG} \
+		-f docker/Dockerfile.build-support docker
+	docker push registry.mobiledgex.net:5000/mobiledgex/build-support:${TAG}
+
 install:
 	go install ./...
 

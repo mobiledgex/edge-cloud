@@ -27,7 +27,10 @@ RUN go mod download
 RUN make -f Makefile.tools
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 RUN go mod download
-RUN go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger; exit 0
+
+COPY --from=registry.mobiledgex.net:5000/mobiledgex/build-support-doc:2019-11-12 /go/bin/protoc-gen-doc /go/bin
+COPY --from=registry.mobiledgex.net:5000/mobiledgex/build-support-doc:2019-11-12 /go/bin/protoc-gen-swagger /go/bin
+
 WORKDIR /go/src/github.com/mobiledgex
 COPY edge-cloud edge-cloud
 COPY edge-cloud-infra edge-cloud-infra
@@ -35,6 +38,9 @@ COPY edge-proto edge-proto
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 ENV CGO_ENABLED=1
 RUN make
+WORKDIR /go/src/github.com/mobiledgex/edge-cloud
+RUN make doc
+RUN make external-doc
 
 FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v0.0.14-339-g20a71c7
 
@@ -53,6 +59,10 @@ COPY --from=build /go/bin/shepherd /usr/local/bin
 COPY --from=build /go/bin/mcctl /usr/local/bin
 COPY --from=build /go/bin/resource-tracker /usr/local/bin
 COPY --from=build /go/plugins /plugins
+
+COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/edgeproto/doc/*.json /usr/local/doc/internal/
+COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/edgeproto/external-doc/*.json /usr/local/doc/external/
+COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/*.json /usr/local/doc/client/
 
 ADD edge-cloud/docker/mex-docker.env /root/mex-docker.env
 ADD edge-cloud/docker/edge-cloud-entrypoint.sh /usr/local/bin
