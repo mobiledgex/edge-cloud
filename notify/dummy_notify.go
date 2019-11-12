@@ -195,7 +195,7 @@ func (s *Client) WaitForConnect(connect uint64) {
 		if s.sendrecv.stats.Connects == connect {
 			break
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 	}
 }
 
