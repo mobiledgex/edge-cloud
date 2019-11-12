@@ -524,6 +524,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
 		// start the upgrade
+		new.Config.CleanupMode = true
 		err := cd.platform.UpdateCloudlet(ctx, new, &new.Config, updateCloudletCallback)
 		if err != nil {
 			errstr := fmt.Sprintf("Update Cloudlet failed: %v", err)

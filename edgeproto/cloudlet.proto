@@ -131,6 +131,8 @@ message PlatformConfig {
   string span = 10;
   // Internal controller flag
   bool controller_mode = 11;
+  // Internal cleanup flag
+  bool cleanup_mode = 12;
 }
 
 // PlatformType is the supported list of cloudlet types

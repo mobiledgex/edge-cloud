@@ -39,6 +39,8 @@ var region = flag.String("region", "local", "region name")
 var testMode = flag.Bool("testMode", false, "Run CRM in test mode")
 var parentSpan = flag.String("span", "", "Use parent span for logging")
 var controllerMode = flag.Bool("controllerMode", false, "CRM started by controller")
+var crmVersion = flag.String("version", "", "CRM version")
+var cleanupMode = flag.Bool("cleanupMode", false, "cleanup previous versions of CRM if present")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
@@ -128,9 +130,14 @@ func main() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
 
-		cloudletVersion, err := cloudcommon.GetDockerBaseImageVersion()
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "unable to fetch docker image version", "err", err)
+		cloudletVersion := ""
+		if *crmVersion == "" {
+			cloudletVersion, err = cloudcommon.GetDockerBaseImageVersion()
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfo, "unable to fetch docker image version", "err", err)
+			}
+		} else {
+			cloudletVersion = *crmVersion
 		}
 
 		myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_INIT
@@ -171,8 +178,7 @@ func main() {
 			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
 			myCloudlet.Errors = nil
-			if cloudlet.State == edgeproto.TrackedState_UPDATING ||
-				cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+			if *cleanupMode {
 				controllerData.CleanupOldCloudlet(ctx, &cloudlet, updateCloudletStatus)
 			}
 			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_READY

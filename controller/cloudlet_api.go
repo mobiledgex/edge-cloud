@@ -157,7 +157,7 @@ func getRolesAndSecrets(appRoles *VaultRoles) error {
 	return nil
 }
 
-func getPlatformConfig(ctx context.Context) (*edgeproto.PlatformConfig, error) {
+func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edgeproto.PlatformConfig, error) {
 	pfConfig := edgeproto.PlatformConfig{}
 	appRoles := VaultRoles{}
 	if err := getRolesAndSecrets(&appRoles); err != nil {
@@ -170,7 +170,7 @@ func getPlatformConfig(ctx context.Context) (*edgeproto.PlatformConfig, error) {
 		pfConfig.CrmRoleId = appRoles.CRMRoleID
 		pfConfig.CrmSecretId = appRoles.CRMSecretID
 	}
-	pfConfig.PlatformTag = *versionTag
+	pfConfig.PlatformTag = cloudlet.Version
 	pfConfig.TlsCertFile = *tlsCertFile
 	pfConfig.VaultAddr = *vaultAddr
 	pfConfig.RegistryPath = *cloudletRegistryPath
@@ -235,7 +235,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := cb.Context()
 
-	pfConfig, err := getPlatformConfig(ctx)
+	pfConfig, err := getPlatformConfig(ctx, in)
 	if err != nil {
 		return err
 	}
@@ -690,7 +690,7 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	}
 
 	log.SpanLog(ctx, log.DebugLevelApi, "fetch platform config")
-	pfConfig, err := getPlatformConfig(ctx)
+	pfConfig, err := getPlatformConfig(ctx, in)
 	if err != nil {
 		return err
 	}
@@ -700,6 +700,7 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 			return objstore.ErrKVStoreKeyNotFound
 		}
 		cloudlet.Config = *pfConfig
+		cloudlet.Version = in.Version
 		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 
 		s.store.STMPut(stm, &cloudlet)

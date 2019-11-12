@@ -61,6 +61,8 @@ type Crm struct {
 	TestMode       bool
 	Span           string
 	ControllerMode bool
+	CleanupMode    bool
+	Version        string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`

@@ -370,6 +370,13 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.ControllerMode {
 		args = append(args, "-controllerMode")
 	}
+	if p.CleanupMode {
+		args = append(args, "-cleanupMode")
+	}
+	if p.Version != "" {
+		args = append(args, "--version")
+		args = append(args, p.Version)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
