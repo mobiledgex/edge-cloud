@@ -524,7 +524,6 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
 		// start the upgrade
-		new.Config.CleanupMode = true
 		err := cd.platform.UpdateCloudlet(ctx, new, &new.Config, updateCloudletCallback)
 		if err != nil {
 			errstr := fmt.Sprintf("Update Cloudlet failed: %v", err)
@@ -537,8 +536,9 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "updated cloudlet", "cloudlet", new)
 	} else if new.State == edgeproto.TrackedState_UPDATE_ERROR {
-		// On an UpdateError, old cloudlet's last state will be UPGRADE
-		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+		// On an UpdateError, old cloudlet's last state will either be UPGRADE or ERRORS
+		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE &&
+			cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			log.SpanLog(ctx, log.DebugLevelMexos,
 				"old cloudlet state invalid, failed to resolve UpdateError",
 				"key", new.Key, "state", cloudletInfo.State)

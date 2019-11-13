@@ -403,7 +403,9 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if lastState == curState {
 			return
 		}
-		lastState = cloudletInfo.State
+		if !isVersionConflict(ctx, localVersion, remoteVersion) {
+			lastState = cloudletInfo.State
+		}
 		// handle the different state transition flows for create and update
 		switch cloudlet.State {
 		case edgeproto.TrackedState_CREATING:
@@ -416,6 +418,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		case edgeproto.TrackedState_UPDATE_REQUESTED:
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
 				updating <- true
+				lastState = cloudletInfo.State
 				return
 			}
 			// crm might've already proceeded with upgrade,
@@ -438,6 +441,9 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 				initok <- true
 			}
 		case edgeproto.TrackedState_CRM_INITOK:
+			if isVersionConflict(ctx, localVersion, remoteVersion) {
+				return
+			}
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 				done <- true
 			}
@@ -694,6 +700,8 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	if err != nil {
 		return err
 	}
+	// cleanup old crms post upgrade
+	pfConfig.CleanupMode = true
 	cloudlet := edgeproto.Cloudlet{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cloudlet) {
