@@ -180,7 +180,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 		if err != nil {
 			return err
 		}
-		err = cloudcommon.ValidateVMRegistryPath(ctx, in.ImagePath, *vaultAddr)
+		err = cloudcommon.ValidateVMRegistryPath(ctx, in.ImagePath, vaultConfig)
 		if err != nil {
 			if *testMode {
 				log.SpanLog(ctx, log.DebugLevelApi, "Warning, could not validate VM registry path.", "err", err)
@@ -192,7 +192,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER &&
 		!cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) {
-		err := cloudcommon.ValidateDockerRegistryPath(ctx, in.ImagePath, *vaultAddr)
+		err := cloudcommon.ValidateDockerRegistryPath(ctx, in.ImagePath, vaultConfig)
 		if err != nil {
 			if *testMode {
 				log.SpanLog(ctx, log.DebugLevelApi, "Warning, could not validate docker registry path.", "err", err)

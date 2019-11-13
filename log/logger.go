@@ -30,7 +30,7 @@ func init() {
 
 // Deprecated: you should use SpanLog instead.
 func DebugLog(lvl uint64, msg string, keysAndValues ...interface{}) {
-	if debugLevel&lvl == 0 {
+	if debugLevel&lvl == 0 && lvl != DebugLevelInfo {
 		return
 	}
 	slogger.Infow(msg, keysAndValues...)
