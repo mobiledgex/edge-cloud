@@ -297,7 +297,10 @@ func main() {
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "plugin init done", "operatorApiGw", operatorApiGw)
 
-	dmecommon.InitVault(*vaultAddr, *region)
+	err = dmecommon.InitVault(*vaultAddr, *region)
+	if err != nil {
+		log.FatalLog("Failed to init vault", "err", err)
+	}
 
 	dmecommon.SetupMatchEngine()
 	grpcOpts := make([]grpc.ServerOption, 0)

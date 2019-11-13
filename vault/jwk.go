@@ -38,9 +38,7 @@ type JWKS struct {
 	Mux               sync.Mutex
 	Path              string
 	Metapath          string
-	addr              string
-	roleID            string
-	secretID          string
+	config            Config
 	lastUpdateAttempt time.Time
 }
 
@@ -53,7 +51,7 @@ type JWK struct {
 var DefaultJwkRefreshDelay = 5 * time.Minute
 var JwkUpdateDelay = 5 * time.Second
 
-func (s *JWKS) Init(addr, region, name, roleID, secretID string) {
+func (s *JWKS) Init(config *Config, region, name string) {
 	if region != "" {
 		region += "/"
 	}
@@ -61,9 +59,8 @@ func (s *JWKS) Init(addr, region, name, roleID, secretID string) {
 	s.RefreshDelay = DefaultJwkRefreshDelay
 	s.Path = region + "jwtkeys/data/" + name
 	s.Metapath = region + "jwtkeys/metadata/" + name
-	s.addr = addr
-	s.roleID = roleID
-	s.secretID = secretID
+	s.config = *config
+	s.lastUpdateAttempt = time.Unix(0, 0)
 }
 
 // GoUpdate starts a go thread to keep the JKWS up to date.
@@ -133,13 +130,9 @@ func (s *JWKS) updateKeys() error {
 	s.lastUpdateAttempt = time.Now()
 	s.Mux.Unlock()
 
-	client, err := NewClient(s.addr)
+	client, err := s.config.Login()
 	if err != nil {
-		return fmt.Errorf("new client failed for %s", s.addr)
-	}
-	err = AppRoleLogin(client, s.roleID, s.secretID)
-	if err != nil {
-		return fmt.Errorf("approle login failed for %s, %s", s.addr, err.Error())
+		return fmt.Errorf("login failed for %s, %s", s.config.Addr, err.Error())
 	}
 
 	// Get the metadata to find out how many and what versions there are
@@ -190,12 +183,8 @@ func (s *JWKS) updateKeys() error {
 	return nil
 }
 
-func PutSecret(addr, region, roleID, secretID, name, secret, refresh string) error {
-	client, err := NewClient(addr)
-	if err != nil {
-		return err
-	}
-	err = AppRoleLogin(client, roleID, secretID)
+func PutSecret(config *Config, region, name, secret, refresh string) error {
+	client, err := config.Login()
 	if err != nil {
 		return err
 	}

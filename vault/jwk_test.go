@@ -21,8 +21,10 @@ func TestJwk(t *testing.T) {
 	defer vault.StopLocal()
 
 	// this represents a dme process accessing vault
+	dmeAuth := NewAppRoleAuth(roles.DmeRoleID, roles.DmeSecretID)
+	dmeConfig := NewConfig(process.VaultAddress, dmeAuth)
 	jwks := JWKS{}
-	jwks.Init(process.VaultAddress, "local", "dme", roles.DmeRoleID, roles.DmeSecretID)
+	jwks.Init(dmeConfig, "local", "dme")
 	// vault local process puts two secrets to start
 	err = jwks.updateKeys()
 	require.Nil(t, err, "update keys")
@@ -46,12 +48,14 @@ func TestJwk(t *testing.T) {
 	require.Nil(t, err, "verify cookie")
 
 	// put a new secret to rotate secrets
+	rotatorAuth := NewAppRoleAuth(roles.RotatorRoleID, roles.RotatorSecretID)
+	rotatorConfig := NewConfig(process.VaultAddress, rotatorAuth)
 	newSecret := "abcdefg"
-	err = PutSecret(process.VaultAddress, "local", roles.RotatorRoleID, roles.RotatorSecretID, "dme", newSecret, "1m")
+	err = PutSecret(rotatorConfig, "local", "dme", newSecret, "1m")
 	require.Nil(t, err, "put secret")
 	// simulate another dme that has the new key set
 	jwks2 := JWKS{}
-	jwks2.Init(process.VaultAddress, "local", "dme", roles.DmeRoleID, roles.DmeSecretID)
+	jwks2.Init(dmeConfig, "local", "dme")
 	err = jwks2.updateKeys()
 	require.Nil(t, err, "update keys2")
 	require.Equal(t, 3, jwks2.Meta.CurrentVersion)
