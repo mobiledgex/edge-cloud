@@ -65,7 +65,7 @@ An upgrade is initiated by user from controller. During which, modifications to 
 Cloudlet is upgraded before controller/MC
 
 There are three actors at play here. First is controller, via which upgrade is initiated, second is old CRM service (CRMv1) which will be upgraded and third is new CRM service (CRMv2).
-Upgrade is intiated from controller, old CRM then starts new CRM service. Once new CRM service is up, it kills old CRM service.
+Upgrade is initiated from controller, old CRM then starts new CRM service. Once new CRM service is up, it kills old CRM service.
 
 There are states under consideration, one is TrackedState maintained by controller & other one is CloudletState maintained by CRM.
 Since CRM can crash and reconnect, it cannot be completely trusted during upgrade. Hence we only use Controller state for state transitions.
