@@ -15,6 +15,11 @@ FROM registry.mobiledgex.net:5000/mobiledgex/build:go1.12.1 AS build
 ENV GOPATH=/go
 ENV PATH="/go/bin:${PATH}"
 ENV GO111MODULE=on
+
+# Install support tools for docs
+RUN go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@v1.3.0
+COPY --from=registry.mobiledgex.net:5000/mobiledgex/protoc-gen-swagger:2019-11-13 /build/bin/protoc-gen-swagger /go/bin
+
 WORKDIR /go/src/github.com/mobiledgex
 # Do dependencies first so they can be cached
 COPY edge-cloud/go.mod edge-cloud/go.mod
@@ -27,9 +32,6 @@ RUN go mod download
 RUN make -f Makefile.tools
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 RUN go mod download
-
-COPY --from=registry.mobiledgex.net:5000/mobiledgex/build-support-doc:2019-11-12 /go/bin/protoc-gen-doc /go/bin
-COPY --from=registry.mobiledgex.net:5000/mobiledgex/build-support-doc:2019-11-12 /go/bin/protoc-gen-swagger /go/bin
 
 WORKDIR /go/src/github.com/mobiledgex
 COPY edge-cloud edge-cloud
