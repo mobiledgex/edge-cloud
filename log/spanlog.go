@@ -67,7 +67,7 @@ func SpanFromContext(ctx context.Context) opentracing.Span {
 }
 
 func SpanLog(ctx context.Context, lvl uint64, msg string, keysAndValues ...interface{}) {
-	if debugLevel&lvl == 0 {
+	if debugLevel&lvl == 0 && lvl != DebugLevelInfo {
 		return
 	}
 	ospan := opentracing.SpanFromContext(ctx)

@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/mapstructure"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vault"
@@ -39,16 +38,13 @@ type RegistryTags struct {
 	Tags []string `json:"tags"`
 }
 
-func getVaultRegistryPath(registry, vaultAddr string) string {
-	return fmt.Sprintf(
-		"%s/v1/secret/data/registry/%s",
-		vaultAddr, registry,
-	)
+func getVaultRegistryPath(registry string) string {
+	return fmt.Sprintf("/secret/data/registry/%s", registry)
 }
 
-func GetRegistryAuth(ctx context.Context, imgUrl, vaultAddr string) (*RegistryAuth, error) {
-	if vaultAddr == "" {
-		return nil, fmt.Errorf("missing vaultAddr")
+func GetRegistryAuth(ctx context.Context, imgUrl string, vaultConfig *vault.Config) (*RegistryAuth, error) {
+	if vaultConfig == nil {
+		return nil, fmt.Errorf("missing vault config")
 	}
 	urlObj, err := util.ImagePathParse(imgUrl)
 	if err != nil {
@@ -59,15 +55,10 @@ func GetRegistryAuth(ctx context.Context, imgUrl, vaultAddr string) (*RegistryAu
 	if len(hostname) < 1 {
 		return nil, fmt.Errorf("empty hostname")
 	}
-	vaultPath := getVaultRegistryPath(hostname[0], vaultAddr)
+	vaultPath := getVaultRegistryPath(hostname[0])
 	log.SpanLog(ctx, log.DebugLevelApi, "get registry auth", "vault-path", vaultPath)
-
-	data, err := vault.GetVaultData(vaultPath)
-	if err != nil {
-		return nil, err
-	}
 	auth := &RegistryAuth{}
-	err = mapstructure.WeakDecode(data["data"], auth)
+	err = vault.GetData(vaultConfig, vaultPath, 0, auth)
 	if err != nil {
 		return nil, err
 	}
@@ -202,8 +193,8 @@ func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth 
  * - The Registry authorizes the client by validating the Bearer token and the claim set embedded within
  *   it and begins the session as usual
  */
-func SendHTTPReq(ctx context.Context, method, regUrl string, vaultAddr string) (*http.Response, error) {
-	auth, err := GetRegistryAuth(ctx, regUrl, vaultAddr)
+func SendHTTPReq(ctx context.Context, method, regUrl string, vaultConfig *vault.Config) (*http.Response, error) {
+	auth, err := GetRegistryAuth(ctx, regUrl, vaultConfig)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
 	}
@@ -231,7 +222,7 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, vaultAddr string) (
 	return resp, nil
 }
 
-func ValidateDockerRegistryPath(ctx context.Context, regUrl, vaultAddr string) error {
+func ValidateDockerRegistryPath(ctx context.Context, regUrl string, vaultConfig *vault.Config) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "validate registry path", "path", regUrl)
 
 	if regUrl == "" {
@@ -263,7 +254,7 @@ func ValidateDockerRegistryPath(ctx context.Context, regUrl, vaultAddr string) e
 	regUrl = fmt.Sprintf("%s://%s/%s%s/tags/list", urlObj.Scheme, urlObj.Host, version, regPath)
 	log.SpanLog(ctx, log.DebugLevelApi, "registry api url", "url", regUrl)
 
-	resp, err := SendHTTPReq(ctx, "GET", regUrl, vaultAddr)
+	resp, err := SendHTTPReq(ctx, "GET", regUrl, vaultConfig)
 	if err != nil {
 		return err
 	}
@@ -289,13 +280,13 @@ func ValidateDockerRegistryPath(ctx context.Context, regUrl, vaultAddr string) e
 	return fmt.Errorf("Invalid registry path: %s", http.StatusText(resp.StatusCode))
 }
 
-func ValidateVMRegistryPath(ctx context.Context, imgUrl, vaultAddr string) error {
+func ValidateVMRegistryPath(ctx context.Context, imgUrl string, vaultConfig *vault.Config) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "validate vm-image path", "path", imgUrl)
 	if imgUrl == "" {
 		return fmt.Errorf("image path is empty")
 	}
 
-	resp, err := SendHTTPReq(ctx, "GET", imgUrl, vaultAddr)
+	resp, err := SendHTTPReq(ctx, "GET", imgUrl, vaultConfig)
 	if err != nil {
 		return err
 	}

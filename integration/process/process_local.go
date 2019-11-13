@@ -146,7 +146,7 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.CtrlRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.CtrlSecretID),
 		}
-		log.Printf("dme envs: %v\n", envs)
+		log.Printf("controller envs: %v\n", envs)
 	}
 
 	var err error
