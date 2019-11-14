@@ -898,10 +898,6 @@ func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.C
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cl) {
 			return objstore.ErrKVStoreKeyNotFound
-		}
-
-		if err != nil {
-			return err
 		} else {
 			if cl.ResTagMap == nil {
 				cl.ResTagMap = make(map[string]*edgeproto.ResTagTableKey)
@@ -910,6 +906,9 @@ func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.C
 
 		return err
 	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
 
 	for resource, tblname := range in.Mapping {
 		if valerr, ok := resTagTableApi.ValidateResName(resource); !ok {

@@ -12,7 +12,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	//"github.com/mobiledgex/edge-cloud/vmspec"
 )
 
 type ClusterInstApi struct {
