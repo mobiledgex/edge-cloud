@@ -345,15 +345,24 @@ func isVersionConflict(ctx context.Context, localVersion, remoteVersion string) 
 	return false
 }
 
+func (s *CloudletApi) UpdateCloudletState(ctx context.Context, key *edgeproto.CloudletKey, newState edgeproto.TrackedState) error {
+	cloudlet := edgeproto.Cloudlet{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, key, &cloudlet) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		cloudlet.State = newState
+		s.store.STMPut(stm, &cloudlet)
+		return nil
+	})
+	return err
+}
+
 func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, updateCallback edgeproto.CacheUpdateCallback) error {
 	lastStatusId := uint32(0)
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	fatal := make(chan bool, 1)
-	updating := make(chan bool, 1)
-	initok := make(chan bool, 1)
-
-	var lastState edgeproto.CloudletState
 
 	var err error
 
@@ -368,19 +377,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	info := edgeproto.CloudletInfo{}
 	if cloudletInfoApi.cache.Get(key, &info) {
 		lastStatusId = info.Status.TaskNumber
-	}
-
-	updateCloudletState := func(newState edgeproto.TrackedState) error {
-		cloudlet := edgeproto.Cloudlet{}
-		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			if !s.store.STMGet(stm, key, &cloudlet) {
-				return objstore.ErrKVStoreKeyNotFound
-			}
-			cloudlet.State = newState
-			s.store.STMPut(stm, &cloudlet)
-			return nil
-		})
-		return err
 	}
 
 	checkState := func(key *edgeproto.CloudletKey) {
@@ -400,50 +396,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
 		}
-		if lastState == curState {
-			return
-		}
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
-			lastState = cloudletInfo.State
-		}
-		// handle the different state transition flows for create and update
-		switch cloudlet.State {
-		case edgeproto.TrackedState_CREATING:
-			// creating new cloudlet, wait for Ready to come back
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-				done <- true
-			} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
-				initok <- true
-			}
-		case edgeproto.TrackedState_UPDATE_REQUESTED:
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
-				updating <- true
-				lastState = cloudletInfo.State
-				return
-			}
-			// crm might've already proceeded with upgrade,
-			// transition based on intermediate states from new CRM
-			if isVersionConflict(ctx, localVersion, remoteVersion) {
-				return
-			}
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
-				initok <- true
-			}
-		case edgeproto.TrackedState_UPDATING:
-			// crm upgrading itself
-			// Make sure that state comes from new cloudlet
-			if isVersionConflict(ctx, localVersion, remoteVersion) {
-				return
-			}
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-				done <- true
-			} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
-				initok <- true
-			}
-		case edgeproto.TrackedState_CRM_INITOK:
-			if isVersionConflict(ctx, localVersion, remoteVersion) {
-				return
-			}
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 				done <- true
 			}
@@ -483,17 +436,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			err = nil
 			if successMsg != "" {
 				updateCallback(edgeproto.UpdateTask, successMsg)
-			}
-		case <-initok:
-			err = updateCloudletState(edgeproto.TrackedState_CRM_INITOK)
-			if err == nil {
-				continue
-			}
-		case <-updating:
-			// transition from UPDATE_REQUESTED -> UPDATING state, as crm is upgrading
-			err = updateCloudletState(edgeproto.TrackedState_UPDATING)
-			if err == nil {
-				continue
 			}
 		case <-failed:
 			if cloudletInfoApi.cache.Get(key, &info) {

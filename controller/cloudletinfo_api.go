@@ -45,10 +45,31 @@ func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgepr
 }
 
 func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
+	var err error
+
 	// for now assume all fields have been specified
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
 	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
+
+	cloudlet := edgeproto.Cloudlet{}
+	if !cloudletApi.cache.Get(&in.Key, &cloudlet) {
+		return
+	}
+	localVersion := cloudlet.Version
+	remoteVersion := in.Version
+
+	if !isVersionConflict(ctx, localVersion, remoteVersion) {
+		if in.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
+			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_CRM_INITOK)
+		} else if in.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_READY)
+		}
+	} else {
+		if in.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_UPDATING)
+		}
+	}
 }
 
 func (s *CloudletInfoApi) Del(ctx context.Context, key *edgeproto.CloudletKey, wait func(int64)) {
