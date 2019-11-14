@@ -137,6 +137,8 @@ func validateFields(ctx context.Context) error {
 }
 
 func startServices() error {
+	var err error
+
 	log.SetDebugLevelStrs(*debugLevels)
 
 	if *externalApiAddr == "" {
@@ -158,11 +160,6 @@ func startServices() error {
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	err := validateFields(ctx)
-	if err != nil {
-		return err
-	}
-
 	log.SpanLog(ctx, log.DebugLevelInfo, "Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
 	// region number for etcd is a deprecated concept since we decided
 	// etcd is per-region.
@@ -176,6 +173,11 @@ func startServices() error {
 		return err
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "vault auth", "type", vaultConfig.Auth.Type())
+
+	err = validateFields(ctx)
+	if err != nil {
+		return err
+	}
 
 	if *localEtcd {
 		opts := []process.StartOp{}
