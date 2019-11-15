@@ -131,7 +131,7 @@ func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, sta
 	info.Key = *key
 	info.State = state
 	info.Version = version
-	cloudletInfoApi.cache.Update(ctx, &info, 0)
+	cloudletInfoApi.Update(ctx, &info, 0)
 }
 
 func testControllerStates(t *testing.T, ctx context.Context) {

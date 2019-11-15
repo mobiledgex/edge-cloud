@@ -46,7 +46,6 @@ func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgepr
 
 func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
 	var err error
-
 	// for now assume all fields have been specified
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
@@ -69,6 +68,10 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		if in.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
 			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_UPDATING)
 		}
+	}
+	if err != nil {
+		log.DebugLog(log.DebugLevelNotify, "CloudletInfo state transition error",
+			"key", in.Key, "err", err)
 	}
 }
 
