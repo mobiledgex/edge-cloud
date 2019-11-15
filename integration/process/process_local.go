@@ -367,6 +367,13 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.TestMode {
 		args = append(args, "-testMode")
 	}
+	if p.CleanupMode {
+		args = append(args, "-cleanupMode")
+	}
+	if p.Version != "" {
+		args = append(args, "--version")
+		args = append(args, p.Version)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {

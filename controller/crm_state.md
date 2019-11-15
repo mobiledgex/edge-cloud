@@ -58,3 +58,44 @@ Additionally, the state machine needs to handle Controller crashing, CRM crashin
 On Controller crash or network disconnect, the CRM will still be running. Any threads still running will indicate transitional states that will be consistent with whatever Controller state was last committed, i.e. for Creating, Controller state must be CreateRequested. Therefore there is nothing special to be done for transitional states as they fall under the normal state machine transitions.
 
 On CRM crash, there will no longer be any threads running, thus after reading the current state of Openstack/k8s, the states will either be Ready, NotPresent, or possible some Errror state which is consistent with the Controller's current state. Therefore we only need to handle Ready/NotPresent in resolving the inconsistency.
+
+# State Transitions for Cloudlet Upgrade
+
+An upgrade is initiated by user from controller. During which, modifications to appInst/clusterInst is not allowed.
+Cloudlet is upgraded before controller/MC
+
+There are three actors at play here. First is controller, via which upgrade is initiated, second is old CRM service (CRMv1) which will be upgraded and third is new CRM service (CRMv2).
+Upgrade is initiated from controller, old CRM then starts new CRM service. Once new CRM service is up, it kills old CRM service.
+
+There are states under consideration, one is TrackedState maintained by controller & other one is CloudletState maintained by CRM.
+Since CRM can crash and reconnect, it cannot be completely trusted during upgrade. Hence we only use Controller state for state transitions.
+CloudletState will just be used to send the next state from CRM to controller. Also, CRM will only look at controller state to decide its actions.
+
+Upgrade error is left as it is, so that it can be fixed manually by admin.
+Here we also ensures that, in error state, modifications to appInst/clusterInst is disallowed, unless it is fixed manually.
+
+Following is state transition table for cloudlet upgrade:
+
+| State           | Actor      | Actions/Comments                                     | Next State                        |
+|-----------------|------------|------------------------------------------------------|-----------------------------------|
+| Ready           | User       | Initiates cloudlet upgrade                           | UpdateRequested                   |
+| UpdateRequested | CRMv1      | Ack start of upgrade (sends upgrade), Starts CRMv2   | Updating                          |
+|                 | Controller | CRMv2 connects (sends init), Controller ack for init | InitOk                            |
+|                 | CRMv1      | Start CRMv2 fails, CRMv1 cleans up CRMv2             | UpdateError                       |
+| Updating        | Controller | CRMv2 connects (sends init), Controller ack for init | InitOk                            |
+|                 | CRMv2      | Gather Info, Kill CRMv1                              | Ready (triggers send of all data) |
+|                 | CRMv1      | CRMv2 bringup failed, CRMv1 cleans up CRMv2          | UpdateError                       |
+| InitOk          | CRMv2      | Gather Info, Kill CRMv1                              | Ready (triggers send of all data) |
+|                 | CRMv1      | CRMv2 bringup failed, CRMv1 cleans up CRMv2          | UpdateError                       |
+| UpdateError     | CRMv1      | Continue using CRMv1 (set Ready), resend all data    | UpdateError                       |
+
+For cloudlet creation, we'll have a different table:
+
+| State             | Actor      | Actions/Comments                                       | Next State                                                                                                 |
+|-------------------|------------|--------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| Offline           | User       | Initiates cloudlet create                              | Init                                                                                                       |
+|                   | CRM        | CRM started manually                                   | Init                                                                                                       |
+| Ready/Init/InitOk | CRM        | Start up, must have new notify-id (handles CRM crash)  | Init                                                                                                       |
+| Init              | Controller | Ack cloudlet start                                     | InitOk                                                                                                     |
+| InitOk            | CRM        | Gather cloudlet data                                   | Ready (triggers send of all data)                                                                          |
+|                   | CRM        | Gather cloudlet data failed, exits                     | Offline (Controller moves to offline after disconnect, unless new CRM has reconnected with new notify id)  |
