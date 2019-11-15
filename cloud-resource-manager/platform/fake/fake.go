@@ -119,11 +119,6 @@ func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	// for testing controller side code
 	log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet upgrade")
 
-	// Sleep is required to avoid race condition
-	// As crmservice bringup happens in an instant here,
-	// it might not give time for controller to get in appropriate state
-	time.Sleep(5 * time.Second)
-
 	updateCallback(edgeproto.UpdateTask, "Starting new CRMServer")
 	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
 	if err != nil {

@@ -10,7 +10,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -74,24 +73,18 @@ appinstances:
         name: Niantic
       name: Pokemon Go
       version: 1.0.0
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: cloud2
-    id: 99
-  clusterinstkey:
-    clusterkey:
-      name: pokemon_cluster
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: cloud2
+    clusterinstkey:
+      clusterkey:
+        name: pokemon_cluster
+      cloudletkey:
+        operatorkey:
+          name: TMUS
+        name: cloud2
+      developer: Niantic
+  cloudletloc:
+    latitude: 31
+    longitude: -91
   liveness: LivenessStatic
-  imagepath: some/path
-  imagetype: ImageTypeDocker
-  mapppedports: 10000-10010
-  mappepdpath: /serverpath
-  configmap: /configmap
   flavor:
     name: x1.tiny
 - key:
@@ -100,23 +93,18 @@ appinstances:
         name: 1000realities
       name: VRmax
       version: 1.0.0
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: cloud2
-    id: 100
-  clusterinstkey:
-    clusterkey:
-      name: 1000realities_cluster
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: cloud2
+    clusterinstkey:
+      clusterkey:
+        name: 1000realities_cluster
+      cloudletkey:
+        operatorkey:
+          name: TMUS
+        name: cloud2
+      developer: 1000realities
+  cloudletloc:
+    latitude: 31
+    longitude: -91
   liveness: LivenessDynamic
-  imagepath: some/other/path
-  imagetype: ImageTypeDocker
-  mappepdpath: /serverpath
-  configmap: /configmap
   flavor:
     name: x1.small
 `
@@ -173,7 +161,7 @@ func TestCRM(t *testing.T) {
 	notifyClient.WaitForConnect(1)
 	stats := notify.Stats{}
 	notifyClient.GetStats(&stats)
-	assert.Equal(t, uint64(1), stats.Connects)
+	require.Equal(t, uint64(1), stats.Connects)
 
 	// Add data to controller
 	for ii := range data.Flavors {
@@ -193,9 +181,9 @@ func TestCRM(t *testing.T) {
 
 	// TODO: check that the above changes triggered cloudlet cluster/app creates
 	// for now just check stats
-	assert.Equal(t, 3, len(controllerData.FlavorCache.Objs))
-	assert.Equal(t, 2, len(controllerData.ClusterInstCache.Objs))
-	assert.Equal(t, 2, len(controllerData.AppInstCache.Objs))
+	require.Equal(t, 3, len(controllerData.FlavorCache.Objs))
+	require.Equal(t, 2, len(controllerData.ClusterInstCache.Objs))
+	require.Equal(t, 2, len(controllerData.AppInstCache.Objs))
 
 	// delete
 	for ii := range data.AppInstances {
@@ -212,12 +200,13 @@ func TestCRM(t *testing.T) {
 	notify.WaitFor(&controllerData.AppInstCache, 0)
 
 	// TODO: check that deletes triggered cloudlet cluster/app deletes.
-	assert.Equal(t, 0, len(controllerData.FlavorCache.Objs))
-	assert.Equal(t, 0, len(controllerData.ClusterInstCache.Objs))
-	assert.Equal(t, 0, len(controllerData.AppInstCache.Objs))
+	require.Equal(t, 0, len(controllerData.FlavorCache.Objs))
+	require.Equal(t, 0, len(controllerData.ClusterInstCache.Objs))
+	require.Equal(t, 0, len(controllerData.AppInstCache.Objs))
 
 	// closing the signal channel triggers main to exit
 	close(sigChan)
 	// wait until main is done so it can clean up properly
 	<-mainDone
+	ctrlMgr.Stop()
 }

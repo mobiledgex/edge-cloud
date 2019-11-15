@@ -5,6 +5,7 @@
 package notify
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -20,6 +21,7 @@ type DummyHandler struct {
 	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
 	CloudletInfoCache    edgeproto.CloudletInfoCache
 	AlertCache           edgeproto.AlertCache
+	NodeCache            edgeproto.NodeCache
 }
 
 func NewDummyHandler() *DummyHandler {
@@ -33,6 +35,7 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitFlavorCache(&h.FlavorCache)
 	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
 	edgeproto.InitAlertCache(&h.AlertCache)
+	edgeproto.InitNodeCache(&h.NodeCache)
 	return h
 }
 
@@ -49,6 +52,7 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterRecvClusterInstInfoCache(&s.ClusterInstInfoCache)
 	mgr.RegisterRecvCloudletInfoCache(&s.CloudletInfoCache)
 	mgr.RegisterRecvAlertCache(&s.AlertCache)
+	mgr.RegisterRecvNodeCache(&s.NodeCache)
 }
 
 func (s *DummyHandler) RegisterCRMClient(cl *Client) {
@@ -57,6 +61,7 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 	cl.RegisterSendClusterInstInfoCache(&s.ClusterInstInfoCache)
 	cl.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
 	cl.RegisterSendAlertCache(&s.AlertCache)
+	cl.RegisterSendNodeCache(&s.NodeCache)
 
 	cl.RegisterRecvAppCache(&s.AppCache)
 	cl.RegisterRecvAppInstCache(&s.AppInstCache)
@@ -82,6 +87,7 @@ const (
 	ClusterInstInfoType
 	CloudletInfoType
 	AlertType
+	NodeType
 )
 
 type WaitForCache interface {
@@ -114,6 +120,8 @@ func (s *DummyHandler) GetCache(typ CacheType) WaitForCache {
 		cache = &s.CloudletInfoCache
 	case AlertType:
 		cache = &s.AlertCache
+	case NodeType:
+		cache = &s.NodeCache
 	}
 	return cache
 }
@@ -138,6 +146,8 @@ func (c CacheType) String() string {
 		return "CloudletInfoCache"
 	case AlertType:
 		return "AlertCache"
+	case NodeType:
+		return "NodeCache"
 	}
 	return "unknown cache type"
 }
@@ -190,12 +200,46 @@ func (s *DummyHandler) WaitForAlerts(count int) {
 	s.WaitFor(AlertType, count)
 }
 
+func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state edgeproto.CloudletState, version string) error {
+	lastState := edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+	for i := 0; i < 100; i++ {
+		cloudletInfo := edgeproto.CloudletInfo{}
+		if s.CloudletInfoCache.Get(key, &cloudletInfo) {
+			if cloudletInfo.State == state {
+				if cloudletInfo.Version == version {
+					return nil
+				}
+				return fmt.Errorf("invalid cloudletInfo version: %s, should be %s",
+					cloudletInfo.Version,
+					version)
+			}
+			lastState = cloudletInfo.State
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	return fmt.Errorf("Unable to get desired cloudletInfo state, actual state %s, desired state %s", lastState, state)
+}
+
+func (s *DummyHandler) GetCloudletDetails(key *edgeproto.CloudletKey) (string, int64, error) {
+	for _, obj := range s.NodeCache.Objs {
+		if obj.Key.NodeType != edgeproto.NodeType_NODE_CRM {
+			continue
+		}
+		if obj.Key.CloudletKey != *key {
+			continue
+		}
+		return obj.ImageVersion, obj.NotifyId, nil
+	}
+	return "", -1, fmt.Errorf("Unable to find cloudlet in node list")
+}
+
 func (s *Client) WaitForConnect(connect uint64) {
 	for i := 0; i < 10; i++ {
 		if s.sendrecv.stats.Connects == connect {
 			break
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 	}
 }
 
