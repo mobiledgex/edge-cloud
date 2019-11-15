@@ -77,6 +77,20 @@ func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgepr
 	return static
 }
 
+// Checks if there is some action in progress by AppInst on the cloudlet
+func (s *AppInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key, val := range s.cache.Objs {
+		if key.ClusterInstKey.CloudletKey.Matches(in) {
+			if edgeproto.IsTransientState(val.State) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (s *AppInstApi) updateAppInstRevision(ctx context.Context, key *edgeproto.AppInstKey, revision int32) error {
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}

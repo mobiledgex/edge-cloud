@@ -102,3 +102,25 @@ func TestValidObjName(t *testing.T) {
 	err = ValidObjName("objname_123dev,test")
 	require.NotNil(t, err, "invalid name")
 }
+
+func TestVersion(t *testing.T) {
+	var err error
+
+	_, err = VersionParse("2011-10-11")
+	require.Nil(t, err, "valid version")
+
+	_, err = VersionParse("2011-30-11")
+	require.NotNil(t, err, "invalid version")
+
+	_, err = VersionParse("2011-30-99")
+	require.NotNil(t, err, "invalid version")
+
+	_, err = VersionParse("abcd")
+	require.NotNil(t, err, "invalid version")
+
+	_, err = VersionParse("20111-11-11")
+	require.NotNil(t, err, "invalid version")
+
+	_, err = VersionParse("2011-1-1")
+	require.NotNil(t, err, "invalid version")
+}

@@ -9,7 +9,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  upgrade: true
+  version: 2020-10-10
 - key:
     operatorkey:
       name: dmuus
@@ -20,4 +20,4 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  upgrade: true
+  version: 2020-10-10

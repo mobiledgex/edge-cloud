@@ -17,7 +17,7 @@ type PlatformConfig struct {
 
 // Platform abstracts the underlying cloudlet platform.
 type Platform interface {
-	// GetType Returns the Cloudlet's stack type, i.e. Openstack, Azure, etc.
+	// GetType returns the cloudlet's stack type, i.e. Openstack, Azure, etc.
 	GetType() string
 	// Init is called once during CRM startup.
 	Init(ctx context.Context, platformConfig *PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
