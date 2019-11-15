@@ -81,10 +81,12 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 	if !s.sendrecv.filterCloudletKeys {
 		return
 	}
+
 	s.sendrecv.updateCloudletKey(notice.Action, &buf.Key)
 
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
 		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
+			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE ||
 			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
 			// trigger send of cloudlet details to cloudlet
 			if s.sendrecv.cloudletSend != nil {
@@ -93,6 +95,23 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 		}
 		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 			// trigger send of all objects related to cloudlet
+
+			// In case of cloudlet upgrade, Check if READY is recieved from
+			// appropriate cloudlet
+			cloudlet := edgeproto.Cloudlet{}
+			if buf.Version != "" && s.sendrecv.cloudletSend != nil {
+				if s.sendrecv.cloudletSend.handler.Get(&buf.Key, &cloudlet) &&
+					(cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
+						cloudlet.State == edgeproto.TrackedState_UPDATING) &&
+					cloudlet.Version != buf.Version {
+					return
+				}
+			}
+
+			// Post cloudlet upgrade, when CLOUDLET_STATE_READY state
+			// is seen from upgraded CRM, then following will trigger
+			// send of all objects (which includes objects missed
+			// during upgrade)
 			if s.sendrecv.clusterInstSend != nil {
 				clusterInsts := make(map[edgeproto.ClusterInstKey]struct{})
 				s.sendrecv.clusterInstSend.handler.GetForCloudlet(&buf.Key, clusterInsts)

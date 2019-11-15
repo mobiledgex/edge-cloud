@@ -2,12 +2,28 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
+)
+
+type stateTransition struct {
+	triggerState   edgeproto.CloudletState
+	triggerVersion string
+	expectedState  edgeproto.TrackedState
+	ignoreState    bool
+}
+
+const (
+	crm_v1 = "2001-01-31"
+	crm_v2 = "2002-01-31"
 )
 
 func TestCloudletApi(t *testing.T) {
@@ -54,6 +70,13 @@ func TestCloudletApi(t *testing.T) {
 	testBadLat(t, ctx, &cl, []float64{0, 90.1, -90.1, -1323213, 1232334}, "update")
 	testBadLong(t, ctx, &cl, []float64{0, 180.1, -180.1, -1323213, 1232334}, "update")
 
+	// Cloudlet upgrade tests
+	testControllerStates(t, ctx)
+	testCloudletStates(t, ctx, "success")
+	testCloudletStates(t, ctx, "success-cleanupfailure")
+	testCloudletStates(t, ctx, "failure")
+	testUpgradeFailure(t, ctx)
+
 	dummy.Stop()
 }
 
@@ -85,4 +108,405 @@ func testBadLong(t *testing.T, ctx context.Context, clbad *edgeproto.Cloudlet, l
 			require.NotNil(t, err, "update cloudlet bad longitude")
 		}
 	}
+}
+
+func waitForState(key *edgeproto.CloudletKey, state edgeproto.TrackedState) error {
+	lastState := edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
+	for i := 0; i < 10; i++ {
+		cloudlet := edgeproto.Cloudlet{}
+		if cloudletApi.cache.Get(key, &cloudlet) {
+			if cloudlet.State == state {
+				return nil
+			}
+			lastState = cloudlet.State
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	return fmt.Errorf("Unable to get desired cloudlet state, actual state %s, desired state %s", lastState, state)
+}
+
+func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.CloudletState, version string) {
+	info := edgeproto.CloudletInfo{}
+	info.Key = *key
+	info.State = state
+	info.Version = version
+	cloudletInfoApi.Update(ctx, &info, 0)
+}
+
+func testControllerStates(t *testing.T, ctx context.Context) {
+	var stateTransitions []stateTransition
+	// State transitions from "UpdateRequested"
+
+	stateTransitions = []stateTransition{
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE,
+			triggerVersion: crm_v1,
+			expectedState:  edgeproto.TrackedState_UPDATING,
+		},
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_INIT,
+			triggerVersion: crm_v2,
+			expectedState:  edgeproto.TrackedState_CRM_INITOK,
+		},
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_READY,
+			triggerVersion: crm_v2,
+			expectedState:  edgeproto.TrackedState_READY,
+		},
+	}
+	testUpgradeScenario(t, ctx, &stateTransitions, "success")
+
+	stateTransitions = []stateTransition{
+		stateTransition{
+			// From old CRM, should be ignored
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_INIT,
+			triggerVersion: crm_v1,
+			expectedState:  edgeproto.TrackedState_CRM_INITOK,
+			ignoreState:    true,
+		},
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE,
+			triggerVersion: crm_v1,
+			expectedState:  edgeproto.TrackedState_UPDATING,
+		},
+		stateTransition{
+			// From old CRM, should be ignored
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_INIT,
+			triggerVersion: crm_v1,
+			expectedState:  edgeproto.TrackedState_CRM_INITOK,
+			ignoreState:    true,
+		},
+		stateTransition{
+			// From old CRM, should be ignored
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_READY,
+			triggerVersion: crm_v1,
+			expectedState:  edgeproto.TrackedState_READY,
+			ignoreState:    true,
+		},
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_INIT,
+			triggerVersion: crm_v2,
+			expectedState:  edgeproto.TrackedState_CRM_INITOK,
+		},
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_READY,
+			triggerVersion: crm_v2,
+			expectedState:  edgeproto.TrackedState_READY,
+		},
+	}
+	testUpgradeScenario(t, ctx, &stateTransitions, "success")
+
+	stateTransitions = []stateTransition{
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_INIT,
+			triggerVersion: crm_v2,
+			expectedState:  edgeproto.TrackedState_CRM_INITOK,
+		},
+		stateTransition{
+			// From old CRM, should be ignored
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_READY,
+			triggerVersion: crm_v1,
+			expectedState:  edgeproto.TrackedState_READY,
+			ignoreState:    true,
+		},
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_READY,
+			triggerVersion: crm_v2,
+			expectedState:  edgeproto.TrackedState_READY,
+		},
+	}
+	testUpgradeScenario(t, ctx, &stateTransitions, "success")
+
+	stateTransitions = []stateTransition{
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE,
+			triggerVersion: crm_v1,
+			expectedState:  edgeproto.TrackedState_UPDATING,
+		},
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_INIT,
+			triggerVersion: crm_v2,
+			expectedState:  edgeproto.TrackedState_CRM_INITOK,
+		},
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_ERRORS,
+			triggerVersion: crm_v1,
+			expectedState:  edgeproto.TrackedState_UPDATE_ERROR,
+		},
+	}
+	testUpgradeScenario(t, ctx, &stateTransitions, "fail")
+
+	stateTransitions = []stateTransition{
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE,
+			triggerVersion: crm_v1,
+			expectedState:  edgeproto.TrackedState_UPDATING,
+		},
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_ERRORS,
+			triggerVersion: crm_v1,
+			expectedState:  edgeproto.TrackedState_UPDATE_ERROR,
+		},
+	}
+	testUpgradeScenario(t, ctx, &stateTransitions, "fail")
+
+	stateTransitions = []stateTransition{
+		stateTransition{
+			triggerState:   edgeproto.CloudletState_CLOUDLET_STATE_ERRORS,
+			triggerVersion: crm_v1,
+			expectedState:  edgeproto.TrackedState_UPDATE_ERROR,
+		},
+	}
+	testUpgradeScenario(t, ctx, &stateTransitions, "fail")
+}
+
+func testUpgradeScenario(t *testing.T, ctx context.Context, transitions *[]stateTransition, scenario string) {
+	var err error
+	cloudlet := testutil.CloudletData[2]
+	cloudlet.Key.Name = "crmupgradetests"
+	cloudlet.Version = crm_v1
+	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+
+	go func() {
+		forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+		cloudlet.Version = crm_v2
+		err := cloudletApi.UpgradeCloudlet(ctx, &cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+		if scenario == "fail" {
+			require.NotNil(t, err, "upgrade cloudlet should fail")
+		} else {
+			require.Nil(t, err, "upgrade cloudlet should succeed")
+		}
+	}()
+
+	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_UPDATE_REQUESTED)
+	require.Nil(t, err, "cloudlet state transtions")
+
+	for _, transition := range *transitions {
+		forceCloudletInfoState(ctx, &cloudlet.Key, transition.triggerState, transition.triggerVersion)
+		err = waitForState(&cloudlet.Key, transition.expectedState)
+		if transition.ignoreState {
+			require.NotNil(t, err, fmt.Sprintf("cloudlet state transtions for %s scenario should be ignored", scenario))
+		} else {
+			require.Nil(t, err, fmt.Sprintf("cloudlet state transtions for %s scenario", scenario))
+		}
+	}
+
+	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+}
+
+func testNotifyId(t *testing.T, ctrlHandler *notify.DummyHandler, key *edgeproto.CloudletKey, nodeCount, notifyId int, crmVersion string) {
+	require.Equal(t, nodeCount, len(ctrlHandler.NodeCache.Objs), "node count matches")
+	nodeVersion, nodeNotifyId, err := ctrlHandler.GetCloudletDetails(key)
+	require.Nil(t, err, "get cloudlet version & notifyId from node cache")
+	require.Equal(t, nodeVersion, crmVersion, "node version matches")
+	require.Equal(t, nodeNotifyId, int64(notifyId), "node notifyId matches")
+}
+
+func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
+	ctrlHandler := notify.NewDummyHandler()
+	ctrlMgr := notify.ServerMgr{}
+	ctrlHandler.RegisterServer(&ctrlMgr)
+	ctrlMgr.Start("127.0.0.1:50001", "")
+	defer ctrlMgr.Stop()
+
+	crm_notifyaddr := "127.0.0.1:0"
+	cloudlet := testutil.CloudletData[2]
+	cloudlet.Version = crm_v1
+	cloudlet.Key.Name = "testcloudletstates"
+	cloudlet.NotifySrvAddr = crm_notifyaddr
+	pfConfig, err := getPlatformConfig(ctx, &cloudlet)
+	require.Nil(t, err, "get platform config")
+
+	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig)
+	require.Nil(t, err, "start cloudlet")
+
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, crm_v1)
+	require.Nil(t, err, "cloudlet state transition")
+
+	cloudlet.State = edgeproto.TrackedState_CRM_INITOK
+	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+	require.Nil(t, err, "cloudlet state transition")
+
+	cloudlet.State = edgeproto.TrackedState_READY
+	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+	// Wait for cloudlet trackedstate to propagate to CRM
+	time.Sleep(1 * time.Millisecond)
+
+	// Start upgrade
+	switch scenario {
+	case "success":
+		// Cloudlet state transition:
+		//   Upgrade (crmv1) -> Init (crmv2) -> Ready (crmv2)
+		// Tracked state transition
+		//   UpdateRequested -> Updating -> CrmInitOk -> Ready
+
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 0, crm_v1)
+
+		cloudlet.Config = *pfConfig
+		cloudlet.NotifySrvAddr = crm_notifyaddr
+		cloudlet.Version = crm_v2
+		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+		err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE, crm_v1)
+		require.Nil(t, err, "cloudlet state transition")
+
+		cloudlet.State = edgeproto.TrackedState_UPDATING
+		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+		err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, crm_v2)
+		require.Nil(t, err, "cloudlet state transition")
+
+		cloudlet.State = edgeproto.TrackedState_CRM_INITOK
+		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+		err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v2)
+		require.Nil(t, err, "cloudlet state transition")
+
+		cloudlet.State = edgeproto.TrackedState_READY
+		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 1, crm_v2)
+	case "success-cleanupfailure":
+		// Cloudlet state transition:
+		//   Upgrade (crmv1) -> Init (crmv2) -> Ready (crmv2)
+		// Tracked state transition
+		//   UpdateRequested -> Updating -> CrmInitOk -> Ready
+
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 0, crm_v1)
+
+		cloudlet.Config = *pfConfig
+		cloudlet.NotifySrvAddr = crm_notifyaddr
+		cloudlet.Version = crm_v2
+		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		// simulate cleanup failure
+		cloudlet.Config.CleanupMode = false
+		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+		err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE, crm_v1)
+		require.Nil(t, err, "cloudlet state transition")
+
+		cloudlet.State = edgeproto.TrackedState_UPDATING
+		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+		err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, crm_v2)
+		require.Nil(t, err, "cloudlet state transition")
+
+		cloudlet.State = edgeproto.TrackedState_CRM_INITOK
+		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+		err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v2)
+		require.Nil(t, err, "cloudlet state transition")
+
+		cloudlet.State = edgeproto.TrackedState_READY
+		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 1, crm_v2)
+	case "failure":
+		// upgrade will fail because notifySrvAddr is invalid
+		// Cloudlet state transition:
+		//   Upgrade (crmv1) -> Error (crmv1) -> Ready (crmv1)
+		// Tracked state transition
+		//   UpdateRequested ->  UpdateError
+
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 0, crm_v1)
+
+		cloudlet.Config = *pfConfig
+		cloudlet.Version = crm_v2
+		cloudlet.NotifySrvAddr = "abcdef"
+		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+		err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_ERRORS, crm_v1)
+		require.Nil(t, err, "cloudlet state transition")
+
+		cloudlet.State = edgeproto.TrackedState_UPDATE_ERROR
+		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+		err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+		require.Nil(t, err, "cloudlet state transition")
+
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 0, crm_v1)
+	}
+
+	// Delete CRM
+	err = cloudcommon.StopCRMService(ctx, &cloudlet)
+	require.Nil(t, err, "stop cloudlet")
+}
+
+func testUpgradeFailure(t *testing.T, ctx context.Context) {
+	var err error
+	cloudlet := testutil.CloudletData[2]
+	cloudlet.Key.Name = "crmfailuretests"
+	cloudlet.Version = crm_v1
+	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+
+	// Upgrade should fail if any appInst/clusterInst
+	// creation/updation/deletion is in progress
+	clusterInst := testutil.ClusterInstData[0]
+	clusterInst.State = edgeproto.TrackedState_UPDATE_REQUESTED
+	clusterInst.Key.CloudletKey = cloudlet.Key
+	clusterInstApi.cache.Update(ctx, &clusterInst, 0)
+
+	cloudlet.Version = crm_v2
+	err = cloudletApi.UpgradeCloudlet(ctx, &cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.NotNil(t, err, "upgrade should fail as clusterinst will begin update")
+
+	clusterInstApi.cache.Delete(ctx, &clusterInst, 0)
+
+	appInst := testutil.AppInstData[0]
+	appInst.State = edgeproto.TrackedState_CREATING
+	appInst.Key.ClusterInstKey.CloudletKey = cloudlet.Key
+	appInstApi.cache.Update(ctx, &appInst, 0)
+
+	cloudlet.Version = crm_v2
+	err = cloudletApi.UpgradeCloudlet(ctx, &cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.NotNil(t, err, "upgrade should fail as appinst creation is in progress")
+
+	appInstApi.cache.Delete(ctx, &appInst, 0)
+
+	// Simulate upgrade in progress, appInst/clusterInst creation will
+	// not be allowed on this cloudlet until upgrade is done
+	cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
+	cloudletApi.cache.Update(ctx, &cloudlet, 0)
+
+	_, err = appApi.CreateApp(ctx, &testutil.AppData[0])
+	require.Nil(t, err, "create app")
+	appInst = testutil.AppInstData[0]
+	appInst.Key.ClusterInstKey.CloudletKey = cloudlet.Key
+	err = appInstApi.CreateAppInst(&appInst, testutil.NewCudStreamoutAppInst(ctx))
+	require.NotNil(t, err, "Create AppInst failure as cloudlet is upgrading")
+
+	cloudlet.State = edgeproto.TrackedState_UPDATING
+	cloudletApi.cache.Update(ctx, &cloudlet, 0)
+
+	clusterInst = testutil.ClusterInstData[0]
+	clusterInst.Key.CloudletKey = cloudlet.Key
+	err = clusterInstApi.CreateClusterInst(&clusterInst, testutil.NewCudStreamoutClusterInst(ctx))
+	require.NotNil(t, err, "Create ClusterInst failure as cloudlet is upgrading")
+
+	// Simulate upgrade failure, appInst/clusterInst creation will
+	// not be allowed on this cloudlet until upgrade is fixed
+	cloudlet.State = edgeproto.TrackedState_UPDATE_ERROR
+	cloudletApi.cache.Update(ctx, &cloudlet, 0)
+
+	appInst = testutil.AppInstData[0]
+	appInst.Key.ClusterInstKey.CloudletKey = cloudlet.Key
+	err = appInstApi.CreateAppInst(&appInst, testutil.NewCudStreamoutAppInst(ctx))
+	require.NotNil(t, err, "Create AppInst failure as cloudlet is in error state")
+
+	clusterInst = testutil.ClusterInstData[0]
+	clusterInst.Key.CloudletKey = cloudlet.Key
+	err = clusterInstApi.CreateClusterInst(&clusterInst, testutil.NewCudStreamoutClusterInst(ctx))
+	require.NotNil(t, err, "Create ClusterInst failure as cloudlet is in error state")
+
+	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
 }
