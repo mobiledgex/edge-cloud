@@ -182,7 +182,6 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	}
 	pfConfig.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
 	pfConfig.Span = log.SpanToString(ctx)
-	pfConfig.ControllerMode = true
 
 	return &pfConfig, nil
 }

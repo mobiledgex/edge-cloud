@@ -33,7 +33,6 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	vaultAddr := ""
 	testMode := false
 	span := ""
-	controllerMode := false
 	cleanupMode := false
 	if pfConfig != nil {
 		envVars["VAULT_ROLE_ID"] = pfConfig.CrmRoleId
@@ -43,7 +42,6 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		vaultAddr = pfConfig.VaultAddr
 		testMode = pfConfig.TestMode
 		span = pfConfig.Span
-		controllerMode = pfConfig.ControllerMode
 		cleanupMode = pfConfig.CleanupMode
 	}
 	for envKey, envVal := range cloudlet.EnvVar {
@@ -64,13 +62,12 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		TLS: process.TLSCerts{
 			ServerCert: tlsCertFile,
 		},
-		VaultAddr:      vaultAddr,
-		PhysicalName:   cloudlet.PhysicalName,
-		TestMode:       testMode,
-		Span:           span,
-		ControllerMode: controllerMode,
-		CleanupMode:    cleanupMode,
-		Version:        cloudlet.Version,
+		VaultAddr:    vaultAddr,
+		PhysicalName: cloudlet.PhysicalName,
+		TestMode:     testMode,
+		Span:         span,
+		CleanupMode:  cleanupMode,
+		Version:      cloudlet.Version,
 	}, opts, nil
 }
 

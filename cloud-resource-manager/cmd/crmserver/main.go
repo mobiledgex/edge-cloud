@@ -38,7 +38,6 @@ var solib = flag.String("plugin", "", "plugin file")
 var region = flag.String("region", "local", "region name")
 var testMode = flag.Bool("testMode", false, "Run CRM in test mode")
 var parentSpan = flag.String("span", "", "Use parent span for logging")
-var controllerMode = flag.Bool("controllerMode", false, "CRM started by controller")
 var crmVersion = flag.String("version", "", "CRM version")
 var cleanupMode = flag.Bool("cleanupMode", false, "cleanup previous versions of CRM if present")
 
@@ -145,22 +144,18 @@ func main() {
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
 
 		var cloudlet edgeproto.Cloudlet
-		// If CRM is started manually, then controller will not send cloudlet-cache
-		// Hence avoid this check if CRM started in controller mode
-		if *controllerMode {
-			log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudlet.Key)
-			// Wait for cloudlet cache from controller
-			// This ensures that crm is able to communicate to controller via Notify Channel
-			select {
-			case <-controllerData.ControllerWait:
-				if !controllerData.CloudletCache.Get(&myCloudlet.Key, &cloudlet) {
-					log.FatalLog("failed to fetch cloudlet cache from controller")
-				}
-			case <-time.After(ControllerTimeout):
-				log.FatalLog("Timed out waiting for cloudlet cache from controller")
+		log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudlet.Key)
+		// Wait for cloudlet cache from controller
+		// This ensures that crm is able to communicate to controller via Notify Channel
+		select {
+		case <-controllerData.ControllerWait:
+			if !controllerData.CloudletCache.Get(&myCloudlet.Key, &cloudlet) {
+				log.FatalLog("failed to fetch cloudlet cache from controller")
 			}
-			log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
+		case <-time.After(ControllerTimeout):
+			log.FatalLog("Timed out waiting for cloudlet cache from controller")
 		}
+		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		if err := initPlatform(ctx, &myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
