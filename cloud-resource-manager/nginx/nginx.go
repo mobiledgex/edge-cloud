@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/dockermgmt"
@@ -25,6 +27,35 @@ var NginxL7Name = "nginxL7"
 
 var nginxConfT *template.Template
 var nginxL7ConfT *template.Template
+
+// defaultConcurrentConnsPerIP is the default DOS protection setting for connections per source IP
+const defaultConcurrentConnsPerIP uint64 = 100
+
+func getTCPConcurrentConnectionsPerIP() (uint64, error) {
+	var err error
+	connStr := os.Getenv("MEX_LB_CONCURRENT_TCP_CONNS")
+	conns := defaultConcurrentConnsPerIP
+	if connStr != "" {
+		conns, err = strconv.ParseUint(connStr, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+	}
+	return conns, nil
+}
+
+func getUDPConcurrentConnectionsPerIP() (uint64, error) {
+	var err error
+	connStr := os.Getenv("MEX_LB_CONCURRENT_UDP_CONNS")
+	conns := defaultConcurrentConnsPerIP
+	if connStr != "" {
+		conns, err = strconv.ParseUint(connStr, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+	}
+	return conns, nil
+}
 
 func init() {
 	nginxConfT = template.Must(template.New("conf").Parse(nginxConf))
@@ -138,6 +169,14 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 	}
 	httpPorts := []HTTPSpecDetail{}
 
+	tcpconns, err := getTCPConcurrentConnectionsPerIP()
+	if err != nil {
+		return err
+	}
+	udpconns, err := getUDPConcurrentConnectionsPerIP()
+	if err != nil {
+		return err
+	}
 	for _, p := range ports {
 		origin := fmt.Sprintf("%s:%d", originIP, p.InternalPort)
 		switch p.Proto {
@@ -151,15 +190,17 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 			continue
 		case dme.LProto_L_PROTO_TCP:
 			tcpPort := TCPSpecDetail{
-				Port:   p.PublicPort,
-				Origin: origin,
+				Port:                 p.PublicPort,
+				Origin:               origin,
+				ConcurrentConnsPerIP: tcpconns,
 			}
 			spec.TCPSpec = append(spec.TCPSpec, &tcpPort)
 			spec.L4 = true
 		case dme.LProto_L_PROTO_UDP:
 			udpPort := UDPSpecDetail{
-				Port:   p.PublicPort,
-				Origin: origin,
+				Port:                 p.PublicPort,
+				Origin:               origin,
+				ConcurrentConnsPerIP: udpconns,
 			}
 			spec.UDPSpec = append(spec.UDPSpec, &udpPort)
 			spec.L4 = true
@@ -180,7 +221,7 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 
 	log.DebugLog(log.DebugLevelMexos, "create nginx conf", "name", name)
 	buf := bytes.Buffer{}
-	err := nginxConfT.Execute(&buf, &spec)
+	err = nginxConfT.Execute(&buf, &spec)
 	if err != nil {
 		return err
 	}
@@ -234,13 +275,15 @@ type ProxySpec struct {
 }
 
 type TCPSpecDetail struct {
-	Port   int32
-	Origin string
+	Port                 int32
+	Origin               string
+	ConcurrentConnsPerIP uint64
 }
 
 type UDPSpecDetail struct {
-	Port   int32
-	Origin string
+	Port                 int32
+	Origin               string
+	ConcurrentConnsPerIP uint64
 }
 
 type HTTPSpecDetail struct {
@@ -292,14 +335,17 @@ http {
 
 {{if .L4 -}}
 stream {
+	limit_conn_zone $binary_remote_addr zone=ipaddr:10m;
 	{{- range .TCPSpec}}
 	server {
+		limit_conn ipaddr {{.ConcurrentConnsPerIP}};
 		listen {{.Port}};
 		proxy_pass {{.Origin}};
 	}
 	{{- end}}
 	{{- range .UDPSpec}}
 	server {
+		limit_conn ipaddr {{.ConcurrentConnsPerIP}};
 		listen {{.Port}} udp;
 		proxy_pass {{.Origin}};
 	}
