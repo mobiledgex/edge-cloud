@@ -14,7 +14,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
@@ -260,7 +259,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
 					cb.Send(&edgeproto.Result{Message: "Use DeleteCloudlet to remove and try again"})
 				}
-				return objstore.ErrKVStoreKeyExists
+				return in.Key.ExistsError()
 			}
 			in.Errors = nil
 		}
@@ -349,7 +348,7 @@ func (s *CloudletApi) UpdateCloudletState(ctx context.Context, key *edgeproto.Cl
 	cloudlet := edgeproto.Cloudlet{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, key, &cloudlet) {
-			return objstore.ErrKVStoreKeyNotFound
+			return key.NotFoundError()
 		}
 		cloudlet.State = newState
 		s.store.STMPut(stm, &cloudlet)
@@ -466,7 +465,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	cloudlet := edgeproto.Cloudlet{}
 	err1 := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, key, &cloudlet) {
-			return objstore.ErrKVStoreKeyNotFound
+			return key.NotFoundError()
 		}
 		if err == nil {
 			cloudlet.Errors = nil
@@ -567,7 +566,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	cur := &edgeproto.Cloudlet{}
 	if !cloudletApi.cache.Get(&in.Key, cur) {
-		return objstore.ErrKVStoreKeyNotFound
+		return in.Key.NotFoundError()
 	}
 	cur.CopyInFields(in)
 
@@ -605,7 +604,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, cur) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		cur.CopyInFields(in)
 		// In case we need to set TrackedState to ready
@@ -663,7 +662,7 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	cloudlet := edgeproto.Cloudlet{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cloudlet) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		cloudlet.Config = *pfConfig
 		cloudlet.Version = in.Version
@@ -714,7 +713,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		if ignoreCRMState(cctx) {
 			// delete happens later, this STM just checks for existence
@@ -769,7 +768,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	updateCloudlet := edgeproto.Cloudlet{}
 	err1 := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &updateCloudlet) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		if err != nil {
 			updateCloudlet.State = edgeproto.TrackedState_DELETE_ERROR

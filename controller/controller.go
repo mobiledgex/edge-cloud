@@ -373,7 +373,7 @@ func checkVersion(ctx context.Context, objStore objstore.KVStore) (string, error
 	key := objstore.DbKeyPrefixString("Version")
 	val, _, _, err := objStore.Get(key)
 	if err != nil {
-		if !strings.Contains(err.Error(), objstore.ErrKVStoreKeyNotFound.Error()) {
+		if !strings.Contains(err.Error(), objstore.NotFoundError(key).Error()) {
 			return "", err
 		}
 	}

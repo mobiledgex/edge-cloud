@@ -1832,6 +1832,14 @@ func CloudletKeyStringParse(str string, key *CloudletKey) {
 	}
 }
 
+func (m *CloudletKey) NotFoundError() error {
+	return fmt.Errorf("Cloudlet key %s not found", m.GetKeyString())
+}
+
+func (m *CloudletKey) ExistsError() error {
+	return fmt.Errorf("Cloudlet key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *CloudletKey) ValidateEnums() error {
 	if err := m.OperatorKey.ValidateEnums(); err != nil {

@@ -12,7 +12,6 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -298,7 +297,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
 					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
 				}
-				return objstore.ErrKVStoreKeyExists
+				return in.Key.ExistsError()
 			}
 			in.Errors = nil
 			// must reset Uri
@@ -416,7 +415,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
 					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
 				}
-				return objstore.ErrKVStoreKeyExists
+				return in.Key.ExistsError()
 			}
 			in.Errors = nil
 		} else {
@@ -733,7 +732,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 
 	if len(instances) == 0 {
 		log.DebugLog(log.DebugLevelApi, "no AppInsts matched", "key", in.Key)
-		return objstore.ErrKVStoreKeyNotFound
+		return in.Key.NotFoundError()
 	}
 
 	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d AppInsts", len(instances))})
@@ -818,7 +817,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cb.Send(&edgeproto.Result{Message: "ClusterInstKey developer not specified, may need to specify it"})
 			}
 			// already deleted
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		if err := in.Key.ClusterInstKey.ValidateKey(); err != nil {
 			return err

@@ -57,7 +57,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 		syncCheck.Expect(t, key, val, expRev)
 	}
 	_, err = objStore.Create(ctx, key1, val1)
-	assert.Equal(t, objstore.ErrKVStoreKeyExists, err, "Create object that already exists")
+	assert.Equal(t, objstore.ExistsError(key1), err, "Create object that already exists")
 
 	// test get and list
 	val, vers, _, err := objStore.Get(key1)
@@ -65,7 +65,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	assert.Equal(t, val1, string(val), "Get key %s value", key1)
 	assert.EqualValues(t, 1, vers, "version for key %s", key1)
 	val, vers, _, err = objStore.Get("No such key")
-	assert.Equal(t, objstore.ErrKVStoreKeyNotFound, err, "Get non-existent key")
+	assert.Equal(t, objstore.NotFoundError("No such key"), err, "Get non-existent key")
 
 	count = 0
 	err = objStore.List("", func(key, val []byte, rev int64) error {
@@ -95,7 +95,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	assert.EqualValues(t, 3, vers, "version for key %s", key1)
 
 	rev, err = objStore.Update(ctx, "no-such-key", "", 0)
-	assert.Equal(t, objstore.ErrKVStoreKeyNotFound, err, "Update non-existent key")
+	assert.Equal(t, objstore.NotFoundError("no-such-key"), err, "Update non-existent key")
 
 	// test delete
 	rev, err = objStore.Delete(ctx, key1)
@@ -103,7 +103,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	assert.Nil(t, err, "Delete key %s", key1)
 	syncCheck.ExpectNil(t, key1, expRev)
 	val, _, _, err = objStore.Get(key1)
-	assert.Equal(t, objstore.ErrKVStoreKeyNotFound, err, "Get deleted key")
+	assert.Equal(t, objstore.NotFoundError(key1), err, "Get deleted key")
 	count = 0
 	err = objStore.List("", func(key, val []byte, rev int64) error {
 		count++
