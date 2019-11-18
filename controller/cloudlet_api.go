@@ -500,8 +500,8 @@ func getCloudletVersion(key *edgeproto.CloudletKey) (string, error) {
 	return "", fmt.Errorf("Unable to find Cloudlet node")
 }
 
-func isCloudletUpgradeRequired(key *edgeproto.CloudletKey, newVersion string) error {
-	cloudletVersion, err := getCloudletVersion(key)
+func isCloudletUpgradeRequired(cloudlet *edgeproto.Cloudlet) error {
+	cloudletVersion, err := getCloudletVersion(&cloudlet.Key)
 	if err != nil {
 		return fmt.Errorf("unable to fetch cloudlet version: %v", err)
 	}
@@ -520,7 +520,7 @@ func isCloudletUpgradeRequired(key *edgeproto.CloudletKey, newVersion string) er
 		return err
 	}
 
-	new_vers, err := util.VersionParse(newVersion)
+	new_vers, err := util.VersionParse(cloudlet.Version)
 	if err != nil {
 		return err
 	}
@@ -536,7 +536,11 @@ func isCloudletUpgradeRequired(key *edgeproto.CloudletKey, newVersion string) er
 	} else if diff < 0 {
 		return nil
 	} else {
-		return fmt.Errorf("no upgrade required, cloudlet is already of version %s", cloudletVersion)
+		// Allow users to retry upgrade to same version on an update error
+		if cloudlet.State != edgeproto.TrackedState_UPDATE_ERROR {
+			return fmt.Errorf("no upgrade required, cloudlet is already of version %s", cloudletVersion)
+		}
+		return nil
 	}
 }
 
@@ -560,14 +564,27 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return err
 	}
 
+	cur := &edgeproto.Cloudlet{}
+	if !cloudletApi.cache.Get(&in.Key, cur) {
+		return objstore.ErrKVStoreKeyNotFound
+	}
+	cur.CopyInFields(in)
+
 	upgrade := false
 	if _, found := fmap[edgeproto.CloudletFieldVersion]; found {
-		err = isCloudletUpgradeRequired(&in.Key, in.Version)
+		err = isCloudletUpgradeRequired(cur)
 		if err != nil {
 			return err
 		}
-		if !*testMode {
-			// TODO: verify if image is available in registry
+		// verify if image is available in registry
+		registry_path := *cloudletRegistryPath + ":" + in.Version
+		err = cloudcommon.ValidateDockerRegistryPath(ctx, registry_path, vaultConfig)
+		if err != nil {
+			if *testMode {
+				log.SpanLog(ctx, log.DebugLevelInfo, "Failed to validate cloudlet registry path", "err", err)
+			} else {
+				return err
+			}
 		}
 		upgrade = true
 	}
@@ -579,13 +596,12 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if in.DeploymentLocal {
 			return fmt.Errorf("upgrade is not supported for local deployments")
 		}
-		err = s.UpgradeCloudlet(ctx, in, cb)
+		err = s.UpgradeCloudlet(ctx, cur, cb)
 		if err != nil {
 			return err
 		}
 	}
 
-	cur := &edgeproto.Cloudlet{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, cur) {
 			return objstore.ErrKVStoreKeyNotFound
