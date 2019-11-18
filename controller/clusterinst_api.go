@@ -96,6 +96,20 @@ func (s *ClusterInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[ed
 	return static
 }
 
+// Checks if there is some action in progress by ClusterInst on the cloudlet
+func (s *ClusterInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key, val := range s.cache.Objs {
+		if key.CloudletKey.Matches(in) {
+			if edgeproto.IsTransientState(val.State) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -299,7 +313,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions, edgeproto.TrackedState_CREATE_ERROR, cloudcommon.CreateClusterInstTimeout, "Created successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions, edgeproto.TrackedState_CREATE_ERROR, cloudcommon.CreateClusterInstTimeout, "Created ClusterInst successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create ClusterInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_READY)
@@ -313,7 +327,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		cb.Send(&edgeproto.Result{Message: "DELETING ClusterInst due to failures"})
 		undoErr := s.deleteClusterInstInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
-			log.InfoLog("Undo create clusterinst", "undoErr", undoErr)
+			log.InfoLog("Undo create ClusterInst", "undoErr", undoErr)
 		}
 	}
 	return err
@@ -395,7 +409,9 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			// nothing changed
 			return nil
 		}
-		inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		if !ignoreCRM(cctx) {
+			inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
 		s.store.STMPut(stm, &inbuf)
 		return nil
 	})
@@ -408,7 +424,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateClusterInstTimeout, "Updated successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, cloudcommon.UpdateClusterInstTimeout, "Updated ClusterInst successfully", cb.Send)
 	return err
 }
 
@@ -454,7 +470,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		// restore previous state since we failed pre-delete actions
 		in.State = prevState
 		s.store.Update(ctx, in, s.sync.syncWait)
-		return fmt.Errorf("Failed to auto-delete applications from clusterInst %s, %s",
+		return fmt.Errorf("Failed to auto-delete applications from ClusterInst %s, %s",
 			in.Key.ClusterKey.Name, err.Error())
 	}
 
@@ -468,12 +484,12 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 
 		nodeFlavor := edgeproto.Flavor{}
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
-			log.WarnLog("Delete cluster inst: flavor not found",
+			log.WarnLog("Delete ClusterInst: flavor not found",
 				"flavor", in.Flavor.Name)
 		}
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
-			log.WarnLog("Delete cluster inst: cloudlet not found",
+			log.WarnLog("Delete ClusterInst: cloudlet not found",
 				"cloudlet", in.Key.CloudletKey)
 		}
 		refs := edgeproto.CloudletRefs{}
@@ -529,7 +545,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		cb.Send(&edgeproto.Result{Message: "Recreating ClusterInst due to failure"})
 		undoErr := s.createClusterInstInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
-			log.InfoLog("Undo delete clusterinst", "undoErr", undoErr)
+			log.InfoLog("Undo delete ClusterInst", "undoErr", undoErr)
 		}
 	}
 	return err
@@ -579,15 +595,7 @@ func crmTransitionOk(cur edgeproto.TrackedState, next edgeproto.TrackedState) bo
 func ignoreTransient(cctx *CallContext, state edgeproto.TrackedState) bool {
 	if cctx.Override == edgeproto.CRMOverride_IGNORE_TRANSIENT_STATE ||
 		cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
-		if state == edgeproto.TrackedState_CREATING ||
-			state == edgeproto.TrackedState_CREATE_REQUESTED ||
-			state == edgeproto.TrackedState_UPDATE_REQUESTED ||
-			state == edgeproto.TrackedState_DELETE_REQUESTED ||
-			state == edgeproto.TrackedState_UPDATING ||
-			state == edgeproto.TrackedState_DELETING ||
-			state == edgeproto.TrackedState_DELETE_PREPARE {
-			return true
-		}
+		return edgeproto.IsTransientState(state)
 	}
 	return false
 }

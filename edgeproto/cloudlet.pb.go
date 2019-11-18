@@ -266,7 +266,7 @@ type PlatformConfig struct {
 	CrmSecretId string `protobuf:"bytes,7,opt,name=crm_secret_id,json=crmSecretId,proto3" json:"crm_secret_id,omitempty"`
 	// Tag of edge-cloud image
 	PlatformTag string `protobuf:"bytes,8,opt,name=platform_tag,json=platformTag,proto3" json:"platform_tag,omitempty"`
-	// Internal Test Flag
+	// Internal Test flag
 	TestMode bool `protobuf:"varint,9,opt,name=test_mode,json=testMode,proto3" json:"test_mode,omitempty"`
 	// Span string
 	Span string `protobuf:"bytes,10,opt,name=span,proto3" json:"span,omitempty"`
@@ -330,8 +330,8 @@ type Cloudlet struct {
 	PhysicalName string `protobuf:"bytes,18,opt,name=physical_name,json=physicalName,proto3" json:"physical_name,omitempty"`
 	// Single Key-Value pair of env var to be passed to CRM
 	EnvVar map[string]string `protobuf:"bytes,19,rep,name=env_var,json=envVar" json:"env_var,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// Upgrade cloudlet services
-	Upgrade bool `protobuf:"varint,20,opt,name=upgrade,proto3" json:"upgrade,omitempty"`
+	// Cloudlet version
+	Version string `protobuf:"bytes,20,opt,name=version,proto3" json:"version,omitempty"`
 	// Platform Config Info
 	Config PlatformConfig `protobuf:"bytes,21,opt,name=config" json:"config"`
 	// Optional resource to restagtbl key map key values = [gpu, nas, nic]
@@ -1496,6 +1496,7 @@ func (m *PlatformConfig) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i++
 	}
+
 	return i, nil
 }
 
@@ -1711,17 +1712,13 @@ func (m *Cloudlet) MarshalTo(dAtA []byte) (int, error) {
 			i += copy(dAtA[i:], v)
 		}
 	}
-	if m.Upgrade {
-		dAtA[i] = 0xa0
+	if len(m.Version) > 0 {
+		dAtA[i] = 0xa2
 		i++
 		dAtA[i] = 0x1
 		i++
-		if m.Upgrade {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Version)))
+		i += copy(dAtA[i:], m.Version)
 	}
 	dAtA[i] = 0xaa
 	i++
@@ -1914,7 +1911,9 @@ func (m *CloudletInfo) MarshalTo(dAtA []byte) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	i += n14
+
 	if len(m.Version) > 0 {
 		dAtA[i] = 0x62
 		i++
@@ -2472,11 +2471,9 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 			}
 		}
 	}
-	if !opts.IgnoreBackend {
-		if !opts.Filter || o.Upgrade != false {
-			if o.Upgrade != m.Upgrade {
-				return false
-			}
+	if !opts.Filter || o.Version != "" {
+		if o.Version != m.Version {
+			return false
 		}
 	}
 	if !opts.IgnoreBackend {
@@ -2547,7 +2544,7 @@ const CloudletFieldPhysicalName = "18"
 const CloudletFieldEnvVar = "19"
 const CloudletFieldEnvVarKey = "19.1"
 const CloudletFieldEnvVarValue = "19.2"
-const CloudletFieldUpgrade = "20"
+const CloudletFieldVersion = "20"
 const CloudletFieldConfig = "21"
 const CloudletFieldConfigRegistryPath = "21.1"
 const CloudletFieldConfigImagePath = "21.2"
@@ -2603,7 +2600,7 @@ var CloudletAllFields = []string{
 	CloudletFieldPhysicalName,
 	CloudletFieldEnvVarKey,
 	CloudletFieldEnvVarValue,
-	CloudletFieldUpgrade,
+	CloudletFieldVersion,
 	CloudletFieldConfigRegistryPath,
 	CloudletFieldConfigImagePath,
 	CloudletFieldConfigNotifyCtrlAddrs,
@@ -2656,7 +2653,7 @@ var CloudletAllFieldsMap = map[string]struct{}{
 	CloudletFieldPhysicalName:                       struct{}{},
 	CloudletFieldEnvVarKey:                          struct{}{},
 	CloudletFieldEnvVarValue:                        struct{}{},
-	CloudletFieldUpgrade:                            struct{}{},
+	CloudletFieldVersion:                            struct{}{},
 	CloudletFieldConfigRegistryPath:                 struct{}{},
 	CloudletFieldConfigImagePath:                    struct{}{},
 	CloudletFieldConfigNotifyCtrlAddrs:              struct{}{},
@@ -2709,7 +2706,7 @@ var CloudletAllFieldsStringMap = map[string]string{
 	CloudletFieldPhysicalName:                       "Cloudlet Field Physical Name",
 	CloudletFieldEnvVarKey:                          "Cloudlet Field Env Var Key",
 	CloudletFieldEnvVarValue:                        "Cloudlet Field Env Var Value",
-	CloudletFieldUpgrade:                            "Cloudlet Field Upgrade",
+	CloudletFieldVersion:                            "Cloudlet Field Version",
 	CloudletFieldConfigRegistryPath:                 "Cloudlet Field Config Registry Path",
 	CloudletFieldConfigImagePath:                    "Cloudlet Field Config Image Path",
 	CloudletFieldConfigNotifyCtrlAddrs:              "Cloudlet Field Config Notify Ctrl Addrs",
@@ -2881,8 +2878,8 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 			}
 		}
 	}
-	if m.Upgrade != o.Upgrade {
-		fields[CloudletFieldUpgrade] = struct{}{}
+	if m.Version != o.Version {
+		fields[CloudletFieldVersion] = struct{}{}
 	}
 	if m.Config.RegistryPath != o.Config.RegistryPath {
 		fields[CloudletFieldConfigRegistryPath] = struct{}{}
@@ -2928,6 +2925,7 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 		fields[CloudletFieldConfigCleanupMode] = struct{}{}
 		fields[CloudletFieldConfig] = struct{}{}
 	}
+
 	if m.ResTagMap != nil && o.ResTagMap != nil {
 		if len(m.ResTagMap) != len(o.ResTagMap) {
 			fields[CloudletFieldResTagMap] = struct{}{}
@@ -3178,8 +3176,8 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 		}
 	}
 	if _, set := fmap["20"]; set {
-		if m.Upgrade != src.Upgrade {
-			m.Upgrade = src.Upgrade
+		if m.Version != src.Version {
+			m.Version = src.Version
 			changed++
 		}
 	}
@@ -3750,9 +3748,6 @@ func IgnoreCloudletFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "NotifySrvAddr")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "Upgrade")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "Config")
@@ -5156,8 +5151,9 @@ func (m *Cloudlet) Size() (n int) {
 			n += mapEntrySize + 2 + sovCloudlet(uint64(mapEntrySize))
 		}
 	}
-	if m.Upgrade {
-		n += 3
+	l = len(m.Version)
+	if l > 0 {
+		n += 2 + l + sovCloudlet(uint64(l))
 	}
 	l = m.Config.Size()
 	n += 2 + l + sovCloudlet(uint64(l))
@@ -6992,6 +6988,35 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
+
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CleanupMode = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
 			}
 			iNdEx += skippy
 		}
@@ -7787,10 +7812,10 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 			m.EnvVar[mapkey] = mapvalue
 			iNdEx = postIndex
 		case 20:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Upgrade", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
 			}
-			var v int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCloudlet
@@ -7800,12 +7825,21 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Upgrade = bool(v != 0)
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Version = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 21:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Config", wireType)

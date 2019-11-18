@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // If new valid characters are added here, be sure to update
@@ -136,4 +137,14 @@ func ImagePathParse(imagepath string) (*url.URL, error) {
 		imagepath = "https://" + imagepath
 	}
 	return url.Parse(imagepath)
+}
+
+func VersionParse(version string) (*time.Time, error) {
+	// 2nd Jan 2016
+	ref_layout := "2006-01-02"
+	vers, err := time.Parse(ref_layout, version)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse version: %v", err)
+	}
+	return &vers, nil
 }

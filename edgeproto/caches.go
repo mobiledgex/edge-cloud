@@ -1,6 +1,8 @@
 package edgeproto
 
 import (
+	"fmt"
+
 	"github.com/mobiledgex/edge-cloud/log"
 	context "golang.org/x/net/context"
 )
@@ -49,15 +51,26 @@ func (s *ClusterInstCache) GetForCloudlet(key *CloudletKey, clusterInsts map[Clu
 	}
 }
 
-func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey, state TrackedState) {
-	info := ClusterInstInfo{}
-	if !s.Get(key, &info) {
-		info.Key = *key
-	}
-	info.Errors = nil
-	info.State = state
-	info.Status = StatusInfo{}
-	s.Update(ctx, &info, 0)
+func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey, state TrackedState) error {
+	var err error
+	s.UpdateModFunc(ctx, key, 0, func(old *ClusterInstInfo) (newObj *ClusterInstInfo, changed bool) {
+		info := &ClusterInstInfo{}
+		if old == nil {
+			info.Key = *key
+		} else {
+			err = StateConflict(old.State, state)
+			if err != nil {
+				log.DebugLog(log.DebugLevelApi, "SetState conflict", "oldState", old.State, "newState", state, "err", err)
+				return old, false
+			}
+			*info = *old
+		}
+		info.Errors = nil
+		info.State = state
+		info.Status = StatusInfo{}
+		return info, true
+	})
+	return err
 }
 
 func (s *ClusterInstInfoCache) SetStatusTask(ctx context.Context, key *ClusterInstKey, taskName string) {
@@ -106,15 +119,70 @@ func (s *ClusterInstInfoCache) SetError(ctx context.Context, key *ClusterInstKey
 	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state TrackedState) {
-	info := AppInstInfo{}
-	if !s.Get(key, &info) {
-		info.Key = *key
+// If CRM crashes or reconnects to controller, controller will resend
+// current state. This is needed to:
+// -restart actions that were lost due to a crash
+// -update cache for dependent objects (AppInst looks up ClusterInst from
+// cache).
+// If it was a disconnect and not a restart, there may already be a
+// thread in progress. To prevent multiple conflicting threads, check
+// the state which can tell us if a thread is in progress.
+func StateConflict(oldState, newState TrackedState) error {
+	busyStates := []TrackedState{
+		TrackedState_CREATING,
+		TrackedState_UPDATING,
+		TrackedState_DELETING,
 	}
-	info.Errors = nil
-	info.State = state
-	info.Status = StatusInfo{}
-	s.Update(ctx, &info, 0)
+
+	oldBusy := false
+	newBusy := false
+	for _, state := range busyStates {
+		if oldState == state {
+			oldBusy = true
+		}
+		if newState == state {
+			newBusy = true
+		}
+	}
+	if oldBusy && newBusy {
+		return fmt.Errorf("conflicting state: %s", oldState)
+	}
+	return nil
+}
+
+func IsTransientState(state TrackedState) bool {
+	if state == TrackedState_CREATING ||
+		state == TrackedState_CREATE_REQUESTED ||
+		state == TrackedState_UPDATE_REQUESTED ||
+		state == TrackedState_DELETE_REQUESTED ||
+		state == TrackedState_UPDATING ||
+		state == TrackedState_DELETING ||
+		state == TrackedState_DELETE_PREPARE {
+		return true
+	}
+	return false
+}
+
+func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state TrackedState) error {
+	var err error
+	s.UpdateModFunc(ctx, key, 0, func(old *AppInstInfo) (newObj *AppInstInfo, changed bool) {
+		info := &AppInstInfo{}
+		if old == nil {
+			info.Key = *key
+		} else {
+			err = StateConflict(old.State, state)
+			if err != nil {
+				log.DebugLog(log.DebugLevelApi, "SetState conflict", "oldState", old.State, "newState", state, "err", err)
+				return old, false
+			}
+			*info = *old
+		}
+		info.Errors = nil
+		info.State = state
+		info.Status = StatusInfo{}
+		return info, true
+	})
+	return err
 }
 
 func (s *AppInstInfoCache) SetStateRuntime(ctx context.Context, key *AppInstKey, state TrackedState, rt *AppInstRuntime) {

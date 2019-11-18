@@ -146,7 +146,7 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.CtrlRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.CtrlSecretID),
 		}
-		log.Printf("dme envs: %v\n", envs)
+		log.Printf("controller envs: %v\n", envs)
 	}
 
 	var err error
@@ -366,6 +366,13 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	}
 	if p.TestMode {
 		args = append(args, "-testMode")
+	}
+	if p.CleanupMode {
+		args = append(args, "-cleanupMode")
+	}
+	if p.Version != "" {
+		args = append(args, "--version")
+		args = append(args, p.Version)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)

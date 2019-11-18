@@ -27,6 +27,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/vault"
 	"google.golang.org/grpc"
 )
 
@@ -69,6 +70,7 @@ var ErrCtrlUpgradeRequired = errors.New("data mode upgrade required")
 
 var sigChan chan os.Signal
 var services Services
+var vaultConfig *vault.Config
 
 type Services struct {
 	etcdLocal       *process.Etcd
@@ -104,12 +106,6 @@ func validateFields(ctx context.Context) error {
 	if *versionTag == "" {
 		return fmt.Errorf("Version tag is required")
 	}
-	if *registryFQDN == "" {
-		return fmt.Errorf("registryFQDN is required")
-	}
-	if *artifactoryFQDN == "" {
-		return fmt.Errorf("artifactoryFQDN is required")
-	}
 	if *cloudletRegistryPath != "" {
 		parts := strings.Split(*cloudletRegistryPath, "/")
 		if len(parts) < 2 || !strings.Contains(parts[0], ".") {
@@ -126,25 +122,23 @@ func validateFields(ctx context.Context) error {
 			return fmt.Errorf("Invalid registry path")
 		}
 		platform_registry_path := *cloudletRegistryPath + ":" + strings.TrimSpace(string(*versionTag))
-		err = cloudcommon.ValidateDockerRegistryPath(ctx, platform_registry_path, *vaultAddr)
+		err = cloudcommon.ValidateDockerRegistryPath(ctx, platform_registry_path, vaultConfig)
 		if err != nil {
 			return err
 		}
-	} else {
-		return fmt.Errorf("cloudletRegistryPath is required")
 	}
 	if *cloudletVMImagePath != "" {
 		err := util.ValidateImagePath(*cloudletVMImagePath)
 		if err != nil {
 			return err
 		}
-	} else {
-		return fmt.Errorf("cloudletVMImagePath is required")
 	}
 	return nil
 }
 
 func startServices() error {
+	var err error
+
 	log.SetDebugLevelStrs(*debugLevels)
 
 	if *externalApiAddr == "" {
@@ -166,17 +160,23 @@ func startServices() error {
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	err := validateFields(ctx)
-	if err != nil {
-		return err
-	}
-
 	log.SpanLog(ctx, log.DebugLevelInfo, "Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
 	// region number for etcd is a deprecated concept since we decided
 	// etcd is per-region.
 	objstore.InitRegion(uint32(1))
 	if !util.ValidRegion(*region) {
 		return fmt.Errorf("invalid region name")
+	}
+
+	vaultConfig, err = vault.BestConfig(*vaultAddr)
+	if err != nil && !*testMode {
+		return err
+	}
+	log.SpanLog(ctx, log.DebugLevelInfo, "vault auth", "type", vaultConfig.Auth.Type())
+
+	err = validateFields(ctx)
+	if err != nil {
+		return err
 	}
 
 	if *localEtcd {
@@ -232,7 +232,7 @@ func startServices() error {
 
 	// get influxDB credentials from vault
 	influxAuth := &cloudcommon.InfluxCreds{}
-	influxAuth, err = cloudcommon.GetInfluxDataAuth(*vaultAddr, *region)
+	influxAuth, err = cloudcommon.GetInfluxDataAuth(vaultConfig, *region)
 	// Default to empty credentials if in test mode
 	if *testMode && err != nil {
 		influxAuth = &cloudcommon.InfluxCreds{}
