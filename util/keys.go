@@ -37,7 +37,7 @@ func ValidatePublicKey(pemStr string) (*rsa.PublicKey, error) {
 		// Assert we got an rsa public key. Returned value is an interface{}
 		sshKey, ok := rsaPubKey.(*rsa.PublicKey)
 		if !ok {
-			return nil, fmt.Errorf("invalid PEM passed")
+			return nil, fmt.Errorf("Invalid PEM passed")
 		}
 		return sshKey, nil
 	} else if strings.HasPrefix(string(pemBytes), "---- BEGIN SSH2 PUBLIC KEY") {

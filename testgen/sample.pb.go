@@ -2617,10 +2617,10 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *TestGen) ValidateEnums() error {
 	if _, ok := OuterEnum_name[int32(m.OuterEn)]; !ok {
-		return errors.New("invalid OuterEn")
+		return errors.New("Invalid OuterEn")
 	}
 	if _, ok := TestGen_InnerEnum_name[int32(m.InnerEn)]; !ok {
-		return errors.New("invalid InnerEn")
+		return errors.New("Invalid InnerEn")
 	}
 	if err := m.IncludeMsg.ValidateEnums(); err != nil {
 		return err

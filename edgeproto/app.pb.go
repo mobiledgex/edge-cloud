@@ -1629,13 +1629,13 @@ func (m *App) ValidateEnums() error {
 		return err
 	}
 	if _, ok := ImageType_name[int32(m.ImageType)]; !ok {
-		return errors.New("invalid ImageType")
+		return errors.New("Invalid ImageType")
 	}
 	if err := m.DefaultFlavor.ValidateEnums(); err != nil {
 		return err
 	}
 	if _, ok := DeleteType_name[int32(m.DelOpt)]; !ok {
-		return errors.New("invalid DelOpt")
+		return errors.New("Invalid DelOpt")
 	}
 	for _, e := range m.Configs {
 		if err := e.ValidateEnums(); err != nil {

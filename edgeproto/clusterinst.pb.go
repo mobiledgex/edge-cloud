@@ -1831,16 +1831,16 @@ func (m *ClusterInst) ValidateEnums() error {
 		return err
 	}
 	if _, ok := TrackedState_name[int32(m.State)]; !ok {
-		return errors.New("invalid State")
+		return errors.New("Invalid State")
 	}
 	if _, ok := CRMOverride_name[int32(m.CrmOverride)]; !ok {
-		return errors.New("invalid CrmOverride")
+		return errors.New("Invalid CrmOverride")
 	}
 	if _, ok := IpAccess_name[int32(m.IpAccess)]; !ok {
-		return errors.New("invalid IpAccess")
+		return errors.New("Invalid IpAccess")
 	}
 	if _, ok := Liveness_name[int32(m.Liveness)]; !ok {
-		return errors.New("invalid Liveness")
+		return errors.New("Invalid Liveness")
 	}
 	if err := m.Status.ValidateEnums(); err != nil {
 		return err
@@ -2559,7 +2559,7 @@ func (m *ClusterInstInfo) ValidateEnums() error {
 		return err
 	}
 	if _, ok := TrackedState_name[int32(m.State)]; !ok {
-		return errors.New("invalid State")
+		return errors.New("Invalid State")
 	}
 	if err := m.Status.ValidateEnums(); err != nil {
 		return err

@@ -87,7 +87,7 @@ func ValidObjName(name string) error {
 		return fmt.Errorf("Name can only contain letters, digits, _ . -")
 	}
 	if !ValidLDAPName(name) {
-		return fmt.Errorf("invalid characters in Name")
+		return fmt.Errorf("Invalid characters in Name")
 	}
 	return nil
 }
@@ -125,7 +125,7 @@ func ValidateImagePath(imagePath string) error {
 	}
 	_, err := hex.DecodeString(cSum[1])
 	if err != nil {
-		return fmt.Errorf("invalid md5 checksum")
+		return fmt.Errorf("Invalid md5 checksum")
 	}
 	return nil
 }

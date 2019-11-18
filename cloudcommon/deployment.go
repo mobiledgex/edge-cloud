@@ -255,7 +255,7 @@ func GenerateManifest(app *edgeproto.App) (string, error) {
 	} else if _, ok := deploygen.Generators[target]; ok {
 		return deploygen.RunGen(target, app)
 	}
-	return "", fmt.Errorf("invalid deployment generator %s", target)
+	return "", fmt.Errorf("Invalid deployment generator %s", target)
 }
 
 func GetRemoteManifest(target string) (string, error) {

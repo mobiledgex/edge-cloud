@@ -46,7 +46,7 @@ func (c *Command) WriteOutput(objs interface{}, format string) error {
 	case OutputFormatTable:
 		return fmt.Errorf("table output format not supported yet")
 	default:
-		return fmt.Errorf("invalid output format %s", format)
+		return fmt.Errorf("Invalid output format %s", format)
 	}
 	return nil
 }

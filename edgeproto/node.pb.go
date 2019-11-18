@@ -480,7 +480,7 @@ func NodeKeyStringParse(str string, key *NodeKey) {
 // Helper method to check that enums have valid values
 func (m *NodeKey) ValidateEnums() error {
 	if _, ok := NodeType_name[int32(m.NodeType)]; !ok {
-		return errors.New("invalid NodeType")
+		return errors.New("Invalid NodeType")
 	}
 	if err := m.CloudletKey.ValidateEnums(); err != nil {
 		return err

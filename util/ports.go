@@ -23,7 +23,7 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 	for _, pstr := range pstrs {
 		pp := strings.Split(pstr, ":")
 		if len(pp) != 2 {
-			return nil, fmt.Errorf("invalid AccessPorts format %s", pstr)
+			return nil, fmt.Errorf("Invalid AccessPorts format %s", pstr)
 		}
 		// within each pp[1], we may have a hypenated range of ports ex: udp:M-N inclusive
 		portrange := strings.Split(pp[1], "-")

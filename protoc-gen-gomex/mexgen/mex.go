@@ -1634,7 +1634,7 @@ func getKeyVersionHash(msgs []descriptor.DescriptorProto, salt string) [16]byte 
 func (m *mex) generateEnumCheck(field *descriptor.FieldDescriptorProto, elem string) {
 	m.P("if _, ok := ", m.support.GoType(m.gen, field), "_name[int32(", elem,
 		")]; !ok {")
-	m.P("return errors.New(\"invalid ", generator.CamelCase(*field.Name),
+	m.P("return errors.New(\"Invalid ", generator.CamelCase(*field.Name),
 		"\")")
 	m.P("}")
 }

@@ -307,7 +307,7 @@ func (m *Notice) CopyInFields(src *Notice) int {
 // Helper method to check that enums have valid values
 func (m *Notice) ValidateEnums() error {
 	if _, ok := NoticeAction_name[int32(m.Action)]; !ok {
-		return errors.New("invalid Action")
+		return errors.New("Invalid Action")
 	}
 	return nil
 }

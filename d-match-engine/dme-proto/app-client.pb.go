@@ -2192,7 +2192,7 @@ func (m *RegisterClientReply) CopyInFields(src *RegisterClientReply) int {
 // Helper method to check that enums have valid values
 func (m *RegisterClientReply) ValidateEnums() error {
 	if _, ok := ReplyStatus_name[int32(m.Status)]; !ok {
-		return errors.New("invalid Status")
+		return errors.New("Invalid Status")
 	}
 	return nil
 }
@@ -2370,7 +2370,7 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 // Helper method to check that enums have valid values
 func (m *FindCloudletReply) ValidateEnums() error {
 	if _, ok := FindCloudletReply_FindStatus_name[int32(m.Status)]; !ok {
-		return errors.New("invalid Status")
+		return errors.New("Invalid Status")
 	}
 	for _, e := range m.Ports {
 		if err := e.ValidateEnums(); err != nil {
@@ -2478,10 +2478,10 @@ func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) int {
 // Helper method to check that enums have valid values
 func (m *VerifyLocationReply) ValidateEnums() error {
 	if _, ok := VerifyLocationReply_TowerStatus_name[int32(m.TowerStatus)]; !ok {
-		return errors.New("invalid TowerStatus")
+		return errors.New("Invalid TowerStatus")
 	}
 	if _, ok := VerifyLocationReply_GPSLocationStatus_name[int32(m.GpsLocationStatus)]; !ok {
-		return errors.New("invalid GpsLocationStatus")
+		return errors.New("Invalid GpsLocationStatus")
 	}
 	return nil
 }
@@ -2574,7 +2574,7 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) int {
 // Helper method to check that enums have valid values
 func (m *GetLocationReply) ValidateEnums() error {
 	if _, ok := GetLocationReply_LocStatus_name[int32(m.Status)]; !ok {
-		return errors.New("invalid Status")
+		return errors.New("Invalid Status")
 	}
 	if err := m.NetworkLocation.ValidateEnums(); err != nil {
 		return err
@@ -2962,7 +2962,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 // Helper method to check that enums have valid values
 func (m *AppInstListReply) ValidateEnums() error {
 	if _, ok := AppInstListReply_AIStatus_name[int32(m.Status)]; !ok {
-		return errors.New("invalid Status")
+		return errors.New("Invalid Status")
 	}
 	for _, e := range m.Cloudlets {
 		if err := e.ValidateEnums(); err != nil {
@@ -3071,7 +3071,7 @@ func (m *FqdnListReply) ValidateEnums() error {
 		}
 	}
 	if _, ok := FqdnListReply_FLStatus_name[int32(m.Status)]; !ok {
-		return errors.New("invalid Status")
+		return errors.New("Invalid Status")
 	}
 	return nil
 }
@@ -3104,7 +3104,7 @@ func (m *DynamicLocGroupRequest) CopyInFields(src *DynamicLocGroupRequest) int {
 // Helper method to check that enums have valid values
 func (m *DynamicLocGroupRequest) ValidateEnums() error {
 	if _, ok := DynamicLocGroupRequest_DlgCommType_name[int32(m.CommType)]; !ok {
-		return errors.New("invalid CommType")
+		return errors.New("Invalid CommType")
 	}
 	return nil
 }
@@ -3133,7 +3133,7 @@ func (m *DynamicLocGroupReply) CopyInFields(src *DynamicLocGroupReply) int {
 // Helper method to check that enums have valid values
 func (m *DynamicLocGroupReply) ValidateEnums() error {
 	if _, ok := ReplyStatus_name[int32(m.Status)]; !ok {
-		return errors.New("invalid Status")
+		return errors.New("Invalid Status")
 	}
 	return nil
 }
@@ -3535,7 +3535,7 @@ func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) int {
 // Helper method to check that enums have valid values
 func (m *QosPositionKpiReply) ValidateEnums() error {
 	if _, ok := ReplyStatus_name[int32(m.Status)]; !ok {
-		return errors.New("invalid Status")
+		return errors.New("Invalid Status")
 	}
 	for _, e := range m.PositionResults {
 		if err := e.ValidateEnums(); err != nil {

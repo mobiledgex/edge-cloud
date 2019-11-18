@@ -283,7 +283,7 @@ func (m *DlgMessage) CopyInFields(src *DlgMessage) int {
 // Helper method to check that enums have valid values
 func (m *DlgMessage) ValidateEnums() error {
 	if _, ok := DlgMessage_DlgAck_name[int32(m.AckType)]; !ok {
-		return errors.New("invalid AckType")
+		return errors.New("Invalid AckType")
 	}
 	return nil
 }

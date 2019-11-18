@@ -126,7 +126,7 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 			return dat, err
 		}
 		if !s.AllowUnused && len(unused) > 0 {
-			return dat, fmt.Errorf("invalid args: %s",
+			return dat, fmt.Errorf("Invalid args: %s",
 				strings.Join(unused, " "))
 		}
 	}

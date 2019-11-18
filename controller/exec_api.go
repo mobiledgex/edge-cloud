@@ -49,7 +49,7 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 	if app.Deployment == cloudcommon.AppDeploymentTypeVM {
 		execRequestTimeout = LongTimeout
 		if req.Command != "" || req.ContainerId != "" {
-			return nil, fmt.Errorf("invalid argument, command/containerid is not supported for VM based Apps")
+			return nil, fmt.Errorf("Invalid argument, command/containerid is not supported for VM based Apps")
 		}
 		req.Console = true
 	} else {

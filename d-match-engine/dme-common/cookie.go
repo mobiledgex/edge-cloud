@@ -70,7 +70,7 @@ func VerifyCookie(cookie string) (*CookieKey, error) {
 	}
 	if !token.Valid {
 		log.InfoLog("cookie is invalid or expired", "cookie", cookie, "claims", claims)
-		return nil, errors.New("invalid or expired cookie")
+		return nil, errors.New("Invalid or expired cookie")
 	}
 	// It is possible that the App was deleted after this cookie was issued.  If so, the cookie is no longer valid
 	// Note that returning an error from from here will result in an Unauthorized error code, rather than a NotFound

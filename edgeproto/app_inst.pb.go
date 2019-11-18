@@ -2403,22 +2403,22 @@ func (m *AppInst) ValidateEnums() error {
 		return err
 	}
 	if _, ok := Liveness_name[int32(m.Liveness)]; !ok {
-		return errors.New("invalid Liveness")
+		return errors.New("Invalid Liveness")
 	}
 	if err := m.Flavor.ValidateEnums(); err != nil {
 		return err
 	}
 	if _, ok := TrackedState_name[int32(m.State)]; !ok {
-		return errors.New("invalid State")
+		return errors.New("Invalid State")
 	}
 	if _, ok := CRMOverride_name[int32(m.CrmOverride)]; !ok {
-		return errors.New("invalid CrmOverride")
+		return errors.New("Invalid CrmOverride")
 	}
 	if err := m.RuntimeInfo.ValidateEnums(); err != nil {
 		return err
 	}
 	if _, ok := IpAccess_name[int32(m.AutoClusterIpAccess)]; !ok {
-		return errors.New("invalid AutoClusterIpAccess")
+		return errors.New("Invalid AutoClusterIpAccess")
 	}
 	if err := m.Status.ValidateEnums(); err != nil {
 		return err
@@ -3260,7 +3260,7 @@ func (m *AppInstInfo) ValidateEnums() error {
 		return err
 	}
 	if _, ok := TrackedState_name[int32(m.State)]; !ok {
-		return errors.New("invalid State")
+		return errors.New("Invalid State")
 	}
 	if err := m.RuntimeInfo.ValidateEnums(); err != nil {
 		return err

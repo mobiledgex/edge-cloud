@@ -3398,7 +3398,7 @@ func (m *Cloudlet) ValidateEnums() error {
 		return err
 	}
 	if _, ok := IpSupport_name[int32(m.IpSupport)]; !ok {
-		return errors.New("invalid IpSupport")
+		return errors.New("Invalid IpSupport")
 	}
 	if err := m.TimeLimits.ValidateEnums(); err != nil {
 		return err
@@ -3407,13 +3407,13 @@ func (m *Cloudlet) ValidateEnums() error {
 		return err
 	}
 	if _, ok := TrackedState_name[int32(m.State)]; !ok {
-		return errors.New("invalid State")
+		return errors.New("Invalid State")
 	}
 	if _, ok := CRMOverride_name[int32(m.CrmOverride)]; !ok {
-		return errors.New("invalid CrmOverride")
+		return errors.New("Invalid CrmOverride")
 	}
 	if _, ok := PlatformType_name[int32(m.PlatformType)]; !ok {
-		return errors.New("invalid PlatformType")
+		return errors.New("Invalid PlatformType")
 	}
 	if err := m.Flavor.ValidateEnums(); err != nil {
 		return err
@@ -4302,7 +4302,7 @@ func (m *CloudletInfo) ValidateEnums() error {
 		return err
 	}
 	if _, ok := CloudletState_name[int32(m.State)]; !ok {
-		return errors.New("invalid State")
+		return errors.New("Invalid State")
 	}
 	for _, e := range m.Flavors {
 		if err := e.ValidateEnums(); err != nil {

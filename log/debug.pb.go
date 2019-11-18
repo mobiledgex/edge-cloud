@@ -338,7 +338,7 @@ func (m *DebugLevels) CopyInFields(src *DebugLevels) int {
 func (m *DebugLevels) ValidateEnums() error {
 	for _, e := range m.Levels {
 		if _, ok := DebugLevel_name[int32(e)]; !ok {
-			return errors.New("invalid Levels")
+			return errors.New("Invalid Levels")
 		}
 	}
 	return nil

@@ -165,7 +165,7 @@ func startServices() error {
 	// etcd is per-region.
 	objstore.InitRegion(uint32(1))
 	if !util.ValidRegion(*region) {
-		return fmt.Errorf("invalid region name")
+		return fmt.Errorf("Invalid region name")
 	}
 
 	vaultConfig, err = vault.BestConfig(*vaultAddr)

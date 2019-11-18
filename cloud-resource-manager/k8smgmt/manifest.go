@@ -74,7 +74,7 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile, imagePul
 	//decode the objects so we can find the container objects, where we'll add the env vars
 	objs, _, err := cloudcommon.DecodeK8SYaml(mf)
 	if err != nil {
-		return kubeManifest, fmt.Errorf("invalid kubernetes deployment yaml, %s", err.Error())
+		return kubeManifest, fmt.Errorf("Invalid kubernetes deployment yaml, %s", err.Error())
 	}
 
 	//walk the objects

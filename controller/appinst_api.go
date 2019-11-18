@@ -1065,7 +1065,7 @@ func setPortFQDNPrefixes(in *edgeproto.AppInst, app *edgeproto.App) error {
 	if app.Deployment == cloudcommon.AppDeploymentTypeKubernetes {
 		objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
 		if err != nil {
-			return fmt.Errorf("invalid kubernetes deployment yaml, %s", err.Error())
+			return fmt.Errorf("Invalid kubernetes deployment yaml, %s", err.Error())
 		}
 		for ii, _ := range in.MappedPorts {
 			setPortFQDNPrefix(&in.MappedPorts[ii], objs)

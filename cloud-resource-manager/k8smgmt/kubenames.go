@@ -79,7 +79,7 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	if app.Deployment == cloudcommon.AppDeploymentTypeKubernetes {
 		objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
 		if err != nil {
-			return nil, fmt.Errorf("invalid kubernetes deployment yaml, %s", err.Error())
+			return nil, fmt.Errorf("Invalid kubernetes deployment yaml, %s", err.Error())
 		}
 		for _, o := range objs {
 			log.DebugLog(log.DebugLevelMexos, "k8s obj", "obj", o)

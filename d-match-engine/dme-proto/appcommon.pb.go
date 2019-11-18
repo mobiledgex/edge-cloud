@@ -167,7 +167,7 @@ func (m *AppPort) CopyInFields(src *AppPort) int {
 // Helper method to check that enums have valid values
 func (m *AppPort) ValidateEnums() error {
 	if _, ok := LProto_name[int32(m.Proto)]; !ok {
-		return errors.New("invalid Proto")
+		return errors.New("Invalid Proto")
 	}
 	return nil
 }

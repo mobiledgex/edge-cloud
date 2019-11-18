@@ -38,7 +38,7 @@ func GetDockerBaseImageVersion() (string, error) {
 	}
 	out := strings.Fields(string(dat))
 	if len(out) != 2 {
-		return "", fmt.Errorf("invalid version details: %s", out)
+		return "", fmt.Errorf("Invalid version details: %s", out)
 	}
 	return out[1], nil
 }
@@ -47,7 +47,7 @@ func GetAvailablePort(ipaddr string) (string, error) {
 	// Get non-conflicting port only if actual port is 0
 	ipobj := strings.Split(ipaddr, ":")
 	if len(ipobj) != 2 {
-		return "", fmt.Errorf("invalid address format")
+		return "", fmt.Errorf("Invalid address format")
 	}
 	if ipobj[1] != "0" {
 		return ipaddr, nil
