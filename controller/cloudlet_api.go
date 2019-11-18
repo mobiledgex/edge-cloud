@@ -221,6 +221,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	if in.PhysicalName == "" {
 		in.PhysicalName = in.Key.Name
+		cb.Send(&edgeproto.Result{Message: "Setting physicalname to match cloudlet name"})
 	}
 
 	if in.Version == "" {
@@ -673,9 +674,11 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 }
 
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
-	pfConfig := edgeproto.PlatformConfig{}
-	pfConfig.VaultAddr = *vaultAddr
-	return s.deleteCloudletInternal(DefCallContext(), in, &pfConfig, cb)
+	pfConfig, err := getPlatformConfig(cb.Context(), in)
+	if err != nil {
+		return err
+	}
+	return s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
 }
 
 func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
