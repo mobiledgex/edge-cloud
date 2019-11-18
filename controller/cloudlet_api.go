@@ -829,6 +829,80 @@ func (s *CloudletApi) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudlet
 	return err
 }
 
+func (s *CloudletApi) RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error) {
+	var err error
+	cl := edgeproto.Cloudlet{}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+
+		for resource, _ := range in.Mapping {
+			delete(cl.ResTagMap, resource)
+		}
+		s.store.STMPut(stm, &cl)
+		return err
+	})
+	return &edgeproto.Result{}, err
+}
+
+func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error) {
+
+	var err error
+	cl := edgeproto.Cloudlet{}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return objstore.ErrKVStoreKeyNotFound
+		} else {
+			if cl.ResTagMap == nil {
+				cl.ResTagMap = make(map[string]*edgeproto.ResTagTableKey)
+			}
+		}
+
+		return err
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+
+	for resource, tblname := range in.Mapping {
+		if valerr, ok := resTagTableApi.ValidateResName(resource); !ok {
+			return &edgeproto.Result{}, valerr
+		}
+		resource = strings.ToLower(resource)
+		var key edgeproto.ResTagTableKey
+		key.Name = tblname
+		key.OperatorKey = in.Key.OperatorKey
+		tbl, err := resTagTableApi.GetResTagTable(ctx, &key)
+		if err == objstore.ErrKVStoreKeyNotFound {
+			// auto-create empty
+			tbl.Key = key
+			_, err = resTagTableApi.CreateResTagTable(ctx, tbl)
+			if err != nil {
+				return &edgeproto.Result{}, err
+			}
+		}
+		cl.ResTagMap[resource] = &key
+	}
+
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		for resource, tblname := range in.Mapping {
+			key := edgeproto.ResTagTableKey{
+				Name:        tblname,
+				OperatorKey: in.Key.OperatorKey,
+			}
+			cl.ResTagMap[resource] = &key
+		}
+		s.store.STMPut(stm, &cl)
+		return err
+	})
+
+	return &edgeproto.Result{}, err
+}
+
 func (s *CloudletApi) UpdateAppInstLocations(ctx context.Context, in *edgeproto.Cloudlet) {
 	fmap := edgeproto.MakeFieldMap(in.Fields)
 	if _, found := fmap[edgeproto.CloudletFieldLocation]; !found {

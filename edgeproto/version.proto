@@ -17,6 +17,7 @@ enum VersionHash {
   HASH_536a69a5e27bf7cf5152d85eba21aa74 = 6 [(protogen.upgrade_func) = "AddInternalPortsForPrometheus"];
   HASH_caedcdeef911bc00d5dceacf8e55890a = 7;
   HASH_60febe402fd8f1a1ded0762dbc72a5a8 = 8;
+  HASH_d4ca5418a77d22d968ce7a2afc549dfe = 9;
   option (protogen.version_hash) = true;
   option (protogen.version_hash_salt) = "0";
 }

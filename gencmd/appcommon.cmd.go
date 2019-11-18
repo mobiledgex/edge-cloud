@@ -29,6 +29,6 @@ var AppPortComments = map[string]string{
 	"publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
 	"pathprefix":   "Public facing path for HTTP L7 access.",
 	"fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"endport":      "A non-zero end port indicates this is a port range from internal port to end port, inclusive.",
 }
 var AppPortSpecialArgs = map[string]string{}
