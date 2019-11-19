@@ -12,7 +12,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/vmspec"
 )
 
 type ClusterInstApi struct {
@@ -263,7 +262,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
 		var err error
-		vmspec, err := vmspec.GetVMSpec(info.Flavors, nodeFlavor)
+		vmspec, err := resTagTableApi.GetVMSpec(info.Flavors, nodeFlavor, cloudlet.ResTagMap)
 		if err != nil {
 			return err
 		}
