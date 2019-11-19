@@ -107,7 +107,12 @@ func CreateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("CreateClusterInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateClusterInst recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -170,7 +175,12 @@ func DeleteClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("DeleteClusterInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteClusterInst recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -234,7 +244,12 @@ func UpdateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("UpdateClusterInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateClusterInst recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -297,7 +312,12 @@ func ShowClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowClusterInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowClusterInst recv failed: %s", errstr)
 		}
 		ClusterInstHideTags(obj)
 		objs = append(objs, obj)
@@ -374,7 +394,12 @@ func ShowClusterInstInfo(c *cli.Command, in *edgeproto.ClusterInstInfo) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowClusterInstInfo recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowClusterInstInfo recv failed: %s", errstr)
 		}
 		ClusterInstInfoHideTags(obj)
 		objs = append(objs, obj)

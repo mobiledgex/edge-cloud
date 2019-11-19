@@ -12,7 +12,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 )
@@ -556,7 +555,7 @@ func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet
 	// now it's all stored, fetch a copy of the cloudlet and verify
 	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !cloudletApi.store.STMGet(stm, &cl.Key, testcl) {
-			return objstore.ErrKVStoreKeyNotFound
+			return cl.Key.NotFoundError()
 		}
 		return err
 	})
@@ -591,7 +590,7 @@ func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet
 
 	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !cloudletApi.store.STMGet(stm, &cl.Key, rmcl) {
-			return objstore.ErrKVStoreKeyNotFound
+			return cl.Key.NotFoundError()
 		}
 		return err
 	})

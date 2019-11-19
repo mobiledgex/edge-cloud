@@ -68,8 +68,6 @@ type KVStore interface {
 }
 
 var ErrKVStoreNotInitialized = errors.New("Object Storage not initialized")
-var ErrKVStoreKeyNotFound = errors.New("Key not found")
-var ErrKVStoreKeyExists = errors.New("Key already exists")
 
 // Any object that wants to be stored in the database
 // needs to implement the Obj interface.
@@ -95,6 +93,10 @@ type ObjKey interface {
 	// Validate checks that the key object fields do not contain
 	// invalid or missing data.
 	ValidateKey() error
+	// NotFoundError returns a not found error describing the key.
+	NotFoundError() error
+	// ExistsError returns an already exists error describing the key.
+	ExistsError() error
 }
 
 type KVOptions struct {
@@ -194,4 +196,12 @@ func DbKeyPrefixParse(inkey string) (region, typ, key string, err error) {
 	key = key[ii+1:]
 
 	return region, typ, key, nil
+}
+
+func NotFoundError(key string) error {
+	return fmt.Errorf("key %s not found", key)
+}
+
+func ExistsError(key string) error {
+	return fmt.Errorf("key %s already exists", key)
 }

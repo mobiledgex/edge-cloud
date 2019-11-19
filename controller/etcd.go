@@ -79,7 +79,7 @@ func (e *EtcdClient) Create(ctx context.Context, key, val string) (int64, error)
 		return 0, err
 	}
 	if !resp.Succeeded {
-		return 0, objstore.ErrKVStoreKeyExists
+		return 0, objstore.ExistsError(key)
 	}
 	log.DebugLog(log.DebugLevelEtcd, "created data", "key", key, "val", val, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
@@ -106,7 +106,7 @@ func (e *EtcdClient) Update(ctx context.Context, key, val string, version int64)
 		return 0, err
 	}
 	if !resp.Succeeded {
-		return 0, objstore.ErrKVStoreKeyNotFound
+		return 0, objstore.NotFoundError(key)
 	}
 	log.DebugLog(log.DebugLevelEtcd, "updated data", "key", key, "val", val, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
@@ -126,7 +126,7 @@ func (e *EtcdClient) Delete(ctx context.Context, key string) (int64, error) {
 		return 0, err
 	}
 	if !resp.Succeeded {
-		return 0, objstore.ErrKVStoreKeyNotFound
+		return 0, objstore.NotFoundError(key)
 	}
 	log.DebugLog(log.DebugLevelEtcd, "deleted data", "key", key, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
@@ -145,7 +145,7 @@ func (e *EtcdClient) Get(key string, ops ...objstore.KVOp) ([]byte, int64, int64
 		return nil, 0, 0, err
 	}
 	if len(resp.Kvs) == 0 {
-		return nil, 0, 0, objstore.ErrKVStoreKeyNotFound
+		return nil, 0, 0, objstore.NotFoundError(key)
 	}
 	obj := resp.Kvs[0]
 	log.DebugLog(log.DebugLevelEtcd, "got data", "key", key, "val", string(obj.Value), "ver", obj.Version, "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)

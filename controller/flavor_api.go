@@ -7,7 +7,6 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
 type FlavorApi struct {
@@ -42,7 +41,7 @@ func (s *FlavorApi) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
 	if !flavorApi.HasFlavor(&in.Key) {
 		// key doesn't exist
-		return &edgeproto.Result{}, objstore.ErrKVStoreKeyNotFound
+		return &edgeproto.Result{}, in.Key.NotFoundError()
 	}
 	if clusterInstApi.UsesFlavor(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Flavor in use by ClusterInst")
@@ -74,7 +73,7 @@ func (s *FlavorApi) AddFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*ed
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &flav) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		if flav.OptResMap == nil {
 			flav.OptResMap = make(map[string]string)
@@ -100,7 +99,7 @@ func (s *FlavorApi) RemoveFlavorRes(ctx context.Context, in *edgeproto.Flavor) (
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &flav) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		for res, _ := range in.OptResMap {
 			delete(flav.OptResMap, res)

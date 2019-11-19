@@ -174,7 +174,12 @@ func ShowCloudletPool(c *cli.Command, in *edgeproto.CloudletPool) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowCloudletPool recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudletPool recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}
@@ -357,7 +362,12 @@ func ShowCloudletPoolMember(c *cli.Command, in *edgeproto.CloudletPoolMember) er
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowCloudletPoolMember recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudletPoolMember recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}
@@ -433,7 +443,12 @@ func ShowPoolsForCloudlet(c *cli.Command, in *edgeproto.CloudletKey) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowPoolsForCloudlet recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowPoolsForCloudlet recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}
@@ -501,7 +516,12 @@ func ShowCloudletsForPool(c *cli.Command, in *edgeproto.CloudletPoolKey) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowCloudletsForPool recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudletsForPool recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}

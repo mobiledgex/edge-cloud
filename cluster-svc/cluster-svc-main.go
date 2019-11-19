@@ -20,7 +20,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
@@ -217,7 +216,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 	res, err := appInstCreateApi(apiClient, appInst)
 	if err != nil {
 		// Handle non-fatal errors
-		if strings.Contains(err.Error(), objstore.ErrKVStoreKeyExists.Error()) {
+		if strings.Contains(err.Error(), appInst.Key.ExistsError().Error()) {
 			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "app", app.String(), "cluster", clusterInst.Key.String())
 			return nil
 		}
@@ -293,7 +292,7 @@ func createAppCommon(ctx context.Context, dialOpts grpc.DialOption, app *edgepro
 	res, err := apiClient.CreateApp(ctx, app)
 	if err != nil {
 		// Handle non-fatal errors
-		if strings.Contains(err.Error(), objstore.ErrKVStoreKeyExists.Error()) {
+		if strings.Contains(err.Error(), app.Key.ExistsError().Error()) {
 			log.SpanLog(ctx, log.DebugLevelApi, "app already exists", "app", app.String())
 			return nil
 		}

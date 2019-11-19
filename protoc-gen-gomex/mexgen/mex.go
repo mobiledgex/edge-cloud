@@ -1498,6 +1498,17 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("}")
 		m.P("")
+
+		m.P("func (m *", message.Name, ") NotFoundError() error {")
+		m.P("return fmt.Errorf(\"", strings.TrimSuffix(*message.Name, "Key"), " key %s not found\", m.GetKeyString())")
+		m.P("}")
+		m.P("")
+
+		m.P("func (m *", message.Name, ") ExistsError() error {")
+		m.P("return fmt.Errorf(\"", strings.TrimSuffix(*message.Name, "Key"), " key %s already exists\", m.GetKeyString())")
+		m.P("}")
+		m.P("")
+
 		m.importJson = true
 		m.importLog = true
 	}

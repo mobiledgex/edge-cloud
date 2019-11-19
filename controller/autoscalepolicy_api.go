@@ -6,7 +6,6 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
 type AutoScalePolicyApi struct {
@@ -35,7 +34,7 @@ func (s *AutoScalePolicyApi) UpdateAutoScalePolicy(ctx context.Context, in *edge
 	cur := edgeproto.AutoScalePolicy{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cur) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		cur.CopyInFields(in)
 		if err := cur.Validate(nil); err != nil {
