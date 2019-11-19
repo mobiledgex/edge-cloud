@@ -346,3 +346,17 @@ func (s *DummyServer) ShowFlavor(in *edgeproto.Flavor, server edgeproto.FlavorAp
 	})
 	return err
 }
+
+func (s *DummyServer) AddFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) RemoveFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	return &edgeproto.Result{}, nil
+}

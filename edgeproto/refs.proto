@@ -38,6 +38,9 @@ message CloudletRefs {
   int32 used_dynamic_ips = 9;
   // Used static IPs
   string used_static_ips = 10;
+  // Used Optional Resources
+  map<string, uint32> opt_res_used_map = 11;
+
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

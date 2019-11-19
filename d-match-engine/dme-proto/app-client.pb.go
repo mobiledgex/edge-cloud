@@ -365,7 +365,7 @@ type FindCloudletRequest struct {
 	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Session Cookie from RegisterClientRequest
 	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
-	// The carrier name that the user is connected to ("Cellular Carrier Name")
+	// The carrier name that user is connected to ("Cellular Carrier Name")
 	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// The GPS location of the user
 	GpsLocation *Loc `protobuf:"bytes,4,opt,name=gps_location,json=gpsLocation" json:"gps_location,omitempty"`
@@ -387,7 +387,7 @@ type FindCloudletReply struct {
 	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Status return
 	Status FindCloudletReply_FindStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.FindCloudletReply_FindStatus" json:"status,omitempty"`
-	// Fully Qualified Domain Name of the Closest App instance
+	// Full Qualified Domain Name of Closest App instance
 	Fqdn string `protobuf:"bytes,3,opt,name=fqdn,proto3" json:"fqdn,omitempty"`
 	// List of Service Endpoints for AppInst
 	Ports []*AppPort `protobuf:"bytes,4,rep,name=ports" json:"ports,omitempty"`
@@ -405,11 +405,11 @@ type VerifyLocationRequest struct {
 	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Session Cookie from RegisterClientRequest
 	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
-	// The carrier name that the user is connected to ("Cellular Carrier Name")
+	// The carrier name that user is connected to ("Cellular Carrier Name")
 	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// The GPS location to verify
 	GpsLocation *Loc `protobuf:"bytes,4,opt,name=gps_location,json=gpsLocation" json:"gps_location,omitempty"`
-	// token used for location verification, app must be retrieve from TokenServerURI
+	// token used for location verification, app must retrieve from TokenServerURI
 	VerifyLocToken string `protobuf:"bytes,5,opt,name=verify_loc_token,json=verifyLocToken,proto3" json:"verify_loc_token,omitempty"`
 }
 
@@ -425,7 +425,7 @@ type VerifyLocationReply struct {
 	GpsLocationStatus VerifyLocationReply_GPSLocationStatus `protobuf:"varint,3,opt,name=gps_location_status,json=gpsLocationStatus,proto3,enum=distributed_match_engine.VerifyLocationReply_GPSLocationStatus" json:"gps_location_status,omitempty"`
 	// location accuracy, the location is verified to
 	// be within this number of kilometers.  Negative value
-	// means no verification was performed
+	// means no verification was done
 	GpsLocationAccuracyKm float64 `protobuf:"fixed64,4,opt,name=gps_location_accuracy_km,json=gpsLocationAccuracyKm,proto3" json:"gps_location_accuracy_km,omitempty"`
 }
 
@@ -439,7 +439,7 @@ type GetLocationRequest struct {
 	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Session Cookie from RegisterClientRequest
 	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
-	// The carrier name that the user is connected to ("Cellular Carrier Name")
+	// The carrier name that user is connected to ("Cellular Carrier Name")
 	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 }
 
@@ -451,7 +451,7 @@ func (*GetLocationRequest) Descriptor() ([]byte, []int) { return fileDescriptorA
 type GetLocationReply struct {
 	Ver    uint32                     `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	Status GetLocationReply_LocStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.GetLocationReply_LocStatus" json:"status,omitempty"`
-	// The carrier name that the user is connected to ("Cellular Carrier Name")
+	// The carrier name that user is connected to ("Cellular Carrier Name")
 	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// The tower that user is currently connected to
 	Tower uint64 `protobuf:"varint,4,opt,name=tower,proto3" json:"tower,omitempty"`
@@ -469,7 +469,7 @@ type AppInstListRequest struct {
 	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Session Cookie from RegisterClientRequest
 	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
-	// The carrier name that the user is connected to ("Cellular Carrier Name")
+	// The carrier name that user is connected to ("Cellular Carrier Name")
 	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// The GPS location of the user
 	GpsLocation *Loc `protobuf:"bytes,4,opt,name=gps_location,json=gpsLocation" json:"gps_location,omitempty"`
@@ -497,7 +497,7 @@ func (*Appinstance) ProtoMessage()               {}
 func (*Appinstance) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{9} }
 
 type CloudletLocation struct {
-	// The carrier name that the user is connected to ("Cellular Carrier Name")
+	// The carrier name that user is connected to ("Cellular Carrier Name")
 	CarrierName string `protobuf:"bytes,1,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// Cloudlet Name
 	CloudletName string `protobuf:"bytes,2,opt,name=cloudlet_name,json=cloudletName,proto3" json:"cloudlet_name,omitempty"`
