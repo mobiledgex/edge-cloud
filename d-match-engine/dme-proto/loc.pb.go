@@ -36,7 +36,7 @@ type Loc struct {
 	Longitude float64 `protobuf:"fixed64,2,opt,name=longitude,proto3" json:"longitude,omitempty"`
 	// horizontal accuracy (radius in meters)
 	HorizontalAccuracy float64 `protobuf:"fixed64,3,opt,name=horizontal_accuracy,json=horizontalAccuracy,proto3" json:"horizontal_accuracy,omitempty"`
-	// veritical accuracy (meters)
+	// vertical accuracy (meters)
 	VerticalAccuracy float64 `protobuf:"fixed64,4,opt,name=vertical_accuracy,json=verticalAccuracy,proto3" json:"vertical_accuracy,omitempty"`
 	// On android only lat and long are guaranteed to be supplied
 	// altitude in meters
