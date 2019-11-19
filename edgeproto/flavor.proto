@@ -1,3 +1,4 @@
+
 // A Flavor defines the resources assigned to a Kubernetes cluster.
 // Note that these are NOT openstack VM flavors, although some parts
 // of it may translate to openstack flavors.
@@ -34,6 +35,9 @@ message Flavor {
   uint64 vcpus = 4;
   // Amount of disk space in gigabytes
   uint64 disk = 5;
+  // Optional Resources request, key = [gpu, nas, nic]
+  map<string, string> opt_res_map = 6;
+
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -75,5 +79,22 @@ service FlavorApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceFlavors,ActionView,skipenforce";
+  }
+
+  // Add Optional Resource
+  rpc AddFlavorRes(Flavor) returns (Result) {
+      option (google.api.http) = {
+      post: "/addres/flavor"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceFlavors,ActionManage,";
+  }
+  // Remove Optional Resource
+  rpc RemoveFlavorRes(Flavor) returns (Result) {
+      option (google.api.http) = {
+      post: "/removeres/flavor"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceFlavors,ActionManage,";
   }
 }

@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"errors"
+	"strings"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -62,4 +64,49 @@ func (s *FlavorApi) ShowFlavor(in *edgeproto.Flavor, cb edgeproto.FlavorApi_Show
 		return err
 	})
 	return err
+}
+
+func (s *FlavorApi) AddFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+
+	var flav edgeproto.Flavor
+	var err error
+
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &flav) {
+			return in.Key.NotFoundError()
+		}
+		if flav.OptResMap == nil {
+			flav.OptResMap = make(map[string]string)
+		}
+		for res, val := range in.OptResMap {
+			// validate the resname(s)
+			if err, ok := resTagTableApi.ValidateResName(res); !ok {
+				return err
+			}
+			in.Key.Name = strings.ToLower(in.Key.Name)
+			flav.OptResMap[res] = val
+		}
+		s.store.STMPut(stm, &flav)
+		return nil
+	})
+
+	return &edgeproto.Result{}, err
+}
+
+func (s *FlavorApi) RemoveFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	var flav edgeproto.Flavor
+	var err error
+
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &flav) {
+			return in.Key.NotFoundError()
+		}
+		for res, _ := range in.OptResMap {
+			delete(flav.OptResMap, res)
+		}
+		s.store.STMPut(stm, &flav)
+		return nil
+	})
+
+	return &edgeproto.Result{}, err
 }

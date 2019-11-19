@@ -260,6 +260,7 @@ func startServices() error {
 		grpc.StreamInterceptor(AuditStreamInterceptor))
 	edgeproto.RegisterDeveloperApiServer(server, &developerApi)
 	edgeproto.RegisterAppApiServer(server, &appApi)
+	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
 	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
 	edgeproto.RegisterFlavorApiServer(server, &flavorApi)
 	edgeproto.RegisterClusterInstApiServer(server, &clusterInstApi)
@@ -275,6 +276,7 @@ func startServices() error {
 	edgeproto.RegisterCloudletPoolShowApiServer(server, &cloudletPoolMemberApi)
 	edgeproto.RegisterAlertApiServer(server, &alertApi)
 	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
+
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -306,6 +308,7 @@ func startServices() error {
 			edgeproto.RegisterCloudletPoolShowApiHandler,
 			edgeproto.RegisterAlertApiHandler,
 			edgeproto.RegisterAutoScalePolicyApiHandler,
+			edgeproto.RegisterResTagTableApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -413,6 +416,7 @@ func InitApis(sync *Sync) {
 	InitExecApi()
 	InitAlertApi(sync)
 	InitAutoScalePolicyApi(sync)
+	InitResTagTableApi(sync)
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "nohostname"
