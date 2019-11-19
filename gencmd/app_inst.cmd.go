@@ -136,7 +136,12 @@ func CreateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("CreateAppInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateAppInst recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -199,7 +204,12 @@ func DeleteAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("DeleteAppInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteAppInst recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -263,7 +273,12 @@ func UpdateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("UpdateAppInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateAppInst recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -326,7 +341,12 @@ func ShowAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowAppInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAppInst recv failed: %s", errstr)
 		}
 		AppInstHideTags(obj)
 		objs = append(objs, obj)
@@ -403,7 +423,12 @@ func ShowAppInstInfo(c *cli.Command, in *edgeproto.AppInstInfo) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowAppInstInfo recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAppInstInfo recv failed: %s", errstr)
 		}
 		AppInstInfoHideTags(obj)
 		objs = append(objs, obj)
@@ -477,7 +502,12 @@ func ShowAppInstMetrics(c *cli.Command, in *edgeproto.AppInstMetrics) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowAppInstMetrics recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAppInstMetrics recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}

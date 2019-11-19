@@ -12,7 +12,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
@@ -277,7 +276,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			return edgeproto.ErrEdgeApiFlavorNotFound
 		}
 		if s.store.STMGet(stm, &in.Key, nil) {
-			return objstore.ErrKVStoreKeyExists
+			return in.Key.ExistsError()
 		}
 		s.store.STMPut(stm, in)
 		return nil
@@ -320,7 +319,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		cur := edgeproto.App{}
 
 		if !s.store.STMGet(stm, &in.Key, &cur) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		if appInstExists {
 			if cur.Deployment != cloudcommon.AppDeploymentTypeKubernetes &&
@@ -352,7 +351,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	if !appApi.HasApp(&in.Key) {
 		// key doesn't exist
-		return &edgeproto.Result{}, objstore.ErrKVStoreKeyNotFound
+		return &edgeproto.Result{}, in.Key.NotFoundError()
 	}
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
 	if appInstApi.UsesApp(&in.Key, dynInsts) {

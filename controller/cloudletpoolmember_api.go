@@ -7,7 +7,6 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
 type CloudletPoolMemberApi struct {
@@ -48,7 +47,7 @@ func (s *CloudletPoolMemberApi) CreateCloudletPoolMember(ctx context.Context, in
 func (s *CloudletPoolMemberApi) DeleteCloudletPoolMember(ctx context.Context, in *edgeproto.CloudletPoolMember) (*edgeproto.Result, error) {
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, in, nil) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.NotFoundError()
 		}
 		s.store.STMDel(stm, in)
 		return nil

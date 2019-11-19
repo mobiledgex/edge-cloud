@@ -848,6 +848,14 @@ func ClusterInstKeyStringParse(str string, key *ClusterInstKey) {
 	}
 }
 
+func (m *ClusterInstKey) NotFoundError() error {
+	return fmt.Errorf("ClusterInst key %s not found", m.GetKeyString())
+}
+
+func (m *ClusterInstKey) ExistsError() error {
+	return fmt.Errorf("ClusterInst key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *ClusterInstKey) ValidateEnums() error {
 	if err := m.ClusterKey.ValidateEnums(); err != nil {

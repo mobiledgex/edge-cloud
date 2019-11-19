@@ -2,6 +2,7 @@ package edgeproto
 
 import (
 	"encoding/json"
+	fmt "fmt"
 	"sort"
 
 	"github.com/mobiledgex/edge-cloud/log"
@@ -16,6 +17,14 @@ func (m AlertKey) GetKeyString() string {
 
 func (m *AlertKey) Matches(o *AlertKey) bool {
 	return string(*m) == string(*o)
+}
+
+func (m AlertKey) NotFoundError() error {
+	return fmt.Errorf("Alert key %s not found", m.GetKeyString())
+}
+
+func (m AlertKey) ExistsError() error {
+	return fmt.Errorf("Alert key %s already exists", m.GetKeyString())
 }
 
 func (m *Alert) GetObjKey() objstore.ObjKey {

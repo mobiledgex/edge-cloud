@@ -129,6 +129,14 @@ func ClusterKeyStringParse(str string, key *ClusterKey) {
 	}
 }
 
+func (m *ClusterKey) NotFoundError() error {
+	return fmt.Errorf("Cluster key %s not found", m.GetKeyString())
+}
+
+func (m *ClusterKey) ExistsError() error {
+	return fmt.Errorf("Cluster key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *ClusterKey) ValidateEnums() error {
 	return nil
