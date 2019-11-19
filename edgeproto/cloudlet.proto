@@ -217,7 +217,6 @@ message Cloudlet {
   option (protogen.notify_recv_hook) = true;
   option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status,Config,NotifySrvAddr";
   option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
-  option (protogen.also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
 }
 
 service CloudletApi {
@@ -229,6 +228,7 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.method_also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
   }
   // Delete a Cloudlet
   rpc DeleteCloudlet(Cloudlet) returns (stream Result) {

@@ -62,8 +62,8 @@ var CloudletApiCmd edgeproto.CloudletApiClient
 
 var CreateCloudletCmd = &cli.Command{
 	Use:          "CreateCloudlet",
-	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
+	RequiredArgs: strings.Join(CreateCloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(CreateCloudletOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
 	SpecialArgs:  &CloudletSpecialArgs,
 	Comments:     CloudletComments,
@@ -930,17 +930,17 @@ var MappingEntrySpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
 	"operator",
 	"name",
-	"location.latitude",
-	"location.longitude",
-	"numdynamicips",
 }
 var CloudletOptionalArgs = []string{
 	"accesscredentials",
+	"location.latitude",
+	"location.longitude",
 	"location.altitude",
 	"location.timestamp.seconds",
 	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
+	"numdynamicips",
 	"errors",
 	"state",
 	"crmoverride",
@@ -1099,3 +1099,30 @@ var CloudletMetricsComments = map[string]string{
 	"foo": "what goes here?",
 }
 var CloudletMetricsSpecialArgs = map[string]string{}
+var CreateCloudletRequiredArgs = []string{
+	"operator",
+	"name",
+	"location.latitude",
+	"location.longitude",
+	"numdynamicips",
+}
+var CreateCloudletOptionalArgs = []string{
+	"accesscredentials",
+	"location.altitude",
+	"location.timestamp.seconds",
+	"location.timestamp.nanos",
+	"ipsupport",
+	"staticips",
+	"errors",
+	"state",
+	"crmoverride",
+	"deploymentlocal",
+	"platformtype",
+	"flavor.name",
+	"physicalname",
+	"envvar",
+	"version",
+	"restagmap.key",
+	"restagmap.value.name",
+	"restagmap.value.operatorkey.name",
+}
