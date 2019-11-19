@@ -9,7 +9,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 )
@@ -147,7 +146,7 @@ func forceClusterInstState(ctx context.Context, in *edgeproto.ClusterInst, state
 	err := clusterInstApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		obj := edgeproto.ClusterInst{}
 		if !clusterInstApi.store.STMGet(stm, &in.Key, &obj) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		obj.State = state
 		clusterInstApi.store.STMPut(stm, &obj)

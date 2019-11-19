@@ -1081,6 +1081,14 @@ func AppInstKeyStringParse(str string, key *AppInstKey) {
 	}
 }
 
+func (m *AppInstKey) NotFoundError() error {
+	return fmt.Errorf("AppInst key %s not found", m.GetKeyString())
+}
+
+func (m *AppInstKey) ExistsError() error {
+	return fmt.Errorf("AppInst key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *AppInstKey) ValidateEnums() error {
 	if err := m.AppKey.ValidateEnums(); err != nil {

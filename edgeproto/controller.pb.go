@@ -326,6 +326,14 @@ func ControllerKeyStringParse(str string, key *ControllerKey) {
 	}
 }
 
+func (m *ControllerKey) NotFoundError() error {
+	return fmt.Errorf("Controller key %s not found", m.GetKeyString())
+}
+
+func (m *ControllerKey) ExistsError() error {
+	return fmt.Errorf("Controller key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *ControllerKey) ValidateEnums() error {
 	return nil

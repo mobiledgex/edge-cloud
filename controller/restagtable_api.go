@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"sort"
 
+	"strconv"
+	"strings"
+
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/vmspec"
-	"strconv"
-	"strings"
 )
 
 type ResTagTableApi struct {
@@ -50,7 +50,7 @@ func (s *ResTagTableApi) CreateResTagTable(ctx context.Context, in *edgeproto.Re
 	in.Key.Name = strings.ToLower(in.Key.Name)
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
-			return objstore.ErrKVStoreKeyExists
+			return in.Key.ExistsError()
 		}
 		s.store.STMPut(stm, in)
 		return nil
@@ -64,7 +64,7 @@ func (s *ResTagTableApi) CreateResTagTable(ctx context.Context, in *edgeproto.Re
 func (s *ResTagTableApi) DeleteResTagTable(ctx context.Context, in *edgeproto.ResTagTable) (*edgeproto.Result, error) {
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, nil) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		s.store.STMDel(stm, &in.Key)
 		return nil
@@ -76,7 +76,7 @@ func (s *ResTagTableApi) GetResTagTable(ctx context.Context, in *edgeproto.ResTa
 	var tbl edgeproto.ResTagTable
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, in, &tbl) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.NotFoundError()
 		}
 		return nil
 	})
@@ -98,7 +98,7 @@ func (s *ResTagTableApi) UpdateResTagTable(ctx context.Context, in *edgeproto.Re
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &tbl) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		tbl.CopyInFields(in)
 		s.store.STMPut(stm, &tbl)
@@ -135,7 +135,7 @@ func (s *ResTagTableApi) AddResTag(ctx context.Context, in *edgeproto.ResTagTabl
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &tbl) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		for _, t := range in.Tags {
 			// Check tbl we just fetched for dups, could be an empty table
@@ -164,7 +164,7 @@ func (s *ResTagTableApi) RemoveResTag(ctx context.Context, in *edgeproto.ResTagT
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &tbl) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		for _, t := range in.Tags {
 			for j, tag := range tbl.Tags {

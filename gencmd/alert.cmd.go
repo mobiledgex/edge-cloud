@@ -163,7 +163,12 @@ func ShowAlert(c *cli.Command, in *edgeproto.Alert) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowAlert recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAlert recv failed: %s", errstr)
 		}
 		AlertHideTags(obj)
 		objs = append(objs, obj)

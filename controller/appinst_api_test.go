@@ -9,7 +9,6 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/require"
@@ -278,7 +277,7 @@ func forceAppInstState(ctx context.Context, in *edgeproto.AppInst, state edgepro
 	err := appInstApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		obj := edgeproto.AppInst{}
 		if !appInstApi.store.STMGet(stm, &in.Key, &obj) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		obj.State = state
 		appInstApi.store.STMPut(stm, &obj)

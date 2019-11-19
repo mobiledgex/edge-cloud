@@ -507,6 +507,14 @@ func FlavorKeyStringParse(str string, key *FlavorKey) {
 	}
 }
 
+func (m *FlavorKey) NotFoundError() error {
+	return fmt.Errorf("Flavor key %s not found", m.GetKeyString())
+}
+
+func (m *FlavorKey) ExistsError() error {
+	return fmt.Errorf("Flavor key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *FlavorKey) ValidateEnums() error {
 	return nil

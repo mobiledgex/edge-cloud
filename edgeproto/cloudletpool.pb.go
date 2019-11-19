@@ -738,6 +738,14 @@ func CloudletPoolKeyStringParse(str string, key *CloudletPoolKey) {
 	}
 }
 
+func (m *CloudletPoolKey) NotFoundError() error {
+	return fmt.Errorf("CloudletPool key %s not found", m.GetKeyString())
+}
+
+func (m *CloudletPoolKey) ExistsError() error {
+	return fmt.Errorf("CloudletPool key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *CloudletPoolKey) ValidateEnums() error {
 	return nil
@@ -1655,6 +1663,14 @@ func CloudletPoolMemberStringParse(str string, key *CloudletPoolMember) {
 	if err != nil {
 		log.FatalLog("Failed to unmarshal CloudletPoolMember key string", "str", str)
 	}
+}
+
+func (m *CloudletPoolMember) NotFoundError() error {
+	return fmt.Errorf("CloudletPoolMember key %s not found", m.GetKeyString())
+}
+
+func (m *CloudletPoolMember) ExistsError() error {
+	return fmt.Errorf("CloudletPoolMember key %s already exists", m.GetKeyString())
 }
 
 func (m *CloudletPoolMember) GetObjKey() objstore.ObjKey {

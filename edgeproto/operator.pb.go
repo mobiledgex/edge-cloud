@@ -399,6 +399,14 @@ func OperatorKeyStringParse(str string, key *OperatorKey) {
 	}
 }
 
+func (m *OperatorKey) NotFoundError() error {
+	return fmt.Errorf("Operator key %s not found", m.GetKeyString())
+}
+
+func (m *OperatorKey) ExistsError() error {
+	return fmt.Errorf("Operator key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *OperatorKey) ValidateEnums() error {
 	return nil
