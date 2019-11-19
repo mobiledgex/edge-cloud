@@ -36,6 +36,7 @@ type ApplicationData struct {
 	CloudletPools       []CloudletPool       `yaml:"cloudletpools"`
 	CloudletPoolMembers []CloudletPoolMember `yaml:"cloudletpoolmembers"`
 	AutoScalePolicies   []AutoScalePolicy    `yaml:"autoscalepolicies"`
+	ResTagTables        []ResTagTable        `ymal:"restagtables"`
 }
 
 // sort each slice by key
@@ -81,6 +82,9 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.AutoScalePolicies[:], func(i, j int) bool {
 		return a.AutoScalePolicies[i].Key.GetKeyString() < a.AutoScalePolicies[j].Key.GetKeyString()
+	})
+	sort.Slice(a.ResTagTables[:], func(i, j int) bool {
+		return a.ResTagTables[i].Key.GetKeyString() < a.ResTagTables[j].Key.GetKeyString()
 	})
 }
 
@@ -254,6 +258,20 @@ func (key *CloudletPoolMember) ValidateKey() error {
 
 func (s *CloudletPoolMember) Validate(fields map[string]struct{}) error {
 	return s.ValidateKey()
+}
+
+func (key *ResTagTableKey) ValidateKey() error {
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid ResTagTable name")
+	}
+	return nil
+}
+
+func (s *ResTagTable) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (key *AppInstKey) ValidateKey() error {
@@ -538,6 +556,7 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPool))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPoolMember))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAutoScalePolicy))
+	opts = append(opts, cmpopts.SortSlices(CmpSortResTagTable))
 	return opts
 }
 

@@ -182,6 +182,8 @@ var CloudletRefsOptionalArgs = []string{
 	"rootlbports.value",
 	"useddynamicips",
 	"usedstaticips",
+	"optresusedmap.key",
+	"optresusedmap.value",
 }
 var CloudletRefsAliasArgs = []string{}
 var CloudletRefsComments = map[string]string{
@@ -203,6 +205,14 @@ var RootLbPortsEntryOptionalArgs = []string{
 var RootLbPortsEntryAliasArgs = []string{}
 var RootLbPortsEntryComments = map[string]string{}
 var RootLbPortsEntrySpecialArgs = map[string]string{}
+var OptResUsedMapEntryRequiredArgs = []string{}
+var OptResUsedMapEntryOptionalArgs = []string{
+	"key",
+	"value",
+}
+var OptResUsedMapEntryAliasArgs = []string{}
+var OptResUsedMapEntryComments = map[string]string{}
+var OptResUsedMapEntrySpecialArgs = map[string]string{}
 var ClusterRefsRequiredArgs = []string{
 	"key.clusterkey.name",
 	"key.cloudletkey.operatorkey.name",
