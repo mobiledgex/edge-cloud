@@ -38,7 +38,7 @@ var LocComments = map[string]string{
 	"latitude":           "latitude in WGS 84 coordinates",
 	"longitude":          "longitude in WGS 84 coordinates",
 	"horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"verticalaccuracy":   "veritical accuracy (meters)",
+	"verticalaccuracy":   "vertical accuracy (meters)",
 	"altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"speed":              "speed (IOS) / velocity (Android) (meters/sec)",
