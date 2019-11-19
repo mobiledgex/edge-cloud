@@ -153,7 +153,7 @@ func (s *CloudletInfoApi) checkCloudletReady(key *edgeproto.CloudletKey) error {
 	// upgrade but cloudletInfo is yet to transition to it
 	cloudlet := edgeproto.Cloudlet{}
 	if !cloudletApi.cache.Get(key, &cloudlet) {
-		return objstore.ErrKVStoreKeyNotFound
+		return key.NotFoundError()
 	}
 	if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
 		cloudlet.State == edgeproto.TrackedState_UPDATING {

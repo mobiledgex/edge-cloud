@@ -58,7 +58,7 @@ func TestEtcdLease(t *testing.T) {
 	// wait 3 seconds, then key should be revoked
 	time.Sleep(3 * time.Second)
 	_, _, _, err = objStore.Get(key)
-	assert.Equal(t, objstore.ErrKVStoreKeyNotFound, err, "check expired")
+	assert.Equal(t, objstore.NotFoundError(key), err, "check expired")
 
 	assert.Nil(t, kperr, "keepalive error")
 }

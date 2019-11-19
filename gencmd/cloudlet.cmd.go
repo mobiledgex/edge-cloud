@@ -101,7 +101,12 @@ func CreateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("CreateCloudlet recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateCloudlet recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -164,7 +169,12 @@ func DeleteCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("DeleteCloudlet recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteCloudlet recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -228,7 +238,12 @@ func UpdateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("UpdateCloudlet recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateCloudlet recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -291,7 +306,12 @@ func ShowCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowCloudlet recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudlet recv failed: %s", errstr)
 		}
 		CloudletHideTags(obj)
 		objs = append(objs, obj)
@@ -478,7 +498,12 @@ func ShowCloudletInfo(c *cli.Command, in *edgeproto.CloudletInfo) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowCloudletInfo recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudletInfo recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}
@@ -661,7 +686,12 @@ func ShowCloudletMetrics(c *cli.Command, in *edgeproto.CloudletMetrics) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowCloudletMetrics recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudletMetrics recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}

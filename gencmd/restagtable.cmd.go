@@ -229,7 +229,12 @@ func ShowResTagTable(c *cli.Command, in *edgeproto.ResTagTable) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowResTagTable recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowResTagTable recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}

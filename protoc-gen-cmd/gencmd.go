@@ -281,7 +281,12 @@ func {{.Method}}(c *cli.Command, in *{{.FQInType}}) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("{{.Method}} recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("{{.Method}} recv failed: %s", errstr)
 		}
 	{{- if .OutHideTags}}
 		{{.OutType}}HideTags(obj)

@@ -580,6 +580,14 @@ func ResTagTableKeyStringParse(str string, key *ResTagTableKey) {
 	}
 }
 
+func (m *ResTagTableKey) NotFoundError() error {
+	return fmt.Errorf("ResTagTable key %s not found", m.GetKeyString())
+}
+
+func (m *ResTagTableKey) ExistsError() error {
+	return fmt.Errorf("ResTagTable key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *ResTagTableKey) ValidateEnums() error {
 	if err := m.OperatorKey.ValidateEnums(); err != nil {

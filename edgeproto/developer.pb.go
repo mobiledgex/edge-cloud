@@ -398,6 +398,14 @@ func DeveloperKeyStringParse(str string, key *DeveloperKey) {
 	}
 }
 
+func (m *DeveloperKey) NotFoundError() error {
+	return fmt.Errorf("Developer key %s not found", m.GetKeyString())
+}
+
+func (m *DeveloperKey) ExistsError() error {
+	return fmt.Errorf("Developer key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *DeveloperKey) ValidateEnums() error {
 	return nil

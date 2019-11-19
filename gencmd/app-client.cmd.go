@@ -481,7 +481,12 @@ func GetQosPositionKpi(c *cli.Command, in *distributed_match_engine.QosPositionR
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("GetQosPositionKpi recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("GetQosPositionKpi recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}

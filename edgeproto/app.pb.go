@@ -720,6 +720,14 @@ func AppKeyStringParse(str string, key *AppKey) {
 	}
 }
 
+func (m *AppKey) NotFoundError() error {
+	return fmt.Errorf("App key %s not found", m.GetKeyString())
+}
+
+func (m *AppKey) ExistsError() error {
+	return fmt.Errorf("App key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *AppKey) ValidateEnums() error {
 	if err := m.DeveloperKey.ValidateEnums(); err != nil {
