@@ -618,10 +618,10 @@ func (s *AppInstApi) updateAppInstStore(ctx context.Context, in *edgeproto.AppIn
 	return err
 }
 
-// updateAppInstInternal returns true if the appinst updated, false otherwise.  False value with no error means no update was needed
-func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppInstKey, cb edgeproto.AppInstApi_UpdateAppInstServer, forceUpdate bool) (bool, error) {
+// refreshAppInstInternal returns true if the appinst updated, false otherwise.  False value with no error means no update was needed
+func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.AppInstKey, cb edgeproto.AppInstApi_RefreshAppInstServer, forceUpdate bool) (bool, error) {
 	ctx := cb.Context()
-	log.SpanLog(ctx, log.DebugLevelApi, "updateAppInstInternal", "key", key)
+	log.SpanLog(ctx, log.DebugLevelApi, "refreshAppInstInternal", "key", key)
 
 	updatedRevision := false
 	crmUpdateRequired := false
@@ -685,7 +685,7 @@ func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, key edgeproto.AppI
 	}
 }
 
-func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
+func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_RefreshAppInstServer) error {
 	ctx := cb.Context()
 
 	if in.UpdateMultiple {
@@ -740,7 +740,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	for instkey, _ := range instances {
 		go func(k edgeproto.AppInstKey) {
 			log.DebugLog(log.DebugLevelApi, "updating AppInst", "key", k)
-			updated, err := s.updateAppInstInternal(DefCallContext(), k, cb, in.ForceUpdate)
+			updated, err := s.refreshAppInstInternal(DefCallContext(), k, cb, in.ForceUpdate)
 			if err == nil {
 				instanceUpdateResults[k] <- updateResult{errString: "", revisionUpdated: updated}
 			} else {
@@ -773,6 +773,72 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	}
 	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Completed: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
 	return nil
+}
+
+func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
+	ctx := cb.Context()
+	fmap := edgeproto.MakeFieldMap(in.Fields)
+	err := in.Validate(fmap)
+	if err != nil {
+		return err
+	}
+
+	allowedFields := []string{}
+	badFields := []string{}
+	for _, field := range in.Fields {
+		if field == edgeproto.AppInstFieldCrmOverride ||
+			field == edgeproto.AppInstFieldKey ||
+			in.IsKeyField(field) {
+			continue
+		} else if field == edgeproto.AppInstFieldConfigs || field == edgeproto.AppInstFieldConfigsKind || field == edgeproto.AppInstFieldConfigsConfig {
+			// only thing modifiable right now is the "configs".
+			allowedFields = append(allowedFields, field)
+		} else {
+			badFields = append(badFields, field)
+		}
+	}
+	if len(badFields) > 0 {
+		// cat all the bad field names and return error
+		badstrs := []string{}
+		for _, bad := range badFields {
+			badstrs = append(badstrs, edgeproto.AppInstAllFieldsStringMap[bad])
+		}
+		return fmt.Errorf("specified fields %s cannot be modified", strings.Join(badstrs, ","))
+	}
+	in.Fields = allowedFields
+	if len(allowedFields) == 0 {
+		return fmt.Errorf("Nothing specified to modify")
+	}
+
+	cctx := DefCallContext()
+	cctx.SetOverride(&in.CrmOverride)
+
+	cur := edgeproto.AppInst{}
+	changeCount := 0
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		changeCount = cur.CopyInFields(in)
+		if changeCount == 0 {
+			// nothing changed
+			return nil
+		}
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	if changeCount == 0 {
+		return nil
+	}
+	if ignoreCRM(cctx) {
+		return nil
+	}
+	forceUpdate := true
+	_, err = s.refreshAppInstInternal(cctx, in.Key, cb, forceUpdate)
+	return err
 }
 
 func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
@@ -951,6 +1017,8 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		inst.Status = in.Status
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			inst.Errors = in.Errors
+		} else {
+			inst.Errors = nil
 		}
 		inst.RuntimeInfo = in.RuntimeInfo
 		s.store.STMPut(stm, &inst)

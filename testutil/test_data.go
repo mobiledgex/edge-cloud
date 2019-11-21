@@ -855,7 +855,7 @@ func GetCloudletUsedDisk(indices ...int) uint64 {
 var AlertData = []edgeproto.Alert{
 	edgeproto.Alert{
 		Labels: map[string]string{
-			"alertname": "Scale Cluster Up",
+			"alertname": "AutoScaleUp",
 			"operator":  ClusterInstData[0].Key.CloudletKey.OperatorKey.Name,
 			"cloudlet":  ClusterInstData[0].Key.CloudletKey.Name,
 			"cluster":   ClusterInstData[0].Key.ClusterKey.Name,
@@ -874,7 +874,7 @@ var AlertData = []edgeproto.Alert{
 	},
 	edgeproto.Alert{
 		Labels: map[string]string{
-			"alertname": "Scale Cluster Down",
+			"alertname": "AutoScaleDown",
 			"operator":  ClusterInstData[0].Key.CloudletKey.OperatorKey.Name,
 			"cloudlet":  ClusterInstData[0].Key.CloudletKey.Name,
 			"cluster":   ClusterInstData[0].Key.ClusterKey.Name,
@@ -893,7 +893,7 @@ var AlertData = []edgeproto.Alert{
 	},
 	edgeproto.Alert{
 		Labels: map[string]string{
-			"alertname": "Cluster Offline",
+			"alertname": "AutoScaleUp",
 			"operator":  ClusterInstData[1].Key.CloudletKey.OperatorKey.Name,
 			"cloudlet":  ClusterInstData[1].Key.CloudletKey.Name,
 			"cluster":   ClusterInstData[1].Key.ClusterKey.Name,

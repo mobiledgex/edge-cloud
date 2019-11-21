@@ -873,7 +873,7 @@ func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.C
 		key.Name = tblname
 		key.OperatorKey = in.Key.OperatorKey
 		tbl, err := resTagTableApi.GetResTagTable(ctx, &key)
-		if err.Error() == key.NotFoundError().Error() {
+		if err != nil && err.Error() == key.NotFoundError().Error() {
 			// auto-create empty
 			tbl.Key = key
 			_, err = resTagTableApi.CreateResTagTable(ctx, tbl)
