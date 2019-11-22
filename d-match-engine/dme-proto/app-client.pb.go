@@ -2251,7 +2251,13 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) int {
 				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 				changed++
 			}
+		} else if m.GpsLocation.Timestamp != nil {
+			m.GpsLocation.Timestamp = nil
+			changed++
 		}
+	} else if m.GpsLocation != nil {
+		m.GpsLocation = nil
+		changed++
 	}
 	if m.DevName != src.DevName {
 		m.DevName = src.DevName
@@ -2293,6 +2299,7 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 	if src.Ports != nil {
 		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
 			m.Ports = make([]*AppPort, len(src.Ports))
+			changed++
 		}
 		for i0 := 0; i0 < len(src.Ports); i0++ {
 			m.Ports[i0] = &AppPort{}
@@ -2321,6 +2328,9 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 				changed++
 			}
 		}
+	} else if m.Ports != nil {
+		m.Ports = nil
+		changed++
 	}
 	if src.CloudletLocation != nil {
 		m.CloudletLocation = &Loc{}
@@ -2362,7 +2372,13 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 				m.CloudletLocation.Timestamp.Nanos = src.CloudletLocation.Timestamp.Nanos
 				changed++
 			}
+		} else if m.CloudletLocation.Timestamp != nil {
+			m.CloudletLocation.Timestamp = nil
+			changed++
 		}
+	} else if m.CloudletLocation != nil {
+		m.CloudletLocation = nil
+		changed++
 	}
 	return changed
 }
@@ -2437,7 +2453,13 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) int {
 				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 				changed++
 			}
+		} else if m.GpsLocation.Timestamp != nil {
+			m.GpsLocation.Timestamp = nil
+			changed++
 		}
+	} else if m.GpsLocation != nil {
+		m.GpsLocation = nil
+		changed++
 	}
 	if m.VerifyLocToken != src.VerifyLocToken {
 		m.VerifyLocToken = src.VerifyLocToken
@@ -2566,7 +2588,13 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) int {
 				m.NetworkLocation.Timestamp.Nanos = src.NetworkLocation.Timestamp.Nanos
 				changed++
 			}
+		} else if m.NetworkLocation.Timestamp != nil {
+			m.NetworkLocation.Timestamp = nil
+			changed++
 		}
+	} else if m.NetworkLocation != nil {
+		m.NetworkLocation = nil
+		changed++
 	}
 	return changed
 }
@@ -2636,7 +2664,13 @@ func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) int {
 				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 				changed++
 			}
+		} else if m.GpsLocation.Timestamp != nil {
+			m.GpsLocation.Timestamp = nil
+			changed++
 		}
+	} else if m.GpsLocation != nil {
+		m.GpsLocation = nil
+		changed++
 	}
 	return changed
 }
@@ -2666,6 +2700,7 @@ func (m *Appinstance) CopyInFields(src *Appinstance) int {
 	if src.Ports != nil {
 		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
 			m.Ports = make([]*AppPort, len(src.Ports))
+			changed++
 		}
 		for i0 := 0; i0 < len(src.Ports); i0++ {
 			m.Ports[i0] = &AppPort{}
@@ -2694,6 +2729,9 @@ func (m *Appinstance) CopyInFields(src *Appinstance) int {
 				changed++
 			}
 		}
+	} else if m.Ports != nil {
+		m.Ports = nil
+		changed++
 	}
 	return changed
 }
@@ -2758,7 +2796,13 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 				changed++
 			}
+		} else if m.GpsLocation.Timestamp != nil {
+			m.GpsLocation.Timestamp = nil
+			changed++
 		}
+	} else if m.GpsLocation != nil {
+		m.GpsLocation = nil
+		changed++
 	}
 	if m.Distance != src.Distance {
 		m.Distance = src.Distance
@@ -2767,6 +2811,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 	if src.Appinstances != nil {
 		if m.Appinstances == nil || len(m.Appinstances) != len(src.Appinstances) {
 			m.Appinstances = make([]*Appinstance, len(src.Appinstances))
+			changed++
 		}
 		for i0 := 0; i0 < len(src.Appinstances); i0++ {
 			m.Appinstances[i0] = &Appinstance{}
@@ -2785,6 +2830,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 			if src.Appinstances[i0].Ports != nil {
 				if m.Appinstances[i0].Ports == nil || len(m.Appinstances[i0].Ports) != len(src.Appinstances[i0].Ports) {
 					m.Appinstances[i0].Ports = make([]*AppPort, len(src.Appinstances[i0].Ports))
+					changed++
 				}
 				for i1 := 0; i1 < len(src.Appinstances[i0].Ports); i1++ {
 					m.Appinstances[i0].Ports[i1] = &AppPort{}
@@ -2813,8 +2859,14 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 						changed++
 					}
 				}
+			} else if m.Appinstances[i0].Ports != nil {
+				m.Appinstances[i0].Ports = nil
+				changed++
 			}
 		}
+	} else if m.Appinstances != nil {
+		m.Appinstances = nil
+		changed++
 	}
 	return changed
 }
@@ -2845,6 +2897,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 	if src.Cloudlets != nil {
 		if m.Cloudlets == nil || len(m.Cloudlets) != len(src.Cloudlets) {
 			m.Cloudlets = make([]*CloudletLocation, len(src.Cloudlets))
+			changed++
 		}
 		for i0 := 0; i0 < len(src.Cloudlets); i0++ {
 			m.Cloudlets[i0] = &CloudletLocation{}
@@ -2896,7 +2949,13 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 						m.Cloudlets[i0].GpsLocation.Timestamp.Nanos = src.Cloudlets[i0].GpsLocation.Timestamp.Nanos
 						changed++
 					}
+				} else if m.Cloudlets[i0].GpsLocation.Timestamp != nil {
+					m.Cloudlets[i0].GpsLocation.Timestamp = nil
+					changed++
 				}
+			} else if m.Cloudlets[i0].GpsLocation != nil {
+				m.Cloudlets[i0].GpsLocation = nil
+				changed++
 			}
 			if m.Cloudlets[i0].Distance != src.Cloudlets[i0].Distance {
 				m.Cloudlets[i0].Distance = src.Cloudlets[i0].Distance
@@ -2905,6 +2964,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 			if src.Cloudlets[i0].Appinstances != nil {
 				if m.Cloudlets[i0].Appinstances == nil || len(m.Cloudlets[i0].Appinstances) != len(src.Cloudlets[i0].Appinstances) {
 					m.Cloudlets[i0].Appinstances = make([]*Appinstance, len(src.Cloudlets[i0].Appinstances))
+					changed++
 				}
 				for i1 := 0; i1 < len(src.Cloudlets[i0].Appinstances); i1++ {
 					m.Cloudlets[i0].Appinstances[i1] = &Appinstance{}
@@ -2923,6 +2983,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 					if src.Cloudlets[i0].Appinstances[i1].Ports != nil {
 						if m.Cloudlets[i0].Appinstances[i1].Ports == nil || len(m.Cloudlets[i0].Appinstances[i1].Ports) != len(src.Cloudlets[i0].Appinstances[i1].Ports) {
 							m.Cloudlets[i0].Appinstances[i1].Ports = make([]*AppPort, len(src.Cloudlets[i0].Appinstances[i1].Ports))
+							changed++
 						}
 						for i2 := 0; i2 < len(src.Cloudlets[i0].Appinstances[i1].Ports); i2++ {
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2] = &AppPort{}
@@ -2951,10 +3012,19 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 								changed++
 							}
 						}
+					} else if m.Cloudlets[i0].Appinstances[i1].Ports != nil {
+						m.Cloudlets[i0].Appinstances[i1].Ports = nil
+						changed++
 					}
 				}
+			} else if m.Cloudlets[i0].Appinstances != nil {
+				m.Cloudlets[i0].Appinstances = nil
+				changed++
 			}
 		}
+	} else if m.Cloudlets != nil {
+		m.Cloudlets = nil
+		changed++
 	}
 	return changed
 }
@@ -3006,6 +3076,7 @@ func (m *AppFqdn) CopyInFields(src *AppFqdn) int {
 	}
 	if m.Fqdns == nil || len(m.Fqdns) != len(src.Fqdns) {
 		m.Fqdns = make([]string, len(src.Fqdns))
+		changed++
 	}
 	copy(m.Fqdns, src.Fqdns)
 	changed++
@@ -3030,6 +3101,7 @@ func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
 	if src.AppFqdns != nil {
 		if m.AppFqdns == nil || len(m.AppFqdns) != len(src.AppFqdns) {
 			m.AppFqdns = make([]*AppFqdn, len(src.AppFqdns))
+			changed++
 		}
 		for i0 := 0; i0 < len(src.AppFqdns); i0++ {
 			m.AppFqdns[i0] = &AppFqdn{}
@@ -3047,6 +3119,7 @@ func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
 			}
 			if m.AppFqdns[i0].Fqdns == nil || len(m.AppFqdns[i0].Fqdns) != len(src.AppFqdns[i0].Fqdns) {
 				m.AppFqdns[i0].Fqdns = make([]string, len(src.AppFqdns[i0].Fqdns))
+				changed++
 			}
 			copy(m.AppFqdns[i0].Fqdns, src.AppFqdns[i0].Fqdns)
 			changed++
@@ -3055,6 +3128,9 @@ func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
 				changed++
 			}
 		}
+	} else if m.AppFqdns != nil {
+		m.AppFqdns = nil
+		changed++
 	}
 	if m.Status != src.Status {
 		m.Status = src.Status
@@ -3184,7 +3260,13 @@ func (m *QosPosition) CopyInFields(src *QosPosition) int {
 				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 				changed++
 			}
+		} else if m.GpsLocation.Timestamp != nil {
+			m.GpsLocation.Timestamp = nil
+			changed++
 		}
+	} else if m.GpsLocation != nil {
+		m.GpsLocation = nil
+		changed++
 	}
 	return changed
 }
@@ -3201,21 +3283,25 @@ func (m *BandSelection) CopyInFields(src *BandSelection) int {
 	changed := 0
 	if m.Rat_2G == nil || len(m.Rat_2G) != len(src.Rat_2G) {
 		m.Rat_2G = make([]string, len(src.Rat_2G))
+		changed++
 	}
 	copy(m.Rat_2G, src.Rat_2G)
 	changed++
 	if m.Rat_3G == nil || len(m.Rat_3G) != len(src.Rat_3G) {
 		m.Rat_3G = make([]string, len(src.Rat_3G))
+		changed++
 	}
 	copy(m.Rat_3G, src.Rat_3G)
 	changed++
 	if m.Rat_4G == nil || len(m.Rat_4G) != len(src.Rat_4G) {
 		m.Rat_4G = make([]string, len(src.Rat_4G))
+		changed++
 	}
 	copy(m.Rat_4G, src.Rat_4G)
 	changed++
 	if m.Rat_5G == nil || len(m.Rat_5G) != len(src.Rat_5G) {
 		m.Rat_5G = make([]string, len(src.Rat_5G))
+		changed++
 	}
 	copy(m.Rat_5G, src.Rat_5G)
 	changed++
@@ -3240,6 +3326,7 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 	if src.Positions != nil {
 		if m.Positions == nil || len(m.Positions) != len(src.Positions) {
 			m.Positions = make([]*QosPosition, len(src.Positions))
+			changed++
 		}
 		for i0 := 0; i0 < len(src.Positions); i0++ {
 			m.Positions[i0] = &QosPosition{}
@@ -3287,9 +3374,18 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 						m.Positions[i0].GpsLocation.Timestamp.Nanos = src.Positions[i0].GpsLocation.Timestamp.Nanos
 						changed++
 					}
+				} else if m.Positions[i0].GpsLocation.Timestamp != nil {
+					m.Positions[i0].GpsLocation.Timestamp = nil
+					changed++
 				}
+			} else if m.Positions[i0].GpsLocation != nil {
+				m.Positions[i0].GpsLocation = nil
+				changed++
 			}
 		}
+	} else if m.Positions != nil {
+		m.Positions = nil
+		changed++
 	}
 	if m.LteCategory != src.LteCategory {
 		m.LteCategory = src.LteCategory
@@ -3299,23 +3395,30 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 		m.BandSelection = &BandSelection{}
 		if m.BandSelection.Rat_2G == nil || len(m.BandSelection.Rat_2G) != len(src.BandSelection.Rat_2G) {
 			m.BandSelection.Rat_2G = make([]string, len(src.BandSelection.Rat_2G))
+			changed++
 		}
 		copy(m.BandSelection.Rat_2G, src.BandSelection.Rat_2G)
 		changed++
 		if m.BandSelection.Rat_3G == nil || len(m.BandSelection.Rat_3G) != len(src.BandSelection.Rat_3G) {
 			m.BandSelection.Rat_3G = make([]string, len(src.BandSelection.Rat_3G))
+			changed++
 		}
 		copy(m.BandSelection.Rat_3G, src.BandSelection.Rat_3G)
 		changed++
 		if m.BandSelection.Rat_4G == nil || len(m.BandSelection.Rat_4G) != len(src.BandSelection.Rat_4G) {
 			m.BandSelection.Rat_4G = make([]string, len(src.BandSelection.Rat_4G))
+			changed++
 		}
 		copy(m.BandSelection.Rat_4G, src.BandSelection.Rat_4G)
 		changed++
 		if m.BandSelection.Rat_5G == nil || len(m.BandSelection.Rat_5G) != len(src.BandSelection.Rat_5G) {
 			m.BandSelection.Rat_5G = make([]string, len(src.BandSelection.Rat_5G))
+			changed++
 		}
 		copy(m.BandSelection.Rat_5G, src.BandSelection.Rat_5G)
+		changed++
+	} else if m.BandSelection != nil {
+		m.BandSelection = nil
 		changed++
 	}
 	return changed
@@ -3380,7 +3483,13 @@ func (m *QosPositionKpiResult) CopyInFields(src *QosPositionKpiResult) int {
 				m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 				changed++
 			}
+		} else if m.GpsLocation.Timestamp != nil {
+			m.GpsLocation.Timestamp = nil
+			changed++
 		}
+	} else if m.GpsLocation != nil {
+		m.GpsLocation = nil
+		changed++
 	}
 	if m.DluserthroughputMin != src.DluserthroughputMin {
 		m.DluserthroughputMin = src.DluserthroughputMin
@@ -3442,6 +3551,7 @@ func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) int {
 	if src.PositionResults != nil {
 		if m.PositionResults == nil || len(m.PositionResults) != len(src.PositionResults) {
 			m.PositionResults = make([]*QosPositionKpiResult, len(src.PositionResults))
+			changed++
 		}
 		for i0 := 0; i0 < len(src.PositionResults); i0++ {
 			m.PositionResults[i0] = &QosPositionKpiResult{}
@@ -3489,7 +3599,13 @@ func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) int {
 						m.PositionResults[i0].GpsLocation.Timestamp.Nanos = src.PositionResults[i0].GpsLocation.Timestamp.Nanos
 						changed++
 					}
+				} else if m.PositionResults[i0].GpsLocation.Timestamp != nil {
+					m.PositionResults[i0].GpsLocation.Timestamp = nil
+					changed++
 				}
+			} else if m.PositionResults[i0].GpsLocation != nil {
+				m.PositionResults[i0].GpsLocation = nil
+				changed++
 			}
 			if m.PositionResults[i0].DluserthroughputMin != src.PositionResults[i0].DluserthroughputMin {
 				m.PositionResults[i0].DluserthroughputMin = src.PositionResults[i0].DluserthroughputMin
@@ -3528,6 +3644,9 @@ func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) int {
 				changed++
 			}
 		}
+	} else if m.PositionResults != nil {
+		m.PositionResults = nil
+		changed++
 	}
 	return changed
 }

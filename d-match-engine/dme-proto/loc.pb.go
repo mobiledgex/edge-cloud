@@ -223,6 +223,9 @@ func (m *Loc) CopyInFields(src *Loc) int {
 			m.Timestamp.Nanos = src.Timestamp.Nanos
 			changed++
 		}
+	} else if m.Timestamp != nil {
+		m.Timestamp = nil
+		changed++
 	}
 	return changed
 }
