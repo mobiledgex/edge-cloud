@@ -352,16 +352,14 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		return fmt.Errorf("nothing specified to update")
 	}
 	allowedFields := []string{}
-	allowedFieldsMap := make(map[string]struct{})
 	badFields := []string{}
 	for _, field := range in.Fields {
 		if field == edgeproto.ClusterInstFieldCrmOverride ||
 			field == edgeproto.ClusterInstFieldKey ||
 			in.IsKeyField(field) {
 			continue
-		} else if field == edgeproto.ClusterInstFieldNumNodes {
+		} else if field == edgeproto.ClusterInstFieldNumNodes || field == edgeproto.ClusterInstFieldAutoScalePolicy {
 			allowedFields = append(allowedFields, field)
-			allowedFieldsMap[field] = struct{}{}
 		} else {
 			badFields = append(badFields, field)
 		}

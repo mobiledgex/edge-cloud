@@ -328,6 +328,7 @@ func (m *DebugLevels) CopyInFields(src *DebugLevels) int {
 	changed := 0
 	if m.Levels == nil || len(m.Levels) != len(src.Levels) {
 		m.Levels = make([]DebugLevel, len(src.Levels))
+		changed++
 	}
 	copy(m.Levels, src.Levels)
 	changed++

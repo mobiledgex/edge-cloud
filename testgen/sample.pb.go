@@ -862,6 +862,9 @@ func (m *IncludeMessage) CopyInFields(src *IncludeMessage) int {
 			m.NestedMsg.Name = src.NestedMsg.Name
 			changed++
 		}
+	} else if m.NestedMsg != nil {
+		m.NestedMsg = nil
+		changed++
 	}
 	return changed
 }
@@ -1609,6 +1612,8 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 			fields[TestGenFieldInnerMsgId] = struct{}{}
 			fields[TestGenFieldInnerMsg] = struct{}{}
 		}
+	} else if (m.InnerMsg != nil && o.InnerMsg == nil) || (m.InnerMsg == nil && o.InnerMsg != nil) {
+		fields[TestGenFieldInnerMsg] = struct{}{}
 	}
 	if m.InnerMsgNonnull.Url != o.InnerMsgNonnull.Url {
 		fields[TestGenFieldInnerMsgNonnullUrl] = struct{}{}
@@ -1633,7 +1638,12 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 				fields[TestGenFieldIncludeMsgNestedMsg] = struct{}{}
 				fields[TestGenFieldIncludeMsg] = struct{}{}
 			}
+		} else if (m.IncludeMsg.NestedMsg != nil && o.IncludeMsg.NestedMsg == nil) || (m.IncludeMsg.NestedMsg == nil && o.IncludeMsg.NestedMsg != nil) {
+			fields[TestGenFieldIncludeMsgNestedMsg] = struct{}{}
+			fields[TestGenFieldIncludeMsg] = struct{}{}
 		}
+	} else if (m.IncludeMsg != nil && o.IncludeMsg == nil) || (m.IncludeMsg == nil && o.IncludeMsg != nil) {
+		fields[TestGenFieldIncludeMsg] = struct{}{}
 	}
 	if m.IncludeMsgNonnull.Name != o.IncludeMsgNonnull.Name {
 		fields[TestGenFieldIncludeMsgNonnullName] = struct{}{}
@@ -1649,12 +1659,17 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 			fields[TestGenFieldIncludeMsgNonnullNestedMsg] = struct{}{}
 			fields[TestGenFieldIncludeMsgNonnull] = struct{}{}
 		}
+	} else if (m.IncludeMsgNonnull.NestedMsg != nil && o.IncludeMsgNonnull.NestedMsg == nil) || (m.IncludeMsgNonnull.NestedMsg == nil && o.IncludeMsgNonnull.NestedMsg != nil) {
+		fields[TestGenFieldIncludeMsgNonnullNestedMsg] = struct{}{}
+		fields[TestGenFieldIncludeMsgNonnull] = struct{}{}
 	}
 	if m.IncludeFields != nil && o.IncludeFields != nil {
 		if m.IncludeFields.Name != o.IncludeFields.Name {
 			fields[TestGenFieldIncludeFieldsName] = struct{}{}
 			fields[TestGenFieldIncludeFields] = struct{}{}
 		}
+	} else if (m.IncludeFields != nil && o.IncludeFields == nil) || (m.IncludeFields == nil && o.IncludeFields != nil) {
+		fields[TestGenFieldIncludeFields] = struct{}{}
 	}
 	if m.IncludeFieldsNonnull.Name != o.IncludeFieldsNonnull.Name {
 		fields[TestGenFieldIncludeFieldsNonnullName] = struct{}{}
@@ -1700,7 +1715,12 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 				fields[TestGenFieldLocTimestamp] = struct{}{}
 				fields[TestGenFieldLoc] = struct{}{}
 			}
+		} else if (m.Loc.Timestamp != nil && o.Loc.Timestamp == nil) || (m.Loc.Timestamp == nil && o.Loc.Timestamp != nil) {
+			fields[TestGenFieldLocTimestamp] = struct{}{}
+			fields[TestGenFieldLoc] = struct{}{}
 		}
+	} else if (m.Loc != nil && o.Loc == nil) || (m.Loc == nil && o.Loc != nil) {
+		fields[TestGenFieldLoc] = struct{}{}
 	}
 	if m.LocNonnull.Latitude != o.LocNonnull.Latitude {
 		fields[TestGenFieldLocNonnullLatitude] = struct{}{}
@@ -1741,6 +1761,9 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 			fields[TestGenFieldLocNonnullTimestamp] = struct{}{}
 			fields[TestGenFieldLocNonnull] = struct{}{}
 		}
+	} else if (m.LocNonnull.Timestamp != nil && o.LocNonnull.Timestamp == nil) || (m.LocNonnull.Timestamp == nil && o.LocNonnull.Timestamp != nil) {
+		fields[TestGenFieldLocNonnullTimestamp] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
 	}
 	if len(m.RepeatedInt) != len(o.RepeatedInt) {
 		fields[TestGenFieldRepeatedInt] = struct{}{}
@@ -1791,9 +1814,14 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 						fields[TestGenFieldRepeatedMsgNestedMsg] = struct{}{}
 						fields[TestGenFieldRepeatedMsg] = struct{}{}
 					}
+				} else if (m.RepeatedMsg[i0].NestedMsg != nil && o.RepeatedMsg[i0].NestedMsg == nil) || (m.RepeatedMsg[i0].NestedMsg == nil && o.RepeatedMsg[i0].NestedMsg != nil) {
+					fields[TestGenFieldRepeatedMsgNestedMsg] = struct{}{}
+					fields[TestGenFieldRepeatedMsg] = struct{}{}
 				}
 			}
 		}
+	} else if (m.RepeatedMsg != nil && o.RepeatedMsg == nil) || (m.RepeatedMsg == nil && o.RepeatedMsg != nil) {
+		fields[TestGenFieldRepeatedMsg] = struct{}{}
 	}
 	if len(m.RepeatedMsgNonnull) != len(o.RepeatedMsgNonnull) {
 		fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
@@ -1813,6 +1841,9 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 					fields[TestGenFieldRepeatedMsgNonnullNestedMsg] = struct{}{}
 					fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
 				}
+			} else if (m.RepeatedMsgNonnull[i0].NestedMsg != nil && o.RepeatedMsgNonnull[i0].NestedMsg == nil) || (m.RepeatedMsgNonnull[i0].NestedMsg == nil && o.RepeatedMsgNonnull[i0].NestedMsg != nil) {
+				fields[TestGenFieldRepeatedMsgNonnullNestedMsg] = struct{}{}
+				fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
 			}
 		}
 	}
@@ -1827,6 +1858,8 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 				}
 			}
 		}
+	} else if (m.RepeatedFields != nil && o.RepeatedFields == nil) || (m.RepeatedFields == nil && o.RepeatedFields != nil) {
+		fields[TestGenFieldRepeatedFields] = struct{}{}
 	}
 	if len(m.RepeatedFieldsNonnull) != len(o.RepeatedFieldsNonnull) {
 		fields[TestGenFieldRepeatedFieldsNonnull] = struct{}{}
@@ -1853,6 +1886,8 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 				}
 			}
 		}
+	} else if (m.RepeatedInnerMsg != nil && o.RepeatedInnerMsg == nil) || (m.RepeatedInnerMsg == nil && o.RepeatedInnerMsg != nil) {
+		fields[TestGenFieldRepeatedInnerMsg] = struct{}{}
 	}
 	if len(m.RepeatedInnerMsgNonnull) != len(o.RepeatedInnerMsgNonnull) {
 		fields[TestGenFieldRepeatedInnerMsgNonnull] = struct{}{}
@@ -1912,9 +1947,14 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 						fields[TestGenFieldRepeatedLocTimestamp] = struct{}{}
 						fields[TestGenFieldRepeatedLoc] = struct{}{}
 					}
+				} else if (m.RepeatedLoc[i0].Timestamp != nil && o.RepeatedLoc[i0].Timestamp == nil) || (m.RepeatedLoc[i0].Timestamp == nil && o.RepeatedLoc[i0].Timestamp != nil) {
+					fields[TestGenFieldRepeatedLocTimestamp] = struct{}{}
+					fields[TestGenFieldRepeatedLoc] = struct{}{}
 				}
 			}
 		}
+	} else if (m.RepeatedLoc != nil && o.RepeatedLoc == nil) || (m.RepeatedLoc == nil && o.RepeatedLoc != nil) {
+		fields[TestGenFieldRepeatedLoc] = struct{}{}
 	}
 	if len(m.RepeatedLocNonnull) != len(o.RepeatedLocNonnull) {
 		fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
@@ -1959,6 +1999,9 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 					fields[TestGenFieldRepeatedLocNonnullTimestamp] = struct{}{}
 					fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
 				}
+			} else if (m.RepeatedLocNonnull[i0].Timestamp != nil && o.RepeatedLocNonnull[i0].Timestamp == nil) || (m.RepeatedLocNonnull[i0].Timestamp == nil && o.RepeatedLocNonnull[i0].Timestamp != nil) {
+				fields[TestGenFieldRepeatedLocNonnullTimestamp] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
 			}
 		}
 	}
@@ -1978,6 +2021,8 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 				}
 			}
 		}
+	} else if (m.IntMap != nil && o.IntMap == nil) || (m.IntMap == nil && o.IntMap != nil) {
+		fields[TestGenFieldIntMap] = struct{}{}
 	}
 	if m.MsgMap != nil && o.MsgMap != nil {
 		if len(m.MsgMap) != len(o.MsgMap) {
@@ -1996,6 +2041,8 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 				}
 			}
 		}
+	} else if (m.MsgMap != nil && o.MsgMap == nil) || (m.MsgMap == nil && o.MsgMap != nil) {
+		fields[TestGenFieldMsgMap] = struct{}{}
 	}
 	if m.Unused != o.Unused {
 		fields[TestGenFieldUnused] = struct{}{}
@@ -2101,19 +2148,24 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 			changed++
 		}
 	}
-	if _, set := fmap["18"]; set && src.InnerMsg != nil {
-		m.InnerMsg = &TestGen_InnerMessage{}
-		if _, set := fmap["18.1"]; set {
-			if m.InnerMsg.Url != src.InnerMsg.Url {
-				m.InnerMsg.Url = src.InnerMsg.Url
-				changed++
+	if _, set := fmap["18"]; set {
+		if src.InnerMsg != nil {
+			m.InnerMsg = &TestGen_InnerMessage{}
+			if _, set := fmap["18.1"]; set {
+				if m.InnerMsg.Url != src.InnerMsg.Url {
+					m.InnerMsg.Url = src.InnerMsg.Url
+					changed++
+				}
 			}
-		}
-		if _, set := fmap["18.2"]; set {
-			if m.InnerMsg.Id != src.InnerMsg.Id {
-				m.InnerMsg.Id = src.InnerMsg.Id
-				changed++
+			if _, set := fmap["18.2"]; set {
+				if m.InnerMsg.Id != src.InnerMsg.Id {
+					m.InnerMsg.Id = src.InnerMsg.Id
+					changed++
+				}
 			}
+		} else if m.InnerMsg != nil {
+			m.InnerMsg = nil
+			changed++
 		}
 	}
 	if _, set := fmap["19"]; set {
@@ -2130,28 +2182,38 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 			}
 		}
 	}
-	if _, set := fmap["20"]; set && src.IncludeMsg != nil {
-		m.IncludeMsg = &IncludeMessage{}
-		if _, set := fmap["20.1"]; set {
-			if m.IncludeMsg.Name != src.IncludeMsg.Name {
-				m.IncludeMsg.Name = src.IncludeMsg.Name
-				changed++
-			}
-		}
-		if _, set := fmap["20.2"]; set {
-			if m.IncludeMsg.Id != src.IncludeMsg.Id {
-				m.IncludeMsg.Id = src.IncludeMsg.Id
-				changed++
-			}
-		}
-		if _, set := fmap["20.3"]; set && src.IncludeMsg.NestedMsg != nil {
-			m.IncludeMsg.NestedMsg = &NestedMessage{}
-			if _, set := fmap["20.3.1"]; set {
-				if m.IncludeMsg.NestedMsg.Name != src.IncludeMsg.NestedMsg.Name {
-					m.IncludeMsg.NestedMsg.Name = src.IncludeMsg.NestedMsg.Name
+	if _, set := fmap["20"]; set {
+		if src.IncludeMsg != nil {
+			m.IncludeMsg = &IncludeMessage{}
+			if _, set := fmap["20.1"]; set {
+				if m.IncludeMsg.Name != src.IncludeMsg.Name {
+					m.IncludeMsg.Name = src.IncludeMsg.Name
 					changed++
 				}
 			}
+			if _, set := fmap["20.2"]; set {
+				if m.IncludeMsg.Id != src.IncludeMsg.Id {
+					m.IncludeMsg.Id = src.IncludeMsg.Id
+					changed++
+				}
+			}
+			if _, set := fmap["20.3"]; set {
+				if src.IncludeMsg.NestedMsg != nil {
+					m.IncludeMsg.NestedMsg = &NestedMessage{}
+					if _, set := fmap["20.3.1"]; set {
+						if m.IncludeMsg.NestedMsg.Name != src.IncludeMsg.NestedMsg.Name {
+							m.IncludeMsg.NestedMsg.Name = src.IncludeMsg.NestedMsg.Name
+							changed++
+						}
+					}
+				} else if m.IncludeMsg.NestedMsg != nil {
+					m.IncludeMsg.NestedMsg = nil
+					changed++
+				}
+			}
+		} else if m.IncludeMsg != nil {
+			m.IncludeMsg = nil
+			changed++
 		}
 	}
 	if _, set := fmap["21"]; set {
@@ -2167,23 +2229,33 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 				changed++
 			}
 		}
-		if _, set := fmap["21.3"]; set && src.IncludeMsgNonnull.NestedMsg != nil {
-			m.IncludeMsgNonnull.NestedMsg = &NestedMessage{}
-			if _, set := fmap["21.3.1"]; set {
-				if m.IncludeMsgNonnull.NestedMsg.Name != src.IncludeMsgNonnull.NestedMsg.Name {
-					m.IncludeMsgNonnull.NestedMsg.Name = src.IncludeMsgNonnull.NestedMsg.Name
-					changed++
+		if _, set := fmap["21.3"]; set {
+			if src.IncludeMsgNonnull.NestedMsg != nil {
+				m.IncludeMsgNonnull.NestedMsg = &NestedMessage{}
+				if _, set := fmap["21.3.1"]; set {
+					if m.IncludeMsgNonnull.NestedMsg.Name != src.IncludeMsgNonnull.NestedMsg.Name {
+						m.IncludeMsgNonnull.NestedMsg.Name = src.IncludeMsgNonnull.NestedMsg.Name
+						changed++
+					}
 				}
+			} else if m.IncludeMsgNonnull.NestedMsg != nil {
+				m.IncludeMsgNonnull.NestedMsg = nil
+				changed++
 			}
 		}
 	}
-	if _, set := fmap["22"]; set && src.IncludeFields != nil {
-		m.IncludeFields = &IncludeFields{}
-		if _, set := fmap["22.2"]; set {
-			if m.IncludeFields.Name != src.IncludeFields.Name {
-				m.IncludeFields.Name = src.IncludeFields.Name
-				changed++
+	if _, set := fmap["22"]; set {
+		if src.IncludeFields != nil {
+			m.IncludeFields = &IncludeFields{}
+			if _, set := fmap["22.2"]; set {
+				if m.IncludeFields.Name != src.IncludeFields.Name {
+					m.IncludeFields.Name = src.IncludeFields.Name
+					changed++
+				}
 			}
+		} else if m.IncludeFields != nil {
+			m.IncludeFields = nil
+			changed++
 		}
 	}
 	if _, set := fmap["23"]; set {
@@ -2194,64 +2266,74 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 			}
 		}
 	}
-	if _, set := fmap["24"]; set && src.Loc != nil {
-		m.Loc = &distributed_match_engine.Loc{}
-		if _, set := fmap["24.1"]; set {
-			if m.Loc.Latitude != src.Loc.Latitude {
-				m.Loc.Latitude = src.Loc.Latitude
-				changed++
-			}
-		}
-		if _, set := fmap["24.2"]; set {
-			if m.Loc.Longitude != src.Loc.Longitude {
-				m.Loc.Longitude = src.Loc.Longitude
-				changed++
-			}
-		}
-		if _, set := fmap["24.3"]; set {
-			if m.Loc.HorizontalAccuracy != src.Loc.HorizontalAccuracy {
-				m.Loc.HorizontalAccuracy = src.Loc.HorizontalAccuracy
-				changed++
-			}
-		}
-		if _, set := fmap["24.4"]; set {
-			if m.Loc.VerticalAccuracy != src.Loc.VerticalAccuracy {
-				m.Loc.VerticalAccuracy = src.Loc.VerticalAccuracy
-				changed++
-			}
-		}
-		if _, set := fmap["24.5"]; set {
-			if m.Loc.Altitude != src.Loc.Altitude {
-				m.Loc.Altitude = src.Loc.Altitude
-				changed++
-			}
-		}
-		if _, set := fmap["24.6"]; set {
-			if m.Loc.Course != src.Loc.Course {
-				m.Loc.Course = src.Loc.Course
-				changed++
-			}
-		}
-		if _, set := fmap["24.7"]; set {
-			if m.Loc.Speed != src.Loc.Speed {
-				m.Loc.Speed = src.Loc.Speed
-				changed++
-			}
-		}
-		if _, set := fmap["24.8"]; set && src.Loc.Timestamp != nil {
-			m.Loc.Timestamp = &distributed_match_engine.Timestamp{}
-			if _, set := fmap["24.8.1"]; set {
-				if m.Loc.Timestamp.Seconds != src.Loc.Timestamp.Seconds {
-					m.Loc.Timestamp.Seconds = src.Loc.Timestamp.Seconds
+	if _, set := fmap["24"]; set {
+		if src.Loc != nil {
+			m.Loc = &distributed_match_engine.Loc{}
+			if _, set := fmap["24.1"]; set {
+				if m.Loc.Latitude != src.Loc.Latitude {
+					m.Loc.Latitude = src.Loc.Latitude
 					changed++
 				}
 			}
-			if _, set := fmap["24.8.2"]; set {
-				if m.Loc.Timestamp.Nanos != src.Loc.Timestamp.Nanos {
-					m.Loc.Timestamp.Nanos = src.Loc.Timestamp.Nanos
+			if _, set := fmap["24.2"]; set {
+				if m.Loc.Longitude != src.Loc.Longitude {
+					m.Loc.Longitude = src.Loc.Longitude
 					changed++
 				}
 			}
+			if _, set := fmap["24.3"]; set {
+				if m.Loc.HorizontalAccuracy != src.Loc.HorizontalAccuracy {
+					m.Loc.HorizontalAccuracy = src.Loc.HorizontalAccuracy
+					changed++
+				}
+			}
+			if _, set := fmap["24.4"]; set {
+				if m.Loc.VerticalAccuracy != src.Loc.VerticalAccuracy {
+					m.Loc.VerticalAccuracy = src.Loc.VerticalAccuracy
+					changed++
+				}
+			}
+			if _, set := fmap["24.5"]; set {
+				if m.Loc.Altitude != src.Loc.Altitude {
+					m.Loc.Altitude = src.Loc.Altitude
+					changed++
+				}
+			}
+			if _, set := fmap["24.6"]; set {
+				if m.Loc.Course != src.Loc.Course {
+					m.Loc.Course = src.Loc.Course
+					changed++
+				}
+			}
+			if _, set := fmap["24.7"]; set {
+				if m.Loc.Speed != src.Loc.Speed {
+					m.Loc.Speed = src.Loc.Speed
+					changed++
+				}
+			}
+			if _, set := fmap["24.8"]; set {
+				if src.Loc.Timestamp != nil {
+					m.Loc.Timestamp = &distributed_match_engine.Timestamp{}
+					if _, set := fmap["24.8.1"]; set {
+						if m.Loc.Timestamp.Seconds != src.Loc.Timestamp.Seconds {
+							m.Loc.Timestamp.Seconds = src.Loc.Timestamp.Seconds
+							changed++
+						}
+					}
+					if _, set := fmap["24.8.2"]; set {
+						if m.Loc.Timestamp.Nanos != src.Loc.Timestamp.Nanos {
+							m.Loc.Timestamp.Nanos = src.Loc.Timestamp.Nanos
+							changed++
+						}
+					}
+				} else if m.Loc.Timestamp != nil {
+					m.Loc.Timestamp = nil
+					changed++
+				}
+			}
+		} else if m.Loc != nil {
+			m.Loc = nil
+			changed++
 		}
 	}
 	if _, set := fmap["25"]; set {
@@ -2297,25 +2379,31 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 				changed++
 			}
 		}
-		if _, set := fmap["25.8"]; set && src.LocNonnull.Timestamp != nil {
-			m.LocNonnull.Timestamp = &distributed_match_engine.Timestamp{}
-			if _, set := fmap["25.8.1"]; set {
-				if m.LocNonnull.Timestamp.Seconds != src.LocNonnull.Timestamp.Seconds {
-					m.LocNonnull.Timestamp.Seconds = src.LocNonnull.Timestamp.Seconds
-					changed++
+		if _, set := fmap["25.8"]; set {
+			if src.LocNonnull.Timestamp != nil {
+				m.LocNonnull.Timestamp = &distributed_match_engine.Timestamp{}
+				if _, set := fmap["25.8.1"]; set {
+					if m.LocNonnull.Timestamp.Seconds != src.LocNonnull.Timestamp.Seconds {
+						m.LocNonnull.Timestamp.Seconds = src.LocNonnull.Timestamp.Seconds
+						changed++
+					}
 				}
-			}
-			if _, set := fmap["25.8.2"]; set {
-				if m.LocNonnull.Timestamp.Nanos != src.LocNonnull.Timestamp.Nanos {
-					m.LocNonnull.Timestamp.Nanos = src.LocNonnull.Timestamp.Nanos
-					changed++
+				if _, set := fmap["25.8.2"]; set {
+					if m.LocNonnull.Timestamp.Nanos != src.LocNonnull.Timestamp.Nanos {
+						m.LocNonnull.Timestamp.Nanos = src.LocNonnull.Timestamp.Nanos
+						changed++
+					}
 				}
+			} else if m.LocNonnull.Timestamp != nil {
+				m.LocNonnull.Timestamp = nil
+				changed++
 			}
 		}
 	}
 	if _, set := fmap["26"]; set {
 		if m.RepeatedInt == nil || len(m.RepeatedInt) != len(src.RepeatedInt) {
 			m.RepeatedInt = make([]int64, len(src.RepeatedInt))
+			changed++
 		}
 		copy(m.RepeatedInt, src.RepeatedInt)
 		changed++
@@ -2323,6 +2411,7 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	if _, set := fmap["27"]; set {
 		if m.Ip == nil || len(m.Ip) != len(src.Ip) {
 			m.Ip = make([]byte, len(src.Ip))
+			changed++
 		}
 		copy(m.Ip, src.Ip)
 		changed++
@@ -2330,42 +2419,55 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	if _, set := fmap["28"]; set {
 		if m.Names == nil || len(m.Names) != len(src.Names) {
 			m.Names = make([]string, len(src.Names))
+			changed++
 		}
 		copy(m.Names, src.Names)
 		changed++
 	}
-	if _, set := fmap["29"]; set && src.RepeatedMsg != nil {
-		if m.RepeatedMsg == nil || len(m.RepeatedMsg) != len(src.RepeatedMsg) {
-			m.RepeatedMsg = make([]*IncludeMessage, len(src.RepeatedMsg))
-		}
-		for i0 := 0; i0 < len(src.RepeatedMsg); i0++ {
-			m.RepeatedMsg[i0] = &IncludeMessage{}
-			if _, set := fmap["29.1"]; set {
-				if m.RepeatedMsg[i0].Name != src.RepeatedMsg[i0].Name {
-					m.RepeatedMsg[i0].Name = src.RepeatedMsg[i0].Name
-					changed++
-				}
+	if _, set := fmap["29"]; set {
+		if src.RepeatedMsg != nil {
+			if m.RepeatedMsg == nil || len(m.RepeatedMsg) != len(src.RepeatedMsg) {
+				m.RepeatedMsg = make([]*IncludeMessage, len(src.RepeatedMsg))
+				changed++
 			}
-			if _, set := fmap["29.2"]; set {
-				if m.RepeatedMsg[i0].Id != src.RepeatedMsg[i0].Id {
-					m.RepeatedMsg[i0].Id = src.RepeatedMsg[i0].Id
-					changed++
+			for i0 := 0; i0 < len(src.RepeatedMsg); i0++ {
+				m.RepeatedMsg[i0] = &IncludeMessage{}
+				if _, set := fmap["29.1"]; set {
+					if m.RepeatedMsg[i0].Name != src.RepeatedMsg[i0].Name {
+						m.RepeatedMsg[i0].Name = src.RepeatedMsg[i0].Name
+						changed++
+					}
 				}
-			}
-			if _, set := fmap["29.3"]; set && src.RepeatedMsg[i0].NestedMsg != nil {
-				m.RepeatedMsg[i0].NestedMsg = &NestedMessage{}
-				if _, set := fmap["29.3.1"]; set {
-					if m.RepeatedMsg[i0].NestedMsg.Name != src.RepeatedMsg[i0].NestedMsg.Name {
-						m.RepeatedMsg[i0].NestedMsg.Name = src.RepeatedMsg[i0].NestedMsg.Name
+				if _, set := fmap["29.2"]; set {
+					if m.RepeatedMsg[i0].Id != src.RepeatedMsg[i0].Id {
+						m.RepeatedMsg[i0].Id = src.RepeatedMsg[i0].Id
+						changed++
+					}
+				}
+				if _, set := fmap["29.3"]; set {
+					if src.RepeatedMsg[i0].NestedMsg != nil {
+						m.RepeatedMsg[i0].NestedMsg = &NestedMessage{}
+						if _, set := fmap["29.3.1"]; set {
+							if m.RepeatedMsg[i0].NestedMsg.Name != src.RepeatedMsg[i0].NestedMsg.Name {
+								m.RepeatedMsg[i0].NestedMsg.Name = src.RepeatedMsg[i0].NestedMsg.Name
+								changed++
+							}
+						}
+					} else if m.RepeatedMsg[i0].NestedMsg != nil {
+						m.RepeatedMsg[i0].NestedMsg = nil
 						changed++
 					}
 				}
 			}
+		} else if m.RepeatedMsg != nil {
+			m.RepeatedMsg = nil
+			changed++
 		}
 	}
 	if _, set := fmap["30"]; set {
 		if m.RepeatedMsgNonnull == nil || len(m.RepeatedMsgNonnull) != len(src.RepeatedMsgNonnull) {
 			m.RepeatedMsgNonnull = make([]IncludeMessage, len(src.RepeatedMsgNonnull))
+			changed++
 		}
 		for i0 := 0; i0 < len(src.RepeatedMsgNonnull); i0++ {
 			if _, set := fmap["30.1"]; set {
@@ -2380,34 +2482,46 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 					changed++
 				}
 			}
-			if _, set := fmap["30.3"]; set && src.RepeatedMsgNonnull[i0].NestedMsg != nil {
-				m.RepeatedMsgNonnull[i0].NestedMsg = &NestedMessage{}
-				if _, set := fmap["30.3.1"]; set {
-					if m.RepeatedMsgNonnull[i0].NestedMsg.Name != src.RepeatedMsgNonnull[i0].NestedMsg.Name {
-						m.RepeatedMsgNonnull[i0].NestedMsg.Name = src.RepeatedMsgNonnull[i0].NestedMsg.Name
-						changed++
+			if _, set := fmap["30.3"]; set {
+				if src.RepeatedMsgNonnull[i0].NestedMsg != nil {
+					m.RepeatedMsgNonnull[i0].NestedMsg = &NestedMessage{}
+					if _, set := fmap["30.3.1"]; set {
+						if m.RepeatedMsgNonnull[i0].NestedMsg.Name != src.RepeatedMsgNonnull[i0].NestedMsg.Name {
+							m.RepeatedMsgNonnull[i0].NestedMsg.Name = src.RepeatedMsgNonnull[i0].NestedMsg.Name
+							changed++
+						}
 					}
-				}
-			}
-		}
-	}
-	if _, set := fmap["31"]; set && src.RepeatedFields != nil {
-		if m.RepeatedFields == nil || len(m.RepeatedFields) != len(src.RepeatedFields) {
-			m.RepeatedFields = make([]*IncludeFields, len(src.RepeatedFields))
-		}
-		for i0 := 0; i0 < len(src.RepeatedFields); i0++ {
-			m.RepeatedFields[i0] = &IncludeFields{}
-			if _, set := fmap["31.2"]; set {
-				if m.RepeatedFields[i0].Name != src.RepeatedFields[i0].Name {
-					m.RepeatedFields[i0].Name = src.RepeatedFields[i0].Name
+				} else if m.RepeatedMsgNonnull[i0].NestedMsg != nil {
+					m.RepeatedMsgNonnull[i0].NestedMsg = nil
 					changed++
 				}
 			}
 		}
 	}
+	if _, set := fmap["31"]; set {
+		if src.RepeatedFields != nil {
+			if m.RepeatedFields == nil || len(m.RepeatedFields) != len(src.RepeatedFields) {
+				m.RepeatedFields = make([]*IncludeFields, len(src.RepeatedFields))
+				changed++
+			}
+			for i0 := 0; i0 < len(src.RepeatedFields); i0++ {
+				m.RepeatedFields[i0] = &IncludeFields{}
+				if _, set := fmap["31.2"]; set {
+					if m.RepeatedFields[i0].Name != src.RepeatedFields[i0].Name {
+						m.RepeatedFields[i0].Name = src.RepeatedFields[i0].Name
+						changed++
+					}
+				}
+			}
+		} else if m.RepeatedFields != nil {
+			m.RepeatedFields = nil
+			changed++
+		}
+	}
 	if _, set := fmap["32"]; set {
 		if m.RepeatedFieldsNonnull == nil || len(m.RepeatedFieldsNonnull) != len(src.RepeatedFieldsNonnull) {
 			m.RepeatedFieldsNonnull = make([]IncludeFields, len(src.RepeatedFieldsNonnull))
+			changed++
 		}
 		for i0 := 0; i0 < len(src.RepeatedFieldsNonnull); i0++ {
 			if _, set := fmap["32.2"]; set {
@@ -2418,29 +2532,36 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 			}
 		}
 	}
-	if _, set := fmap["33"]; set && src.RepeatedInnerMsg != nil {
-		if m.RepeatedInnerMsg == nil || len(m.RepeatedInnerMsg) != len(src.RepeatedInnerMsg) {
-			m.RepeatedInnerMsg = make([]*TestGen_InnerMessage, len(src.RepeatedInnerMsg))
-		}
-		for i0 := 0; i0 < len(src.RepeatedInnerMsg); i0++ {
-			m.RepeatedInnerMsg[i0] = &TestGen_InnerMessage{}
-			if _, set := fmap["33.1"]; set {
-				if m.RepeatedInnerMsg[i0].Url != src.RepeatedInnerMsg[i0].Url {
-					m.RepeatedInnerMsg[i0].Url = src.RepeatedInnerMsg[i0].Url
-					changed++
+	if _, set := fmap["33"]; set {
+		if src.RepeatedInnerMsg != nil {
+			if m.RepeatedInnerMsg == nil || len(m.RepeatedInnerMsg) != len(src.RepeatedInnerMsg) {
+				m.RepeatedInnerMsg = make([]*TestGen_InnerMessage, len(src.RepeatedInnerMsg))
+				changed++
+			}
+			for i0 := 0; i0 < len(src.RepeatedInnerMsg); i0++ {
+				m.RepeatedInnerMsg[i0] = &TestGen_InnerMessage{}
+				if _, set := fmap["33.1"]; set {
+					if m.RepeatedInnerMsg[i0].Url != src.RepeatedInnerMsg[i0].Url {
+						m.RepeatedInnerMsg[i0].Url = src.RepeatedInnerMsg[i0].Url
+						changed++
+					}
+				}
+				if _, set := fmap["33.2"]; set {
+					if m.RepeatedInnerMsg[i0].Id != src.RepeatedInnerMsg[i0].Id {
+						m.RepeatedInnerMsg[i0].Id = src.RepeatedInnerMsg[i0].Id
+						changed++
+					}
 				}
 			}
-			if _, set := fmap["33.2"]; set {
-				if m.RepeatedInnerMsg[i0].Id != src.RepeatedInnerMsg[i0].Id {
-					m.RepeatedInnerMsg[i0].Id = src.RepeatedInnerMsg[i0].Id
-					changed++
-				}
-			}
+		} else if m.RepeatedInnerMsg != nil {
+			m.RepeatedInnerMsg = nil
+			changed++
 		}
 	}
 	if _, set := fmap["34"]; set {
 		if m.RepeatedInnerMsgNonnull == nil || len(m.RepeatedInnerMsgNonnull) != len(src.RepeatedInnerMsgNonnull) {
 			m.RepeatedInnerMsgNonnull = make([]TestGen_InnerMessage, len(src.RepeatedInnerMsgNonnull))
+			changed++
 		}
 		for i0 := 0; i0 < len(src.RepeatedInnerMsgNonnull); i0++ {
 			if _, set := fmap["34.1"]; set {
@@ -2457,74 +2578,86 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 			}
 		}
 	}
-	if _, set := fmap["35"]; set && src.RepeatedLoc != nil {
-		if m.RepeatedLoc == nil || len(m.RepeatedLoc) != len(src.RepeatedLoc) {
-			m.RepeatedLoc = make([]*distributed_match_engine.Loc, len(src.RepeatedLoc))
-		}
-		for i0 := 0; i0 < len(src.RepeatedLoc); i0++ {
-			m.RepeatedLoc[i0] = &distributed_match_engine.Loc{}
-			if _, set := fmap["35.1"]; set {
-				if m.RepeatedLoc[i0].Latitude != src.RepeatedLoc[i0].Latitude {
-					m.RepeatedLoc[i0].Latitude = src.RepeatedLoc[i0].Latitude
-					changed++
-				}
+	if _, set := fmap["35"]; set {
+		if src.RepeatedLoc != nil {
+			if m.RepeatedLoc == nil || len(m.RepeatedLoc) != len(src.RepeatedLoc) {
+				m.RepeatedLoc = make([]*distributed_match_engine.Loc, len(src.RepeatedLoc))
+				changed++
 			}
-			if _, set := fmap["35.2"]; set {
-				if m.RepeatedLoc[i0].Longitude != src.RepeatedLoc[i0].Longitude {
-					m.RepeatedLoc[i0].Longitude = src.RepeatedLoc[i0].Longitude
-					changed++
-				}
-			}
-			if _, set := fmap["35.3"]; set {
-				if m.RepeatedLoc[i0].HorizontalAccuracy != src.RepeatedLoc[i0].HorizontalAccuracy {
-					m.RepeatedLoc[i0].HorizontalAccuracy = src.RepeatedLoc[i0].HorizontalAccuracy
-					changed++
-				}
-			}
-			if _, set := fmap["35.4"]; set {
-				if m.RepeatedLoc[i0].VerticalAccuracy != src.RepeatedLoc[i0].VerticalAccuracy {
-					m.RepeatedLoc[i0].VerticalAccuracy = src.RepeatedLoc[i0].VerticalAccuracy
-					changed++
-				}
-			}
-			if _, set := fmap["35.5"]; set {
-				if m.RepeatedLoc[i0].Altitude != src.RepeatedLoc[i0].Altitude {
-					m.RepeatedLoc[i0].Altitude = src.RepeatedLoc[i0].Altitude
-					changed++
-				}
-			}
-			if _, set := fmap["35.6"]; set {
-				if m.RepeatedLoc[i0].Course != src.RepeatedLoc[i0].Course {
-					m.RepeatedLoc[i0].Course = src.RepeatedLoc[i0].Course
-					changed++
-				}
-			}
-			if _, set := fmap["35.7"]; set {
-				if m.RepeatedLoc[i0].Speed != src.RepeatedLoc[i0].Speed {
-					m.RepeatedLoc[i0].Speed = src.RepeatedLoc[i0].Speed
-					changed++
-				}
-			}
-			if _, set := fmap["35.8"]; set && src.RepeatedLoc[i0].Timestamp != nil {
-				m.RepeatedLoc[i0].Timestamp = &distributed_match_engine.Timestamp{}
-				if _, set := fmap["35.8.1"]; set {
-					if m.RepeatedLoc[i0].Timestamp.Seconds != src.RepeatedLoc[i0].Timestamp.Seconds {
-						m.RepeatedLoc[i0].Timestamp.Seconds = src.RepeatedLoc[i0].Timestamp.Seconds
+			for i0 := 0; i0 < len(src.RepeatedLoc); i0++ {
+				m.RepeatedLoc[i0] = &distributed_match_engine.Loc{}
+				if _, set := fmap["35.1"]; set {
+					if m.RepeatedLoc[i0].Latitude != src.RepeatedLoc[i0].Latitude {
+						m.RepeatedLoc[i0].Latitude = src.RepeatedLoc[i0].Latitude
 						changed++
 					}
 				}
-				if _, set := fmap["35.8.2"]; set {
-					if m.RepeatedLoc[i0].Timestamp.Nanos != src.RepeatedLoc[i0].Timestamp.Nanos {
-						m.RepeatedLoc[i0].Timestamp.Nanos = src.RepeatedLoc[i0].Timestamp.Nanos
+				if _, set := fmap["35.2"]; set {
+					if m.RepeatedLoc[i0].Longitude != src.RepeatedLoc[i0].Longitude {
+						m.RepeatedLoc[i0].Longitude = src.RepeatedLoc[i0].Longitude
+						changed++
+					}
+				}
+				if _, set := fmap["35.3"]; set {
+					if m.RepeatedLoc[i0].HorizontalAccuracy != src.RepeatedLoc[i0].HorizontalAccuracy {
+						m.RepeatedLoc[i0].HorizontalAccuracy = src.RepeatedLoc[i0].HorizontalAccuracy
+						changed++
+					}
+				}
+				if _, set := fmap["35.4"]; set {
+					if m.RepeatedLoc[i0].VerticalAccuracy != src.RepeatedLoc[i0].VerticalAccuracy {
+						m.RepeatedLoc[i0].VerticalAccuracy = src.RepeatedLoc[i0].VerticalAccuracy
+						changed++
+					}
+				}
+				if _, set := fmap["35.5"]; set {
+					if m.RepeatedLoc[i0].Altitude != src.RepeatedLoc[i0].Altitude {
+						m.RepeatedLoc[i0].Altitude = src.RepeatedLoc[i0].Altitude
+						changed++
+					}
+				}
+				if _, set := fmap["35.6"]; set {
+					if m.RepeatedLoc[i0].Course != src.RepeatedLoc[i0].Course {
+						m.RepeatedLoc[i0].Course = src.RepeatedLoc[i0].Course
+						changed++
+					}
+				}
+				if _, set := fmap["35.7"]; set {
+					if m.RepeatedLoc[i0].Speed != src.RepeatedLoc[i0].Speed {
+						m.RepeatedLoc[i0].Speed = src.RepeatedLoc[i0].Speed
+						changed++
+					}
+				}
+				if _, set := fmap["35.8"]; set {
+					if src.RepeatedLoc[i0].Timestamp != nil {
+						m.RepeatedLoc[i0].Timestamp = &distributed_match_engine.Timestamp{}
+						if _, set := fmap["35.8.1"]; set {
+							if m.RepeatedLoc[i0].Timestamp.Seconds != src.RepeatedLoc[i0].Timestamp.Seconds {
+								m.RepeatedLoc[i0].Timestamp.Seconds = src.RepeatedLoc[i0].Timestamp.Seconds
+								changed++
+							}
+						}
+						if _, set := fmap["35.8.2"]; set {
+							if m.RepeatedLoc[i0].Timestamp.Nanos != src.RepeatedLoc[i0].Timestamp.Nanos {
+								m.RepeatedLoc[i0].Timestamp.Nanos = src.RepeatedLoc[i0].Timestamp.Nanos
+								changed++
+							}
+						}
+					} else if m.RepeatedLoc[i0].Timestamp != nil {
+						m.RepeatedLoc[i0].Timestamp = nil
 						changed++
 					}
 				}
 			}
+		} else if m.RepeatedLoc != nil {
+			m.RepeatedLoc = nil
+			changed++
 		}
 	}
 	if _, set := fmap["36"]; set {
 		if m.RepeatedLocNonnull == nil || len(m.RepeatedLocNonnull) != len(src.RepeatedLocNonnull) {
 			m.RepeatedLocNonnull = make([]distributed_match_engine.Loc, len(src.RepeatedLocNonnull))
+			changed++
 		}
 		for i0 := 0; i0 < len(src.RepeatedLocNonnull); i0++ {
 			if _, set := fmap["36.1"]; set {
@@ -2569,39 +2702,54 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 					changed++
 				}
 			}
-			if _, set := fmap["36.8"]; set && src.RepeatedLocNonnull[i0].Timestamp != nil {
-				m.RepeatedLocNonnull[i0].Timestamp = &distributed_match_engine.Timestamp{}
-				if _, set := fmap["36.8.1"]; set {
-					if m.RepeatedLocNonnull[i0].Timestamp.Seconds != src.RepeatedLocNonnull[i0].Timestamp.Seconds {
-						m.RepeatedLocNonnull[i0].Timestamp.Seconds = src.RepeatedLocNonnull[i0].Timestamp.Seconds
-						changed++
+			if _, set := fmap["36.8"]; set {
+				if src.RepeatedLocNonnull[i0].Timestamp != nil {
+					m.RepeatedLocNonnull[i0].Timestamp = &distributed_match_engine.Timestamp{}
+					if _, set := fmap["36.8.1"]; set {
+						if m.RepeatedLocNonnull[i0].Timestamp.Seconds != src.RepeatedLocNonnull[i0].Timestamp.Seconds {
+							m.RepeatedLocNonnull[i0].Timestamp.Seconds = src.RepeatedLocNonnull[i0].Timestamp.Seconds
+							changed++
+						}
 					}
-				}
-				if _, set := fmap["36.8.2"]; set {
-					if m.RepeatedLocNonnull[i0].Timestamp.Nanos != src.RepeatedLocNonnull[i0].Timestamp.Nanos {
-						m.RepeatedLocNonnull[i0].Timestamp.Nanos = src.RepeatedLocNonnull[i0].Timestamp.Nanos
-						changed++
+					if _, set := fmap["36.8.2"]; set {
+						if m.RepeatedLocNonnull[i0].Timestamp.Nanos != src.RepeatedLocNonnull[i0].Timestamp.Nanos {
+							m.RepeatedLocNonnull[i0].Timestamp.Nanos = src.RepeatedLocNonnull[i0].Timestamp.Nanos
+							changed++
+						}
 					}
-				}
-			}
-		}
-	}
-	if _, set := fmap["37"]; set && src.IntMap != nil {
-		m.IntMap = make(map[int32]int32)
-		for k0, _ := range src.IntMap {
-			m.IntMap[k0] = src.IntMap[k0]
-		}
-	}
-	if _, set := fmap["38"]; set && src.MsgMap != nil {
-		m.MsgMap = make(map[int32]*NestedMessage)
-		for k0, _ := range src.MsgMap {
-			m.MsgMap[k0] = &NestedMessage{}
-			if _, set := fmap["38.1"]; set {
-				if m.MsgMap[k0].Name != src.MsgMap[k0].Name {
-					m.MsgMap[k0].Name = src.MsgMap[k0].Name
+				} else if m.RepeatedLocNonnull[i0].Timestamp != nil {
+					m.RepeatedLocNonnull[i0].Timestamp = nil
 					changed++
 				}
 			}
+		}
+	}
+	if _, set := fmap["37"]; set {
+		if src.IntMap != nil {
+			m.IntMap = make(map[int32]int32)
+			for k0, _ := range src.IntMap {
+				m.IntMap[k0] = src.IntMap[k0]
+			}
+		} else if m.IntMap != nil {
+			m.IntMap = nil
+			changed++
+		}
+	}
+	if _, set := fmap["38"]; set {
+		if src.MsgMap != nil {
+			m.MsgMap = make(map[int32]*NestedMessage)
+			for k0, _ := range src.MsgMap {
+				m.MsgMap[k0] = &NestedMessage{}
+				if _, set := fmap["38.1"]; set {
+					if m.MsgMap[k0].Name != src.MsgMap[k0].Name {
+						m.MsgMap[k0].Name = src.MsgMap[k0].Name
+						changed++
+					}
+				}
+			}
+		} else if m.MsgMap != nil {
+			m.MsgMap = nil
+			changed++
 		}
 	}
 	if _, set := fmap["39"]; set {
