@@ -540,6 +540,7 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 	}
 	if m.Clusters == nil || len(m.Clusters) != len(src.Clusters) {
 		m.Clusters = make([]ClusterKey, len(src.Clusters))
+		changed++
 	}
 	for i0 := 0; i0 < len(src.Clusters); i0++ {
 		if m.Clusters[i0].Name != src.Clusters[i0].Name {
@@ -564,6 +565,9 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 		for k0, _ := range src.RootLbPorts {
 			m.RootLbPorts[k0] = src.RootLbPorts[k0]
 		}
+	} else if m.RootLbPorts != nil {
+		m.RootLbPorts = nil
+		changed++
 	}
 	if m.UsedDynamicIps != src.UsedDynamicIps {
 		m.UsedDynamicIps = src.UsedDynamicIps
@@ -578,6 +582,9 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 		for k0, _ := range src.OptResUsedMap {
 			m.OptResUsedMap[k0] = src.OptResUsedMap[k0]
 		}
+	} else if m.OptResUsedMap != nil {
+		m.OptResUsedMap = nil
+		changed++
 	}
 	return changed
 }
@@ -1070,6 +1077,7 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
 	}
 	if m.Apps == nil || len(m.Apps) != len(src.Apps) {
 		m.Apps = make([]AppKey, len(src.Apps))
+		changed++
 	}
 	for i0 := 0; i0 < len(src.Apps); i0++ {
 		if m.Apps[i0].DeveloperKey.Name != src.Apps[i0].DeveloperKey.Name {

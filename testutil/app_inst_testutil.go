@@ -563,6 +563,16 @@ func (s *DummyServer) DeleteAppInst(in *edgeproto.AppInst, server edgeproto.AppI
 	return err
 }
 
+func (s *DummyServer) RefreshAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_RefreshAppInstServer) error {
+	var err error
+	if true {
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
+	}
+	return err
+}
+
 func (s *DummyServer) UpdateAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_UpdateAppInstServer) error {
 	var err error
 	s.AppInstCache.Update(server.Context(), in, 0)

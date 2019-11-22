@@ -300,6 +300,8 @@ func runAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeprot
 			stream, err = appinAPI.CreateAppInst(ctx, &a)
 		case "update":
 			stream, err = appinAPI.UpdateAppInst(ctx, &a)
+		case "refresh":
+			stream, err = appinAPI.RefreshAppInst(ctx, &a)
 		case "delete":
 			stream, err = appinAPI.DeleteAppInst(ctx, &a)
 		}
@@ -405,6 +407,8 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				rc = false
 			}
 		case "create":
+			fallthrough
+		case "refresh":
 			fallthrough
 		case "update":
 			err = runFlavorApi(ctrlapi, ctx, &appData, api)

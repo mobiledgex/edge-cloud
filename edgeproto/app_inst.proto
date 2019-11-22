@@ -108,7 +108,18 @@ service AppInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
   }
-  // Update restarts an application instance with new App settings or image
+  // Refresh restarts an application instance with new App settings or image
+  rpc RefreshAppInst(AppInst) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/refresh/appinst"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
+    option (protogen.method_not_required) = "Key.ClusterInstKey";
+    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,Configs";
+  }
+  // Update an AppInst and then refresh it
   rpc UpdateAppInst(AppInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/appinst"
@@ -116,8 +127,7 @@ service AppInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
-    option (protogen.method_not_required) = "Key.ClusterInstKey";
-    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision";
+    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple";
   }
   // Show application instances. Any fields specified will be used to filter results.
   rpc ShowAppInst(AppInst) returns (stream AppInst) {

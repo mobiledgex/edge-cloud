@@ -2167,6 +2167,9 @@ func (m *OpenStackProperties) CopyInFields(src *OpenStackProperties) int {
 		for k0, _ := range src.OpenRcVars {
 			m.OpenRcVars[k0] = src.OpenRcVars[k0]
 		}
+	} else if m.OpenRcVars != nil {
+		m.OpenRcVars = nil
+		changed++
 	}
 	return changed
 }
@@ -2209,7 +2212,13 @@ func (m *CloudletInfraProperties) CopyInFields(src *CloudletInfraProperties) int
 			for k1, _ := range src.OpenstackProperties.OpenRcVars {
 				m.OpenstackProperties.OpenRcVars[k1] = src.OpenstackProperties.OpenRcVars[k1]
 			}
+		} else if m.OpenstackProperties.OpenRcVars != nil {
+			m.OpenstackProperties.OpenRcVars = nil
+			changed++
 		}
+	} else if m.OpenstackProperties != nil {
+		m.OpenstackProperties = nil
+		changed++
 	}
 	if src.AzureProperties != nil {
 		m.AzureProperties = &AzureProperties{}
@@ -2229,6 +2238,9 @@ func (m *CloudletInfraProperties) CopyInFields(src *CloudletInfraProperties) int
 			m.AzureProperties.Password = src.AzureProperties.Password
 			changed++
 		}
+	} else if m.AzureProperties != nil {
+		m.AzureProperties = nil
+		changed++
 	}
 	if src.GcpProperties != nil {
 		m.GcpProperties = &GcpProperties{}
@@ -2248,6 +2260,9 @@ func (m *CloudletInfraProperties) CopyInFields(src *CloudletInfraProperties) int
 			m.GcpProperties.GcpAuthKeyUrl = src.GcpProperties.GcpAuthKeyUrl
 			changed++
 		}
+	} else if m.GcpProperties != nil {
+		m.GcpProperties = nil
+		changed++
 	}
 	return changed
 }
@@ -2335,6 +2350,9 @@ func (m *CloudletResMap) CopyInFields(src *CloudletResMap) int {
 		for k0, _ := range src.Mapping {
 			m.Mapping[k0] = src.Mapping[k0]
 		}
+	} else if m.Mapping != nil {
+		m.Mapping = nil
+		changed++
 	}
 	return changed
 }
@@ -2784,6 +2802,9 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 			fields[CloudletFieldLocationTimestamp] = struct{}{}
 			fields[CloudletFieldLocation] = struct{}{}
 		}
+	} else if (m.Location.Timestamp != nil && o.Location.Timestamp == nil) || (m.Location.Timestamp == nil && o.Location.Timestamp != nil) {
+		fields[CloudletFieldLocationTimestamp] = struct{}{}
+		fields[CloudletFieldLocation] = struct{}{}
 	}
 	if m.IpSupport != o.IpSupport {
 		fields[CloudletFieldIpSupport] = struct{}{}
@@ -2882,6 +2903,8 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 				}
 			}
 		}
+	} else if (m.EnvVar != nil && o.EnvVar == nil) || (m.EnvVar == nil && o.EnvVar != nil) {
+		fields[CloudletFieldEnvVar] = struct{}{}
 	}
 	if m.Version != o.Version {
 		fields[CloudletFieldVersion] = struct{}{}
@@ -2953,6 +2976,8 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 				}
 			}
 		}
+	} else if (m.ResTagMap != nil && o.ResTagMap == nil) || (m.ResTagMap == nil && o.ResTagMap != nil) {
+		fields[CloudletFieldResTagMap] = struct{}{}
 	}
 }
 
@@ -3024,19 +3049,24 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 				changed++
 			}
 		}
-		if _, set := fmap["5.8"]; set && src.Location.Timestamp != nil {
-			m.Location.Timestamp = &distributed_match_engine.Timestamp{}
-			if _, set := fmap["5.8.1"]; set {
-				if m.Location.Timestamp.Seconds != src.Location.Timestamp.Seconds {
-					m.Location.Timestamp.Seconds = src.Location.Timestamp.Seconds
-					changed++
+		if _, set := fmap["5.8"]; set {
+			if src.Location.Timestamp != nil {
+				m.Location.Timestamp = &distributed_match_engine.Timestamp{}
+				if _, set := fmap["5.8.1"]; set {
+					if m.Location.Timestamp.Seconds != src.Location.Timestamp.Seconds {
+						m.Location.Timestamp.Seconds = src.Location.Timestamp.Seconds
+						changed++
+					}
 				}
-			}
-			if _, set := fmap["5.8.2"]; set {
-				if m.Location.Timestamp.Nanos != src.Location.Timestamp.Nanos {
-					m.Location.Timestamp.Nanos = src.Location.Timestamp.Nanos
-					changed++
+				if _, set := fmap["5.8.2"]; set {
+					if m.Location.Timestamp.Nanos != src.Location.Timestamp.Nanos {
+						m.Location.Timestamp.Nanos = src.Location.Timestamp.Nanos
+						changed++
+					}
 				}
+			} else if m.Location.Timestamp != nil {
+				m.Location.Timestamp = nil
+				changed++
 			}
 		}
 	}
@@ -3099,6 +3129,7 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 	if _, set := fmap["10"]; set {
 		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
 			m.Errors = make([]string, len(src.Errors))
+			changed++
 		}
 		copy(m.Errors, src.Errors)
 		changed++
@@ -3173,10 +3204,15 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 			changed++
 		}
 	}
-	if _, set := fmap["19"]; set && src.EnvVar != nil {
-		m.EnvVar = make(map[string]string)
-		for k0, _ := range src.EnvVar {
-			m.EnvVar[k0] = src.EnvVar[k0]
+	if _, set := fmap["19"]; set {
+		if src.EnvVar != nil {
+			m.EnvVar = make(map[string]string)
+			for k0, _ := range src.EnvVar {
+				m.EnvVar[k0] = src.EnvVar[k0]
+			}
+		} else if m.EnvVar != nil {
+			m.EnvVar = nil
+			changed++
 		}
 	}
 	if _, set := fmap["20"]; set {
@@ -3253,24 +3289,29 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 			}
 		}
 	}
-	if _, set := fmap["22"]; set && src.ResTagMap != nil {
-		m.ResTagMap = make(map[string]*ResTagTableKey)
-		for k0, _ := range src.ResTagMap {
-			m.ResTagMap[k0] = &ResTagTableKey{}
-			if _, set := fmap["22.1"]; set {
-				if m.ResTagMap[k0].Name != src.ResTagMap[k0].Name {
-					m.ResTagMap[k0].Name = src.ResTagMap[k0].Name
-					changed++
-				}
-			}
-			if _, set := fmap["22.2"]; set {
-				if _, set := fmap["22.2.1"]; set {
-					if m.ResTagMap[k0].OperatorKey.Name != src.ResTagMap[k0].OperatorKey.Name {
-						m.ResTagMap[k0].OperatorKey.Name = src.ResTagMap[k0].OperatorKey.Name
+	if _, set := fmap["22"]; set {
+		if src.ResTagMap != nil {
+			m.ResTagMap = make(map[string]*ResTagTableKey)
+			for k0, _ := range src.ResTagMap {
+				m.ResTagMap[k0] = &ResTagTableKey{}
+				if _, set := fmap["22.1"]; set {
+					if m.ResTagMap[k0].Name != src.ResTagMap[k0].Name {
+						m.ResTagMap[k0].Name = src.ResTagMap[k0].Name
 						changed++
 					}
 				}
+				if _, set := fmap["22.2"]; set {
+					if _, set := fmap["22.2.1"]; set {
+						if m.ResTagMap[k0].OperatorKey.Name != src.ResTagMap[k0].OperatorKey.Name {
+							m.ResTagMap[k0].OperatorKey.Name = src.ResTagMap[k0].OperatorKey.Name
+							changed++
+						}
+					}
+				}
 			}
+		} else if m.ResTagMap != nil {
+			m.ResTagMap = nil
+			changed++
 		}
 	}
 	return changed
@@ -4023,6 +4064,8 @@ func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
 				}
 			}
 		}
+	} else if (m.Flavors != nil && o.Flavors == nil) || (m.Flavors == nil && o.Flavors != nil) {
+		fields[CloudletInfoFieldFlavors] = struct{}{}
 	}
 	if m.Status.TaskNumber != o.Status.TaskNumber {
 		fields[CloudletInfoFieldStatusTaskNumber] = struct{}{}
@@ -4103,46 +4146,53 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 	if _, set := fmap["9"]; set {
 		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
 			m.Errors = make([]string, len(src.Errors))
+			changed++
 		}
 		copy(m.Errors, src.Errors)
 		changed++
 	}
-	if _, set := fmap["10"]; set && src.Flavors != nil {
-		if m.Flavors == nil || len(m.Flavors) != len(src.Flavors) {
-			m.Flavors = make([]*FlavorInfo, len(src.Flavors))
-		}
-		for i0 := 0; i0 < len(src.Flavors); i0++ {
-			m.Flavors[i0] = &FlavorInfo{}
-			if _, set := fmap["10.1"]; set {
-				if m.Flavors[i0].Name != src.Flavors[i0].Name {
-					m.Flavors[i0].Name = src.Flavors[i0].Name
-					changed++
+	if _, set := fmap["10"]; set {
+		if src.Flavors != nil {
+			if m.Flavors == nil || len(m.Flavors) != len(src.Flavors) {
+				m.Flavors = make([]*FlavorInfo, len(src.Flavors))
+				changed++
+			}
+			for i0 := 0; i0 < len(src.Flavors); i0++ {
+				m.Flavors[i0] = &FlavorInfo{}
+				if _, set := fmap["10.1"]; set {
+					if m.Flavors[i0].Name != src.Flavors[i0].Name {
+						m.Flavors[i0].Name = src.Flavors[i0].Name
+						changed++
+					}
+				}
+				if _, set := fmap["10.2"]; set {
+					if m.Flavors[i0].Vcpus != src.Flavors[i0].Vcpus {
+						m.Flavors[i0].Vcpus = src.Flavors[i0].Vcpus
+						changed++
+					}
+				}
+				if _, set := fmap["10.3"]; set {
+					if m.Flavors[i0].Ram != src.Flavors[i0].Ram {
+						m.Flavors[i0].Ram = src.Flavors[i0].Ram
+						changed++
+					}
+				}
+				if _, set := fmap["10.4"]; set {
+					if m.Flavors[i0].Disk != src.Flavors[i0].Disk {
+						m.Flavors[i0].Disk = src.Flavors[i0].Disk
+						changed++
+					}
+				}
+				if _, set := fmap["10.5"]; set {
+					if m.Flavors[i0].Properties != src.Flavors[i0].Properties {
+						m.Flavors[i0].Properties = src.Flavors[i0].Properties
+						changed++
+					}
 				}
 			}
-			if _, set := fmap["10.2"]; set {
-				if m.Flavors[i0].Vcpus != src.Flavors[i0].Vcpus {
-					m.Flavors[i0].Vcpus = src.Flavors[i0].Vcpus
-					changed++
-				}
-			}
-			if _, set := fmap["10.3"]; set {
-				if m.Flavors[i0].Ram != src.Flavors[i0].Ram {
-					m.Flavors[i0].Ram = src.Flavors[i0].Ram
-					changed++
-				}
-			}
-			if _, set := fmap["10.4"]; set {
-				if m.Flavors[i0].Disk != src.Flavors[i0].Disk {
-					m.Flavors[i0].Disk = src.Flavors[i0].Disk
-					changed++
-				}
-			}
-			if _, set := fmap["10.5"]; set {
-				if m.Flavors[i0].Properties != src.Flavors[i0].Properties {
-					m.Flavors[i0].Properties = src.Flavors[i0].Properties
-					changed++
-				}
-			}
+		} else if m.Flavors != nil {
+			m.Flavors = nil
+			changed++
 		}
 	}
 	if _, set := fmap["11"]; set {

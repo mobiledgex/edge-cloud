@@ -285,11 +285,13 @@ func (m *Notice) CopyInFields(src *Notice) int {
 	}
 	if m.Any.Value == nil || len(m.Any.Value) != len(src.Any.Value) {
 		m.Any.Value = make([]byte, len(src.Any.Value))
+		changed++
 	}
 	copy(m.Any.Value, src.Any.Value)
 	changed++
 	if m.WantObjs == nil || len(m.WantObjs) != len(src.WantObjs) {
 		m.WantObjs = make([]string, len(src.WantObjs))
+		changed++
 	}
 	copy(m.WantObjs, src.WantObjs)
 	changed++

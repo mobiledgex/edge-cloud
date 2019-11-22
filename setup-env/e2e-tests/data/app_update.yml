@@ -5,19 +5,3 @@ apps:
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:2.0
-
-appinstances:
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: SmallCluster
-      cloudletkey:
-        operatorkey:
-          name: dmuus
-        name: dmuus-cloud-1
-      developer: AcmeAppCo
