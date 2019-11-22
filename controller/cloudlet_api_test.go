@@ -614,6 +614,9 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	// is to take our meta-flavor resourse request object, and return, for this
 	// operator/cloudlet the closest matching available flavor to use in the eventual
 	// launch of a suitable image.
+	cli := edgeproto.CloudletInfo{}
+	//ok := cloudletInfoApi.cache.Get(&cl.Key, &cli)
+	//require.Equal(t, true, ok)
 
 	if cl.ResTagMap == nil {
 		cl.ResTagMap = make(map[string]*edgeproto.ResTagTableKey)
@@ -660,24 +663,26 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		// as not supported (yet), that's why this is here.
 		OptResMap: map[string]string{"gpu": "1", "nas": "ceph-20"},
 	}
-
+	taz := edgeproto.OSAZone{Name: "AZ1_GPU", Status: "available"}
+	cli.AvailabilityZones = append(cli.AvailabilityZones, &taz)
 	// this simple case should find the flavor with 'gpu' in the name
-	spec, vmerr := resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, cl.ResTagMap)
+	spec, vmerr := resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, *cl, cli)
 	require.Nil(t, vmerr, "GetVmSpec")
 	require.Equal(t, "flavor.large-gpu", spec.FlavorName)
-
+	require.Equal(t, "AZ1_GPU", spec.AvailabilityZone)
 	// now to force vmspec.GetVMSpec() to actually look into the given tag table. We
 	// ask for more Vcpus which will reject flavor.large-gpu (8 vcpus), but still requesting a GPU
 	// resource, so the table will be searched for a matching tag in flavor.large-gpu (10 vcpus) properties.
 	testflavor.Vcpus = 10
 	// if we can support the map in TestConversion we can use testutil.FlavorData[4] as we did pre-map
 	// this should by-pass the flavor with 'gpu' in the name, since that has 8 vcpus, and we're now requesting 10
-	spec, vmerr = resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, cl.ResTagMap)
+	spec, vmerr = resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, *cl, cli)
 	require.Nil(t, vmerr, "GetVmSpec")
 	require.Equal(t, "flavor.large", spec.FlavorName)
 
+	nulCL := edgeproto.Cloudlet{}
 	// and finally, make sure GetVMSpec ignores a nil tbl if none exist or desired, behavior
 	// is only a flavor with 'gpu' in the name will trigger a gpu request match.
-	spec, vmerr = resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, nil)
+	spec, vmerr = resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, nulCL, cli)
 	require.Equal(t, "no suitable platform flavor found for x1.large-mex, please try a smaller flavor", vmerr.Error(), "nil table")
 }

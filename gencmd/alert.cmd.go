@@ -49,7 +49,9 @@ It has these top-level messages:
 	PlatformConfig
 	CloudletResMap
 	Cloudlet
+	FlavorMatch
 	FlavorInfo
+	OSAZone
 	CloudletInfo
 	CloudletMetrics
 	CloudletPoolKey
