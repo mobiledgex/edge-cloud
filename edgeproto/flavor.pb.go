@@ -638,6 +638,8 @@ func (m *Flavor) DiffFields(o *Flavor, fields map[string]struct{}) {
 				}
 			}
 		}
+	} else if (m.OptResMap != nil && o.OptResMap == nil) || (m.OptResMap == nil && o.OptResMap != nil) {
+		fields[FlavorFieldOptResMap] = struct{}{}
 	}
 }
 
@@ -670,10 +672,15 @@ func (m *Flavor) CopyInFields(src *Flavor) int {
 			changed++
 		}
 	}
-	if _, set := fmap["6"]; set && src.OptResMap != nil {
-		m.OptResMap = make(map[string]string)
-		for k0, _ := range src.OptResMap {
-			m.OptResMap[k0] = src.OptResMap[k0]
+	if _, set := fmap["6"]; set {
+		if src.OptResMap != nil {
+			m.OptResMap = make(map[string]string)
+			for k0, _ := range src.OptResMap {
+				m.OptResMap[k0] = src.OptResMap[k0]
+			}
+		} else if m.OptResMap != nil {
+			m.OptResMap = nil
+			changed++
 		}
 	}
 	return changed

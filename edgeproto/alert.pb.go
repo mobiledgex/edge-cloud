@@ -417,12 +417,18 @@ func (m *Alert) CopyInFields(src *Alert) int {
 		for k0, _ := range src.Labels {
 			m.Labels[k0] = src.Labels[k0]
 		}
+	} else if m.Labels != nil {
+		m.Labels = nil
+		changed++
 	}
 	if src.Annotations != nil {
 		m.Annotations = make(map[string]string)
 		for k0, _ := range src.Annotations {
 			m.Annotations[k0] = src.Annotations[k0]
 		}
+	} else if m.Annotations != nil {
+		m.Annotations = nil
+		changed++
 	}
 	if m.State != src.State {
 		m.State = src.State

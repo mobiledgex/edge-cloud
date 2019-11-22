@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -25,6 +26,16 @@ func InitAlertApi(sync *Sync) {
 }
 
 func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
+	// for now, only store needed alerts
+	name, ok := in.Labels["alertname"]
+	if !ok {
+		log.SpanLog(ctx, log.DebugLevelNotify, "alertname not found", "labels", in.Labels)
+		return
+	}
+	if name != cloudcommon.AlertAutoScaleUp && name != cloudcommon.AlertAutoScaleDown {
+		log.SpanLog(ctx, log.DebugLevelNotify, "ignoring alert", "name", name)
+		return
+	}
 	in.Controller = ControllerId
 	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
 }
