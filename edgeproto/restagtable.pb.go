@@ -709,6 +709,7 @@ func (m *ResTagTable) CopyInFields(src *ResTagTable) int {
 	if _, set := fmap["3"]; set {
 		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
 			m.Tags = make([]string, len(src.Tags))
+			changed++
 		}
 		copy(m.Tags, src.Tags)
 		changed++

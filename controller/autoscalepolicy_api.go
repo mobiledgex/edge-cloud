@@ -32,13 +32,17 @@ func (s *AutoScalePolicyApi) CreateAutoScalePolicy(ctx context.Context, in *edge
 
 func (s *AutoScalePolicyApi) UpdateAutoScalePolicy(ctx context.Context, in *edgeproto.AutoScalePolicy) (*edgeproto.Result, error) {
 	cur := edgeproto.AutoScalePolicy{}
+	changed := 0
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		cur.CopyInFields(in)
+		changed = cur.CopyInFields(in)
 		if err := cur.Validate(nil); err != nil {
 			return err
+		}
+		if changed == 0 {
+			return nil
 		}
 		s.store.STMPut(stm, &cur)
 		return nil
