@@ -873,6 +873,7 @@ func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.C
 		key.Name = tblname
 		key.OperatorKey = in.Key.OperatorKey
 		tbl, err := resTagTableApi.GetResTagTable(ctx, &key)
+    
 		if err != nil && err.Error() == key.NotFoundError().Error() {
 			// auto-create empty
 			tbl.Key = key
@@ -957,4 +958,46 @@ func (s *CloudletApi) showCloudletsByKeys(keys map[edgeproto.CloudletKey]struct{
 		}
 	}
 	return nil
+}
+
+func (s *CloudletApi) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error) {
+
+	cl := edgeproto.Cloudlet{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return in.Key.NotFoundError()
+		}
+		// ResTagMap may infact be nil, that's ok if OSFlavor.Name is enough to match
+		return nil
+	})
+
+	cli := edgeproto.CloudletInfo{}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cli) {
+			return in.Key.NotFoundError()
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Error retrieving cloudlet info for %s ", in.Key.Name)
+	}
+
+	mexFlavor := edgeproto.Flavor{}
+	mexFlavor.Key.Name = in.FlavorName
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !flavorApi.store.STMGet(stm, &mexFlavor.Key, &mexFlavor) {
+			return in.Key.NotFoundError()
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Error retrieving target flavor")
+	}
+	spec, vmerr := resTagTableApi.GetVMSpec(mexFlavor, cl, cli)
+	if vmerr != nil {
+		return nil, vmerr
+	}
+	in.FlavorName = spec.FlavorName
+	in.AvailabilityZone = spec.AvailabilityZone
+	return in, nil
 }

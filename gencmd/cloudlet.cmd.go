@@ -446,6 +446,60 @@ func RemoveCloudletResMappings(c *cli.Command, data []edgeproto.CloudletResMap, 
 	}
 }
 
+var FindFlavorMatchCmd = &cli.Command{
+	Use:          "FindFlavorMatch",
+	RequiredArgs: strings.Join(FlavorMatchRequiredArgs, " "),
+	OptionalArgs: strings.Join(FlavorMatchOptionalArgs, " "),
+	AliasArgs:    strings.Join(FlavorMatchAliasArgs, " "),
+	SpecialArgs:  &FlavorMatchSpecialArgs,
+	Comments:     FlavorMatchComments,
+	ReqData:      &edgeproto.FlavorMatch{},
+	ReplyData:    &edgeproto.FlavorMatch{},
+	Run:          runFindFlavorMatch,
+}
+
+func runFindFlavorMatch(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.FlavorMatch)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return FindFlavorMatch(c, obj)
+}
+
+func FindFlavorMatch(c *cli.Command, in *edgeproto.FlavorMatch) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.FindFlavorMatch(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("FindFlavorMatch failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func FindFlavorMatchs(c *cli.Command, data []edgeproto.FlavorMatch, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("FindFlavorMatch %v\n", data[ii])
+		myerr := FindFlavorMatch(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var CloudletApiCmds = []*cobra.Command{
 	CreateCloudletCmd.GenCmd(),
 	DeleteCloudletCmd.GenCmd(),
@@ -453,6 +507,7 @@ var CloudletApiCmds = []*cobra.Command{
 	ShowCloudletCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
+	FindFlavorMatchCmd.GenCmd(),
 }
 
 var CloudletInfoApiCmd edgeproto.CloudletInfoApiClient
@@ -1026,6 +1081,24 @@ var ResTagMapEntryComments = map[string]string{
 	"value.operatorkey.name": "Company or Organization name of the operator",
 }
 var ResTagMapEntrySpecialArgs = map[string]string{}
+var FlavorMatchRequiredArgs = []string{
+	"operator",
+	"cloudlet",
+}
+var FlavorMatchOptionalArgs = []string{
+	"flavor",
+	"availabilityzone",
+}
+var FlavorMatchAliasArgs = []string{
+	"operator=key.operatorkey.name",
+	"cloudlet=key.name",
+	"flavor=flavorname",
+}
+var FlavorMatchComments = map[string]string{
+	"operator": "Company or Organization name of the operator",
+	"cloudlet": "Name of the cloudlet",
+}
+var FlavorMatchSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",
@@ -1043,6 +1116,14 @@ var FlavorInfoComments = map[string]string{
 	"properties": "OS Flavor Properties, if any",
 }
 var FlavorInfoSpecialArgs = map[string]string{}
+var OSAZoneRequiredArgs = []string{}
+var OSAZoneOptionalArgs = []string{
+	"name",
+	"status",
+}
+var OSAZoneAliasArgs = []string{}
+var OSAZoneComments = map[string]string{}
+var OSAZoneSpecialArgs = map[string]string{}
 var CloudletInfoRequiredArgs = []string{
 	"operator",
 	"name",
@@ -1065,6 +1146,8 @@ var CloudletInfoOptionalArgs = []string{
 	"status.taskname",
 	"status.stepname",
 	"version",
+	"availabilityzones.name",
+	"availabilityzones.status",
 }
 var CloudletInfoAliasArgs = []string{
 	"operator=key.operatorkey.name",

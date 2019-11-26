@@ -49,7 +49,9 @@
 		PlatformConfig
 		CloudletResMap
 		Cloudlet
+		FlavorMatch
 		FlavorInfo
+		OSAZone
 		CloudletInfo
 		CloudletMetrics
 		CloudletPoolKey
