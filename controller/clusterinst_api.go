@@ -261,11 +261,12 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
 		var err error
-		vmspec, err := resTagTableApi.GetVMSpec(info.Flavors, nodeFlavor, cloudlet.ResTagMap)
+		vmspec, err := resTagTableApi.GetVMSpec(nodeFlavor, cloudlet, info)
 		if err != nil {
 			return err
 		}
 		in.NodeFlavor = vmspec.FlavorName
+		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
 
 		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Flavor", "vmspec", vmspec)

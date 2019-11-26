@@ -62,7 +62,8 @@ message ClusterInst {
   uint64 external_volume_size = 17 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
   // Auto scale policy name
   string auto_scale_policy = 18;
-
+  // Optional Resource AZ if any
+  string availability_zone = 19;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
