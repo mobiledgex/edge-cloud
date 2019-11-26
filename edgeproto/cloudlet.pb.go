@@ -4329,6 +4329,8 @@ func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
 				}
 			}
 		}
+	} else if (m.AvailabilityZones != nil && o.AvailabilityZones == nil) || (m.AvailabilityZones == nil && o.AvailabilityZones != nil) {
+		fields[CloudletInfoFieldAvailabilityZones] = struct{}{}
 	}
 }
 
@@ -4471,24 +4473,30 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 			changed++
 		}
 	}
-	if _, set := fmap["13"]; set && src.AvailabilityZones != nil {
-		if m.AvailabilityZones == nil || len(m.AvailabilityZones) != len(src.AvailabilityZones) {
-			m.AvailabilityZones = make([]*OSAZone, len(src.AvailabilityZones))
-		}
-		for i0 := 0; i0 < len(src.AvailabilityZones); i0++ {
-			m.AvailabilityZones[i0] = &OSAZone{}
-			if _, set := fmap["13.1"]; set {
-				if m.AvailabilityZones[i0].Name != src.AvailabilityZones[i0].Name {
-					m.AvailabilityZones[i0].Name = src.AvailabilityZones[i0].Name
-					changed++
+	if _, set := fmap["13"]; set {
+		if src.AvailabilityZones != nil {
+			if m.AvailabilityZones == nil || len(m.AvailabilityZones) != len(src.AvailabilityZones) {
+				m.AvailabilityZones = make([]*OSAZone, len(src.AvailabilityZones))
+				changed++
+			}
+			for i0 := 0; i0 < len(src.AvailabilityZones); i0++ {
+				m.AvailabilityZones[i0] = &OSAZone{}
+				if _, set := fmap["13.1"]; set {
+					if m.AvailabilityZones[i0].Name != src.AvailabilityZones[i0].Name {
+						m.AvailabilityZones[i0].Name = src.AvailabilityZones[i0].Name
+						changed++
+					}
+				}
+				if _, set := fmap["13.2"]; set {
+					if m.AvailabilityZones[i0].Status != src.AvailabilityZones[i0].Status {
+						m.AvailabilityZones[i0].Status = src.AvailabilityZones[i0].Status
+						changed++
+					}
 				}
 			}
-			if _, set := fmap["13.2"]; set {
-				if m.AvailabilityZones[i0].Status != src.AvailabilityZones[i0].Status {
-					m.AvailabilityZones[i0].Status = src.AvailabilityZones[i0].Status
-					changed++
-				}
-			}
+		} else if m.AvailabilityZones != nil {
+			m.AvailabilityZones = nil
+			changed++
 		}
 	}
 	return changed
