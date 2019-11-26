@@ -118,6 +118,10 @@ type promCustomizations struct {
 // Create app/appInst when clusterInst transitions to a 'ready' state
 func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {
 	var err error
+	// cluster-svc only manages k8s clusters for now
+	if new.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+		return
+	}
 	log.SpanLog(ctx, log.DebugLevelNotify, "cluster update", "cluster", new.Key.ClusterKey.Name,
 		"cloudlet", new.Key.CloudletKey.Name, "state", edgeproto.TrackedState_name[int32(new.State)])
 	// Need to create a connection to server, as passed to us by commands
