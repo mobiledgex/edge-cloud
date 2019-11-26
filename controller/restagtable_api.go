@@ -195,7 +195,6 @@ func (s *ResTagTableApi) GetCloudletResourceMap(key *edgeproto.ResTagTableKey) (
 
 func (s *ResTagTableApi) findAZmatch(res string, cli edgeproto.CloudletInfo) (edgeproto.OSAZone, bool) {
 	var az *edgeproto.OSAZone
-	//az := edgeproto.OSAZone{}
 	for _, az = range cli.AvailabilityZones {
 		if strings.Contains(strings.ToLower(az.Name), res) {
 			return *az, true
@@ -209,7 +208,6 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 
 	// non-nominal corner case: Cloudlet has no resource map at all, node flavor asks for a resource
 	// so only hints found in the flavor name itself can be used, currently only resource 'gpu' uses this.
-	//
 	if resmap == nil {
 		// handle any flavor name hints that may exist
 		if _, ok := nodeflavor.OptResMap[strings.ToLower(edgeproto.OptResNames_name[int32(edgeproto.OptResNames_GPU)])]; ok {
@@ -275,10 +273,13 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 }
 
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
-func (s *ResTagTableApi) GetVMSpec(flavorList []*edgeproto.FlavorInfo, nodeflavor edgeproto.Flavor, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (*vmspec.VMCreationSpec, error) {
-	log.InfoLog("GetVMSpec with closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
+func (s *ResTagTableApi) GetVMSpec(nodeflavor edgeproto.Flavor, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (*vmspec.VMCreationSpec, error) {
+	var flavorList []*edgeproto.FlavorInfo
 	var vmspec vmspec.VMCreationSpec
 	var az string
+
+	flavorList = cli.Flavors
+	log.InfoLog("GetVMSpec with closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
 	sort.Slice(flavorList[:], func(i, j int) bool {
 		if flavorList[i].Vcpus < flavorList[j].Vcpus {
 			return true

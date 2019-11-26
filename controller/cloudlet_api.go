@@ -993,10 +993,7 @@ func (s *CloudletApi) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorM
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving target flavor")
 	}
-
-	var flavors []*edgeproto.FlavorInfo = cli.Flavors // OS flavor list to search for match
-	spec, vmerr := resTagTableApi.GetVMSpec(flavors, mexFlavor, cl, cli)
-
+	spec, vmerr := resTagTableApi.GetVMSpec(mexFlavor, cl, cli)
 	if vmerr != nil {
 		return nil, vmerr
 	}

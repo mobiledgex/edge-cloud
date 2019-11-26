@@ -614,9 +614,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	// is to take our meta-flavor resourse request object, and return, for this
 	// operator/cloudlet the closest matching available flavor to use in the eventual
 	// launch of a suitable image.
-	cli := edgeproto.CloudletInfo{}
-	//ok := cloudletInfoApi.cache.Get(&cl.Key, &cli)
-	//require.Equal(t, true, ok)
+	var cli edgeproto.CloudletInfo = testutil.CloudletInfoData[0]
 
 	if cl.ResTagMap == nil {
 		cl.ResTagMap = make(map[string]*edgeproto.ResTagTableKey)
@@ -666,7 +664,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	taz := edgeproto.OSAZone{Name: "AZ1_GPU", Status: "available"}
 	cli.AvailabilityZones = append(cli.AvailabilityZones, &taz)
 	// this simple case should find the flavor with 'gpu' in the name
-	spec, vmerr := resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, *cl, cli)
+	spec, vmerr := resTagTableApi.GetVMSpec(testflavor, *cl, cli)
 	require.Nil(t, vmerr, "GetVmSpec")
 	require.Equal(t, "flavor.large-gpu", spec.FlavorName)
 	require.Equal(t, "AZ1_GPU", spec.AvailabilityZone)
@@ -676,13 +674,13 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	testflavor.Vcpus = 10
 	// if we can support the map in TestConversion we can use testutil.FlavorData[4] as we did pre-map
 	// this should by-pass the flavor with 'gpu' in the name, since that has 8 vcpus, and we're now requesting 10
-	spec, vmerr = resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, *cl, cli)
+	spec, vmerr = resTagTableApi.GetVMSpec(testflavor, *cl, cli)
 	require.Nil(t, vmerr, "GetVmSpec")
 	require.Equal(t, "flavor.large", spec.FlavorName)
 
 	nulCL := edgeproto.Cloudlet{}
 	// and finally, make sure GetVMSpec ignores a nil tbl if none exist or desired, behavior
 	// is only a flavor with 'gpu' in the name will trigger a gpu request match.
-	spec, vmerr = resTagTableApi.GetVMSpec(testutil.CloudletInfoData[0].Flavors, testflavor, nulCL, cli)
+	spec, vmerr = resTagTableApi.GetVMSpec(testflavor, nulCL, cli)
 	require.Equal(t, "no suitable platform flavor found for x1.large-mex, please try a smaller flavor", vmerr.Error(), "nil table")
 }
