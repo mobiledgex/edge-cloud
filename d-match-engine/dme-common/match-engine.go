@@ -365,6 +365,8 @@ func findClosestForCarrier(carrierName string, key edgeproto.AppKey, loc *dme.Lo
 				mreply.Status = dme.FindCloudletReply_FIND_FOUND
 				*mreply.CloudletLocation = i.location
 				mreply.Ports = copyPorts(i)
+				mreply.CarrierName = carrierName
+				mreply.CloudletName = i.clusterInstKey.CloudletKey.Name
 			}
 		}
 

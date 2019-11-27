@@ -1,5 +1,7 @@
 status: FindFound
 fqdn: smallcluster.tmus-cloud-1.tmus.mobiledgex.net
+carriername: tmus
+cloudletname: tmus-cloud-1
 ports:
 - proto: LProtoTcp
   internalport: 80

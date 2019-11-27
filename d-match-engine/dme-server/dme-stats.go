@@ -23,10 +23,11 @@ var LatencyTimes = []time.Duration{
 	100 * time.Millisecond,
 }
 
-// Stats are collected per App and per method name (verifylocation, etc).
+// Stats are collected per App per Cloudlet and per method name (verifylocation, etc).
 type StatKey struct {
-	AppKey edgeproto.AppKey
-	method string
+	AppKey        edgeproto.AppKey
+	CloudletFound edgeproto.CloudletKey
+	method        string
 }
 
 type ApiStatCall struct {
@@ -140,6 +141,8 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	metric.AddTag("method", key.method)
 	metric.AddIntVal("reqs", stat.reqs)
 	metric.AddIntVal("errs", stat.errs)
+	metric.AddTag("foundCloudlet", key.CloudletFound.Name)
+	metric.AddTag("foundOperator", key.CloudletFound.OperatorKey.Name)
 	stat.latency.AddToMetric(&metric)
 	return &metric
 }
@@ -196,6 +199,16 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		call.key.AppKey.Name = ckey.AppName
 		call.key.AppKey.Version = ckey.AppVers
 	}
+
+	// For the FindCloudlet api we should record what we returned
+	switch typ := resp.(type) {
+	case *dme.FindCloudletReply:
+		call.key.CloudletFound.Name = typ.CloudletName
+		call.key.CloudletFound.OperatorKey.Name = typ.CarrierName
+	default:
+		break
+	}
+
 	if err != nil {
 		call.fail = true
 	}

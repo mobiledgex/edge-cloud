@@ -612,6 +612,8 @@ var FindCloudletReplyOptionalArgs = []string{
 	"cloudletlocation.speed",
 	"cloudletlocation.timestamp.seconds",
 	"cloudletlocation.timestamp.nanos",
+	"carriername",
+	"cloudletname",
 }
 var FindCloudletReplyAliasArgs = []string{}
 var FindCloudletReplyComments = map[string]string{
@@ -631,6 +633,8 @@ var FindCloudletReplyComments = map[string]string{
 	"cloudletlocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"cloudletlocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudletlocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+	"carriername":                         "The carrier name that the user is connected to (Cellular Carrier Name)",
+	"cloudletname":                        "Cloudlet Name",
 }
 var FindCloudletReplySpecialArgs = map[string]string{}
 var VerifyLocationRequestRequiredArgs = []string{}

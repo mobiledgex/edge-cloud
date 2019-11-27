@@ -1,5 +1,7 @@
 status: FindFound
 fqdn: acmeappcosomeapplication110.autoclustersomeapplication1.azure-cloud-4.azure.mobiledgex.net
+carriername: azure
+cloudletname: azure-cloud-4
 ports:
 - proto: LProtoTcp
   internalport: 80
