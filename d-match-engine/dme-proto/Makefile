@@ -17,5 +17,10 @@ swagger: $(PROTOS)
 	# go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 	protoc ${INCLUDE} --swagger_out=logtostderr=true,allow_merge=true,merge_file_name=app-client:. *.proto
 
+external-swagger: $(PROTOS)
+	mkdir -p ./external-doc
+	protoc ${INCLUDE} --swagger_out=logtostderr=true,allow_merge=true,config_file=swagger_config.yaml,merge_file_name=app-client:./external-doc *.proto
+
+
 $(PROTOS):
 	ln -sf ${DMEDIR}/$@ $@
