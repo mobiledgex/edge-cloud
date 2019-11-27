@@ -181,10 +181,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("NumMasters and NumNodes not applicable for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
 		}
 		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-			// must be dedicated for docker
+			// assume dedicated for docker
 			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
-		} else if in.IpAccess != edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-			return fmt.Errorf("IpAccess must be dedicated for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
 		}
 	} else {
 		return fmt.Errorf("Invalid deployment type %s for ClusterInst", in.Deployment)
@@ -219,6 +217,16 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
+		}
+		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+			if in.Deployment == cloudcommon.AppDeploymentTypeDocker && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_DIND {
+				platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
+				return fmt.Errorf("IpAccess must be dedicated for deployment type %s platform type %s", cloudcommon.AppDeploymentTypeDocker, platName)
+			}
+		} else {
+			if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND {
+				return fmt.Errorf("IpAccess must be shared for DIND")
+			}
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
 			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
