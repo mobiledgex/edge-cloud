@@ -120,10 +120,8 @@ message PlatformConfig {
   string vault_addr  = 4;
   // TLS cert file
   string tls_cert_file = 5;
-  // Vault role ID for CRM
-  string crm_role_id    = 6;
-  // Vault secret ID for CRM
-  string crm_secret_id = 7;
+  // Environment variables
+  map<string, string> env_var = 6;
   // Tag of edge-cloud image
   string platform_tag = 8;
   // Internal Test flag

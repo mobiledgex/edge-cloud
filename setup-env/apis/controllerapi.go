@@ -574,8 +574,9 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		if err != nil {
 			return err
 		}
-		pfConfig.CrmRoleId = roles.CRMRoleID
-		pfConfig.CrmSecretId = roles.CRMSecretID
+		pfConfig.EnvVar = make(map[string]string)
+		pfConfig.EnvVar["VAULT_ROLE_ID"] = roles.CRMRoleID
+		pfConfig.EnvVar["VAULT_SECRET_ID"] = roles.CRMSecretID
 
 		// Defaults
 		pfConfig.PlatformTag = ""

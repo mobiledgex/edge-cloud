@@ -35,8 +35,9 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	span := ""
 	cleanupMode := false
 	if pfConfig != nil {
-		envVars["VAULT_ROLE_ID"] = pfConfig.CrmRoleId
-		envVars["VAULT_SECRET_ID"] = pfConfig.CrmSecretId
+		for k, v := range pfConfig.EnvVar {
+			envVars[k] = v
+		}
 		notifyCtrlAddrs = pfConfig.NotifyCtrlAddrs
 		tlsCertFile = pfConfig.TlsCertFile
 		vaultAddr = pfConfig.VaultAddr
