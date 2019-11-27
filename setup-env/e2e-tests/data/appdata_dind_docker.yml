@@ -39,6 +39,7 @@ clusterinsts:
       name: localtest
     developer: MobiledgeX
   deployment: docker
+  ipaccess: IpAccessShared
   flavor:
     name: x1.medium
   liveness: LivenessStatic
