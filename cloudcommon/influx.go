@@ -13,7 +13,7 @@ type InfluxCreds struct {
 }
 
 func GetInfluxDataAuth(vaultConfig *vault.Config, region string) (*InfluxCreds, error) {
-	if vaultConfig == nil {
+	if vaultConfig.Addr == "" {
 		// no vault address, either unit test or no auth needed
 		return &InfluxCreds{}, nil
 	}

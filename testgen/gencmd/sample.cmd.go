@@ -283,19 +283,3 @@ var InnerMessageOptionalArgs = []string{
 var InnerMessageAliasArgs = []string{}
 var InnerMessageComments = map[string]string{}
 var InnerMessageSpecialArgs = map[string]string{}
-var IntMapEntryRequiredArgs = []string{}
-var IntMapEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var IntMapEntryAliasArgs = []string{}
-var IntMapEntryComments = map[string]string{}
-var IntMapEntrySpecialArgs = map[string]string{}
-var MsgMapEntryRequiredArgs = []string{}
-var MsgMapEntryOptionalArgs = []string{
-	"key",
-	"value.name",
-}
-var MsgMapEntryAliasArgs = []string{}
-var MsgMapEntryComments = map[string]string{}
-var MsgMapEntrySpecialArgs = map[string]string{}

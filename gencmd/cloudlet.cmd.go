@@ -880,14 +880,6 @@ var OpenStackPropertiesComments = map[string]string{
 var OpenStackPropertiesSpecialArgs = map[string]string{
 	"openrcvars": "StringToString",
 }
-var OpenRcVarsEntryRequiredArgs = []string{}
-var OpenRcVarsEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var OpenRcVarsEntryAliasArgs = []string{}
-var OpenRcVarsEntryComments = map[string]string{}
-var OpenRcVarsEntrySpecialArgs = map[string]string{}
 var CloudletInfraPropertiesRequiredArgs = []string{}
 var CloudletInfraPropertiesOptionalArgs = []string{
 	"cloudletkind",
@@ -934,8 +926,7 @@ var PlatformConfigOptionalArgs = []string{
 	"notifyctrladdrs",
 	"vaultaddr",
 	"tlscertfile",
-	"crmroleid",
-	"crmsecretid",
+	"envvar",
 	"platformtag",
 	"testmode",
 	"span",
@@ -948,14 +939,15 @@ var PlatformConfigComments = map[string]string{
 	"notifyctrladdrs": "Address of controller notify port (can be multiple of these)",
 	"vaultaddr":       "Vault address",
 	"tlscertfile":     "TLS cert file",
-	"crmroleid":       "Vault role ID for CRM",
-	"crmsecretid":     "Vault secret ID for CRM",
+	"envvar":          "Environment variables",
 	"platformtag":     "Tag of edge-cloud image",
 	"testmode":        "Internal Test flag",
 	"span":            "Span string",
 	"cleanupmode":     "Internal cleanup flag",
 }
-var PlatformConfigSpecialArgs = map[string]string{}
+var PlatformConfigSpecialArgs = map[string]string{
+	"envvar": "StringToString",
+}
 var CloudletResMapRequiredArgs = []string{
 	"operator",
 	"name",
@@ -974,14 +966,6 @@ var CloudletResMapComments = map[string]string{
 var CloudletResMapSpecialArgs = map[string]string{
 	"mapping": "StringToString",
 }
-var MappingEntryRequiredArgs = []string{}
-var MappingEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var MappingEntryAliasArgs = []string{}
-var MappingEntryComments = map[string]string{}
-var MappingEntrySpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
 	"operator",
 	"name",
@@ -1048,8 +1032,7 @@ var CloudletComments = map[string]string{
 	"config.notifyctrladdrs":              "Address of controller notify port (can be multiple of these)",
 	"config.vaultaddr":                    "Vault address",
 	"config.tlscertfile":                  "TLS cert file",
-	"config.crmroleid":                    "Vault role ID for CRM",
-	"config.crmsecretid":                  "Vault secret ID for CRM",
+	"config.envvar":                       "Environment variables",
 	"config.platformtag":                  "Tag of edge-cloud image",
 	"config.testmode":                     "Internal Test flag",
 	"config.span":                         "Span string",
@@ -1058,29 +1041,10 @@ var CloudletComments = map[string]string{
 	"restagmap.value.operatorkey.name":    "Company or Organization name of the operator",
 }
 var CloudletSpecialArgs = map[string]string{
-	"envvar": "StringToString",
-	"errors": "StringArray",
+	"config.envvar": "StringToString",
+	"envvar":        "StringToString",
+	"errors":        "StringArray",
 }
-var EnvVarEntryRequiredArgs = []string{}
-var EnvVarEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var EnvVarEntryAliasArgs = []string{}
-var EnvVarEntryComments = map[string]string{}
-var EnvVarEntrySpecialArgs = map[string]string{}
-var ResTagMapEntryRequiredArgs = []string{}
-var ResTagMapEntryOptionalArgs = []string{
-	"key",
-	"value.name",
-	"value.operatorkey.name",
-}
-var ResTagMapEntryAliasArgs = []string{}
-var ResTagMapEntryComments = map[string]string{
-	"value.name":             "Resource Table Name",
-	"value.operatorkey.name": "Company or Organization name of the operator",
-}
-var ResTagMapEntrySpecialArgs = map[string]string{}
 var FlavorMatchRequiredArgs = []string{
 	"operator",
 	"cloudlet",
