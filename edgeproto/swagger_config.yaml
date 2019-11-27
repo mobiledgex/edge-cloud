@@ -14,6 +14,37 @@ skipmethods:
   StreamNotice:
   ShowCloudletRefs:
   ShowClusterRefs:
+  CreateCloudletPool:
+  DeleteCloudletPool:
+  ShowCloudletPool:
+  CreateCloudletPoolMember:
+  DeleteCloudletPoolMember:
+  ShowCloudletPoolMember:
+  ShowPoolsForCloudlet:
+  ShowCloudletsForPool:
+  AddCloudletPoolMember:
+  RemoveCloudletPoolMember:
+  ShowCloudletPoolMember:
+  CreateResTagTable:
+  DeleteResTagTable:
+  UpdateResTagTable:
+  ShowResTagTable:
+  AddResTag:
+  RemoveResTag:
+  GetResTagTable:
+  AddCloudletResMapping:
+  RemoveCloudletResMapping:
+  FindFlavorMatch:
+  AddFlavorRes:
+  RemoveFlavorRes:
+  CreateAutoScalePolicy:
+  DeleteAutoScalePolicy:
+  UpdateAutoScalePolicy:
+  ShowAutoScalePolicy:
+  ShowAlert:
+  AddCloudletResMapping:
+  RemoveCloudletResMapping:
+  RefreshAppInst:
 skipfields:
   App:
     fields:
@@ -24,6 +55,9 @@ skipfields:
     del_opt:
     android_package_name:
     configs:
+    internal_ports:
+    revision:
+    md5sum:
   AppInst:
     fields:
     cloudlet_loc:
@@ -34,9 +68,20 @@ skipfields:
     runtime_info:
     auto_cluster_ip_access:
     state:
+    revision:
+    force_update:
+    update_multiple:
   Cloudlet:
     fields:
     time_limits:
+    notify_srv_addr:
+    physical_name:
+    flavor:
+    env_var:
+    version:
+    config:
+    res_tag_map:
+    deployment_local:
   ClusterInst:
     fields:
     liveness:
@@ -45,9 +90,13 @@ skipfields:
     errors:
     crm_override:
     allocated_ip:
+    auto_scale_policy:
+    availability_zone:
+    external_volume_size:
   Developer:
     fields:
   Flavor:
     fields:
+    opt_res_map:
   Operator:
     fields:

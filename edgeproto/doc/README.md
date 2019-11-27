@@ -3,6 +3,16 @@
 
 ## Table of Contents
 
+- [alert.proto](#alert.proto)
+    - [Alert](#edgeproto.Alert)
+    - [Alert.AnnotationsEntry](#edgeproto.Alert.AnnotationsEntry)
+    - [Alert.LabelsEntry](#edgeproto.Alert.LabelsEntry)
+  
+  
+  
+    - [AlertApi](#edgeproto.AlertApi)
+  
+
 - [app.proto](#app.proto)
     - [App](#edgeproto.App)
     - [AppKey](#edgeproto.AppKey)
@@ -29,20 +39,38 @@
     - [AppInstMetricsApi](#edgeproto.AppInstMetricsApi)
   
 
+- [autoscalepolicy.proto](#autoscalepolicy.proto)
+    - [AutoScalePolicy](#edgeproto.AutoScalePolicy)
+    - [PolicyKey](#edgeproto.PolicyKey)
+  
+  
+  
+    - [AutoScalePolicyApi](#edgeproto.AutoScalePolicyApi)
+  
+
 - [cloudlet.proto](#cloudlet.proto)
     - [AzureProperties](#edgeproto.AzureProperties)
     - [Cloudlet](#edgeproto.Cloudlet)
+    - [Cloudlet.EnvVarEntry](#edgeproto.Cloudlet.EnvVarEntry)
+    - [Cloudlet.ResTagMapEntry](#edgeproto.Cloudlet.ResTagMapEntry)
     - [CloudletInfo](#edgeproto.CloudletInfo)
     - [CloudletInfraCommon](#edgeproto.CloudletInfraCommon)
     - [CloudletInfraProperties](#edgeproto.CloudletInfraProperties)
     - [CloudletKey](#edgeproto.CloudletKey)
     - [CloudletMetrics](#edgeproto.CloudletMetrics)
+    - [CloudletResMap](#edgeproto.CloudletResMap)
+    - [CloudletResMap.MappingEntry](#edgeproto.CloudletResMap.MappingEntry)
     - [FlavorInfo](#edgeproto.FlavorInfo)
+    - [FlavorMatch](#edgeproto.FlavorMatch)
     - [GcpProperties](#edgeproto.GcpProperties)
+    - [OSAZone](#edgeproto.OSAZone)
     - [OpenStackProperties](#edgeproto.OpenStackProperties)
     - [OpenStackProperties.OpenRcVarsEntry](#edgeproto.OpenStackProperties.OpenRcVarsEntry)
+    - [OperationTimeLimits](#edgeproto.OperationTimeLimits)
+    - [PlatformConfig](#edgeproto.PlatformConfig)
   
     - [CloudletState](#edgeproto.CloudletState)
+    - [PlatformType](#edgeproto.PlatformType)
   
   
     - [CloudletApi](#edgeproto.CloudletApi)
@@ -50,13 +78,23 @@
     - [CloudletMetricsApi](#edgeproto.CloudletMetricsApi)
   
 
+- [cloudletpool.proto](#cloudletpool.proto)
+    - [CloudletPool](#edgeproto.CloudletPool)
+    - [CloudletPoolKey](#edgeproto.CloudletPoolKey)
+    - [CloudletPoolMember](#edgeproto.CloudletPoolMember)
+  
+  
+  
+    - [CloudletPoolApi](#edgeproto.CloudletPoolApi)
+    - [CloudletPoolMemberApi](#edgeproto.CloudletPoolMemberApi)
+    - [CloudletPoolShowApi](#edgeproto.CloudletPoolShowApi)
+  
+
 - [cluster.proto](#cluster.proto)
-    - [Cluster](#edgeproto.Cluster)
     - [ClusterKey](#edgeproto.ClusterKey)
   
   
   
-    - [ClusterApi](#edgeproto.ClusterApi)
   
 
 - [clusterinst.proto](#clusterinst.proto)
@@ -71,6 +109,7 @@
   
 
 - [common.proto](#common.proto)
+    - [StatusInfo](#edgeproto.StatusInfo)
   
     - [CRMOverride](#edgeproto.CRMOverride)
     - [IpAccess](#edgeproto.IpAccess)
@@ -109,6 +148,7 @@
 
 - [flavor.proto](#flavor.proto)
     - [Flavor](#edgeproto.Flavor)
+    - [Flavor.OptResMapEntry](#edgeproto.Flavor.OptResMapEntry)
     - [FlavorKey](#edgeproto.FlavorKey)
   
   
@@ -155,6 +195,7 @@
 
 - [refs.proto](#refs.proto)
     - [CloudletRefs](#edgeproto.CloudletRefs)
+    - [CloudletRefs.OptResUsedMapEntry](#edgeproto.CloudletRefs.OptResUsedMapEntry)
     - [CloudletRefs.RootLbPortsEntry](#edgeproto.CloudletRefs.RootLbPortsEntry)
     - [ClusterRefs](#edgeproto.ClusterRefs)
   
@@ -162,6 +203,16 @@
   
     - [CloudletRefsApi](#edgeproto.CloudletRefsApi)
     - [ClusterRefsApi](#edgeproto.ClusterRefsApi)
+  
+
+- [restagtable.proto](#restagtable.proto)
+    - [ResTagTable](#edgeproto.ResTagTable)
+    - [ResTagTableKey](#edgeproto.ResTagTableKey)
+  
+    - [OptResNames](#edgeproto.OptResNames)
+  
+  
+    - [ResTagTableApi](#edgeproto.ResTagTableApi)
   
 
 - [result.proto](#result.proto)
@@ -182,6 +233,85 @@
 
 
 
+<a name="alert.proto"/>
+<p align="right"><a href="#top">Top</a></p>
+
+## alert.proto
+
+
+
+<a name="edgeproto.Alert"/>
+
+### Alert
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| labels | [Alert.LabelsEntry](#edgeproto.Alert.LabelsEntry) | repeated | Labels uniquely define the alert |
+| annotations | [Alert.AnnotationsEntry](#edgeproto.Alert.AnnotationsEntry) | repeated | Annotations are extra information about the alert |
+| state | [string](#string) |  | State of the alert |
+| active_at | [distributed_match_engine.Timestamp](#distributed_match_engine.Timestamp) |  | When alert became active |
+| value | [double](#double) |  | Any value associated with alert |
+| notify_id | [int64](#int64) |  | Id of client assigned by server (internal use only) |
+| controller | [string](#string) |  | Connected controller unique id |
+
+
+
+
+
+
+<a name="edgeproto.Alert.AnnotationsEntry"/>
+
+### Alert.AnnotationsEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [string](#string) |  |  |
+| value | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="edgeproto.Alert.LabelsEntry"/>
+
+### Alert.LabelsEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [string](#string) |  |  |
+| value | [string](#string) |  |  |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+
+<a name="edgeproto.AlertApi"/>
+
+### AlertApi
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| ShowAlert | [Alert](#edgeproto.Alert) | [Alert](#edgeproto.Alert) | Show alerts |
+
+ 
+
+
+
 <a name="app.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -192,31 +322,31 @@
 <a name="edgeproto.App"/>
 
 ### App
-Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.
-An application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet.
+App belongs to developers and is used to provide information about their application.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
 | key | [AppKey](#edgeproto.AppKey) |  | Unique identifier key |
-| image_path | [string](#string) |  | URI from which to download image |
+| image_path | [string](#string) |  | URI of where image resides |
 | image_type | [ImageType](#edgeproto.ImageType) |  | Image type (see ImageType) |
-| access_ports | [string](#string) |  | For Layer4 access, the ports the app listens on. This is a comma separated list of protocol:port pairs, i.e. tcp:80,http:443,udp:10002. Only tcp, udp, and http protocols are supported; tcp and udp are assumed to be L4, and http is assumed to be L7 access. |
-| config | [string](#string) |  | URI of resource to be used to establish config for App. |
-| default_flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Default flavor for the App, may be overridden by the AppInst |
-| cluster | [ClusterKey](#edgeproto.ClusterKey) |  | Cluster field is deprecated. Apps no longer have dependencies on Clusters. |
-| app_template | [string](#string) |  | Template of kubernetes deployment yaml. Who/What sets this is TDB, but it should not be directly exposed to the user, because we do not want to expose kubernetes to the user. However, because we currently don&#39;t have any other way to set it, for flexibility, for now it is exposed to the user. |
+| access_ports | [string](#string) |  | Comma separated list of protocol:port pairs that the App listens on. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443 |
+| default_flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Default flavor for the App, which may be overridden by the AppInst |
 | auth_public_key | [string](#string) |  | public key used for authentication |
-| command | [string](#string) |  | Command to start service |
+| command | [string](#string) |  | Command that the container runs to start service |
 | annotations | [string](#string) |  | Annotations is a comma separated map of arbitrary key value pairs, for example: key1=val1,key2=val2,key3=&#34;val 3&#34; |
-| deployment | [string](#string) |  | Deployment target (kubernetes, docker, kvm, etc) |
-| deployment_manifest | [string](#string) |  | Deployment manifest is the deployment specific manifest file/config |
-| deployment_generator | [string](#string) |  | Deployment generator target |
-| android_package_name | [string](#string) |  | Android package name, optional |
-| permits_platform_apps | [bool](#bool) |  | Indicates whether or not platform apps are allowed to perform actions on behalf of this app, such as FindCloudlet |
+| deployment | [string](#string) |  | Deployment type (kubernetes, docker, or vm) |
+| deployment_manifest | [string](#string) |  | Deployment manifest is the deployment specific manifest file/config For docker deployment, this can be a docker-compose or docker run file For kubernetes deployment, this can be a kubernetes yaml or helm chart file |
+| deployment_generator | [string](#string) |  | Deployment generator target to generate a basic deployment manifest |
+| android_package_name | [string](#string) |  | Android package name used to match the App name from the Android package |
 | del_opt | [DeleteType](#edgeproto.DeleteType) |  | Override actions to Controller |
-| configs | [ConfigFile](#edgeproto.ConfigFile) | repeated | Customization files |
+| configs | [ConfigFile](#edgeproto.ConfigFile) | repeated | Customization files passed through to implementing services |
+| scale_with_cluster | [bool](#bool) |  | Option to run App on all nodes of the cluster |
+| internal_ports | [bool](#bool) |  | Should this app have access to outside world? |
+| revision | [int32](#int32) |  | Revision increments each time the App is updated |
+| official_fqdn | [string](#string) |  | Official FQDN is the FQDN that the app uses to connect by default |
+| md5sum | [string](#string) |  | MD5Sum of the VM-based app image |
 
 
 
@@ -226,14 +356,14 @@ An application in itself is not tied to a Cloudlet, but provides a definition th
 <a name="edgeproto.AppKey"/>
 
 ### AppKey
-AppKey uniquely identifies an Application.
+AppKey uniquely identifies an App
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | developer_key | [DeveloperKey](#edgeproto.DeveloperKey) |  | Developer key |
-| name | [string](#string) |  | Application name |
-| version | [string](#string) |  | Version of the app |
+| name | [string](#string) |  | App name |
+| version | [string](#string) |  | App version |
 
 
 
@@ -273,13 +403,14 @@ AppKey uniquely identifies an Application.
 <a name="edgeproto.ImageType"/>
 
 ### ImageType
-ImageType specifies the image type of the application.
+ImageType specifies image type of an App
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | IMAGE_TYPE_UNKNOWN | 0 | Unknown image type |
-| IMAGE_TYPE_DOCKER | 1 | Docker container image type compatible with Kubernetes |
+| IMAGE_TYPE_DOCKER | 1 | Docker container image type compatible either with Docker or Kubernetes |
 | IMAGE_TYPE_QCOW | 2 | QCOW2 virtual machine image type |
+| IMAGE_TYPE_HELM | 3 | Helm chart is a separate image type |
 
 
  
@@ -313,9 +444,8 @@ ImageType specifies the image type of the application.
 <a name="edgeproto.AppInst"/>
 
 ### AppInst
-AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
-When an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.
-Many of the fields here are inherited from the App definition. Some are derived, like the mapped ports field, depending upon if the AppInst accessibility is via a shared or dedicated load balancer.
+AppInst is an instance of an App on a Cloudlet where it is defined by an App plus a ClusterInst key. 
+Many of the fields here are inherited from the App definition.
 
 
 | Field | Type | Label | Description |
@@ -333,6 +463,11 @@ Many of the fields here are inherited from the App definition. Some are derived,
 | runtime_info | [AppInstRuntime](#edgeproto.AppInstRuntime) |  | AppInst runtime information |
 | created_at | [distributed_match_engine.Timestamp](#distributed_match_engine.Timestamp) |  | Created at time |
 | auto_cluster_ip_access | [IpAccess](#edgeproto.IpAccess) |  | IpAccess for auto-clusters. Ignored otherwise. |
+| status | [StatusInfo](#edgeproto.StatusInfo) |  | status is used to reflect progress of creation or other events |
+| revision | [int32](#int32) |  | Revision increments each time the App is updated. Updating the App Instance will sync the revision with that of the App |
+| force_update | [bool](#bool) |  | Force Appinst update when UpdateAppInst is done if revision matches |
+| update_multiple | [bool](#bool) |  | Allow multiple instances to be updated at once |
+| configs | [ConfigFile](#edgeproto.ConfigFile) | repeated | Customization files passed through to implementing services |
 
 
 
@@ -353,6 +488,7 @@ AppInstInfo provides information from the Cloudlet Resource Manager about the st
 | state | [TrackedState](#edgeproto.TrackedState) |  | Current state of the AppInst on the Cloudlet |
 | errors | [string](#string) | repeated | Any errors trying to create, update, or delete the AppInst on the Cloudlet |
 | runtime_info | [AppInstRuntime](#edgeproto.AppInstRuntime) |  | AppInst runtime information |
+| status | [StatusInfo](#edgeproto.StatusInfo) |  | status is used to reflect progress of creation or other events |
 
 
 
@@ -420,7 +556,8 @@ AppInstKey uniquely identifies an Application Instance (AppInst) or Application 
 | ----------- | ------------ | ------------- | ------------|
 | CreateAppInst | [AppInst](#edgeproto.AppInst) | [Result](#edgeproto.AppInst) | Create an application instance |
 | DeleteAppInst | [AppInst](#edgeproto.AppInst) | [Result](#edgeproto.AppInst) | Delete an application instance |
-| UpdateAppInst | [AppInst](#edgeproto.AppInst) | [Result](#edgeproto.AppInst) | Update an application instance |
+| RefreshAppInst | [AppInst](#edgeproto.AppInst) | [Result](#edgeproto.AppInst) | Refresh restarts an application instance with new App settings or image |
+| UpdateAppInst | [AppInst](#edgeproto.AppInst) | [Result](#edgeproto.AppInst) | Update an AppInst and then refresh it |
 | ShowAppInst | [AppInst](#edgeproto.AppInst) | [AppInst](#edgeproto.AppInst) | Show application instances. Any fields specified will be used to filter results. |
 
 
@@ -442,6 +579,73 @@ AppInstKey uniquely identifies an Application Instance (AppInst) or Application 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 | ShowAppInstMetrics | [AppInstMetrics](#edgeproto.AppInstMetrics) | [AppInstMetrics](#edgeproto.AppInstMetrics) | Show application instance metrics. |
+
+ 
+
+
+
+<a name="autoscalepolicy.proto"/>
+<p align="right"><a href="#top">Top</a></p>
+
+## autoscalepolicy.proto
+
+
+
+<a name="edgeproto.AutoScalePolicy"/>
+
+### AutoScalePolicy
+AutoScalePolicy defines when and how ClusterInsts will have their
+nodes scaled up or down.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
+| key | [PolicyKey](#edgeproto.PolicyKey) |  | Unique identifier key |
+| min_nodes | [uint32](#uint32) |  | Minimum number of cluster nodes |
+| max_nodes | [uint32](#uint32) |  | Maximum number of cluster nodes |
+| scale_up_cpu_thresh | [uint32](#uint32) |  | Scale up cpu threshold (percentage 1 to 100) |
+| scale_down_cpu_thresh | [uint32](#uint32) |  | Scale down cpu threshold (percentage 1 to 100) |
+| trigger_time_sec | [uint32](#uint32) |  | Trigger time defines how long trigger threshold must be satified in seconds before acting upon it. |
+
+
+
+
+
+
+<a name="edgeproto.PolicyKey"/>
+
+### PolicyKey
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| developer | [string](#string) |  | Name of the Developer that this policy belongs to |
+| name | [string](#string) |  | Policy name |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+
+<a name="edgeproto.AutoScalePolicyApi"/>
+
+### AutoScalePolicyApi
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| CreateAutoScalePolicy | [AutoScalePolicy](#edgeproto.AutoScalePolicy) | [Result](#edgeproto.AutoScalePolicy) | Create an Auto Scale Policy |
+| DeleteAutoScalePolicy | [AutoScalePolicy](#edgeproto.AutoScalePolicy) | [Result](#edgeproto.AutoScalePolicy) | Delete an Auto Scale Policy |
+| UpdateAutoScalePolicy | [AutoScalePolicy](#edgeproto.AutoScalePolicy) | [Result](#edgeproto.AutoScalePolicy) | Update an Auto Scale Policy |
+| ShowAutoScalePolicy | [AutoScalePolicy](#edgeproto.AutoScalePolicy) | [AutoScalePolicy](#edgeproto.AutoScalePolicy) | Show Auto Scale Policies. Any fields specified will be used to filter results. |
 
  
 
@@ -475,21 +679,64 @@ AppInstKey uniquely identifies an Application Instance (AppInst) or Application 
 <a name="edgeproto.Cloudlet"/>
 
 ### Cloudlet
-A Cloudlet is a set of compute resources at a particular location, typically an Operator&#39;s regional data center, or a cell tower. The Cloudlet is managed by a Cloudlet Resource Manager, which communicates with the Mobiledgex Controller and allows AppInsts (application instances) to be instantiated on the Cloudlet.
-A Cloudlet will be created by either a Mobiledgex admin or an Operator that provides the Cloudlet.
+A Cloudlet is a set of compute resources at a particular location, provided by an Operator.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
 | key | [CloudletKey](#edgeproto.CloudletKey) |  | Unique identifier key |
-| access_uri | [string](#string) |  | URI to use to connect to and create and administer the Cloudlet. This is not the URI for applications clients to access their back-end instances. |
+| access_credentials | [string](#string) |  | Placeholder for cloudlet access credentials, i.e. openstack keys, passwords, etc |
 | location | [distributed_match_engine.Loc](#distributed_match_engine.Loc) |  | Location of the Cloudlet site |
 | ip_support | [IpSupport](#edgeproto.IpSupport) |  | Type of IP support provided by Cloudlet (see IpSupport) |
 | static_ips | [string](#string) |  | List of static IPs for static IP support |
-| num_dynamic_ips | [int32](#int32) |  | Number of dynamic IPs available for dynamic IP support
+| num_dynamic_ips | [int32](#int32) |  | Number of dynamic IPs available for dynamic IP support |
+| time_limits | [OperationTimeLimits](#edgeproto.OperationTimeLimits) |  | time limits |
+| errors | [string](#string) | repeated | Any errors trying to create, update, or delete the Cloudlet. |
+| status | [StatusInfo](#edgeproto.StatusInfo) |  | status is used to reflect progress of creation or other events |
+| state | [TrackedState](#edgeproto.TrackedState) |  | Current state of the cloudlet |
+| crm_override | [CRMOverride](#edgeproto.CRMOverride) |  | Override actions to CRM |
+| deployment_local | [bool](#bool) |  | Deploy cloudlet services locally |
+| platform_type | [PlatformType](#edgeproto.PlatformType) |  | Platform type |
+| notify_srv_addr | [string](#string) |  | Address for the CRM notify listener to run on |
+| flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Min system resource requirements for platform |
+| physical_name | [string](#string) |  | Physical infrastructure cloudlet name |
+| env_var | [Cloudlet.EnvVarEntry](#edgeproto.Cloudlet.EnvVarEntry) | repeated | Single Key-Value pair of env var to be passed to CRM |
+| version | [string](#string) |  | Cloudlet version |
+| config | [PlatformConfig](#edgeproto.PlatformConfig) |  | Platform Config Info |
+| res_tag_map | [Cloudlet.ResTagMapEntry](#edgeproto.Cloudlet.ResTagMapEntry) | repeated | Optional resource to restagtbl key map key values = [gpu, nas, nic] |
 
-Certs for accessing cloudlet site |
+
+
+
+
+
+<a name="edgeproto.Cloudlet.EnvVarEntry"/>
+
+### Cloudlet.EnvVarEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [string](#string) |  |  |
+| value | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="edgeproto.Cloudlet.ResTagMapEntry"/>
+
+### Cloudlet.ResTagMapEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [string](#string) |  |  |
+| value | [ResTagTableKey](#edgeproto.ResTagTableKey) |  |  |
 
 
 
@@ -514,6 +761,9 @@ CloudletInfo provides information from the Cloudlet Resource Manager about the s
 | os_max_vol_gb | [uint64](#uint64) |  | Maximum amount of disk in GB on the Cloudlet |
 | errors | [string](#string) | repeated | Any errors encountered while making changes to the Cloudlet |
 | flavors | [FlavorInfo](#edgeproto.FlavorInfo) | repeated | Supported flavors by the Cloudlet |
+| status | [StatusInfo](#edgeproto.StatusInfo) |  | status is used to reflect progress of creation or other events |
+| version | [string](#string) |  | Cloudlet version |
+| availability_zones | [OSAZone](#edgeproto.OSAZone) | repeated | Availability Zones if any |
 
 
 
@@ -598,6 +848,38 @@ CloudletKey uniquely identifies a Cloudlet.
 
 
 
+<a name="edgeproto.CloudletResMap"/>
+
+### CloudletResMap
+optional resource input consists of a resource specifier and clouldkey name
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [CloudletKey](#edgeproto.CloudletKey) |  | Resource cloudlet key |
+| mapping | [CloudletResMap.MappingEntry](#edgeproto.CloudletResMap.MappingEntry) | repeated | Resource mapping info |
+
+
+
+
+
+
+<a name="edgeproto.CloudletResMap.MappingEntry"/>
+
+### CloudletResMap.MappingEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [string](#string) |  |  |
+| value | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="edgeproto.FlavorInfo"/>
 
 ### FlavorInfo
@@ -610,6 +892,24 @@ Flavor details from the Cloudlet
 | vcpus | [uint64](#uint64) |  | Number of VCPU cores on the Cloudlet |
 | ram | [uint64](#uint64) |  | Ram in MB on the Cloudlet |
 | disk | [uint64](#uint64) |  | Amount of disk in GB on the Cloudlet |
+| properties | [string](#string) |  | OS Flavor Properties, if any |
+
+
+
+
+
+
+<a name="edgeproto.FlavorMatch"/>
+
+### FlavorMatch
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [CloudletKey](#edgeproto.CloudletKey) |  | Cloudlet ctx |
+| flavor_name | [string](#string) |  |  |
+| availability_zone | [string](#string) |  |  |
 
 
 
@@ -628,6 +928,22 @@ Flavor details from the Cloudlet
 | zone | [string](#string) |  | availability zone |
 | service_account | [string](#string) |  | service account to login with |
 | gcp_auth_key_url | [string](#string) |  | vault credentials link |
+
+
+
+
+
+
+<a name="edgeproto.OSAZone"/>
+
+### OSAZone
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  |  |
+| status | [string](#string) |  |  |
 
 
 
@@ -668,6 +984,51 @@ Flavor details from the Cloudlet
 
 
 
+
+<a name="edgeproto.OperationTimeLimits"/>
+
+### OperationTimeLimits
+time limits for cloudlet create, update and delete operations
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| create_cluster_inst_timeout | [int64](#int64) |  | max time to create a cluster instance |
+| update_cluster_inst_timeout | [int64](#int64) |  | max time to update a cluster instance |
+| delete_cluster_inst_timeout | [int64](#int64) |  | max time to delete a cluster instance |
+| create_app_inst_timeout | [int64](#int64) |  | max time to create an app instance |
+| update_app_inst_timeout | [int64](#int64) |  | max time to update an app instance |
+| delete_app_inst_timeout | [int64](#int64) |  | max time to delete an app instance |
+
+
+
+
+
+
+<a name="edgeproto.PlatformConfig"/>
+
+### PlatformConfig
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| registry_path | [string](#string) |  | Path to Docker registry holding edge-cloud image |
+| image_path | [string](#string) |  | Path to platform base image |
+| notify_ctrl_addrs | [string](#string) |  | Address of controller notify port (can be multiple of these) |
+| vault_addr | [string](#string) |  | Vault address |
+| tls_cert_file | [string](#string) |  | TLS cert file |
+| crm_role_id | [string](#string) |  | Vault role ID for CRM |
+| crm_secret_id | [string](#string) |  | Vault secret ID for CRM |
+| platform_tag | [string](#string) |  | Tag of edge-cloud image |
+| test_mode | [bool](#bool) |  | Internal Test flag |
+| span | [string](#string) |  | Span string |
+| cleanup_mode | [bool](#bool) |  | Internal cleanup flag |
+
+
+
+
+
  
 
 
@@ -683,6 +1044,25 @@ CloudletState is the state of the Cloudlet.
 | CLOUDLET_STATE_READY | 2 | Cloudlet is created and ready |
 | CLOUDLET_STATE_OFFLINE | 3 | Cloudlet is offline (unreachable) |
 | CLOUDLET_STATE_NOT_PRESENT | 4 | Cloudlet is not present |
+| CLOUDLET_STATE_INIT | 5 | Cloudlet is initializing |
+| CLOUDLET_STATE_UPGRADE | 6 | Cloudlet is upgrading |
+
+
+
+<a name="edgeproto.PlatformType"/>
+
+### PlatformType
+PlatformType is the supported list of cloudlet types
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| PLATFORM_TYPE_FAKE | 0 | Fake Cloudlet |
+| PLATFORM_TYPE_DIND | 1 | DIND Cloudlet |
+| PLATFORM_TYPE_OPENSTACK | 2 | Openstack Cloudlet |
+| PLATFORM_TYPE_AZURE | 3 | Azure Cloudlet |
+| PLATFORM_TYPE_GCP | 4 | GCP Cloudlet |
+| PLATFORM_TYPE_MEXDIND | 5 | MEXDIND Cloudlet |
+| PLATFORM_TYPE_FAKEINFRA | 6 | Fake Infra Cloudlet |
 
 
  
@@ -701,6 +1081,9 @@ CloudletState is the state of the Cloudlet.
 | DeleteCloudlet | [Cloudlet](#edgeproto.Cloudlet) | [Result](#edgeproto.Cloudlet) | Delete a Cloudlet |
 | UpdateCloudlet | [Cloudlet](#edgeproto.Cloudlet) | [Result](#edgeproto.Cloudlet) | Update a Cloudlet |
 | ShowCloudlet | [Cloudlet](#edgeproto.Cloudlet) | [Cloudlet](#edgeproto.Cloudlet) | Show Cloudlets |
+| AddCloudletResMapping | [CloudletResMap](#edgeproto.CloudletResMap) | [Result](#edgeproto.CloudletResMap) | Add Optional Resource tag table |
+| RemoveCloudletResMapping | [CloudletResMap](#edgeproto.CloudletResMap) | [Result](#edgeproto.CloudletResMap) | Add Optional Resource tag table |
+| FindFlavorMatch | [FlavorMatch](#edgeproto.FlavorMatch) | [FlavorMatch](#edgeproto.FlavorMatch) | Discover if flavor produces a matching platform flavor |
 
 
 <a name="edgeproto.CloudletInfoApi"/>
@@ -728,30 +1111,108 @@ CloudletState is the state of the Cloudlet.
 
 
 
-<a name="cluster.proto"/>
+<a name="cloudletpool.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
-## cluster.proto
+## cloudletpool.proto
 
 
 
-<a name="edgeproto.Cluster"/>
+<a name="edgeproto.CloudletPool"/>
 
-### Cluster
-Clusters define a set of resources that are provided to one or more Apps tied to the cluster. The set of resources is defined by the Cluster flavor. The Cluster definition here is analogous to a Kubernetes cluster.
-Like Apps, a Cluster is merely a definition, but is not instantiated on any Cloudlets. ClusterInsts are Clusters instantiated on a particular Cloudlet.
-In comparison to ClusterFlavors which are fairly static and controller by administrators, Clusters are much more dynamic and created and deleted by the user.
+### CloudletPool
+
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
-| key | [ClusterKey](#edgeproto.ClusterKey) |  | Unique key |
-| default_flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Default flavor of the Cluster, may be overridden on the ClusterInst |
-| auto | [bool](#bool) |  | Auto is set to true when automatically created by back-end (internal use only) |
+| key | [CloudletPoolKey](#edgeproto.CloudletPoolKey) |  | CloudletPool key |
 
 
 
+
+
+
+<a name="edgeproto.CloudletPoolKey"/>
+
+### CloudletPoolKey
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | CloudletPool Name |
+
+
+
+
+
+
+<a name="edgeproto.CloudletPoolMember"/>
+
+### CloudletPoolMember
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| pool_key | [CloudletPoolKey](#edgeproto.CloudletPoolKey) |  | CloudletPool key |
+| cloudlet_key | [CloudletKey](#edgeproto.CloudletKey) |  | Cloudlet key |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+
+<a name="edgeproto.CloudletPoolApi"/>
+
+### CloudletPoolApi
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| CreateCloudletPool | [CloudletPool](#edgeproto.CloudletPool) | [Result](#edgeproto.CloudletPool) | Create a CloudletPool |
+| DeleteCloudletPool | [CloudletPool](#edgeproto.CloudletPool) | [Result](#edgeproto.CloudletPool) | Delete a CloudletPool |
+| ShowCloudletPool | [CloudletPool](#edgeproto.CloudletPool) | [CloudletPool](#edgeproto.CloudletPool) | Show CloudletPools |
+
+
+<a name="edgeproto.CloudletPoolMemberApi"/>
+
+### CloudletPoolMemberApi
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| CreateCloudletPoolMember | [CloudletPoolMember](#edgeproto.CloudletPoolMember) | [Result](#edgeproto.CloudletPoolMember) | Add a Cloudlet to a CloudletPool |
+| DeleteCloudletPoolMember | [CloudletPoolMember](#edgeproto.CloudletPoolMember) | [Result](#edgeproto.CloudletPoolMember) | Remove a Cloudlet from a CloudletPool |
+| ShowCloudletPoolMember | [CloudletPoolMember](#edgeproto.CloudletPoolMember) | [CloudletPoolMember](#edgeproto.CloudletPoolMember) | Show the Cloudlet to CloudletPool relationships |
+
+
+<a name="edgeproto.CloudletPoolShowApi"/>
+
+### CloudletPoolShowApi
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| ShowPoolsForCloudlet | [CloudletKey](#edgeproto.CloudletKey) | [CloudletPool](#edgeproto.CloudletKey) | Show CloudletPools that have Cloudlet as a member |
+| ShowCloudletsForPool | [CloudletPoolKey](#edgeproto.CloudletPoolKey) | [Cloudlet](#edgeproto.CloudletPoolKey) | Show Cloudlets that belong to the Pool |
+
+ 
+
+
+
+<a name="cluster.proto"/>
+<p align="right"><a href="#top">Top</a></p>
+
+## cluster.proto
 
 
 
@@ -775,19 +1236,6 @@ ClusterKey uniquely identifies a Cluster.
 
  
 
-
-<a name="edgeproto.ClusterApi"/>
-
-### ClusterApi
-
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| CreateCluster | [Cluster](#edgeproto.Cluster) | [Result](#edgeproto.Cluster) | Create a Cluster |
-| DeleteCluster | [Cluster](#edgeproto.Cluster) | [Result](#edgeproto.Cluster) | Delete a Cluster |
-| UpdateCluster | [Cluster](#edgeproto.Cluster) | [Result](#edgeproto.Cluster) | Update a Cluster |
-| ShowCluster | [Cluster](#edgeproto.Cluster) | [Cluster](#edgeproto.Cluster) | Show Clusters |
-
  
 
 
@@ -802,26 +1250,30 @@ ClusterKey uniquely identifies a Cluster.
 <a name="edgeproto.ClusterInst"/>
 
 ### ClusterInst
-ClusterInst is an instance of a Cluster on a Cloudlet. It is defined by a Cluster plus a Cloudlet key. This separation of the definition of the Cluster versus its instance is unique to Mobiledgex, and allows the Developer to provide the Cluster definition, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
-When a Cluster is instantiated on a Cloudlet, the user may override the default ClusterFlavor of the Cluster. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.
+ClusterInst is an instance of a Cluster on a Cloudlet. 
+It is defined by a Cluster, Cloudlet, and Developer key.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
 | key | [ClusterInstKey](#edgeproto.ClusterInstKey) |  | Unique key |
-| flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Node flavor |
+| flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Flavor of the k8s node |
 | liveness | [Liveness](#edgeproto.Liveness) |  | Liveness of instance (see Liveness) |
 | auto | [bool](#bool) |  | Auto is set to true when automatically created by back-end (internal use only) |
 | state | [TrackedState](#edgeproto.TrackedState) |  | State of the cluster instance |
 | errors | [string](#string) | repeated | Any errors trying to create, update, or delete the ClusterInst on the Cloudlet. |
 | crm_override | [CRMOverride](#edgeproto.CRMOverride) |  | Override actions to CRM |
-| ip_access | [IpAccess](#edgeproto.IpAccess) |  | IP access type |
-| allocated_ip | [string](#string) |  | allocated IP for dedicated access |
+| ip_access | [IpAccess](#edgeproto.IpAccess) |  | IP access type (RootLB Type) |
+| allocated_ip | [string](#string) |  | Allocated IP for dedicated access |
 | node_flavor | [string](#string) |  | Cloudlet specific node flavor |
-| deployment | [string](#string) |  | Deployment target (kubernetes, docker, kvm, etc) |
-| num_masters | [uint32](#uint32) |  | number of masters |
-| num_nodes | [uint32](#uint32) |  | number of nodes |
+| deployment | [string](#string) |  | Deployment type (kubernetes or docker) |
+| num_masters | [uint32](#uint32) |  | Number of k8s masters (In case of docker deployment, this field is not required) |
+| num_nodes | [uint32](#uint32) |  | Number of k8s nodes (In case of docker deployment, this field is not required) |
+| status | [StatusInfo](#edgeproto.StatusInfo) |  | status is used to reflect progress of creation or other events |
+| external_volume_size | [uint64](#uint64) |  | Size of external volume to be attached to nodes |
+| auto_scale_policy | [string](#string) |  | Auto scale policy name |
+| availability_zone | [string](#string) |  | Optional Resource AZ if any |
 
 
 
@@ -841,6 +1293,7 @@ ClusterInstInfo provides information from the Cloudlet Resource Manager about th
 | notify_id | [int64](#int64) |  | Id of client assigned by server (internal use only) |
 | state | [TrackedState](#edgeproto.TrackedState) |  | State of the cluster instance |
 | errors | [string](#string) | repeated | Any errors trying to create, update, or delete the ClusterInst on the Cloudlet. |
+| status | [StatusInfo](#edgeproto.StatusInfo) |  | status is used to reflect progress of creation or other events |
 
 
 
@@ -855,9 +1308,9 @@ ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster I
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| cluster_key | [ClusterKey](#edgeproto.ClusterKey) |  | Cluster key |
-| cloudlet_key | [CloudletKey](#edgeproto.CloudletKey) |  | Cloudlet on which the Cluster is instantiated |
-| developer | [string](#string) |  | Developer organization this cluster belongs to |
+| cluster_key | [ClusterKey](#edgeproto.ClusterKey) |  | Name of Cluster |
+| cloudlet_key | [CloudletKey](#edgeproto.CloudletKey) |  | Name of Cloudlet on which the Cluster is instantiated |
+| developer | [string](#string) |  | Name of Developer that this cluster belongs to |
 
 
 
@@ -902,6 +1355,27 @@ ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster I
 ## common.proto
 
 
+
+<a name="edgeproto.StatusInfo"/>
+
+### StatusInfo
+Used to track status of create/delete/update for resources that are being modified 
+by the controller via the CRM.  Tasks are the high level jobs that are to be completed.
+Steps are work items within a task.   Within the clusterinst and appinst objects this
+is converted to a string
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| task_number | [uint32](#uint32) |  |  |
+| max_tasks | [uint32](#uint32) |  |  |
+| task_name | [string](#string) |  |  |
+| step_name | [string](#string) |  |  |
+
+
+
+
+
  
 
 
@@ -927,14 +1401,14 @@ Controller to ignore errors from the CRM, or ignore the CRM completely
 <a name="edgeproto.IpAccess"/>
 
 ### IpAccess
-
+IpAccess indicates the type of RootLB that Developer requires for their App
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | IP_ACCESS_UNKNOWN | 0 | Unknown IP access |
-| IP_ACCESS_DEDICATED | 1 | Dedicated IP access |
-| IP_ACCESS_DEDICATED_OR_SHARED | 2 | Dedicated or shared (prefers dedicated) access |
-| IP_ACCESS_SHARED | 3 | Shared IP access |
+| IP_ACCESS_DEDICATED | 1 | Dedicated RootLB |
+| IP_ACCESS_DEDICATED_OR_SHARED | 2 | Dedicated or shared (prefers dedicated) RootLB |
+| IP_ACCESS_SHARED | 3 | Shared RootLB |
 
 
 
@@ -985,6 +1459,7 @@ i.e. track the state of a ClusterInst object on the CRM (Cloudlet).
 | DELETING | 10 | Deleting |
 | DELETE_ERROR | 11 | Delete error |
 | DELETE_PREPARE | 12 | Delete prepare (extra state used by controller to block other changes) |
+| CRM_INITOK | 13 | CRM INIT OK |
 
 
  
@@ -1012,6 +1487,10 @@ A Controller is a service that manages the edge-cloud data and controls other ed
 | ----- | ---- | ----- | ----------- |
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
 | key | [ControllerKey](#edgeproto.ControllerKey) |  | Unique identifier key |
+| build_master | [string](#string) |  | Build Master Version |
+| build_head | [string](#string) |  | Build Head Version |
+| build_author | [string](#string) |  | Build Author |
+| hostname | [string](#string) |  | Hostname |
 
 
 
@@ -1062,19 +1541,13 @@ ControllerKey uniquely defines a Controller
 <a name="edgeproto.Developer"/>
 
 ### Developer
-A Developer defines a Mobiledgex customer that can create and manage applications, clusters, instances, etc. Applications and other objects created by one Developer cannot be seen or managed by other Developers. Billing will likely be done on a per-developer basis.
-Creating a developer identity is likely the first step of (self-)registering a new customer.
-TODO: user management, auth, etc is not implemented yet.
+Developer is defined as the consumer of edge computing resources to manage and deploy Apps
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
 | key | [DeveloperKey](#edgeproto.DeveloperKey) |  | Unique identifier key |
-| username | [string](#string) |  | Login name (TODO) |
-| passhash | [string](#string) |  | Encrypted password (TODO) |
-| address | [string](#string) |  | Physical address |
-| email | [string](#string) |  | Contact email |
 
 
 
@@ -1084,12 +1557,12 @@ TODO: user management, auth, etc is not implemented yet.
 <a name="edgeproto.DeveloperKey"/>
 
 ### DeveloperKey
-DeveloperKey uniquely identifies a Developer (Mobiledgex customer)
+DeveloperKey uniquely identifies a Developer
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | Organization or Company Name |
+| name | [string](#string) |  | Organization or Company Name that a Developer is part of |
 
 
 
@@ -1139,6 +1612,8 @@ DeveloperKey uniquely identifies a Developer (Mobiledgex customer)
 | offer | [string](#string) |  | WebRTC Offer |
 | answer | [string](#string) |  | WebRTC Answer |
 | err | [string](#string) |  | Any error message |
+| console | [bool](#bool) |  | VM Console |
+| console_url | [string](#string) |  | VM Console URL |
 
 
 
@@ -1175,16 +1650,33 @@ DeveloperKey uniquely identifies a Developer (Mobiledgex customer)
 <a name="edgeproto.Flavor"/>
 
 ### Flavor
-A Flavor identifies the Cpu, Ram, and Disk resources required for either a node in a Cluster, or an application instance. For a node in a cluster, these are the physical resources provided by that node. For an application instance, this defines the resources (per node) that should be allocated to the instance from the Cluster.
+
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
-| key | [FlavorKey](#edgeproto.FlavorKey) |  | Unique key |
-| ram | [uint64](#uint64) |  | RAM in MB |
-| vcpus | [uint64](#uint64) |  | VCPU cores |
-| disk | [uint64](#uint64) |  | Amount of disk in GB |
+| key | [FlavorKey](#edgeproto.FlavorKey) |  | Unique key for the new flavor. |
+| ram | [uint64](#uint64) |  | RAM in megabytes |
+| vcpus | [uint64](#uint64) |  | Number of virtual CPUs |
+| disk | [uint64](#uint64) |  | Amount of disk space in gigabytes |
+| opt_res_map | [Flavor.OptResMapEntry](#edgeproto.Flavor.OptResMapEntry) | repeated | Optional Resources request, key = [gpu, nas, nic] |
+
+
+
+
+
+
+<a name="edgeproto.Flavor.OptResMapEntry"/>
+
+### Flavor.OptResMapEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [string](#string) |  |  |
+| value | [string](#string) |  |  |
 
 
 
@@ -1199,7 +1691,7 @@ FlavorKey uniquely identifies a Flavor.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
+| name | [string](#string) |  | Flavor name |
 
 
 
@@ -1223,6 +1715,8 @@ FlavorKey uniquely identifies a Flavor.
 | DeleteFlavor | [Flavor](#edgeproto.Flavor) | [Result](#edgeproto.Flavor) | Delete a Flavor |
 | UpdateFlavor | [Flavor](#edgeproto.Flavor) | [Result](#edgeproto.Flavor) | Update a Flavor |
 | ShowFlavor | [Flavor](#edgeproto.Flavor) | [Flavor](#edgeproto.Flavor) | Show Flavors |
+| AddFlavorRes | [Flavor](#edgeproto.Flavor) | [Result](#edgeproto.Flavor) | Add Optional Resource |
+| RemoveFlavorRes | [Flavor](#edgeproto.Flavor) | [Result](#edgeproto.Flavor) | Remove Optional Resource |
 
  
 
@@ -1313,6 +1807,11 @@ Node defines a DME (distributed matching engine) or CRM (cloudlet resource manag
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
 | key | [NodeKey](#edgeproto.NodeKey) |  | Unique identifier key |
 | notify_id | [int64](#int64) |  | Id of client assigned by server (internal use only) |
+| build_master | [string](#string) |  | Build Master Version |
+| build_head | [string](#string) |  | Build Head Version |
+| build_author | [string](#string) |  | Build Author |
+| hostname | [string](#string) |  | Hostname |
+| image_version | [string](#string) |  | Docker edge-cloud base image version |
 
 
 
@@ -1348,6 +1847,7 @@ NodeType defines the type of Node
 | NODE_UNKNOWN | 0 | Unknown |
 | NODE_DME | 1 | Distributed Matching Engine |
 | NODE_CRM | 2 | Cloudlet Resource Manager |
+| NODE_CONTROLLER | 3 | Controller Node |
 
 
  
@@ -1390,6 +1890,7 @@ In general, the protocol is used to synchronize state from one service to anothe
 | any | [google.protobuf.Any](#google.protobuf.Any) |  | Data |
 | want_objs | [string](#string) | repeated | Wanted Objects |
 | filter_cloudlet_key | [bool](#bool) |  | Filter by cloudlet key |
+| span | [string](#string) |  | Opentracing span |
 
 
 
@@ -1440,7 +1941,8 @@ NoticeAction denotes what kind of action this notification is for.
 <a name="edgeproto.Operator"/>
 
 ### Operator
-An Operator defines a telecommunications provider such as AT&amp;T, T-Mobile, etc. The operators in turn provide Mobiledgex with compute resource Cloudlets that serve as the basis for location-based services.
+An Operator supplies compute resources.
+For example, telecommunications provider such as AT&amp;T is an Operator
 
 
 | Field | Type | Label | Description |
@@ -1513,6 +2015,23 @@ CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used 
 | root_lb_ports | [CloudletRefs.RootLbPortsEntry](#edgeproto.CloudletRefs.RootLbPortsEntry) | repeated | Used ports on root load balancer. Map key is public port, value is a bitmap for the protocol bitmap: bit 0: tcp, bit 1: udp |
 | used_dynamic_ips | [int32](#int32) |  | Used dynamic IPs |
 | used_static_ips | [string](#string) |  | Used static IPs |
+| opt_res_used_map | [CloudletRefs.OptResUsedMapEntry](#edgeproto.CloudletRefs.OptResUsedMapEntry) | repeated | Used Optional Resources |
+
+
+
+
+
+
+<a name="edgeproto.CloudletRefs.OptResUsedMapEntry"/>
+
+### CloudletRefs.OptResUsedMapEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [string](#string) |  |  |
+| value | [uint32](#uint32) |  |  |
 
 
 
@@ -1583,6 +2102,85 @@ This API should be admin-only
 
 
 
+<a name="restagtable.proto"/>
+<p align="right"><a href="#top">Top</a></p>
+
+## restagtable.proto
+
+
+
+<a name="edgeproto.ResTagTable"/>
+
+### ResTagTable
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| fields | [string](#string) | repeated |  |
+| key | [ResTagTableKey](#edgeproto.ResTagTableKey) |  |  |
+| tags | [string](#string) | repeated | one or more string tags |
+| azone | [string](#string) |  | availability zone(s) of resource if required |
+
+
+
+
+
+
+<a name="edgeproto.ResTagTableKey"/>
+
+### ResTagTableKey
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | Resource Table Name |
+| operator_key | [OperatorKey](#edgeproto.OperatorKey) |  | Operator of the cloudlet site. |
+
+
+
+
+
+ 
+
+
+<a name="edgeproto.OptResNames"/>
+
+### OptResNames
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| GPU | 0 |  |
+| NAS | 1 |  |
+| NIC | 2 |  |
+
+
+ 
+
+ 
+
+
+<a name="edgeproto.ResTagTableApi"/>
+
+### ResTagTableApi
+This API should be admin-only
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| CreateResTagTable | [ResTagTable](#edgeproto.ResTagTable) | [Result](#edgeproto.ResTagTable) | Create TagTable |
+| DeleteResTagTable | [ResTagTable](#edgeproto.ResTagTable) | [Result](#edgeproto.ResTagTable) | Delete TagTable |
+| UpdateResTagTable | [ResTagTable](#edgeproto.ResTagTable) | [Result](#edgeproto.ResTagTable) |  |
+| ShowResTagTable | [ResTagTable](#edgeproto.ResTagTable) | [ResTagTable](#edgeproto.ResTagTable) | show TagTable |
+| AddResTag | [ResTagTable](#edgeproto.ResTagTable) | [Result](#edgeproto.ResTagTable) | add new tag(s) to TagTable |
+| RemoveResTag | [ResTagTable](#edgeproto.ResTagTable) | [Result](#edgeproto.ResTagTable) | remove existing tag(s) from TagTable |
+| GetResTagTable | [ResTagTableKey](#edgeproto.ResTagTableKey) | [ResTagTable](#edgeproto.ResTagTableKey) | Fetch a copy of the TagTable |
+
+ 
+
+
+
 <a name="result.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -1637,6 +2235,10 @@ Below enum lists hashes as well as corresponding versions
 | HASH_00bdcfa956ca4ee42be87abcd8fcaf1c | 3 |  |
 | HASH_0d2d9c0b07ad989e96fb3b3a44924316 | 4 |  |
 | HASH_2b79f0b6e402045ee5f68d697b9386ae | 5 |  |
+| HASH_536a69a5e27bf7cf5152d85eba21aa74 | 6 |  |
+| HASH_caedcdeef911bc00d5dceacf8e55890a | 7 |  |
+| HASH_60febe402fd8f1a1ded0762dbc72a5a8 | 8 |  |
+| HASH_d4ca5418a77d22d968ce7a2afc549dfe | 9 |  |
 
 
  
