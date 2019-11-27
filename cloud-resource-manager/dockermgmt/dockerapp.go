@@ -166,8 +166,8 @@ func createDockerComposeFile(client pc.PlatformClient, app *edgeproto.App, appIn
 func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	image := app.ImagePath
 	name := util.DockerSanitize(app.Key.Name)
-	cloudlet := util.DockerSanitize(appInst.Key.ClusterInstKey.CloudletKey.GetKeyString())
-	cluster := util.DockerSanitize(appInst.Key.ClusterInstKey.ClusterKey.GetKeyString())
+	cloudlet := util.DockerSanitize(appInst.Key.ClusterInstKey.CloudletKey.Name)
+	cluster := util.DockerSanitize(appInst.Key.ClusterInstKey.Developer + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name)
 
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d -l edge-cloud -l cloudlet=%s -l cluster=%s --restart=unless-stopped --name=%s %s %s %s", cloudlet, cluster, name,
