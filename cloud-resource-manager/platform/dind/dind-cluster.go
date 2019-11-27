@@ -53,8 +53,7 @@ func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto
 }
 
 func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst) error {
-	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
-	return s.DeleteDINDCluster(ctx, clusterName)
+	return s.DeleteDINDCluster(ctx, clusterInst)
 }
 
 //CreateDINDCluster creates kubernetes cluster on local mac
@@ -128,10 +127,18 @@ func (s *Platform) CreateDINDCluster(ctx context.Context, clusterName, kconfName
 }
 
 //DeleteDINDCluster creates kubernetes cluster on local mac
-func (s *Platform) DeleteDINDCluster(ctx context.Context, name string) error {
-	cluster, err := FindCluster(name)
+func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto.ClusterInst) error {
+
+	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
+	log.SpanLog(ctx, log.DebugLevelMexos, "DeleteDINDCluster", "clusterName", clusterName)
+
+	if clusterInst.Deployment == cloudcommon.AppDeploymentTypeDocker {
+		log.SpanLog(ctx, log.DebugLevelMexos, "No delete required for DIND docker cluster", "clusterName", clusterName)
+		return nil
+	}
+	cluster, err := FindCluster(clusterName)
 	if err != nil {
-		return fmt.Errorf("ERROR - Cluster %s not found, %v", name, err)
+		return fmt.Errorf("ERROR - Cluster %s not found, %v", clusterName, err)
 	}
 
 	// disconnect nginxL7 network
@@ -147,13 +154,11 @@ func (s *Platform) DeleteDINDCluster(ctx context.Context, name string) error {
 
 	os.Setenv("DIND_LABEL", cluster.ClusterName)
 	os.Setenv("CLUSTER_ID", GetClusterID(cluster.ClusterID))
-	log.SpanLog(ctx, log.DebugLevelMexos, "DeleteDINDCluster", "name", name)
-
 	out, err = sh.Command(cloudcommon.DindScriptName, "clean").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%s %v", out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "Finished dind clean", "scriptName", cloudcommon.DindScriptName, "name", name, "out", out)
+	log.SpanLog(ctx, log.DebugLevelMexos, "Finished dind clean", "scriptName", cloudcommon.DindScriptName, "clusterName", clusterName, "out", out)
 	return nil
 }
 
