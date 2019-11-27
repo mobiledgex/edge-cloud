@@ -1,0 +1,4 @@
+skipmethods:
+  AddUserToGroup:
+  GetFqdnList:
+  GetQosPositionKpi:

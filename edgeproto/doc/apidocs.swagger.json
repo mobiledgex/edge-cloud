@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "app.proto",
+    "title": "alert.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -15,6 +15,114 @@
     "application/json"
   ],
   "paths": {
+    "/add/cloudletpoolmember": {
+      "post": {
+        "summary": "Create a CloudletPool",
+        "operationId": "CreateCloudletPoolMember",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletPoolMember"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletPoolMemberApi"
+        ]
+      }
+    },
+    "/add/gputagtbl": {
+      "post": {
+        "summary": "add new tag(s) to TagTable",
+        "operationId": "AddResTag",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResTagTable"
+            }
+          }
+        ],
+        "tags": [
+          "ResTagTableApi"
+        ]
+      }
+    },
+    "/addmapping/cloudlet": {
+      "post": {
+        "summary": "Add Optional Resource tag table",
+        "operationId": "AddCloudletResMapping",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletResMap"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletApi"
+        ]
+      }
+    },
+    "/addres/flavor": {
+      "post": {
+        "summary": "Add Optional Resource",
+        "operationId": "AddFlavorRes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoFlavor"
+            }
+          }
+        ],
+        "tags": [
+          "FlavorApi"
+        ]
+      }
+    },
     "/create/app": {
       "post": {
         "summary": "Create an application",
@@ -44,7 +152,7 @@
     },
     "/create/appinst": {
       "post": {
-        "summary": "Show application instances state.",
+        "summary": "Create an application instance",
         "operationId": "CreateAppInst",
         "responses": {
           "200": {
@@ -69,8 +177,36 @@
         ]
       }
     },
+    "/create/autoscalepolicy": {
+      "post": {
+        "summary": "Create an Auto Scale Policy",
+        "operationId": "CreateAutoScalePolicy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoAutoScalePolicy"
+            }
+          }
+        ],
+        "tags": [
+          "AutoScalePolicyApi"
+        ]
+      }
+    },
     "/create/cloudlet": {
       "post": {
+        "summary": "Create a Cloudlet",
         "operationId": "CreateCloudlet",
         "responses": {
           "200": {
@@ -95,8 +231,36 @@
         ]
       }
     },
+    "/create/cloudletpool": {
+      "post": {
+        "summary": "Create a CloudletPool",
+        "operationId": "CreateCloudletPool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletPool"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletPoolApi"
+        ]
+      }
+    },
     "/create/clusterinst": {
       "post": {
+        "summary": "Create a Cluster instance",
         "operationId": "CreateClusterInst",
         "responses": {
           "200": {
@@ -123,6 +287,7 @@
     },
     "/create/developer": {
       "post": {
+        "summary": "Create a Developer",
         "operationId": "CreateDeveloper",
         "responses": {
           "200": {
@@ -149,6 +314,7 @@
     },
     "/create/flavor": {
       "post": {
+        "summary": "Create a Flavor",
         "operationId": "CreateFlavor",
         "responses": {
           "200": {
@@ -173,8 +339,36 @@
         ]
       }
     },
+    "/create/gputagtbl": {
+      "post": {
+        "summary": "Create TagTable",
+        "operationId": "CreateResTagTable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResTagTable"
+            }
+          }
+        ],
+        "tags": [
+          "ResTagTableApi"
+        ]
+      }
+    },
     "/create/operator": {
       "post": {
+        "summary": "Create an Operator",
         "operationId": "CreateOperator",
         "responses": {
           "200": {
@@ -228,6 +422,7 @@
     },
     "/delete/appinst": {
       "post": {
+        "summary": "Delete an application instance",
         "operationId": "DeleteAppInst",
         "responses": {
           "200": {
@@ -252,8 +447,36 @@
         ]
       }
     },
+    "/delete/autoscalepolicy": {
+      "post": {
+        "summary": "Delete an Auto Scale Policy",
+        "operationId": "DeleteAutoScalePolicy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoAutoScalePolicy"
+            }
+          }
+        ],
+        "tags": [
+          "AutoScalePolicyApi"
+        ]
+      }
+    },
     "/delete/cloudet": {
       "post": {
+        "summary": "Delete a Cloudlet",
         "operationId": "DeleteCloudlet",
         "responses": {
           "200": {
@@ -278,8 +501,36 @@
         ]
       }
     },
+    "/delete/cloudletpool": {
+      "post": {
+        "summary": "Delete a CloudletPool",
+        "operationId": "DeleteCloudletPool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletPool"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletPoolApi"
+        ]
+      }
+    },
     "/delete/clusterinst": {
       "post": {
+        "summary": "Delete a Cluster instance",
         "operationId": "DeleteClusterInst",
         "responses": {
           "200": {
@@ -306,6 +557,7 @@
     },
     "/delete/developer": {
       "post": {
+        "summary": "Delete a Developer",
         "operationId": "DeleteDeveloper",
         "responses": {
           "200": {
@@ -332,6 +584,7 @@
     },
     "/delete/flavor": {
       "post": {
+        "summary": "Delete a Flavor",
         "operationId": "DeleteFlavor",
         "responses": {
           "200": {
@@ -356,8 +609,36 @@
         ]
       }
     },
+    "/delete/gputagtbl": {
+      "post": {
+        "summary": "Delete TagTable",
+        "operationId": "DeleteResTagTable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResTagTable"
+            }
+          }
+        ],
+        "tags": [
+          "ResTagTableApi"
+        ]
+      }
+    },
     "/delete/operator": {
       "post": {
+        "summary": "Delete an Operator",
         "operationId": "DeleteOperator",
         "responses": {
           "200": {
@@ -379,6 +660,222 @@
         ],
         "tags": [
           "OperatorApi"
+        ]
+      }
+    },
+    "/findmapping/cloudlet": {
+      "post": {
+        "summary": "Discover if flavor produces a matching platform flavor",
+        "operationId": "FindFlavorMatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoFlavorMatch"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoFlavorMatch"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletApi"
+        ]
+      }
+    },
+    "/get/gputagtbl": {
+      "post": {
+        "summary": "Fetch a copy of the TagTable",
+        "operationId": "GetResTagTable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResTagTable"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResTagTableKey"
+            }
+          }
+        ],
+        "tags": [
+          "ResTagTableApi"
+        ]
+      }
+    },
+    "/refresh/appinst": {
+      "post": {
+        "summary": "Refresh restarts an application instance with new App settings or image",
+        "operationId": "RefreshAppInst",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoAppInst"
+            }
+          }
+        ],
+        "tags": [
+          "AppInstApi"
+        ]
+      }
+    },
+    "/remove/cloudletpoolmember": {
+      "post": {
+        "summary": "Delete a CloudletPool",
+        "operationId": "DeleteCloudletPoolMember",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletPoolMember"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletPoolMemberApi"
+        ]
+      }
+    },
+    "/removeres/flavor": {
+      "post": {
+        "summary": "Remove Optional Resource",
+        "operationId": "RemoveFlavorRes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoFlavor"
+            }
+          }
+        ],
+        "tags": [
+          "FlavorApi"
+        ]
+      }
+    },
+    "/rm/gputagtbl": {
+      "post": {
+        "summary": "remove existing tag(s) from TagTable",
+        "operationId": "RemoveResTag",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResTagTable"
+            }
+          }
+        ],
+        "tags": [
+          "ResTagTableApi"
+        ]
+      }
+    },
+    "/rmmapping/cloudlet": {
+      "post": {
+        "summary": "Add Optional Resource tag table",
+        "operationId": "RemoveCloudletResMapping",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletResMap"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletApi"
+        ]
+      }
+    },
+    "/show/alert": {
+      "post": {
+        "summary": "Show alerts",
+        "operationId": "ShowAlert",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoAlert"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoAlert"
+            }
+          }
+        ],
+        "tags": [
+          "AlertApi"
         ]
       }
     },
@@ -411,6 +908,7 @@
     },
     "/show/appinst": {
       "post": {
+        "summary": "Show application instances. Any fields specified will be used to filter results.",
         "operationId": "ShowAppInst",
         "responses": {
           "200": {
@@ -435,8 +933,90 @@
         ]
       }
     },
+    "/show/appinstinfo": {
+      "post": {
+        "summary": "Create an application instance",
+        "operationId": "ShowAppInstInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoAppInstInfo"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoAppInstInfo"
+            }
+          }
+        ],
+        "tags": [
+          "AppInstInfoApi"
+        ]
+      }
+    },
+    "/show/appinstmetrics": {
+      "post": {
+        "summary": "Create an application instance",
+        "operationId": "ShowAppInstMetrics",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoAppInstMetrics"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoAppInstMetrics"
+            }
+          }
+        ],
+        "tags": [
+          "AppInstMetricsApi"
+        ]
+      }
+    },
+    "/show/autoscalepolicy": {
+      "post": {
+        "summary": "Show Auto Scale Policies. Any fields specified will be used to filter results.",
+        "operationId": "ShowAutoScalePolicy",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoAutoScalePolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoAutoScalePolicy"
+            }
+          }
+        ],
+        "tags": [
+          "AutoScalePolicyApi"
+        ]
+      }
+    },
     "/show/cloudlet": {
       "post": {
+        "summary": "Show Cloudlets",
         "operationId": "ShowCloudlet",
         "responses": {
           "200": {
@@ -461,8 +1041,144 @@
         ]
       }
     },
+    "/show/cloudletinfo": {
+      "post": {
+        "summary": "Create a Cloudlet",
+        "operationId": "ShowCloudletInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoCloudletInfo"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletInfo"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletInfoApi"
+        ]
+      }
+    },
+    "/show/cloudletmetrics": {
+      "post": {
+        "summary": "Create a Cloudlet",
+        "operationId": "ShowCloudletMetrics",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoCloudletMetrics"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletMetrics"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletMetricsApi"
+        ]
+      }
+    },
+    "/show/cloudletpool": {
+      "post": {
+        "summary": "Show CloudletPools",
+        "operationId": "ShowCloudletPool",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoCloudletPool"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletPool"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletPoolApi"
+        ]
+      }
+    },
+    "/show/cloudletpoolmember": {
+      "post": {
+        "summary": "Show CloudletPools",
+        "operationId": "ShowCloudletPoolMember",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoCloudletPoolMember"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletPoolMember"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletPoolMemberApi"
+        ]
+      }
+    },
+    "/show/cloudletsforpool": {
+      "post": {
+        "summary": "Delete a CloudletPool",
+        "operationId": "ShowCloudletsForPool",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoCloudlet"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletPoolKey"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletPoolShowApi"
+        ]
+      }
+    },
     "/show/clusterinst": {
       "post": {
+        "summary": "Show Cluster instances",
         "operationId": "ShowClusterInst",
         "responses": {
           "200": {
@@ -487,8 +1203,63 @@
         ]
       }
     },
+    "/show/clusterinstinfo": {
+      "post": {
+        "summary": "Create a Cluster instance",
+        "operationId": "ShowClusterInstInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoClusterInstInfo"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoClusterInstInfo"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterInstInfoApi"
+        ]
+      }
+    },
+    "/show/controller": {
+      "post": {
+        "summary": "Show Controllers",
+        "operationId": "ShowController",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoController"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoController"
+            }
+          }
+        ],
+        "tags": [
+          "ControllerApi"
+        ]
+      }
+    },
     "/show/developer": {
       "post": {
+        "summary": "Show Developers",
         "operationId": "ShowDeveloper",
         "responses": {
           "200": {
@@ -515,6 +1286,7 @@
     },
     "/show/flavor": {
       "post": {
+        "summary": "Show Flavors",
         "operationId": "ShowFlavor",
         "responses": {
           "200": {
@@ -539,8 +1311,90 @@
         ]
       }
     },
+    "/show/gputagtbl": {
+      "post": {
+        "summary": "show TagTable",
+        "operationId": "ShowResTagTable",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoResTagTable"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResTagTable"
+            }
+          }
+        ],
+        "tags": [
+          "ResTagTableApi"
+        ]
+      }
+    },
+    "/show/node": {
+      "post": {
+        "summary": "Show all Nodes connected to all Controllers",
+        "operationId": "ShowNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoNode"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoNode"
+            }
+          }
+        ],
+        "tags": [
+          "NodeApi"
+        ]
+      }
+    },
+    "/show/nodelocal": {
+      "post": {
+        "summary": "Show Nodes connected locally only",
+        "operationId": "ShowNodeLocal",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoNode"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoNode"
+            }
+          }
+        ],
+        "tags": [
+          "NodeApi"
+        ]
+      }
+    },
     "/show/operator": {
       "post": {
+        "summary": "Show Operators",
         "operationId": "ShowOperator",
         "responses": {
           "200": {
@@ -562,6 +1416,33 @@
         ],
         "tags": [
           "OperatorApi"
+        ]
+      }
+    },
+    "/show/poolsforcloudlet": {
+      "post": {
+        "summary": "Create a CloudletPool",
+        "operationId": "ShowPoolsForCloudlet",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "$ref": "#/x-stream-definitions/edgeprotoCloudletPool"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoCloudletKey"
+            }
+          }
+        ],
+        "tags": [
+          "CloudletPoolShowApi"
         ]
       }
     },
@@ -594,6 +1475,7 @@
     },
     "/update/appinst": {
       "post": {
+        "summary": "Update an AppInst and then refresh it",
         "operationId": "UpdateAppInst",
         "responses": {
           "200": {
@@ -618,8 +1500,36 @@
         ]
       }
     },
+    "/update/autoscalepolicy": {
+      "post": {
+        "summary": "Update an Auto Scale Policy",
+        "operationId": "UpdateAutoScalePolicy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoAutoScalePolicy"
+            }
+          }
+        ],
+        "tags": [
+          "AutoScalePolicyApi"
+        ]
+      }
+    },
     "/update/cloudlet": {
       "post": {
+        "summary": "Update a Cloudlet",
         "operationId": "UpdateCloudlet",
         "responses": {
           "200": {
@@ -646,6 +1556,7 @@
     },
     "/update/clusterinst": {
       "post": {
+        "summary": "Update a Cluster instance",
         "operationId": "UpdateClusterInst",
         "responses": {
           "200": {
@@ -672,6 +1583,7 @@
     },
     "/update/developer": {
       "post": {
+        "summary": "Update a Developer",
         "operationId": "UpdateDeveloper",
         "responses": {
           "200": {
@@ -698,6 +1610,7 @@
     },
     "/update/flavor": {
       "post": {
+        "summary": "Update a Flavor",
         "operationId": "UpdateFlavor",
         "responses": {
           "200": {
@@ -722,8 +1635,35 @@
         ]
       }
     },
+    "/update/gputagtbl": {
+      "post": {
+        "operationId": "UpdateResTagTable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/edgeprotoResTagTable"
+            }
+          }
+        ],
+        "tags": [
+          "ResTagTableApi"
+        ]
+      }
+    },
     "/update/operator": {
       "post": {
+        "summary": "Update an Operator",
         "operationId": "UpdateOperator",
         "responses": {
           "200": {
@@ -750,6 +1690,50 @@
     }
   },
   "definitions": {
+    "distributed_match_engineAppPort": {
+      "type": "object",
+      "properties": {
+        "proto": {
+          "$ref": "#/definitions/distributed_match_engineLProto",
+          "title": "TCP (L4), UDP (L4), or HTTP (L7) protocol"
+        },
+        "internal_port": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Container port"
+        },
+        "public_port": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)"
+        },
+        "path_prefix": {
+          "type": "string",
+          "description": "Public facing path for HTTP L7 access."
+        },
+        "fqdn_prefix": {
+          "type": "string",
+          "description": "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty."
+        },
+        "end_port": {
+          "type": "integer",
+          "format": "int32",
+          "description": "A non-zero end port indicates a port range from internal port to end port, inclusive."
+        }
+      },
+      "description": "AppPort describes an L4 or L7 public access port/path mapping. This is used to track external to internal mappings for access via a shared load balancer or reverse proxy."
+    },
+    "distributed_match_engineLProto": {
+      "type": "string",
+      "enum": [
+        "L_PROTO_UNKNOWN",
+        "L_PROTO_TCP",
+        "L_PROTO_UDP",
+        "L_PROTO_HTTP"
+      ],
+      "default": "L_PROTO_UNKNOWN",
+      "description": "LProto indicates which protocol to use for accessing an application on a particular port. This is required by Kubernetes for port mapping.\n\n - L_PROTO_UNKNOWN: Unknown protocol\n - L_PROTO_TCP: TCP (L4) protocol\n - L_PROTO_UDP: UDP (L4) protocol\n - L_PROTO_HTTP: HTTP (L7 tcp) protocol"
+    },
     "distributed_match_engineLoc": {
       "type": "object",
       "properties": {
@@ -771,7 +1755,7 @@
         "vertical_accuracy": {
           "type": "number",
           "format": "double",
-          "title": "veritical accuracy (meters)"
+          "title": "vertical accuracy (meters)"
         },
         "altitude": {
           "type": "number",
@@ -808,6 +1792,47 @@
       },
       "title": "This is a simple Timestamp message type\ngrpc-gateway converts google.protobuf.Timestamp into an RFC3339-type string\nwhich is a waste of a conversion, so we define our own"
     },
+    "edgeprotoAlert": {
+      "type": "object",
+      "properties": {
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Labels uniquely define the alert"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Annotations are extra information about the alert"
+        },
+        "state": {
+          "type": "string",
+          "title": "State of the alert"
+        },
+        "active_at": {
+          "$ref": "#/definitions/distributed_match_engineTimestamp",
+          "title": "When alert became active"
+        },
+        "value": {
+          "type": "number",
+          "format": "double",
+          "title": "Any value associated with alert"
+        },
+        "notify_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Id of client assigned by server (internal use only)"
+        },
+        "controller": {
+          "type": "string",
+          "title": "Connected controller unique id"
+        }
+      }
+    },
     "edgeprotoApp": {
       "type": "object",
       "properties": {
@@ -824,7 +1849,7 @@
         },
         "image_path": {
           "type": "string",
-          "title": "URI from which to download image"
+          "title": "URI of where image resides"
         },
         "image_type": {
           "$ref": "#/definitions/edgeprotoImageType",
@@ -832,11 +1857,11 @@
         },
         "access_ports": {
           "type": "string",
-          "description": "For Layer4 access, the ports the app listens on.\nThis is a comma separated list of protocol:port pairs, i.e.\ntcp:80,http:443,udp:10002.\nOnly tcp, udp, and http protocols are supported; tcp and udp are assumed\nto be L4, and http is assumed to be L7 access."
+          "title": "Comma separated list of protocol:port pairs that the App listens on.\nNumerical values must be decimal format.\ni.e. tcp:80,udp:10002,http:443"
         },
         "default_flavor": {
           "$ref": "#/definitions/edgeprotoFlavorKey",
-          "title": "Default flavor for the App, may be overridden by the AppInst"
+          "title": "Default flavor for the App, which may be overridden by the AppInst"
         },
         "auth_public_key": {
           "type": "string",
@@ -844,19 +1869,31 @@
         },
         "command": {
           "type": "string",
-          "title": "Command to start service"
+          "title": "Command that the container runs to start service"
+        },
+        "annotations": {
+          "type": "string",
+          "title": "Annotations is a comma separated map of arbitrary key value pairs,\nfor example: key1=val1,key2=val2,key3=\"val 3\""
         },
         "deployment": {
           "type": "string",
-          "title": "Deployment target (kubernetes, docker, kvm, etc)"
+          "title": "Deployment type (kubernetes, docker, or vm)"
         },
         "deployment_manifest": {
           "type": "string",
-          "title": "Deployment manifest is the deployment specific manifest file/config"
+          "title": "Deployment manifest is the deployment specific manifest file/config\nFor docker deployment, this can be a docker-compose or docker run file\nFor kubernetes deployment, this can be a kubernetes yaml or helm chart file"
+        },
+        "deployment_generator": {
+          "type": "string",
+          "title": "Deployment generator target to generate a basic deployment manifest"
         },
         "android_package_name": {
           "type": "string",
           "title": "Android package name used to match the App name from the Android package"
+        },
+        "del_opt": {
+          "$ref": "#/definitions/edgeprotoDeleteType",
+          "title": "Override actions to Controller"
         },
         "configs": {
           "type": "array",
@@ -864,9 +1901,32 @@
             "$ref": "#/definitions/edgeprotoConfigFile"
           },
           "title": "Customization files passed through to implementing services"
+        },
+        "scale_with_cluster": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Option to run App on all nodes of the cluster"
+        },
+        "internal_ports": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Should this app have access to outside world?"
+        },
+        "revision": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Revision increments each time the App is updated"
+        },
+        "official_fqdn": {
+          "type": "string",
+          "title": "Official FQDN is the FQDN that the app uses to connect by default"
+        },
+        "md5sum": {
+          "type": "string",
+          "title": "MD5Sum of the VM-based app image"
         }
       },
-      "description": "Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes.\nAn application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet."
+      "description": "App belongs to developers and is used to provide information about their application."
     },
     "edgeprotoAppInst": {
       "type": "object",
@@ -882,20 +1942,125 @@
           "$ref": "#/definitions/edgeprotoAppInstKey",
           "title": "Unique identifier key"
         },
+        "cloudlet_loc": {
+          "$ref": "#/definitions/distributed_match_engineLoc",
+          "title": "Cached location of the cloudlet"
+        },
         "uri": {
           "type": "string",
           "description": "Base FQDN (not really URI) for the App. See Service FQDN for endpoint access."
+        },
+        "liveness": {
+          "$ref": "#/definitions/edgeprotoLiveness",
+          "title": "Liveness of instance (see Liveness)"
+        },
+        "mapped_ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/distributed_match_engineAppPort"
+          },
+          "description": "For instances accessible via a shared load balancer, defines the external\nports on the shared load balancer that map to the internal ports\nExternal ports should be appended to the Uri for L4 access."
         },
         "flavor": {
           "$ref": "#/definitions/edgeprotoFlavorKey",
           "title": "Flavor defining resource requirements"
         },
+        "state": {
+          "$ref": "#/definitions/edgeprotoTrackedState",
+          "title": "Current state of the AppInst on the Cloudlet"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Any errors trying to create, update, or delete the AppInst on the Cloudlet"
+        },
+        "crm_override": {
+          "$ref": "#/definitions/edgeprotoCRMOverride",
+          "title": "Override actions to CRM"
+        },
+        "runtime_info": {
+          "$ref": "#/definitions/edgeprotoAppInstRuntime",
+          "title": "AppInst runtime information"
+        },
         "created_at": {
           "$ref": "#/definitions/distributed_match_engineTimestamp",
           "title": "Created at time"
+        },
+        "auto_cluster_ip_access": {
+          "$ref": "#/definitions/edgeprotoIpAccess",
+          "description": "IpAccess for auto-clusters. Ignored otherwise."
+        },
+        "status": {
+          "$ref": "#/definitions/edgeprotoStatusInfo",
+          "title": "status is used to reflect progress of creation or other events"
+        },
+        "revision": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Revision increments each time the App is updated.  Updating the App Instance will sync the revision with that of the App"
+        },
+        "force_update": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Force Appinst update when UpdateAppInst is done if revision matches"
+        },
+        "update_multiple": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Allow multiple instances to be updated at once"
+        },
+        "configs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/edgeprotoConfigFile"
+          },
+          "title": "Customization files passed through to implementing services"
         }
       },
-      "description": "AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.\nWhen an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.\nMany of the fields here are inherited from the App definition. Some are derived, like the mapped ports field, depending upon if the AppInst accessibility is via a shared or dedicated load balancer."
+      "description": "AppInst is an instance of an App on a Cloudlet where it is defined by an App plus a ClusterInst key. \nMany of the fields here are inherited from the App definition."
+    },
+    "edgeprotoAppInstInfo": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Fields are used for the Update API to specify which fields to apply"
+        },
+        "key": {
+          "$ref": "#/definitions/edgeprotoAppInstKey",
+          "title": "Unique identifier key"
+        },
+        "notify_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Id of client assigned by server (internal use only)"
+        },
+        "state": {
+          "$ref": "#/definitions/edgeprotoTrackedState",
+          "title": "Current state of the AppInst on the Cloudlet"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Any errors trying to create, update, or delete the AppInst on the Cloudlet"
+        },
+        "runtime_info": {
+          "$ref": "#/definitions/edgeprotoAppInstRuntime",
+          "title": "AppInst runtime information"
+        },
+        "status": {
+          "$ref": "#/definitions/edgeprotoStatusInfo",
+          "title": "status is used to reflect progress of creation or other events"
+        }
+      },
+      "description": "AppInstInfo provides information from the Cloudlet Resource Manager about the state of the AppInst on the Cloudlet. Whereas the AppInst defines the intent of instantiating an App on a Cloudlet, the AppInstInfo defines the current state of trying to apply that intent on the physical resources of the Cloudlet."
     },
     "edgeprotoAppInstKey": {
       "type": "object",
@@ -911,6 +2076,29 @@
       },
       "description": "AppInstKey uniquely identifies an Application Instance (AppInst) or Application Instance state (AppInstInfo)."
     },
+    "edgeprotoAppInstMetrics": {
+      "type": "object",
+      "properties": {
+        "something": {
+          "type": "string",
+          "format": "uint64",
+          "description": "what goes here?\nNote that metrics for grpc calls can be done by a prometheus\ninterceptor in grpc, so adding call metrics here may be\nredundant unless they're needed for billing."
+        }
+      },
+      "description": "(TODO) AppInstMetrics provide metrics collected about the application instance on the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files."
+    },
+    "edgeprotoAppInstRuntime": {
+      "type": "object",
+      "properties": {
+        "container_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "List of container names"
+        }
+      }
+    },
     "edgeprotoAppKey": {
       "type": "object",
       "properties": {
@@ -920,14 +2108,68 @@
         },
         "name": {
           "type": "string",
-          "title": "Application name"
+          "title": "App name"
         },
         "version": {
           "type": "string",
-          "title": "Version of the app"
+          "title": "App version"
         }
       },
-      "description": "AppKey uniquely identifies an Application."
+      "title": "AppKey uniquely identifies an App"
+    },
+    "edgeprotoAutoScalePolicy": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Fields are used for the Update API to specify which fields to apply"
+        },
+        "key": {
+          "$ref": "#/definitions/edgeprotoPolicyKey",
+          "title": "Unique identifier key"
+        },
+        "min_nodes": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Minimum number of cluster nodes"
+        },
+        "max_nodes": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Maximum number of cluster nodes"
+        },
+        "scale_up_cpu_thresh": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Scale up cpu threshold (percentage 1 to 100)"
+        },
+        "scale_down_cpu_thresh": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Scale down cpu threshold (percentage 1 to 100)"
+        },
+        "trigger_time_sec": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Trigger time defines how long trigger threshold must be satified in seconds before acting upon it."
+        }
+      },
+      "description": "AutoScalePolicy defines when and how ClusterInsts will have their\nnodes scaled up or down."
+    },
+    "edgeprotoCRMOverride": {
+      "type": "string",
+      "enum": [
+        "NO_OVERRIDE",
+        "IGNORE_CRM_ERRORS",
+        "IGNORE_CRM",
+        "IGNORE_TRANSIENT_STATE",
+        "IGNORE_CRM_AND_TRANSIENT_STATE"
+      ],
+      "default": "NO_OVERRIDE",
+      "description": "CRMOverride can be applied to commands that issue requests to the CRM.\nIt should only be used by administrators when bugs have caused the\nController and CRM to get out of sync. It allows commands from the\nController to ignore errors from the CRM, or ignore the CRM completely\n(messages will not be sent to CRM).\n\n - NO_OVERRIDE: No override\n - IGNORE_CRM_ERRORS: Ignore errors from CRM\n - IGNORE_CRM: Ignore CRM completely (does not inform CRM of operation)\n - IGNORE_TRANSIENT_STATE: Ignore Transient State (only admin should use if CRM crashed)\n - IGNORE_CRM_AND_TRANSIENT_STATE: Ignore CRM and Transient State"
     },
     "edgeprotoCloudlet": {
       "type": "object",
@@ -963,9 +2205,149 @@
           "type": "integer",
           "format": "int32",
           "title": "Number of dynamic IPs available for dynamic IP support"
+        },
+        "time_limits": {
+          "$ref": "#/definitions/edgeprotoOperationTimeLimits",
+          "title": "time limits"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Any errors trying to create, update, or delete the Cloudlet."
+        },
+        "status": {
+          "$ref": "#/definitions/edgeprotoStatusInfo",
+          "title": "status is used to reflect progress of creation or other events"
+        },
+        "state": {
+          "$ref": "#/definitions/edgeprotoTrackedState",
+          "title": "Current state of the cloudlet"
+        },
+        "crm_override": {
+          "$ref": "#/definitions/edgeprotoCRMOverride",
+          "title": "Override actions to CRM"
+        },
+        "deployment_local": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Deploy cloudlet services locally"
+        },
+        "platform_type": {
+          "$ref": "#/definitions/edgeprotoPlatformType",
+          "title": "Platform type"
+        },
+        "notify_srv_addr": {
+          "type": "string",
+          "title": "Address for the CRM notify listener to run on"
+        },
+        "flavor": {
+          "$ref": "#/definitions/edgeprotoFlavorKey",
+          "title": "Min system resource requirements for platform"
+        },
+        "physical_name": {
+          "type": "string",
+          "title": "Physical infrastructure cloudlet name"
+        },
+        "env_var": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Single Key-Value pair of env var to be passed to CRM"
+        },
+        "version": {
+          "type": "string",
+          "title": "Cloudlet version"
+        },
+        "config": {
+          "$ref": "#/definitions/edgeprotoPlatformConfig",
+          "title": "Platform Config Info"
+        },
+        "res_tag_map": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/edgeprotoResTagTableKey"
+          },
+          "title": "Optional resource to restagtbl key map key values = [gpu, nas, nic]"
         }
       },
-      "description": "A Cloudlet is a set of compute resources at a particular location, typically an Operator's regional data center, or a cell tower. The Cloudlet is managed by a Cloudlet Resource Manager, which communicates with the Mobiledgex Controller and allows AppInsts (application instances) to be instantiated on the Cloudlet.\nA Cloudlet will be created by either a Mobiledgex admin or an Operator that provides the Cloudlet."
+      "description": "A Cloudlet is a set of compute resources at a particular location, provided by an Operator."
+    },
+    "edgeprotoCloudletInfo": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Fields are used for the Update API to specify which fields to apply"
+        },
+        "key": {
+          "$ref": "#/definitions/edgeprotoCloudletKey",
+          "title": "Unique identifier key"
+        },
+        "state": {
+          "$ref": "#/definitions/edgeprotoCloudletState",
+          "title": "State of cloudlet"
+        },
+        "notify_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Id of client assigned by server (internal use only)"
+        },
+        "controller": {
+          "type": "string",
+          "title": "Connected controller unique id"
+        },
+        "os_max_ram": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Maximum Ram in MB on the Cloudlet"
+        },
+        "os_max_vcores": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Maximum number of VCPU cores on the Cloudlet"
+        },
+        "os_max_vol_gb": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Maximum amount of disk in GB on the Cloudlet"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Any errors encountered while making changes to the Cloudlet"
+        },
+        "flavors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/edgeprotoFlavorInfo"
+          },
+          "title": "Supported flavors by the Cloudlet"
+        },
+        "status": {
+          "$ref": "#/definitions/edgeprotoStatusInfo",
+          "title": "status is used to reflect progress of creation or other events"
+        },
+        "version": {
+          "type": "string",
+          "title": "Cloudlet version"
+        },
+        "availability_zones": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/edgeprotoOSAZone"
+          },
+          "title": "Availability Zones if any"
+        }
+      },
+      "description": "CloudletInfo provides information from the Cloudlet Resource Manager about the state of the Cloudlet."
     },
     "edgeprotoCloudletKey": {
       "type": "object",
@@ -980,6 +2362,143 @@
         }
       },
       "description": "CloudletKey uniquely identifies a Cloudlet."
+    },
+    "edgeprotoCloudletMetrics": {
+      "type": "object",
+      "properties": {
+        "foo": {
+          "type": "string",
+          "format": "uint64",
+          "title": "what goes here?"
+        }
+      },
+      "description": "(TODO) CloudletMetrics provide metrics collected about the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files."
+    },
+    "edgeprotoCloudletPool": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Fields are used for the Update API to specify which fields to apply"
+        },
+        "key": {
+          "$ref": "#/definitions/edgeprotoCloudletPoolKey",
+          "title": "CloudletPool key"
+        }
+      }
+    },
+    "edgeprotoCloudletPoolKey": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "CloudletPool Name"
+        }
+      }
+    },
+    "edgeprotoCloudletPoolMember": {
+      "type": "object",
+      "properties": {
+        "pool_key": {
+          "$ref": "#/definitions/edgeprotoCloudletPoolKey",
+          "title": "CloudletPool key"
+        },
+        "cloudlet_key": {
+          "$ref": "#/definitions/edgeprotoCloudletKey",
+          "title": "Cloudlet key"
+        }
+      }
+    },
+    "edgeprotoCloudletRefs": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/edgeprotoCloudletKey",
+          "title": "Cloudlet key"
+        },
+        "clusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/edgeprotoClusterKey"
+          },
+          "title": "Clusters instantiated on the Cloudlet"
+        },
+        "used_ram": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Used RAM in MB"
+        },
+        "used_vcores": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Used VCPU cores"
+        },
+        "used_disk": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Used disk in GB"
+        },
+        "root_lb_ports": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": "Used ports on root load balancer. Map key is public port, value is a bitmap for the protocol\nbitmap: bit 0: tcp, bit 1: udp"
+        },
+        "used_dynamic_ips": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Used dynamic IPs"
+        },
+        "used_static_ips": {
+          "type": "string",
+          "title": "Used static IPs"
+        },
+        "opt_res_used_map": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": "Used Optional Resources"
+        }
+      },
+      "description": "CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used resources are compared against max resources for a Cloudlet to determine if resources are available for a new Cluster to be instantiated on the Cloudlet."
+    },
+    "edgeprotoCloudletResMap": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/edgeprotoCloudletKey",
+          "title": "Resource cloudlet key"
+        },
+        "mapping": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Resource mapping info"
+        }
+      },
+      "title": "optional resource input consists of a resource specifier and clouldkey name"
+    },
+    "edgeprotoCloudletState": {
+      "type": "string",
+      "enum": [
+        "CLOUDLET_STATE_UNKNOWN",
+        "CLOUDLET_STATE_ERRORS",
+        "CLOUDLET_STATE_READY",
+        "CLOUDLET_STATE_OFFLINE",
+        "CLOUDLET_STATE_NOT_PRESENT",
+        "CLOUDLET_STATE_INIT",
+        "CLOUDLET_STATE_UPGRADE"
+      ],
+      "default": "CLOUDLET_STATE_UNKNOWN",
+      "description": "CloudletState is the state of the Cloudlet.\n\n - CLOUDLET_STATE_UNKNOWN: Unknown\n - CLOUDLET_STATE_ERRORS: Create/Delete/Update encountered errors (see Errors field of CloudletInfo)\n - CLOUDLET_STATE_READY: Cloudlet is created and ready\n - CLOUDLET_STATE_OFFLINE: Cloudlet is offline (unreachable)\n - CLOUDLET_STATE_NOT_PRESENT: Cloudlet is not present\n - CLOUDLET_STATE_INIT: Cloudlet is initializing\n - CLOUDLET_STATE_UPGRADE: Cloudlet is upgrading"
     },
     "edgeprotoClusterInst": {
       "type": "object",
@@ -997,47 +2516,129 @@
         },
         "flavor": {
           "$ref": "#/definitions/edgeprotoFlavorKey",
-          "title": "Node flavor"
+          "title": "Flavor of the k8s node"
+        },
+        "liveness": {
+          "$ref": "#/definitions/edgeprotoLiveness",
+          "title": "Liveness of instance (see Liveness)"
+        },
+        "auto": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Auto is set to true when automatically created by back-end (internal use only)"
+        },
+        "state": {
+          "$ref": "#/definitions/edgeprotoTrackedState",
+          "title": "State of the cluster instance"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet."
+        },
+        "crm_override": {
+          "$ref": "#/definitions/edgeprotoCRMOverride",
+          "title": "Override actions to CRM"
         },
         "ip_access": {
           "$ref": "#/definitions/edgeprotoIpAccess",
-          "title": "IP access type"
+          "title": "IP access type (RootLB Type)"
         },
         "allocated_ip": {
           "type": "string",
-          "title": "allocated IP for dedicated access"
+          "title": "Allocated IP for dedicated access"
+        },
+        "node_flavor": {
+          "type": "string",
+          "title": "Cloudlet specific node flavor"
         },
         "deployment": {
           "type": "string",
-          "title": "Deployment target (kubernetes, docker, kvm, etc)"
+          "title": "Deployment type (kubernetes or docker)"
         },
         "num_masters": {
           "type": "integer",
           "format": "int64",
-          "title": "number of masters"
+          "title": "Number of k8s masters (In case of docker deployment, this field is not required)"
         },
         "num_nodes": {
           "type": "integer",
           "format": "int64",
-          "title": "number of nodes"
+          "title": "Number of k8s nodes (In case of docker deployment, this field is not required)"
+        },
+        "status": {
+          "$ref": "#/definitions/edgeprotoStatusInfo",
+          "title": "status is used to reflect progress of creation or other events"
+        },
+        "external_volume_size": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Size of external volume to be attached to nodes"
+        },
+        "auto_scale_policy": {
+          "type": "string",
+          "title": "Auto scale policy name"
+        },
+        "availability_zone": {
+          "type": "string",
+          "title": "Optional Resource AZ if any"
         }
       },
-      "description": "ClusterInst is an instance of a Cluster on a Cloudlet. It is defined by a Cluster plus a Cloudlet key. This separation of the definition of the Cluster versus its instance is unique to Mobiledgex, and allows the Developer to provide the Cluster definition, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.\nWhen a Cluster is instantiated on a Cloudlet, the user may override the default ClusterFlavor of the Cluster. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations."
+      "description": "ClusterInst is an instance of a Cluster on a Cloudlet. \nIt is defined by a Cluster, Cloudlet, and Developer key."
+    },
+    "edgeprotoClusterInstInfo": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Fields are used for the Update API to specify which fields to apply"
+        },
+        "key": {
+          "$ref": "#/definitions/edgeprotoClusterInstKey",
+          "title": "Unique identifier key"
+        },
+        "notify_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Id of client assigned by server (internal use only)"
+        },
+        "state": {
+          "$ref": "#/definitions/edgeprotoTrackedState",
+          "title": "State of the cluster instance"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet."
+        },
+        "status": {
+          "$ref": "#/definitions/edgeprotoStatusInfo",
+          "title": "status is used to reflect progress of creation or other events"
+        }
+      },
+      "description": "ClusterInstInfo provides information from the Cloudlet Resource Manager about the state of the ClusterInst on the Cloudlet. Whereas the ClusterInst defines the intent of instantiating a Cluster on a Cloudlet, the ClusterInstInfo defines the current state of trying to apply that intent on the physical resources of the Cloudlet."
     },
     "edgeprotoClusterInstKey": {
       "type": "object",
       "properties": {
         "cluster_key": {
           "$ref": "#/definitions/edgeprotoClusterKey",
-          "title": "Cluster key"
+          "title": "Name of Cluster"
         },
         "cloudlet_key": {
           "$ref": "#/definitions/edgeprotoCloudletKey",
-          "title": "Cloudlet on which the Cluster is instantiated"
+          "title": "Name of Cloudlet on which the Cluster is instantiated"
         },
         "developer": {
           "type": "string",
-          "title": "Developer organization this cluster belongs to"
+          "title": "Name of Developer that this cluster belongs to"
         }
       },
       "description": "ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster Instance state (ClusterInstInfo)."
@@ -1052,6 +2653,38 @@
       },
       "description": "ClusterKey uniquely identifies a Cluster."
     },
+    "edgeprotoClusterRefs": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/edgeprotoClusterInstKey",
+          "title": "Cluster Instance key"
+        },
+        "apps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/edgeprotoAppKey"
+          },
+          "title": "Apps instances in the Cluster Instance"
+        },
+        "used_ram": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Used RAM in MB"
+        },
+        "used_vcores": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Used VCPU cores"
+        },
+        "used_disk": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Used disk in GB"
+        }
+      },
+      "description": "ClusterRefs track used resources within a ClusterInst. Each AppInst specifies a set of required resources (Flavor), so tracking resources used by Apps within a Cluster is necessary to determine if enough resources are available for another AppInst to be instantiated on a ClusterInst."
+    },
     "edgeprotoConfigFile": {
       "type": "object",
       "properties": {
@@ -1064,6 +2697,58 @@
           "title": "config file contents or URI reference"
         }
       }
+    },
+    "edgeprotoController": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Fields are used for the Update API to specify which fields to apply"
+        },
+        "key": {
+          "$ref": "#/definitions/edgeprotoControllerKey",
+          "title": "Unique identifier key"
+        },
+        "build_master": {
+          "type": "string",
+          "title": "Build Master Version"
+        },
+        "build_head": {
+          "type": "string",
+          "title": "Build Head Version"
+        },
+        "build_author": {
+          "type": "string",
+          "title": "Build Author"
+        },
+        "hostname": {
+          "type": "string",
+          "title": "Hostname"
+        }
+      },
+      "description": "A Controller is a service that manages the edge-cloud data and controls other edge-cloud micro-services."
+    },
+    "edgeprotoControllerKey": {
+      "type": "object",
+      "properties": {
+        "addr": {
+          "type": "string",
+          "title": "external API address"
+        }
+      },
+      "title": "ControllerKey uniquely defines a Controller"
+    },
+    "edgeprotoDeleteType": {
+      "type": "string",
+      "enum": [
+        "NO_AUTO_DELETE",
+        "AUTO_DELETE"
+      ],
+      "default": "NO_AUTO_DELETE",
+      "title": "- NO_AUTO_DELETE: No autodelete\n - AUTO_DELETE: Autodelete"
     },
     "edgeprotoDeveloper": {
       "type": "object",
@@ -1080,17 +2765,55 @@
           "title": "Unique identifier key"
         }
       },
-      "description": "A Developer defines a Mobiledgex customer that can create and manage applications, clusters, instances, etc. Applications and other objects created by one Developer cannot be seen or managed by other Developers. Billing will likely be done on a per-developer basis.\nCreating a developer identity is likely the first step of (self-)registering a new customer.\nTODO: user management, auth, etc is not implemented yet."
+      "title": "Developer is defined as the consumer of edge computing resources to manage and deploy Apps"
     },
     "edgeprotoDeveloperKey": {
       "type": "object",
       "properties": {
         "name": {
           "type": "string",
-          "title": "Organization or Company Name"
+          "title": "Organization or Company Name that a Developer is part of"
         }
       },
-      "title": "DeveloperKey uniquely identifies a Developer (Mobiledgex customer)"
+      "title": "DeveloperKey uniquely identifies a Developer"
+    },
+    "edgeprotoExecRequest": {
+      "type": "object",
+      "properties": {
+        "app_inst_key": {
+          "$ref": "#/definitions/edgeprotoAppInstKey",
+          "title": "Target AppInst"
+        },
+        "command": {
+          "type": "string",
+          "title": "Command or Shell"
+        },
+        "container_id": {
+          "type": "string",
+          "title": "ContainerID is the name of the target container, if applicable"
+        },
+        "offer": {
+          "type": "string",
+          "title": "WebRTC Offer"
+        },
+        "answer": {
+          "type": "string",
+          "title": "WebRTC Answer"
+        },
+        "err": {
+          "type": "string",
+          "title": "Any error message"
+        },
+        "console": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "VM Console"
+        },
+        "console_url": {
+          "type": "string",
+          "title": "VM Console URL"
+        }
+      }
     },
     "edgeprotoFlavor": {
       "type": "object",
@@ -1104,44 +2827,97 @@
         },
         "key": {
           "$ref": "#/definitions/edgeprotoFlavorKey",
-          "title": "Unique key"
+          "description": "Unique key for the new flavor."
         },
         "ram": {
           "type": "string",
           "format": "uint64",
-          "title": "RAM in MB"
+          "title": "RAM in megabytes"
         },
         "vcpus": {
           "type": "string",
           "format": "uint64",
-          "title": "VCPU cores"
+          "title": "Number of virtual CPUs"
         },
         "disk": {
           "type": "string",
           "format": "uint64",
-          "title": "Amount of disk in GB"
+          "title": "Amount of disk space in gigabytes"
+        },
+        "opt_res_map": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Optional Resources request, key = [gpu, nas, nic]"
+        }
+      }
+    },
+    "edgeprotoFlavorInfo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name of the flavor on the Cloudlet"
+        },
+        "vcpus": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Number of VCPU cores on the Cloudlet"
+        },
+        "ram": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Ram in MB on the Cloudlet"
+        },
+        "disk": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Amount of disk in GB on the Cloudlet"
+        },
+        "properties": {
+          "type": "string",
+          "title": "OS Flavor Properties, if any"
         }
       },
-      "description": "A Flavor identifies the Cpu, Ram, and Disk resources required for either a node in a Cluster, or an application instance. For a node in a cluster, these are the physical resources provided by that node. For an application instance, this defines the resources (per node) that should be allocated to the instance from the Cluster."
+      "title": "Flavor details from the Cloudlet"
     },
     "edgeprotoFlavorKey": {
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "title": "Flavor name"
         }
       },
       "description": "FlavorKey uniquely identifies a Flavor."
+    },
+    "edgeprotoFlavorMatch": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/edgeprotoCloudletKey",
+          "title": "Cloudlet ctx"
+        },
+        "flavor_name": {
+          "type": "string"
+        },
+        "availability_zone": {
+          "type": "string"
+        }
+      }
     },
     "edgeprotoImageType": {
       "type": "string",
       "enum": [
         "IMAGE_TYPE_UNKNOWN",
         "IMAGE_TYPE_DOCKER",
-        "IMAGE_TYPE_QCOW"
+        "IMAGE_TYPE_QCOW",
+        "IMAGE_TYPE_HELM"
       ],
       "default": "IMAGE_TYPE_UNKNOWN",
-      "description": "ImageType specifies the image type of the application.\n\n - IMAGE_TYPE_UNKNOWN: Unknown image type\n - IMAGE_TYPE_DOCKER: Docker container image type compatible with Kubernetes\n - IMAGE_TYPE_QCOW: QCOW2 virtual machine image type"
+      "description": "- IMAGE_TYPE_UNKNOWN: Unknown image type\n - IMAGE_TYPE_DOCKER: Docker container image type compatible either with Docker or Kubernetes\n - IMAGE_TYPE_QCOW: QCOW2 virtual machine image type\n - IMAGE_TYPE_HELM: Helm chart is a separate image type",
+      "title": "ImageType specifies image type of an App"
     },
     "edgeprotoIpAccess": {
       "type": "string",
@@ -1152,7 +2928,8 @@
         "IP_ACCESS_SHARED"
       ],
       "default": "IP_ACCESS_UNKNOWN",
-      "title": "- IP_ACCESS_UNKNOWN: Unknown IP access\n - IP_ACCESS_DEDICATED: Dedicated IP access\n - IP_ACCESS_DEDICATED_OR_SHARED: Dedicated or shared (prefers dedicated) access\n - IP_ACCESS_SHARED: Shared IP access"
+      "description": "- IP_ACCESS_UNKNOWN: Unknown IP access\n - IP_ACCESS_DEDICATED: Dedicated RootLB\n - IP_ACCESS_DEDICATED_OR_SHARED: Dedicated or shared (prefers dedicated) RootLB\n - IP_ACCESS_SHARED: Shared RootLB",
+      "title": "IpAccess indicates the type of RootLB that Developer requires for their App"
     },
     "edgeprotoIpSupport": {
       "type": "string",
@@ -1163,6 +2940,181 @@
       ],
       "default": "IP_SUPPORT_UNKNOWN",
       "description": "IpSupport indicates the type of public IP support provided by the Cloudlet. Static IP support indicates a set of static public IPs are available for use, and managed by the Controller. Dynamic indicates the Cloudlet uses a DHCP server to provide public IP addresses, and the controller has no control over which IPs are assigned.\n\n - IP_SUPPORT_UNKNOWN: Unknown IP support\n - IP_SUPPORT_STATIC: Static IP addresses are provided to and managed by Controller\n - IP_SUPPORT_DYNAMIC: IP addresses are dynamically provided by an Operator's DHCP server"
+    },
+    "edgeprotoLiveness": {
+      "type": "string",
+      "enum": [
+        "LIVENESS_UNKNOWN",
+        "LIVENESS_STATIC",
+        "LIVENESS_DYNAMIC"
+      ],
+      "default": "LIVENESS_UNKNOWN",
+      "description": "Liveness indicates if an object was created statically via an external API call, or dynamically via an internal algorithm.\n\n - LIVENESS_UNKNOWN: Unknown liveness\n - LIVENESS_STATIC: Object managed by external entity\n - LIVENESS_DYNAMIC: Object managed internally"
+    },
+    "edgeprotoNode": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Fields are used for the Update API to specify which fields to apply"
+        },
+        "key": {
+          "$ref": "#/definitions/edgeprotoNodeKey",
+          "title": "Unique identifier key"
+        },
+        "notify_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Id of client assigned by server (internal use only)"
+        },
+        "build_master": {
+          "type": "string",
+          "title": "Build Master Version"
+        },
+        "build_head": {
+          "type": "string",
+          "title": "Build Head Version"
+        },
+        "build_author": {
+          "type": "string",
+          "title": "Build Author"
+        },
+        "hostname": {
+          "type": "string",
+          "title": "Hostname"
+        },
+        "image_version": {
+          "type": "string",
+          "title": "Docker edge-cloud base image version"
+        }
+      },
+      "description": "Node defines a DME (distributed matching engine) or CRM (cloudlet resource manager) instance."
+    },
+    "edgeprotoNodeKey": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name or hostname of node"
+        },
+        "node_type": {
+          "$ref": "#/definitions/edgeprotoNodeType",
+          "title": "Node type"
+        },
+        "cloudlet_key": {
+          "$ref": "#/definitions/edgeprotoCloudletKey",
+          "title": "Cloudlet on which node is running, or is associated with"
+        }
+      },
+      "title": "NodeKey uniquely identifies a DME or CRM node"
+    },
+    "edgeprotoNodeType": {
+      "type": "string",
+      "enum": [
+        "NODE_UNKNOWN",
+        "NODE_DME",
+        "NODE_CRM",
+        "NODE_CONTROLLER"
+      ],
+      "default": "NODE_UNKNOWN",
+      "description": "- NODE_UNKNOWN: Unknown\n - NODE_DME: Distributed Matching Engine\n - NODE_CRM: Cloudlet Resource Manager\n - NODE_CONTROLLER: Controller Node",
+      "title": "NodeType defines the type of Node"
+    },
+    "edgeprotoNotice": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "$ref": "#/definitions/edgeprotoNoticeAction",
+          "title": "Action to perform"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Protocol version supported by sender"
+        },
+        "any": {
+          "$ref": "#/definitions/protobufAny",
+          "title": "Data"
+        },
+        "want_objs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Wanted Objects"
+        },
+        "filter_cloudlet_key": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Filter by cloudlet key"
+        },
+        "span": {
+          "type": "string",
+          "title": "Opentracing span"
+        }
+      }
+    },
+    "edgeprotoNoticeAction": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "UPDATE",
+        "DELETE",
+        "VERSION",
+        "SENDALL_END"
+      ],
+      "default": "NONE",
+      "description": "NoticeAction denotes what kind of action this notification is for.\n\n - NONE: No action\n - UPDATE: Update the object\n - DELETE: Delete the object\n - VERSION: Version exchange negotitation message\n - SENDALL_END: Initial send all finished message"
+    },
+    "edgeprotoOSAZone": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "edgeprotoOperationTimeLimits": {
+      "type": "object",
+      "properties": {
+        "create_cluster_inst_timeout": {
+          "type": "string",
+          "format": "int64",
+          "title": "max time to create a cluster instance"
+        },
+        "update_cluster_inst_timeout": {
+          "type": "string",
+          "format": "int64",
+          "title": "max time to update a cluster instance"
+        },
+        "delete_cluster_inst_timeout": {
+          "type": "string",
+          "format": "int64",
+          "title": "max time to delete a cluster instance"
+        },
+        "create_app_inst_timeout": {
+          "type": "string",
+          "format": "int64",
+          "title": "max time to create an app instance"
+        },
+        "update_app_inst_timeout": {
+          "type": "string",
+          "format": "int64",
+          "title": "max time to update an app instance"
+        },
+        "delete_app_inst_timeout": {
+          "type": "string",
+          "format": "int64",
+          "title": "max time to delete an app instance"
+        }
+      },
+      "title": "time limits for cloudlet create, update and delete operations"
     },
     "edgeprotoOperator": {
       "type": "object",
@@ -1179,7 +3131,7 @@
           "title": "Unique identifier key"
         }
       },
-      "description": "An Operator defines a telecommunications provider such as AT\u0026T, xmobx, etc. The operators in turn provide Mobiledgex with compute resource Cloudlets that serve as the basis for location-based services."
+      "title": "An Operator supplies compute resources.\nFor example, telecommunications provider such as AT\u0026T is an Operator"
     },
     "edgeprotoOperatorKey": {
       "type": "object",
@@ -1190,6 +3142,123 @@
         }
       },
       "title": "OperatorKey uniquely identifies an Operator"
+    },
+    "edgeprotoPlatformConfig": {
+      "type": "object",
+      "properties": {
+        "registry_path": {
+          "type": "string",
+          "title": "Path to Docker registry holding edge-cloud image"
+        },
+        "image_path": {
+          "type": "string",
+          "title": "Path to platform base image"
+        },
+        "notify_ctrl_addrs": {
+          "type": "string",
+          "title": "Address of controller notify port (can be multiple of these)"
+        },
+        "vault_addr": {
+          "type": "string",
+          "title": "Vault address"
+        },
+        "tls_cert_file": {
+          "type": "string",
+          "title": "TLS cert file"
+        },
+        "crm_role_id": {
+          "type": "string",
+          "title": "Vault role ID for CRM"
+        },
+        "crm_secret_id": {
+          "type": "string",
+          "title": "Vault secret ID for CRM"
+        },
+        "platform_tag": {
+          "type": "string",
+          "title": "Tag of edge-cloud image"
+        },
+        "test_mode": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Internal Test flag"
+        },
+        "span": {
+          "type": "string",
+          "title": "Span string"
+        },
+        "cleanup_mode": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Internal cleanup flag"
+        }
+      }
+    },
+    "edgeprotoPlatformType": {
+      "type": "string",
+      "enum": [
+        "PLATFORM_TYPE_FAKE",
+        "PLATFORM_TYPE_DIND",
+        "PLATFORM_TYPE_OPENSTACK",
+        "PLATFORM_TYPE_AZURE",
+        "PLATFORM_TYPE_GCP",
+        "PLATFORM_TYPE_MEXDIND",
+        "PLATFORM_TYPE_FAKEINFRA"
+      ],
+      "default": "PLATFORM_TYPE_FAKE",
+      "description": "- PLATFORM_TYPE_FAKE: Fake Cloudlet\n - PLATFORM_TYPE_DIND: DIND Cloudlet\n - PLATFORM_TYPE_OPENSTACK: Openstack Cloudlet\n - PLATFORM_TYPE_AZURE: Azure Cloudlet\n - PLATFORM_TYPE_GCP: GCP Cloudlet\n - PLATFORM_TYPE_MEXDIND: MEXDIND Cloudlet\n - PLATFORM_TYPE_FAKEINFRA: Fake Infra Cloudlet",
+      "title": "PlatformType is the supported list of cloudlet types"
+    },
+    "edgeprotoPolicyKey": {
+      "type": "object",
+      "properties": {
+        "developer": {
+          "type": "string",
+          "title": "Name of the Developer that this policy belongs to"
+        },
+        "name": {
+          "type": "string",
+          "title": "Policy name"
+        }
+      }
+    },
+    "edgeprotoResTagTable": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "key": {
+          "$ref": "#/definitions/edgeprotoResTagTableKey"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "one or more string tags"
+        },
+        "azone": {
+          "type": "string",
+          "title": "availability zone(s) of resource if required"
+        }
+      }
+    },
+    "edgeprotoResTagTableKey": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Resource Table Name"
+        },
+        "operator_key": {
+          "$ref": "#/definitions/edgeprotoOperatorKey",
+          "description": "Operator of the cloudlet site."
+        }
+      }
     },
     "edgeprotoResult": {
       "type": "object",
@@ -1205,6 +3274,47 @@
         }
       },
       "description": "Result is a generic object for returning the result of an API call. In general, result is not used. The error value returned by the GRPC API call is used instead."
+    },
+    "edgeprotoStatusInfo": {
+      "type": "object",
+      "properties": {
+        "task_number": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "max_tasks": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "task_name": {
+          "type": "string"
+        },
+        "step_name": {
+          "type": "string"
+        }
+      },
+      "title": "Used to track status of create/delete/update for resources that are being modified \nby the controller via the CRM.  Tasks are the high level jobs that are to be completed.\nSteps are work items within a task.   Within the clusterinst and appinst objects this\nis converted to a string"
+    },
+    "edgeprotoTrackedState": {
+      "type": "string",
+      "enum": [
+        "TRACKED_STATE_UNKNOWN",
+        "NOT_PRESENT",
+        "CREATE_REQUESTED",
+        "CREATING",
+        "CREATE_ERROR",
+        "READY",
+        "UPDATE_REQUESTED",
+        "UPDATING",
+        "UPDATE_ERROR",
+        "DELETE_REQUESTED",
+        "DELETING",
+        "DELETE_ERROR",
+        "DELETE_PREPARE",
+        "CRM_INITOK"
+      ],
+      "default": "TRACKED_STATE_UNKNOWN",
+      "description": "TrackedState is used to track the state of an object on a remote node,\ni.e. track the state of a ClusterInst object on the CRM (Cloudlet).\n\n - TRACKED_STATE_UNKNOWN: Unknown state\n - NOT_PRESENT: Not present (does not exist)\n - CREATE_REQUESTED: Create requested\n - CREATING: Creating\n - CREATE_ERROR: Create error\n - READY: Ready\n - UPDATE_REQUESTED: Update requested\n - UPDATING: Updating\n - UPDATE_ERROR: Update error\n - DELETE_REQUESTED: Delete requested\n - DELETING: Deleting\n - DELETE_ERROR: Delete error\n - DELETE_PREPARE: Delete prepare (extra state used by controller to block other changes)\n - CRM_INITOK: CRM INIT OK"
     },
     "protobufAny": {
       "type": "object",
@@ -1248,6 +3358,18 @@
     }
   },
   "x-stream-definitions": {
+    "edgeprotoAlert": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoAlert"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoAlert"
+    },
     "edgeprotoApp": {
       "type": "object",
       "properties": {
@@ -1272,6 +3394,42 @@
       },
       "title": "Stream result of edgeprotoAppInst"
     },
+    "edgeprotoAppInstInfo": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoAppInstInfo"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoAppInstInfo"
+    },
+    "edgeprotoAppInstMetrics": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoAppInstMetrics"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoAppInstMetrics"
+    },
+    "edgeprotoAutoScalePolicy": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoAutoScalePolicy"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoAutoScalePolicy"
+    },
     "edgeprotoCloudlet": {
       "type": "object",
       "properties": {
@@ -1284,6 +3442,66 @@
       },
       "title": "Stream result of edgeprotoCloudlet"
     },
+    "edgeprotoCloudletInfo": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoCloudletInfo"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoCloudletInfo"
+    },
+    "edgeprotoCloudletMetrics": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoCloudletMetrics"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoCloudletMetrics"
+    },
+    "edgeprotoCloudletPool": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoCloudletPool"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoCloudletPool"
+    },
+    "edgeprotoCloudletPoolMember": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoCloudletPoolMember"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoCloudletPoolMember"
+    },
+    "edgeprotoCloudletRefs": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoCloudletRefs"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoCloudletRefs"
+    },
     "edgeprotoClusterInst": {
       "type": "object",
       "properties": {
@@ -1295,6 +3513,42 @@
         }
       },
       "title": "Stream result of edgeprotoClusterInst"
+    },
+    "edgeprotoClusterInstInfo": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoClusterInstInfo"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoClusterInstInfo"
+    },
+    "edgeprotoClusterRefs": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoClusterRefs"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoClusterRefs"
+    },
+    "edgeprotoController": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoController"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoController"
     },
     "edgeprotoDeveloper": {
       "type": "object",
@@ -1320,6 +3574,30 @@
       },
       "title": "Stream result of edgeprotoFlavor"
     },
+    "edgeprotoNode": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoNode"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoNode"
+    },
+    "edgeprotoNotice": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoNotice"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoNotice"
+    },
     "edgeprotoOperator": {
       "type": "object",
       "properties": {
@@ -1331,6 +3609,18 @@
         }
       },
       "title": "Stream result of edgeprotoOperator"
+    },
+    "edgeprotoResTagTable": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/edgeprotoResTagTable"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of edgeprotoResTagTable"
     },
     "edgeprotoResult": {
       "type": "object",
