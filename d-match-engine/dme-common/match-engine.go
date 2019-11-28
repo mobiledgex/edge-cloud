@@ -29,6 +29,8 @@ type DmeAppInst struct {
 	ports []dme.AppPort
 	// State of the cloudlet - copy of the DmeCloudlet
 	cloudletState edgeproto.CloudletState
+	// State of this AppInst
+	appInstState edgeproto.TrackedState
 }
 
 type DmeAppInsts struct {
@@ -64,12 +66,13 @@ func SetupMatchEngine() {
 	DmeAppTbl.Cloudlets = make(map[edgeproto.CloudletKey]*DmeCloudlet)
 }
 
+// AppInst state is a superset of the cloudlet state and appInst state
 func GetDmeAppInstState(appInst *DmeAppInst) edgeproto.TrackedState {
 	if appInst == nil {
 		return edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
 	}
 	if appInst.cloudletState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-		return edgeproto.TrackedState_READY
+		return appInst.appInstState
 	}
 	return edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
 }
@@ -129,6 +132,7 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 		cl.uri = appInst.Uri
 		cl.location = appInst.CloudletLoc
 		cl.ports = appInst.MappedPorts
+		cl.appInstState = appInst.State
 		if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
 			cl.cloudletState = cloudlet.State
 		} else {
@@ -138,13 +142,15 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 			"appName", app.AppKey.Name,
 			"appVersion", app.AppKey.Version,
 			"latitude", appInst.CloudletLoc.Latitude,
-			"longitude", appInst.CloudletLoc.Longitude)
+			"longitude", appInst.CloudletLoc.Longitude,
+			"state", appInst.State)
 	} else {
 		cNew = new(DmeAppInst)
 		cNew.clusterInstKey = appInst.Key.ClusterInstKey
 		cNew.uri = appInst.Uri
 		cNew.location = appInst.CloudletLoc
 		cNew.ports = appInst.MappedPorts
+		cNew.appInstState = appInst.State
 		if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
 			cNew.cloudletState = cloudlet.State
 		} else {
@@ -157,7 +163,8 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 			"cloudletKey", appInst.Key.ClusterInstKey.CloudletKey,
 			"uri", appInst.Uri,
 			"latitude", cNew.location.Latitude,
-			"longitude", cNew.location.Longitude)
+			"longitude", cNew.location.Longitude,
+			"state", cNew.appInstState)
 	}
 	app.Unlock()
 }
