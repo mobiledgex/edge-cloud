@@ -464,6 +464,7 @@ func (m *mex) printCopyInMakeArray(name string, desc *generator.Descriptor, fiel
 		typ, _ := m.gen.GoType(desc, field)
 		m.P("if m.", name, " == nil || len(m.", name, ") != len(src.", name, ") {")
 		m.P("m.", name, " = make(", typ, ", len(src.", name, "))")
+		m.P("changed++")
 		m.P("}")
 	}
 }
@@ -592,6 +593,8 @@ func (m *mex) generateDiffFields(parents, names []string, desc *generator.Descri
 			}
 		}
 		if nullableMessage {
+			m.P("} else if (m.", hierName, " != nil && o.", hierName, " == nil) || (m.", hierName, " == nil && o.", hierName, " != nil) {")
+			m.markDiff(names, name)
 			m.P("}")
 		}
 	}
@@ -701,12 +704,9 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 
 		if hasGrpcFields {
 			numStr := strings.Join(append(nums, num), ".")
-			nilCheck := ""
-			if nullableMessage {
-				nilCheck = " && src." + hierName + " != nil"
-			}
-			m.P("if _, set := fmap[\"", numStr, "\"]; set", nilCheck, " {")
-		} else if nullableMessage {
+			m.P("if _, set := fmap[\"", numStr, "\"]; set {")
+		}
+		if nullableMessage {
 			m.P("if src.", hierName, " != nil {")
 		}
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
@@ -762,7 +762,13 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED && *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 			m.P("}")
 		}
-		if hasGrpcFields || nullableMessage {
+		if nullableMessage {
+			m.P("} else if m.", hierName, " != nil {")
+			m.P("m.", hierName, " = nil")
+			m.P("changed++")
+			m.P("}")
+		}
+		if hasGrpcFields {
 			m.P("}")
 		}
 	}
@@ -1498,6 +1504,17 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("}")
 		m.P("")
+
+		m.P("func (m *", message.Name, ") NotFoundError() error {")
+		m.P("return fmt.Errorf(\"", strings.TrimSuffix(*message.Name, "Key"), " key %s not found\", m.GetKeyString())")
+		m.P("}")
+		m.P("")
+
+		m.P("func (m *", message.Name, ") ExistsError() error {")
+		m.P("return fmt.Errorf(\"", strings.TrimSuffix(*message.Name, "Key"), " key %s already exists\", m.GetKeyString())")
+		m.P("}")
+		m.P("")
+
 		m.importJson = true
 		m.importLog = true
 	}

@@ -451,6 +451,14 @@ func PolicyKeyStringParse(str string, key *PolicyKey) {
 	}
 }
 
+func (m *PolicyKey) NotFoundError() error {
+	return fmt.Errorf("Policy key %s not found", m.GetKeyString())
+}
+
+func (m *PolicyKey) ExistsError() error {
+	return fmt.Errorf("Policy key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *PolicyKey) ValidateEnums() error {
 	return nil

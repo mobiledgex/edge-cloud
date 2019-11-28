@@ -477,6 +477,14 @@ func NodeKeyStringParse(str string, key *NodeKey) {
 	}
 }
 
+func (m *NodeKey) NotFoundError() error {
+	return fmt.Errorf("Node key %s not found", m.GetKeyString())
+}
+
+func (m *NodeKey) ExistsError() error {
+	return fmt.Errorf("Node key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *NodeKey) ValidateEnums() error {
 	if _, ok := NodeType_name[int32(m.NodeType)]; !ok {

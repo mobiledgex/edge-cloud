@@ -11,8 +11,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/vmspec"
 )
 
 type ClusterInstApi struct {
@@ -183,10 +181,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("NumMasters and NumNodes not applicable for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
 		}
 		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-			// must be dedicated for docker
+			// assume dedicated for docker
 			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
-		} else if in.IpAccess != edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-			return fmt.Errorf("IpAccess must be dedicated for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
 		}
 	} else {
 		return fmt.Errorf("Invalid deployment type %s for ClusterInst", in.Deployment)
@@ -203,7 +199,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
 					cb.Send(&edgeproto.Result{Message: "Use DeleteClusterInst to remove and try again"})
 				}
-				return objstore.ErrKVStoreKeyExists
+				return in.Key.ExistsError()
 			}
 			in.Errors = nil
 		} else {
@@ -221,6 +217,16 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
+		}
+		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+			if in.Deployment == cloudcommon.AppDeploymentTypeDocker && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_DIND {
+				platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
+				return fmt.Errorf("IpAccess must be dedicated for deployment type %s platform type %s", cloudcommon.AppDeploymentTypeDocker, platName)
+			}
+		} else {
+			if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND {
+				return fmt.Errorf("IpAccess must be shared for DIND")
+			}
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
 			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
@@ -263,11 +269,12 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
 		var err error
-		vmspec, err := vmspec.GetVMSpec(info.Flavors, nodeFlavor)
+		vmspec, err := resTagTableApi.GetVMSpec(nodeFlavor, cloudlet, info)
 		if err != nil {
 			return err
 		}
 		in.NodeFlavor = vmspec.FlavorName
+		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
 
 		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Flavor", "vmspec", vmspec)
@@ -353,16 +360,14 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		return fmt.Errorf("nothing specified to update")
 	}
 	allowedFields := []string{}
-	allowedFieldsMap := make(map[string]struct{})
 	badFields := []string{}
 	for _, field := range in.Fields {
 		if field == edgeproto.ClusterInstFieldCrmOverride ||
 			field == edgeproto.ClusterInstFieldKey ||
 			in.IsKeyField(field) {
 			continue
-		} else if field == edgeproto.ClusterInstFieldNumNodes {
+		} else if field == edgeproto.ClusterInstFieldNumNodes || field == edgeproto.ClusterInstFieldAutoScalePolicy {
 			allowedFields = append(allowedFields, field)
-			allowedFieldsMap[field] = struct{}{}
 		} else {
 			badFields = append(badFields, field)
 		}
@@ -392,7 +397,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		changeCount = 0
 		if !s.store.STMGet(stm, &in.Key, &inbuf) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		if inbuf.NumMasters == 0 {
 			return fmt.Errorf("cannot modify single node clusters")
@@ -448,7 +453,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	// Set state to prevent other apps from being created on ClusterInst
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
 			if in.State == edgeproto.TrackedState_DELETE_ERROR {
@@ -477,7 +482,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		if in.State != edgeproto.TrackedState_DELETE_PREPARE {
 			return errors.New("ClusterInst expected state DELETE_PREPARE")

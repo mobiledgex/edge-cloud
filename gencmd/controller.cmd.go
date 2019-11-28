@@ -88,7 +88,12 @@ func ShowController(c *cli.Command, in *edgeproto.Controller) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowController recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowController recv failed: %s", errstr)
 		}
 		ControllerHideTags(obj)
 		objs = append(objs, obj)

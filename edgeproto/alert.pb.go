@@ -23,6 +23,7 @@
 		notice.proto
 		operator.proto
 		refs.proto
+		restagtable.proto
 		result.proto
 		version.proto
 
@@ -46,8 +47,11 @@
 		OpenStackProperties
 		CloudletInfraProperties
 		PlatformConfig
+		CloudletResMap
 		Cloudlet
+		FlavorMatch
 		FlavorInfo
+		OSAZone
 		CloudletInfo
 		CloudletMetrics
 		CloudletPoolKey
@@ -75,6 +79,8 @@
 		Operator
 		CloudletRefs
 		ClusterRefs
+		ResTagTableKey
+		ResTagTable
 		Result
 */
 package edgeproto
@@ -413,12 +419,18 @@ func (m *Alert) CopyInFields(src *Alert) int {
 		for k0, _ := range src.Labels {
 			m.Labels[k0] = src.Labels[k0]
 		}
+	} else if m.Labels != nil {
+		m.Labels = nil
+		changed++
 	}
 	if src.Annotations != nil {
 		m.Annotations = make(map[string]string)
 		for k0, _ := range src.Annotations {
 			m.Annotations[k0] = src.Annotations[k0]
 		}
+	} else if m.Annotations != nil {
+		m.Annotations = nil
+		changed++
 	}
 	if m.State != src.State {
 		m.State = src.State
@@ -918,6 +930,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(DeleteType(0)):
 		if en, ok := DeleteType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(OptResNames(0)):
+		if en, ok := OptResNames_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(Liveness(0)):

@@ -44,7 +44,7 @@ var apiAddr = flag.String("apiAddr", "127.0.0.1:55001", "API listener address")
 var externalApiAddr = flag.String("externalApiAddr", "", "External API listener address if behind proxy/LB. Defaults to apiAddr")
 var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address")
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
-var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
+var vaultAddr = flag.String("vaultAddr", "", "Vault address; local vault runs at http://127.0.0.1:8200")
 var publicAddr = flag.String("publicAddr", "127.0.0.1", "Public facing address/hostname of controller")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file. Keyfile and CA file must be in same directory")
@@ -100,13 +100,10 @@ func main() {
 }
 
 func validateFields(ctx context.Context) error {
-	if *testMode {
-		return nil
-	}
-	if *versionTag == "" {
-		return fmt.Errorf("Version tag is required")
-	}
 	if *cloudletRegistryPath != "" {
+		if *versionTag == "" {
+			return fmt.Errorf("Version tag is required")
+		}
 		parts := strings.Split(*cloudletRegistryPath, "/")
 		if len(parts) < 2 || !strings.Contains(parts[0], ".") {
 			return fmt.Errorf("Cloudlet registry path should be full registry URL: <domain-name>/<registry-path>")
@@ -169,7 +166,7 @@ func startServices() error {
 	}
 
 	vaultConfig, err = vault.BestConfig(*vaultAddr)
-	if err != nil && !*testMode {
+	if err != nil {
 		return err
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "vault auth", "type", vaultConfig.Auth.Type())
@@ -260,6 +257,7 @@ func startServices() error {
 		grpc.StreamInterceptor(AuditStreamInterceptor))
 	edgeproto.RegisterDeveloperApiServer(server, &developerApi)
 	edgeproto.RegisterAppApiServer(server, &appApi)
+	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
 	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
 	edgeproto.RegisterFlavorApiServer(server, &flavorApi)
 	edgeproto.RegisterClusterInstApiServer(server, &clusterInstApi)
@@ -275,6 +273,7 @@ func startServices() error {
 	edgeproto.RegisterCloudletPoolShowApiServer(server, &cloudletPoolMemberApi)
 	edgeproto.RegisterAlertApiServer(server, &alertApi)
 	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
+
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -306,6 +305,7 @@ func startServices() error {
 			edgeproto.RegisterCloudletPoolShowApiHandler,
 			edgeproto.RegisterAlertApiHandler,
 			edgeproto.RegisterAutoScalePolicyApiHandler,
+			edgeproto.RegisterResTagTableApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -373,7 +373,7 @@ func checkVersion(ctx context.Context, objStore objstore.KVStore) (string, error
 	key := objstore.DbKeyPrefixString("Version")
 	val, _, _, err := objStore.Get(key)
 	if err != nil {
-		if !strings.Contains(err.Error(), objstore.ErrKVStoreKeyNotFound.Error()) {
+		if !strings.Contains(err.Error(), objstore.NotFoundError(key).Error()) {
 			return "", err
 		}
 	}
@@ -413,6 +413,7 @@ func InitApis(sync *Sync) {
 	InitExecApi()
 	InitAlertApi(sync)
 	InitAutoScalePolicyApi(sync)
+	InitResTagTableApi(sync)
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "nohostname"

@@ -34,20 +34,24 @@ tests:
     yaml2: "{{datadir}}/nodes.yml"
     filetype: appdata
 
-- name: Update provisioning to upgrade app
+- name: Update provisioning to App
   apifile: "{{datadir}}/app_update.yml"
-  actions: [ctrlapi-update,ctrlapi-show]
+  actions: [ctrlapi-update]
+
+- name: Refresh provisioning to single AppInst
+  apifile: "{{datadir}}/appinst_refresh.yml"
+  actions: [ctrlapi-refresh,ctrlapi-show]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata_show_after_update.yml"
+    yaml2: "{{datadir}}/appdata_show_after_refresh.yml"
     filetype: appdata
 
-- name: Update provisioning to upgrade all apps
-  apifile: "{{datadir}}/app_update_all.yml"
-  actions: [ctrlapi-update,ctrlapi-show]
+- name: Refresh provisioning to all AppInsts
+  apifile: "{{datadir}}/appinst_refresh_all.yml"
+  actions: [ctrlapi-refresh,ctrlapi-show]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata_show_after_update_all.yml"
+    yaml2: "{{datadir}}/appdata_show_after_refresh_all.yml"
     filetype: appdata
 
 - name: delete provisioning, verify it is empty

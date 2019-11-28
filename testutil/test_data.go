@@ -536,6 +536,20 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Ram:   uint64(4096),
 				Disk:  uint64(40),
 			},
+			// restagtbl/clouldlet resource map tests
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.large-gpu",
+				Vcpus: uint64(8),
+				Ram:   uint64(8192),
+				Disk:  uint64(40),
+			},
+			&edgeproto.FlavorInfo{
+				Name:       "flavor.large",
+				Vcpus:      uint64(10),
+				Ram:        uint64(8192),
+				Disk:       uint64(40),
+				Properties: "vgpu=nvidia-63",
+			},
 		},
 	},
 	edgeproto.CloudletInfo{
@@ -751,6 +765,45 @@ var CloudletPoolMemberData = []edgeproto.CloudletPoolMember{
 	},
 }
 
+var Restblkeys = []edgeproto.ResTagTableKey{
+	edgeproto.ResTagTableKey{
+		Name: "gpu",
+		OperatorKey: edgeproto.OperatorKey{
+			Name: "AT&T Inc.",
+		},
+	},
+	edgeproto.ResTagTableKey{
+		Name: "nas",
+		OperatorKey: edgeproto.OperatorKey{
+			Name: "AT&T Inc.",
+		},
+	},
+	edgeproto.ResTagTableKey{
+		Name: "nic",
+		OperatorKey: edgeproto.OperatorKey{
+			Name: "AT&T Inc.",
+		},
+	},
+}
+
+var ResTagTableData = []edgeproto.ResTagTable{
+
+	edgeproto.ResTagTable{
+		Key:  Restblkeys[0],
+		Tags: []string{"tesla-p4", "foo"},
+	},
+
+	edgeproto.ResTagTable{
+		Key:  Restblkeys[1],
+		Tags: []string{"vcpu", "pci-passthru"},
+	},
+
+	edgeproto.ResTagTable{
+		Key:  Restblkeys[2],
+		Tags: []string{"nvidia-63", "pci-passthru"},
+	},
+}
+
 func GetCloudletUsedRam(indices ...int) uint64 {
 	var ram uint64
 	data := ClusterInstData
@@ -802,7 +855,7 @@ func GetCloudletUsedDisk(indices ...int) uint64 {
 var AlertData = []edgeproto.Alert{
 	edgeproto.Alert{
 		Labels: map[string]string{
-			"alertname": "Scale Cluster Up",
+			"alertname": "AutoScaleUp",
 			"operator":  ClusterInstData[0].Key.CloudletKey.OperatorKey.Name,
 			"cloudlet":  ClusterInstData[0].Key.CloudletKey.Name,
 			"cluster":   ClusterInstData[0].Key.ClusterKey.Name,
@@ -821,7 +874,7 @@ var AlertData = []edgeproto.Alert{
 	},
 	edgeproto.Alert{
 		Labels: map[string]string{
-			"alertname": "Scale Cluster Down",
+			"alertname": "AutoScaleDown",
 			"operator":  ClusterInstData[0].Key.CloudletKey.OperatorKey.Name,
 			"cloudlet":  ClusterInstData[0].Key.CloudletKey.Name,
 			"cluster":   ClusterInstData[0].Key.ClusterKey.Name,
@@ -840,7 +893,7 @@ var AlertData = []edgeproto.Alert{
 	},
 	edgeproto.Alert{
 		Labels: map[string]string{
-			"alertname": "Cluster Offline",
+			"alertname": "AutoScaleUp",
 			"operator":  ClusterInstData[1].Key.CloudletKey.OperatorKey.Name,
 			"cloudlet":  ClusterInstData[1].Key.CloudletKey.Name,
 			"cluster":   ClusterInstData[1].Key.ClusterKey.Name,

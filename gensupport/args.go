@@ -30,6 +30,11 @@ func GenerateMethodArgs(g *generator.Generator, support *PluginSupport, method *
 }
 
 func generateArgs(g *generator.Generator, support *PluginSupport, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto, prefixMessageToAlias bool, count int) {
+	if desc.Options != nil && desc.Options.MapEntry != nil && *desc.Options.MapEntry == true {
+		// descriptor for map entry, skip
+		return
+	}
+
 	message := desc.DescriptorProto
 	msgname := *message.Name
 	if method != nil {

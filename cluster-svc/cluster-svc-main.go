@@ -20,7 +20,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
@@ -119,6 +118,10 @@ type promCustomizations struct {
 // Create app/appInst when clusterInst transitions to a 'ready' state
 func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {
 	var err error
+	// cluster-svc only manages k8s clusters for now
+	if new.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+		return
+	}
 	log.SpanLog(ctx, log.DebugLevelNotify, "cluster update", "cluster", new.Key.ClusterKey.Name,
 		"cloudlet", new.Key.CloudletKey.Name, "state", edgeproto.TrackedState_name[int32(new.State)])
 	// Need to create a connection to server, as passed to us by commands
@@ -131,6 +134,34 @@ func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgepro
 	}
 }
 
+func autoScalePolicyCb(ctx context.Context, old *edgeproto.AutoScalePolicy, new *edgeproto.AutoScalePolicy) {
+	log.SpanLog(ctx, log.DebugLevelNotify, "autoscalepolicy update", "new", new, "old", old)
+	if new == nil || old == nil {
+		// deleted, should have been removed from all clusterinsts already
+		// or new policy, won't be on any clusterinsts yet
+		return
+	}
+	fields := make(map[string]struct{})
+	new.DiffFields(old, fields)
+	if len(fields) == 0 {
+		return
+	}
+	// update all prometheus AppInsts on ClusterInsts using the policy
+	insts := []edgeproto.ClusterInst{}
+	ClusterInstCache.Mux.Lock()
+	for k, v := range ClusterInstCache.Objs {
+		if new.Key.Developer == k.Developer && new.Key.Name == v.AutoScalePolicy {
+			insts = append(insts, *v)
+		}
+	}
+	ClusterInstCache.Mux.Unlock()
+
+	for _, inst := range insts {
+		err := createMEXPromInst(ctx, dialOpts, &inst)
+		log.SpanLog(ctx, log.DebugLevelApi, "Updated policy", "ClusterInst", inst.Key, "AutoScalePolicy", new.Key.Name, "err", err)
+	}
+}
+
 func init() {
 	prometheusT = template.Must(template.New("prometheus").Parse(MEXPrometheusAppHelmTemplate))
 }
@@ -140,12 +171,12 @@ func initNotifyClient(ctx context.Context, addrs string, tlsCertFile string) *no
 	edgeproto.InitAutoScalePolicyCache(&AutoScalePolicyCache)
 	edgeproto.InitClusterInstCache(&ClusterInstCache)
 	ClusterInstCache.SetUpdatedCb(clusterInstCb)
+	AutoScalePolicyCache.SetUpdatedCb(autoScalePolicyCb)
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient
 }
 
-func appInstCreateApi(apiClient edgeproto.AppInstApiClient, appInst edgeproto.AppInst) (*edgeproto.Result, error) {
-	ctx := context.TODO()
+func appInstCreateApi(ctx context.Context, apiClient edgeproto.AppInstApiClient, appInst edgeproto.AppInst) (*edgeproto.Result, error) {
 	stream, err := apiClient.CreateAppInst(ctx, &appInst)
 	var res *edgeproto.Result
 	if err == nil {
@@ -163,9 +194,8 @@ func appInstCreateApi(apiClient edgeproto.AppInstApiClient, appInst edgeproto.Ap
 	return res, err
 }
 
-func appInstUpdateApi(apiClient edgeproto.AppInstApiClient, appInst edgeproto.AppInst) (*edgeproto.Result, error) {
-	ctx := context.TODO()
-	stream, err := apiClient.UpdateAppInst(ctx, &appInst)
+func appInstUpdateApi(ctx context.Context, apiClient edgeproto.AppInstApiClient, appInst *edgeproto.AppInst) (*edgeproto.Result, error) {
+	stream, err := apiClient.UpdateAppInst(ctx, appInst)
 	var res *edgeproto.Result
 	if err == nil {
 		for {
@@ -180,6 +210,47 @@ func appInstUpdateApi(apiClient edgeproto.AppInstApiClient, appInst edgeproto.Ap
 		}
 	}
 	return res, err
+}
+
+func appInstRefreshApi(ctx context.Context, apiClient edgeproto.AppInstApiClient, appInst *edgeproto.AppInst) (*edgeproto.Result, error) {
+	stream, err := apiClient.RefreshAppInst(ctx, appInst)
+	var res *edgeproto.Result
+	if err == nil {
+		for {
+			res, err = stream.Recv()
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			if err != nil {
+				break
+			}
+		}
+	}
+	return res, err
+}
+
+func appInstGetApi(ctx context.Context, apiClient edgeproto.AppInstApiClient, appInst *edgeproto.AppInst) (*edgeproto.AppInst, error) {
+	stream, err := apiClient.ShowAppInst(ctx, appInst)
+	insts := make([]*edgeproto.AppInst, 0)
+	var inst *edgeproto.AppInst
+	if err == nil {
+		for {
+			inst, err = stream.Recv()
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			if err != nil {
+				break
+			}
+			insts = append(insts, inst)
+		}
+	}
+	if len(insts) == 1 {
+		return insts[0], err
+	}
+	return nil, err
 }
 
 // create an appInst as a clustersvc
@@ -214,18 +285,19 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 		appInst.Configs = configs
 	}
 
-	res, err := appInstCreateApi(apiClient, appInst)
+	res, err := appInstCreateApi(ctx, apiClient, appInst)
 	if err != nil {
 		// Handle non-fatal errors
-		if strings.Contains(err.Error(), objstore.ErrKVStoreKeyExists.Error()) {
+		if strings.Contains(err.Error(), appInst.Key.ExistsError().Error()) {
 			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "app", app.String(), "cluster", clusterInst.Key.String())
+			updateExistingAppInst(ctx, apiClient, &appInst)
 			return nil
 		}
 		if strings.Contains(err.Error(), edgeproto.ErrEdgeApiAppNotFound.Error()) {
 			log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist, create it first", "app", app.String())
 			// Create the app
 			if err = createAppCommon(ctx, dialOpts, app); err == nil {
-				if res, err = appInstCreateApi(apiClient, appInst); err == nil {
+				if res, err = appInstCreateApi(ctx, apiClient, appInst); err == nil {
 					log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", appInst.String(), "result", res.String())
 					return nil
 				}
@@ -293,7 +365,7 @@ func createAppCommon(ctx context.Context, dialOpts grpc.DialOption, app *edgepro
 	res, err := apiClient.CreateApp(ctx, app)
 	if err != nil {
 		// Handle non-fatal errors
-		if strings.Contains(err.Error(), objstore.ErrKVStoreKeyExists.Error()) {
+		if strings.Contains(err.Error(), app.Key.ExistsError().Error()) {
 			log.SpanLog(ctx, log.DebugLevelApi, "app already exists", "app", app.String())
 			return nil
 		}
@@ -364,13 +436,53 @@ func updatePrometheusInsts() {
 			},
 			UpdateMultiple: true,
 		}
-		res, err := appInstUpdateApi(apiClient, appInst)
+		res, err := appInstRefreshApi(ctx, apiClient, &appInst)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Unable to update appinst",
 				"appinst", appInst, "error", err.Error())
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "update appinst", "appinst", appInst.String(), "result", res.String())
 	}
+}
+
+// updates existing AppInst if needed
+func updateExistingAppInst(ctx context.Context, apiClient edgeproto.AppInstApiClient, appInst *edgeproto.AppInst) {
+	appRef := edgeproto.AppInst{
+		Key: appInst.Key,
+	}
+	existing, err := appInstGetApi(ctx, apiClient, &appRef)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "update check: failed to show AppInst", "key", appInst.Key, "err", err)
+		return
+	}
+	if existing == nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "update check: AppInst not found", "key", appInst.Key)
+		return
+	}
+	fields := make(map[string]struct{})
+	appInst.DiffFields(existing, fields)
+	hasKey := func(field string) bool {
+		_, found := fields[field]
+		return found
+	}
+	newFields := []string{}
+	if hasKey(edgeproto.AppInstFieldConfigs) ||
+		hasKey(edgeproto.AppInstFieldConfigsKind) ||
+		hasKey(edgeproto.AppInstFieldConfigsConfig) {
+		newFields = append(newFields,
+			edgeproto.AppInstFieldConfigs,
+			edgeproto.AppInstFieldConfigsKind,
+			edgeproto.AppInstFieldConfigsConfig)
+	}
+	if len(newFields) == 0 {
+		log.SpanLog(ctx, log.DebugLevelApi, "update check: no changes")
+		return
+	}
+	// update appinst
+	appInst.Fields = newFields
+	log.SpanLog(ctx, log.DebugLevelApi, "update check: updating AppInst", "key", appInst.Key, "fields", newFields)
+	_, err = appInstUpdateApi(ctx, apiClient, appInst)
+	log.SpanLog(ctx, log.DebugLevelApi, "update check: updated AppInst", "key", appInst.Key, "err", err)
 }
 
 // Check if we are running the correct revision of prometheus app, and if not, upgrade it

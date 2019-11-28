@@ -23,6 +23,7 @@ It is generated from these files:
 	notice.proto
 	operator.proto
 	refs.proto
+	restagtable.proto
 	result.proto
 	version.proto
 
@@ -46,8 +47,11 @@ It has these top-level messages:
 	OpenStackProperties
 	CloudletInfraProperties
 	PlatformConfig
+	CloudletResMap
 	Cloudlet
+	FlavorMatch
 	FlavorInfo
+	OSAZone
 	CloudletInfo
 	CloudletMetrics
 	CloudletPoolKey
@@ -75,6 +79,8 @@ It has these top-level messages:
 	Operator
 	CloudletRefs
 	ClusterRefs
+	ResTagTableKey
+	ResTagTable
 	Result
 */
 package gencmd
@@ -159,7 +165,12 @@ func ShowAlert(c *cli.Command, in *edgeproto.Alert) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowAlert recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAlert recv failed: %s", errstr)
 		}
 		AlertHideTags(obj)
 		objs = append(objs, obj)
@@ -214,19 +225,3 @@ var AlertSpecialArgs = map[string]string{
 	"annotations": "StringToString",
 	"labels":      "StringToString",
 }
-var LabelsEntryRequiredArgs = []string{}
-var LabelsEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var LabelsEntryAliasArgs = []string{}
-var LabelsEntryComments = map[string]string{}
-var LabelsEntrySpecialArgs = map[string]string{}
-var AnnotationsEntryRequiredArgs = []string{}
-var AnnotationsEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var AnnotationsEntryAliasArgs = []string{}
-var AnnotationsEntryComments = map[string]string{}
-var AnnotationsEntrySpecialArgs = map[string]string{}

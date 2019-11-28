@@ -255,25 +255,25 @@ func CleanupDIND() error {
 			log.Printf("done dind clean for: %s out: %s\n", clusterName, out)
 		}
 	}
-	// cleanup nginxL7.
-	pscmd := exec.Command("docker", "ps", "-a", "-q", "--filter", "ancestor=nginx")
+	// cleanup nginx and other docker containers
+	pscmd := exec.Command("docker", "ps", "-a", "-q", "--filter", "label=edge-cloud")
 	output, err = pscmd.Output()
 	if err != nil {
 		log.Printf("Error running docker ps: %v", err)
 		return err
 	}
-	nginxContainers := strings.Split(string(output), "\n")
-	nginxCmds := []string{"kill", "rm"}
-	for _, nginx := range nginxContainers {
-		if nginx == "" {
+	mexContainers := strings.Split(string(output), "\n")
+	cmds := []string{"kill", "rm"}
+	for _, c := range mexContainers {
+		if c == "" {
 			continue
 		}
-		for _, cmd := range nginxCmds {
-			killcmd := exec.Command("docker", cmd, nginx)
+		for _, cmd := range cmds {
+			killcmd := exec.Command("docker", cmd, c)
 			output, err = killcmd.CombinedOutput()
 			if err != nil {
 				// not fatal as it may not have been running
-				log.Printf("Error running command: %s on nginx container: %s - %v - %v\n", cmd, nginx, string(output), err)
+				log.Printf("Error running command: %s on container: %s - %v - %v\n", cmd, c, string(output), err)
 			}
 		}
 	}

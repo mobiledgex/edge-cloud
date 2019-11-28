@@ -173,7 +173,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
-  revision: 2
+  revision: 1
 - key:
     developerkey:
       name: AcmeAppCo
@@ -369,7 +369,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  revision: 2
+  revision: 1
 - key:
     appkey:
       developerkey:
@@ -427,7 +427,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  revision: 2
+  revision: 1
 - key:
     appkey:
       developerkey:

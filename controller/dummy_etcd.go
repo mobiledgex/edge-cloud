@@ -52,7 +52,7 @@ func (e *dummyEtcd) Create(ctx context.Context, key, val string) (int64, error) 
 	}
 	_, ok := e.db[key]
 	if ok {
-		return 0, objstore.ErrKVStoreKeyExists
+		return 0, objstore.ExistsError(key)
 	}
 	e.db[key] = val
 	e.vers[key] = 1
@@ -71,7 +71,7 @@ func (e *dummyEtcd) Update(ctx context.Context, key, val string, version int64) 
 	}
 	_, ok := e.db[key]
 	if !ok {
-		return 0, objstore.ErrKVStoreKeyNotFound
+		return 0, objstore.NotFoundError(key)
 	}
 	ver := e.vers[key]
 	if version != objstore.ObjStoreUpdateVersionAny && ver != version {
@@ -129,7 +129,7 @@ func (e *dummyEtcd) Get(key string, opts ...objstore.KVOp) ([]byte, int64, int64
 	}
 	val, ok := e.db[key]
 	if !ok {
-		return nil, 0, 0, objstore.ErrKVStoreKeyNotFound
+		return nil, 0, 0, objstore.NotFoundError(key)
 	}
 	ver := e.vers[key]
 

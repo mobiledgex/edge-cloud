@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"google.golang.org/grpc"
@@ -109,17 +110,17 @@ func runNodeShow(ctrl *process.Controller, outputDir string, cmp bool) bool {
 }
 
 //based on the api some errors will be converted to no error
-func ignoreExpectedErrors(api string, err error) error {
+func ignoreExpectedErrors(api string, key objstore.ObjKey, err error) error {
 	if err == nil {
 		return err
 	}
 	if api == "delete" {
-		if strings.Contains(err.Error(), "Key not found") {
+		if strings.Contains(err.Error(), key.NotFoundError().Error()) {
 			log.Printf("ignoring error on delete : %v\n", err)
 			return nil
 		}
 	} else if api == "create" {
-		if strings.Contains(err.Error(), "Key already exists") {
+		if strings.Contains(err.Error(), key.ExistsError().Error()) {
 			log.Printf("ignoring error on create : %v\n", err)
 			return nil
 		}
@@ -140,7 +141,7 @@ func runFlavorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto
 		case "delete":
 			_, err = opAPI.DeleteFlavor(ctx, &f)
 		}
-		err = ignoreExpectedErrors(mode, err)
+		err = ignoreExpectedErrors(mode, &f.Key, err)
 		if err != nil {
 			return fmt.Errorf("API %s failed for %v -- err %v", mode, f.Key, err)
 		}
@@ -161,7 +162,7 @@ func runOperatorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepro
 		case "delete":
 			_, err = opAPI.DeleteOperator(ctx, &o)
 		}
-		err = ignoreExpectedErrors(mode, err)
+		err = ignoreExpectedErrors(mode, &o.Key, err)
 		if err != nil {
 			return fmt.Errorf("API %s failed for %v -- err %v", mode, o.Key, err)
 		}
@@ -182,7 +183,7 @@ func runDeveloperApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepr
 		case "delete":
 			_, err = devApi.DeleteDeveloper(ctx, &d)
 		}
-		err = ignoreExpectedErrors(mode, err)
+		err = ignoreExpectedErrors(mode, &d.Key, err)
 		if err != nil {
 			return fmt.Errorf("API %s failed for %v -- err %v", mode, d.Key, err)
 		}
@@ -220,7 +221,7 @@ func runCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepro
 			stream, err = clAPI.DeleteCloudlet(ctx, &c)
 		}
 		err = testutil.CloudletReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, err)
+		err = ignoreExpectedErrors(mode, &c.Key, err)
 		if err != nil {
 			return fmt.Errorf("API %s failed for %v -- err %v", mode, c.Key, err)
 		}
@@ -241,7 +242,7 @@ func runCloudletInfoApi(conn *grpc.ClientConn, ctx context.Context, appdata *edg
 		case "delete":
 			_, err = clAPI.EvictCloudletInfo(ctx, &c)
 		}
-		err = ignoreExpectedErrors(mode, err)
+		err = ignoreExpectedErrors(mode, &c.Key, err)
 		if err != nil {
 			return fmt.Errorf("API %s failed for %v -- err %v", mode, c.Key, err)
 		}
@@ -268,7 +269,7 @@ func runAppApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.Ap
 		case "delete":
 			_, err = appAPI.DeleteApp(ctx, &a)
 		}
-		err = ignoreExpectedErrors(mode, err)
+		err = ignoreExpectedErrors(mode, &a.Key, err)
 		if err != nil {
 			return fmt.Errorf("API %s failed for %v -- err %v", mode, a.Key, err)
 		}
@@ -291,7 +292,7 @@ func runClusterInstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edge
 			stream, err = clusterinAPI.DeleteClusterInst(ctx, &c)
 		}
 		err = testutil.ClusterInstReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, err)
+		err = ignoreExpectedErrors(mode, &c.Key, err)
 		if err != nil {
 			return fmt.Errorf("API %s failed for %v -- err %v", mode, c.Key, err)
 		}
@@ -311,11 +312,13 @@ func runAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeprot
 			stream, err = appinAPI.CreateAppInst(ctx, &a)
 		case "update":
 			stream, err = appinAPI.UpdateAppInst(ctx, &a)
+		case "refresh":
+			stream, err = appinAPI.RefreshAppInst(ctx, &a)
 		case "delete":
 			stream, err = appinAPI.DeleteAppInst(ctx, &a)
 		}
 		err = testutil.AppInstReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, err)
+		err = ignoreExpectedErrors(mode, &a.Key, err)
 		if err != nil {
 			return fmt.Errorf("API %s failed for %v -- err %v", mode, a.Key, err)
 		}
@@ -416,6 +419,8 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				rc = false
 			}
 		case "create":
+			fallthrough
+		case "refresh":
 			fallthrough
 		case "update":
 			err = runFlavorApi(ctrlapi, ctx, &appData, api)
@@ -581,8 +586,9 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		if err != nil {
 			return err
 		}
-		pfConfig.CrmRoleId = roles.CRMRoleID
-		pfConfig.CrmSecretId = roles.CRMSecretID
+		pfConfig.EnvVar = make(map[string]string)
+		pfConfig.EnvVar["VAULT_ROLE_ID"] = roles.CRMRoleID
+		pfConfig.EnvVar["VAULT_SECRET_ID"] = roles.CRMSecretID
 
 		// Defaults
 		pfConfig.PlatformTag = ""

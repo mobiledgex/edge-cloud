@@ -720,6 +720,14 @@ func AppKeyStringParse(str string, key *AppKey) {
 	}
 }
 
+func (m *AppKey) NotFoundError() error {
+	return fmt.Errorf("App key %s not found", m.GetKeyString())
+}
+
+func (m *AppKey) ExistsError() error {
+	return fmt.Errorf("App key %s already exists", m.GetKeyString())
+}
+
 // Helper method to check that enums have valid values
 func (m *AppKey) ValidateEnums() error {
 	if err := m.DeveloperKey.ValidateEnums(); err != nil {
@@ -1035,6 +1043,8 @@ func (m *App) DiffFields(o *App, fields map[string]struct{}) {
 				}
 			}
 		}
+	} else if (m.Configs != nil && o.Configs == nil) || (m.Configs == nil && o.Configs != nil) {
+		fields[AppFieldConfigs] = struct{}{}
 	}
 	if m.ScaleWithCluster != o.ScaleWithCluster {
 		fields[AppFieldScaleWithCluster] = struct{}{}
@@ -1152,24 +1162,30 @@ func (m *App) CopyInFields(src *App) int {
 			changed++
 		}
 	}
-	if _, set := fmap["21"]; set && src.Configs != nil {
-		if m.Configs == nil || len(m.Configs) != len(src.Configs) {
-			m.Configs = make([]*ConfigFile, len(src.Configs))
-		}
-		for i0 := 0; i0 < len(src.Configs); i0++ {
-			m.Configs[i0] = &ConfigFile{}
-			if _, set := fmap["21.1"]; set {
-				if m.Configs[i0].Kind != src.Configs[i0].Kind {
-					m.Configs[i0].Kind = src.Configs[i0].Kind
-					changed++
+	if _, set := fmap["21"]; set {
+		if src.Configs != nil {
+			if m.Configs == nil || len(m.Configs) != len(src.Configs) {
+				m.Configs = make([]*ConfigFile, len(src.Configs))
+				changed++
+			}
+			for i0 := 0; i0 < len(src.Configs); i0++ {
+				m.Configs[i0] = &ConfigFile{}
+				if _, set := fmap["21.1"]; set {
+					if m.Configs[i0].Kind != src.Configs[i0].Kind {
+						m.Configs[i0].Kind = src.Configs[i0].Kind
+						changed++
+					}
+				}
+				if _, set := fmap["21.2"]; set {
+					if m.Configs[i0].Config != src.Configs[i0].Config {
+						m.Configs[i0].Config = src.Configs[i0].Config
+						changed++
+					}
 				}
 			}
-			if _, set := fmap["21.2"]; set {
-				if m.Configs[i0].Config != src.Configs[i0].Config {
-					m.Configs[i0].Config = src.Configs[i0].Config
-					changed++
-				}
-			}
+		} else if m.Configs != nil {
+			m.Configs = nil
+			changed++
 		}
 	}
 	if _, set := fmap["22"]; set {

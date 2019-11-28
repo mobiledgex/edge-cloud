@@ -14,7 +14,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
@@ -127,55 +126,35 @@ func (s *CloudletApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cloud
 	})
 }
 
-func getRolesAndSecrets(appRoles *VaultRoles) error {
-	// Vault controller level credentials are required to access
-	// registry credentials
-	roleId := os.Getenv("VAULT_ROLE_ID")
-	if roleId == "" {
-		return fmt.Errorf("Env variable VAULT_ROLE_ID not set")
+func getCrmEnv(vars map[string]string) {
+	// For Vault approle, CRM will have its own role/secret
+	if val, ok := os.LookupEnv("VAULT_CRM_ROLE_ID"); ok {
+		vars["VAULT_ROLE_ID"] = val
 	}
-	secretId := os.Getenv("VAULT_SECRET_ID")
-	if secretId == "" {
-		return fmt.Errorf("Env variable VAULT_SECRET_ID not set")
+	if val, ok := os.LookupEnv("VAULT_CRM_SECRET_ID"); ok {
+		vars["VAULT_SECRET_ID"] = val
 	}
 
-	// Vault CRM level credentials are required to access
-	// instantiate crmserver
-	crmRoleId := os.Getenv("VAULT_CRM_ROLE_ID")
-	if crmRoleId == "" {
-		return fmt.Errorf("Env variable VAULT_CRM_ROLE_ID not set")
+	for _, key := range []string{
+		"GITHUB_ID",
+		"VAULT_TOKEN",
+	} {
+		if val, ok := os.LookupEnv(key); ok {
+			vars[key] = val
+		}
 	}
-	crmSecretId := os.Getenv("VAULT_CRM_SECRET_ID")
-	if crmSecretId == "" {
-		return fmt.Errorf("Env variable VAULT_CRM_SECRET_ID not set")
-	}
-	appRoles.CtrlRoleID = roleId
-	appRoles.CtrlSecretID = secretId
-	appRoles.CRMRoleID = crmRoleId
-	appRoles.CRMSecretID = crmSecretId
-	//Once we integrate DME add dme roles to the same structure
-	return nil
 }
 
 func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edgeproto.PlatformConfig, error) {
 	pfConfig := edgeproto.PlatformConfig{}
-	appRoles := VaultRoles{}
-	if err := getRolesAndSecrets(&appRoles); err != nil {
-		if !*testMode {
-			return nil, err
-		}
-		log.DebugLog(log.DebugLevelApi, "Warning, Failed to get roleIDs - running locally",
-			"err", err)
-	} else {
-		pfConfig.CrmRoleId = appRoles.CRMRoleID
-		pfConfig.CrmSecretId = appRoles.CRMSecretID
-	}
 	pfConfig.PlatformTag = cloudlet.Version
 	pfConfig.TlsCertFile = *tlsCertFile
 	pfConfig.VaultAddr = *vaultAddr
 	pfConfig.RegistryPath = *cloudletRegistryPath
 	pfConfig.ImagePath = *cloudletVMImagePath
 	pfConfig.TestMode = *testMode
+	pfConfig.EnvVar = make(map[string]string)
+	getCrmEnv(pfConfig.EnvVar)
 	addrObjs := strings.Split(*notifyAddr, ":")
 	if len(addrObjs) != 2 {
 		return nil, fmt.Errorf("unable to fetch notify addr of the controller")
@@ -221,6 +200,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	if in.PhysicalName == "" {
 		in.PhysicalName = in.Key.Name
+		cb.Send(&edgeproto.Result{Message: "Setting physicalname to match cloudlet name"})
 	}
 
 	if in.Version == "" {
@@ -259,7 +239,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
 					cb.Send(&edgeproto.Result{Message: "Use DeleteCloudlet to remove and try again"})
 				}
-				return objstore.ErrKVStoreKeyExists
+				return in.Key.ExistsError()
 			}
 			in.Errors = nil
 		}
@@ -348,7 +328,7 @@ func (s *CloudletApi) UpdateCloudletState(ctx context.Context, key *edgeproto.Cl
 	cloudlet := edgeproto.Cloudlet{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, key, &cloudlet) {
-			return objstore.ErrKVStoreKeyNotFound
+			return key.NotFoundError()
 		}
 		cloudlet.State = newState
 		s.store.STMPut(stm, &cloudlet)
@@ -465,7 +445,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	cloudlet := edgeproto.Cloudlet{}
 	err1 := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, key, &cloudlet) {
-			return objstore.ErrKVStoreKeyNotFound
+			return key.NotFoundError()
 		}
 		if err == nil {
 			cloudlet.Errors = nil
@@ -500,8 +480,8 @@ func getCloudletVersion(key *edgeproto.CloudletKey) (string, error) {
 	return "", fmt.Errorf("Unable to find Cloudlet node")
 }
 
-func isCloudletUpgradeRequired(key *edgeproto.CloudletKey, newVersion string) error {
-	cloudletVersion, err := getCloudletVersion(key)
+func isCloudletUpgradeRequired(cloudlet *edgeproto.Cloudlet) error {
+	cloudletVersion, err := getCloudletVersion(&cloudlet.Key)
 	if err != nil {
 		return fmt.Errorf("unable to fetch cloudlet version: %v", err)
 	}
@@ -520,7 +500,7 @@ func isCloudletUpgradeRequired(key *edgeproto.CloudletKey, newVersion string) er
 		return err
 	}
 
-	new_vers, err := util.VersionParse(newVersion)
+	new_vers, err := util.VersionParse(cloudlet.Version)
 	if err != nil {
 		return err
 	}
@@ -536,7 +516,11 @@ func isCloudletUpgradeRequired(key *edgeproto.CloudletKey, newVersion string) er
 	} else if diff < 0 {
 		return nil
 	} else {
-		return fmt.Errorf("no upgrade required, cloudlet is already of version %s", cloudletVersion)
+		// Allow users to retry upgrade to same version on an update error
+		if cloudlet.State != edgeproto.TrackedState_UPDATE_ERROR {
+			return fmt.Errorf("no upgrade required, cloudlet is already of version %s", cloudletVersion)
+		}
+		return nil
 	}
 }
 
@@ -560,14 +544,27 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return err
 	}
 
+	cur := &edgeproto.Cloudlet{}
+	if !cloudletApi.cache.Get(&in.Key, cur) {
+		return in.Key.NotFoundError()
+	}
+	cur.CopyInFields(in)
+
 	upgrade := false
 	if _, found := fmap[edgeproto.CloudletFieldVersion]; found {
-		err = isCloudletUpgradeRequired(&in.Key, in.Version)
+		err = isCloudletUpgradeRequired(cur)
 		if err != nil {
 			return err
 		}
-		if !*testMode {
-			// TODO: verify if image is available in registry
+		// verify if image is available in registry
+		registry_path := *cloudletRegistryPath + ":" + in.Version
+		err = cloudcommon.ValidateDockerRegistryPath(ctx, registry_path, vaultConfig)
+		if err != nil {
+			if *testMode {
+				log.SpanLog(ctx, log.DebugLevelInfo, "Failed to validate cloudlet registry path", "err", err)
+			} else {
+				return err
+			}
 		}
 		upgrade = true
 	}
@@ -579,16 +576,15 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if in.DeploymentLocal {
 			return fmt.Errorf("upgrade is not supported for local deployments")
 		}
-		err = s.UpgradeCloudlet(ctx, in, cb)
+		err = s.UpgradeCloudlet(ctx, cur, cb)
 		if err != nil {
 			return err
 		}
 	}
 
-	cur := &edgeproto.Cloudlet{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, cur) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		cur.CopyInFields(in)
 		// In case we need to set TrackedState to ready
@@ -645,8 +641,8 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	pfConfig.CleanupMode = true
 	cloudlet := &edgeproto.Cloudlet{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, cloudlet) {
-			return objstore.ErrKVStoreKeyNotFound
+		if !s.store.STMGet(stm, &in.Key, &cloudlet) {
+			return in.Key.NotFoundError()
 		}
 		cloudlet.Config = *pfConfig
 		cloudlet.CopyInFields(in)
@@ -673,9 +669,11 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 }
 
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
-	pfConfig := edgeproto.PlatformConfig{}
-	pfConfig.VaultAddr = *vaultAddr
-	return s.deleteCloudletInternal(DefCallContext(), in, &pfConfig, cb)
+	pfConfig, err := getPlatformConfig(cb.Context(), in)
+	if err != nil {
+		return err
+	}
+	return s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
 }
 
 func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
@@ -695,7 +693,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		if ignoreCRMState(cctx) {
 			// delete happens later, this STM just checks for existence
@@ -750,7 +748,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	updateCloudlet := edgeproto.Cloudlet{}
 	err1 := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &updateCloudlet) {
-			return objstore.ErrKVStoreKeyNotFound
+			return in.Key.NotFoundError()
 		}
 		if err != nil {
 			updateCloudlet.State = edgeproto.TrackedState_DELETE_ERROR
@@ -810,6 +808,81 @@ func (s *CloudletApi) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudlet
 	return err
 }
 
+func (s *CloudletApi) RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error) {
+	var err error
+	cl := edgeproto.Cloudlet{}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return in.Key.NotFoundError()
+		}
+
+		for resource, _ := range in.Mapping {
+			delete(cl.ResTagMap, resource)
+		}
+		s.store.STMPut(stm, &cl)
+		return err
+	})
+	return &edgeproto.Result{}, err
+}
+
+func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error) {
+
+	var err error
+	cl := edgeproto.Cloudlet{}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return in.Key.NotFoundError()
+		} else {
+			if cl.ResTagMap == nil {
+				cl.ResTagMap = make(map[string]*edgeproto.ResTagTableKey)
+			}
+		}
+
+		return err
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+
+	for resource, tblname := range in.Mapping {
+		if valerr, ok := resTagTableApi.ValidateResName(resource); !ok {
+			return &edgeproto.Result{}, valerr
+		}
+		resource = strings.ToLower(resource)
+		var key edgeproto.ResTagTableKey
+		key.Name = tblname
+		key.OperatorKey = in.Key.OperatorKey
+		tbl, err := resTagTableApi.GetResTagTable(ctx, &key)
+
+		if err != nil && err.Error() == key.NotFoundError().Error() {
+			// auto-create empty
+			tbl.Key = key
+			_, err = resTagTableApi.CreateResTagTable(ctx, tbl)
+			if err != nil {
+				return &edgeproto.Result{}, err
+			}
+		}
+		cl.ResTagMap[resource] = &key
+	}
+
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return in.Key.NotFoundError()
+		}
+		for resource, tblname := range in.Mapping {
+			key := edgeproto.ResTagTableKey{
+				Name:        tblname,
+				OperatorKey: in.Key.OperatorKey,
+			}
+			cl.ResTagMap[resource] = &key
+		}
+		s.store.STMPut(stm, &cl)
+		return err
+	})
+
+	return &edgeproto.Result{}, err
+}
+
 func (s *CloudletApi) UpdateAppInstLocations(ctx context.Context, in *edgeproto.Cloudlet) {
 	fmap := edgeproto.MakeFieldMap(in.Fields)
 	if _, found := fmap[edgeproto.CloudletFieldLocation]; !found {
@@ -865,4 +938,46 @@ func (s *CloudletApi) showCloudletsByKeys(keys map[edgeproto.CloudletKey]struct{
 		}
 	}
 	return nil
+}
+
+func (s *CloudletApi) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error) {
+
+	cl := edgeproto.Cloudlet{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return in.Key.NotFoundError()
+		}
+		// ResTagMap may infact be nil, that's ok if OSFlavor.Name is enough to match
+		return nil
+	})
+
+	cli := edgeproto.CloudletInfo{}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cli) {
+			return in.Key.NotFoundError()
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Error retrieving cloudlet info for %s ", in.Key.Name)
+	}
+
+	mexFlavor := edgeproto.Flavor{}
+	mexFlavor.Key.Name = in.FlavorName
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !flavorApi.store.STMGet(stm, &mexFlavor.Key, &mexFlavor) {
+			return in.Key.NotFoundError()
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Error retrieving target flavor")
+	}
+	spec, vmerr := resTagTableApi.GetVMSpec(mexFlavor, cl, cli)
+	if vmerr != nil {
+		return nil, vmerr
+	}
+	in.FlavorName = spec.FlavorName
+	in.AvailabilityZone = spec.AvailabilityZone
+	return in, nil
 }

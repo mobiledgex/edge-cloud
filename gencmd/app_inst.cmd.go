@@ -136,7 +136,12 @@ func CreateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("CreateAppInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateAppInst recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -199,7 +204,12 @@ func DeleteAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("DeleteAppInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteAppInst recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -214,6 +224,74 @@ func DeleteAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	for ii, _ := range data {
 		fmt.Printf("DeleteAppInst %v\n", data[ii])
 		myerr := DeleteAppInst(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var RefreshAppInstCmd = &cli.Command{
+	Use:          "RefreshAppInst",
+	RequiredArgs: strings.Join(RefreshAppInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(RefreshAppInstOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
+	SpecialArgs:  &AppInstSpecialArgs,
+	Comments:     AppInstComments,
+	ReqData:      &edgeproto.AppInst{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRefreshAppInst,
+}
+
+func runRefreshAppInst(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInst)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RefreshAppInst(c, obj)
+}
+
+func RefreshAppInst(c *cli.Command, in *edgeproto.AppInst) error {
+	if AppInstApiCmd == nil {
+		return fmt.Errorf("AppInstApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := AppInstApiCmd.RefreshAppInst(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RefreshAppInst failed: %s", errstr)
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("RefreshAppInst recv failed: %s", errstr)
+		}
+		c.WriteOutput(obj, cli.OutputFormat)
+	}
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RefreshAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RefreshAppInst %v\n", data[ii])
+		myerr := RefreshAppInst(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -263,7 +341,12 @@ func UpdateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("UpdateAppInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateAppInst recv failed: %s", errstr)
 		}
 		c.WriteOutput(obj, cli.OutputFormat)
 	}
@@ -326,7 +409,12 @@ func ShowAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowAppInst recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAppInst recv failed: %s", errstr)
 		}
 		AppInstHideTags(obj)
 		objs = append(objs, obj)
@@ -356,6 +444,7 @@ func ShowAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 var AppInstApiCmds = []*cobra.Command{
 	CreateAppInstCmd.GenCmd(),
 	DeleteAppInstCmd.GenCmd(),
+	RefreshAppInstCmd.GenCmd(),
 	UpdateAppInstCmd.GenCmd(),
 	ShowAppInstCmd.GenCmd(),
 }
@@ -403,7 +492,12 @@ func ShowAppInstInfo(c *cli.Command, in *edgeproto.AppInstInfo) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowAppInstInfo recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAppInstInfo recv failed: %s", errstr)
 		}
 		AppInstInfoHideTags(obj)
 		objs = append(objs, obj)
@@ -477,7 +571,12 @@ func ShowAppInstMetrics(c *cli.Command, in *edgeproto.AppInstMetrics) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowAppInstMetrics recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAppInstMetrics recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}
@@ -671,12 +770,12 @@ var CreateAppInstOptionalArgs = []string{
 	"configs.kind",
 	"configs.config",
 }
-var UpdateAppInstRequiredArgs = []string{
+var RefreshAppInstRequiredArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
 }
-var UpdateAppInstOptionalArgs = []string{
+var RefreshAppInstOptionalArgs = []string{
 	"cluster",
 	"operator",
 	"cloudlet",
@@ -684,6 +783,19 @@ var UpdateAppInstOptionalArgs = []string{
 	"crmoverride",
 	"forceupdate",
 	"updatemultiple",
+}
+var UpdateAppInstRequiredArgs = []string{
+	"developer",
+	"appname",
+	"appvers",
+	"cluster",
+	"operator",
+	"cloudlet",
+}
+var UpdateAppInstOptionalArgs = []string{
+	"clusterdeveloper",
+	"crmoverride",
+	"forceupdate",
 	"configs.kind",
 	"configs.config",
 }

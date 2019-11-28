@@ -66,7 +66,12 @@ func ShowCloudletRefs(c *cli.Command, in *edgeproto.CloudletRefs) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowCloudletRefs recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudletRefs recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}
@@ -139,7 +144,12 @@ func ShowClusterRefs(c *cli.Command, in *edgeproto.ClusterRefs) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ShowClusterRefs recv failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowClusterRefs recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}
@@ -182,6 +192,8 @@ var CloudletRefsOptionalArgs = []string{
 	"rootlbports.value",
 	"useddynamicips",
 	"usedstaticips",
+	"optresusedmap.key",
+	"optresusedmap.value",
 }
 var CloudletRefsAliasArgs = []string{}
 var CloudletRefsComments = map[string]string{
@@ -195,14 +207,6 @@ var CloudletRefsComments = map[string]string{
 	"usedstaticips":        "Used static IPs",
 }
 var CloudletRefsSpecialArgs = map[string]string{}
-var RootLbPortsEntryRequiredArgs = []string{}
-var RootLbPortsEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var RootLbPortsEntryAliasArgs = []string{}
-var RootLbPortsEntryComments = map[string]string{}
-var RootLbPortsEntrySpecialArgs = map[string]string{}
 var ClusterRefsRequiredArgs = []string{
 	"key.clusterkey.name",
 	"key.cloudletkey.operatorkey.name",
