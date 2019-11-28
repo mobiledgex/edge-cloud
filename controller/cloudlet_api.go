@@ -641,7 +641,7 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	pfConfig.CleanupMode = true
 	cloudlet := &edgeproto.Cloudlet{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, &cloudlet) {
+		if !s.store.STMGet(stm, &in.Key, cloudlet) {
 			return in.Key.NotFoundError()
 		}
 		cloudlet.Config = *pfConfig
