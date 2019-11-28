@@ -806,6 +806,9 @@ func (m *CloudletPool) CopyInFields(src *CloudletPool) int {
 	return changed
 }
 
+func (m *CloudletPool) SetUpdateFields() {
+}
+
 func (s *CloudletPool) HasFields() bool {
 	return true
 }

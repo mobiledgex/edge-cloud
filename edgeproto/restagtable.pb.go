@@ -723,6 +723,15 @@ func (m *ResTagTable) CopyInFields(src *ResTagTable) int {
 	return changed
 }
 
+func (m *ResTagTable) SetUpdateFields() {
+	if m.Tags != nil {
+		m.Fields = append(m.Fields, ResTagTableFieldTags)
+	}
+	if m.Azone != "" {
+		m.Fields = append(m.Fields, ResTagTableFieldAzone)
+	}
+}
+
 func (s *ResTagTable) HasFields() bool {
 	return true
 }

@@ -1985,6 +1985,53 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 	return changed
 }
 
+func (m *AppInst) SetUpdateFields() {
+	if m.CloudletLoc.Latitude != 0 {
+		m.Fields = append(m.Fields, AppInstFieldCloudletLocLatitude)
+	}
+	if m.CloudletLoc.Longitude != 0 {
+		m.Fields = append(m.Fields, AppInstFieldCloudletLocLongitude)
+	}
+	if m.CloudletLoc.HorizontalAccuracy != 0 {
+		m.Fields = append(m.Fields, AppInstFieldCloudletLocHorizontalAccuracy)
+	}
+	if m.CloudletLoc.VerticalAccuracy != 0 {
+		m.Fields = append(m.Fields, AppInstFieldCloudletLocVerticalAccuracy)
+	}
+	if m.CloudletLoc.Altitude != 0 {
+		m.Fields = append(m.Fields, AppInstFieldCloudletLocAltitude)
+	}
+	if m.CloudletLoc.Course != 0 {
+		m.Fields = append(m.Fields, AppInstFieldCloudletLocCourse)
+	}
+	if m.CloudletLoc.Speed != 0 {
+		m.Fields = append(m.Fields, AppInstFieldCloudletLocSpeed)
+	}
+	if m.CloudletLoc.Timestamp != nil {
+		if m.CloudletLoc.Timestamp.Seconds != 0 {
+			m.Fields = append(m.Fields, AppInstFieldCloudletLocTimestampSeconds)
+		}
+		if m.CloudletLoc.Timestamp.Nanos != 0 {
+			m.Fields = append(m.Fields, AppInstFieldCloudletLocTimestampNanos)
+		}
+	}
+	if m.CrmOverride != 0 {
+		m.Fields = append(m.Fields, AppInstFieldCrmOverride)
+	}
+	if m.Revision != 0 {
+		m.Fields = append(m.Fields, AppInstFieldRevision)
+	}
+	if m.ForceUpdate != false {
+		m.Fields = append(m.Fields, AppInstFieldForceUpdate)
+	}
+	if m.UpdateMultiple != false {
+		m.Fields = append(m.Fields, AppInstFieldUpdateMultiple)
+	}
+	if m.Configs != nil {
+		m.Fields = append(m.Fields, AppInstFieldConfigs)
+	}
+}
+
 func (s *AppInst) HasFields() bool {
 	return true
 }
@@ -2908,6 +2955,18 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) int {
 		}
 	}
 	return changed
+}
+
+func (m *AppInstInfo) SetUpdateFields() {
+	if m.NotifyId != 0 {
+		m.Fields = append(m.Fields, AppInstInfoFieldNotifyId)
+	}
+	if m.State != 0 {
+		m.Fields = append(m.Fields, AppInstInfoFieldState)
+	}
+	if m.Errors != nil {
+		m.Fields = append(m.Fields, AppInstInfoFieldErrors)
+	}
 }
 
 func (s *AppInstInfo) HasFields() bool {

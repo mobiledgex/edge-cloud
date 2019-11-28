@@ -686,6 +686,21 @@ func (m *Flavor) CopyInFields(src *Flavor) int {
 	return changed
 }
 
+func (m *Flavor) SetUpdateFields() {
+	if m.Ram != 0 {
+		m.Fields = append(m.Fields, FlavorFieldRam)
+	}
+	if m.Vcpus != 0 {
+		m.Fields = append(m.Fields, FlavorFieldVcpus)
+	}
+	if m.Disk != 0 {
+		m.Fields = append(m.Fields, FlavorFieldDisk)
+	}
+	if m.OptResMap != nil {
+		m.Fields = append(m.Fields, FlavorFieldOptResMap)
+	}
+}
+
 func (s *Flavor) HasFields() bool {
 	return true
 }

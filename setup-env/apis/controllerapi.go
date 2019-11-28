@@ -137,6 +137,7 @@ func runFlavorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto
 		case "create":
 			_, err = opAPI.CreateFlavor(ctx, &f)
 		case "update":
+			f.SetUpdateFields()
 			_, err = opAPI.UpdateFlavor(ctx, &f)
 		case "delete":
 			_, err = opAPI.DeleteFlavor(ctx, &f)
@@ -201,21 +202,7 @@ func runCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepro
 		case "create":
 			stream, err = clAPI.CreateCloudlet(ctx, &c)
 		case "update":
-			if c.Location.Latitude != 0 {
-				c.Fields = append(c.Fields, edgeproto.CloudletFieldLocationLatitude)
-			}
-			if c.Location.Longitude != 0 {
-				c.Fields = append(c.Fields, edgeproto.CloudletFieldLocationLongitude)
-			}
-			if c.NumDynamicIps > 0 {
-				c.Fields = append(c.Fields, edgeproto.CloudletFieldNumDynamicIps)
-			}
-			if c.Version != "" {
-				c.Fields = append(c.Fields, edgeproto.CloudletFieldVersion)
-			}
-			if c.NotifySrvAddr != "" {
-				c.Fields = append(c.Fields, edgeproto.CloudletFieldNotifySrvAddr)
-			}
+			c.SetUpdateFields()
 			stream, err = clAPI.UpdateCloudlet(ctx, &c)
 		case "delete":
 			stream, err = clAPI.DeleteCloudlet(ctx, &c)
@@ -259,12 +246,7 @@ func runAppApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.Ap
 		case "create":
 			_, err = appAPI.CreateApp(ctx, &a)
 		case "update":
-			if a.ImagePath != "" {
-				a.Fields = append(a.Fields, edgeproto.AppFieldImagePath)
-			}
-			if a.DeploymentManifest != "" {
-				a.Fields = append(a.Fields, edgeproto.AppFieldDeploymentManifest)
-			}
+			a.SetUpdateFields()
 			_, err = appAPI.UpdateApp(ctx, &a)
 		case "delete":
 			_, err = appAPI.DeleteApp(ctx, &a)
@@ -287,6 +269,7 @@ func runClusterInstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edge
 		case "create":
 			stream, err = clusterinAPI.CreateClusterInst(ctx, &c)
 		case "update":
+			c.SetUpdateFields()
 			stream, err = clusterinAPI.UpdateClusterInst(ctx, &c)
 		case "delete":
 			stream, err = clusterinAPI.DeleteClusterInst(ctx, &c)
@@ -311,6 +294,7 @@ func runAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeprot
 		case "create":
 			stream, err = appinAPI.CreateAppInst(ctx, &a)
 		case "update":
+			a.SetUpdateFields()
 			stream, err = appinAPI.UpdateAppInst(ctx, &a)
 		case "refresh":
 			stream, err = appinAPI.RefreshAppInst(ctx, &a)

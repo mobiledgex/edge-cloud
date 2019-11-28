@@ -466,6 +466,9 @@ func (m *Developer) CopyInFields(src *Developer) int {
 	return changed
 }
 
+func (m *Developer) SetUpdateFields() {
+}
+
 func (s *Developer) HasFields() bool {
 	return true
 }
