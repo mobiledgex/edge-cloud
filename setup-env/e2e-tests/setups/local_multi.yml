@@ -50,6 +50,7 @@ controllers:
   hostname: "127.0.0.1"
   registryfqdn: "docker.mobiledgex.net"
   testmode: true
+  versiontag: "2019-10-24"
 
 - name: ctrl2
   etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
@@ -63,6 +64,7 @@ controllers:
   hostname: "127.0.0.1"
   registryfqdn: "docker.mobiledgex.net"
   testmode: true
+  versiontag: "2019-10-24"
 
 clustersvcs:
 - name: cluster-svc1

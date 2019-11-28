@@ -130,6 +130,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	if p.TestMode {
 		args = append(args, "-testMode")
 	}
+	if p.VersionTag != "" {
+		args = append(args, "--versionTag")
+		args = append(args, p.VersionTag)
+	}
 
 	var envs []string
 	if options.RolesFile != "" {

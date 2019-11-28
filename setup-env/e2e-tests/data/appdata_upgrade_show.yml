@@ -89,7 +89,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-1
-  version: 2020-10-10
+  version: 2020-10-10 
 - key:
     operatorkey:
       name: tmus
@@ -103,7 +103,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-2
-  version: 2020-10-10
+  version: 2020-10-10 
 - key:
     operatorkey:
       name: tmus
@@ -153,7 +153,7 @@ apps:
       name: AcmeAppCo
     name: someapplication1
     version: "1.0"
-  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:2.0
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
   officialfqdn: someapplication1.acmeappco.com
@@ -173,7 +173,6 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
-  revision: 2
 - key:
     developerkey:
       name: AcmeAppCo
@@ -369,7 +368,6 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  revision: 2
 - key:
     appkey:
       developerkey:
@@ -427,7 +425,6 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  revision: 2
 - key:
     appkey:
       developerkey:

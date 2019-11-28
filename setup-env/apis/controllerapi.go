@@ -200,9 +200,21 @@ func runCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepro
 		case "create":
 			stream, err = clAPI.CreateCloudlet(ctx, &c)
 		case "update":
-			c.Fields = append(c.Fields, edgeproto.CloudletFieldLocationLatitude)
-			c.Fields = append(c.Fields, edgeproto.CloudletFieldLocationLongitude)
-			c.Fields = append(c.Fields, edgeproto.CloudletFieldNumDynamicIps)
+			if c.Location.Latitude != 0 {
+				c.Fields = append(c.Fields, edgeproto.CloudletFieldLocationLatitude)
+			}
+			if c.Location.Longitude != 0 {
+				c.Fields = append(c.Fields, edgeproto.CloudletFieldLocationLongitude)
+			}
+			if c.NumDynamicIps > 0 {
+				c.Fields = append(c.Fields, edgeproto.CloudletFieldNumDynamicIps)
+			}
+			if c.Version != "" {
+				c.Fields = append(c.Fields, edgeproto.CloudletFieldVersion)
+			}
+			if c.NotifySrvAddr != "" {
+				c.Fields = append(c.Fields, edgeproto.CloudletFieldNotifySrvAddr)
+			}
 			stream, err = clAPI.UpdateCloudlet(ctx, &c)
 		case "delete":
 			stream, err = clAPI.DeleteCloudlet(ctx, &c)

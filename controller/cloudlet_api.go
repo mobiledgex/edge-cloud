@@ -643,16 +643,16 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	}
 	// cleanup old crms post upgrade
 	pfConfig.CleanupMode = true
-	cloudlet := edgeproto.Cloudlet{}
+	cloudlet := &edgeproto.Cloudlet{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, &cloudlet) {
+		if !s.store.STMGet(stm, &in.Key, cloudlet) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
 		cloudlet.Config = *pfConfig
-		cloudlet.Version = in.Version
+		cloudlet.CopyInFields(in)
 		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 
-		s.store.STMPut(stm, &cloudlet)
+		s.store.STMPut(stm, cloudlet)
 		return nil
 	})
 	if err != nil {
