@@ -576,7 +576,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if in.DeploymentLocal {
 			return fmt.Errorf("upgrade is not supported for local deployments")
 		}
-		err = s.UpgradeCloudlet(ctx, cur, cb)
+		err = s.UpgradeCloudlet(ctx, in, cb)
 		if err != nil {
 			return err
 		}
@@ -644,8 +644,8 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 		if !s.store.STMGet(stm, &in.Key, cloudlet) {
 			return in.Key.NotFoundError()
 		}
-		cloudlet.Config = *pfConfig
 		cloudlet.CopyInFields(in)
+		cloudlet.Config = *pfConfig
 		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 
 		s.store.STMPut(stm, cloudlet)
