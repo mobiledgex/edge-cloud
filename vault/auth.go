@@ -2,7 +2,6 @@ package vault
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 
 	"github.com/hashicorp/vault/api"
@@ -16,15 +15,21 @@ type Auth interface {
 }
 
 // BestAuth determines the best auth to use based on the environment.
-func BestAuth() (Auth, error) {
-	roleID := os.Getenv("VAULT_ROLE_ID")
-	secretID := os.Getenv("VAULT_SECRET_ID")
+func BestAuth(ops ...BestOp) (Auth, error) {
+	opts := ApplyOps(ops...)
+
+	roleID := opts.env.Getenv("VAULT_ROLE_ID")
+	secretID := opts.env.Getenv("VAULT_SECRET_ID")
 	if roleID != "" && secretID != "" {
 		return NewAppRoleAuth(roleID, secretID), nil
 	}
-	githubID := os.Getenv("GITHUB_ID")
+	githubID := opts.env.Getenv("GITHUB_ID")
 	if runtime.GOOS == "darwin" && githubID != "" {
 		return NewGithubAuth(githubID), nil
 	}
-	return nil, fmt.Errorf("No appropriate auth found, please set either VAULT_ROLE_ID and VAULT_SECRET_ID for approle auth, or GITHUB_ID for github token auth.")
+	token := opts.env.Getenv("VAULT_TOKEN")
+	if token != "" {
+		return NewTokenAuth(token), nil
+	}
+	return nil, fmt.Errorf("No appropriate Vault auth found, please set VAULT_ROLE_ID and VAULT_SECRET_ID for approle auth, GITHUB_ID for github token auth, or VAULT_TOKEN for token auth.")
 }
