@@ -167,8 +167,7 @@ func (s *CloudletInfoApi) checkCloudletReady(key *edgeproto.CloudletKey) error {
 	// For testing, state is Errors due to openstack limits not found.
 	// Errors state does indicate it is online, so consider it ok.
 	state := s.getCloudletState(key)
-	if state == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
-		state == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
+	if state == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 		return nil
 	}
 	return fmt.Errorf("Cloudlet %v not ready, state is %s", key,
