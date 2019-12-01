@@ -52,6 +52,7 @@
 		FlavorMatch
 		FlavorInfo
 		OSAZone
+		OSImage
 		CloudletInfo
 		CloudletMetrics
 		CloudletPoolKey
