@@ -130,6 +130,8 @@ message PlatformConfig {
   string span = 10;
   // Internal cleanup flag
   bool cleanup_mode = 11;
+  // Region
+  string region = 12;
 }
 
 // PlatformType is the supported list of cloudlet types
@@ -160,14 +162,19 @@ message CloudletResMap {
   option (protogen.also_required) = "Mapping";
 }
 
+message CloudletAccess {
+  // Variables required to access cloudlet
+  string vars = 1;
+  // Optional CA Cert for HTTPs based verifications
+  string ca_cert = 2;
+}
+
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator. 
 message Cloudlet {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Unique identifier key
   CloudletKey key = 2 [(gogoproto.nullable) = false];
-  // Placeholder for cloudlet access credentials, i.e. openstack keys, passwords, etc
-  string access_credentials = 4 [(protogen.test_update) = true];
   // Location of the Cloudlet site
   distributed_match_engine.Loc location = 5 [(gogoproto.nullable) = false];
   // Type of IP support provided by Cloudlet (see IpSupport)
@@ -195,7 +202,7 @@ message Cloudlet {
   // Min system resource requirements for platform
   FlavorKey flavor = 17 [(gogoproto.nullable) = false];
   // Physical infrastructure cloudlet name
-  string physical_name = 18;
+  string physical_name = 18 [(protogen.backend) = true];
   // Single Key-Value pair of env var to be passed to CRM
   map<string, string> env_var = 19;
   // Cloudlet version 
@@ -204,6 +211,8 @@ message Cloudlet {
   PlatformConfig config = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Optional resource to restagtbl key map key values = [gpu, nas, nic]
   map<string, edgeproto.ResTagTableKey> res_tag_map = 22 [(protogen.backend) = true];
+  // Details required to access cloudlet
+  CloudletAccess access_info = 23;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

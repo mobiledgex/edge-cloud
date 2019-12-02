@@ -48,6 +48,7 @@
 		CloudletInfraProperties
 		PlatformConfig
 		CloudletResMap
+		CloudletAccess
 		Cloudlet
 		FlavorMatch
 		FlavorInfo

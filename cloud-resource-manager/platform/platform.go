@@ -12,6 +12,7 @@ type PlatformConfig struct {
 	CloudletKey  *edgeproto.CloudletKey
 	PhysicalName string
 	VaultAddr    string
+	Region       string
 	TestMode     bool
 }
 
