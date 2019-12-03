@@ -13,6 +13,7 @@ type VMCreationSpec struct {
 	FlavorName         string
 	ExternalVolumeSize uint64
 	AvailabilityZone   string
+	ImageName          string
 }
 
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any

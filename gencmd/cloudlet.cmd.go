@@ -880,14 +880,6 @@ var OpenStackPropertiesComments = map[string]string{
 var OpenStackPropertiesSpecialArgs = map[string]string{
 	"openrcvars": "StringToString",
 }
-var OpenRcVarsEntryRequiredArgs = []string{}
-var OpenRcVarsEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var OpenRcVarsEntryAliasArgs = []string{}
-var OpenRcVarsEntryComments = map[string]string{}
-var OpenRcVarsEntrySpecialArgs = map[string]string{}
 var CloudletInfraPropertiesRequiredArgs = []string{}
 var CloudletInfraPropertiesOptionalArgs = []string{
 	"cloudletkind",
@@ -934,8 +926,7 @@ var PlatformConfigOptionalArgs = []string{
 	"notifyctrladdrs",
 	"vaultaddr",
 	"tlscertfile",
-	"crmroleid",
-	"crmsecretid",
+	"envvar",
 	"platformtag",
 	"testmode",
 	"span",
@@ -948,14 +939,15 @@ var PlatformConfigComments = map[string]string{
 	"notifyctrladdrs": "Address of controller notify port (can be multiple of these)",
 	"vaultaddr":       "Vault address",
 	"tlscertfile":     "TLS cert file",
-	"crmroleid":       "Vault role ID for CRM",
-	"crmsecretid":     "Vault secret ID for CRM",
+	"envvar":          "Environment variables",
 	"platformtag":     "Tag of edge-cloud image",
 	"testmode":        "Internal Test flag",
 	"span":            "Span string",
 	"cleanupmode":     "Internal cleanup flag",
 }
-var PlatformConfigSpecialArgs = map[string]string{}
+var PlatformConfigSpecialArgs = map[string]string{
+	"envvar": "StringToString",
+}
 var CloudletResMapRequiredArgs = []string{
 	"operator",
 	"name",
@@ -974,14 +966,6 @@ var CloudletResMapComments = map[string]string{
 var CloudletResMapSpecialArgs = map[string]string{
 	"mapping": "StringToString",
 }
-var MappingEntryRequiredArgs = []string{}
-var MappingEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var MappingEntryAliasArgs = []string{}
-var MappingEntryComments = map[string]string{}
-var MappingEntrySpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
 	"operator",
 	"name",
@@ -1048,8 +1032,7 @@ var CloudletComments = map[string]string{
 	"config.notifyctrladdrs":              "Address of controller notify port (can be multiple of these)",
 	"config.vaultaddr":                    "Vault address",
 	"config.tlscertfile":                  "TLS cert file",
-	"config.crmroleid":                    "Vault role ID for CRM",
-	"config.crmsecretid":                  "Vault secret ID for CRM",
+	"config.envvar":                       "Environment variables",
 	"config.platformtag":                  "Tag of edge-cloud image",
 	"config.testmode":                     "Internal Test flag",
 	"config.span":                         "Span string",
@@ -1058,29 +1041,10 @@ var CloudletComments = map[string]string{
 	"restagmap.value.operatorkey.name":    "Company or Organization name of the operator",
 }
 var CloudletSpecialArgs = map[string]string{
-	"envvar": "StringToString",
-	"errors": "StringArray",
+	"config.envvar": "StringToString",
+	"envvar":        "StringToString",
+	"errors":        "StringArray",
 }
-var EnvVarEntryRequiredArgs = []string{}
-var EnvVarEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var EnvVarEntryAliasArgs = []string{}
-var EnvVarEntryComments = map[string]string{}
-var EnvVarEntrySpecialArgs = map[string]string{}
-var ResTagMapEntryRequiredArgs = []string{}
-var ResTagMapEntryOptionalArgs = []string{
-	"key",
-	"value.name",
-	"value.operatorkey.name",
-}
-var ResTagMapEntryAliasArgs = []string{}
-var ResTagMapEntryComments = map[string]string{
-	"value.name":             "Resource Table Name",
-	"value.operatorkey.name": "Company or Organization name of the operator",
-}
-var ResTagMapEntrySpecialArgs = map[string]string{}
 var FlavorMatchRequiredArgs = []string{
 	"operator",
 	"cloudlet",
@@ -1124,6 +1088,21 @@ var OSAZoneOptionalArgs = []string{
 var OSAZoneAliasArgs = []string{}
 var OSAZoneComments = map[string]string{}
 var OSAZoneSpecialArgs = map[string]string{}
+var OSImageRequiredArgs = []string{}
+var OSImageOptionalArgs = []string{
+	"name",
+	"tags",
+	"properties",
+	"diskformat",
+}
+var OSImageAliasArgs = []string{}
+var OSImageComments = map[string]string{
+	"name":       "image name",
+	"tags":       "optional tags present on image",
+	"properties": "image properties/metadata",
+	"diskformat": "format qcow2, img, etc",
+}
+var OSImageSpecialArgs = map[string]string{}
 var CloudletInfoRequiredArgs = []string{
 	"operator",
 	"name",
@@ -1148,27 +1127,35 @@ var CloudletInfoOptionalArgs = []string{
 	"version",
 	"availabilityzones.name",
 	"availabilityzones.status",
+	"osimages.name",
+	"osimages.tags",
+	"osimages.properties",
+	"osimages.diskformat",
 }
 var CloudletInfoAliasArgs = []string{
 	"operator=key.operatorkey.name",
 	"name=key.name",
 }
 var CloudletInfoComments = map[string]string{
-	"operator":           "Company or Organization name of the operator",
-	"name":               "Name of the cloudlet",
-	"state":              "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
-	"notifyid":           "Id of client assigned by server (internal use only)",
-	"controller":         "Connected controller unique id",
-	"osmaxram":           "Maximum Ram in MB on the Cloudlet",
-	"osmaxvcores":        "Maximum number of VCPU cores on the Cloudlet",
-	"osmaxvolgb":         "Maximum amount of disk in GB on the Cloudlet",
-	"errors":             "Any errors encountered while making changes to the Cloudlet",
-	"flavors.name":       "Name of the flavor on the Cloudlet",
-	"flavors.vcpus":      "Number of VCPU cores on the Cloudlet",
-	"flavors.ram":        "Ram in MB on the Cloudlet",
-	"flavors.disk":       "Amount of disk in GB on the Cloudlet",
-	"flavors.properties": "OS Flavor Properties, if any",
-	"version":            "Cloudlet version",
+	"operator":            "Company or Organization name of the operator",
+	"name":                "Name of the cloudlet",
+	"state":               "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
+	"notifyid":            "Id of client assigned by server (internal use only)",
+	"controller":          "Connected controller unique id",
+	"osmaxram":            "Maximum Ram in MB on the Cloudlet",
+	"osmaxvcores":         "Maximum number of VCPU cores on the Cloudlet",
+	"osmaxvolgb":          "Maximum amount of disk in GB on the Cloudlet",
+	"errors":              "Any errors encountered while making changes to the Cloudlet",
+	"flavors.name":        "Name of the flavor on the Cloudlet",
+	"flavors.vcpus":       "Number of VCPU cores on the Cloudlet",
+	"flavors.ram":         "Ram in MB on the Cloudlet",
+	"flavors.disk":        "Amount of disk in GB on the Cloudlet",
+	"flavors.properties":  "OS Flavor Properties, if any",
+	"version":             "Cloudlet version",
+	"osimages.name":       "image name",
+	"osimages.tags":       "optional tags present on image",
+	"osimages.properties": "image properties/metadata",
+	"osimages.diskformat": "format qcow2, img, etc",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors": "StringArray",

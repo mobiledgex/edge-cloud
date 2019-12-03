@@ -7,6 +7,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
+	"github.com/mobiledgex/edge-cloud/vault"
 )
 
 func TestAlertApi(t *testing.T) {
@@ -40,4 +41,5 @@ func testinit() {
 	testMode = &tMode
 	dockerRegistry := "docker.mobiledgex.net"
 	registryFQDN = &dockerRegistry
+	vaultConfig, _ = vault.BestConfig("")
 }

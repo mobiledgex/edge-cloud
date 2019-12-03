@@ -207,22 +207,6 @@ var CloudletRefsComments = map[string]string{
 	"usedstaticips":        "Used static IPs",
 }
 var CloudletRefsSpecialArgs = map[string]string{}
-var RootLbPortsEntryRequiredArgs = []string{}
-var RootLbPortsEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var RootLbPortsEntryAliasArgs = []string{}
-var RootLbPortsEntryComments = map[string]string{}
-var RootLbPortsEntrySpecialArgs = map[string]string{}
-var OptResUsedMapEntryRequiredArgs = []string{}
-var OptResUsedMapEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var OptResUsedMapEntryAliasArgs = []string{}
-var OptResUsedMapEntryComments = map[string]string{}
-var OptResUsedMapEntrySpecialArgs = map[string]string{}
 var ClusterRefsRequiredArgs = []string{
 	"key.clusterkey.name",
 	"key.cloudletkey.operatorkey.name",
