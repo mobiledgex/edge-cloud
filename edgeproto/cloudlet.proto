@@ -327,6 +327,17 @@ message OSAZone {
   string status = 2;
 }
 
+message OSImage {
+  // image name
+  string name = 1;
+  // optional tags present on image
+  string tags = 2;
+  // image properties/metadata
+  string properties = 3;
+  // format qcow2, img, etc
+  string disk_format = 4;
+}
+
 // CloudletInfo provides information from the Cloudlet Resource Manager about the state of the Cloudlet.
 message CloudletInfo {
   // Fields are used for the Update API to specify which fields to apply
@@ -355,6 +366,8 @@ message CloudletInfo {
   string version = 12;
   // Availability Zones if any
   repeated OSAZone availability_zones = 13;
+  // Local Images availble to cloudlet
+  repeated OSImage os_images = 14;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
