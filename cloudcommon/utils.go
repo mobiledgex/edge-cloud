@@ -66,21 +66,3 @@ func GetAvailablePort(ipaddr string) (string, error) {
 
 	return fmt.Sprintf("%s:%d", ipobj[0], port), nil
 }
-
-func MapParse(vars string) (map[string]string, error) {
-	out := strings.Split(vars, "\n")
-	if len(out) <= 1 {
-		return nil, fmt.Errorf("invalid vars: %v", out)
-	}
-	varsmap := make(map[string]string)
-	for _, v := range out {
-		out1 := strings.Split(v, "=")
-		if len(out1) != 2 {
-			return nil, fmt.Errorf("invalid separator for key-value pair: %v", out1)
-		}
-		key := strings.TrimSpace(out1[0])
-		value := strings.TrimSpace(out1[1])
-		varsmap[key] = value
-	}
-	return varsmap, nil
-}

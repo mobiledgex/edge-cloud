@@ -48,7 +48,6 @@ It has these top-level messages:
 	CloudletInfraProperties
 	PlatformConfig
 	CloudletResMap
-	CloudletAccess
 	Cloudlet
 	FlavorMatch
 	FlavorInfo

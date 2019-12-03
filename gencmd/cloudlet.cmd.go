@@ -968,17 +968,6 @@ var CloudletResMapComments = map[string]string{
 var CloudletResMapSpecialArgs = map[string]string{
 	"mapping": "StringToString",
 }
-var CloudletAccessRequiredArgs = []string{}
-var CloudletAccessOptionalArgs = []string{
-	"vars",
-	"cacert",
-}
-var CloudletAccessAliasArgs = []string{}
-var CloudletAccessComments = map[string]string{
-	"vars":   "Variables required to access cloudlet",
-	"cacert": "Optional CA Cert for HTTPs based verifications",
-}
-var CloudletAccessSpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
 	"operator",
 	"name",
@@ -1004,8 +993,7 @@ var CloudletOptionalArgs = []string{
 	"restagmap.key",
 	"restagmap.value.name",
 	"restagmap.value.operatorkey.name",
-	"accessinfo.vars",
-	"accessinfo.cacert",
+	"accessvars",
 }
 var CloudletAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -1053,10 +1041,10 @@ var CloudletComments = map[string]string{
 	"config.region":                       "Region",
 	"restagmap.value.name":                "Resource Table Name",
 	"restagmap.value.operatorkey.name":    "Company or Organization name of the operator",
-	"accessinfo.vars":                     "Variables required to access cloudlet",
-	"accessinfo.cacert":                   "Optional CA Cert for HTTPs based verifications",
+	"accessvars":                          "Variables required to access cloudlet",
 }
 var CloudletSpecialArgs = map[string]string{
+	"accessvars":    "StringToString",
 	"config.envvar": "StringToString",
 	"envvar":        "StringToString",
 	"errors":        "StringArray",
@@ -1187,6 +1175,5 @@ var CreateCloudletOptionalArgs = []string{
 	"restagmap.key",
 	"restagmap.value.name",
 	"restagmap.value.operatorkey.name",
-	"accessinfo.vars",
-	"accessinfo.cacert",
+	"accessvars",
 }

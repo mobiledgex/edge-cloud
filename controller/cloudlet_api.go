@@ -199,21 +199,17 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.NotifySrvAddr = "127.0.0.1:0"
 	}
 
+	if in.PhysicalName == "" {
+		in.PhysicalName = in.Key.Name
+		cb.Send(&edgeproto.Result{Message: "Setting physicalname to match cloudlet name"})
+	}
+
 	if in.Version == "" {
 		in.Version = *versionTag
 	}
 
-	if in.AccessInfo != nil {
-		if in.PhysicalName != "" {
-			return errors.New("Cannot use physicalname and accessinfo together")
-		}
-		_, err := cloudcommon.MapParse(in.AccessInfo.Vars)
-		if err != nil {
-			return err
-		}
-		if in.DeploymentLocal {
-			return errors.New("Access info is not supported for local deployment")
-		}
+	if in.AccessVars != nil && in.DeploymentLocal {
+		return errors.New("Access vars is not supported for local deployment")
 	}
 
 	return s.createCloudletInternal(DefCallContext(), in, cb)
@@ -578,16 +574,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		upgrade = true
 	}
 
-	if _, found := fmap[edgeproto.CloudletFieldAccessInfo]; found {
+	if _, found := fmap[edgeproto.CloudletFieldAccessVars]; found {
 		if !upgrade {
-			return fmt.Errorf("Access info can only be updated during upgrade")
-		}
-		if in.AccessInfo != nil {
-			_, err = cloudcommon.MapParse(in.AccessInfo.Vars)
-			if err != nil {
-				return err
-			}
-			cur.AccessInfo = in.AccessInfo
+			return fmt.Errorf("Access vars can only be updated during upgrade")
 		}
 	}
 
