@@ -43,7 +43,7 @@ RUN make
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud
 RUN make doc
 RUN make external-doc
-RUN make -C d-match-engine/dme-proto swagger
+RUN make -C d-match-engine/dme-proto external-swagger
 
 FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v0.0.14-339-g20a71c7
 
@@ -65,7 +65,7 @@ COPY --from=build /go/plugins /plugins
 
 COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/edgeproto/doc/*.json /usr/local/doc/internal/
 COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/edgeproto/external-doc/*.json /usr/local/doc/external/
-COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/*.json /usr/local/doc/client/
+COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/external-doc/*.json /usr/local/doc/client/
 
 ADD edge-cloud/docker/mex-docker.env /root/mex-docker.env
 ADD edge-cloud/docker/edge-cloud-entrypoint.sh /usr/local/bin
