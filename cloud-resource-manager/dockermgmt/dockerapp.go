@@ -17,9 +17,12 @@ import (
 var createZip = "createZip"
 var deleteZip = "deleteZip"
 
+var UseInternalPortInContainer = "internalPort"
+var UsePublicPortInContainer = "publicPort"
+
 // Helper function that generates the ports string for docker command
 // Example : "-p 80:80/http -p 7777:7777/tcp"
-func GetDockerPortString(ports []dme.AppPort) []string {
+func GetDockerPortString(ports []dme.AppPort, containerPortType string) []string {
 	var cmdArgs []string
 
 	for _, p := range ports {
@@ -31,7 +34,11 @@ func GetDockerPortString(ports []dme.AppPort) []string {
 		if err != nil {
 			continue
 		}
-		pstr := fmt.Sprintf("%d:%d/%s", p.PublicPort, p.PublicPort, proto)
+		containerPort := p.PublicPort
+		if containerPortType == UseInternalPortInContainer {
+			containerPort = p.InternalPort
+		}
+		pstr := fmt.Sprintf("%d:%d/%s", p.PublicPort, containerPort, proto)
 		cmdArgs = append(cmdArgs, "-p", pstr)
 	}
 	return cmdArgs
@@ -159,9 +166,12 @@ func createDockerComposeFile(client pc.PlatformClient, app *edgeproto.App, appIn
 func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	image := app.ImagePath
 	name := util.DockerSanitize(app.Key.Name)
+	cloudlet := util.DockerSanitize(appInst.Key.ClusterInstKey.CloudletKey.Name)
+	cluster := util.DockerSanitize(appInst.Key.ClusterInstKey.Developer + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name)
+
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --name=%s %s %s %s", name,
-			strings.Join(GetDockerPortString(appInst.MappedPorts), " "), image, app.Command)
+		cmd := fmt.Sprintf("docker run -d -l edge-cloud -l cloudlet=%s -l cluster=%s --restart=unless-stopped --name=%s %s %s %s", cloudlet, cluster, name,
+			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer), " "), image, app.Command)
 		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 
 		out, err := client.Output(cmd)

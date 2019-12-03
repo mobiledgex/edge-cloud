@@ -226,19 +226,3 @@ var AlertSpecialArgs = map[string]string{
 	"annotations": "StringToString",
 	"labels":      "StringToString",
 }
-var LabelsEntryRequiredArgs = []string{}
-var LabelsEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var LabelsEntryAliasArgs = []string{}
-var LabelsEntryComments = map[string]string{}
-var LabelsEntrySpecialArgs = map[string]string{}
-var AnnotationsEntryRequiredArgs = []string{}
-var AnnotationsEntryOptionalArgs = []string{
-	"key",
-	"value",
-}
-var AnnotationsEntryAliasArgs = []string{}
-var AnnotationsEntryComments = map[string]string{}
-var AnnotationsEntrySpecialArgs = map[string]string{}

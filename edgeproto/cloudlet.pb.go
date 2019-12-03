@@ -260,10 +260,8 @@ type PlatformConfig struct {
 	VaultAddr string `protobuf:"bytes,4,opt,name=vault_addr,json=vaultAddr,proto3" json:"vault_addr,omitempty"`
 	// TLS cert file
 	TlsCertFile string `protobuf:"bytes,5,opt,name=tls_cert_file,json=tlsCertFile,proto3" json:"tls_cert_file,omitempty"`
-	// Vault role ID for CRM
-	CrmRoleId string `protobuf:"bytes,6,opt,name=crm_role_id,json=crmRoleId,proto3" json:"crm_role_id,omitempty"`
-	// Vault secret ID for CRM
-	CrmSecretId string `protobuf:"bytes,7,opt,name=crm_secret_id,json=crmSecretId,proto3" json:"crm_secret_id,omitempty"`
+	// Environment variables
+	EnvVar map[string]string `protobuf:"bytes,6,rep,name=env_var,json=envVar" json:"env_var,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	// Tag of edge-cloud image
 	PlatformTag string `protobuf:"bytes,8,opt,name=platform_tag,json=platformTag,proto3" json:"platform_tag,omitempty"`
 	// Internal Test flag
@@ -1532,17 +1530,22 @@ func (m *PlatformConfig) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.TlsCertFile)))
 		i += copy(dAtA[i:], m.TlsCertFile)
 	}
-	if len(m.CrmRoleId) > 0 {
-		dAtA[i] = 0x32
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.CrmRoleId)))
-		i += copy(dAtA[i:], m.CrmRoleId)
-	}
-	if len(m.CrmSecretId) > 0 {
-		dAtA[i] = 0x3a
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.CrmSecretId)))
-		i += copy(dAtA[i:], m.CrmSecretId)
+	if len(m.EnvVar) > 0 {
+		for k, _ := range m.EnvVar {
+			dAtA[i] = 0x32
+			i++
+			v := m.EnvVar[k]
+			mapSize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
+			i = encodeVarintCloudlet(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i += copy(dAtA[i:], k)
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
+			i += copy(dAtA[i:], v)
+		}
 	}
 	if len(m.PlatformTag) > 0 {
 		dAtA[i] = 0x42
@@ -2517,12 +2520,13 @@ func (m *PlatformConfig) CopyInFields(src *PlatformConfig) int {
 		m.TlsCertFile = src.TlsCertFile
 		changed++
 	}
-	if m.CrmRoleId != src.CrmRoleId {
-		m.CrmRoleId = src.CrmRoleId
-		changed++
-	}
-	if m.CrmSecretId != src.CrmSecretId {
-		m.CrmSecretId = src.CrmSecretId
+	if src.EnvVar != nil {
+		m.EnvVar = make(map[string]string)
+		for k0, _ := range src.EnvVar {
+			m.EnvVar[k0] = src.EnvVar[k0]
+		}
+	} else if m.EnvVar != nil {
+		m.EnvVar = nil
 		changed++
 	}
 	if m.PlatformTag != src.PlatformTag {
@@ -2788,8 +2792,9 @@ const CloudletFieldConfigImagePath = "21.2"
 const CloudletFieldConfigNotifyCtrlAddrs = "21.3"
 const CloudletFieldConfigVaultAddr = "21.4"
 const CloudletFieldConfigTlsCertFile = "21.5"
-const CloudletFieldConfigCrmRoleId = "21.6"
-const CloudletFieldConfigCrmSecretId = "21.7"
+const CloudletFieldConfigEnvVar = "21.6"
+const CloudletFieldConfigEnvVarKey = "21.6.1"
+const CloudletFieldConfigEnvVarValue = "21.6.2"
 const CloudletFieldConfigPlatformTag = "21.8"
 const CloudletFieldConfigTestMode = "21.9"
 const CloudletFieldConfigSpan = "21.10"
@@ -2843,8 +2848,8 @@ var CloudletAllFields = []string{
 	CloudletFieldConfigNotifyCtrlAddrs,
 	CloudletFieldConfigVaultAddr,
 	CloudletFieldConfigTlsCertFile,
-	CloudletFieldConfigCrmRoleId,
-	CloudletFieldConfigCrmSecretId,
+	CloudletFieldConfigEnvVarKey,
+	CloudletFieldConfigEnvVarValue,
 	CloudletFieldConfigPlatformTag,
 	CloudletFieldConfigTestMode,
 	CloudletFieldConfigSpan,
@@ -2896,8 +2901,8 @@ var CloudletAllFieldsMap = map[string]struct{}{
 	CloudletFieldConfigNotifyCtrlAddrs:              struct{}{},
 	CloudletFieldConfigVaultAddr:                    struct{}{},
 	CloudletFieldConfigTlsCertFile:                  struct{}{},
-	CloudletFieldConfigCrmRoleId:                    struct{}{},
-	CloudletFieldConfigCrmSecretId:                  struct{}{},
+	CloudletFieldConfigEnvVarKey:                    struct{}{},
+	CloudletFieldConfigEnvVarValue:                  struct{}{},
 	CloudletFieldConfigPlatformTag:                  struct{}{},
 	CloudletFieldConfigTestMode:                     struct{}{},
 	CloudletFieldConfigSpan:                         struct{}{},
@@ -2949,8 +2954,8 @@ var CloudletAllFieldsStringMap = map[string]string{
 	CloudletFieldConfigNotifyCtrlAddrs:              "Cloudlet Field Config Notify Ctrl Addrs",
 	CloudletFieldConfigVaultAddr:                    "Cloudlet Field Config Vault Addr",
 	CloudletFieldConfigTlsCertFile:                  "Cloudlet Field Config Tls Cert File",
-	CloudletFieldConfigCrmRoleId:                    "Cloudlet Field Config Crm Role Id",
-	CloudletFieldConfigCrmSecretId:                  "Cloudlet Field Config Crm Secret Id",
+	CloudletFieldConfigEnvVarKey:                    "Cloudlet Field Config Env Var Key",
+	CloudletFieldConfigEnvVarValue:                  "Cloudlet Field Config Env Var Value",
 	CloudletFieldConfigPlatformTag:                  "Cloudlet Field Config Platform Tag",
 	CloudletFieldConfigTestMode:                     "Cloudlet Field Config Test Mode",
 	CloudletFieldConfigSpan:                         "Cloudlet Field Config Span",
@@ -3143,12 +3148,27 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 		fields[CloudletFieldConfigTlsCertFile] = struct{}{}
 		fields[CloudletFieldConfig] = struct{}{}
 	}
-	if m.Config.CrmRoleId != o.Config.CrmRoleId {
-		fields[CloudletFieldConfigCrmRoleId] = struct{}{}
-		fields[CloudletFieldConfig] = struct{}{}
-	}
-	if m.Config.CrmSecretId != o.Config.CrmSecretId {
-		fields[CloudletFieldConfigCrmSecretId] = struct{}{}
+	if m.Config.EnvVar != nil && o.Config.EnvVar != nil {
+		if len(m.Config.EnvVar) != len(o.Config.EnvVar) {
+			fields[CloudletFieldConfigEnvVar] = struct{}{}
+			fields[CloudletFieldConfig] = struct{}{}
+		} else {
+			for k1, _ := range m.Config.EnvVar {
+				_, vok1 := o.Config.EnvVar[k1]
+				if !vok1 {
+					fields[CloudletFieldConfigEnvVar] = struct{}{}
+					fields[CloudletFieldConfig] = struct{}{}
+				} else {
+					if m.Config.EnvVar[k1] != o.Config.EnvVar[k1] {
+						fields[CloudletFieldConfigEnvVar] = struct{}{}
+						fields[CloudletFieldConfig] = struct{}{}
+						break
+					}
+				}
+			}
+		}
+	} else if (m.Config.EnvVar != nil && o.Config.EnvVar == nil) || (m.Config.EnvVar == nil && o.Config.EnvVar != nil) {
+		fields[CloudletFieldConfigEnvVar] = struct{}{}
 		fields[CloudletFieldConfig] = struct{}{}
 	}
 	if m.Config.PlatformTag != o.Config.PlatformTag {
@@ -3467,14 +3487,13 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 			}
 		}
 		if _, set := fmap["21.6"]; set {
-			if m.Config.CrmRoleId != src.Config.CrmRoleId {
-				m.Config.CrmRoleId = src.Config.CrmRoleId
-				changed++
-			}
-		}
-		if _, set := fmap["21.7"]; set {
-			if m.Config.CrmSecretId != src.Config.CrmSecretId {
-				m.Config.CrmSecretId = src.Config.CrmSecretId
+			if src.Config.EnvVar != nil {
+				m.Config.EnvVar = make(map[string]string)
+				for k1, _ := range src.Config.EnvVar {
+					m.Config.EnvVar[k1] = src.Config.EnvVar[k1]
+				}
+			} else if m.Config.EnvVar != nil {
+				m.Config.EnvVar = nil
 				changed++
 			}
 		}
@@ -4651,7 +4670,7 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 			m.AvailabilityZones = nil
 			changed++
 		}
-	}
+  }
 	if _, set := fmap["14"]; set {
 		if src.OsImages != nil {
 			if m.OsImages == nil || len(m.OsImages) != len(src.OsImages) {
@@ -4681,12 +4700,14 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 				if _, set := fmap["14.4"]; set {
 					if m.OsImages[i0].DiskFormat != src.OsImages[i0].DiskFormat {
 						m.OsImages[i0].DiskFormat = src.OsImages[i0].DiskFormat
+
 						changed++
 					}
 				}
 			}
 		} else if m.OsImages != nil {
 			m.OsImages = nil
+
 			changed++
 		}
 	}
@@ -5570,13 +5591,13 @@ func (m *PlatformConfig) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovCloudlet(uint64(l))
 	}
-	l = len(m.CrmRoleId)
-	if l > 0 {
-		n += 1 + l + sovCloudlet(uint64(l))
-	}
-	l = len(m.CrmSecretId)
-	if l > 0 {
-		n += 1 + l + sovCloudlet(uint64(l))
+	if len(m.EnvVar) > 0 {
+		for k, v := range m.EnvVar {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
+			n += mapEntrySize + 1 + sovCloudlet(uint64(mapEntrySize))
+		}
 	}
 	l = len(m.PlatformTag)
 	if l > 0 {
@@ -7414,9 +7435,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CrmRoleId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field EnvVar", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCloudlet
@@ -7426,49 +7447,109 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthCloudlet
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.CrmRoleId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CrmSecretId", wireType)
+			if m.EnvVar == nil {
+				m.EnvVar = make(map[string]string)
 			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCloudlet
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowCloudlet
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowCloudlet
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowCloudlet
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipCloudlet(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCloudlet
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.CrmSecretId = string(dAtA[iNdEx:postIndex])
+			m.EnvVar[mapkey] = mapvalue
 			iNdEx = postIndex
 		case 8:
 			if wireType != 2 {

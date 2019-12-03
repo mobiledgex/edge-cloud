@@ -126,55 +126,35 @@ func (s *CloudletApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cloud
 	})
 }
 
-func getRolesAndSecrets(appRoles *VaultRoles) error {
-	// Vault controller level credentials are required to access
-	// registry credentials
-	roleId := os.Getenv("VAULT_ROLE_ID")
-	if roleId == "" {
-		return fmt.Errorf("Env variable VAULT_ROLE_ID not set")
+func getCrmEnv(vars map[string]string) {
+	// For Vault approle, CRM will have its own role/secret
+	if val, ok := os.LookupEnv("VAULT_CRM_ROLE_ID"); ok {
+		vars["VAULT_ROLE_ID"] = val
 	}
-	secretId := os.Getenv("VAULT_SECRET_ID")
-	if secretId == "" {
-		return fmt.Errorf("Env variable VAULT_SECRET_ID not set")
+	if val, ok := os.LookupEnv("VAULT_CRM_SECRET_ID"); ok {
+		vars["VAULT_SECRET_ID"] = val
 	}
 
-	// Vault CRM level credentials are required to access
-	// instantiate crmserver
-	crmRoleId := os.Getenv("VAULT_CRM_ROLE_ID")
-	if crmRoleId == "" {
-		return fmt.Errorf("Env variable VAULT_CRM_ROLE_ID not set")
+	for _, key := range []string{
+		"GITHUB_ID",
+		"VAULT_TOKEN",
+	} {
+		if val, ok := os.LookupEnv(key); ok {
+			vars[key] = val
+		}
 	}
-	crmSecretId := os.Getenv("VAULT_CRM_SECRET_ID")
-	if crmSecretId == "" {
-		return fmt.Errorf("Env variable VAULT_CRM_SECRET_ID not set")
-	}
-	appRoles.CtrlRoleID = roleId
-	appRoles.CtrlSecretID = secretId
-	appRoles.CRMRoleID = crmRoleId
-	appRoles.CRMSecretID = crmSecretId
-	//Once we integrate DME add dme roles to the same structure
-	return nil
 }
 
 func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edgeproto.PlatformConfig, error) {
 	pfConfig := edgeproto.PlatformConfig{}
-	appRoles := VaultRoles{}
-	if err := getRolesAndSecrets(&appRoles); err != nil {
-		if !*testMode {
-			return nil, err
-		}
-		log.DebugLog(log.DebugLevelApi, "Warning, Failed to get roleIDs - running locally",
-			"err", err)
-	} else {
-		pfConfig.CrmRoleId = appRoles.CRMRoleID
-		pfConfig.CrmSecretId = appRoles.CRMSecretID
-	}
 	pfConfig.PlatformTag = cloudlet.Version
 	pfConfig.TlsCertFile = *tlsCertFile
 	pfConfig.VaultAddr = *vaultAddr
 	pfConfig.RegistryPath = *cloudletRegistryPath
 	pfConfig.ImagePath = *cloudletVMImagePath
 	pfConfig.TestMode = *testMode
+	pfConfig.EnvVar = make(map[string]string)
+	getCrmEnv(pfConfig.EnvVar)
 	addrObjs := strings.Split(*notifyAddr, ":")
 	if len(addrObjs) != 2 {
 		return nil, fmt.Errorf("unable to fetch notify addr of the controller")
