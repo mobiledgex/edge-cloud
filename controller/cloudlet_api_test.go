@@ -662,12 +662,15 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		OptResMap: map[string]string{"gpu": "1", "nas": "ceph-20"},
 	}
 	taz := edgeproto.OSAZone{Name: "AZ1_GPU", Status: "available"}
+	timg := edgeproto.OSImage{Name: "gpu_image"}
 	cli.AvailabilityZones = append(cli.AvailabilityZones, &taz)
+	cli.OsImages = append(cli.OsImages, &timg)
 	// this simple case should find the flavor with 'gpu' in the name
 	spec, vmerr := resTagTableApi.GetVMSpec(testflavor, *cl, cli)
 	require.Nil(t, vmerr, "GetVmSpec")
 	require.Equal(t, "flavor.large-gpu", spec.FlavorName)
 	require.Equal(t, "AZ1_GPU", spec.AvailabilityZone)
+	require.Equal(t, "gpu_image", spec.ImageName)
 	// now to force vmspec.GetVMSpec() to actually look into the given tag table. We
 	// ask for more Vcpus which will reject flavor.large-gpu (8 vcpus), but still requesting a GPU
 	// resource, so the table will be searched for a matching tag in flavor.large-gpu (10 vcpus) properties.
