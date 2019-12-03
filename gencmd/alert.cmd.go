@@ -52,6 +52,7 @@ It has these top-level messages:
 	FlavorMatch
 	FlavorInfo
 	OSAZone
+	OSImage
 	CloudletInfo
 	CloudletMetrics
 	CloudletPoolKey
