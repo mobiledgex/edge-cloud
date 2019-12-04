@@ -275,13 +275,13 @@ func RunAutoScalePolicyApi(conn *grpc.ClientConn, ctx context.Context, data *[]e
 	for ii, obj := range *data {
 		log.Printf("API %v for AutoScalePolicy: %v", mode, obj.Key)
 		switch mode {
-		case "create":
-			_, err = autoScalePolicyApi.CreateAutoScalePolicy(ctx, &obj)
 		case "delete":
 			_, err = autoScalePolicyApi.DeleteAutoScalePolicy(ctx, &obj)
 		case "update":
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			_, err = autoScalePolicyApi.UpdateAutoScalePolicy(ctx, &obj)
+		case "create":
+			_, err = autoScalePolicyApi.CreateAutoScalePolicy(ctx, &obj)
 		default:
 			log.Printf("Unsupported API %v for AutoScalePolicy: %v", mode, obj.Key)
 			return nil

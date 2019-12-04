@@ -1217,54 +1217,6 @@ func (m *App) CopyInFields(src *App) int {
 	return changed
 }
 
-func (m *App) SetUpdateFields() {
-	if m.ImagePath != "" {
-		m.Fields = append(m.Fields, AppFieldImagePath)
-	}
-	if m.ImageType != 0 {
-		m.Fields = append(m.Fields, AppFieldImageType)
-	}
-	if m.AccessPorts != "" {
-		m.Fields = append(m.Fields, AppFieldAccessPorts)
-	}
-	if m.AuthPublicKey != "" {
-		m.Fields = append(m.Fields, AppFieldAuthPublicKey)
-	}
-	if m.Command != "" {
-		m.Fields = append(m.Fields, AppFieldCommand)
-	}
-	if m.Annotations != "" {
-		m.Fields = append(m.Fields, AppFieldAnnotations)
-	}
-	if m.DeploymentManifest != "" {
-		m.Fields = append(m.Fields, AppFieldDeploymentManifest)
-	}
-	if m.AndroidPackageName != "" {
-		m.Fields = append(m.Fields, AppFieldAndroidPackageName)
-	}
-	if m.DelOpt != 0 {
-		m.Fields = append(m.Fields, AppFieldDelOpt)
-	}
-	if m.Configs != nil {
-		m.Fields = append(m.Fields, AppFieldConfigs)
-	}
-	if m.ScaleWithCluster != false {
-		m.Fields = append(m.Fields, AppFieldScaleWithCluster)
-	}
-	if m.InternalPorts != false {
-		m.Fields = append(m.Fields, AppFieldInternalPorts)
-	}
-	if m.Revision != 0 {
-		m.Fields = append(m.Fields, AppFieldRevision)
-	}
-	if m.OfficialFqdn != "" {
-		m.Fields = append(m.Fields, AppFieldOfficialFqdn)
-	}
-	if m.Md5Sum != "" {
-		m.Fields = append(m.Fields, AppFieldMd5Sum)
-	}
-}
-
 func (s *App) HasFields() bool {
 	return true
 }

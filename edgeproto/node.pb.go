@@ -734,9 +734,6 @@ func (m *Node) CopyInFields(src *Node) int {
 	return changed
 }
 
-func (m *Node) SetUpdateFields() {
-}
-
 func (s *Node) HasFields() bool {
 	return true
 }

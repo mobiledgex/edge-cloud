@@ -623,24 +623,6 @@ func (m *AutoScalePolicy) CopyInFields(src *AutoScalePolicy) int {
 	return changed
 }
 
-func (m *AutoScalePolicy) SetUpdateFields() {
-	if m.MinNodes != 0 {
-		m.Fields = append(m.Fields, AutoScalePolicyFieldMinNodes)
-	}
-	if m.MaxNodes != 0 {
-		m.Fields = append(m.Fields, AutoScalePolicyFieldMaxNodes)
-	}
-	if m.ScaleUpCpuThresh != 0 {
-		m.Fields = append(m.Fields, AutoScalePolicyFieldScaleUpCpuThresh)
-	}
-	if m.ScaleDownCpuThresh != 0 {
-		m.Fields = append(m.Fields, AutoScalePolicyFieldScaleDownCpuThresh)
-	}
-	if m.TriggerTimeSec != 0 {
-		m.Fields = append(m.Fields, AutoScalePolicyFieldTriggerTimeSec)
-	}
-}
-
 func (s *AutoScalePolicy) HasFields() bool {
 	return true
 }

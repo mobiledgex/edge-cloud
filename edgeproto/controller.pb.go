@@ -474,9 +474,6 @@ func (m *Controller) CopyInFields(src *Controller) int {
 	return changed
 }
 
-func (m *Controller) SetUpdateFields() {
-}
-
 func (s *Controller) HasFields() bool {
 	return true
 }

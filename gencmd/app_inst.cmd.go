@@ -459,15 +459,15 @@ func RunAppInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto
 		log.Printf("API %v for AppInst: %v", mode, obj.Key)
 		var stream testutil.AppInstStream
 		switch mode {
+		case "delete":
+			stream, err = appInstApi.DeleteAppInst(ctx, &obj)
+		case "refresh":
+			stream, err = appInstApi.RefreshAppInst(ctx, &obj)
 		case "update":
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			stream, err = appInstApi.UpdateAppInst(ctx, &obj)
 		case "create":
 			stream, err = appInstApi.CreateAppInst(ctx, &obj)
-		case "delete":
-			stream, err = appInstApi.DeleteAppInst(ctx, &obj)
-		case "refresh":
-			stream, err = appInstApi.RefreshAppInst(ctx, &obj)
 		default:
 			log.Printf("Unsupported API %v for AppInst: %v", mode, obj.Key)
 			return nil

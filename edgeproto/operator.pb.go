@@ -467,9 +467,6 @@ func (m *Operator) CopyInFields(src *Operator) int {
 	return changed
 }
 
-func (m *Operator) SetUpdateFields() {
-}
-
 func (s *Operator) HasFields() bool {
 	return true
 }

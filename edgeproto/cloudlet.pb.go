@@ -3477,65 +3477,6 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 	return changed
 }
 
-func (m *Cloudlet) SetUpdateFields() {
-	if m.AccessCredentials != "" {
-		m.Fields = append(m.Fields, CloudletFieldAccessCredentials)
-	}
-	if m.Location.Latitude != 0 {
-		m.Fields = append(m.Fields, CloudletFieldLocationLatitude)
-	}
-	if m.Location.Longitude != 0 {
-		m.Fields = append(m.Fields, CloudletFieldLocationLongitude)
-	}
-	if m.Location.HorizontalAccuracy != 0 {
-		m.Fields = append(m.Fields, CloudletFieldLocationHorizontalAccuracy)
-	}
-	if m.Location.VerticalAccuracy != 0 {
-		m.Fields = append(m.Fields, CloudletFieldLocationVerticalAccuracy)
-	}
-	if m.Location.Altitude != 0 {
-		m.Fields = append(m.Fields, CloudletFieldLocationAltitude)
-	}
-	if m.Location.Course != 0 {
-		m.Fields = append(m.Fields, CloudletFieldLocationCourse)
-	}
-	if m.Location.Speed != 0 {
-		m.Fields = append(m.Fields, CloudletFieldLocationSpeed)
-	}
-	if m.Location.Timestamp != nil {
-		if m.Location.Timestamp.Seconds != 0 {
-			m.Fields = append(m.Fields, CloudletFieldLocationTimestampSeconds)
-		}
-		if m.Location.Timestamp.Nanos != 0 {
-			m.Fields = append(m.Fields, CloudletFieldLocationTimestampNanos)
-		}
-	}
-	if m.IpSupport != 0 {
-		m.Fields = append(m.Fields, CloudletFieldIpSupport)
-	}
-	if m.StaticIps != "" {
-		m.Fields = append(m.Fields, CloudletFieldStaticIps)
-	}
-	if m.NumDynamicIps != 0 {
-		m.Fields = append(m.Fields, CloudletFieldNumDynamicIps)
-	}
-	if m.PlatformType != 0 {
-		m.Fields = append(m.Fields, CloudletFieldPlatformType)
-	}
-	if m.NotifySrvAddr != "" {
-		m.Fields = append(m.Fields, CloudletFieldNotifySrvAddr)
-	}
-	if m.PhysicalName != "" {
-		m.Fields = append(m.Fields, CloudletFieldPhysicalName)
-	}
-	if m.EnvVar != nil {
-		m.Fields = append(m.Fields, CloudletFieldEnvVar)
-	}
-	if m.Version != "" {
-		m.Fields = append(m.Fields, CloudletFieldVersion)
-	}
-}
-
 func (s *Cloudlet) HasFields() bool {
 	return true
 }
@@ -4578,51 +4519,6 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 		}
 	}
 	return changed
-}
-
-func (m *CloudletInfo) SetUpdateFields() {
-	if m.State != 0 {
-		m.Fields = append(m.Fields, CloudletInfoFieldState)
-	}
-	if m.NotifyId != 0 {
-		m.Fields = append(m.Fields, CloudletInfoFieldNotifyId)
-	}
-	if m.Controller != "" {
-		m.Fields = append(m.Fields, CloudletInfoFieldController)
-	}
-	if m.OsMaxRam != 0 {
-		m.Fields = append(m.Fields, CloudletInfoFieldOsMaxRam)
-	}
-	if m.OsMaxVcores != 0 {
-		m.Fields = append(m.Fields, CloudletInfoFieldOsMaxVcores)
-	}
-	if m.OsMaxVolGb != 0 {
-		m.Fields = append(m.Fields, CloudletInfoFieldOsMaxVolGb)
-	}
-	if m.Errors != nil {
-		m.Fields = append(m.Fields, CloudletInfoFieldErrors)
-	}
-	if m.Flavors != nil {
-		m.Fields = append(m.Fields, CloudletInfoFieldFlavors)
-	}
-	if m.Status.TaskNumber != 0 {
-		m.Fields = append(m.Fields, CloudletInfoFieldStatusTaskNumber)
-	}
-	if m.Status.MaxTasks != 0 {
-		m.Fields = append(m.Fields, CloudletInfoFieldStatusMaxTasks)
-	}
-	if m.Status.TaskName != "" {
-		m.Fields = append(m.Fields, CloudletInfoFieldStatusTaskName)
-	}
-	if m.Status.StepName != "" {
-		m.Fields = append(m.Fields, CloudletInfoFieldStatusStepName)
-	}
-	if m.Version != "" {
-		m.Fields = append(m.Fields, CloudletInfoFieldVersion)
-	}
-	if m.AvailabilityZones != nil {
-		m.Fields = append(m.Fields, CloudletInfoFieldAvailabilityZones)
-	}
 }
 
 func (s *CloudletInfo) HasFields() bool {

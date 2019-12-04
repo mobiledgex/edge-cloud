@@ -429,10 +429,10 @@ func RunCloudletPoolMemberApi(conn *grpc.ClientConn, ctx context.Context, data *
 	for _, obj := range *data {
 		log.Printf("API %v for CloudletPoolMember: %v", mode, obj.PoolKey)
 		switch mode {
-		case "delete":
-			_, err = cloudletPoolMemberApi.DeleteCloudletPoolMember(ctx, &obj)
 		case "create":
 			_, err = cloudletPoolMemberApi.CreateCloudletPoolMember(ctx, &obj)
+		case "delete":
+			_, err = cloudletPoolMemberApi.DeleteCloudletPoolMember(ctx, &obj)
 		default:
 			log.Printf("Unsupported API %v for CloudletPoolMember: %v", mode, obj.PoolKey)
 			return nil

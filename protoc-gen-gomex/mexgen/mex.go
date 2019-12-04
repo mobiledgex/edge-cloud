@@ -452,63 +452,6 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	}
 }
 
-func (m *mex) getFieldName(names []string, field *descriptor.FieldDescriptorProto) string {
-	name := generator.CamelCase(*field.Name)
-	return strings.Join(append(names, name), "")
-}
-
-func (m *mex) generateSetFields(parents, names []string, field *descriptor.FieldDescriptorProto) {
-	nullableMessage := false
-	if field.Type == nil {
-		return
-	}
-	if GetBackend(field) {
-		return
-	}
-	nilval := "0"
-	name := generator.CamelCase(*field.Name)
-	hierName := strings.Join(append(parents, name), ".")
-
-	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
-		*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
-		nilval = "nil"
-	} else {
-		switch *field.Type {
-		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
-			if GetObjKey(subDesc.DescriptorProto) {
-				return
-			}
-			if gogoproto.IsNullable(field) {
-				nullableMessage = true
-				m.P("if m.", hierName, " != nil {")
-			}
-			for ii, subField := range subDesc.DescriptorProto.Field {
-				if ii == 0 && *subField.Name == "fields" {
-					continue
-				}
-				m.generateSetFields(append(parents, name), append(names, name), subField)
-			}
-			if nullableMessage {
-				m.P("}")
-			}
-			return
-		case descriptor.FieldDescriptorProto_TYPE_STRING:
-			nilval = "\"\""
-		case descriptor.FieldDescriptorProto_TYPE_BOOL:
-			nilval = "false"
-		case descriptor.FieldDescriptorProto_TYPE_GROUP:
-			// deprecated in proto3
-			return
-		}
-	}
-
-	m.P("if m.", hierName, " != ", nilval, " {")
-	fname := m.getFieldName(names, field)
-	m.P("m.Fields = append(m.Fields, ", fname, ")")
-	m.P("}")
-}
-
 func (m *mex) printCopyInMakeArray(name string, desc *generator.Descriptor, field *descriptor.FieldDescriptorProto) {
 	mapType := m.support.GetMapType(m.gen, field)
 	if mapType != nil {
@@ -1504,18 +1447,6 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	m.P("return changed")
 	m.P("}")
 	m.P("")
-
-	if gensupport.HasGrpcFields(message) {
-		m.P("func (m *", msgtyp, ") SetUpdateFields() {")
-		for ii, field := range message.Field {
-			if ii == 0 && *field.Name == "fields" {
-				continue
-			}
-			m.generateSetFields([]string{}, []string{*message.Name + "Field"}, field)
-		}
-		m.P("}")
-		m.P("")
-	}
 
 	if GetGenerateCud(message) {
 		keyType, err := m.support.GetMessageKeyType(m.gen, desc)

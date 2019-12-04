@@ -1358,24 +1358,6 @@ func (m *ClusterInst) CopyInFields(src *ClusterInst) int {
 	return changed
 }
 
-func (m *ClusterInst) SetUpdateFields() {
-	if m.CrmOverride != 0 {
-		m.Fields = append(m.Fields, ClusterInstFieldCrmOverride)
-	}
-	if m.NumMasters != 0 {
-		m.Fields = append(m.Fields, ClusterInstFieldNumMasters)
-	}
-	if m.NumNodes != 0 {
-		m.Fields = append(m.Fields, ClusterInstFieldNumNodes)
-	}
-	if m.AutoScalePolicy != "" {
-		m.Fields = append(m.Fields, ClusterInstFieldAutoScalePolicy)
-	}
-	if m.AvailabilityZone != "" {
-		m.Fields = append(m.Fields, ClusterInstFieldAvailabilityZone)
-	}
-}
-
 func (s *ClusterInst) HasFields() bool {
 	return true
 }
@@ -2171,18 +2153,6 @@ func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) int {
 		}
 	}
 	return changed
-}
-
-func (m *ClusterInstInfo) SetUpdateFields() {
-	if m.NotifyId != 0 {
-		m.Fields = append(m.Fields, ClusterInstInfoFieldNotifyId)
-	}
-	if m.State != 0 {
-		m.Fields = append(m.Fields, ClusterInstInfoFieldState)
-	}
-	if m.Errors != nil {
-		m.Fields = append(m.Fields, ClusterInstInfoFieldErrors)
-	}
 }
 
 func (s *ClusterInstInfo) HasFields() bool {

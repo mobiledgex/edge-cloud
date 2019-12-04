@@ -385,13 +385,13 @@ func RunFlavorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.
 	for ii, obj := range *data {
 		log.Printf("API %v for Flavor: %v", mode, obj.Key)
 		switch mode {
+		case "create":
+			_, err = flavorApi.CreateFlavor(ctx, &obj)
 		case "delete":
 			_, err = flavorApi.DeleteFlavor(ctx, &obj)
 		case "update":
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			_, err = flavorApi.UpdateFlavor(ctx, &obj)
-		case "create":
-			_, err = flavorApi.CreateFlavor(ctx, &obj)
 		default:
 			log.Printf("Unsupported API %v for Flavor: %v", mode, obj.Key)
 			return nil

@@ -361,13 +361,13 @@ func RunClusterInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgep
 		log.Printf("API %v for ClusterInst: %v", mode, obj.Key)
 		var stream testutil.ClusterInstStream
 		switch mode {
+		case "create":
+			stream, err = clusterInstApi.CreateClusterInst(ctx, &obj)
 		case "delete":
 			stream, err = clusterInstApi.DeleteClusterInst(ctx, &obj)
 		case "update":
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			stream, err = clusterInstApi.UpdateClusterInst(ctx, &obj)
-		case "create":
-			stream, err = clusterInstApi.CreateClusterInst(ctx, &obj)
 		default:
 			log.Printf("Unsupported API %v for ClusterInst: %v", mode, obj.Key)
 			return nil
