@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"sync"
 	"time"
 
@@ -138,6 +139,8 @@ func ApiStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *ApiStat)
 	metric.AddIntVal("errs", stat.errs)
 	metric.AddTag("foundCloudlet", key.CloudletFound.Name)
 	metric.AddTag("foundOperator", key.CloudletFound.OperatorKey.Name)
+	// Cell ID is just a unique number - keep it as a string
+	metric.AddTag("cellID", strconv.FormatUint(uint64(key.CellId), 10))
 	stat.latency.AddToMetric(&metric)
 	return &metric
 }
@@ -169,6 +172,28 @@ func MetricToStat(metric *edgeproto.Metric) (*dmecommon.StatKey, *ApiStat) {
 	return key, stat
 }
 
+func getCellIdFromDmeReq(req interface{}) uint32 {
+	switch typ := req.(type) {
+	case *dme.RegisterClientRequest:
+		return typ.CellId
+	case *dme.FindCloudletRequest:
+		return typ.CellId
+	case *dme.VerifyLocationRequest:
+		return typ.CellId
+	case *dme.GetLocationRequest:
+		return typ.CellId
+	case *dme.AppInstListRequest:
+		return typ.CellId
+	case *dme.FqdnListRequest:
+		return typ.CellId
+	case *dme.DynamicLocGroupRequest:
+		return typ.CellId
+	case *dme.QosPositionRequest:
+		return typ.CellId
+	}
+	return 0
+}
+
 func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	start := time.Now()
 
@@ -196,7 +221,7 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		call.key.AppKey.Name = ckey.AppName
 		call.key.AppKey.Version = ckey.AppVers
 	}
-
+	call.key.CellId = getCellIdFromDmeReq(req)
 	if err != nil {
 		call.fail = true
 	}

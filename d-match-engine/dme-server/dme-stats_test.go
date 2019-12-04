@@ -52,6 +52,7 @@ func TestStatDrops(t *testing.T) {
 			key.AppKey.Name = "app"
 			key.AppKey.Version = "1.0.0"
 			key.Method = "findLocation"
+			key.CellId = 1000
 
 			ch := time.After(10 * notifyInterval)
 			done := false

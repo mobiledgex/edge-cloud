@@ -62,6 +62,7 @@ var DmeAppTbl *DmeApps
 type StatKey struct {
 	AppKey        edgeproto.AppKey
 	CloudletFound edgeproto.CloudletKey
+	CellId        uint32
 	Method        string
 }
 
