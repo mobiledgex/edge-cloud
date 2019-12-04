@@ -452,6 +452,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if !s.store.STMGet(stm, key, &cloudlet) {
 			return key.NotFoundError()
 		}
+		cloudlet.AccessVars = nil
 		if err == nil {
 			cloudlet.Errors = nil
 			cloudlet.State = edgeproto.TrackedState_READY
