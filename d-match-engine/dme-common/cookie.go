@@ -34,6 +34,7 @@ type CookieKey struct {
 	DevName string `json:"devname,omitempty"`
 	AppName string `json:"appname,omitempty"`
 	AppVers string `json:"appvers,omitempty"`
+	Uuid    string `json:"uuid,omitempty"`
 	Kid     int    `json:"kid,omitempty"`
 }
 
