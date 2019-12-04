@@ -10,17 +10,18 @@ import (
 	"testing"
 	"time"
 
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/stretchr/testify/assert"
 )
 
 type testdb struct {
-	stats map[StatKey]*ApiStat
+	stats map[dmecommon.StatKey]*ApiStat
 	mux   sync.Mutex
 }
 
 func (n *testdb) Init() {
-	n.stats = make(map[StatKey]*ApiStat)
+	n.stats = make(map[dmecommon.StatKey]*ApiStat)
 }
 
 func (n *testdb) send(ctx context.Context, metric *edgeproto.Metric) bool {
@@ -46,11 +47,11 @@ func TestStatDrops(t *testing.T) {
 	for ii := 0; ii < numThreads; ii++ {
 		wg.Add(1)
 		go func(id int) {
-			key := StatKey{}
+			key := dmecommon.StatKey{}
 			key.AppKey.DeveloperKey.Name = "dev" + strconv.Itoa(id)
 			key.AppKey.Name = "app"
 			key.AppKey.Version = "1.0.0"
-			key.method = "findLocation"
+			key.Method = "findLocation"
 
 			ch := time.After(10 * notifyInterval)
 			done := false

@@ -24,14 +24,9 @@ var LatencyTimes = []time.Duration{
 }
 
 // Stats are collected per App per Cloudlet and per method name (verifylocation, etc).
-type StatKey struct {
-	AppKey        edgeproto.AppKey
-	CloudletFound edgeproto.CloudletKey
-	method        string
-}
 
 type ApiStatCall struct {
-	key     StatKey
+	key     dmecommon.StatKey
 	fail    bool
 	latency time.Duration
 }
@@ -44,7 +39,7 @@ type ApiStat struct {
 }
 
 type MapShard struct {
-	apiStatMap map[StatKey]*ApiStat
+	apiStatMap map[dmecommon.StatKey]*ApiStat
 	notify     bool
 	mux        sync.Mutex
 }
@@ -64,7 +59,7 @@ func NewDmeStats(interval time.Duration, numShards uint, send func(ctx context.C
 	s.shards = make([]MapShard, numShards, numShards)
 	s.numShards = numShards
 	for ii, _ := range s.shards {
-		s.shards[ii].apiStatMap = make(map[StatKey]*ApiStat)
+		s.shards[ii].apiStatMap = make(map[dmecommon.StatKey]*ApiStat)
 	}
 	s.interval = interval
 	s.send = send
@@ -85,7 +80,7 @@ func (s *DmeStats) Stop() {
 }
 
 func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
-	hash := xxhash.Sum64([]byte(call.key.method + call.key.AppKey.DeveloperKey.Name + call.key.AppKey.Name))
+	hash := xxhash.Sum64([]byte(call.key.Method + call.key.AppKey.DeveloperKey.Name + call.key.AppKey.Name))
 	idx := hash % uint64(s.numShards)
 
 	shard := &s.shards[idx]
@@ -128,7 +123,7 @@ func (s *DmeStats) RunNotify() {
 	s.waitGroup.Done()
 }
 
-func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeproto.Metric {
+func ApiStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *ApiStat) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
 	metric.Name = "dme-api"
@@ -138,7 +133,7 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	metric.AddTag("oper", myCloudletKey.OperatorKey.Name)
 	metric.AddTag("cloudlet", myCloudletKey.Name)
 	metric.AddTag("id", *scaleID)
-	metric.AddTag("method", key.method)
+	metric.AddTag("method", key.Method)
 	metric.AddIntVal("reqs", stat.reqs)
 	metric.AddIntVal("errs", stat.errs)
 	metric.AddTag("foundCloudlet", key.CloudletFound.Name)
@@ -147,8 +142,8 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	return &metric
 }
 
-func MetricToStat(metric *edgeproto.Metric) (*StatKey, *ApiStat) {
-	key := &StatKey{}
+func MetricToStat(metric *edgeproto.Metric) (*dmecommon.StatKey, *ApiStat) {
+	key := &dmecommon.StatKey{}
 	stat := &ApiStat{}
 	for _, tag := range metric.Tags {
 		switch tag.Name {
@@ -159,7 +154,7 @@ func MetricToStat(metric *edgeproto.Metric) (*StatKey, *ApiStat) {
 		case "ver":
 			key.AppKey.Version = tag.Val
 		case "method":
-			key.method = tag.Val
+			key.Method = tag.Val
 		}
 	}
 	for _, val := range metric.Vals {
@@ -177,11 +172,13 @@ func MetricToStat(metric *edgeproto.Metric) (*StatKey, *ApiStat) {
 func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	start := time.Now()
 
+	call := ApiStatCall{}
+	ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.key)
+
 	// call the handler
 	resp, err := handler(ctx, req)
 
-	call := ApiStatCall{}
-	_, call.key.method = cloudcommon.ParseGrpcMethod(info.FullMethod)
+	_, call.key.Method = cloudcommon.ParseGrpcMethod(info.FullMethod)
 
 	switch typ := req.(type) {
 	case *dme.RegisterClientRequest:
@@ -198,15 +195,6 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		call.key.AppKey.DeveloperKey.Name = ckey.DevName
 		call.key.AppKey.Name = ckey.AppName
 		call.key.AppKey.Version = ckey.AppVers
-	}
-
-	// For the FindCloudlet api we should record what we returned
-	switch typ := resp.(type) {
-	case *dme.FindCloudletReply:
-		call.key.CloudletFound.Name = typ.CloudletName
-		call.key.CloudletFound.OperatorKey.Name = typ.CarrierName
-	default:
-		break
 	}
 
 	if err != nil {
