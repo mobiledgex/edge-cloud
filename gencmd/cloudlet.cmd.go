@@ -10,6 +10,9 @@ import "context"
 import "io"
 import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
+import "google.golang.org/grpc"
+import "log"
+import "github.com/mobiledgex/edge-cloud/testutil"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -510,6 +513,33 @@ var CloudletApiCmds = []*cobra.Command{
 	FindFlavorMatchCmd.GenCmd(),
 }
 
+func RunCloudletApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Cloudlet, dataMap []map[string]interface{}, mode string) error {
+	var err error
+	cloudletApi := edgeproto.NewCloudletApiClient(conn)
+	for ii, obj := range *data {
+		log.Printf("API %v for Cloudlet: %v", mode, obj.Key)
+		var stream testutil.CloudletStream
+		switch mode {
+		case "create":
+			stream, err = cloudletApi.CreateCloudlet(ctx, &obj)
+		case "delete":
+			stream, err = cloudletApi.DeleteCloudlet(ctx, &obj)
+		case "update":
+			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
+			stream, err = cloudletApi.UpdateCloudlet(ctx, &obj)
+		default:
+			log.Printf("Unsupported API %v for Cloudlet: %v", mode, obj.Key)
+			return nil
+		}
+		err = testutil.CloudletReadResultStream(stream, err)
+		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		if err != nil {
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+		}
+	}
+	return nil
+}
+
 var CloudletInfoApiCmd edgeproto.CloudletInfoApiClient
 
 var ShowCloudletInfoCmd = &cli.Command{
@@ -696,6 +726,28 @@ var CloudletInfoApiCmds = []*cobra.Command{
 	ShowCloudletInfoCmd.GenCmd(),
 	InjectCloudletInfoCmd.GenCmd(),
 	EvictCloudletInfoCmd.GenCmd(),
+}
+
+func RunCloudletInfoApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.CloudletInfo, dataMap []map[string]interface{}, mode string) error {
+	var err error
+	cloudletInfoApi := edgeproto.NewCloudletInfoApiClient(conn)
+	for _, obj := range *data {
+		log.Printf("API %v for CloudletInfo: %v", mode, obj.Key)
+		switch mode {
+		case "delete":
+			_, err = cloudletInfoApi.EvictCloudletInfo(ctx, &obj)
+		case "create":
+			_, err = cloudletInfoApi.InjectCloudletInfo(ctx, &obj)
+		default:
+			log.Printf("Unsupported API %v for CloudletInfo: %v", mode, obj.Key)
+			return nil
+		}
+		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		if err != nil {
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+		}
+	}
+	return nil
 }
 
 var CloudletMetricsApiCmd edgeproto.CloudletMetricsApiClient

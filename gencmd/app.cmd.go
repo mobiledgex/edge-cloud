@@ -10,6 +10,8 @@ import "context"
 import "io"
 import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
+import "google.golang.org/grpc"
+import "log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -287,6 +289,31 @@ var AppApiCmds = []*cobra.Command{
 	DeleteAppCmd.GenCmd(),
 	UpdateAppCmd.GenCmd(),
 	ShowAppCmd.GenCmd(),
+}
+
+func RunAppApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.App, dataMap []map[string]interface{}, mode string) error {
+	var err error
+	appApi := edgeproto.NewAppApiClient(conn)
+	for ii, obj := range *data {
+		log.Printf("API %v for App: %v", mode, obj.Key)
+		switch mode {
+		case "create":
+			_, err = appApi.CreateApp(ctx, &obj)
+		case "delete":
+			_, err = appApi.DeleteApp(ctx, &obj)
+		case "update":
+			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
+			_, err = appApi.UpdateApp(ctx, &obj)
+		default:
+			log.Printf("Unsupported API %v for App: %v", mode, obj.Key)
+			return nil
+		}
+		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		if err != nil {
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+		}
+	}
+	return nil
 }
 
 var AppKeyRequiredArgs = []string{}
