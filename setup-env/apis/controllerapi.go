@@ -20,7 +20,7 @@ import (
 )
 
 var appData edgeproto.ApplicationData
-var appDataMap map[string][]map[string]interface{}
+var appDataMap edgeproto.ApplicationDataMap
 
 type runCommandData struct {
 	Request        edgeproto.ExecRequest
