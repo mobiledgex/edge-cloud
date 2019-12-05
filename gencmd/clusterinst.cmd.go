@@ -10,9 +10,6 @@ import "context"
 import "io"
 import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
-import "google.golang.org/grpc"
-import "log"
-import "github.com/mobiledgex/edge-cloud/testutil"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -352,33 +349,6 @@ var ClusterInstApiCmds = []*cobra.Command{
 	DeleteClusterInstCmd.GenCmd(),
 	UpdateClusterInstCmd.GenCmd(),
 	ShowClusterInstCmd.GenCmd(),
-}
-
-func RunClusterInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.ClusterInst, dataMap []map[string]interface{}, mode string) error {
-	var err error
-	clusterInstApi := edgeproto.NewClusterInstApiClient(conn)
-	for ii, obj := range *data {
-		log.Printf("API %v for ClusterInst: %v", mode, obj.Key)
-		var stream testutil.ClusterInstStream
-		switch mode {
-		case "create":
-			stream, err = clusterInstApi.CreateClusterInst(ctx, &obj)
-		case "delete":
-			stream, err = clusterInstApi.DeleteClusterInst(ctx, &obj)
-		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			stream, err = clusterInstApi.UpdateClusterInst(ctx, &obj)
-		default:
-			log.Printf("Unsupported API %v for ClusterInst: %v", mode, obj.Key)
-			return nil
-		}
-		err = testutil.ClusterInstReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
-		}
-	}
-	return nil
 }
 
 var ClusterInstInfoApiCmd edgeproto.ClusterInstInfoApiClient

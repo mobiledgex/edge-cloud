@@ -1,4 +1,4 @@
-package gencmd
+package testutil
 
 import (
 	"log"

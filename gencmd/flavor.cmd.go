@@ -10,8 +10,6 @@ import "context"
 import "io"
 import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
-import "google.golang.org/grpc"
-import "log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -377,31 +375,6 @@ var FlavorApiCmds = []*cobra.Command{
 	ShowFlavorCmd.GenCmd(),
 	AddFlavorResCmd.GenCmd(),
 	RemoveFlavorResCmd.GenCmd(),
-}
-
-func RunFlavorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Flavor, dataMap []map[string]interface{}, mode string) error {
-	var err error
-	flavorApi := edgeproto.NewFlavorApiClient(conn)
-	for ii, obj := range *data {
-		log.Printf("API %v for Flavor: %v", mode, obj.Key)
-		switch mode {
-		case "create":
-			_, err = flavorApi.CreateFlavor(ctx, &obj)
-		case "delete":
-			_, err = flavorApi.DeleteFlavor(ctx, &obj)
-		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			_, err = flavorApi.UpdateFlavor(ctx, &obj)
-		default:
-			log.Printf("Unsupported API %v for Flavor: %v", mode, obj.Key)
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
-		}
-	}
-	return nil
 }
 
 var FlavorKeyRequiredArgs = []string{}

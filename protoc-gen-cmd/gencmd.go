@@ -43,9 +43,6 @@ type GenCmd struct {
 	importErrors       bool
 	importStatus       bool
 	importCli          bool
-	importGrpc         bool
-	importLog          bool
-	importTestutil     bool
 }
 
 func (g *GenCmd) Name() string {
@@ -98,15 +95,6 @@ func (g *GenCmd) GenerateImports(file *generator.FileDescriptor) {
 	if g.importStatus {
 		g.PrintImport("", "google.golang.org/grpc/status")
 	}
-	if g.importGrpc {
-		g.PrintImport("", "google.golang.org/grpc")
-	}
-	if g.importLog {
-		g.PrintImport("", "log")
-	}
-	if g.importTestutil {
-		g.PrintImport("", "github.com/mobiledgex/edge-cloud/testutil")
-	}
 }
 
 func (g *GenCmd) Generate(file *generator.FileDescriptor) {
@@ -125,9 +113,6 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 	g.importErrors = false
 	g.importStatus = false
 	g.importCli = false
-	g.importGrpc = false
-	g.importLog = false
-	g.importTestutil = false
 	g.inMessages = make(map[string]*generator.Descriptor)
 	g.enumArgs = make(map[string][]*EnumArg)
 	g.hideTags = make(map[string]struct{})
@@ -160,7 +145,6 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		for _, service := range file.FileDescriptorProto.Service {
 			g.generateServiceVars(file.FileDescriptorProto, service)
 			g.generateServiceCmd(file.FileDescriptorProto, service)
-			g.generateRunApi(file.FileDescriptorProto, service)
 		}
 	}
 	for ii, desc := range file.Messages() {
@@ -216,122 +200,6 @@ func (g *GenCmd) generateServiceCmd(file *descriptor.FileDescriptorProto, servic
 		g.P()
 		g.importCobra = true
 	}
-}
-
-type methodInfo struct {
-	Name   string
-	Stream bool
-}
-
-func (g *GenCmd) generateRunApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {
-	mappedActions := map[string]string{
-		"Create":  "create",
-		"Inject":  "create",
-		"Update":  "update",
-		"Delete":  "delete",
-		"Evict":   "delete",
-		"Refresh": "refresh",
-	}
-	ignoredActions := []string{
-		"Show",
-	}
-	specialKeys := map[string]string{
-		"CloudletPoolMember": "PoolKey",
-	}
-	if len(service.Method) == 0 {
-		return
-	}
-	out := make(map[string]map[string]methodInfo)
-	for _, method := range service.Method {
-		ignore := false
-		for _, action := range ignoredActions {
-			if strings.HasPrefix(*method.Name, action) {
-				ignore = true
-				break
-			}
-		}
-		if ignore {
-			continue
-		}
-		for k, v := range mappedActions {
-			if strings.HasPrefix(*method.Name, k) {
-				cmd := strings.TrimPrefix(*method.Name, k)
-				mInfo := methodInfo{
-					Name: *method.Name,
-				}
-				if gensupport.ServerStreaming(method) {
-					mInfo.Stream = true
-				}
-				if _, ok := out[cmd]; ok {
-					out[cmd][v] = mInfo
-				} else {
-					out[cmd] = map[string]methodInfo{
-						v: mInfo,
-					}
-				}
-			}
-		}
-	}
-	if len(out) <= 0 {
-		return
-	}
-	for k, v := range out {
-		var streaming bool
-		for _, mInfo := range v {
-			if mInfo.Stream {
-				streaming = true
-				break
-			}
-		}
-		g.P()
-		g.P("func Run", k, "Api(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.", k, ", dataMap []map[string]interface{}, mode string) error {")
-		g.P("var err error")
-		objApiStr := strings.ToLower(string(k[0])) + string(k[1:len(k)]) + "Api"
-		objKey := "obj.Key"
-		if newKey, ok := specialKeys[k]; ok {
-			objKey = "obj." + newKey
-		}
-		g.P(objApiStr, " := edgeproto.New"+k+"ApiClient(conn)")
-		if _, ok := v["update"]; ok {
-			g.P("for ii, obj := range *data {")
-		} else {
-			g.P("for _, obj := range *data {")
-		}
-		g.P("log.Printf(\"API %v for ", k, ": %v\", mode, ", objKey, ")")
-		if streaming {
-			g.importTestutil = true
-			g.P("var stream testutil.", k, "Stream")
-		}
-		g.P("switch mode {")
-		for m, mInfo := range v {
-			g.P("case \"", m, "\":")
-			if m == "update" {
-				g.importCli = true
-				g.P("obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)")
-			}
-			if mInfo.Stream {
-				g.P("stream, err = ", objApiStr, ".", mInfo.Name, "(ctx, &obj)")
-			} else {
-				g.P("_, err = ", objApiStr, ".", mInfo.Name, "(ctx, &obj)")
-			}
-		}
-		g.P("default:")
-		g.P("log.Printf(\"Unsupported API %v for ", k, ": %v\", mode, ", objKey, ")")
-		g.P("return nil")
-		g.P("}")
-		if streaming {
-			g.P("err = testutil.", k, "ReadResultStream(stream, err)")
-		}
-		g.P("err = ignoreExpectedErrors(mode, &", objKey, ", err)")
-		g.P("if err != nil {")
-		g.P("return fmt.Errorf(\"API %s failed for %v -- err %v\", mode, ", objKey, ", err)")
-		g.P("}")
-		g.P("}")
-		g.P("return nil")
-		g.P("}")
-	}
-	g.importGrpc = true
-	g.importLog = true
 }
 
 type tmplArgs struct {

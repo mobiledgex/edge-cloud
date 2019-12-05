@@ -11,6 +11,7 @@ import "context"
 import "time"
 import "github.com/stretchr/testify/require"
 import "github.com/mobiledgex/edge-cloud/log"
+import "github.com/mobiledgex/edge-cloud/cli"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -306,6 +307,31 @@ func FindDeveloperData(key *edgeproto.DeveloperKey, testData []edgeproto.Develop
 		}
 	}
 	return nil, false
+}
+
+func RunDeveloperApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Developer, dataMap []map[string]interface{}, mode string) error {
+	var err error
+	developerApi := edgeproto.NewDeveloperApiClient(conn)
+	for ii, obj := range *data {
+		log.DebugLog(log.DebugLevelApi, "API %v for Developer: %v", mode, obj.Key)
+		switch mode {
+		case "update":
+			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
+			_, err = developerApi.UpdateDeveloper(ctx, &obj)
+		case "create":
+			_, err = developerApi.CreateDeveloper(ctx, &obj)
+		case "delete":
+			_, err = developerApi.DeleteDeveloper(ctx, &obj)
+		default:
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Developer: %v", mode, obj.Key)
+			return nil
+		}
+		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		if err != nil {
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+		}
+	}
+	return nil
 }
 
 func (s *DummyServer) CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {

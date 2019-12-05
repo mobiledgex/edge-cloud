@@ -10,8 +10,6 @@ import "context"
 import "io"
 import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
-import "google.golang.org/grpc"
-import "log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -213,28 +211,6 @@ var CloudletPoolApiCmds = []*cobra.Command{
 	ShowCloudletPoolCmd.GenCmd(),
 }
 
-func RunCloudletPoolApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.CloudletPool, dataMap []map[string]interface{}, mode string) error {
-	var err error
-	cloudletPoolApi := edgeproto.NewCloudletPoolApiClient(conn)
-	for _, obj := range *data {
-		log.Printf("API %v for CloudletPool: %v", mode, obj.Key)
-		switch mode {
-		case "create":
-			_, err = cloudletPoolApi.CreateCloudletPool(ctx, &obj)
-		case "delete":
-			_, err = cloudletPoolApi.DeleteCloudletPool(ctx, &obj)
-		default:
-			log.Printf("Unsupported API %v for CloudletPool: %v", mode, obj.Key)
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
-		}
-	}
-	return nil
-}
-
 var CloudletPoolMemberApiCmd edgeproto.CloudletPoolMemberApiClient
 
 var CreateCloudletPoolMemberCmd = &cli.Command{
@@ -421,28 +397,6 @@ var CloudletPoolMemberApiCmds = []*cobra.Command{
 	CreateCloudletPoolMemberCmd.GenCmd(),
 	DeleteCloudletPoolMemberCmd.GenCmd(),
 	ShowCloudletPoolMemberCmd.GenCmd(),
-}
-
-func RunCloudletPoolMemberApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.CloudletPoolMember, dataMap []map[string]interface{}, mode string) error {
-	var err error
-	cloudletPoolMemberApi := edgeproto.NewCloudletPoolMemberApiClient(conn)
-	for _, obj := range *data {
-		log.Printf("API %v for CloudletPoolMember: %v", mode, obj.PoolKey)
-		switch mode {
-		case "create":
-			_, err = cloudletPoolMemberApi.CreateCloudletPoolMember(ctx, &obj)
-		case "delete":
-			_, err = cloudletPoolMemberApi.DeleteCloudletPoolMember(ctx, &obj)
-		default:
-			log.Printf("Unsupported API %v for CloudletPoolMember: %v", mode, obj.PoolKey)
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, &obj.PoolKey, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.PoolKey, err)
-		}
-	}
-	return nil
 }
 
 var CloudletPoolShowApiCmd edgeproto.CloudletPoolShowApiClient

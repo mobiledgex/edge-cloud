@@ -10,8 +10,6 @@ import "context"
 import "io"
 import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
-import "google.golang.org/grpc"
-import "log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -267,31 +265,6 @@ var AutoScalePolicyApiCmds = []*cobra.Command{
 	DeleteAutoScalePolicyCmd.GenCmd(),
 	UpdateAutoScalePolicyCmd.GenCmd(),
 	ShowAutoScalePolicyCmd.GenCmd(),
-}
-
-func RunAutoScalePolicyApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.AutoScalePolicy, dataMap []map[string]interface{}, mode string) error {
-	var err error
-	autoScalePolicyApi := edgeproto.NewAutoScalePolicyApiClient(conn)
-	for ii, obj := range *data {
-		log.Printf("API %v for AutoScalePolicy: %v", mode, obj.Key)
-		switch mode {
-		case "delete":
-			_, err = autoScalePolicyApi.DeleteAutoScalePolicy(ctx, &obj)
-		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			_, err = autoScalePolicyApi.UpdateAutoScalePolicy(ctx, &obj)
-		case "create":
-			_, err = autoScalePolicyApi.CreateAutoScalePolicy(ctx, &obj)
-		default:
-			log.Printf("Unsupported API %v for AutoScalePolicy: %v", mode, obj.Key)
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
-		}
-	}
-	return nil
 }
 
 var PolicyKeyRequiredArgs = []string{}

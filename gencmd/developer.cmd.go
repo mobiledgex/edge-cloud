@@ -10,8 +10,6 @@ import "context"
 import "io"
 import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
-import "google.golang.org/grpc"
-import "log"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -267,31 +265,6 @@ var DeveloperApiCmds = []*cobra.Command{
 	DeleteDeveloperCmd.GenCmd(),
 	UpdateDeveloperCmd.GenCmd(),
 	ShowDeveloperCmd.GenCmd(),
-}
-
-func RunDeveloperApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Developer, dataMap []map[string]interface{}, mode string) error {
-	var err error
-	developerApi := edgeproto.NewDeveloperApiClient(conn)
-	for ii, obj := range *data {
-		log.Printf("API %v for Developer: %v", mode, obj.Key)
-		switch mode {
-		case "create":
-			_, err = developerApi.CreateDeveloper(ctx, &obj)
-		case "delete":
-			_, err = developerApi.DeleteDeveloper(ctx, &obj)
-		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			_, err = developerApi.UpdateDeveloper(ctx, &obj)
-		default:
-			log.Printf("Unsupported API %v for Developer: %v", mode, obj.Key)
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
-		}
-	}
-	return nil
 }
 
 var DeveloperKeyRequiredArgs = []string{}

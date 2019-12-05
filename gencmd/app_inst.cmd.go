@@ -11,9 +11,6 @@ import "context"
 import "io"
 import "github.com/mobiledgex/edge-cloud/cli"
 import "google.golang.org/grpc/status"
-import "google.golang.org/grpc"
-import "log"
-import "github.com/mobiledgex/edge-cloud/testutil"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -450,35 +447,6 @@ var AppInstApiCmds = []*cobra.Command{
 	RefreshAppInstCmd.GenCmd(),
 	UpdateAppInstCmd.GenCmd(),
 	ShowAppInstCmd.GenCmd(),
-}
-
-func RunAppInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.AppInst, dataMap []map[string]interface{}, mode string) error {
-	var err error
-	appInstApi := edgeproto.NewAppInstApiClient(conn)
-	for ii, obj := range *data {
-		log.Printf("API %v for AppInst: %v", mode, obj.Key)
-		var stream testutil.AppInstStream
-		switch mode {
-		case "delete":
-			stream, err = appInstApi.DeleteAppInst(ctx, &obj)
-		case "refresh":
-			stream, err = appInstApi.RefreshAppInst(ctx, &obj)
-		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			stream, err = appInstApi.UpdateAppInst(ctx, &obj)
-		case "create":
-			stream, err = appInstApi.CreateAppInst(ctx, &obj)
-		default:
-			log.Printf("Unsupported API %v for AppInst: %v", mode, obj.Key)
-			return nil
-		}
-		err = testutil.AppInstReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
-		}
-	}
-	return nil
 }
 
 var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient

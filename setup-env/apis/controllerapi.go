@@ -13,9 +13,9 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/gencmd"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	"github.com/mobiledgex/edge-cloud/testutil"
 	"gopkg.in/yaml.v2"
 )
 
@@ -170,42 +170,42 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		switch api {
 		case "delete":
 			//run in reverse order to delete child keys
-			err = gencmd.RunAppInstApi(ctrlapi, ctx, &appData.AppInstances, appDataMap["appinstances"], api)
+			err = testutil.RunAppInstApi(ctrlapi, ctx, &appData.AppInstances, appDataMap["appinstances"], api)
 			if err != nil {
 				log.Printf("Error in appinst API %v \n", err)
 				rc = false
 			}
-			err = gencmd.RunClusterInstApi(ctrlapi, ctx, &appData.ClusterInsts, appDataMap["clusterinsts"], api)
+			err = testutil.RunClusterInstApi(ctrlapi, ctx, &appData.ClusterInsts, appDataMap["clusterinsts"], api)
 			if err != nil {
 				log.Printf("Error in clusterinst API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunAppApi(ctrlapi, ctx, &appData.Applications, appDataMap["apps"], api)
+			err = testutil.RunAppApi(ctrlapi, ctx, &appData.Applications, appDataMap["apps"], api)
 			if err != nil {
 				log.Printf("Error in app API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunCloudletInfoApi(ctrlapi, ctx, &appData.CloudletInfos, appDataMap["cloudletinfos"], api)
+			err = testutil.RunCloudletInfoApi(ctrlapi, ctx, &appData.CloudletInfos, appDataMap["cloudletinfos"], api)
 			if err != nil {
 				log.Printf("Error in cloudletInfo API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunCloudletApi(ctrlapi, ctx, &appData.Cloudlets, appDataMap["cloudlets"], api)
+			err = testutil.RunCloudletApi(ctrlapi, ctx, &appData.Cloudlets, appDataMap["cloudlets"], api)
 			if err != nil {
 				log.Printf("Error in cloudlet API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunDeveloperApi(ctrlapi, ctx, &appData.Developers, appDataMap["developers"], api)
+			err = testutil.RunDeveloperApi(ctrlapi, ctx, &appData.Developers, appDataMap["developers"], api)
 			if err != nil {
 				log.Printf("Error in developer API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
+			err = testutil.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
 			if err != nil {
 				log.Printf("Error in operator API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
+			err = testutil.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
 			if err != nil {
 				log.Printf("Error in flavor API %v\n", err)
 				rc = false
@@ -215,42 +215,42 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		case "refresh":
 			fallthrough
 		case "update":
-			err = gencmd.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
+			err = testutil.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
 			if err != nil {
 				log.Printf("Error in flavor API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
+			err = testutil.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
 			if err != nil {
 				log.Printf("Error in operator API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunDeveloperApi(ctrlapi, ctx, &appData.Developers, appDataMap["developers"], api)
+			err = testutil.RunDeveloperApi(ctrlapi, ctx, &appData.Developers, appDataMap["developers"], api)
 			if err != nil {
 				log.Printf("Error in developer API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunCloudletApi(ctrlapi, ctx, &appData.Cloudlets, appDataMap["cloudlets"], api)
+			err = testutil.RunCloudletApi(ctrlapi, ctx, &appData.Cloudlets, appDataMap["cloudlets"], api)
 			if err != nil {
 				log.Printf("Error in cloudlet API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunCloudletInfoApi(ctrlapi, ctx, &appData.CloudletInfos, appDataMap["cloudletinfos"], api)
+			err = testutil.RunCloudletInfoApi(ctrlapi, ctx, &appData.CloudletInfos, appDataMap["cloudletinfos"], api)
 			if err != nil {
 				log.Printf("Error in cloudletInfo API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunAppApi(ctrlapi, ctx, &appData.Applications, appDataMap["apps"], api)
+			err = testutil.RunAppApi(ctrlapi, ctx, &appData.Applications, appDataMap["apps"], api)
 			if err != nil {
 				log.Printf("Error in app API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunClusterInstApi(ctrlapi, ctx, &appData.ClusterInsts, appDataMap["clusterinsts"], api)
+			err = testutil.RunClusterInstApi(ctrlapi, ctx, &appData.ClusterInsts, appDataMap["clusterinsts"], api)
 			if err != nil {
 				log.Printf("Error in clusterinst API %v\n", err)
 				rc = false
 			}
-			err = gencmd.RunAppInstApi(ctrlapi, ctx, &appData.AppInstances, appDataMap["appinstances"], api)
+			err = testutil.RunAppInstApi(ctrlapi, ctx, &appData.AppInstances, appDataMap["appinstances"], api)
 			if err != nil {
 				log.Printf("Error in appinst API %v\n", err)
 				rc = false
