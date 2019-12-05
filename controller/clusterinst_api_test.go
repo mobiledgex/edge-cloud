@@ -118,6 +118,8 @@ func TestClusterInstApi(t *testing.T) {
 	responder.SetSimulateClusterCreateFailure(false)
 	responder.SetSimulateClusterDeleteFailure(false)
 
+	testReservableClusterInst(t, ctx, commonApi)
+
 	dummy.Stop()
 }
 
@@ -153,4 +155,72 @@ func forceClusterInstState(ctx context.Context, in *edgeproto.ClusterInst, state
 		return nil
 	})
 	return err
+}
+
+func testReservableClusterInst(t *testing.T, ctx context.Context, api *testutil.ClusterInstCommonApi) {
+	cinst := testutil.ClusterInstData[7]
+	checkReservedBy(t, ctx, api, &cinst.Key, "")
+
+	// create test app
+	for _, app := range testutil.AppData {
+		_, err := appApi.CreateApp(ctx, &app)
+		require.Nil(t, err, "create App")
+	}
+
+	// Should be able to create a developer AppInst on the ClusterInst
+	streamOut := testutil.NewCudStreamoutAppInst(ctx)
+	appinst := edgeproto.AppInst{}
+	appinst.Key.AppKey = testutil.AppData[0].Key
+	appinst.Key.ClusterInstKey = cinst.Key
+	err := appInstApi.CreateAppInst(&appinst, streamOut)
+	require.Nil(t, err, "create AppInst")
+	checkReservedBy(t, ctx, api, &cinst.Key, appinst.Key.AppKey.DeveloperKey.Name)
+
+	// Cannot create another AppInst on it from different developer
+	appinst2 := edgeproto.AppInst{}
+	appinst2.Key.AppKey = testutil.AppData[10].Key
+	appinst2.Key.ClusterInstKey = cinst.Key
+	require.NotEqual(t, appinst.Key.AppKey.DeveloperKey.Name, appinst2.Key.AppKey.DeveloperKey.Name)
+	err = appInstApi.CreateAppInst(&appinst2, streamOut)
+	require.NotNil(t, err, "create AppInst on already reserved ClusterInst")
+	// Cannot create another AppInst on it from the same developer
+	appinst3 := edgeproto.AppInst{}
+	appinst3.Key.AppKey = testutil.AppData[1].Key
+	appinst3.Key.ClusterInstKey = cinst.Key
+	require.Equal(t, appinst.Key.AppKey.DeveloperKey.Name, appinst3.Key.AppKey.DeveloperKey.Name)
+	err = appInstApi.CreateAppInst(&appinst3, streamOut)
+	require.NotNil(t, err, "create AppInst on already reserved ClusterInst")
+
+	// Make sure above changes have not affected ReservedBy setting
+	checkReservedBy(t, ctx, api, &cinst.Key, appinst.Key.AppKey.DeveloperKey.Name)
+
+	// Deleting AppInst should removed ReservedBy
+	err = appInstApi.DeleteAppInst(&appinst, streamOut)
+	require.Nil(t, err, "delete AppInst")
+	checkReservedBy(t, ctx, api, &cinst.Key, "")
+
+	// Can now create AppInst from different developer
+	err = appInstApi.CreateAppInst(&appinst2, streamOut)
+	require.Nil(t, err, "create AppInst on reservable ClusterInst")
+	checkReservedBy(t, ctx, api, &cinst.Key, appinst2.Key.AppKey.DeveloperKey.Name)
+
+	// Delete AppInst
+	err = appInstApi.DeleteAppInst(&appinst2, streamOut)
+	require.Nil(t, err, "delete AppInst on reservable ClusterInst")
+	checkReservedBy(t, ctx, api, &cinst.Key, "")
+	// Delete App
+	for _, app := range testutil.AppData {
+		_, err = appApi.DeleteApp(ctx, &app)
+		require.Nil(t, err, "delete App")
+	}
+	checkReservedBy(t, ctx, api, &cinst.Key, "")
+}
+
+func checkReservedBy(t *testing.T, ctx context.Context, api *testutil.ClusterInstCommonApi, key *edgeproto.ClusterInstKey, expected string) {
+	cinst := edgeproto.ClusterInst{}
+	found := testutil.GetClusterInst(t, ctx, api, key, &cinst)
+	require.True(t, found, "get ClusterInst")
+	require.True(t, cinst.Reservable)
+	require.Equal(t, expected, cinst.ReservedBy)
+	require.Equal(t, cloudcommon.DeveloperMobiledgeX, cinst.Key.Developer)
 }
