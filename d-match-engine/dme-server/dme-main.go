@@ -222,9 +222,10 @@ func (s *server) RegisterClient(ctx context.Context,
 		}
 	}
 	key := dmecommon.CookieKey{
-		DevName: req.DevName,
-		AppName: req.AppName,
-		AppVers: req.AppVers,
+		DevName:  req.DevName,
+		AppName:  req.AppName,
+		AppVers:  req.AppVers,
+		ClientId: req.ClientId,
 	}
 	cookie, err := dmecommon.GenerateCookie(&key, ctx, cookieExpiration)
 	if err != nil {
