@@ -279,13 +279,20 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 
 	var autocluster bool
+	var tenant bool
 	// See if we need to create auto-cluster.
 	// This also sets up the correct ClusterInstKey in "in".
 
-	if in.Key.AppKey.DeveloperKey.Name != cloudcommon.DeveloperMobiledgeX &&
-		in.Key.AppKey.DeveloperKey.Name != in.Key.ClusterInstKey.Developer {
+	if in.Key.AppKey.DeveloperKey.Name != in.Key.ClusterInstKey.Developer {
 		// both are specified, make sure they match
-		return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.DeveloperKey.Name, in.Key.ClusterInstKey.Developer)
+		if in.Key.AppKey.DeveloperKey.Name == cloudcommon.DeveloperMobiledgeX {
+			// mobiledgex apps on dev ClusterInst, like prometheus
+		} else if in.Key.ClusterInstKey.Developer == cloudcommon.DeveloperMobiledgeX {
+			// developer apps on reservable mobiledgex ClusterInst
+			tenant = true
+		} else {
+			return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.DeveloperKey.Name, in.Key.ClusterInstKey.Developer)
+		}
 	}
 	appDeploymentType := ""
 
@@ -302,7 +309,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			in.Errors = nil
 			// must reset Uri
 			in.Uri = ""
-
 		} else {
 			err := in.Validate(edgeproto.AppInstAllFieldsMap)
 			if err != nil {
@@ -455,6 +461,16 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if clusterInst.State != edgeproto.TrackedState_READY {
 				return fmt.Errorf("ClusterInst %s not ready", clusterInst.Key.GetKeyString())
 			}
+			if tenant {
+				if !clusterInst.Reservable {
+					return fmt.Errorf("ClusterInst is not reservable")
+				}
+				if clusterInst.ReservedBy != "" {
+					// Only one AppInst (even from the same developer)
+					// allowed per reservable ClusterInst
+					return fmt.Errorf("Reservable MobiledgeX ClusterInst already in use")
+				}
+			}
 			needDeployment := app.Deployment
 			if app.Deployment == cloudcommon.AppDeploymentTypeHelm {
 				needDeployment = cloudcommon.AppDeploymentTypeKubernetes
@@ -464,6 +480,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 			ipaccess = clusterInst.IpAccess
 			clusterKey = &clusterInst.Key.ClusterKey
+			if tenant {
+				clusterInst.ReservedBy = in.Key.AppKey.DeveloperKey.Name
+				clusterInstApi.store.STMPut(stm, &clusterInst)
+			}
 		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}
@@ -927,6 +947,13 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		clusterInstKey = in.Key.ClusterInstKey
 		if cloudletRefsChanged {
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
+		}
+		clusterInst := edgeproto.ClusterInst{}
+		if clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst) {
+			if clusterInst.ReservedBy != "" && clusterInst.ReservedBy == in.Key.AppKey.DeveloperKey.Name {
+				clusterInst.ReservedBy = ""
+				clusterInstApi.store.STMPut(stm, &clusterInst)
+			}
 		}
 
 		// delete app inst
