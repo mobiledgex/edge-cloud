@@ -169,14 +169,15 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 	}
 	httpPorts := []HTTPSpecDetail{}
 
-	tcpconns, err := getTCPConcurrentConnectionsPerIP()
-	if err != nil {
-		return err
-	}
+	// tcpconns, err := getTCPConcurrentConnectionsPerIP()
+	// if err != nil {
+	// 	return err
+	// }
 	udpconns, err := getUDPConcurrentConnectionsPerIP()
 	if err != nil {
 		return err
 	}
+	needEnvoy := false
 	for _, p := range ports {
 		origin := fmt.Sprintf("%s:%d", originIP, p.InternalPort)
 		switch p.Proto {
@@ -189,13 +190,7 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 			httpPorts = append(httpPorts, httpPort)
 			continue
 		case dme.LProto_L_PROTO_TCP:
-			tcpPort := TCPSpecDetail{
-				Port:                 p.PublicPort,
-				Origin:               origin,
-				ConcurrentConnsPerIP: tcpconns,
-			}
-			spec.TCPSpec = append(spec.TCPSpec, &tcpPort)
-			spec.L4 = true
+			needEnvoy = true // have envoy handle the tcp stuff
 		case dme.LProto_L_PROTO_UDP:
 			udpPort := UDPSpecDetail{
 				Port:                 p.PublicPort,
@@ -204,6 +199,13 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 			}
 			spec.UDPSpec = append(spec.UDPSpec, &udpPort)
 			spec.L4 = true
+		}
+	}
+
+	if needEnvoy {
+		err = CreateEnvoyProxy(client, name, originIP, ports)
+		if err != nil {
+			return fmt.Errorf("Create Envoy Proxy failed, %v", err)
 		}
 	}
 
@@ -277,6 +279,7 @@ type ProxySpec struct {
 type TCPSpecDetail struct {
 	Port                 int32
 	Origin               string
+	OriginPort			 int32
 	ConcurrentConnsPerIP uint64
 }
 
@@ -336,13 +339,6 @@ http {
 {{if .L4 -}}
 stream {
 	limit_conn_zone $binary_remote_addr zone=ipaddr:10m;
-	{{- range .TCPSpec}}
-	server {
-		limit_conn ipaddr {{.ConcurrentConnsPerIP}};
-		listen {{.Port}};
-		proxy_pass {{.Origin}};
-	}
-	{{- end}}
 	{{- range .UDPSpec}}
 	server {
 		limit_conn ipaddr {{.ConcurrentConnsPerIP}};
@@ -350,17 +346,6 @@ stream {
 		proxy_pass {{.Origin}};
 	}
 	{{- end}}
-}
-http {
-	server {
-		listen 127.0.0.1:{{.MetricPort}};
-		server_name 127.0.0.1:{{.MetricPort}};
-		location /nginx_metrics {
-			allow 127.0.0.1;
-			deny all;
-			stub_status;
-		}
-	}
 }
 {{- end}}
 `
@@ -407,6 +392,7 @@ func DeleteNginxProxy(client pc.PlatformClient, name string) error {
 	reloadNginxL7(client)
 
 	log.DebugLog(log.DebugLevelMexos, "deleted nginx", "name", name)
+	DeleteEnvoyProxy(client, name)
 	return nil
 }
 
