@@ -315,13 +315,13 @@ func RunDeveloperApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgepro
 	for ii, obj := range *data {
 		log.DebugLog(log.DebugLevelApi, "API %v for Developer: %v", mode, obj.Key)
 		switch mode {
+		case "delete":
+			_, err = developerApi.DeleteDeveloper(ctx, &obj)
 		case "update":
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			_, err = developerApi.UpdateDeveloper(ctx, &obj)
 		case "create":
 			_, err = developerApi.CreateDeveloper(ctx, &obj)
-		case "delete":
-			_, err = developerApi.DeleteDeveloper(ctx, &obj)
 		default:
 			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Developer: %v", mode, obj.Key)
 			return nil

@@ -568,13 +568,13 @@ func RunCloudletApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeprot
 		log.DebugLog(log.DebugLevelApi, "API %v for Cloudlet: %v", mode, obj.Key)
 		var stream CloudletStream
 		switch mode {
+		case "update":
+			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
+			stream, err = cloudletApi.UpdateCloudlet(ctx, &obj)
 		case "create":
 			stream, err = cloudletApi.CreateCloudlet(ctx, &obj)
 		case "delete":
 			stream, err = cloudletApi.DeleteCloudlet(ctx, &obj)
-		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			stream, err = cloudletApi.UpdateCloudlet(ctx, &obj)
 		default:
 			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Cloudlet: %v", mode, obj.Key)
 			return nil
