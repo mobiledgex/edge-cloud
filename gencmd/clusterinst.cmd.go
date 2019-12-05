@@ -462,6 +462,7 @@ var ClusterInstOptionalArgs = []string{
 	"numnodes",
 	"autoscalepolicy",
 	"availabilityzone",
+	"imagename",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -490,6 +491,7 @@ var ClusterInstComments = map[string]string{
 	"externalvolumesize": "Size of external volume to be attached to nodes",
 	"autoscalepolicy":    "Auto scale policy name",
 	"availabilityzone":   "Optional Resource AZ if any",
+	"imagename":          "Optional resource specific image to launch",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors": "StringArray",
