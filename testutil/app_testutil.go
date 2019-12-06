@@ -315,13 +315,13 @@ func RunAppApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.App
 	for ii, obj := range *data {
 		log.DebugLog(log.DebugLevelApi, "API %v for App: %v", mode, obj.Key)
 		switch mode {
-		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			_, err = appApi.UpdateApp(ctx, &obj)
 		case "create":
 			_, err = appApi.CreateApp(ctx, &obj)
 		case "delete":
 			_, err = appApi.DeleteApp(ctx, &obj)
+		case "update":
+			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
+			_, err = appApi.UpdateApp(ctx, &obj)
 		default:
 			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for App: %v", mode, obj.Key)
 			return nil

@@ -3,6 +3,7 @@
 package main
 
 import (
+	"sort"
 	"strings"
 	"text/template"
 
@@ -636,11 +637,12 @@ func (t *TestCud) generateRunApi(file *descriptor.FileDescriptorProto, service *
 	}
 	for k, v := range out {
 		var streaming bool
-		for _, mInfo := range v {
+		mapKeys := []string{}
+		for k, mInfo := range v {
 			if mInfo.Stream {
 				streaming = true
-				break
 			}
+			mapKeys = append(mapKeys, k)
 		}
 		t.P()
 		t.P("func Run", k, "Api(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.", k, ", dataMap []map[string]interface{}, mode string) error {")
@@ -661,9 +663,11 @@ func (t *TestCud) generateRunApi(file *descriptor.FileDescriptorProto, service *
 			t.P("var stream ", k, "Stream")
 		}
 		t.P("switch mode {")
-		for m, mInfo := range v {
-			t.P("case \"", m, "\":")
-			if m == "update" {
+		sort.Strings(mapKeys)
+		for _, action := range mapKeys {
+			mInfo := v[action]
+			t.P("case \"", action, "\":")
+			if action == "update" {
 				t.importCli = true
 				t.P("obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)")
 			}
