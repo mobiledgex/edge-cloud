@@ -39,6 +39,8 @@ type ApplicationData struct {
 	ResTagTables        []ResTagTable        `ymal:"restagtables"`
 }
 
+type ApplicationDataMap map[string][]map[string]interface{}
+
 // sort each slice by key
 func (a *ApplicationData) Sort() {
 	sort.Slice(a.AppInstances[:], func(i, j int) bool {
@@ -537,6 +539,7 @@ func IgnoreTaggedFields(taglist string) []cmp.Option {
 	opts = append(opts, IgnoreAppInstInfoFields(taglist))
 	opts = append(opts, IgnoreClusterInstFields(taglist))
 	opts = append(opts, IgnoreClusterInstInfoFields(taglist))
+	opts = append(opts, IgnoreCloudletFields(taglist))
 	return opts
 }
 

@@ -370,6 +370,7 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-2
+  version: 2019-10-24
 - key:
     operatorkey:
       name: dmuus
@@ -384,6 +385,7 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-5
+  version: 2019-10-24
 - key:
     operatorkey:
       name: dmuus
@@ -398,6 +400,7 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-6
+  version: 2019-10-24
 - key:
     operatorkey:
       name: azure
@@ -412,6 +415,7 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: azure-cloud-9
+  version: 2019-10-24
 - key:
     operatorkey:
       name: gcp
@@ -426,6 +430,7 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: gcp-cloud-10
+  version: 2019-10-24
 - key:
     operatorkey:
       name: dmuus
@@ -440,6 +445,7 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-1
+  version: 2019-10-24
 - key:
     operatorkey:
       name: dmuus
@@ -454,6 +460,7 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-3
+  version: 2019-10-24
 - key:
     operatorkey:
       name: dmuus
@@ -468,6 +475,7 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-4
+  version: 2019-10-24
 - key:
     operatorkey:
       name: dmuus
@@ -482,6 +490,7 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-7
+  version: 2019-10-24
 - key:
     operatorkey:
       name: dmuus
@@ -496,6 +505,7 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-8
+  version: 2019-10-24
 
 apps:
 - key:
