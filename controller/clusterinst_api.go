@@ -151,6 +151,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if in.Key.ClusterKey.Name == "" {
 		return fmt.Errorf("Cluster name cannot be empty")
 	}
+	if in.Reservable && in.Key.Developer != cloudcommon.DeveloperMobiledgeX {
+		return fmt.Errorf("Only %s ClusterInsts may be reservable", cloudcommon.DeveloperMobiledgeX)
+	}
+
 	// validate deployment
 	if in.Deployment == "" {
 		// assume kubernetes, because that's what we've been doing

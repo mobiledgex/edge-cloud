@@ -3,6 +3,7 @@
 package main
 
 import (
+	"sort"
 	"strings"
 	"text/template"
 
@@ -29,6 +30,7 @@ type TestCud struct {
 	importRequire   bool
 	importGrpc      bool
 	importLog       bool
+	importCli       bool
 }
 
 func (t *TestCud) Name() string {
@@ -444,6 +446,9 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 	if t.importLog {
 		t.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
 	}
+	if t.importCli {
+		t.PrintImport("", "github.com/mobiledgex/edge-cloud/cli")
+	}
 }
 
 func (t *TestCud) Generate(file *generator.FileDescriptor) {
@@ -455,6 +460,7 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 	t.importTime = false
 	t.importRequire = false
 	t.importLog = false
+	t.importCli = false
 	t.support.InitFile()
 	if !t.support.GenFile(*file.FileDescriptorProto.Name) {
 		return
@@ -497,6 +503,7 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 			if len(service.Method) == 0 {
 				continue
 			}
+			t.generateRunApi(file.FileDescriptorProto, service)
 			for _, method := range service.Method {
 				t.genDummyMethod(*service.Name, method)
 			}
@@ -572,6 +579,120 @@ func (t *TestCud) generateCudTest(desc *generator.Descriptor) {
 	t.importTime = true
 	t.importRequire = true
 	t.importLog = true
+}
+
+type methodInfo struct {
+	Name   string
+	Stream bool
+}
+
+func (t *TestCud) generateRunApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {
+	mappedActions := map[string]string{
+		"Create":  "create",
+		"Inject":  "create",
+		"Update":  "update",
+		"Delete":  "delete",
+		"Evict":   "delete",
+		"Refresh": "refresh",
+	}
+	ignoredActions := []string{
+		"Show",
+	}
+	specialKeys := map[string]string{
+		"CloudletPoolMember": "PoolKey",
+	}
+	out := make(map[string]map[string]methodInfo)
+	for _, method := range service.Method {
+		ignore := false
+		for _, action := range ignoredActions {
+			if strings.HasPrefix(*method.Name, action) {
+				ignore = true
+				break
+			}
+		}
+		if ignore {
+			continue
+		}
+		for k, v := range mappedActions {
+			if strings.HasPrefix(*method.Name, k) {
+				cmd := strings.TrimPrefix(*method.Name, k)
+				mInfo := methodInfo{
+					Name: *method.Name,
+				}
+				if gensupport.ServerStreaming(method) {
+					mInfo.Stream = true
+				}
+				if _, ok := out[cmd]; ok {
+					out[cmd][v] = mInfo
+				} else {
+					out[cmd] = map[string]methodInfo{
+						v: mInfo,
+					}
+				}
+			}
+		}
+	}
+	if len(out) <= 0 {
+		return
+	}
+	for k, v := range out {
+		var streaming bool
+		mapKeys := []string{}
+		for k, mInfo := range v {
+			if mInfo.Stream {
+				streaming = true
+			}
+			mapKeys = append(mapKeys, k)
+		}
+		t.P()
+		t.P("func Run", k, "Api(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.", k, ", dataMap []map[string]interface{}, mode string) error {")
+		t.P("var err error")
+		objApiStr := strings.ToLower(string(k[0])) + string(k[1:len(k)]) + "Api"
+		objKey := "obj.Key"
+		if newKey, ok := specialKeys[k]; ok {
+			objKey = "obj." + newKey
+		}
+		t.P(objApiStr, " := edgeproto.New"+k+"ApiClient(conn)")
+		if _, ok := v["update"]; ok {
+			t.P("for ii, obj := range *data {")
+		} else {
+			t.P("for _, obj := range *data {")
+		}
+		t.P("log.DebugLog(log.DebugLevelApi, \"API %v for ", k, ": %v\", mode, ", objKey, ")")
+		if streaming {
+			t.P("var stream ", k, "Stream")
+		}
+		t.P("switch mode {")
+		sort.Strings(mapKeys)
+		for _, action := range mapKeys {
+			mInfo := v[action]
+			t.P("case \"", action, "\":")
+			if action == "update" {
+				t.importCli = true
+				t.P("obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)")
+			}
+			if mInfo.Stream {
+				t.P("stream, err = ", objApiStr, ".", mInfo.Name, "(ctx, &obj)")
+			} else {
+				t.P("_, err = ", objApiStr, ".", mInfo.Name, "(ctx, &obj)")
+			}
+		}
+		t.P("default:")
+		t.P("log.DebugLog(log.DebugLevelApi, \"Unsupported API %v for ", k, ": %v\", mode, ", objKey, ")")
+		t.P("return nil")
+		t.P("}")
+		if streaming {
+			t.P("err = ", k, "ReadResultStream(stream, err)")
+		}
+		t.P("err = ignoreExpectedErrors(mode, &", objKey, ", err)")
+		t.P("if err != nil {")
+		t.P("return fmt.Errorf(\"API %s failed for %v -- err %v\", mode, ", objKey, ", err)")
+		t.P("}")
+		t.P("}")
+		t.P("return nil")
+		t.P("}")
+	}
+	t.importGrpc = true
 }
 
 type methodArgs struct {

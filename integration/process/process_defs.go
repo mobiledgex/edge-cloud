@@ -30,6 +30,7 @@ type Controller struct {
 	RegistryFQDN         string
 	ArtifactoryFQDN      string
 	CloudletRegistryPath string
+	VersionTag           string
 	CloudletVMImagePath  string
 }
 type Dme struct {

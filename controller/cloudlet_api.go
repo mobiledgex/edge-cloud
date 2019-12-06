@@ -588,7 +588,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if in.DeploymentLocal {
 			return fmt.Errorf("upgrade is not supported for local deployments")
 		}
-		err = s.UpgradeCloudlet(ctx, cur, cb)
+		err = s.UpgradeCloudlet(ctx, in, cb)
 		if err != nil {
 			return err
 		}
@@ -651,16 +651,16 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	}
 	// cleanup old crms post upgrade
 	pfConfig.CleanupMode = true
-	cloudlet := edgeproto.Cloudlet{}
+	cloudlet := &edgeproto.Cloudlet{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, &cloudlet) {
+		if !s.store.STMGet(stm, &in.Key, cloudlet) {
 			return in.Key.NotFoundError()
 		}
+		cloudlet.CopyInFields(in)
 		cloudlet.Config = *pfConfig
-		cloudlet.Version = in.Version
 		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 
-		s.store.STMPut(stm, &cloudlet)
+		s.store.STMPut(stm, cloudlet)
 		return nil
 	})
 	if err != nil {

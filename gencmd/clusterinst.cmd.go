@@ -462,6 +462,8 @@ var ClusterInstOptionalArgs = []string{
 	"numnodes",
 	"autoscalepolicy",
 	"availabilityzone",
+	"imagename",
+	"reservable",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -490,6 +492,9 @@ var ClusterInstComments = map[string]string{
 	"externalvolumesize": "Size of external volume to be attached to nodes",
 	"autoscalepolicy":    "Auto scale policy name",
 	"availabilityzone":   "Optional Resource AZ if any",
+	"imagename":          "Optional resource specific image to launch",
+	"reservable":         "If ClusterInst is reservable",
+	"reservedby":         "For reservable MobiledgeX ClusterInsts, the current developer tenant",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors": "StringArray",
