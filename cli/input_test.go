@@ -1,10 +1,11 @@
-package cli
+package cli_test
 
 import (
 	"encoding/json"
 	"fmt"
 	"testing"
 
+	"github.com/mobiledgex/edge-cloud/cli"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	yaml "github.com/mobiledgex/yaml/v2"
@@ -27,7 +28,7 @@ type InnerObj struct {
 
 func TestParseArgs(t *testing.T) {
 	var args []string
-	input := &Input{}
+	input := &cli.Input{}
 
 	ex := TestObj{
 		Inner1: InnerObj{
@@ -80,7 +81,7 @@ func TestParseArgs(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid args")
 
 	// test enum
-	input = &Input{
+	input = &cli.Input{
 		DecodeHook: edgeproto.EnumDecodeHook,
 	}
 
@@ -91,7 +92,7 @@ func TestParseArgs(t *testing.T) {
 	testParseArgs(t, input, args, &rc, &edgeproto.Cloudlet{}, &edgeproto.Cloudlet{})
 }
 
-func testParseArgs(t *testing.T, input *Input, args []string, expected, buf1, buf2 interface{}) {
+func testParseArgs(t *testing.T, input *cli.Input, args []string, expected, buf1, buf2 interface{}) {
 	// parse the args into a clean buffer
 	dat, err := input.ParseArgs(args, buf1)
 	require.Nil(t, err)
@@ -100,7 +101,7 @@ func testParseArgs(t *testing.T, input *Input, args []string, expected, buf1, bu
 	fmt.Printf("argsmap: %v\n", dat)
 
 	// convert args to json
-	jsmap, err := JsonMap(dat, buf1, StructNamespace)
+	jsmap, err := cli.JsonMap(dat, buf1, cli.StructNamespace)
 	require.Nil(t, err)
 	fmt.Printf("jsonamp: %v\n", jsmap)
 
@@ -143,9 +144,9 @@ func TestConversion(t *testing.T) {
 
 func testConversion(t *testing.T, obj interface{}, buf, buf2 interface{}) {
 	// marshal object to args
-	args, err := MarshalArgs(obj, nil)
+	args, err := cli.MarshalArgs(obj, nil)
 	require.Nil(t, err, "marshal %v", obj)
-	input := Input{
+	input := cli.Input{
 		DecodeHook: edgeproto.EnumDecodeHook,
 	}
 	fmt.Printf("args: %v\n", args)
@@ -157,7 +158,7 @@ func testConversion(t *testing.T, obj interface{}, buf, buf2 interface{}) {
 	fmt.Printf("argsmap: %v\n", dat)
 
 	// convert args map to json map
-	jsmap, err := JsonMap(dat, obj, StructNamespace)
+	jsmap, err := cli.JsonMap(dat, obj, cli.StructNamespace)
 	require.Nil(t, err, "json map")
 	fmt.Printf("jsonmap: %s\n", jsmap)
 
@@ -327,16 +328,16 @@ func TestJsonMapFromYaml(t *testing.T) {
 		require.Nil(t, err, "%d: unmarshal json to map", ii)
 
 		// convert yaml map to json map (this is the focus of the test)
-		jsonMapFromYaml, err := JsonMap(jsonMap, d.obj3, YamlNamespace)
+		jsonMapFromYaml, err := cli.JsonMap(jsonMap, d.obj3, cli.YamlNamespace)
 		require.Nil(t, err, "%d: jsonMap conversion")
 
 		// Due to difference with enums and numeric types
 		// (int vs float), the jsonMap and jsonMapFromYaml are not
 		// directly comparable to each other. So we decode into
 		// objects and compare the objects to verify.
-		_, err = WeakDecode(jsonMap, d.obj3, edgeproto.EnumDecodeHook)
+		_, err = cli.WeakDecode(jsonMap, d.obj3, edgeproto.EnumDecodeHook)
 		require.Nil(t, err, "%d: decode jsonMap")
-		_, err = WeakDecode(jsonMapFromYaml, d.obj4, edgeproto.EnumDecodeHook)
+		_, err = cli.WeakDecode(jsonMapFromYaml, d.obj4, edgeproto.EnumDecodeHook)
 		require.Nil(t, err, "%d: decode jsonMapFromYaml")
 		require.Equal(t, d.obj3, d.obj4, "%d: objects equal after mapping")
 	}

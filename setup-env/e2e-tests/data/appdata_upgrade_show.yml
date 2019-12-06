@@ -89,7 +89,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-1
-  version: 2019-10-24
+  version: 2020-10-10 
 - key:
     operatorkey:
       name: dmuus
@@ -103,7 +103,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-2
-  version: 2019-10-24
+  version: 2020-10-10 
 - key:
     operatorkey:
       name: dmuus
@@ -179,7 +179,7 @@ apps:
     name: helmApplication
     version: "1.0"
   imagepath: mobiledgex/AcmeAppCo/helmApplication
-  imagetype: ImageTypeHelm  
+  imagetype: ImageTypeHelm
   accessports: udp:20002
   defaultflavor:
     name: x1.small
@@ -228,7 +228,7 @@ apps:
     config: |
       prometheus:
         prometheusSpec:
-          scrapeInterval: "30s"
+          scrapeInterval: "15s"
         service:
           type: LoadBalancer
       kubelet:
@@ -262,7 +262,6 @@ apps:
         enabled: false
       alertmanager:
         enabled: false
-  revision: 1
 - key:
     developerkey:
       name: AcmeAppCo1
@@ -336,7 +335,6 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.medium
-  revision: 1
 - key:
     appkey:
       developerkey:
@@ -394,7 +392,6 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.medium
-  revision: 1
 - key:
     appkey:
       developerkey:
