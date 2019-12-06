@@ -62,9 +62,6 @@ func NodeHideTags(in *edgeproto.Node) {
 	if _, found := tags["nocmp"]; found {
 		in.Hostname = ""
 	}
-	if _, found := tags["nocmp"]; found {
-		in.ImageVersion = ""
-	}
 }
 
 var NodeApiCmd edgeproto.NodeApiClient
