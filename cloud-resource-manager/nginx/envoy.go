@@ -67,7 +67,7 @@ func CreateEnvoyProxy(client pc.PlatformClient, name, originIP string, ports []d
 	cmdArgs = append(cmdArgs, []string{
 		"-v", accesslogFile + ":/var/log/access.log",
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
-		"envoyproxy/envoy"}...)
+		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
 	log.DebugLog(log.DebugLevelMexos, "envoy docker command", "name", "envoy"+name,
 		"cmd", cmd)
