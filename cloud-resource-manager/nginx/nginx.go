@@ -76,7 +76,37 @@ func InitL7Proxy(client pc.PlatformClient, ops ...Op) error {
 	return CreateNginxProxy(client, NginxL7Name, "", []dme.AppPort{}, ops...)
 }
 
+func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {
+	needEnvoy := false
+	needNginx := false
+	for _, p := range ports {
+		switch p.Proto {
+		case dme.LProto_L_PROTO_HTTP:
+			needNginx = true
+		case dme.LProto_L_PROTO_TCP:
+			needEnvoy = true // have envoy handle the tcp stuff
+		case dme.LProto_L_PROTO_UDP:
+			needNginx = true
+		}
+	}
+	if name == NginxL7Name {
+		needNginx = true
+	}
+	return needEnvoy, needNginx
+}
+
 func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []dme.AppPort, ops ...Op) error {
+	// check to see whether nginx or envoy is needed (or both)
+	envoyNeeded, nginxNeeded := CheckProtocols(name, ports)
+	if envoyNeeded {
+		err := CreateEnvoyProxy(client, name, originIP, ports)
+		if err != nil {
+			return fmt.Errorf("Create Envoy Proxy failed, %v", err)
+		}
+	}
+	if !nginxNeeded {
+		return nil
+	}
 	log.DebugLog(log.DebugLevelMexos, "create nginx", "name", name, "originip", originIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
@@ -165,19 +195,14 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 	spec := ProxySpec{
 		Name:       name,
 		UseTLS:     useTLS,
-		MetricPort: cloudcommon.NginxMetricsPort,
+		MetricPort: cloudcommon.LBMetricsPort,
 	}
 	httpPorts := []HTTPSpecDetail{}
 
-	// tcpconns, err := getTCPConcurrentConnectionsPerIP()
-	// if err != nil {
-	// 	return err
-	// }
 	udpconns, err := getUDPConcurrentConnectionsPerIP()
 	if err != nil {
 		return err
 	}
-	needEnvoy := false
 	for _, p := range ports {
 		origin := fmt.Sprintf("%s:%d", originIP, p.InternalPort)
 		switch p.Proto {
@@ -190,7 +215,7 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 			httpPorts = append(httpPorts, httpPort)
 			continue
 		case dme.LProto_L_PROTO_TCP:
-			needEnvoy = true // have envoy handle the tcp stuff
+			continue // have envoy handle the tcp stuff
 		case dme.LProto_L_PROTO_UDP:
 			udpPort := UDPSpecDetail{
 				Port:                 p.PublicPort,
@@ -199,13 +224,6 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 			}
 			spec.UDPSpec = append(spec.UDPSpec, &udpPort)
 			spec.L4 = true
-		}
-	}
-
-	if needEnvoy {
-		err = CreateEnvoyProxy(client, name, originIP, ports)
-		if err != nil {
-			return fmt.Errorf("Create Envoy Proxy failed, %v", err)
 		}
 	}
 
@@ -385,7 +403,7 @@ func DeleteNginxProxy(client pc.PlatformClient, name string) error {
 	}
 	if deleteContainer {
 		out, err = client.Output("docker rm " + name)
-		if err != nil {
+		if err != nil && !strings.Contains(string(out), "No such container") {
 			return fmt.Errorf("can't remove nginx container %s, %s, %v", name, out, err)
 		}
 	}

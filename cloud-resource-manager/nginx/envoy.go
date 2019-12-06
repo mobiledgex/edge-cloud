@@ -67,7 +67,7 @@ func CreateEnvoyProxy(client pc.PlatformClient, name, originIP string, ports []d
 	cmdArgs = append(cmdArgs, []string{
 		"-v", accesslogFile + ":/var/log/access.log",
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
-		"envoyproxy/proxy"}...)
+		"envoyproxy/envoy"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
 	log.DebugLog(log.DebugLevelMexos, "envoy docker command", "name", "envoy"+name,
 		"cmd", cmd)
@@ -82,7 +82,7 @@ func CreateEnvoyProxy(client pc.PlatformClient, name, originIP string, ports []d
 func createEnvoyYaml(client pc.PlatformClient, yamlname, name, originIP string, ports []dme.AppPort) error {
 	spec := ProxySpec{
 		Name:       name,
-		MetricPort: cloudcommon.NginxMetricsPort,
+		MetricPort: cloudcommon.LBMetricsPort,
 	}
 	for _, p := range ports {
 		switch p.Proto { 
@@ -136,8 +136,8 @@ static_resources:
                 json_format: {
                   "start_time": "%START_TIME%",
                   "duration": "%DURATION%",
-				  "bytes_sent": "%BYTES_SENT%",
-				  "bytes_received": "%BYTES_RECEIVED%",
+                  "bytes_sent": "%BYTES_SENT%",
+                  "bytes_received": "%BYTES_RECEIVED%",
                   "client_address": "%DOWNSTREAM_REMOTE_ADDRESS%",
                   "upstream_cluster": "%UPSTREAM_CLUSTER%"
 				}
@@ -151,14 +151,14 @@ static_resources:
     hosts:
     - socket_address:
         address: {{.Origin}}
-		port_value: {{.OriginPort}}
+        port_value: {{.OriginPort}}
 {{- end}}
 admin:
   access_log_path: "/var/log/admin.log"
   address:
     socket_address:
       address: 0.0.0.0
-	  port_value: {{.MetricPort}}
+      port_value: {{.MetricPort}}
 {{- end}}
 `
 
@@ -171,7 +171,7 @@ func DeleteEnvoyProxy(client pc.PlatformClient, name string) error {
 	} else {
 		if strings.Contains(string(out), "No such container") {
 			log.DebugLog(log.DebugLevelMexos,
-				"envoy LB container already gone", "name", name)
+				"envoy LB container already gone", "name", "envoy"+name)
 		} else {
 			return fmt.Errorf("can't delete envoy container %s, %s, %v", name, out, err)
 		}
@@ -183,7 +183,7 @@ func DeleteEnvoyProxy(client pc.PlatformClient, name string) error {
 	}
 	if deleteContainer {
 		out, err = client.Output("docker rm " + "envoy"+name)
-		if err != nil {
+		if err != nil && !strings.Contains(string(out), "No such container") {
 			return fmt.Errorf("can't remove envoy container %s, %s, %v", "envoy"+name, out, err)
 		}
 	}
