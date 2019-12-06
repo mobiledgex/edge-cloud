@@ -193,31 +193,41 @@ func (s *ResTagTableApi) GetCloudletResourceMap(key *edgeproto.ResTagTableKey) (
 	return tbl, err
 }
 
-func (s *ResTagTableApi) findAZmatch(res string, cli edgeproto.CloudletInfo) (edgeproto.OSAZone, bool) {
+func (s *ResTagTableApi) findImagematch(res string, cli edgeproto.CloudletInfo) (string, bool) {
+	var img *edgeproto.OSImage
+	for _, img = range cli.OsImages {
+		if strings.Contains(strings.ToLower(img.Name), res) {
+			return img.Name, true
+		}
+	}
+	return "", false
+}
+
+func (s *ResTagTableApi) findAZmatch(res string, cli edgeproto.CloudletInfo) (string, bool) {
 	var az *edgeproto.OSAZone
 	for _, az = range cli.AvailabilityZones {
 		if strings.Contains(strings.ToLower(az.Name), res) {
-			return *az, true
+			return az.Name, true
 		}
 	}
-	return *az, false
+	return "", false
 }
 
-func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, error, bool) {
+func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, string, bool, error) {
 	var resmap map[string]*edgeproto.ResTagTableKey = cl.ResTagMap
-
+	var img, az string
 	// non-nominal corner case: Cloudlet has no resource map at all, node flavor asks for a resource
 	// so only hints found in the flavor name itself can be used, currently only resource 'gpu' uses this.
 	if resmap == nil {
 		// handle any flavor name hints that may exist
 		if _, ok := nodeflavor.OptResMap[strings.ToLower(edgeproto.OptResNames_name[int32(edgeproto.OptResNames_GPU)])]; ok {
 			if strings.Contains(flavor.Name, "gpu") {
-				if az, ok := s.findAZmatch("gpu", cli); ok {
-					return az.Name, nil, true
-				}
+				az, _ := s.findAZmatch("gpu", cli)
+				img, _ := s.findImagematch("gpu", cli)
+				return az, img, true, nil
 			}
 		}
-		return "", fmt.Errorf("Clouddlet has no Resource mapping tables"), false
+		return "", "", false, fmt.Errorf("Clouddlet has no Resource mapping tables")
 	}
 	// Run the extent of the resource map. If the nodeflavor requests
 	// an optional resource, look into that restagtbl for hints to match
@@ -233,34 +243,29 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 			gpuval := nodeflavor.OptResMap[strings.ToLower(edgeproto.OptResNames_name[resname])]
 			if numgpus, err = strconv.Atoi(gpuval); err != nil {
 				err = fmt.Errorf("atoi failed for %s", gpuval)
-				return "", err, false
+				return "", "", false, err
 			}
 			if numgpus > 0 {
 				if !strings.Contains(flavor.Name, "gpu") {
-					// now we need to fetch the tag table for this  resouce
-					//  using the key in this cloudlet map
 					tbl, err := s.GetCloudletResourceMap(tblkey)
 					if err != nil || tbl == nil {
-						// gpu requested, no gpu table, request will fail
-						return "", err, false
+						// gpu requested, name didn't match and
+						// no gpu table, osFlavor fails
+						return "", "", false, err
 					}
 					for _, tag := range tbl.Tags {
 						if !strings.Contains(flavor.Properties, tag) {
-							return "", err, false
+							return "", "", false, err
 						}
 					}
-					// we've found a good match, check for az
-					if az, ok := s.findAZmatch("gpu", cli); ok {
-						return az.Name, nil, true
-					}
-				} else {
-					if az, ok := s.findAZmatch("gpu", cli); ok {
-						return az.Name, nil, true
-					}
 				}
+				az, _ = s.findAZmatch("gpu", cli)
+				img, _ = s.findImagematch("gpu", cli)
+				return az, img, true, nil
+			} else {
+				return "", "", false, fmt.Errorf("No GPU resources requested")
 			}
-			break
-		// Other resources TBI
+			// Other resources TBI
 		case int32(edgeproto.OptResNames_NAS):
 			break
 		case int32(edgeproto.OptResNames_NIC):
@@ -269,14 +274,15 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 			log.InfoLog("Unhandled resource", "res", res)
 		}
 	}
-	return "", nil, true
+	return "", "", false, nil
+
 }
 
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
 func (s *ResTagTableApi) GetVMSpec(nodeflavor edgeproto.Flavor, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (*vmspec.VMCreationSpec, error) {
 	var flavorList []*edgeproto.FlavorInfo
 	var vmspec vmspec.VMCreationSpec
-	var az string
+	var az, img string
 
 	flavorList = cli.Flavors
 	log.InfoLog("GetVMSpec with closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
@@ -311,16 +317,17 @@ func (s *ResTagTableApi) GetVMSpec(nodeflavor edgeproto.Flavor, cl edgeproto.Clo
 			continue
 		}
 		// Good matches for flavor so far, does nodeflavor request an
-		// optional resource? If so, it will have a non-nil OptResMap.
+		// optional resource? If so, the flavor will have a non-nil OptResMap.
 		// If any specific resource fails, the flavor is rejected.
 		var ok bool
 		if nodeflavor.OptResMap != nil {
-			if az, _, ok = resTagTableApi.optResLookup(nodeflavor, *flavor, cl, cli); !ok {
+			if az, img, ok, _ = resTagTableApi.optResLookup(nodeflavor, *flavor, cl, cli); !ok {
 				continue
 			}
 		}
 		vmspec.FlavorName = flavor.Name
 		vmspec.AvailabilityZone = az
+		vmspec.ImageName = img
 		log.InfoLog("Found closest flavor", "flavor", flavor, "vmspec", vmspec)
 
 		return &vmspec, nil
