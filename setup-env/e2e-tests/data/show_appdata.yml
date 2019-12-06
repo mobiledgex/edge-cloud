@@ -52,6 +52,7 @@ cloudlets:
     longitude: -175
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+  version: 2019-10-24
 
 apps:
 - key:

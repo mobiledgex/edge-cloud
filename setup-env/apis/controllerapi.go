@@ -14,14 +14,13 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"google.golang.org/grpc"
 	"gopkg.in/yaml.v2"
 )
 
 var appData edgeproto.ApplicationData
+var appDataMap edgeproto.ApplicationDataMap
 
 type runCommandData struct {
 	Request        edgeproto.ExecRequest
@@ -30,6 +29,16 @@ type runCommandData struct {
 
 func readAppDataFile(file string) {
 	err := util.ReadYamlFile(file, &appData, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
+	if err != nil {
+		if !util.IsYamlOk(err, "appdata") {
+			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", file)
+			os.Exit(1)
+		}
+	}
+}
+
+func readAppDataFileGeneric(file string) {
+	err := util.ReadYamlFile(file, &appDataMap, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
 	if err != nil {
 		if !util.IsYamlOk(err, "appdata") {
 			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", file)
@@ -109,212 +118,6 @@ func runNodeShow(ctrl *process.Controller, outputDir string, cmp bool) bool {
 	return runShow(ctrl, showCmds, outputDir, cmp)
 }
 
-//based on the api some errors will be converted to no error
-func ignoreExpectedErrors(api string, key objstore.ObjKey, err error) error {
-	if err == nil {
-		return err
-	}
-	if api == "delete" {
-		if strings.Contains(err.Error(), key.NotFoundError().Error()) {
-			log.Printf("ignoring error on delete : %v\n", err)
-			return nil
-		}
-	} else if api == "create" {
-		if strings.Contains(err.Error(), key.ExistsError().Error()) {
-			log.Printf("ignoring error on create : %v\n", err)
-			return nil
-		}
-	}
-	return err
-}
-
-func runFlavorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	opAPI := edgeproto.NewFlavorApiClient(conn)
-	var err error = nil
-	for _, f := range appdata.Flavors {
-		log.Printf("API %v for flavor: %v", mode, f.Key)
-		switch mode {
-		case "create":
-			_, err = opAPI.CreateFlavor(ctx, &f)
-		case "update":
-			_, err = opAPI.UpdateFlavor(ctx, &f)
-		case "delete":
-			_, err = opAPI.DeleteFlavor(ctx, &f)
-		}
-		err = ignoreExpectedErrors(mode, &f.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, f.Key, err)
-		}
-	}
-	return nil
-}
-
-func runOperatorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	opAPI := edgeproto.NewOperatorApiClient(conn)
-	var err error = nil
-	for _, o := range appdata.Operators {
-		log.Printf("API %v for operator: %v", mode, o.Key)
-		switch mode {
-		case "create":
-			_, err = opAPI.CreateOperator(ctx, &o)
-		case "update":
-			_, err = opAPI.UpdateOperator(ctx, &o)
-		case "delete":
-			_, err = opAPI.DeleteOperator(ctx, &o)
-		}
-		err = ignoreExpectedErrors(mode, &o.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, o.Key, err)
-		}
-	}
-	return nil
-}
-
-func runDeveloperApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	devApi := edgeproto.NewDeveloperApiClient(conn)
-	for _, d := range appdata.Developers {
-		log.Printf("API %v for developer: %v", mode, d.Key.Name)
-		switch mode {
-		case "create":
-			_, err = devApi.CreateDeveloper(ctx, &d)
-		case "update":
-			_, err = devApi.UpdateDeveloper(ctx, &d)
-		case "delete":
-			_, err = devApi.DeleteDeveloper(ctx, &d)
-		}
-		err = ignoreExpectedErrors(mode, &d.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, d.Key, err)
-		}
-	}
-	return nil
-}
-
-func runCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	clAPI := edgeproto.NewCloudletApiClient(conn)
-	for _, c := range appdata.Cloudlets {
-		log.Printf("API %v for cloudlet: %v data %+v", mode, c.Key.Name, c)
-		var stream testutil.CloudletStream
-		switch mode {
-		case "create":
-			stream, err = clAPI.CreateCloudlet(ctx, &c)
-		case "update":
-			c.Fields = append(c.Fields, edgeproto.CloudletFieldLocationLatitude)
-			c.Fields = append(c.Fields, edgeproto.CloudletFieldLocationLongitude)
-			c.Fields = append(c.Fields, edgeproto.CloudletFieldNumDynamicIps)
-			stream, err = clAPI.UpdateCloudlet(ctx, &c)
-		case "delete":
-			stream, err = clAPI.DeleteCloudlet(ctx, &c)
-		}
-		err = testutil.CloudletReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, &c.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, c.Key, err)
-		}
-	}
-	return nil
-}
-
-func runCloudletInfoApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	clAPI := edgeproto.NewCloudletInfoApiClient(conn)
-	for _, c := range appdata.CloudletInfos {
-		log.Printf("API %v for cloudletinfos: %v", mode, c.Key)
-		switch mode {
-		case "create":
-			_, err = clAPI.InjectCloudletInfo(ctx, &c)
-		case "update":
-			// no-op
-		case "delete":
-			_, err = clAPI.EvictCloudletInfo(ctx, &c)
-		}
-		err = ignoreExpectedErrors(mode, &c.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, c.Key, err)
-		}
-	}
-	return nil
-}
-
-func runAppApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	appAPI := edgeproto.NewAppApiClient(conn)
-	for _, a := range appdata.Applications {
-		log.Printf("API %v for app: %v", mode, a.Key.Name)
-		switch mode {
-		case "create":
-			_, err = appAPI.CreateApp(ctx, &a)
-		case "update":
-			if a.ImagePath != "" {
-				a.Fields = append(a.Fields, edgeproto.AppFieldImagePath)
-			}
-			if a.DeploymentManifest != "" {
-				a.Fields = append(a.Fields, edgeproto.AppFieldDeploymentManifest)
-			}
-			_, err = appAPI.UpdateApp(ctx, &a)
-		case "delete":
-			_, err = appAPI.DeleteApp(ctx, &a)
-		}
-		err = ignoreExpectedErrors(mode, &a.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, a.Key, err)
-		}
-	}
-	return nil
-}
-
-func runClusterInstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	clusterinAPI := edgeproto.NewClusterInstApiClient(conn)
-	for _, c := range appdata.ClusterInsts {
-		log.Printf("API %v for clusterinst: %v", mode, c.Key)
-		var stream testutil.ClusterInstStream
-		switch mode {
-		case "create":
-			stream, err = clusterinAPI.CreateClusterInst(ctx, &c)
-		case "update":
-			stream, err = clusterinAPI.UpdateClusterInst(ctx, &c)
-		case "delete":
-			stream, err = clusterinAPI.DeleteClusterInst(ctx, &c)
-		}
-		err = testutil.ClusterInstReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, &c.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, c.Key, err)
-		}
-	}
-
-	return nil
-}
-
-func runAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	appinAPI := edgeproto.NewAppInstApiClient(conn)
-	for _, a := range appdata.AppInstances {
-		log.Printf("API %v for appinstance: %v", mode, a.Key)
-		var stream testutil.AppInstStream
-		switch mode {
-		case "create":
-			stream, err = appinAPI.CreateAppInst(ctx, &a)
-		case "update":
-			stream, err = appinAPI.UpdateAppInst(ctx, &a)
-		case "refresh":
-			stream, err = appinAPI.RefreshAppInst(ctx, &a)
-		case "delete":
-			stream, err = appinAPI.DeleteAppInst(ctx, &a)
-		}
-		err = testutil.AppInstReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, &a.Key, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, a.Key, err)
-		}
-	}
-
-	return nil
-}
-
 func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir string, mods []string) bool {
 	runCLI := false
 	for _, mod := range mods {
@@ -349,6 +152,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 	}
 
 	readAppDataFile(apiFile)
+	readAppDataFileGeneric(apiFile)
 
 	log.Printf("Connecting to controller %v at address %v", ctrl.Name, ctrl.ApiAddr)
 	ctrlapi, err := ctrl.ConnectAPI(apiConnectTimeout)
@@ -366,42 +170,42 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		switch api {
 		case "delete":
 			//run in reverse order to delete child keys
-			err = runAppinstApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunAppInstApi(ctrlapi, ctx, &appData.AppInstances, appDataMap["appinstances"], api)
 			if err != nil {
 				log.Printf("Error in appinst API %v \n", err)
 				rc = false
 			}
-			err = runClusterInstApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunClusterInstApi(ctrlapi, ctx, &appData.ClusterInsts, appDataMap["clusterinsts"], api)
 			if err != nil {
 				log.Printf("Error in clusterinst API %v\n", err)
 				rc = false
 			}
-			err = runAppApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunAppApi(ctrlapi, ctx, &appData.Applications, appDataMap["apps"], api)
 			if err != nil {
 				log.Printf("Error in app API %v\n", err)
 				rc = false
 			}
-			err = runCloudletInfoApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunCloudletInfoApi(ctrlapi, ctx, &appData.CloudletInfos, appDataMap["cloudletinfos"], api)
 			if err != nil {
 				log.Printf("Error in cloudletInfo API %v\n", err)
 				rc = false
 			}
-			err = runCloudletApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunCloudletApi(ctrlapi, ctx, &appData.Cloudlets, appDataMap["cloudlets"], api)
 			if err != nil {
 				log.Printf("Error in cloudlet API %v\n", err)
 				rc = false
 			}
-			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunDeveloperApi(ctrlapi, ctx, &appData.Developers, appDataMap["developers"], api)
 			if err != nil {
 				log.Printf("Error in developer API %v\n", err)
 				rc = false
 			}
-			err = runOperatorApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
 			if err != nil {
 				log.Printf("Error in operator API %v\n", err)
 				rc = false
 			}
-			err = runFlavorApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
 			if err != nil {
 				log.Printf("Error in flavor API %v\n", err)
 				rc = false
@@ -411,42 +215,42 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		case "refresh":
 			fallthrough
 		case "update":
-			err = runFlavorApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
 			if err != nil {
 				log.Printf("Error in flavor API %v\n", err)
 				rc = false
 			}
-			err = runOperatorApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
 			if err != nil {
 				log.Printf("Error in operator API %v\n", err)
 				rc = false
 			}
-			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunDeveloperApi(ctrlapi, ctx, &appData.Developers, appDataMap["developers"], api)
 			if err != nil {
 				log.Printf("Error in developer API %v\n", err)
 				rc = false
 			}
-			err = runCloudletApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunCloudletApi(ctrlapi, ctx, &appData.Cloudlets, appDataMap["cloudlets"], api)
 			if err != nil {
 				log.Printf("Error in cloudlet API %v\n", err)
 				rc = false
 			}
-			err = runCloudletInfoApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunCloudletInfoApi(ctrlapi, ctx, &appData.CloudletInfos, appDataMap["cloudletinfos"], api)
 			if err != nil {
 				log.Printf("Error in cloudletInfo API %v\n", err)
 				rc = false
 			}
-			err = runAppApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunAppApi(ctrlapi, ctx, &appData.Applications, appDataMap["apps"], api)
 			if err != nil {
 				log.Printf("Error in app API %v\n", err)
 				rc = false
 			}
-			err = runClusterInstApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunClusterInstApi(ctrlapi, ctx, &appData.ClusterInsts, appDataMap["clusterinsts"], api)
 			if err != nil {
 				log.Printf("Error in clusterinst API %v\n", err)
 				rc = false
 			}
-			err = runAppinstApi(ctrlapi, ctx, &appData, api)
+			err = testutil.RunAppInstApi(ctrlapi, ctx, &appData.AppInstances, appDataMap["appinstances"], api)
 			if err != nil {
 				log.Printf("Error in appinst API %v\n", err)
 				rc = false

@@ -11,6 +11,7 @@ import "context"
 import "time"
 import "github.com/stretchr/testify/require"
 import "github.com/mobiledgex/edge-cloud/log"
+import "github.com/mobiledgex/edge-cloud/cli"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -539,6 +540,35 @@ func FindAppInstInfoData(key *edgeproto.AppInstKey, testData []edgeproto.AppInst
 		}
 	}
 	return nil, false
+}
+
+func RunAppInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.AppInst, dataMap []map[string]interface{}, mode string) error {
+	var err error
+	appInstApi := edgeproto.NewAppInstApiClient(conn)
+	for ii, obj := range *data {
+		log.DebugLog(log.DebugLevelApi, "API %v for AppInst: %v", mode, obj.Key)
+		var stream AppInstStream
+		switch mode {
+		case "create":
+			stream, err = appInstApi.CreateAppInst(ctx, &obj)
+		case "delete":
+			stream, err = appInstApi.DeleteAppInst(ctx, &obj)
+		case "refresh":
+			stream, err = appInstApi.RefreshAppInst(ctx, &obj)
+		case "update":
+			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
+			stream, err = appInstApi.UpdateAppInst(ctx, &obj)
+		default:
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for AppInst: %v", mode, obj.Key)
+			return nil
+		}
+		err = AppInstReadResultStream(stream, err)
+		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		if err != nil {
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+		}
+	}
+	return nil
 }
 
 func (s *DummyServer) CreateAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_CreateAppInstServer) error {

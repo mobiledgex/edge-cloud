@@ -50,7 +50,7 @@ message Node {
   // Hostname
   string hostname = 7 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Docker edge-cloud base image version
-  string image_version= 8 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string image_version= 8 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
