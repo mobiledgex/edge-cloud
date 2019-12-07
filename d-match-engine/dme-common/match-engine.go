@@ -59,6 +59,7 @@ type DmeApps struct {
 
 var DmeAppTbl *DmeApps
 
+// Stats are collected per App per Cloudlet and per method name (verifylocation, etc).
 type StatKey struct {
 	AppKey        edgeproto.AppKey
 	CloudletFound edgeproto.CloudletKey
