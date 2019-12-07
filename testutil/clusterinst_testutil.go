@@ -11,6 +11,7 @@ import "context"
 import "time"
 import "github.com/stretchr/testify/require"
 import "github.com/mobiledgex/edge-cloud/log"
+import "github.com/mobiledgex/edge-cloud/cli"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -537,6 +538,33 @@ func FindClusterInstInfoData(key *edgeproto.ClusterInstKey, testData []edgeproto
 		}
 	}
 	return nil, false
+}
+
+func RunClusterInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.ClusterInst, dataMap []map[string]interface{}, mode string) error {
+	var err error
+	clusterInstApi := edgeproto.NewClusterInstApiClient(conn)
+	for ii, obj := range *data {
+		log.DebugLog(log.DebugLevelApi, "API %v for ClusterInst: %v", mode, obj.Key)
+		var stream ClusterInstStream
+		switch mode {
+		case "create":
+			stream, err = clusterInstApi.CreateClusterInst(ctx, &obj)
+		case "delete":
+			stream, err = clusterInstApi.DeleteClusterInst(ctx, &obj)
+		case "update":
+			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
+			stream, err = clusterInstApi.UpdateClusterInst(ctx, &obj)
+		default:
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for ClusterInst: %v", mode, obj.Key)
+			return nil
+		}
+		err = ClusterInstReadResultStream(stream, err)
+		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		if err != nil {
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+		}
+	}
+	return nil
 }
 
 func (s *DummyServer) CreateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_CreateClusterInstServer) error {

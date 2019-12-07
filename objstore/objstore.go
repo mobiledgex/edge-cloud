@@ -199,9 +199,9 @@ func DbKeyPrefixParse(inkey string) (region, typ, key string, err error) {
 }
 
 func NotFoundError(key string) error {
-	return fmt.Errorf("key %s not found", key)
+	return fmt.Errorf("key %s not found", DbKeyPrefixRemove(key))
 }
 
 func ExistsError(key string) error {
-	return fmt.Errorf("key %s already exists", key)
+	return fmt.Errorf("key %s already exists", DbKeyPrefixRemove(key))
 }

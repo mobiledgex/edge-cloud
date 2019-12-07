@@ -101,6 +101,7 @@ cloudlets:
   flavor:
     name: x1.medium
   physicalname: tmus-cloud-1
+  version: 2019-10-24
 - key:
     operatorkey:
       name: tmus
@@ -122,6 +123,7 @@ cloudlets:
   flavor:
     name: x1.medium
   physicalname: tmus-cloud-2
+  version: 2019-10-24
 
 apps:
 - key:

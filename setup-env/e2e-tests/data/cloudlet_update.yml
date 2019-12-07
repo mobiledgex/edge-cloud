@@ -10,6 +10,7 @@ cloudlets:
   numdynamicips: 254
   platformtype: PlatformTypeFake
   version: 2020-10-10
+  notifysrvaddr: 127.0.0.1:61001
 - key:
     operatorkey:
       name: tmus
@@ -21,3 +22,4 @@ cloudlets:
   numdynamicips: 254
   platformtype: PlatformTypeFake
   version: 2020-10-10
+  notifysrvaddr: 127.0.0.1:61002

@@ -11,6 +11,7 @@ import "context"
 import "time"
 import "github.com/stretchr/testify/require"
 import "github.com/mobiledgex/edge-cloud/log"
+import "github.com/mobiledgex/edge-cloud/cli"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -306,6 +307,31 @@ func FindOperatorData(key *edgeproto.OperatorKey, testData []edgeproto.Operator)
 		}
 	}
 	return nil, false
+}
+
+func RunOperatorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Operator, dataMap []map[string]interface{}, mode string) error {
+	var err error
+	operatorApi := edgeproto.NewOperatorApiClient(conn)
+	for ii, obj := range *data {
+		log.DebugLog(log.DebugLevelApi, "API %v for Operator: %v", mode, obj.Key)
+		switch mode {
+		case "create":
+			_, err = operatorApi.CreateOperator(ctx, &obj)
+		case "delete":
+			_, err = operatorApi.DeleteOperator(ctx, &obj)
+		case "update":
+			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
+			_, err = operatorApi.UpdateOperator(ctx, &obj)
+		default:
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Operator: %v", mode, obj.Key)
+			return nil
+		}
+		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		if err != nil {
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+		}
+	}
+	return nil
 }
 
 func (s *DummyServer) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
