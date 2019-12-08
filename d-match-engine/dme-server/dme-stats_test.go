@@ -51,7 +51,9 @@ func TestStatDrops(t *testing.T) {
 			key.AppKey.DeveloperKey.Name = "dev" + strconv.Itoa(id)
 			key.AppKey.Name = "app"
 			key.AppKey.Version = "1.0.0"
-			key.Method = "findLocation"
+			key.Method = "findCloudlet"
+			key.CloudletFound.Name = "UnitTest"
+			key.CloudletFound.OperatorKey.Name = "unittest"
 			key.CellId = 1000
 
 			ch := time.After(10 * notifyInterval)

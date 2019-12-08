@@ -24,8 +24,6 @@ var LatencyTimes = []time.Duration{
 	100 * time.Millisecond,
 }
 
-// Stats are collected per App per Cloudlet and per method name (verifylocation, etc).
-
 type ApiStatCall struct {
 	key     dmecommon.StatKey
 	fail    bool
