@@ -3,9 +3,11 @@ package dmetest
 import dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 
 type FindCloudletRR struct {
-	Reg   dme.RegisterClientRequest
-	Req   dme.FindCloudletRequest
-	Reply dme.FindCloudletReply
+	Reg           dme.RegisterClientRequest
+	Req           dme.FindCloudletRequest
+	Reply         dme.FindCloudletReply
+	ReplyCarrier  string
+	ReplyCloudlet string
 }
 
 // FindCloudlet API test data.
@@ -27,6 +29,8 @@ var FindCloudletData = []FindCloudletRR{
 			CloudletLocation: &Cloudlets[2].Location,
 			Status:           1,
 		},
+		ReplyCarrier:  Cloudlets[2].CarrierName,
+		ReplyCloudlet: Cloudlets[2].Name,
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
@@ -43,6 +47,8 @@ var FindCloudletData = []FindCloudletRR{
 			CloudletLocation: &Cloudlets[1].Location,
 			Status:           1,
 		},
+		ReplyCarrier:  Cloudlets[1].CarrierName,
+		ReplyCloudlet: Cloudlets[1].Name,
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
@@ -73,6 +79,8 @@ var FindCloudletData = []FindCloudletRR{
 			CloudletLocation: &Cloudlets[2].Location,
 			Status:           1,
 		},
+		ReplyCarrier:  Cloudlets[2].CarrierName,
+		ReplyCloudlet: Cloudlets[2].Name,
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
@@ -89,6 +97,8 @@ var FindCloudletData = []FindCloudletRR{
 			CloudletLocation: &Cloudlets[1].Location,
 			Status:           1,
 		},
+		ReplyCarrier:  Cloudlets[1].CarrierName,
+		ReplyCloudlet: Cloudlets[1].Name,
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
@@ -105,6 +115,8 @@ var FindCloudletData = []FindCloudletRR{
 			CloudletLocation: &Cloudlets[1].Location,
 			Status:           1,
 		},
+		ReplyCarrier:  Cloudlets[1].CarrierName,
+		ReplyCloudlet: Cloudlets[1].Name,
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
@@ -121,6 +133,8 @@ var FindCloudletData = []FindCloudletRR{
 			CloudletLocation: &Cloudlets[3].Location,
 			Status:           1,
 		},
+		ReplyCarrier:  Cloudlets[3].CarrierName,
+		ReplyCloudlet: Cloudlets[3].Name,
 	},
 }
 
