@@ -291,14 +291,14 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 		if err == nil {
 			if len(accessVars) > 0 {
-				err = cloudletPlatform.SetupCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
+				err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
 			}
 			if err == nil {
 				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, updatecb.cb)
 				if err != nil && len(accessVars) > 0 {
 					err1 := cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, updatecb.cb)
 					if err1 != nil {
-						cb.Send(&edgeproto.Result{Message: err.Error()})
+						cb.Send(&edgeproto.Result{Message: err1.Error()})
 					}
 				}
 			}
@@ -622,7 +622,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return err
 		}
 		if len(accessVars) > 0 {
-			err = cloudletPlatform.SetupCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
+			err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
 			if err != nil {
 				return err
 			}
@@ -632,7 +632,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			if cloudletPlatform != nil && len(accessVars) > 0 {
 				err1 := cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, updatecb.cb)
 				if err1 != nil {
-					cb.Send(&edgeproto.Result{Message: err.Error()})
+					cb.Send(&edgeproto.Result{Message: err1.Error()})
 				}
 			}
 			return err
