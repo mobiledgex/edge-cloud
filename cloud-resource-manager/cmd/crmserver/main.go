@@ -159,25 +159,24 @@ func main() {
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		if err := initPlatform(ctx, &myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
-			cspan.Finish()
-			span.Finish()
-			log.FatalLog("failed to init platform", "err", err)
-		}
-
-		log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
-		updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
-		err = controllerData.GatherCloudletInfo(ctx, &myCloudlet)
-
-		if err != nil {
-			myCloudlet.Errors = append(myCloudlet.Errors, err.Error())
+			myCloudlet.Errors = append(myCloudlet.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
-			myCloudlet.Errors = nil
-			if *cleanupMode {
-				controllerData.CleanupOldCloudlet(ctx, &cloudlet, updateCloudletStatus)
+			log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
+			updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
+			err = controllerData.GatherCloudletInfo(ctx, &myCloudlet)
+
+			if err != nil {
+				myCloudlet.Errors = append(myCloudlet.Errors, err.Error())
+				myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
+			} else {
+				myCloudlet.Errors = nil
+				if *cleanupMode {
+					controllerData.CleanupOldCloudlet(ctx, &cloudlet, updateCloudletStatus)
+				}
+				myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+				log.SpanLog(ctx, log.DebugLevelMexos, "cloudlet state", "state", myCloudlet.State, "myCloudlet", myCloudlet)
 			}
-			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-			log.SpanLog(ctx, log.DebugLevelMexos, "cloudlet state", "state", myCloudlet.State, "myCloudlet", myCloudlet)
 		}
 
 		log.SpanLog(ctx, log.DebugLevelInfo, "sending cloudlet info cache update")

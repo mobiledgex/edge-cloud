@@ -93,7 +93,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
 	}
 
-	err := dmecommon.FindCloudlet(ckey, req, reply)
+	err := dmecommon.FindCloudlet(ctx, ckey, req, reply)
 	log.DebugLog(log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }

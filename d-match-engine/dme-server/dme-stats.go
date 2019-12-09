@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"sync"
 	"time"
 
@@ -23,14 +24,8 @@ var LatencyTimes = []time.Duration{
 	100 * time.Millisecond,
 }
 
-// Stats are collected per App and per method name (verifylocation, etc).
-type StatKey struct {
-	AppKey edgeproto.AppKey
-	method string
-}
-
 type ApiStatCall struct {
-	key     StatKey
+	key     dmecommon.StatKey
 	fail    bool
 	latency time.Duration
 }
@@ -43,7 +38,7 @@ type ApiStat struct {
 }
 
 type MapShard struct {
-	apiStatMap map[StatKey]*ApiStat
+	apiStatMap map[dmecommon.StatKey]*ApiStat
 	notify     bool
 	mux        sync.Mutex
 }
@@ -63,7 +58,7 @@ func NewDmeStats(interval time.Duration, numShards uint, send func(ctx context.C
 	s.shards = make([]MapShard, numShards, numShards)
 	s.numShards = numShards
 	for ii, _ := range s.shards {
-		s.shards[ii].apiStatMap = make(map[StatKey]*ApiStat)
+		s.shards[ii].apiStatMap = make(map[dmecommon.StatKey]*ApiStat)
 	}
 	s.interval = interval
 	s.send = send
@@ -84,7 +79,7 @@ func (s *DmeStats) Stop() {
 }
 
 func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
-	hash := xxhash.Sum64([]byte(call.key.method + call.key.AppKey.DeveloperKey.Name + call.key.AppKey.Name))
+	hash := xxhash.Sum64([]byte(call.key.Method + call.key.AppKey.DeveloperKey.Name + call.key.AppKey.Name))
 	idx := hash % uint64(s.numShards)
 
 	shard := &s.shards[idx]
@@ -127,7 +122,7 @@ func (s *DmeStats) RunNotify() {
 	s.waitGroup.Done()
 }
 
-func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeproto.Metric {
+func ApiStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *ApiStat) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
 	metric.Name = "dme-api"
@@ -137,15 +132,19 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	metric.AddTag("oper", myCloudletKey.OperatorKey.Name)
 	metric.AddTag("cloudlet", myCloudletKey.Name)
 	metric.AddTag("id", *scaleID)
-	metric.AddTag("method", key.method)
+	metric.AddTag("method", key.Method)
 	metric.AddIntVal("reqs", stat.reqs)
 	metric.AddIntVal("errs", stat.errs)
+	metric.AddTag("foundCloudlet", key.CloudletFound.Name)
+	metric.AddTag("foundOperator", key.CloudletFound.OperatorKey.Name)
+	// Cell ID is just a unique number - keep it as a string
+	metric.AddTag("cellID", strconv.FormatUint(uint64(key.CellId), 10))
 	stat.latency.AddToMetric(&metric)
 	return &metric
 }
 
-func MetricToStat(metric *edgeproto.Metric) (*StatKey, *ApiStat) {
-	key := &StatKey{}
+func MetricToStat(metric *edgeproto.Metric) (*dmecommon.StatKey, *ApiStat) {
+	key := &dmecommon.StatKey{}
 	stat := &ApiStat{}
 	for _, tag := range metric.Tags {
 		switch tag.Name {
@@ -156,7 +155,7 @@ func MetricToStat(metric *edgeproto.Metric) (*StatKey, *ApiStat) {
 		case "ver":
 			key.AppKey.Version = tag.Val
 		case "method":
-			key.method = tag.Val
+			key.Method = tag.Val
 		}
 	}
 	for _, val := range metric.Vals {
@@ -171,14 +170,38 @@ func MetricToStat(metric *edgeproto.Metric) (*StatKey, *ApiStat) {
 	return key, stat
 }
 
+func getCellIdFromDmeReq(req interface{}) uint32 {
+	switch typ := req.(type) {
+	case *dme.RegisterClientRequest:
+		return typ.CellId
+	case *dme.FindCloudletRequest:
+		return typ.CellId
+	case *dme.VerifyLocationRequest:
+		return typ.CellId
+	case *dme.GetLocationRequest:
+		return typ.CellId
+	case *dme.AppInstListRequest:
+		return typ.CellId
+	case *dme.FqdnListRequest:
+		return typ.CellId
+	case *dme.DynamicLocGroupRequest:
+		return typ.CellId
+	case *dme.QosPositionRequest:
+		return typ.CellId
+	}
+	return 0
+}
+
 func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	start := time.Now()
+
+	call := ApiStatCall{}
+	ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.key)
 
 	// call the handler
 	resp, err := handler(ctx, req)
 
-	call := ApiStatCall{}
-	_, call.key.method = cloudcommon.ParseGrpcMethod(info.FullMethod)
+	_, call.key.Method = cloudcommon.ParseGrpcMethod(info.FullMethod)
 
 	switch typ := req.(type) {
 	case *dme.RegisterClientRequest:
@@ -196,6 +219,7 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		call.key.AppKey.Name = ckey.AppName
 		call.key.AppKey.Version = ckey.AppVers
 	}
+	call.key.CellId = getCellIdFromDmeReq(req)
 	if err != nil {
 		call.fail = true
 	}
