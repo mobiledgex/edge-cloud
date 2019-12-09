@@ -47,6 +47,7 @@ controllers:
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
+  shorttimeouts: true
   hostname: "127.0.0.1"
   registryfqdn: "docker.mobiledgex.net"
   testmode: true
