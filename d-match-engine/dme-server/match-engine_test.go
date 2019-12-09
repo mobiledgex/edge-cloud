@@ -61,6 +61,9 @@ func TestAddRemove(t *testing.T) {
 		ckey, err := dmecommon.VerifyCookie(regReply.SessionCookie)
 		assert.Nil(t, err, "verify cookie")
 		ctx = dmecommon.NewCookieContext(ctx, ckey)
+		// Make sure we get the statsKey value filled in
+		call := ApiStatCall{}
+		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.key)
 
 		reply, err := serv.FindCloudlet(ctx, &rr.Req)
 		assert.Nil(t, err, "find cloudlet")
@@ -68,6 +71,11 @@ func TestAddRemove(t *testing.T) {
 		if reply.Status == dme.FindCloudletReply_FIND_FOUND {
 			assert.Equal(t, rr.Reply.Fqdn, reply.Fqdn,
 				"findCloudletData[%d]", ii)
+			// Check the filled in cloudlet details
+			assert.Equal(t, rr.ReplyCarrier,
+				call.key.CloudletFound.OperatorKey.Name, "findCloudletData[%d]", ii)
+			assert.Equal(t, rr.ReplyCloudlet,
+				call.key.CloudletFound.Name, "findCloudletData[%d]", ii)
 		}
 	}
 	// disable one cloudlet and check the newly found cloudlet
