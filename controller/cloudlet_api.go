@@ -237,6 +237,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		pfFlavor = DefaultPlatformFlavor
 	}
 
+	accessVars := make(map[string]string)
+	if in.AccessVars != nil {
+		accessVars = in.AccessVars
+		in.AccessVars = nil
+	}
+
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
 			if !cctx.Undo {
@@ -284,7 +290,18 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 		if err == nil {
-			err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, updatecb.cb)
+			if len(accessVars) > 0 {
+				err = cloudletPlatform.SetupCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
+			}
+			if err == nil {
+				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, updatecb.cb)
+				if err != nil && len(accessVars) > 0 {
+					err1 := cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, updatecb.cb)
+					if err1 != nil {
+						cb.Send(&edgeproto.Result{Message: err.Error()})
+					}
+				}
+			}
 		}
 	}
 
@@ -575,10 +592,16 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		upgrade = true
 	}
 
+	accessVars := make(map[string]string)
 	if _, found := fmap[edgeproto.CloudletFieldAccessVars]; found {
 		if !upgrade {
 			return fmt.Errorf("Access vars can only be updated during upgrade")
 		}
+		if in.DeploymentLocal {
+			return errors.New("Access vars is not supported for local deployment")
+		}
+		accessVars = in.AccessVars
+		in.AccessVars = nil
 	}
 
 	cctx := DefCallContext()
@@ -588,8 +611,30 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if in.DeploymentLocal {
 			return fmt.Errorf("upgrade is not supported for local deployments")
 		}
+		updatecb := updateCloudletCallback{in, cb}
+		var cloudletPlatform pf.Platform
+		cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String())
+		if err != nil {
+			return err
+		}
+		pfConfig, err := getPlatformConfig(ctx, in)
+		if err != nil {
+			return err
+		}
+		if len(accessVars) > 0 {
+			err = cloudletPlatform.SetupCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
+			if err != nil {
+				return err
+			}
+		}
 		err = s.UpgradeCloudlet(ctx, in, cb)
 		if err != nil {
+			if cloudletPlatform != nil && len(accessVars) > 0 {
+				err1 := cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, updatecb.cb)
+				if err1 != nil {
+					cb.Send(&edgeproto.Result{Message: err.Error()})
+				}
+			}
 			return err
 		}
 	}
