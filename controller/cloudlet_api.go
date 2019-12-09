@@ -342,6 +342,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	fatal := make(chan bool, 1)
+	offline := make(chan bool, 1)
 
 	var err error
 
@@ -374,6 +375,8 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
+		} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+			offline <- true
 		}
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
@@ -433,6 +436,8 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			}
 			updateCallback(edgeproto.UpdateTask, out)
 			err = errors.New(out)
+		case <-offline:
+			err = fmt.Errorf("Cloudlet is offline")
 		case <-time.After(timeout):
 			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
 			updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
