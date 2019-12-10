@@ -14,7 +14,7 @@ import (
 )
 
 // Envoy is now handling all of our L4 TCP loadbalancing
-// Eventually L7 and UDP Proxying support will be added so 
+// Eventually L7 and UDP Proxying support will be added so
 // all of our loadbalancing is handled by envoy.
 // UDP proxying is currently blocked by: https://github.com/envoyproxy/envoy/issues/492
 
@@ -56,7 +56,7 @@ func CreateEnvoyProxy(client pc.PlatformClient, name, originIP string, ports []d
 	}
 
 	// container name is envoy+name for now to avoid conflicts with the nginx containers
-	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", "envoy"+name}
+	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", "envoy" + name}
 	if opts.DockerPublishPorts {
 		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer)...)
 	}
@@ -85,13 +85,13 @@ func createEnvoyYaml(client pc.PlatformClient, yamlname, name, originIP string, 
 		MetricPort: cloudcommon.LBMetricsPort,
 	}
 	for _, p := range ports {
-		switch p.Proto { 
+		switch p.Proto {
 		// only support tcp for now
 		case dme.LProto_L_PROTO_TCP:
 			tcpPort := TCPSpecDetail{
-				Port:                 p.PublicPort,
-				Origin:               originIP,
-				OriginPort:			  p.InternalPort,
+				Port:       p.PublicPort,
+				Origin:     originIP,
+				OriginPort: p.InternalPort,
 			}
 			spec.TCPSpec = append(spec.TCPSpec, &tcpPort)
 			spec.L4 = true
@@ -164,7 +164,7 @@ admin:
 
 func DeleteEnvoyProxy(client pc.PlatformClient, name string) error {
 	log.DebugLog(log.DebugLevelMexos, "delete envoy", "name", "envoy"+name)
-	out, err := client.Output("docker kill " + "envoy"+name)
+	out, err := client.Output("docker kill " + "envoy" + name)
 	deleteContainer := false
 	if err == nil {
 		deleteContainer = true
@@ -182,7 +182,7 @@ func DeleteEnvoyProxy(client pc.PlatformClient, name string) error {
 		log.DebugLog(log.DebugLevelMexos, "delete envoy dir", "name", name, "dir", envoyDir, "out", out, "err", err)
 	}
 	if deleteContainer {
-		out, err = client.Output("docker rm " + "envoy"+name)
+		out, err = client.Output("docker rm " + "envoy" + name)
 		if err != nil && !strings.Contains(string(out), "No such container") {
 			return fmt.Errorf("can't remove envoy container %s, %s, %v", "envoy"+name, out, err)
 		}

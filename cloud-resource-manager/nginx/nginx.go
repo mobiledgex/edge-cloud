@@ -99,7 +99,7 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 	// check to see whether nginx or envoy is needed (or both)
 	envoyNeeded, nginxNeeded := CheckProtocols(name, ports)
 	if envoyNeeded {
-		err := CreateEnvoyProxy(client, name, originIP, ports)
+		err := CreateEnvoyProxy(client, name, originIP, ports, ops...)
 		if err != nil {
 			return fmt.Errorf("Create Envoy Proxy failed, %v", err)
 		}
@@ -297,7 +297,7 @@ type ProxySpec struct {
 type TCPSpecDetail struct {
 	Port                 int32
 	Origin               string
-	OriginPort			 int32
+	OriginPort           int32
 	ConcurrentConnsPerIP uint64
 }
 
