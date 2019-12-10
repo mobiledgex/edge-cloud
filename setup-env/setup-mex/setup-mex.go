@@ -500,6 +500,12 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 			return false
 		}
 	}
+	for _, p := range util.Deployment.Crms {
+		opts = append(opts, process.WithDebug("notify,mexos,api"))
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
 	for _, p := range util.Deployment.Locsims {
 		if processName != "" && processName != p.Name {
 			continue
@@ -539,7 +545,7 @@ func Cleanup(ctx context.Context) error {
 	return CleanupDIND()
 }
 
-func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec, mods []string) []string {
+func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec, mods []string, vars map[string]string) []string {
 	var actionArgs []string
 
 	act, actionParam := GetActionParam(actionSpec)
