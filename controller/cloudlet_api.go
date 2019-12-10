@@ -342,6 +342,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	fatal := make(chan bool, 1)
+	offline := make(chan bool, 1)
 
 	var err error
 
@@ -374,6 +375,8 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
+		} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+			offline <- true
 		}
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
@@ -433,6 +436,8 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			}
 			updateCallback(edgeproto.UpdateTask, out)
 			err = errors.New(out)
+		case <-offline:
+			err = fmt.Errorf("Cloudlet is offline")
 		case <-time.After(timeout):
 			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
 			updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
@@ -576,7 +581,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if in.DeploymentLocal {
 			return fmt.Errorf("upgrade is not supported for local deployments")
 		}
-		err = s.UpgradeCloudlet(ctx, cur, cb)
+		err = s.UpgradeCloudlet(ctx, in, cb)
 		if err != nil {
 			return err
 		}
@@ -639,16 +644,16 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	}
 	// cleanup old crms post upgrade
 	pfConfig.CleanupMode = true
-	cloudlet := edgeproto.Cloudlet{}
+	cloudlet := &edgeproto.Cloudlet{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, &cloudlet) {
+		if !s.store.STMGet(stm, &in.Key, cloudlet) {
 			return in.Key.NotFoundError()
 		}
+		cloudlet.CopyInFields(in)
 		cloudlet.Config = *pfConfig
-		cloudlet.Version = in.Version
 		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 
-		s.store.STMPut(stm, &cloudlet)
+		s.store.STMPut(stm, cloudlet)
 		return nil
 	})
 	if err != nil {
@@ -853,7 +858,7 @@ func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.C
 		key.Name = tblname
 		key.OperatorKey = in.Key.OperatorKey
 		tbl, err := resTagTableApi.GetResTagTable(ctx, &key)
-    
+
 		if err != nil && err.Error() == key.NotFoundError().Error() {
 			// auto-create empty
 			tbl.Key = key
