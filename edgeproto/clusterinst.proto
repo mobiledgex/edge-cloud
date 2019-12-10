@@ -65,7 +65,7 @@ message ClusterInst {
   // Optional Resource AZ if any
   string availability_zone = 19;
   // Optional resource specific image to launch
-  string image_name = 20;
+  string image_name = 20  [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
   // If ClusterInst is reservable
   bool reservable = 21;
   // For reservable MobiledgeX ClusterInsts, the current developer tenant
