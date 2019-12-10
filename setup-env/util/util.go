@@ -96,6 +96,7 @@ type DeploymentData struct {
 	SampleApps  []*process.SampleApp  `yaml:"sampleapps"`
 	Influxs     []*process.Influx     `yaml:"influxs"`
 	ClusterSvcs []*process.ClusterSvc `yaml:"clustersvcs"`
+	Crms        []*process.Crm        `yaml:"crms"`
 	Jaegers     []*process.Jaeger     `yaml:"jaegers"`
 	Traefiks    []*process.Traefik    `yaml:"traefiks"`
 }
