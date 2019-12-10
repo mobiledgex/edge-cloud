@@ -148,7 +148,7 @@ func main() {
 	ranTest := false
 	for _, a := range spec.Actions {
 		util.PrintStepBanner("running action: " + a)
-		errs := setupmex.RunAction(ctx, a, outputDir, &spec, mods)
+		errs := setupmex.RunAction(ctx, a, outputDir, &spec, mods, config.Vars)
 		errors = append(errors, errs...)
 		ranTest = true
 	}
