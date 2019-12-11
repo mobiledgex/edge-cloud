@@ -196,7 +196,7 @@ func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, na
 	spec := ProxySpec{
 		Name:       name,
 		UseTLS:     useTLS,
-		MetricPort: cloudcommon.LBMetricsPort,
+		MetricPort: cloudcommon.ProxyMetricsPort,
 	}
 	httpPorts := []HTTPSpecDetail{}
 

@@ -83,7 +83,7 @@ func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, origi
 func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, name, originIP string, ports []dme.AppPort) error {
 	spec := ProxySpec{
 		Name:       name,
-		MetricPort: cloudcommon.LBMetricsPort,
+		MetricPort: cloudcommon.ProxyMetricsPort,
 	}
 	for _, p := range ports {
 		switch p.Proto {
