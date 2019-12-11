@@ -65,6 +65,21 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_READY)
 		}
 	} else {
+		// Allow CRM init when started/upgraded manually
+		if cloudlet.State == edgeproto.TrackedState_READY &&
+			in.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
+			newCloudlet := edgeproto.Cloudlet{}
+			key := &in.Key
+			err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+				if !cloudletApi.store.STMGet(stm, key, &newCloudlet) {
+					return key.NotFoundError()
+				}
+				newCloudlet.State = edgeproto.TrackedState_CRM_INITOK
+				newCloudlet.Version = in.Version
+				cloudletApi.store.STMPut(stm, &newCloudlet)
+				return nil
+			})
+		}
 		if in.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
 			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_UPDATING)
 		}
