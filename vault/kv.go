@@ -72,3 +72,8 @@ func ParseData(data map[string]interface{}) (*KVData, error) {
 	}
 	return d, nil
 }
+
+func DeleteKV(client *api.Client, path string) error {
+	_, err := client.Logical().Delete(path)
+	return err
+}
