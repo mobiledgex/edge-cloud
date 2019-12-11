@@ -72,8 +72,12 @@ path "secret/data/registry/*" {
   capabilities = [ "read" ]
 }
 
-path "secret/data/$REGION/cloudlet/*" {
-  capabilities = [ "read" ]
+path "secret/data/$REGION/cloudlet/openstack/*" {
+  capabilities = [ "create", "update", "delete", "read" ]
+}
+
+path "secret/metadata/$REGION/cloudlet/openstack/*" {
+  capabilities = [ "delete" ]
 }
 
 path "secret/data/cloudlet/openstack/mexenv.json" {

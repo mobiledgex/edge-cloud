@@ -221,6 +221,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physica
 		CloudletKey:  &cloudlet.Key,
 		PhysicalName: physicalName,
 		VaultAddr:    vaultAddr,
+		Region:       *region,
 		TestMode:     *testMode}
 	log.SpanLog(ctx, log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
 	err := platform.Init(ctx, &pc, updateCallback)
