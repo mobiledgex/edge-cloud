@@ -281,13 +281,14 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return nil
 	}
 
+	var cloudletPlatform pf.Platform
+	deleteAccessVars := false
 	updatecb := updateCloudletCallback{in, cb}
 
 	if in.DeploymentLocal {
 		updatecb.cb(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(ctx, in, pfConfig)
 	} else {
-		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 		if err == nil {
 			if len(accessVars) > 0 {
@@ -296,10 +297,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if err == nil {
 				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, updatecb.cb)
 				if err != nil && len(accessVars) > 0 {
-					err1 := cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, updatecb.cb)
-					if err1 != nil {
-						cb.Send(&edgeproto.Result{Message: err1.Error()})
-					}
+					deleteAccessVars = true
 				}
 			}
 		}
@@ -329,6 +327,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, pfConfig, cb)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create Cloudlet", "undoErr", undoErr)
+		}
+	}
+	if deleteAccessVars {
+		err1 := cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, updatecb.cb)
+		if err1 != nil {
+			cb.Send(&edgeproto.Result{Message: err1.Error()})
 		}
 	}
 	return err
