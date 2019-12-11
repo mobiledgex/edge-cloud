@@ -23,7 +23,7 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 		return err
 	}
 	updateCallback(edgeproto.UpdateTask, "Setting up Nginx L7 Proxy")
-	err = nginx.InitL7Proxy(client, nginx.WithDockerPublishPorts())
+	err = nginx.InitL7Proxy(ctx, client, nginx.WithDockerPublishPorts())
 	if err != nil {
 		return err
 	}

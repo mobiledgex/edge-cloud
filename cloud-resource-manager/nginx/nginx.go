@@ -2,6 +2,7 @@ package nginx
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"os"
@@ -62,7 +63,7 @@ func init() {
 	nginxL7ConfT = template.Must(template.New("l7app").Parse(nginxL7Conf))
 }
 
-func InitL7Proxy(client pc.PlatformClient, ops ...Op) error {
+func InitL7Proxy(ctx context.Context, client pc.PlatformClient, ops ...Op) error {
 	out, err := client.Output("docker ps --format '{{.Names}}'")
 	if err != nil {
 		return err
@@ -73,7 +74,7 @@ func InitL7Proxy(client pc.PlatformClient, ops ...Op) error {
 			return nil
 		}
 	}
-	return CreateNginxProxy(client, NginxL7Name, "", []dme.AppPort{}, ops...)
+	return CreateNginxProxy(ctx, client, NginxL7Name, "", []dme.AppPort{}, ops...)
 }
 
 func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {
@@ -95,11 +96,11 @@ func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {
 	return needEnvoy, needNginx
 }
 
-func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []dme.AppPort, ops ...Op) error {
+func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, originIP string, ports []dme.AppPort, ops ...Op) error {
 	// check to see whether nginx or envoy is needed (or both)
 	envoyNeeded, nginxNeeded := CheckProtocols(name, ports)
 	if envoyNeeded {
-		err := CreateEnvoyProxy(client, name, originIP, ports, ops...)
+		err := CreateEnvoyProxy(ctx, client, name, originIP, ports, ops...)
 		if err != nil {
 			return fmt.Errorf("Create Envoy Proxy failed, %v", err)
 		}

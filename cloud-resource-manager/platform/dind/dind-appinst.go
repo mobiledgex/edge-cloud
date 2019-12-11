@@ -43,7 +43,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 		}
 		masterIP := cluster.MasterAddr
 		network := GetDockerNetworkName(cluster)
-		err = nginx.CreateNginxProxy(client,
+		err = nginx.CreateNginxProxy(ctx, client,
 			names.AppName,
 			masterIP,
 			appInst.MappedPorts,

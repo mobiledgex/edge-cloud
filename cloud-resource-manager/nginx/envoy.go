@@ -2,6 +2,7 @@ package nginx // lol
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"strings"
@@ -24,8 +25,8 @@ func init() {
 	envoyYamlT = template.Must(template.New("yaml").Parse(envoyYaml))
 }
 
-func CreateEnvoyProxy(client pc.PlatformClient, name, originIP string, ports []dme.AppPort, ops ...Op) error {
-	log.DebugLog(log.DebugLevelMexos, "create envoy", "name", name, "originip", originIP, "ports", ports)
+func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, originIP string, ports []dme.AppPort, ops ...Op) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "create envoy", "name", name, "originip", originIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
 
@@ -36,7 +37,7 @@ func CreateEnvoyProxy(client pc.PlatformClient, name, originIP string, ports []d
 	pwd := strings.TrimSpace(string(out))
 
 	dir := pwd + "/envoy/" + name
-	log.DebugLog(log.DebugLevelMexos, "envoy remote dir", "name", name, "dir", dir)
+	log.SpanLog(ctx, log.DebugLevelMexos, "envoy remote dir", "name", name, "dir", dir)
 
 	err = pc.Run(client, "mkdir -p "+dir)
 	if err != nil {
@@ -45,12 +46,12 @@ func CreateEnvoyProxy(client pc.PlatformClient, name, originIP string, ports []d
 	accesslogFile := dir + "/access.log"
 	err = pc.Run(client, "touch "+accesslogFile)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos,
+		log.SpanLog(ctx, log.DebugLevelMexos,
 			"envoy %s can't create file %s", name, accesslogFile)
 		return err
 	}
 	eyamlName := dir + "/envoy.yaml"
-	err = createEnvoyYaml(client, eyamlName, name, originIP, ports)
+	err = createEnvoyYaml(ctx, client, eyamlName, name, originIP, ports)
 	if err != nil {
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
 	}
@@ -69,17 +70,17 @@ func CreateEnvoyProxy(client pc.PlatformClient, name, originIP string, ports []d
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
-	log.DebugLog(log.DebugLevelMexos, "envoy docker command", "name", "envoy"+name,
+	log.SpanLog(ctx, log.DebugLevelMexos, "envoy docker command", "name", "envoy"+name,
 		"cmd", cmd)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't create envoy container %s, %s, %v", "envoy"+name, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "created envoy container", "name", name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "created envoy container", "name", name)
 	return nil
 }
 
-func createEnvoyYaml(client pc.PlatformClient, yamlname, name, originIP string, ports []dme.AppPort) error {
+func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, name, originIP string, ports []dme.AppPort) error {
 	spec := ProxySpec{
 		Name:       name,
 		MetricPort: cloudcommon.LBMetricsPort,
@@ -98,7 +99,7 @@ func createEnvoyYaml(client pc.PlatformClient, yamlname, name, originIP string, 
 		}
 	}
 
-	log.DebugLog(log.DebugLevelMexos, "create envoy yaml", "name", name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "create envoy yaml", "name", name)
 	buf := bytes.Buffer{}
 	err := envoyYamlT.Execute(&buf, &spec)
 	if err != nil {
@@ -106,7 +107,7 @@ func createEnvoyYaml(client pc.PlatformClient, yamlname, name, originIP string, 
 	}
 	err = pc.WriteFile(client, yamlname, buf.String(), "envoy.yaml", pc.NoSudo)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "write envoy.yaml failed",
+		log.SpanLog(ctx, log.DebugLevelMexos, "write envoy.yaml failed",
 			"name", name, "err", err)
 		return err
 	}
@@ -162,15 +163,15 @@ admin:
 {{- end}}
 `
 
-func DeleteEnvoyProxy(client pc.PlatformClient, name string) error {
-	log.DebugLog(log.DebugLevelMexos, "delete envoy", "name", "envoy"+name)
+func DeleteEnvoyProxy(ctx context.Context, client pc.PlatformClient, name string) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy", "name", "envoy"+name)
 	out, err := client.Output("docker kill " + "envoy" + name)
 	deleteContainer := false
 	if err == nil {
 		deleteContainer = true
 	} else {
 		if strings.Contains(string(out), "No such container") {
-			log.DebugLog(log.DebugLevelMexos,
+			log.SpanLog(ctx, log.DebugLevelMexos,
 				"envoy LB container already gone", "name", "envoy"+name)
 		} else {
 			return fmt.Errorf("can't delete envoy container %s, %s, %v", name, out, err)
@@ -179,7 +180,7 @@ func DeleteEnvoyProxy(client pc.PlatformClient, name string) error {
 	envoyDir := "envoy/" + name
 	out, err = client.Output("rm -rf " + envoyDir)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "delete envoy dir", "name", name, "dir", envoyDir, "out", out, "err", err)
+		log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy dir", "name", name, "dir", envoyDir, "out", out, "err", err)
 	}
 	if deleteContainer {
 		out, err = client.Output("docker rm " + "envoy" + name)
@@ -188,6 +189,10 @@ func DeleteEnvoyProxy(client pc.PlatformClient, name string) error {
 		}
 	}
 
-	log.DebugLog(log.DebugLevelMexos, "deleted envoy", "name", name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "deleted envoy", "name", name)
 	return nil
+}
+
+func GetEnvoyContainerName(name string) string {
+	return "envoy" + name
 }
