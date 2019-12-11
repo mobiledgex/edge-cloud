@@ -82,6 +82,7 @@ func TestCloudletApi(t *testing.T) {
 	testCloudletStates(t, ctx, "success-cleanupfailure")
 	testCloudletStates(t, ctx, "failure")
 	testUpgradeFailure(t, ctx)
+	testManualBringup(t, ctx)
 
 	dummy.Stop()
 	dummy.Stop()
@@ -516,6 +517,29 @@ func testUpgradeFailure(t *testing.T, ctx context.Context) {
 	clusterInst.Key.CloudletKey = cloudlet.Key
 	err = clusterInstApi.CreateClusterInst(&clusterInst, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err, "Create ClusterInst failure as cloudlet is in error state")
+
+	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+}
+
+func testManualBringup(t *testing.T, ctx context.Context) {
+	var err error
+	cloudlet := testutil.CloudletData[2]
+	cloudlet.Key.Name = "crmmanualbringup"
+	cloudlet.Version = crm_v1
+	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+
+	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
+	require.Nil(t, err, "cloudlet obj created")
+
+	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, crm_v2)
+	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_CRM_INITOK)
+	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
+
+	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v2)
+	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
+	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 
 	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
