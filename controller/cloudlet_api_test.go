@@ -279,6 +279,7 @@ func testUpgradeScenario(t *testing.T, ctx context.Context, transitions *[]state
 	go func() {
 		forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
 		cloudlet.Version = crm_v2
+		cloudlet.Fields = []string{edgeproto.CloudletFieldVersion}
 		err := cloudletApi.UpgradeCloudlet(ctx, &cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 		if scenario == "fail" {
 			require.NotNil(t, err, "upgrade cloudlet should fail")
@@ -463,6 +464,7 @@ func testUpgradeFailure(t *testing.T, ctx context.Context) {
 	clusterInstApi.cache.Update(ctx, &clusterInst, 0)
 
 	cloudlet.Version = crm_v2
+	cloudlet.Fields = []string{edgeproto.CloudletFieldVersion}
 	err = cloudletApi.UpgradeCloudlet(ctx, &cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err, "upgrade should fail as clusterinst will begin update")
 
@@ -474,6 +476,7 @@ func testUpgradeFailure(t *testing.T, ctx context.Context) {
 	appInstApi.cache.Update(ctx, &appInst, 0)
 
 	cloudlet.Version = crm_v2
+	cloudlet.Fields = []string{edgeproto.CloudletFieldVersion}
 	err = cloudletApi.UpgradeCloudlet(ctx, &cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err, "upgrade should fail as appinst creation is in progress")
 
