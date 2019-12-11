@@ -1,4 +1,4 @@
-package nginx
+package proxy
 
 import (
 	"bytes"
@@ -108,7 +108,7 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, origi
 	if !nginxNeeded {
 		return nil
 	}
-	log.DebugLog(log.DebugLevelMexos, "create nginx", "name", name, "originip", originIP, "ports", ports)
+	log.SpanLog(ctx, log.DebugLevelMexos, "create nginx", "name", name, "originip", originIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
 
@@ -119,7 +119,7 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, origi
 	pwd := strings.TrimSpace(string(out))
 
 	dir := pwd + "/nginx/" + name
-	log.DebugLog(log.DebugLevelMexos, "nginx remote dir", "name", name, "dir", dir)
+	log.SpanLog(ctx, log.DebugLevelMexos, "nginx remote dir", "name", name, "dir", dir)
 	l7dir := pwd + "/" + NginxL7Dir
 
 	err = pc.Run(client, "mkdir -p "+dir)
@@ -132,25 +132,25 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, origi
 	if err == nil {
 		useTLS = true
 	}
-	log.DebugLog(log.DebugLevelMexos, "nginx certs check",
+	log.SpanLog(ctx, log.DebugLevelMexos, "nginx certs check",
 		"name", name, "useTLS", useTLS)
 
 	errlogFile := dir + "/err.log"
 	err = pc.Run(client, "touch "+errlogFile)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos,
+		log.SpanLog(ctx, log.DebugLevelMexos,
 			"nginx %s can't create file %s", name, errlogFile)
 		return err
 	}
 	accesslogFile := dir + "/access.log"
 	err = pc.Run(client, "touch "+accesslogFile)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos,
+		log.SpanLog(ctx, log.DebugLevelMexos,
 			"nginx %s can't create file %s", name, accesslogFile)
 		return err
 	}
 	nconfName := dir + "/nginx.conf"
-	err = createNginxConf(client, nconfName, name, l7dir, originIP, ports, useTLS)
+	err = createNginxConf(ctx, client, nconfName, name, l7dir, originIP, ports, useTLS)
 	if err != nil {
 		return fmt.Errorf("create nginx.conf failed, %v", err)
 	}
@@ -182,17 +182,17 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, origi
 		"-v", nconfName + ":/etc/nginx/nginx.conf",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/nginx-with-curl"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
-	log.DebugLog(log.DebugLevelMexos, "nginx docker command", "name", name,
+	log.SpanLog(ctx, log.DebugLevelMexos, "nginx docker command", "name", name,
 		"cmd", cmd)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't create nginx container %s, %s, %v", name, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "created nginx container", "name", name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "created nginx container", "name", name)
 	return nil
 }
 
-func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP string, ports []dme.AppPort, useTLS bool) error {
+func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, name, l7dir, originIP string, ports []dme.AppPort, useTLS bool) error {
 	spec := ProxySpec{
 		Name:       name,
 		UseTLS:     useTLS,
@@ -240,7 +240,7 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 		}
 	}
 
-	log.DebugLog(log.DebugLevelMexos, "create nginx conf", "name", name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "create nginx conf", "name", name)
 	buf := bytes.Buffer{}
 	err = nginxConfT.Execute(&buf, &spec)
 	if err != nil {
@@ -248,14 +248,14 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 	}
 	err = pc.WriteFile(client, confname, buf.String(), "nginx.conf", pc.NoSudo)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "write nginx.conf failed",
+		log.SpanLog(ctx, log.DebugLevelMexos, "write nginx.conf failed",
 			"name", name, "err", err)
 		return err
 	}
 
 	if len(httpPorts) > 0 {
 		// add L7 config to L7 nginx instance
-		log.DebugLog(log.DebugLevelMexos, "create L7 nginx conf", "name", name)
+		log.SpanLog(ctx, log.DebugLevelMexos, "create L7 nginx conf", "name", name)
 		buf := bytes.Buffer{}
 		err = nginxL7ConfT.Execute(&buf, httpPorts)
 		if err != nil {
@@ -263,7 +263,7 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 		}
 		err = pc.WriteFile(client, l7dir+"/"+name+".conf", buf.String(), "nginx L7 conf", pc.NoSudo)
 		if err != nil {
-			log.DebugLog(log.DebugLevelMexos,
+			log.SpanLog(ctx, log.DebugLevelMexos,
 				"write nginx L7 conf failed",
 				"name", name, "err", err)
 			return err
@@ -377,15 +377,15 @@ location /{{.PathPrefix}}/ {
 {{- end}}
 `
 
-func DeleteNginxProxy(client pc.PlatformClient, name string) error {
-	log.DebugLog(log.DebugLevelMexos, "delete nginx", "name", name)
+func DeleteNginxProxy(ctx context.Context, client pc.PlatformClient, name string) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx", "name", name)
 	out, err := client.Output("docker kill " + name)
 	deleteContainer := false
 	if err == nil {
 		deleteContainer = true
 	} else {
 		if strings.Contains(string(out), "No such container") {
-			log.DebugLog(log.DebugLevelMexos,
+			log.SpanLog(ctx, log.DebugLevelMexos,
 				"nginx LB container already gone", "name", name)
 		} else {
 			return fmt.Errorf("can't delete nginx container %s, %s, %v", name, out, err)
@@ -394,13 +394,13 @@ func DeleteNginxProxy(client pc.PlatformClient, name string) error {
 	l7conf := NginxL7Dir + "/" + name + ".conf"
 	out, err = client.Output("rm " + l7conf)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "delete nginx L7 conf",
+		log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx L7 conf",
 			"name", name, "l7conf", l7conf, "out", out, "err", err)
 	}
 	nginxDir := "nginx/" + name
 	out, err = client.Output("rm -rf " + nginxDir)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "delete nginx dir", "name", name, "dir", nginxDir, "out", out, "err", err)
+		log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx dir", "name", name, "dir", nginxDir, "out", out, "err", err)
 	}
 	if deleteContainer {
 		out, err = client.Output("docker rm " + name)
@@ -410,8 +410,8 @@ func DeleteNginxProxy(client pc.PlatformClient, name string) error {
 	}
 	reloadNginxL7(client)
 
-	log.DebugLog(log.DebugLevelMexos, "deleted nginx", "name", name)
-	DeleteEnvoyProxy(client, name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "deleted nginx", "name", name)
+	DeleteEnvoyProxy(ctx, client, name)
 	return nil
 }
 

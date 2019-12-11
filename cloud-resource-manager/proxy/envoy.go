@@ -1,4 +1,4 @@
-package nginx // lol
+package proxy
 
 import (
 	"bytes"
