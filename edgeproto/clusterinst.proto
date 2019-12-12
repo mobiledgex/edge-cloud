@@ -58,7 +58,7 @@ message ClusterInst {
   uint32 num_nodes = 14;
   // status is used to reflect progress of creation or other events
   StatusInfo status = 16 [(protogen.backend) = true, (gogoproto.nullable) = false];
-  // Size of external volume to be attached to nodes
+  // Size of external volume to be attached to nodes.  This is for the root partition
   uint64 external_volume_size = 17 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
   // Auto scale policy name
   string auto_scale_policy = 18;
@@ -70,6 +70,8 @@ message ClusterInst {
   bool reservable = 21;
   // For reservable MobiledgeX ClusterInsts, the current developer tenant
   string reserved_by = 22 [(protogen.backend) = true];
+  // Size of an optional shared volume to be mounted on the master
+  uint64 shared_volume_size = 23;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
