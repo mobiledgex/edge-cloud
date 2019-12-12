@@ -184,6 +184,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if in.NumMasters != 0 || in.NumNodes != 0 {
 			return fmt.Errorf("NumMasters and NumNodes not applicable for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
 		}
+		if in.SharedVolumeSize != 0 {
+			return fmt.Errorf("SharedVolumeSize not supported for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
+
+		}
 		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			// assume dedicated for docker
 			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
@@ -231,6 +235,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND {
 				return fmt.Errorf("IpAccess must be shared for DIND")
 			}
+		}
+		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && in.SharedVolumeSize != 0 {
+			return errors.New("Shared volumes only supported on OpenStack")
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
 			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {

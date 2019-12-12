@@ -370,6 +370,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// find flavor from app
 			in.Flavor = app.DefaultFlavor
 		}
+		if in.SharedVolumeSize == 0 {
+			in.SharedVolumeSize = app.DefaultSharedVolumeSize
+		}
 		return nil
 	})
 	if err != nil {
@@ -389,6 +392,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		clusterInst.Flavor = in.Flavor
 		clusterInst.IpAccess = in.AutoClusterIpAccess
 		clusterInst.Deployment = appDeploymentType
+		clusterInst.SharedVolumeSize = in.SharedVolumeSize
 		if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes ||
 			appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
 			clusterInst.Deployment = cloudcommon.AppDeploymentTypeKubernetes
