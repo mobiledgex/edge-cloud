@@ -464,6 +464,7 @@ var ClusterInstOptionalArgs = []string{
 	"availabilityzone",
 	"imagename",
 	"reservable",
+	"sharedvolumesize",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -489,12 +490,13 @@ var ClusterInstComments = map[string]string{
 	"deployment":         "Deployment type (kubernetes or docker)",
 	"nummasters":         "Number of k8s masters (In case of docker deployment, this field is not required)",
 	"numnodes":           "Number of k8s nodes (In case of docker deployment, this field is not required)",
-	"externalvolumesize": "Size of external volume to be attached to nodes",
+	"externalvolumesize": "Size of external volume to be attached to nodes.  This is for the root partition",
 	"autoscalepolicy":    "Auto scale policy name",
 	"availabilityzone":   "Optional Resource AZ if any",
 	"imagename":          "Optional resource specific image to launch",
 	"reservable":         "If ClusterInst is reservable",
 	"reservedby":         "For reservable MobiledgeX ClusterInsts, the current developer tenant",
+	"sharedvolumesize":   "Size of an optional shared volume to be mounted on the master",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors": "StringArray",
