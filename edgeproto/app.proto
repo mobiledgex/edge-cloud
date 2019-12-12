@@ -60,7 +60,7 @@ message ConfigFile {
   // Unique identifier key
   AppKey key = 2 [(gogoproto.nullable) = false];
   // URI of where image resides
-  string image_path = 4;
+  string image_path = 4 [(protogen.backend) = true];
   // Image type (see ImageType)
   ImageType image_type = 5;
   // Comma separated list of protocol:port pairs that the App listens on.
@@ -81,7 +81,7 @@ message ConfigFile {
   // Deployment manifest is the deployment specific manifest file/config
   // For docker deployment, this can be a docker-compose or docker run file
   // For kubernetes deployment, this can be a kubernetes yaml or helm chart file
-  string deployment_manifest = 16 [(protogen.hidetag) = "nocmp"];
+  string deployment_manifest = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Deployment generator target to generate a basic deployment manifest
   string deployment_generator = 17 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Android package name used to match the App name from the Android package

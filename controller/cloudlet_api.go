@@ -154,6 +154,7 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	pfConfig.ImagePath = *cloudletVMImagePath
 	pfConfig.TestMode = *testMode
 	pfConfig.EnvVar = make(map[string]string)
+	pfConfig.Region = *region
 	getCrmEnv(pfConfig.EnvVar)
 	addrObjs := strings.Split(*notifyAddr, ":")
 	if len(addrObjs) != 2 {
@@ -207,6 +208,10 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.Version = *versionTag
 	}
 
+	if in.AccessVars != nil && in.DeploymentLocal {
+		return errors.New("Access vars is not supported for local deployment")
+	}
+
 	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 
@@ -230,6 +235,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if in.Flavor.Name == "" {
 		in.Flavor = DefaultPlatformFlavor.Key
 		pfFlavor = DefaultPlatformFlavor
+	}
+
+	accessVars := make(map[string]string)
+	if in.AccessVars != nil {
+		accessVars = in.AccessVars
+		in.AccessVars = nil
 	}
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -270,16 +281,25 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return nil
 	}
 
+	var cloudletPlatform pf.Platform
+	deleteAccessVars := false
 	updatecb := updateCloudletCallback{in, cb}
 
 	if in.DeploymentLocal {
 		updatecb.cb(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(ctx, in, pfConfig)
 	} else {
-		var cloudletPlatform pf.Platform
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 		if err == nil {
-			err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, updatecb.cb)
+			if len(accessVars) > 0 {
+				err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
+			}
+			if err == nil {
+				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, updatecb.cb)
+				if err != nil && len(accessVars) > 0 {
+					deleteAccessVars = true
+				}
+			}
 		}
 	}
 
@@ -307,6 +327,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, pfConfig, cb)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create Cloudlet", "undoErr", undoErr)
+		}
+	}
+	if deleteAccessVars {
+		err1 := cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, updatecb.cb)
+		if err1 != nil {
+			cb.Send(&edgeproto.Result{Message: err1.Error()})
 		}
 	}
 	return err
@@ -342,7 +368,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	fatal := make(chan bool, 1)
-	offline := make(chan bool, 1)
 
 	var err error
 
@@ -375,8 +400,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
-		} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
-			offline <- true
 		}
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
@@ -436,8 +459,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			}
 			updateCallback(edgeproto.UpdateTask, out)
 			err = errors.New(out)
-		case <-offline:
-			err = fmt.Errorf("Cloudlet is offline")
 		case <-time.After(timeout):
 			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
 			updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
@@ -452,6 +473,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if !s.store.STMGet(stm, key, &cloudlet) {
 			return key.NotFoundError()
 		}
+		cloudlet.AccessVars = nil
 		if err == nil {
 			cloudlet.Errors = nil
 			cloudlet.State = edgeproto.TrackedState_READY
@@ -574,6 +596,18 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		upgrade = true
 	}
 
+	accessVars := make(map[string]string)
+	if _, found := fmap[edgeproto.CloudletFieldAccessVars]; found {
+		if !upgrade {
+			return fmt.Errorf("Access vars can only be updated during upgrade")
+		}
+		if in.DeploymentLocal {
+			return errors.New("Access vars is not supported for local deployment")
+		}
+		accessVars = in.AccessVars
+		in.AccessVars = nil
+	}
+
 	cctx := DefCallContext()
 	cctx.SetOverride(&in.CrmOverride)
 
@@ -581,8 +615,30 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if in.DeploymentLocal {
 			return fmt.Errorf("upgrade is not supported for local deployments")
 		}
+		updatecb := updateCloudletCallback{in, cb}
+		var cloudletPlatform pf.Platform
+		cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String())
+		if err != nil {
+			return err
+		}
+		pfConfig, err := getPlatformConfig(ctx, in)
+		if err != nil {
+			return err
+		}
+		if len(accessVars) > 0 {
+			err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
+			if err != nil {
+				return err
+			}
+		}
 		err = s.UpgradeCloudlet(ctx, in, cb)
 		if err != nil {
+			if cloudletPlatform != nil && len(accessVars) > 0 {
+				err1 := cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, updatecb.cb)
+				if err1 != nil {
+					cb.Send(&edgeproto.Result{Message: err1.Error()})
+				}
+			}
 			return err
 		}
 	}

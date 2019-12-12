@@ -49,6 +49,9 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["nocmp"]; found {
 		in.ExternalVolumeSize = 0
 	}
+	if _, found := tags["nocmp"]; found {
+		in.ImageName = ""
+	}
 }
 
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
