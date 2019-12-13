@@ -104,7 +104,7 @@ func TestAddRemove(t *testing.T) {
 
 	// Change the state of the appInst and get check the results
 	appInst := dmetest.MakeAppInst(&dmetest.Apps[0], &dmetest.Cloudlets[2])
-	appInst.State = edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
+	appInst.State = edgeproto.TrackedState_HEALTHCHECK_FAILED
 	dmecommon.AddAppInst(appInst)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")
