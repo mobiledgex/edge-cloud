@@ -130,6 +130,8 @@ message PlatformConfig {
   string span = 10;
   // Internal cleanup flag
   bool cleanup_mode = 11;
+  // Region
+  string region = 12;
 }
 
 // PlatformType is the supported list of cloudlet types
@@ -166,8 +168,6 @@ message Cloudlet {
   repeated string fields = 1;
   // Unique identifier key
   CloudletKey key = 2 [(gogoproto.nullable) = false];
-  // Placeholder for cloudlet access credentials, i.e. openstack keys, passwords, etc
-  string access_credentials = 4 [(protogen.test_update) = true];
   // Location of the Cloudlet site
   distributed_match_engine.Loc location = 5 [(gogoproto.nullable) = false];
   // Type of IP support provided by Cloudlet (see IpSupport)
@@ -204,6 +204,8 @@ message Cloudlet {
   PlatformConfig config = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Optional resource to restagtbl key map key values = [gpu, nas, nic]
   map<string, edgeproto.ResTagTableKey> res_tag_map = 22 [(protogen.backend) = true];
+  // Variables required to access cloudlet
+  map<string, string> access_vars = 23;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

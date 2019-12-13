@@ -931,6 +931,7 @@ var PlatformConfigOptionalArgs = []string{
 	"testmode",
 	"span",
 	"cleanupmode",
+	"region",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -944,6 +945,7 @@ var PlatformConfigComments = map[string]string{
 	"testmode":        "Internal Test flag",
 	"span":            "Span string",
 	"cleanupmode":     "Internal cleanup flag",
+	"region":          "Region",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -971,7 +973,6 @@ var CloudletRequiredArgs = []string{
 	"name",
 }
 var CloudletOptionalArgs = []string{
-	"accesscredentials",
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
@@ -992,6 +993,7 @@ var CloudletOptionalArgs = []string{
 	"restagmap.key",
 	"restagmap.value.name",
 	"restagmap.value.operatorkey.name",
+	"accessvars",
 }
 var CloudletAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -1000,7 +1002,6 @@ var CloudletAliasArgs = []string{
 var CloudletComments = map[string]string{
 	"operator":                            "Company or Organization name of the operator",
 	"name":                                "Name of the cloudlet",
-	"accesscredentials":                   "Placeholder for cloudlet access credentials, i.e. openstack keys, passwords, etc",
 	"location.latitude":                   "latitude in WGS 84 coordinates",
 	"location.longitude":                  "longitude in WGS 84 coordinates",
 	"location.horizontalaccuracy":         "horizontal accuracy (radius in meters)",
@@ -1037,10 +1038,13 @@ var CloudletComments = map[string]string{
 	"config.testmode":                     "Internal Test flag",
 	"config.span":                         "Span string",
 	"config.cleanupmode":                  "Internal cleanup flag",
+	"config.region":                       "Region",
 	"restagmap.value.name":                "Resource Table Name",
 	"restagmap.value.operatorkey.name":    "Company or Organization name of the operator",
+	"accessvars":                          "Variables required to access cloudlet",
 }
 var CloudletSpecialArgs = map[string]string{
+	"accessvars":    "StringToString",
 	"config.envvar": "StringToString",
 	"envvar":        "StringToString",
 	"errors":        "StringArray",
@@ -1177,7 +1181,6 @@ var CreateCloudletRequiredArgs = []string{
 	"numdynamicips",
 }
 var CreateCloudletOptionalArgs = []string{
-	"accesscredentials",
 	"location.altitude",
 	"location.timestamp.seconds",
 	"location.timestamp.nanos",
@@ -1195,4 +1198,5 @@ var CreateCloudletOptionalArgs = []string{
 	"restagmap.key",
 	"restagmap.value.name",
 	"restagmap.value.operatorkey.name",
+	"accessvars",
 }
