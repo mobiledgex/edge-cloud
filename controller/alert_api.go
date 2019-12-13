@@ -98,12 +98,11 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		log.SpanLog(ctx, log.DebugLevelNotify, "ignoring alert", "name", name)
 		return
 	}
+	in.Controller = ControllerId
+	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
 	if name == cloudcommon.AlertAppInstDown {
 		appInstSetStateFromAlert(ctx, in, edgeproto.TrackedState_HEALTHCHECK_FAILED)
 	}
-
-	in.Controller = ControllerId
-	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
 }
 
 func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
