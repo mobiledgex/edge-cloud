@@ -63,6 +63,7 @@ type Crm struct {
 	Span          string
 	CleanupMode   bool
 	Version       string
+	Region        string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`

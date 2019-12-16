@@ -378,6 +378,10 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--version")
 		args = append(args, p.Version)
 	}
+	if p.Region != "" {
+		args = append(args, "--region")
+		args = append(args, p.Region)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
