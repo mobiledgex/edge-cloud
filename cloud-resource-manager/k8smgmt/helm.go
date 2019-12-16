@@ -1,8 +1,11 @@
 package k8smgmt
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -22,13 +25,39 @@ var validHelmInstallOpts = map[string]struct{}{
 
 const AppConfigHelmYaml = "hemlCustomizationYaml"
 
-func getHelmOpts(client pc.PlatformClient, appName string, configs []*edgeproto.ConfigFile) (string, error) {
+type HelmCustomizations struct {
+	ClusterMasterIP string
+}
+
+func replaceHelmVars(config string, helmCust *HelmCustomizations) (string, error) {
+	// replace variables wrapped in "___" with brackets
+	r := regexp.MustCompile("__(\\S+)__")
+	s := r.ReplaceAllString(config, "{{$1}}")
+
+	tmpl, err := template.New("helm").Parse(s)
+	if err != nil {
+		return "", fmt.Errorf("unable to parse helm template: %v", err)
+	}
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, helmCust)
+	if err != nil {
+		return "", fmt.Errorf("Template Execute Failed: %s", err)
+	}
+	return buf.String(), nil
+}
+
+func getHelmOpts(client pc.PlatformClient, appName string, configs []*edgeproto.ConfigFile, helmCust *HelmCustomizations) (string, error) {
 	// Walk the Configs in the App and generate the yaml files from the helm customization ones
+
 	var ymls []string
 	for ii, v := range configs {
 		if v.Kind == AppConfigHelmYaml {
+			conf, err := replaceHelmVars(v.Config, helmCust)
+			if err != nil {
+				return "", err
+			}
 			file := fmt.Sprintf("%s%d", appName, ii)
-			err := pc.WriteFile(client, file, v.Config, v.Kind, pc.NoSudo)
+			err = pc.WriteFile(client, file, conf, v.Kind, pc.NoSudo)
 			if err != nil {
 				return "", err
 			}
@@ -111,7 +140,7 @@ func getHelmRepoAndChart(imagePath string) (string, string, error) {
 	return "", chart, nil
 }
 
-func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, helmCust *HelmCustomizations) error {
 	log.DebugLog(log.DebugLevelMexos, "create kubernetes helm app", "clusterInst", clusterInst, "kubeNames", names)
 
 	// install helm if it's not installed yet
@@ -143,7 +172,7 @@ func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *
 		return err
 	}
 	configs := append(app.Configs, appInst.Configs...)
-	helmOpts, err := getHelmOpts(client, names.AppName, configs)
+	helmOpts, err := getHelmOpts(client, names.AppName, configs, helmCust)
 	if err != nil {
 		return err
 	}
@@ -158,10 +187,10 @@ func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *
 	return nil
 }
 
-func UpdateHelmAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func UpdateHelmAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, helmCust *HelmCustomizations) error {
 	log.DebugLog(log.DebugLevelMexos, "update kubernetes helm app", "app", app, "kubeNames", names)
 	configs := append(app.Configs, appInst.Configs...)
-	helmOpts, err := getHelmOpts(client, names.AppName, configs)
+	helmOpts, err := getHelmOpts(client, names.AppName, configs, helmCust)
 	if err != nil {
 		return err
 	}

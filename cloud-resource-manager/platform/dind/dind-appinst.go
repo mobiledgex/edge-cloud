@@ -34,14 +34,15 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if err != nil {
 		return err
 	}
+	cluster, err := FindCluster(names.ClusterName)
+	masterIP := cluster.MasterAddr
+
+	if err != nil {
+		return err
+	}
 	// NOTE: for DIND we don't check whether this is internal
 	if len(appInst.MappedPorts) > 0 {
 		log.SpanLog(ctx, log.DebugLevelMexos, "AddNginxProxy for dind", "ports", appInst.MappedPorts)
-		cluster, err := FindCluster(names.ClusterName)
-		if err != nil {
-			return err
-		}
-		masterIP := cluster.MasterAddr
 		network := GetDockerNetworkName(cluster)
 		err = nginx.CreateNginxProxy(client,
 			names.AppName,
@@ -61,7 +62,8 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 			err = k8smgmt.WaitForAppInst(client, names, app, k8smgmt.WaitRunning)
 		}
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
-		err = k8smgmt.CreateHelmAppInst(client, names, clusterInst, app, appInst)
+		helmCust := k8smgmt.HelmCustomizations{ClusterMasterIP: masterIP}
+		err = k8smgmt.CreateHelmAppInst(client, names, clusterInst, app, appInst, &helmCust)
 	} else {
 		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
 	}
@@ -125,7 +127,12 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 		return k8smgmt.UpdateAppInst(client, names, app, appInst)
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
-		return k8smgmt.UpdateHelmAppInst(client, names, app, appInst)
+		cluster, err := FindCluster(names.ClusterName)
+		if err != nil {
+			return err
+		}
+		helmCust := k8smgmt.HelmCustomizations{ClusterMasterIP: cluster.MasterAddr}
+		return k8smgmt.UpdateHelmAppInst(client, names, app, appInst, &helmCust)
 	}
 	return fmt.Errorf("UpdateAppInst not supported for deployment: %s", appDeploymentType)
 }

@@ -142,7 +142,7 @@ var NFSAutoProvisionApp = edgeproto.App{
 
 var NFSAutoProvisionAppTemplate = `nfs:
   path: /share
-  server: 10.101.1.10
+  server: __.ClusterMasterIP__
 storageClass:
   name: standard
   defaultClass: true
