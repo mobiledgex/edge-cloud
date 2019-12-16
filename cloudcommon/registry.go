@@ -202,7 +202,8 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, vaultConfig *vault.
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode == http.StatusUnauthorized {
+	switch resp.StatusCode {
+	case http.StatusUnauthorized:
 		// Following is valid only for Docker Registry v2 Authentication
 		// close response body as we will retry with authtoken
 		resp.Body.Close()
@@ -218,8 +219,15 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, vaultConfig *vault.
 			err = fmt.Errorf("Access denied to registry path")
 		}
 		return nil, err
+	case http.StatusForbidden:
+		resp.Body.Close()
+		return nil, fmt.Errorf("Invalid credentials to access URL: %s", regUrl)
+	case http.StatusOK:
+		return resp, nil
+	default:
+		resp.Body.Close()
+		return nil, fmt.Errorf("Invalid URL: %s, %s", regUrl, http.StatusText(resp.StatusCode))
 	}
-	return resp, nil
 }
 
 func ValidateDockerRegistryPath(ctx context.Context, regUrl string, vaultConfig *vault.Config) error {
