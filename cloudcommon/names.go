@@ -47,6 +47,7 @@ var DeveloperMetricsDbName = "metrics"
 var MEXPrometheusAppName = "MEXPrometheusAppName"
 var PrometheusPort = int32(9090)
 var NginxMetricsPort = int32(65121)
+var NFSAutoProvisionAppName = "NFSAutoProvision"
 
 // DIND script to pull from kubeadm-dind-cluster
 var DindScriptName = "dind-cluster-v1.14.sh"
