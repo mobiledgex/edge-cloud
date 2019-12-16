@@ -18,3 +18,6 @@ var AlertLabelAppVer = "appver"
 var AlertKeyNodeCount = "nodecount"
 var AlertKeyLowCpuNodeCount = "lowcpunodecount"
 var AlertKeyMinNodes = "minnodes"
+
+// for healthCheck:
+var AlertHealthCheckStatus = "status"

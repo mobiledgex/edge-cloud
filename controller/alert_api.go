@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -25,8 +26,8 @@ func InitAlertApi(sync *Sync) {
 	sync.RegisterCache(&alertApi.cache)
 }
 
-// AppInstDown alert needs to set the TrackedState of the AppInst
-func appInstSetStateFromAlert(ctx context.Context, alert *edgeproto.Alert, state edgeproto.TrackedState) {
+// AppInstDown alert needs to set the HealthCheck in AppInst
+func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.Alert, state edgeproto.HealthCheck) {
 	dev, ok := alert.Labels[cloudcommon.AlertLabelDev]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Dev label in Alert", "alert", alert)
@@ -57,7 +58,6 @@ func appInstSetStateFromAlert(ctx context.Context, alert *edgeproto.Alert, state
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find App Version label in Alert", "alert", alert)
 		return
 	}
-	// Build up info since we use UpdateFromInfo API
 	appInst := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: edgeproto.AppKey{
@@ -80,9 +80,8 @@ func appInstSetStateFromAlert(ctx context.Context, alert *edgeproto.Alert, state
 				Developer: dev,
 			},
 		},
-		State: state,
 	}
-	appInstApi.UpdateState(ctx, &appInst)
+	appInstApi.HealthCheckUpdate(ctx, &appInst, state)
 
 }
 
@@ -101,7 +100,23 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	in.Controller = ControllerId
 	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
 	if name == cloudcommon.AlertAppInstDown {
-		appInstSetStateFromAlert(ctx, in, edgeproto.TrackedState_HEALTHCHECK_FAILED)
+		state, ok := in.Annotations[cloudcommon.AlertHealthCheckStatus]
+		if !ok {
+			log.SpanLog(ctx, log.DebugLevelNotify, "HealthCheck satus not found",
+				"annotations", in.Annotations)
+			return
+		}
+		hcState, err := strconv.Atoi(state)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelNotify, "failed to parse Health Check state",
+				"state", state, "error", err)
+		}
+		if !ok {
+			log.SpanLog(ctx, log.DebugLevelNotify, "HealthCheck satus unknown",
+				"annotations", in.Annotations, "status", state)
+			return
+		}
+		appInstSetStateFromHealthCheckAlert(ctx, in, edgeproto.HealthCheck(hcState))
 	}
 }
 
@@ -123,10 +138,10 @@ func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelNotify, "notify delete Alert", "key", in.GetKeyVal(), "err", err)
 	}
-	// Need to set the state of AppInst to disabled
+	// Reset HealthCheck state back to OK
 	name, ok := in.Labels["alertname"]
 	if ok && foundAlert && name == cloudcommon.AlertAppInstDown {
-		appInstSetStateFromAlert(ctx, in, edgeproto.TrackedState_READY)
+		appInstSetStateFromHealthCheckAlert(ctx, in, edgeproto.HealthCheck_HEALTH_CHECK_OK)
 	}
 }
 

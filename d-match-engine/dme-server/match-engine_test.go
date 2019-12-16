@@ -102,16 +102,16 @@ func TestAddRemove(t *testing.T) {
 	assert.Equal(t, dmetest.FindCloudletData[3].Reply.Status, reply.Status)
 	assert.Equal(t, dmetest.FindCloudletData[3].Reply.Fqdn, reply.Fqdn)
 
-	// Change the state of the appInst and get check the results
+	// Change the health check status of the appInst and get check the results
 	appInst := dmetest.MakeAppInst(&dmetest.Apps[0], &dmetest.Cloudlets[2])
-	appInst.State = edgeproto.TrackedState_HEALTHCHECK_FAILED
+	appInst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE
 	dmecommon.AddAppInst(appInst)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Status, reply.Status)
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Fqdn, reply.Fqdn)
 	// reset and check the one that we get is returned
-	appInst.State = edgeproto.TrackedState_READY
+	appInst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK
 	dmecommon.AddAppInst(appInst)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")

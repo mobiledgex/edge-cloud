@@ -30,8 +30,8 @@ type DmeAppInst struct {
 	ports []dme.AppPort
 	// State of the cloudlet - copy of the DmeCloudlet
 	cloudletState edgeproto.CloudletState
-	// State of this AppInst
-	appInstState edgeproto.TrackedState
+	// Health state of the appInst
+	appInstHealth edgeproto.HealthCheck
 }
 
 type DmeAppInsts struct {
@@ -81,14 +81,15 @@ func SetupMatchEngine() {
 }
 
 // AppInst state is a superset of the cloudlet state and appInst state
-func GetDmeAppInstState(appInst *DmeAppInst) edgeproto.TrackedState {
+// Returns if this AppInstance is usable or not
+func IsAppInstUsable(appInst *DmeAppInst) bool {
 	if appInst == nil {
-		return edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
+		return false
 	}
 	if appInst.cloudletState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-		return appInst.appInstState
+		return appInst.appInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_OK
 	}
-	return edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
+	return false
 }
 
 // TODO: Have protoc auto-generate Equal functions.
@@ -146,7 +147,7 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 		cl.uri = appInst.Uri
 		cl.location = appInst.CloudletLoc
 		cl.ports = appInst.MappedPorts
-		cl.appInstState = appInst.State
+		cl.appInstHealth = appInst.HealthCheck
 		if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
 			cl.cloudletState = cloudlet.State
 		} else {
@@ -164,7 +165,7 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 		cNew.uri = appInst.Uri
 		cNew.location = appInst.CloudletLoc
 		cNew.ports = appInst.MappedPorts
-		cNew.appInstState = appInst.State
+		cNew.appInstHealth = appInst.HealthCheck
 		if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
 			cNew.cloudletState = cloudlet.State
 		} else {
@@ -178,7 +179,7 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 			"uri", appInst.Uri,
 			"latitude", cNew.location.Latitude,
 			"longitude", cNew.location.Longitude,
-			"state", cNew.appInstState)
+			"HealthState", cNew.appInstHealth)
 	}
 	app.Unlock()
 }
@@ -378,7 +379,7 @@ func findClosestForCarrier(ctx context.Context, carrierName string, key edgeprot
 				"longitude", i.location.Longitude,
 				"maxDistance", maxDistance,
 				"this-dist", d)
-			if d < maxDistance && (GetDmeAppInstState(i) == edgeproto.TrackedState_READY) {
+			if d < maxDistance && IsAppInstUsable(i) {
 				log.DebugLog(log.DebugLevelDmereq, "closer cloudlet", "uri", i.uri)
 				updated = true
 				maxDistance = d
@@ -561,7 +562,7 @@ func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.Ap
 			}
 			for _, i := range c.Insts {
 				// skip disabled appInstances
-				if GetDmeAppInstState(i) != edgeproto.TrackedState_READY {
+				if !IsAppInstUsable(i) {
 					continue
 				}
 				cloc, exists := foundCloudlets[i.clusterInstKey.CloudletKey]

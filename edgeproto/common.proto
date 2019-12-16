@@ -68,8 +68,6 @@ enum TrackedState {
   DELETE_PREPARE = 12;
   // CRM INIT OK
   CRM_INITOK = 13;
-  // Disabled by healthCheck
-  HEALTHCHECK_FAILED = 14;
 }
 
 // CRMOverride can be applied to commands that issue requests to the CRM.

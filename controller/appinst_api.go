@@ -1016,15 +1016,15 @@ func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_
 	return err
 }
 
-func (s *AppInstApi) UpdateState(ctx context.Context, in *edgeproto.AppInst) {
-	log.DebugLog(log.DebugLevelApi, "Update AppInst state", "key", in.Key, "state", in.State)
+func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppInst, state edgeproto.HealthCheck) {
+	log.DebugLog(log.DebugLevelApi, "Update AppInst Health Check", "key", in.Key, "state", state)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
 			return nil
 		}
-		inst.State = in.State
+		inst.HealthCheck = state
 		s.store.STMPut(stm, &inst)
 		return nil
 	})
