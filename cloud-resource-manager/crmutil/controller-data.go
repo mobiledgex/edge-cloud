@@ -512,8 +512,17 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
+		pfFlavor := edgeproto.Flavor{}
+		if new.Flavor.Name == cloudcommon.DefaultPlatformFlavor.Key.Name {
+			pfFlavor = cloudcommon.DefaultPlatformFlavor
+		} else {
+			if !cd.FlavorCache.Get(&new.Flavor, &pfFlavor) {
+				log.SpanLog(ctx, log.DebugLevelMexos, "Unable to find platform flavor for Cloudlet", "flavor", new.Flavor)
+			}
+		}
+
 		// start the upgrade
-		err := cd.platform.UpdateCloudlet(ctx, new, &new.Config, updateCloudletCallback)
+		err := cd.platform.UpdateCloudlet(ctx, new, &new.Config, &pfFlavor, updateCloudletCallback)
 		if err != nil {
 			errstr := fmt.Sprintf("Update Cloudlet failed: %v", err)
 			log.InfoLog("can't update cloudlet", "error", errstr, "key", new.Key)

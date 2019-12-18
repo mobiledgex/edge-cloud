@@ -387,7 +387,6 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		pfConfig.TlsCertFile = ctrl.TLS.ServerCert
 		pfConfig.VaultAddr = "http://127.0.0.1:8200"
 		pfConfig.RegistryPath = "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
-		pfConfig.ImagePath = ""
 		pfConfig.TestMode = true
 		pfConfig.NotifyCtrlAddrs = ctrl.NotifyAddr
 

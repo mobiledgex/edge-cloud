@@ -63,6 +63,8 @@ type Crm struct {
 	Span          string
 	CleanupMode   bool
 	Version       string
+	ImagePath     string
+	ImageVersion  string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`

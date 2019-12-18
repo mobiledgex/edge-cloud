@@ -15,6 +15,15 @@ import (
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
+var DefaultPlatformFlavor = edgeproto.Flavor{
+	Key: edgeproto.FlavorKey{
+		Name: "DefaultPlatformFlavor",
+	},
+	Vcpus: 2,
+	Ram:   4096,
+	Disk:  20,
+}
+
 func GetCloudletLogFile(filePrefix string) string {
 	return "/tmp/" + filePrefix + ".log"
 }
@@ -34,6 +43,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	testMode := false
 	span := ""
 	cleanupMode := false
+	imagePath := ""
 	if pfConfig != nil {
 		for k, v := range pfConfig.EnvVar {
 			envVars[k] = v
@@ -44,6 +54,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		testMode = pfConfig.TestMode
 		span = pfConfig.Span
 		cleanupMode = pfConfig.CleanupMode
+		imagePath = pfConfig.ImagePath
 	}
 	for envKey, envVal := range cloudlet.EnvVar {
 		envVars[envKey] = envVal
@@ -69,6 +80,8 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		Span:         span,
 		CleanupMode:  cleanupMode,
 		Version:      cloudlet.Version,
+		ImageVersion: cloudlet.ImageVersion,
+		ImagePath:    imagePath,
 	}, opts, nil
 }
 

@@ -33,17 +33,7 @@ type VaultRoles struct {
 	CtrlSecretID string `json:"controllersecretid"`
 }
 
-var (
-	cloudletApi           = CloudletApi{}
-	DefaultPlatformFlavor = edgeproto.Flavor{
-		Key: edgeproto.FlavorKey{
-			Name: "DefaultPlatformFlavor",
-		},
-		Vcpus: 2,
-		Ram:   4096,
-		Disk:  20,
-	}
-)
+var cloudletApi = CloudletApi{}
 
 const (
 	PlatformInitTimeout = 20 * time.Minute
@@ -208,8 +198,13 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.Version = *versionTag
 	}
 
-	if in.AccessVars != nil && in.DeploymentLocal {
-		return errors.New("Access vars is not supported for local deployment")
+	if in.DeploymentLocal {
+		if in.AccessVars != nil {
+			return errors.New("Access vars is not supported for local deployment")
+		}
+		if in.ImageVersion != "" {
+			return errors.New("Image version is not supported for local deployment")
+		}
 	}
 
 	return s.createCloudletInternal(DefCallContext(), in, cb)
@@ -233,8 +228,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	pfFlavor := edgeproto.Flavor{}
 	if in.Flavor.Name == "" {
-		in.Flavor = DefaultPlatformFlavor.Key
-		pfFlavor = DefaultPlatformFlavor
+		in.Flavor = cloudcommon.DefaultPlatformFlavor.Key
+		pfFlavor = cloudcommon.DefaultPlatformFlavor
 	}
 
 	accessVars := make(map[string]string)
@@ -254,7 +249,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 			in.Errors = nil
 		}
-		if in.Flavor.Name != "" && in.Flavor.Name != DefaultPlatformFlavor.Key.Name {
+		if in.Flavor.Name != "" && in.Flavor.Name != cloudcommon.DefaultPlatformFlavor.Key.Name {
 			if !flavorApi.store.STMGet(stm, &in.Flavor, &pfFlavor) {
 				return fmt.Errorf("Platform Flavor %s not found", in.Flavor.Name)
 			}
@@ -594,6 +589,27 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			}
 		}
 		upgrade = true
+	}
+
+	if _, found := fmap[edgeproto.CloudletFieldImageVersion]; found {
+		if in.DeploymentLocal {
+			return errors.New("Image version is not supported for local deployment")
+		}
+		if !upgrade {
+			return errors.New("Image version can only be upgraded if Cloudlet version is updated")
+		}
+	}
+
+	if in.ImageUpgrade {
+		if in.DeploymentLocal {
+			return errors.New("Image upgrade is not supported for local deployment")
+		}
+		if !upgrade {
+			return errors.New("Image can only be upgraded if Cloudlet version is updated")
+		}
+		if in.ImageVersion == "" {
+			return errors.New("Image version is required for image upgrade")
+		}
 	}
 
 	accessVars := make(map[string]string)

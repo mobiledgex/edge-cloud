@@ -223,6 +223,11 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 			return errors.New("Invalid longitude value")
 		}
 	}
+	if _, found := fields[CloudletFieldImageVersion]; found {
+		if err := util.ValidateImageVersion(s.ImageVersion); err != nil {
+			return err
+		}
+	}
 	if err := s.ValidateEnums(); err != nil {
 		return err
 	}

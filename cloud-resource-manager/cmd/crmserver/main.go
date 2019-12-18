@@ -38,7 +38,9 @@ var solib = flag.String("plugin", "", "plugin file")
 var region = flag.String("region", "local", "region name")
 var testMode = flag.Bool("testMode", false, "Run CRM in test mode")
 var parentSpan = flag.String("span", "", "Use parent span for logging")
-var crmVersion = flag.String("version", "", "CRM version")
+var crmVersion = flag.String("version", "", "CRM service version")
+var imagePath = flag.String("imagePath", "", "Image path where CRM baseimages are present")
+var imageVersion = flag.String("imageVersion", "", "CRM image version")
 var cleanupMode = flag.Bool("cleanupMode", false, "cleanup previous versions of CRM if present")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
@@ -222,7 +224,9 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physica
 		PhysicalName: physicalName,
 		VaultAddr:    vaultAddr,
 		Region:       *region,
-		TestMode:     *testMode}
+		TestMode:     *testMode,
+		ImagePath:    *imagePath,
+		ImageVersion: *imageVersion}
 	log.SpanLog(ctx, log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
 	err := platform.Init(ctx, &pc, updateCallback)
 	return err
