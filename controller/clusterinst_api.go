@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -123,7 +124,11 @@ func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	in.Auto = false
-	return s.createClusterInstInternal(DefCallContext(), in, cb)
+	err := s.createClusterInstInternal(DefCallContext(), in, cb)
+	if err == nil && in.State == edgeproto.TrackedState_READY {
+		recordClusterInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
+	}
+	return err
 }
 
 // createClusterInstInternal is used to create dynamic cluster insts internally,
@@ -358,11 +363,22 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 }
 
 func (s *ClusterInstApi) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
-	return s.deleteClusterInstInternal(DefCallContext(), in, cb)
+	err := s.deleteClusterInstInternal(DefCallContext(), in, cb)
+	if err == nil {
+		recordClusterInstEvent(cb.Context(), in, cloudcommon.DELETED, cloudcommon.InstanceDown)
+	}
+	return err
 }
 
 func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
-	return s.updateClusterInstInternal(DefCallContext(), in, cb)
+	recordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
+	err := s.updateClusterInstInternal(DefCallContext(), in, cb)
+	if in.State != edgeproto.TrackedState_READY {
+		recordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+	} else {
+		recordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+	}
+	return err
 }
 
 func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
@@ -710,4 +726,32 @@ func (s *ClusterInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cl
 		}
 		return nil
 	})
+}
+
+func recordClusterInstEvent(ctx context.Context, cluster *edgeproto.ClusterInst, event cloudcommon.InstanceEvent, serverStatus string) {
+	metric := edgeproto.Metric{}
+	metric.Name = cloudcommon.ClusterInstEvent
+	ts, _ := types.TimestampProto(time.Now())
+	metric.Timestamp = *ts
+	metric.AddTag("operator", cluster.Key.CloudletKey.OperatorKey.Name)
+	metric.AddTag("cloudlet", cluster.Key.CloudletKey.Name)
+	metric.AddTag("cluster", cluster.Key.ClusterKey.Name)
+	metric.AddTag("dev", cluster.Key.Developer)
+	metric.AddTag("event", string(event))
+	metric.AddTag("status", serverStatus)
+
+	// errors should never happen here since to get to this point the flavor should have already been checked previously, but just in case
+	nodeFlavor := edgeproto.Flavor{}
+	if !flavorApi.cache.Get(&cluster.Flavor, &nodeFlavor) {
+		log.SpanLog(ctx, log.DebugLevelApi, "flavor not found for recording clusterInst lifecycle", "flavor name", cluster.Flavor.Name)
+	} else {
+		metric.AddTag("flavor", cluster.Flavor.Name)
+		metric.AddIntVal("ram", nodeFlavor.Ram)
+		metric.AddIntVal("vcpu", nodeFlavor.Vcpus)
+		metric.AddIntVal("disk", nodeFlavor.Disk)
+		metric.AddIntVal("nodeCount", uint64(cluster.NumMasters+cluster.NumNodes))
+		metric.AddTag("other", fmt.Sprintf("%v", nodeFlavor.OptResMap))
+	}
+
+	services.influxQ.AddMetric(&metric)
 }
