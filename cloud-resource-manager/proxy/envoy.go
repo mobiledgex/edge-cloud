@@ -21,6 +21,9 @@ import (
 
 var envoyYamlT *template.Template
 
+// this is the default value in envoy, for DOS protection
+const defaultConcurrentConns uint64 = 1024
+
 func init() {
 	envoyYamlT = template.Must(template.New("yaml").Parse(envoyYaml))
 }
@@ -94,6 +97,11 @@ func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, na
 				Origin:     originIP,
 				OriginPort: p.InternalPort,
 			}
+			tcpconns, err := getTCPConcurrentConnections()
+			if err != nil {
+				return err
+			}
+			tcpPort.ConcurrentConns = tcpconns
 			spec.TCPSpec = append(spec.TCPSpec, &tcpPort)
 			spec.L4 = true
 		}
@@ -148,6 +156,9 @@ static_resources:
   - name: backend{{.Port}}
     connect_timeout: 0.25s
     type: strict_dns
+    circuit_breakers:
+        thresholds:
+            max_connections: {{.ConcurrentConns}}
     lb_policy: round_robin
     hosts:
     - socket_address:

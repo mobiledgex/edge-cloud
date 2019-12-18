@@ -32,10 +32,12 @@ var nginxL7ConfT *template.Template
 // defaultConcurrentConnsPerIP is the default DOS protection setting for connections per source IP
 const defaultConcurrentConnsPerIP uint64 = 100
 
-func getTCPConcurrentConnectionsPerIP() (uint64, error) {
+// TCP is in envoy, which does not have concurrent connections per IP, but rather
+// just concurrent connections overall
+func getTCPConcurrentConnections() (uint64, error) {
 	var err error
 	connStr := os.Getenv("MEX_LB_CONCURRENT_TCP_CONNS")
-	conns := defaultConcurrentConnsPerIP
+	conns := defaultConcurrentConns
 	if connStr != "" {
 		conns, err = strconv.ParseUint(connStr, 10, 64)
 		if err != nil {
@@ -296,10 +298,10 @@ type ProxySpec struct {
 }
 
 type TCPSpecDetail struct {
-	Port                 int32
-	Origin               string
-	OriginPort           int32
-	ConcurrentConnsPerIP uint64
+	Port            int32
+	Origin          string
+	OriginPort      int32
+	ConcurrentConns uint64
 }
 
 type UDPSpecDetail struct {
