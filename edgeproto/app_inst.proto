@@ -25,6 +25,16 @@ message AppInstKey {
   option (gogoproto.gostring) = true;
 }
 
+// Health check status gets set by external, or rootLB health check
+enum HealthCheck {
+  // Health Check is ok
+  HEALTH_CHECK_OK = 0;
+  // Health Check failure due to RootLB being offline
+  HEALTH_CHECK_FAIL_ROOTLB_OFFLINE = 1;
+  // Health Check failure due to Backend server being unavailable
+  HEALTH_CHECK_FAIL_SERVER_FAIL = 2;
+}
+
 // AppInst is an instance of an App on a Cloudlet where it is defined by an App plus a ClusterInst key. 
 // Many of the fields here are inherited from the App definition. 
 message AppInst {
@@ -68,6 +78,8 @@ message AppInst {
   repeated ConfigFile configs = 27;
   // shared volume size when creating auto cluster
   uint64 shared_volume_size = 28;
+  // Health Check status
+  HealthCheck health_check = 29;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

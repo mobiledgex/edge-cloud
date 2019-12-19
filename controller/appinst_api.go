@@ -1016,6 +1016,20 @@ func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_
 	return err
 }
 
+func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppInst, state edgeproto.HealthCheck) {
+	log.DebugLog(log.DebugLevelApi, "Update AppInst Health Check", "key", in.Key, "state", state)
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		inst := edgeproto.AppInst{}
+		if !s.store.STMGet(stm, &in.Key, &inst) {
+			// got deleted in the meantime
+			return nil
+		}
+		inst.HealthCheck = state
+		s.store.STMPut(stm, &inst)
+		return nil
+	})
+}
+
 func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
 	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {

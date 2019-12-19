@@ -99,7 +99,7 @@ func waitAndCheckCloudletforApps(t *testing.T, key *edgeproto.CloudletKey) {
 			if c, found := app.Carriers[carrier]; found {
 				for clusterInstKey, appInst := range c.Insts {
 					if clusterInstKey.CloudletKey.GetKeyString() == key.GetKeyString() &&
-						dmecommon.GetDmeAppInstState(appInst) == edgeproto.TrackedState_READY {
+						dmecommon.IsAppInstUsable(appInst) {
 						still_enabled = true
 					}
 				}
