@@ -531,7 +531,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					// rootLB has its own ports it uses
 					// before any apps are even present.
 					iport := ports[ii].InternalPort
-					if iport != 22 && iport != cloudcommon.RootLBL7Port && iport != cloudcommon.NginxMetricsPort {
+					if iport != 22 && iport != cloudcommon.RootLBL7Port && iport != cloudcommon.ProxyMetricsPort {
 						eport = iport
 					}
 				}
@@ -1014,6 +1014,20 @@ func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_
 		return err
 	})
 	return err
+}
+
+func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppInst, state edgeproto.HealthCheck) {
+	log.DebugLog(log.DebugLevelApi, "Update AppInst Health Check", "key", in.Key, "state", state)
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		inst := edgeproto.AppInst{}
+		if !s.store.STMGet(stm, &in.Key, &inst) {
+			// got deleted in the meantime
+			return nil
+		}
+		inst.HealthCheck = state
+		s.store.STMPut(stm, &inst)
+		return nil
+	})
 }
 
 func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
