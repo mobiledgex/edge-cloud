@@ -103,6 +103,7 @@ func MakeAppInst(a *App, c *Cloudlet) *edgeproto.AppInst {
 	inst.Key.ClusterInstKey.ClusterKey.Name = "testcluster" //TODO - change the testdata to also have clusterInst information
 	inst.CloudletLoc = c.Location
 	inst.Uri = c.Uri
+	inst.State = edgeproto.TrackedState_READY
 	return &inst
 }
 

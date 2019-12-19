@@ -971,6 +971,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := CloudletState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(HealthCheck(0)):
+		if en, ok := HealthCheck_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(NodeType(0)):
 		if en, ok := NodeType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
