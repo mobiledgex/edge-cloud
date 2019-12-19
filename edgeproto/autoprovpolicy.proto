@@ -1,0 +1,132 @@
+// Auto Provisioning Policy
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
+import "autoscalepolicy.proto";
+import "cloudlet.proto";
+import "app.proto";
+import "clusterinst.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
+import "google/protobuf/timestamp.proto";
+
+// AutoProvPolicy defines the automated provisioning policy
+message AutoProvPolicy {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  PolicyKey key = 2 [(gogoproto.nullable) = false];
+  // Minimum number of clients within the auto deploy interval to trigger deployment
+  uint32 deploy_client_count = 3;
+  // Number of intervals to check before triggering deployment
+  uint32 deploy_interval_count = 4 [(protogen.test_update) = true];
+  // Allowed deployment locations
+  repeated AutoProvCloudlet cloudlets = 5;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.noconfig) = "Cloudlets";
+  option (protogen.alias) = "name=Key.Name,developer=Key.Developer";
+}
+
+// AutoProvCloudlet stores the potential cloudlet and location for DME lookup
+message AutoProvCloudlet {
+  // Cloudlet key
+  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // Cloudlet location
+  distributed_match_engine.Loc loc = 2 [(gogoproto.nullable) = false];
+}
+
+// call this AppInstMiss instead?
+message AutoProvCount {
+  // Target app
+  AppKey app_key = 1 [(gogoproto.nullable) = false];
+  // Target cloudlet
+  CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
+  // FindCloudlet client count
+  uint64 count = 3;
+  // Process count immediately
+  bool process_now = 4;
+  // Immediately deploy to clusterinst
+  ClusterInstKey deploy_now_key = 5 [(gogoproto.nullable) = false];
+}
+
+message AutoProvCounts {
+  // DME node name
+  string dme_node_name = 1;
+  // Timestamp when the metric was captured
+  google.protobuf.Timestamp timestamp = 2 [(gogoproto.nullable) = false];
+  // List of DmeCount from DME
+  repeated AutoProvCount counts = 3;
+  option (protogen.notify_message) = true;
+  option (protogen.notify_print_send_recv) = false;
+}
+
+// AutoProvPolicyCloudlet is used to add and remove Cloudlets from the Auto Provisioning Policy
+message AutoProvPolicyCloudlet {
+  // Unique policy identifier key
+  PolicyKey key = 1 [(gogoproto.nullable) = false];
+  // Cloudlet identifier key
+  CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
+  option (protogen.alias) = "name=Key.Name,developer=Key.Developer,cloudlet=CloudletKey.Name,operator=CloudletKey.OperatorKey.Name";
+}
+
+service AutoProvPolicyApi {
+  // Create an Auto Provisioning Policy
+  rpc CreateAutoProvPolicy(AutoProvPolicy) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/autoprovpolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
+    option (protogen.method_also_required) = "MinNodes,MaxNodes";
+  }
+  // Delete an Auto Provisioning Policy
+  rpc DeleteAutoProvPolicy(AutoProvPolicy) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/autoprovpolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
+  }
+  // Update an Auto Provisioning Policy
+  rpc UpdateAutoProvPolicy(AutoProvPolicy) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/autoprovpolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
+  }
+  // Show Auto Provisioning Policies. Any fields specified will be used to filter results.
+  rpc ShowAutoProvPolicy(AutoProvPolicy) returns (stream AutoProvPolicy) {
+    option (google.api.http) = {
+      post: "/show/autoprovpolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionView,Key.Developer";
+  }
+  // Add a Cloudlet to the Auto Provisioning Policy
+  rpc AddAutoProvPolicyCloudlet(AutoProvPolicyCloudlet) returns (Result) {
+    option (google.api.http) = {
+      post: "/add/autoprovpolicycloudlet"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
+    option (protogen.input_required) = true;
+  }
+  // Remove a Cloudlet from the Auto Provisioning Policy
+  rpc RemoveAutoProvPolicyCloudlet(AutoProvPolicyCloudlet) returns (Result) {
+    option (google.api.http) = {
+      post: "/rm/autoprovpolicycloudlet"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
+    option (protogen.input_required) = true;
+  }
+}

@@ -8,6 +8,7 @@ It is generated from these files:
 	alert.proto
 	app.proto
 	app_inst.proto
+	autoprovpolicy.proto
 	autoscalepolicy.proto
 	cloudlet.proto
 	cloudletpool.proto
@@ -37,6 +38,11 @@ It has these top-level messages:
 	AppInstRuntime
 	AppInstInfo
 	AppInstMetrics
+	AutoProvPolicy
+	AutoProvCloudlet
+	AutoProvCount
+	AutoProvCounts
+	AutoProvPolicyCloudlet
 	PolicyKey
 	AutoScalePolicy
 	CloudletKey

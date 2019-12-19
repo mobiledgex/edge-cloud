@@ -5,13 +5,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cespare/xxhash"
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
+	"github.com/mobiledgex/edge-cloud/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -79,8 +79,7 @@ func (s *DmeStats) Stop() {
 }
 
 func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
-	hash := xxhash.Sum64([]byte(call.key.Method + call.key.AppKey.DeveloperKey.Name + call.key.AppKey.Name))
-	idx := hash % uint64(s.numShards)
+	idx := util.GetShardIndex(call.key.Method+call.key.AppKey.DeveloperKey.Name+call.key.AppKey.Name, s.numShards)
 
 	shard := &s.shards[idx]
 	shard.mux.Lock()

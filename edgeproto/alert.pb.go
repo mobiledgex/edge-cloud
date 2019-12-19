@@ -8,6 +8,7 @@
 		alert.proto
 		app.proto
 		app_inst.proto
+		autoprovpolicy.proto
 		autoscalepolicy.proto
 		cloudlet.proto
 		cloudletpool.proto
@@ -37,6 +38,11 @@
 		AppInstRuntime
 		AppInstInfo
 		AppInstMetrics
+		AutoProvPolicy
+		AutoProvCloudlet
+		AutoProvCount
+		AutoProvCounts
+		AutoProvPolicyCloudlet
 		PolicyKey
 		AutoScalePolicy
 		CloudletKey

@@ -338,6 +338,7 @@ var AppOptionalArgs = []string{
 	"officialfqdn",
 	"md5sum",
 	"defaultsharedvolumesize",
+	"autoprovpolicy",
 }
 var AppAliasArgs = []string{
 	"developer=key.developerkey.name",
@@ -369,5 +370,6 @@ var AppComments = map[string]string{
 	"officialfqdn":            "Official FQDN is the FQDN that the app uses to connect by default",
 	"md5sum":                  "MD5Sum of the VM-based app image",
 	"defaultsharedvolumesize": "shared volume size when creating auto cluster",
+	"autoprovpolicy":          "Auto provisioning policy name",
 }
 var AppSpecialArgs = map[string]string{}

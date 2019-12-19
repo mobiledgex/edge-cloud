@@ -85,6 +85,7 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   reservable: true
+  reservedby: AcmeAppCo
 
 operators:
 - key:
@@ -381,6 +382,31 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.medium
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: autoprovapp
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: ReservableCluster2
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
+      developer: MobiledgeX
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  liveness: LivenessDynamic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 81
+    publicport: 81
+    fqdnprefix: autoprovapp-tcp.
+  flavor:
+    name: x1.small
 
 autoprovpolicies:
 - key:

@@ -48,7 +48,7 @@ var vaultAddr = flag.String("vaultAddr", "", "Vault address; local vault runs at
 var publicAddr = flag.String("publicAddr", "127.0.0.1", "Public facing address/hostname of controller")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file. Keyfile and CA file must be in same directory")
-var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
+var shortTimeouts = flag.Bool("shortTimeouts", false, "set timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "http://127.0.0.1:8086", "InfluxDB listener address")
 var registryFQDN = flag.String("registryFQDN", "", "default docker image registry FQDN")
 var artifactoryFQDN = flag.String("artifactoryFQDN", "", "default VM image registry (artifactory) FQDN")
@@ -237,7 +237,7 @@ func startServices() error {
 		return fmt.Errorf("Failed to get influxDB auth, %v", err)
 	}
 	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
-	err = influxQ.Start(*influxAddr, "")
+	err = influxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
@@ -273,6 +273,7 @@ func startServices() error {
 	edgeproto.RegisterCloudletPoolShowApiServer(server, &cloudletPoolMemberApi)
 	edgeproto.RegisterAlertApiServer(server, &alertApi)
 	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
+	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
 
 	log.RegisterDebugApiServer(server, &log.Api{})
 
@@ -305,6 +306,7 @@ func startServices() error {
 			edgeproto.RegisterCloudletPoolShowApiHandler,
 			edgeproto.RegisterAlertApiHandler,
 			edgeproto.RegisterAutoScalePolicyApiHandler,
+			edgeproto.RegisterAutoProvPolicyApiHandler,
 			edgeproto.RegisterResTagTableApiHandler,
 		},
 	}
@@ -413,6 +415,7 @@ func InitApis(sync *Sync) {
 	InitExecApi()
 	InitAlertApi(sync)
 	InitAutoScalePolicyApi(sync)
+	InitAutoProvPolicyApi(sync)
 	InitResTagTableApi(sync)
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -426,6 +429,7 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
+	notify.ServerMgrOne.RegisterSendAutoProvPolicyCache(&autoProvPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
@@ -439,6 +443,8 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterRecv(notify.NewNodeRecvMany(&nodeApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(&execApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAlertRecvMany(&alertApi))
+	autoProvPolicyApi.SetInfluxQ(influxQ)
+	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
 }
 
 // This is for figuring out the "external" address when
