@@ -381,7 +381,7 @@ func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
 		yamlstr := string(yamlFile)
 		for k, v := range opts.vars {
 			if strings.HasPrefix(v, "ENV=") {
-				// envitonment variable variable
+				// environment variable replacement var
 				envVarName := strings.Replace(v, "ENV=", "", 1)
 				envVarVal := os.Getenv(envVarName)
 				if envVarVal == "" {
