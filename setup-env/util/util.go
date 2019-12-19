@@ -374,12 +374,21 @@ func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
 	}
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return errors.New(fmt.Sprintf("error reading yaml file: %v err: %v\n", filename, err))
+		return fmt.Errorf("error reading yaml file: %v err: %v\n", filename, err)
 	}
 	if opts.vars != nil {
 		//replace variables denoted as {{variablename}}
 		yamlstr := string(yamlFile)
 		for k, v := range opts.vars {
+			if strings.HasPrefix(v, "ENV=") {
+				// environment variable replacement var
+				envVarName := strings.Replace(v, "ENV=", "", 1)
+				envVarVal := os.Getenv(envVarName)
+				if envVarVal == "" {
+					return fmt.Errorf("environment variable not set: %s", envVarName)
+				}
+				v = envVarVal
+			}
 			yamlstr = strings.Replace(yamlstr, "{{"+k+"}}", v, -1)
 		}
 		yamlFile = []byte(yamlstr)
