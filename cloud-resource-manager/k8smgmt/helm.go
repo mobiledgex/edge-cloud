@@ -127,7 +127,7 @@ func getHelmRepoAndChart(imagePath string) (string, string, error) {
 }
 
 func CreateHelmAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	log.DebugLog(log.DebugLevelMexos, "create kubernetes helm app", "clusterInst", clusterInst, "kubeNames", names)
+	log.SpanLog(ctx, log.DebugLevelMexos, "create kubernetes helm app", "clusterInst", clusterInst, "kubeNames", names)
 
 	// install helm if it's not installed yet
 	cmd := fmt.Sprintf("%s helm version", names.KconfEnv)
@@ -151,7 +151,7 @@ func CreateHelmAppInst(ctx context.Context, client pc.PlatformClient, names *Kub
 		if err != nil {
 			return fmt.Errorf("error adding helm repo, %s, %s, %v", cmd, out, err)
 		}
-		log.DebugLog(log.DebugLevelMexos, "added helm repository")
+		log.SpanLog(ctx, log.DebugLevelMexos, "added helm repository")
 	}
 	helmArgs, err := getHelmInstallOptsString(app.Annotations)
 	if err != nil {
@@ -162,47 +162,47 @@ func CreateHelmAppInst(ctx context.Context, client pc.PlatformClient, names *Kub
 	if err != nil {
 		return err
 	}
-	log.DebugLog(log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
+	log.SpanLog(ctx, log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
 	cmd = fmt.Sprintf("%s helm install %s %s --name %s %s", names.KconfEnv, chart, helmArgs,
 		names.HelmAppName, helmOpts)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deploying helm chart, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "applied helm chart")
+	log.SpanLog(ctx, log.DebugLevelMexos, "applied helm chart")
 	return nil
 }
 
 func UpdateHelmAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	log.DebugLog(log.DebugLevelMexos, "update kubernetes helm app", "app", app, "kubeNames", names)
+	log.SpanLog(ctx, log.DebugLevelMexos, "update kubernetes helm app", "app", app, "kubeNames", names)
 	configs := append(app.Configs, appInst.Configs...)
 	helmOpts, err := getHelmOpts(ctx, client, names.AppName, configs)
 	if err != nil {
 		return err
 	}
-	log.DebugLog(log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
+	log.SpanLog(ctx, log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
 	cmd := fmt.Sprintf("%s helm upgrade %s %s %s", names.KconfEnv, helmOpts, names.HelmAppName, names.AppImage)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error updating helm chart, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "updated helm chart")
+	log.SpanLog(ctx, log.DebugLevelMexos, "updated helm chart")
 	return nil
 }
 
 func DeleteHelmAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst) error {
-	log.DebugLog(log.DebugLevelMexos, "delete kubernetes helm app")
+	log.SpanLog(ctx, log.DebugLevelMexos, "delete kubernetes helm app")
 	cmd := fmt.Sprintf("%s helm delete --purge %s", names.KconfEnv, names.HelmAppName)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deleting helm chart, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "removed helm chart")
+	log.SpanLog(ctx, log.DebugLevelMexos, "removed helm chart")
 	return nil
 }
 
 func InstallHelm(ctx context.Context, client pc.PlatformClient, names *KubeNames) error {
-	log.DebugLog(log.DebugLevelMexos, "installing helm into cluster", "kconf", names.KconfName)
+	log.SpanLog(ctx, log.DebugLevelMexos, "installing helm into cluster", "kconf", names.KconfName)
 
 	// Add service account for tiller
 	cmd := fmt.Sprintf("%s kubectl create serviceaccount --namespace kube-system tiller", names.KconfEnv)
@@ -210,7 +210,7 @@ func InstallHelm(ctx context.Context, client pc.PlatformClient, names *KubeNames
 	if err != nil {
 		return fmt.Errorf("error creating tiller service account, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "setting service acct", "kconf", names.KconfName)
+	log.SpanLog(ctx, log.DebugLevelMexos, "setting service acct", "kconf", names.KconfName)
 
 	cmd = fmt.Sprintf("%s kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller", names.KconfEnv)
 	out, err = client.Output(cmd)
@@ -223,7 +223,7 @@ func InstallHelm(ctx context.Context, client pc.PlatformClient, names *KubeNames
 	if err != nil {
 		return fmt.Errorf("error initializing tiller for app, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "helm tiller initialized")
+	log.SpanLog(ctx, log.DebugLevelMexos, "helm tiller initialized")
 	return nil
 }
 

@@ -21,14 +21,14 @@ const AppConfigEnvYaml = "envVarsYaml"
 
 const MexAppLabel = "mex-app"
 
-func addEnvVars(template *v1.PodTemplateSpec, envVars []v1.EnvVar) {
+func addEnvVars(ctx context.Context, template *v1.PodTemplateSpec, envVars []v1.EnvVar) {
 	// walk the containers and append environment variables to each
 	for j, _ := range template.Spec.Containers {
 		template.Spec.Containers[j].Env = append(template.Spec.Containers[j].Env, envVars...)
 	}
 }
 
-func addImagePullSecret(template *v1.PodTemplateSpec, secretName string) {
+func addImagePullSecret(ctx context.Context, template *v1.PodTemplateSpec, secretName string) {
 	found := false
 	for _, s := range template.Spec.ImagePullSecrets {
 		if s.Name == secretName {
@@ -38,7 +38,7 @@ func addImagePullSecret(template *v1.PodTemplateSpec, secretName string) {
 	if !found {
 		var newSecret v1.LocalObjectReference
 		newSecret.Name = secretName
-		log.DebugLog(log.DebugLevelMexos, "adding imagePullSecret", "secretName", secretName)
+		log.SpanLog(ctx, log.DebugLevelMexos, "adding imagePullSecret", "secretName", secretName)
 		template.Spec.ImagePullSecrets = append(template.Spec.ImagePullSecrets, newSecret)
 	}
 }
@@ -56,7 +56,7 @@ func MergeEnvVars(ctx context.Context, kubeManifest string, configs []*edgeproto
 	var err error
 
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
-	log.DebugLog(log.DebugLevelMexos, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecret", imagePullSecret)
+	log.SpanLog(ctx, log.DebugLevelMexos, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecret", imagePullSecret)
 
 	// Walk the Configs in the App and get all the environment variables together
 	for _, v := range configs {
@@ -74,14 +74,14 @@ func MergeEnvVars(ctx context.Context, kubeManifest string, configs []*edgeproto
 			}
 
 			if err1 := yaml.Unmarshal([]byte(cfg), &curVars); err1 != nil {
-				log.DebugLog(log.DebugLevelMexos, "cannot unmarshal env vars", "kind", v.Kind,
+				log.SpanLog(ctx, log.DebugLevelMexos, "cannot unmarshal env vars", "kind", v.Kind,
 					"config", cfg, "error", err1)
 			} else {
 				envVars = append(envVars, curVars...)
 			}
 		}
 	}
-	log.DebugLog(log.DebugLevelMexos, "Merging environment variables", "envVars", envVars)
+	log.SpanLog(ctx, log.DebugLevelMexos, "Merging environment variables", "envVars", envVars)
 	mf, err := cloudcommon.GetDeploymentManifest(kubeManifest)
 	if err != nil {
 		return mf, err
@@ -106,16 +106,16 @@ func MergeEnvVars(ctx context.Context, kubeManifest string, configs []*edgeproto
 	for i, _ := range objs {
 		switch obj := objs[i].(type) {
 		case *appsv1.Deployment:
-			addEnvVars(&obj.Spec.Template, envVars)
+			addEnvVars(ctx, &obj.Spec.Template, envVars)
 			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
 			if imagePullSecret != "" {
-				addImagePullSecret(&obj.Spec.Template, imagePullSecret)
+				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecret)
 			}
 		case *appsv1.DaemonSet:
-			addEnvVars(&obj.Spec.Template, envVars)
+			addEnvVars(ctx, &obj.Spec.Template, envVars)
 			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
 			if imagePullSecret != "" {
-				addImagePullSecret(&obj.Spec.Template, imagePullSecret)
+				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecret)
 			}
 		}
 	}

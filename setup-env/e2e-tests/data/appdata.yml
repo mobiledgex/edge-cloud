@@ -125,71 +125,9 @@ apps:
   deployment: "kubernetes"
   defaultflavor:
     name: x1.small
-  accessports: "tcp:80,http:443"
+  accessports: "tcp:80,http:443,udp:10002"
   officialfqdn: someapplication1.acmeappco.com
   androidpackagename: com.acme.someapplication1
-  configs:
-  - kind: envVarsYaml
-    config: |
-      - name: SOME_ENV1
-        value: value1
-      - name: CrmValue
-        value: {{ .CRM.ClusterIp }}
-      - name: SOME_ENV2
-        valueFrom:
-          configMapKeyRef:
-            key: CloudletName
-            name: mexcluster-info
-            optional: true
-  deploymentmanifest: |
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: someapplication1-tcp
-      labels:
-        run: someapplication1
-    spec:
-      type: LoadBalancer
-      ports:
-      - name: tcp80
-        protocol: TCP
-        port: 80
-        targetPort: 80
-      - name: http443
-        protocol: TCP
-        port: 443
-        targetPort: 443
-      selector:
-        run: someapplication1
-    ---
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: someapplication1-deployment
-    spec:
-      replicas: 1
-      selector:
-        matchLabels:
-          run: someapplication1
-          dns: someapplication1.{{ .CRM.ClusterFqdn }}
-      template:
-        metadata:
-          labels:
-            run: someapplication1
-        spec:
-          volumes:
-          imagePullSecrets:
-          - name: registry.mobiledgex.net
-          containers:
-          - name: someapplication1
-            image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-            imagePullPolicy: Always
-            ports:
-            - containerPort: 80
-              protocol: TCP
-            - containerPort: 443
-              protocol: TCP
-
   authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
 - key:
     developerkey:
