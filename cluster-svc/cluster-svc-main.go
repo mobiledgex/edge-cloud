@@ -293,7 +293,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 			updateExistingAppInst(ctx, apiClient, &appInst)
 			return nil
 		}
-		if strings.Contains(err.Error(), edgeproto.ErrEdgeApiAppNotFound.Error()) {
+		if strings.Contains(err.Error(), "not found") {
 			log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist, create it first", "app", app.String())
 			// Create the app
 			if err = createAppCommon(ctx, dialOpts, app); err == nil {

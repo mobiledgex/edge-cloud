@@ -14,9 +14,6 @@ import (
 )
 
 //TODO - need to move out Errors into a separate package
-var ErrEdgeApiFlavorNotFound = errors.New("Specified flavor not found")
-var ErrEdgeApiAppNotFound = errors.New("Specified app not found")
-var ErrEdgeApiAppInstNotFound = errors.New("Specified app instance not found")
 
 var AutoScaleMaxNodes uint32 = 10
 
@@ -97,7 +94,7 @@ func (key *DeveloperKey) ValidateKey() error {
 		errstring := err.Error()
 		// lowercase the first letter of the error message
 		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
-		return fmt.Errorf("Developer " + errstring)
+		return fmt.Errorf("Invalid developer name, " + errstring)
 	}
 	return nil
 }
@@ -347,10 +344,10 @@ func (key *PolicyKey) ValidateKey() error {
 		errstring := err.Error()
 		// lowercase the first letter of the error message
 		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
-		return fmt.Errorf("Developer " + errstring)
+		return fmt.Errorf("Invalid developer name, " + errstring)
 	}
 	if key.Name == "" {
-		return errors.New("Invalid policy name")
+		return errors.New("Policy name cannot be empty")
 	}
 	return nil
 }
