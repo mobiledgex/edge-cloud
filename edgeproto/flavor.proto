@@ -44,7 +44,6 @@ message Flavor {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.alias) = "name=Key.Name";
-  option (protogen.also_required) = "Ram,Vcpus,Disk";
 }
 
 service FlavorApi {
@@ -55,6 +54,7 @@ service FlavorApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceFlavors,ActionManage,";
+    option (protogen.method_also_required) = "Ram,Vcpus,Disk";
   }
   // Delete a Flavor
   rpc DeleteFlavor(Flavor) returns (Result) {
