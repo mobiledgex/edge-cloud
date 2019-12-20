@@ -51,6 +51,9 @@ func (s *AutoScalePolicyApi) UpdateAutoScalePolicy(ctx context.Context, in *edge
 }
 
 func (s *AutoScalePolicyApi) DeleteAutoScalePolicy(ctx context.Context, in *edgeproto.AutoScalePolicy) (*edgeproto.Result, error) {
+	if !s.cache.HasKey(&in.Key) {
+		return &edgeproto.Result{}, in.Key.NotFoundError()
+	}
 	if clusterInstApi.UsesAutoScalePolicy(&in.Key) {
 		return &edgeproto.Result{}, fmt.Errorf("Policy in use by ClusterInst")
 	}

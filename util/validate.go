@@ -84,10 +84,10 @@ func K8SSanitize(name string) string {
 func ValidObjName(name string) error {
 	re := regexp.MustCompile("^[a-zA-Z0-9_\\-.]*$")
 	if !re.MatchString(name) {
-		return fmt.Errorf("Name can only contain letters, digits, _ . -")
+		return fmt.Errorf("name can only contain letters, digits, _ . -")
 	}
-	if !ValidLDAPName(name) {
-		return fmt.Errorf("invalid characters in Name")
+	if err := ValidLDAPName(name); err != nil {
+		return err
 	}
 	return nil
 }

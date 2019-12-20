@@ -27,8 +27,8 @@ var FlavorApiCmd edgeproto.FlavorApiClient
 
 var CreateFlavorCmd = &cli.Command{
 	Use:          "CreateFlavor",
-	RequiredArgs: strings.Join(FlavorRequiredArgs, " "),
-	OptionalArgs: strings.Join(FlavorOptionalArgs, " "),
+	RequiredArgs: strings.Join(CreateFlavorRequiredArgs, " "),
+	OptionalArgs: strings.Join(CreateFlavorOptionalArgs, " "),
 	AliasArgs:    strings.Join(FlavorAliasArgs, " "),
 	SpecialArgs:  &FlavorSpecialArgs,
 	Comments:     FlavorComments,
@@ -388,11 +388,11 @@ var FlavorKeyComments = map[string]string{
 var FlavorKeySpecialArgs = map[string]string{}
 var FlavorRequiredArgs = []string{
 	"name",
+}
+var FlavorOptionalArgs = []string{
 	"ram",
 	"vcpus",
 	"disk",
-}
-var FlavorOptionalArgs = []string{
 	"optresmap",
 }
 var FlavorAliasArgs = []string{
@@ -407,4 +407,13 @@ var FlavorComments = map[string]string{
 }
 var FlavorSpecialArgs = map[string]string{
 	"optresmap": "StringToString",
+}
+var CreateFlavorRequiredArgs = []string{
+	"name",
+	"ram",
+	"vcpus",
+	"disk",
+}
+var CreateFlavorOptionalArgs = []string{
+	"optresmap",
 }
