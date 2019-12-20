@@ -140,9 +140,10 @@ var NFSAutoProvisionApp = edgeproto.App{
 	Annotations:   "version=1.2.8",
 }
 
+// TODO: change server address after integrating with Helm Chart Customization feature
 var NFSAutoProvisionAppTemplate = `nfs:
   path: /share
-  server: __.ClusterMasterIP__
+  server: 10.101.1.10
 storageClass:
   name: standard
   defaultClass: true
