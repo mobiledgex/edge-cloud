@@ -34,24 +34,14 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if err != nil {
 		return err
 	}
-	cluster, err := FindCluster(names.ClusterName)
-	masterIP := cluster.MasterAddr
-
-	if err != nil {
-		return err
-	}
 	// NOTE: for DIND we don't check whether this is internal
 	if len(appInst.MappedPorts) > 0 {
-<<<<<<< HEAD
-		log.SpanLog(ctx, log.DebugLevelMexos, "AddNginxProxy for dind", "ports", appInst.MappedPorts)
-=======
 		log.SpanLog(ctx, log.DebugLevelMexos, "Add Proxy for dind", "ports", appInst.MappedPorts)
 		cluster, err := FindCluster(names.ClusterName)
 		if err != nil {
 			return err
 		}
 		masterIP := cluster.MasterAddr
->>>>>>> ab9ab6cb510a48bd6c56cbca0bc11e03221a65cf
 		network := GetDockerNetworkName(cluster)
 		err = proxy.CreateNginxProxy(ctx, client,
 			names.AppName,
@@ -71,8 +61,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 			err = k8smgmt.WaitForAppInst(client, names, app, k8smgmt.WaitRunning)
 		}
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
-		helmCust := k8smgmt.HelmCustomizations{ClusterMasterIP: masterIP}
-		err = k8smgmt.CreateHelmAppInst(client, names, clusterInst, app, appInst, &helmCust)
+		err = k8smgmt.CreateHelmAppInst(client, names, clusterInst, app, appInst)
 	} else {
 		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
 	}
@@ -136,12 +125,7 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 		return k8smgmt.UpdateAppInst(client, names, app, appInst)
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
-		cluster, err := FindCluster(names.ClusterName)
-		if err != nil {
-			return err
-		}
-		helmCust := k8smgmt.HelmCustomizations{ClusterMasterIP: cluster.MasterAddr}
-		return k8smgmt.UpdateHelmAppInst(client, names, app, appInst, &helmCust)
+		return k8smgmt.UpdateHelmAppInst(client, names, app, appInst)
 	}
 	return fmt.Errorf("UpdateAppInst not supported for deployment: %s", appDeploymentType)
 }
