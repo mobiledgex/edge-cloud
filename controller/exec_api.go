@@ -40,11 +40,11 @@ func InitExecApi() {
 
 func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
 	if !appInstApi.HasKey(&req.AppInstKey) {
-		return nil, edgeproto.ErrEdgeApiAppInstNotFound
+		return nil, req.AppInstKey.NotFoundError()
 	}
 	app := edgeproto.App{}
 	if !appApi.Get(&req.AppInstKey.AppKey, &app) {
-		return nil, edgeproto.ErrEdgeApiAppNotFound
+		return nil, req.AppInstKey.AppKey.NotFoundError()
 	}
 	if app.Deployment == cloudcommon.AppDeploymentTypeVM {
 		execRequestTimeout = LongTimeout
