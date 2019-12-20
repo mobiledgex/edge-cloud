@@ -159,9 +159,9 @@ func appInstCachedFieldsTest(t *testing.T, ctx context.Context, cAppApi *testuti
 	updater := edgeproto.App{}
 	updater.Key = testutil.AppData[0].Key
 	newPath := "resources: a new config"
-	updater.AuthPublicKey = newPath
+	updater.AndroidPackageName = newPath
 	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, edgeproto.AppFieldAuthPublicKey)
+	updater.Fields = append(updater.Fields, edgeproto.AppFieldAndroidPackageName)
 	_, err := cAppApi.UpdateApp(ctx, &updater)
 	require.Nil(t, err, "Update app")
 
