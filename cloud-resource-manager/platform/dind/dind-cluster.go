@@ -11,7 +11,7 @@ import (
 
 	sh "github.com/codeskyblue/go-sh"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/nginx"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -114,7 +114,7 @@ func (s *Platform) CreateDINDCluster(ctx context.Context, clusterName, kconfName
 
 	// bridge nginxL7 network to this cluster's network
 	out, err = sh.Command("docker", "network", "connect",
-		GetDockerNetworkName(&cluster), nginx.NginxL7Name).CombinedOutput()
+		GetDockerNetworkName(&cluster), proxy.NginxL7Name).CombinedOutput()
 	if err != nil && strings.Contains(string(out), "already exists") {
 		err = nil
 	}
@@ -143,7 +143,7 @@ func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto
 
 	// disconnect nginxL7 network
 	out, err := sh.Command("docker", "network", "disconnect",
-		GetDockerNetworkName(cluster), nginx.NginxL7Name).CombinedOutput()
+		GetDockerNetworkName(cluster), proxy.NginxL7Name).CombinedOutput()
 	if err != nil && strings.Contains(string(out), "is not connected") {
 		err = nil
 	}
