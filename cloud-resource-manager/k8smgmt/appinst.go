@@ -1,6 +1,7 @@
 package k8smgmt
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -24,7 +25,7 @@ var createManifest = "create"
 
 // WaitForAppInst waits for pods to either start or result in an error if WaitRunning specified,
 // or if WaitDeleted is specified then wait for them to all disappear.
-func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, waitFor string) error {
+func WaitForAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, waitFor string) error {
 	// wait half as long as the total controller wait time, which includes all tasks
 	log.DebugLog(log.DebugLevelMexos, "waiting for appinst pods", "appName", app.Key.Name, "maxWait", maxWait, "waitFor", waitFor)
 	start := time.Now()
@@ -132,12 +133,12 @@ func WaitForAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.A
 	return nil
 }
 
-func createOrUpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
+func createOrUpdateAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
 	mf, err := cloudcommon.GetDeploymentManifest(app.DeploymentManifest)
 	if err != nil {
 		return err
 	}
-	mf, err = MergeEnvVars(mf, app.Configs, names.ImagePullSecret)
+	mf, err = MergeEnvVars(ctx, mf, app.Configs, names.ImagePullSecret)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "failed to merge env vars", "error", err)
 	}
@@ -159,19 +160,19 @@ func createOrUpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edge
 
 }
 
-func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	return createOrUpdateAppInst(client, names, app, appInst, createManifest)
+func CreateAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	return createOrUpdateAppInst(ctx, client, names, app, appInst, createManifest)
 }
 
-func UpdateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	err := createOrUpdateAppInst(client, names, app, appInst, applyManifest)
+func UpdateAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	err := createOrUpdateAppInst(ctx, client, names, app, appInst, applyManifest)
 	if err != nil {
 		return err
 	}
-	return WaitForAppInst(client, names, app, WaitRunning)
+	return WaitForAppInst(ctx, client, names, app, WaitRunning)
 }
 
-func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func DeleteAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.DebugLog(log.DebugLevelMexos, "deleting app", "name", names.AppName)
 	file := names.AppName + names.AppRevision + ".yaml"
 	cmd := fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, file)
@@ -187,10 +188,10 @@ func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 	//Note wait for deletion of appinst can be done here in a generic place, but wait for creation is split
 	// out in each platform specific task so that we can optimize the time taken for create by allowing the
 	// wait to be run in parallel with other tasks
-	return WaitForAppInst(client, names, app, WaitDeleted)
+	return WaitForAppInst(ctx, client, names, app, WaitDeleted)
 }
 
-func GetAppInstRuntime(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
+func GetAppInstRuntime(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
 	rt := &edgeproto.AppInstRuntime{}
 	rt.ContainerIds = make([]string, 0)
 
@@ -220,7 +221,7 @@ func GetAppInstRuntime(client pc.PlatformClient, names *KubeNames, app *edgeprot
 	return rt, nil
 }
 
-func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
+func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
 	// If no container specified, pick the first one in the AppInst.
 	// Note that some deployments may not require a container id.
 	if req.ContainerId == "" {

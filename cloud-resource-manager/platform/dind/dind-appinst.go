@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/dockermgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -34,15 +35,15 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if err != nil {
 		return err
 	}
+	cluster, err := FindCluster(names.ClusterName)
+	if err != nil {
+		return err
+	}
+	masterIP := cluster.MasterAddr
+	network := GetDockerNetworkName(cluster)
 	// NOTE: for DIND we don't check whether this is internal
 	if len(appInst.MappedPorts) > 0 {
 		log.SpanLog(ctx, log.DebugLevelMexos, "Add Proxy for dind", "ports", appInst.MappedPorts)
-		cluster, err := FindCluster(names.ClusterName)
-		if err != nil {
-			return err
-		}
-		masterIP := cluster.MasterAddr
-		network := GetDockerNetworkName(cluster)
 		err = proxy.CreateNginxProxy(ctx, client,
 			names.AppName,
 			masterIP,
@@ -55,13 +56,21 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 		}
 	}
 
+	// Add crm local replace variables
+	deploymentVars := crmutil.DeploymentReplaceVars{
+		CRM: crmutil.CrmReplaceVars{
+			ClusterIp: masterIP,
+		},
+	}
+	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
+
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
-		err = k8smgmt.CreateAppInst(client, names, app, appInst)
+		err = k8smgmt.CreateAppInst(ctx, client, names, app, appInst)
 		if err == nil {
-			err = k8smgmt.WaitForAppInst(client, names, app, k8smgmt.WaitRunning)
+			err = k8smgmt.WaitForAppInst(ctx, client, names, app, k8smgmt.WaitRunning)
 		}
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
-		err = k8smgmt.CreateHelmAppInst(client, names, clusterInst, app, appInst)
+		err = k8smgmt.CreateHelmAppInst(ctx, client, names, clusterInst, app, appInst)
 	} else {
 		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
 	}
@@ -93,9 +102,9 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	}
 
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
-		err = k8smgmt.DeleteAppInst(client, names, app, appInst)
+		err = k8smgmt.DeleteAppInst(ctx, client, names, app, appInst)
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
-		err = k8smgmt.DeleteHelmAppInst(client, names, clusterInst)
+		err = k8smgmt.DeleteHelmAppInst(ctx, client, names, clusterInst)
 	} else {
 		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
 	}
@@ -122,10 +131,23 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if err != nil {
 		return err
 	}
+
+	cluster, err := FindCluster(names.ClusterName)
+	if err != nil {
+		return err
+	}
+	// Add crm local replace variables
+	deploymentVars := crmutil.DeploymentReplaceVars{
+		CRM: crmutil.CrmReplaceVars{
+			ClusterIp: cluster.MasterAddr,
+		},
+	}
+	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
+
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
-		return k8smgmt.UpdateAppInst(client, names, app, appInst)
+		return k8smgmt.UpdateAppInst(ctx, client, names, app, appInst)
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
-		return k8smgmt.UpdateHelmAppInst(client, names, app, appInst)
+		return k8smgmt.UpdateHelmAppInst(ctx, client, names, app, appInst)
 	}
 	return fmt.Errorf("UpdateAppInst not supported for deployment: %s", appDeploymentType)
 }
@@ -140,11 +162,11 @@ func (s *Platform) GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto
 		return nil, err
 	}
 
-	return k8smgmt.GetAppInstRuntime(client, names, app, appInst)
+	return k8smgmt.GetAppInstRuntime(ctx, client, names, app, appInst)
 }
 
 func (s *Platform) GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
-	return k8smgmt.GetContainerCommand(clusterInst, app, appInst, req)
+	return k8smgmt.GetContainerCommand(ctx, clusterInst, app, appInst, req)
 }
 
 func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error) {

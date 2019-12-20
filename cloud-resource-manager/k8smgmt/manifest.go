@@ -2,10 +2,12 @@ package k8smgmt
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -48,19 +50,32 @@ func addMexLabel(meta *metav1.ObjectMeta, label string) {
 }
 
 // Merge in all the environment variables into
-func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile, imagePullSecret string) (string, error) {
+func MergeEnvVars(ctx context.Context, kubeManifest string, configs []*edgeproto.ConfigFile, imagePullSecret string) (string, error) {
 	var envVars []v1.EnvVar
 	var files []string
+	var err error
 
+	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
 	log.DebugLog(log.DebugLevelMexos, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecret", imagePullSecret)
 
 	// Walk the Configs in the App and get all the environment variables together
 	for _, v := range configs {
 		if v.Kind == AppConfigEnvYaml {
 			var curVars []v1.EnvVar
-			if err1 := yaml.Unmarshal([]byte(v.Config), &curVars); err1 != nil {
+			cfg := v.Config
+			// Fill in the Deployment Vars passed as a variable through the context
+			if varsFound {
+				cfg, err = crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelMexos, "failed to replace Crm variables",
+						"EnvVars ", v.Config, "DeploymentVars", deploymentVars, "error", err)
+					return "", err
+				}
+			}
+
+			if err1 := yaml.Unmarshal([]byte(cfg), &curVars); err1 != nil {
 				log.DebugLog(log.DebugLevelMexos, "cannot unmarshal env vars", "kind", v.Kind,
-					"config", v.Config, "error", err1)
+					"config", cfg, "error", err1)
 			} else {
 				envVars = append(envVars, curVars...)
 			}
@@ -71,6 +86,16 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile, imagePul
 	if err != nil {
 		return mf, err
 	}
+	// Fill in the Deployment Vars passed as a variable through the context
+	if varsFound {
+		mf, err = crmutil.ReplaceDeploymentVars(mf, deploymentVars)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelMexos, "failed to replace Crm variables",
+				"manifest", mf, "DeploymentVars", deploymentVars, "error", err)
+			return "", err
+		}
+	}
+
 	//decode the objects so we can find the container objects, where we'll add the env vars
 	objs, _, err := cloudcommon.DecodeK8SYaml(mf)
 	if err != nil {
