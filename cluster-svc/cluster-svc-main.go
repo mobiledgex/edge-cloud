@@ -140,9 +140,10 @@ var NFSAutoProvisionApp = edgeproto.App{
 	Annotations:   "version=1.2.8",
 }
 
+// TODO: change this IP once we integrate with the Helm Customization feature
 var NFSAutoProvisionAppTemplate = `nfs:
   path: /share
-  server: __.ClusterMasterIP__
+  server: 10.101.0.10
 storageClass:
   name: standard
   defaultClass: true
@@ -453,7 +454,7 @@ func getAppFromController(ctx context.Context, appkey *edgeproto.AppKey, apiClie
 
 func getAppFromClusterSvc(appkey *edgeproto.AppKey) (*edgeproto.App, error) {
 	var app edgeproto.App
-	switch app.Key.Name {
+	switch appkey.Name {
 	case MEXPrometheusAppName:
 		app = MEXPrometheusApp
 	case NFSAutoProvisionAppName:
