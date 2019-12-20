@@ -226,14 +226,16 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
+		isSharedOnly := cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX
 		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
+
 		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-			if in.Deployment == cloudcommon.AppDeploymentTypeDocker && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_DIND {
+			if in.Deployment == cloudcommon.AppDeploymentTypeDocker && !isSharedOnly {
 				return fmt.Errorf("IpAccess must be dedicated for deployment type %s platform type %s", cloudcommon.AppDeploymentTypeDocker, platName)
 			}
 		} else {
-			if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND {
-				return fmt.Errorf("IpAccess must be shared for DIND")
+			if isSharedOnly {
+				return fmt.Errorf("IpAccess must be shared for %s", platName)
 			}
 		}
 		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {

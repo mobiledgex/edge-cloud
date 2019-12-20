@@ -6,7 +6,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/dockermgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/nginx"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -34,24 +34,23 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if err != nil {
 		return err
 	}
-	cluster, err := FindCluster(names.ClusterName)
-	masterIP := cluster.MasterAddr
-
-	if err != nil {
-		return err
-	}
 	// NOTE: for DIND we don't check whether this is internal
 	if len(appInst.MappedPorts) > 0 {
-		log.SpanLog(ctx, log.DebugLevelMexos, "AddNginxProxy for dind", "ports", appInst.MappedPorts)
+		log.SpanLog(ctx, log.DebugLevelMexos, "Add Proxy for dind", "ports", appInst.MappedPorts)
+		cluster, err := FindCluster(names.ClusterName)
+		if err != nil {
+			return err
+		}
+		masterIP := cluster.MasterAddr
 		network := GetDockerNetworkName(cluster)
-		err = nginx.CreateNginxProxy(client,
+		err = proxy.CreateNginxProxy(ctx, client,
 			names.AppName,
 			masterIP,
 			appInst.MappedPorts,
-			nginx.WithDockerNetwork(network),
-			nginx.WithDockerPublishPorts())
+			proxy.WithDockerNetwork(network),
+			proxy.WithDockerPublishPorts())
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "cannot add nginx proxy", "appName", names.AppName, "ports", appInst.MappedPorts)
+			log.SpanLog(ctx, log.DebugLevelMexos, "cannot add proxy", "appName", names.AppName, "ports", appInst.MappedPorts)
 			return err
 		}
 	}
@@ -62,8 +61,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 			err = k8smgmt.WaitForAppInst(client, names, app, k8smgmt.WaitRunning)
 		}
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
-		helmCust := k8smgmt.HelmCustomizations{ClusterMasterIP: masterIP}
-		err = k8smgmt.CreateHelmAppInst(client, names, clusterInst, app, appInst, &helmCust)
+		err = k8smgmt.CreateHelmAppInst(client, names, clusterInst, app, appInst)
 	} else {
 		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
 	}
@@ -107,8 +105,8 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 
 	if len(appInst.MappedPorts) > 0 {
 		log.SpanLog(ctx, log.DebugLevelMexos, "DeleteNginxProxy for dind")
-		if err = nginx.DeleteNginxProxy(client, names.AppName); err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "cannot delete nginx proxy", "name", names.AppName)
+		if err = proxy.DeleteNginxProxy(ctx, client, names.AppName); err != nil {
+			log.SpanLog(ctx, log.DebugLevelMexos, "cannot delete proxy", "name", names.AppName)
 			return err
 		}
 	}
@@ -127,12 +125,7 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 		return k8smgmt.UpdateAppInst(client, names, app, appInst)
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
-		cluster, err := FindCluster(names.ClusterName)
-		if err != nil {
-			return err
-		}
-		helmCust := k8smgmt.HelmCustomizations{ClusterMasterIP: cluster.MasterAddr}
-		return k8smgmt.UpdateHelmAppInst(client, names, app, appInst, &helmCust)
+		return k8smgmt.UpdateHelmAppInst(client, names, app, appInst)
 	}
 	return fmt.Errorf("UpdateAppInst not supported for deployment: %s", appDeploymentType)
 }
