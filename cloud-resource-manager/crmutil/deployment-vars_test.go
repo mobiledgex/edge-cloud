@@ -21,7 +21,7 @@ spec:
     metadata:
       labels:
         run: someapplication1
-        target: {{ .CRM.ClusterIp }}:443
+        target: [[ .Deployment.ClusterIp ]]:443
     spec:
       volumes:
       imagePullSecrets:
@@ -38,7 +38,7 @@ spec:
 `
 
 var testConfigFile = `nfs:
-  server: {{ .CRM.ClusterIp }}
+  server: [[ .Deployment.ClusterIp ]]
   path: /ifs/kubernetes
 `
 
@@ -78,13 +78,13 @@ var testConfigFileResult = `nfs:
   path: /ifs/kubernetes
 `
 var testConfigFileWrongVar = `nfs:
-  server: {{ .CRM.ClusterName }}
+  server: [[ .Deployment.ClusterName ]]
   path: /ifs/kubernetes
 `
 
 func TestCrmDeploymentVars(t *testing.T) {
 	deploymentVars := DeploymentReplaceVars{
-		CRM: CrmReplaceVars{
+		Deployment: CrmReplaceVars{
 			ClusterIp: testClusterIp,
 		},
 	}
@@ -107,5 +107,5 @@ func TestCrmDeploymentVars(t *testing.T) {
 	// error cases
 	val, err = ReplaceDeploymentVars(testConfigFileWrongVar, &deploymentVars)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "CRM.ClusterName")
+	assert.Contains(t, err.Error(), "Deployment.ClusterName")
 }

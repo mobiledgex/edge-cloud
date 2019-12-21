@@ -18,11 +18,11 @@ type CrmReplaceVars struct {
 // specific information filled in
 type DeploymentReplaceVars struct {
 	// CRM knows about the actual cluster where app is being deployed
-	CRM CrmReplaceVars
+	Deployment CrmReplaceVars
 }
 
 func ReplaceDeploymentVars(manifest string, replaceVars *DeploymentReplaceVars) (string, error) {
-	tmpl := template.Must(template.New("varsReplaceTemplate").Parse(manifest))
+	tmpl := template.Must(template.New("varsReplaceTemplate").Delims("[[", "]]").Parse(manifest))
 	buf := bytes.Buffer{}
 	if err := tmpl.Execute(&buf, replaceVars); err != nil {
 		return "", err

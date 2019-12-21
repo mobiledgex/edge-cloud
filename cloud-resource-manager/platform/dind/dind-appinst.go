@@ -58,7 +58,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 
 	// Add crm local replace variables
 	deploymentVars := crmutil.DeploymentReplaceVars{
-		CRM: crmutil.CrmReplaceVars{
+		Deployment: crmutil.CrmReplaceVars{
 			ClusterIp: masterIP,
 		},
 	}
@@ -138,7 +138,7 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	}
 	// Add crm local replace variables
 	deploymentVars := crmutil.DeploymentReplaceVars{
-		CRM: crmutil.CrmReplaceVars{
+		Deployment: crmutil.CrmReplaceVars{
 			ClusterIp: cluster.MasterAddr,
 		},
 	}
