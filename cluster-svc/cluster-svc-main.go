@@ -198,8 +198,6 @@ func autoScalePolicyCb(ctx context.Context, old *edgeproto.AutoScalePolicy, new 
 	for _, inst := range insts {
 		err := createMEXPromInst(ctx, dialOpts, &inst)
 		log.SpanLog(ctx, log.DebugLevelApi, "Updated policy for Prometheus", "ClusterInst", inst.Key, "AutoScalePolicy", new.Key.Name, "err", err)
-		err = createNFSAutoProvAppInstIfRequired(ctx, dialOpts, &inst)
-		log.SpanLog(ctx, log.DebugLevelApi, "Updated policy for NFS Auto prov", "ClusterInst", inst.Key, "AutoScalePolicy", new.Key.Name, "err", err)
 	}
 }
 
