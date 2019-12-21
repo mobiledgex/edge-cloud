@@ -238,8 +238,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				return fmt.Errorf("IpAccess must be shared for %s", platName)
 			}
 		}
-		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && in.SharedVolumeSize != 0 {
-			return errors.New("Shared volumes only supported on OpenStack")
+		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {
+			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
 			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
