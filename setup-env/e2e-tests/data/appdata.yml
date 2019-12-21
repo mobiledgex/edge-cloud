@@ -28,6 +28,7 @@ clusterinsts:
     name: x1.small
   liveness: LivenessStatic
   ipaccess: IpAccessShared
+  sharedvolumesize: 100
   nummasters: 1
   numnodes: 2
 

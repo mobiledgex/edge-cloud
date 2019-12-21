@@ -46,6 +46,7 @@ var NetworkSchemePrivateIP = "privateip"
 var DeveloperMetricsDbName = "metrics"
 var MEXPrometheusAppName = "MEXPrometheusAppName"
 var PrometheusPort = int32(9090)
+var NFSAutoProvisionAppName = "NFSAutoProvision"
 var ProxyMetricsPort = int32(65121)
 
 // DIND script to pull from kubeadm-dind-cluster
