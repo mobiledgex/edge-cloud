@@ -61,7 +61,7 @@ func (m *AutoProvCloudlet) String() string            { return proto.CompactText
 func (*AutoProvCloudlet) ProtoMessage()               {}
 func (*AutoProvCloudlet) Descriptor() ([]byte, []int) { return fileDescriptorAutoprovpolicy, []int{1} }
 
-// call this AppInstMiss instead?
+// AutoProvCount is used to send potential cloudlet and location counts from DME to Controller
 type AutoProvCount struct {
 	// Target app
 	AppKey AppKey `protobuf:"bytes,1,opt,name=app_key,json=appKey" json:"app_key"`
@@ -80,6 +80,7 @@ func (m *AutoProvCount) String() string            { return proto.CompactTextStr
 func (*AutoProvCount) ProtoMessage()               {}
 func (*AutoProvCount) Descriptor() ([]byte, []int) { return fileDescriptorAutoprovpolicy, []int{2} }
 
+// AutoProvCounts is used to send potential cloudlet and location counts from DME to Controller
 type AutoProvCounts struct {
 	// DME node name
 	DmeNodeName string `protobuf:"bytes,1,opt,name=dme_node_name,json=dmeNodeName,proto3" json:"dme_node_name,omitempty"`

@@ -43,7 +43,7 @@ message AutoProvCloudlet {
   distributed_match_engine.Loc loc = 2 [(gogoproto.nullable) = false];
 }
 
-// call this AppInstMiss instead?
+// AutoProvCount is used to send potential cloudlet and location counts from DME to Controller
 message AutoProvCount {
   // Target app
   AppKey app_key = 1 [(gogoproto.nullable) = false];
@@ -57,6 +57,7 @@ message AutoProvCount {
   ClusterInstKey deploy_now_key = 5 [(gogoproto.nullable) = false];
 }
 
+// AutoProvCounts is used to send potential cloudlet and location counts from DME to Controller
 message AutoProvCounts {
   // DME node name
   string dme_node_name = 1;
