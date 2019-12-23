@@ -2,10 +2,12 @@ package k8smgmt
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -19,14 +21,14 @@ const AppConfigEnvYaml = "envVarsYaml"
 
 const MexAppLabel = "mex-app"
 
-func addEnvVars(template *v1.PodTemplateSpec, envVars []v1.EnvVar) {
+func addEnvVars(ctx context.Context, template *v1.PodTemplateSpec, envVars []v1.EnvVar) {
 	// walk the containers and append environment variables to each
 	for j, _ := range template.Spec.Containers {
 		template.Spec.Containers[j].Env = append(template.Spec.Containers[j].Env, envVars...)
 	}
 }
 
-func addImagePullSecret(template *v1.PodTemplateSpec, secretName string) {
+func addImagePullSecret(ctx context.Context, template *v1.PodTemplateSpec, secretName string) {
 	found := false
 	for _, s := range template.Spec.ImagePullSecrets {
 		if s.Name == secretName {
@@ -36,7 +38,7 @@ func addImagePullSecret(template *v1.PodTemplateSpec, secretName string) {
 	if !found {
 		var newSecret v1.LocalObjectReference
 		newSecret.Name = secretName
-		log.DebugLog(log.DebugLevelMexos, "adding imagePullSecret", "secretName", secretName)
+		log.SpanLog(ctx, log.DebugLevelMexos, "adding imagePullSecret", "secretName", secretName)
 		template.Spec.ImagePullSecrets = append(template.Spec.ImagePullSecrets, newSecret)
 	}
 }
@@ -48,29 +50,52 @@ func addMexLabel(meta *metav1.ObjectMeta, label string) {
 }
 
 // Merge in all the environment variables into
-func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile, imagePullSecret string) (string, error) {
+func MergeEnvVars(ctx context.Context, kubeManifest string, configs []*edgeproto.ConfigFile, imagePullSecret string) (string, error) {
 	var envVars []v1.EnvVar
 	var files []string
+	var err error
 
-	log.DebugLog(log.DebugLevelMexos, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecret", imagePullSecret)
+	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
+	log.SpanLog(ctx, log.DebugLevelMexos, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecret", imagePullSecret)
 
 	// Walk the Configs in the App and get all the environment variables together
 	for _, v := range configs {
 		if v.Kind == AppConfigEnvYaml {
 			var curVars []v1.EnvVar
-			if err1 := yaml.Unmarshal([]byte(v.Config), &curVars); err1 != nil {
-				log.DebugLog(log.DebugLevelMexos, "cannot unmarshal env vars", "kind", v.Kind,
-					"config", v.Config, "error", err1)
+			cfg := v.Config
+			// Fill in the Deployment Vars passed as a variable through the context
+			if varsFound {
+				cfg, err = crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelMexos, "failed to replace Crm variables",
+						"EnvVars ", v.Config, "DeploymentVars", deploymentVars, "error", err)
+					return "", err
+				}
+			}
+
+			if err1 := yaml.Unmarshal([]byte(cfg), &curVars); err1 != nil {
+				log.SpanLog(ctx, log.DebugLevelMexos, "cannot unmarshal env vars", "kind", v.Kind,
+					"config", cfg, "error", err1)
 			} else {
 				envVars = append(envVars, curVars...)
 			}
 		}
 	}
-	log.DebugLog(log.DebugLevelMexos, "Merging environment variables", "envVars", envVars)
+	log.SpanLog(ctx, log.DebugLevelMexos, "Merging environment variables", "envVars", envVars)
 	mf, err := cloudcommon.GetDeploymentManifest(kubeManifest)
 	if err != nil {
 		return mf, err
 	}
+	// Fill in the Deployment Vars passed as a variable through the context
+	if varsFound {
+		mf, err = crmutil.ReplaceDeploymentVars(mf, deploymentVars)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelMexos, "failed to replace Crm variables",
+				"manifest", mf, "DeploymentVars", deploymentVars, "error", err)
+			return "", err
+		}
+	}
+
 	//decode the objects so we can find the container objects, where we'll add the env vars
 	objs, _, err := cloudcommon.DecodeK8SYaml(mf)
 	if err != nil {
@@ -81,16 +106,16 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile, imagePul
 	for i, _ := range objs {
 		switch obj := objs[i].(type) {
 		case *appsv1.Deployment:
-			addEnvVars(&obj.Spec.Template, envVars)
+			addEnvVars(ctx, &obj.Spec.Template, envVars)
 			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
 			if imagePullSecret != "" {
-				addImagePullSecret(&obj.Spec.Template, imagePullSecret)
+				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecret)
 			}
 		case *appsv1.DaemonSet:
-			addEnvVars(&obj.Spec.Template, envVars)
+			addEnvVars(ctx, &obj.Spec.Template, envVars)
 			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
 			if imagePullSecret != "" {
-				addImagePullSecret(&obj.Spec.Template, imagePullSecret)
+				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecret)
 			}
 		}
 	}

@@ -37,7 +37,6 @@ var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc a
 var upgradeInstances = flag.Bool("updateAll", false, "Upgrade all Instances of Prometheus operator")
 var pluginRequired = flag.Bool("pluginRequired", false, "Require plugin")
 
-var exporterT *template.Template
 var prometheusT *template.Template
 var nfsT *template.Template
 
@@ -143,7 +142,7 @@ var NFSAutoProvisionApp = edgeproto.App{
 // TODO: change this IP once we integrate with the Helm Customization feature
 var NFSAutoProvisionAppTemplate = `nfs:
   path: /share
-  server: 10.101.0.10
+  server: [[ .Deployment.ClusterIp ]]
 storageClass:
   name: standard
   defaultClass: true
