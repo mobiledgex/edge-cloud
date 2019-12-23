@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
@@ -37,8 +38,16 @@ func TestAppApi(t *testing.T) {
 
 	testutil.InternalAppTest(t, "cud", &appApi, testutil.AppData)
 
+	// update should validate ports
+	upapp := testutil.AppData[3]
+	upapp.AccessPorts = "tcp:0"
+	upapp.Fields = []string{edgeproto.AppFieldAccessPorts}
+	_, err := appApi.UpdateApp(ctx, &upapp)
+	require.NotNil(t, err, "Update app with port 0")
+	require.Contains(t, err.Error(), "App ports out of range")
+
 	obj := testutil.AppData[3]
-	_, err := appApi.DeleteApp(ctx, &obj)
+	_, err = appApi.DeleteApp(ctx, &obj)
 	require.Nil(t, err)
 
 	// vmapp with http should fail
