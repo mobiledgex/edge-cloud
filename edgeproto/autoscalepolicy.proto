@@ -50,7 +50,7 @@ service AutoScalePolicyApi {
       post: "/create/autoscalepolicy"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceAutoScalePolicy,ActionManage,Key.Developer";
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
     option (protogen.method_also_required) = "MinNodes,MaxNodes";
   }
   // Delete an Auto Scale Policy
@@ -59,7 +59,7 @@ service AutoScalePolicyApi {
       post: "/delete/autoscalepolicy"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceAutoScalePolicy,ActionManage,Key.Developer";
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
   }
   // Update an Auto Scale Policy
   rpc UpdateAutoScalePolicy(AutoScalePolicy) returns (Result) {
@@ -67,7 +67,7 @@ service AutoScalePolicyApi {
       post: "/update/autoscalepolicy"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceAutoScalePolicy,ActionManage,Key.Developer";
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
   }
   // Show Auto Scale Policies. Any fields specified will be used to filter results.
   rpc ShowAutoScalePolicy(AutoScalePolicy) returns (stream AutoScalePolicy) {
@@ -75,6 +75,6 @@ service AutoScalePolicyApi {
       post: "/show/autoscalepolicy"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceAutoScalePolicy,ActionView,Key.Developer";
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionView,Key.Developer";
   }
 }

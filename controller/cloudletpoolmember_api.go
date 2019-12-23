@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -30,13 +29,13 @@ func (s *CloudletPoolMemberApi) CreateCloudletPoolMember(ctx context.Context, in
 	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, in, nil) {
-			return fmt.Errorf("Member already exists")
+			return in.ExistsError()
 		}
 		if !cloudletPoolApi.store.STMGet(stm, &in.PoolKey, nil) {
-			return fmt.Errorf("Specified cloudlet pool not found")
+			return in.PoolKey.NotFoundError()
 		}
 		if !cloudletApi.store.STMGet(stm, &in.CloudletKey, nil) {
-			return fmt.Errorf("Specified cloudlet not found")
+			return in.CloudletKey.NotFoundError()
 		}
 		s.store.STMPut(stm, in)
 		return nil

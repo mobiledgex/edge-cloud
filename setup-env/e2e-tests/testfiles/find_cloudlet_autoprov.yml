@@ -1,0 +1,47 @@
+##
+description: FindCloudlet tests for auto-provisioning. Test can only be run once in order to verify influx db stats (counts) correctly
+
+tests:
+
+- name: Add and show provisioning without appinst
+  apifile: "{{datadir}}/appdata_no_appinst.yml"
+  actions: [ctrlapi-create,ctrlapi-add,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{datadir}}/appdata_no_appinst_show.yml"
+    yaml2: "{{outputdir}}/show-commands.yml"
+    filetype: appdata
+
+- name: find cloudlet for auto-prov app (will trigger immediate deployment)
+  apifile: "{{datadir}}/find_cloudlet_autoprov.yml"
+  actions: [dmeapi-findcloudlet]
+
+- name: find cloudlet for auto-prov app2
+  apifile: "{{datadir}}/find_cloudlet_autoprov2.yml"
+  actions: [dmeapi-findcloudlet]
+
+- name: find cloudlet for auto-prov app2 (after sleep 1)
+  apifile: "{{datadir}}/find_cloudlet_autoprov2.yml"
+  actions: [sleep=1,dmeapi-findcloudlet]
+
+- name: show auto provisioned appinst (based on immediate deployment)
+  actions: [ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_no_appinst_autoprov_show.yml"
+    filetype: appdata
+
+- name: delete provisioning, verify it is empty
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata_no_appinst.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+
+- name: check influx stats for auto-provisioning
+  actions: [influxapi]
+  apifile: "{{datadir}}/influx_autoprov_query.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/influx_autoprov_data.yml"
+    filetype: influxdata

@@ -17,26 +17,31 @@ import (
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	edgeutil "github.com/mobiledgex/edge-cloud/util"
 	yaml "github.com/mobiledgex/yaml/v2"
 	"google.golang.org/grpc"
 )
 
 type dmeApiRequest struct {
-	Rcreq           dmeproto.RegisterClientRequest  `yaml:"registerclientrequest"`
-	Fcreq           dmeproto.FindCloudletRequest    `yaml:"findcloudletrequest"`
-	Vlreq           dmeproto.VerifyLocationRequest  `yaml:"verifylocationrequest"`
-	Glreq           dmeproto.GetLocationRequest     `yaml:"getlocationrequest"`
-	Dlreq           dmeproto.DynamicLocGroupRequest `yaml:"dynamiclocgrouprequest"`
-	Aireq           dmeproto.AppInstListRequest     `yaml:"appinstlistrequest"`
-	Fqreq           dmeproto.FqdnListRequest        `yaml:"fqdnlistrequest"`
-	Qosreq          dmeproto.QosPositionRequest     `yaml:"qospositionrequest"`
-	TokenServerPath string                          `yaml:"token-server-path"`
-	ErrorExpected   string                          `yaml:"error-expected"`
+	Rcreq            dmeproto.RegisterClientRequest  `yaml:"registerclientrequest"`
+	Fcreq            dmeproto.FindCloudletRequest    `yaml:"findcloudletrequest"`
+	Vlreq            dmeproto.VerifyLocationRequest  `yaml:"verifylocationrequest"`
+	Glreq            dmeproto.GetLocationRequest     `yaml:"getlocationrequest"`
+	Dlreq            dmeproto.DynamicLocGroupRequest `yaml:"dynamiclocgrouprequest"`
+	Aireq            dmeproto.AppInstListRequest     `yaml:"appinstlistrequest"`
+	Fqreq            dmeproto.FqdnListRequest        `yaml:"fqdnlistrequest"`
+	Qosreq           dmeproto.QosPositionRequest     `yaml:"qospositionrequest"`
+	TokenServerPath  string                          `yaml:"token-server-path"`
+	ErrorExpected    string                          `yaml:"error-expected"`
+	Repeat           int                             `yaml:"repeat"`
+	RunAtIntervalSec float64                         `yaml:"runatintervalsec"`
+	RunAtOffsetSec   float64                         `yaml:"runatoffsetsec"`
 }
 
 type registration struct {
 	Req   dmeproto.RegisterClientRequest `yaml:"registerclientrequest"`
 	Reply dmeproto.RegisterClientReply   `yaml:"registerclientreply"`
+	At    time.Time                      `yaml:"at"`
 }
 
 type RegisterReplyWithError struct {
@@ -195,7 +200,8 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		if apiRequest.Rcreq.AppName != "" &&
 			(registerStatus.Req.DevName != apiRequest.Rcreq.DevName ||
 				registerStatus.Req.AppName != apiRequest.Rcreq.AppName ||
-				registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers) {
+				registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers ||
+				time.Since(registerStatus.At) > time.Hour) {
 			log.Printf("Re-registering for api %s - %+v\n", api, apiRequest.Rcreq)
 			ok := RunDmeAPI("register", procname, apiFile, apiType, outputDir)
 			if !ok {
@@ -210,14 +216,27 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 	switch api {
 	case "findcloudlet":
 		apiRequest.Fcreq.SessionCookie = sessionCookie
-		fc, err := client.FindCloudlet(ctx, &apiRequest.Fcreq)
-		if fc != nil {
-			sort.Slice(fc.Ports, func(i, j int) bool {
-				return fc.Ports[i].InternalPort < fc.Ports[j].InternalPort
-			})
+		if apiRequest.Repeat == 0 {
+			apiRequest.Repeat = 1
 		}
-		dmereply = fc
-		dmeerror = err
+		if apiRequest.RunAtIntervalSec != 0 {
+			dur := edgeutil.GetWaitTime(time.Now(), apiRequest.RunAtIntervalSec, apiRequest.RunAtOffsetSec)
+			time.Sleep(dur)
+		}
+		for ii := 0; ii < apiRequest.Repeat; ii++ {
+			log.Printf("fcreq %v\n", apiRequest.Fcreq)
+			fc, err := client.FindCloudlet(ctx, &apiRequest.Fcreq)
+			if fc != nil {
+				sort.Slice(fc.Ports, func(i, j int) bool {
+					return fc.Ports[i].InternalPort < fc.Ports[j].InternalPort
+				})
+			}
+			dmereply = fc
+			dmeerror = err
+			if err != nil {
+				break
+			}
+		}
 	case "register":
 		var expirySeconds int64 = 600
 		if strings.Contains(apiRequest.Rcreq.AuthToken, "GENTOKEN:") {
@@ -239,6 +258,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 			dmereply = &registration{
 				Req:   apiRequest.Rcreq,
 				Reply: *reply,
+				At:    time.Now(),
 			}
 		}
 

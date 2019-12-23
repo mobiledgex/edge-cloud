@@ -129,8 +129,10 @@ func (s *AppInstApi) UsesClusterInst(in *edgeproto.ClusterInstKey) bool {
 	defer s.cache.Mux.Unlock()
 	for key, val := range s.cache.Objs {
 		if key.ClusterInstKey.Matches(in) && appApi.Get(&val.Key.AppKey, &app) {
-			log.DebugLog(log.DebugLevelApi, "AppInst found for clusterInst", "app", app.Key.Name,
-				"autodelete", app.DelOpt.String())
+			if val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
+				continue
+			}
+			log.DebugLog(log.DebugLevelApi, "AppInst found for clusterInst", "app", app.Key.Name, "autodelete", app.DelOpt.String())
 			if app.DelOpt == edgeproto.DeleteType_NO_AUTO_DELETE {
 				return true
 			}
@@ -147,7 +149,7 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 	s.cache.Mux.Lock()
 	for k, val := range s.cache.Objs {
 		if k.ClusterInstKey.Matches(key) && appApi.Get(&val.Key.AppKey, &app) {
-			if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
+			if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE || val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
 				apps[k] = val
 			}
 		}
@@ -241,7 +243,7 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 	var app edgeproto.App
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !appApi.store.STMGet(stm, &key.AppKey, &app) {
-			return edgeproto.ErrEdgeApiAppNotFound
+			return key.AppKey.NotFoundError()
 		}
 		return nil
 	})
@@ -327,7 +329,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		var app edgeproto.App
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
-			return edgeproto.ErrEdgeApiAppNotFound
+			return in.Key.AppKey.NotFoundError()
 		}
 		in.Revision = app.Revision
 		appDeploymentType = app.Deployment
@@ -444,7 +446,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		var app edgeproto.App
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
-			return edgeproto.ErrEdgeApiAppNotFound
+			return in.Key.AppKey.NotFoundError()
 		}
 
 		if in.Flavor.Name == "" {
@@ -663,7 +665,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 		var curr edgeproto.AppInst
 
 		if !appApi.store.STMGet(stm, &key.AppKey, &app) {
-			return edgeproto.ErrEdgeApiAppNotFound
+			return key.AppKey.NotFoundError()
 		}
 		if s.store.STMGet(stm, &key, &curr) {
 			// allow UPDATE_ERROR state so updates can be retried
@@ -681,7 +683,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 				return nil
 			}
 		} else {
-			return edgeproto.ErrEdgeApiAppInstNotFound
+			return key.NotFoundError()
 		}
 		if ignoreCRM(cctx) {
 			crmUpdateRequired = false

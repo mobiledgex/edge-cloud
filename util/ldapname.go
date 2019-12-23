@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -12,15 +13,18 @@ import (
 // Org names are also used as "group" names in gitlab.
 var ldapNameMatch = regexp.MustCompile("^[-_0-9a-zA-Z .&,!]+$")
 
-func ValidLDAPName(name string) bool {
+func ValidLDAPName(name string) error {
 	if name == "" {
-		return false
+		return fmt.Errorf("name cannot be empty")
 	}
 	if name[0] == ' ' || name[len(name)-1] == ' ' {
 		// ldap: no leading or trailing spaces
-		return false
+		return fmt.Errorf("name cannot have leading or trailing spaces")
 	}
-	return ldapNameMatch.MatchString(name)
+	if !ldapNameMatch.MatchString(name) {
+		return fmt.Errorf("name does not match LDAP required format")
+	}
+	return nil
 }
 
 func EscapeLDAPName(name string) string {
