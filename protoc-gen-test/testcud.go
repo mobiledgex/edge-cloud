@@ -3,7 +3,6 @@
 package main
 
 import (
-	"sort"
 	"strings"
 	"text/template"
 
@@ -581,117 +580,65 @@ func (t *TestCud) generateCudTest(desc *generator.Descriptor) {
 	t.importLog = true
 }
 
-type methodInfo struct {
-	Name   string
-	Stream bool
+func (t *TestCud) generateRunApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {
+	// group methods by input type
+	groups := gensupport.GetMethodGroups(t.Generator, service, nil)
+	for inType, group := range groups {
+		t.generateRunGroupApi(file, service, inType, group)
+	}
 }
 
-func (t *TestCud) generateRunApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {
-	mappedActions := map[string]string{
-		"Create":  "create",
-		"Inject":  "create",
-		"Update":  "update",
-		"Delete":  "delete",
-		"Evict":   "delete",
-		"Refresh": "refresh",
-	}
-	ignoredActions := []string{
-		"Show",
-	}
+func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, inType string, group *gensupport.MethodGroup) {
 	specialKeys := map[string]string{
 		"CloudletPoolMember": "PoolKey",
 	}
-	out := make(map[string]map[string]methodInfo)
-	for _, method := range service.Method {
-		ignore := false
-		for _, action := range ignoredActions {
-			if strings.HasPrefix(*method.Name, action) {
-				ignore = true
-				break
-			}
-		}
-		if ignore {
-			continue
-		}
-		for k, v := range mappedActions {
-			if strings.HasPrefix(*method.Name, k) {
-				cmd := strings.TrimPrefix(*method.Name, k)
-				mInfo := methodInfo{
-					Name: *method.Name,
-				}
-				if gensupport.ServerStreaming(method) {
-					mInfo.Stream = true
-				}
-				if _, ok := out[cmd]; ok {
-					out[cmd][v] = mInfo
-				} else {
-					out[cmd] = map[string]methodInfo{
-						v: mInfo,
-					}
-				}
-			}
-		}
+	apiName := *service.Name + group.Suffix
+
+	t.P()
+	t.P("func Run", apiName, "(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.", inType, ", dataMap []map[string]interface{}, mode string) error {")
+	t.P("var err error")
+	objApiStr := strings.ToLower(string(inType[0])) + string(inType[1:len(inType)]) + "Api"
+	objKey := "obj.Key"
+	if newKey, ok := specialKeys[inType]; ok {
+		objKey = "obj." + newKey
 	}
-	if len(out) <= 0 {
-		return
+	t.P(objApiStr, " := edgeproto.New", service.Name, "Client(conn)")
+	if group.HasUpdate {
+		t.P("for ii, obj := range *data {")
+	} else {
+		t.P("for _, obj := range *data {")
 	}
-	for k, v := range out {
-		var streaming bool
-		mapKeys := []string{}
-		for k, mInfo := range v {
-			if mInfo.Stream {
-				streaming = true
-			}
-			mapKeys = append(mapKeys, k)
+	t.P("log.DebugLog(log.DebugLevelApi, \"API %v for ", inType, ": %v\", mode, ", objKey, ")")
+	if group.HasStream {
+		t.P("var stream ", inType, "Stream")
+	}
+	t.P("switch mode {")
+	for _, mInfo := range group.MethodInfos {
+		t.P("case \"", mInfo.Action, "\":")
+		if mInfo.Action == "update" {
+			t.importCli = true
+			t.P("obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)")
 		}
-		t.P()
-		t.P("func Run", k, "Api(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.", k, ", dataMap []map[string]interface{}, mode string) error {")
-		t.P("var err error")
-		objApiStr := strings.ToLower(string(k[0])) + string(k[1:len(k)]) + "Api"
-		objKey := "obj.Key"
-		if newKey, ok := specialKeys[k]; ok {
-			objKey = "obj." + newKey
-		}
-		t.P(objApiStr, " := edgeproto.New"+k+"ApiClient(conn)")
-		if _, ok := v["update"]; ok {
-			t.P("for ii, obj := range *data {")
+		if mInfo.Stream {
+			t.P("stream, err = ", objApiStr, ".", mInfo.Name, "(ctx, &obj)")
 		} else {
-			t.P("for _, obj := range *data {")
+			t.P("_, err = ", objApiStr, ".", mInfo.Name, "(ctx, &obj)")
 		}
-		t.P("log.DebugLog(log.DebugLevelApi, \"API %v for ", k, ": %v\", mode, ", objKey, ")")
-		if streaming {
-			t.P("var stream ", k, "Stream")
-		}
-		t.P("switch mode {")
-		sort.Strings(mapKeys)
-		for _, action := range mapKeys {
-			mInfo := v[action]
-			t.P("case \"", action, "\":")
-			if action == "update" {
-				t.importCli = true
-				t.P("obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)")
-			}
-			if mInfo.Stream {
-				t.P("stream, err = ", objApiStr, ".", mInfo.Name, "(ctx, &obj)")
-			} else {
-				t.P("_, err = ", objApiStr, ".", mInfo.Name, "(ctx, &obj)")
-			}
-		}
-		t.P("default:")
-		t.P("log.DebugLog(log.DebugLevelApi, \"Unsupported API %v for ", k, ": %v\", mode, ", objKey, ")")
-		t.P("return nil")
-		t.P("}")
-		if streaming {
-			t.P("err = ", k, "ReadResultStream(stream, err)")
-		}
-		t.P("err = ignoreExpectedErrors(mode, &", objKey, ", err)")
-		t.P("if err != nil {")
-		t.P("return fmt.Errorf(\"API %s failed for %v -- err %v\", mode, ", objKey, ", err)")
-		t.P("}")
-		t.P("}")
-		t.P("return nil")
-		t.P("}")
 	}
+	t.P("default:")
+	t.P("log.DebugLog(log.DebugLevelApi, \"Unsupported API %v for ", inType, ": %v\", mode, ", objKey, ")")
+	t.P("return nil")
+	t.P("}")
+	if group.HasStream {
+		t.P("err = ", inType, "ReadResultStream(stream, err)")
+	}
+	t.P("err = ignoreExpectedErrors(mode, &", objKey, ", err)")
+	t.P("if err != nil {")
+	t.P("return fmt.Errorf(\"API %s failed for %v -- err %v\", mode, ", objKey, ", err)")
+	t.P("}")
+	t.P("}")
+	t.P("return nil")
+	t.P("}")
 	t.importGrpc = true
 }
 

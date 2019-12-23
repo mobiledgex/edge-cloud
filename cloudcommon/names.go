@@ -48,6 +48,7 @@ var MEXPrometheusAppName = "MEXPrometheusAppName"
 var PrometheusPort = int32(9090)
 var NFSAutoProvisionAppName = "NFSAutoProvision"
 var ProxyMetricsPort = int32(65121)
+var AutoProvMeasurement = "auto-prov-counts"
 
 // DIND script to pull from kubeadm-dind-cluster
 var DindScriptName = "dind-cluster-v1.14.sh"

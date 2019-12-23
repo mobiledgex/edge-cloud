@@ -527,6 +527,91 @@ func ServerStreaming(method *descriptor.MethodDescriptorProto) bool {
 	return *method.ServerStreaming
 }
 
+type MethodInfo struct {
+	Name   string
+	Action string
+	Stream bool
+	Mc2Api bool
+	Method *descriptor.MethodDescriptorProto
+}
+
+type MethodGroup struct {
+	MethodInfos []*MethodInfo
+	InType      string
+	HasStream   bool
+	HasUpdate   bool
+	HasMc2Api   bool
+	Suffix      string
+}
+
+func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorProto, actions map[string]string) (string, *MethodInfo) {
+	in := GetDesc(g, method.GetInputType())
+	inType := *in.DescriptorProto.Name
+
+	info := MethodInfo{}
+	for k, v := range actions {
+		if strings.HasPrefix(*method.Name, k) {
+			info.Action = v
+			break
+		}
+	}
+	info.Name = *method.Name
+	if info.Action == "" {
+		// ignore
+		return "", nil
+	}
+	if ServerStreaming(method) {
+		info.Stream = true
+	}
+	if GetStringExtension(method.Options, protogen.E_Mc2Api, "") != "" {
+		info.Mc2Api = true
+	}
+	return inType, &info
+}
+
+// group methods by input type
+func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescriptorProto, actions map[string]string) map[string]*MethodGroup {
+	if actions == nil {
+		actions = map[string]string{
+			"Create":  "create",
+			"Inject":  "create",
+			"Update":  "update",
+			"Delete":  "delete",
+			"Evict":   "delete",
+			"Refresh": "refresh",
+			"Add":     "add",
+			"Remove":  "remove",
+		}
+	}
+	groups := make(map[string]*MethodGroup)
+	for _, method := range service.Method {
+		inType, info := GetMethodInfo(g, method, actions)
+		if info == nil {
+			continue
+		}
+		group, found := groups[inType]
+		if !found {
+			group = &MethodGroup{}
+			group.InType = inType
+			if inType+"Api" != *service.Name {
+				group.Suffix = "_" + inType
+			}
+			groups[inType] = group
+		}
+		group.MethodInfos = append(group.MethodInfos, info)
+		if info.Stream {
+			group.HasStream = true
+		}
+		if info.Action == "update" {
+			group.HasUpdate = true
+		}
+		if info.Mc2Api {
+			group.HasMc2Api = true
+		}
+	}
+	return groups
+}
+
 func GetFirstFile(gen *generator.Generator) string {
 	// Generator passes us all files (some of which are builtin
 	// like google/api/http). To determine the first file to generate
