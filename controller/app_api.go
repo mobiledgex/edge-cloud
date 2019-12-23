@@ -333,6 +333,9 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 		}
 	}
+	if err := in.Validate(edgeproto.MakeFieldMap(in.Fields)); err != nil {
+		return &edgeproto.Result{}, err
+	}
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.App{}
