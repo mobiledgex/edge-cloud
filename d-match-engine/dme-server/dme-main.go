@@ -53,6 +53,7 @@ var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memo
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
 var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
+var shortTimeouts = flag.Bool("shortTimeouts", false, "set timeouts short for simulated cloudlet testing")
 
 // TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -308,6 +309,8 @@ func main() {
 	notifyClient := initNotifyClient(*notifyAddrs, *tlsCertFile)
 	sendMetric := notify.NewMetricSend()
 	notifyClient.RegisterSend(sendMetric)
+	sendAutoProvCounts := notify.NewAutoProvCountsSend()
+	notifyClient.RegisterSend(sendAutoProvCounts)
 
 	notifyClient.Start()
 	defer notifyClient.Stop()
@@ -316,6 +319,14 @@ func main() {
 	stats := NewDmeStats(interval, *statsShards, sendMetric.Update)
 	stats.Start()
 	defer stats.Stop()
+
+	autoProvStats := dmecommon.InitAutoProvStats(cloudcommon.AutoDeployIntervalSec, 0, *statsShards, &myNode.Key, sendAutoProvCounts.Update)
+	if *shortTimeouts {
+		autoProvStats.UpdateSettings(1, 0)
+	}
+	autoProvStats.Start()
+	defer autoProvStats.Stop()
+
 	grpcOpts = append(grpcOpts,
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))

@@ -568,6 +568,28 @@ func RunCloudletApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeprot
 	return nil
 }
 
+func RunCloudletApi_CloudletResMap(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.CloudletResMap, dataMap []map[string]interface{}, mode string) error {
+	var err error
+	cloudletResMapApi := edgeproto.NewCloudletApiClient(conn)
+	for _, obj := range *data {
+		log.DebugLog(log.DebugLevelApi, "API %v for CloudletResMap: %v", mode, obj.Key)
+		switch mode {
+		case "add":
+			_, err = cloudletResMapApi.AddCloudletResMapping(ctx, &obj)
+		case "remove":
+			_, err = cloudletResMapApi.RemoveCloudletResMapping(ctx, &obj)
+		default:
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for CloudletResMap: %v", mode, obj.Key)
+			return nil
+		}
+		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		if err != nil {
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+		}
+	}
+	return nil
+}
+
 func (s *DummyServer) CreateCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_CreateCloudletServer) error {
 	var err error
 	s.CloudletCache.Update(server.Context(), in, 0)

@@ -12,7 +12,7 @@ vaults:
 influxs:
 - name: influx1
   datadir: /var/tmp/edge-cloud-local-influx/influx1
-  httpaddr: "127.0.0.1:8086"
+  httpaddr: "http://127.0.0.1:8086"
   hostname: "127.0.0.1"
 
 etcds:
@@ -92,6 +92,7 @@ dmes:
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"dmuus-cloud-1"}'
   vaultaddr: "http://127.0.0.1:8200"
+  shorttimeouts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
@@ -104,6 +105,7 @@ dmes:
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"dmuus-cloud-2"}'
   vaultaddr: "http://127.0.0.1:8200"
+  shorttimeouts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"

@@ -44,6 +44,7 @@ func TestAppInstApi(t *testing.T) {
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
+	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 	testutil.InternalClusterInstCreate(t, &clusterInstApi, testutil.ClusterInstData)
@@ -232,6 +233,7 @@ func TestAutoClusterInst(t *testing.T) {
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
+	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 
 	// since cluster inst does not exist, it will be auto-created

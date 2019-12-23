@@ -129,8 +129,10 @@ func (s *AppInstApi) UsesClusterInst(in *edgeproto.ClusterInstKey) bool {
 	defer s.cache.Mux.Unlock()
 	for key, val := range s.cache.Objs {
 		if key.ClusterInstKey.Matches(in) && appApi.Get(&val.Key.AppKey, &app) {
-			log.DebugLog(log.DebugLevelApi, "AppInst found for clusterInst", "app", app.Key.Name,
-				"autodelete", app.DelOpt.String())
+			if val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
+				continue
+			}
+			log.DebugLog(log.DebugLevelApi, "AppInst found for clusterInst", "app", app.Key.Name, "autodelete", app.DelOpt.String())
 			if app.DelOpt == edgeproto.DeleteType_NO_AUTO_DELETE {
 				return true
 			}
@@ -147,7 +149,7 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 	s.cache.Mux.Lock()
 	for k, val := range s.cache.Objs {
 		if k.ClusterInstKey.Matches(key) && appApi.Get(&val.Key.AppKey, &app) {
-			if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
+			if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE || val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
 				apps[k] = val
 			}
 		}
