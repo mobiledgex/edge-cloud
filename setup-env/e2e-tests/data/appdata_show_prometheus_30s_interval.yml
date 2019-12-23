@@ -280,7 +280,7 @@ apps:
     config: |
       nfs:
         path: /share
-        server: 10.101.0.10
+        server: [[ .Deployment.ClusterIp ]]
       storageClass:
         name: standard
         defaultClass: true

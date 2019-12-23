@@ -90,7 +90,7 @@ apps:
       - name: SOME_ENV1
         value: value1
       - name: CrmValue
-        value: {{ .Deployment.ClusterIp }}
+        value: [[ .Deployment.ClusterIp ]]
       - name: SOME_ENV2
         valueFrom:
           configMapKeyRef:

@@ -142,7 +142,7 @@ var NFSAutoProvisionApp = edgeproto.App{
 // TODO: change this IP once we integrate with the Helm Customization feature
 var NFSAutoProvisionAppTemplate = `nfs:
   path: /share
-  server: 10.101.0.10
+  server: [[ .Deployment.ClusterIp ]]
 storageClass:
   name: standard
   defaultClass: true
