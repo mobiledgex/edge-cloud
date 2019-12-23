@@ -23,6 +23,7 @@ import (
 	"time"
 
 	ct "github.com/daviddengcn/go-colortext"
+	influxclient "github.com/influxdata/influxdb/client/v2"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/influxsup"
 	mextls "github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
@@ -241,6 +242,9 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 	if p.CloudletKey != "" {
 		args = append(args, "--cloudletKey")
 		args = append(args, p.CloudletKey)
+	}
+	if p.ShortTimeouts {
+		args = append(args, "-shortTimeouts")
 	}
 	if p.TLS.ServerCert != "" {
 		args = append(args, "--tls")
@@ -503,6 +507,10 @@ func (p *Influx) LookupArgs() string { return "" }
 
 func (p *Influx) ResetData() error {
 	return os.RemoveAll(p.DataDir)
+}
+
+func (p *Influx) GetClient() (influxclient.Client, error) {
+	return influxsup.GetClient(p.HttpAddr, p.Auth.User, p.Auth.Pass)
 }
 
 // ClusterSvc process

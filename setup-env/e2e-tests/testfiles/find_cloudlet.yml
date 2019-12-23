@@ -8,7 +8,7 @@ tests:
 
 - name: Add and show provisioning without appinst
   apifile: "{{datadir}}/appdata_no_appinst.yml"
-  actions: [ctrlapi-create,ctrlapi-show]
+  actions: [ctrlapi-create,ctrlapi-add,ctrlapi-show]
   compareyaml:
     yaml1: "{{datadir}}/appdata_no_appinst_show.yml"
     yaml2: "{{outputdir}}/show-commands.yml"
@@ -112,7 +112,7 @@ tests:
 
 - name: delete rest of provisioning
   actions: [ctrlapi-delete]
-  apifile: "{{datadir}}/appdata.yml"
+  apifile: "{{datadir}}/appdata_no_appinst.yml"
 
 - name: verify provisioning is empty
   actions: [ctrlapi-show]

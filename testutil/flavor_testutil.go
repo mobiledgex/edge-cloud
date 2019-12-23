@@ -322,6 +322,10 @@ func RunFlavorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.
 		case "update":
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			_, err = flavorApi.UpdateFlavor(ctx, &obj)
+		case "add":
+			_, err = flavorApi.AddFlavorRes(ctx, &obj)
+		case "remove":
+			_, err = flavorApi.RemoveFlavorRes(ctx, &obj)
 		default:
 			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Flavor: %v", mode, obj.Key)
 			return nil
