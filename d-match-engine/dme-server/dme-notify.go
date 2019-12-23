@@ -67,8 +67,10 @@ var nodeCache edgeproto.NodeCache
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
 	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
+	notifyClient.RegisterRecv(notify.NewAutoProvPolicyRecv(&dmecommon.AutoProvPolicyHandler{}))
 	notifyClient.RegisterRecv(notify.NewAppRecv(&AppHandler{}))
 	notifyClient.RegisterRecv(notify.NewAppInstRecv(&AppInstHandler{}))
+	notifyClient.RegisterRecv(notify.NewClusterInstRecv(&dmecommon.DmeAppTbl.FreeReservableClusterInsts))
 	notifyClient.RegisterSendNodeCache(&nodeCache)
 	notifyClient.RegisterRecv(notify.NewCloudletInfoRecv(&CloudletInfoHandler{}))
 	log.InfoLog("notify client to", "addrs", addrs)
