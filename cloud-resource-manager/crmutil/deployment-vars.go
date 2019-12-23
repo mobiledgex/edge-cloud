@@ -2,7 +2,7 @@ package crmutil
 
 import (
 	"bytes"
-	"html/template"
+	"text/template"
 )
 
 // Context keyword for getting the DeploymentVars
