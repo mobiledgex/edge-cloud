@@ -1,2 +1,2 @@
 database: metrics
-cmd: select * from "auto-prov-counts"
+cmd: select time,app,cloudlet,count,dev,oper,ver from "auto-prov-counts"
