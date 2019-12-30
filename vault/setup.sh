@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # exit immediately on failure
-set -e
+set -e -x
 
 # Set up the profiles for the edge-cloud approles.
 # This assumes a global Vault for all regions, so paths in the Vault

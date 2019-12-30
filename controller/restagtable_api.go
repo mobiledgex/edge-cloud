@@ -250,12 +250,19 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 					tbl, err := s.GetCloudletResourceMap(tblkey)
 					if err != nil || tbl == nil {
 						// gpu requested, name didn't match and
-						// no gpu table, osFlavor fails
+						// no gpu table, this osFlavor fails
 						return "", "", false, err
 					}
 					for _, tag := range tbl.Tags {
-						if !strings.Contains(flavor.Properties, tag) {
-							return "", "", false, err
+						// PropMap impl:
+						for k, v := range flavor.PropMap {
+							// continue on first match
+							// effectively the same as orig str impl. Next, we'll offer
+							// search by property name functionality where tag values become
+							// more interesting, and match on either key or value
+							if strings.Contains(tag, k) || strings.Contains(tag, v) {
+								continue
+							}
 						}
 					}
 				}
