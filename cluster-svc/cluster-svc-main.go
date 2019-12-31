@@ -37,8 +37,8 @@ var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc a
 var upgradeInstances = flag.Bool("updateAll", false, "Upgrade all Instances of Prometheus operator")
 var pluginRequired = flag.Bool("pluginRequired", false, "Require plugin")
 
-var exporterT *template.Template
 var prometheusT *template.Template
+var nfsT *template.Template
 
 var clusterSvcPlugin pf.ClusterSvc
 
@@ -114,6 +114,40 @@ type promCustomizations struct {
 	Interval string
 }
 
+// nothing yet to customize
+type nfsCustomizations struct {
+}
+
+var NFSAutoProvisionAppName = cloudcommon.NFSAutoProvisionAppName
+var NFSAutoProvAppVers = "1.0"
+
+var NFSAutoProvAppKey = edgeproto.AppKey{
+	Name:    NFSAutoProvisionAppName,
+	Version: NFSAutoProvAppVers,
+	DeveloperKey: edgeproto.DeveloperKey{
+		Name: cloudcommon.DeveloperMobiledgeX,
+	},
+}
+
+var NFSAutoProvisionApp = edgeproto.App{
+	Key:           NFSAutoProvAppKey,
+	ImagePath:     "stable/nfs-client-provisioner",
+	Deployment:    cloudcommon.AppDeploymentTypeHelm,
+	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
+	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
+	InternalPorts: true,
+	Annotations:   "version=1.2.8",
+}
+
+// TODO: change this IP once we integrate with the Helm Customization feature
+var NFSAutoProvisionAppTemplate = `nfs:
+  path: /share
+  server: [[ .Deployment.ClusterIp ]]
+storageClass:
+  name: standard
+  defaultClass: true
+`
+
 // Process updates from notify framework about cluster instances
 // Create app/appInst when clusterInst transitions to a 'ready' state
 func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {
@@ -129,6 +163,10 @@ func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgepro
 		// Create Prometheus on the cluster after creation
 		if err = createMEXPromInst(ctx, dialOpts, new); err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Prometheus-operator inst create failed", "cluster",
+				new.Key.ClusterKey.Name, "error", err.Error())
+		}
+		if err = createNFSAutoProvAppInstIfRequired(ctx, dialOpts, new); err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "NFS Auto provision inst create failed", "cluster",
 				new.Key.ClusterKey.Name, "error", err.Error())
 		}
 	}
@@ -158,12 +196,13 @@ func autoScalePolicyCb(ctx context.Context, old *edgeproto.AutoScalePolicy, new 
 
 	for _, inst := range insts {
 		err := createMEXPromInst(ctx, dialOpts, &inst)
-		log.SpanLog(ctx, log.DebugLevelApi, "Updated policy", "ClusterInst", inst.Key, "AutoScalePolicy", new.Key.Name, "err", err)
+		log.SpanLog(ctx, log.DebugLevelApi, "Updated policy for Prometheus", "ClusterInst", inst.Key, "AutoScalePolicy", new.Key.Name, "err", err)
 	}
 }
 
 func init() {
 	prometheusT = template.Must(template.New("prometheus").Parse(MEXPrometheusAppHelmTemplate))
+	nfsT = template.Must(template.New("nfsauthprov").Parse(NFSAutoProvisionAppTemplate))
 }
 
 func initNotifyClient(ctx context.Context, addrs string, tlsCertFile string) *notify.Client {
@@ -293,7 +332,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 			updateExistingAppInst(ctx, apiClient, &appInst)
 			return nil
 		}
-		if strings.Contains(err.Error(), edgeproto.ErrEdgeApiAppNotFound.Error()) {
+		if strings.Contains(err.Error(), "not found") {
 			log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist, create it first", "app", app.String())
 			// Create the app
 			if err = createAppCommon(ctx, dialOpts, app); err == nil {
@@ -317,6 +356,13 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 
 func createMEXPromInst(ctx context.Context, dialOpts grpc.DialOption, inst *edgeproto.ClusterInst) error {
 	return createAppInstCommon(ctx, dialOpts, inst, &MEXPrometheusApp)
+}
+
+func createNFSAutoProvAppInstIfRequired(ctx context.Context, dialOpts grpc.DialOption, inst *edgeproto.ClusterInst) error {
+	if inst.SharedVolumeSize != 0 {
+		return createAppInstCommon(ctx, dialOpts, inst, &NFSAutoProvisionApp)
+	}
+	return nil
 }
 
 func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
@@ -344,6 +390,18 @@ func fillAppConfigs(app *edgeproto.App, interval time.Duration) error {
 		}
 		app.Configs = []*edgeproto.ConfigFile{&config}
 		app.AccessPorts = *externalPorts
+	case NFSAutoProvisionAppName:
+		ex := nfsCustomizations{}
+		buf := bytes.Buffer{}
+		err := nfsT.Execute(&buf, &ex)
+		if err != nil {
+			return err
+		}
+		config := edgeproto.ConfigFile{
+			Kind:   k8smgmt.AppConfigHelmYaml,
+			Config: buf.String(),
+		}
+		app.Configs = []*edgeproto.ConfigFile{&config}
 	default:
 		return fmt.Errorf("Unrecognized app %s", app.Key.Name)
 	}
@@ -380,9 +438,9 @@ func createAppCommon(ctx context.Context, dialOpts grpc.DialOption, app *edgepro
 	return nil
 }
 
-func getPrometheusAppFromController(ctx context.Context, apiClient edgeproto.AppApiClient) (*edgeproto.App, error) {
+func getAppFromController(ctx context.Context, appkey *edgeproto.AppKey, apiClient edgeproto.AppApiClient) (*edgeproto.App, error) {
 	stream, err := apiClient.ShowApp(ctx, &edgeproto.App{
-		Key: MEXPrometheusAppKey,
+		Key: *appkey,
 	})
 	if err != nil {
 		return nil, err
@@ -391,8 +449,16 @@ func getPrometheusAppFromController(ctx context.Context, apiClient edgeproto.App
 	return stream.Recv()
 }
 
-func getPrometheusAppFromClusterSvc() (*edgeproto.App, error) {
-	app := MEXPrometheusApp
+func getAppFromClusterSvc(appkey *edgeproto.AppKey) (*edgeproto.App, error) {
+	var app edgeproto.App
+	switch appkey.Name {
+	case MEXPrometheusAppName:
+		app = MEXPrometheusApp
+	case NFSAutoProvisionAppName:
+		app = NFSAutoProvisionApp
+	default:
+		return nil, fmt.Errorf("Unrecognized app %s", app.Key.Name)
+	}
 	// add app customizations
 	if err := fillAppConfigs(&app, *scrapeInterval); err != nil {
 		return nil, err
@@ -400,7 +466,7 @@ func getPrometheusAppFromClusterSvc() (*edgeproto.App, error) {
 	return &app, nil
 }
 
-func setPrometheusAppDiffFields(src *edgeproto.App, dst *edgeproto.App) {
+func setAppDiffFields(src *edgeproto.App, dst *edgeproto.App) {
 	fields := make(map[string]struct{})
 	src.DiffFields(dst, fields)
 
@@ -416,8 +482,8 @@ func setPrometheusAppDiffFields(src *edgeproto.App, dst *edgeproto.App) {
 	}
 }
 
-func updatePrometheusInsts() {
-	span := log.StartSpan(log.DebugLevelApi, "updatePrometheusInsts")
+func updateAppInsts(appkey *edgeproto.AppKey) {
+	span := log.StartSpan(log.DebugLevelApi, "updateAppInsts")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
@@ -427,12 +493,12 @@ func updatePrometheusInsts() {
 	}
 	defer conn.Close()
 
-	// Update all appInstances of the Prometheus App
+	// Update all appInstances of the App
 	if *upgradeInstances {
 		apiClient := edgeproto.NewAppInstApiClient(conn)
 		appInst := edgeproto.AppInst{
 			Key: edgeproto.AppInstKey{
-				AppKey: MEXPrometheusAppKey,
+				AppKey: *appkey,
 			},
 			UpdateMultiple: true,
 		}
@@ -486,7 +552,7 @@ func updateExistingAppInst(ctx context.Context, apiClient edgeproto.AppInstApiCl
 }
 
 // Check if we are running the correct revision of prometheus app, and if not, upgrade it
-func validatePrometheusRevision(ctx context.Context) error {
+func validateAppRevision(ctx context.Context, appkey *edgeproto.AppKey) error {
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
@@ -494,24 +560,24 @@ func validatePrometheusRevision(ctx context.Context) error {
 	defer conn.Close()
 	apiClient := edgeproto.NewAppApiClient(conn)
 
-	// Get existing prometheus App
-	currentApp, err := getPrometheusAppFromController(ctx, apiClient)
+	// Get existing App
+	currentApp, err := getAppFromController(ctx, appkey, apiClient)
 	if err == io.EOF {
 		// No app exists yet - just create it when we need to
-		log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist", "app", MEXPrometheusAppKey)
+		log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist", "app", appkey)
 		return nil
 	}
 	if err != nil {
 		return err
 	}
 
-	newApp, err := getPrometheusAppFromClusterSvc()
+	newApp, err := getAppFromClusterSvc(appkey)
 	if err != nil {
 		return err
 	}
 
 	// Set the fields we want to update
-	setPrometheusAppDiffFields(currentApp, newApp)
+	setAppDiffFields(currentApp, newApp)
 	if len(newApp.Fields) > 0 {
 		_, err := apiClient.UpdateApp(ctx, newApp)
 		if err != nil {
@@ -546,11 +612,18 @@ func main() {
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
 
-	if err = validatePrometheusRevision(ctx); err != nil {
+	if err = validateAppRevision(ctx, &MEXPrometheusAppKey); err != nil {
 		log.FatalLog("Validate Prometheus version", "error", err)
 	}
+
+	if err = validateAppRevision(ctx, &NFSAutoProvAppKey); err != nil {
+		log.FatalLog("Validate NFSAutoProvision version", "error", err)
+	}
 	// Update prometheus instances in a separate go routine
-	go updatePrometheusInsts()
+	go updateAppInsts(&MEXPrometheusAppKey)
+
+	// update nfs auto prov app instances
+	go updateAppInsts(&NFSAutoProvAppKey)
 
 	notifyClient := initNotifyClient(ctx, *notifyAddrs, *tlsCertFile)
 	notifyClient.RegisterRecvClusterInstCache(&ClusterInstCache)

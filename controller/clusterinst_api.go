@@ -184,6 +184,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if in.NumMasters != 0 || in.NumNodes != 0 {
 			return fmt.Errorf("NumMasters and NumNodes not applicable for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
 		}
+		if in.SharedVolumeSize != 0 {
+			return fmt.Errorf("SharedVolumeSize not supported for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
+
+		}
 		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			// assume dedicated for docker
 			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
@@ -222,15 +226,20 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
+		isSharedOnly := cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX
+		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
+
 		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-			if in.Deployment == cloudcommon.AppDeploymentTypeDocker && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_DIND {
-				platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
+			if in.Deployment == cloudcommon.AppDeploymentTypeDocker && !isSharedOnly {
 				return fmt.Errorf("IpAccess must be dedicated for deployment type %s platform type %s", cloudcommon.AppDeploymentTypeDocker, platName)
 			}
 		} else {
-			if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND {
-				return fmt.Errorf("IpAccess must be shared for DIND")
+			if isSharedOnly {
+				return fmt.Errorf("IpAccess must be shared for %s", platName)
 			}
+		}
+		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {
+			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
 			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {

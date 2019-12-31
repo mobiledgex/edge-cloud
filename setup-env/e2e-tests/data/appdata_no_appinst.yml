@@ -37,7 +37,6 @@ clusterinsts:
   ipaccess: IpAccessDedicated
   nummasters: 1
   numnodes: 1
-
 - key:
     clusterkey:
       name: SmallCluster
@@ -52,6 +51,36 @@ clusterinsts:
   ipaccess: IpAccessShared
   nummasters: 1
   numnodes: 1
+- key:
+    clusterkey:
+      name: ReservableCluster
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-1
+    developer: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: LivenessStatic
+  ipaccess: IpAccessDedicated
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+- key:
+    clusterkey:
+      name: ReservableCluster2
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-2
+    developer: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: LivenessStatic
+  ipaccess: IpAccessDedicated
+  nummasters: 1
+  numnodes: 1
+  reservable: true
 
 operators:
 - key:
@@ -139,6 +168,37 @@ cloudlets:
   flavor:
     name: x1.small
 
+autoprovpolicies:
+- key:
+    name: autoprov1
+    developer: AcmeAppCo
+  deployclientcount: 1
+  deployintervalcount: 1
+  cloudlets:
+  - key:
+      name: tmus-cloud-1
+      operatorkey:
+        name: tmus
+- key:
+    name: autoprov2
+    developer: AcmeAppCo
+  deployclientcount: 10
+  deployintervalcount: 4
+  cloudlets:
+  - key:
+      name: tmus-cloud-1
+      operatorkey:
+        name: tmus
+
+autoprovpolicycloudlets:
+- key:
+    name: autoprov1
+    developer: AcmeAppCo
+  cloudletkey:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-2
+
 apps:
 - key:
     developerkey:
@@ -155,7 +215,34 @@ apps:
   accessports: "tcp:80,http:443,udp:10002"
   androidpackagename: com.acme.someapplication1
   authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
-
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: autoprovapp
+    version: "1.0"
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagetype: ImageTypeDocker
+  deployment: kubernetes
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+  accessports: "tcp:81"
+  autoprovpolicy: autoprov1
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: autoprovapp2
+    version: "1.0"
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagetype: ImageTypeDocker
+  deployment: kubernetes
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+  accessports: "tcp:82"
+  autoprovpolicy: autoprov2
 - key:
     developerkey:
       name: Samsung

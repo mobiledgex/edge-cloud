@@ -146,8 +146,8 @@ enum PlatformType {
   PLATFORM_TYPE_AZURE = 3;
   // GCP Cloudlet
   PLATFORM_TYPE_GCP = 4;
-  // MEXDIND Cloudlet
-  PLATFORM_TYPE_MEXDIND = 5;
+  // Edgebox Cloudlet
+  PLATFORM_TYPE_EDGEBOX = 5;
   // Fake Infra Cloudlet
   PLATFORM_TYPE_FAKEINFRA = 6;
 }

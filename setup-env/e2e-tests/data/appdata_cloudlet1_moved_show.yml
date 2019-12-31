@@ -27,6 +27,7 @@ clusterinsts:
     developer: AcmeAppCo
   flavor:
     name: x1.small
+  sharedvolumesize: 100
   liveness: LivenessStatic
   ipaccess: IpAccessShared
   deployment: kubernetes
@@ -269,6 +270,27 @@ apps:
         enabled: false
 - key:
     developerkey:
+      name: MobiledgeX
+    name: NFSAutoProvision
+    version: "1.0"
+  imagepath: stable/nfs-client-provisioner
+  imagetype: ImageTypeHelm
+  defaultflavor:
+    name: x1.medium
+  annotations: version=1.2.8
+  deployment: helm
+  configs:
+  - kind: hemlCustomizationYaml
+    config: |
+      nfs:
+        path: /share
+        server: [[ .Deployment.ClusterIp ]]
+      storageClass:
+        name: standard
+        defaultClass: true
+  internalports: true
+- key:
+    developerkey:
       name: AcmeAppCo1
     name: vmapp1
     version: "1.0"
@@ -428,6 +450,26 @@ appinstances:
   - proto: LProtoTcp
     internalport: 9090
     publicport: 9090
+  flavor:
+    name: x1.medium
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX
+      name: NFSAutoProvision
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 40
+    longitude: -99
+  liveness: LivenessStatic
   flavor:
     name: x1.medium
 - key:

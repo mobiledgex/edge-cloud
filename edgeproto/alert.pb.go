@@ -8,6 +8,7 @@
 		alert.proto
 		app.proto
 		app_inst.proto
+		autoprovpolicy.proto
 		autoscalepolicy.proto
 		cloudlet.proto
 		cloudletpool.proto
@@ -37,6 +38,11 @@
 		AppInstRuntime
 		AppInstInfo
 		AppInstMetrics
+		AutoProvPolicy
+		AutoProvCloudlet
+		AutoProvCount
+		AutoProvCounts
+		AutoProvPolicyCloudlet
 		PolicyKey
 		AutoScalePolicy
 		CloudletKey
@@ -963,6 +969,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(CloudletState(0)):
 		if en, ok := CloudletState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(HealthCheck(0)):
+		if en, ok := HealthCheck_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(NodeType(0)):

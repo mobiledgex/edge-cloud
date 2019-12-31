@@ -82,11 +82,12 @@ func TestValidLDAPName(t *testing.T) {
 	require.Equal(t, "foo, Inc.", UnescapeLDAPName(split[1]))
 }
 
-func checkValidLDAPName(t *testing.T, name string, want bool) {
-	got := ValidLDAPName(name)
-	if got != want {
-		t.Errorf("checking name %s, wanted %t but got %t",
-			name, want, got)
+func checkValidLDAPName(t *testing.T, name string, valid bool) {
+	err := ValidLDAPName(name)
+	if valid {
+		require.Nil(t, err, "name %s should have been valid")
+	} else {
+		require.NotNil(t, err, "name %s should have been invalid")
 	}
 }
 

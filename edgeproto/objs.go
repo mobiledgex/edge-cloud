@@ -14,29 +14,28 @@ import (
 )
 
 //TODO - need to move out Errors into a separate package
-var ErrEdgeApiFlavorNotFound = errors.New("Specified flavor not found")
-var ErrEdgeApiAppNotFound = errors.New("Specified app not found")
-var ErrEdgeApiAppInstNotFound = errors.New("Specified app instance not found")
 
 var AutoScaleMaxNodes uint32 = 10
 
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
-	Operators           []Operator           `yaml:"operators"`
-	Cloudlets           []Cloudlet           `yaml:"cloudlets"`
-	Flavors             []Flavor             `yaml:"flavors"`
-	ClusterInsts        []ClusterInst        `yaml:"clusterinsts"`
-	Developers          []Developer          `yaml:"developers"`
-	Applications        []App                `yaml:"apps"`
-	AppInstances        []AppInst            `yaml:"appinstances"`
-	CloudletInfos       []CloudletInfo       `yaml:"cloudletinfos"`
-	AppInstInfos        []AppInstInfo        `yaml:"appinstinfos"`
-	ClusterInstInfos    []ClusterInstInfo    `yaml:"clusterinstinfos"`
-	Nodes               []Node               `yaml:"nodes"`
-	CloudletPools       []CloudletPool       `yaml:"cloudletpools"`
-	CloudletPoolMembers []CloudletPoolMember `yaml:"cloudletpoolmembers"`
-	AutoScalePolicies   []AutoScalePolicy    `yaml:"autoscalepolicies"`
-	ResTagTables        []ResTagTable        `ymal:"restagtables"`
+	Operators               []Operator               `yaml:"operators"`
+	Cloudlets               []Cloudlet               `yaml:"cloudlets"`
+	Flavors                 []Flavor                 `yaml:"flavors"`
+	ClusterInsts            []ClusterInst            `yaml:"clusterinsts"`
+	Developers              []Developer              `yaml:"developers"`
+	Applications            []App                    `yaml:"apps"`
+	AppInstances            []AppInst                `yaml:"appinstances"`
+	CloudletInfos           []CloudletInfo           `yaml:"cloudletinfos"`
+	AppInstInfos            []AppInstInfo            `yaml:"appinstinfos"`
+	ClusterInstInfos        []ClusterInstInfo        `yaml:"clusterinstinfos"`
+	Nodes                   []Node                   `yaml:"nodes"`
+	CloudletPools           []CloudletPool           `yaml:"cloudletpools"`
+	CloudletPoolMembers     []CloudletPoolMember     `yaml:"cloudletpoolmembers"`
+	AutoScalePolicies       []AutoScalePolicy        `yaml:"autoscalepolicies"`
+	AutoProvPolicies        []AutoProvPolicy         `yaml:"autoprovpolicies"`
+	AutoProvPolicyCloudlets []AutoProvPolicyCloudlet `yaml:"autoprovpolicycloudlets"`
+	ResTagTables            []ResTagTable            `ymal:"restagtables"`
 }
 
 type ApplicationDataMap map[string][]map[string]interface{}
@@ -85,6 +84,15 @@ func (a *ApplicationData) Sort() {
 	sort.Slice(a.AutoScalePolicies[:], func(i, j int) bool {
 		return a.AutoScalePolicies[i].Key.GetKeyString() < a.AutoScalePolicies[j].Key.GetKeyString()
 	})
+	sort.Slice(a.AutoProvPolicies[:], func(i, j int) bool {
+		return a.AutoProvPolicies[i].Key.GetKeyString() < a.AutoProvPolicies[j].Key.GetKeyString()
+	})
+	sort.Slice(a.AutoProvPolicyCloudlets[:], func(i, j int) bool {
+		if a.AutoProvPolicyCloudlets[i].Key.GetKeyString() == a.AutoProvPolicyCloudlets[j].Key.GetKeyString() {
+			return a.AutoProvPolicyCloudlets[i].CloudletKey.GetKeyString() < a.AutoProvPolicyCloudlets[j].CloudletKey.GetKeyString()
+		}
+		return a.AutoProvPolicyCloudlets[i].Key.GetKeyString() < a.AutoProvPolicyCloudlets[j].Key.GetKeyString()
+	})
 	sort.Slice(a.ResTagTables[:], func(i, j int) bool {
 		return a.ResTagTables[i].Key.GetKeyString() < a.ResTagTables[j].Key.GetKeyString()
 	})
@@ -97,7 +105,7 @@ func (key *DeveloperKey) ValidateKey() error {
 		errstring := err.Error()
 		// lowercase the first letter of the error message
 		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
-		return fmt.Errorf("Developer " + errstring)
+		return fmt.Errorf("Invalid developer name, " + errstring)
 	}
 	return nil
 }
@@ -352,10 +360,10 @@ func (key *PolicyKey) ValidateKey() error {
 		errstring := err.Error()
 		// lowercase the first letter of the error message
 		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
-		return fmt.Errorf("Developer " + errstring)
+		return fmt.Errorf("Invalid developer name, " + errstring)
 	}
 	if key.Name == "" {
-		return errors.New("Invalid policy name")
+		return errors.New("Policy name cannot be empty")
 	}
 	return nil
 }
@@ -387,6 +395,21 @@ func (s *AutoScalePolicy) Validate(fields map[string]struct{}) error {
 	if s.ScaleUpCpuThresh <= s.ScaleDownCpuThresh {
 		return fmt.Errorf("Scale down cpu threshold must be less than scale up cpu threshold")
 	}
+	return nil
+}
+
+func (s *AutoProvPolicy) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if s.DeployClientCount <= 0 {
+		return errors.New("Deploy client count must be greater than 0")
+	}
+	/*
+		if s.AutoDeployIntervalCount <= 0 {
+			return errors.New("Auto deploy interval count must be greater than 0")
+		}
+	*/
 	return nil
 }
 

@@ -62,7 +62,8 @@ service CloudletPoolApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
-  }
+    option (protogen.mc2_custom_authz) = true;
+ }
   // Show CloudletPools
   rpc ShowCloudletPool(CloudletPool) returns (stream CloudletPool) {
     option (google.api.http) = {

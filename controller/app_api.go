@@ -61,6 +61,17 @@ func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	return false
 }
 
+func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, app := range s.cache.Objs {
+		if app.Key.DeveloperKey.Name == key.Developer && app.AutoProvPolicy == key.Name {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *AppApi) AutoDeleteAppsForDeveloper(ctx context.Context, key *edgeproto.DeveloperKey) {
 	apps := make(map[edgeproto.AppKey]*edgeproto.App)
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting Apps ", "developer", key)
@@ -273,10 +284,18 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
-			return edgeproto.ErrEdgeApiFlavorNotFound
+			return in.DefaultFlavor.NotFoundError()
 		}
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
+		}
+		if in.AutoProvPolicy != "" {
+			apKey := edgeproto.PolicyKey{}
+			apKey.Developer = in.Key.DeveloperKey.Name
+			apKey.Name = in.AutoProvPolicy
+			if !autoProvPolicyApi.store.STMGet(stm, &apKey, nil) {
+				return apKey.NotFoundError()
+			}
 		}
 		s.store.STMPut(stm, in)
 		return nil
@@ -313,6 +332,9 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				return &edgeproto.Result{}, fmt.Errorf("Field cannot be modified when AppInsts exist")
 			}
 		}
+	}
+	if err := in.Validate(edgeproto.MakeFieldMap(in.Fields)); err != nil {
+		return &edgeproto.Result{}, err
 	}
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -372,7 +394,10 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// delete dynamic instances
 		for key, _ := range dynInsts {
 			appInst := edgeproto.AppInst{Key: key}
-			derr := appInstApi.DeleteAppInst(&appInst, nil)
+			stream := streamoutAppInst{}
+			stream.ctx = ctx
+			stream.debugLvl = log.DebugLevelApi
+			derr := appInstApi.DeleteAppInst(&appInst, &stream)
 			if derr != nil {
 				log.DebugLog(log.DebugLevelApi,
 					"Failed to delete dynamic AppInst",

@@ -4,16 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/url"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/influxdata/influxdb/client/v2"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/influxsup"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/tls"
 )
 
 // Each write to the Influx DB is an HTTP Post method.
@@ -55,34 +54,14 @@ func NewInfluxQ(DBName, username, password string) *InfluxQ {
 	return &q
 }
 
-func (q *InfluxQ) Start(addr, tlsCert string) error {
-	var err error
-	var conf = client.HTTPConfig{
-		Addr:     addr,
-		Username: q.user,
-		Password: q.password,
-	}
-	addrUrl, err := url.Parse(addr)
+func (q *InfluxQ) Start(addr string) error {
+	cl, err := influxsup.GetClient(addr, q.user, q.password)
 	if err != nil {
 		return err
 	}
-
-	if addrUrl.Scheme == "https" {
-		creds, err := tls.GetTLSClientConfig(addrUrl.Hostname(), tlsCert, "", false)
-		// Should not try to verify
-		if err != nil || creds == nil {
-			conf.InsecureSkipVerify = true
-		} else {
-			conf.TLSConfig = creds
-		}
-	}
-
 	q.mux.Lock()
 	defer q.mux.Unlock()
-	q.client, err = client.NewHTTPClient(conf)
-	if err != nil {
-		return err
-	}
+	q.client = cl
 	q.done = false
 	q.wg.Add(1)
 	go q.RunPush()
@@ -185,7 +164,7 @@ func (q *InfluxQ) Recv(ctx context.Context, metric *edgeproto.Metric) {
 	q.AddMetric(metric)
 }
 
-func (q *InfluxQ) AddMetric(metric *edgeproto.Metric) {
+func (q *InfluxQ) AddMetric(metrics ...*edgeproto.Metric) {
 	q.mux.Lock()
 	defer q.mux.Unlock()
 	if len(q.data) > InfluxQPushCountMax {
@@ -194,7 +173,9 @@ func (q *InfluxQ) AddMetric(metric *edgeproto.Metric) {
 		q.Qfull++
 		return
 	}
-	q.data = append(q.data, metric)
+	for ii, _ := range metrics {
+		q.data = append(q.data, metrics[ii])
+	}
 	if len(q.data) > InfluxQPushCountTrigger {
 		q.DoPush()
 	}

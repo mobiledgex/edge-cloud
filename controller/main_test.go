@@ -68,12 +68,14 @@ func TestController(t *testing.T) {
 	clusterInstClient := edgeproto.NewClusterInstApiClient(conn)
 	cloudletInfoClient := edgeproto.NewCloudletInfoApiClient(conn)
 	autoScalePolicyClient := edgeproto.NewAutoScalePolicyApiClient(conn)
+	autoProvPolicyClient := edgeproto.NewAutoProvPolicyApiClient(conn)
 
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
 
 	testutil.ClientDeveloperTest(t, "cud", devClient, testutil.DevData)
 	testutil.ClientFlavorTest(t, "cud", flavorClient, testutil.FlavorData)
+	testutil.ClientAutoProvPolicyTest(t, "cud", autoProvPolicyClient, testutil.AutoProvPolicyData)
 	testutil.ClientAutoScalePolicyTest(t, "cud", autoScalePolicyClient, testutil.AutoScalePolicyData)
 	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
 	testutil.ClientOperatorTest(t, "cud", operClient, testutil.OperatorData)

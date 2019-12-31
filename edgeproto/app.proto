@@ -100,6 +100,10 @@ message ConfigFile {
   string official_fqdn = 25;
   // MD5Sum of the VM-based app image
   string md5sum = 26;
+  // shared volume size when creating auto cluster
+  uint64 default_shared_volume_size = 27;
+  // Auto provisioning policy name
+  string auto_prov_policy = 28;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

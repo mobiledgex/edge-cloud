@@ -91,6 +91,8 @@ func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool 
 		"cloudlets: ShowCloudlet",
 		"apps: ShowApp",
 		"appinstances: ShowAppInst",
+		"autoscalepolicies: ShowAutoScalePolicy",
+		"autoprovpolicies: ShowAutoProvPolicy",
 	}
 	// Some objects are generated asynchronously in response to
 	// other objects being created. For example, Prometheus metric
@@ -169,6 +171,8 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		var err error
 		switch api {
 		case "delete":
+			fallthrough
+		case "remove":
 			//run in reverse order to delete child keys
 			err = testutil.RunAppInstApi(ctrlapi, ctx, &appData.AppInstances, appDataMap["appinstances"], api)
 			if err != nil {
@@ -183,6 +187,21 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = testutil.RunAppApi(ctrlapi, ctx, &appData.Applications, appDataMap["apps"], api)
 			if err != nil {
 				log.Printf("Error in app API %v\n", err)
+				rc = false
+			}
+			err = testutil.RunAutoScalePolicyApi(ctrlapi, ctx, &appData.AutoScalePolicies, appDataMap["autoscalepolicies"], api)
+			if err != nil {
+				log.Printf("Error in auto scale policy API %v\n", err)
+				rc = false
+			}
+			err = testutil.RunAutoProvPolicyApi_AutoProvPolicyCloudlet(ctrlapi, ctx, &appData.AutoProvPolicyCloudlets, appDataMap["autoprovpolicycloudlets"], api)
+			if err != nil {
+				log.Printf("Error in auto prov policy cloudlet API %v\n", err)
+				rc = false
+			}
+			err = testutil.RunAutoProvPolicyApi(ctrlapi, ctx, &appData.AutoProvPolicies, appDataMap["autoprovpolicies"], api)
+			if err != nil {
+				log.Printf("Error in auto prov policy API %v\n", err)
 				rc = false
 			}
 			err = testutil.RunCloudletInfoApi(ctrlapi, ctx, &appData.CloudletInfos, appDataMap["cloudletinfos"], api)
@@ -212,6 +231,8 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			}
 		case "create":
 			fallthrough
+		case "add":
+			fallthrough
 		case "refresh":
 			fallthrough
 		case "update":
@@ -238,6 +259,21 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = testutil.RunCloudletInfoApi(ctrlapi, ctx, &appData.CloudletInfos, appDataMap["cloudletinfos"], api)
 			if err != nil {
 				log.Printf("Error in cloudletInfo API %v\n", err)
+				rc = false
+			}
+			err = testutil.RunAutoProvPolicyApi(ctrlapi, ctx, &appData.AutoProvPolicies, appDataMap["autoprovpolicies"], api)
+			if err != nil {
+				log.Printf("Error in auto prov policy API %v\n", err)
+				rc = false
+			}
+			err = testutil.RunAutoProvPolicyApi_AutoProvPolicyCloudlet(ctrlapi, ctx, &appData.AutoProvPolicyCloudlets, appDataMap["autoprovpolicycloudlets"], api)
+			if err != nil {
+				log.Printf("Error in auto prov policy cloudlet API %v\n", err)
+				rc = false
+			}
+			err = testutil.RunAutoScalePolicyApi(ctrlapi, ctx, &appData.AutoScalePolicies, appDataMap["autoscalepolicies"], api)
+			if err != nil {
+				log.Printf("Error in auto scale policy API %v\n", err)
 				rc = false
 			}
 			err = testutil.RunAppApi(ctrlapi, ctx, &appData.Applications, appDataMap["apps"], api)

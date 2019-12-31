@@ -1,11 +1,13 @@
 package k8smgmt
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -22,13 +24,26 @@ var validHelmInstallOpts = map[string]struct{}{
 
 const AppConfigHelmYaml = "hemlCustomizationYaml"
 
-func getHelmOpts(client pc.PlatformClient, appName string, configs []*edgeproto.ConfigFile) (string, error) {
-	// Walk the Configs in the App and generate the yaml files from the helm customization ones
+func getHelmOpts(ctx context.Context, client pc.PlatformClient, appName string, configs []*edgeproto.ConfigFile) (string, error) {
 	var ymls []string
+	var err error
+
+	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
+	// Walk the Configs in the App and generate the yaml files from the helm customization ones
 	for ii, v := range configs {
 		if v.Kind == AppConfigHelmYaml {
+			cfg := v.Config
+			// Fill in the Deployment Vars passed as a variable through the context
+			if varsFound {
+				cfg, err = crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelMexos, "failed to replace Crm variables",
+						"config file", v.Config, "DeploymentVars", deploymentVars, "error", err)
+					return "", err
+				}
+			}
 			file := fmt.Sprintf("%s%d", appName, ii)
-			err := pc.WriteFile(client, file, v.Config, v.Kind, pc.NoSudo)
+			err = pc.WriteFile(client, file, cfg, v.Kind, pc.NoSudo)
 			if err != nil {
 				return "", err
 			}
@@ -111,14 +126,14 @@ func getHelmRepoAndChart(imagePath string) (string, string, error) {
 	return "", chart, nil
 }
 
-func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	log.DebugLog(log.DebugLevelMexos, "create kubernetes helm app", "clusterInst", clusterInst, "kubeNames", names)
+func CreateHelmAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "create kubernetes helm app", "clusterInst", clusterInst, "kubeNames", names)
 
 	// install helm if it's not installed yet
 	cmd := fmt.Sprintf("%s helm version", names.KconfEnv)
 	out, err := client.Output(cmd)
 	if err != nil {
-		err = InstallHelm(client, names)
+		err = InstallHelm(ctx, client, names)
 		if err != nil {
 			return err
 		}
@@ -136,58 +151,58 @@ func CreateHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *
 		if err != nil {
 			return fmt.Errorf("error adding helm repo, %s, %s, %v", cmd, out, err)
 		}
-		log.DebugLog(log.DebugLevelMexos, "added helm repository")
+		log.SpanLog(ctx, log.DebugLevelMexos, "added helm repository")
 	}
 	helmArgs, err := getHelmInstallOptsString(app.Annotations)
 	if err != nil {
 		return err
 	}
 	configs := append(app.Configs, appInst.Configs...)
-	helmOpts, err := getHelmOpts(client, names.AppName, configs)
+	helmOpts, err := getHelmOpts(ctx, client, names.AppName, configs)
 	if err != nil {
 		return err
 	}
-	log.DebugLog(log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
+	log.SpanLog(ctx, log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
 	cmd = fmt.Sprintf("%s helm install %s %s --name %s %s", names.KconfEnv, chart, helmArgs,
 		names.HelmAppName, helmOpts)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deploying helm chart, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "applied helm chart")
+	log.SpanLog(ctx, log.DebugLevelMexos, "applied helm chart")
 	return nil
 }
 
-func UpdateHelmAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	log.DebugLog(log.DebugLevelMexos, "update kubernetes helm app", "app", app, "kubeNames", names)
+func UpdateHelmAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "update kubernetes helm app", "app", app, "kubeNames", names)
 	configs := append(app.Configs, appInst.Configs...)
-	helmOpts, err := getHelmOpts(client, names.AppName, configs)
+	helmOpts, err := getHelmOpts(ctx, client, names.AppName, configs)
 	if err != nil {
 		return err
 	}
-	log.DebugLog(log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
+	log.SpanLog(ctx, log.DebugLevelMexos, "Helm options", "helmOpts", helmOpts)
 	cmd := fmt.Sprintf("%s helm upgrade %s %s %s", names.KconfEnv, helmOpts, names.HelmAppName, names.AppImage)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error updating helm chart, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "updated helm chart")
+	log.SpanLog(ctx, log.DebugLevelMexos, "updated helm chart")
 	return nil
 }
 
-func DeleteHelmAppInst(client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst) error {
-	log.DebugLog(log.DebugLevelMexos, "delete kubernetes helm app")
+func DeleteHelmAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "delete kubernetes helm app")
 	cmd := fmt.Sprintf("%s helm delete --purge %s", names.KconfEnv, names.HelmAppName)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deleting helm chart, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "removed helm chart")
+	log.SpanLog(ctx, log.DebugLevelMexos, "removed helm chart")
 	return nil
 }
 
-func InstallHelm(client pc.PlatformClient, names *KubeNames) error {
-	log.DebugLog(log.DebugLevelMexos, "installing helm into cluster", "kconf", names.KconfName)
+func InstallHelm(ctx context.Context, client pc.PlatformClient, names *KubeNames) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "installing helm into cluster", "kconf", names.KconfName)
 
 	// Add service account for tiller
 	cmd := fmt.Sprintf("%s kubectl create serviceaccount --namespace kube-system tiller", names.KconfEnv)
@@ -195,7 +210,7 @@ func InstallHelm(client pc.PlatformClient, names *KubeNames) error {
 	if err != nil {
 		return fmt.Errorf("error creating tiller service account, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "setting service acct", "kconf", names.KconfName)
+	log.SpanLog(ctx, log.DebugLevelMexos, "setting service acct", "kconf", names.KconfName)
 
 	cmd = fmt.Sprintf("%s kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller", names.KconfEnv)
 	out, err = client.Output(cmd)
@@ -208,7 +223,7 @@ func InstallHelm(client pc.PlatformClient, names *KubeNames) error {
 	if err != nil {
 		return fmt.Errorf("error initializing tiller for app, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "helm tiller initialized")
+	log.SpanLog(ctx, log.DebugLevelMexos, "helm tiller initialized")
 	return nil
 }
 

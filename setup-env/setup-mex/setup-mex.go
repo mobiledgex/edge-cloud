@@ -482,14 +482,14 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 		}
 	}
 	for _, p := range util.Deployment.Controllers {
-		opts = append(opts, process.WithDebug("etcd,api,notify"))
+		opts = append(opts, process.WithDebug("etcd,api,notify,metrics"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
 	}
 	for _, p := range util.Deployment.Dmes {
 		opts = append(opts, process.WithRolesFile(rolesfile))
-		opts = append(opts, process.WithDebug("locapi,dmedb,dmereq,notify"))
+		opts = append(opts, process.WithDebug("locapi,dmedb,dmereq,notify,metrics"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
@@ -623,6 +623,11 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 		if !apis.RunDmeAPI(actionSubtype, actionParam, spec.ApiFile, spec.ApiType, outputDir) {
 			log.Printf("Unable to run api for %s\n", action)
 			errors = append(errors, "dme api failed")
+		}
+	case "influxapi":
+		if !apis.RunInfluxAPI(actionSubtype, actionParam, spec.ApiFile, outputDir) {
+			log.Printf("Unable to run influx api for %s\n", action)
+			errors = append(errors, "influx api failed")
 		}
 	case "cleanup":
 		err := Cleanup(ctx)

@@ -19,6 +19,7 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
+	influxclient "github.com/influxdata/influxdb/client/v2"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -236,6 +237,19 @@ func ConnectDme(p *process.Dme, c chan ReturnCodeWithText) {
 	}
 }
 
+func GetInflux(name string) *process.Influx {
+	if name == "" {
+		return Deployment.Influxs[0]
+	}
+	for _, influx := range Deployment.Influxs {
+		if influx.Name == name {
+			return influx
+		}
+	}
+	log.Fatalf("Error: could not find specified influx: %s\n", name)
+	return nil // unreachable
+}
+
 func checkCloudletState(p *process.Crm, timeout time.Duration) error {
 	filter := edgeproto.CloudletInfo{}
 	err := json.Unmarshal([]byte(p.CloudletKey), &filter.Key)
@@ -374,12 +388,21 @@ func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
 	}
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return errors.New(fmt.Sprintf("error reading yaml file: %v err: %v\n", filename, err))
+		return fmt.Errorf("error reading yaml file: %v err: %v\n", filename, err)
 	}
 	if opts.vars != nil {
 		//replace variables denoted as {{variablename}}
 		yamlstr := string(yamlFile)
 		for k, v := range opts.vars {
+			if strings.HasPrefix(v, "ENV=") {
+				// environment variable replacement var
+				envVarName := strings.Replace(v, "ENV=", "", 1)
+				envVarVal := os.Getenv(envVarName)
+				if envVarVal == "" {
+					return fmt.Errorf("environment variable not set: %s", envVarName)
+				}
+				v = envVarVal
+			}
 			yamlstr = strings.Replace(yamlstr, "{{"+k+"}}", v, -1)
 		}
 		yamlFile = []byte(yamlstr)
@@ -397,7 +420,6 @@ func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -481,7 +503,17 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		y1 = q1
 		y2 = q2
+	} else if fileType == "influxdata" {
+		var r1 []influxclient.Result
+		var r2 []influxclient.Result
 
+		err1 = ReadYamlFile(firstYamlFile, &r1)
+		err2 = ReadYamlFile(secondYamlFile, &r2)
+		clearInfluxTime(r1)
+		clearInfluxTime(r2)
+
+		y1 = r1
+		y2 = r2
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1)
 		err2 = ReadYamlFile(secondYamlFile, &y2)
@@ -553,4 +585,23 @@ func CallRESTPost(httpAddr string, client *http.Client, pb proto.Message, reply 
 		return err
 	}
 	return nil
+}
+
+func clearInfluxTime(results []influxclient.Result) {
+	for ii, _ := range results {
+		for jj, _ := range results[ii].Series {
+			row := &results[ii].Series[jj]
+			if len(row.Columns) < 1 || row.Columns[0] != "time" {
+				continue
+			}
+			// first value in each point is time,
+			// zero it out so we can ignore it
+			for tt, _ := range row.Values {
+				pt := row.Values[tt]
+				if len(pt) > 0 {
+					pt[0] = 0
+				}
+			}
+		}
+	}
 }
