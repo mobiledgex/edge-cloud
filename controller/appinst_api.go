@@ -381,6 +381,59 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return err
 	}
 
+	var app edgeproto.App
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if s.store.STMGet(stm, &in.Key, nil) {
+			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR {
+				if in.State == edgeproto.TrackedState_CREATE_ERROR {
+					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
+					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
+				}
+				return in.Key.ExistsError()
+			}
+			in.Errors = nil
+		} else {
+			err := in.Validate(edgeproto.AppInstAllFieldsMap)
+			if err != nil {
+				return err
+			}
+		}
+		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+			return in.Key.AppKey.NotFoundError()
+		}
+
+		if in.Flavor.Name == "" {
+			in.Flavor = app.DefaultFlavor
+		}
+
+		if !flavorApi.store.STMGet(stm, &in.Flavor, nil) {
+			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
+		}
+
+		// Set new state to show clusterinst progress as part of
+		// appinst progress
+		in.State = edgeproto.TrackedState_INITIALIZING
+		s.store.STMPut(stm, in)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	defer func() {
+		s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			var curr edgeproto.AppInst
+			if s.store.STMGet(stm, &in.Key, &curr) {
+				// In case there is an error after initializing state
+				// is set, then delete AppInst obj directly as there is
+				// no change done on CRM side
+				if curr.State == edgeproto.TrackedState_INITIALIZING {
+					s.store.STMDel(stm, &in.Key)
+				}
+			}
+			return nil
+		})
+	}()
+
 	if autocluster {
 		// auto-create cluster inst
 		clusterInst := edgeproto.ClusterInst{}
@@ -422,18 +475,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		// lookup already done, don't overwrite changes
 		if s.store.STMGet(stm, &in.Key, nil) {
-			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR {
-				if in.State == edgeproto.TrackedState_CREATE_ERROR {
-					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
-					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
-				}
+			if in.State != edgeproto.TrackedState_INITIALIZING {
 				return in.Key.ExistsError()
-			}
-			in.Errors = nil
-		} else {
-			err := in.Validate(edgeproto.AppInstAllFieldsMap)
-			if err != nil {
-				return err
 			}
 		}
 
@@ -443,19 +486,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return errors.New("Specified Cloudlet not found")
 		}
 		in.CloudletLoc = cloudlet.Location
-
-		var app edgeproto.App
-		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
-			return in.Key.AppKey.NotFoundError()
-		}
-
-		if in.Flavor.Name == "" {
-			in.Flavor = app.DefaultFlavor
-		}
-
-		if !flavorApi.store.STMGet(stm, &in.Flavor, nil) {
-			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
-		}
 
 		var clusterKey *edgeproto.ClusterKey
 		ipaccess := edgeproto.IpAccess_IP_ACCESS_SHARED
