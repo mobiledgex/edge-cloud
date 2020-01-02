@@ -29,6 +29,12 @@ func (s *FlavorApi) HasFlavor(key *edgeproto.FlavorKey) bool {
 }
 
 func (s *FlavorApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+
+	if in.OptResMap != nil {
+		if ok, err := resTagTableApi.ValidateOptResMapValues(in.OptResMap); !ok {
+			return &edgeproto.Result{}, err
+		}
+	}
 	return s.store.Create(ctx, in, s.sync.syncWait)
 }
 
