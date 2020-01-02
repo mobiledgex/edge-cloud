@@ -381,7 +381,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return err
 	}
 
-	var app edgeproto.App
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR {
@@ -397,17 +396,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if err != nil {
 				return err
 			}
-		}
-		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
-			return in.Key.AppKey.NotFoundError()
-		}
-
-		if in.Flavor.Name == "" {
-			in.Flavor = app.DefaultFlavor
-		}
-
-		if !flavorApi.store.STMGet(stm, &in.Flavor, nil) {
-			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
 		}
 
 		// Set new state to show clusterinst progress as part of
@@ -486,6 +474,19 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return errors.New("Specified Cloudlet not found")
 		}
 		in.CloudletLoc = cloudlet.Location
+
+		var app edgeproto.App
+		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+			return in.Key.AppKey.NotFoundError()
+		}
+
+		if in.Flavor.Name == "" {
+			in.Flavor = app.DefaultFlavor
+		}
+
+		if !flavorApi.store.STMGet(stm, &in.Flavor, nil) {
+			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
+		}
 
 		var clusterKey *edgeproto.ClusterKey
 		ipaccess := edgeproto.IpAccess_IP_ACCESS_SHARED
