@@ -398,31 +398,35 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 		}
 
-		// Set new state to show clusterinst progress as part of
-		// appinst progress
-		in.State = edgeproto.TrackedState_INITIALIZING
-		s.store.STMPut(stm, in)
+		if autocluster {
+			// Set new state to show autocluster clusterinst progress as part of
+			// appinst progress
+			in.State = edgeproto.TrackedState_CREATING_DEPENDENCIES
+			s.store.STMPut(stm, in)
+		}
 		return nil
 	})
 	if err != nil {
 		return err
 	}
-	defer func() {
-		s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			var curr edgeproto.AppInst
-			if s.store.STMGet(stm, &in.Key, &curr) {
-				// In case there is an error after initializing state
-				// is set, then delete AppInst obj directly as there is
-				// no change done on CRM side
-				if curr.State == edgeproto.TrackedState_INITIALIZING {
-					s.store.STMDel(stm, &in.Key)
-				}
-			}
-			return nil
-		})
-	}()
 
 	if autocluster {
+		defer func() {
+			if reterr != nil {
+				s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+					var curr edgeproto.AppInst
+					if s.store.STMGet(stm, &in.Key, &curr) {
+						// In case there is an error after CREATING_DEPENDENCIES state
+						// is set, then delete AppInst obj directly as there is
+						// no change done on CRM side
+						if curr.State == edgeproto.TrackedState_CREATING_DEPENDENCIES {
+							s.store.STMDel(stm, &in.Key)
+						}
+					}
+					return nil
+				})
+			}
+		}()
 		// auto-create cluster inst
 		clusterInst := edgeproto.ClusterInst{}
 		clusterInst.Key = in.Key.ClusterInstKey
@@ -463,9 +467,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		// lookup already done, don't overwrite changes
 		if s.store.STMGet(stm, &in.Key, nil) {
-			if in.State != edgeproto.TrackedState_INITIALIZING {
+			if in.State != edgeproto.TrackedState_CREATING_DEPENDENCIES {
 				return in.Key.ExistsError()
 			}
+		} else {
+			return fmt.Errorf("Unexpected error: AppInst %s was deleted", in.Key.GetKeyString())
 		}
 
 		// cache location of cloudlet in app inst

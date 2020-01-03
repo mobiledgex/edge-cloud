@@ -68,8 +68,8 @@ enum TrackedState {
   DELETE_PREPARE = 12;
   // CRM INIT OK
   CRM_INITOK = 13;
-  // Initializing (state used to tracked dependent object change progress)
-  INITIALIZING = 14;
+  // Creating dependencies (state used to tracked dependent object change progress)
+  CREATING_DEPENDENCIES = 14;
 }
 
 // CRMOverride can be applied to commands that issue requests to the CRM.
