@@ -334,3 +334,20 @@ func (s *ResTagTableApi) GetVMSpec(nodeflavor edgeproto.Flavor, cl edgeproto.Clo
 	}
 	return &vmspec, fmt.Errorf("no suitable platform flavor found for %s, please try a smaller flavor", nodeflavor.Key.Name)
 }
+
+// Validate CLI input for any Optional Resource Map entries provided with CreateFlavor
+func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool, error) {
+	var numgpus int
+	var err error
+	for k, v := range resmap {
+		if k == "gpu" {
+			if numgpus, err = strconv.Atoi(v); err != nil {
+				return false, fmt.Errorf("Non-numeric gpu optresmap value found, 1 expected")
+			}
+			if numgpus > 1 {
+				return false, fmt.Errorf("optresmap gpu values > 1 are currently unsupported. Please use 1")
+			}
+		}
+	}
+	return true, nil
+}
