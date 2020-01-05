@@ -382,8 +382,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if s.store.STMGet(stm, &in.Key, nil) {
-			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR {
+		if s.store.STMGet(stm, &in.Key, in) {
+			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
 				if in.State == edgeproto.TrackedState_CREATE_ERROR {
 					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
 					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
@@ -397,7 +397,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return err
 			}
 		}
-
 		// Set new state to show autocluster clusterinst progress as part of
 		// appinst progress
 		in.State = edgeproto.TrackedState_CREATING_DEPENDENCIES
@@ -465,7 +464,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		// lookup already done, don't overwrite changes
-		if s.store.STMGet(stm, &in.Key, nil) {
+		if s.store.STMGet(stm, &in.Key, in) {
 			if in.State != edgeproto.TrackedState_CREATING_DEPENDENCIES {
 				return in.Key.ExistsError()
 			}
