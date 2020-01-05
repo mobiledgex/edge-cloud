@@ -10,4 +10,5 @@ all:
 	go install ${GOGOPROTO}/protoc-gen-gogo
 	go install ${GOGOPROTO}/protoc-gen-gogofast
 	go install ${GRPCGATEWAY}/protoc-gen-grpc-gateway
-	go get github.com/uber/prototool/cmd/prototool
+	(cd ~/go; go install github.com/uber/prototool/cmd/prototool)
+	(cd ~/go/src/github.com/grpc-ecosystem/grpc-gateway; go install ./protoc-gen-swagger)
