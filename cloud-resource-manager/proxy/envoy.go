@@ -164,6 +164,13 @@ static_resources:
     - socket_address:
         address: {{.Origin}}
         port_value: {{.OriginPort}}
+    health_checks:
+      - timeout: 1s
+        interval: 5s
+        interval_jitter: 1s
+        unhealthy_threshold: 3
+        healthy_threshold: 3
+        tcp_health_check: {}
 {{- end}}
 admin:
   access_log_path: "/var/log/admin.log"
