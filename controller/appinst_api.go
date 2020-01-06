@@ -381,6 +381,49 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return err
 	}
 
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if s.store.STMGet(stm, &in.Key, in) {
+			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
+				if in.State == edgeproto.TrackedState_CREATE_ERROR {
+					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
+					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
+				}
+				return in.Key.ExistsError()
+			}
+			in.Errors = nil
+		} else {
+			err := in.Validate(edgeproto.AppInstAllFieldsMap)
+			if err != nil {
+				return err
+			}
+		}
+		// Set new state to show autocluster clusterinst progress as part of
+		// appinst progress
+		in.State = edgeproto.TrackedState_CREATING_DEPENDENCIES
+		s.store.STMPut(stm, in)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if reterr != nil {
+			s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+				var curr edgeproto.AppInst
+				if s.store.STMGet(stm, &in.Key, &curr) {
+					// In case there is an error after CREATING_DEPENDENCIES state
+					// is set, then delete AppInst obj directly as there is
+					// no change done on CRM side
+					if curr.State == edgeproto.TrackedState_CREATING_DEPENDENCIES {
+						s.store.STMDel(stm, &in.Key)
+					}
+				}
+				return nil
+			})
+		}
+	}()
+
 	if autocluster {
 		// auto-create cluster inst
 		clusterInst := edgeproto.ClusterInst{}
@@ -421,20 +464,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		// lookup already done, don't overwrite changes
-		if s.store.STMGet(stm, &in.Key, nil) {
-			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR {
-				if in.State == edgeproto.TrackedState_CREATE_ERROR {
-					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
-					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
-				}
+		if s.store.STMGet(stm, &in.Key, in) {
+			if in.State != edgeproto.TrackedState_CREATING_DEPENDENCIES {
 				return in.Key.ExistsError()
 			}
-			in.Errors = nil
 		} else {
-			err := in.Validate(edgeproto.AppInstAllFieldsMap)
-			if err != nil {
-				return err
-			}
+			return fmt.Errorf("Unexpected error: AppInst %s was deleted", in.Key.GetKeyString())
 		}
 
 		// cache location of cloudlet in app inst

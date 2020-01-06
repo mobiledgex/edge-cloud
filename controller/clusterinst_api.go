@@ -348,6 +348,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		cb.Send(&edgeproto.Result{Message: "DELETING ClusterInst due to failures"})
 		undoErr := s.deleteClusterInstInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to undo ClusterInst creation: %v", undoErr)})
 			log.InfoLog("Undo create ClusterInst", "undoErr", undoErr)
 		}
 	}
@@ -451,9 +452,13 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
+	// If it is autoClusterInst and creation had failed, then deletion should proceed
+	// even though clusterinst is in use by Application Instance
+	//if !(cctx.Undo && strings.HasPrefix(in.Key.ClusterKey.Name, ClusterAutoPrefix)) {
 	if appInstApi.UsesClusterInst(&in.Key) {
 		return errors.New("ClusterInst in use by Application Instance")
 	}
+	//}
 	cctx.SetOverride(&in.CrmOverride)
 	if !ignoreCRM(cctx) {
 		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
@@ -564,6 +569,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		cb.Send(&edgeproto.Result{Message: "Recreating ClusterInst due to failure"})
 		undoErr := s.createClusterInstInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to undo ClusterInst deletion: %v", undoErr)})
 			log.InfoLog("Undo delete ClusterInst", "undoErr", undoErr)
 		}
 	}
