@@ -1,4 +1,6 @@
 skipmethods:
   AddUserToGroup:
+  GetAppInstList:
   GetFqdnList:
+  GetLocation:
   GetQosPositionKpi:
