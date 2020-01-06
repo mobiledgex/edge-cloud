@@ -152,6 +152,7 @@ func StateConflict(oldState, newState TrackedState) error {
 
 func IsTransientState(state TrackedState) bool {
 	if state == TrackedState_CREATING ||
+		state == TrackedState_CREATING_DEPENDENCIES ||
 		state == TrackedState_CREATE_REQUESTED ||
 		state == TrackedState_UPDATE_REQUESTED ||
 		state == TrackedState_DELETE_REQUESTED ||
