@@ -61,7 +61,7 @@ func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, origi
 	}
 
 	certDir := dir + "/certs"
-	err = pc.Run(client, "mkdir "+certDir)
+	err = pc.Run(client, "mkdir -p "+certDir)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos,
 			"envoy %s can't create cert dir %s", name, certDir)
