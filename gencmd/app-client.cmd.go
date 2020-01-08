@@ -53,6 +53,7 @@ import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
+import _ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -553,9 +554,9 @@ var RegisterClientRequestComments = map[string]string{
 	"devname":     "App Developer Name",
 	"appname":     "App Name",
 	"appvers":     "App Version",
-	"carriername": "carrier name, not currently used",
-	"authtoken":   "authentication token",
-	"cellid":      "Cell id where the client is",
+	"carriername": "Carrier Name _Not currently used_",
+	"authtoken":   "Authentication Token More details about the auth token here",
+	"cellid":      "Cell ID Cell ID where the client is",
 	"tags.type":   "type of data",
 	"tags.data":   "data value",
 }
@@ -603,8 +604,8 @@ var FindCloudletRequestOptionalArgs = []string{
 var FindCloudletRequestAliasArgs = []string{}
 var FindCloudletRequestComments = map[string]string{
 	"ver":                            "API version",
-	"sessioncookie":                  "Session Cookie from RegisterClientRequest",
-	"carriername":                    "The carrier name that the user is connected to (Cellular Carrier Name)",
+	"sessioncookie":                  "Session Cookie Session Cookie from RegisterClientRequest",
+	"carriername":                    "Carrier Name The carrier name that the user is connected to _(Cellular Carrier Name)_",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -612,10 +613,10 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"devname":                        "DevName is applicable to Platform apps only",
-	"appname":                        "App Name is applicable to Platform apps only",
-	"appvers":                        "App Version is applicable to Platform apps only",
-	"cellid":                         "Cell id where the client is",
+	"devname":                        "Dev Name Applicable to Platform apps only",
+	"appname":                        "App Name Applicable to Platform apps only",
+	"appvers":                        "App Version Applicable to Platform apps only",
+	"cellid":                         "Cell ID Cell ID where the client is",
 	"tags.type":                      "type of data",
 	"tags.data":                      "data value",
 }
@@ -687,8 +688,8 @@ var VerifyLocationRequestOptionalArgs = []string{
 var VerifyLocationRequestAliasArgs = []string{}
 var VerifyLocationRequestComments = map[string]string{
 	"ver":                            "API version",
-	"sessioncookie":                  "Session Cookie from RegisterClientRequest",
-	"carriername":                    "The carrier name that the user is connected to (Cellular Carrier Name)",
+	"sessioncookie":                  "Session Cookie Session Cookie from RegisterClientRequest",
+	"carriername":                    "Carrier Name The carrier name that the user is connected to _(Cellular Carrier Name)_",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -696,8 +697,8 @@ var VerifyLocationRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"verifyloctoken":                 "token used for location verification, app must be retrieve from TokenServerURI",
-	"cellid":                         "Cell id where the client is",
+	"verifyloctoken":                 "Verify Location Token Must be retrieved from TokenServerURI",
+	"cellid":                         "Cell ID Cell ID where the client is",
 	"tags.type":                      "type of data",
 	"tags.data":                      "data value",
 }
