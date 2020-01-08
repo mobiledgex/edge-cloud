@@ -129,6 +129,10 @@ func AddApp(in *edgeproto.App) {
 	app.AuthPublicKey = in.AuthPublicKey
 	app.AndroidPackageName = in.AndroidPackageName
 	app.OfficialFqdn = in.OfficialFqdn
+	clearAutoProvStats := false
+	if app.AutoProvPolicy != nil && in.AutoProvPolicy == "" {
+		clearAutoProvStats = true
+	}
 	app.AutoProvPolicy = nil
 	if in.AutoProvPolicy != "" {
 		ppKey := edgeproto.PolicyKey{
@@ -140,6 +144,9 @@ func AddApp(in *edgeproto.App) {
 		} else {
 			log.DebugLog(log.DebugLevelDmedb, "AutoProvPolicy on App not found", "app", in.Key, "policy", app.AutoProvPolicy)
 		}
+	}
+	if clearAutoProvStats {
+		autoProvStats.Clear(&in.Key)
 	}
 }
 

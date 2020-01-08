@@ -22,6 +22,8 @@ type DummyHandler struct {
 	CloudletInfoCache    edgeproto.CloudletInfoCache
 	AlertCache           edgeproto.AlertCache
 	NodeCache            edgeproto.NodeCache
+	AutoScalePolicyCache edgeproto.AutoScalePolicyCache
+	AutoProvPolicyCache  edgeproto.AutoProvPolicyCache
 }
 
 func NewDummyHandler() *DummyHandler {
@@ -36,6 +38,8 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
 	edgeproto.InitAlertCache(&h.AlertCache)
 	edgeproto.InitNodeCache(&h.NodeCache)
+	edgeproto.InitAutoScalePolicyCache(&h.AutoScalePolicyCache)
+	edgeproto.InitAutoProvPolicyCache(&h.AutoProvPolicyCache)
 	return h
 }
 
@@ -47,6 +51,8 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendFlavorCache(&s.FlavorCache)
 	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
 	mgr.RegisterSendAlertCache(&s.AlertCache)
+	mgr.RegisterSendAutoScalePolicyCache(&s.AutoScalePolicyCache)
+	mgr.RegisterSendAutoProvPolicyCache(&s.AutoProvPolicyCache)
 
 	mgr.RegisterRecvAppInstInfoCache(&s.AppInstInfoCache)
 	mgr.RegisterRecvClusterInstInfoCache(&s.ClusterInstInfoCache)
