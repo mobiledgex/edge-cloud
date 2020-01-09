@@ -22,12 +22,17 @@ var UsePublicPortInContainer = "publicPort"
 
 // Helper function that generates the ports string for docker command
 // Example : "-p 80:80/http -p 7777:7777/tcp"
-func GetDockerPortString(ports []dme.AppPort, containerPortType string) []string {
+func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMatch dme.LProto) []string {
 	var cmdArgs []string
 
 	for _, p := range ports {
 		if p.Proto == dme.LProto_L_PROTO_HTTP {
 			// L7 not allowed for docker
+			continue
+		}
+		// quick fix to deal with the fact that nginx and envoy both try to listen to a superset of ports.
+		// remove this when we go to 100% envor
+		if protoMatch != dme.LProto_L_PROTO_UNKNOWN && protoMatch != p.Proto {
 			continue
 		}
 		proto, err := edgeproto.LProtoStr(p.Proto)
@@ -171,7 +176,7 @@ func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *e
 
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d -l edge-cloud -l cloudlet=%s -l cluster=%s --restart=unless-stopped --name=%s %s %s %s", cloudlet, cluster, name,
-			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer), " "), image, app.Command)
+			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer, dme.LProto_L_PROTO_UNKNOWN), " "), image, app.Command)
 		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 
 		out, err := client.Output(cmd)

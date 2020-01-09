@@ -160,7 +160,7 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, origi
 
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", name}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_UDP)...)
 		if name == NginxL7Name {
 			// Special case. When the L7 nginx instance is created,
 			// there are no configs yet for L7. Expose the L7 port manually.
