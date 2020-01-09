@@ -570,7 +570,7 @@ func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorPr
 }
 
 // group methods by input type
-func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescriptorProto, actions map[string]string) map[string]*MethodGroup {
+func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescriptorProto, actions map[string]string) []*MethodGroup {
 	if actions == nil {
 		actions = map[string]string{
 			"Create":  "create",
@@ -609,7 +609,14 @@ func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescript
 			group.HasMc2Api = true
 		}
 	}
-	return groups
+	groupsSorted := make([]*MethodGroup, 0)
+	for _, group := range groups {
+		groupsSorted = append(groupsSorted, group)
+	}
+	sort.Slice(groupsSorted, func(i, j int) bool {
+		return groupsSorted[i].InType < groupsSorted[j].InType
+	})
+	return groupsSorted
 }
 
 func GetFirstFile(gen *generator.Generator) string {
