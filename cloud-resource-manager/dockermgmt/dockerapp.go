@@ -31,7 +31,7 @@ func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMat
 			continue
 		}
 		// quick fix to deal with the fact that nginx and envoy both try to listen to a superset of ports.
-		// remove this when we go to 100% envor
+		// remove this when we go to 100% envoy
 		if protoMatch != dme.LProto_L_PROTO_UNKNOWN && protoMatch != p.Proto {
 			continue
 		}

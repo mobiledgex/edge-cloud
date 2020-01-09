@@ -31,7 +31,7 @@ func GetAppAccessConfig(ctx context.Context, configs []*edgeproto.ConfigFile) (*
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
 	var aac AppAccessConfig
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "getAppAccessConfig", "deploymentVars", deploymentVars, "varsFound", varsFound, "configs", configs)
+	log.SpanLog(ctx, log.DebugLevelMexos, "getAppAccessConfig", "deploymentVars", deploymentVars, "varsFound", varsFound)
 	if !varsFound {
 		return nil, fmt.Errorf("unable to find replacement vars")
 	}
@@ -48,7 +48,7 @@ func GetAppAccessConfig(ctx context.Context, configs []*edgeproto.ConfigFile) (*
 			}
 			err = yaml.Unmarshal([]byte(cfg), &aac)
 			if err != nil {
-				return nil, fmt.Errorf("unable to unmarshall app access config: %v", err)
+				return nil, fmt.Errorf("unable to unmarshall app access config: %s err: %v", cfg, err)
 			}
 			log.SpanLog(ctx, log.DebugLevelMexos, "Got app access config", "aac", aac)
 		}
