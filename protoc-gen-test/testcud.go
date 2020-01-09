@@ -583,16 +583,17 @@ func (t *TestCud) generateCudTest(desc *generator.Descriptor) {
 func (t *TestCud) generateRunApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {
 	// group methods by input type
 	groups := gensupport.GetMethodGroups(t.Generator, service, nil)
-	for inType, group := range groups {
-		t.generateRunGroupApi(file, service, inType, group)
+	for _, group := range groups {
+		t.generateRunGroupApi(file, service, group)
 	}
 }
 
-func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, inType string, group *gensupport.MethodGroup) {
+func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, group *gensupport.MethodGroup) {
 	specialKeys := map[string]string{
 		"CloudletPoolMember": "PoolKey",
 	}
 	apiName := *service.Name + group.Suffix
+	inType := group.InType
 
 	t.P()
 	t.P("func Run", apiName, "(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.", inType, ", dataMap []map[string]interface{}, mode string) error {")
