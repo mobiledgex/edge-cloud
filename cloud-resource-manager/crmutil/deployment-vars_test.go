@@ -43,6 +43,10 @@ var testConfigFile = `nfs:
 `
 
 var testClusterIp = "10.1.1.1"
+var testCloudletName = "TestCloudlet"
+var testClusterName = "TestCluster"
+var testDeveloperName = "AcmeAppCo"
+var testDnsZone = "mobiledgex-test.net"
 
 var testManifestResult = `apiVersion: apps/v1
 kind: Deployment
@@ -78,14 +82,26 @@ var testConfigFileResult = `nfs:
   path: /ifs/kubernetes
 `
 var testConfigFileWrongVar = `nfs:
-  server: [[ .Deployment.ClusterName ]]
+  server: [[ .Deployment.OperatorName ]]
   path: /ifs/kubernetes
 `
+
+var testAppAccessConfig = `
+dnsOverride: "*.[[.Deployment.DeveloperName]]-[[.Deployment.ClusterName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"
+lbTlsCertCommonName: ""*.[[.Deployment.DeveloperName]]-[[.Deployment.ClusterName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"`
+
+var testAppAccessConfigResult = `
+dnsOverride: "*.AcmeAppCo-TestCluster-TestCloudlet.mobiledgex-test.net"
+lbTlsCertCommonName: ""*.AcmeAppCo-TestCluster-TestCloudlet.mobiledgex-test.net"`
 
 func TestCrmDeploymentVars(t *testing.T) {
 	deploymentVars := DeploymentReplaceVars{
 		Deployment: CrmReplaceVars{
-			ClusterIp: testClusterIp,
+			ClusterIp:     testClusterIp,
+			CloudletName:  testCloudletName,
+			ClusterName:   testClusterName,
+			DeveloperName: testDeveloperName,
+			DnsZone:       testDnsZone,
 		},
 	}
 	// positive tests
@@ -98,6 +114,10 @@ func TestCrmDeploymentVars(t *testing.T) {
 	// Test manifest decode
 	_, _, err = cloudcommon.DecodeK8SYaml(val)
 	assert.Nil(t, err)
+	// App Access Config test
+	val, err = ReplaceDeploymentVars(testAppAccessConfig, &deploymentVars)
+	assert.Nil(t, err)
+	assert.Equal(t, testAppAccessConfigResult, val)
 
 	// configFile with no vars
 	val, err = ReplaceDeploymentVars(testConfigFileResult, &deploymentVars)
@@ -107,5 +127,5 @@ func TestCrmDeploymentVars(t *testing.T) {
 	// error cases
 	val, err = ReplaceDeploymentVars(testConfigFileWrongVar, &deploymentVars)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Deployment.ClusterName")
+	assert.Contains(t, err.Error(), "Deployment.OperatorName")
 }
