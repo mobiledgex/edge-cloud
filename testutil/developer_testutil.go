@@ -313,7 +313,7 @@ func RunDeveloperApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgepro
 	var err error
 	developerApi := edgeproto.NewDeveloperApiClient(conn)
 	for ii, obj := range *data {
-		log.DebugLog(log.DebugLevelApi, "API %v for Developer: %v", mode, obj.Key)
+		log.DebugLog(log.DebugLevelApi, "API %v for Developer: %v", mode, obj.GetKey())
 		switch mode {
 		case "create":
 			_, err = developerApi.CreateDeveloper(ctx, &obj)
@@ -323,12 +323,12 @@ func RunDeveloperApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgepro
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			_, err = developerApi.UpdateDeveloper(ctx, &obj)
 		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Developer: %v", mode, obj.Key)
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Developer: %v", mode, obj.GetKey())
 			return nil
 		}
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
 		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
 		}
 	}
 	return nil
