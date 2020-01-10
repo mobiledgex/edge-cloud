@@ -572,17 +572,32 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 			},
 			// restagtbl/clouldlet resource map tests
 			&edgeproto.FlavorInfo{
-				Name:  "flavor.large-gpu",
-				Vcpus: uint64(8),
-				Ram:   uint64(8192),
-				Disk:  uint64(40),
+				Name:    "flavor.large",
+				Vcpus:   uint64(10),
+				Ram:     uint64(8192),
+				Disk:    uint64(40),
+				PropMap: map[string]string{"pci": "T4:1"},
 			},
 			&edgeproto.FlavorInfo{
-				Name:       "flavor.large",
-				Vcpus:      uint64(10),
-				Ram:        uint64(8192),
-				Disk:       uint64(40),
-				Properties: "vgpu=nvidia-63",
+				Name:    "flavor.large-pci",
+				Vcpus:   uint64(10),
+				Ram:     uint64(8192),
+				Disk:    uint64(40),
+				PropMap: map[string]string{"pci": "NP4:1"},
+			},
+			&edgeproto.FlavorInfo{
+				Name:    "flavor.large-nvidia",
+				Vcpus:   uint64(10),
+				Ram:     uint64(8192),
+				Disk:    uint64(40),
+				PropMap: map[string]string{"vgpu": "nvidia-63:1"},
+			},
+			&edgeproto.FlavorInfo{
+				Name:    "flavor.large-generic-gpu",
+				Vcpus:   uint64(10),
+				Ram:     uint64(8192),
+				Disk:    uint64(40),
+				PropMap: map[string]string{"gpu": "T4:1"},
 			},
 		},
 	},
@@ -826,17 +841,17 @@ var ResTagTableData = []edgeproto.ResTagTable{
 
 	edgeproto.ResTagTable{
 		Key:  Restblkeys[0],
-		Tags: []string{"tesla-p4", "foo"},
+		Tags: map[string]string{"vgpu": "tesla-p4"},
 	},
 
 	edgeproto.ResTagTable{
 		Key:  Restblkeys[1],
-		Tags: []string{"vcpu", "pci-passthru"},
+		Tags: map[string]string{"vcpu": "nvidia-72", "pci-passthru": "NP4:2"},
 	},
 
 	edgeproto.ResTagTable{
 		Key:  Restblkeys[2],
-		Tags: []string{"nvidia-63", "pci-passthru"},
+		Tags: map[string]string{"vcpu": "nvidia-63", "pci-passthru": "T4:1"},
 	},
 }
 

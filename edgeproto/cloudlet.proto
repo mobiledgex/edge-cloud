@@ -322,7 +322,7 @@ message FlavorInfo {
   // Amount of disk in GB on the Cloudlet
   uint64 disk = 4;
   // OS Flavor Properties, if any
-  string properties = 5 [(protogen.backend) = true];
+  map<string,string> prop_map = 5 [(protogen.backend) = true];
 }
 message OSAZone {
   string name   = 1;

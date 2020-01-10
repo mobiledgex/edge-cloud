@@ -40,11 +40,10 @@ func TestResTagTableApi(t *testing.T) {
 	_, err := resTagTableApi.CreateResTagTable(ctx, &tab)
 	require.Equal(t, "ResTagTable key {\"name\":\"gpu\",\"operator_key\":{\"name\":\"AT\\u0026T Inc.\"}} already exists", err.Error(), "create tag table EEXIST expected")
 
-	testags := []string{"tag1", "tag2", "tag3"}
-	multi_tag := []string{"multi-tag1", "multi-tag2", "multi-tag3"}
-	nonnom_multi_tag := []string{"mtag1", "mtag2", "mtag2"}
-
+	testags := map[string]string{"tag1": "val1"} //  "tag2": "val2", "tag3": "val3"}
+	multi_tag := map[string]string{"multi-tag1": "val1", "multi-tag2": "val2", "multi-tag3": "val2"}
 	// create new table
+	//var in edgeproto.ResTagTable
 	var tbl edgeproto.ResTagTable
 	var tkey edgeproto.ResTagTableKey
 	tkey.Name = "gpu"
@@ -61,7 +60,7 @@ func TestResTagTableApi(t *testing.T) {
 	require.Equal(t, len(tbl1.Tags), 0) // no tags yet
 
 	// add some tags to tbl
-	tbl.Tags = []string{testags[0]}
+	tbl.Tags = testags
 
 	_, err = resTagTableApi.AddResTag(ctx, &tbl)
 	require.Nil(t, err, "AddResTag")
@@ -71,7 +70,7 @@ func TestResTagTableApi(t *testing.T) {
 	require.Equal(t, 1, len(tbl1.Tags), "Num Tags error")
 
 	// another tag
-	tbl.Tags[0] = testags[1] // "tag2"
+	tbl.Tags["tag2"] = "val2" // testags[1] // "tag2"
 	_, err = resTagTableApi.AddResTag(ctx, &tbl)
 	require.Nil(t, err, "AddResTag")
 
@@ -79,7 +78,7 @@ func TestResTagTableApi(t *testing.T) {
 	require.Nil(t, err, "GgetResTagTable")
 	require.Equal(t, 2, len(tbl1.Tags), "Num Tags error")
 
-	tbl.Tags[0] = testags[2] // "tag3"
+	tbl.Tags["tag3"] = "val3"
 
 	_, err = resTagTableApi.AddResTag(ctx, &tbl)
 	require.Nil(t, err, "AddResTag")
@@ -89,20 +88,25 @@ func TestResTagTableApi(t *testing.T) {
 	require.Equal(t, 3, len(tbl1.Tags), "Num Tags error")
 
 	// Non-nominal add duplicate tag
-	_, err = resTagTableApi.AddResTag(ctx, &tbl)
-	require.Equal(t, "Duplicate Tag Found tag3", err.Error(), "AddResTag dup tag")
+	//	_, err = resTagTableApi.AddResTag(ctx /*tbl*/, tbl1)
+	//	if err != nil {
+	//		require.Equal(t, "Duplicate Tag Found tag3", err.Error(), "AddResTag dup tag")
+	//	}
 
 	// Nominal Delete tag
+	delete(tbl.Tags, "tag1")
+	delete(tbl.Tags, "tag2")
+	// all that's left is tag3 which we want deleted
 	_, err = resTagTableApi.RemoveResTag(ctx, &tbl)
 	require.Nil(t, err, "RemoveResTag")
-
+	tbl1 = nil
 	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
-	require.Nil(t, err, "GgetResTagTable")
+	require.Nil(t, err, "GetResTagTable")
 	require.Equal(t, 2, len(tbl1.Tags), "Num Tags error")
 
 	// and what's left should be tag1 and tag2
-	require.Equal(t, tbl1.Tags[0], "tag1", "reamining tags")
-	require.Equal(t, tbl1.Tags[1], "tag2", "remaining tags")
+	require.Equal(t, tbl1.Tags["tag1"], "val1", "reamining tags")
+	require.Equal(t, tbl1.Tags["tag2"], "val2", "remaining tags")
 	require.Equal(t, 2, len(tbl1.Tags), "len remaining tags unexpected")
 
 	// test multi-tag input support
@@ -123,14 +127,9 @@ func TestResTagTableApi(t *testing.T) {
 	require.Nil(t, err, "GgetResTagTable")
 	require.Equal(t, 2, len(tbl1.Tags), "multi-tag remove tags err")
 
-	// Non-nominal multi-tag input test, duplicate tag in input tag set
-	tbl.Tags = nonnom_multi_tag
-	_, err = resTagTableApi.AddResTag(ctx, &tbl)
-	require.Equal(t, "Duplicate Tag Found mtag2 in multi-tag input", err.Error(), "Dup Multi-Tag add")
-
 	// Final state of our test tbl1 should match that listed above in comment
-	require.Equal(t, "tag1", tbl1.Tags[0], "TagTab membership mismatch")
-	require.Equal(t, "tag2", tbl1.Tags[1], "TagTab membership mismatch")
+	require.Equal(t, "val1", tbl1.Tags["tag1"], "TagTab membership mismatch")
+	require.Equal(t, "val2", tbl1.Tags["tag2"], "TagTab membership mismatch")
 	require.Equal(t, 2, len(tbl1.Tags), "TagTab len unexpected")
 
 	// test update of optional availablity zone

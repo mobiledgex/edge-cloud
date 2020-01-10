@@ -108,43 +108,20 @@ func (s *ResTagTableApi) UpdateResTagTable(ctx context.Context, in *edgeproto.Re
 	return &edgeproto.Result{}, err
 }
 
-func (s *ResTagTableApi) validateMultiTagInput(in *edgeproto.ResTagTable) error {
-	if len(in.Tags) > 1 {
-		for i, ctag := range in.Tags {
-			if i == len(in.Tags)-1 {
-				break
-			}
-			for _, ttag := range in.Tags[i+1 : len(in.Tags)] {
-				if ctag == ttag {
-					return fmt.Errorf("Duplicate Tag Found %s in multi-tag input", ctag)
-				}
-			}
-		}
-	}
-	return nil
-}
-
 func (s *ResTagTableApi) AddResTag(ctx context.Context, in *edgeproto.ResTagTable) (*edgeproto.Result, error) {
 	var tbl edgeproto.ResTagTable
 
-	// validate input, don't accept dup tag values in any  multi-tag input
-	err := s.validateMultiTagInput(in)
-	if err != nil {
-		return &edgeproto.Result{}, err
-	}
+	var err error
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &tbl) {
 			return in.Key.NotFoundError()
 		}
-		for _, t := range in.Tags {
-			// Check tbl we just fetched for dups, could be an empty table
-			for _, tt := range tbl.Tags {
-				if t == tt {
-					return fmt.Errorf("Duplicate Tag Found %s", t)
-				}
-			}
-			tbl.Tags = append(tbl.Tags, t)
+		if tbl.Tags == nil {
+			tbl.Tags = make(map[string]string)
+		}
+		for k, t := range in.Tags {
+			tbl.Tags[k] = t
 		}
 		s.store.STMPut(stm, &tbl)
 		return nil
@@ -155,26 +132,13 @@ func (s *ResTagTableApi) AddResTag(ctx context.Context, in *edgeproto.ResTagTabl
 
 func (s *ResTagTableApi) RemoveResTag(ctx context.Context, in *edgeproto.ResTagTable) (*edgeproto.Result, error) {
 	var tbl edgeproto.ResTagTable
-
-	// validate input, don't accept dup tag values in any  multi-tag input
-	err := s.validateMultiTagInput(in)
-	if err != nil {
-		return &edgeproto.Result{}, err
-	}
-
+	var err error
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &tbl) {
 			return in.Key.NotFoundError()
 		}
-		for _, t := range in.Tags {
-			for j, tag := range tbl.Tags {
-
-				if t == tag {
-					tbl.Tags[j] = tbl.Tags[len(tbl.Tags)-1]
-					tbl.Tags[len(tbl.Tags)-1] = ""
-					tbl.Tags = tbl.Tags[:len(tbl.Tags)-1]
-				}
-			}
+		for k, _ := range in.Tags {
+			delete(tbl.Tags, k)
 		}
 		s.store.STMPut(stm, &tbl)
 		return nil
@@ -216,49 +180,82 @@ func (s *ResTagTableApi) findAZmatch(res string, cli edgeproto.CloudletInfo) (st
 func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, string, bool, error) {
 	var resmap map[string]*edgeproto.ResTagTableKey = cl.ResTagMap
 	var img, az string
-	// non-nominal corner case: Cloudlet has no resource map at all, node flavor asks for a resource
-	// so only hints found in the flavor name itself can be used, currently only resource 'gpu' uses this.
-	if resmap == nil {
-		// handle any flavor name hints that may exist
-		if _, ok := nodeflavor.OptResMap[strings.ToLower(edgeproto.OptResNames_name[int32(edgeproto.OptResNames_GPU)])]; ok {
-			if strings.Contains(flavor.Name, "gpu") {
-				az, _ := s.findAZmatch("gpu", cli)
-				img, _ := s.findImagematch("gpu", cli)
-				return az, img, true, nil
-			}
-		}
-		return "", "", false, fmt.Errorf("Clouddlet has no Resource mapping tables")
-	}
+	var wildcard bool = false
 	// Run the extent of the resource map. If the nodeflavor requests
 	// an optional resource, look into that restagtbl for hints to match
 	// the given flavorInfo's properities.
+
 	for res, tblkey := range resmap {
+
 		resname := edgeproto.OptResNames_value[strings.ToUpper(res)]
 		switch resname {
 
 		case int32(edgeproto.OptResNames_GPU):
-
-			var numgpus int
+			var numgpus, numres int
 			var err error
+			var count string
 			gpuval := nodeflavor.OptResMap[strings.ToLower(edgeproto.OptResNames_name[resname])]
-			if numgpus, err = strconv.Atoi(gpuval); err != nil {
-				err = fmt.Errorf("atoi failed for %s", gpuval)
-				return "", "", false, err
+			request := strings.Split(gpuval, ":")
+			if len(request) == 1 {
+				// should not happen with CLI validation in place
+				return "", "", false, fmt.Errorf("invalid optresmap entry encountered flavor %s request %s",
+					nodeflavor.Key.Name, gpuval)
+			}
+			if len(request) == 2 {
+				// generic request for res type, no res specifier present
+				wildcard = true
+				count = request[1]
+			} else if len(request) == 3 {
+				count = request[2]
+			}
+			if numgpus, err = strconv.Atoi(count); err != nil {
+				return "", "", false, fmt.Errorf("Non-numertic resource count encountered")
 			}
 			if numgpus > 0 {
-				if !strings.Contains(flavor.Name, "gpu") {
-					tbl, err := s.GetCloudletResourceMap(tblkey)
-					if err != nil || tbl == nil {
-						// gpu requested, name didn't match and
-						// no gpu table, osFlavor fails
-						return "", "", false, err
-					}
-					for _, tag := range tbl.Tags {
-						if !strings.Contains(flavor.Properties, tag) {
-							return "", "", false, err
+				tbl, err := s.GetCloudletResourceMap(tblkey)
+				if err != nil || tbl == nil {
+					// gpu requested, name didn't match and
+					// no gpu table, osFlavor fails
+					return "", "", false, err
+				}
+				// check tags table for a key match
+				// If found, take the value of that tag entry  and search our flavors properties map
+				// for a match. If found, this is our flavor.
+				for tag_key, tag_val := range tbl.Tags {
+					if tag_key == request[0] {
+						if len(flavor.PropMap) == 0 {
+							continue
+						}
+						var alias []string
+						for flav_key, flav_val := range flavor.PropMap {
+							// How many resources are supplied by this os flavor?
+							alias = strings.Split(flav_val, ":")
+							if len(alias) == 2 {
+								if numres, err = strconv.Atoi(alias[1]); err != nil {
+									return "", "", false, fmt.Errorf("Non-numeric count found in os flavor props")
+								}
+							} else {
+								continue
+							}
+							if wildcard {
+								// we have just the $kind:1 as in vgpu:1
+								if flav_key == request[0] && numres >= numgpus {
+									goto flavor_found
+								}
+							} else {
+								// we have resource type specifier as in $kind:$alias:N ex: vgpu:Nvidia-63:1
+								if strings.Contains(tag_val, flav_val) {
+									if numres >= numgpus {
+										goto flavor_found
+									}
+								}
+							}
 						}
 					}
 				}
+				return "", "", false, fmt.Errorf("no matching tag found for mex flavor  %s\n\n", nodeflavor.Key.Name)
+
+			flavor_found:
 				az, _ = s.findAZmatch("gpu", cli)
 				img, _ = s.findImagematch("gpu", cli)
 				return az, img, true, nil
@@ -335,18 +332,57 @@ func (s *ResTagTableApi) GetVMSpec(nodeflavor edgeproto.Flavor, cl edgeproto.Clo
 	return &vmspec, fmt.Errorf("no suitable platform flavor found for %s, please try a smaller flavor", nodeflavor.Key.Name)
 }
 
-// Validate CLI input for any Optional Resource Map entries provided with CreateFlavor
+// Validate CLI input for any Optional Resource Map entries provided with CreateFlavor.
+// Any validation of the manditory resource values will be found in flavor_api.go.
+
 func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool, error) {
-	var numgpus int
+	// Currently only gpu resources are supported, but this routine is easily
+	// extended to include those, TBI.
+	//
+	// For GPU resources, when creating a mex flavor, you can specify requests of the form:
+	// 1) optresmap=gpu=gpu:N
+	// 2) optresmap=gpu=vgpu:N or
+	// 3) optresmap=gpu=pci:N
+	// 4) optresmap=vgpu:nvidia-63:N
+	// 5) optresmap=pci:T4:N
+	//
+	// Where:
+	// 1) indicates we don't care how the resourse is provided, and the first matching os flavor will be used.
+	// All other specifiers are optional, and increase specificity of the request.
+	//
+	// 2) Requests a vGPU resource, of any kind.
+	// 3) Requests a dedicated PCI passthru GPU, of any kind.
+	// 4 and 5 allow specific types of resource instances and are also optional.
+	// 4) optresmap=gpu=vgpu:nvidia-63:1   = specific vgpu type, 1 instance.
+	// 5) optresmap=gpu=pci:T4:2           = specific pci passthru, 2 instances.
+	//
+	// In all cases, a numeric count value is used to map to os flavors that supply > 1 of the given
+	// resource. Only flavors that advertise a count >= to that requested should match.
 	var err error
+	var count string
 	for k, v := range resmap {
 		if k == "gpu" {
-			if numgpus, err = strconv.Atoi(v); err != nil {
-				return false, fmt.Errorf("Non-numeric gpu optresmap value found, 1 expected")
+			values := strings.Split(v, ":")
+			if len(values) == 1 {
+				return false, fmt.Errorf("Missing manditory resource count, ex: optresmap=gpu=gpu:1")
 			}
-			if numgpus > 1 {
-				return false, fmt.Errorf("optresmap gpu values > 1 are currently unsupported. Please use 1")
+			if values[0] != "pci" && values[0] != "vgpu" && values[0] != "gpu" {
+				return false, fmt.Errorf("GPU resource type selector must be one of [gpu, pci, vgpu] found %s", values[0])
 			}
+			if len(values) == 2 {
+				count = values[1]
+			} else if len(values) == 3 {
+				count = values[2]
+			} else {
+				return false, fmt.Errorf("Invalid optresmap syntax encountered: ex: optresmap=gpu=gpu:1")
+			}
+			if _, err = strconv.Atoi(count); err != nil {
+				return false, fmt.Errorf("Non-numeric resource count encountered, found %s", values[1])
+			}
+
+		} else {
+			// if k == "nas" etc
+			return false, fmt.Errorf("Only GPU resources currently supported, use optresmap=gpu=$resource:$count found %s", k)
 		}
 	}
 	return true, nil
