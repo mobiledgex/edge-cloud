@@ -205,7 +205,7 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	err := s.createAppInstInternal(DefCallContext(), in, cb)
-	if err == nil && in.State == edgeproto.TrackedState_READY {
+	if err == nil {//&& in.State == edgeproto.TrackedState_READY {
 		recordAppInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
 	}
 	return err
@@ -266,7 +266,6 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
-	fmt.Printf("asdf calling createAppInstInteral\n")
 	ctx := cb.Context()
 
 	// populate the clusterinst developer from the app developer if not already present
@@ -1280,7 +1279,6 @@ func setL7Port(port *dme.AppPort, key *edgeproto.AppInstKey) bool {
 }
 
 func recordAppInstEvent(ctx context.Context, app *edgeproto.AppInst, event cloudcommon.InstanceEvent, serverStatus string) {
-	fmt.Printf("asdf recording\n")
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.AppInstEvent
 	ts, _ := types.TimestampProto(time.Now())
@@ -1291,9 +1289,8 @@ func recordAppInstEvent(ctx context.Context, app *edgeproto.AppInst, event cloud
 	metric.AddTag("dev", app.Key.AppKey.DeveloperKey.Name)
 	metric.AddTag("app", app.Key.AppKey.Name)
 	metric.AddTag("version", app.Key.AppKey.Version)
-	metric.AddTag("event", string(event))
-	metric.AddTag("status", serverStatus)
+	metric.AddStringVal("event", string(event))
+	metric.AddStringVal("status", serverStatus)
 
-	fmt.Printf("qwerty recording appinst event %+v\n", metric)
 	services.influxQ.AddMetric(&metric)
 }

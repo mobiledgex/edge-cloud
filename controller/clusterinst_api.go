@@ -125,7 +125,7 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	in.Auto = false
 	err := s.createClusterInstInternal(DefCallContext(), in, cb)
-	if err == nil && in.State == edgeproto.TrackedState_READY {
+	if err == nil {//&& in.State == edgeproto.TrackedState_READY {
 		recordClusterInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
 	}
 	return err
@@ -737,8 +737,8 @@ func recordClusterInstEvent(ctx context.Context, cluster *edgeproto.ClusterInst,
 	metric.AddTag("cloudlet", cluster.Key.CloudletKey.Name)
 	metric.AddTag("cluster", cluster.Key.ClusterKey.Name)
 	metric.AddTag("dev", cluster.Key.Developer)
-	metric.AddTag("event", string(event))
-	metric.AddTag("status", serverStatus)
+	metric.AddStringVal("event", string(event))
+	metric.AddStringVal("status", serverStatus)
 
 	// errors should never happen here since to get to this point the flavor should have already been checked previously, but just in case
 	nodeFlavor := edgeproto.Flavor{}
@@ -750,7 +750,7 @@ func recordClusterInstEvent(ctx context.Context, cluster *edgeproto.ClusterInst,
 		metric.AddIntVal("vcpu", nodeFlavor.Vcpus)
 		metric.AddIntVal("disk", nodeFlavor.Disk)
 		metric.AddIntVal("nodeCount", uint64(cluster.NumMasters+cluster.NumNodes))
-		metric.AddTag("other", fmt.Sprintf("%v", nodeFlavor.OptResMap))
+		metric.AddStringVal("other", fmt.Sprintf("%v", nodeFlavor.OptResMap))
 	}
 
 	services.influxQ.AddMetric(&metric)
