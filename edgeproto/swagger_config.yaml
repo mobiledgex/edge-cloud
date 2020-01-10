@@ -45,6 +45,9 @@ skipmethods:
   AddCloudletResMapping:
   RemoveCloudletResMapping:
   RefreshAppInst:
+  CreateOperatorCode:
+  DeleteOperatorCode:
+  ShowOperatorCode:
 skipfields:
   App:
     fields:
