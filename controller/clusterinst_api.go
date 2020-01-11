@@ -125,8 +125,8 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	in.Auto = false
 	err := s.createClusterInstInternal(DefCallContext(), in, cb)
-	if err == nil {//&& in.State == edgeproto.TrackedState_READY {
-		recordClusterInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
+	if err == nil {
+		RecordClusterInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
 	}
 	return err
 }
@@ -365,18 +365,18 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 func (s *ClusterInstApi) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	err := s.deleteClusterInstInternal(DefCallContext(), in, cb)
 	if err == nil {
-		recordClusterInstEvent(cb.Context(), in, cloudcommon.DELETED, cloudcommon.InstanceDown)
+		RecordClusterInstEvent(cb.Context(), in, cloudcommon.DELETED, cloudcommon.InstanceDown)
 	}
 	return err
 }
 
 func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
-	recordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
+	RecordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 	err := s.updateClusterInstInternal(DefCallContext(), in, cb)
 	if in.State != edgeproto.TrackedState_READY {
-		recordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+		RecordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
 	} else {
-		recordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+		RecordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
 	}
 	return err
 }
@@ -728,7 +728,7 @@ func (s *ClusterInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cl
 	})
 }
 
-func recordClusterInstEvent(ctx context.Context, cluster *edgeproto.ClusterInst, event cloudcommon.InstanceEvent, serverStatus string) {
+func RecordClusterInstEvent(ctx context.Context, cluster *edgeproto.ClusterInst, event cloudcommon.InstanceEvent, serverStatus string) {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.ClusterInstEvent
 	ts, _ := types.TimestampProto(time.Now())

@@ -844,7 +844,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 					"Failed to delete dynamic app inst",
 					"key", key, "err", derr)
 			} else {
-				recordAppInstEvent(ctx, &appInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
+				RecordAppInstEvent(ctx, &appInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
 			}
 		}
 	}
@@ -857,7 +857,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 					"Failed to delete dynamic ClusterInst",
 					"key", key, "err", derr)
 			} else {
-				recordClusterInstEvent(ctx, &clInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
+				RecordClusterInstEvent(ctx, &clInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
 			}
 		}
 	}
