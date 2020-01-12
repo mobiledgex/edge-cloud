@@ -538,15 +538,15 @@ type MethodInfo struct {
 type MethodGroup struct {
 	MethodInfos []*MethodInfo
 	InType      string
+	In          *generator.Descriptor
 	HasStream   bool
 	HasUpdate   bool
 	HasMc2Api   bool
 	Suffix      string
 }
 
-func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorProto, actions map[string]string) (string, *MethodInfo) {
+func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorProto, actions map[string]string) (*generator.Descriptor, *MethodInfo) {
 	in := GetDesc(g, method.GetInputType())
-	inType := *in.DescriptorProto.Name
 
 	info := MethodInfo{}
 	for k, v := range actions {
@@ -558,7 +558,7 @@ func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorPr
 	info.Name = *method.Name
 	if info.Action == "" {
 		// ignore
-		return "", nil
+		return nil, nil
 	}
 	if ServerStreaming(method) {
 		info.Stream = true
@@ -566,7 +566,7 @@ func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorPr
 	if GetStringExtension(method.Options, protogen.E_Mc2Api, "") != "" {
 		info.Mc2Api = true
 	}
-	return inType, &info
+	return in, &info
 }
 
 // group methods by input type
@@ -585,13 +585,15 @@ func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescript
 	}
 	groups := make(map[string]*MethodGroup)
 	for _, method := range service.Method {
-		inType, info := GetMethodInfo(g, method, actions)
+		in, info := GetMethodInfo(g, method, actions)
 		if info == nil {
 			continue
 		}
+		inType := *in.DescriptorProto.Name
 		group, found := groups[inType]
 		if !found {
 			group = &MethodGroup{}
+			group.In = in
 			group.InType = inType
 			if inType+"Api" != *service.Name {
 				group.Suffix = "_" + inType

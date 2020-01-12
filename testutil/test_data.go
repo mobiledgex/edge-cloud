@@ -229,6 +229,25 @@ var OperatorData = []edgeproto.Operator{
 	},
 }
 
+var OperatorCodeData = []edgeproto.OperatorCode{
+	edgeproto.OperatorCode{
+		Code:         "31170",
+		OperatorName: "UFGT Inc.",
+	},
+	edgeproto.OperatorCode{
+		Code:         "31026",
+		OperatorName: "xmobx",
+	},
+	edgeproto.OperatorCode{
+		Code:         "310110",
+		OperatorName: "Zerilu",
+	},
+	edgeproto.OperatorCode{
+		Code:         "2621",
+		OperatorName: "Denton telecom",
+	},
+}
+
 var CloudletData = []edgeproto.Cloudlet{
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
