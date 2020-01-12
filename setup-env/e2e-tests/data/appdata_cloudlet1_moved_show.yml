@@ -57,6 +57,10 @@ operators:
 - key:
     name: gcp
 
+operatorcodes:
+- code: 31026
+  operatorname: dmuus
+
 developers:
 - key:
     name: AcmeAppCo1

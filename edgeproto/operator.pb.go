@@ -54,9 +54,23 @@ func (m *Operator) String() string            { return proto.CompactTextString(m
 func (*Operator) ProtoMessage()               {}
 func (*Operator) Descriptor() ([]byte, []int) { return fileDescriptorOperator, []int{1} }
 
+// OperatorCode maps a carrier code to an Operator name
+type OperatorCode struct {
+	// MCC plus MNC code, or custom carrier code designation.
+	Code string `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	// MobiledgeX operator name
+	OperatorName string `protobuf:"bytes,2,opt,name=operator_name,json=operatorName,proto3" json:"operator_name,omitempty"`
+}
+
+func (m *OperatorCode) Reset()                    { *m = OperatorCode{} }
+func (m *OperatorCode) String() string            { return proto.CompactTextString(m) }
+func (*OperatorCode) ProtoMessage()               {}
+func (*OperatorCode) Descriptor() ([]byte, []int) { return fileDescriptorOperator, []int{2} }
+
 func init() {
 	proto.RegisterType((*OperatorKey)(nil), "edgeproto.OperatorKey")
 	proto.RegisterType((*Operator)(nil), "edgeproto.Operator")
+	proto.RegisterType((*OperatorCode)(nil), "edgeproto.OperatorCode")
 }
 func (this *OperatorKey) GoString() string {
 	if this == nil {
@@ -284,6 +298,170 @@ var _OperatorApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "operator.proto",
 }
 
+// Client API for OperatorCodeApi service
+
+type OperatorCodeApiClient interface {
+	// Create a code for an Operator.
+	CreateOperatorCode(ctx context.Context, in *OperatorCode, opts ...grpc.CallOption) (*Result, error)
+	// Delete a code for an Operator.
+	DeleteOperatorCode(ctx context.Context, in *OperatorCode, opts ...grpc.CallOption) (*Result, error)
+	// Show OperatorCodes
+	ShowOperatorCode(ctx context.Context, in *OperatorCode, opts ...grpc.CallOption) (OperatorCodeApi_ShowOperatorCodeClient, error)
+}
+
+type operatorCodeApiClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewOperatorCodeApiClient(cc *grpc.ClientConn) OperatorCodeApiClient {
+	return &operatorCodeApiClient{cc}
+}
+
+func (c *operatorCodeApiClient) CreateOperatorCode(ctx context.Context, in *OperatorCode, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := grpc.Invoke(ctx, "/edgeproto.OperatorCodeApi/CreateOperatorCode", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *operatorCodeApiClient) DeleteOperatorCode(ctx context.Context, in *OperatorCode, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := grpc.Invoke(ctx, "/edgeproto.OperatorCodeApi/DeleteOperatorCode", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *operatorCodeApiClient) ShowOperatorCode(ctx context.Context, in *OperatorCode, opts ...grpc.CallOption) (OperatorCodeApi_ShowOperatorCodeClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_OperatorCodeApi_serviceDesc.Streams[0], c.cc, "/edgeproto.OperatorCodeApi/ShowOperatorCode", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &operatorCodeApiShowOperatorCodeClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type OperatorCodeApi_ShowOperatorCodeClient interface {
+	Recv() (*OperatorCode, error)
+	grpc.ClientStream
+}
+
+type operatorCodeApiShowOperatorCodeClient struct {
+	grpc.ClientStream
+}
+
+func (x *operatorCodeApiShowOperatorCodeClient) Recv() (*OperatorCode, error) {
+	m := new(OperatorCode)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// Server API for OperatorCodeApi service
+
+type OperatorCodeApiServer interface {
+	// Create a code for an Operator.
+	CreateOperatorCode(context.Context, *OperatorCode) (*Result, error)
+	// Delete a code for an Operator.
+	DeleteOperatorCode(context.Context, *OperatorCode) (*Result, error)
+	// Show OperatorCodes
+	ShowOperatorCode(*OperatorCode, OperatorCodeApi_ShowOperatorCodeServer) error
+}
+
+func RegisterOperatorCodeApiServer(s *grpc.Server, srv OperatorCodeApiServer) {
+	s.RegisterService(&_OperatorCodeApi_serviceDesc, srv)
+}
+
+func _OperatorCodeApi_CreateOperatorCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OperatorCode)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OperatorCodeApiServer).CreateOperatorCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.OperatorCodeApi/CreateOperatorCode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OperatorCodeApiServer).CreateOperatorCode(ctx, req.(*OperatorCode))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OperatorCodeApi_DeleteOperatorCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OperatorCode)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OperatorCodeApiServer).DeleteOperatorCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.OperatorCodeApi/DeleteOperatorCode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OperatorCodeApiServer).DeleteOperatorCode(ctx, req.(*OperatorCode))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OperatorCodeApi_ShowOperatorCode_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(OperatorCode)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(OperatorCodeApiServer).ShowOperatorCode(m, &operatorCodeApiShowOperatorCodeServer{stream})
+}
+
+type OperatorCodeApi_ShowOperatorCodeServer interface {
+	Send(*OperatorCode) error
+	grpc.ServerStream
+}
+
+type operatorCodeApiShowOperatorCodeServer struct {
+	grpc.ServerStream
+}
+
+func (x *operatorCodeApiShowOperatorCodeServer) Send(m *OperatorCode) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _OperatorCodeApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.OperatorCodeApi",
+	HandlerType: (*OperatorCodeApiServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateOperatorCode",
+			Handler:    _OperatorCodeApi_CreateOperatorCode_Handler,
+		},
+		{
+			MethodName: "DeleteOperatorCode",
+			Handler:    _OperatorCodeApi_DeleteOperatorCode_Handler,
+		},
+	},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ShowOperatorCode",
+			Handler:       _OperatorCodeApi_ShowOperatorCode_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "operator.proto",
+}
+
 func (m *OperatorKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -346,6 +524,36 @@ func (m *Operator) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n1
+	return i, nil
+}
+
+func (m *OperatorCode) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OperatorCode) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Code) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintOperator(dAtA, i, uint64(len(m.Code)))
+		i += copy(dAtA[i:], m.Code)
+	}
+	if len(m.OperatorName) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintOperator(dAtA, i, uint64(len(m.OperatorName)))
+		i += copy(dAtA[i:], m.OperatorName)
+	}
 	return i, nil
 }
 
@@ -893,6 +1101,429 @@ func (m *Operator) ValidateEnums() error {
 	return nil
 }
 
+func (m *OperatorCode) Matches(o *OperatorCode, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !opts.Filter || o.Code != "" {
+		if o.Code != m.Code {
+			return false
+		}
+	}
+	if !opts.Filter || o.OperatorName != "" {
+		if o.OperatorName != m.OperatorName {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *OperatorCode) CopyInFields(src *OperatorCode) int {
+	changed := 0
+	if m.Code != src.Code {
+		m.Code = src.Code
+		changed++
+	}
+	if m.OperatorName != src.OperatorName {
+		m.OperatorName = src.OperatorName
+		changed++
+	}
+	return changed
+}
+
+func (s *OperatorCode) HasFields() bool {
+	return false
+}
+
+type OperatorCodeStore struct {
+	kvstore objstore.KVStore
+}
+
+func NewOperatorCodeStore(kvstore objstore.KVStore) OperatorCodeStore {
+	return OperatorCodeStore{kvstore: kvstore}
+}
+
+func (s *OperatorCodeStore) Create(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("OperatorCode", m.GetKey())
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Create(ctx, key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *OperatorCodeStore) Update(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("OperatorCode", m.GetKey())
+	var vers int64 = 0
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *OperatorCodeStore) Put(ctx context.Context, m *OperatorCode, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("OperatorCode", m.GetKey())
+	var val []byte
+	val, err = json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *OperatorCodeStore) Delete(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error) {
+	err := m.GetKey().ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("OperatorCode", m.GetKey())
+	rev, err := s.kvstore.Delete(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *OperatorCodeStore) LoadOne(key string) (*OperatorCode, int64, error) {
+	val, rev, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	var obj OperatorCode
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Failed to parse OperatorCode data", "val", string(val))
+		return nil, 0, err
+	}
+	return &obj, rev, nil
+}
+
+func (s *OperatorCodeStore) STMGet(stm concurrency.STM, key *OperatorCodeKey, buf *OperatorCode) bool {
+	keystr := objstore.DbKeyString("OperatorCode", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *OperatorCodeStore) STMPut(stm concurrency.STM, obj *OperatorCode, ops ...objstore.KVOp) {
+	keystr := objstore.DbKeyString("OperatorCode", obj.GetKey())
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("OperatorCode json marsahal failed", "obj", obj, "err", err)
+	}
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
+}
+
+func (s *OperatorCodeStore) STMDel(stm concurrency.STM, key *OperatorCodeKey) {
+	keystr := objstore.DbKeyString("OperatorCode", key)
+	stm.Del(keystr)
+}
+
+type OperatorCodeKeyWatcher struct {
+	cb func(ctx context.Context)
+}
+
+// OperatorCodeCache caches OperatorCode objects in memory in a hash table
+// and keeps them in sync with the database.
+type OperatorCodeCache struct {
+	Objs        map[OperatorCodeKey]*OperatorCode
+	Mux         util.Mutex
+	List        map[OperatorCodeKey]struct{}
+	NotifyCb    func(ctx context.Context, obj *OperatorCodeKey, old *OperatorCode)
+	UpdatedCb   func(ctx context.Context, old *OperatorCode, new *OperatorCode)
+	KeyWatchers map[OperatorCodeKey][]*OperatorCodeKeyWatcher
+}
+
+func NewOperatorCodeCache() *OperatorCodeCache {
+	cache := OperatorCodeCache{}
+	InitOperatorCodeCache(&cache)
+	return &cache
+}
+
+func InitOperatorCodeCache(cache *OperatorCodeCache) {
+	cache.Objs = make(map[OperatorCodeKey]*OperatorCode)
+	cache.KeyWatchers = make(map[OperatorCodeKey][]*OperatorCodeKeyWatcher)
+}
+
+func (c *OperatorCodeCache) GetTypeString() string {
+	return "OperatorCode"
+}
+
+func (c *OperatorCodeCache) Get(key *OperatorCodeKey, valbuf *OperatorCode) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	inst, found := c.Objs[*key]
+	if found {
+		*valbuf = *inst
+	}
+	return found
+}
+
+func (c *OperatorCodeCache) HasKey(key *OperatorCodeKey) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	_, found := c.Objs[*key]
+	return found
+}
+
+func (c *OperatorCodeCache) GetAllKeys(ctx context.Context, keys map[OperatorCodeKey]context.Context) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		keys[key] = ctx
+	}
+}
+
+func (c *OperatorCodeCache) Update(ctx context.Context, in *OperatorCode, rev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *OperatorCode) (*OperatorCode, bool) {
+		return in, true
+	})
+}
+
+func (c *OperatorCodeCache) UpdateModFunc(ctx context.Context, key *OperatorCodeKey, rev int64, modFunc func(old *OperatorCode) (new *OperatorCode, changed bool)) {
+	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
+		if c.UpdatedCb != nil {
+			newCopy := &OperatorCode{}
+			*newCopy = *new
+			defer c.UpdatedCb(ctx, old, newCopy)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(ctx, new.GetKey(), old)
+		}
+	}
+	c.Objs[new.GetKeyVal()] = new
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate OperatorCode", "obj", new, "rev", rev)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(ctx, new.GetKey())
+}
+
+func (c *OperatorCodeCache) Delete(ctx context.Context, in *OperatorCode, rev int64) {
+	c.Mux.Lock()
+	old := c.Objs[in.GetKeyVal()]
+	delete(c.Objs, in.GetKeyVal())
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
+	log.DebugLog(log.DebugLevelApi, "SyncDelete OperatorCode", "key", in.GetKey(), "rev", rev)
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		c.NotifyCb(ctx, in.GetKey(), old)
+	}
+	c.TriggerKeyWatchers(ctx, in.GetKey())
+}
+
+func (c *OperatorCodeCache) Prune(ctx context.Context, validKeys map[OperatorCodeKey]struct{}) {
+	notify := make(map[OperatorCodeKey]*OperatorCode)
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			if c.NotifyCb != nil {
+				notify[key] = c.Objs[key]
+			}
+			delete(c.Objs, key)
+		}
+	}
+	c.Mux.Unlock()
+	for key, old := range notify {
+		if c.NotifyCb != nil {
+			c.NotifyCb(ctx, &key, old)
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *OperatorCodeCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+
+func (c *OperatorCodeCache) Flush(ctx context.Context, notifyId int64) {
+}
+
+func (c *OperatorCodeCache) Show(filter *OperatorCode, cb func(ret *OperatorCode) error) error {
+	log.DebugLog(log.DebugLevelApi, "Show OperatorCode", "count", len(c.Objs))
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, obj := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare OperatorCode", "filter", filter, "obj", obj)
+		if !obj.Matches(filter, MatchFilter()) {
+			continue
+		}
+		log.DebugLog(log.DebugLevelApi, "Show OperatorCode", "obj", obj)
+		err := cb(obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func OperatorCodeGenericNotifyCb(fn func(key *OperatorCodeKey, old *OperatorCode)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*OperatorCodeKey), obj.(*OperatorCode))
+	}
+}
+
+func (c *OperatorCodeCache) SetNotifyCb(fn func(ctx context.Context, obj *OperatorCodeKey, old *OperatorCode)) {
+	c.NotifyCb = fn
+}
+
+func (c *OperatorCodeCache) SetUpdatedCb(fn func(ctx context.Context, old *OperatorCode, new *OperatorCode)) {
+	c.UpdatedCb = fn
+}
+
+func (c *OperatorCodeCache) WatchKey(key *OperatorCodeKey, cb func(ctx context.Context)) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*OperatorCodeKeyWatcher, 0)
+	}
+	watcher := OperatorCodeKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching OperatorCode", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *OperatorCodeCache) TriggerKeyWatchers(ctx context.Context, key *OperatorCodeKey) {
+	watchers := make([]*OperatorCodeKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb(ctx)
+	}
+}
+func (c *OperatorCodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+	obj := OperatorCode{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse OperatorCode data", "val", string(val))
+		return
+	}
+	c.Update(ctx, &obj, rev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.GetKeyVal()] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *OperatorCodeCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+	obj := OperatorCode{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	OperatorCodeKeyStringParse(keystr, &obj)
+	c.Delete(ctx, &obj, rev)
+}
+
+func (c *OperatorCodeCache) SyncListStart(ctx context.Context) {
+	c.List = make(map[OperatorCodeKey]struct{})
+}
+
+func (c *OperatorCodeCache) SyncListEnd(ctx context.Context) {
+	deleted := make(map[OperatorCodeKey]*OperatorCode)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, val := range deleted {
+			c.NotifyCb(ctx, &key, val)
+			c.TriggerKeyWatchers(ctx, &key)
+		}
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *OperatorCode) ValidateEnums() error {
+	return nil
+}
+
 func (m *OperatorKey) Size() (n int) {
 	var l int
 	_ = l
@@ -914,6 +1545,20 @@ func (m *Operator) Size() (n int) {
 	}
 	l = m.Key.Size()
 	n += 1 + l + sovOperator(uint64(l))
+	return n
+}
+
+func (m *OperatorCode) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Code)
+	if l > 0 {
+		n += 1 + l + sovOperator(uint64(l))
+	}
+	l = len(m.OperatorName)
+	if l > 0 {
+		n += 1 + l + sovOperator(uint64(l))
+	}
 	return n
 }
 
@@ -1118,6 +1763,114 @@ func (m *Operator) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *OperatorCode) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowOperator
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OperatorCode: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OperatorCode: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowOperator
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthOperator
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Code = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OperatorName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowOperator
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthOperator
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OperatorName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipOperator(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthOperator
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipOperator(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1226,30 +1979,41 @@ var (
 func init() { proto.RegisterFile("operator.proto", fileDescriptorOperator) }
 
 var fileDescriptorOperator = []byte{
-	// 390 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xcb, 0x2f, 0x48, 0x2d,
-	0x4a, 0x2c, 0xc9, 0x2f, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4c, 0x4d, 0x49, 0x4f,
-	0x05, 0x33, 0xa5, 0x64, 0xd2, 0xf3, 0xf3, 0xd3, 0x73, 0x52, 0xf5, 0x13, 0x0b, 0x32, 0xf5, 0x13,
-	0xf3, 0xf2, 0xf2, 0x4b, 0x12, 0x4b, 0x32, 0xf3, 0xf3, 0x8a, 0x21, 0x0a, 0xa5, 0x2c, 0xd2, 0x33,
-	0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x73, 0xf3, 0x93, 0x32, 0x73, 0x40, 0x1a,
-	0x2b, 0xf4, 0x41, 0xa4, 0x6e, 0x72, 0x4e, 0x7e, 0x69, 0x8a, 0x3e, 0x58, 0x5d, 0x7a, 0x6a, 0x1e,
-	0x9c, 0x01, 0xd5, 0xc9, 0x53, 0x94, 0x5a, 0x5c, 0x9a, 0x53, 0x02, 0xe5, 0x89, 0xa4, 0xe7, 0xa7,
-	0xe7, 0x83, 0x99, 0xfa, 0x20, 0x16, 0x44, 0x54, 0x49, 0x9f, 0x8b, 0xdb, 0x1f, 0xea, 0x30, 0xef,
-	0xd4, 0x4a, 0x21, 0x21, 0x2e, 0x96, 0xbc, 0xc4, 0xdc, 0x54, 0x09, 0x46, 0x05, 0x46, 0x0d, 0xce,
-	0x20, 0x30, 0xdb, 0x8a, 0xe7, 0xc5, 0x67, 0x09, 0xc6, 0x1f, 0x9f, 0x25, 0x18, 0x37, 0x2c, 0x90,
-	0x67, 0x54, 0x2a, 0xe5, 0xe2, 0x80, 0x69, 0x10, 0x12, 0xe3, 0x62, 0x4b, 0xcb, 0x4c, 0xcd, 0x49,
-	0x29, 0x96, 0x60, 0x54, 0x60, 0xd6, 0xe0, 0x0c, 0x82, 0xf2, 0x84, 0xf4, 0xb8, 0x98, 0xb3, 0x53,
-	0x2b, 0x25, 0x98, 0x14, 0x18, 0x35, 0xb8, 0x8d, 0xc4, 0xf4, 0xe0, 0x3e, 0xd5, 0x43, 0xb2, 0xca,
-	0x89, 0xe5, 0xc4, 0x3d, 0x79, 0x86, 0x20, 0x90, 0x42, 0x2b, 0x45, 0x90, 0x0d, 0x1f, 0x3e, 0x4b,
-	0x30, 0x36, 0x7c, 0x91, 0x60, 0x9c, 0xf1, 0x45, 0x82, 0x71, 0xd6, 0x57, 0x09, 0x5e, 0x90, 0xdd,
-	0xb6, 0xde, 0xa9, 0x95, 0x7a, 0x7e, 0x89, 0xb9, 0xa9, 0x46, 0x2f, 0x99, 0x10, 0x0e, 0x75, 0x2c,
-	0xc8, 0x14, 0x0a, 0xe5, 0xe2, 0x73, 0x2e, 0x4a, 0x4d, 0x2c, 0x49, 0x85, 0x3b, 0x46, 0x18, 0x8b,
-	0x3d, 0x52, 0x82, 0x48, 0x82, 0x41, 0xe0, 0xd0, 0x50, 0x92, 0x6e, 0xba, 0xfc, 0x64, 0x32, 0x93,
-	0xa8, 0x92, 0x80, 0x7e, 0x32, 0xd8, 0x00, 0x7d, 0x58, 0xc4, 0x58, 0x31, 0x6a, 0x81, 0x8c, 0x75,
-	0x49, 0xcd, 0x49, 0xa5, 0xc8, 0xd8, 0x14, 0xb0, 0x01, 0xe8, 0xc6, 0x86, 0x16, 0xa4, 0x50, 0xe6,
-	0xda, 0x52, 0xb0, 0x01, 0x68, 0xc6, 0xf2, 0x04, 0x67, 0xe4, 0x97, 0xe3, 0x37, 0x14, 0x9b, 0xa0,
-	0x92, 0x24, 0xd8, 0x58, 0x61, 0x25, 0x3e, 0xfd, 0xe2, 0x8c, 0xfc, 0x72, 0x64, 0x43, 0x0d, 0x18,
-	0x9d, 0x04, 0x4e, 0x3c, 0x94, 0x63, 0x38, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07,
-	0x8f, 0xe4, 0x18, 0x93, 0xd8, 0xc0, 0xda, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x0b, 0xd9,
-	0xf4, 0xc7, 0xc5, 0x02, 0x00, 0x00,
+	// 561 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x53, 0xbf, 0x6f, 0xd3, 0x40,
+	0x14, 0xce, 0x25, 0x55, 0x45, 0xae, 0x69, 0x08, 0x6e, 0x69, 0xaf, 0x01, 0xa5, 0xa9, 0xbb, 0x44,
+	0x50, 0xec, 0x2a, 0x2c, 0x28, 0x12, 0x43, 0x13, 0xc4, 0x12, 0xf1, 0x43, 0x41, 0x65, 0x45, 0x8e,
+	0xfd, 0x70, 0x2c, 0x1c, 0xbf, 0xc8, 0x3f, 0x14, 0xb2, 0x21, 0x26, 0xc4, 0x84, 0xc4, 0x82, 0x98,
+	0xf8, 0x13, 0x3a, 0xf0, 0x47, 0x64, 0x44, 0x62, 0x47, 0x10, 0x31, 0x40, 0x27, 0x44, 0x12, 0x89,
+	0x11, 0xdd, 0xc5, 0x0e, 0x4e, 0x14, 0xb2, 0x54, 0x5d, 0xac, 0x77, 0xef, 0xde, 0xfb, 0xbe, 0xef,
+	0xbd, 0xcf, 0x47, 0xb3, 0xd8, 0x01, 0x57, 0xf3, 0xd1, 0x55, 0x3a, 0x2e, 0xfa, 0x28, 0xa5, 0xc1,
+	0x30, 0x41, 0x84, 0xf9, 0xab, 0x26, 0xa2, 0x69, 0x83, 0xaa, 0x75, 0x2c, 0x55, 0x73, 0x1c, 0xf4,
+	0x35, 0xdf, 0x42, 0xc7, 0x9b, 0x14, 0xe6, 0x6f, 0x99, 0x96, 0xdf, 0x0a, 0x9a, 0x8a, 0x8e, 0x6d,
+	0xb5, 0x8d, 0x4d, 0xcb, 0xe6, 0x8d, 0xcf, 0x55, 0xfe, 0xbd, 0xa1, 0xdb, 0x18, 0x18, 0xaa, 0xa8,
+	0x33, 0xc1, 0x99, 0x06, 0x61, 0x67, 0xc6, 0x05, 0x2f, 0xb0, 0xfd, 0xf0, 0xb4, 0x69, 0xa2, 0x89,
+	0x22, 0x54, 0x79, 0x34, 0xc9, 0xca, 0x2a, 0x5d, 0x7b, 0x10, 0x0a, 0xab, 0x43, 0x4f, 0x92, 0xe8,
+	0x8a, 0xa3, 0xb5, 0x81, 0x91, 0x22, 0x29, 0xa5, 0x1b, 0x22, 0xae, 0x64, 0x7e, 0x0c, 0x19, 0xf9,
+	0x33, 0x64, 0xe4, 0xe4, 0xc3, 0x2e, 0x91, 0x03, 0x7a, 0x21, 0x6a, 0x90, 0xb6, 0xe8, 0xea, 0x53,
+	0x0b, 0x6c, 0xc3, 0x63, 0xa4, 0x98, 0x2a, 0xa5, 0x1b, 0xe1, 0x49, 0x52, 0x68, 0xea, 0x19, 0xf4,
+	0x58, 0xb2, 0x48, 0x4a, 0x6b, 0xe5, 0x2d, 0x65, 0x3a, 0xa9, 0x12, 0xa3, 0xaa, 0xae, 0xf4, 0xbf,
+	0xec, 0x26, 0x1a, 0xbc, 0xb0, 0xb2, 0xc7, 0x19, 0x7e, 0x0d, 0x19, 0x79, 0x31, 0x62, 0xe4, 0xdd,
+	0x88, 0x91, 0xf7, 0x63, 0xb6, 0xce, 0xb9, 0x6f, 0xd7, 0xa1, 0xa7, 0xdc, 0xd7, 0xda, 0x20, 0xfb,
+	0x34, 0x13, 0x35, 0xd7, 0xd0, 0x00, 0x2e, 0x54, 0x47, 0x63, 0x2a, 0x94, 0xc7, 0xd2, 0x3e, 0x5d,
+	0x8f, 0x96, 0xfc, 0x44, 0x4c, 0x91, 0x14, 0x97, 0x99, 0x28, 0xc9, 0x81, 0x2a, 0xd7, 0xe3, 0x5c,
+	0x6f, 0x42, 0xbe, 0x93, 0x31, 0x4b, 0xfc, 0x1e, 0xb3, 0x8b, 0x71, 0x8a, 0x3a, 0xf4, 0xca, 0x3f,
+	0x93, 0xff, 0xd6, 0x73, 0xd4, 0xb1, 0xa4, 0x63, 0x9a, 0xad, 0xb9, 0xa0, 0xf9, 0x30, 0x5d, 0xc1,
+	0xc6, 0x82, 0xe9, 0xf2, 0x97, 0x62, 0xc9, 0x86, 0xf0, 0x40, 0xbe, 0xf2, 0xf2, 0xf3, 0xf7, 0xb7,
+	0xc9, 0xcb, 0x72, 0x4e, 0xd5, 0x05, 0x80, 0x1a, 0x89, 0xaa, 0x90, 0x6b, 0x1c, 0xf6, 0x0e, 0xd8,
+	0x70, 0x26, 0x58, 0x43, 0x00, 0xcc, 0xc3, 0x1e, 0x77, 0x8c, 0xb3, 0xa9, 0x0d, 0x04, 0xc0, 0x1c,
+	0x6c, 0xe6, 0x51, 0x0b, 0xbb, 0xcb, 0x41, 0x17, 0x25, 0xe5, 0x1d, 0x01, 0xbb, 0x21, 0x67, 0x55,
+	0xaf, 0x85, 0xdd, 0x38, 0xe8, 0x21, 0x29, 0x7f, 0x4c, 0xd1, 0x99, 0xfd, 0xf3, 0x7d, 0xbf, 0x22,
+	0x54, 0x9a, 0x5d, 0xb8, 0x30, 0x7f, 0x7b, 0x01, 0x38, 0xbf, 0x58, 0x34, 0xca, 0xdd, 0xd3, 0x11,
+	0xdb, 0x6f, 0x80, 0x87, 0x81, 0xab, 0x43, 0x8d, 0xbf, 0x17, 0x1b, 0xfc, 0x87, 0x88, 0xb6, 0x77,
+	0x70, 0xa4, 0xf3, 0x77, 0x76, 0x4f, 0x73, 0x34, 0x13, 0x0e, 0x84, 0xb4, 0x1d, 0x79, 0x73, 0xde,
+	0x1f, 0xfe, 0x67, 0xf1, 0xa9, 0xb9, 0x94, 0x59, 0x93, 0xce, 0x5f, 0xca, 0x9c, 0xa7, 0x91, 0x94,
+	0xd7, 0x84, 0xe6, 0xe2, 0x0e, 0x2c, 0x17, 0xf2, 0xbf, 0x0b, 0xb9, 0x7a, 0x3a, 0x62, 0x7b, 0xcb,
+	0xe4, 0x3c, 0xb6, 0xa0, 0x3b, 0x11, 0xb3, 0x2d, 0x4b, 0xb3, 0x96, 0x85, 0x52, 0x0e, 0x49, 0x35,
+	0xd7, 0xff, 0x56, 0x48, 0xf4, 0x07, 0x05, 0xf2, 0x69, 0x50, 0x20, 0x5f, 0x07, 0x05, 0xd2, 0x5c,
+	0x15, 0x5c, 0x37, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0x22, 0xb8, 0x9d, 0xa2, 0xf2, 0x04, 0x00,
+	0x00,
 }
