@@ -313,7 +313,7 @@ func RunFlavorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.
 	var err error
 	flavorApi := edgeproto.NewFlavorApiClient(conn)
 	for ii, obj := range *data {
-		log.DebugLog(log.DebugLevelApi, "API %v for Flavor: %v", mode, obj.Key)
+		log.DebugLog(log.DebugLevelApi, "API %v for Flavor: %v", mode, obj.GetKey())
 		switch mode {
 		case "create":
 			_, err = flavorApi.CreateFlavor(ctx, &obj)
@@ -327,12 +327,12 @@ func RunFlavorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.
 		case "remove":
 			_, err = flavorApi.RemoveFlavorRes(ctx, &obj)
 		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Flavor: %v", mode, obj.Key)
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Flavor: %v", mode, obj.GetKey())
 			return nil
 		}
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
 		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
 		}
 	}
 	return nil

@@ -313,7 +313,7 @@ func RunAppApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.App
 	var err error
 	appApi := edgeproto.NewAppApiClient(conn)
 	for ii, obj := range *data {
-		log.DebugLog(log.DebugLevelApi, "API %v for App: %v", mode, obj.Key)
+		log.DebugLog(log.DebugLevelApi, "API %v for App: %v", mode, obj.GetKey())
 		switch mode {
 		case "create":
 			_, err = appApi.CreateApp(ctx, &obj)
@@ -323,12 +323,12 @@ func RunAppApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.App
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			_, err = appApi.UpdateApp(ctx, &obj)
 		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for App: %v", mode, obj.Key)
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for App: %v", mode, obj.GetKey())
 			return nil
 		}
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
 		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
 		}
 	}
 	return nil

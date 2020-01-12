@@ -84,6 +84,7 @@
 		Notice
 		OperatorKey
 		Operator
+		OperatorCode
 		CloudletRefs
 		ClusterRefs
 		ResTagTableKey
