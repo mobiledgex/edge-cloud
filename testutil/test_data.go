@@ -229,6 +229,25 @@ var OperatorData = []edgeproto.Operator{
 	},
 }
 
+var OperatorCodeData = []edgeproto.OperatorCode{
+	edgeproto.OperatorCode{
+		Code:         "31170",
+		OperatorName: "AT&T Inc.",
+	},
+	edgeproto.OperatorCode{
+		Code:         "31026",
+		OperatorName: "T-Mobile",
+	},
+	edgeproto.OperatorCode{
+		Code:         "310110",
+		OperatorName: "Verizon",
+	},
+	edgeproto.OperatorCode{
+		Code:         "2621",
+		OperatorName: "Deutsche Telekom",
+	},
+}
+
 var CloudletData = []edgeproto.Cloudlet{
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
