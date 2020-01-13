@@ -309,11 +309,281 @@ func FindOperatorData(key *edgeproto.OperatorKey, testData []edgeproto.Operator)
 	return nil, false
 }
 
+type ShowOperatorCode struct {
+	Data map[string]edgeproto.OperatorCode
+	grpc.ServerStream
+	Ctx context.Context
+}
+
+func (x *ShowOperatorCode) Init() {
+	x.Data = make(map[string]edgeproto.OperatorCode)
+}
+
+func (x *ShowOperatorCode) Send(m *edgeproto.OperatorCode) error {
+	x.Data[m.GetKey().GetKeyString()] = *m
+	return nil
+}
+
+func (x *ShowOperatorCode) Context() context.Context {
+	return x.Ctx
+}
+
+var OperatorCodeShowExtraCount = 0
+
+func (x *ShowOperatorCode) ReadStream(stream edgeproto.OperatorCodeApi_ShowOperatorCodeClient, err error) {
+	x.Data = make(map[string]edgeproto.OperatorCode)
+	if err != nil {
+		return
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			break
+		}
+		x.Data[obj.GetKey().GetKeyString()] = *obj
+	}
+}
+
+func (x *ShowOperatorCode) CheckFound(obj *edgeproto.OperatorCode) bool {
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	return found
+}
+
+func (x *ShowOperatorCode) AssertFound(t *testing.T, obj *edgeproto.OperatorCode) {
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find OperatorCode %s", obj.GetKey().GetKeyString())
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
+		require.Equal(t, *obj, check, "OperatorCode are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.GetKey().GetKeyString())
+	}
+}
+
+func (x *ShowOperatorCode) AssertNotFound(t *testing.T, obj *edgeproto.OperatorCode) {
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find OperatorCode %s", obj.GetKey().GetKeyString())
+}
+
+func WaitAssertFoundOperatorCode(t *testing.T, api edgeproto.OperatorCodeApiClient, obj *edgeproto.OperatorCode, count int, retry time.Duration) {
+	show := ShowOperatorCode{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowOperatorCode(ctx, obj)
+		show.ReadStream(stream, err)
+		cancel()
+		if show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertFound(t, obj)
+}
+
+func WaitAssertNotFoundOperatorCode(t *testing.T, api edgeproto.OperatorCodeApiClient, obj *edgeproto.OperatorCode, count int, retry time.Duration) {
+	show := ShowOperatorCode{}
+	filterNone := edgeproto.OperatorCode{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowOperatorCode(ctx, &filterNone)
+		show.ReadStream(stream, err)
+		cancel()
+		if !show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertNotFound(t, obj)
+}
+
+// Wrap the api with a common interface
+type OperatorCodeCommonApi struct {
+	internal_api edgeproto.OperatorCodeApiServer
+	client_api   edgeproto.OperatorCodeApiClient
+}
+
+func (x *OperatorCodeCommonApi) CreateOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error) {
+	copy := &edgeproto.OperatorCode{}
+	*copy = *in
+	if x.internal_api != nil {
+		return x.internal_api.CreateOperatorCode(ctx, copy)
+	} else {
+		return x.client_api.CreateOperatorCode(ctx, copy)
+	}
+}
+
+func (x *OperatorCodeCommonApi) DeleteOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error) {
+	copy := &edgeproto.OperatorCode{}
+	*copy = *in
+	if x.internal_api != nil {
+		return x.internal_api.DeleteOperatorCode(ctx, copy)
+	} else {
+		return x.client_api.DeleteOperatorCode(ctx, copy)
+	}
+}
+
+func (x *OperatorCodeCommonApi) ShowOperatorCode(ctx context.Context, filter *edgeproto.OperatorCode, showData *ShowOperatorCode) error {
+	if x.internal_api != nil {
+		showData.Ctx = ctx
+		return x.internal_api.ShowOperatorCode(filter, showData)
+	} else {
+		stream, err := x.client_api.ShowOperatorCode(ctx, filter)
+		showData.ReadStream(stream, err)
+		return err
+	}
+}
+
+func NewInternalOperatorCodeApi(api edgeproto.OperatorCodeApiServer) *OperatorCodeCommonApi {
+	apiWrap := OperatorCodeCommonApi{}
+	apiWrap.internal_api = api
+	return &apiWrap
+}
+
+func NewClientOperatorCodeApi(api edgeproto.OperatorCodeApiClient) *OperatorCodeCommonApi {
+	apiWrap := OperatorCodeCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}
+
+func InternalOperatorCodeTest(t *testing.T, test string, api edgeproto.OperatorCodeApiServer, testData []edgeproto.OperatorCode) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalOperatorCodeTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	switch test {
+	case "cud":
+		basicOperatorCodeCudTest(t, ctx, NewInternalOperatorCodeApi(api), testData)
+	case "show":
+		basicOperatorCodeShowTest(t, ctx, NewInternalOperatorCodeApi(api), testData)
+	}
+}
+
+func ClientOperatorCodeTest(t *testing.T, test string, api edgeproto.OperatorCodeApiClient, testData []edgeproto.OperatorCode) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientOperatorCodeTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	switch test {
+	case "cud":
+		basicOperatorCodeCudTest(t, ctx, NewClientOperatorCodeApi(api), testData)
+	case "show":
+		basicOperatorCodeShowTest(t, ctx, NewClientOperatorCodeApi(api), testData)
+	}
+}
+
+func basicOperatorCodeShowTest(t *testing.T, ctx context.Context, api *OperatorCodeCommonApi, testData []edgeproto.OperatorCode) {
+	var err error
+
+	show := ShowOperatorCode{}
+	show.Init()
+	filterNone := edgeproto.OperatorCode{}
+	err = api.ShowOperatorCode(ctx, &filterNone, &show)
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData)+OperatorCodeShowExtraCount, len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
+
+func GetOperatorCode(t *testing.T, ctx context.Context, api *OperatorCodeCommonApi, key *edgeproto.OperatorCodeKey, out *edgeproto.OperatorCode) bool {
+	var err error
+
+	show := ShowOperatorCode{}
+	show.Init()
+	filter := edgeproto.OperatorCode{}
+	filter.SetKey(key)
+	err = api.ShowOperatorCode(ctx, &filter, &show)
+	require.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
+func basicOperatorCodeCudTest(t *testing.T, ctx context.Context, api *OperatorCodeCommonApi, testData []edgeproto.OperatorCode) {
+	var err error
+
+	if len(testData) < 3 {
+		require.True(t, false, "Need at least 3 test data objects")
+		return
+	}
+
+	// test create
+	CreateOperatorCodeData(t, ctx, api, testData)
+
+	// test duplicate Create - should fail
+	_, err = api.CreateOperatorCode(ctx, &testData[0])
+	require.NotNil(t, err, "Create duplicate OperatorCode")
+
+	// test show all items
+	basicOperatorCodeShowTest(t, ctx, api, testData)
+
+	// test Delete
+	_, err = api.DeleteOperatorCode(ctx, &testData[0])
+	require.Nil(t, err, "Delete OperatorCode %s", testData[0].GetKey().GetKeyString())
+	show := ShowOperatorCode{}
+	show.Init()
+	filterNone := edgeproto.OperatorCode{}
+	err = api.ShowOperatorCode(ctx, &filterNone, &show)
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData)-1+OperatorCodeShowExtraCount, len(show.Data), "Show count")
+	show.AssertNotFound(t, &testData[0])
+	// Create it back
+	_, err = api.CreateOperatorCode(ctx, &testData[0])
+	require.Nil(t, err, "Create OperatorCode %s", testData[0].GetKey().GetKeyString())
+
+	// test invalid keys
+	bad := edgeproto.OperatorCode{}
+	_, err = api.CreateOperatorCode(ctx, &bad)
+	require.NotNil(t, err, "Create OperatorCode with no key info")
+
+}
+
+func InternalOperatorCodeCreate(t *testing.T, api edgeproto.OperatorCodeApiServer, testData []edgeproto.OperatorCode) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalOperatorCodeCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	CreateOperatorCodeData(t, ctx, NewInternalOperatorCodeApi(api), testData)
+}
+
+func ClientOperatorCodeCreate(t *testing.T, api edgeproto.OperatorCodeApiClient, testData []edgeproto.OperatorCode) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientOperatorCodeCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	CreateOperatorCodeData(t, ctx, NewClientOperatorCodeApi(api), testData)
+}
+
+func CreateOperatorCodeData(t *testing.T, ctx context.Context, api *OperatorCodeCommonApi, testData []edgeproto.OperatorCode) {
+	var err error
+
+	for _, obj := range testData {
+		_, err = api.CreateOperatorCode(ctx, &obj)
+		require.Nil(t, err, "Create OperatorCode %s", obj.GetKey().GetKeyString())
+	}
+}
+
+func FindOperatorCodeData(key *edgeproto.OperatorCodeKey, testData []edgeproto.OperatorCode) (*edgeproto.OperatorCode, bool) {
+	for ii, _ := range testData {
+		if testData[ii].GetKey().Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
+}
+
 func RunOperatorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Operator, dataMap []map[string]interface{}, mode string) error {
 	var err error
 	operatorApi := edgeproto.NewOperatorApiClient(conn)
 	for ii, obj := range *data {
-		log.DebugLog(log.DebugLevelApi, "API %v for Operator: %v", mode, obj.Key)
+		log.DebugLog(log.DebugLevelApi, "API %v for Operator: %v", mode, obj.GetKey())
 		switch mode {
 		case "create":
 			_, err = operatorApi.CreateOperator(ctx, &obj)
@@ -323,12 +593,12 @@ func RunOperatorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeprot
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			_, err = operatorApi.UpdateOperator(ctx, &obj)
 		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Operator: %v", mode, obj.Key)
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Operator: %v", mode, obj.GetKey())
 			return nil
 		}
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
 		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
 		}
 	}
 	return nil
@@ -367,6 +637,59 @@ func (s *DummyServer) ShowOperator(in *edgeproto.Operator, server edgeproto.Oper
 		}
 	}
 	err = s.OperatorCache.Show(in, func(obj *edgeproto.Operator) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
+}
+
+func RunOperatorCodeApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.OperatorCode, dataMap []map[string]interface{}, mode string) error {
+	var err error
+	operatorCodeApi := edgeproto.NewOperatorCodeApiClient(conn)
+	for _, obj := range *data {
+		log.DebugLog(log.DebugLevelApi, "API %v for OperatorCode: %v", mode, obj.GetKey())
+		switch mode {
+		case "create":
+			_, err = operatorCodeApi.CreateOperatorCode(ctx, &obj)
+		case "delete":
+			_, err = operatorCodeApi.DeleteOperatorCode(ctx, &obj)
+		default:
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for OperatorCode: %v", mode, obj.GetKey())
+			return nil
+		}
+		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
+		if err != nil {
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
+		}
+	}
+	return nil
+}
+
+func (s *DummyServer) CreateOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.OperatorCodeCache.Update(ctx, in, 0)
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) DeleteOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.OperatorCodeCache.Delete(ctx, in, 0)
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) ShowOperatorCode(in *edgeproto.OperatorCode, server edgeproto.OperatorCodeApi_ShowOperatorCodeServer) error {
+	var err error
+	obj := &edgeproto.OperatorCode{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.OperatorCode{})
+		}
+	}
+	err = s.OperatorCodeCache.Show(in, func(obj *edgeproto.OperatorCode) error {
 		err := server.Send(obj)
 		return err
 	})

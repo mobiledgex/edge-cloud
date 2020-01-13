@@ -545,7 +545,7 @@ func RunCloudletApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeprot
 	var err error
 	cloudletApi := edgeproto.NewCloudletApiClient(conn)
 	for ii, obj := range *data {
-		log.DebugLog(log.DebugLevelApi, "API %v for Cloudlet: %v", mode, obj.Key)
+		log.DebugLog(log.DebugLevelApi, "API %v for Cloudlet: %v", mode, obj.GetKey())
 		var stream CloudletStream
 		switch mode {
 		case "create":
@@ -556,13 +556,35 @@ func RunCloudletApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeprot
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			stream, err = cloudletApi.UpdateCloudlet(ctx, &obj)
 		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Cloudlet: %v", mode, obj.Key)
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Cloudlet: %v", mode, obj.GetKey())
 			return nil
 		}
 		err = CloudletReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
 		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
+		}
+	}
+	return nil
+}
+
+func RunCloudletApi_CloudletResMap(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.CloudletResMap, dataMap []map[string]interface{}, mode string) error {
+	var err error
+	cloudletResMapApi := edgeproto.NewCloudletApiClient(conn)
+	for _, obj := range *data {
+		log.DebugLog(log.DebugLevelApi, "API %v for CloudletResMap: %v", mode, obj.GetKey())
+		switch mode {
+		case "add":
+			_, err = cloudletResMapApi.AddCloudletResMapping(ctx, &obj)
+		case "remove":
+			_, err = cloudletResMapApi.RemoveCloudletResMapping(ctx, &obj)
+		default:
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for CloudletResMap: %v", mode, obj.GetKey())
+			return nil
+		}
+		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
+		if err != nil {
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
 		}
 	}
 	return nil
@@ -642,19 +664,19 @@ func RunCloudletInfoApi(conn *grpc.ClientConn, ctx context.Context, data *[]edge
 	var err error
 	cloudletInfoApi := edgeproto.NewCloudletInfoApiClient(conn)
 	for _, obj := range *data {
-		log.DebugLog(log.DebugLevelApi, "API %v for CloudletInfo: %v", mode, obj.Key)
+		log.DebugLog(log.DebugLevelApi, "API %v for CloudletInfo: %v", mode, obj.GetKey())
 		switch mode {
 		case "create":
 			_, err = cloudletInfoApi.InjectCloudletInfo(ctx, &obj)
 		case "delete":
 			_, err = cloudletInfoApi.EvictCloudletInfo(ctx, &obj)
 		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for CloudletInfo: %v", mode, obj.Key)
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for CloudletInfo: %v", mode, obj.GetKey())
 			return nil
 		}
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
 		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
 		}
 	}
 	return nil

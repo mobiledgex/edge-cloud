@@ -544,7 +544,7 @@ func RunClusterInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgep
 	var err error
 	clusterInstApi := edgeproto.NewClusterInstApiClient(conn)
 	for ii, obj := range *data {
-		log.DebugLog(log.DebugLevelApi, "API %v for ClusterInst: %v", mode, obj.Key)
+		log.DebugLog(log.DebugLevelApi, "API %v for ClusterInst: %v", mode, obj.GetKey())
 		var stream ClusterInstStream
 		switch mode {
 		case "create":
@@ -555,13 +555,13 @@ func RunClusterInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgep
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			stream, err = clusterInstApi.UpdateClusterInst(ctx, &obj)
 		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for ClusterInst: %v", mode, obj.Key)
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for ClusterInst: %v", mode, obj.GetKey())
 			return nil
 		}
 		err = ClusterInstReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
 		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
 		}
 	}
 	return nil

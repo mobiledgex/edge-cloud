@@ -5,7 +5,7 @@ registerclientrequest:
   authtoken: "GENTOKEN:authtoken_private.pem"
   cellid: 1234
 findcloudletrequest:
-  carriername: tmus
+  carriername: 31026
   gpslocation:
     latitude: 36.00
     longitude: -96.00
