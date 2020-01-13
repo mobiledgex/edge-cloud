@@ -363,11 +363,6 @@ type RegisterClientRequest struct {
 	// Cell ID where the client is
 	CellId uint32 `protobuf:"varint,7,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
 	//
-	// Unique ID Type
-	//
-	// Type of unique ID provided by the client
-	UniqueIdType string `protobuf:"bytes,8,opt,name=unique_id_type,json=uniqueIdType,proto3" json:"unique_id_type,omitempty"`
-	//
 	// Unique ID
 	//
 	// Optional. Unique identification of the client device or user. May be overridden by the server.
@@ -421,8 +416,8 @@ type FindCloudletRequest struct {
 	// Session Cookie from RegisterClientRequest
 	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
 	//
-	// Carrier Name
-	//
+  // Carrier Name 
+  //
 	// Unique carrier identification (typically MCC + MNC)
 	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	//
@@ -490,8 +485,6 @@ type VerifyLocationRequest struct {
 	//
 	// Session Cookie from RegisterClientRequest
 	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
-	//
-	// Carrier Name
 	//
 	// Unique carrier identification (typically MCC + MNC)
 	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
