@@ -546,7 +546,7 @@ func RunAppInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto
 	var err error
 	appInstApi := edgeproto.NewAppInstApiClient(conn)
 	for ii, obj := range *data {
-		log.DebugLog(log.DebugLevelApi, "API %v for AppInst: %v", mode, obj.Key)
+		log.DebugLog(log.DebugLevelApi, "API %v for AppInst: %v", mode, obj.GetKey())
 		var stream AppInstStream
 		switch mode {
 		case "create":
@@ -559,13 +559,13 @@ func RunAppInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto
 			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
 			stream, err = appInstApi.UpdateAppInst(ctx, &obj)
 		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for AppInst: %v", mode, obj.Key)
+			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for AppInst: %v", mode, obj.GetKey())
 			return nil
 		}
 		err = AppInstReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, &obj.Key, err)
+		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
 		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.Key, err)
+			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
 		}
 	}
 	return nil

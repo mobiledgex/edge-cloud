@@ -84,6 +84,7 @@ It has these top-level messages:
 	Notice
 	OperatorKey
 	Operator
+	OperatorCode
 	CloudletRefs
 	ClusterRefs
 	ResTagTableKey

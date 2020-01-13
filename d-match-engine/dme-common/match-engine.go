@@ -66,6 +66,7 @@ type DmeApps struct {
 	Cloudlets                  map[edgeproto.CloudletKey]*DmeCloudlet
 	AutoProvPolicies           map[edgeproto.PolicyKey]*AutoProvPolicy
 	FreeReservableClusterInsts edgeproto.FreeReservableClusterInstCache
+	OperatorCodes              edgeproto.OperatorCodeCache
 }
 
 var DmeAppTbl *DmeApps
@@ -89,6 +90,7 @@ func SetupMatchEngine() {
 	DmeAppTbl.Cloudlets = make(map[edgeproto.CloudletKey]*DmeCloudlet)
 	DmeAppTbl.AutoProvPolicies = make(map[edgeproto.PolicyKey]*AutoProvPolicy)
 	DmeAppTbl.FreeReservableClusterInsts.Init()
+	edgeproto.InitOperatorCodeCache(&DmeAppTbl.OperatorCodes)
 }
 
 // AppInst state is a superset of the cloudlet state and appInst state
@@ -129,6 +131,10 @@ func AddApp(in *edgeproto.App) {
 	app.AuthPublicKey = in.AuthPublicKey
 	app.AndroidPackageName = in.AndroidPackageName
 	app.OfficialFqdn = in.OfficialFqdn
+	clearAutoProvStats := false
+	if app.AutoProvPolicy != nil && in.AutoProvPolicy == "" {
+		clearAutoProvStats = true
+	}
 	app.AutoProvPolicy = nil
 	if in.AutoProvPolicy != "" {
 		ppKey := edgeproto.PolicyKey{
@@ -140,6 +146,9 @@ func AddApp(in *edgeproto.App) {
 		} else {
 			log.DebugLog(log.DebugLevelDmedb, "AutoProvPolicy on App not found", "app", in.Key, "policy", app.AutoProvPolicy)
 		}
+	}
+	if clearAutoProvStats {
+		autoProvStats.Clear(&in.Key)
 	}
 }
 
@@ -393,8 +402,10 @@ func (s *AutoProvPolicyHandler) Prune(ctx context.Context, keys map[edgeproto.Po
 	tbl := DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
-	for key, _ := range keys {
-		delete(tbl.AutoProvPolicies, key)
+	for key, _ := range tbl.AutoProvPolicies {
+		if _, found := keys[key]; !found {
+			delete(tbl.AutoProvPolicies, key)
+		}
 	}
 }
 
@@ -435,6 +446,13 @@ func SetInstStateForCloudlet(info *edgeproto.CloudletInfo) {
 // than the max distance.  Return the distance and whether or not response was updated
 func findClosestForCarrier(ctx context.Context, carrierName string, key edgeproto.AppKey, loc *dme.Loc, maxDistance float64, mreply *dme.FindCloudletReply) (float64, bool) {
 	tbl := DmeAppTbl
+	// translate carrier name (mcc+mnc) to mobiledgex operator name,
+	// otherwise use as is.
+	operCode := edgeproto.OperatorCode{}
+	operCodeKey := edgeproto.OperatorCodeKey(carrierName)
+	if tbl.OperatorCodes.Get(&operCodeKey, &operCode) {
+		carrierName = operCode.OperatorName
+	}
 	var d float64
 	var updated = false
 	var found *DmeAppInst

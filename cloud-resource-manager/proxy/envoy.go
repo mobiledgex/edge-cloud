@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"strings"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/dockermgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -54,21 +55,42 @@ func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, origi
 		return err
 	}
 	eyamlName := dir + "/envoy.yaml"
-	err = createEnvoyYaml(ctx, client, eyamlName, name, originIP, ports)
+	err = createEnvoyYaml(ctx, client, eyamlName, name, originIP, opts.Cert, ports)
 	if err != nil {
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
+	}
+
+	certDir := dir + "/certs"
+	err = pc.Run(client, "mkdir -p "+certDir)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelMexos,
+			"envoy %s can't create cert dir %s", name, certDir)
+		return err
+	}
+	if opts.Cert != nil {
+		certFile := certDir + "/" + opts.Cert.CommonName + ".crt"
+		err = pc.WriteFile(client, certFile, opts.Cert.CertString, "tls cert", pc.NoSudo)
+		if err != nil {
+			return err
+		}
+		keyFile := certDir + "/" + opts.Cert.CommonName + ".key"
+		err = pc.WriteFile(client, keyFile, opts.Cert.KeyString, "tls key", pc.NoSudo)
+		if err != nil {
+			return err
+		}
 	}
 
 	// container name is envoy+name for now to avoid conflicts with the nginx containers
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", "envoy" + name}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_TCP)...)
 	}
 	if opts.DockerNetwork != "" {
 		// For dind, we use the network which the dind cluster is on.
 		cmdArgs = append(cmdArgs, "--network", opts.DockerNetwork)
 	}
 	cmdArgs = append(cmdArgs, []string{
+		"-v", certDir + ":/etc/envoy/certs",
 		"-v", accesslogFile + ":/var/log/access.log",
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl"}...)
@@ -83,10 +105,11 @@ func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, origi
 	return nil
 }
 
-func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, name, originIP string, ports []dme.AppPort) error {
+func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, name, originIP string, cert *access.TLSCert, ports []dme.AppPort) error {
 	spec := ProxySpec{
 		Name:       name,
 		MetricPort: cloudcommon.ProxyMetricsPort,
+		Cert:       cert,
 	}
 	for _, p := range ports {
 		switch p.Proto {
@@ -106,7 +129,6 @@ func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, na
 			spec.L4 = true
 		}
 	}
-
 	log.SpanLog(ctx, log.DebugLevelMexos, "create envoy yaml", "name", name)
 	buf := bytes.Buffer{}
 	err := envoyYamlT.Execute(&buf, &spec)
@@ -150,6 +172,15 @@ static_resources:
                   "client_address": "%DOWNSTREAM_REMOTE_ADDRESS%",
                   "upstream_cluster": "%UPSTREAM_CLUSTER%"
 				}
+     {{if $.Cert}}
+      tls_context:
+        common_tls_context:
+          tls_certificates:
+            - certificate_chain:
+                filename: "/etc/envoy/certs/{{$.Cert.CommonName}}.crt"
+              private_key:
+                filename: "/etc/envoy/certs/{{$.Cert.CommonName}}.key"
+     {{- end}}
   {{- end}}
   clusters:
   {{- range .TCPSpec}}
@@ -164,6 +195,13 @@ static_resources:
     - socket_address:
         address: {{.Origin}}
         port_value: {{.OriginPort}}
+    health_checks:
+      - timeout: 1s
+        interval: 5s
+        interval_jitter: 1s
+        unhealthy_threshold: 3
+        healthy_threshold: 3
+        tcp_health_check: {}
 {{- end}}
 admin:
   access_log_path: "/var/log/admin.log"

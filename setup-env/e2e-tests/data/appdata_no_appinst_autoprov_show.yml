@@ -95,6 +95,10 @@ operators:
 - key:
     name: gcp
 
+operatorcodes:
+- code: 31026
+  operatorname: tmus
+
 developers:
 - key:
     name: AcmeAppCo
