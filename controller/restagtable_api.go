@@ -211,57 +211,55 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 			if numgpus, err = strconv.Atoi(count); err != nil {
 				return "", "", false, fmt.Errorf("Non-numertic resource count encountered")
 			}
-			if numgpus > 0 {
-				tbl, err := s.GetCloudletResourceMap(tblkey)
-				if err != nil || tbl == nil {
-					// gpu requested, name didn't match and
-					// no gpu table, osFlavor fails
-					return "", "", false, err
+			if numgpus == 0 {
+				return "", "", false, fmt.Errorf("No GPU resources requested")
+			}
+			tbl, err := s.GetCloudletResourceMap(tblkey)
+			if err != nil || tbl == nil {
+				// gpu requested and
+				// no gpu table, osFlavor fails
+				return "", "", false, err
+			}
+			// check tags table for a key match
+			// If found, take the value of that tag entry and search our flavors properties map
+			// for a match. If found, this is our flavor.
+			for tag_key, tag_val := range tbl.Tags {
+				if tag_key != request[0] || len(flavor.PropMap) == 0 {
+					continue
 				}
-				// check tags table for a key match
-				// If found, take the value of that tag entry  and search our flavors properties map
-				// for a match. If found, this is our flavor.
-				for tag_key, tag_val := range tbl.Tags {
-					if tag_key == request[0] {
-						if len(flavor.PropMap) == 0 {
-							continue
+				var alias []string
+				for flav_key, flav_val := range flavor.PropMap {
+					// How many resources are supplied by this os flavor?
+					alias = strings.Split(flav_val, ":")
+					if len(alias) == 2 {
+						if numres, err = strconv.Atoi(alias[1]); err != nil {
+							return "", "", false, fmt.Errorf("Non-numeric count found in os flavor props")
 						}
-						var alias []string
-						for flav_key, flav_val := range flavor.PropMap {
-							// How many resources are supplied by this os flavor?
-							alias = strings.Split(flav_val, ":")
-							if len(alias) == 2 {
-								if numres, err = strconv.Atoi(alias[1]); err != nil {
-									return "", "", false, fmt.Errorf("Non-numeric count found in os flavor props")
-								}
-							} else {
-								continue
-							}
-							if wildcard {
-								// we have just the $kind:1 as in vgpu:1
-								if flav_key == request[0] && numres >= numgpus {
-									goto flavor_found
-								}
-							} else {
-								// we have resource type specifier as in $kind:$alias:N ex: vgpu:Nvidia-63:1
-								if strings.Contains(tag_val, flav_val) {
-									if numres >= numgpus {
-										goto flavor_found
-									}
-								}
+					} else {
+						continue
+					}
+					if wildcard {
+						// we have just the $kind:1 as in vgpu:1
+						if flav_key == request[0] && numres >= numgpus {
+							goto flavor_found
+						}
+					} else {
+						// we have resource type specifier as in $kind:$alias:N ex: vgpu:Nvidia-63:1
+						if strings.Contains(tag_val, flav_val) {
+							if numres >= numgpus {
+								goto flavor_found
 							}
 						}
 					}
 				}
-				return "", "", false, fmt.Errorf("no matching tag found for mex flavor  %s\n\n", nodeflavor.Key.Name)
-
-			flavor_found:
-				az, _ = s.findAZmatch("gpu", cli)
-				img, _ = s.findImagematch("gpu", cli)
-				return az, img, true, nil
-			} else {
-				return "", "", false, fmt.Errorf("No GPU resources requested")
 			}
+			return "", "", false, fmt.Errorf("no matching tag found for mex flavor  %s\n\n", nodeflavor.Key.Name)
+
+		flavor_found:
+			az, _ = s.findAZmatch("gpu", cli)
+			img, _ = s.findImagematch("gpu", cli)
+			return az, img, true, nil
+
 			// Other resources TBI
 		case int32(edgeproto.OptResNames_NAS):
 			break

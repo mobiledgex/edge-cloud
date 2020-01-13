@@ -87,19 +87,13 @@ func TestResTagTableApi(t *testing.T) {
 	require.Nil(t, err, "GgetResTagTable")
 	require.Equal(t, 3, len(tbl1.Tags), "Num Tags error")
 
-	// Non-nominal add duplicate tag
-	//	_, err = resTagTableApi.AddResTag(ctx /*tbl*/, tbl1)
-	//	if err != nil {
-	//		require.Equal(t, "Duplicate Tag Found tag3", err.Error(), "AddResTag dup tag")
-	//	}
-
 	// Nominal Delete tag
 	delete(tbl.Tags, "tag1")
 	delete(tbl.Tags, "tag2")
 	// all that's left is tag3 which we want deleted
 	_, err = resTagTableApi.RemoveResTag(ctx, &tbl)
 	require.Nil(t, err, "RemoveResTag")
-	tbl1 = nil
+
 	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GetResTagTable")
 	require.Equal(t, 2, len(tbl1.Tags), "Num Tags error")
