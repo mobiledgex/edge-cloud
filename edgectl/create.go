@@ -27,8 +27,10 @@ func runCreate(c *cli.Command, args []string) error {
 	gencmd.CreateCloudlets(c, data.Cloudlets, &err)
 	gencmd.InjectCloudletInfos(c, data.CloudletInfos, &err)
 	gencmd.CreateApps(c, data.Applications, &err)
+	gencmd.CreatePrivacyPolicys(c, data.PrivacyPolicies, &err)
 	gencmd.CreateClusterInsts(c, data.ClusterInsts, &err)
 	gencmd.CreateAppInsts(c, data.AppInstances, &err)
+
 	return err
 }
 
@@ -49,6 +51,7 @@ func runDelete(c *cli.Command, args []string) error {
 
 	gencmd.DeleteAppInsts(c, data.AppInstances, &err)
 	gencmd.DeleteClusterInsts(c, data.ClusterInsts, &err)
+	gencmd.DeletePrivacyPolicys(c, data.PrivacyPolicies, &err)
 	gencmd.DeleteApps(c, data.Applications, &err)
 	gencmd.EvictCloudletInfos(c, data.CloudletInfos, &err)
 	gencmd.DeleteCloudlets(c, data.Cloudlets, &err)

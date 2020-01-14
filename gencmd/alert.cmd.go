@@ -23,6 +23,7 @@ It is generated from these files:
 	node.proto
 	notice.proto
 	operator.proto
+	privacypolicy.proto
 	refs.proto
 	restagtable.proto
 	result.proto
@@ -84,6 +85,8 @@ It has these top-level messages:
 	Notice
 	OperatorKey
 	Operator
+	OutboundSecurityRule
+	PrivacyPolicy
 	CloudletRefs
 	ClusterRefs
 	ResTagTableKey

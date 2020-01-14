@@ -24,6 +24,7 @@ type ControllerData struct {
 	AppInstInfoCache     edgeproto.AppInstInfoCache
 	CloudletInfoCache    edgeproto.CloudletInfoCache
 	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
+	PrivacyPolicyCache   edgeproto.PrivacyPolicyCache
 	NodeCache            edgeproto.NodeCache
 	AlertCache           edgeproto.AlertCache
 	ExecReqHandler       *ExecReqHandler
@@ -45,6 +46,7 @@ func NewControllerData(pf platform.Platform) *ControllerData {
 	edgeproto.InitClusterInstCache(&cd.ClusterInstCache)
 	edgeproto.InitNodeCache(&cd.NodeCache)
 	edgeproto.InitAlertCache(&cd.AlertCache)
+	edgeproto.InitPrivacyPolicyCache(&cd.PrivacyPolicyCache)
 	cd.ExecReqHandler = NewExecReqHandler(cd)
 	cd.ExecReqSend = notify.NewExecRequestSend()
 	// set callbacks to trigger changes
@@ -152,7 +154,15 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 			timeout := time.Duration(cloudlet.TimeLimits.CreateClusterInstTimeout)
 			log.SpanLog(ctx, log.DebugLevelMexos, "create cluster inst", "ClusterInst", *new, "timeout", timeout)
-			err = cd.platform.CreateClusterInst(ctx, new, updateClusterCacheCallback, timeout)
+
+			policy := edgeproto.PrivacyPolicy{}
+			policy.Key.Developer = new.Key.Developer
+			policy.Key.Name = new.PrivacyPolicy
+			found := cd.PrivacyPolicyCache.Get(&policy.Key, &policy)
+			if !found {
+				log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
+			}
+			err = cd.platform.CreateClusterInst(ctx, new, &policy, updateClusterCacheCallback, timeout)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelMexos, "error cluster create fail", "error", err)
 				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create failed: %s", err))
@@ -171,8 +181,15 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		}
 
 		log.SpanLog(ctx, log.DebugLevelMexos, "update cluster inst", "ClusterInst", *new)
+		policy := edgeproto.PrivacyPolicy{}
+		policy.Key.Developer = new.Key.Developer
+		policy.Key.Name = new.PrivacyPolicy
+		found := cd.PrivacyPolicyCache.Get(&policy.Key, &policy)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
+		}
 
-		err = cd.platform.UpdateClusterInst(ctx, new, updateClusterCacheCallback)
+		err = cd.platform.UpdateClusterInst(ctx, new, &policy, updateClusterCacheCallback)
 		if err != nil {
 			str := fmt.Sprintf("update failed: %s", err)
 			cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str)

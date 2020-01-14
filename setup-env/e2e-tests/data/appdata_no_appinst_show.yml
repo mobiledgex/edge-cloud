@@ -15,13 +15,6 @@ flavors:
   vcpus: 4
   disk: 4
 
-
-clusters:
-- key:
-    name: SmallCluster
-  defaultflavor:
-    name: x1.small
-
 clusterinsts:
 - key:
     clusterkey:
