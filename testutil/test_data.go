@@ -348,7 +348,6 @@ var ClusterInstData = []edgeproto.ClusterInst{
 			Developer:   DevData[3].Key.Name,
 		},
 		Flavor:          FlavorData[0].Key,
-		IpAccess:        edgeproto.IpAccess_IP_ACCESS_DEDICATED_OR_SHARED,
 		NumMasters:      1,
 		NumNodes:        2,
 		AutoScalePolicy: AutoScalePolicyData[2].Key.Name,

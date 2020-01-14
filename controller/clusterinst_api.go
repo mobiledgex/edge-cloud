@@ -188,18 +188,15 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("SharedVolumeSize not supported for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
 
 		}
-		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-			// assume dedicated for docker
-			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
-		}
 	} else {
 		return fmt.Errorf("Invalid deployment type %s for ClusterInst", in.Deployment)
 	}
 
-	if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-		// default to shared
-		in.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
+	// dedicatedOrShared(2) is removed
+	if in.IpAccess == 2 {
+		in.IpAccess = edgeproto.IpAccess_IP_ACCESS_UNKNOWN
 	}
+
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
@@ -228,16 +225,21 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		isSharedOnly := cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX
 		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
-
-		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-			if in.Deployment == cloudcommon.AppDeploymentTypeDocker && !isSharedOnly {
-				return fmt.Errorf("IpAccess must be dedicated for deployment type %s platform type %s", cloudcommon.AppDeploymentTypeDocker, platName)
+		if isSharedOnly {
+			if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+				return fmt.Errorf("IpAccess must be shared for cloudlet platform type %s", platName)
 			}
-		} else {
-			if isSharedOnly {
-				return fmt.Errorf("IpAccess must be shared for %s", platName)
+			// override unknown
+			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
+		} else if in.Deployment == cloudcommon.AppDeploymentTypeDocker {
+			// docker must be dedicated
+			if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+				return fmt.Errorf("IpAccess must be dedicated for deployment type %s cloudlet platform type %s", cloudcommon.AppDeploymentTypeDocker, platName)
 			}
+			// override unknown
+			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
 		}
+
 		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
