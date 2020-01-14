@@ -455,7 +455,7 @@ func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, noti
 	if err != nil {
 		s.sendrecv.stats.UnmarshalErrors++
 {{- if .PrintSendRecv}}
-		log.SpanLog(ctx, log.DebugLevelNotify, "err", err)
+		log.SpanLog(ctx, log.DebugLevelNotify, "Unmarshal Error", "err", err)
 {{- end}}
 		return
 	}
