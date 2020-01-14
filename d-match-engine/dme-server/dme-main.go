@@ -225,12 +225,13 @@ func (s *server) RegisterClient(ctx context.Context,
 	}
 
 	// Generate KSUID
-	clientId := ksuid.New()
+	uid := ksuid.New()
 	key := dmecommon.CookieKey{
-		DevName:  req.DevName,
-		AppName:  req.AppName,
-		AppVers:  req.AppVers,
-		ClientId: clientId.String(),
+		DevName:      req.DevName,
+		AppName:      req.AppName,
+		AppVers:      req.AppVers,
+		UniqueIdType: "dme-ksuid",
+		UniqueId:     uid.String(),
 	}
 
 	cookie, err := dmecommon.GenerateCookie(&key, ctx, cookieExpiration)
