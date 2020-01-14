@@ -1166,7 +1166,7 @@ func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, refs 
 		// shared, so no allocation needed
 		return nil
 	}
-	if inst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED_OR_SHARED {
+	if inst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 		// set to shared, as CRM does not implement dedicated
 		// ip assignment yet.
 		inst.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED

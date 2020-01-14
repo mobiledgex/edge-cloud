@@ -31,8 +31,6 @@ enum IpAccess {
   IP_ACCESS_UNKNOWN = 0;
   // Dedicated RootLB
   IP_ACCESS_DEDICATED = 1;
-  // Dedicated or shared (prefers dedicated) RootLB
-  IP_ACCESS_DEDICATED_OR_SHARED = 2;
   // Shared RootLB
   IP_ACCESS_SHARED = 3;
 }
