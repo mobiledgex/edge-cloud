@@ -212,7 +212,10 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("Access vars is not supported for local deployment")
 	}
 
-	return s.createCloudletInternal(DefCallContext(), in, cb)
+	err := s.createCloudletInternal(DefCallContext(), in, cb)
+	if err == nil {
+		RecordCloudletEvent(ctx, in, cloudcommon.CREATED, cloudcommon.InstanceUp)
+	}
 }
 
 func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
@@ -734,7 +737,11 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	if err != nil {
 		return err
 	}
-	return s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
+	err = s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
+	if err != nil {
+		RecordCloudletEvent(ctx, in, cloudcommon.DELETED, cloudcommon.InstanceDown)
+	}
+	return err
 }
 
 func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
@@ -1045,4 +1052,17 @@ func (s *CloudletApi) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorM
 	in.FlavorName = spec.FlavorName
 	in.AvailabilityZone = spec.AvailabilityZone
 	return in, nil
+}
+
+func RecordCloudletEvent(ctx context.Context, cloudlet *edgeproto.Cloudlet, event cloudcommon.InstanceEvent, serverStatus string) {
+	metric := edgeproto.Metric{}
+	metric.Name = cloudcommon.CloudletEvent
+	ts, _ := types.TimestampProto(time.Now())
+	metric.Timestamp = *ts
+	metric.AddTag("operator", app.Key.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	metric.AddTag("cloudlet", app.Key.ClusterInstKey.CloudletKey.Name)
+	metric.AddStringVal("event", string(event))
+	metric.AddStringVal("status", serverStatus)
+
+	services.influxQ.AddMetric(&metric)
 }

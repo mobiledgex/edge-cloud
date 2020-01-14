@@ -63,7 +63,8 @@ const (
 	UPDATE_ERROR       InstanceEvent = "UPDATE_ERROR"
 	UPDATE_COMPLETE    InstanceEvent = "UPDATE_COMPLETE"
 	DELETED            InstanceEvent = "DELETED"
-	SERVER_UNAVAILABLE InstanceEvent = "SERVER_UNAVAILABLE"
+	HEALTH_CHECK_FAIL  InstanceEvent = "HEALTH_CHECK_FAIL"
+	HEALTH_CHECK_OK	   InstanceEvent = "HEALTH_CHECK_OK"
 )
 
 var InstanceUp = "UP"
