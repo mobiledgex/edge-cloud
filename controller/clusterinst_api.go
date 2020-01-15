@@ -753,5 +753,5 @@ func RecordClusterInstEvent(ctx context.Context, cluster *edgeproto.ClusterInst,
 		metric.AddStringVal("other", fmt.Sprintf("%v", nodeFlavor.OptResMap))
 	}
 
-	services.influxQ.AddMetric(&metric)
+	services.events.AddMetric(&metric)
 }

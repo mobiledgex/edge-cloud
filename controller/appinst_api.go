@@ -206,7 +206,7 @@ func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	err := s.createAppInstInternal(DefCallContext(), in, cb)
 	if err == nil {
-		recordAppInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
+		RecordAppInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
 	}
 	return err
 }
@@ -1087,10 +1087,10 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 		}
 		// healthy -> not healthy
 		if inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_OK && state != edgeproto.HealthCheck_HEALTH_CHECK_OK {
-			RecordAppInstEvent(ctx, inst, cloudcommon.HEALTH_CHECK_FAIL, cloudcommon.InstanceDown)
-		// not healthy -> healthy
+			RecordAppInstEvent(ctx, &inst, cloudcommon.HEALTH_CHECK_FAIL, cloudcommon.InstanceDown)
+			// not healthy -> healthy
 		} else if inst.HealthCheck != edgeproto.HealthCheck_HEALTH_CHECK_OK && state == edgeproto.HealthCheck_HEALTH_CHECK_OK {
-			RecordAppInstEvent(ctx, inst, cloudcommon.HEALTH_CHECK_OK, cloudcommon.InstanceUp)
+			RecordAppInstEvent(ctx, &inst, cloudcommon.HEALTH_CHECK_OK, cloudcommon.InstanceUp)
 		}
 		inst.HealthCheck = state
 		s.store.STMPut(stm, &inst)
@@ -1299,5 +1299,5 @@ func RecordAppInstEvent(ctx context.Context, app *edgeproto.AppInst, event cloud
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
-	services.influxQ.AddMetric(&metric)
+	services.events.AddMetric(&metric)
 }

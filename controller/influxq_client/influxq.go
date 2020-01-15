@@ -91,6 +91,7 @@ func (q *InfluxQ) RunPush() {
 				continue
 			}
 			q.dbcreated = true
+			fmt.Printf("asdf database created: %+v", q)
 		}
 
 		select {

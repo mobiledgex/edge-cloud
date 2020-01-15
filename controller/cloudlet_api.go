@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/gogo/protobuf/types"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -214,8 +215,9 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	err := s.createCloudletInternal(DefCallContext(), in, cb)
 	if err == nil {
-		RecordCloudletEvent(ctx, in, cloudcommon.CREATED, cloudcommon.InstanceUp)
+		RecordCloudletEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
 	}
+	return err
 }
 
 func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
@@ -668,7 +670,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	// after the cloudlet change is committed, if the location changed,
 	// update app insts as well.
 	s.UpdateAppInstLocations(ctx, in)
-
 	return nil
 }
 
@@ -701,6 +702,7 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	if err != nil {
 		return err
 	}
+	RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 	// cleanup old crms post upgrade
 	pfConfig.CleanupMode = true
 	cloudlet := &edgeproto.Cloudlet{}
@@ -728,7 +730,16 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 		"Upgraded Cloudlet successfully",    // Set success message
 		PlatformInitTimeout, updatecb.cb,
 	)
-
+	info := edgeproto.CloudletInfo{}
+	if cloudletInfoApi.cache.Get(&in.Key, &info) {
+		if err != nil {
+			RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+		} else if info.State == edgeproto.CloudletState_CLOUDLET_STATE_READY { // update failed but cloudlet is still up
+			RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceUp)
+		} else { // error and cloudlet went down
+			RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+		}
+	}
 	return err
 }
 
@@ -739,7 +750,7 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	}
 	err = s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
 	if err != nil {
-		RecordCloudletEvent(ctx, in, cloudcommon.DELETED, cloudcommon.InstanceDown)
+		RecordCloudletEvent(cb.Context(), in, cloudcommon.DELETED, cloudcommon.InstanceDown)
 	}
 	return err
 }
@@ -1059,10 +1070,10 @@ func RecordCloudletEvent(ctx context.Context, cloudlet *edgeproto.Cloudlet, even
 	metric.Name = cloudcommon.CloudletEvent
 	ts, _ := types.TimestampProto(time.Now())
 	metric.Timestamp = *ts
-	metric.AddTag("operator", app.Key.ClusterInstKey.CloudletKey.OperatorKey.Name)
-	metric.AddTag("cloudlet", app.Key.ClusterInstKey.CloudletKey.Name)
+	metric.AddTag("operator", cloudlet.Key.OperatorKey.Name)
+	metric.AddTag("cloudlet", cloudlet.Key.Name)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
-	services.influxQ.AddMetric(&metric)
+	services.events.AddMetric(&metric)
 }
