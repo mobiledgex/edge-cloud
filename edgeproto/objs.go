@@ -479,6 +479,18 @@ func (m *Metric) AddIntVal(name string, ival uint64) {
 	m.Vals = append(m.Vals, &val)
 }
 
+func (m *Metric) AddBoolVal(name string, bval bool) {
+	val := MetricVal{Name: name}
+	val.Value = &MetricVal_Bval{Bval: bval}
+	m.Vals = append(m.Vals, &val)
+}
+
+func (m *Metric) AddStringVal(name string, sval string) {
+	val := MetricVal{Name: name}
+	val.Value = &MetricVal_Sval{Sval: sval}
+	m.Vals = append(m.Vals, &val)
+}
+
 func GetLProto(s string) (dme.LProto, error) {
 	s = strings.ToLower(s)
 	switch s {
