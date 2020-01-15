@@ -50,6 +50,27 @@ var NFSAutoProvisionAppName = "NFSAutoProvision"
 var ProxyMetricsPort = int32(65121)
 var AutoProvMeasurement = "auto-prov-counts"
 
+// Instance Lifecycle variables
+var EventsDbName = "events"
+var CloudletEvent = "cloudlet"
+var ClusterInstEvent = "clusterinst"
+var AppInstEvent = "appinst"
+
+type InstanceEvent string
+
+const (
+	CREATED           InstanceEvent = "CREATED"
+	UPDATE_START      InstanceEvent = "UPDATE_START"
+	UPDATE_ERROR      InstanceEvent = "UPDATE_ERROR"
+	UPDATE_COMPLETE   InstanceEvent = "UPDATE_COMPLETE"
+	DELETED           InstanceEvent = "DELETED"
+	HEALTH_CHECK_FAIL InstanceEvent = "HEALTH_CHECK_FAIL"
+	HEALTH_CHECK_OK   InstanceEvent = "HEALTH_CHECK_OK"
+)
+
+var InstanceUp = "UP"
+var InstanceDown = "DOWN"
+
 // DIND script to pull from kubeadm-dind-cluster
 var DindScriptName = "dind-cluster-v1.14.sh"
 

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/gogo/protobuf/types"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -212,7 +213,11 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("Access vars is not supported for local deployment")
 	}
 
-	return s.createCloudletInternal(DefCallContext(), in, cb)
+	err := s.createCloudletInternal(DefCallContext(), in, cb)
+	if err == nil {
+		RecordCloudletEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
+	}
+	return err
 }
 
 func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
@@ -665,7 +670,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	// after the cloudlet change is committed, if the location changed,
 	// update app insts as well.
 	s.UpdateAppInstLocations(ctx, in)
-
 	return nil
 }
 
@@ -698,6 +702,7 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	if err != nil {
 		return err
 	}
+	RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 	// cleanup old crms post upgrade
 	pfConfig.CleanupMode = true
 	cloudlet := &edgeproto.Cloudlet{}
@@ -725,7 +730,16 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 		"Upgraded Cloudlet successfully",    // Set success message
 		PlatformInitTimeout, updatecb.cb,
 	)
-
+	info := edgeproto.CloudletInfo{}
+	if cloudletInfoApi.cache.Get(&in.Key, &info) {
+		if err != nil {
+			RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+		} else if info.State == edgeproto.CloudletState_CLOUDLET_STATE_READY { // update failed but cloudlet is still up
+			RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceUp)
+		} else { // error and cloudlet went down
+			RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+		}
+	}
 	return err
 }
 
@@ -734,7 +748,11 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	if err != nil {
 		return err
 	}
-	return s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
+	err = s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
+	if err != nil {
+		RecordCloudletEvent(cb.Context(), in, cloudcommon.DELETED, cloudcommon.InstanceDown)
+	}
+	return err
 }
 
 func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
@@ -843,6 +861,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				log.DebugLog(log.DebugLevelApi,
 					"Failed to delete dynamic app inst",
 					"key", key, "err", derr)
+			} else {
+				RecordAppInstEvent(ctx, &appInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
 			}
 		}
 	}
@@ -854,6 +874,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				log.DebugLog(log.DebugLevelApi,
 					"Failed to delete dynamic ClusterInst",
 					"key", key, "err", derr)
+			} else {
+				RecordClusterInstEvent(ctx, &clInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
 			}
 		}
 	}
@@ -1041,4 +1063,17 @@ func (s *CloudletApi) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorM
 	in.FlavorName = spec.FlavorName
 	in.AvailabilityZone = spec.AvailabilityZone
 	return in, nil
+}
+
+func RecordCloudletEvent(ctx context.Context, cloudlet *edgeproto.Cloudlet, event cloudcommon.InstanceEvent, serverStatus string) {
+	metric := edgeproto.Metric{}
+	metric.Name = cloudcommon.CloudletEvent
+	ts, _ := types.TimestampProto(time.Now())
+	metric.Timestamp = *ts
+	metric.AddTag("operator", cloudlet.Key.OperatorKey.Name)
+	metric.AddTag("cloudlet", cloudlet.Key.Name)
+	metric.AddStringVal("event", string(event))
+	metric.AddStringVal("status", serverStatus)
+
+	services.events.AddMetric(&metric)
 }

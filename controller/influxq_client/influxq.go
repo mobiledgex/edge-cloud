@@ -132,6 +132,10 @@ func (q *InfluxQ) RunPush() {
 					fields[mval.Name] = mval.GetDval()
 				case *edgeproto.MetricVal_Ival:
 					fields[mval.Name] = int64(mval.GetIval())
+				case *edgeproto.MetricVal_Bval:
+					fields[mval.Name] = mval.GetBval()
+				case *edgeproto.MetricVal_Sval:
+					fields[mval.Name] = mval.GetSval()
 				}
 			}
 			ts, err := types.TimestampFromProto(&metric.Timestamp)
