@@ -26,6 +26,8 @@ message MetricVal {
   oneof value {
     double dval = 2;
     uint64 ival = 3;
+    bool bval = 4;
+    string sval = 5;
   }
 }
 
