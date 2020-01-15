@@ -83,7 +83,7 @@ func (s *ClusterInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, cluster := range s.cache.Objs {
-		if cluster.PrivacyPolicy == key.Name {
+		if cluster.PrivacyPolicy == key.Name && cluster.Key.Developer == key.Developer {
 			return true
 		}
 	}
