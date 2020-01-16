@@ -41,10 +41,11 @@ func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.Cloud
 	return nil
 }
 
-func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error {
 	return fmt.Errorf("update cluster not supported for fake cloudlets")
 }
-func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
+func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "fake CreateClusterInst", "clusterInst", clusterInst, "privacyPolicy", privacyPolicy)
 	updateCallback(edgeproto.UpdateTask, "First Create Task")
 	updateCallback(edgeproto.UpdateTask, "Second Create Task")
 	log.SpanLog(ctx, log.DebugLevelMexos, "fake ClusterInst ready")

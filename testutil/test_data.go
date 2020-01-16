@@ -1043,3 +1043,111 @@ var AutoProvPolicyData = []edgeproto.AutoProvPolicy{
 		DeployIntervalCount: 4,
 	},
 }
+
+var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
+	edgeproto.PrivacyPolicy{
+		Key: edgeproto.PolicyKey{
+			Name:      "privacy-policy0",
+			Developer: DevData[0].Key.Name,
+		},
+		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
+			edgeproto.OutboundSecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "8.100.0.0/16",
+				PortRangeMin: 443,
+				PortRangeMax: 443,
+			},
+			edgeproto.OutboundSecurityRule{
+				Protocol:     "udp",
+				RemoteCidr:   "0.0.0.0/0",
+				PortRangeMin: 53,
+				PortRangeMax: 53,
+			},
+		},
+	},
+	edgeproto.PrivacyPolicy{
+		Key: edgeproto.PolicyKey{
+			Name:      "privacy-policy1",
+			Developer: DevData[1].Key.Name,
+		},
+		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
+			edgeproto.OutboundSecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "8.100.0.0/16",
+				PortRangeMin: 443,
+				PortRangeMax: 443,
+			},
+			edgeproto.OutboundSecurityRule{
+				Protocol:     "udp",
+				RemoteCidr:   "0.0.0.0/0",
+				PortRangeMin: 53,
+				PortRangeMax: 53,
+			},
+		},
+	},
+	edgeproto.PrivacyPolicy{
+		Key: edgeproto.PolicyKey{
+			Name:      "privacy-policy2",
+			Developer: DevData[2].Key.Name,
+		},
+		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
+			edgeproto.OutboundSecurityRule{
+				Protocol:   "icmp",
+				RemoteCidr: "0.0.0.0/0",
+			},
+			edgeproto.OutboundSecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "10.0.0.0/8",
+				PortRangeMin: 1,
+				PortRangeMax: 65535,
+			},
+		},
+	},
+}
+
+var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
+	// Failure case, max port > min port
+	edgeproto.PrivacyPolicy{
+		Key: edgeproto.PolicyKey{
+			Name:      "privacy-policy3",
+			Developer: DevData[0].Key.Name,
+		},
+		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
+			edgeproto.OutboundSecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "10.1.0.0/16",
+				PortRangeMin: 201,
+				PortRangeMax: 110,
+			},
+		},
+	},
+	// Failure case, bad CIDR
+	edgeproto.PrivacyPolicy{
+		Key: edgeproto.PolicyKey{
+			Name:      "privacy-policy4",
+			Developer: DevData[1].Key.Name,
+		},
+		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
+			edgeproto.OutboundSecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "10.0.0.0/50",
+				PortRangeMin: 22,
+				PortRangeMax: 22,
+			},
+		},
+	},
+	// Failure case, missing min port but max port present
+	edgeproto.PrivacyPolicy{
+		Key: edgeproto.PolicyKey{
+			Name:      "privacy-policy5",
+			Developer: DevData[2].Key.Name,
+		},
+		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
+			edgeproto.OutboundSecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "47.186.0.0/16",
+				PortRangeMax: 22,
+			},
+		},
+	},
+}
