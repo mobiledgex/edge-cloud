@@ -23,6 +23,7 @@
 		node.proto
 		notice.proto
 		operator.proto
+		privacypolicy.proto
 		refs.proto
 		restagtable.proto
 		result.proto
@@ -85,6 +86,8 @@
 		OperatorKey
 		Operator
 		OperatorCode
+		OutboundSecurityRule
+		PrivacyPolicy
 		CloudletRefs
 		ClusterRefs
 		ResTagTableKey

@@ -30,8 +30,10 @@ func runCreate(c *cli.Command, args []string) error {
 	gencmd.CreateAutoScalePolicys(c, data.AutoScalePolicies, &err)
 	gencmd.CreateAutoProvPolicys(c, data.AutoProvPolicies, &err)
 	gencmd.CreateApps(c, data.Applications, &err)
+	gencmd.CreatePrivacyPolicys(c, data.PrivacyPolicies, &err)
 	gencmd.CreateClusterInsts(c, data.ClusterInsts, &err)
 	gencmd.CreateAppInsts(c, data.AppInstances, &err)
+
 	return err
 }
 
@@ -52,6 +54,7 @@ func runDelete(c *cli.Command, args []string) error {
 
 	gencmd.DeleteAppInsts(c, data.AppInstances, &err)
 	gencmd.DeleteClusterInsts(c, data.ClusterInsts, &err)
+	gencmd.DeletePrivacyPolicys(c, data.PrivacyPolicies, &err)
 	gencmd.DeleteApps(c, data.Applications, &err)
 	gencmd.DeleteAutoProvPolicys(c, data.AutoProvPolicies, &err)
 	gencmd.DeleteAutoScalePolicys(c, data.AutoScalePolicies, &err)
