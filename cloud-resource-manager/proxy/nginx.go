@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/dockermgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -159,7 +160,7 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, origi
 
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", name}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_UDP)...)
 		if name == NginxL7Name {
 			// Special case. When the L7 nginx instance is created,
 			// there are no configs yet for L7. Expose the L7 port manually.
@@ -293,8 +294,9 @@ type ProxySpec struct {
 	UDPSpec    []*UDPSpecDetail
 	TCPSpec    []*TCPSpecDetail
 	L7Port     int32
-	UseTLS     bool
+	UseTLS     bool // To be removed
 	MetricPort int32
+	Cert       *access.TLSCert
 }
 
 type TCPSpecDetail struct {
@@ -420,6 +422,7 @@ func DeleteNginxProxy(ctx context.Context, client pc.PlatformClient, name string
 type Options struct {
 	DockerPublishPorts bool
 	DockerNetwork      string
+	Cert               *access.TLSCert
 }
 
 type Op func(opts *Options)
@@ -433,6 +436,13 @@ func WithDockerNetwork(network string) Op {
 func WithDockerPublishPorts() Op {
 	return func(opts *Options) {
 		opts.DockerPublishPorts = true
+	}
+}
+
+func WithTLSCert(cert *access.TLSCert) Op {
+	return func(opts *Options) {
+		opts.Cert = cert
+		opts.Cert.CommonName = strings.Replace(opts.Cert.CommonName, "*", "_", 1)
 	}
 }
 

@@ -29,6 +29,8 @@ func (m *Timestamp) String() string            { return proto.CompactTextString(
 func (*Timestamp) ProtoMessage()               {}
 func (*Timestamp) Descriptor() ([]byte, []int) { return fileDescriptorLoc, []int{0} }
 
+//
+// GPS Location
 type Loc struct {
 	// latitude in WGS 84 coordinates
 	Latitude float64 `protobuf:"fixed64,1,opt,name=latitude,proto3" json:"latitude,omitempty"`

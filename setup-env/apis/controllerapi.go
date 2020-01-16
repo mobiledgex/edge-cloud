@@ -87,6 +87,7 @@ func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool 
 		"flavors: ShowFlavor",
 		"clusterinsts: ShowClusterInst",
 		"operators: ShowOperator",
+		"operatorcodes: ShowOperatorCode",
 		"developers: ShowDeveloper",
 		"cloudlets: ShowCloudlet",
 		"apps: ShowApp",
@@ -219,6 +220,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in developer API %v\n", err)
 				rc = false
 			}
+			err = testutil.RunOperatorCodeApi(ctrlapi, ctx, &appData.OperatorCodes, appDataMap["operatorcodes"], api)
+			if err != nil {
+				log.Printf("Error in operator code API %v\n", err)
+				rc = false
+			}
 			err = testutil.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
 			if err != nil {
 				log.Printf("Error in operator API %v\n", err)
@@ -244,6 +250,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = testutil.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
 			if err != nil {
 				log.Printf("Error in operator API %v\n", err)
+				rc = false
+			}
+			err = testutil.RunOperatorCodeApi(ctrlapi, ctx, &appData.OperatorCodes, appDataMap["operatorcodes"], api)
+			if err != nil {
+				log.Printf("Error in operator code API %v\n", err)
 				rc = false
 			}
 			err = testutil.RunDeveloperApi(ctrlapi, ctx, &appData.Developers, appDataMap["developers"], api)

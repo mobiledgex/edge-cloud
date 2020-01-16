@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -123,7 +124,11 @@ func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	in.Auto = false
-	return s.createClusterInstInternal(DefCallContext(), in, cb)
+	err := s.createClusterInstInternal(DefCallContext(), in, cb)
+	if err == nil {
+		RecordClusterInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
+	}
+	return err
 }
 
 // createClusterInstInternal is used to create dynamic cluster insts internally,
@@ -188,18 +193,15 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("SharedVolumeSize not supported for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
 
 		}
-		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-			// assume dedicated for docker
-			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
-		}
 	} else {
 		return fmt.Errorf("Invalid deployment type %s for ClusterInst", in.Deployment)
 	}
 
-	if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-		// default to shared
-		in.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
+	// dedicatedOrShared(2) is removed
+	if in.IpAccess == 2 {
+		in.IpAccess = edgeproto.IpAccess_IP_ACCESS_UNKNOWN
 	}
+
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
@@ -228,16 +230,21 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		isSharedOnly := cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX
 		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
-
-		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-			if in.Deployment == cloudcommon.AppDeploymentTypeDocker && !isSharedOnly {
-				return fmt.Errorf("IpAccess must be dedicated for deployment type %s platform type %s", cloudcommon.AppDeploymentTypeDocker, platName)
+		if isSharedOnly {
+			if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+				return fmt.Errorf("IpAccess must be shared for cloudlet platform type %s", platName)
 			}
-		} else {
-			if isSharedOnly {
-				return fmt.Errorf("IpAccess must be shared for %s", platName)
+			// override unknown
+			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
+		} else if in.Deployment == cloudcommon.AppDeploymentTypeDocker {
+			// docker must be dedicated
+			if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+				return fmt.Errorf("IpAccess must be dedicated for deployment type %s cloudlet platform type %s", cloudcommon.AppDeploymentTypeDocker, platName)
 			}
+			// override unknown
+			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
 		}
+
 		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
@@ -356,11 +363,22 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 }
 
 func (s *ClusterInstApi) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
-	return s.deleteClusterInstInternal(DefCallContext(), in, cb)
+	err := s.deleteClusterInstInternal(DefCallContext(), in, cb)
+	if err == nil {
+		RecordClusterInstEvent(cb.Context(), in, cloudcommon.DELETED, cloudcommon.InstanceDown)
+	}
+	return err
 }
 
 func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
-	return s.updateClusterInstInternal(DefCallContext(), in, cb)
+	RecordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
+	err := s.updateClusterInstInternal(DefCallContext(), in, cb)
+	if in.State != edgeproto.TrackedState_READY {
+		RecordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+	} else {
+		RecordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+	}
+	return err
 }
 
 func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
@@ -708,4 +726,32 @@ func (s *ClusterInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cl
 		}
 		return nil
 	})
+}
+
+func RecordClusterInstEvent(ctx context.Context, cluster *edgeproto.ClusterInst, event cloudcommon.InstanceEvent, serverStatus string) {
+	metric := edgeproto.Metric{}
+	metric.Name = cloudcommon.ClusterInstEvent
+	ts, _ := types.TimestampProto(time.Now())
+	metric.Timestamp = *ts
+	metric.AddTag("operator", cluster.Key.CloudletKey.OperatorKey.Name)
+	metric.AddTag("cloudlet", cluster.Key.CloudletKey.Name)
+	metric.AddTag("cluster", cluster.Key.ClusterKey.Name)
+	metric.AddTag("dev", cluster.Key.Developer)
+	metric.AddStringVal("event", string(event))
+	metric.AddStringVal("status", serverStatus)
+
+	// errors should never happen here since to get to this point the flavor should have already been checked previously, but just in case
+	nodeFlavor := edgeproto.Flavor{}
+	if !flavorApi.cache.Get(&cluster.Flavor, &nodeFlavor) {
+		log.SpanLog(ctx, log.DebugLevelApi, "flavor not found for recording clusterInst lifecycle", "flavor name", cluster.Flavor.Name)
+	} else {
+		metric.AddTag("flavor", cluster.Flavor.Name)
+		metric.AddIntVal("ram", nodeFlavor.Ram)
+		metric.AddIntVal("vcpu", nodeFlavor.Vcpus)
+		metric.AddIntVal("disk", nodeFlavor.Disk)
+		metric.AddIntVal("nodeCount", uint64(cluster.NumMasters+cluster.NumNodes))
+		metric.AddStringVal("other", fmt.Sprintf("%v", nodeFlavor.OptResMap))
+	}
+
+	services.events.AddMetric(&metric)
 }

@@ -62,3 +62,45 @@ service OperatorApi {
     };
   }
 }
+
+// OperatorCode maps a carrier code to an Operator name
+message OperatorCode {
+  // MCC plus MNC code, or custom carrier code designation.
+  string code = 1;
+  // MobiledgeX operator name
+  string operator_name = 2;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cud_test_update) = false;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.custom_key_type) = "OperatorCodeKey";
+}
+
+service OperatorCodeApi {
+  // Create a code for an Operator.
+  rpc CreateOperatorCode(OperatorCode) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/operatorcode"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
+  }
+  // Delete a code for an Operator.
+  rpc DeleteOperatorCode(OperatorCode) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/operatorcode"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
+  }
+  // Show OperatorCodes
+  rpc ShowOperatorCode(OperatorCode) returns (stream OperatorCode) {
+    option (google.api.http) = {
+      post: "/show/operatorcode"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudletPools,ActionView,";
+  }
+}

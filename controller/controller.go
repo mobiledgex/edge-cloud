@@ -76,6 +76,7 @@ type Services struct {
 	etcdLocal       *process.Etcd
 	sync            *Sync
 	influxQ         *influxq.InfluxQ
+	events          *influxq.InfluxQ
 	notifyServerMgr bool
 	grpcServer      *grpc.Server
 	httpServer      *http.Server
@@ -236,6 +237,7 @@ func startServices() error {
 	} else if err != nil {
 		return fmt.Errorf("Failed to get influxDB auth, %v", err)
 	}
+	// metrics influx
 	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
 	err = influxQ.Start(*influxAddr)
 	if err != nil {
@@ -243,6 +245,14 @@ func startServices() error {
 			*influxAddr, err)
 	}
 	services.influxQ = influxQ
+	// events influx
+	events := influxq.NewInfluxQ(cloudcommon.EventsDbName, influxAuth.User, influxAuth.Pass)
+	err = events.Start(*influxAddr)
+	if err != nil {
+		return fmt.Errorf("Failed to start influx queue address %s, %v",
+			*influxAddr, err)
+	}
+	services.events = events
 
 	InitNotify(influxQ)
 	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile)
@@ -259,6 +269,7 @@ func startServices() error {
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
 	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
+	edgeproto.RegisterOperatorCodeApiServer(server, &operatorCodeApi)
 	edgeproto.RegisterFlavorApiServer(server, &flavorApi)
 	edgeproto.RegisterClusterInstApiServer(server, &clusterInstApi)
 	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
@@ -295,6 +306,7 @@ func startServices() error {
 			edgeproto.RegisterAppApiHandler,
 			edgeproto.RegisterAppInstApiHandler,
 			edgeproto.RegisterOperatorApiHandler,
+			edgeproto.RegisterOperatorCodeApiHandler,
 			edgeproto.RegisterCloudletApiHandler,
 			edgeproto.RegisterCloudletInfoApiHandler,
 			edgeproto.RegisterFlavorApiHandler,
@@ -360,6 +372,9 @@ func stopServices() {
 	if services.influxQ != nil {
 		services.influxQ.Stop()
 	}
+	if services.events != nil {
+		services.events.Stop()
+	}
 	if services.sync != nil {
 		services.sync.Done()
 	}
@@ -400,6 +415,7 @@ func InitApis(sync *Sync) {
 	InitDeveloperApi(sync)
 	InitAppApi(sync)
 	InitOperatorApi(sync)
+	InitOperatorCodeApi(sync)
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
 	InitFlavorApi(sync)
@@ -425,6 +441,7 @@ func InitApis(sync *Sync) {
 }
 
 func InitNotify(influxQ *influxq.InfluxQ) {
+	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)

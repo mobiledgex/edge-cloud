@@ -28,6 +28,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/version"
+	"github.com/segmentio/ksuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
@@ -222,11 +223,17 @@ func (s *server) RegisterClient(ctx context.Context,
 			return mstatus, grpc.Errorf(codes.Unauthenticated, "failed to verify token - %s", err.Error())
 		}
 	}
+
+	// Generate KSUID
+	uid := ksuid.New()
 	key := dmecommon.CookieKey{
-		DevName: req.DevName,
-		AppName: req.AppName,
-		AppVers: req.AppVers,
+		DevName:      req.DevName,
+		AppName:      req.AppName,
+		AppVers:      req.AppVers,
+		UniqueIdType: "dme-ksuid",
+		UniqueId:     uid.String(),
 	}
+
 	cookie, err := dmecommon.GenerateCookie(&key, ctx, cookieExpiration)
 	if err != nil {
 		return mstatus, grpc.Errorf(codes.Internal, err.Error())

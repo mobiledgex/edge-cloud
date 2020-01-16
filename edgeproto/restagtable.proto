@@ -29,7 +29,7 @@ message ResTagTable {
   repeated string fields = 1;
   ResTagTableKey key = 2 [(gogoproto.nullable) = false];
   // one or more string tags
-  repeated string tags = 3;
+  map<string, string> tags = 3;
   // availability zone(s) of resource if required
   string azone = 4;
   option (gogoproto.gostring) = true;
