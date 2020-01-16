@@ -92,6 +92,9 @@ func (a *ApplicationData) Sort() {
 	sort.Slice(a.AutoProvPolicies[:], func(i, j int) bool {
 		return a.AutoProvPolicies[i].Key.GetKeyString() < a.AutoProvPolicies[j].Key.GetKeyString()
 	})
+	sort.Slice(a.PrivacyPolicies[:], func(i, j int) bool {
+		return a.PrivacyPolicies[i].Key.GetKeyString() < a.PrivacyPolicies[j].Key.GetKeyString()
+	})
 	sort.Slice(a.AutoProvPolicyCloudlets[:], func(i, j int) bool {
 		if a.AutoProvPolicyCloudlets[i].Key.GetKeyString() == a.AutoProvPolicyCloudlets[j].Key.GetKeyString() {
 			return a.AutoProvPolicyCloudlets[i].CloudletKey.GetKeyString() < a.AutoProvPolicyCloudlets[j].CloudletKey.GetKeyString()

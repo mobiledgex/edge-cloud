@@ -257,7 +257,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				return fmt.Errorf("Privacy Policy not supported on %s", platName)
 			}
 			if in.IpAccess != edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-				return fmt.Errorf("PrivacyPolicy only supported for IP_ACCESS_DEDICATED")
+				if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+					in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
+				} else {
+					return fmt.Errorf("PrivacyPolicy only supported for IP_ACCESS_DEDICATED")
+				}
 			}
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {

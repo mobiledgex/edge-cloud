@@ -51,7 +51,8 @@ type PrivacyPolicy struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
-	Key                   PolicyKey              `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key PolicyKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	// list of outbound security rules for whitelisting traffic
 	OutboundSecurityRules []OutboundSecurityRule `protobuf:"bytes,3,rep,name=outbound_security_rules,json=outboundSecurityRules" json:"outbound_security_rules"`
 }
 
@@ -76,7 +77,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for PrivacyPolicyApi service
 
 type PrivacyPolicyApiClient interface {
-	// Create an Auto Scale Policy
+	// Create a Privacy Policy
 	CreatePrivacyPolicy(ctx context.Context, in *PrivacyPolicy, opts ...grpc.CallOption) (*Result, error)
 	// Delete an Auto Scale Policy
 	DeletePrivacyPolicy(ctx context.Context, in *PrivacyPolicy, opts ...grpc.CallOption) (*Result, error)
@@ -156,7 +157,7 @@ func (x *privacyPolicyApiShowPrivacyPolicyClient) Recv() (*PrivacyPolicy, error)
 // Server API for PrivacyPolicyApi service
 
 type PrivacyPolicyApiServer interface {
-	// Create an Auto Scale Policy
+	// Create a Privacy Policy
 	CreatePrivacyPolicy(context.Context, *PrivacyPolicy) (*Result, error)
 	// Delete an Auto Scale Policy
 	DeletePrivacyPolicy(context.Context, *PrivacyPolicy) (*Result, error)

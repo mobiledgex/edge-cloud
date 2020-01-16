@@ -156,11 +156,14 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			log.SpanLog(ctx, log.DebugLevelMexos, "create cluster inst", "ClusterInst", *new, "timeout", timeout)
 
 			policy := edgeproto.PrivacyPolicy{}
-			policy.Key.Developer = new.Key.Developer
-			policy.Key.Name = new.PrivacyPolicy
-			found := cd.PrivacyPolicyCache.Get(&policy.Key, &policy)
-			if !found {
-				log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
+			if new.PrivacyPolicy != "" {
+				policy.Key.Developer = new.Key.Developer
+				policy.Key.Name = new.PrivacyPolicy
+				if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
+					log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
+					cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, "Privacy Policy not found")
+					return
+				}
 			}
 			err = cd.platform.CreateClusterInst(ctx, new, &policy, updateClusterCacheCallback, timeout)
 			if err != nil {
@@ -182,13 +185,15 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 		log.SpanLog(ctx, log.DebugLevelMexos, "update cluster inst", "ClusterInst", *new)
 		policy := edgeproto.PrivacyPolicy{}
-		policy.Key.Developer = new.Key.Developer
-		policy.Key.Name = new.PrivacyPolicy
-		found := cd.PrivacyPolicyCache.Get(&policy.Key, &policy)
-		if !found {
-			log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
+		if new.PrivacyPolicy != "" {
+			policy.Key.Developer = new.Key.Developer
+			policy.Key.Name = new.PrivacyPolicy
+			if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
+				log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
+				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, "Privacy Policy not found")
+				return
+			}
 		}
-
 		err = cd.platform.UpdateClusterInst(ctx, new, &policy, updateClusterCacheCallback)
 		if err != nil {
 			str := fmt.Sprintf("update failed: %s", err)
