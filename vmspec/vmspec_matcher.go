@@ -14,6 +14,7 @@ type VMCreationSpec struct {
 	ExternalVolumeSize uint64
 	AvailabilityZone   string
 	ImageName          string
+	PrivacyPolicy      *edgeproto.PrivacyPolicy
 }
 
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any

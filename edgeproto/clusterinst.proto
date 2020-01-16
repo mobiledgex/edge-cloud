@@ -72,6 +72,8 @@ message ClusterInst {
   string reserved_by = 22 [(protogen.backend) = true];
   // Size of an optional shared volume to be mounted on the master
   uint64 shared_volume_size = 23;
+  // Optional privacy policy name
+  string privacy_policy = 24;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

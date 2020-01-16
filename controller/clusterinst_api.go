@@ -80,6 +80,17 @@ func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) bool {
 	return false
 }
 
+func (s *ClusterInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, cluster := range s.cache.Objs {
+		if cluster.PrivacyPolicy == key.Name && cluster.Key.Developer == key.Developer {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *ClusterInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgeproto.ClusterInstKey]struct{}) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -248,6 +259,18 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
+		if in.PrivacyPolicy != "" {
+			if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
+				return fmt.Errorf("Privacy Policy not supported on %s", platName)
+			}
+			if in.IpAccess != edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+				if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+					in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
+				} else {
+					return fmt.Errorf("PrivacyPolicy only supported for IP_ACCESS_DEDICATED")
+				}
+			}
+		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
 			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
 				return errors.New("Only kubernetes clusters can be deployed in Azure or GCP")
@@ -269,6 +292,12 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 			if in.NumNodes > policy.MaxNodes {
 				in.NumNodes = policy.MaxNodes
+			}
+		}
+		if in.PrivacyPolicy != "" {
+			policy := edgeproto.PrivacyPolicy{}
+			if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Developer, &policy); err != nil {
+				return err
 			}
 		}
 		info := edgeproto.CloudletInfo{}

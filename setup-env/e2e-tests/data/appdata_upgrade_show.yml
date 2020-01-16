@@ -15,6 +15,27 @@ flavors:
   vcpus: 4
   disk: 4
 
+privacypolicies:
+- key:
+    developer: AcmeAppCo
+    name: PrivPolicy1
+  outboundsecurityrules:
+  - protocol: tcp
+    portrangemin: 443
+    portrangemax: 443
+    remotecidr: 35.247.68.151/32
+  - protocol: tcp
+    portrangemin: 8080
+    portrangemax: 8088
+    remotecidr: 0.0.0.0/0
+  - protocol: udp
+    portrangemin: 53
+    portrangemax: 53
+    remotecidr: 0.0.0.0/0
+  - protocol: icmp
+    remotecidr: 80.0.0.0/8
+
+
 clusterinsts:
 - key:
     clusterkey:
@@ -47,6 +68,7 @@ clusterinsts:
   deployment: kubernetes
   nummasters: 1
   numnodes: 2
+  privacypolicy: PrivPolicy1
 
 operators:
 - key:

@@ -545,24 +545,20 @@ var RegisterClientRequestOptionalArgs = []string{
 	"carriername",
 	"authtoken",
 	"cellid",
-	"uniqueidtype",
-	"uniqueid",
 	"tags.type",
 	"tags.data",
 }
 var RegisterClientRequestAliasArgs = []string{}
 var RegisterClientRequestComments = map[string]string{
-	"ver":          "API version",
-	"devname":      "App Developer Name",
-	"appname":      "App Name",
-	"appvers":      "App Version",
-	"carriername":  "Carrier Name _Not currently used_",
-	"authtoken":    "Authentication Token More details about the auth token here",
-	"cellid":       "Cell ID Cell ID where the client is",
-	"uniqueidtype": "Unique ID Type Type of unique ID provided by the client",
-	"uniqueid":     "Unique ID Optional. Unique identification of the client device or user. May be overridden by the server.",
-	"tags.type":    "type of data",
-	"tags.data":    "data value",
+	"ver":         "API version",
+	"devname":     "App Developer Name",
+	"appname":     "App Name",
+	"appvers":     "App Version",
+	"carriername": "Carrier Name _Not currently used_",
+	"authtoken":   "Authentication Token More details about the auth token here",
+	"cellid":      "Cell ID Cell ID where the client is",
+	"tags.type":   "type of data",
+	"tags.data":   "data value",
 }
 var RegisterClientRequestSpecialArgs = map[string]string{}
 var RegisterClientReplyRequiredArgs = []string{}
@@ -571,8 +567,6 @@ var RegisterClientReplyOptionalArgs = []string{
 	"status",
 	"sessioncookie",
 	"tokenserveruri",
-	"uniqueidtype",
-	"uniqueid",
 	"tags.type",
 	"tags.data",
 }
@@ -581,9 +575,7 @@ var RegisterClientReplyComments = map[string]string{
 	"ver":            "API version",
 	"status":         "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
 	"sessioncookie":  "Session Cookie to be used in later API calls",
-	"tokenserveruri": "URI for the Token Server",
-	"uniqueidtype":   "Unique ID Type Type of unique ID provided by the server",
-	"uniqueid":       "Unique ID Optional. Unique identification of the client device or user",
+	"tokenserveruri": "URI for Token Server",
 	"tags.type":      "type of data",
 	"tags.data":      "data value",
 }
@@ -613,7 +605,7 @@ var FindCloudletRequestAliasArgs = []string{}
 var FindCloudletRequestComments = map[string]string{
 	"ver":                            "API version",
 	"sessioncookie":                  "Session Cookie Session Cookie from RegisterClientRequest",
-	"carriername":                    "Carrier Name Unique carrier identification (typically MCC + MNC)",
+	"carriername":                    "Carrier Name The carrier name that the user is connected to _(Cellular Carrier Name)_",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -697,7 +689,7 @@ var VerifyLocationRequestAliasArgs = []string{}
 var VerifyLocationRequestComments = map[string]string{
 	"ver":                            "API version",
 	"sessioncookie":                  "Session Cookie Session Cookie from RegisterClientRequest",
-	"carriername":                    "Carrier Name Unique carrier identification (typically MCC + MNC)",
+	"carriername":                    "Carrier Name The carrier name that the user is connected to _(Cellular Carrier Name)_",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -743,7 +735,7 @@ var GetLocationRequestAliasArgs = []string{}
 var GetLocationRequestComments = map[string]string{
 	"ver":           "API version",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
-	"carriername":   "Unique carrier identification (typically MCC + MNC)",
+	"carriername":   "The carrier name that the user is connected to (Cellular Carrier Name)",
 	"cellid":        "Cell id where the client is",
 	"tags.type":     "type of data",
 	"tags.data":     "data value",
@@ -770,8 +762,8 @@ var GetLocationReplyOptionalArgs = []string{
 var GetLocationReplyAliasArgs = []string{}
 var GetLocationReplyComments = map[string]string{
 	"status":                             ", one of LocUnknown, LocFound, LocDenied",
-	"carriername":                        "Unique carrier identification (typically MCC + MNC)",
-	"tower":                              "The tower that the user is currently connected to",
+	"carriername":                        "The carrier name that the user is connected to (Cellular Carrier Name)",
+	"tower":                              "The tower that user is currently connected to",
 	"networklocation.latitude":           "latitude in WGS 84 coordinates",
 	"networklocation.longitude":          "longitude in WGS 84 coordinates",
 	"networklocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -805,7 +797,7 @@ var AppInstListRequestAliasArgs = []string{}
 var AppInstListRequestComments = map[string]string{
 	"ver":                            "API version",
 	"sessioncookie":                  "Session Cookie from RegisterClientRequest",
-	"carriername":                    "Unique carrier identification (typically MCC + MNC)",
+	"carriername":                    "The carrier name that the user is connected to (Cellular Carrier Name)",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -869,7 +861,7 @@ var CloudletLocationOptionalArgs = []string{
 }
 var CloudletLocationAliasArgs = []string{}
 var CloudletLocationComments = map[string]string{
-	"carriername":                     "Unique carrier identification (typically MCC + MNC)",
+	"carriername":                     "The carrier name that the user is connected to (Cellular Carrier Name)",
 	"cloudletname":                    "Cloudlet Name",
 	"gpslocation.latitude":            "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":           "longitude in WGS 84 coordinates",
@@ -922,7 +914,7 @@ var AppInstListReplyAliasArgs = []string{}
 var AppInstListReplyComments = map[string]string{
 	"ver":                                       "API version",
 	"status":                                    ", one of AiUndefined, AiSuccess, AiFail",
-	"cloudlets.carriername":                     "Unique carrier identification (typically MCC + MNC)",
+	"cloudlets.carriername":                     "The carrier name that the user is connected to (Cellular Carrier Name)",
 	"cloudlets.cloudletname":                    "Cloudlet Name",
 	"cloudlets.gpslocation.latitude":            "latitude in WGS 84 coordinates",
 	"cloudlets.gpslocation.longitude":           "longitude in WGS 84 coordinates",
@@ -976,7 +968,7 @@ var AppFqdnComments = map[string]string{
 	"appvers":            "App Version",
 	"devname":            "developer name",
 	"fqdns":              "App FQDN",
-	"androidpackagename": "Optional. Android package name",
+	"androidpackagename": "optional android package name",
 }
 var AppFqdnSpecialArgs = map[string]string{
 	"fqdns": "StringArray",
@@ -1000,7 +992,7 @@ var FqdnListReplyComments = map[string]string{
 	"appfqdns.appvers":            "App Version",
 	"appfqdns.devname":            "developer name",
 	"appfqdns.fqdns":              "App FQDN",
-	"appfqdns.androidpackagename": "Optional. Android package name",
+	"appfqdns.androidpackagename": "optional android package name",
 	"status":                      ", one of FlUndefined, FlSuccess, FlFail",
 	"tags.type":                   "type of data",
 	"tags.data":                   "data value",
@@ -1125,7 +1117,7 @@ var QosPositionRequestComments = map[string]string{
 	"positions.gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"positions.gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"positions.gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"ltecategory":                              "Optional. Clients device LTE category number.",
+	"ltecategory":                              "clients device LTE category number, optional",
 	"bandselection.rat_2g":                     "Radio Access Technologies",
 	"cellid":                                   "Cell id where the client is",
 	"tags.type":                                "type of data",
