@@ -85,6 +85,7 @@
 		Notice
 		OperatorKey
 		Operator
+		OperatorCode
 		OutboundSecurityRule
 		PrivacyPolicy
 		CloudletRefs

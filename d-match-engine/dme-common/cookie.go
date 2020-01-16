@@ -31,12 +31,13 @@ func InitVault(addr, region string) error {
 }
 
 type CookieKey struct {
-	PeerIP   string `json:"peerip,omitempty"`
-	DevName  string `json:"devname,omitempty"`
-	AppName  string `json:"appname,omitempty"`
-	AppVers  string `json:"appvers,omitempty"`
-	ClientId string `json:"clientid,omitempty"`
-	Kid      int    `json:"kid,omitempty"`
+	PeerIP       string `json:"peerip,omitempty"`
+	DevName      string `json:"devname,omitempty"`
+	AppName      string `json:"appname,omitempty"`
+	AppVers      string `json:"appvers,omitempty"`
+	UniqueIdType string `json:"uniqueidtype,omitempty"`
+	UniqueId     string `json:"uniqueid,omitempty"`
+	Kid          int    `json:"kid,omitempty"`
 }
 
 type dmeClaims struct {

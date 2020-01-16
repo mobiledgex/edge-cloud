@@ -85,6 +85,7 @@ It has these top-level messages:
 	Notice
 	OperatorKey
 	Operator
+	OperatorCode
 	OutboundSecurityRule
 	PrivacyPolicy
 	CloudletRefs

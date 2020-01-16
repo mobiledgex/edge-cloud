@@ -589,9 +589,6 @@ func (t *TestCud) generateRunApi(file *descriptor.FileDescriptorProto, service *
 }
 
 func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, group *gensupport.MethodGroup) {
-	specialKeys := map[string]string{
-		"CloudletPoolMember": "PoolKey",
-	}
 	apiName := *service.Name + group.Suffix
 	inType := group.InType
 
@@ -599,10 +596,7 @@ func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, serv
 	t.P("func Run", apiName, "(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.", inType, ", dataMap []map[string]interface{}, mode string) error {")
 	t.P("var err error")
 	objApiStr := strings.ToLower(string(inType[0])) + string(inType[1:len(inType)]) + "Api"
-	objKey := "obj.Key"
-	if newKey, ok := specialKeys[inType]; ok {
-		objKey = "obj." + newKey
-	}
+	objKey := "obj.GetKey()"
 	t.P(objApiStr, " := edgeproto.New", service.Name, "Client(conn)")
 	if group.HasUpdate {
 		t.P("for ii, obj := range *data {")
@@ -633,7 +627,7 @@ func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, serv
 	if group.HasStream {
 		t.P("err = ", inType, "ReadResultStream(stream, err)")
 	}
-	t.P("err = ignoreExpectedErrors(mode, &", objKey, ", err)")
+	t.P("err = ignoreExpectedErrors(mode, ", objKey, ", err)")
 	t.P("if err != nil {")
 	t.P("return fmt.Errorf(\"API %s failed for %v -- err %v\", mode, ", objKey, ", err)")
 	t.P("}")

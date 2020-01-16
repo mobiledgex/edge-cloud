@@ -24,6 +24,7 @@ var maxPort uint32 = 65535
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
 	Operators               []Operator               `yaml:"operators"`
+	OperatorCodes           []OperatorCode           `yaml:"operatorcodes"`
 	Cloudlets               []Cloudlet               `yaml:"cloudlets"`
 	Flavors                 []Flavor                 `yaml:"flavors"`
 	ClusterInsts            []ClusterInst            `yaml:"clusterinsts"`
@@ -61,6 +62,9 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.Operators[:], func(i, j int) bool {
 		return a.Operators[i].Key.GetKeyString() < a.Operators[j].Key.GetKeyString()
+	})
+	sort.Slice(a.OperatorCodes[:], func(i, j int) bool {
+		return a.OperatorCodes[i].GetKey().GetKeyString() < a.OperatorCodes[j].GetKey().GetKeyString()
 	})
 	sort.Slice(a.ClusterInsts[:], func(i, j int) bool {
 		return a.ClusterInsts[i].Key.GetKeyString() < a.ClusterInsts[j].Key.GetKeyString()
@@ -131,6 +135,23 @@ func (key *OperatorKey) ValidateKey() error {
 
 func (s *Operator) Validate(fields map[string]struct{}) error {
 	return s.GetKey().ValidateKey()
+}
+
+func (key *OperatorCodeKey) ValidateKey() error {
+	if key.GetKeyString() == "" {
+		return errors.New("No code specified")
+	}
+	return nil
+}
+
+func (s *OperatorCode) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if s.OperatorName == "" {
+		return errors.New("No operator name specified")
+	}
+	return nil
 }
 
 func (key *ClusterKey) ValidateKey() error {
@@ -494,6 +515,18 @@ func (m *Metric) AddIntVal(name string, ival uint64) {
 	m.Vals = append(m.Vals, &val)
 }
 
+func (m *Metric) AddBoolVal(name string, bval bool) {
+	val := MetricVal{Name: name}
+	val.Value = &MetricVal_Bval{Bval: bval}
+	m.Vals = append(m.Vals, &val)
+}
+
+func (m *Metric) AddStringVal(name string, sval string) {
+	val := MetricVal{Name: name}
+	val.Value = &MetricVal_Sval{Sval: sval}
+	m.Vals = append(m.Vals, &val)
+}
+
 func GetLProto(s string) (dme.LProto, error) {
 	s = strings.ToLower(s)
 	switch s {
@@ -609,6 +642,7 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudlet))
 	opts = append(opts, cmpopts.SortSlices(CmpSortDeveloper))
 	opts = append(opts, cmpopts.SortSlices(CmpSortOperator))
+	opts = append(opts, cmpopts.SortSlices(CmpSortOperatorCode))
 	opts = append(opts, cmpopts.SortSlices(CmpSortClusterInst))
 	opts = append(opts, cmpopts.SortSlices(CmpSortFlavor))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletInfo))

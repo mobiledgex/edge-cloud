@@ -229,6 +229,25 @@ var OperatorData = []edgeproto.Operator{
 	},
 }
 
+var OperatorCodeData = []edgeproto.OperatorCode{
+	edgeproto.OperatorCode{
+		Code:         "31170",
+		OperatorName: "AT&T Inc.",
+	},
+	edgeproto.OperatorCode{
+		Code:         "31026",
+		OperatorName: "T-Mobile",
+	},
+	edgeproto.OperatorCode{
+		Code:         "310110",
+		OperatorName: "Verizon",
+	},
+	edgeproto.OperatorCode{
+		Code:         "2621",
+		OperatorName: "Deutsche Telekom",
+	},
+}
+
 var CloudletData = []edgeproto.Cloudlet{
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -329,7 +348,6 @@ var ClusterInstData = []edgeproto.ClusterInst{
 			Developer:   DevData[3].Key.Name,
 		},
 		Flavor:          FlavorData[0].Key,
-		IpAccess:        edgeproto.IpAccess_IP_ACCESS_DEDICATED_OR_SHARED,
 		NumMasters:      1,
 		NumNodes:        2,
 		AutoScalePolicy: AutoScalePolicyData[2].Key.Name,
@@ -572,17 +590,32 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 			},
 			// restagtbl/clouldlet resource map tests
 			&edgeproto.FlavorInfo{
-				Name:  "flavor.large-gpu",
-				Vcpus: uint64(8),
-				Ram:   uint64(8192),
-				Disk:  uint64(40),
+				Name:    "flavor.large",
+				Vcpus:   uint64(10),
+				Ram:     uint64(8192),
+				Disk:    uint64(40),
+				PropMap: map[string]string{"pci": "T4:1"},
 			},
 			&edgeproto.FlavorInfo{
-				Name:       "flavor.large",
-				Vcpus:      uint64(10),
-				Ram:        uint64(8192),
-				Disk:       uint64(40),
-				Properties: "vgpu=nvidia-63",
+				Name:    "flavor.large-pci",
+				Vcpus:   uint64(10),
+				Ram:     uint64(8192),
+				Disk:    uint64(40),
+				PropMap: map[string]string{"pci": "NP4:1"},
+			},
+			&edgeproto.FlavorInfo{
+				Name:    "flavor.large-nvidia",
+				Vcpus:   uint64(10),
+				Ram:     uint64(8192),
+				Disk:    uint64(40),
+				PropMap: map[string]string{"vgpu": "nvidia-63:1"},
+			},
+			&edgeproto.FlavorInfo{
+				Name:    "flavor.large-generic-gpu",
+				Vcpus:   uint64(10),
+				Ram:     uint64(8192),
+				Disk:    uint64(40),
+				PropMap: map[string]string{"gpu": "T4:1"},
 			},
 		},
 	},
@@ -826,17 +859,17 @@ var ResTagTableData = []edgeproto.ResTagTable{
 
 	edgeproto.ResTagTable{
 		Key:  Restblkeys[0],
-		Tags: []string{"tesla-p4", "foo"},
+		Tags: map[string]string{"vgpu": "tesla-p4"},
 	},
 
 	edgeproto.ResTagTable{
 		Key:  Restblkeys[1],
-		Tags: []string{"vcpu", "pci-passthru"},
+		Tags: map[string]string{"vcpu": "nvidia-72", "pci-passthru": "NP4:2"},
 	},
 
 	edgeproto.ResTagTable{
 		Key:  Restblkeys[2],
-		Tags: []string{"nvidia-63", "pci-passthru"},
+		Tags: map[string]string{"vcpu": "nvidia-63", "pci-passthru": "T4:1"},
 	},
 }
 

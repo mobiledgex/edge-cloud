@@ -488,7 +488,7 @@ var ClusterInstComments = map[string]string{
 	"state":              "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"errors":             "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
 	"crmoverride":        "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
-	"ipaccess":           "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessDedicatedOrShared, IpAccessShared",
+	"ipaccess":           "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
 	"allocatedip":        "Allocated IP for dedicated access",
 	"nodeflavor":         "Cloudlet specific node flavor",
 	"deployment":         "Deployment type (kubernetes or docker)",

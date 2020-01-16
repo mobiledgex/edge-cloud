@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -168,6 +169,9 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 			cctx := DefCallContext()
 			cctx.SetOverride(&crmo)
 			err = s.deleteAppInstInternal(cctx, val, cb)
+			if err == nil {
+				RecordAppInstEvent(cb.Context(), val, cloudcommon.DELETED, cloudcommon.InstanceDown)
+			}
 			if err != nil && err.Error() == "AppInst busy, cannot delete" {
 				spinTime = time.Since(start)
 				if spinTime > cloudcommon.DeleteAppInstTimeout {
@@ -200,7 +204,11 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
-	return s.createAppInstInternal(DefCallContext(), in, cb)
+	err := s.createAppInstInternal(DefCallContext(), in, cb)
+	if err == nil {
+		RecordAppInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
+	}
+	return err
 }
 
 func getProtocolBitMap(proto dme.LProto) (int32, error) {
@@ -447,6 +455,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		err := clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
 		if err != nil {
 			return err
+		} else if clusterInst.State == edgeproto.TrackedState_READY {
+			RecordClusterInstEvent(ctx, &clusterInst, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
 		defer func() {
 			if reterr != nil && !cctx.Undo {
@@ -457,6 +467,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 						"Undo create auto-ClusterInst failed",
 						"key", clusterInst.Key,
 						"undoErr", undoErr)
+				} else {
+					RecordClusterInstEvent(ctx, &clusterInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
 				}
 			}
 		}()
@@ -801,9 +813,11 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 	for instkey, _ := range instances {
 		go func(k edgeproto.AppInstKey) {
 			log.DebugLog(log.DebugLevelApi, "updating AppInst", "key", k)
+			RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 			updated, err := s.refreshAppInstInternal(DefCallContext(), k, cb, in.ForceUpdate)
 			if err == nil {
 				instanceUpdateResults[k] <- updateResult{errString: "", revisionUpdated: updated}
+				RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
 			} else {
 				instanceUpdateResults[k] <- updateResult{errString: err.Error(), revisionUpdated: updated}
 			}
@@ -898,12 +912,20 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		return nil
 	}
 	forceUpdate := true
+	RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 	_, err = s.refreshAppInstInternal(cctx, in.Key, cb, forceUpdate)
+	if err != nil {
+		RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+	}
 	return err
 }
 
 func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
-	return s.deleteAppInstInternal(DefCallContext(), in, cb)
+	err := s.deleteAppInstInternal(DefCallContext(), in, cb)
+	if err == nil {
+		RecordAppInstEvent(cb.Context(), in, cloudcommon.DELETED, cloudcommon.InstanceDown)
+	}
+	return err
 }
 
 func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
@@ -1040,6 +1062,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if autoerr != nil {
 			log.InfoLog("Failed to delete auto-ClusterInst",
 				"clusterInst", clusterInst, "err", err)
+		} else {
+			RecordClusterInstEvent(ctx, &clusterInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
 	}
 	return err
@@ -1060,6 +1084,13 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
 			return nil
+		}
+		// healthy -> not healthy
+		if inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_OK && state != edgeproto.HealthCheck_HEALTH_CHECK_OK {
+			RecordAppInstEvent(ctx, &inst, cloudcommon.HEALTH_CHECK_FAIL, cloudcommon.InstanceDown)
+			// not healthy -> healthy
+		} else if inst.HealthCheck != edgeproto.HealthCheck_HEALTH_CHECK_OK && state == edgeproto.HealthCheck_HEALTH_CHECK_OK {
+			RecordAppInstEvent(ctx, &inst, cloudcommon.HEALTH_CHECK_OK, cloudcommon.InstanceUp)
 		}
 		inst.HealthCheck = state
 		s.store.STMPut(stm, &inst)
@@ -1166,7 +1197,7 @@ func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, refs 
 		// shared, so no allocation needed
 		return nil
 	}
-	if inst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED_OR_SHARED {
+	if inst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 		// set to shared, as CRM does not implement dedicated
 		// ip assignment yet.
 		inst.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
@@ -1252,4 +1283,21 @@ func setL7Port(port *dme.AppPort, key *edgeproto.AppInstKey) bool {
 	port.PublicPort = cloudcommon.RootLBL7Port
 	port.PathPrefix = cloudcommon.GetL7Path(key, port.InternalPort)
 	return true
+}
+
+func RecordAppInstEvent(ctx context.Context, app *edgeproto.AppInst, event cloudcommon.InstanceEvent, serverStatus string) {
+	metric := edgeproto.Metric{}
+	metric.Name = cloudcommon.AppInstEvent
+	ts, _ := types.TimestampProto(time.Now())
+	metric.Timestamp = *ts
+	metric.AddTag("operator", app.Key.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	metric.AddTag("cloudlet", app.Key.ClusterInstKey.CloudletKey.Name)
+	metric.AddTag("cluster", app.Key.ClusterInstKey.ClusterKey.Name)
+	metric.AddTag("dev", app.Key.AppKey.DeveloperKey.Name)
+	metric.AddTag("app", app.Key.AppKey.Name)
+	metric.AddTag("version", app.Key.AppKey.Version)
+	metric.AddStringVal("event", string(event))
+	metric.AddStringVal("status", serverStatus)
+
+	services.events.AddMetric(&metric)
 }
