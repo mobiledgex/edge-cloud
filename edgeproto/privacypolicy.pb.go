@@ -79,11 +79,11 @@ const _ = grpc.SupportPackageIsVersion4
 type PrivacyPolicyApiClient interface {
 	// Create a Privacy Policy
 	CreatePrivacyPolicy(ctx context.Context, in *PrivacyPolicy, opts ...grpc.CallOption) (*Result, error)
-	// Delete an Auto Scale Policy
+	// Delete a Privacy policy
 	DeletePrivacyPolicy(ctx context.Context, in *PrivacyPolicy, opts ...grpc.CallOption) (*Result, error)
-	// Update an Auto Scale Policy
+	// Update a Privacy policy
 	UpdatePrivacyPolicy(ctx context.Context, in *PrivacyPolicy, opts ...grpc.CallOption) (*Result, error)
-	// Show Auto Scale Policies. Any fields specified will be used to filter results.
+	// Show Privacy Policies. Any fields specified will be used to filter results.
 	ShowPrivacyPolicy(ctx context.Context, in *PrivacyPolicy, opts ...grpc.CallOption) (PrivacyPolicyApi_ShowPrivacyPolicyClient, error)
 }
 
@@ -159,11 +159,11 @@ func (x *privacyPolicyApiShowPrivacyPolicyClient) Recv() (*PrivacyPolicy, error)
 type PrivacyPolicyApiServer interface {
 	// Create a Privacy Policy
 	CreatePrivacyPolicy(context.Context, *PrivacyPolicy) (*Result, error)
-	// Delete an Auto Scale Policy
+	// Delete a Privacy policy
 	DeletePrivacyPolicy(context.Context, *PrivacyPolicy) (*Result, error)
-	// Update an Auto Scale Policy
+	// Update a Privacy policy
 	UpdatePrivacyPolicy(context.Context, *PrivacyPolicy) (*Result, error)
-	// Show Auto Scale Policies. Any fields specified will be used to filter results.
+	// Show Privacy Policies. Any fields specified will be used to filter results.
 	ShowPrivacyPolicy(*PrivacyPolicy, PrivacyPolicyApi_ShowPrivacyPolicyServer) error
 }
 

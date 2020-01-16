@@ -47,7 +47,7 @@ service PrivacyPolicyApi {
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
   }
-  // Delete an Auto Scale Policy
+  // Delete a Privacy policy
   rpc DeletePrivacyPolicy(PrivacyPolicy) returns (Result) {
     option (google.api.http) = {
       post: "/delete/privacypolicy"
@@ -55,7 +55,7 @@ service PrivacyPolicyApi {
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
   }
-  // Update an Auto Scale Policy
+  // Update a Privacy policy
   rpc UpdatePrivacyPolicy(PrivacyPolicy) returns (Result) {
     option (google.api.http) = {
       post: "/update/privacypolicy"
@@ -63,7 +63,7 @@ service PrivacyPolicyApi {
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
   }
-  // Show Auto Scale Policies. Any fields specified will be used to filter results.
+  // Show Privacy Policies. Any fields specified will be used to filter results.
   rpc ShowPrivacyPolicy(PrivacyPolicy) returns (stream PrivacyPolicy) {
     option (google.api.http) = {
       post: "/show/privacypolicy"
