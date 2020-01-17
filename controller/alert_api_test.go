@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -42,4 +43,5 @@ func testinit() {
 	dockerRegistry := "docker.mobiledgex.net"
 	registryFQDN = &dockerRegistry
 	vaultConfig, _ = vault.BestConfig("")
+	services.events = influxq.NewInfluxQ("test", "user", "pass")
 }

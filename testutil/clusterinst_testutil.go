@@ -540,20 +540,25 @@ func FindClusterInstInfoData(key *edgeproto.ClusterInstKey, testData []edgeproto
 	return nil, false
 }
 
-func RunClusterInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.ClusterInst, dataMap []map[string]interface{}, mode string) error {
-	var err error
+func RunClusterInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.ClusterInst, dataMap interface{}, mode string) error {
 	clusterInstApi := edgeproto.NewClusterInstApiClient(conn)
-	for ii, obj := range *data {
+	var err error
+	for ii, objD := range *data {
+		obj := &objD
 		log.DebugLog(log.DebugLevelApi, "API %v for ClusterInst: %v", mode, obj.GetKey())
 		var stream ClusterInstStream
 		switch mode {
 		case "create":
-			stream, err = clusterInstApi.CreateClusterInst(ctx, &obj)
+			stream, err = clusterInstApi.CreateClusterInst(ctx, obj)
 		case "delete":
-			stream, err = clusterInstApi.DeleteClusterInst(ctx, &obj)
+			stream, err = clusterInstApi.DeleteClusterInst(ctx, obj)
 		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			stream, err = clusterInstApi.UpdateClusterInst(ctx, &obj)
+			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
+			if err != nil {
+				return fmt.Errorf("bad dataMap for ClusterInst: %v", err)
+			}
+			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			stream, err = clusterInstApi.UpdateClusterInst(ctx, obj)
 		default:
 			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for ClusterInst: %v", mode, obj.GetKey())
 			return nil

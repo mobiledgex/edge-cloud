@@ -20,7 +20,6 @@ func TestAppInstApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
-	reduceInfoTimeouts()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -31,6 +30,8 @@ func TestAppInstApi(t *testing.T) {
 	defer sync.Done()
 	responder := NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
 		&appInstInfoApi, &clusterInstInfoApi)
+
+	reduceInfoTimeouts(t, ctx)
 
 	// cannote create instances without apps and cloudlets
 	for _, obj := range testutil.AppInstData {
@@ -215,7 +216,6 @@ func TestAutoClusterInst(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
-	reduceInfoTimeouts()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -227,6 +227,7 @@ func TestAutoClusterInst(t *testing.T) {
 	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
 		&appInstInfoApi, &clusterInstInfoApi)
 
+	reduceInfoTimeouts(t, ctx)
 	// create supporting data
 	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)

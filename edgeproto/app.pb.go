@@ -984,30 +984,30 @@ var AppAllFieldsMap = map[string]struct{}{
 }
 
 var AppAllFieldsStringMap = map[string]string{
-	AppFieldKeyDeveloperKeyName:     "App Field Key Developer Key Name",
-	AppFieldKeyName:                 "App Field Key Name",
-	AppFieldKeyVersion:              "App Field Key Version",
-	AppFieldImagePath:               "App Field Image Path",
-	AppFieldImageType:               "App Field Image Type",
-	AppFieldAccessPorts:             "App Field Access Ports",
-	AppFieldDefaultFlavorName:       "App Field Default Flavor Name",
-	AppFieldAuthPublicKey:           "App Field Auth Public Key",
-	AppFieldCommand:                 "App Field Command",
-	AppFieldAnnotations:             "App Field Annotations",
-	AppFieldDeployment:              "App Field Deployment",
-	AppFieldDeploymentManifest:      "App Field Deployment Manifest",
-	AppFieldDeploymentGenerator:     "App Field Deployment Generator",
-	AppFieldAndroidPackageName:      "App Field Android Package Name",
-	AppFieldDelOpt:                  "App Field Del Opt",
-	AppFieldConfigsKind:             "App Field Configs Kind",
-	AppFieldConfigsConfig:           "App Field Configs Config",
-	AppFieldScaleWithCluster:        "App Field Scale With Cluster",
-	AppFieldInternalPorts:           "App Field Internal Ports",
-	AppFieldRevision:                "App Field Revision",
-	AppFieldOfficialFqdn:            "App Field Official Fqdn",
-	AppFieldMd5Sum:                  "App Field Md5 Sum",
-	AppFieldDefaultSharedVolumeSize: "App Field Default Shared Volume Size",
-	AppFieldAutoProvPolicy:          "App Field Auto Prov Policy",
+	AppFieldKeyDeveloperKeyName:     "Key Developer Key Name",
+	AppFieldKeyName:                 "Key Name",
+	AppFieldKeyVersion:              "Key Version",
+	AppFieldImagePath:               "Image Path",
+	AppFieldImageType:               "Image Type",
+	AppFieldAccessPorts:             "Access Ports",
+	AppFieldDefaultFlavorName:       "Default Flavor Name",
+	AppFieldAuthPublicKey:           "Auth Public Key",
+	AppFieldCommand:                 "Command",
+	AppFieldAnnotations:             "Annotations",
+	AppFieldDeployment:              "Deployment",
+	AppFieldDeploymentManifest:      "Deployment Manifest",
+	AppFieldDeploymentGenerator:     "Deployment Generator",
+	AppFieldAndroidPackageName:      "Android Package Name",
+	AppFieldDelOpt:                  "Del Opt",
+	AppFieldConfigsKind:             "Configs Kind",
+	AppFieldConfigsConfig:           "Configs Config",
+	AppFieldScaleWithCluster:        "Scale With Cluster",
+	AppFieldInternalPorts:           "Internal Ports",
+	AppFieldRevision:                "Revision",
+	AppFieldOfficialFqdn:            "Official Fqdn",
+	AppFieldMd5Sum:                  "Md5 Sum",
+	AppFieldDefaultSharedVolumeSize: "Default Shared Volume Size",
+	AppFieldAutoProvPolicy:          "Auto Prov Policy",
 }
 
 func (m *App) IsKeyField(s string) bool {
@@ -1388,7 +1388,7 @@ func (s *AppStore) LoadOne(key string) (*App, int64, error) {
 	var obj App
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse App data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse App data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1632,7 +1632,7 @@ func (c *AppCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	obj := App{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse App data", "val", string(val))
+		log.WarnLog("Failed to parse App data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

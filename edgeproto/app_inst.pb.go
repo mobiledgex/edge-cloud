@@ -1484,49 +1484,49 @@ var AppInstAllFieldsMap = map[string]struct{}{
 }
 
 var AppInstAllFieldsStringMap = map[string]string{
-	AppInstFieldKeyAppKeyDeveloperKeyName:                   "App Inst Field Key App Key Developer Key Name",
-	AppInstFieldKeyAppKeyName:                               "App Inst Field Key App Key Name",
-	AppInstFieldKeyAppKeyVersion:                            "App Inst Field Key App Key Version",
-	AppInstFieldKeyClusterInstKeyClusterKeyName:             "App Inst Field Key Cluster Inst Key Cluster Key Name",
-	AppInstFieldKeyClusterInstKeyCloudletKeyOperatorKeyName: "App Inst Field Key Cluster Inst Key Cloudlet Key Operator Key Name",
-	AppInstFieldKeyClusterInstKeyCloudletKeyName:            "App Inst Field Key Cluster Inst Key Cloudlet Key Name",
-	AppInstFieldKeyClusterInstKeyDeveloper:                  "App Inst Field Key Cluster Inst Key Developer",
-	AppInstFieldCloudletLocLatitude:                         "App Inst Field Cloudlet Loc Latitude",
-	AppInstFieldCloudletLocLongitude:                        "App Inst Field Cloudlet Loc Longitude",
-	AppInstFieldCloudletLocHorizontalAccuracy:               "App Inst Field Cloudlet Loc Horizontal Accuracy",
-	AppInstFieldCloudletLocVerticalAccuracy:                 "App Inst Field Cloudlet Loc Vertical Accuracy",
-	AppInstFieldCloudletLocAltitude:                         "App Inst Field Cloudlet Loc Altitude",
-	AppInstFieldCloudletLocCourse:                           "App Inst Field Cloudlet Loc Course",
-	AppInstFieldCloudletLocSpeed:                            "App Inst Field Cloudlet Loc Speed",
-	AppInstFieldCloudletLocTimestampSeconds:                 "App Inst Field Cloudlet Loc Timestamp Seconds",
-	AppInstFieldCloudletLocTimestampNanos:                   "App Inst Field Cloudlet Loc Timestamp Nanos",
-	AppInstFieldUri:                                         "App Inst Field Uri",
-	AppInstFieldLiveness:                                    "App Inst Field Liveness",
-	AppInstFieldMappedPortsProto:                            "App Inst Field Mapped Ports Proto",
-	AppInstFieldMappedPortsInternalPort:                     "App Inst Field Mapped Ports Internal Port",
-	AppInstFieldMappedPortsPublicPort:                       "App Inst Field Mapped Ports Public Port",
-	AppInstFieldMappedPortsPathPrefix:                       "App Inst Field Mapped Ports Path Prefix",
-	AppInstFieldMappedPortsFqdnPrefix:                       "App Inst Field Mapped Ports Fqdn Prefix",
-	AppInstFieldMappedPortsEndPort:                          "App Inst Field Mapped Ports End Port",
-	AppInstFieldFlavorName:                                  "App Inst Field Flavor Name",
-	AppInstFieldState:                                       "App Inst Field State",
-	AppInstFieldErrors:                                      "App Inst Field Errors",
-	AppInstFieldCrmOverride:                                 "App Inst Field Crm Override",
-	AppInstFieldRuntimeInfoContainerIds:                     "App Inst Field Runtime Info Container Ids",
-	AppInstFieldCreatedAtSeconds:                            "App Inst Field Created At Seconds",
-	AppInstFieldCreatedAtNanos:                              "App Inst Field Created At Nanos",
-	AppInstFieldAutoClusterIpAccess:                         "App Inst Field Auto Cluster Ip Access",
-	AppInstFieldStatusTaskNumber:                            "App Inst Field Status Task Number",
-	AppInstFieldStatusMaxTasks:                              "App Inst Field Status Max Tasks",
-	AppInstFieldStatusTaskName:                              "App Inst Field Status Task Name",
-	AppInstFieldStatusStepName:                              "App Inst Field Status Step Name",
-	AppInstFieldRevision:                                    "App Inst Field Revision",
-	AppInstFieldForceUpdate:                                 "App Inst Field Force Update",
-	AppInstFieldUpdateMultiple:                              "App Inst Field Update Multiple",
-	AppInstFieldConfigsKind:                                 "App Inst Field Configs Kind",
-	AppInstFieldConfigsConfig:                               "App Inst Field Configs Config",
-	AppInstFieldSharedVolumeSize:                            "App Inst Field Shared Volume Size",
-	AppInstFieldHealthCheck:                                 "App Inst Field Health Check",
+	AppInstFieldKeyAppKeyDeveloperKeyName:                   "Key App Key Developer Key Name",
+	AppInstFieldKeyAppKeyName:                               "Key App Key Name",
+	AppInstFieldKeyAppKeyVersion:                            "Key App Key Version",
+	AppInstFieldKeyClusterInstKeyClusterKeyName:             "Key Cluster Inst Key Cluster Key Name",
+	AppInstFieldKeyClusterInstKeyCloudletKeyOperatorKeyName: "Key Cluster Inst Key Cloudlet Key Operator Key Name",
+	AppInstFieldKeyClusterInstKeyCloudletKeyName:            "Key Cluster Inst Key Cloudlet Key Name",
+	AppInstFieldKeyClusterInstKeyDeveloper:                  "Key Cluster Inst Key Developer",
+	AppInstFieldCloudletLocLatitude:                         "Cloudlet Loc Latitude",
+	AppInstFieldCloudletLocLongitude:                        "Cloudlet Loc Longitude",
+	AppInstFieldCloudletLocHorizontalAccuracy:               "Cloudlet Loc Horizontal Accuracy",
+	AppInstFieldCloudletLocVerticalAccuracy:                 "Cloudlet Loc Vertical Accuracy",
+	AppInstFieldCloudletLocAltitude:                         "Cloudlet Loc Altitude",
+	AppInstFieldCloudletLocCourse:                           "Cloudlet Loc Course",
+	AppInstFieldCloudletLocSpeed:                            "Cloudlet Loc Speed",
+	AppInstFieldCloudletLocTimestampSeconds:                 "Cloudlet Loc Timestamp Seconds",
+	AppInstFieldCloudletLocTimestampNanos:                   "Cloudlet Loc Timestamp Nanos",
+	AppInstFieldUri:                                         "Uri",
+	AppInstFieldLiveness:                                    "Liveness",
+	AppInstFieldMappedPortsProto:                            "Mapped Ports Proto",
+	AppInstFieldMappedPortsInternalPort:                     "Mapped Ports Internal Port",
+	AppInstFieldMappedPortsPublicPort:                       "Mapped Ports Public Port",
+	AppInstFieldMappedPortsPathPrefix:                       "Mapped Ports Path Prefix",
+	AppInstFieldMappedPortsFqdnPrefix:                       "Mapped Ports Fqdn Prefix",
+	AppInstFieldMappedPortsEndPort:                          "Mapped Ports End Port",
+	AppInstFieldFlavorName:                                  "Flavor Name",
+	AppInstFieldState:                                       "State",
+	AppInstFieldErrors:                                      "Errors",
+	AppInstFieldCrmOverride:                                 "Crm Override",
+	AppInstFieldRuntimeInfoContainerIds:                     "Runtime Info Container Ids",
+	AppInstFieldCreatedAtSeconds:                            "Created At Seconds",
+	AppInstFieldCreatedAtNanos:                              "Created At Nanos",
+	AppInstFieldAutoClusterIpAccess:                         "Auto Cluster Ip Access",
+	AppInstFieldStatusTaskNumber:                            "Status Task Number",
+	AppInstFieldStatusMaxTasks:                              "Status Max Tasks",
+	AppInstFieldStatusTaskName:                              "Status Task Name",
+	AppInstFieldStatusStepName:                              "Status Step Name",
+	AppInstFieldRevision:                                    "Revision",
+	AppInstFieldForceUpdate:                                 "Force Update",
+	AppInstFieldUpdateMultiple:                              "Update Multiple",
+	AppInstFieldConfigsKind:                                 "Configs Kind",
+	AppInstFieldConfigsConfig:                               "Configs Config",
+	AppInstFieldSharedVolumeSize:                            "Shared Volume Size",
+	AppInstFieldHealthCheck:                                 "Health Check",
 }
 
 func (m *AppInst) IsKeyField(s string) bool {
@@ -2181,7 +2181,7 @@ func (s *AppInstStore) LoadOne(key string) (*AppInst, int64, error) {
 	var obj AppInst
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse AppInst data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse AppInst data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -2425,7 +2425,7 @@ func (c *AppInstCache) SyncUpdate(ctx context.Context, key, val []byte, rev int6
 	obj := AppInst{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse AppInst data", "val", string(val))
+		log.WarnLog("Failed to parse AppInst data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)
@@ -2771,21 +2771,21 @@ var AppInstInfoAllFieldsMap = map[string]struct{}{
 }
 
 var AppInstInfoAllFieldsStringMap = map[string]string{
-	AppInstInfoFieldKeyAppKeyDeveloperKeyName:                   "App Inst Info Field Key App Key Developer Key Name",
-	AppInstInfoFieldKeyAppKeyName:                               "App Inst Info Field Key App Key Name",
-	AppInstInfoFieldKeyAppKeyVersion:                            "App Inst Info Field Key App Key Version",
-	AppInstInfoFieldKeyClusterInstKeyClusterKeyName:             "App Inst Info Field Key Cluster Inst Key Cluster Key Name",
-	AppInstInfoFieldKeyClusterInstKeyCloudletKeyOperatorKeyName: "App Inst Info Field Key Cluster Inst Key Cloudlet Key Operator Key Name",
-	AppInstInfoFieldKeyClusterInstKeyCloudletKeyName:            "App Inst Info Field Key Cluster Inst Key Cloudlet Key Name",
-	AppInstInfoFieldKeyClusterInstKeyDeveloper:                  "App Inst Info Field Key Cluster Inst Key Developer",
-	AppInstInfoFieldNotifyId:                                    "App Inst Info Field Notify Id",
-	AppInstInfoFieldState:                                       "App Inst Info Field State",
-	AppInstInfoFieldErrors:                                      "App Inst Info Field Errors",
-	AppInstInfoFieldRuntimeInfoContainerIds:                     "App Inst Info Field Runtime Info Container Ids",
-	AppInstInfoFieldStatusTaskNumber:                            "App Inst Info Field Status Task Number",
-	AppInstInfoFieldStatusMaxTasks:                              "App Inst Info Field Status Max Tasks",
-	AppInstInfoFieldStatusTaskName:                              "App Inst Info Field Status Task Name",
-	AppInstInfoFieldStatusStepName:                              "App Inst Info Field Status Step Name",
+	AppInstInfoFieldKeyAppKeyDeveloperKeyName:                   "Key App Key Developer Key Name",
+	AppInstInfoFieldKeyAppKeyName:                               "Key App Key Name",
+	AppInstInfoFieldKeyAppKeyVersion:                            "Key App Key Version",
+	AppInstInfoFieldKeyClusterInstKeyClusterKeyName:             "Key Cluster Inst Key Cluster Key Name",
+	AppInstInfoFieldKeyClusterInstKeyCloudletKeyOperatorKeyName: "Key Cluster Inst Key Cloudlet Key Operator Key Name",
+	AppInstInfoFieldKeyClusterInstKeyCloudletKeyName:            "Key Cluster Inst Key Cloudlet Key Name",
+	AppInstInfoFieldKeyClusterInstKeyDeveloper:                  "Key Cluster Inst Key Developer",
+	AppInstInfoFieldNotifyId:                                    "Notify Id",
+	AppInstInfoFieldState:                                       "State",
+	AppInstInfoFieldErrors:                                      "Errors",
+	AppInstInfoFieldRuntimeInfoContainerIds:                     "Runtime Info Container Ids",
+	AppInstInfoFieldStatusTaskNumber:                            "Status Task Number",
+	AppInstInfoFieldStatusMaxTasks:                              "Status Max Tasks",
+	AppInstInfoFieldStatusTaskName:                              "Status Task Name",
+	AppInstInfoFieldStatusStepName:                              "Status Step Name",
 }
 
 func (m *AppInstInfo) IsKeyField(s string) bool {
@@ -3109,7 +3109,7 @@ func (s *AppInstInfoStore) LoadOne(key string) (*AppInstInfo, int64, error) {
 	var obj AppInstInfo
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse AppInstInfo data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse AppInstInfo data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -3371,7 +3371,7 @@ func (c *AppInstInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev 
 	obj := AppInstInfo{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse AppInstInfo data", "val", string(val))
+		log.WarnLog("Failed to parse AppInstInfo data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

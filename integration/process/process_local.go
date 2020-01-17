@@ -125,9 +125,6 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
-	if p.ShortTimeouts {
-		args = append(args, "-shortTimeouts")
-	}
 	if p.TestMode {
 		args = append(args, "-testMode")
 	}
@@ -242,9 +239,6 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 	if p.CloudletKey != "" {
 		args = append(args, "--cloudletKey")
 		args = append(args, p.CloudletKey)
-	}
-	if p.ShortTimeouts {
-		args = append(args, "-shortTimeouts")
 	}
 	if p.TLS.ServerCert != "" {
 		args = append(args, "--tls")

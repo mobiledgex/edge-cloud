@@ -3,6 +3,7 @@ package apis
 // interacts with the controller APIs for use by the e2e test tool
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -77,13 +78,23 @@ func runShow(ctrl *process.Controller, showCmds []string, outputDir string, cmp 
 			log.Printf("Found failure in show output\n")
 			errFound = true
 		}
-		util.PrintToFile("show-commands.yml", outputDir, label+"\n"+string(out)+"\n", truncate)
+		// contents under label needs to be indented for non-lists
+		buf := bytes.Buffer{}
+		for _, line := range strings.Split(string(out), "\n") {
+			if line != "" {
+				buf.WriteString("  ")
+				buf.WriteString(line)
+			}
+			buf.WriteString("\n")
+		}
+		util.PrintToFile("show-commands.yml", outputDir, label+"\n"+buf.String()+"\n", truncate)
 	}
 	return !errFound
 }
 
 func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool {
 	var showCmds = []string{
+		"settings: ShowSettings",
 		"flavors: ShowFlavor",
 		"clusterinsts: ShowClusterInst",
 		"operators: ShowOperator",
@@ -241,6 +252,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in flavor API %v\n", err)
 				rc = false
 			}
+			err = testutil.RunSettingsApi(ctrlapi, ctx, appData.Settings, appDataMap["settings"], "reset")
+			if err != nil {
+				log.Printf("Error in settings API %v\n", err)
+				rc = false
+			}
 		case "create":
 			fallthrough
 		case "add":
@@ -248,6 +264,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		case "refresh":
 			fallthrough
 		case "update":
+			err = testutil.RunSettingsApi(ctrlapi, ctx, appData.Settings, appDataMap["settings"], "update")
+			if err != nil {
+				log.Printf("Error in settigs API %v\n", err)
+				rc = false
+			}
 			err = testutil.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
 			if err != nil {
 				log.Printf("Error in flavor API %v\n", err)

@@ -1176,34 +1176,34 @@ var ClusterInstAllFieldsMap = map[string]struct{}{
 }
 
 var ClusterInstAllFieldsStringMap = map[string]string{
-	ClusterInstFieldKeyClusterKeyName:             "Cluster Inst Field Key Cluster Key Name",
-	ClusterInstFieldKeyCloudletKeyOperatorKeyName: "Cluster Inst Field Key Cloudlet Key Operator Key Name",
-	ClusterInstFieldKeyCloudletKeyName:            "Cluster Inst Field Key Cloudlet Key Name",
-	ClusterInstFieldKeyDeveloper:                  "Cluster Inst Field Key Developer",
-	ClusterInstFieldFlavorName:                    "Cluster Inst Field Flavor Name",
-	ClusterInstFieldState:                         "Cluster Inst Field State",
-	ClusterInstFieldErrors:                        "Cluster Inst Field Errors",
-	ClusterInstFieldCrmOverride:                   "Cluster Inst Field Crm Override",
-	ClusterInstFieldIpAccess:                      "Cluster Inst Field Ip Access",
-	ClusterInstFieldAllocatedIp:                   "Cluster Inst Field Allocated Ip",
-	ClusterInstFieldLiveness:                      "Cluster Inst Field Liveness",
-	ClusterInstFieldAuto:                          "Cluster Inst Field Auto",
-	ClusterInstFieldNodeFlavor:                    "Cluster Inst Field Node Flavor",
-	ClusterInstFieldNumMasters:                    "Cluster Inst Field Num Masters",
-	ClusterInstFieldNumNodes:                      "Cluster Inst Field Num Nodes",
-	ClusterInstFieldDeployment:                    "Cluster Inst Field Deployment",
-	ClusterInstFieldStatusTaskNumber:              "Cluster Inst Field Status Task Number",
-	ClusterInstFieldStatusMaxTasks:                "Cluster Inst Field Status Max Tasks",
-	ClusterInstFieldStatusTaskName:                "Cluster Inst Field Status Task Name",
-	ClusterInstFieldStatusStepName:                "Cluster Inst Field Status Step Name",
-	ClusterInstFieldExternalVolumeSize:            "Cluster Inst Field External Volume Size",
-	ClusterInstFieldAutoScalePolicy:               "Cluster Inst Field Auto Scale Policy",
-	ClusterInstFieldAvailabilityZone:              "Cluster Inst Field Availability Zone",
-	ClusterInstFieldImageName:                     "Cluster Inst Field Image Name",
-	ClusterInstFieldReservable:                    "Cluster Inst Field Reservable",
-	ClusterInstFieldReservedBy:                    "Cluster Inst Field Reserved By",
-	ClusterInstFieldSharedVolumeSize:              "Cluster Inst Field Shared Volume Size",
-	ClusterInstFieldPrivacyPolicy:                 "Cluster Inst Field Privacy Policy",
+	ClusterInstFieldKeyClusterKeyName:             "Key Cluster Key Name",
+	ClusterInstFieldKeyCloudletKeyOperatorKeyName: "Key Cloudlet Key Operator Key Name",
+	ClusterInstFieldKeyCloudletKeyName:            "Key Cloudlet Key Name",
+	ClusterInstFieldKeyDeveloper:                  "Key Developer",
+	ClusterInstFieldFlavorName:                    "Flavor Name",
+	ClusterInstFieldState:                         "State",
+	ClusterInstFieldErrors:                        "Errors",
+	ClusterInstFieldCrmOverride:                   "Crm Override",
+	ClusterInstFieldIpAccess:                      "Ip Access",
+	ClusterInstFieldAllocatedIp:                   "Allocated Ip",
+	ClusterInstFieldLiveness:                      "Liveness",
+	ClusterInstFieldAuto:                          "Auto",
+	ClusterInstFieldNodeFlavor:                    "Node Flavor",
+	ClusterInstFieldNumMasters:                    "Num Masters",
+	ClusterInstFieldNumNodes:                      "Num Nodes",
+	ClusterInstFieldDeployment:                    "Deployment",
+	ClusterInstFieldStatusTaskNumber:              "Status Task Number",
+	ClusterInstFieldStatusMaxTasks:                "Status Max Tasks",
+	ClusterInstFieldStatusTaskName:                "Status Task Name",
+	ClusterInstFieldStatusStepName:                "Status Step Name",
+	ClusterInstFieldExternalVolumeSize:            "External Volume Size",
+	ClusterInstFieldAutoScalePolicy:               "Auto Scale Policy",
+	ClusterInstFieldAvailabilityZone:              "Availability Zone",
+	ClusterInstFieldImageName:                     "Image Name",
+	ClusterInstFieldReservable:                    "Reservable",
+	ClusterInstFieldReservedBy:                    "Reserved By",
+	ClusterInstFieldSharedVolumeSize:              "Shared Volume Size",
+	ClusterInstFieldPrivacyPolicy:                 "Privacy Policy",
 }
 
 func (m *ClusterInst) IsKeyField(s string) bool {
@@ -1617,7 +1617,7 @@ func (s *ClusterInstStore) LoadOne(key string) (*ClusterInst, int64, error) {
 	var obj ClusterInst
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse ClusterInst data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse ClusterInst data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1861,7 +1861,7 @@ func (c *ClusterInstCache) SyncUpdate(ctx context.Context, key, val []byte, rev 
 	obj := ClusterInst{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse ClusterInst data", "val", string(val))
+		log.WarnLog("Failed to parse ClusterInst data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)
@@ -2149,17 +2149,17 @@ var ClusterInstInfoAllFieldsMap = map[string]struct{}{
 }
 
 var ClusterInstInfoAllFieldsStringMap = map[string]string{
-	ClusterInstInfoFieldKeyClusterKeyName:             "Cluster Inst Info Field Key Cluster Key Name",
-	ClusterInstInfoFieldKeyCloudletKeyOperatorKeyName: "Cluster Inst Info Field Key Cloudlet Key Operator Key Name",
-	ClusterInstInfoFieldKeyCloudletKeyName:            "Cluster Inst Info Field Key Cloudlet Key Name",
-	ClusterInstInfoFieldKeyDeveloper:                  "Cluster Inst Info Field Key Developer",
-	ClusterInstInfoFieldNotifyId:                      "Cluster Inst Info Field Notify Id",
-	ClusterInstInfoFieldState:                         "Cluster Inst Info Field State",
-	ClusterInstInfoFieldErrors:                        "Cluster Inst Info Field Errors",
-	ClusterInstInfoFieldStatusTaskNumber:              "Cluster Inst Info Field Status Task Number",
-	ClusterInstInfoFieldStatusMaxTasks:                "Cluster Inst Info Field Status Max Tasks",
-	ClusterInstInfoFieldStatusTaskName:                "Cluster Inst Info Field Status Task Name",
-	ClusterInstInfoFieldStatusStepName:                "Cluster Inst Info Field Status Step Name",
+	ClusterInstInfoFieldKeyClusterKeyName:             "Key Cluster Key Name",
+	ClusterInstInfoFieldKeyCloudletKeyOperatorKeyName: "Key Cloudlet Key Operator Key Name",
+	ClusterInstInfoFieldKeyCloudletKeyName:            "Key Cloudlet Key Name",
+	ClusterInstInfoFieldKeyDeveloper:                  "Key Developer",
+	ClusterInstInfoFieldNotifyId:                      "Notify Id",
+	ClusterInstInfoFieldState:                         "State",
+	ClusterInstInfoFieldErrors:                        "Errors",
+	ClusterInstInfoFieldStatusTaskNumber:              "Status Task Number",
+	ClusterInstInfoFieldStatusMaxTasks:                "Status Max Tasks",
+	ClusterInstInfoFieldStatusTaskName:                "Status Task Name",
+	ClusterInstInfoFieldStatusStepName:                "Status Step Name",
 }
 
 func (m *ClusterInstInfo) IsKeyField(s string) bool {
@@ -2417,7 +2417,7 @@ func (s *ClusterInstInfoStore) LoadOne(key string) (*ClusterInstInfo, int64, err
 	var obj ClusterInstInfo
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse ClusterInstInfo data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse ClusterInstInfo data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -2679,7 +2679,7 @@ func (c *ClusterInstInfoCache) SyncUpdate(ctx context.Context, key, val []byte, 
 	obj := ClusterInstInfo{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse ClusterInstInfo data", "val", string(val))
+		log.WarnLog("Failed to parse ClusterInstInfo data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

@@ -309,23 +309,28 @@ func FindFlavorData(key *edgeproto.FlavorKey, testData []edgeproto.Flavor) (*edg
 	return nil, false
 }
 
-func RunFlavorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Flavor, dataMap []map[string]interface{}, mode string) error {
-	var err error
+func RunFlavorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Flavor, dataMap interface{}, mode string) error {
 	flavorApi := edgeproto.NewFlavorApiClient(conn)
-	for ii, obj := range *data {
+	var err error
+	for ii, objD := range *data {
+		obj := &objD
 		log.DebugLog(log.DebugLevelApi, "API %v for Flavor: %v", mode, obj.GetKey())
 		switch mode {
 		case "create":
-			_, err = flavorApi.CreateFlavor(ctx, &obj)
+			_, err = flavorApi.CreateFlavor(ctx, obj)
 		case "delete":
-			_, err = flavorApi.DeleteFlavor(ctx, &obj)
+			_, err = flavorApi.DeleteFlavor(ctx, obj)
 		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			_, err = flavorApi.UpdateFlavor(ctx, &obj)
+			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
+			if err != nil {
+				return fmt.Errorf("bad dataMap for Flavor: %v", err)
+			}
+			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			_, err = flavorApi.UpdateFlavor(ctx, obj)
 		case "add":
-			_, err = flavorApi.AddFlavorRes(ctx, &obj)
+			_, err = flavorApi.AddFlavorRes(ctx, obj)
 		case "remove":
-			_, err = flavorApi.RemoveFlavorRes(ctx, &obj)
+			_, err = flavorApi.RemoveFlavorRes(ctx, obj)
 		default:
 			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Flavor: %v", mode, obj.GetKey())
 			return nil
