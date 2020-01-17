@@ -94,6 +94,7 @@ func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool 
 		"appinstances: ShowAppInst",
 		"autoscalepolicies: ShowAutoScalePolicy",
 		"autoprovpolicies: ShowAutoProvPolicy",
+		"privacypolicies: ShowPrivacyPolicy",
 	}
 	// Some objects are generated asynchronously in response to
 	// other objects being created. For example, Prometheus metric
@@ -205,6 +206,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in auto prov policy API %v\n", err)
 				rc = false
 			}
+			err = testutil.RunPrivacyPolicyApi(ctrlapi, ctx, &appData.PrivacyPolicies, appDataMap["privacypolicies"], api)
+			if err != nil {
+				log.Printf("Error in privacy policy API %v\n", err)
+				rc = false
+			}
 			err = testutil.RunCloudletInfoApi(ctrlapi, ctx, &appData.CloudletInfos, appDataMap["cloudletinfos"], api)
 			if err != nil {
 				log.Printf("Error in cloudletInfo API %v\n", err)
@@ -285,6 +291,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = testutil.RunAutoScalePolicyApi(ctrlapi, ctx, &appData.AutoScalePolicies, appDataMap["autoscalepolicies"], api)
 			if err != nil {
 				log.Printf("Error in auto scale policy API %v\n", err)
+				rc = false
+			}
+			err = testutil.RunPrivacyPolicyApi(ctrlapi, ctx, &appData.PrivacyPolicies, appDataMap["privacypolicies"], api)
+			if err != nil {
+				log.Printf("Error in privacy policy API %v\n", err)
 				rc = false
 			}
 			err = testutil.RunAppApi(ctrlapi, ctx, &appData.Applications, appDataMap["apps"], api)

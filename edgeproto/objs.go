@@ -3,6 +3,7 @@ package edgeproto
 import (
 	"errors"
 	fmt "fmt"
+	"net"
 	"sort"
 	"strconv"
 	strings "strings"
@@ -16,6 +17,9 @@ import (
 //TODO - need to move out Errors into a separate package
 
 var AutoScaleMaxNodes uint32 = 10
+
+var minPort uint32 = 1
+var maxPort uint32 = 65535
 
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
@@ -36,6 +40,7 @@ type ApplicationData struct {
 	AutoScalePolicies       []AutoScalePolicy        `yaml:"autoscalepolicies"`
 	AutoProvPolicies        []AutoProvPolicy         `yaml:"autoprovpolicies"`
 	AutoProvPolicyCloudlets []AutoProvPolicyCloudlet `yaml:"autoprovpolicycloudlets"`
+	PrivacyPolicies         []PrivacyPolicy          `yaml:"privacypolicies"`
 	ResTagTables            []ResTagTable            `ymal:"restagtables"`
 }
 
@@ -90,6 +95,9 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.AutoProvPolicies[:], func(i, j int) bool {
 		return a.AutoProvPolicies[i].Key.GetKeyString() < a.AutoProvPolicies[j].Key.GetKeyString()
+	})
+	sort.Slice(a.PrivacyPolicies[:], func(i, j int) bool {
+		return a.PrivacyPolicies[i].Key.GetKeyString() < a.PrivacyPolicies[j].Key.GetKeyString()
 	})
 	sort.Slice(a.AutoProvPolicyCloudlets[:], func(i, j int) bool {
 		if a.AutoProvPolicyCloudlets[i].Key.GetKeyString() == a.AutoProvPolicyCloudlets[j].Key.GetKeyString() {
@@ -431,6 +439,34 @@ func (s *AutoProvPolicy) Validate(fields map[string]struct{}) error {
 			return errors.New("Auto deploy interval count must be greater than 0")
 		}
 	*/
+	return nil
+}
+
+func (s *PrivacyPolicy) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	for _, o := range s.OutboundSecurityRules {
+		if o.Protocol != "tcp" && o.Protocol != "udp" && o.Protocol != "icmp" {
+			return fmt.Errorf("Protocol must be one of: (tcp,udp,icmp)")
+		}
+		if o.Protocol == "icmp" {
+			if o.PortRangeMin != 0 || o.PortRangeMax != 0 {
+				return fmt.Errorf("Port range must be empty for icmp")
+			}
+		} else {
+			if o.PortRangeMin < minPort || o.PortRangeMin > maxPort {
+				return fmt.Errorf("Invalid min port range: %d", o.PortRangeMin)
+			}
+			if o.PortRangeMin > o.PortRangeMax {
+				return fmt.Errorf("Min port range: %d cannot be higher than max: %d", o.PortRangeMin, o.PortRangeMax)
+			}
+		}
+		_, _, err := net.ParseCIDR(o.RemoteCidr)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

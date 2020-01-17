@@ -1,0 +1,74 @@
+// Policy proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
+import "autoscalepolicy.proto";
+
+message OutboundSecurityRule {
+  // tcp, udp, icmp
+  string protocol = 1;
+  // TCP or UDP port range start
+  uint32 port_range_min = 2;  
+    // TCP or UDP port range end
+  uint32 port_range_max = 3;
+  // remote CIDR X.X.X.X/X
+  string remote_cidr = 4;
+}
+
+
+// PrivacyPolicy defines security restrictions for cluster instances
+// nodes scaled up or down.
+message PrivacyPolicy {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  PolicyKey key = 2 [(gogoproto.nullable) = false];
+  // list of outbound security rules for whitelisting traffic
+  repeated OutboundSecurityRule outbound_security_rules = 3 [(gogoproto.nullable) = false];
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.alias) = "name=Key.Name,developer=Key.Developer";
+}
+
+service PrivacyPolicyApi {
+  // Create a Privacy Policy
+  rpc CreatePrivacyPolicy(PrivacyPolicy) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/privacypolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
+  }
+  // Delete a Privacy policy
+  rpc DeletePrivacyPolicy(PrivacyPolicy) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/privacypolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
+  }
+  // Update a Privacy policy
+  rpc UpdatePrivacyPolicy(PrivacyPolicy) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/privacypolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
+  }
+  // Show Privacy Policies. Any fields specified will be used to filter results.
+  rpc ShowPrivacyPolicy(PrivacyPolicy) returns (stream PrivacyPolicy) {
+    option (google.api.http) = {
+      post: "/show/privacypolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionView,Key.Developer";
+  }
+}
