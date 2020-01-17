@@ -769,16 +769,21 @@ func RecordClusterInstEvent(ctx context.Context, cluster *edgeproto.ClusterInst,
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
+	info := edgeproto.ClusterInst{}
+	if !clusterInstApi.cache.Get(&cluster.Key, &info) {
+		log.SpanLog(ctx, log.DebugLevelApi, "Cannot log event for invalid clusterinst")
+		return
+	}
 	// errors should never happen here since to get to this point the flavor should have already been checked previously, but just in case
 	nodeFlavor := edgeproto.Flavor{}
-	if !flavorApi.cache.Get(&cluster.Flavor, &nodeFlavor) {
-		log.SpanLog(ctx, log.DebugLevelApi, "flavor not found for recording clusterInst lifecycle", "flavor name", cluster.Flavor.Name)
+	if !flavorApi.cache.Get(&info.Flavor, &nodeFlavor) {
+		log.SpanLog(ctx, log.DebugLevelApi, "flavor not found for recording clusterInst lifecycle", "flavor name", info.Flavor.Name)
 	} else {
-		metric.AddTag("flavor", cluster.Flavor.Name)
+		metric.AddTag("flavor", info.Flavor.Name)
 		metric.AddIntVal("ram", nodeFlavor.Ram)
 		metric.AddIntVal("vcpu", nodeFlavor.Vcpus)
 		metric.AddIntVal("disk", nodeFlavor.Disk)
-		metric.AddIntVal("nodeCount", uint64(cluster.NumMasters+cluster.NumNodes))
+		metric.AddIntVal("nodeCount", uint64(info.NumMasters+info.NumNodes))
 		metric.AddStringVal("other", fmt.Sprintf("%v", nodeFlavor.OptResMap))
 	}
 
