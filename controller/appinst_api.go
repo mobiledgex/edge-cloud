@@ -172,6 +172,10 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 			if err == nil {
 				RecordAppInstEvent(cb.Context(), val, cloudcommon.DELETED, cloudcommon.InstanceDown)
 			}
+			if err != nil && err.Error() == val.Key.NotFoundError().Error() {
+				err = nil
+				break
+			}
 			if err != nil && err.Error() == "AppInst busy, cannot delete" {
 				spinTime = time.Since(start)
 				if spinTime > cloudcommon.DeleteAppInstTimeout {
@@ -184,6 +188,7 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 				break
 			}
 		}
+
 		if err != nil {
 			return err
 		}
@@ -973,6 +978,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
+			log.SpanLog(ctx, log.DebugLevelApi, "AppInst busy, cannot delete", "state", in.State)
 			return errors.New("AppInst busy, cannot delete")
 		}
 
