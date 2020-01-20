@@ -4,3 +4,14 @@ skipmethods:
   GetFqdnList:
   GetLocation:
   GetQosPositionKpi:
+info:
+  app-client.proto:
+    version: "1.0"
+    title: MobiledgeX Client API
+    description: |
+      # Introduction
+      The MobiledgeX APIs provide you with a set of operations and resources to:
+         * Identify your application's backend software
+         * Locate where our backend is running
+         * Verify that the GPS coordinates accurately report the actual location of the device
+         * Find the closest cloudlet, and more.

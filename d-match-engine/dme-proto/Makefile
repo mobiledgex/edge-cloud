@@ -3,7 +3,7 @@
 GW		= $(shell go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
 APIS		= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/googleapis)
 INCLUDE		= -I. -I${GW} -I${APIS} -I${GOPATH}
-BUILTIN		= Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api,Mgoogle/protobuf/field_mask.proto=github.com/gogo/protobuf/types,Mprotoc-gen-swagger/options/annotations.proto=github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options
+BUILTIN		= Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api,Mgoogle/protobuf/field_mask.proto=github.com/gogo/protobuf/types
 PROTOS		= app-client.proto appcommon.proto dynamic-location-group.proto loc.proto
 DMEDIR		= ${GOPATH}/src/github.com/mobiledgex/edge-proto/dme
 
