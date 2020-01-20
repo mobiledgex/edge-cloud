@@ -150,9 +150,9 @@ func VersionParse(version string) (*time.Time, error) {
 }
 
 func ValidateImageVersion(imgVersion string) error {
-	re := regexp.MustCompile("^[0-9a-zA-Z][0-9a-zA-Z.]*$")
+	re := regexp.MustCompile("^[0-9a-zA-Z][0-9a-zA-Z.-]*$")
 	if !re.MatchString(imgVersion) {
-		return fmt.Errorf("ImageVersion can only contain letters, digits, .")
+		return fmt.Errorf("ImageVersion can only contain letters, digits, -, .")
 	}
 	return nil
 }

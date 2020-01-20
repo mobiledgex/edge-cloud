@@ -128,6 +128,9 @@ func TestVersion(t *testing.T) {
 	err = ValidateImageVersion("2.0.0")
 	require.Nil(t, err, "valid image version")
 
+	err = ValidateImageVersion("2.0-0")
+	require.Nil(t, err, "valid image version")
+
 	err = ValidateImageVersion("2.0_0")
 	require.NotNil(t, err, "invalid image version")
 
