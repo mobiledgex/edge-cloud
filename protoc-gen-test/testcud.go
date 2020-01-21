@@ -591,17 +591,26 @@ func (t *TestCud) generateRunApi(file *descriptor.FileDescriptorProto, service *
 func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, group *gensupport.MethodGroup) {
 	apiName := *service.Name + group.Suffix
 	inType := group.InType
-
-	t.P()
-	t.P("func Run", apiName, "(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.", inType, ", dataMap []map[string]interface{}, mode string) error {")
-	t.P("var err error")
 	objApiStr := strings.ToLower(string(inType[0])) + string(inType[1:len(inType)]) + "Api"
 	objKey := "obj.GetKey()"
+	dataIn := "data *[]edgeproto." + inType
+	if group.SingularData {
+		dataIn = "obj *edgeproto." + inType
+	}
+
+	t.P()
+	t.P("func Run", apiName, "(conn *grpc.ClientConn, ctx context.Context, ", dataIn, ", dataMap interface{}, mode string) error {")
 	t.P(objApiStr, " := edgeproto.New", service.Name, "Client(conn)")
-	if group.HasUpdate {
-		t.P("for ii, obj := range *data {")
+	t.P("var err error")
+	if group.SingularData {
+		t.P("if obj == nil { return nil }")
 	} else {
-		t.P("for _, obj := range *data {")
+		if group.HasUpdate {
+			t.P("for ii, objD := range *data {")
+		} else {
+			t.P("for _, objD := range *data {")
+		}
+		t.P("obj := &objD")
 	}
 	t.P("log.DebugLog(log.DebugLevelApi, \"API %v for ", inType, ": %v\", mode, ", objKey, ")")
 	if group.HasStream {
@@ -612,12 +621,20 @@ func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, serv
 		t.P("case \"", mInfo.Action, "\":")
 		if mInfo.Action == "update" {
 			t.importCli = true
-			t.P("obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)")
+			if group.SingularData {
+				t.P("objMap, err := cli.GetGenericObj(dataMap)")
+			} else {
+				t.P("objMap, err := cli.GetGenericObjFromList(dataMap, ii)")
+			}
+			t.P("if err != nil {")
+			t.P("return fmt.Errorf(\"bad dataMap for ", inType, ": %v\", err)")
+			t.P("}")
+			t.P("obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)")
 		}
 		if mInfo.Stream {
-			t.P("stream, err = ", objApiStr, ".", mInfo.Name, "(ctx, &obj)")
+			t.P("stream, err = ", objApiStr, ".", mInfo.Name, "(ctx, obj)")
 		} else {
-			t.P("_, err = ", objApiStr, ".", mInfo.Name, "(ctx, &obj)")
+			t.P("_, err = ", objApiStr, ".", mInfo.Name, "(ctx, obj)")
 		}
 	}
 	t.P("default:")
@@ -631,10 +648,13 @@ func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, serv
 	t.P("if err != nil {")
 	t.P("return fmt.Errorf(\"API %s failed for %v -- err %v\", mode, ", objKey, ", err)")
 	t.P("}")
-	t.P("}")
+	if !group.SingularData {
+		t.P("}")
+	}
 	t.P("return nil")
 	t.P("}")
 	t.importGrpc = true
+	t.importLog = true
 }
 
 type methodArgs struct {

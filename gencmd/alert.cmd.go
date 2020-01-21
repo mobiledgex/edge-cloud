@@ -27,6 +27,7 @@ It is generated from these files:
 	refs.proto
 	restagtable.proto
 	result.proto
+	settings.proto
 	version.proto
 
 It has these top-level messages:
@@ -93,6 +94,7 @@ It has these top-level messages:
 	ResTagTableKey
 	ResTagTable
 	Result
+	Settings
 */
 package gencmd
 

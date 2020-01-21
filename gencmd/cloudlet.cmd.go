@@ -33,9 +33,6 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.TimeLimits = edgeproto.OperationTimeLimits{}
-	}
-	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
 	}
 	if _, found := tags["nocmp"]; found {
@@ -800,12 +797,12 @@ var OperationTimeLimitsOptionalArgs = []string{
 }
 var OperationTimeLimitsAliasArgs = []string{}
 var OperationTimeLimitsComments = map[string]string{
-	"createclusterinsttimeout": "max time to create a cluster instance",
-	"updateclusterinsttimeout": "max time to update a cluster instance",
-	"deleteclusterinsttimeout": "max time to delete a cluster instance",
-	"createappinsttimeout":     "max time to create an app instance",
-	"updateappinsttimeout":     "max time to update an app instance",
-	"deleteappinsttimeout":     "max time to delete an app instance",
+	"createclusterinsttimeout": "override default max time to create a cluster instance (duration)",
+	"updateclusterinsttimeout": "override default max time to update a cluster instance (duration)",
+	"deleteclusterinsttimeout": "override default max time to delete a cluster instance (duration)",
+	"createappinsttimeout":     "override default max time to create an app instance (duration)",
+	"updateappinsttimeout":     "override default max time to update an app instance (duration)",
+	"deleteappinsttimeout":     "override default max time to delete an app instance (duration)",
 }
 var OperationTimeLimitsSpecialArgs = map[string]string{}
 var CloudletInfraCommonRequiredArgs = []string{}
@@ -981,6 +978,12 @@ var CloudletOptionalArgs = []string{
 	"ipsupport",
 	"staticips",
 	"numdynamicips",
+	"timelimits.createclusterinsttimeout",
+	"timelimits.updateclusterinsttimeout",
+	"timelimits.deleteclusterinsttimeout",
+	"timelimits.createappinsttimeout",
+	"timelimits.updateappinsttimeout",
+	"timelimits.deleteappinsttimeout",
 	"errors",
 	"state",
 	"crmoverride",
@@ -1012,12 +1015,12 @@ var CloudletComments = map[string]string{
 	"ipsupport":                           "Type of IP support provided by Cloudlet (see IpSupport), one of IpSupportUnknown, IpSupportStatic, IpSupportDynamic",
 	"staticips":                           "List of static IPs for static IP support",
 	"numdynamicips":                       "Number of dynamic IPs available for dynamic IP support",
-	"timelimits.createclusterinsttimeout": "max time to create a cluster instance",
-	"timelimits.updateclusterinsttimeout": "max time to update a cluster instance",
-	"timelimits.deleteclusterinsttimeout": "max time to delete a cluster instance",
-	"timelimits.createappinsttimeout":     "max time to create an app instance",
-	"timelimits.updateappinsttimeout":     "max time to update an app instance",
-	"timelimits.deleteappinsttimeout":     "max time to delete an app instance",
+	"timelimits.createclusterinsttimeout": "override default max time to create a cluster instance (duration)",
+	"timelimits.updateclusterinsttimeout": "override default max time to update a cluster instance (duration)",
+	"timelimits.deleteclusterinsttimeout": "override default max time to delete a cluster instance (duration)",
+	"timelimits.createappinsttimeout":     "override default max time to create an app instance (duration)",
+	"timelimits.updateappinsttimeout":     "override default max time to update an app instance (duration)",
+	"timelimits.deleteappinsttimeout":     "override default max time to delete an app instance (duration)",
 	"errors":                              "Any errors trying to create, update, or delete the Cloudlet.",
 	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
@@ -1189,6 +1192,12 @@ var CreateCloudletOptionalArgs = []string{
 	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
+	"timelimits.createclusterinsttimeout",
+	"timelimits.updateclusterinsttimeout",
+	"timelimits.deleteclusterinsttimeout",
+	"timelimits.createappinsttimeout",
+	"timelimits.updateappinsttimeout",
+	"timelimits.deleteappinsttimeout",
 	"errors",
 	"state",
 	"crmoverride",

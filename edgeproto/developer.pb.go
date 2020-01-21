@@ -438,7 +438,7 @@ var DeveloperAllFieldsMap = map[string]struct{}{
 }
 
 var DeveloperAllFieldsStringMap = map[string]string{
-	DeveloperFieldKeyName: "Developer Field Key Name",
+	DeveloperFieldKeyName: "Key Name",
 }
 
 func (m *Developer) IsKeyField(s string) bool {
@@ -578,7 +578,7 @@ func (s *DeveloperStore) LoadOne(key string) (*Developer, int64, error) {
 	var obj Developer
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse Developer data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse Developer data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -822,7 +822,7 @@ func (c *DeveloperCache) SyncUpdate(ctx context.Context, key, val []byte, rev in
 	obj := Developer{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse Developer data", "val", string(val))
+		log.WarnLog("Failed to parse Developer data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

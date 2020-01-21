@@ -597,12 +597,12 @@ var FlavorAllFieldsMap = map[string]struct{}{
 }
 
 var FlavorAllFieldsStringMap = map[string]string{
-	FlavorFieldKeyName:        "Flavor Field Key Name",
-	FlavorFieldRam:            "Flavor Field Ram",
-	FlavorFieldVcpus:          "Flavor Field Vcpus",
-	FlavorFieldDisk:           "Flavor Field Disk",
-	FlavorFieldOptResMapKey:   "Flavor Field Opt Res Map Key",
-	FlavorFieldOptResMapValue: "Flavor Field Opt Res Map Value",
+	FlavorFieldKeyName:        "Key Name",
+	FlavorFieldRam:            "Ram",
+	FlavorFieldVcpus:          "Vcpus",
+	FlavorFieldDisk:           "Disk",
+	FlavorFieldOptResMapKey:   "Opt Res Map Key",
+	FlavorFieldOptResMapValue: "Opt Res Map Value",
 }
 
 func (m *Flavor) IsKeyField(s string) bool {
@@ -799,7 +799,7 @@ func (s *FlavorStore) LoadOne(key string) (*Flavor, int64, error) {
 	var obj Flavor
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse Flavor data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse Flavor data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1043,7 +1043,7 @@ func (c *FlavorCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64
 	obj := Flavor{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse Flavor data", "val", string(val))
+		log.WarnLog("Failed to parse Flavor data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

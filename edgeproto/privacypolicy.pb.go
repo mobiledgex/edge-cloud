@@ -455,12 +455,12 @@ var PrivacyPolicyAllFieldsMap = map[string]struct{}{
 }
 
 var PrivacyPolicyAllFieldsStringMap = map[string]string{
-	PrivacyPolicyFieldKeyDeveloper:                      "Privacy Policy Field Key Developer",
-	PrivacyPolicyFieldKeyName:                           "Privacy Policy Field Key Name",
-	PrivacyPolicyFieldOutboundSecurityRulesProtocol:     "Privacy Policy Field Outbound Security Rules Protocol",
-	PrivacyPolicyFieldOutboundSecurityRulesPortRangeMin: "Privacy Policy Field Outbound Security Rules Port Range Min",
-	PrivacyPolicyFieldOutboundSecurityRulesPortRangeMax: "Privacy Policy Field Outbound Security Rules Port Range Max",
-	PrivacyPolicyFieldOutboundSecurityRulesRemoteCidr:   "Privacy Policy Field Outbound Security Rules Remote Cidr",
+	PrivacyPolicyFieldKeyDeveloper:                      "Key Developer",
+	PrivacyPolicyFieldKeyName:                           "Key Name",
+	PrivacyPolicyFieldOutboundSecurityRulesProtocol:     "Outbound Security Rules Protocol",
+	PrivacyPolicyFieldOutboundSecurityRulesPortRangeMin: "Outbound Security Rules Port Range Min",
+	PrivacyPolicyFieldOutboundSecurityRulesPortRangeMax: "Outbound Security Rules Port Range Max",
+	PrivacyPolicyFieldOutboundSecurityRulesRemoteCidr:   "Outbound Security Rules Remote Cidr",
 }
 
 func (m *PrivacyPolicy) IsKeyField(s string) bool {
@@ -664,7 +664,7 @@ func (s *PrivacyPolicyStore) LoadOne(key string) (*PrivacyPolicy, int64, error) 
 	var obj PrivacyPolicy
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse PrivacyPolicy data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse PrivacyPolicy data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -908,7 +908,7 @@ func (c *PrivacyPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, re
 	obj := PrivacyPolicy{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse PrivacyPolicy data", "val", string(val))
+		log.WarnLog("Failed to parse PrivacyPolicy data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

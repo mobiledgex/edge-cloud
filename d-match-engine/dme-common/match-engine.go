@@ -70,6 +70,7 @@ type DmeApps struct {
 }
 
 var DmeAppTbl *DmeApps
+var Settings edgeproto.Settings
 
 // Stats are collected per App per Cloudlet and per method name (verifylocation, etc).
 type StatKey struct {
@@ -794,4 +795,8 @@ func AppExists(devname string, appname string, appvers string) bool {
 	defer tbl.RUnlock()
 	_, ok := tbl.Apps[key]
 	return ok
+}
+
+func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeproto.Settings) {
+	autoProvStats.UpdateSettings(new.AutoDeployIntervalSec)
 }

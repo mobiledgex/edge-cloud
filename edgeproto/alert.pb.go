@@ -27,6 +27,7 @@
 		refs.proto
 		restagtable.proto
 		result.proto
+		settings.proto
 		version.proto
 
 	It has these top-level messages:
@@ -93,6 +94,7 @@
 		ResTagTableKey
 		ResTagTable
 		Result
+		Settings
 */
 package edgeproto
 
@@ -568,7 +570,7 @@ func (s *AlertStore) LoadOne(key string) (*Alert, int64, error) {
 	var obj Alert
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse Alert data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse Alert data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -830,7 +832,7 @@ func (c *AlertCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64)
 	obj := Alert{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse Alert data", "val", string(val))
+		log.WarnLog("Failed to parse Alert data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

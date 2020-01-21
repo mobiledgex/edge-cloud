@@ -309,19 +309,24 @@ func FindDeveloperData(key *edgeproto.DeveloperKey, testData []edgeproto.Develop
 	return nil, false
 }
 
-func RunDeveloperApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Developer, dataMap []map[string]interface{}, mode string) error {
-	var err error
+func RunDeveloperApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Developer, dataMap interface{}, mode string) error {
 	developerApi := edgeproto.NewDeveloperApiClient(conn)
-	for ii, obj := range *data {
+	var err error
+	for ii, objD := range *data {
+		obj := &objD
 		log.DebugLog(log.DebugLevelApi, "API %v for Developer: %v", mode, obj.GetKey())
 		switch mode {
 		case "create":
-			_, err = developerApi.CreateDeveloper(ctx, &obj)
+			_, err = developerApi.CreateDeveloper(ctx, obj)
 		case "delete":
-			_, err = developerApi.DeleteDeveloper(ctx, &obj)
+			_, err = developerApi.DeleteDeveloper(ctx, obj)
 		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			_, err = developerApi.UpdateDeveloper(ctx, &obj)
+			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
+			if err != nil {
+				return fmt.Errorf("bad dataMap for Developer: %v", err)
+			}
+			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			_, err = developerApi.UpdateDeveloper(ctx, obj)
 		default:
 			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Developer: %v", mode, obj.GetKey())
 			return nil

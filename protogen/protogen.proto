@@ -77,6 +77,8 @@ extend google.protobuf.MessageOptions {
   // Type name to be used as key for this message. Overrides the default behavior
   // that assumes a field named "Key" exists in the message that is the key.
   string custom_key_type = 51038;
+  // Data is singular in system (never more than one)
+  bool singular_data = 51039;
 }
 
 extend google.protobuf.EnumOptions {

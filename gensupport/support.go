@@ -341,6 +341,10 @@ func GetCustomKeyType(message *descriptor.DescriptorProto) string {
 	return GetStringExtension(message.Options, protogen.E_CustomKeyType, "")
 }
 
+func GetSingularData(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_SingularData, false)
+}
+
 func HasHideTags(g *generator.Generator, desc *generator.Descriptor, hideTag *proto.ExtensionDesc, visited []*generator.Descriptor) bool {
 	if WasVisited(desc, visited) {
 		return false
@@ -536,13 +540,14 @@ type MethodInfo struct {
 }
 
 type MethodGroup struct {
-	MethodInfos []*MethodInfo
-	InType      string
-	In          *generator.Descriptor
-	HasStream   bool
-	HasUpdate   bool
-	HasMc2Api   bool
-	Suffix      string
+	MethodInfos  []*MethodInfo
+	InType       string
+	In           *generator.Descriptor
+	HasStream    bool
+	HasUpdate    bool
+	HasMc2Api    bool
+	SingularData bool
+	Suffix       string
 }
 
 func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorProto, actions map[string]string) (*generator.Descriptor, *MethodInfo) {
@@ -581,6 +586,7 @@ func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescript
 			"Refresh": "refresh",
 			"Add":     "add",
 			"Remove":  "remove",
+			"Reset":   "reset",
 		}
 	}
 	groups := make(map[string]*MethodGroup)
@@ -595,6 +601,7 @@ func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescript
 			group = &MethodGroup{}
 			group.In = in
 			group.InType = inType
+			group.SingularData = GetSingularData(in.DescriptorProto)
 			if inType+"Api" != *service.Name {
 				group.Suffix = "_" + inType
 			}

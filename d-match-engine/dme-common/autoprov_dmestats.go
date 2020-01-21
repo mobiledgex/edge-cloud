@@ -70,7 +70,13 @@ func (s *AutoProvStats) Stop() {
 	s.stop = nil
 }
 
-func (s *AutoProvStats) UpdateSettings(intervalSec, offsetSec float64) {
+func (s *AutoProvStats) UpdateSettings(intervalSec float64) {
+	if s.intervalSec == intervalSec {
+		// note that offset should always be 0. Offset allows
+		// collector (autoprov service) to collect shortly
+		// after generator (dme) pushes stats to influxdb.
+		return
+	}
 	restart := false
 	if s.stop != nil {
 		s.Stop()
@@ -78,7 +84,6 @@ func (s *AutoProvStats) UpdateSettings(intervalSec, offsetSec float64) {
 	}
 	s.mux.Lock()
 	s.intervalSec = intervalSec
-	s.offsetSec = offsetSec
 	s.mux.Unlock()
 	if restart {
 		s.Start()
