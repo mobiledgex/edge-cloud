@@ -30,7 +30,7 @@ func runCreate(c *cli.Command, args []string) error {
 			return fmt.Errorf("invalid data map for settings: %v", err)
 		}
 		data.Settings.Fields = cli.GetSpecifiedFields(objMap, data.Settings, cli.JsonNamespace)
-		gencmd.UpdateSettingss(c, data.Settings, &err)
+		gencmd.UpdateSettingsBatch(c, data.Settings, &err)
 	}
 	gencmd.CreateFlavors(c, data.Flavors, &err)
 	gencmd.CreateOperators(c, data.Operators, &err)
@@ -76,7 +76,7 @@ func runDelete(c *cli.Command, args []string) error {
 	gencmd.DeleteOperators(c, data.Operators, &err)
 	gencmd.DeleteFlavors(c, data.Flavors, &err)
 	if data.Settings != nil {
-		gencmd.ResetSettingss(c, data.Settings, &err)
+		gencmd.ResetSettingsBatch(c, data.Settings, &err)
 	}
 	return err
 }

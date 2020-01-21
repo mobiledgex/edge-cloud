@@ -65,7 +65,7 @@ func UpdateSettings(c *cli.Command, in *edgeproto.Settings) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func UpdateSettingss(c *cli.Command, data *edgeproto.Settings, err *error) {
+func UpdateSettingsBatch(c *cli.Command, data *edgeproto.Settings, err *error) {
 	if *err != nil || data == nil {
 		return
 	}
@@ -116,7 +116,7 @@ func ResetSettings(c *cli.Command, in *edgeproto.Settings) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func ResetSettingss(c *cli.Command, data *edgeproto.Settings, err *error) {
+func ResetSettingsBatch(c *cli.Command, data *edgeproto.Settings, err *error) {
 	if *err != nil || data == nil {
 		return
 	}
@@ -166,7 +166,7 @@ func ShowSettings(c *cli.Command, in *edgeproto.Settings) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func ShowSettingss(c *cli.Command, data *edgeproto.Settings, err *error) {
+func ShowSettingsBatch(c *cli.Command, data *edgeproto.Settings, err *error) {
 	if *err != nil || data == nil {
 		return
 	}

@@ -159,9 +159,9 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create Failed, Could not find cloudlet in cache %s", new.Key.CloudletKey))
 				return
 			}
-			timeout := cd.settings.CreateClusterInstTimeout.D()
+			timeout := cd.settings.CreateClusterInstTimeout.TimeDuration()
 			if cloudlet.TimeLimits.CreateClusterInstTimeout != 0 {
-				timeout = cloudlet.TimeLimits.CreateClusterInstTimeout.D()
+				timeout = cloudlet.TimeLimits.CreateClusterInstTimeout.TimeDuration()
 			}
 			log.SpanLog(ctx, log.DebugLevelMexos, "create cluster inst", "ClusterInst", *new, "timeout", timeout)
 

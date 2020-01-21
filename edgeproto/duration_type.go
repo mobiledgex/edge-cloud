@@ -63,7 +63,7 @@ func (e Duration) MarshalJSON() ([]byte, error) {
 	return json.Marshal(dur.String())
 }
 
-func (e Duration) D() time.Duration {
+func (e Duration) TimeDuration() time.Duration {
 	return time.Duration(e)
 }
 

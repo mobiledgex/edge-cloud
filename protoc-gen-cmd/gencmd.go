@@ -323,7 +323,7 @@ func {{.Method}}(c *cli.Command, in *{{.FQInType}}) error {
 
 // this supports "Create" and "Delete" commands on ApplicationData
 {{- if .SingularData}}
-func {{.Method}}s(c *cli.Command, data *{{.FQInType}}, err *error) {
+func {{.Method}}Batch(c *cli.Command, data *{{.FQInType}}, err *error) {
 	if *err != nil || data == nil {
 		return
 	}

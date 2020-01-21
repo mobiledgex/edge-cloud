@@ -173,7 +173,7 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 			}
 			if err != nil && err.Error() == "AppInst busy, cannot delete" {
 				spinTime = time.Since(start)
-				if spinTime > settingsApi.Get().DeleteAppInstTimeout.D() {
+				if spinTime > settingsApi.Get().DeleteAppInstTimeout.TimeDuration() {
 					log.DebugLog(log.DebugLevelApi, "Timeout while waiting for App", "appName", val.Key.AppKey.Name)
 					return err
 				}
@@ -666,7 +666,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Created AppInst successfully"})
 		return nil
 	}
-	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR, settingsApi.Get().CreateAppInstTimeout.D(), "Created AppInst successfully", cb.Send)
+	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR, settingsApi.Get().CreateAppInstTimeout.TimeDuration(), "Created AppInst successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create AppInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_READY)
@@ -749,7 +749,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 		return false, err
 	}
 	if crmUpdateRequired {
-		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateAppInstTimeout.D(), "", cb.Send)
+		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateAppInstTimeout.TimeDuration(), "", cb.Send)
 	}
 	if err != nil {
 		return false, err
@@ -1039,7 +1039,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
 		return nil
 	}
-	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, settingsApi.Get().DeleteAppInstTimeout.D(), "Deleted AppInst successfully", cb.Send)
+	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, settingsApi.Get().DeleteAppInstTimeout.TimeDuration(), "Deleted AppInst successfully", cb.Send)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
