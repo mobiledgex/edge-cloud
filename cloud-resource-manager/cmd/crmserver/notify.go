@@ -13,6 +13,7 @@ var sendAlert *notify.AlertSend
 
 // NewNotifyHandler instantiates new notify handler
 func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
+	client.RegisterRecvSettingsCache(&cd.SettingsCache)
 	client.RegisterRecvFlavorCache(&cd.FlavorCache)
 	client.RegisterRecvAppCache(&cd.AppCache)
 	client.RegisterRecvAppInstCache(&cd.AppInstCache)
@@ -32,6 +33,7 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 }
 
 func initSrvNotify(notifyServer *notify.ServerMgr) {
+	notifyServer.RegisterSendSettingsCache(&controllerData.SettingsCache)
 	notifyServer.RegisterSendAppCache(&controllerData.AppCache)
 	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
 	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)

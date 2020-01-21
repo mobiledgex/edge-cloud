@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -75,18 +74,6 @@ var InstanceDown = "DOWN"
 var DindScriptName = "dind-cluster-v1.14.sh"
 
 var MexNodePrefix = "mex-k8s-node-"
-
-// TODO: these timeouts should be adjust based on target platform,
-// as some platforms (azure, etc) may take much longer.
-// These timeouts should be at least long enough for the controller and
-// CRM to exchange an initial set of messages (i.e. 10 sec or so).
-var CreateAppInstTimeout = 30 * time.Minute
-var UpdateAppInstTimeout = 20 * time.Minute
-var DeleteAppInstTimeout = 20 * time.Minute
-
-var CreateClusterInstTimeout = 30 * time.Minute
-var UpdateClusterInstTimeout = 20 * time.Minute
-var DeleteClusterInstTimeout = 20 * time.Minute
 
 // GCP limits to 40, Azure has issues above 54.  For consistency go with the lower limit
 const MaxClusterNameLength = 40
