@@ -675,11 +675,11 @@ var ResTagTableAllFieldsMap = map[string]struct{}{
 }
 
 var ResTagTableAllFieldsStringMap = map[string]string{
-	ResTagTableFieldKeyName:            "Res Tag Table Field Key Name",
-	ResTagTableFieldKeyOperatorKeyName: "Res Tag Table Field Key Operator Key Name",
-	ResTagTableFieldTagsKey:            "Res Tag Table Field Tags Key",
-	ResTagTableFieldTagsValue:          "Res Tag Table Field Tags Value",
-	ResTagTableFieldAzone:              "Res Tag Table Field Azone",
+	ResTagTableFieldKeyName:            "Key Name",
+	ResTagTableFieldKeyOperatorKeyName: "Key Operator Key Name",
+	ResTagTableFieldTagsKey:            "Tags Key",
+	ResTagTableFieldTagsValue:          "Tags Value",
+	ResTagTableFieldAzone:              "Azone",
 }
 
 func (m *ResTagTable) IsKeyField(s string) bool {
@@ -871,7 +871,7 @@ func (s *ResTagTableStore) LoadOne(key string) (*ResTagTable, int64, error) {
 	var obj ResTagTable
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse ResTagTable data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse ResTagTable data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1115,7 +1115,7 @@ func (c *ResTagTableCache) SyncUpdate(ctx context.Context, key, val []byte, rev 
 	obj := ResTagTable{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse ResTagTable data", "val", string(val))
+		log.WarnLog("Failed to parse ResTagTable data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

@@ -542,22 +542,27 @@ func FindAppInstInfoData(key *edgeproto.AppInstKey, testData []edgeproto.AppInst
 	return nil, false
 }
 
-func RunAppInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.AppInst, dataMap []map[string]interface{}, mode string) error {
-	var err error
+func RunAppInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.AppInst, dataMap interface{}, mode string) error {
 	appInstApi := edgeproto.NewAppInstApiClient(conn)
-	for ii, obj := range *data {
+	var err error
+	for ii, objD := range *data {
+		obj := &objD
 		log.DebugLog(log.DebugLevelApi, "API %v for AppInst: %v", mode, obj.GetKey())
 		var stream AppInstStream
 		switch mode {
 		case "create":
-			stream, err = appInstApi.CreateAppInst(ctx, &obj)
+			stream, err = appInstApi.CreateAppInst(ctx, obj)
 		case "delete":
-			stream, err = appInstApi.DeleteAppInst(ctx, &obj)
+			stream, err = appInstApi.DeleteAppInst(ctx, obj)
 		case "refresh":
-			stream, err = appInstApi.RefreshAppInst(ctx, &obj)
+			stream, err = appInstApi.RefreshAppInst(ctx, obj)
 		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			stream, err = appInstApi.UpdateAppInst(ctx, &obj)
+			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
+			if err != nil {
+				return fmt.Errorf("bad dataMap for AppInst: %v", err)
+			}
+			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			stream, err = appInstApi.UpdateAppInst(ctx, obj)
 		default:
 			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for AppInst: %v", mode, obj.GetKey())
 			return nil

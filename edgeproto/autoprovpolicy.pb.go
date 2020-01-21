@@ -731,21 +731,21 @@ var AutoProvPolicyAllFieldsMap = map[string]struct{}{
 }
 
 var AutoProvPolicyAllFieldsStringMap = map[string]string{
-	AutoProvPolicyFieldKeyDeveloper:                   "Auto Prov Policy Field Key Developer",
-	AutoProvPolicyFieldKeyName:                        "Auto Prov Policy Field Key Name",
-	AutoProvPolicyFieldDeployClientCount:              "Auto Prov Policy Field Deploy Client Count",
-	AutoProvPolicyFieldDeployIntervalCount:            "Auto Prov Policy Field Deploy Interval Count",
-	AutoProvPolicyFieldCloudletsKeyOperatorKeyName:    "Auto Prov Policy Field Cloudlets Key Operator Key Name",
-	AutoProvPolicyFieldCloudletsKeyName:               "Auto Prov Policy Field Cloudlets Key Name",
-	AutoProvPolicyFieldCloudletsLocLatitude:           "Auto Prov Policy Field Cloudlets Loc Latitude",
-	AutoProvPolicyFieldCloudletsLocLongitude:          "Auto Prov Policy Field Cloudlets Loc Longitude",
-	AutoProvPolicyFieldCloudletsLocHorizontalAccuracy: "Auto Prov Policy Field Cloudlets Loc Horizontal Accuracy",
-	AutoProvPolicyFieldCloudletsLocVerticalAccuracy:   "Auto Prov Policy Field Cloudlets Loc Vertical Accuracy",
-	AutoProvPolicyFieldCloudletsLocAltitude:           "Auto Prov Policy Field Cloudlets Loc Altitude",
-	AutoProvPolicyFieldCloudletsLocCourse:             "Auto Prov Policy Field Cloudlets Loc Course",
-	AutoProvPolicyFieldCloudletsLocSpeed:              "Auto Prov Policy Field Cloudlets Loc Speed",
-	AutoProvPolicyFieldCloudletsLocTimestampSeconds:   "Auto Prov Policy Field Cloudlets Loc Timestamp Seconds",
-	AutoProvPolicyFieldCloudletsLocTimestampNanos:     "Auto Prov Policy Field Cloudlets Loc Timestamp Nanos",
+	AutoProvPolicyFieldKeyDeveloper:                   "Key Developer",
+	AutoProvPolicyFieldKeyName:                        "Key Name",
+	AutoProvPolicyFieldDeployClientCount:              "Deploy Client Count",
+	AutoProvPolicyFieldDeployIntervalCount:            "Deploy Interval Count",
+	AutoProvPolicyFieldCloudletsKeyOperatorKeyName:    "Cloudlets Key Operator Key Name",
+	AutoProvPolicyFieldCloudletsKeyName:               "Cloudlets Key Name",
+	AutoProvPolicyFieldCloudletsLocLatitude:           "Cloudlets Loc Latitude",
+	AutoProvPolicyFieldCloudletsLocLongitude:          "Cloudlets Loc Longitude",
+	AutoProvPolicyFieldCloudletsLocHorizontalAccuracy: "Cloudlets Loc Horizontal Accuracy",
+	AutoProvPolicyFieldCloudletsLocVerticalAccuracy:   "Cloudlets Loc Vertical Accuracy",
+	AutoProvPolicyFieldCloudletsLocAltitude:           "Cloudlets Loc Altitude",
+	AutoProvPolicyFieldCloudletsLocCourse:             "Cloudlets Loc Course",
+	AutoProvPolicyFieldCloudletsLocSpeed:              "Cloudlets Loc Speed",
+	AutoProvPolicyFieldCloudletsLocTimestampSeconds:   "Cloudlets Loc Timestamp Seconds",
+	AutoProvPolicyFieldCloudletsLocTimestampNanos:     "Cloudlets Loc Timestamp Nanos",
 }
 
 func (m *AutoProvPolicy) IsKeyField(s string) bool {
@@ -1081,7 +1081,7 @@ func (s *AutoProvPolicyStore) LoadOne(key string) (*AutoProvPolicy, int64, error
 	var obj AutoProvPolicy
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse AutoProvPolicy data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse AutoProvPolicy data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1325,7 +1325,7 @@ func (c *AutoProvPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, r
 	obj := AutoProvPolicy{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse AutoProvPolicy data", "val", string(val))
+		log.WarnLog("Failed to parse AutoProvPolicy data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

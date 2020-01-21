@@ -606,16 +606,16 @@ var NodeAllFieldsMap = map[string]struct{}{
 }
 
 var NodeAllFieldsStringMap = map[string]string{
-	NodeFieldKeyName:                       "Node Field Key Name",
-	NodeFieldKeyNodeType:                   "Node Field Key Node Type",
-	NodeFieldKeyCloudletKeyOperatorKeyName: "Node Field Key Cloudlet Key Operator Key Name",
-	NodeFieldKeyCloudletKeyName:            "Node Field Key Cloudlet Key Name",
-	NodeFieldNotifyId:                      "Node Field Notify Id",
-	NodeFieldBuildMaster:                   "Node Field Build Master",
-	NodeFieldBuildHead:                     "Node Field Build Head",
-	NodeFieldBuildAuthor:                   "Node Field Build Author",
-	NodeFieldHostname:                      "Node Field Hostname",
-	NodeFieldImageVersion:                  "Node Field Image Version",
+	NodeFieldKeyName:                       "Key Name",
+	NodeFieldKeyNodeType:                   "Key Node Type",
+	NodeFieldKeyCloudletKeyOperatorKeyName: "Key Cloudlet Key Operator Key Name",
+	NodeFieldKeyCloudletKeyName:            "Key Cloudlet Key Name",
+	NodeFieldNotifyId:                      "Notify Id",
+	NodeFieldBuildMaster:                   "Build Master",
+	NodeFieldBuildHead:                     "Build Head",
+	NodeFieldBuildAuthor:                   "Build Author",
+	NodeFieldHostname:                      "Hostname",
+	NodeFieldImageVersion:                  "Image Version",
 }
 
 func (m *Node) IsKeyField(s string) bool {
@@ -846,7 +846,7 @@ func (s *NodeStore) LoadOne(key string) (*Node, int64, error) {
 	var obj Node
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse Node data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse Node data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1108,7 +1108,7 @@ func (c *NodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) 
 	obj := Node{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse Node data", "val", string(val))
+		log.WarnLog("Failed to parse Node data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

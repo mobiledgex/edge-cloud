@@ -217,6 +217,7 @@ type tmplArgs struct {
 	Show                 bool
 	InputRequired        bool
 	HasMethodArgs        bool
+	SingularData         bool
 }
 
 var tmpl = `
@@ -321,6 +322,18 @@ func {{.Method}}(c *cli.Command, in *{{.FQInType}}) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
+{{- if .SingularData}}
+func {{.Method}}Batch(c *cli.Command, data *{{.FQInType}}, err *error) {
+	if *err != nil || data == nil {
+		return
+	}
+	fmt.Printf("{{.Method}} %v\n", data)
+	myerr := {{.Method}}(c, data)
+	if myerr != nil {
+		*err = myerr
+	}
+}
+{{- else}}
 func {{.Method}}s(c *cli.Command, data []{{.FQInType}}, err *error) {
 	if *err != nil {
 		return
@@ -334,6 +347,7 @@ func {{.Method}}s(c *cli.Command, data []{{.FQInType}}, err *error) {
 		}
 	}
 }
+{{- end}}
 
 `
 
@@ -362,6 +376,7 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 		StreamOutIncremental: gensupport.GetStreamOutIncremental(method),
 		InputRequired:        gensupport.GetInputRequired(method),
 		HasMethodArgs:        gensupport.HasMethodArgs(method),
+		SingularData:         gensupport.GetSingularData(in.DescriptorProto),
 	}
 	if strings.HasPrefix(*method.Name, "Show") {
 		cmd.Show = true

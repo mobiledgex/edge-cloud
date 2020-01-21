@@ -227,6 +227,10 @@ func startServices() error {
 	if err != nil {
 		return fmt.Errorf("Failed to register controller, %v", err)
 	}
+	err = settingsApi.initDefaults(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to init settings, %v", err)
+	}
 
 	// get influxDB credentials from vault
 	influxAuth := &cloudcommon.InfluxCreds{}
@@ -286,6 +290,7 @@ func startServices() error {
 	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
 	edgeproto.RegisterPrivacyPolicyApiServer(server, &privacyPolicyApi)
+	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
 
 	log.RegisterDebugApiServer(server, &log.Api{})
 
@@ -322,6 +327,7 @@ func startServices() error {
 			edgeproto.RegisterAutoProvPolicyApiHandler,
 			edgeproto.RegisterResTagTableApiHandler,
 			edgeproto.RegisterPrivacyPolicyApiHandler,
+			edgeproto.RegisterSettingsApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -436,6 +442,7 @@ func InitApis(sync *Sync) {
 	InitAutoProvPolicyApi(sync)
 	InitResTagTableApi(sync)
 	InitPrivacyPolicyApi(sync)
+	InitSettingsApi(sync)
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "nohostname"
@@ -444,6 +451,7 @@ func InitApis(sync *Sync) {
 }
 
 func InitNotify(influxQ *influxq.InfluxQ) {
+	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)

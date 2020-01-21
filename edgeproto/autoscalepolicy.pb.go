@@ -534,13 +534,13 @@ var AutoScalePolicyAllFieldsMap = map[string]struct{}{
 }
 
 var AutoScalePolicyAllFieldsStringMap = map[string]string{
-	AutoScalePolicyFieldKeyDeveloper:       "Auto Scale Policy Field Key Developer",
-	AutoScalePolicyFieldKeyName:            "Auto Scale Policy Field Key Name",
-	AutoScalePolicyFieldMinNodes:           "Auto Scale Policy Field Min Nodes",
-	AutoScalePolicyFieldMaxNodes:           "Auto Scale Policy Field Max Nodes",
-	AutoScalePolicyFieldScaleUpCpuThresh:   "Auto Scale Policy Field Scale Up Cpu Thresh",
-	AutoScalePolicyFieldScaleDownCpuThresh: "Auto Scale Policy Field Scale Down Cpu Thresh",
-	AutoScalePolicyFieldTriggerTimeSec:     "Auto Scale Policy Field Trigger Time Sec",
+	AutoScalePolicyFieldKeyDeveloper:       "Key Developer",
+	AutoScalePolicyFieldKeyName:            "Key Name",
+	AutoScalePolicyFieldMinNodes:           "Min Nodes",
+	AutoScalePolicyFieldMaxNodes:           "Max Nodes",
+	AutoScalePolicyFieldScaleUpCpuThresh:   "Scale Up Cpu Thresh",
+	AutoScalePolicyFieldScaleDownCpuThresh: "Scale Down Cpu Thresh",
+	AutoScalePolicyFieldTriggerTimeSec:     "Trigger Time Sec",
 }
 
 func (m *AutoScalePolicy) IsKeyField(s string) bool {
@@ -735,7 +735,7 @@ func (s *AutoScalePolicyStore) LoadOne(key string) (*AutoScalePolicy, int64, err
 	var obj AutoScalePolicy
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse AutoScalePolicy data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse AutoScalePolicy data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -979,7 +979,7 @@ func (c *AutoScalePolicyCache) SyncUpdate(ctx context.Context, key, val []byte, 
 	obj := AutoScalePolicy{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse AutoScalePolicy data", "val", string(val))
+		log.WarnLog("Failed to parse AutoScalePolicy data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

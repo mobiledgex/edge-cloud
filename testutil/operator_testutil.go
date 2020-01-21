@@ -579,19 +579,24 @@ func FindOperatorCodeData(key *edgeproto.OperatorCodeKey, testData []edgeproto.O
 	return nil, false
 }
 
-func RunOperatorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Operator, dataMap []map[string]interface{}, mode string) error {
-	var err error
+func RunOperatorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Operator, dataMap interface{}, mode string) error {
 	operatorApi := edgeproto.NewOperatorApiClient(conn)
-	for ii, obj := range *data {
+	var err error
+	for ii, objD := range *data {
+		obj := &objD
 		log.DebugLog(log.DebugLevelApi, "API %v for Operator: %v", mode, obj.GetKey())
 		switch mode {
 		case "create":
-			_, err = operatorApi.CreateOperator(ctx, &obj)
+			_, err = operatorApi.CreateOperator(ctx, obj)
 		case "delete":
-			_, err = operatorApi.DeleteOperator(ctx, &obj)
+			_, err = operatorApi.DeleteOperator(ctx, obj)
 		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			_, err = operatorApi.UpdateOperator(ctx, &obj)
+			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
+			if err != nil {
+				return fmt.Errorf("bad dataMap for Operator: %v", err)
+			}
+			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			_, err = operatorApi.UpdateOperator(ctx, obj)
 		default:
 			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Operator: %v", mode, obj.GetKey())
 			return nil
@@ -643,16 +648,17 @@ func (s *DummyServer) ShowOperator(in *edgeproto.Operator, server edgeproto.Oper
 	return err
 }
 
-func RunOperatorCodeApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.OperatorCode, dataMap []map[string]interface{}, mode string) error {
-	var err error
+func RunOperatorCodeApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.OperatorCode, dataMap interface{}, mode string) error {
 	operatorCodeApi := edgeproto.NewOperatorCodeApiClient(conn)
-	for _, obj := range *data {
+	var err error
+	for _, objD := range *data {
+		obj := &objD
 		log.DebugLog(log.DebugLevelApi, "API %v for OperatorCode: %v", mode, obj.GetKey())
 		switch mode {
 		case "create":
-			_, err = operatorCodeApi.CreateOperatorCode(ctx, &obj)
+			_, err = operatorCodeApi.CreateOperatorCode(ctx, obj)
 		case "delete":
-			_, err = operatorCodeApi.DeleteOperatorCode(ctx, &obj)
+			_, err = operatorCodeApi.DeleteOperatorCode(ctx, obj)
 		default:
 			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for OperatorCode: %v", mode, obj.GetKey())
 			return nil

@@ -67,6 +67,7 @@ var nodeCache edgeproto.NodeCache
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
 	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
+	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(&dmecommon.Settings, dmecommon.SettingsUpdated))
 	notifyClient.RegisterRecv(notify.NewAutoProvPolicyRecv(&dmecommon.AutoProvPolicyHandler{}))
 	notifyClient.RegisterRecv(notify.NewOperatorCodeRecv(&dmecommon.DmeAppTbl.OperatorCodes))
 	notifyClient.RegisterRecv(notify.NewAppRecv(&AppHandler{}))

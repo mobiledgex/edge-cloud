@@ -24,7 +24,6 @@ type Controller struct {
 	VaultAddr            string
 	InfluxAddr           string
 	TLS                  TLSCerts
-	ShortTimeouts        bool
 	cmd                  *exec.Cmd
 	TestMode             bool
 	RegistryFQDN         string
@@ -34,20 +33,19 @@ type Controller struct {
 	CloudletVMImagePath  string
 }
 type Dme struct {
-	Common        `yaml:",inline"`
-	ApiAddr       string
-	HttpAddr      string
-	NotifyAddrs   string
-	LocVerUrl     string
-	TokSrvUrl     string
-	QosPosUrl     string
-	Carrier       string
-	CloudletKey   string
-	VaultAddr     string
-	CookieExpr    string
-	ShortTimeouts bool
-	TLS           TLSCerts
-	cmd           *exec.Cmd
+	Common      `yaml:",inline"`
+	ApiAddr     string
+	HttpAddr    string
+	NotifyAddrs string
+	LocVerUrl   string
+	TokSrvUrl   string
+	QosPosUrl   string
+	Carrier     string
+	CloudletKey string
+	VaultAddr   string
+	CookieExpr  string
+	TLS         TLSCerts
+	cmd         *exec.Cmd
 }
 type Crm struct {
 	Common        `yaml:",inline"`

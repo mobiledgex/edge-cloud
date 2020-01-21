@@ -1,3 +1,17 @@
+settings:
+  shepherdmetricscollectioninterval: 1s
+  shepherdhealthcheckretries: 3
+  shepherdhealthcheckinterval: 5s
+  autodeployintervalsec: 1
+  autodeployoffsetsec: 0.3
+  autodeploymaxintervals: 10
+  createappinsttimeout: 3s
+  updateappinsttimeout: 2s
+  deleteappinsttimeout: 2s
+  createclusterinsttimeout: 3s
+  updateclusterinsttimeout: 2s
+  deleteclusterinsttimeout: 2s
+
 flavors:
 - key:
     name: x1.tiny
