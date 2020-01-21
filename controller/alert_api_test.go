@@ -43,5 +43,5 @@ func testinit() {
 	dockerRegistry := "docker.mobiledgex.net"
 	registryFQDN = &dockerRegistry
 	vaultConfig, _ = vault.BestConfig("")
-	services.events = influxq.NewInfluxQ("test", "user", "pass")
+	services.events = influxq.NewInfluxQ("events", "user", "pass")
 }
