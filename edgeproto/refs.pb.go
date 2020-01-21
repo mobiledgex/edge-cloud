@@ -687,7 +687,7 @@ func (s *CloudletRefsStore) LoadOne(key string) (*CloudletRefs, int64, error) {
 	var obj CloudletRefs
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse CloudletRefs data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse CloudletRefs data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -931,7 +931,7 @@ func (c *CloudletRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev
 	obj := CloudletRefs{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse CloudletRefs data", "val", string(val))
+		log.WarnLog("Failed to parse CloudletRefs data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)
@@ -1206,7 +1206,7 @@ func (s *ClusterRefsStore) LoadOne(key string) (*ClusterRefs, int64, error) {
 	var obj ClusterRefs
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse ClusterRefs data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse ClusterRefs data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1450,7 +1450,7 @@ func (c *ClusterRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev 
 	obj := ClusterRefs{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse ClusterRefs data", "val", string(val))
+		log.WarnLog("Failed to parse ClusterRefs data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

@@ -1,3 +1,17 @@
+settings:
+  shepherdmetricscollectioninterval: 5s
+  shepherdhealthcheckretries: 3
+  shepherdhealthcheckinterval: 5s
+  autodeployintervalsec: 300
+  autodeployoffsetsec: 20
+  autodeploymaxintervals: 10
+  createappinsttimeout: 30m
+  updateappinsttimeout: 30m
+  deleteappinsttimeout: 20m
+  createclusterinsttimeout: 30m
+  updateclusterinsttimeout: 20m
+  deleteclusterinsttimeout: 20m
+
 flavors:
 - key:
     name: x1.tiny
@@ -89,13 +103,6 @@ cloudlets:
     longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  timelimits:
-    createclusterinsttimeout: 3000000000
-    updateclusterinsttimeout: 2000000000
-    deleteclusterinsttimeout: 2000000000
-    createappinsttimeout: 3000000000
-    updateappinsttimeout: 2000000000
-    deleteappinsttimeout: 2000000000
   state: Ready
   notifysrvaddr: 127.0.0.1:51001
   flavor:
@@ -111,13 +118,6 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
-  timelimits:
-    createclusterinsttimeout: 3000000000
-    updateclusterinsttimeout: 2000000000
-    deleteclusterinsttimeout: 2000000000
-    createappinsttimeout: 3000000000
-    updateappinsttimeout: 2000000000
-    deleteappinsttimeout: 2000000000
   state: Ready
   notifysrvaddr: 127.0.0.1:51002
   flavor:

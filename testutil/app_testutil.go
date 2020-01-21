@@ -309,19 +309,24 @@ func FindAppData(key *edgeproto.AppKey, testData []edgeproto.App) (*edgeproto.Ap
 	return nil, false
 }
 
-func RunAppApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.App, dataMap []map[string]interface{}, mode string) error {
-	var err error
+func RunAppApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.App, dataMap interface{}, mode string) error {
 	appApi := edgeproto.NewAppApiClient(conn)
-	for ii, obj := range *data {
+	var err error
+	for ii, objD := range *data {
+		obj := &objD
 		log.DebugLog(log.DebugLevelApi, "API %v for App: %v", mode, obj.GetKey())
 		switch mode {
 		case "create":
-			_, err = appApi.CreateApp(ctx, &obj)
+			_, err = appApi.CreateApp(ctx, obj)
 		case "delete":
-			_, err = appApi.DeleteApp(ctx, &obj)
+			_, err = appApi.DeleteApp(ctx, obj)
 		case "update":
-			obj.Fields = cli.GetSpecifiedFields(dataMap[ii], &obj, cli.YamlNamespace)
-			_, err = appApi.UpdateApp(ctx, &obj)
+			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
+			if err != nil {
+				return fmt.Errorf("bad dataMap for App: %v", err)
+			}
+			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			_, err = appApi.UpdateApp(ctx, obj)
 		default:
 			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for App: %v", mode, obj.GetKey())
 			return nil

@@ -84,6 +84,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.CloudletPoolMemberApiCmd = edgeproto.NewCloudletPoolMemberApiClient(conn)
 	gencmd.AlertApiCmd = edgeproto.NewAlertApiClient(conn)
 	gencmd.ResTagTableApiCmd = edgeproto.NewResTagTableApiClient(conn)
+	gencmd.SettingsApiCmd = edgeproto.NewSettingsApiClient(conn)
 	execApiCmd = edgeproto.NewExecApiClient(conn)
 	return nil
 }
@@ -126,6 +127,7 @@ func main() {
 	controllerCmd.AddCommand(gencmd.CloudletPoolMemberApiCmds...)
 	controllerCmd.AddCommand(gencmd.AlertApiCmds...)
 	controllerCmd.AddCommand(gencmd.ResTagTableApiCmds...)
+	controllerCmd.AddCommand(gencmd.SettingsApiCmds...)
 
 	controllerCmd.AddCommand(createCmd.GenCmd())
 	controllerCmd.AddCommand(deleteCmd.GenCmd())

@@ -778,7 +778,7 @@ var CloudletPoolAllFieldsMap = map[string]struct{}{
 }
 
 var CloudletPoolAllFieldsStringMap = map[string]string{
-	CloudletPoolFieldKeyName: "Cloudlet Pool Field Key Name",
+	CloudletPoolFieldKeyName: "Key Name",
 }
 
 func (m *CloudletPool) IsKeyField(s string) bool {
@@ -918,7 +918,7 @@ func (s *CloudletPoolStore) LoadOne(key string) (*CloudletPool, int64, error) {
 	var obj CloudletPool
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse CloudletPool data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse CloudletPool data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1162,7 +1162,7 @@ func (c *CloudletPoolCache) SyncUpdate(ctx context.Context, key, val []byte, rev
 	obj := CloudletPool{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse CloudletPool data", "val", string(val))
+		log.WarnLog("Failed to parse CloudletPool data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)
@@ -1365,7 +1365,7 @@ func (s *CloudletPoolMemberStore) LoadOne(key string) (*CloudletPoolMember, int6
 	var obj CloudletPoolMember
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse CloudletPoolMember data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse CloudletPoolMember data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1609,7 +1609,7 @@ func (c *CloudletPoolMemberCache) SyncUpdate(ctx context.Context, key, val []byt
 	obj := CloudletPoolMember{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse CloudletPoolMember data", "val", string(val))
+		log.WarnLog("Failed to parse CloudletPoolMember data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

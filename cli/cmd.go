@@ -220,7 +220,7 @@ func (c *Command) ParseInput(args []string) (map[string]interface{}, error) {
 			SpecialArgs:    c.SpecialArgs,
 			PasswordArg:    c.PasswordArg,
 			VerifyPassword: c.VerifyPassword,
-			DecodeHook:     edgeproto.EnumDecodeHook,
+			DecodeHook:     edgeproto.DecodeHook,
 		}
 		argsMap, err := input.ParseArgs(args, c.ReqData)
 		if err != nil {

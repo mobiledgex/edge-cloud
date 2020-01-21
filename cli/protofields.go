@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -41,4 +42,27 @@ func getFields(data map[string]interface{}, t reflect.Type, ns FieldNamespace, f
 		fields = append(fields, fstr)
 	}
 	return fields
+}
+
+func GetGenericObj(dataMap interface{}) (map[string]interface{}, error) {
+	if dataMap == nil {
+		return nil, fmt.Errorf("nil dataMap")
+	}
+	if m, ok := dataMap.(map[string]interface{}); ok {
+		return m, nil
+	}
+	return nil, fmt.Errorf("expected map[string]interface{} but was %T", dataMap)
+}
+
+func GetGenericObjFromList(dataMap interface{}, idx int) (map[string]interface{}, error) {
+	if dataMap == nil {
+		return nil, fmt.Errorf("nil dataMap")
+	}
+	if list, ok := dataMap.([]interface{}); ok {
+		if obj, ok := list[idx].(map[string]interface{}); ok {
+			return obj, nil
+		}
+		return nil, fmt.Errorf("index %d expected map[string]interface{} but was %T", idx, list[idx])
+	}
+	return nil, fmt.Errorf("expected []interface{} but was %T", dataMap)
 }

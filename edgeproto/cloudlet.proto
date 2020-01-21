@@ -27,18 +27,18 @@ message CloudletKey {
 
 // time limits for cloudlet create, update and delete operations
 message OperationTimeLimits{
-    // max time to create a cluster instance
-    int64 create_cluster_inst_timeout = 1;
-    // max time to update a cluster instance
-    int64 update_cluster_inst_timeout = 2;
-    // max time to delete a cluster instance
-    int64 delete_cluster_inst_timeout = 3;
-    // max time to create an app instance
-    int64 create_app_inst_timeout = 4;
-    // max time to update an app instance
-    int64 update_app_inst_timeout = 5;
-    // max time to delete an app instance
-    int64 delete_app_inst_timeout = 6;
+    // override default max time to create a cluster instance (duration)
+    int64 create_cluster_inst_timeout = 1 [(gogoproto.casttype) = "Duration"];
+    // override default max time to update a cluster instance (duration)
+    int64 update_cluster_inst_timeout = 2 [(gogoproto.casttype) = "Duration"];
+    // override default max time to delete a cluster instance (duration)
+    int64 delete_cluster_inst_timeout = 3 [(gogoproto.casttype) = "Duration"];
+    // override default max time to create an app instance (duration)
+    int64 create_app_inst_timeout = 4 [(gogoproto.casttype) = "Duration"];
+    // override default max time to update an app instance (duration)
+    int64 update_app_inst_timeout = 5 [(gogoproto.casttype) = "Duration"];
+    // override default max time to delete an app instance (duration)
+    int64 delete_app_inst_timeout = 6 [(gogoproto.casttype) = "Duration"];
 }
 
 // properites common to all cloudlets
@@ -176,8 +176,8 @@ message Cloudlet {
   string static_ips = 7;
   // Number of dynamic IPs available for dynamic IP support
   int32 num_dynamic_ips = 8;
-  // time limits
-  OperationTimeLimits time_limits = 9 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // time limits which override global settings if non-zero
+  OperationTimeLimits time_limits = 9 [(gogoproto.nullable) = false];
   // Any errors trying to create, update, or delete the Cloudlet.
   repeated string errors = 10 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // status is used to reflect progress of creation or other events
@@ -215,7 +215,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,TimeLimits,Status,Config,NotifySrvAddr";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr";
   option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }
 

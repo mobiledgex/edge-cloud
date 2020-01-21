@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/mobiledgex/edge-cloud/cli"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/gencmd"
@@ -15,12 +17,21 @@ var createCmd = &cli.Command{
 }
 
 func runCreate(c *cli.Command, args []string) error {
-	_, err := c.ParseInput(args)
+	mapped, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
 	data := c.ReqData.(*edgeproto.ApplicationData)
+	dataMap := edgeproto.ApplicationDataMap(mapped)
 
+	if data.Settings != nil {
+		objMap, err := cli.GetGenericObj(dataMap["settings"])
+		if err != nil {
+			return fmt.Errorf("invalid data map for settings: %v", err)
+		}
+		data.Settings.Fields = cli.GetSpecifiedFields(objMap, data.Settings, cli.JsonNamespace)
+		gencmd.UpdateSettingsBatch(c, data.Settings, &err)
+	}
 	gencmd.CreateFlavors(c, data.Flavors, &err)
 	gencmd.CreateOperators(c, data.Operators, &err)
 	gencmd.CreateOperatorCodes(c, data.OperatorCodes, &err)
@@ -64,5 +75,8 @@ func runDelete(c *cli.Command, args []string) error {
 	gencmd.DeleteOperatorCodes(c, data.OperatorCodes, &err)
 	gencmd.DeleteOperators(c, data.Operators, &err)
 	gencmd.DeleteFlavors(c, data.Flavors, &err)
+	if data.Settings != nil {
+		gencmd.ResetSettingsBatch(c, data.Settings, &err)
+	}
 	return err
 }
