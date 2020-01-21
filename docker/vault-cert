@@ -1,0 +1,93 @@
+#!/usr/bin/python
+
+import argparse
+import os
+import re
+import requests
+import sys
+
+DEF_CERT_DIR = "/tls"
+DEF_CERT_NAME = "tls.crt"
+DEF_KEY_NAME = "tls.key"
+DEF_VAULT = "https://vault-main.mobiledgex.net"
+
+def get_token(args):
+    r = requests.post(args.vault + "/v1/auth/approle/login",
+                      json={
+                          "role_id": args.vault_role,
+                          "secret_id": args.vault_secret,
+                      })
+    if r.status_code != requests.codes.ok:
+        sys.exit("ERROR: Failed to retrieve token: " + r.text)
+
+    try:
+        resp = r.json()
+        token = resp["auth"]["client_token"]
+    except:
+        sys.exit("ERROR: Token not found: " + r.text)
+
+    return(token)
+
+def get_cert(domain, token):
+    domain = re.sub(r"^\*.", "_.", domain)
+
+    r = requests.get(args.vault + "/v1/certs/cert/" + domain,
+                     headers={"X-Vault-Token": token})
+    if r.status_code != requests.codes.ok:
+        sys.exit("Failed to retrieve cert: " + r.text)
+
+    return r.json()["data"]
+
+def check_cert(data, args):
+    certfile = os.path.join(args.cert_dir, args.cert_filename)
+
+    with open(certfile) as f:
+        oldcert = f.read()
+    if oldcert != data["cert"]:
+        sys.exit("Newer cert available")
+
+def write_cert(data, args):
+    if not os.path.exists(args.cert_dir):
+        os.makedirs(args.cert_dir)
+
+    certfile = os.path.join(args.cert_dir, args.cert_filename)
+    keyfile = os.path.join(args.cert_dir, args.key_filename)
+
+    with open(certfile, "w") as f:
+        f.write(data["cert"])
+
+    with open(keyfile, "w") as f:
+        f.write(data["key"])
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("domain", help="Domain to generate cert for")
+    parser.add_argument("--check", action="store_true",
+                        help="Check if cert needs to be refreshed")
+    parser.add_argument("--cert-dir", default=DEF_CERT_DIR,
+                        help="Certificate dir")
+    parser.add_argument("--cert-filename", default=DEF_CERT_NAME,
+                        help="Certificate file name")
+    parser.add_argument("--key-filename", default=DEF_KEY_NAME,
+                        help="Key file name")
+    parser.add_argument("--vault", default=DEF_VAULT,
+                        help="Vault address")
+    parser.add_argument("--vault-role",
+                        default=os.environ.get("VAULT_ROLE_ID", None),
+                        help="Vault role ID")
+    parser.add_argument("--vault-secret",
+                        default=os.environ.get("VAULT_SECRET_ID", None),
+                        help="Vault secret ID")
+    args = parser.parse_args()
+
+    if not args.vault_role or not args.vault_secret:
+        sys.exit("ERROR: Vault role and secret necessary")
+
+    token = get_token(args)
+    cert = get_cert(args.domain, token)
+
+    if args.check:
+        check_cert(cert, args)
+    else:
+        write_cert(cert, args)

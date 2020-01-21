@@ -104,6 +104,11 @@ path "$REGION/jwtkeys/data/dme" {
 path "$REGION/jwtkeys/metadata/dme" {
   capabilities = [ "read" ]
 }
+
+# Allow access to certs (including access to cert creation)
+path "certs/*" {
+  capabilities = ["read"]
+}
 EOF
 vault policy write $REGION.dme /tmp/dme-pol.hcl
 rm /tmp/dme-pol.hcl
