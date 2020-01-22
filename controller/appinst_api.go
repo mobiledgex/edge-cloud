@@ -720,10 +720,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 				log.InfoLog("AppInst is not ready or update_error state for update", "state", curr.State)
 				return fmt.Errorf("AppInst is not ready or update_error")
 			}
-			if curr.Revision != app.Revision {
-				crmUpdateRequired = true
-				updatedRevision = true
-			} else if forceUpdate {
+			if curr.Revision != app.Revision || forceUpdate {
 				crmUpdateRequired = true
 				updatedRevision = true
 			} else {
