@@ -150,9 +150,8 @@ func (s *ResTagTableApi) RemoveResTag(ctx context.Context, in *edgeproto.ResTagT
 
 // Routines supporting the mapping used in GetVMSpec
 //
-func (s *ResTagTableApi) GetCloudletResourceMap(key *edgeproto.ResTagTableKey) (*edgeproto.ResTagTable, error) {
+func (s *ResTagTableApi) GetCloudletResourceMap(ctx context.Context, key *edgeproto.ResTagTableKey) (*edgeproto.ResTagTable, error) {
 
-	var ctx context.Context
 	tbl, err := resTagTableApi.GetResTagTable(ctx, key)
 	return tbl, err
 }
@@ -177,7 +176,7 @@ func (s *ResTagTableApi) findAZmatch(res string, cli edgeproto.CloudletInfo) (st
 	return "", false
 }
 
-func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, string, bool, error) {
+func (s *ResTagTableApi) optResLookup(ctx context.Context, nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, string, bool, error) {
 	var resmap map[string]*edgeproto.ResTagTableKey = cl.ResTagMap
 	var img, az string
 	var wildcard bool = false
@@ -214,23 +213,23 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 			if numgpus == 0 {
 				return "", "", false, fmt.Errorf("No GPU resources requested")
 			}
-			tbl, err := s.GetCloudletResourceMap(tblkey)
+
+			tbl, err := s.GetCloudletResourceMap(ctx, tblkey)
 			if err != nil || tbl == nil {
 				// gpu requested and
 				// no gpu table, osFlavor fails
 				return "", "", false, err
 			}
-			// check tags table for a key match
+			// check for key match
 			// If found, take the value of that tag entry and search our flavors properties map
 			// for a match. If found, this is our flavor.
+
 			for tag_key, tag_val := range tbl.Tags {
-				if tag_key != request[0] || len(flavor.PropMap) == 0 {
-					continue
-				}
 				var alias []string
 				for flav_key, flav_val := range flavor.PropMap {
 					// How many resources are supplied by this os flavor?
 					alias = strings.Split(flav_val, ":")
+					log.InfoLog("optResLookup", "alias", alias)
 					if len(alias) == 2 {
 						if numres, err = strconv.Atoi(alias[1]); err != nil {
 							return "", "", false, fmt.Errorf("Non-numeric count found in os flavor props")
@@ -239,15 +238,18 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 						continue
 					}
 					if wildcard {
-						// we have just the $kind:1 as in vgpu:1
-						if flav_key == request[0] && numres >= numgpus {
+						// we have just the $kind:1 as in gpu=gpu:1
+						if strings.Contains(flav_key, tag_key) && numres >= numgpus {
 							goto flavor_found
+
 						}
 					} else {
-						// we have resource type specifier as in $kind:$alias:N ex: vgpu:Nvidia-63:1
-						if strings.Contains(tag_val, flav_val) {
-							if numres >= numgpus {
-								goto flavor_found
+						if request[0] == tag_key {
+							if strings.Contains(flav_key, tag_key) { // pci_passthrough == pic or vgpu = vgpu
+								if strings.Contains(flav_val, tag_val) && numres >= numgpus {
+									goto flavor_found
+								}
+
 							}
 						}
 					}
@@ -258,6 +260,9 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 		flavor_found:
 			az, _ = s.findAZmatch("gpu", cli)
 			img, _ = s.findImagematch("gpu", cli)
+
+			log.InfoLog("OptResLookup", "mex flavor", nodeflavor.Key.Name, "os flavor", flavor.Name)
+
 			return az, img, true, nil
 
 			// Other resources TBI
@@ -274,7 +279,7 @@ func (s *ResTagTableApi) optResLookup(nodeflavor edgeproto.Flavor, flavor edgepr
 }
 
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
-func (s *ResTagTableApi) GetVMSpec(nodeflavor edgeproto.Flavor, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (*vmspec.VMCreationSpec, error) {
+func (s *ResTagTableApi) GetVMSpec(ctx context.Context, nodeflavor edgeproto.Flavor, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (*vmspec.VMCreationSpec, error) {
 	var flavorList []*edgeproto.FlavorInfo
 	var vmspec vmspec.VMCreationSpec
 	var az, img string
@@ -316,7 +321,7 @@ func (s *ResTagTableApi) GetVMSpec(nodeflavor edgeproto.Flavor, cl edgeproto.Clo
 		// If any specific resource fails, the flavor is rejected.
 		var ok bool
 		if nodeflavor.OptResMap != nil {
-			if az, img, ok, _ = resTagTableApi.optResLookup(nodeflavor, *flavor, cl, cli); !ok {
+			if az, img, ok, _ = resTagTableApi.optResLookup(ctx, nodeflavor, *flavor, cl, cli); !ok {
 				continue
 			}
 		}
