@@ -313,7 +313,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
 		var err error
-		vmspec, err := resTagTableApi.GetVMSpec(nodeFlavor, cloudlet, info)
+		vmspec, err := resTagTableApi.GetVMSpec(ctx, nodeFlavor, cloudlet, info)
 		if err != nil {
 			return err
 		}
