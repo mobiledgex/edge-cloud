@@ -33,7 +33,8 @@ func GetAppAccessConfig(ctx context.Context, configs []*edgeproto.ConfigFile) (*
 
 	log.SpanLog(ctx, log.DebugLevelMexos, "getAppAccessConfig", "deploymentVars", deploymentVars, "varsFound", varsFound)
 	if !varsFound {
-		return nil, fmt.Errorf("unable to find replacement vars")
+		// If no deployment vars were populated, return an empty config
+		return &aac, nil
 	}
 	// Walk the Configs in the App and generate the yaml files from the helm customization ones
 	for _, v := range configs {
