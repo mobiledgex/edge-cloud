@@ -70,7 +70,7 @@ message AppInst {
   StatusInfo status = 23 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Revision increments each time the App is updated.  Updating the App Instance will sync the revision with that of the App
   int32 revision = 24;
-  // Force Appinst update when UpdateAppInst is done if revision matches
+  // Force Appinst refresh even if revision number matches App revision number.
   bool force_update = 25 [(protogen.hidetag) = "nocmp"];
   // Allow multiple instances to be updated at once
   bool update_multiple = 26 [(protogen.hidetag) = "nocmp"];
@@ -111,7 +111,7 @@ service AppInstApi {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
     option (protogen.mc2_custom_authz) = true;
     // add in UpdateMultiple for noconfig
-    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,UpdateMultiple";
+    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,UpdateMultiple,ForceUpdate";
   }
   // Delete an application instance
   rpc DeleteAppInst(AppInst) returns (stream Result) {
@@ -141,7 +141,7 @@ service AppInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
-    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple";
+    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple,ForceUpdate";
   }
   // Show application instances. Any fields specified will be used to filter results.
   rpc ShowAppInst(AppInst) returns (stream AppInst) {
