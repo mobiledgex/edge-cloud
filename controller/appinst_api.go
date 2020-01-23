@@ -168,9 +168,6 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverri
 				cctx.SetOverride(&crmo)
 			}
 			err = s.deleteAppInstInternal(cctx, val, cb)
-			if err == nil {
-				RecordAppInstEvent(cb.Context(), val, cloudcommon.DELETED, cloudcommon.InstanceDown)
-			}
 			if err != nil && err.Error() == val.Key.NotFoundError().Error() {
 				err = nil
 				break
@@ -208,11 +205,7 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
-	err := s.createAppInstInternal(DefCallContext(), in, cb)
-	if err == nil {
-		RecordAppInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
-	}
-	return err
+	return s.createAppInstInternal(DefCallContext(), in, cb)
 }
 
 func getProtocolBitMap(proto dme.LProto) (int32, error) {
@@ -814,11 +807,9 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 	for instkey, _ := range instances {
 		go func(k edgeproto.AppInstKey) {
 			log.DebugLog(log.DebugLevelApi, "updating AppInst", "key", k)
-			RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 			updated, err := s.refreshAppInstInternal(DefCallContext(), k, cb, in.ForceUpdate)
 			if err == nil {
 				instanceUpdateResults[k] <- updateResult{errString: "", revisionUpdated: updated}
-				RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
 			} else {
 				instanceUpdateResults[k] <- updateResult{errString: err.Error(), revisionUpdated: updated}
 			}
@@ -913,20 +904,12 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		return nil
 	}
 	forceUpdate := true
-	RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 	_, err = s.refreshAppInstInternal(cctx, in.Key, cb, forceUpdate)
-	if err != nil {
-		RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
-	}
 	return err
 }
 
 func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
-	err := s.deleteAppInstInternal(DefCallContext(), in, cb)
-	if err == nil {
-		RecordAppInstEvent(cb.Context(), in, cloudcommon.DELETED, cloudcommon.InstanceDown)
-	}
-	return err
+	return s.deleteAppInstInternal(DefCallContext(), in, cb)
 }
 
 func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
