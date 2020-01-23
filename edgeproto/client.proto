@@ -1,0 +1,66 @@
+// AppInstClient proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
+import "app.proto";
+import "app_inst.proto";
+import "developer.proto";
+import "gogoproto/gogo.proto";
+
+
+// AppKey uniquely identifies an App
+message AppInstClientKey {
+  // AppInst Key
+  AppInstKey app_inst_key = 1;
+  // App name
+  string uuid = 2;
+  option (protogen.obj_key) = true;
+  option (protogen.generate_matches) = true;
+}
+
+
+// Client is an AppInst client that called FindCloudlet DME Api
+ message AppInstClient {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  AppInstClientKey key = 2 [(gogoproto.nullable) = false];
+  // Location of the Client
+  distributed_match_engine.Loc location = 3;
+  // Id of client assigned by server (internal use only)
+  int64 notify_id = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  enum FindStatus {
+    FIND_UNKNOWN = 0;
+    FIND_FOUND = 1;
+    FIND_NOTFOUND = 2;
+  }
+  // Status return
+  FindStatus status = 6;
+
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.notify_flush) = true;
+
+//  option (protogen.notify_message) = true;
+//  option (protogen.notify_custom_update) = true;
+}
+
+service AppInstClientApi {
+  // Show application instance clients.
+  rpc ShowAppInstClient(AppInstClient) returns (stream AppInstClient) {
+    option (google.api.http) = {
+      post: "/show/appinstclient"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceAppInstClients,ActionView,Key.AppInstKey.Key.DeveloperKey.Name";
+  }
+}
