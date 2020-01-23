@@ -137,7 +137,7 @@ func (s *AppInstApi) UsesClusterInst(in *edgeproto.ClusterInstKey) bool {
 	return false
 }
 
-func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
+func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverride edgeproto.CRMOverride, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	var app edgeproto.App
 	var err error
 	apps := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
@@ -160,9 +160,13 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 		cb.Send(&edgeproto.Result{Message: "Autodeleting AppInst " + val.Key.AppKey.Name})
 		for {
 			// ignore CRM errors when deleting dynamic apps as we will be deleting the cluster anyway
-			crmo := edgeproto.CRMOverride_IGNORE_CRM_ERRORS
 			cctx := DefCallContext()
-			cctx.SetOverride(&crmo)
+			if crmoverride != edgeproto.CRMOverride_NO_OVERRIDE {
+				cctx.SetOverride(&crmoverride)
+			} else {
+				crmo := edgeproto.CRMOverride_IGNORE_CRM_ERRORS
+				cctx.SetOverride(&crmo)
+			}
 			err = s.deleteAppInstInternal(cctx, val, cb)
 			if err == nil {
 				RecordAppInstEvent(cb.Context(), val, cloudcommon.DELETED, cloudcommon.InstanceDown)
@@ -720,10 +724,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 				log.InfoLog("AppInst is not ready or update_error state for update", "state", curr.State)
 				return fmt.Errorf("AppInst is not ready or update_error")
 			}
-			if curr.Revision != app.Revision {
-				crmUpdateRequired = true
-				updatedRevision = true
-			} else if forceUpdate {
+			if curr.Revision != app.Revision || forceUpdate {
 				crmUpdateRequired = true
 				updatedRevision = true
 			} else {
