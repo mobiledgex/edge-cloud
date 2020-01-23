@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 )
 
 // If new valid characters are added here, be sure to update
@@ -79,6 +80,27 @@ func K8SSanitize(name string) string {
 		",", "",
 		"!", "")
 	return strings.ToLower(r.Replace(name))
+}
+
+// alphanumeric plus -_. first char must be alpha, <= 255 chars.
+func HeatSanitize(name string) string {
+	r := strings.NewReplacer(
+		" ", "",
+		"&", "",
+		",", "",
+		"!", "")
+	str := r.Replace(name)
+	if str == "" {
+		return str
+	}
+	if !unicode.IsLetter(rune(str[0])) {
+		// first character must be alpha
+		str = "a" + str
+	}
+	if len(str) > 255 {
+		str = str[:254]
+	}
+	return str
 }
 
 func ValidObjName(name string) error {
