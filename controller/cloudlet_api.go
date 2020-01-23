@@ -605,18 +605,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 	}
 
-	if in.ImageUpgrade {
-		if in.DeploymentLocal {
-			return errors.New("Image upgrade is not supported for local deployment")
-		}
-		if !upgrade {
-			return errors.New("Image can only be upgraded if Cloudlet version is updated")
-		}
-		if in.ImageVersion == "" {
-			return errors.New("Image version is required for image upgrade")
-		}
-	}
-
 	accessVars := make(map[string]string)
 	if _, found := fmap[edgeproto.CloudletFieldAccessVars]; found {
 		if !upgrade {
@@ -674,6 +662,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if ignoreCRMState(cctx) {
 			cur.State = edgeproto.TrackedState_READY
 		}
+		if cur.State == edgeproto.TrackedState_READY {
+			cur.Errors = nil
+		}
 		s.store.STMPut(stm, cur)
 		return nil
 	})
@@ -681,7 +672,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	if err != nil {
 		return err
 	}
-	cb.Send(&edgeproto.Result{Message: "Updated Cloudlet successfully"})
 
 	// after the cloudlet change is committed, if the location changed,
 	// update app insts as well.
