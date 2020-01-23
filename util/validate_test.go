@@ -125,3 +125,27 @@ func TestVersion(t *testing.T) {
 	_, err = VersionParse("2011-1-1")
 	require.NotNil(t, err, "invalid version")
 }
+
+func TestHeatSanitize(t *testing.T) {
+	longstring := make([]rune, 300)
+	for i := range longstring {
+		longstring[i] = 'a'
+	}
+
+	tests := []struct {
+		name     string
+		expected string
+	}{
+		{"foo-bar", "foo-bar"},
+		{"foo_bar1234567890", "foo_bar1234567890"},
+		{"foo.bar-baz_", "foo.bar-baz_"},
+		{"foo bar&baz,blah,!no", "foobarbazblahno"},
+		{"00foo", "a00foo"},
+		{"0jon ber,lin&", "a0jonbeacon"},
+		{string(longstring), string(longstring[:254])},
+	}
+	for _, test := range tests {
+		str := HeatSanitize(test.name)
+		require.Equal(t, test.expected, str)
+	}
+}

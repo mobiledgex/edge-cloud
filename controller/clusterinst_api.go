@@ -532,7 +532,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 
 	// Delete appInsts that are set for autodelete
-	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cb); err != nil {
+	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cctx.Override, cb); err != nil {
 		// restore previous state since we failed pre-delete actions
 		in.State = prevState
 		s.store.Update(ctx, in, s.sync.syncWait)
