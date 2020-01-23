@@ -42,9 +42,10 @@ type ApplicationData struct {
 	AutoProvPolicyCloudlets []AutoProvPolicyCloudlet `yaml:"autoprovpolicycloudlets"`
 	PrivacyPolicies         []PrivacyPolicy          `yaml:"privacypolicies"`
 	ResTagTables            []ResTagTable            `ymal:"restagtables"`
+	Settings                *Settings                `yaml:"settings"`
 }
 
-type ApplicationDataMap map[string][]map[string]interface{}
+type ApplicationDataMap map[string]interface{}
 
 // sort each slice by key
 func (a *ApplicationData) Sort() {

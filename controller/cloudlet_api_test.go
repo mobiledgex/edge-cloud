@@ -651,7 +651,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Key: edgeproto.ResTagTableKey{
 			Name: "gpumap",
 		},
-		Tags: map[string]string{"vgpu": "nvidia-63:1", "pci": "T4:1", "gpu": "T4:1"},
+		Tags: map[string]string{"vgpu": "nvidia-63:1", "pci": "t4:1", "gpu": "T4:1"},
 	}
 	_, err := resTagTableApi.CreateResTagTable(ctx, &gputab)
 	require.Nil(t, nil, err, "CreateResTagTable")
@@ -659,7 +659,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	// Our clouldets resource map, maps from resource type names, to ResTagTableKeys.
 	// The ResTagTableKey is a resource name, and the owning operator key.
 	cl.ResTagMap["gpu"] = &gputab.Key
-	resTagTableApi.GetCloudletResourceMap(&gputab.Key)
+	resTagTableApi.GetCloudletResourceMap(ctx, &gputab.Key)
 
 	// We also  need a list of edgeproto.FlavorInfo structs
 	// which it so happens we have in the testutils.CloudletInfoData.Flavors array
@@ -712,7 +712,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Vcpus: 8,
 		Disk:  40,
 		// This says I want one gpu, don't care if it's vgpu or passthrough
-		OptResMap: map[string]string{"gpu": "pci:T4:1", "nas": "ceph-20:1"},
+		OptResMap: map[string]string{"gpu": "pci:t4:1", "nas": "ceph-20:1"},
 	}
 
 	var flavorVgpuNvidiaMatch = edgeproto.Flavor{
@@ -735,37 +735,38 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	// We can direct a generic request to a given flavor though,
 	// which is the case here.
 
-	spec, vmerr := resTagTableApi.GetVMSpec(testflavor, *cl, cli)
+	spec, vmerr := resTagTableApi.GetVMSpec(ctx, testflavor, *cl, cli)
 	require.Nil(t, vmerr, "GetVmSpec")
-	require.Equal(t, "flavor.large-generic-gpu", spec.FlavorName)
+	require.Equal(t, "flavor.large", spec.FlavorName)
 	require.Equal(t, "AZ1_GPU", spec.AvailabilityZone)
 	require.Equal(t, "gpu_image", spec.ImageName)
 
-	spec, vmerr = resTagTableApi.GetVMSpec(flavorVgpuMatch, *cl, cli)
-	require.Nil(t, vmerr, "GetVmSpec")
-	require.Equal(t, "flavor.large-nvidia", spec.FlavorName)
+	spec, vmerr = resTagTableApi.GetVMSpec(ctx, flavorVgpuMatch, *cl, cli)
+	require.Nil(t, vmerr, "GetVmSpec wildcard request")
+	require.Equal(t, "flavor.large", spec.FlavorName)
 
-	spec, vmerr = resTagTableApi.GetVMSpec(flavorPciMatch, *cl, cli)
-	require.Nil(t, vmerr, "Matched Tag")
+	spec, vmerr = resTagTableApi.GetVMSpec(ctx, flavorPciMatch, *cl, cli)
+	require.Nil(t, vmerr, "GetVMSpec")
 	require.Equal(t, "flavor.large", spec.FlavorName)
 
 	// non-nominal, ask for more resources than the would-be match supports.
 	// change testflavor to request 10 gpus of any kind.
 	testflavor.OptResMap["gpu"] = "gpu:10"
-	spec, vmerr = resTagTableApi.GetVMSpec(testflavor, *cl, cli)
+	spec, vmerr = resTagTableApi.GetVMSpec(ctx, testflavor, *cl, cli)
 	require.Equal(t, "no suitable platform flavor found for x1.large-mex, please try a smaller flavor", vmerr.Error(), "nil table")
 
-	spec, vmerr = resTagTableApi.GetVMSpec(testPciT4flavor, *cl, cli)
+	// specific pci passthrough
+	spec, vmerr = resTagTableApi.GetVMSpec(ctx, testPciT4flavor, *cl, cli)
 	require.Nil(t, vmerr, "GetVmSpec")
 	require.Equal(t, "flavor.large", spec.FlavorName)
 
-	spec, vmerr = resTagTableApi.GetVMSpec(flavorVgpuNvidiaMatch, *cl, cli)
+	spec, vmerr = resTagTableApi.GetVMSpec(ctx, flavorVgpuNvidiaMatch, *cl, cli)
 	require.Nil(t, vmerr, "GetVmSpec")
 	require.Equal(t, "flavor.large-nvidia", spec.FlavorName)
 
 	nulCL := edgeproto.Cloudlet{}
 	// and finally, make sure GetVMSpec ignores a nil tbl if none exist or desired, behavior
 	// is only a flavor with 'gpu' in the name will trigger a gpu request match.
-	spec, vmerr = resTagTableApi.GetVMSpec(testflavor, nulCL, cli)
+	spec, vmerr = resTagTableApi.GetVMSpec(ctx, testflavor, nulCL, cli)
 	require.Equal(t, "no suitable platform flavor found for x1.large-mex, please try a smaller flavor", vmerr.Error(), "nil table")
 }

@@ -19,7 +19,6 @@ import (
 
 func getGrpcClient(t *testing.T) (*grpc.ClientConn, error) {
 	// grpc client
-	reduceInfoTimeouts()
 	return grpc.Dial("127.0.0.1:55001", grpc.WithInsecure())
 }
 
@@ -36,6 +35,8 @@ func TestController(t *testing.T) {
 	err := startServices()
 	require.Nil(t, err, "start")
 	defer stopServices()
+
+	reduceInfoTimeouts(t, ctx)
 
 	conn, err := getGrpcClient(t)
 	require.Nil(t, err, "grpc client")
@@ -175,6 +176,9 @@ func TestDataGen(t *testing.T) {
 
 func TestEdgeCloudBug26(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify)
+	log.InitTracer("")
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
 	flag.Parse()
 	testinit()
 	*localEtcd = true
@@ -183,6 +187,8 @@ func TestEdgeCloudBug26(t *testing.T) {
 	err := startServices()
 	require.Nil(t, err, "start")
 	defer stopServices()
+
+	reduceInfoTimeouts(t, ctx)
 
 	conn, err := getGrpcClient(t)
 	require.Nil(t, err, "grcp client")
@@ -257,7 +263,6 @@ cloudletinfos:
 	err = yaml.Unmarshal([]byte(yamlData), &data)
 	require.Nil(t, err, "unmarshal data")
 
-	ctx := context.TODO()
 	_, err = devClient.CreateDeveloper(ctx, &data.Developers[0])
 	require.Nil(t, err, "create dev")
 	_, err = flavorClient.CreateFlavor(ctx, &data.Flavors[0])

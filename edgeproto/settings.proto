@@ -1,0 +1,70 @@
+syntax = "proto3";
+package edgeproto;
+
+import "result.proto";
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
+
+// Global settings
+message Settings {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Shepherd metrics collection interval for k8s and docker appInstances (duration)
+  int64 shepherd_metrics_collection_interval = 2 [(gogoproto.casttype) = "Duration"];
+  // Number of times Shepherd Health Check fails before we mark appInst down
+  int32 shepherd_health_check_retries = 3;
+  // Health Checking probing frequency (duration)
+  int64 shepherd_health_check_interval = 4 [(gogoproto.casttype) = "Duration"];
+  // Auto Provisioning Stats push and analysis interval (seconds)
+  double auto_deploy_interval_sec = 5;
+  // Auto Provisioning analysis offset from interval (seconds)
+  double auto_deploy_offset_sec = 6;
+  // Auto Provisioning Policy max allowed intervals
+  uint32 auto_deploy_max_intervals = 7;
+  // Create AppInst timeout (duration)
+  int64 create_app_inst_timeout = 8 [(gogoproto.casttype) = "Duration"];
+  // Update AppInst timeout (duration)
+  int64 update_app_inst_timeout = 9 [(gogoproto.casttype) = "Duration"];
+  // Delete AppInst timeout (duration)
+  int64 delete_app_inst_timeout = 10 [(gogoproto.casttype) = "Duration"];
+  // Create ClusterInst timeout (duration)
+  int64 create_cluster_inst_timeout = 11 [(gogoproto.casttype) = "Duration"];
+  // Update ClusterInst timeout (duration)
+  int64 update_cluster_inst_timeout = 12 [(gogoproto.casttype) = "Duration"];
+  // Delete ClusterInst timeout (duration)
+  int64 delete_cluster_inst_timeout = 13 [(gogoproto.casttype) = "Duration"];
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.custom_key_type) = "SettingsKey";
+  option (protogen.singular_data) = true;
+}
+
+service SettingsApi {
+  // Update settings
+  rpc UpdateSettings(Settings) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/settings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Reset all settings to their defaults
+  rpc ResetSettings(Settings) returns (Result) {
+    option (google.api.http) = {
+      post: "/reset/settings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Show settings
+  rpc ShowSettings(Settings) returns (Settings) {
+    option (google.api.http) = {
+      post: "/show/settings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionView,";
+  }
+}

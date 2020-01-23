@@ -19,7 +19,6 @@ func TestClusterInstApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
-	reduceInfoTimeouts()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -30,6 +29,8 @@ func TestClusterInstApi(t *testing.T) {
 	defer sync.Done()
 	responder := NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
 		&appInstInfoApi, &clusterInstInfoApi)
+
+	reduceInfoTimeouts(t, ctx)
 
 	// cannot create insts without cluster/cloudlet
 	for _, obj := range testutil.ClusterInstData {
@@ -124,14 +125,34 @@ func TestClusterInstApi(t *testing.T) {
 	dummy.Stop()
 }
 
-func reduceInfoTimeouts() {
-	cloudcommon.CreateClusterInstTimeout = 1 * time.Second
-	cloudcommon.UpdateClusterInstTimeout = 1 * time.Second
-	cloudcommon.DeleteClusterInstTimeout = 1 * time.Second
+func reduceInfoTimeouts(t *testing.T, ctx context.Context) {
+	settingsApi.initDefaults(ctx)
 
-	cloudcommon.CreateAppInstTimeout = 1 * time.Second
-	cloudcommon.UpdateAppInstTimeout = 1 * time.Second
-	cloudcommon.DeleteAppInstTimeout = 1 * time.Second
+	settings, err := settingsApi.ShowSettings(ctx, &edgeproto.Settings{})
+	require.Nil(t, err)
+
+	settings.CreateClusterInstTimeout = edgeproto.Duration(1 * time.Second)
+	settings.UpdateClusterInstTimeout = edgeproto.Duration(1 * time.Second)
+	settings.DeleteClusterInstTimeout = edgeproto.Duration(1 * time.Second)
+	settings.CreateAppInstTimeout = edgeproto.Duration(1 * time.Second)
+	settings.UpdateAppInstTimeout = edgeproto.Duration(1 * time.Second)
+	settings.DeleteAppInstTimeout = edgeproto.Duration(1 * time.Second)
+
+	settings.Fields = []string{
+		edgeproto.SettingsFieldCreateAppInstTimeout,
+		edgeproto.SettingsFieldUpdateAppInstTimeout,
+		edgeproto.SettingsFieldDeleteAppInstTimeout,
+		edgeproto.SettingsFieldCreateClusterInstTimeout,
+		edgeproto.SettingsFieldUpdateClusterInstTimeout,
+		edgeproto.SettingsFieldDeleteClusterInstTimeout,
+	}
+	_, err = settingsApi.UpdateSettings(ctx, settings)
+	require.Nil(t, err)
+
+	updated, err := settingsApi.ShowSettings(ctx, &edgeproto.Settings{})
+	updated.Fields = []string{}
+	settings.Fields = []string{}
+	require.Equal(t, settings, updated)
 }
 
 func checkClusterInstState(t *testing.T, ctx context.Context, api *testutil.ClusterInstCommonApi, in *edgeproto.ClusterInst, state edgeproto.TrackedState) {

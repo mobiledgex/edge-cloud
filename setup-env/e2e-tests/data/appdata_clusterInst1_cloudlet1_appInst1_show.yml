@@ -1,3 +1,16 @@
+settings:
+  shepherdmetricscollectioninterval: 5s
+  shepherdhealthcheckretries: 3
+  shepherdhealthcheckinterval: 5s
+  autodeployintervalsec: 300
+  autodeployoffsetsec: 20
+  autodeploymaxintervals: 10
+  createappinsttimeout: 30m
+  updateappinsttimeout: 30m
+  deleteappinsttimeout: 20m
+  createclusterinsttimeout: 30m
+  updateclusterinsttimeout: 20m
+  deleteclusterinsttimeout: 20m
 operators:
 - key:
     name: tmus

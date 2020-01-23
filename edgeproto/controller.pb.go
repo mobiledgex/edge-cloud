@@ -406,11 +406,11 @@ var ControllerAllFieldsMap = map[string]struct{}{
 }
 
 var ControllerAllFieldsStringMap = map[string]string{
-	ControllerFieldKeyAddr:     "Controller Field Key Addr",
-	ControllerFieldBuildMaster: "Controller Field Build Master",
-	ControllerFieldBuildHead:   "Controller Field Build Head",
-	ControllerFieldBuildAuthor: "Controller Field Build Author",
-	ControllerFieldHostname:    "Controller Field Hostname",
+	ControllerFieldKeyAddr:     "Key Addr",
+	ControllerFieldBuildMaster: "Build Master",
+	ControllerFieldBuildHead:   "Build Head",
+	ControllerFieldBuildAuthor: "Build Author",
+	ControllerFieldHostname:    "Hostname",
 }
 
 func (m *Controller) IsKeyField(s string) bool {
@@ -586,7 +586,7 @@ func (s *ControllerStore) LoadOne(key string) (*Controller, int64, error) {
 	var obj Controller
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse Controller data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse Controller data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -830,7 +830,7 @@ func (c *ControllerCache) SyncUpdate(ctx context.Context, key, val []byte, rev i
 	obj := Controller{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse Controller data", "val", string(val))
+		log.WarnLog("Failed to parse Controller data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)

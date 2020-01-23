@@ -3,7 +3,6 @@ package crmutil
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -27,9 +26,11 @@ type ControllerData struct {
 	PrivacyPolicyCache   edgeproto.PrivacyPolicyCache
 	NodeCache            edgeproto.NodeCache
 	AlertCache           edgeproto.AlertCache
+	SettingsCache        edgeproto.SettingsCache
 	ExecReqHandler       *ExecReqHandler
 	ExecReqSend          *notify.ExecRequestSend
 	ControllerWait       chan bool
+	settings             edgeproto.Settings
 }
 
 // NewControllerData creates a new instance to track data from the controller
@@ -47,6 +48,7 @@ func NewControllerData(pf platform.Platform) *ControllerData {
 	edgeproto.InitNodeCache(&cd.NodeCache)
 	edgeproto.InitAlertCache(&cd.AlertCache)
 	edgeproto.InitPrivacyPolicyCache(&cd.PrivacyPolicyCache)
+	edgeproto.InitSettingsCache(&cd.SettingsCache)
 	cd.ExecReqHandler = NewExecReqHandler(cd)
 	cd.ExecReqSend = notify.NewExecRequestSend()
 	// set callbacks to trigger changes
@@ -54,6 +56,7 @@ func NewControllerData(pf platform.Platform) *ControllerData {
 	cd.AppInstCache.SetUpdatedCb(cd.appInstChanged)
 	cd.FlavorCache.SetUpdatedCb(cd.flavorChanged)
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
+	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 	cd.ControllerWait = make(chan bool, 1)
 	return cd
 }
@@ -108,6 +111,10 @@ func (cd *ControllerData) GatherInsts() {
 // the notify receive thread. If the actions done here not quick,
 // they should be done in a separate worker thread.
 
+func (cd *ControllerData) settingsChanged(ctx context.Context, old *edgeproto.Settings, new *edgeproto.Settings) {
+	cd.settings = *new
+}
+
 func (cd *ControllerData) flavorChanged(ctx context.Context, old *edgeproto.Flavor, new *edgeproto.Flavor) {
 	//Do I need to do anything on a flavor change? update existing apps/clusters on this flavor?
 	//flavor := edgeproto.Flavor{}
@@ -152,7 +159,10 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create Failed, Could not find cloudlet in cache %s", new.Key.CloudletKey))
 				return
 			}
-			timeout := time.Duration(cloudlet.TimeLimits.CreateClusterInstTimeout)
+			timeout := cd.settings.CreateClusterInstTimeout.TimeDuration()
+			if cloudlet.TimeLimits.CreateClusterInstTimeout != 0 {
+				timeout = cloudlet.TimeLimits.CreateClusterInstTimeout.TimeDuration()
+			}
 			log.SpanLog(ctx, log.DebugLevelMexos, "create cluster inst", "ClusterInst", *new, "timeout", timeout)
 
 			policy := edgeproto.PrivacyPolicy{}

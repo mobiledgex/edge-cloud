@@ -631,7 +631,7 @@ func (m *mex) generateAllFields(afg AllFieldsGen, names, nums []string, desc *ge
 }
 
 // Generate a simple string map to use in user-friendly error messages EC-608
-func (m *mex) generateAllStringFieldsMap(afg AllFieldsGen, names, nums []string, desc *generator.Descriptor) {
+func (m *mex) generateAllStringFieldsMap(afg AllFieldsGen, names, nums []string, fprefix string, desc *generator.Descriptor) {
 
 	message := desc.DescriptorProto
 	for ii, field := range message.Field {
@@ -645,7 +645,7 @@ func (m *mex) generateAllStringFieldsMap(afg AllFieldsGen, names, nums []string,
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
-			m.generateAllStringFieldsMap(afg, append(names, name), append(nums, num), subDesc)
+			m.generateAllStringFieldsMap(afg, append(names, name), append(nums, num), fprefix, subDesc)
 		default:
 
 			switch afg {
@@ -656,7 +656,7 @@ func (m *mex) generateAllStringFieldsMap(afg AllFieldsGen, names, nums []string,
 			case AllFieldsGenMap:
 				var readable []string
 				pname = strings.Join(append(names, name, ""), "")
-				m.P(strings.Join(append(names, name), ""), ":")
+				m.P(fprefix, strings.Join(append(names, name), ""), ":")
 
 				l := 0
 				// take the camelcase name and insert " " before
@@ -672,7 +672,6 @@ func (m *mex) generateAllStringFieldsMap(afg AllFieldsGen, names, nums []string,
 				pstr := strings.Join(readable, " ") // readable?
 				m.P("\"", pstr, "\"", ",")
 				readable = nil
-
 			}
 		}
 	}
@@ -897,7 +896,7 @@ func (s *{{.Name}}Store) LoadOne(key string) (*{{.Name}}, int64, error) {
 	var obj {{.Name}}
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse {{.Name}} data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse {{.Name}} data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1179,7 +1178,7 @@ func (c *{{.Name}}Cache) SyncUpdate(ctx context.Context, key, val []byte, rev in
 	obj := {{.Name}}{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse {{.Name}} data", "val", string(val))
+		log.WarnLog("Failed to parse {{.Name}} data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)
@@ -1421,7 +1420,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("")
 		m.P("var ", *message.Name, "AllFieldsStringMap = map[string]string{")
-		m.generateAllStringFieldsMap(AllFieldsGenMap, []string{*message.Name + "Field"}, []string{}, desc)
+		m.generateAllStringFieldsMap(AllFieldsGenMap, []string{}, []string{}, *message.Name+"Field", desc)
 		m.P("}")
 		m.P("")
 		m.P("func (m *", *message.Name, ") IsKeyField(s string) bool {")
@@ -1461,6 +1460,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			KeyType:   keyType,
 		}
 		m.cudTemplate.Execute(m.gen.Buffer, args)
+		m.importLog = true
 	}
 	if GetGenerateCache(message) {
 		keyType, err := m.support.GetMessageKeyType(m.gen, desc)

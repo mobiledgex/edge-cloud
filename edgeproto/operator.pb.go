@@ -647,7 +647,7 @@ var OperatorAllFieldsMap = map[string]struct{}{
 }
 
 var OperatorAllFieldsStringMap = map[string]string{
-	OperatorFieldKeyName: "Operator Field Key Name",
+	OperatorFieldKeyName: "Key Name",
 }
 
 func (m *Operator) IsKeyField(s string) bool {
@@ -787,7 +787,7 @@ func (s *OperatorStore) LoadOne(key string) (*Operator, int64, error) {
 	var obj Operator
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse Operator data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse Operator data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1031,7 +1031,7 @@ func (c *OperatorCache) SyncUpdate(ctx context.Context, key, val []byte, rev int
 	obj := Operator{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse Operator data", "val", string(val))
+		log.WarnLog("Failed to parse Operator data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)
@@ -1234,7 +1234,7 @@ func (s *OperatorCodeStore) LoadOne(key string) (*OperatorCode, int64, error) {
 	var obj OperatorCode
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse OperatorCode data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse OperatorCode data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -1478,7 +1478,7 @@ func (c *OperatorCodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev
 	obj := OperatorCode{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse OperatorCode data", "val", string(val))
+		log.WarnLog("Failed to parse OperatorCode data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, rev)
