@@ -213,16 +213,18 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		return errors.New("Access vars is not supported for local deployment")
 	}
 
-	err := s.createCloudletInternal(DefCallContext(), in, cb)
-	if err == nil {
-		RecordCloudletEvent(cb.Context(), &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
-	}
-	return err
+	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 
-func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
+func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := cb.Context()
+
+	defer func() {
+		if reterr == nil {
+			RecordCloudletEvent(ctx, &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
+		}
+	}()
 
 	pfConfig, err := getPlatformConfig(ctx, in)
 	if err != nil {
@@ -666,7 +668,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	return nil
 }
 
-func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
+func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) (reterr error) {
 	updatecb := updateCloudletCallback{in, cb}
 
 	if appInstApi.UsingCloudlet(&in.Key) {
@@ -695,7 +697,7 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	if err != nil {
 		return err
 	}
-	RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
+	
 	// cleanup old crms post upgrade
 	pfConfig.CleanupMode = true
 	cloudlet := &edgeproto.Cloudlet{}
@@ -714,6 +716,20 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 		return err
 	}
 
+	RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
+	defer func() {
+		info := edgeproto.CloudletInfo{}
+		if cloudletInfoApi.cache.Get(&in.Key, &info) {
+			if reterr == nil {
+				RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+			} else if info.State == edgeproto.CloudletState_CLOUDLET_STATE_READY { // update failed but cloudlet is still up
+				RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceUp)
+			} else { // error and cloudlet went down
+				RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+			}
+		}
+	}()
+
 	updatecb.cb(edgeproto.UpdateTask, "Upgrading Cloudlet")
 
 	// Wait for cloudlet to finish upgrading
@@ -723,16 +739,6 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 		"Upgraded Cloudlet successfully",    // Set success message
 		PlatformInitTimeout, updatecb.cb,
 	)
-	info := edgeproto.CloudletInfo{}
-	if cloudletInfoApi.cache.Get(&in.Key, &info) {
-		if err != nil {
-			RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
-		} else if info.State == edgeproto.CloudletState_CLOUDLET_STATE_READY { // update failed but cloudlet is still up
-			RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceUp)
-		} else { // error and cloudlet went down
-			RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
-		}
-	}
 	return err
 }
 
@@ -741,15 +747,18 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	if err != nil {
 		return err
 	}
-	err = s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
-	if err != nil {
-		RecordCloudletEvent(cb.Context(), &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
-	}
-	return err
+	return s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
 }
 
-func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
+func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
 	ctx := cb.Context()
+
+	defer func() {
+		if reterr == nil {
+			RecordCloudletEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
+		}
+	}()
+
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
 	if appInstApi.UsesCloudlet(&in.Key, dynInsts) {
 		// disallow delete if static instances are present

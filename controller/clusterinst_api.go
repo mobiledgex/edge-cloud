@@ -135,7 +135,7 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 
 // createClusterInstInternal is used to create dynamic cluster insts internally,
 // bypassing static assignment. It is also used to create auto-cluster insts.
-func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
+func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
@@ -145,6 +145,13 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 	}
+
+	defer func() {
+		if reterr == nil {
+			RecordClusterInstEvent(cb.Context(), &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
+		}
+	}()
+
 	ctx := cb.Context()
 	if in.Key.Developer == "" {
 		return fmt.Errorf("Developer cannot be empty")
@@ -390,7 +397,7 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.updateClusterInstInternal(DefCallContext(), in, cb)
 }
 
-func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
+func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "updateClusterInstInternal")
 	if err := in.Key.ValidateKey(); err != nil {
@@ -468,6 +475,16 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if changeCount == 0 {
 		return nil
 	}
+
+	RecordClusterInstEvent(ctx, &in.Key, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
+	defer func() {
+		if reterr == nil {
+			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+		} else {
+			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+		}
+	}()
+
 	if ignoreCRM(cctx) {
 		return nil
 	}
@@ -475,7 +492,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	return err
 }
 
-func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
+func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
@@ -515,6 +532,12 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil {
 		return err
 	}
+
+	defer func() {
+		if reterr == nil {
+			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
+		}
+	}()
 
 	// Delete appInsts that are set for autodelete
 	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cctx.Override, cb); err != nil {
@@ -598,6 +621,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if undoErr != nil {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to undo ClusterInst deletion: %v", undoErr)})
 			log.InfoLog("Undo delete ClusterInst", "undoErr", undoErr)
+			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.DELETE_ERROR, cloudcommon.InstanceDown)
 		}
 	}
 	return err
