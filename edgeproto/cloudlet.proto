@@ -349,9 +349,9 @@ message CloudletInfo {
   // State of cloudlet
   CloudletState state = 3;
   // Id of client assigned by server (internal use only)
-  int64 notify_id = 4;
+  int64 notify_id = 4 [(protogen.hidetag) = "nocmp"];
   // Connected controller unique id
-  string controller = 5;
+  string controller = 5 [(protogen.hidetag) = "nocmp"];
   // Maximum Ram in MB on the Cloudlet
   uint64 os_max_ram = 6;
   // Maximum number of VCPU cores on the Cloudlet
@@ -387,7 +387,7 @@ service CloudletInfoApi {
       post: "/show/cloudletinfo"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Key.OperatorKey.Name";
   }
   // Inject (create) a CloudletInfo for regression testing
   rpc InjectCloudletInfo(CloudletInfo) returns (Result) {}
