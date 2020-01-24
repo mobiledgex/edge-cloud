@@ -15,3 +15,335 @@ info:
          * Locate where our backend is running
          * Verify that the GPS coordinates accurately report the actual location of the device
          * Find the closest cloudlet, and more.
+
+      # MobiledgeX Library
+      ## Android
+      ### GetConnection
+      Function that gets a “connection” object (depending on Protocol of
+      specified connection and language) bound to cellular interface and
+      connected to application backend (as specified by findCloudletReply).
+
+      Parameters:
+         * `findCloudletReply` AppClient.FindCloudletReply:  Object returned from findCloudlet API
+         * `appPort` AppPort: AppPort object from Ports field in FindCloudletReply 
+         * `portNum` int: Used if developer specified a port range and wants a specific port (use -1 if it it doesn’t matter)
+         * `timeoutMs` int: Milliseconds
+
+      Return:
+      All return a Future object to facilitate asynchronous code 
+         * `getTcpSocket` Future<Socket> (import java.net.Socket)
+         * `getTcpSslSocket` Future<SSLSocket> (import javax.net.ssl.SSLSocket)
+         * `getUdpSocket` Future<DatagramSocket> (import java.net.DatagramSocket)
+         * `getHttpClient` Future<OkHttpClient> (import com.squareup.okhttp.OkHttpClient)
+
+      Example Code:
+      ```java
+      AppConnectionManager appConnect = me.getAppConnectionManager();
+      try {
+          AppClient.FindCloudletRequest findCloudletRequest = me.createFindCloudletRequest(context, devName, appName, appVers, carrierName, location, authToken, cellID, uniqueIdType, uniqueId, tags);
+          HashMap<Integer, AppPort> portMap = appConnect.getTCPMap(findCloudletReply);
+          AppPort appPort = portMap.get(internal_port); // This internal port depends entirely the AppInst configuration/Docker image.
+          Future<Socket> fs = appConnect.getTcpSocket(findCloudletReply, appPort, public_port, (int)GRPC_TIMEOUT_MS);
+          Socket s = fs.get();
+          try {
+              /* use Socket */
+          } catch (IOException ioe) {
+              /* handle exception */
+          }
+      } catch (DmeDnsException dde) {
+          /* handle exception */
+      } catch (ExecutionException ee) {
+         /* handle exception */
+      } catch (StatusRuntimeException sre) {
+          /* handle exception */
+      } catch (InterruptedException ie) {
+          /* handle exception */
+      } finally {
+          s.close();
+      }
+      ```
+
+      ### PerformanceMetrics
+
+      com.mobiledgex.matchingengine.performancemetrics.NetTest
+      com.mobiledgex.matchingengine.performancemetrics.Site
+
+      #### NetTest
+
+      Initialization:
+      ```java
+      NetTest()
+      ```
+
+      Class Variables:
+         * boolean runTest
+         * int PingIntervalMS (default to 5000)
+         * int TestTimeoutMS (default to 5000)
+         * int ConnectTimeoutMS (default to 5000)
+         * LinkedBlockingQueue<Site> sites (import java.util.concurrent.LinkedBlockingQueue)
+
+      Class Functions:
+         * boolean doTest(boolean enable)
+         * void RunNetTest()
+
+      #### Site
+
+      Initialization:
+      ```java
+      Site(Network network, String host, int port)
+      Site(Network network, NetTest.TestType testType, int numSamples, String l7Path)
+      Site(Network network, NetTest.TestType testType, int numSamples, String host, int port)
+      ```
+
+      Class Variables:
+         * Network network
+         * String host
+         * int port
+         * String l7Path
+         * double lastPingMs
+         * NetTest.TestType testType
+         * double[] samples
+         * double average
+         * double stddev
+
+      Class Functions:
+         * addSample(double time)
+         * recalculateStats()
+
+      Example Code:
+      ```java
+      import com.mobiledgex.matchingengine.performancemetrics.NetTest;
+      import com.mobiledgex.matchingengine.performancemetrics.Site;
+
+      NetTest netTest = new NetTest();
+      Site site = new Site(mMatchingEngine.getNetworkManager().getActiveNetwork(), NetTest.TestType.CONNECT, numSamples, l7Url);
+      netTest.sites.add(site);netTest.doTest(true);
+      ```
+
+      ## Unity
+      ### GetConnection
+      Function that gets a “connection” object (depending on Protocol of
+      specified connection and language) bound to cellular interface and
+      connected to application backend (as specified by findCloudletReply).
+
+      Parameters:
+         * `reply` DistributedMatchEngine.FindCloudletReply: Object returned from findCloudlet API
+         * `appPort` DistributedMatchEngine.AppPort: AppPort object from Ports field in FindCloudletReply 
+         * `desiredPort` int: Used if developer specified a port range and wants a specific port (use -1 if it it doesn’t matter)
+         * `timeoutMs` int: Milliseconds. Throws a GetConnectionException if GetConnection takes longer than specified timeout
+
+      Return:
+      All return a Task object (using System.Threading.Tasks) to facilitate asynchronous code
+         * `GetTCPConnection` Task<Socket> (using System.Net.Sockets)
+         * `GetTCPTLSConnection` Task<SslStream> (using System.Net.Security)
+         * `GetUDPConection` Task<Socket> (using System.Net.Sockets)
+         * `GetHTTPClient` Task<HttpClient> (using System.Net.Http)
+         * `GetWebsocketConnection` Task<ClientWebSocket> (using System.Net.WebSockets)
+
+      Example Code:
+      ```csharp
+      try {
+          reply = await me.RegisterAndFindCloudlet(carrierName, devName, appName, appVers, developerAuthToken, loc, cellID, uniqueIDType, uniqueID, tags);
+      } 
+      catch (DmeDnsException dde) {
+              /* handle exception */
+      }
+      catch (RegisterClientException rce) {
+              /* handle exception */
+      }
+      Dictionary<int, AppPort> appPortsDict = me.GetTCPAppPorts(reply);
+      int public_port = reply.ports[internal_port].public_port; // We happen to know it's the first one.
+      AppPort appPort = appPortsDict[public_port];
+      try {
+          Socket tcpConnection = await me.GetTCPConnection(reply, appPort, public_port, 5000);
+          /* use tcpConnection */
+              tcpConnection.Close();
+      }
+      catch (GetConnectionException e) {
+              /* handle exception */
+      }
+      catch (Exception e) {
+              /* handle exception */
+      }
+      ```
+
+      ### PerformanceMetrics
+
+      DistributedMatchEngine.PerformanceMetrics.NetTest
+      DistributedMatchEngine.PerformanceMetrics.NetTest.Site
+
+      #### NetTest
+
+      Initialization:
+      ```csharp
+      NetTest(MatchingEngine matchingEngine)
+      ```
+
+      Class Variables:
+         * bool runTest
+         * int PingIntervalMS { get; set; } (Default to 5000 milliseconds)
+         * int TestTimeoutMS (default to 5000 milliseconds)
+         * ConcurrentQueue<Site> sites { get; }
+
+      Class Functions:
+         * bool doTest(bool enable)
+         * async void RunNetTest()
+
+      #### Site
+      Initialization:
+      ```csharp
+      Site(string host, int port, TestType testType, int numSamples)
+      Site(string L7Path, TestType testType, int numSamples)
+      ```
+
+      Class Variables:
+         * string host
+         * int port
+         * string L7Path
+         * double lastPingMs
+         * TestType testType
+         * double[] samples
+         * double average
+         * double stddev
+
+      Class Functions:
+         * void addSample(double time)
+         * void recalculateStats()
+
+      Example Code:
+      ```csharp
+      Site site1 = new Site
+      {
+          l7Path = MatchingEngine.CreateUrl(findCloudletReply, appPort, appPort.public_port);
+          testType = TestType.CONNECT;
+      }
+
+      Site site2 = new Site
+      {
+          host = appPort.fqdn_prefix + findCloudletReply.fqdn;
+          port = appPort.public_port;
+          testType = TestType.CONNECT;
+      }
+
+      NetTest netTest = new NetTest(matchingEngine);
+      netTest.sites.enqueue(site1);
+      netTest.sites.enqueue(site2);
+      netTest.doTest(true);
+      ```
+
+      ## iOS
+      ### GetConnection
+      Function that gets a “connection” object (depending on Protocol of
+      specified connection and language) bound to cellular interface and
+      connected to application backend (as specified by findCloudletReply).
+
+      Parameters:
+         * `findCloudletReply` [String: AnyObject]: Object returned from findCloudlet API
+         * `appPort` [String: Any]: AppPort object from Ports field in FindCloudletReply 
+            * The developer chooses this by using get[Protocol]AppPorts which returns a dictionary (key: internal_port, value: appPort)
+            * Using the known internal_port (specified on app deployment), get correct AppPort
+         *  `desiredPort` String: Used if developer specified a port range and wants a specific port (use “-1” if it it doesn’t matter)
+         *  `timeout` Double: Milliseconds. Promise will return with timeout error if GetConnection takes longer than specified timeout
+
+      Return:
+      All return a Google Promises object (PromisesSwift pod) to facilitate asynchronous code 
+         *  `getTCPConnection` Promise<CFSocket>
+         *  `getUDPConnection` Promise<CFSocket>
+         *  `getTCPTLSConnection` Promise<NWConnection> (import Network)
+         *  `getUDPDTLSConnection` Promise<NWConnection> (import Network)
+         *  `getHTTPConnection` Promise<URLRequest>
+         *  `getWebsocketConnection` Promise<SocketManager> (Socket.IO-Client-Swift dependency)
+         *  `getBSDTCPConnection` Promise<MobiledgeXiOSLibrary.Socket> (MobiledgeXiOSLibrary.Socket is a struct with 2 fields: addrInfo (UnsafeMutablePointer<addrinfo>) and sockfd (nt32))
+
+      Example Code:
+      ```swift
+      matchingEngine.registerAndFindCloudlet(devName: devName, appName: appName, appVers: appVers, carrierName: carrierName, authToken: authToken, gpsLocation: loc, uniqueIDType: uniqueIDType, uniqueID: uniqueID, cellID: cellID, tags: tags)
+      .then { findCloudletReply -> Promise<Socket> in
+      guard let appPortsDict = self.matchingEngine.getTCPAppPorts(findCloudletReply: findCloudletReply) else {
+              /* handle error */
+      }
+      if appPortsDict.capacity == 0 {
+          /* handle error */
+      }
+      guard let appPort = appPortsDict[internalPort] else {
+          /* handle error */
+      }
+      return self.matchingEngine.getTCPConnection(findCloudletReply: findCloudletReply, appPort: appPort, desiredPort: desiredPort, timeout: 5000)
+      }.then { socket in
+          /* read and write using socket */
+          CFRelease(socket) // close socket
+      }.catch { error in
+          /* handle error */
+      }
+      ```
+
+      ### PerformanceMetrics
+
+      MobiledgeXiOSLibrary.PerformanceMetrics.NetTest
+      MobiledgeXiOSLibrary.PerformanceMetrics.Site
+
+      #### NetTest
+
+      Initialization:
+      ```swift
+      init(sites: [MobiledgeXiOSLibrary.PerformanceMetrics.Site])
+      ```
+         * `sites` Array of MobiledgeXiOSLibrary.PerformanceMetrics.Site objects
+
+      Class Variables:
+         * `sites` [MobiledgeXiOSLibrary.PerformanceMetrics.Site]
+         * `tests` [AnyCancellable]
+         * `timeout` Double (default is 5.0 milliseconds)
+
+      Class Functions:
+         * `runTest(interval: Int)` Runs a connect/disconnect test or ping test every “interval” milliseconds per site on a background Dispatch Queue. Collects “latency” stats for each site.
+            * `interval` Time in milliseconds between “ping” tests to
+         * `cancelTest()` Stop running test on background Dispatch Queue
+         * `addSite(site: Site)` Add a site to array of sites to be tested for latency. Stops and restarts runTest() if already running, otherwise only adds to array.
+         * `removeSite()` Removes a site from array of sites. Stops and restarts runTest if already running, otherwise only removes from array.
+
+      #### Site
+      Initialization:
+      ```swift
+      init(network: String, l7Path: String, testType: NetTest.TestType?, numSamples: Int?)
+      ```
+         * `network` use MobiledgeXiOSLibrary.NetworkInterface.CELLULAR or .WIFI
+         * `l7Path` Layer 7 path (for HTTP)
+         * _(Optional)_ MobiledgeXiOSLibrary.PerformanceMetrics.NetTest.TestType.CONNECT or .PING
+         * _(Optional)_ Number of samples in rolling average and std dev
+
+      ```swift
+      init(network: String, host: String, port: String, testType: NetTest.TestType?, numSamples: Int?)
+      ```
+         * `network` use MobiledgeXiOSLibrary.NetworkInterface.CELLULAR or .WIFI
+         * `host` fqdn of application backend deployed via MobiledgeX infrastructure
+         * `port` port of application backend deployed via MobiledgeX infrastructure
+         * _(Optional)_ `testType` MobiledgeXiOSLibrary.PerformanceMetrics.NetTest.TestType.CONNECT or .PING
+         * _(Optional)_ `numSamples` Number of samples in rolling average and std dev
+
+      Class Variables:
+         * `host` String?
+         * `port` String?
+         * `l7Path` String?
+         * `network` String
+         * `testType` NetTest.TestType (defaults to cellular if not initialized)
+         * `lastPingMs` Double?
+         * `avg` Double
+         * `stdDev` Double?
+         * `samples` [Double]
+         * `capacity` Int  (defaults to 5 if not initialized)
+
+      Class Functions
+         * `addSample(sample: Double)` add a latency sample (in milliseconds)
+
+      Example Code:
+      ```swift
+      import MobiledgeXiOSLibrary
+
+      let site1 = MobiledgeXiOSLibrary.PerformanceMetrics.Site(network: MobiledgeXiOSLibrary.NetworkInterface.CELLULAR, l7Path: l7Path, testType: MobiledgeXiOSLibrary.PerformanceMetrics.NetTest.TestType.CONNECT, numSamples: 10)
+      let site2 = MobiledgeXiOSLibrary.PerformanceMetrics.Site(network: MobiledgeXiOSLibrary.NetworkInterface.CELLULAR, host: host, port:  port, testType: MobiledgeXiOSLibrary.PerformanceMetrics.NetTest.TestType.CONNECT, numSamples: 10)
+
+      let sites = [site1, site2]
+
+      let netTest = MobiledgeXiOSLibrary.PerformanceMetrics.NetTest(sites: sites)netTest.runTest(interval: interval_milli)
+      ```
