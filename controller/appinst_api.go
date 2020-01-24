@@ -265,6 +265,12 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
 	ctx := cb.Context()
 
+	defer func() {
+		if reterr == nil {
+			RecordAppInstEvent(ctx, in, cloudcommon.CREATED, cloudcommon.InstanceUp)
+		}
+	}()
+
 	// populate the clusterinst developer from the app developer if not already present
 	if in.Key.ClusterInstKey.Developer == "" {
 		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
@@ -689,7 +695,7 @@ func (s *AppInstApi) updateAppInstStore(ctx context.Context, in *edgeproto.AppIn
 }
 
 // refreshAppInstInternal returns true if the appinst updated, false otherwise.  False value with no error means no update was needed
-func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.AppInstKey, cb edgeproto.AppInstApi_RefreshAppInstServer, forceUpdate bool) (bool, error) {
+func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.AppInstKey, cb edgeproto.AppInstApi_RefreshAppInstServer, forceUpdate bool) (retbool bool, reterr error) {
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "refreshAppInstInternal", "key", key)
 
@@ -704,9 +710,19 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 	cloudletErr := cloudletInfoApi.checkCloudletReady(&key.ClusterInstKey.CloudletKey)
 
 	var app edgeproto.App
+	var curr edgeproto.AppInst
+
+	RecordAppInstEvent(ctx, &curr, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
+
+	defer func () {
+		if reterr == nil {
+			RecordAppInstEvent(ctx, &curr, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+		} else {
+			RecordAppInstEvent(ctx, &curr, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+		}
+	}()
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		var curr edgeproto.AppInst
 
 		if !appApi.store.STMGet(stm, &key.AppKey, &app) {
 			return key.AppKey.NotFoundError()
@@ -912,9 +928,15 @@ func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	return s.deleteAppInstInternal(DefCallContext(), in, cb)
 }
 
-func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
+func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := cb.Context()
+
+	defer func() {
+		if reterr == nil {
+			RecordAppInstEvent(ctx, in, cloudcommon.DELETED, cloudcommon.InstanceDown)
+		}
+	}()
 
 	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
 	// populate the clusterinst developer from the app developer if not already present
