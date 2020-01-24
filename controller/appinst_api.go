@@ -1038,23 +1038,23 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 	if ignoreCRM(cctx) {
 		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
-		return nil
-	}
-	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, settingsApi.Get().DeleteAppInstTimeout.TimeDuration(), "Deleted AppInst successfully", cb.Send)
-	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
-		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
-		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
-		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
-		err = nil
-	}
-	if err != nil {
-		// crm failed or some other err, undo
-		cb.Send(&edgeproto.Result{Message: "Recreating AppInst due to failure"})
-		undoErr := s.createAppInstInternal(cctx.WithUndo(), in, cb)
-		if undoErr != nil {
-			log.InfoLog("Undo delete AppInst", "undoErr", undoErr)
+	} else {
+		err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, settingsApi.Get().DeleteAppInstTimeout.TimeDuration(), "Deleted AppInst successfully", cb.Send)
+		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
+			s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
+			cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
+			err = nil
 		}
-		return err
+		if err != nil {
+			// crm failed or some other err, undo
+			cb.Send(&edgeproto.Result{Message: "Recreating AppInst due to failure"})
+			undoErr := s.createAppInstInternal(cctx.WithUndo(), in, cb)
+			if undoErr != nil {
+				log.InfoLog("Undo delete AppInst", "undoErr", undoErr)
+			}
+			return err
+		}
 	}
 	// delete clusterinst afterwards if it was auto-created and nobody is left using it
 	clusterInst := edgeproto.ClusterInst{}

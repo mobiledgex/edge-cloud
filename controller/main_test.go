@@ -119,6 +119,9 @@ func TestController(t *testing.T) {
 	require.NotNil(t, err)
 	// test that delete works after removing dependencies
 	for _, inst := range testutil.AppInstData {
+		if testutil.IsAutoClusterAutoDeleteApp(&inst.Key) {
+			continue
+		}
 		stream, err := appInstClient.DeleteAppInst(ctx, &inst)
 		err = testutil.AppInstReadResultStream(stream, err)
 		require.Nil(t, err)

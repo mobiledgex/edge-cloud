@@ -1,6 +1,9 @@
 package testutil
 
 import (
+	fmt "fmt"
+	"strings"
+
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -461,28 +464,28 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 	},
 }
 var AppInstData = []edgeproto.AppInst{
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 0
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[0].Key,
 			ClusterInstKey: ClusterInstData[0].Key,
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 1
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[0].Key,
 			ClusterInstKey: ClusterInstData[3].Key,
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 2
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[0].Key,
 			ClusterInstKey: ClusterInstData[1].Key,
 		},
 		CloudletLoc: CloudletData[1].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 3
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[1].Key,
 			// ClusterInst is ClusterInstAutoData[0]
@@ -490,7 +493,7 @@ var AppInstData = []edgeproto.AppInst{
 		},
 		CloudletLoc: CloudletData[1].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 4
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[2].Key,
 			// ClusterInst is ClusterInstAutoData[1]
@@ -498,14 +501,14 @@ var AppInstData = []edgeproto.AppInst{
 		},
 		CloudletLoc: CloudletData[2].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 5
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[5].Key,
 			ClusterInstKey: ClusterInstData[2].Key,
 		},
 		CloudletLoc: CloudletData[2].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 6
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[6].Key,
 			// ClusterInst is ClusterInstAutoData[2]
@@ -514,20 +517,33 @@ var AppInstData = []edgeproto.AppInst{
 		CloudletLoc:         CloudletData[2].Location,
 		AutoClusterIpAccess: edgeproto.IpAccess_IP_ACCESS_DEDICATED,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 7
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[6].Key,
 			ClusterInstKey: ClusterInstData[0].Key,
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
-
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 8
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[7].Key,
 			ClusterInstKey: ClusterInstData[0].Key,
 		},
 		CloudletLoc: CloudletData[0].Location,
+	},
+	edgeproto.AppInst{ // 9
+		Key: edgeproto.AppInstKey{
+			AppKey:         AppData[9].Key, //auto-delete app
+			ClusterInstKey: ClusterInstData[0].Key,
+		},
+		CloudletLoc: CloudletData[0].Location,
+	},
+	edgeproto.AppInst{ // 10
+		Key: edgeproto.AppInstKey{
+			AppKey:         AppData[9].Key, //auto-delete app
+			ClusterInstKey: ClusterInstAutoData[0].Key,
+		},
+		CloudletLoc: CloudletData[1].Location,
 	},
 }
 var AppInstInfoData = []edgeproto.AppInstInfo{
@@ -1150,4 +1166,16 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 			},
 		},
 	},
+}
+
+func IsAutoClusterAutoDeleteApp(key *edgeproto.AppInstKey) bool {
+	if !strings.HasPrefix(key.ClusterInstKey.ClusterKey.Name, "autocluster") {
+		return false
+	}
+	for _, app := range AppData {
+		if app.Key.Matches(&key.AppKey) {
+			return app.DelOpt == edgeproto.DeleteType_AUTO_DELETE
+		}
+	}
+	panic(fmt.Sprintf("App definition not found for %v", key))
 }
