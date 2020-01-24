@@ -387,7 +387,7 @@ service CloudletInfoApi {
       post: "/show/cloudletinfo"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Key.OperatorKey.Name";
   }
   // Inject (create) a CloudletInfo for regression testing
   rpc InjectCloudletInfo(CloudletInfo) returns (Result) {}
