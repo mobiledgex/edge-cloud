@@ -267,7 +267,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	defer func() {
 		if reterr == nil {
-			RecordAppInstEvent(ctx, in, cloudcommon.CREATED, cloudcommon.InstanceUp)
+			RecordAppInstEvent(ctx, &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
 	}()
 
@@ -458,8 +458,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		err := clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
 		if err != nil {
 			return err
-		} else if clusterInst.State == edgeproto.TrackedState_READY {
-			RecordClusterInstEvent(ctx, &clusterInst, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
 		defer func() {
 			if reterr != nil && !cctx.Undo {
@@ -470,8 +468,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 						"Undo create auto-ClusterInst failed",
 						"key", clusterInst.Key,
 						"undoErr", undoErr)
-				} else {
-					RecordClusterInstEvent(ctx, &clusterInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
 				}
 			}
 		}()
@@ -710,19 +706,9 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 	cloudletErr := cloudletInfoApi.checkCloudletReady(&key.ClusterInstKey.CloudletKey)
 
 	var app edgeproto.App
-	var curr edgeproto.AppInst
-
-	RecordAppInstEvent(ctx, &curr, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
-
-	defer func () {
-		if reterr == nil {
-			RecordAppInstEvent(ctx, &curr, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
-		} else {
-			RecordAppInstEvent(ctx, &curr, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
-		}
-	}()
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		var curr edgeproto.AppInst
 
 		if !appApi.store.STMGet(stm, &key.AppKey, &app) {
 			return key.AppKey.NotFoundError()
@@ -759,6 +745,15 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 		return false, err
 	}
 	if crmUpdateRequired {
+		RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
+
+		defer func () {
+			if reterr == nil {
+				RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+			} else {
+				RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+			}
+		}()
 		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateAppInstTimeout.TimeDuration(), "", cb.Send)
 	}
 	if err != nil {
@@ -772,7 +767,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 	ctx := cb.Context()
 
 	if in.UpdateMultiple {
-		// if UpdateMuliple flag is specified, then only the appkey must be present
+		// if UpdateMultiple flag is specified, then only the appkey must be present
 		if err := in.Key.AppKey.ValidateKey(); err != nil {
 			return err
 		}
@@ -934,7 +929,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	defer func() {
 		if reterr == nil {
-			RecordAppInstEvent(ctx, in, cloudcommon.DELETED, cloudcommon.InstanceDown)
+			RecordAppInstEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
 	}()
 
@@ -1069,8 +1064,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if autoerr != nil {
 			log.InfoLog("Failed to delete auto-ClusterInst",
 				"clusterInst", clusterInst, "err", err)
-		} else {
-			RecordClusterInstEvent(ctx, &clusterInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
 	}
 	return err
@@ -1094,10 +1087,10 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 		}
 		// healthy -> not healthy
 		if inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_OK && state != edgeproto.HealthCheck_HEALTH_CHECK_OK {
-			RecordAppInstEvent(ctx, &inst, cloudcommon.HEALTH_CHECK_FAIL, cloudcommon.InstanceDown)
+			RecordAppInstEvent(ctx, &inst.Key, cloudcommon.HEALTH_CHECK_FAIL, cloudcommon.InstanceDown)
 			// not healthy -> healthy
 		} else if inst.HealthCheck != edgeproto.HealthCheck_HEALTH_CHECK_OK && state == edgeproto.HealthCheck_HEALTH_CHECK_OK {
-			RecordAppInstEvent(ctx, &inst, cloudcommon.HEALTH_CHECK_OK, cloudcommon.InstanceUp)
+			RecordAppInstEvent(ctx, &inst.Key, cloudcommon.HEALTH_CHECK_OK, cloudcommon.InstanceUp)
 		}
 		inst.HealthCheck = state
 		s.store.STMPut(stm, &inst)
@@ -1292,17 +1285,17 @@ func setL7Port(port *dme.AppPort, key *edgeproto.AppInstKey) bool {
 	return true
 }
 
-func RecordAppInstEvent(ctx context.Context, app *edgeproto.AppInst, event cloudcommon.InstanceEvent, serverStatus string) {
+func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, event cloudcommon.InstanceEvent, serverStatus string) {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.AppInstEvent
 	ts, _ := types.TimestampProto(time.Now())
 	metric.Timestamp = *ts
-	metric.AddTag("operator", app.Key.ClusterInstKey.CloudletKey.OperatorKey.Name)
-	metric.AddTag("cloudlet", app.Key.ClusterInstKey.CloudletKey.Name)
-	metric.AddTag("cluster", app.Key.ClusterInstKey.ClusterKey.Name)
-	metric.AddTag("dev", app.Key.AppKey.DeveloperKey.Name)
-	metric.AddTag("app", app.Key.AppKey.Name)
-	metric.AddTag("version", app.Key.AppKey.Version)
+	metric.AddTag("operator", appInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	metric.AddTag("cloudlet", appInstKey.ClusterInstKey.CloudletKey.Name)
+	metric.AddTag("cluster", appInstKey.ClusterInstKey.ClusterKey.Name)
+	metric.AddTag("dev", appInstKey.AppKey.DeveloperKey.Name)
+	metric.AddTag("app", appInstKey.AppKey.Name)
+	metric.AddTag("version", appInstKey.AppKey.Version)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 

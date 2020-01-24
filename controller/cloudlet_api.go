@@ -215,7 +215,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	err := s.createCloudletInternal(DefCallContext(), in, cb)
 	if err == nil {
-		RecordCloudletEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
+		RecordCloudletEvent(cb.Context(), &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 	}
 	return err
 }
@@ -695,7 +695,7 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	if err != nil {
 		return err
 	}
-	RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
+	RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 	// cleanup old crms post upgrade
 	pfConfig.CleanupMode = true
 	cloudlet := &edgeproto.Cloudlet{}
@@ -726,11 +726,11 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	info := edgeproto.CloudletInfo{}
 	if cloudletInfoApi.cache.Get(&in.Key, &info) {
 		if err != nil {
-			RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+			RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
 		} else if info.State == edgeproto.CloudletState_CLOUDLET_STATE_READY { // update failed but cloudlet is still up
-			RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceUp)
+			RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceUp)
 		} else { // error and cloudlet went down
-			RecordCloudletEvent(ctx, in, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+			RecordCloudletEvent(ctx, &in.Key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
 		}
 	}
 	return err
@@ -743,7 +743,7 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	}
 	err = s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
 	if err != nil {
-		RecordCloudletEvent(cb.Context(), in, cloudcommon.DELETED, cloudcommon.InstanceDown)
+		RecordCloudletEvent(cb.Context(), &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
 	}
 	return err
 }
@@ -1054,13 +1054,13 @@ func (s *CloudletApi) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorM
 	return in, nil
 }
 
-func RecordCloudletEvent(ctx context.Context, cloudlet *edgeproto.Cloudlet, event cloudcommon.InstanceEvent, serverStatus string) {
+func RecordCloudletEvent(ctx context.Context, cloudletKey *edgeproto.CloudletKey, event cloudcommon.InstanceEvent, serverStatus string) {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.CloudletEvent
 	ts, _ := types.TimestampProto(time.Now())
 	metric.Timestamp = *ts
-	metric.AddTag("operator", cloudlet.Key.OperatorKey.Name)
-	metric.AddTag("cloudlet", cloudlet.Key.Name)
+	metric.AddTag("operator", cloudletKey.OperatorKey.Name)
+	metric.AddTag("cloudlet", cloudletKey.Name)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
