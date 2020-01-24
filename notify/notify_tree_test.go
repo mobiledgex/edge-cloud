@@ -94,9 +94,9 @@ func TestNotifyTree(t *testing.T) {
 	// crms at all levels get all flavors
 	// mid level gets the appInsts and clusterInsts for all below it.
 	// low level only gets the ones for itself.
-	checkClientCache(t, low21, 3, 3, 4, 1)
-	checkClientCache(t, low22, 3, 2, 2, 1)
-	checkClientCache(t, mid2, 3, 5, 6, 2)
+	checkClientCache(t, low21, 3, 3, 5, 1)
+	checkClientCache(t, low22, 3, 2, 3, 1)
+	checkClientCache(t, mid2, 3, 5, 8, 2)
 
 	// Add info objs to low nodes
 	low11.handler.AppInstInfoCache.Update(ctx, &testutil.AppInstInfoData[0], 0)
