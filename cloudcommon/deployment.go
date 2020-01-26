@@ -60,6 +60,24 @@ func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string)
 	return false
 }
 
+func IsValidDeploymentForAccessType (accessType edgeproto.AccessType, deployment string) bool {
+	switch accessType  {
+
+	case edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER:
+		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeHelm || deployment == AppDeploymentTypeDocker {
+			return true
+		}
+	case edgeproto.AccessType_ACCESS_TYPE_DIRECT:
+		if deployment == AppDeploymentTypeVM || deployment == AppDeploymentTypeDocker {
+			return true
+		}
+	case edgeproto.AccessType_ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT:
+			return true
+	}
+	return false
+}
+
+
 func IsValidDeploymentManifest(appDeploymentType, command, manifest string, ports []dme.AppPort) error {
 	if appDeploymentType == AppDeploymentTypeVM {
 		if command != "" {

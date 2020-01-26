@@ -46,6 +46,17 @@ enum DeleteType {
   AUTO_DELETE = 1;
 }
 
+
+enum AccessType {
+  // Default load balancer or direct based on deployment
+  ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT = 0;
+  // Direct access with no load balancer
+  ACCESS_TYPE_DIRECT = 1;
+    // Access via a load balancer
+  ACCESS_TYPE_LOAD_BALANCER = 2;
+}
+
+
 message ConfigFile {
   // kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config
   string kind = 1;
@@ -104,6 +115,8 @@ message ConfigFile {
   uint64 default_shared_volume_size = 27;
   // Auto provisioning policy name
   string auto_prov_policy = 28;
+  // Access type
+  AccessType access_type = 29; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

@@ -77,7 +77,9 @@ func InitL7Proxy(ctx context.Context, client pc.PlatformClient, ops ...Op) error
 			return nil
 		}
 	}
-	return CreateNginxProxy(ctx, client, NginxL7Name, "", []dme.AppPort{}, ops...)
+	listenIP := ""
+	backendIP := ""
+	return CreateNginxProxy(ctx, client, NginxL7Name, listenIP, backendIP, []dme.AppPort{}, ops...)
 }
 
 func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {
@@ -99,11 +101,11 @@ func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {
 	return needEnvoy, needNginx
 }
 
-func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, originIP string, ports []dme.AppPort, ops ...Op) error {
+func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, listenIP, destIP string, ports []dme.AppPort, ops ...Op) error {
 	// check to see whether nginx or envoy is needed (or both)
 	envoyNeeded, nginxNeeded := CheckProtocols(name, ports)
 	if envoyNeeded {
-		err := CreateEnvoyProxy(ctx, client, name, originIP, ports, ops...)
+		err := CreateEnvoyProxy(ctx, client, name, listenIP, destIP, ports, ops...)
 		if err != nil {
 			return fmt.Errorf("Create Envoy Proxy failed, %v", err)
 		}
@@ -111,7 +113,7 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, origi
 	if !nginxNeeded {
 		return nil
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "create nginx", "name", name, "originip", originIP, "ports", ports)
+	log.SpanLog(ctx, log.DebugLevelMexos, "create nginx", "name", name, "listenIP", listenIP, "destIP", destIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
 
@@ -153,14 +155,14 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, origi
 		return err
 	}
 	nconfName := dir + "/nginx.conf"
-	err = createNginxConf(ctx, client, nconfName, name, l7dir, originIP, ports, useTLS)
+	err = createNginxConf(ctx, client, nconfName, name, l7dir, listenIP, destIP, ports, useTLS)
 	if err != nil {
 		return fmt.Errorf("create nginx.conf failed, %v", err)
 	}
 
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", name}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_UDP)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_UDP, cloudcommon.IPAddrAllInterfaces)...)
 		if name == NginxL7Name {
 			// Special case. When the L7 nginx instance is created,
 			// there are no configs yet for L7. Expose the L7 port manually.
@@ -195,7 +197,7 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, origi
 	return nil
 }
 
-func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, name, l7dir, originIP string, ports []dme.AppPort, useTLS bool) error {
+func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, name, l7dir, listenIP, backendIP string, ports []dme.AppPort, useTLS bool) error {
 	spec := ProxySpec{
 		Name:       name,
 		UseTLS:     useTLS,
@@ -208,13 +210,14 @@ func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, na
 		return err
 	}
 	for _, p := range ports {
-		origin := fmt.Sprintf("%s:%d", originIP, p.InternalPort)
 		switch p.Proto {
 		case dme.LProto_L_PROTO_HTTP:
 			httpPort := HTTPSpecDetail{
-				Port:       p.PublicPort,
+				ListenIP: listenIP,
+				ListenPort:       p.PublicPort,
+				BackendIP:     backendIP,
+				BackendPort:       p.InternalPort,
 				PathPrefix: p.PathPrefix,
-				Origin:     origin,
 			}
 			httpPorts = append(httpPorts, httpPort)
 			continue
@@ -222,8 +225,10 @@ func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, na
 			continue // have envoy handle the tcp stuff
 		case dme.LProto_L_PROTO_UDP:
 			udpPort := UDPSpecDetail{
-				Port:                 p.PublicPort,
-				Origin:               origin,
+				ListenIP: listenIP,
+				ListenPort:       p.PublicPort,
+				BackendIP:     backendIP,
+				BackendPort:       p.InternalPort,
 				ConcurrentConnsPerIP: udpconns,
 			}
 			spec.UDPSpec = append(spec.UDPSpec, &udpPort)
@@ -300,22 +305,27 @@ type ProxySpec struct {
 }
 
 type TCPSpecDetail struct {
-	Port            int32
-	Origin          string
-	OriginPort      int32
+	ListenIP     string
+	ListenPort   int32
+	BackendIP     string
+	BackendPort      int32
 	ConcurrentConns uint64
 }
 
 type UDPSpecDetail struct {
-	Port                 int32
-	Origin               string
+	ListenIP     string
+	ListenPort   int32
+	BackendIP     string
+	BackendPort      int32
 	ConcurrentConnsPerIP uint64
 }
 
 type HTTPSpecDetail struct {
-	Port       int32
+	ListenIP     string
+	ListenPort   int32
+	BackendIP     string
+	BackendPort      int32
 	PathPrefix string
-	Origin     string
 }
 
 var nginxConf = `
@@ -365,8 +375,8 @@ stream {
 	{{- range .UDPSpec}}
 	server {
 		limit_conn ipaddr {{.ConcurrentConnsPerIP}};
-		listen {{.Port}} udp;
-		proxy_pass {{.Origin}};
+		listen {{.ListenPort}} udp;
+		proxy_pass {{.BackendIP}};
 	}
 	{{- end}}
 }
@@ -376,7 +386,7 @@ stream {
 var nginxL7Conf = `
 {{- range .}}
 location /{{.PathPrefix}}/ {
-	proxy_pass http://{{.Origin}}/;
+	proxy_pass http://{{.BackendIP}}/;
 }
 {{- end}}
 `

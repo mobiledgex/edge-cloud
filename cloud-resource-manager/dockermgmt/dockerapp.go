@@ -22,8 +22,10 @@ var UsePublicPortInContainer = "publicPort"
 
 // Helper function that generates the ports string for docker command
 // Example : "-p 80:80/http -p 7777:7777/tcp"
-func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMatch dme.LProto) []string {
+func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMatch dme.LProto, listenIP string) []string {
 	var cmdArgs []string
+
+	log.InfoLog("XXXXXXX ENTER GetDockerPortString", "ports", ports)
 
 	for _, p := range ports {
 		if p.Proto == dme.LProto_L_PROTO_HTTP {
@@ -43,9 +45,15 @@ func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMat
 		if containerPortType == UseInternalPortInContainer {
 			containerPort = p.InternalPort
 		}
-		pstr := fmt.Sprintf("%d:%d/%s", p.PublicPort, containerPort, proto)
+		listenIPStr := ""
+		if listenIP != "" {
+			listenIPStr = listenIP + ":"
+		}
+		pstr := fmt.Sprintf("%s%d:%d/%s", listenIPStr, p.PublicPort, containerPort, proto)
 		cmdArgs = append(cmdArgs, "-p", pstr)
 	}
+	log.InfoLog("XXXXXXX LEAVE GetDockerPortString", "cmdArgs", cmdArgs)
+
 	return cmdArgs
 }
 
@@ -176,7 +184,7 @@ func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *e
 
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d -l edge-cloud -l cloudlet=%s -l cluster=%s --restart=unless-stopped --name=%s %s %s %s", cloudlet, cluster, name,
-			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer, dme.LProto_L_PROTO_UNKNOWN), " "), image, app.Command)
+			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrAllInterfaces), " "), image, app.Command)
 		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 
 		out, err := client.Output(cmd)
@@ -204,6 +212,10 @@ func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto
 	name := util.DockerSanitize(app.Key.Name)
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", name, image, app.Command)
+		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
+			cmd = fmt.Sprintf("docker run -d -l edge-cloud --restart=unless-stopped --name=%s %s %s %s", name,
+				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrLocalHost), " "), image, app.Command)
+		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 
 		out, err := client.Output(cmd)

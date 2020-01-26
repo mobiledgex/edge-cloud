@@ -945,6 +945,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := DeleteType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(AccessType(0)):
+		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(OptResNames(0)):
 		if en, ok := OptResNames_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil

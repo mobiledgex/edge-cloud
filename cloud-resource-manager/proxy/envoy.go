@@ -29,8 +29,8 @@ func init() {
 	envoyYamlT = template.Must(template.New("yaml").Parse(envoyYaml))
 }
 
-func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, originIP string, ports []dme.AppPort, ops ...Op) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "create envoy", "name", name, "originip", originIP, "ports", ports)
+func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, listenIP, backendIP string, ports []dme.AppPort, ops ...Op) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "create envoy", "name", name, "listenIP", listenIP, "backendIP", backendIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
 
@@ -55,7 +55,7 @@ func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, origi
 		return err
 	}
 	eyamlName := dir + "/envoy.yaml"
-	err = createEnvoyYaml(ctx, client, eyamlName, name, originIP, opts.Cert, ports)
+	err = createEnvoyYaml(ctx, client, eyamlName, name, listenIP, backendIP, opts.Cert, ports)
 	if err != nil {
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
 	}
@@ -83,7 +83,7 @@ func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, origi
 	// container name is envoy+name for now to avoid conflicts with the nginx containers
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", "envoy" + name}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_TCP)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_TCP, cloudcommon.IPAddrAllInterfaces)...)
 	}
 	if opts.DockerNetwork != "" {
 		// For dind, we use the network which the dind cluster is on.
@@ -105,7 +105,7 @@ func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, origi
 	return nil
 }
 
-func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, name, originIP string, cert *access.TLSCert, ports []dme.AppPort) error {
+func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, name, listenIP, backendIP string, cert *access.TLSCert, ports []dme.AppPort) error {
 	spec := ProxySpec{
 		Name:       name,
 		MetricPort: cloudcommon.ProxyMetricsPort,
@@ -116,9 +116,10 @@ func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, na
 		// only support tcp for now
 		case dme.LProto_L_PROTO_TCP:
 			tcpPort := TCPSpecDetail{
-				Port:       p.PublicPort,
-				Origin:     originIP,
-				OriginPort: p.InternalPort,
+				ListenPort:       p.PublicPort,
+				ListenIP:     listenIP,
+				BackendIP:     backendIP,
+				BackendPort: p.InternalPort,
 			}
 			tcpconns, err := getTCPConcurrentConnections()
 			if err != nil {
@@ -152,14 +153,14 @@ static_resources:
   {{- range .TCPSpec}}
   - address:
       socket_address:
-        address: 0.0.0.0
-        port_value: {{.Port}}
+        address: {{.ListenIP}}
+        port_value: {{.ListenPort}}
     filter_chains:
     - filters:
       - name: envoy.tcp_proxy
         config:
           stat_prefix: ingress_tcp
-          cluster: backend{{.Port}}
+          cluster: backend{{.BackendPort}}
           access_log:
             - name: envoy.file_access_log
               config:
@@ -184,7 +185,7 @@ static_resources:
   {{- end}}
   clusters:
   {{- range .TCPSpec}}
-  - name: backend{{.Port}}
+  - name: backend{{.BackendPort}}
     connect_timeout: 0.25s
     type: strict_dns
     circuit_breakers:
@@ -193,8 +194,8 @@ static_resources:
     lb_policy: round_robin
     hosts:
     - socket_address:
-        address: {{.Origin}}
-        port_value: {{.OriginPort}}
+        address: {{.BackendIP}}:{{.BackendPort}}
+        port_value: {{.BackendPort}}
     health_checks:
       - timeout: 1s
         interval: 5s
@@ -207,7 +208,7 @@ admin:
   access_log_path: "/var/log/admin.log"
   address:
     socket_address:
-      address: 0.0.0.0
+      address: 127.0.0.1
       port_value: {{.MetricPort}}
 {{- end}}
 `
