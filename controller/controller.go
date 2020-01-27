@@ -291,7 +291,7 @@ func startServices() error {
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
 	edgeproto.RegisterPrivacyPolicyApiServer(server, &privacyPolicyApi)
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
-
+	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -328,6 +328,7 @@ func startServices() error {
 			edgeproto.RegisterResTagTableApiHandler,
 			edgeproto.RegisterPrivacyPolicyApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
+			edgeproto.RegisterAppInstApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -443,6 +444,8 @@ func InitApis(sync *Sync) {
 	InitResTagTableApi(sync)
 	InitPrivacyPolicyApi(sync)
 	InitSettingsApi(sync)
+	InitAppInstClientApi(sync)
+
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "nohostname"
@@ -476,6 +479,7 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterRecv(notify.NewAlertRecvMany(&alertApi))
 	autoProvPolicyApi.SetInfluxQ(influxQ)
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(&appInstClientApi))
 }
 
 // This is for figuring out the "external" address when

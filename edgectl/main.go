@@ -86,6 +86,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.ResTagTableApiCmd = edgeproto.NewResTagTableApiClient(conn)
 	gencmd.SettingsApiCmd = edgeproto.NewSettingsApiClient(conn)
 	execApiCmd = edgeproto.NewExecApiClient(conn)
+	gencmd.AppInstClientApiCmd = edgeproto.NewAppInstClientApiClient(conn)
 	return nil
 }
 
@@ -128,6 +129,7 @@ func main() {
 	controllerCmd.AddCommand(gencmd.AlertApiCmds...)
 	controllerCmd.AddCommand(gencmd.ResTagTableApiCmds...)
 	controllerCmd.AddCommand(gencmd.SettingsApiCmds...)
+	controllerCmd.AddCommand(gencmd.AppInstClientApiCmds...)
 
 	controllerCmd.AddCommand(createCmd.GenCmd())
 	controllerCmd.AddCommand(deleteCmd.GenCmd())

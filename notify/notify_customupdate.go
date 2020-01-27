@@ -61,6 +61,14 @@ func (s *ExecRequestSend) UpdateOk(ctx context.Context, msg *edgeproto.ExecReque
 	return true
 }
 
+func (s *AppInstClientSend) UpdateOk(ctx context.Context, msg *edgeproto.AppInstClient) bool {
+	if s.sendrecv.filterAppInstKeys {
+		//// TODO: Only send and update if there is someone registered for this AppInstClieent notifications
+	}
+
+	return true
+}
+
 func (s *AppSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
 }
@@ -75,6 +83,10 @@ func (s *CloudletSend) UpdateAllOk() bool {
 
 func (s *ClusterInstSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
+}
+
+func (s *AppInstClientSend) UpdateAllOk() bool {
+	return !s.sendrecv.filterAppInstKeys
 }
 
 func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notice, buf *edgeproto.CloudletInfo, peerAddr string) {

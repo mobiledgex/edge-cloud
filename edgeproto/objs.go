@@ -393,6 +393,14 @@ func (key *PolicyKey) ValidateKey() error {
 	return nil
 }
 
+func (s *AppInstClient) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
+func (key *AppInstClientKey) ValidateKey() error {
+	return key.AppInstKey.ValidateKey()
+}
+
 // Validate fields. Note that specified fields is ignored, so this function
 // must be used only in the context when all fields are present (i.e. after
 // CopyInFields for an update).

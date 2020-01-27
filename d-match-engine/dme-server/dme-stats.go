@@ -10,6 +10,7 @@ import (
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	log "github.com/mobiledgex/edge-cloud/log"
 	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
 	"github.com/mobiledgex/edge-cloud/util"
 	"golang.org/x/net/context"
@@ -191,6 +192,24 @@ func getCellIdFromDmeReq(req interface{}) uint32 {
 	return 0
 }
 
+func getClientFromFindCloudlet(mreq *dme.FindCloudletRequest) edgeproto.AppInstClient {
+	// TODO
+	return edgeproto.AppInstClient{
+		Key: edgeproto.AppInstClientKey{
+			AppInstKey: &edgeproto.AppInstKey{
+				AppKey: edgeproto.AppKey{
+					DeveloperKey: edgeproto.DeveloperKey{
+						Name: mreq.DevName,
+					},
+					Name:    mreq.AppName,
+					Version: mreq.AppVers,
+				},
+			},
+		},
+		Location: mreq.GpsLocation,
+	}
+}
+
 func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	start := time.Now()
 
@@ -207,6 +226,29 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		call.key.AppKey.DeveloperKey.Name = typ.DevName
 		call.key.AppKey.Name = typ.AppName
 		call.key.AppKey.Version = typ.AppVers
+	case *dme.FindCloudletRequest:
+		ckey, ok := dmecommon.CookieFromContext(ctx)
+		if !ok {
+			return resp, err
+		}
+		// Update clients cache
+		client := getClientFromFindCloudlet(req.(*dme.FindCloudletRequest))
+		client.Key.AppInstKey.ClusterInstKey.CloudletKey = call.key.CloudletFound
+		client.Key.Uuid = ckey.UniqueId
+		// TODO - should get this from FindCloudlet GpsLocation
+		if client.Location != nil {
+			client.Location.Timestamp = &dme.Timestamp{}
+			ts := time.Now()
+			client.Location.Timestamp.Seconds = ts.Unix()
+			client.Location.Timestamp.Nanos = int32(ts.Nanosecond())
+		}
+		clientCache.Update(ctx, &client, 0)
+		log.DebugLog(log.DebugLevelDmereq, "Update clients", "client", client)
+
+		call.key.AppKey.DeveloperKey.Name = ckey.DevName
+		call.key.AppKey.Name = ckey.AppName
+		call.key.AppKey.Version = ckey.AppVers
+
 	default:
 		// All other API calls besides RegisterClient
 		// have the app info in the session cookie key.

@@ -10,6 +10,7 @@
 		app_inst.proto
 		autoprovpolicy.proto
 		autoscalepolicy.proto
+		client.proto
 		cloudlet.proto
 		cloudletpool.proto
 		cluster.proto
@@ -47,6 +48,8 @@
 		AutoProvPolicyCloudlet
 		PolicyKey
 		AutoScalePolicy
+		AppInstClientKey
+		AppInstClient
 		CloudletKey
 		OperationTimeLimits
 		CloudletInfraCommon

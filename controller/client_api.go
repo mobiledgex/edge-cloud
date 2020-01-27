@@ -31,3 +31,15 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClient, cb edg
 	})
 	return err
 }
+
+func (s *AppInstClientApi) Update(ctx context.Context, in *edgeproto.AppInstClient, rev int64) {
+	s.cache.Update(ctx, in, rev)
+}
+
+func (s *AppInstClientApi) Delete(ctx context.Context, in *edgeproto.AppInstClient, rev int64) {
+	s.cache.Delete(ctx, in, rev)
+}
+
+func (s *AppInstClientApi) Flush(ctx context.Context, notifyId int64) {
+	s.cache.Flush(ctx, notifyId)
+}

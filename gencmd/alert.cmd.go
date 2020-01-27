@@ -10,6 +10,7 @@ It is generated from these files:
 	app_inst.proto
 	autoprovpolicy.proto
 	autoscalepolicy.proto
+	client.proto
 	cloudlet.proto
 	cloudletpool.proto
 	cluster.proto
@@ -47,6 +48,8 @@ It has these top-level messages:
 	AutoProvPolicyCloudlet
 	PolicyKey
 	AutoScalePolicy
+	AppInstClientKey
+	AppInstClient
 	CloudletKey
 	OperationTimeLimits
 	CloudletInfraCommon

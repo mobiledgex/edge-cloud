@@ -61,6 +61,6 @@ service AppInstClientApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceAppInstClients,ActionView,Key.AppInstKey.Key.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppInstClients,ActionView,Key.AppInstKey.AppKey.DeveloperKey.Name";
   }
 }
