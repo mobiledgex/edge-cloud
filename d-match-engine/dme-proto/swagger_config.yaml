@@ -117,7 +117,8 @@ info:
 
       NetTest netTest = new NetTest();
       Site site = new Site(mMatchingEngine.getNetworkManager().getActiveNetwork(), NetTest.TestType.CONNECT, numSamples, l7Url);
-      netTest.sites.add(site);netTest.doTest(true);
+      netTest.sites.add(site);
+      netTest.doTest(true);
       ```
 
       ## Unity
@@ -242,7 +243,7 @@ info:
          * `appPort` [String: Any]: AppPort object from Ports field in FindCloudletReply 
             * The developer chooses this by using get[Protocol]AppPorts which returns a dictionary (key: internal_port, value: appPort)
             * Using the known internal_port (specified on app deployment), get correct AppPort
-         *  `desiredPort` String: Used if developer specified a port range and wants a specific port (use “-1” if it it doesn’t matter)
+         *  `desiredPort` int: Used if developer specified a port range and wants a specific port (use -1 if it it doesn’t matter)
          *  `timeout` Double: Milliseconds. Promise will return with timeout error if GetConnection takes longer than specified timeout
 
       Return:
