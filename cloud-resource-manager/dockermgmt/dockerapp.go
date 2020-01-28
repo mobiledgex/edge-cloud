@@ -214,7 +214,7 @@ func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto
 		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", name, image, app.Command)
 		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
 			cmd = fmt.Sprintf("docker run -d -l edge-cloud --restart=unless-stopped --name=%s %s %s %s", name,
-				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrLocalHost), " "), image, app.Command)
+				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
 		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 

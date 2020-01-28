@@ -83,7 +83,7 @@ func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, liste
 	// container name is envoy+name for now to avoid conflicts with the nginx containers
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", "envoy" + name}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_TCP, cloudcommon.IPAddrAllInterfaces)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_TCP, listenIP)...)
 	}
 	if opts.DockerNetwork != "" {
 		// For dind, we use the network which the dind cluster is on.
@@ -153,7 +153,7 @@ static_resources:
   {{- range .TCPSpec}}
   - address:
       socket_address:
-        address: {{.ListenIP}}
+        address: 0.0.0.0
         port_value: {{.ListenPort}}
     filter_chains:
     - filters:
@@ -194,7 +194,7 @@ static_resources:
     lb_policy: round_robin
     hosts:
     - socket_address:
-        address: {{.BackendIP}}:{{.BackendPort}}
+        address: {{.BackendIP}}
         port_value: {{.BackendPort}}
     health_checks:
       - timeout: 1s

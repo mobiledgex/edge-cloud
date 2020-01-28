@@ -24,7 +24,7 @@ type AppInstApi struct {
 	cache edgeproto.AppInstCache
 }
 
-const RootLBSharedPortBegin int32 = 11111
+const RootLBSharedPortBegin int32 = 10000
 
 var appInstApi = AppInstApi{}
 
