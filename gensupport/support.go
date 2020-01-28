@@ -185,14 +185,6 @@ func (s *PluginSupport) GetComments(file *descriptor.FileDescriptorProto, path s
 	return text
 }
 
-func (s *PluginSupport) MyComments(file *descriptor.FileDescriptorProto) map[string]*descriptor.SourceCodeInfo_Location {
-	comments, ok := s.Comments[file.GetName()]
-	if !ok {
-		return nil
-	}
-	return comments
-}
-
 // GetDesc returns the Descriptor based on the protoc type name
 // referenced in Fields and Methods.
 func GetDesc(g *generator.Generator, typeName string) *generator.Descriptor {
