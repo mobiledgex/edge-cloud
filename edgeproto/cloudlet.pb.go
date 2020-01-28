@@ -34,6 +34,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Platform Type
+//
 // PlatformType is the supported list of cloudlet types
 type PlatformType int32
 
@@ -122,6 +124,8 @@ func (x CloudletState) String() string {
 }
 func (CloudletState) EnumDescriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{1} }
 
+// Cloudlet unique key
+//
 // CloudletKey uniquely identifies a Cloudlet.
 type CloudletKey struct {
 	// Operator of the cloudlet site
@@ -135,7 +139,9 @@ func (m *CloudletKey) String() string            { return proto.CompactTextStrin
 func (*CloudletKey) ProtoMessage()               {}
 func (*CloudletKey) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{0} }
 
-// time limits for cloudlet create, update and delete operations
+// Operation Time Limits
+//
+// Time limits for cloudlet create, update and delete operations
 type OperationTimeLimits struct {
 	// override default max time to create a cluster instance (duration)
 	CreateClusterInstTimeout Duration `protobuf:"varint,1,opt,name=create_cluster_inst_timeout,json=createClusterInstTimeout,proto3,casttype=Duration" json:"create_cluster_inst_timeout,omitempty"`
@@ -249,6 +255,9 @@ func (m *CloudletInfraProperties) String() string            { return proto.Comp
 func (*CloudletInfraProperties) ProtoMessage()               {}
 func (*CloudletInfraProperties) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{6} }
 
+// Platform Configuration
+//
+// Platform specific configuration required for Cloudlet management
 type PlatformConfig struct {
 	// Path to Docker registry holding edge-cloud image
 	RegistryPath string `protobuf:"bytes,1,opt,name=registry_path,json=registryPath,proto3" json:"registry_path,omitempty"`
@@ -292,10 +301,13 @@ func (m *CloudletResMap) String() string            { return proto.CompactTextSt
 func (*CloudletResMap) ProtoMessage()               {}
 func (*CloudletResMap) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{8} }
 
+// Cloudlet
+//
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator.
 type Cloudlet struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	// required: true
 	// Unique identifier key
 	Key CloudletKey `protobuf:"bytes,2,opt,name=key" json:"key"`
 	// Location of the Cloudlet site
@@ -499,13 +511,16 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for CloudletApi service
 
 type CloudletApiClient interface {
-	// Create a Cloudlet
+	// Create Cloudlet. Sets up cloudlet services on Operator's compute
+	// resources and makes it part of MobiledgeX edge resource portfolio.
+	// These resources will now be managed from edge controller
 	CreateCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_CreateCloudletClient, error)
-	// Delete a Cloudlet
+	// Delete Cloudlet. Removes cloudlet services and will no longer be
+	// managed from edge controller
 	DeleteCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_DeleteCloudletClient, error)
-	// Update a Cloudlet
+	// Update Cloudlet. Updates cloudlet config and also manages upgrade of cloudlet services
 	UpdateCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_UpdateCloudletClient, error)
-	// Show Cloudlets
+	// Show Cloudlets. Lists all the cloudlets managed from edge controller
 	ShowCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_ShowCloudletClient, error)
 	// Add Optional Resource tag table
 	AddCloudletResMapping(ctx context.Context, in *CloudletResMap, opts ...grpc.CallOption) (*Result, error)
@@ -681,13 +696,16 @@ func (c *cloudletApiClient) FindFlavorMatch(ctx context.Context, in *FlavorMatch
 // Server API for CloudletApi service
 
 type CloudletApiServer interface {
-	// Create a Cloudlet
+	// Create Cloudlet. Sets up cloudlet services on Operator's compute
+	// resources and makes it part of MobiledgeX edge resource portfolio.
+	// These resources will now be managed from edge controller
 	CreateCloudlet(*Cloudlet, CloudletApi_CreateCloudletServer) error
-	// Delete a Cloudlet
+	// Delete Cloudlet. Removes cloudlet services and will no longer be
+	// managed from edge controller
 	DeleteCloudlet(*Cloudlet, CloudletApi_DeleteCloudletServer) error
-	// Update a Cloudlet
+	// Update Cloudlet. Updates cloudlet config and also manages upgrade of cloudlet services
 	UpdateCloudlet(*Cloudlet, CloudletApi_UpdateCloudletServer) error
-	// Show Cloudlets
+	// Show Cloudlets. Lists all the cloudlets managed from edge controller
 	ShowCloudlet(*Cloudlet, CloudletApi_ShowCloudletServer) error
 	// Add Optional Resource tag table
 	AddCloudletResMapping(context.Context, *CloudletResMap) (*Result, error)
