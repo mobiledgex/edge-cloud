@@ -20,6 +20,8 @@ info:
       ## Android
 
       ### RegisterClient
+      Register the device
+
       Example Code:
       ```java
       import com.mobiledgex.matchingengine.MatchingEngine;
@@ -35,6 +37,8 @@ info:
       ```
 
       ### FindCloudlet
+      Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
+
       Example Code:
       ```java
       import com.mobiledgex.matchingengine.MatchingEngine;
@@ -150,6 +154,8 @@ info:
       ## Unity
 
       ### RegisterClient
+      Register the device
+
       Example Code:
       ```csharp
       using DistributedMatchEngine;
@@ -159,6 +165,8 @@ info:
       ```
 
       ### FindCloudlet
+      Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
+
       Example Code:
       ```csharp
       using DistributedMatchEngine;
@@ -280,6 +288,8 @@ info:
       ## iOS
 
       ### RegisterClient
+      Register the device
+
       Example Code:
       ```swift
       import IOSMatchingEngine
@@ -292,6 +302,8 @@ info:
       ```
 
       ### FindCloudlet
+      Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
+
       Example Code:
       ```swift
       import IOSMatchingEngine
