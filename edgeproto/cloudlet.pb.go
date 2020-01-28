@@ -139,7 +139,7 @@ func (m *CloudletKey) String() string            { return proto.CompactTextStrin
 func (*CloudletKey) ProtoMessage()               {}
 func (*CloudletKey) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{0} }
 
-// Operation Time Limits
+// Operation time limits
 //
 // Time limits for cloudlet create, update and delete operations
 type OperationTimeLimits struct {

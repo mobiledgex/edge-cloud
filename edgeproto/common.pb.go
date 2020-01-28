@@ -50,7 +50,7 @@ func (x Liveness) String() string {
 }
 func (Liveness) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{0} }
 
-// Indicates the type of public IP support provided by the Cloudlet
+// Type of public IP support
 //
 // Static IP support indicates a set of static public IPs are available for use, and managed by the Controller. Dynamic indicates the Cloudlet uses a DHCP server to provide public IP addresses, and the controller has no control over which IPs are assigned.
 type IpSupport int32
