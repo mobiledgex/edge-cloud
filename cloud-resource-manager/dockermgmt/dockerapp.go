@@ -20,6 +20,10 @@ var deleteZip = "deleteZip"
 var UseInternalPortInContainer = "internalPort"
 var UsePublicPortInContainer = "publicPort"
 
+func GetContainerName(app *edgeproto.App) string {
+	return util.DNSSanitize(app.Key.Name+app.Key.Version) 
+}
+
 // Helper function that generates the ports string for docker command
 // Example : "-p 80:80/http -p 7777:7777/tcp"
 func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMatch dme.LProto, listenIP string) []string {
@@ -209,9 +213,9 @@ func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *e
 
 func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	image := app.ImagePath
-	name := util.DockerSanitize(app.Key.Name)
+	name := GetContainerName(app)
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", name, image, app.Command)
+		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", GetContainerName(app), image, app.Command)
 		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
 			cmd = fmt.Sprintf("docker run -d -l edge-cloud --restart=unless-stopped --name=%s %s %s %s", name,
 				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
@@ -244,7 +248,7 @@ func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto
 func DeleteAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 
 	if app.DeploymentManifest == "" {
-		name := util.DockerSanitize(app.Key.Name)
+		name := GetContainerName(app)
 		cmd := fmt.Sprintf("docker stop %s", name)
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker stop ", "cmd", cmd)
 

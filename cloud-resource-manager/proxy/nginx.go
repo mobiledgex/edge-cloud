@@ -160,9 +160,9 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, liste
 		return fmt.Errorf("create nginx.conf failed, %v", err)
 	}
 
-	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", name}
+	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", "nginx"+name}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_UDP, cloudcommon.IPAddrAllInterfaces)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_UDP, listenIP)...)
 		if name == NginxL7Name {
 			// Special case. When the L7 nginx instance is created,
 			// there are no configs yet for L7. Expose the L7 port manually.
@@ -193,7 +193,7 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, liste
 	if err != nil {
 		return fmt.Errorf("can't create nginx container %s, %s, %v", name, out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "created nginx container", "name", name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "created nginx container", "name",  "nginx"+name)
 	return nil
 }
 
@@ -376,7 +376,7 @@ stream {
 	server {
 		limit_conn ipaddr {{.ConcurrentConnsPerIP}};
 		listen {{.ListenPort}} udp;
-		proxy_pass {{.BackendIP}};
+		proxy_pass {{.BackendIP}}:{{.ListenPort}};
 	}
 	{{- end}}
 }
@@ -393,14 +393,14 @@ location /{{.PathPrefix}}/ {
 
 func DeleteNginxProxy(ctx context.Context, client pc.PlatformClient, name string) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx", "name", name)
-	out, err := client.Output("docker kill " + name)
+	out, err := client.Output("docker kill " +  "nginx"+name)
 	deleteContainer := false
 	if err == nil {
 		deleteContainer = true
 	} else {
 		if strings.Contains(string(out), "No such container") {
 			log.SpanLog(ctx, log.DebugLevelMexos,
-				"nginx LB container already gone", "name", name)
+				"nginx LB container already gone", "name",  "nginx"+name)
 		} else {
 			return fmt.Errorf("can't delete nginx container %s, %s, %v", name, out, err)
 		}
@@ -417,14 +417,14 @@ func DeleteNginxProxy(ctx context.Context, client pc.PlatformClient, name string
 		log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx dir", "name", name, "dir", nginxDir, "out", out, "err", err)
 	}
 	if deleteContainer {
-		out, err = client.Output("docker rm " + name)
+		out, err = client.Output("docker rm " +  "nginx"+name)
 		if err != nil && !strings.Contains(string(out), "No such container") {
 			return fmt.Errorf("can't remove nginx container %s, %s, %v", name, out, err)
 		}
 	}
 	reloadNginxL7(client)
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "deleted nginx", "name", name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "deleted nginx", "name",  "nginx"+name)
 	DeleteEnvoyProxy(ctx, client, name)
 	return nil
 }
