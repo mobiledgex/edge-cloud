@@ -208,7 +208,7 @@ admin:
   access_log_path: "/var/log/admin.log"
   address:
     socket_address:
-      address: 127.0.0.1
+      address: 0.0.0.0
       port_value: {{.MetricPort}}
 {{- end}}
 `

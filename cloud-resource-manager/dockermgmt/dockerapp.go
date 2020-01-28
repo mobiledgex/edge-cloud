@@ -29,8 +29,6 @@ func GetContainerName(app *edgeproto.App) string {
 func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMatch dme.LProto, listenIP string) []string {
 	var cmdArgs []string
 
-	log.InfoLog("XXXXXXX ENTER GetDockerPortString", "ports", ports)
-
 	for _, p := range ports {
 		if p.Proto == dme.LProto_L_PROTO_HTTP {
 			// L7 not allowed for docker
@@ -56,8 +54,6 @@ func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMat
 		pstr := fmt.Sprintf("%s%d:%d/%s", listenIPStr, p.PublicPort, containerPort, proto)
 		cmdArgs = append(cmdArgs, "-p", pstr)
 	}
-	log.InfoLog("XXXXXXX LEAVE GetDockerPortString", "cmdArgs", cmdArgs)
-
 	return cmdArgs
 }
 
