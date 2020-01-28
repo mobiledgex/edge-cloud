@@ -18,6 +18,32 @@ info:
 
       # MobiledgeX Library
       ## Android
+
+      ### RegisterClient
+      Example Code:
+      ```java
+      import com.mobiledgex.matchingengine.MatchingEngine;
+
+      AppClient.Tag tag = AppClient.Tag.newBuilder()
+          .setType(key)
+          .setData(datavalue);
+      RegisterClientRequest registerClientRequest = createDefaultRegisterClientRequest(activityContext, developerName)
+          .setAuthToken(authToken)
+          .setTags(0, tag)
+          .build();
+      me.registerClient(registerClientRequest, 10000);
+      ```
+
+      ### FindCloudlet
+      Example Code:
+      ```java
+      import com.mobiledgex.matchingengine.MatchingEngine;
+      FindCloudletRequest findCloudletRequest = createDefaultFindCloudletRequest(activityContext, location)
+          .setCarrierName(carrierName)
+          .build();
+      FindCloudletReply findCloudletReply = me.findCloudlet(findCloudletRequest, 10000);
+      ```
+
       ### GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
@@ -122,6 +148,25 @@ info:
       ```
 
       ## Unity
+
+      ### RegisterClient
+      Example Code:
+      ```csharp
+      using DistributedMatchEngine;
+      MatchingEngine me = new MatchingEngine();
+      RegisterClientRequest registerClientRequest = me.CreateRegisterClientRequest(carrierName, devName, appName, appVers, authToken);
+      RegisterClientReply registerClientReply = await me.RegisterClient(registerClientRequest);
+      ```
+
+      ### FindCloudlet
+      Example Code:
+      ```csharp
+      using DistributedMatchEngine;
+      MatchingEngine me = new MatchingEngine();
+      FindCloudletRequest findCloudletRequest = CreateFindCloudletRequest(carrierName, developerName, appName, appVersion, loc);
+      FindCloudletReply findCloudletReply = await FindCloudlet(findCloudletRequest);
+      ```
+
       ### GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
@@ -233,6 +278,31 @@ info:
       ```
 
       ## iOS
+
+      ### RegisterClient
+      Example Code:
+      ```swift
+      import IOSMatchingEngine
+      matchingEngine = MatchingEngine()
+      let registerClientRequest = matchingEngine.createRegisterClientRequest(devName: devName, appName: appName, appVers: appVers, carrierName: carrierName, authToken: authToken)
+      let registerClientReplyPromise = matchingEngine.registerClient(request: registerClientRequest)
+          .then { registerClientReply in
+          \* handle registerClientReply*\
+          }
+      ```
+
+      ### FindCloudlet
+      Example Code:
+      ```swift
+      import IOSMatchingEngine
+      matchingEngine = MatchingEngine()
+      let findCloudletRequest = matchingEngine.createFindCloudletRequest(carrierName: carrierName, gpsLocation: loc, devName: devName, appName: appName, appVers: appVers)
+      let findCloudletReplyPromise = matchingEngine.findCloudlet(request: findCloudletRequest)
+          .then { findCloudletReply in
+          \* handle findCloudletReply*\
+          }
+      ```
+
       ### GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
