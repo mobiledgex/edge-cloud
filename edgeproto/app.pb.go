@@ -33,6 +33,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// ImageType
+//
 // ImageType specifies image type of an App
 type ImageType int32
 
@@ -65,6 +67,9 @@ func (x ImageType) String() string {
 }
 func (ImageType) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{0} }
 
+// DeleteType
+//
+// DeleteType specifies if AppInst can be auto deleted or not
 type DeleteType int32
 
 const (
@@ -88,6 +93,8 @@ func (x DeleteType) String() string {
 }
 func (DeleteType) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
 
+// Application unique key
+//
 // AppKey uniquely identifies an App
 type AppKey struct {
 	// Developer key
@@ -103,6 +110,7 @@ func (m *AppKey) String() string            { return proto.CompactTextString(m) 
 func (*AppKey) ProtoMessage()               {}
 func (*AppKey) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{0} }
 
+// ConfigFile
 type ConfigFile struct {
 	// kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config
 	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
@@ -115,10 +123,13 @@ func (m *ConfigFile) String() string            { return proto.CompactTextString
 func (*ConfigFile) ProtoMessage()               {}
 func (*ConfigFile) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
 
+// Application
+//
 // App belongs to developers and is used to provide information about their application.
 type App struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	// required: true
 	// Unique identifier key
 	Key AppKey `protobuf:"bytes,2,opt,name=key" json:"key"`
 	// URI of where image resides
@@ -212,13 +223,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for AppApi service
 
 type AppApiClient interface {
-	// Create an application
+	// Create Application. Create definition for an application instance which will be deployed on a Cloudlet
 	CreateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
-	// Delete an application
+	// Delete Application. Delete definition of an application instance. This requires that no application instance with this definition exists. If it exists, then user must delete those first
 	DeleteApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
-	// Update an application
+	// Update Application. Update definition of an application instance
 	UpdateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
-	// Show applications. Any fields specified will be used to filter results.
+	// Show Applications. Lists all application definitions managed from edge controller. Any fields specified will be used to filter results
 	ShowApp(ctx context.Context, in *App, opts ...grpc.CallOption) (AppApi_ShowAppClient, error)
 }
 
@@ -292,13 +303,13 @@ func (x *appApiShowAppClient) Recv() (*App, error) {
 // Server API for AppApi service
 
 type AppApiServer interface {
-	// Create an application
+	// Create Application. Create definition for an application instance which will be deployed on a Cloudlet
 	CreateApp(context.Context, *App) (*Result, error)
-	// Delete an application
+	// Delete Application. Delete definition of an application instance. This requires that no application instance with this definition exists. If it exists, then user must delete those first
 	DeleteApp(context.Context, *App) (*Result, error)
-	// Update an application
+	// Update Application. Update definition of an application instance
 	UpdateApp(context.Context, *App) (*Result, error)
-	// Show applications. Any fields specified will be used to filter results.
+	// Show Applications. Lists all application definitions managed from edge controller. Any fields specified will be used to filter results
 	ShowApp(*App, AppApi_ShowAppServer) error
 }
 

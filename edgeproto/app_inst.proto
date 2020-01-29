@@ -14,6 +14,8 @@ import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
 import "gogoproto/gogo.proto";
 
+// App Instance Unique Key
+//
 // AppInstKey uniquely identifies an Application Instance (AppInst) or Application Instance state (AppInstInfo).
 message AppInstKey {
   // App key
@@ -25,6 +27,8 @@ message AppInstKey {
   option (gogoproto.gostring) = true;
 }
 
+// Health check status
+//
 // Health check status gets set by external, or rootLB health check
 enum HealthCheck {
   // Health Check is ok
@@ -35,11 +39,14 @@ enum HealthCheck {
   HEALTH_CHECK_FAIL_SERVER_FAIL = 2;
 }
 
+// Application Instance
+//
 // AppInst is an instance of an App on a Cloudlet where it is defined by an App plus a ClusterInst key. 
 // Many of the fields here are inherited from the App definition. 
 message AppInst {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
+  // required: true
   // Unique identifier key
   AppInstKey key = 2 [(gogoproto.nullable) = false];
   // Cached location of the cloudlet
@@ -95,13 +102,16 @@ message AppInst {
   option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
 }
 
+// AppInst Runtime Info
+//
+// Runtime information of active AppInsts
 message AppInstRuntime {
   // List of container names
   repeated string container_ids = 1 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
 }
 
 service AppInstApi {
-  // Create an application instance
+  // Create Application Instance. Creates an instance of an App on a Cloudlet where it is defined by an App plus a ClusterInst key. Many of the fields here are inherited from the App definition
   rpc CreateAppInst(AppInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/appinst"
@@ -113,7 +123,7 @@ service AppInstApi {
     // add in UpdateMultiple for noconfig
     option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,UpdateMultiple,ForceUpdate";
   }
-  // Delete an application instance
+  // Delete Application Instance. Deletes an instance of the App from the Cloudlet
   rpc DeleteAppInst(AppInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/appinst"
@@ -122,7 +132,7 @@ service AppInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
   }
-  // Refresh restarts an application instance with new App settings or image
+  // Refresh Application Instance. Refresh restarts an application instance with new App settings or image
   rpc RefreshAppInst(AppInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/refresh/appinst"
@@ -133,7 +143,7 @@ service AppInstApi {
     option (protogen.method_not_required) = "Key.ClusterInstKey";
     option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,Configs";
   }
-  // Update an AppInst and then refresh it
+  // Update Application Instance. Updates an application instance and then refreshes it
   rpc UpdateAppInst(AppInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/appinst"
@@ -143,7 +153,7 @@ service AppInstApi {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
     option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple,ForceUpdate";
   }
-  // Show application instances. Any fields specified will be used to filter results.
+  // Show Application Instances. Lists all the application instances managed by edge controller. Any fields specified will be used to filter results
   rpc ShowAppInst(AppInst) returns (stream AppInst) {
     option (google.api.http) = {
       post: "/show/appinst"
