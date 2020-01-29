@@ -11,6 +11,8 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
 import "gogoproto/gogo.proto";
 
+// Flavor
+//
 // FlavorKey uniquely identifies a Flavor.
 message FlavorKey {
   // Flavor name
@@ -23,7 +25,6 @@ message FlavorKey {
 //Flavors define the compute, memory, and storage capacity of computing instances. 
 //To put it simply, a flavor is an available hardware configuration for a server. 
 //It defines the size of a virtual server that can be launched.
-
 message Flavor {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;

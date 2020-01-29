@@ -33,6 +33,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Cluster Instance unique key
+//
 // ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster Instance state (ClusterInstInfo).
 type ClusterInstKey struct {
 	// Name of Cluster
@@ -48,11 +50,14 @@ func (m *ClusterInstKey) String() string            { return proto.CompactTextSt
 func (*ClusterInstKey) ProtoMessage()               {}
 func (*ClusterInstKey) Descriptor() ([]byte, []int) { return fileDescriptorClusterinst, []int{0} }
 
+// Cluster Instance
+//
 // ClusterInst is an instance of a Cluster on a Cloudlet.
 // It is defined by a Cluster, Cloudlet, and Developer key.
 type ClusterInst struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	// required: true
 	// Unique key
 	Key ClusterInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
 	// Flavor of the k8s node
@@ -162,13 +167,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for ClusterInstApi service
 
 type ClusterInstApiClient interface {
-	// Create a Cluster instance
+	// Create Cluster Instance. Creates an instance of a Cluster on a Cloudlet, defined by a Cluster Key and a Cloudlet Key.
 	CreateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_CreateClusterInstClient, error)
-	// Delete a Cluster instance
+	// Delete Cluster Instance. Deletes an instance of Cluster deployed on a Cloudlet
 	DeleteClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_DeleteClusterInstClient, error)
-	// Update a Cluster instance
+	// Update Cluster Instance. Updates an instance of Cluster deployed on a Cloudlet
 	UpdateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_UpdateClusterInstClient, error)
-	// Show Cluster instances
+	// Show Cluster Instances. Lists all the cluster instances managed by edge controller
 	ShowClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_ShowClusterInstClient, error)
 }
 
@@ -311,13 +316,13 @@ func (x *clusterInstApiShowClusterInstClient) Recv() (*ClusterInst, error) {
 // Server API for ClusterInstApi service
 
 type ClusterInstApiServer interface {
-	// Create a Cluster instance
+	// Create Cluster Instance. Creates an instance of a Cluster on a Cloudlet, defined by a Cluster Key and a Cloudlet Key.
 	CreateClusterInst(*ClusterInst, ClusterInstApi_CreateClusterInstServer) error
-	// Delete a Cluster instance
+	// Delete Cluster Instance. Deletes an instance of Cluster deployed on a Cloudlet
 	DeleteClusterInst(*ClusterInst, ClusterInstApi_DeleteClusterInstServer) error
-	// Update a Cluster instance
+	// Update Cluster Instance. Updates an instance of Cluster deployed on a Cloudlet
 	UpdateClusterInst(*ClusterInst, ClusterInstApi_UpdateClusterInstServer) error
-	// Show Cluster instances
+	// Show Cluster Instances. Lists all the cluster instances managed by edge controller
 	ShowClusterInst(*ClusterInst, ClusterInstApi_ShowClusterInstServer) error
 }
 

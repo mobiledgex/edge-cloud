@@ -12,6 +12,8 @@ import "cloudlet.proto";
 import "common.proto";
 import "gogoproto/gogo.proto";
 
+// Cluster Instance unique key
+//
 // ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster Instance state (ClusterInstInfo).
 message ClusterInstKey {
   // Name of Cluster
@@ -25,11 +27,14 @@ message ClusterInstKey {
   option (gogoproto.gostring) = true;
 }
 
+// Cluster Instance
+//
 // ClusterInst is an instance of a Cluster on a Cloudlet. 
 // It is defined by a Cluster, Cloudlet, and Developer key. 
 message ClusterInst {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
+  // required: true
   // Unique key
   ClusterInstKey key = 2 [(gogoproto.nullable) = false];
   // Flavor of the k8s node 
@@ -89,7 +94,7 @@ message ClusterInst {
 }
 
 service ClusterInstApi {
-  // Create a Cluster instance
+  // Create Cluster Instance. Creates an instance of a Cluster on a Cloudlet, defined by a Cluster Key and a Cloudlet Key.
   rpc CreateClusterInst(ClusterInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/clusterinst"
@@ -99,7 +104,7 @@ service ClusterInstApi {
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
     option (protogen.mc2_custom_authz) = true;
   }
-  // Delete a Cluster instance
+  // Delete Cluster Instance. Deletes an instance of Cluster deployed on a Cloudlet
   rpc DeleteClusterInst(ClusterInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/clusterinst"
@@ -108,7 +113,7 @@ service ClusterInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
   }
-  // Update a Cluster instance
+  // Update Cluster Instance. Updates an instance of Cluster deployed on a Cloudlet
   rpc UpdateClusterInst(ClusterInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/clusterinst"
@@ -117,7 +122,7 @@ service ClusterInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
   }
-  // Show Cluster instances
+  // Show Cluster Instances. Lists all the cluster instances managed by edge controller
   rpc ShowClusterInst(ClusterInst) returns (stream ClusterInst) {
     option (google.api.http) = {
       post: "/show/clusterinst"
