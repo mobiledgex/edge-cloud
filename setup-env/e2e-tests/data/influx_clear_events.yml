@@ -1,0 +1,2 @@
+database: events
+cmd: drop series from appinst,clusterinst,cloudlet
