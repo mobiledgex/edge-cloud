@@ -16,10 +16,9 @@ info:
          * Verify that the GPS coordinates accurately report the actual location of the device
          * Find the closest cloudlet, and more.
 
-      # MobiledgeX Library
-      ## Android
+      # Edge SDK - Android
 
-      ### RegisterClient
+      ## RegisterClient
       Register the device
 
       Example Code:
@@ -36,7 +35,7 @@ info:
       me.registerClient(registerClientRequest, 10000);
       ```
 
-      ### FindCloudlet
+      ## FindCloudlet
       Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
 
       Example Code:
@@ -48,7 +47,7 @@ info:
       FindCloudletReply findCloudletReply = me.findCloudlet(findCloudletRequest, 10000);
       ```
 
-      ### GetConnection
+      ## GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
       connected to application backend (as specified by findCloudletReply).
@@ -93,12 +92,12 @@ info:
       }
       ```
 
-      ### PerformanceMetrics
+      ## PerformanceMetrics
 
       com.mobiledgex.matchingengine.performancemetrics.NetTest
       com.mobiledgex.matchingengine.performancemetrics.Site
 
-      #### NetTest
+      ### NetTest
 
       Initialization:
       ```java
@@ -116,7 +115,7 @@ info:
          * boolean doTest(boolean enable)
          * void RunNetTest()
 
-      #### Site
+      ### Site
 
       Initialization:
       ```java
@@ -151,9 +150,9 @@ info:
       netTest.doTest(true);
       ```
 
-      ## Unity
+      # Edge SDK - Unity
 
-      ### RegisterClient
+      ## RegisterClient
       Register the device
 
       Example Code:
@@ -164,7 +163,7 @@ info:
       RegisterClientReply registerClientReply = await me.RegisterClient(registerClientRequest);
       ```
 
-      ### FindCloudlet
+      ## FindCloudlet
       Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
 
       Example Code:
@@ -175,7 +174,7 @@ info:
       FindCloudletReply findCloudletReply = await FindCloudlet(findCloudletRequest);
       ```
 
-      ### GetConnection
+      ## GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
       connected to application backend (as specified by findCloudletReply).
@@ -221,12 +220,12 @@ info:
       }
       ```
 
-      ### PerformanceMetrics
+      ## PerformanceMetrics
 
       DistributedMatchEngine.PerformanceMetrics.NetTest
       DistributedMatchEngine.PerformanceMetrics.NetTest.Site
 
-      #### NetTest
+      ### NetTest
 
       Initialization:
       ```csharp
@@ -243,7 +242,7 @@ info:
          * bool doTest(bool enable)
          * async void RunNetTest()
 
-      #### Site
+      ### Site
       Initialization:
       ```csharp
       Site(string host, int port, TestType testType, int numSamples)
@@ -285,9 +284,9 @@ info:
       netTest.doTest(true);
       ```
 
-      ## iOS
+      # Edge SDK - iOS
 
-      ### RegisterClient
+      ## RegisterClient
       Register the device
 
       Example Code:
@@ -301,7 +300,7 @@ info:
           }
       ```
 
-      ### FindCloudlet
+      ## FindCloudlet
       Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
 
       Example Code:
@@ -315,7 +314,7 @@ info:
           }
       ```
 
-      ### GetConnection
+      ## GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
       connected to application backend (as specified by findCloudletReply).
@@ -360,12 +359,12 @@ info:
       }
       ```
 
-      ### PerformanceMetrics
+      ## PerformanceMetrics
 
       MobiledgeXiOSLibrary.PerformanceMetrics.NetTest
       MobiledgeXiOSLibrary.PerformanceMetrics.Site
 
-      #### NetTest
+      ### NetTest
 
       Initialization:
       ```swift
@@ -385,7 +384,7 @@ info:
          * `addSite(site: Site)` Add a site to array of sites to be tested for latency. Stops and restarts runTest() if already running, otherwise only adds to array.
          * `removeSite()` Removes a site from array of sites. Stops and restarts runTest if already running, otherwise only removes from array.
 
-      #### Site
+      ### Site
       Initialization:
       ```swift
       init(network: String, l7Path: String, testType: NetTest.TestType?, numSamples: Int?)
