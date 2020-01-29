@@ -20,6 +20,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Liveness Options
+//
 // Liveness indicates if an object was created statically via an external API call, or dynamically via an internal algorithm.
 type Liveness int32
 
@@ -48,7 +50,9 @@ func (x Liveness) String() string {
 }
 func (Liveness) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{0} }
 
-// IpSupport indicates the type of public IP support provided by the Cloudlet. Static IP support indicates a set of static public IPs are available for use, and managed by the Controller. Dynamic indicates the Cloudlet uses a DHCP server to provide public IP addresses, and the controller has no control over which IPs are assigned.
+// Type of public IP support
+//
+// Static IP support indicates a set of static public IPs are available for use, and managed by the Controller. Dynamic indicates the Cloudlet uses a DHCP server to provide public IP addresses, and the controller has no control over which IPs are assigned.
 type IpSupport int32
 
 const (
@@ -76,6 +80,8 @@ func (x IpSupport) String() string {
 }
 func (IpSupport) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{1} }
 
+// IpAccess Options
+//
 // IpAccess indicates the type of RootLB that Developer requires for their App
 type IpAccess int32
 
@@ -104,6 +110,8 @@ func (x IpAccess) String() string {
 }
 func (IpAccess) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{2} }
 
+// Tracked States
+//
 // TrackedState is used to track the state of an object on a remote node,
 // i.e. track the state of a ClusterInst object on the CRM (Cloudlet).
 type TrackedState int32
@@ -181,6 +189,8 @@ func (x TrackedState) String() string {
 }
 func (TrackedState) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{3} }
 
+// Overrides default CRM behaviour
+//
 // CRMOverride can be applied to commands that issue requests to the CRM.
 // It should only be used by administrators when bugs have caused the
 // Controller and CRM to get out of sync. It allows commands from the
@@ -221,9 +231,11 @@ func (x CRMOverride) String() string {
 }
 func (CRMOverride) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{4} }
 
+// Status Information
+//
 // Used to track status of create/delete/update for resources that are being modified
 // by the controller via the CRM.  Tasks are the high level jobs that are to be completed.
-// Steps are work items within a task.   Within the clusterinst and appinst objects this
+// Steps are work items within a task. Within the clusterinst and appinst objects this
 // is converted to a string
 type StatusInfo struct {
 	TaskNumber uint32 `protobuf:"varint,1,opt,name=task_number,json=taskNumber,proto3" json:"task_number,omitempty"`

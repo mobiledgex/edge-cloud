@@ -13,6 +13,8 @@ import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
 
+// Cloudlet unique key
+//
 // CloudletKey uniquely identifies a Cloudlet.
 message CloudletKey {
   // Operator of the cloudlet site
@@ -25,7 +27,9 @@ message CloudletKey {
   option (protogen.alias) = "operator=OperatorKey.Name";
 }
 
-// time limits for cloudlet create, update and delete operations
+// Operation time limits
+//
+// Time limits for cloudlet create, update and delete operations
 message OperationTimeLimits{
     // override default max time to create a cluster instance (duration)
     int64 create_cluster_inst_timeout = 1 [(gogoproto.casttype) = "Duration"];
@@ -109,6 +113,9 @@ message CloudletInfraProperties{
     GcpProperties gcp_properties = 5;
 }
 
+// Platform Configuration
+//
+// Platform specific configuration required for Cloudlet management
 message PlatformConfig {
   // Path to Docker registry holding edge-cloud image
   string registry_path = 1;
@@ -134,6 +141,8 @@ message PlatformConfig {
   string region = 12;
 }
 
+// Platform Type
+//
 // PlatformType is the supported list of cloudlet types
 enum PlatformType {
   // Fake Cloudlet
@@ -162,10 +171,13 @@ message CloudletResMap {
   option (protogen.also_required) = "Mapping";
 }
 
+// Cloudlet
+//
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator. 
 message Cloudlet {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
+  // required: true
   // Unique identifier key
   CloudletKey key = 2 [(gogoproto.nullable) = false];
   // Location of the Cloudlet site
@@ -228,7 +240,9 @@ message FlavorMatch {
 }
 
 service CloudletApi {
-  // Create a Cloudlet
+  // Create Cloudlet. Sets up cloudlet services on Operator's compute
+  // resources and makes it part of MobiledgeX edge resource portfolio.
+  // These resources will now be managed from edge controller
   rpc CreateCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/cloudlet"
@@ -238,7 +252,8 @@ service CloudletApi {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
     option (protogen.method_also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
   }
-  // Delete a Cloudlet
+  // Delete Cloudlet. Removes cloudlet services and will no longer be
+  // managed from edge controller
   rpc DeleteCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/cloudet"
@@ -247,7 +262,7 @@ service CloudletApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
   }
-  // Update a Cloudlet
+  // Update Cloudlet. Updates cloudlet config and also manages upgrade of cloudlet services
   rpc UpdateCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/cloudlet"
@@ -256,7 +271,7 @@ service CloudletApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
   }
-  // Show Cloudlets
+  // Show Cloudlets. Lists all the cloudlets managed from edge controller
   rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
     option (google.api.http) = {
       post: "/show/cloudlet"
