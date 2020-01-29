@@ -1,0 +1,168 @@
+- series:
+  - name: appinst
+    tags: {}
+    columns:
+    - time
+    - app
+    - cloudlet
+    - cluster
+    - dev
+    - disk
+    - event
+    - flavor
+    - nodeCount
+    - operator
+    - other
+    - ram
+    - status
+    - vcpu
+    - version
+    values:
+    - - "2020-01-28T21:44:17.757749Z"
+      - someapplication1
+      - dmuus-cloud-1
+      - SmallCluster
+      - AcmeAppCo
+      - null
+      - CREATED
+      - null
+      - null
+      - dmuus
+      - null
+      - null
+      - UP
+      - null
+      - "1.0"
+    - - "2020-01-28T21:44:19.842019Z"
+      - someapplication1
+      - dmuus-cloud-1
+      - SmallCluster
+      - AcmeAppCo
+      - null
+      - DELETED
+      - null
+      - null
+      - dmuus
+      - null
+      - null
+      - DOWN
+      - null
+      - "1.0"
+    - - "2020-01-28T21:44:20.073059Z"
+      - someapplication1
+      - dmuus-cloud-1
+      - SmallCluster
+      - AcmeAppCo
+      - null
+      - CREATED
+      - null
+      - null
+      - dmuus
+      - null
+      - null
+      - UP
+      - null
+      - "1.0"
+    - - "2020-01-28T21:44:20.270832Z"
+      - someapplication1
+      - dmuus-cloud-1
+      - SmallCluster
+      - AcmeAppCo
+      - null
+      - DELETED
+      - null
+      - null
+      - dmuus
+      - null
+      - null
+      - DOWN
+      - null
+      - "1.0"
+    partial: false
+  - name: cloudlet
+    tags: {}
+    columns:
+    - time
+    - app
+    - cloudlet
+    - cluster
+    - dev
+    - disk
+    - event
+    - flavor
+    - nodeCount
+    - operator
+    - other
+    - ram
+    - status
+    - vcpu
+    - version
+    values:
+    - - "2020-01-28T21:44:17.248106Z"
+      - null
+      - dmuus-cloud-1
+      - null
+      - null
+      - null
+      - CREATED
+      - null
+      - null
+      - dmuus
+      - null
+      - null
+      - UP
+      - null
+      - null
+    - - "2020-01-28T21:44:20.605077Z"
+      - null
+      - dmuus-cloud-1
+      - null
+      - null
+      - null
+      - DELETED
+      - null
+      - null
+      - dmuus
+      - null
+      - null
+      - DOWN
+      - null
+      - null
+    partial: false
+  - name: clusterinst
+    tags: {}
+    columns:
+    - time
+    - app
+    - cloudlet
+    - cluster
+    - dev
+    - disk
+    - event
+    - flavor
+    - nodeCount
+    - operator
+    - other
+    - ram
+    - status
+    - vcpu
+    - version
+    values:
+    - - "2020-01-28T21:44:17.53257Z"
+      - null
+      - dmuus-cloud-1
+      - SmallCluster
+      - AcmeAppCo
+      - 2
+      - CREATED
+      - x1.small
+      - 3
+      - dmuus
+      - map[]
+      - 2048
+      - UP
+      - 2
+      - null
+    partial: false
+  messages: []
+  err: ""
