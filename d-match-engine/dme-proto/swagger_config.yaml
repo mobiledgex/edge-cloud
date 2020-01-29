@@ -16,9 +16,38 @@ info:
          * Verify that the GPS coordinates accurately report the actual location of the device
          * Find the closest cloudlet, and more.
 
-      # MobiledgeX Library
-      ## Android
-      ### GetConnection
+      # Edge SDK - Android
+
+      ## RegisterClient
+      Register the device
+
+      Example Code:
+      ```java
+      import com.mobiledgex.matchingengine.MatchingEngine;
+
+      AppClient.Tag tag = AppClient.Tag.newBuilder()
+          .setType(key)
+          .setData(datavalue);
+      RegisterClientRequest registerClientRequest = createDefaultRegisterClientRequest(activityContext, developerName)
+          .setAuthToken(authToken)
+          .setTags(0, tag)
+          .build();
+      me.registerClient(registerClientRequest, 10000);
+      ```
+
+      ## FindCloudlet
+      Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
+
+      Example Code:
+      ```java
+      import com.mobiledgex.matchingengine.MatchingEngine;
+      FindCloudletRequest findCloudletRequest = createDefaultFindCloudletRequest(activityContext, location)
+          .setCarrierName(carrierName)
+          .build();
+      FindCloudletReply findCloudletReply = me.findCloudlet(findCloudletRequest, 10000);
+      ```
+
+      ## GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
       connected to application backend (as specified by findCloudletReply).
@@ -63,12 +92,12 @@ info:
       }
       ```
 
-      ### PerformanceMetrics
+      ## PerformanceMetrics
 
       com.mobiledgex.matchingengine.performancemetrics.NetTest
       com.mobiledgex.matchingengine.performancemetrics.Site
 
-      #### NetTest
+      ### NetTest
 
       Initialization:
       ```java
@@ -86,7 +115,7 @@ info:
          * boolean doTest(boolean enable)
          * void RunNetTest()
 
-      #### Site
+      ### Site
 
       Initialization:
       ```java
@@ -121,8 +150,31 @@ info:
       netTest.doTest(true);
       ```
 
-      ## Unity
-      ### GetConnection
+      # Edge SDK - Unity
+
+      ## RegisterClient
+      Register the device
+
+      Example Code:
+      ```csharp
+      using DistributedMatchEngine;
+      MatchingEngine me = new MatchingEngine();
+      RegisterClientRequest registerClientRequest = me.CreateRegisterClientRequest(carrierName, devName, appName, appVers, authToken);
+      RegisterClientReply registerClientReply = await me.RegisterClient(registerClientRequest);
+      ```
+
+      ## FindCloudlet
+      Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
+
+      Example Code:
+      ```csharp
+      using DistributedMatchEngine;
+      MatchingEngine me = new MatchingEngine();
+      FindCloudletRequest findCloudletRequest = CreateFindCloudletRequest(carrierName, developerName, appName, appVersion, loc);
+      FindCloudletReply findCloudletReply = await FindCloudlet(findCloudletRequest);
+      ```
+
+      ## GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
       connected to application backend (as specified by findCloudletReply).
@@ -168,12 +220,12 @@ info:
       }
       ```
 
-      ### PerformanceMetrics
+      ## PerformanceMetrics
 
       DistributedMatchEngine.PerformanceMetrics.NetTest
       DistributedMatchEngine.PerformanceMetrics.NetTest.Site
 
-      #### NetTest
+      ### NetTest
 
       Initialization:
       ```csharp
@@ -190,7 +242,7 @@ info:
          * bool doTest(bool enable)
          * async void RunNetTest()
 
-      #### Site
+      ### Site
       Initialization:
       ```csharp
       Site(string host, int port, TestType testType, int numSamples)
@@ -232,8 +284,37 @@ info:
       netTest.doTest(true);
       ```
 
-      ## iOS
-      ### GetConnection
+      # Edge SDK - iOS
+
+      ## RegisterClient
+      Register the device
+
+      Example Code:
+      ```swift
+      import IOSMatchingEngine
+      matchingEngine = MatchingEngine()
+      let registerClientRequest = matchingEngine.createRegisterClientRequest(devName: devName, appName: appName, appVers: appVers, carrierName: carrierName, authToken: authToken)
+      let registerClientReplyPromise = matchingEngine.registerClient(request: registerClientRequest)
+          .then { registerClientReply in
+          \* handle registerClientReply*\
+          }
+      ```
+
+      ## FindCloudlet
+      Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
+
+      Example Code:
+      ```swift
+      import IOSMatchingEngine
+      matchingEngine = MatchingEngine()
+      let findCloudletRequest = matchingEngine.createFindCloudletRequest(carrierName: carrierName, gpsLocation: loc, devName: devName, appName: appName, appVers: appVers)
+      let findCloudletReplyPromise = matchingEngine.findCloudlet(request: findCloudletRequest)
+          .then { findCloudletReply in
+          \* handle findCloudletReply*\
+          }
+      ```
+
+      ## GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
       connected to application backend (as specified by findCloudletReply).
@@ -278,12 +359,12 @@ info:
       }
       ```
 
-      ### PerformanceMetrics
+      ## PerformanceMetrics
 
       MobiledgeXiOSLibrary.PerformanceMetrics.NetTest
       MobiledgeXiOSLibrary.PerformanceMetrics.Site
 
-      #### NetTest
+      ### NetTest
 
       Initialization:
       ```swift
@@ -303,7 +384,7 @@ info:
          * `addSite(site: Site)` Add a site to array of sites to be tested for latency. Stops and restarts runTest() if already running, otherwise only adds to array.
          * `removeSite()` Removes a site from array of sites. Stops and restarts runTest if already running, otherwise only removes from array.
 
-      #### Site
+      ### Site
       Initialization:
       ```swift
       init(network: String, l7Path: String, testType: NetTest.TestType?, numSamples: Int?)
