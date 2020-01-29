@@ -1,0 +1,123 @@
+settings:
+  shepherdmetricscollectioninterval: 1s
+  autodeployintervalsec: 1
+  autodeployoffsetsec: 0.3
+  createappinsttimeout: 3s
+  updateappinsttimeout: 2s
+  deleteappinsttimeout: 2s
+  createclusterinsttimeout: 3s
+  updateclusterinsttimeout: 2s
+  deleteclusterinsttimeout: 2s
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+privacypolicies:
+-  key:
+      developer: AcmeAppCo
+      name: PrivPolicy1
+   outboundsecurityrules:
+    - protocol:  tcp
+      portrangemin: 443
+      remotecidr: "35.247.68.151/32"
+    - protocol:  tcp
+      portrangemin: 8080
+      portrangemax: 8088
+      remotecidr: "0.0.0.0/0"
+    - protocol: udp
+      portrangemin: 53
+      remotecidr: "0.0.0.0/0"
+    - protocol: icmp
+      remotecidr: "80.0.0.0/8"
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-1
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessStatic
+  ipaccess: IpAccessShared
+  sharedvolumesize: 100
+  nummasters: 1
+  numnodes: 2
+
+operators:
+- key:
+    name: tmus
+
+operatorcodes:
+- code: 31026
+  operatorname: tmus
+
+developers:
+- key:
+    name: AcmeAppCo
+
+cloudlets:
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-1
+  location:
+    latitude: 31
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+
+apps:
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: someapplication1
+    version: "1.0"
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagetype: ImageTypeDocker
+  deployment: "kubernetes"
+  defaultflavor:
+    name: x1.small
+  accessports: "tcp:80,http:443,udp:10002"
+  officialfqdn: someapplication1.acmeappco.com
+  androidpackagename: com.acme.someapplication1
+  authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
+      developer: AcmeAppCo
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
