@@ -90,11 +90,12 @@ func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryA
 			// Response Header Timeout
 			ExpectContinueTimeout: 5 * time.Second,
 			ResponseHeaderTimeout: 5 * time.Second,
+			// use proxy if env vars set
+			Proxy: http.ProxyFromEnvironment,
 		},
 		// Prevent endless redirects
 		Timeout: 10 * time.Minute,
 	}
-
 	req, err := http.NewRequest(method, regUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed sending request %v", err)

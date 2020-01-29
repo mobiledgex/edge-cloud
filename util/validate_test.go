@@ -137,3 +137,27 @@ func TestVersion(t *testing.T) {
 	err = ValidateImageVersion(".2.0.0")
 	require.NotNil(t, err, "invalid image version")
 }
+
+func TestHeatSanitize(t *testing.T) {
+	longstring := make([]rune, 300)
+	for i := range longstring {
+		longstring[i] = 'a'
+	}
+
+	tests := []struct {
+		name     string
+		expected string
+	}{
+		{"foo-bar", "foo-bar"},
+		{"foo_bar1234567890", "foo_bar1234567890"},
+		{"foo.bar-baz_", "foo.bar-baz_"},
+		{"foo bar&baz,blah,!no", "foobarbazblahno"},
+		{"00foo", "a00foo"},
+		{"0jon ber,lin&", "a0jonberlin"},
+		{string(longstring), string(longstring[:254])},
+	}
+	for _, test := range tests {
+		str := HeatSanitize(test.name)
+		require.Equal(t, test.expected, str)
+	}
+}

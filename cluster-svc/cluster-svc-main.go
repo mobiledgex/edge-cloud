@@ -21,6 +21,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/tls"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )
@@ -296,7 +297,7 @@ func appInstGetApi(ctx context.Context, apiClient edgeproto.AppInstApiClient, ap
 func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterInst *edgeproto.ClusterInst, app *edgeproto.App) error {
 	//update flavor
 	app.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
-	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
+	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake(), grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc), grpc.WithStreamInterceptor(log.StreamClientTraceGrpc))
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
 	}
@@ -409,7 +410,7 @@ func fillAppConfigs(app *edgeproto.App, interval time.Duration) error {
 }
 
 func createAppCommon(ctx context.Context, dialOpts grpc.DialOption, app *edgeproto.App) error {
-	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
+	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake(), grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc), grpc.WithStreamInterceptor(log.StreamClientTraceGrpc))
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
 	}
@@ -482,11 +483,11 @@ func setAppDiffFields(src *edgeproto.App, dst *edgeproto.App) {
 	}
 }
 
-func updateAppInsts(appkey *edgeproto.AppKey) {
-	span := log.StartSpan(log.DebugLevelApi, "updateAppInsts")
+func updateAppInsts(ctx context.Context, appkey *edgeproto.AppKey) {
+	span := log.StartSpan(log.DebugLevelApi, "updateAppInsts", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 	defer span.Finish()
-	ctx := log.ContextWithSpan(context.Background(), span)
-	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
+	ctx = log.ContextWithSpan(context.Background(), span)
+	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake(), grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc), grpc.WithStreamInterceptor(log.StreamClientTraceGrpc))
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "Connect to server failed", "server", *ctrlAddr, "error", err.Error())
 		return
@@ -553,7 +554,7 @@ func updateExistingAppInst(ctx context.Context, apiClient edgeproto.AppInstApiCl
 
 // Check if we are running the correct revision of prometheus app, and if not, upgrade it
 func validateAppRevision(ctx context.Context, appkey *edgeproto.AppKey) error {
-	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
+	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake(), grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc), grpc.WithStreamInterceptor(log.StreamClientTraceGrpc))
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
 	}
@@ -620,10 +621,10 @@ func main() {
 		log.FatalLog("Validate NFSAutoProvision version", "error", err)
 	}
 	// Update prometheus instances in a separate go routine
-	go updateAppInsts(&MEXPrometheusAppKey)
+	go updateAppInsts(ctx, &MEXPrometheusAppKey)
 
 	// update nfs auto prov app instances
-	go updateAppInsts(&NFSAutoProvAppKey)
+	go updateAppInsts(ctx, &NFSAutoProvAppKey)
 
 	notifyClient := initNotifyClient(ctx, *notifyAddrs, *tlsCertFile)
 	notifyClient.RegisterRecvClusterInstCache(&ClusterInstCache)

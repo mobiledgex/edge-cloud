@@ -638,6 +638,7 @@ func IgnoreTaggedFields(taglist string) []cmp.Option {
 	opts = append(opts, IgnoreClusterInstFields(taglist))
 	opts = append(opts, IgnoreClusterInstInfoFields(taglist))
 	opts = append(opts, IgnoreCloudletFields(taglist))
+	opts = append(opts, IgnoreCloudletInfoFields(taglist))
 	return opts
 }
 
