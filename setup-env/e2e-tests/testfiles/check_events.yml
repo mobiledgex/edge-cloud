@@ -1,0 +1,59 @@
+##
+description: Checks to make sure controller has been logging instance events properly
+
+tests:
+
+- name: verify provisioning is empty to start
+  actions: [ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+
+- name: clear all events in influx
+  actions: [influxapi]
+  apifile: "{{datadir}}/influx_clear_events.yml"
+
+- name: verify influx is empty
+  actions: [influxapi]
+  apifile: "{{datadir}}/influx_events_query.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/influx_empty.yml"
+    filetype: influxdata
+
+- name: Add and show provisioning and verify it is there
+  apifile: "{{datadir}}/influx_appdata.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/influx_appdata_show.yml"
+    filetype: appdata
+
+- name: delete one appinst
+  apifile: "{{datadir}}/appinst1.yml"
+  actions: [ctrlapi-delete]
+
+- name: re-add one appinst, verify it is there
+  apifile: "{{datadir}}/appinst1.yml"
+  actions: [ctrlapi-create]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/influx_appdata_show.yml"
+    filetype: appdata
+
+- name: delete provisioning, verify it is empty
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/influx_appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+
+- name: check influx events
+  actions: [influxapi]
+  apifile: "{{datadir}}/influx_events_query.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/influx_events_data.yml"
+    filetype: influxdata
