@@ -127,6 +127,7 @@ apps:
     name: x1.medium
   annotations: version=7.1.1
   deployment: helm
+  accesstype: AccessTypeLoadBalancer
   configs:
   - kind: hemlCustomizationYaml
     config: |
@@ -188,6 +189,7 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   deployment: kubernetes
+  accesstype: AccessTypeLoadBalancer
 
 appinstances:
 - key:
