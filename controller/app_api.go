@@ -255,6 +255,14 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
 		return &edgeproto.Result{}, fmt.Errorf("Deployment is not valid for image type")
 	}
+	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment) 
+	if err != nil{
+		return &edgeproto.Result{}, err
+	}
+	if in.AccessType != newAccessType{
+		log.SpanLog(ctx, log.DebugLevelApi, "updating access type", "newAccessType", newAccessType)
+		in.AccessType = newAccessType
+	}
 	if in.Deployment == cloudcommon.AppDeploymentTypeDocker || in.Deployment == cloudcommon.AppDeploymentTypeVM {
 		if strings.Contains(strings.ToLower(in.AccessPorts), "http") {
 			return &edgeproto.Result{}, fmt.Errorf("Deployment Type and HTTP access ports are incompatible")
