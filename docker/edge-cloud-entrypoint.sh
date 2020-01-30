@@ -58,6 +58,7 @@ case "$1" in
 	case "$1" in
 	    client)	cat /usr/local/doc/client/app-client.swagger.json ;;
 	    internal)	cat /usr/local/doc/internal/apidocs.swagger.json ;;
+	    mc)		cat /usr/local/doc/mc/apidocs.swagger.json ;;
 	    *)		cat /usr/local/doc/external/apidocs.swagger.json ;;
 	esac
 	;;

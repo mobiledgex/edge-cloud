@@ -41,6 +41,11 @@ COPY edge-proto edge-proto
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 ENV CGO_ENABLED=1
 RUN make
+
+# Buld the docs
+WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
+RUN go get -u github.com/go-swagger/go-swagger/cmd/swagger
+RUN make doc
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud
 RUN make doc
 RUN make external-doc
@@ -82,6 +87,7 @@ COPY --from=build /go/plugins /plugins
 COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/edgeproto/doc/*.json /usr/local/doc/internal/
 COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/edgeproto/external-doc/*.json /usr/local/doc/external/
 COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/external-doc/*.json /usr/local/doc/client/
+COPY --from=build /go/src/github.com/mobiledgex/edge-cloud-infra/doc/apidocs.swagger.json /usr/local/doc/mc/
 
 RUN echo $BUILD_TAG >/version.txt
 
