@@ -136,6 +136,13 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 // createClusterInstInternal is used to create dynamic cluster insts internally,
 // bypassing static assignment. It is also used to create auto-cluster insts.
 func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) (reterr error) {
+
+	nodeFlavor := edgeproto.Flavor{}
+	cloudlet := edgeproto.Cloudlet{}
+	refs := edgeproto.CloudletRefs{}
+	info := edgeproto.CloudletInfo{}
+	policy := edgeproto.PrivacyPolicy{}
+
 	cctx.SetOverride(&in.CrmOverride)
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
@@ -233,7 +240,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if in.Liveness == edgeproto.Liveness_LIVENESS_UNKNOWN {
 			in.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 		}
-		cloudlet := edgeproto.Cloudlet{}
+
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
@@ -293,16 +300,14 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 		if in.PrivacyPolicy != "" {
-			policy := edgeproto.PrivacyPolicy{}
+
 			if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Developer, &policy); err != nil {
 				return err
 			}
 		}
-		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
 			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.CloudletKey)
 		}
-		refs := edgeproto.CloudletRefs{}
 		if !cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
 			initCloudletRefs(&refs, &in.Key.CloudletKey)
 		}
@@ -311,47 +316,52 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return errors.New("No Flavor specified")
 		}
 
-		nodeFlavor := edgeproto.Flavor{}
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
-		var err error
-		vmspec, err := resTagTableApi.GetVMSpec(ctx, nodeFlavor, cloudlet, info)
-		if err != nil {
-			return err
-		}
-		in.NodeFlavor = vmspec.FlavorName
-		in.AvailabilityZone = vmspec.AvailabilityZone
-		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
 
-		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Flavor", "vmspec", vmspec)
-		// Do we allocate resources based on max nodes (no over-provisioning)?
-		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
-		refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)
-		refs.UsedDisk += (nodeFlavor.Disk + vmspec.ExternalVolumeSize) * uint64(in.NumNodes+in.NumMasters)
-		// XXX For now just track, don't enforce.
-		if false {
-			// XXX what is static overhead?
-			var ramOverhead uint64 = 200
-			var vcoresOverhead uint64 = 2
-			var diskOverhead uint64 = 200
-			// check resources
-			if refs.UsedRam+ramOverhead > info.OsMaxRam {
-				return errors.New("Not enough RAM available")
-			}
-			if refs.UsedVcores+vcoresOverhead > info.OsMaxVcores {
-				return errors.New("Not enough Vcores available")
-			}
-			if refs.UsedDisk+diskOverhead > info.OsMaxVolGb {
-				return errors.New("Not enough Disk available")
-			}
+		return nil
+	})
+	// Drop Wait ctx, GetVMSpec may enter its own Wait
+	vmspec, verr := resTagTableApi.GetVMSpec(ctx, nodeFlavor, cloudlet, info)
+	if verr != nil {
+		return verr
+	}
+	in.NodeFlavor = vmspec.FlavorName
+	in.AvailabilityZone = vmspec.AvailabilityZone
+	in.ExternalVolumeSize = vmspec.ExternalVolumeSize
+
+	log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Flavor", "vmspec", vmspec)
+	// Do we allocate resources based on max nodes (no over-provisioning)?
+	refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
+	refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)
+	refs.UsedDisk += (nodeFlavor.Disk + vmspec.ExternalVolumeSize) * uint64(in.NumNodes+in.NumMasters)
+	// XXX For now just track, don't enforce.
+	if false {
+		// XXX what is static overhead?
+		var ramOverhead uint64 = 200
+		var vcoresOverhead uint64 = 2
+		var diskOverhead uint64 = 200
+		// check resources
+		if refs.UsedRam+ramOverhead > info.OsMaxRam {
+			return errors.New("Not enough RAM available")
 		}
-		// allocateIP also sets in.IpAccess to either Dedicated or Shared
-		err = allocateIP(in, &cloudlet, &refs)
-		if err != nil {
-			return err
+		if refs.UsedVcores+vcoresOverhead > info.OsMaxVcores {
+			return errors.New("Not enough Vcores available")
 		}
-		refs.Clusters = append(refs.Clusters, in.Key.ClusterKey)
+		if refs.UsedDisk+diskOverhead > info.OsMaxVolGb {
+			return errors.New("Not enough Disk available")
+		}
+	}
+	// allocateIP also sets in.IpAccess to either Dedicated or Shared
+	err = allocateIP(in, &cloudlet, &refs)
+	if err != nil {
+		return err
+	}
+	refs.Clusters = append(refs.Clusters, in.Key.ClusterKey)
+
+	// Finish off the Puts of refs and clusterinst
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cloudletRefsApi.store.STMPut(stm, &refs)
 
 		if ignoreCRM(cctx) {
