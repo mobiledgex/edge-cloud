@@ -21,6 +21,10 @@ var AutoScaleMaxNodes uint32 = 10
 var minPort uint32 = 1
 var maxPort uint32 = 65535
 
+// MaxPortRangeForLoadBalancer indicates how large a port range can be if the app is served by a LB.  This number needs
+// refinement, but when the port range is too large, k8s deployments may fail and docker may consume too much memory
+const MaxPortRangeForLoadBalancer = 50
+
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
 	Operators               []Operator               `yaml:"operators"`
@@ -213,6 +217,20 @@ func (key *AppKey) ValidateKey() error {
 	return nil
 }
 
+func ValidatePortRangeForAccessType(ports []dme.AppPort, accessType AccessType) error {
+	for ii, _ := range ports {
+		ports[ii].PublicPort = ports[ii].InternalPort
+		if ports[ii].EndPort != 0 {
+			numPortsInRange := ports[ii].EndPort - ports[ii].PublicPort
+			// this is checked in app_api also, but this in case there are pre-existing apps which violate this new restriction
+			if accessType == AccessType_ACCESS_TYPE_LOAD_BALANCER && numPortsInRange > MaxPortRangeForLoadBalancer {
+				return fmt.Errorf("Port range greater than max of %d for load balanced application", MaxPortRangeForLoadBalancer)
+			}
+		}
+	}
+	return nil
+}
+
 func (s *App) Validate(fields map[string]struct{}) error {
 	var err error
 	if err = s.GetKey().ValidateKey(); err != nil {
@@ -223,11 +241,16 @@ func (s *App) Validate(fields map[string]struct{}) error {
 	}
 	if _, found := fields[AppFieldAccessPorts]; found {
 		if s.AccessPorts != "" {
-			if _, err = ParseAppPorts(s.AccessPorts); found && err != nil {
+			ports, err := ParseAppPorts(s.AccessPorts)
+			if err != nil {
+				return err
+			}
+			if err = ValidatePortRangeForAccessType(ports, s.AccessType); err != nil {
 				return err
 			}
 		}
 	}
+
 	if s.AuthPublicKey != "" {
 		_, err := util.ValidatePublicKey(s.AuthPublicKey)
 		if err != nil {

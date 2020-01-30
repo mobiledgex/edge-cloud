@@ -212,6 +212,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: AcmeAppCo
@@ -236,6 +237,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: helm
   androidpackagename: com.acme.helmApplication
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -247,6 +249,7 @@ apps:
     name: x1.medium
   annotations: version=1.2.8
   deployment: helm
+  accesstype: AccessTypeLoadBalancer
   configs:
   - kind: hemlCustomizationYaml
     config: |
@@ -270,6 +273,7 @@ apps:
   cluster:
     name: SmallCluster
   deployment: kubernetes
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -283,6 +287,7 @@ apps:
     name: x1.medium
   annotations: version=7.1.1
   deployment: helm
+  accesstype: AccessTypeLoadBalancer
   configs:
   - kind: hemlCustomizationYaml
     config: |
@@ -345,6 +350,7 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   deployment: vm
+  accesstype: AccessTypeDirect
 - key:
     developerkey:
       name: AcmeAppCo1
@@ -358,6 +364,7 @@ apps:
   cluster:
     name: DefaultVMCluster
   deployment: vm
+  accesstype: AccessTypeDirect
 - key:
     developerkey:
       name: AcmeAppCo
@@ -369,6 +376,7 @@ apps:
     name: x1.small
   deployment: kubernetes
   officialfqdn: noportsapp.acmeappco.com
+  accesstype: AccessTypeLoadBalancer
 appinstances:
 - key:
     appkey:

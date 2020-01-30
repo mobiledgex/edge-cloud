@@ -112,22 +112,37 @@ func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, na
 		Cert:       cert,
 	}
 	for _, p := range ports {
-		switch p.Proto {
-		// only support tcp for now
-		case dme.LProto_L_PROTO_TCP:
-			tcpPort := TCPSpecDetail{
-				ListenPort:       p.PublicPort,
-				ListenIP:     listenIP,
-				BackendIP:     backendIP,
-				BackendPort: p.InternalPort,
+		endPort := p.EndPort
+		if endPort == 0 {
+			endPort = p.PublicPort
+		} else {
+			// if we have a port range, the internal ports and external ports must match
+			if p.InternalPort != p.PublicPort {
+				return fmt.Errorf("public and internal ports must match when port range in use")
 			}
-			tcpconns, err := getTCPConcurrentConnections()
-			if err != nil {
-				return err
+		}
+		// Currently there is no (known) way to put a port range within Envoy.
+		// So we create one spec per port when there is a port range in use
+		internalPort := p.InternalPort
+		for pubPort := p.PublicPort; pubPort <= endPort; pubPort++ {
+			switch p.Proto {
+			// only support tcp for now
+			case dme.LProto_L_PROTO_TCP:
+				tcpPort := TCPSpecDetail{
+					ListenPort:  pubPort,
+					ListenIP:    listenIP,
+					BackendIP:   backendIP,
+					BackendPort: internalPort,
+				}
+				tcpconns, err := getTCPConcurrentConnections()
+				if err != nil {
+					return err
+				}
+				tcpPort.ConcurrentConns = tcpconns
+				spec.TCPSpec = append(spec.TCPSpec, &tcpPort)
+				spec.L4 = true
 			}
-			tcpPort.ConcurrentConns = tcpconns
-			spec.TCPSpec = append(spec.TCPSpec, &tcpPort)
-			spec.L4 = true
+			internalPort++
 		}
 	}
 	log.SpanLog(ctx, log.DebugLevelMexos, "create envoy yaml", "name", name)

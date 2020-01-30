@@ -21,7 +21,7 @@ var UseInternalPortInContainer = "internalPort"
 var UsePublicPortInContainer = "publicPort"
 
 func GetContainerName(app *edgeproto.App) string {
-	return util.DNSSanitize(app.Key.Name+app.Key.Version) 
+	return util.DNSSanitize(app.Key.Name + app.Key.Version)
 }
 
 // Helper function that generates the ports string for docker command
@@ -43,15 +43,23 @@ func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMat
 		if err != nil {
 			continue
 		}
+		publicPortStr := fmt.Sprintf("%d", p.PublicPort)
+		if p.EndPort != 0 && p.EndPort != p.PublicPort {
+			publicPortStr = fmt.Sprintf("%d-%d", p.PublicPort, p.EndPort)
+		}
 		containerPort := p.PublicPort
 		if containerPortType == UseInternalPortInContainer {
 			containerPort = p.InternalPort
+		}
+		containerPortStr := fmt.Sprintf("%d", containerPort)
+		if p.EndPort != 0 && p.EndPort != containerPort {
+			containerPortStr = fmt.Sprintf("%d-%d", containerPort, p.EndPort)
 		}
 		listenIPStr := ""
 		if listenIP != "" {
 			listenIPStr = listenIP + ":"
 		}
-		pstr := fmt.Sprintf("%s%d:%d/%s", listenIPStr, p.PublicPort, containerPort, proto)
+		pstr := fmt.Sprintf("%s%s:%s/%s", listenIPStr, publicPortStr, containerPortStr, proto)
 		cmdArgs = append(cmdArgs, "-p", pstr)
 	}
 	return cmdArgs

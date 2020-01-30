@@ -60,23 +60,28 @@ func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string)
 	return false
 }
 
-func IsValidDeploymentForAccessType (accessType edgeproto.AccessType, deployment string) bool {
-	switch accessType  {
+// GetMappedAccessType gets the default access type for the deployment if AccessType_ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT
+// is specified.  It returns an error if the access type is not valid for the deployment
+func GetMappedAccessType(accessType edgeproto.AccessType, deployment string) (edgeproto.AccessType, error) {
+	switch accessType {
 
 	case edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER:
 		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeHelm || deployment == AppDeploymentTypeDocker {
-			return true
+			return accessType, nil
 		}
 	case edgeproto.AccessType_ACCESS_TYPE_DIRECT:
 		if deployment == AppDeploymentTypeVM || deployment == AppDeploymentTypeDocker {
-			return true
+			return accessType, nil
 		}
 	case edgeproto.AccessType_ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT:
-			return true
+		if deployment == AppDeploymentTypeVM {
+			return edgeproto.AccessType_ACCESS_TYPE_DIRECT, nil
+		}
+		// all others default to LB
+		return edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER, nil
 	}
-	return false
+	return accessType, fmt.Errorf("Invalid access type for deployment")
 }
-
 
 func IsValidDeploymentManifest(appDeploymentType, command, manifest string, ports []dme.AppPort) error {
 	if appDeploymentType == AppDeploymentTypeVM {
