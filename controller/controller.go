@@ -80,6 +80,7 @@ type Services struct {
 	notifyServerMgr bool
 	grpcServer      *grpc.Server
 	httpServer      *http.Server
+	clientQ         *AppInstClientQ
 }
 
 func main() {
@@ -258,7 +259,9 @@ func startServices() error {
 	}
 	services.events = events
 
-	InitNotify(influxQ)
+	services.clientQ = NewAppInstClientQ()
+
+	InitNotify(influxQ, services.clientQ)
 	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile)
 	services.notifyServerMgr = true
 
@@ -444,7 +447,7 @@ func InitApis(sync *Sync) {
 	InitResTagTableApi(sync)
 	InitPrivacyPolicyApi(sync)
 	InitSettingsApi(sync)
-	InitAppInstClientApi(sync)
+	InitAppInstClientApi()
 
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -453,7 +456,7 @@ func InitApis(sync *Sync) {
 	ControllerId = hostname + "@" + *externalApiAddr
 }
 
-func InitNotify(influxQ *influxq.InfluxQ) {
+func InitNotify(influxQ *influxq.InfluxQ, clientQ *AppInstClientQ) {
 	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
@@ -479,7 +482,7 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterRecv(notify.NewAlertRecvMany(&alertApi))
 	autoProvPolicyApi.SetInfluxQ(influxQ)
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
-	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(&appInstClientApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
 }
 
 // This is for figuring out the "external" address when

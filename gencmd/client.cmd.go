@@ -134,17 +134,16 @@ var AppInstClientKeyComments = map[string]string{
 	"uuid":                                                   "App name",
 }
 var AppInstClientKeySpecialArgs = map[string]string{}
-var AppInstClientRequiredArgs = []string{
-	"key.appinstkey.appkey.developerkey.name",
-	"key.appinstkey.appkey.name",
-	"key.appinstkey.appkey.version",
-	"key.appinstkey.clusterinstkey.clusterkey.name",
-	"key.appinstkey.clusterinstkey.cloudletkey.operatorkey.name",
-	"key.appinstkey.clusterinstkey.cloudletkey.name",
-	"key.appinstkey.clusterinstkey.developer",
-	"key.uuid",
-}
+var AppInstClientRequiredArgs = []string{}
 var AppInstClientOptionalArgs = []string{
+	"clientkey.appinstkey.appkey.developerkey.name",
+	"clientkey.appinstkey.appkey.name",
+	"clientkey.appinstkey.appkey.version",
+	"clientkey.appinstkey.clusterinstkey.clusterkey.name",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.operatorkey.name",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.name",
+	"clientkey.appinstkey.clusterinstkey.developer",
+	"clientkey.uuid",
 	"location.latitude",
 	"location.longitude",
 	"location.horizontalaccuracy",
@@ -159,14 +158,14 @@ var AppInstClientOptionalArgs = []string{
 }
 var AppInstClientAliasArgs = []string{}
 var AppInstClientComments = map[string]string{
-	"key.appinstkey.appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
-	"key.appinstkey.appkey.name":                                 "App name",
-	"key.appinstkey.appkey.version":                              "App version",
-	"key.appinstkey.clusterinstkey.clusterkey.name":              "Cluster name",
-	"key.appinstkey.clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"key.appinstkey.clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
-	"key.appinstkey.clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
-	"key.uuid":                    "App name",
+	"clientkey.appinstkey.appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
+	"clientkey.appinstkey.appkey.name":                                 "App name",
+	"clientkey.appinstkey.appkey.version":                              "App version",
+	"clientkey.appinstkey.clusterinstkey.clusterkey.name":              "Cluster name",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
+	"clientkey.appinstkey.clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
+	"clientkey.uuid":              "App name",
 	"location.latitude":           "latitude in WGS 84 coordinates",
 	"location.longitude":          "longitude in WGS 84 coordinates",
 	"location.horizontalaccuracy": "horizontal accuracy (radius in meters)",

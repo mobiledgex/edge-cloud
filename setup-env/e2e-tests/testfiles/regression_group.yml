@@ -2,17 +2,10 @@ tests:
   - includefile: stop_cleanup.yml
   - includefile: deploy_start.yml
   - includefile: check_dme_nodes.yml
-  - includefile: find_cloudlet_autoprov.yml
   - includefile: add_delete.yml
-  - includefile: add_delete.yml
-    mods: [cli]
   - includefile: add_update_delete.yml
   - includefile: add_delete_2apps.yml
     loops: 2
   - includefile: get_appinstlist.yml
-  - includefile: get_appinstlist.yml
-    api: rest
   - includefile: get_fqdnlist.yml
-  - includefile: get_fqdnlist.yml
-    api: rest
   - includefile: find_cloudlet.yml

@@ -192,22 +192,28 @@ func getCellIdFromDmeReq(req interface{}) uint32 {
 	return 0
 }
 
-func getClientFromFindCloudlet(mreq *dme.FindCloudletRequest) edgeproto.AppInstClient {
-	// TODO
-	return edgeproto.AppInstClient{
-		Key: edgeproto.AppInstClientKey{
+func getClientFromFindCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest) *edgeproto.AppInstClient {
+	if ckey.DevName == "" || ckey.AppName == "" || ckey.AppVers == "" {
+		return nil
+	}
+	return &edgeproto.AppInstClient{
+		ClientKey: edgeproto.AppInstClientKey{
 			AppInstKey: &edgeproto.AppInstKey{
 				AppKey: edgeproto.AppKey{
 					DeveloperKey: edgeproto.DeveloperKey{
-						Name: mreq.DevName,
+						Name: ckey.DevName,
 					},
-					Name:    mreq.AppName,
-					Version: mreq.AppVers,
+					Name:    ckey.AppName,
+					Version: ckey.AppVers,
 				},
 			},
 		},
-		Location: mreq.GpsLocation,
+		Location: *mreq.GpsLocation,
 	}
+}
+
+func getResultFromFindCloudletReply(mreq *dme.FindCloudletReply) edgeproto.AppInstClient_FindStatus {
+	return edgeproto.AppInstClient_FindStatus(mreq.Status)
 }
 
 func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -231,20 +237,22 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		if !ok {
 			return resp, err
 		}
+
 		// Update clients cache
-		client := getClientFromFindCloudlet(req.(*dme.FindCloudletRequest))
-		client.Key.AppInstKey.ClusterInstKey.CloudletKey = call.key.CloudletFound
-		client.Key.Uuid = ckey.UniqueId
-		// TODO - should get this from FindCloudlet GpsLocation
-		if client.Location != nil {
+		client := getClientFromFindCloudlet(ckey, req.(*dme.FindCloudletRequest))
+		if client != nil {
+			client.ClientKey.AppInstKey.ClusterInstKey.CloudletKey = call.key.CloudletFound
+			client.ClientKey.Uuid = ckey.UniqueId
+			// GpsLocation timestamp can carry an arbitrary system time instead of a timestamp
 			client.Location.Timestamp = &dme.Timestamp{}
 			ts := time.Now()
 			client.Location.Timestamp.Seconds = ts.Unix()
 			client.Location.Timestamp.Nanos = int32(ts.Nanosecond())
-		}
-		clientCache.Update(ctx, &client, 0)
-		log.DebugLog(log.DebugLevelDmereq, "Update clients", "client", client)
+			client.Status = getResultFromFindCloudletReply(resp.(*dme.FindCloudletReply))
 
+			ClientSender.Update(ctx, client)
+			log.DebugLog(log.DebugLevelDmereq, "Update clients", "client", client)
+		}
 		call.key.AppKey.DeveloperKey.Name = ckey.DevName
 		call.key.AppKey.Name = ckey.AppName
 		call.key.AppKey.Version = ckey.AppVers
