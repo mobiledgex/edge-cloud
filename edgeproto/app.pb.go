@@ -3,39 +3,30 @@
 
 package edgeproto
 
-import (
-	fmt "fmt"
+import proto "github.com/gogo/protobuf/proto"
+import fmt "fmt"
+import math "math"
+import _ "github.com/gogo/googleapis/google/api"
+import _ "github.com/mobiledgex/edge-cloud/protogen"
+import _ "github.com/gogo/protobuf/gogoproto"
 
-	proto "github.com/gogo/protobuf/proto"
+import strings "strings"
+import reflect "reflect"
 
-	math "math"
+import context "golang.org/x/net/context"
+import grpc "google.golang.org/grpc"
 
-	_ "github.com/gogo/googleapis/google/api"
+import "encoding/json"
+import "github.com/mobiledgex/edge-cloud/objstore"
+import "github.com/coreos/etcd/clientv3/concurrency"
+import "github.com/mobiledgex/edge-cloud/util"
+import "github.com/mobiledgex/edge-cloud/log"
+import "errors"
+import "strconv"
+import "github.com/google/go-cmp/cmp"
+import "github.com/google/go-cmp/cmp/cmpopts"
 
-	_ "github.com/mobiledgex/edge-cloud/protogen"
-
-	_ "github.com/gogo/protobuf/gogoproto"
-
-	strings "strings"
-
-	reflect "reflect"
-
-	context "golang.org/x/net/context"
-
-	"encoding/json"
-	"errors"
-	"strconv"
-
-	"github.com/coreos/etcd/clientv3/concurrency"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/util"
-	grpc "google.golang.org/grpc"
-
-	io "io"
-)
+import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal

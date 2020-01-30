@@ -53,7 +53,6 @@ enum DeleteType {
   AUTO_DELETE = 1;
 }
 
-<<<<<<< HEAD
 
 enum AccessType {
   // Default load balancer or direct based on deployment
@@ -65,9 +64,7 @@ enum AccessType {
 }
 
 
-=======
 // ConfigFile
->>>>>>> af50f759c6c6b51f8d8cb5563cb05cff0238244c
 message ConfigFile {
   // kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config
   string kind = 1;
