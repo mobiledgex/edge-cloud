@@ -168,9 +168,6 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverri
 				cctx.SetOverride(&crmo)
 			}
 			err = s.deleteAppInstInternal(cctx, val, cb)
-			if err == nil {
-				RecordAppInstEvent(cb.Context(), val, cloudcommon.DELETED, cloudcommon.InstanceDown)
-			}
 			if err != nil && err.Error() == val.Key.NotFoundError().Error() {
 				err = nil
 				break
@@ -208,11 +205,7 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
-	err := s.createAppInstInternal(DefCallContext(), in, cb)
-	if err == nil {
-		RecordAppInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
-	}
-	return err
+	return s.createAppInstInternal(DefCallContext(), in, cb)
 }
 
 func getProtocolBitMap(proto dme.LProto) (int32, error) {
@@ -271,6 +264,12 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
 	ctx := cb.Context()
+
+	defer func() {
+		if reterr == nil {
+			RecordAppInstEvent(ctx, &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
+		}
+	}()
 
 	// populate the clusterinst developer from the app developer if not already present
 	if in.Key.ClusterInstKey.Developer == "" {
@@ -459,8 +458,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		err := clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
 		if err != nil {
 			return err
-		} else if clusterInst.State == edgeproto.TrackedState_READY {
-			RecordClusterInstEvent(ctx, &clusterInst, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
 		defer func() {
 			if reterr != nil && !cctx.Undo {
@@ -471,8 +468,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 						"Undo create auto-ClusterInst failed",
 						"key", clusterInst.Key,
 						"undoErr", undoErr)
-				} else {
-					RecordClusterInstEvent(ctx, &clusterInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
 				}
 			}
 		}()
@@ -702,7 +697,7 @@ func (s *AppInstApi) updateAppInstStore(ctx context.Context, in *edgeproto.AppIn
 }
 
 // refreshAppInstInternal returns true if the appinst updated, false otherwise.  False value with no error means no update was needed
-func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.AppInstKey, cb edgeproto.AppInstApi_RefreshAppInstServer, forceUpdate bool) (bool, error) {
+func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.AppInstKey, cb edgeproto.AppInstApi_RefreshAppInstServer, forceUpdate bool) (retbool bool, reterr error) {
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "refreshAppInstInternal", "key", key)
 
@@ -756,6 +751,15 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 		return false, err
 	}
 	if crmUpdateRequired {
+		RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
+
+		defer func () {
+			if reterr == nil {
+				RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+			} else {
+				RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+			}
+		}()
 		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateAppInstTimeout.TimeDuration(), "", cb.Send)
 	}
 	if err != nil {
@@ -769,7 +773,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 	ctx := cb.Context()
 
 	if in.UpdateMultiple {
-		// if UpdateMuliple flag is specified, then only the appkey must be present
+		// if UpdateMultiple flag is specified, then only the appkey must be present
 		if err := in.Key.AppKey.ValidateKey(); err != nil {
 			return err
 		}
@@ -820,11 +824,9 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 	for instkey, _ := range instances {
 		go func(k edgeproto.AppInstKey) {
 			log.DebugLog(log.DebugLevelApi, "updating AppInst", "key", k)
-			RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 			updated, err := s.refreshAppInstInternal(DefCallContext(), k, cb, in.ForceUpdate)
 			if err == nil {
 				instanceUpdateResults[k] <- updateResult{errString: "", revisionUpdated: updated}
-				RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
 			} else {
 				instanceUpdateResults[k] <- updateResult{errString: err.Error(), revisionUpdated: updated}
 			}
@@ -919,25 +921,23 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		return nil
 	}
 	forceUpdate := true
-	RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 	_, err = s.refreshAppInstInternal(cctx, in.Key, cb, forceUpdate)
-	if err != nil {
-		RecordAppInstEvent(cb.Context(), in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
-	}
 	return err
 }
 
 func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
-	err := s.deleteAppInstInternal(DefCallContext(), in, cb)
-	if err == nil {
-		RecordAppInstEvent(cb.Context(), in, cloudcommon.DELETED, cloudcommon.InstanceDown)
-	}
-	return err
+	return s.deleteAppInstInternal(DefCallContext(), in, cb)
 }
 
-func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
+func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := cb.Context()
+
+	defer func() {
+		if reterr == nil {
+			RecordAppInstEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
+		}
+	}()
 
 	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
 	// populate the clusterinst developer from the app developer if not already present
@@ -1044,23 +1044,23 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 	if ignoreCRM(cctx) {
 		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
-		return nil
-	}
-	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, settingsApi.Get().DeleteAppInstTimeout.TimeDuration(), "Deleted AppInst successfully", cb.Send)
-	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
-		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
-		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
-		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
-		err = nil
-	}
-	if err != nil {
-		// crm failed or some other err, undo
-		cb.Send(&edgeproto.Result{Message: "Recreating AppInst due to failure"})
-		undoErr := s.createAppInstInternal(cctx.WithUndo(), in, cb)
-		if undoErr != nil {
-			log.InfoLog("Undo delete AppInst", "undoErr", undoErr)
+	} else {
+		err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, settingsApi.Get().DeleteAppInstTimeout.TimeDuration(), "Deleted AppInst successfully", cb.Send)
+		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
+			s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
+			cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
+			err = nil
 		}
-		return err
+		if err != nil {
+			// crm failed or some other err, undo
+			cb.Send(&edgeproto.Result{Message: "Recreating AppInst due to failure"})
+			undoErr := s.createAppInstInternal(cctx.WithUndo(), in, cb)
+			if undoErr != nil {
+				log.InfoLog("Undo delete AppInst", "undoErr", undoErr)
+			}
+			return err
+		}
 	}
 	// delete clusterinst afterwards if it was auto-created and nobody is left using it
 	clusterInst := edgeproto.ClusterInst{}
@@ -1070,8 +1070,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if autoerr != nil {
 			log.InfoLog("Failed to delete auto-ClusterInst",
 				"clusterInst", clusterInst, "err", err)
-		} else {
-			RecordClusterInstEvent(ctx, &clusterInst, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
 	}
 	return err
@@ -1095,10 +1093,10 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 		}
 		// healthy -> not healthy
 		if inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_OK && state != edgeproto.HealthCheck_HEALTH_CHECK_OK {
-			RecordAppInstEvent(ctx, &inst, cloudcommon.HEALTH_CHECK_FAIL, cloudcommon.InstanceDown)
+			RecordAppInstEvent(ctx, &inst.Key, cloudcommon.HEALTH_CHECK_FAIL, cloudcommon.InstanceDown)
 			// not healthy -> healthy
 		} else if inst.HealthCheck != edgeproto.HealthCheck_HEALTH_CHECK_OK && state == edgeproto.HealthCheck_HEALTH_CHECK_OK {
-			RecordAppInstEvent(ctx, &inst, cloudcommon.HEALTH_CHECK_OK, cloudcommon.InstanceUp)
+			RecordAppInstEvent(ctx, &inst.Key, cloudcommon.HEALTH_CHECK_OK, cloudcommon.InstanceUp)
 		}
 		inst.HealthCheck = state
 		s.store.STMPut(stm, &inst)
@@ -1293,17 +1291,17 @@ func setL7Port(port *dme.AppPort, key *edgeproto.AppInstKey) bool {
 	return true
 }
 
-func RecordAppInstEvent(ctx context.Context, app *edgeproto.AppInst, event cloudcommon.InstanceEvent, serverStatus string) {
+func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, event cloudcommon.InstanceEvent, serverStatus string) {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.AppInstEvent
 	ts, _ := types.TimestampProto(time.Now())
 	metric.Timestamp = *ts
-	metric.AddTag("operator", app.Key.ClusterInstKey.CloudletKey.OperatorKey.Name)
-	metric.AddTag("cloudlet", app.Key.ClusterInstKey.CloudletKey.Name)
-	metric.AddTag("cluster", app.Key.ClusterInstKey.ClusterKey.Name)
-	metric.AddTag("dev", app.Key.AppKey.DeveloperKey.Name)
-	metric.AddTag("app", app.Key.AppKey.Name)
-	metric.AddTag("version", app.Key.AppKey.Version)
+	metric.AddTag("operator", appInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	metric.AddTag("cloudlet", appInstKey.ClusterInstKey.CloudletKey.Name)
+	metric.AddTag("cluster", appInstKey.ClusterInstKey.ClusterKey.Name)
+	metric.AddTag("dev", appInstKey.AppKey.DeveloperKey.Name)
+	metric.AddTag("app", appInstKey.AppKey.Name)
+	metric.AddTag("version", appInstKey.AppKey.Version)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 

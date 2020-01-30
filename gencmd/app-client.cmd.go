@@ -556,10 +556,10 @@ var RegisterClientRequestComments = map[string]string{
 	"appname":      "App Name",
 	"appvers":      "App Version",
 	"carriername":  "Carrier Name _Not currently used_",
-	"authtoken":    "Authentication Token More details about the auth token here",
-	"cellid":       "Cell ID Cell ID where the client is",
+	"authtoken":    "Authentication Token _(optional)_ An authentication token supplied by the application.",
+	"cellid":       "Cell ID _(optional)_ Cellular ID of where the client is connected.",
 	"uniqueidtype": "Unique ID Type Type of unique ID provided by the client",
-	"uniqueid":     "Unique ID Optional. Unique identification of the client device or user. May be overridden by the server.",
+	"uniqueid":     "Unique ID _(optional)_ Unique identification of the client device or user. May be overridden by the server.",
 	"tags.type":    "type of data",
 	"tags.data":    "data value",
 }
@@ -582,7 +582,7 @@ var RegisterClientReplyComments = map[string]string{
 	"sessioncookie":  "Session Cookie to be used in later API calls",
 	"tokenserveruri": "URI for the Token Server",
 	"uniqueidtype":   "Unique ID Type Type of unique ID provided by the server",
-	"uniqueid":       "Unique ID Optional. Unique identification of the client device or user",
+	"uniqueid":       "Unique ID _(optional)_ Unique identification of the client device or user",
 	"tags.type":      "type of data",
 	"tags.data":      "data value",
 }
@@ -623,7 +623,7 @@ var FindCloudletRequestComments = map[string]string{
 	"devname":                        "Dev Name Applicable to Platform apps only",
 	"appname":                        "App Name Applicable to Platform apps only",
 	"appvers":                        "App Version Applicable to Platform apps only",
-	"cellid":                         "Cell ID Cell ID where the client is",
+	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
 	"tags.type":                      "type of data",
 	"tags.data":                      "data value",
 }
@@ -705,7 +705,7 @@ var VerifyLocationRequestComments = map[string]string{
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"verifyloctoken":                 "Verify Location Token Must be retrieved from TokenServerURI",
-	"cellid":                         "Cell ID Cell ID where the client is",
+	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
 	"tags.type":                      "type of data",
 	"tags.data":                      "data value",
 }
@@ -743,7 +743,7 @@ var GetLocationRequestComments = map[string]string{
 	"ver":           "API version",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
 	"carriername":   "Unique carrier identification (typically MCC + MNC)",
-	"cellid":        "Cell id where the client is",
+	"cellid":        "_(optional)_ Cell id where the client is",
 	"tags.type":     "type of data",
 	"tags.data":     "data value",
 }
@@ -812,7 +812,7 @@ var AppInstListRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"cellid":                         "Cell id where the client is",
+	"cellid":                         "_(optional)_ Cell id where the client is",
 	"tags.type":                      "type of data",
 	"tags.data":                      "data value",
 }
@@ -956,7 +956,7 @@ var FqdnListRequestAliasArgs = []string{}
 var FqdnListRequestComments = map[string]string{
 	"ver":           "API version",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
-	"cellid":        "Cell id where the client is",
+	"cellid":        "_(optional)_ Cell id where the client is",
 	"tags.type":     "type of data",
 	"tags.data":     "data value",
 }
@@ -975,7 +975,7 @@ var AppFqdnComments = map[string]string{
 	"appvers":            "App Version",
 	"devname":            "developer name",
 	"fqdns":              "App FQDN",
-	"androidpackagename": "Optional. Android package name",
+	"androidpackagename": "_(optional)_ Android package name",
 }
 var AppFqdnSpecialArgs = map[string]string{
 	"fqdns": "StringArray",
@@ -999,7 +999,7 @@ var FqdnListReplyComments = map[string]string{
 	"appfqdns.appvers":            "App Version",
 	"appfqdns.devname":            "developer name",
 	"appfqdns.fqdns":              "App FQDN",
-	"appfqdns.androidpackagename": "Optional. Android package name",
+	"appfqdns.androidpackagename": "_(optional)_ Android package name",
 	"status":                      ", one of FlUndefined, FlSuccess, FlFail",
 	"tags.type":                   "type of data",
 	"tags.data":                   "data value",
@@ -1024,7 +1024,7 @@ var DynamicLocGroupRequestComments = map[string]string{
 	"lgid":          "Dynamic Location Group Id",
 	"commtype":      ", one of DlgUndefined, DlgSecure, DlgOpen",
 	"userdata":      "Unused",
-	"cellid":        "Cell id where the client is",
+	"cellid":        "_(optional)_ Cell id where the client is",
 	"tags.type":     "type of data",
 	"tags.data":     "data value",
 }
@@ -1124,9 +1124,9 @@ var QosPositionRequestComments = map[string]string{
 	"positions.gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"positions.gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"positions.gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"ltecategory":                              "Optional. Clients device LTE category number.",
+	"ltecategory":                              "_(optional)_ Clients device LTE category number.",
 	"bandselection.rat_2g":                     "Radio Access Technologies",
-	"cellid":                                   "Cell id where the client is",
+	"cellid":                                   "_(optional)_ Cell id where the client is",
 	"tags.type":                                "type of data",
 	"tags.data":                                "data value",
 }

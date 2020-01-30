@@ -36,6 +36,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Health check status
+//
 // Health check status gets set by external, or rootLB health check
 type HealthCheck int32
 
@@ -64,6 +66,8 @@ func (x HealthCheck) String() string {
 }
 func (HealthCheck) EnumDescriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{0} }
 
+// App Instance Unique Key
+//
 // AppInstKey uniquely identifies an Application Instance (AppInst) or Application Instance state (AppInstInfo).
 type AppInstKey struct {
 	// App key
@@ -77,11 +81,14 @@ func (m *AppInstKey) String() string            { return proto.CompactTextString
 func (*AppInstKey) ProtoMessage()               {}
 func (*AppInstKey) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{0} }
 
+// Application Instance
+//
 // AppInst is an instance of an App on a Cloudlet where it is defined by an App plus a ClusterInst key.
 // Many of the fields here are inherited from the App definition.
 type AppInst struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	// required: true
 	// Unique identifier key
 	Key AppInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
 	// Cached location of the cloudlet
@@ -129,6 +136,9 @@ func (m *AppInst) String() string            { return proto.CompactTextString(m)
 func (*AppInst) ProtoMessage()               {}
 func (*AppInst) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{1} }
 
+// AppInst Runtime Info
+//
+// Runtime information of active AppInsts
 type AppInstRuntime struct {
 	// List of container names
 	ContainerIds []string `protobuf:"bytes,1,rep,name=container_ids,json=containerIds" json:"container_ids,omitempty"`
@@ -215,15 +225,15 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for AppInstApi service
 
 type AppInstApiClient interface {
-	// Create an application instance
+	// Create Application Instance. Creates an instance of an App on a Cloudlet where it is defined by an App plus a ClusterInst key. Many of the fields here are inherited from the App definition
 	CreateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_CreateAppInstClient, error)
-	// Delete an application instance
+	// Delete Application Instance. Deletes an instance of the App from the Cloudlet
 	DeleteAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_DeleteAppInstClient, error)
-	// Refresh restarts an application instance with new App settings or image
+	// Refresh Application Instance. Refresh restarts an application instance with new App settings or image
 	RefreshAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_RefreshAppInstClient, error)
-	// Update an AppInst and then refresh it
+	// Update Application Instance. Updates an application instance and then refreshes it
 	UpdateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_UpdateAppInstClient, error)
-	// Show application instances. Any fields specified will be used to filter results.
+	// Show Application Instances. Lists all the application instances managed by edge controller. Any fields specified will be used to filter results
 	ShowAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_ShowAppInstClient, error)
 }
 
@@ -398,15 +408,15 @@ func (x *appInstApiShowAppInstClient) Recv() (*AppInst, error) {
 // Server API for AppInstApi service
 
 type AppInstApiServer interface {
-	// Create an application instance
+	// Create Application Instance. Creates an instance of an App on a Cloudlet where it is defined by an App plus a ClusterInst key. Many of the fields here are inherited from the App definition
 	CreateAppInst(*AppInst, AppInstApi_CreateAppInstServer) error
-	// Delete an application instance
+	// Delete Application Instance. Deletes an instance of the App from the Cloudlet
 	DeleteAppInst(*AppInst, AppInstApi_DeleteAppInstServer) error
-	// Refresh restarts an application instance with new App settings or image
+	// Refresh Application Instance. Refresh restarts an application instance with new App settings or image
 	RefreshAppInst(*AppInst, AppInstApi_RefreshAppInstServer) error
-	// Update an AppInst and then refresh it
+	// Update Application Instance. Updates an application instance and then refreshes it
 	UpdateAppInst(*AppInst, AppInstApi_UpdateAppInstServer) error
-	// Show application instances. Any fields specified will be used to filter results.
+	// Show Application Instances. Lists all the application instances managed by edge controller. Any fields specified will be used to filter results
 	ShowAppInst(*AppInst, AppInstApi_ShowAppInstServer) error
 }
 

@@ -14,6 +14,8 @@ import "gogoproto/gogo.proto";
 // pointer, otherwise the enclosing struct cannot properly function
 // as the key to a hash table. Thus embedded key structs have nullable false.
 
+// Application unique key
+//
 // AppKey uniquely identifies an App
 message AppKey {
   // Developer key
@@ -27,6 +29,8 @@ message AppKey {
   option (gogoproto.gostring) = true;
 }
 
+// ImageType
+//
 // ImageType specifies image type of an App
 enum ImageType {
   // Unknown image type
@@ -39,6 +43,9 @@ enum ImageType {
   IMAGE_TYPE_HELM = 3;
 }
 
+// DeleteType
+//
+// DeleteType specifies if AppInst can be auto deleted or not
 enum DeleteType {
   // No autodelete
   NO_AUTO_DELETE = 0;
@@ -46,6 +53,7 @@ enum DeleteType {
   AUTO_DELETE = 1;
 }
 
+<<<<<<< HEAD
 
 enum AccessType {
   // Default load balancer or direct based on deployment
@@ -57,6 +65,9 @@ enum AccessType {
 }
 
 
+=======
+// ConfigFile
+>>>>>>> af50f759c6c6b51f8d8cb5563cb05cff0238244c
 message ConfigFile {
   // kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config
   string kind = 1;
@@ -64,10 +75,13 @@ message ConfigFile {
   string config = 2;
 }
 
-//App belongs to developers and is used to provide information about their application.
+// Application
+//
+// App belongs to developers and is used to provide information about their application.
  message App {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
+  // required: true
   // Unique identifier key
   AppKey key = 2 [(gogoproto.nullable) = false];
   // URI of where image resides
@@ -128,7 +142,7 @@ message ConfigFile {
 }
 
 service AppApi {
-  // Create an application
+  // Create Application. Create definition for an application instance which will be deployed on a Cloudlet
   rpc CreateApp(App) returns (Result) {
     option (google.api.http) = {
       post: "/create/app"
@@ -137,7 +151,7 @@ service AppApi {
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.DeveloperKey.Name";
     option (protogen.mc2_custom_authz) = true;
   }
-  // Delete an application
+  // Delete Application. Delete definition of an application instance. This requires that no application instance with this definition exists. If it exists, then user must delete those first
   rpc DeleteApp(App) returns (Result) {
     option (google.api.http) = {
       post: "/delete/app"
@@ -145,7 +159,7 @@ service AppApi {
     };
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.DeveloperKey.Name";
   }
-  // Update an application
+  // Update Application. Update definition of an application instance
   rpc UpdateApp(App) returns (Result) {
     option (google.api.http) = {
       post: "/update/app"
@@ -154,7 +168,7 @@ service AppApi {
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.DeveloperKey.Name";
     option (protogen.mc2_custom_authz) = true;
   }
-  // Show applications. Any fields specified will be used to filter results.
+  // Show Applications. Lists all application definitions managed from edge controller. Any fields specified will be used to filter results
   rpc ShowApp(App) returns (stream App) {
     option (google.api.http) = {
       post: "/show/app"
