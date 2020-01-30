@@ -533,6 +533,7 @@ apps:
   defaultflavor:
     name: x1.small
   deployment: kubernetes
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: AcmeAppCo
@@ -556,6 +557,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication1
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: AcmeAppCo
@@ -579,6 +581,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication2
+  accesstype: AccessTypeLoadBalancer
 
 appinstances:
 - key:

@@ -212,6 +212,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: AcmeAppCo
@@ -236,6 +237,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: helm
   androidpackagename: com.acme.helmApplication
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: Samsung
@@ -249,6 +251,7 @@ apps:
   cluster:
     name: SmallCluster
   deployment: kubernetes
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -302,6 +305,7 @@ apps:
       alertmanager:
         enabled: false
   revision: 1
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -323,6 +327,7 @@ apps:
         name: standard
         defaultClass: true
   internalports: true
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: AcmeAppCo1
@@ -346,6 +351,7 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   deployment: vm
+  accesstype: AccessTypeDirect
 - key:
     developerkey:
       name: AcmeAppCo1
@@ -359,6 +365,7 @@ apps:
   cluster:
     name: DefaultVMCluster
   deployment: vm
+  accesstype: AccessTypeDirect
 - key:
     developerkey:
       name: AcmeAppCo
@@ -370,6 +377,7 @@ apps:
     name: x1.small
   deployment: kubernetes
   officialfqdn: noportsapp.acmeappco.com
+  accesstype: AccessTypeLoadBalancer
 
 appinstances:
 - key:
