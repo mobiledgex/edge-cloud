@@ -125,12 +125,6 @@ func validateFields(ctx context.Context) error {
 			return err
 		}
 	}
-	if *cloudletVMImagePath != "" {
-		err := util.ValidateImagePath(*cloudletVMImagePath)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

@@ -555,7 +555,18 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 			return
 		}
-		log.SpanLog(ctx, log.DebugLevelMexos, "updated cloudlet", "cloudlet", new)
+		if !cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo) {
+			log.SpanLog(ctx, log.DebugLevelMexos, "CloudletInfo not found for cloudlet", "key", new.Key)
+			return
+		}
+		log.SpanLog(ctx, log.DebugLevelMexos, "update cloudlet", "cloudlet", new, "cloudletInfo state", cloudletInfo.State)
+		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+			// This means cloudlet has upgraded successfully. If it was in progress
+			// then state would be `CLOUDLET_STATE_INIT`, which happens when service is
+			// upgrading
+			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+		}
 	} else if new.State == edgeproto.TrackedState_UPDATE_ERROR {
 		// On an UpdateError, old cloudlet's last state will either be UPGRADE or ERRORS
 		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE &&

@@ -209,8 +209,13 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.Version = *versionTag
 	}
 
-	if in.AccessVars != nil && in.DeploymentLocal {
-		return errors.New("Access vars is not supported for local deployment")
+	if in.DeploymentLocal {
+		if in.AccessVars != nil {
+			return errors.New("Access vars is not supported for local deployment")
+		}
+		if in.ImageVersion != "" {
+			return errors.New("Image version is not supported for local deployment")
+		}
 	}
 
 	return s.createCloudletInternal(DefCallContext(), in, cb)
@@ -314,8 +319,9 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		// Wait for CRM to connect to controller
 		err = s.WaitForCloudlet(
 			ctx, &in.Key,
-			edgeproto.TrackedState_CREATE_ERROR, // Set error state
-			"Created Cloudlet successfully",     // Set success message
+			edgeproto.CloudletState_CLOUDLET_STATE_INIT, // Set CRM start state
+			edgeproto.TrackedState_CREATE_ERROR,         // Set error state
+			"Created Cloudlet successfully",             // Set success message
 			PlatformInitTimeout, updatecb.cb,
 		)
 	} else {
@@ -363,7 +369,7 @@ func (s *CloudletApi) UpdateCloudletState(ctx context.Context, key *edgeproto.Cl
 	return err
 }
 
-func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, checkpointState edgeproto.CloudletState, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, updateCallback edgeproto.CacheUpdateCallback) error {
 	lastStatusId := uint32(0)
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
@@ -379,11 +385,14 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		}
 	}()
 
+	log.SpanLog(ctx, log.DebugLevelApi, "wait for cloudlet state", "key", key, "checkpointState", checkpointState, "errorState", errorState)
+
 	info := edgeproto.CloudletInfo{}
 	if cloudletInfoApi.cache.Get(key, &info) {
 		lastStatusId = info.Status.TaskNumber
 	}
 
+	crmCheckpointReached := false
 	checkState := func(key *edgeproto.CloudletKey) {
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.cache.Get(key, &cloudlet) {
@@ -398,9 +407,22 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		localVersion := cloudlet.Version
 		remoteVersion := cloudletInfo.Version
 
+		if !crmCheckpointReached {
+			if curState == checkpointState {
+				crmCheckpointReached = true
+			}
+		}
+
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
 		}
+
+		// Wait for CRM to reach a checkpoint state from which controller
+		// will start tracking its progress
+		if !crmCheckpointReached {
+			return
+		}
+
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 				done <- true
@@ -596,6 +618,14 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		upgrade = true
 	}
 
+	if _, found := fmap[edgeproto.CloudletFieldImageVersion]; found {
+		err = util.ValidateImageVersion(in.ImageVersion)
+		if err != nil {
+			return err
+		}
+		upgrade = true
+	}
+
 	accessVars := make(map[string]string)
 	if _, found := fmap[edgeproto.CloudletFieldAccessVars]; found {
 		if !upgrade {
@@ -653,6 +683,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if ignoreCRMState(cctx) {
 			cur.State = edgeproto.TrackedState_READY
 		}
+		if cur.State == edgeproto.TrackedState_READY {
+			cur.Errors = nil
+		}
 		s.store.STMPut(stm, cur)
 		return nil
 	})
@@ -660,7 +693,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	if err != nil {
 		return err
 	}
-	cb.Send(&edgeproto.Result{Message: "Updated Cloudlet successfully"})
 
 	// after the cloudlet change is committed, if the location changed,
 	// update app insts as well.
@@ -697,7 +729,7 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	if err != nil {
 		return err
 	}
-	
+
 	// cleanup old crms post upgrade
 	pfConfig.CleanupMode = true
 	cloudlet := &edgeproto.Cloudlet{}
@@ -735,8 +767,9 @@ func (s *CloudletApi) UpgradeCloudlet(ctx context.Context, in *edgeproto.Cloudle
 	// Wait for cloudlet to finish upgrading
 	err = s.WaitForCloudlet(
 		ctx, &in.Key,
-		edgeproto.TrackedState_UPDATE_ERROR, // Set error state
-		"Upgraded Cloudlet successfully",    // Set success message
+		edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE, // Set CRM start state
+		edgeproto.TrackedState_UPDATE_ERROR,            // Set error state
+		"Upgraded Cloudlet successfully",               // Set success message
 		PlatformInitTimeout, updatecb.cb,
 	)
 	return err

@@ -14,6 +14,8 @@ type PlatformConfig struct {
 	VaultAddr    string
 	Region       string
 	TestMode     bool
+	ImagePath    string
+	ImageVersion string
 }
 
 // Platform abstracts the underlying cloudlet platform.

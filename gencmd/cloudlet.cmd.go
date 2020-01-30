@@ -1020,6 +1020,7 @@ var CloudletOptionalArgs = []string{
 	"restagmap.value.name",
 	"restagmap.value.operatorkey.name",
 	"accessvars",
+	"imageversion",
 }
 var CloudletAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -1068,6 +1069,7 @@ var CloudletComments = map[string]string{
 	"restagmap.value.name":                "Resource Table Name",
 	"restagmap.value.operatorkey.name":    "Company or Organization name of the operator",
 	"accessvars":                          "Variables required to access cloudlet",
+	"imageversion":                        "VM image version for deploying cloudlet services",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1234,4 +1236,5 @@ var CreateCloudletOptionalArgs = []string{
 	"restagmap.value.name",
 	"restagmap.value.operatorkey.name",
 	"accessvars",
+	"imageversion",
 }

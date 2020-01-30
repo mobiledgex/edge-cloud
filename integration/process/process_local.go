@@ -376,6 +376,14 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--version")
 		args = append(args, p.Version)
 	}
+	if p.ImagePath != "" {
+		args = append(args, "--imagePath")
+		args = append(args, p.ImagePath)
+	}
+	if p.ImageVersion != "" {
+		args = append(args, "--imageVersion")
+		args = append(args, p.ImageVersion)
+	}
 	if p.Region != "" {
 		args = append(args, "--region")
 		args = append(args, p.Region)

@@ -62,6 +62,8 @@ type Crm struct {
 	Span          string
 	CleanupMode   bool
 	Version       string
+	ImagePath     string
+	ImageVersion  string
 	Region        string
 }
 type LocApiSim struct {

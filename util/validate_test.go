@@ -124,6 +124,19 @@ func TestVersion(t *testing.T) {
 
 	_, err = VersionParse("2011-1-1")
 	require.NotNil(t, err, "invalid version")
+
+	err = ValidateImageVersion("2.0.0")
+	require.Nil(t, err, "valid image version")
+
+	err = ValidateImageVersion("2.0-0")
+	require.Nil(t, err, "valid image version")
+
+	err = ValidateImageVersion("2.0_0")
+	require.Nil(t, err, "valid image version")
+
+	err = ValidateImageVersion(".2.0.0")
+	require.NotNil(t, err, "invalid image version")
+
 }
 
 func TestHeatSanitize(t *testing.T) {

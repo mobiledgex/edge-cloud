@@ -218,6 +218,8 @@ message Cloudlet {
   map<string, edgeproto.ResTagTableKey> res_tag_map = 22 [(protogen.backend) = true];
   // Variables required to access cloudlet
   map<string, string> access_vars = 23;
+  // VM image version for deploying cloudlet services
+  string image_version = 24;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
