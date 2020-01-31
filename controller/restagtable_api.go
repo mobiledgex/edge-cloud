@@ -150,10 +150,13 @@ func (s *ResTagTableApi) RemoveResTag(ctx context.Context, in *edgeproto.ResTagT
 
 // Routines supporting the mapping used in GetVMSpec
 //
-func (s *ResTagTableApi) GetCloudletResourceMap(ctx context.Context, key *edgeproto.ResTagTableKey) (*edgeproto.ResTagTable, error) {
+func (s *ResTagTableApi) GetCloudletResourceMap(ctx context.Context, stm concurrency.STM, key *edgeproto.ResTagTableKey) (*edgeproto.ResTagTable, error) {
 
-	tbl, err := resTagTableApi.GetResTagTable(ctx, key)
-	return tbl, err
+	tbl := edgeproto.ResTagTable{}
+	if !s.store.STMGet(stm, key, &tbl) {
+		return nil, key.NotFoundError()
+	}
+	return &tbl, nil
 }
 
 func (s *ResTagTableApi) findImagematch(res string, cli edgeproto.CloudletInfo) (string, bool) {
@@ -176,7 +179,7 @@ func (s *ResTagTableApi) findAZmatch(res string, cli edgeproto.CloudletInfo) (st
 	return "", false
 }
 
-func (s *ResTagTableApi) optResLookup(ctx context.Context, nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, string, bool, error) {
+func (s *ResTagTableApi) optResLookup(ctx context.Context, stm concurrency.STM, nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, string, bool, error) {
 	var resmap map[string]*edgeproto.ResTagTableKey = cl.ResTagMap
 	var img, az string
 	var wildcard bool = false
@@ -214,7 +217,7 @@ func (s *ResTagTableApi) optResLookup(ctx context.Context, nodeflavor edgeproto.
 				return "", "", false, fmt.Errorf("No GPU resources requested")
 			}
 
-			tbl, err := s.GetCloudletResourceMap(ctx, tblkey)
+			tbl, err := s.GetCloudletResourceMap(ctx, stm, tblkey)
 			if err != nil || tbl == nil {
 				// gpu requested and
 				// no gpu table, osFlavor fails
@@ -279,7 +282,7 @@ func (s *ResTagTableApi) optResLookup(ctx context.Context, nodeflavor edgeproto.
 }
 
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
-func (s *ResTagTableApi) GetVMSpec(ctx context.Context, nodeflavor edgeproto.Flavor, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (*vmspec.VMCreationSpec, error) {
+func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nodeflavor edgeproto.Flavor, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (*vmspec.VMCreationSpec, error) {
 	var flavorList []*edgeproto.FlavorInfo
 	var vmspec vmspec.VMCreationSpec
 	var az, img string
@@ -321,7 +324,7 @@ func (s *ResTagTableApi) GetVMSpec(ctx context.Context, nodeflavor edgeproto.Fla
 		// If any specific resource fails, the flavor is rejected.
 		var ok bool
 		if nodeflavor.OptResMap != nil {
-			if az, img, ok, _ = resTagTableApi.optResLookup(ctx, nodeflavor, *flavor, cl, cli); !ok {
+			if az, img, ok, _ = resTagTableApi.optResLookup(ctx, stm, nodeflavor, *flavor, cl, cli); !ok {
 				continue
 			}
 		}
