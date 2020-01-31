@@ -535,7 +535,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 
 	defer func() {
 		if reterr == nil {
-			RecordClusterInstEvent(context.WithValue(ctx, "clusterinst", *in), &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
+			RecordClusterInstEvent(context.WithValue(ctx, in.Key, *in), &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
 	}()
 
@@ -773,7 +773,7 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
-	info, ok := ctx.Value("clusterinst").(edgeproto.ClusterInst)
+	info, ok := ctx.Value(clusterInstKey).(edgeproto.ClusterInst)
 	if !ok { // if not provided (aka not recording a delete), get the flavorkey and numnodes ourself
 		info = edgeproto.ClusterInst{}
 		if !clusterInstApi.cache.Get(clusterInstKey, &info) {

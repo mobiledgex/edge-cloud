@@ -124,6 +124,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -145,6 +146,7 @@ apps:
         name: standard
         defaultClass: true
   internalports: true
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -197,6 +199,7 @@ apps:
         enabled: false
       alertmanager:
         enabled: false
+  accesstype: AccessTypeLoadBalancer
 
 appinstances:
 - key:
