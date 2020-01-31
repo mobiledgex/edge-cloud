@@ -40,7 +40,7 @@ info:
       ```java
       distributed_match_engine.AppClient$RegisterClientReply@e3d72edd 
 
-      session_cookie: "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1ODA0OTgwMTksImlhdCI6MTU4MDQxMTYxOSwia2V5Ijp7InBlZXJpcCI6IjEwLjI0      MC4wLjgiLCJkZXZuYW1lIjoiTW9iaWxlZGdlWCIsImFwcG5hbWUiOiJNb2JpbGVkZ2VYIFNESyBEZW1vIiwiYXBwdmVycyI6IjEuMCIsInVuaXF1ZWlkdHlwZSI6ImRtZS      1rc3VpZCIsInVuaXF1ZWlkIjoiMVg3eXFjdEZJNFA4R2lYNkhNYjFVQTRiUU1LIiwia2lkIjo0fX0.9kM38-mqfcRZhT59YRb3f3ZE1OuwchQgcBEHlRufg07gwgt55Ckr      MNubUeZvPmyGbwKHUYKr4z3cG8i4PfR1sA"
+      session_cookie: "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1ODA0OTgwMTksImlhdCI6MTU4MDQxMTYxOSwia2V5Ijp7InBlZXJpcCI6IjEwLjI0MC4wLjgiLCJkZXZuYW1lIjoiTW9iaWxlZGdlWCIsImFwcG5hbWUiOiJNb2JpbGVkZ2VYIFNESyBEZW1vIiwiYXBwdmVycyI6IjEuMCIsInVuaXF1ZWlkdHlwZSI6ImRtZS1rc3VpZCIsInVuaXF1ZWlkIjoiMVg3eXFjdEZJNFA4R2lYNkhNYjFVQTRiUU1LIiwia2lkIjo0fX0.9kM38-mqfcRZhT59YRb3f3ZE1OuwchQgcBEHlRufg07gwgt55CkrMNubUeZvPmyGbwKHUYKr4z3cG8i4PfR1sA"
       status: RS_SUCCESS
       status_value: 1
       token_server_uri: "http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc"
