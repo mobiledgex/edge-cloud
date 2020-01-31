@@ -201,6 +201,7 @@ apps:
         enabled: false
       alertmanager:
         enabled: false
+  accesstype: AccessTypeLoadBalancer
 
 appinstances:
 - key:
