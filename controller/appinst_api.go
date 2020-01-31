@@ -639,7 +639,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				}
 				// port range is validated on app create, but checked again here in case there were
 				// pre-existing apps which violate the supported range
-				err = edgeproto.ValidatePortRangeForAccessType(ports, app.AccessType)
+				err = validatePortRangeForAccessType(ports, app.AccessType)
 				if err != nil {
 					return err
 				}
@@ -753,7 +753,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 	if crmUpdateRequired {
 		RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 
-		defer func () {
+		defer func() {
 			if reterr == nil {
 				RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
 			} else {
