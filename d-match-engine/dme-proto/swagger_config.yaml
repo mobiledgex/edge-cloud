@@ -35,6 +35,16 @@ info:
           .build();
       AppClient.RegisterClientReply registerClientReply = me.registerClient(registerClientRequest, 10000);
       ```
+      
+      Example Response:
+      ```java
+      distributed_match_engine.AppClient$RegisterClientReply@e3d72edd 
+
+      session_cookie: "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1ODA0OTgwMTksImlhdCI6MTU4MDQxMTYxOSwia2V5Ijp7InBlZXJpcCI6IjEwLjI0      MC4wLjgiLCJkZXZuYW1lIjoiTW9iaWxlZGdlWCIsImFwcG5hbWUiOiJNb2JpbGVkZ2VYIFNESyBEZW1vIiwiYXBwdmVycyI6IjEuMCIsInVuaXF1ZWlkdHlwZSI6ImRtZS      1rc3VpZCIsInVuaXF1ZWlkIjoiMVg3eXFjdEZJNFA4R2lYNkhNYjFVQTRiUU1LIiwia2lkIjo0fX0.9kM38-mqfcRZhT59YRb3f3ZE1OuwchQgcBEHlRufg07gwgt55Ckr      MNubUeZvPmyGbwKHUYKr4z3cG8i4PfR1sA"
+      status: RS_SUCCESS
+      status_value: 1
+      token_server_uri: "http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc"
+      ```
 
       ## FindCloudlet
       Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
@@ -49,6 +59,29 @@ info:
           .build();
       AppClient.FindCloudletReply findCloudletReply = me.findCloudlet(findCloudletRequest, 10000);
       ```
+      
+      Example Response:
+      ```java
+      distributed_match_engine.AppClient$FindCloudletReply@2119fe09
+
+      cloudlet_location {
+        latitude: 41.87
+        longitude: -93.097
+        timestamp {
+          seconds: 0
+        }
+      }
+      fqdn: "mobiledgexmobiledgexsdkdemo10.mexdemo-app-cluster.centralus-main.azure.mobiledgex.net"
+      ports {
+        fqdn_prefix: "mobiledgexsdkdemo-tcp."
+        internal_port: 7777
+        proto: L_PROTO_TCP
+        proto_value: 1
+        public_port: 7777
+      }
+      status: FIND_FOUND
+      status_value: 1
+      ``` 
 
       ## VerifyLocation
       Verifies that the GPS coordinates accurately report actual location of device
@@ -60,6 +93,14 @@ info:
       MatchingEngine me = new MatchingEngine(this);
       AppClient.VerifyLocationRequest verifyRequest = me.createVerifyLocationRequest(activityContext, carrierName, location, cellID, tags);
       AppClient.VerifyLocationReply verifiedLocation = me.verifyLocation(verifyRequest, 10000);
+      ```
+      Example Response
+      ```java
+      distributed_match_engine.AppClient$VerifyLocationReply@107c45be
+      
+      gps_location_accuracy_km: -1.0
+      gps_location_status: LOC_MISMATCH_SAME_COUNTRY
+      gps_location_status_value: 2
       ```
 
       ## GetConnection
@@ -178,6 +219,22 @@ info:
       RegisterClientRequest registerClientRequest = me.CreateRegisterClientRequest(carrierName, devName, appName, appVers, authToken);
       RegisterClientReply registerClientReply = await me.RegisterClient(registerClientRequest);
       ```
+      
+      Example Response:
+      ```csharp
+      RegisterClientReply: 
+
+      session_cookie: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1ODA1MTA3MTksImlhdCI6MTU4MDQyNDMxOSwia2V5Ijp7InBlZXJpcCI6IjEyN
+      y4wLjAuMSIsImRldm5hbWUiOiJNb2JpbGVkZ2VYIiwiYXBwbmFtZSI6Ik1vYmlsZWRnZVggU0RLIERlbW8iLCJhcHB2ZXJzIjoiMS4wIiwidW5pcXVlaWR0eXBlIjo
+      iZG1lLWtzdWlkIiwidW5pcXVlaWQiOiIxWDhPYWlSODVSejN3Z0F4V3BEVkpnYk9RSzciLCJraWQiOjJ9fQ.puGP07UCal3FbpWjj9mlrJe5F0Tjv9QvYMwXhmGq7y
+      cPcxNJ8vjnDNJa67dmRgNIsGXIAd0KXolj-3n_xNIL9A, 
+      status: RS_SUCCESS, 
+      tags: DistributedMatchEngine.Tag[], 
+      token_server_uri: http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc, 
+      unique_id: , 
+      unique_id_type: , 
+      ver: 0
+      ```
 
       ## FindCloudlet
       Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
@@ -190,7 +247,18 @@ info:
       FindCloudletRequest findCloudletRequest = CreateFindCloudletRequest(carrierName, developerName, appName, appVersion, loc);
       FindCloudletReply findCloudletReply = await FindCloudlet(findCloudletRequest);
       ```
-      
+      Example Response:
+      ```csharp
+      FindCloudletReply: 
+
+      cloudlet_location: DistributedMatchEngine.Loc, 
+      fqdn: frankfurt-main.tdg.mobiledgex.net, 
+      ports: DistributedMatchEngine.AppPort[], 
+      status: FIND_FOUND, 
+      tags: DistributedMatchEngine.Tag[], 
+      ver: 0 
+      ```
+ 
       ## VerifyLocation
       Verifies that the GPS coordinates accurately report actual location of device
 
@@ -201,6 +269,16 @@ info:
       MatchingEngine me = new MatchingEngine();
       VerifyLocationRequest verifyLocationRequest = me.CreateVerifyLocationRequest(carrierName, loc, cellID, tags);
       VerifyLocationReply verifyLocationReply = await me.VerifyLocation(verifyLocationRequest);
+      ```
+      Example Response:
+      ```csharp
+      VerifyLocationReply: 
+      
+      gps_location_accuracy_km: -1, 
+      gps_location_status: LOC_UNKNOWN, 
+      tags: DistributedMatchEngine.Tag[], 
+      tower_status: TOWER_UNKNOWN, 
+      ver: 0
       ```
 
       ## GetConnection
@@ -330,6 +408,20 @@ info:
       }
       ```
 
+      Example Response:
+      ```swift
+      ["unique_id": , 
+      "status": RS_SUCCESS, 
+      "session_cookie": eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1ODA1MDAxMzIsImlhdCI6MTU4MDQxMzczMiwia2V5Ijp7InBlZXJpcCI6IjE
+      yNy4wLjAuMSIsImRldm5hbWUiOiJNb2JpbGVkZ2VYIiwiYXBwbmFtZSI6Ik1vYmlsZWRnZVggU0RLIERlbW8iLCJhcHB2ZXJzIjoiMS4wIiwidW5pcXVlaWR0eXBlI
+      joiZG1lLWtzdWlkIiwidW5pcXVlaWQiOiIxWDgzOEVNbWJsNjYzSlNnT0dSVHFPYko1M3AiLCJraWQiOjR9fQ.kcrmNOYRLV_irLpYpdN6-oCgj4EakuTgMbIInNs1
+      JvCPm5vCjshO3CCbY_pCbcovUL-EemXZcWXqxYmz_SqIow, 
+      "tags": <__NSArray0 0x7fff80615170>(), 
+      "unique_id_type": , 
+      "ver": 0, 
+      "token_server_uri": http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc]
+      ```
+
       ## FindCloudlet
       Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
 
@@ -344,7 +436,37 @@ info:
           \* handle findCloudletReply*\
       }
       ```
-      
+
+      Example Response:
+      ```swift
+      ["tags": <__NSArray0 0x7fff80615170>(), 
+      "cloudlet_location": {
+         altitude = 0;
+         course = 0;
+         "horizontal_accuracy" = 0;
+         latitude = "41.87";
+         longitude = "-93.09699999999999";
+         speed = 0;
+         timestamp = {
+           nanos = 0;
+           seconds = 0;
+         };
+         "vertical_accuracy" = 0;
+      }, 
+      "ver": 0, 
+      "fqdn": mobiledgexmobiledgexsdkdemo10.mexdemo-app-cluster.centralus-main.azure.mobiledgex.net, 
+      "ports": <__NSSingleObjectArrayI 0x600003d394f0>(
+      {
+        "end_port" = 0;
+        "fqdn_prefix" = "mobiledgexsdkdemo-tcp.";
+        "internal_port" = 7777;
+        "path_prefix" = "";
+        proto = "L_PROTO_TCP";
+        "public_port" = 7777;
+      }), 
+      "status": FIND_FOUND]
+      ```
+ 
       ## VerifyLocation
       Verifies that the GPS coordinates accurately report actual location of device
 
@@ -359,7 +481,16 @@ info:
           /* handle verifyLocationReply */
       }      
       ```
-      
+
+      Example Response:
+      ```swift
+      ["gps_location_accuracy_km": -1, 
+      "gps_location_status": LOC_MISMATCH_SAME_COUNTRY, 
+      "tags": <__NSArray0 0x1f909f888>(), 
+      "ver": 0, 
+      "tower_status": TOWER_UNKNOWN]
+      ```
+ 
       ## GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
