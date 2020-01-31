@@ -659,7 +659,6 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	// Our clouldets resource map, maps from resource type names, to ResTagTableKeys.
 	// The ResTagTableKey is a resource name, and the owning operator key.
 	cl.ResTagMap["gpu"] = &gputab.Key
-	//resTagTableApi.GetCloudletResourceMap(ctx, &gputab.Key)
 
 	// We also  need a list of edgeproto.FlavorInfo structs
 	// which it so happens we have in the testutils.CloudletInfoData.Flavors array
