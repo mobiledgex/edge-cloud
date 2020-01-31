@@ -163,6 +163,21 @@
       - UP
       - 2
       - null
+    - - "2020-01-31T19:35:26.643773Z"
+      - null
+      - tmus-cloud-1
+      - SmallCluster
+      - AcmeAppCo
+      - 2
+      - DELETED
+      - x1.small
+      - 3
+      - tmus
+      - map[]
+      - 2048
+      - DOWN
+      - 2
+      - null
     partial: false
   messages: []
   err: ""
