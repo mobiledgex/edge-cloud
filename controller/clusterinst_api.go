@@ -535,8 +535,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 
 	defer func() {
 		if reterr == nil {
-			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown, *in)
-		} else {
+			RecordClusterInstEvent(context.WithValue(ctx, "clusterinst", *in), &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
 	}()
 
@@ -762,7 +761,7 @@ func (s *ClusterInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cl
 	})
 }
 
-func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.ClusterInstKey, event cloudcommon.InstanceEvent, serverStatus string, clusters ...edgeproto.ClusterInst) {
+func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.ClusterInstKey, event cloudcommon.InstanceEvent, serverStatus string) {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.ClusterInstEvent
 	ts, _ := types.TimestampProto(time.Now())
@@ -774,16 +773,13 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
-	info := edgeproto.ClusterInst{}
-	if len(clusters) == 0 { // if not provided, get the flavorkey and numnodes ourself
+	info, ok := ctx.Value("clusterinst").(edgeproto.ClusterInst)
+	if !ok { // if not provided (aka not recording a delete), get the flavorkey and numnodes ourself
+		info = edgeproto.ClusterInst{}
 		if !clusterInstApi.cache.Get(clusterInstKey, &info) {
 			log.SpanLog(ctx, log.DebugLevelApi, "Cannot log event for invalid clusterinst")
 			return
 		}
-	} else if len(clusters) == 1 { // on a delete, clusterinst wont be in the cache anymore so it needs to be provided beforehand
-		info = clusters[0]
-	} else { // should never have more than one cluster
-		log.SpanLog(ctx, log.DebugLevelApi, "Too many clusterinsts in clusters arg", "clusters", clusters)
 	}
 	// errors should never happen here since to get to this point the flavor should have already been checked previously, but just in case
 	nodeFlavor := edgeproto.Flavor{}
