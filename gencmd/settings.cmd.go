@@ -197,6 +197,7 @@ var SettingsOptionalArgs = []string{
 	"createclusterinsttimeout",
 	"updateclusterinsttimeout",
 	"deleteclusterinsttimeout",
+	"loadbalancermaxportrange",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -212,5 +213,6 @@ var SettingsComments = map[string]string{
 	"createclusterinsttimeout":          "Create ClusterInst timeout (duration)",
 	"updateclusterinsttimeout":          "Update ClusterInst timeout (duration)",
 	"deleteclusterinsttimeout":          "Delete ClusterInst timeout (duration)",
+	"loadbalancermaxportrange":          "Max IP Port range when using a load balancer",
 }
 var SettingsSpecialArgs = map[string]string{}
