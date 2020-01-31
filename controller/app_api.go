@@ -129,7 +129,6 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 }
 
 func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.AccessType) error {
-	//settingsApi := NewSettingsApiClient(conn)
 	maxPorts := settingsApi.Get().LoadBalancerMaxPortRange
 	for ii, _ := range ports {
 		ports[ii].PublicPort = ports[ii].InternalPort
