@@ -22,6 +22,19 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func RunCmdHideTags(in *edgeproto.RunCmd) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.ConsoleUrl = ""
+	}
+}
+
 func ExecRequestHideTags(in *edgeproto.ExecRequest) {
 	if cli.HideTags == "" {
 		return
@@ -37,7 +50,7 @@ func ExecRequestHideTags(in *edgeproto.ExecRequest) {
 		in.Answer = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.ConsoleUrl = ""
+		in.Cmd.ConsoleUrl = ""
 	}
 }
 
@@ -45,8 +58,8 @@ var ExecApiCmd edgeproto.ExecApiClient
 
 var RunCommandCmd = &cli.Command{
 	Use:          "RunCommand",
-	RequiredArgs: strings.Join(ExecRequestRequiredArgs, " "),
-	OptionalArgs: strings.Join(ExecRequestOptionalArgs, " "),
+	RequiredArgs: strings.Join(RunCommandRequiredArgs, " "),
+	OptionalArgs: strings.Join(RunCommandOptionalArgs, " "),
 	AliasArgs:    strings.Join(ExecRequestAliasArgs, " "),
 	SpecialArgs:  &ExecRequestSpecialArgs,
 	Comments:     ExecRequestComments,
@@ -91,6 +104,61 @@ func RunCommands(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
 	for ii, _ := range data {
 		fmt.Printf("RunCommand %v\n", data[ii])
 		myerr := RunCommand(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var ViewLogsCmd = &cli.Command{
+	Use:          "ViewLogs",
+	RequiredArgs: strings.Join(ViewLogsRequiredArgs, " "),
+	OptionalArgs: strings.Join(ViewLogsOptionalArgs, " "),
+	AliasArgs:    strings.Join(ExecRequestAliasArgs, " "),
+	SpecialArgs:  &ExecRequestSpecialArgs,
+	Comments:     ExecRequestComments,
+	ReqData:      &edgeproto.ExecRequest{},
+	ReplyData:    &edgeproto.ExecRequest{},
+	Run:          runViewLogs,
+}
+
+func runViewLogs(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ExecRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ViewLogs(c, obj)
+}
+
+func ViewLogs(c *cli.Command, in *edgeproto.ExecRequest) error {
+	if ExecApiCmd == nil {
+		return fmt.Errorf("ExecApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := ExecApiCmd.ViewLogs(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ViewLogs failed: %s", errstr)
+	}
+	ExecRequestHideTags(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ViewLogss(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ViewLogs %v\n", data[ii])
+		myerr := ViewLogs(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -155,9 +223,38 @@ func SendLocalRequests(c *cli.Command, data []edgeproto.ExecRequest, err *error)
 
 var ExecApiCmds = []*cobra.Command{
 	RunCommandCmd.GenCmd(),
+	ViewLogsCmd.GenCmd(),
 	SendLocalRequestCmd.GenCmd(),
 }
 
+var RunCmdRequiredArgs = []string{}
+var RunCmdOptionalArgs = []string{
+	"command",
+	"console",
+	"consoleurl",
+}
+var RunCmdAliasArgs = []string{}
+var RunCmdComments = map[string]string{
+	"command":    "Command or Shell",
+	"console":    "VM Console",
+	"consoleurl": "VM Console URL",
+}
+var RunCmdSpecialArgs = map[string]string{}
+var ViewLogRequiredArgs = []string{}
+var ViewLogOptionalArgs = []string{
+	"since",
+	"tail",
+	"timestamps",
+	"follow",
+}
+var ViewLogAliasArgs = []string{}
+var ViewLogComments = map[string]string{
+	"since":      "Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)",
+	"tail":       "Show only a recent number of lines",
+	"timestamps": "Show timestamps",
+	"follow":     "Stream data",
+}
+var ViewLogSpecialArgs = map[string]string{}
 var ExecRequestRequiredArgs = []string{
 	"developer",
 	"appname",
@@ -168,8 +265,12 @@ var ExecRequestRequiredArgs = []string{
 	"clusterdeveloper",
 }
 var ExecRequestOptionalArgs = []string{
-	"command",
 	"containerid",
+	"command",
+	"since",
+	"tail",
+	"timestamps",
+	"follow",
 }
 var ExecRequestAliasArgs = []string{
 	"developer=appinstkey.appkey.developerkey.name",
@@ -179,6 +280,11 @@ var ExecRequestAliasArgs = []string{
 	"operator=appinstkey.clusterinstkey.cloudletkey.operatorkey.name",
 	"cloudlet=appinstkey.clusterinstkey.cloudletkey.name",
 	"clusterdeveloper=appinstkey.clusterinstkey.developer",
+	"command=cmd.command",
+	"since=log.since",
+	"tail=log.tail",
+	"timestamps=log.timestamps",
+	"follow=log.follow",
 }
 var ExecRequestComments = map[string]string{
 	"developer":        "Organization or Company Name that a Developer is part of",
@@ -188,12 +294,56 @@ var ExecRequestComments = map[string]string{
 	"operator":         "Company or Organization name of the operator",
 	"cloudlet":         "Name of the cloudlet",
 	"clusterdeveloper": "Name of Developer that this cluster belongs to",
-	"command":          "Command or Shell",
-	"containerid":      "ContainerID is the name of the target container, if applicable",
+	"containerid":      "ContainerId is the name or ID of the target container, if applicable",
 	"offer":            "WebRTC Offer",
 	"answer":           "WebRTC Answer",
 	"err":              "Any error message",
-	"console":          "VM Console",
-	"consoleurl":       "VM Console URL",
+	"command":          "Command or Shell",
+	"cmd.console":      "VM Console",
+	"cmd.consoleurl":   "VM Console URL",
+	"since":            "Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)",
+	"tail":             "Show only a recent number of lines",
+	"timestamps":       "Show timestamps",
+	"follow":           "Stream data",
+	"timeout":          "Timeout",
 }
 var ExecRequestSpecialArgs = map[string]string{}
+var RunCommandRequiredArgs = []string{
+	"developer",
+	"appname",
+	"appvers",
+	"cluster",
+	"operator",
+	"cloudlet",
+}
+var RunCommandOptionalArgs = []string{
+	"clusterdeveloper",
+	"containerid",
+	"offer",
+	"answer",
+	"err",
+	"command",
+	"cmd.console",
+	"cmd.consoleurl",
+	"timeout",
+}
+var ViewLogsRequiredArgs = []string{
+	"developer",
+	"appname",
+	"appvers",
+	"cluster",
+	"operator",
+	"cloudlet",
+}
+var ViewLogsOptionalArgs = []string{
+	"clusterdeveloper",
+	"containerid",
+	"offer",
+	"answer",
+	"err",
+	"since",
+	"tail",
+	"timestamps",
+	"follow",
+	"timeout",
+}

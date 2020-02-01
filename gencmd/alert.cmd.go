@@ -75,6 +75,8 @@ It has these top-level messages:
 	Controller
 	DeveloperKey
 	Developer
+	RunCmd
+	ViewLog
 	ExecRequest
 	FlavorKey
 	Flavor

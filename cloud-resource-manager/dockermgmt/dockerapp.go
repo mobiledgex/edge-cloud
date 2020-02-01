@@ -343,10 +343,30 @@ func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App,
 	if req.ContainerId == "" {
 		if appInst.RuntimeInfo.ContainerIds == nil ||
 			len(appInst.RuntimeInfo.ContainerIds) == 0 {
-			return "", fmt.Errorf("no containers to run command in")
+			return "", fmt.Errorf("no containers found for AppInst, please specify one")
 		}
 		req.ContainerId = appInst.RuntimeInfo.ContainerIds[0]
 	}
-	cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, req.Command)
-	return cmdStr, nil
+	if req.Cmd != nil {
+		cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, req.Cmd.Command)
+		return cmdStr, nil
+	}
+	if req.Log != nil {
+		cmdStr := "docker logs "
+		if req.Log.Since != "" {
+			cmdStr += fmt.Sprintf("--since %s ", req.Log.Since)
+		}
+		if req.Log.Tail != 0 {
+			cmdStr += fmt.Sprintf("--tail %d ", req.Log.Tail)
+		}
+		if req.Log.Timestamps {
+			cmdStr += "--timestamps "
+		}
+		if req.Log.Follow {
+			cmdStr += "--follow "
+		}
+		cmdStr += req.ContainerId
+		return cmdStr, nil
+	}
+	return "", fmt.Errorf("no command or log specified with exec request")
 }

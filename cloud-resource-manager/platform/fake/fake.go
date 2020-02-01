@@ -82,7 +82,13 @@ func (s *Platform) GetPlatformClient(ctx context.Context, clusterInst *edgeproto
 }
 
 func (s *Platform) GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
-	return req.Command, nil
+	if req.Cmd != nil {
+		return req.Cmd.Command, nil
+	}
+	if req.Log != nil {
+		return "echo \"here's some logs\"", nil
+	}
+	return "", fmt.Errorf("no cmd or log specified in exec request")
 }
 
 func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error) {

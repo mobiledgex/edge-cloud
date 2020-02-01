@@ -75,6 +75,8 @@
 		Controller
 		DeveloperKey
 		Developer
+		RunCmd
+		ViewLog
 		ExecRequest
 		FlavorKey
 		Flavor

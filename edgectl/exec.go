@@ -9,11 +9,22 @@ import (
 	webrtcshell "github.com/mobiledgex/edge-cloud/edgectl/cli"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	webrtc "github.com/pion/webrtc/v2"
+	"google.golang.org/grpc"
 )
 
 var execApiCmd edgeproto.ExecApiClient
 
-func runExecRequest(c *cli.Command, args []string) error {
+type execFunc func(context.Context, *edgeproto.ExecRequest, ...grpc.CallOption) (*edgeproto.ExecRequest, error)
+
+func runRunCommand(c *cli.Command, args []string) error {
+	return runExecRequest(c, args, execApiCmd.RunCommand)
+}
+
+func runViewLogs(c *cli.Command, args []string) error {
+	return runExecRequest(c, args, execApiCmd.ViewLogs)
+}
+
+func runExecRequest(c *cli.Command, args []string, apiFunc execFunc) error {
 	if execApiCmd == nil {
 		return fmt.Errorf("ExecApi client not initialized")
 	}
@@ -31,7 +42,7 @@ func runExecRequest(c *cli.Command, args []string) error {
 		req.Offer = string(offerBytes)
 
 		ctx := context.Background()
-		reply, err := execApiCmd.RunCommand(ctx, req)
+		reply, err := apiFunc(ctx, req)
 		if err != nil {
 			return nil, nil, err
 		}

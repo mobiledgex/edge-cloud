@@ -131,8 +131,9 @@ func main() {
 
 	controllerCmd.AddCommand(createCmd.GenCmd())
 	controllerCmd.AddCommand(deleteCmd.GenCmd())
-	gencmd.RunCommandCmd.Run = runExecRequest
-	controllerCmd.AddCommand(gencmd.RunCommandCmd.GenCmd())
+	gencmd.RunCommandCmd.Run = runRunCommand
+	gencmd.ViewLogsCmd.Run = runViewLogs
+	controllerCmd.AddCommand(gencmd.RunCommandCmd.GenCmd(), gencmd.ViewLogsCmd.GenCmd())
 
 	dmeCmd.AddCommand(gencmd.MatchEngineApiCmds...)
 	dmeCmd.AddCommand(gencmd.DebugApiCmds...)

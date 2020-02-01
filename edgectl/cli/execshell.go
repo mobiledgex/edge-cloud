@@ -185,13 +185,13 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 	errchan := make(chan error, 1)
 	openurl := make(chan bool, 1)
 
-	if reply.Console {
-		if reply.ConsoleUrl == "" {
+	if reply.Cmd != nil && reply.Cmd.Console {
+		if reply.Cmd.ConsoleUrl == "" {
 			return fmt.Errorf("unable to fetch console URL from webrtc reply")
 		}
-		urlObj, err := url.Parse(reply.ConsoleUrl)
+		urlObj, err := url.Parse(reply.Cmd.ConsoleUrl)
 		if err != nil {
-			return fmt.Errorf("unable to parse console url, %s, %v", reply.ConsoleUrl, err)
+			return fmt.Errorf("unable to parse console url, %s, %v", reply.Cmd.ConsoleUrl, err)
 		}
 		tlsConfig, err := mextls.GetLocalTLSConfig()
 		if err != nil {
@@ -214,7 +214,7 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 		}
 		go func() {
 			<-openurl
-			proxyUrl := strings.Replace(reply.ConsoleUrl, urlObj.Host, connAddr, 1)
+			proxyUrl := strings.Replace(reply.Cmd.ConsoleUrl, urlObj.Host, connAddr, 1)
 			proxyUrl = strings.Replace(proxyUrl, "http:", "https:", 1)
 			util.OpenUrl(proxyUrl)
 			fmt.Println("Press Ctrl-C to exit")
