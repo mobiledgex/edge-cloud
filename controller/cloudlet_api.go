@@ -16,6 +16,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/vmspec"
 )
 
 type CloudletApi struct {
@@ -1074,39 +1075,30 @@ func (s *CloudletApi) showCloudletsByKeys(keys map[edgeproto.CloudletKey]struct{
 func (s *CloudletApi) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error) {
 
 	cl := edgeproto.Cloudlet{}
+	var spec *vmspec.VMCreationSpec
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, &cl) {
+
+		if !cloudletApi.store.STMGet(stm, &in.Key, &cl) {
 			return in.Key.NotFoundError()
 		}
-		// ResTagMap may infact be nil, that's ok if OSFlavor.Name is enough to match
-		return nil
-	})
-
-	cli := edgeproto.CloudletInfo{}
-	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cli := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cli) {
 			return in.Key.NotFoundError()
 		}
-		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("Error retrieving cloudlet info for %s ", in.Key.Name)
-	}
-
-	mexFlavor := edgeproto.Flavor{}
-	mexFlavor.Key.Name = in.FlavorName
-	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		mexFlavor := edgeproto.Flavor{}
+		mexFlavor.Key.Name = in.FlavorName
 		if !flavorApi.store.STMGet(stm, &mexFlavor.Key, &mexFlavor) {
 			return in.Key.NotFoundError()
+		}
+		var verr error
+		spec, verr = resTagTableApi.GetVMSpec(ctx, stm, mexFlavor, cl, cli)
+		if verr != nil {
+			return verr
 		}
 		return nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Error retrieving target flavor")
-	}
-	spec, vmerr := resTagTableApi.GetVMSpec(ctx, mexFlavor, cl, cli)
-	if vmerr != nil {
-		return nil, vmerr
+		return nil, err
 	}
 	in.FlavorName = spec.FlavorName
 	in.AvailabilityZone = spec.AvailabilityZone

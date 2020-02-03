@@ -93,6 +93,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "http:443,tcp:10002,udp:10002",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
 	edgeproto.App{
@@ -103,6 +104,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "tcp:80,http:443",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
 	edgeproto.App{
@@ -113,6 +115,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "tcp:443,udp:11111",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{
@@ -124,6 +127,7 @@ var AppData = []edgeproto.App{
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
 		ImagePath:     "http://somerepo/image/path/ai/1.2.0#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "tcp:8080",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_DIRECT,
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{
@@ -135,6 +139,7 @@ var AppData = []edgeproto.App{
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
 		ImagePath:     "http://somerepo/image/path/myreality/0.0.1#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "udp:1024",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_DIRECT,
 		DefaultFlavor: FlavorData[2].Key,
 	},
 	edgeproto.App{
@@ -146,6 +151,7 @@ var AppData = []edgeproto.App{
 		Deployment:    "helm",
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_HELM,
 		AccessPorts:   "udp:2024",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[2].Key,
 	},
 	edgeproto.App{
@@ -156,6 +162,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "tcp:80,udp:8001,tcp:065535",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{
@@ -165,6 +172,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.0",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
 	edgeproto.App{
@@ -175,6 +183,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "tcp:80,http:443,udp:10002,tcp:5000-5002", // new port range notation
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
 	edgeproto.App{
@@ -184,6 +193,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.0",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 		DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	},
@@ -195,6 +205,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "tcp:443,udp:11111",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{
@@ -205,6 +216,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:      edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:    "tcp:10003",
+		AccessType:     edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor:  FlavorData[0].Key,
 		AutoProvPolicy: AutoProvPolicyData[0].Key.Name,
 	},

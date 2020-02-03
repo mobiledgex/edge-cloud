@@ -223,7 +223,8 @@ func (s *App) Validate(fields map[string]struct{}) error {
 	}
 	if _, found := fields[AppFieldAccessPorts]; found {
 		if s.AccessPorts != "" {
-			if _, err = ParseAppPorts(s.AccessPorts); found && err != nil {
+			_, err := ParseAppPorts(s.AccessPorts)
+			if err != nil {
 				return err
 			}
 		}

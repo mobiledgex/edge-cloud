@@ -24,15 +24,16 @@ info:
       Example Code:
       ```java
       import com.mobiledgex.matchingengine.MatchingEngine;
-
+      
+      MatchingEngine me = new MatchingEngine(this);
       AppClient.Tag tag = AppClient.Tag.newBuilder()
           .setType(key)
           .setData(datavalue);
-      RegisterClientRequest registerClientRequest = createDefaultRegisterClientRequest(activityContext, developerName)
+      AppClient.RegisterClientRequest registerClientRequest = me.createDefaultRegisterClientRequest(activityContext, developerName)
           .setAuthToken(authToken)
           .setTags(0, tag)
           .build();
-      me.registerClient(registerClientRequest, 10000);
+      AppClient.RegisterClientReply registerClientReply = me.registerClient(registerClientRequest, 10000);
       ```
 
       ## FindCloudlet
@@ -41,10 +42,24 @@ info:
       Example Code:
       ```java
       import com.mobiledgex.matchingengine.MatchingEngine;
-      FindCloudletRequest findCloudletRequest = createDefaultFindCloudletRequest(activityContext, location)
+      
+      MatchingEngine me = new MatchingEngine(this); 
+      AppClient.FindCloudletRequest findCloudletRequest = me.createDefaultFindCloudletRequest(activityContext, location)
           .setCarrierName(carrierName)
           .build();
-      FindCloudletReply findCloudletReply = me.findCloudlet(findCloudletRequest, 10000);
+      AppClient.FindCloudletReply findCloudletReply = me.findCloudlet(findCloudletRequest, 10000);
+      ```
+
+      ## VerifyLocation
+      Verifies that the GPS coordinates accurately report actual location of device
+
+      Example Code:
+      ```java
+      import com.mobiledgex.matchingengine.MatchingEngine;
+      
+      MatchingEngine me = new MatchingEngine(this);
+      AppClient.VerifyLocationRequest verifyRequest = me.createVerifyLocationRequest(activityContext, carrierName, location, cellID, tags);
+      AppClient.VerifyLocationReply verifiedLocation = me.verifyLocation(verifyRequest, 10000);
       ```
 
       ## GetConnection
@@ -158,6 +173,7 @@ info:
       Example Code:
       ```csharp
       using DistributedMatchEngine;
+      
       MatchingEngine me = new MatchingEngine();
       RegisterClientRequest registerClientRequest = me.CreateRegisterClientRequest(carrierName, devName, appName, appVers, authToken);
       RegisterClientReply registerClientReply = await me.RegisterClient(registerClientRequest);
@@ -169,9 +185,22 @@ info:
       Example Code:
       ```csharp
       using DistributedMatchEngine;
+      
       MatchingEngine me = new MatchingEngine();
       FindCloudletRequest findCloudletRequest = CreateFindCloudletRequest(carrierName, developerName, appName, appVersion, loc);
       FindCloudletReply findCloudletReply = await FindCloudlet(findCloudletRequest);
+      ```
+      
+      ## VerifyLocation
+      Verifies that the GPS coordinates accurately report actual location of device
+
+      Example Code:
+      ```csharp
+      using DistributedMatchEngine;
+
+      MatchingEngine me = new MatchingEngine();
+      VerifyLocationRequest verifyLocationRequest = me.CreateVerifyLocationRequest(carrierName, loc, cellID, tags);
+      VerifyLocationReply verifyLocationReply = await me.VerifyLocation(verifyLocationRequest);
       ```
 
       ## GetConnection
@@ -291,13 +320,14 @@ info:
 
       Example Code:
       ```swift
-      import IOSMatchingEngine
-      matchingEngine = MatchingEngine()
+      import MobiledgeXiOSLibrary 
+      
+      let matchingEngine = MatchingEngine()
       let registerClientRequest = matchingEngine.createRegisterClientRequest(devName: devName, appName: appName, appVers: appVers, carrierName: carrierName, authToken: authToken)
       let registerClientReplyPromise = matchingEngine.registerClient(request: registerClientRequest)
           .then { registerClientReply in
           \* handle registerClientReply*\
-          }
+      }
       ```
 
       ## FindCloudlet
@@ -305,15 +335,31 @@ info:
 
       Example Code:
       ```swift
-      import IOSMatchingEngine
-      matchingEngine = MatchingEngine()
+      import MobiledgeXiOSLibrary 
+      
+      let matchingEngine = MatchingEngine()
       let findCloudletRequest = matchingEngine.createFindCloudletRequest(carrierName: carrierName, gpsLocation: loc, devName: devName, appName: appName, appVers: appVers)
       let findCloudletReplyPromise = matchingEngine.findCloudlet(request: findCloudletRequest)
           .then { findCloudletReply in
           \* handle findCloudletReply*\
-          }
+      }
       ```
+      
+      ## VerifyLocation
+      Verifies that the GPS coordinates accurately report actual location of device
 
+      Example Code:
+      ```swift
+      import MobiledgeXiOSLibrary
+
+      let matchingEngine = MatchingEngine()
+      let verifyLocationRequest = matchingEngine.createVerifyLocationRequest(carrierName: carrierName, gpsLocation: loc, cellID: cellID, tags: tags)
+      let verifyLocationReplyPromise = matchingEngine.verifyLocation(request: verifyLocationRequest)
+      .then { verifyLocationReply in
+          /* handle verifyLocationReply */
+      }      
+      ```
+      
       ## GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and

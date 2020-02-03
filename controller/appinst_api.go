@@ -557,7 +557,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 
 			for ii, port := range ports {
-				if port.EndPort != 0 && ipaccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+				if port.EndPort != 0 {
 					return fmt.Errorf("Shared IP access with port range not allowed")
 				}
 				if setL7Port(&ports[ii], &in.Key) {
@@ -636,6 +636,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 						ports[ii].Proto = dme.LProto_L_PROTO_TCP
 					}
 					ports[ii].PublicPort = ports[ii].InternalPort
+				}
+				// port range is validated on app create, but checked again here in case there were
+				// pre-existing apps which violate the supported range
+				err = validatePortRangeForAccessType(ports, app.AccessType)
+				if err != nil {
+					return err
 				}
 			}
 		}
@@ -747,7 +753,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 	if crmUpdateRequired {
 		RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 
-		defer func () {
+		defer func() {
 			if reterr == nil {
 				RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
 			} else {

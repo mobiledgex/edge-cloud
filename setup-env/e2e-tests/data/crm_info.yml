@@ -11,7 +11,7 @@ settings:
   createclusterinsttimeout: 30m
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
-
+  loadbalancermaxportrange: 50
 flavors:
 - key:
     name: x1.tiny
@@ -203,6 +203,7 @@ apps:
             - containerPort: 10002
               protocol: UDP
   deploymentgenerator: kubernetes-basic
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: AcmeAppCo
@@ -274,6 +275,7 @@ apps:
               protocol: UDP
   deploymentgenerator: kubernetes-basic
   scalewithcluster: true
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -327,6 +329,7 @@ apps:
       alertmanager:
         enabled: false
   internalports: true
+  accesstype: AccessTypeLoadBalancer
 
 appinstances:
 - key:

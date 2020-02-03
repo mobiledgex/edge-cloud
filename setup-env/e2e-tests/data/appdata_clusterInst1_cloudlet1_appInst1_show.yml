@@ -11,6 +11,7 @@ settings:
   createclusterinsttimeout: 30m
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
+  loadbalancermaxportrange: 50
 operators:
 - key:
     name: tmus
@@ -88,6 +89,7 @@ apps:
   cluster:
     name: SmallCluster
   deployment: kubernetes
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -101,6 +103,7 @@ apps:
     name: x1.medium
   annotations: version=7.1.1
   deployment: helm
+  accesstype: AccessTypeLoadBalancer
   configs:
   - kind: hemlCustomizationYaml
     config: |
