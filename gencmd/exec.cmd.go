@@ -369,22 +369,17 @@ var ExecRequestComments = map[string]string{
 }
 var ExecRequestSpecialArgs = map[string]string{}
 var RunCommandRequiredArgs = []string{
-	"command",
-}
-var RunCommandOptionalArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
 	"cluster",
 	"operator",
 	"cloudlet",
+	"command",
+}
+var RunCommandOptionalArgs = []string{
 	"clusterdeveloper",
 	"containerid",
-	"offer",
-	"answer",
-	"err",
-	"console.url",
-	"timeout",
 }
 var RunConsoleRequiredArgs = []string{
 	"developer",
@@ -397,11 +392,6 @@ var RunConsoleRequiredArgs = []string{
 var RunConsoleOptionalArgs = []string{
 	"clusterdeveloper",
 	"containerid",
-	"offer",
-	"answer",
-	"err",
-	"console.url",
-	"timeout",
 }
 var ShowLogsRequiredArgs = []string{
 	"developer",
@@ -414,13 +404,8 @@ var ShowLogsRequiredArgs = []string{
 var ShowLogsOptionalArgs = []string{
 	"clusterdeveloper",
 	"containerid",
-	"offer",
-	"answer",
-	"err",
 	"since",
 	"tail",
 	"timestamps",
 	"follow",
-	"console.url",
-	"timeout",
 }
