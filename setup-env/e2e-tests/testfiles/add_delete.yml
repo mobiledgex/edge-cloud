@@ -65,9 +65,9 @@ tests:
   apifile: "{{datadir}}/runcommand.yml"
   actions: [exec-runcommand]
 
-- name: test view logs against app data
-  apifile: "{{datadir}}/viewlogs.yml"
-  actions: [exec-viewlogs]
+- name: test show logs against app data
+  apifile: "{{datadir}}/showlogs.yml"
+  actions: [exec-showlogs]
 
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]

@@ -51,10 +51,10 @@ func (s *ExecApi) getApp(req *edgeproto.ExecRequest, app *edgeproto.App) error {
 	return nil
 }
 
-func (s *ExecApi) ViewLogs(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+func (s *ExecApi) ShowLogs(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
 	if req.Log == nil {
 		// defaults
-		req.Log = &edgeproto.ViewLog{}
+		req.Log = &edgeproto.ShowLog{}
 	}
 	app := edgeproto.App{}
 	if err := s.getApp(req, &app); err != nil {
@@ -98,15 +98,26 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 	}
 	req.Timeout = ShortTimeout
 	if app.Deployment == cloudcommon.AppDeploymentTypeVM {
-		req.Timeout = LongTimeout
-		if cmd.Command != "" || req.ContainerId != "" {
-			return nil, fmt.Errorf("invalid argument, command/containerid is not supported for VM based Apps")
-		}
-		cmd.Console = true
-	} else {
-		if cmd.Command == "" {
-			return nil, fmt.Errorf("command argument is mandatory for %s based Apps", app.Deployment)
-		}
+		return nil, fmt.Errorf("RunCommand not available for VM deployments, use RunConsole instead")
+	}
+	if cmd.Command == "" {
+		return nil, fmt.Errorf("command argument required")
+	}
+	return s.doExchange(ctx, req)
+}
+
+func (s *ExecApi) RunConsole(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+	req.Cmd = nil
+	req.Log = nil
+	req.Console = &edgeproto.RunVMConsole{}
+
+	app := edgeproto.App{}
+	if err := s.getApp(req, &app); err != nil {
+		return nil, err
+	}
+	req.Timeout = LongTimeout
+	if app.Deployment != cloudcommon.AppDeploymentTypeVM {
+		return nil, fmt.Errorf("RunConsole only available for VM deployments, use RunCommand instead")
 	}
 	return s.doExchange(ctx, req)
 }
@@ -137,8 +148,8 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 		if err == nil && reply != nil {
 			req.Answer = reply.Answer
 			req.Err = reply.Err
-			if req.Cmd != nil && reply.Cmd != nil {
-				req.Cmd.ConsoleUrl = reply.Cmd.ConsoleUrl
+			if req.Console != nil && reply.Console != nil {
+				req.Console.Url = reply.Console.Url
 			}
 		}
 		return nil
@@ -208,8 +219,8 @@ func (s *ExecApi) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
 	}
 	sr.req.Answer = msg.Answer
 	sr.req.Err = msg.Err
-	if sr.req.Cmd != nil && msg.Cmd != nil {
-		sr.req.Cmd.ConsoleUrl = msg.Cmd.ConsoleUrl
+	if sr.req.Console != nil && msg.Console != nil {
+		sr.req.Console.Url = msg.Console.Url
 	}
 	sr.done <- true
 }

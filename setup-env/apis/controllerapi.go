@@ -408,8 +408,8 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 	if api == "runcommand" {
 		args = append(args, "RunCommand")
 	}
-	if api == "viewlogs" {
-		args = append(args, "ViewLogs")
+	if api == "showlogs" {
+		args = append(args, "ShowLogs")
 	}
 	args = append(args, "developer="+req.AppInstKey.AppKey.DeveloperKey.Name)
 	args = append(args, "appname="+req.AppInstKey.AppKey.Name)
@@ -421,7 +421,7 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 	if api == "runcommand" && req.Cmd != nil {
 		args = append(args, "command=\""+req.Cmd.Command+"\"")
 	}
-	if api == "viewlogs" && req.Log != nil {
+	if api == "showlogs" && req.Log != nil {
 		if req.Log.Since != "" {
 			args = append(args, "since=\""+req.Log.Since+"\"")
 		}

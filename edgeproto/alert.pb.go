@@ -76,7 +76,8 @@
 		DeveloperKey
 		Developer
 		RunCmd
-		ViewLog
+		RunVMConsole
+		ShowLog
 		ExecRequest
 		FlavorKey
 		Flavor

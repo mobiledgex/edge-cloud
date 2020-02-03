@@ -20,8 +20,8 @@ func runRunCommand(c *cli.Command, args []string) error {
 	return runExecRequest(c, args, execApiCmd.RunCommand)
 }
 
-func runViewLogs(c *cli.Command, args []string) error {
-	return runExecRequest(c, args, execApiCmd.ViewLogs)
+func runShowLogs(c *cli.Command, args []string) error {
+	return runExecRequest(c, args, execApiCmd.ShowLogs)
 }
 
 func runExecRequest(c *cli.Command, args []string, apiFunc execFunc) error {

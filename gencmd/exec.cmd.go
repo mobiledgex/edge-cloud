@@ -22,7 +22,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-func RunCmdHideTags(in *edgeproto.RunCmd) {
+func RunVMConsoleHideTags(in *edgeproto.RunVMConsole) {
 	if cli.HideTags == "" {
 		return
 	}
@@ -31,7 +31,7 @@ func RunCmdHideTags(in *edgeproto.RunCmd) {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.ConsoleUrl = ""
+		in.Url = ""
 	}
 }
 
@@ -50,7 +50,7 @@ func ExecRequestHideTags(in *edgeproto.ExecRequest) {
 		in.Answer = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.Cmd.ConsoleUrl = ""
+		in.Console.Url = ""
 	}
 }
 
@@ -111,40 +111,40 @@ func RunCommands(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
 	}
 }
 
-var ViewLogsCmd = &cli.Command{
-	Use:          "ViewLogs",
-	RequiredArgs: strings.Join(ViewLogsRequiredArgs, " "),
-	OptionalArgs: strings.Join(ViewLogsOptionalArgs, " "),
+var RunConsoleCmd = &cli.Command{
+	Use:          "RunConsole",
+	RequiredArgs: strings.Join(RunConsoleRequiredArgs, " "),
+	OptionalArgs: strings.Join(RunConsoleOptionalArgs, " "),
 	AliasArgs:    strings.Join(ExecRequestAliasArgs, " "),
 	SpecialArgs:  &ExecRequestSpecialArgs,
 	Comments:     ExecRequestComments,
 	ReqData:      &edgeproto.ExecRequest{},
 	ReplyData:    &edgeproto.ExecRequest{},
-	Run:          runViewLogs,
+	Run:          runRunConsole,
 }
 
-func runViewLogs(c *cli.Command, args []string) error {
+func runRunConsole(c *cli.Command, args []string) error {
 	obj := c.ReqData.(*edgeproto.ExecRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return ViewLogs(c, obj)
+	return RunConsole(c, obj)
 }
 
-func ViewLogs(c *cli.Command, in *edgeproto.ExecRequest) error {
+func RunConsole(c *cli.Command, in *edgeproto.ExecRequest) error {
 	if ExecApiCmd == nil {
 		return fmt.Errorf("ExecApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := ExecApiCmd.ViewLogs(ctx, in)
+	obj, err := ExecApiCmd.RunConsole(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("ViewLogs failed: %s", errstr)
+		return fmt.Errorf("RunConsole failed: %s", errstr)
 	}
 	ExecRequestHideTags(obj)
 	c.WriteOutput(obj, cli.OutputFormat)
@@ -152,13 +152,68 @@ func ViewLogs(c *cli.Command, in *edgeproto.ExecRequest) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func ViewLogss(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
+func RunConsoles(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("ViewLogs %v\n", data[ii])
-		myerr := ViewLogs(c, &data[ii])
+		fmt.Printf("RunConsole %v\n", data[ii])
+		myerr := RunConsole(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var ShowLogsCmd = &cli.Command{
+	Use:          "ShowLogs",
+	RequiredArgs: strings.Join(ShowLogsRequiredArgs, " "),
+	OptionalArgs: strings.Join(ShowLogsOptionalArgs, " "),
+	AliasArgs:    strings.Join(ExecRequestAliasArgs, " "),
+	SpecialArgs:  &ExecRequestSpecialArgs,
+	Comments:     ExecRequestComments,
+	ReqData:      &edgeproto.ExecRequest{},
+	ReplyData:    &edgeproto.ExecRequest{},
+	Run:          runShowLogs,
+}
+
+func runShowLogs(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.ExecRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowLogs(c, obj)
+}
+
+func ShowLogs(c *cli.Command, in *edgeproto.ExecRequest) error {
+	if ExecApiCmd == nil {
+		return fmt.Errorf("ExecApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := ExecApiCmd.ShowLogs(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowLogs failed: %s", errstr)
+	}
+	ExecRequestHideTags(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowLogss(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowLogs %v\n", data[ii])
+		myerr := ShowLogs(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -223,38 +278,44 @@ func SendLocalRequests(c *cli.Command, data []edgeproto.ExecRequest, err *error)
 
 var ExecApiCmds = []*cobra.Command{
 	RunCommandCmd.GenCmd(),
-	ViewLogsCmd.GenCmd(),
+	RunConsoleCmd.GenCmd(),
+	ShowLogsCmd.GenCmd(),
 	SendLocalRequestCmd.GenCmd(),
 }
 
 var RunCmdRequiredArgs = []string{}
 var RunCmdOptionalArgs = []string{
 	"command",
-	"console",
-	"consoleurl",
 }
 var RunCmdAliasArgs = []string{}
 var RunCmdComments = map[string]string{
-	"command":    "Command or Shell",
-	"console":    "VM Console",
-	"consoleurl": "VM Console URL",
+	"command": "Command or Shell",
 }
 var RunCmdSpecialArgs = map[string]string{}
-var ViewLogRequiredArgs = []string{}
-var ViewLogOptionalArgs = []string{
+var RunVMConsoleRequiredArgs = []string{}
+var RunVMConsoleOptionalArgs = []string{
+	"url",
+}
+var RunVMConsoleAliasArgs = []string{}
+var RunVMConsoleComments = map[string]string{
+	"url": "VM Console URL",
+}
+var RunVMConsoleSpecialArgs = map[string]string{}
+var ShowLogRequiredArgs = []string{}
+var ShowLogOptionalArgs = []string{
 	"since",
 	"tail",
 	"timestamps",
 	"follow",
 }
-var ViewLogAliasArgs = []string{}
-var ViewLogComments = map[string]string{
+var ShowLogAliasArgs = []string{}
+var ShowLogComments = map[string]string{
 	"since":      "Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)",
 	"tail":       "Show only a recent number of lines",
 	"timestamps": "Show timestamps",
 	"follow":     "Stream data",
 }
-var ViewLogSpecialArgs = map[string]string{}
+var ShowLogSpecialArgs = map[string]string{}
 var ExecRequestRequiredArgs = []string{
 	"developer",
 	"appname",
@@ -299,35 +360,33 @@ var ExecRequestComments = map[string]string{
 	"answer":           "WebRTC Answer",
 	"err":              "Any error message",
 	"command":          "Command or Shell",
-	"cmd.console":      "VM Console",
-	"cmd.consoleurl":   "VM Console URL",
 	"since":            "Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)",
 	"tail":             "Show only a recent number of lines",
 	"timestamps":       "Show timestamps",
 	"follow":           "Stream data",
+	"console.url":      "VM Console URL",
 	"timeout":          "Timeout",
 }
 var ExecRequestSpecialArgs = map[string]string{}
 var RunCommandRequiredArgs = []string{
+	"command",
+}
+var RunCommandOptionalArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
 	"cluster",
 	"operator",
 	"cloudlet",
-}
-var RunCommandOptionalArgs = []string{
 	"clusterdeveloper",
 	"containerid",
 	"offer",
 	"answer",
 	"err",
-	"command",
-	"cmd.console",
-	"cmd.consoleurl",
+	"console.url",
 	"timeout",
 }
-var ViewLogsRequiredArgs = []string{
+var RunConsoleRequiredArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
@@ -335,7 +394,24 @@ var ViewLogsRequiredArgs = []string{
 	"operator",
 	"cloudlet",
 }
-var ViewLogsOptionalArgs = []string{
+var RunConsoleOptionalArgs = []string{
+	"clusterdeveloper",
+	"containerid",
+	"offer",
+	"answer",
+	"err",
+	"console.url",
+	"timeout",
+}
+var ShowLogsRequiredArgs = []string{
+	"developer",
+	"appname",
+	"appvers",
+	"cluster",
+	"operator",
+	"cloudlet",
+}
+var ShowLogsOptionalArgs = []string{
 	"clusterdeveloper",
 	"containerid",
 	"offer",
@@ -345,5 +421,6 @@ var ViewLogsOptionalArgs = []string{
 	"tail",
 	"timestamps",
 	"follow",
+	"console.url",
 	"timeout",
 }

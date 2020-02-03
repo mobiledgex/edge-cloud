@@ -76,7 +76,8 @@ It has these top-level messages:
 	DeveloperKey
 	Developer
 	RunCmd
-	ViewLog
+	RunVMConsole
+	ShowLog
 	ExecRequest
 	FlavorKey
 	Flavor

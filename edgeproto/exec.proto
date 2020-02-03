@@ -9,13 +9,14 @@ import "app_inst.proto";
 message RunCmd {
   // Command or Shell
   string command = 1;
-  // VM Console
-  bool console = 2;
-  // VM Console URL
-  string console_url = 3 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
 }
 
-message ViewLog {
+message RunVMConsole {
+  // VM Console URL
+  string url = 1 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+}
+
+message ShowLog {
   // Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)
   string since = 1;
   // Show only a recent number of lines
@@ -41,28 +42,38 @@ message ExecRequest {
   // Command to run (one of)
   RunCmd cmd = 7;
   // Show log (one of)
-  ViewLog log = 8;
+  ShowLog log = 8;
+  // Console (one of)
+  RunVMConsole console = 9;
   // Timeout
-  int64 timeout = 9 [(gogoproto.casttype) = "Duration"];
+  int64 timeout = 10 [(gogoproto.casttype) = "Duration"];
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
-  option (protogen.noconfig) = "Offer,Answer,Err,Cmd.ConsoleUrl,Cmd.Console,Timeout";
+  option (protogen.noconfig) = "Offer,Answer,Err,Console,Timeout";
   option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow";
   option (protogen.also_required) = "AppInstKey";
 }
 
 service ExecApi {
-  // Run a Command or Shell on a container or VM
+  // Run a Command or Shell on a container
   rpc RunCommand(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.DeveloperKey.Name";
     option (protogen.method_noconfig) = "Log";
+    option (protogen.method_also_required) = "Cmd.Command";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
+  }
+  // Run console on a VM
+  rpc RunConsole(ExecRequest) returns (ExecRequest) {
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.DeveloperKey.Name";
+    option (protogen.method_noconfig) = "Log,Cmd";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
   }
   // View logs for AppInst
-  rpc ViewLogs(ExecRequest) returns (ExecRequest) {
+  rpc ShowLogs(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,AppInstKey.AppKey.DeveloperKey.Name";
     option (protogen.method_noconfig) = "Cmd";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
+    option (protogen.non_standard_show) = true;
   }
   // This is used internally to forward requests to other Controllers.
   rpc SendLocalRequest(ExecRequest) returns (ExecRequest) {}
