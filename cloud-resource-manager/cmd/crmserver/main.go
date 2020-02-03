@@ -38,9 +38,10 @@ var solib = flag.String("plugin", "", "plugin file")
 var region = flag.String("region", "local", "region name")
 var testMode = flag.Bool("testMode", false, "Run CRM in test mode")
 var parentSpan = flag.String("span", "", "Use parent span for logging")
-var crmVersion = flag.String("version", "", "CRM service version")
-var imagePath = flag.String("imagePath", "", "Image path where CRM baseimages are present")
-var imageVersion = flag.String("imageVersion", "", "CRM image version")
+var containerVersion = flag.String("containerVersion", "", "edge-cloud container version")
+var vmImageVersion = flag.String("vmImageVersion", "", "CRM VM baseimage version")
+var packageVersion = flag.String("packageVersion", "", "CRM VM baseimage debian package version")
+var cloudletVMImagePath = flag.String("cloudletVMImagePath", "", "Image path where CRM VM baseimages are present")
 var cleanupMode = flag.Bool("cleanupMode", false, "cleanup previous versions of CRM if present")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
@@ -131,18 +132,18 @@ func main() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
 
-		cloudletVersion := ""
-		if *crmVersion == "" {
-			cloudletVersion, err = cloudcommon.GetDockerBaseImageVersion()
+		cloudletContainerVersion := ""
+		if *containerVersion == "" {
+			cloudletContainerVersion, err = cloudcommon.GetDockerBaseImageVersion()
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "unable to fetch docker image version", "err", err)
 			}
 		} else {
-			cloudletVersion = *crmVersion
+			cloudletContainerVersion = *containerVersion
 		}
 
 		myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_INIT
-		myCloudlet.Version = cloudletVersion
+		myCloudlet.ContainerVersion = cloudletContainerVersion
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
 
 		var cloudlet edgeproto.Cloudlet
@@ -189,7 +190,7 @@ func main() {
 		myNode.BuildHead = version.BuildHead
 		myNode.BuildAuthor = version.BuildAuthor
 		myNode.Hostname = cloudcommon.Hostname()
-		myNode.ImageVersion = cloudletVersion
+		myNode.ContainerVersion = cloudletContainerVersion
 
 		controllerData.NodeCache.Update(ctx, &myNode, 0)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
@@ -220,13 +221,14 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physica
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
 
 	pc := pf.PlatformConfig{
-		CloudletKey:  &cloudlet.Key,
-		PhysicalName: physicalName,
-		VaultAddr:    vaultAddr,
-		Region:       *region,
-		TestMode:     *testMode,
-		ImagePath:    *imagePath,
-		ImageVersion: *imageVersion,
+		CloudletKey:         &cloudlet.Key,
+		PhysicalName:        physicalName,
+		VaultAddr:           vaultAddr,
+		Region:              *region,
+		TestMode:            *testMode,
+		CloudletVMImagePath: *cloudletVMImagePath,
+		VMImageVersion:      *vmImageVersion,
+		PackageVersion:      *packageVersion,
 	}
 	log.SpanLog(ctx, log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
 	err := platform.Init(ctx, &pc, updateCallback)
