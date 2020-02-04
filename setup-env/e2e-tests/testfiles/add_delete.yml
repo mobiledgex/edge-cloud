@@ -63,7 +63,11 @@ tests:
 
 - name: test run command against app data
   apifile: "{{datadir}}/runcommand.yml"
-  actions: [runcommand]
+  actions: [exec-runcommand]
+
+- name: test show logs against app data
+  apifile: "{{datadir}}/showlogs.yml"
+  actions: [exec-showlogs]
 
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]

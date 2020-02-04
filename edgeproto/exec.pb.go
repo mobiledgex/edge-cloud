@@ -24,12 +24,47 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+type RunCmd struct {
+	// Command or Shell
+	Command string `protobuf:"bytes,1,opt,name=command,proto3" json:"command,omitempty"`
+}
+
+func (m *RunCmd) Reset()                    { *m = RunCmd{} }
+func (m *RunCmd) String() string            { return proto.CompactTextString(m) }
+func (*RunCmd) ProtoMessage()               {}
+func (*RunCmd) Descriptor() ([]byte, []int) { return fileDescriptorExec, []int{0} }
+
+type RunVMConsole struct {
+	// VM Console URL
+	Url string `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+}
+
+func (m *RunVMConsole) Reset()                    { *m = RunVMConsole{} }
+func (m *RunVMConsole) String() string            { return proto.CompactTextString(m) }
+func (*RunVMConsole) ProtoMessage()               {}
+func (*RunVMConsole) Descriptor() ([]byte, []int) { return fileDescriptorExec, []int{1} }
+
+type ShowLog struct {
+	// Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)
+	Since string `protobuf:"bytes,1,opt,name=since,proto3" json:"since,omitempty"`
+	// Show only a recent number of lines
+	Tail int32 `protobuf:"varint,2,opt,name=tail,proto3" json:"tail,omitempty"`
+	// Show timestamps
+	Timestamps bool `protobuf:"varint,3,opt,name=timestamps,proto3" json:"timestamps,omitempty"`
+	// Stream data
+	Follow bool `protobuf:"varint,4,opt,name=follow,proto3" json:"follow,omitempty"`
+}
+
+func (m *ShowLog) Reset()                    { *m = ShowLog{} }
+func (m *ShowLog) String() string            { return proto.CompactTextString(m) }
+func (*ShowLog) ProtoMessage()               {}
+func (*ShowLog) Descriptor() ([]byte, []int) { return fileDescriptorExec, []int{2} }
+
+// ExecRequest is a common struct for enabling a webrtc connection do execute some work on a container.
 type ExecRequest struct {
 	// Target AppInst
 	AppInstKey AppInstKey `protobuf:"bytes,1,opt,name=app_inst_key,json=appInstKey" json:"app_inst_key"`
-	// Command or Shell
-	Command string `protobuf:"bytes,2,opt,name=command,proto3" json:"command,omitempty"`
-	// ContainerID is the name of the target container, if applicable
+	// ContainerId is the name or ID of the target container, if applicable
 	ContainerId string `protobuf:"bytes,3,opt,name=container_id,json=containerId,proto3" json:"container_id,omitempty"`
 	// WebRTC Offer
 	Offer string `protobuf:"bytes,4,opt,name=offer,proto3" json:"offer,omitempty"`
@@ -37,18 +72,25 @@ type ExecRequest struct {
 	Answer string `protobuf:"bytes,5,opt,name=answer,proto3" json:"answer,omitempty"`
 	// Any error message
 	Err string `protobuf:"bytes,6,opt,name=err,proto3" json:"err,omitempty"`
-	// VM Console
-	Console bool `protobuf:"varint,7,opt,name=console,proto3" json:"console,omitempty"`
-	// VM Console URL
-	ConsoleUrl string `protobuf:"bytes,8,opt,name=console_url,json=consoleUrl,proto3" json:"console_url,omitempty"`
+	// Command to run (one of)
+	Cmd *RunCmd `protobuf:"bytes,9,opt,name=cmd" json:"cmd,omitempty"`
+	// Show log (one of)
+	Log *ShowLog `protobuf:"bytes,10,opt,name=log" json:"log,omitempty"`
+	// Console (one of)
+	Console *RunVMConsole `protobuf:"bytes,11,opt,name=console" json:"console,omitempty"`
+	// Timeout
+	Timeout Duration `protobuf:"varint,12,opt,name=timeout,proto3,casttype=Duration" json:"timeout,omitempty"`
 }
 
 func (m *ExecRequest) Reset()                    { *m = ExecRequest{} }
 func (m *ExecRequest) String() string            { return proto.CompactTextString(m) }
 func (*ExecRequest) ProtoMessage()               {}
-func (*ExecRequest) Descriptor() ([]byte, []int) { return fileDescriptorExec, []int{0} }
+func (*ExecRequest) Descriptor() ([]byte, []int) { return fileDescriptorExec, []int{3} }
 
 func init() {
+	proto.RegisterType((*RunCmd)(nil), "edgeproto.RunCmd")
+	proto.RegisterType((*RunVMConsole)(nil), "edgeproto.RunVMConsole")
+	proto.RegisterType((*ShowLog)(nil), "edgeproto.ShowLog")
 	proto.RegisterType((*ExecRequest)(nil), "edgeproto.ExecRequest")
 }
 
@@ -63,8 +105,12 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for ExecApi service
 
 type ExecApiClient interface {
-	// Run a Command or Shell on a container or VM
+	// Run a Command or Shell on a container
 	RunCommand(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error)
+	// Run console on a VM
+	RunConsole(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error)
+	// View logs for AppInst
+	ShowLogs(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error)
 	// This is used internally to forward requests to other Controllers.
 	SendLocalRequest(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error)
 }
@@ -86,6 +132,24 @@ func (c *execApiClient) RunCommand(ctx context.Context, in *ExecRequest, opts ..
 	return out, nil
 }
 
+func (c *execApiClient) RunConsole(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error) {
+	out := new(ExecRequest)
+	err := grpc.Invoke(ctx, "/edgeproto.ExecApi/RunConsole", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *execApiClient) ShowLogs(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error) {
+	out := new(ExecRequest)
+	err := grpc.Invoke(ctx, "/edgeproto.ExecApi/ShowLogs", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *execApiClient) SendLocalRequest(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error) {
 	out := new(ExecRequest)
 	err := grpc.Invoke(ctx, "/edgeproto.ExecApi/SendLocalRequest", in, out, c.cc, opts...)
@@ -98,8 +162,12 @@ func (c *execApiClient) SendLocalRequest(ctx context.Context, in *ExecRequest, o
 // Server API for ExecApi service
 
 type ExecApiServer interface {
-	// Run a Command or Shell on a container or VM
+	// Run a Command or Shell on a container
 	RunCommand(context.Context, *ExecRequest) (*ExecRequest, error)
+	// Run console on a VM
+	RunConsole(context.Context, *ExecRequest) (*ExecRequest, error)
+	// View logs for AppInst
+	ShowLogs(context.Context, *ExecRequest) (*ExecRequest, error)
 	// This is used internally to forward requests to other Controllers.
 	SendLocalRequest(context.Context, *ExecRequest) (*ExecRequest, error)
 }
@@ -122,6 +190,42 @@ func _ExecApi_RunCommand_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ExecApiServer).RunCommand(ctx, req.(*ExecRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ExecApi_RunConsole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExecApiServer).RunConsole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.ExecApi/RunConsole",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExecApiServer).RunConsole(ctx, req.(*ExecRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ExecApi_ShowLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExecApiServer).ShowLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.ExecApi/ShowLogs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExecApiServer).ShowLogs(ctx, req.(*ExecRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -153,12 +257,117 @@ var _ExecApi_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ExecApi_RunCommand_Handler,
 		},
 		{
+			MethodName: "RunConsole",
+			Handler:    _ExecApi_RunConsole_Handler,
+		},
+		{
+			MethodName: "ShowLogs",
+			Handler:    _ExecApi_ShowLogs_Handler,
+		},
+		{
 			MethodName: "SendLocalRequest",
 			Handler:    _ExecApi_SendLocalRequest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "exec.proto",
+}
+
+func (m *RunCmd) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RunCmd) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Command) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintExec(dAtA, i, uint64(len(m.Command)))
+		i += copy(dAtA[i:], m.Command)
+	}
+	return i, nil
+}
+
+func (m *RunVMConsole) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RunVMConsole) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Url) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintExec(dAtA, i, uint64(len(m.Url)))
+		i += copy(dAtA[i:], m.Url)
+	}
+	return i, nil
+}
+
+func (m *ShowLog) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ShowLog) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Since) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintExec(dAtA, i, uint64(len(m.Since)))
+		i += copy(dAtA[i:], m.Since)
+	}
+	if m.Tail != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintExec(dAtA, i, uint64(m.Tail))
+	}
+	if m.Timestamps {
+		dAtA[i] = 0x18
+		i++
+		if m.Timestamps {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.Follow {
+		dAtA[i] = 0x20
+		i++
+		if m.Follow {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	return i, nil
 }
 
 func (m *ExecRequest) Marshal() (dAtA []byte, err error) {
@@ -184,12 +393,6 @@ func (m *ExecRequest) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n1
-	if len(m.Command) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(len(m.Command)))
-		i += copy(dAtA[i:], m.Command)
-	}
 	if len(m.ContainerId) > 0 {
 		dAtA[i] = 0x1a
 		i++
@@ -214,21 +417,40 @@ func (m *ExecRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintExec(dAtA, i, uint64(len(m.Err)))
 		i += copy(dAtA[i:], m.Err)
 	}
-	if m.Console {
-		dAtA[i] = 0x38
+	if m.Cmd != nil {
+		dAtA[i] = 0x4a
 		i++
-		if m.Console {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
+		i = encodeVarintExec(dAtA, i, uint64(m.Cmd.Size()))
+		n2, err := m.Cmd.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
 		}
-		i++
+		i += n2
 	}
-	if len(m.ConsoleUrl) > 0 {
-		dAtA[i] = 0x42
+	if m.Log != nil {
+		dAtA[i] = 0x52
 		i++
-		i = encodeVarintExec(dAtA, i, uint64(len(m.ConsoleUrl)))
-		i += copy(dAtA[i:], m.ConsoleUrl)
+		i = encodeVarintExec(dAtA, i, uint64(m.Log.Size()))
+		n3, err := m.Log.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	if m.Console != nil {
+		dAtA[i] = 0x5a
+		i++
+		i = encodeVarintExec(dAtA, i, uint64(m.Console.Size()))
+		n4, err := m.Console.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	if m.Timeout != 0 {
+		dAtA[i] = 0x60
+		i++
+		i = encodeVarintExec(dAtA, i, uint64(m.Timeout))
 	}
 	return i, nil
 }
@@ -242,6 +464,72 @@ func encodeVarintExec(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
+func (m *RunCmd) CopyInFields(src *RunCmd) int {
+	changed := 0
+	if m.Command != src.Command {
+		m.Command = src.Command
+		changed++
+	}
+	return changed
+}
+
+// Helper method to check that enums have valid values
+func (m *RunCmd) ValidateEnums() error {
+	return nil
+}
+
+func (m *RunVMConsole) CopyInFields(src *RunVMConsole) int {
+	changed := 0
+	if m.Url != src.Url {
+		m.Url = src.Url
+		changed++
+	}
+	return changed
+}
+
+// Helper method to check that enums have valid values
+func (m *RunVMConsole) ValidateEnums() error {
+	return nil
+}
+
+func IgnoreRunVMConsoleFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Url")
+	}
+	return cmpopts.IgnoreFields(RunVMConsole{}, names...)
+}
+
+func (m *ShowLog) CopyInFields(src *ShowLog) int {
+	changed := 0
+	if m.Since != src.Since {
+		m.Since = src.Since
+		changed++
+	}
+	if m.Tail != src.Tail {
+		m.Tail = src.Tail
+		changed++
+	}
+	if m.Timestamps != src.Timestamps {
+		m.Timestamps = src.Timestamps
+		changed++
+	}
+	if m.Follow != src.Follow {
+		m.Follow = src.Follow
+		changed++
+	}
+	return changed
+}
+
+// Helper method to check that enums have valid values
+func (m *ShowLog) ValidateEnums() error {
+	return nil
+}
+
 func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
 	changed := 0
 	if m.AppInstKey.AppKey.DeveloperKey.Name != src.AppInstKey.AppKey.DeveloperKey.Name {
@@ -272,10 +560,6 @@ func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
 		m.AppInstKey.ClusterInstKey.Developer = src.AppInstKey.ClusterInstKey.Developer
 		changed++
 	}
-	if m.Command != src.Command {
-		m.Command = src.Command
-		changed++
-	}
 	if m.ContainerId != src.ContainerId {
 		m.ContainerId = src.ContainerId
 		changed++
@@ -292,12 +576,50 @@ func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
 		m.Err = src.Err
 		changed++
 	}
-	if m.Console != src.Console {
-		m.Console = src.Console
+	if src.Cmd != nil {
+		m.Cmd = &RunCmd{}
+		if m.Cmd.Command != src.Cmd.Command {
+			m.Cmd.Command = src.Cmd.Command
+			changed++
+		}
+	} else if m.Cmd != nil {
+		m.Cmd = nil
 		changed++
 	}
-	if m.ConsoleUrl != src.ConsoleUrl {
-		m.ConsoleUrl = src.ConsoleUrl
+	if src.Log != nil {
+		m.Log = &ShowLog{}
+		if m.Log.Since != src.Log.Since {
+			m.Log.Since = src.Log.Since
+			changed++
+		}
+		if m.Log.Tail != src.Log.Tail {
+			m.Log.Tail = src.Log.Tail
+			changed++
+		}
+		if m.Log.Timestamps != src.Log.Timestamps {
+			m.Log.Timestamps = src.Log.Timestamps
+			changed++
+		}
+		if m.Log.Follow != src.Log.Follow {
+			m.Log.Follow = src.Log.Follow
+			changed++
+		}
+	} else if m.Log != nil {
+		m.Log = nil
+		changed++
+	}
+	if src.Console != nil {
+		m.Console = &RunVMConsole{}
+		if m.Console.Url != src.Console.Url {
+			m.Console.Url = src.Console.Url
+			changed++
+		}
+	} else if m.Console != nil {
+		m.Console = nil
+		changed++
+	}
+	if m.Timeout != src.Timeout {
+		m.Timeout = src.Timeout
 		changed++
 	}
 	return changed
@@ -306,6 +628,15 @@ func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
 // Helper method to check that enums have valid values
 func (m *ExecRequest) ValidateEnums() error {
 	if err := m.AppInstKey.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.Cmd.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.Log.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.Console.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
@@ -324,9 +655,48 @@ func IgnoreExecRequestFields(taglist string) cmp.Option {
 		names = append(names, "Answer")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "ConsoleUrl")
+		names = append(names, "Console.Url")
 	}
 	return cmpopts.IgnoreFields(ExecRequest{}, names...)
+}
+
+func (m *RunCmd) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Command)
+	if l > 0 {
+		n += 1 + l + sovExec(uint64(l))
+	}
+	return n
+}
+
+func (m *RunVMConsole) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Url)
+	if l > 0 {
+		n += 1 + l + sovExec(uint64(l))
+	}
+	return n
+}
+
+func (m *ShowLog) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Since)
+	if l > 0 {
+		n += 1 + l + sovExec(uint64(l))
+	}
+	if m.Tail != 0 {
+		n += 1 + sovExec(uint64(m.Tail))
+	}
+	if m.Timestamps {
+		n += 2
+	}
+	if m.Follow {
+		n += 2
+	}
+	return n
 }
 
 func (m *ExecRequest) Size() (n int) {
@@ -334,10 +704,6 @@ func (m *ExecRequest) Size() (n int) {
 	_ = l
 	l = m.AppInstKey.Size()
 	n += 1 + l + sovExec(uint64(l))
-	l = len(m.Command)
-	if l > 0 {
-		n += 1 + l + sovExec(uint64(l))
-	}
 	l = len(m.ContainerId)
 	if l > 0 {
 		n += 1 + l + sovExec(uint64(l))
@@ -354,12 +720,20 @@ func (m *ExecRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovExec(uint64(l))
 	}
-	if m.Console {
-		n += 2
-	}
-	l = len(m.ConsoleUrl)
-	if l > 0 {
+	if m.Cmd != nil {
+		l = m.Cmd.Size()
 		n += 1 + l + sovExec(uint64(l))
+	}
+	if m.Log != nil {
+		l = m.Log.Size()
+		n += 1 + l + sovExec(uint64(l))
+	}
+	if m.Console != nil {
+		l = m.Console.Size()
+		n += 1 + l + sovExec(uint64(l))
+	}
+	if m.Timeout != 0 {
+		n += 1 + sovExec(uint64(m.Timeout))
 	}
 	return n
 }
@@ -376,6 +750,302 @@ func sovExec(x uint64) (n int) {
 }
 func sozExec(x uint64) (n int) {
 	return sovExec(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *RunCmd) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExec
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RunCmd: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RunCmd: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Command", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExec
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Command = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExec(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExec
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RunVMConsole) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExec
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RunVMConsole: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RunVMConsole: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Url", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExec
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Url = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExec(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExec
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ShowLog) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExec
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ShowLog: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ShowLog: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Since", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExec
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Since = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tail", wireType)
+			}
+			m.Tail = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Tail |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamps", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Timestamps = bool(v != 0)
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Follow", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Follow = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExec(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExec
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -435,35 +1105,6 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 			if err := m.AppInstKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Command", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthExec
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Command = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -581,31 +1222,11 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.Err = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Console", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Console = bool(v != 0)
-		case 8:
+		case 9:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConsoleUrl", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Cmd", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowExec
@@ -615,21 +1236,110 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthExec
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConsoleUrl = string(dAtA[iNdEx:postIndex])
+			if m.Cmd == nil {
+				m.Cmd = &RunCmd{}
+			}
+			if err := m.Cmd.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Log", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Log == nil {
+				m.Log = &ShowLog{}
+			}
+			if err := m.Log.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Console", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Console == nil {
+				m.Console = &RunVMConsole{}
+			}
+			if err := m.Console.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
+			}
+			m.Timeout = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timeout |= (Duration(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipExec(dAtA[iNdEx:])
@@ -759,40 +1469,57 @@ var (
 func init() { proto.RegisterFile("exec.proto", fileDescriptorExec) }
 
 var fileDescriptorExec = []byte{
-	// 547 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0xbf, 0x6f, 0xd3, 0x40,
-	0x14, 0xae, 0xdb, 0xa6, 0x69, 0x2f, 0x05, 0x45, 0x16, 0xa0, 0x23, 0x42, 0x21, 0xb4, 0x42, 0xca,
-	0x60, 0x62, 0xa9, 0x2c, 0x08, 0xa9, 0x43, 0x92, 0x66, 0xa8, 0xf8, 0x51, 0xc9, 0x08, 0xd6, 0xe8,
-	0x72, 0x7e, 0x35, 0x16, 0xf6, 0xdd, 0x71, 0x77, 0x2e, 0xe9, 0xcc, 0xc8, 0xc6, 0xc8, 0x5f, 0xc0,
-	0xcc, 0x3f, 0x00, 0x63, 0x60, 0x62, 0x61, 0x45, 0x90, 0x91, 0x39, 0xd9, 0xd1, 0xf9, 0x57, 0x4b,
-	0x14, 0x50, 0x59, 0xec, 0xef, 0xbd, 0xef, 0xfb, 0xee, 0x7b, 0x3a, 0xbd, 0x43, 0x08, 0xc6, 0x40,
-	0x3b, 0x42, 0x72, 0xcd, 0xed, 0x2d, 0xf0, 0x03, 0x48, 0x61, 0xe3, 0x46, 0xc0, 0x79, 0x10, 0x81,
-	0x4b, 0x44, 0xe8, 0x12, 0xc6, 0xb8, 0x26, 0x3a, 0xe4, 0x4c, 0x65, 0xc2, 0xc6, 0xbd, 0x20, 0xd4,
-	0xcf, 0x93, 0x51, 0x87, 0xf2, 0xd8, 0x8d, 0xf9, 0x28, 0x8c, 0x8c, 0x71, 0xec, 0x9a, 0xef, 0x1d,
-	0x1a, 0xf1, 0xc4, 0x77, 0x53, 0x5d, 0x00, 0xac, 0x04, 0xb9, 0xf3, 0x4a, 0xc0, 0x03, 0x9e, 0x42,
-	0xd7, 0xa0, 0xbc, 0x7b, 0x99, 0x08, 0x31, 0x0c, 0x99, 0xd2, 0x59, 0xbd, 0xf3, 0xb1, 0x82, 0x6a,
-	0x83, 0x31, 0x50, 0x0f, 0x5e, 0x26, 0xa0, 0xb4, 0xbd, 0x8f, 0xb6, 0x0b, 0xc5, 0xf0, 0x05, 0x9c,
-	0x62, 0xab, 0x65, 0xb5, 0x6b, 0x7b, 0x57, 0x3b, 0xe5, 0xbc, 0x9d, 0xae, 0x10, 0x87, 0x4c, 0xe9,
-	0x07, 0x70, 0xda, 0x5b, 0x9f, 0x7c, 0xbf, 0xb9, 0xe2, 0x21, 0x52, 0x76, 0x6c, 0x8c, 0xaa, 0x94,
-	0xc7, 0x31, 0x61, 0x3e, 0x5e, 0x6d, 0x59, 0xed, 0x2d, 0xaf, 0x28, 0xed, 0x5b, 0x68, 0x9b, 0x72,
-	0xa6, 0x49, 0xc8, 0x40, 0x0e, 0x43, 0x1f, 0xaf, 0xa5, 0x74, 0xad, 0xec, 0x1d, 0xfa, 0xf6, 0x2e,
-	0xaa, 0xf0, 0xe3, 0x63, 0x90, 0x78, 0xdd, 0x70, 0xbd, 0x4b, 0xef, 0x67, 0xd8, 0x7a, 0xfb, 0xe1,
-	0x7a, 0x85, 0x71, 0x1a, 0x0b, 0x2f, 0xe3, 0xec, 0xdb, 0x68, 0x83, 0x30, 0xf5, 0x0a, 0x24, 0xae,
-	0x2c, 0x53, 0xe5, 0xa4, 0x5d, 0x47, 0x6b, 0x20, 0x25, 0xde, 0x48, 0x53, 0x0c, 0xcc, 0x46, 0x63,
-	0x8a, 0x47, 0x80, 0xab, 0x2d, 0xab, 0xbd, 0xe9, 0x15, 0xa5, 0xdd, 0x41, 0xb5, 0x1c, 0x0e, 0x13,
-	0x19, 0xe1, 0xcd, 0x65, 0xe7, 0xa2, 0x5c, 0xf1, 0x54, 0x46, 0xf7, 0xdf, 0xac, 0x7d, 0x9a, 0x61,
-	0x6b, 0x62, 0xf8, 0x39, 0xde, 0x3d, 0x32, 0x63, 0x39, 0xdd, 0x34, 0xd6, 0x19, 0x48, 0xe9, 0xf4,
-	0x4b, 0x65, 0x01, 0xdf, 0xcd, 0xf1, 0xe7, 0x55, 0x22, 0x04, 0x23, 0x31, 0xec, 0x9f, 0xdd, 0x9f,
-	0xb9, 0x4a, 0xf3, 0x7b, 0x4c, 0x62, 0x70, 0x88, 0x10, 0x27, 0x20, 0xd5, 0x12, 0xfa, 0x19, 0x48,
-	0x15, 0x72, 0xe6, 0xf8, 0x70, 0x02, 0x11, 0x17, 0x20, 0x97, 0x68, 0x0e, 0x0a, 0xae, 0x3c, 0x8f,
-	0x46, 0x89, 0xd2, 0x7f, 0x6a, 0xfb, 0x59, 0x6b, 0xa1, 0x5c, 0x74, 0x2c, 0x8d, 0x59, 0xb0, 0x96,
-	0x71, 0x4e, 0xba, 0x83, 0x11, 0xe8, 0x7f, 0xe6, 0x64, 0x92, 0x32, 0xc8, 0x18, 0x89, 0xe6, 0xf2,
-	0x82, 0x9e, 0xa3, 0x5c, 0x5e, 0xf8, 0xbf, 0xcc, 0x31, 0x3a, 0x73, 0xee, 0x7d, 0xb3, 0x50, 0xd5,
-	0x6c, 0x70, 0x57, 0x84, 0xf6, 0x6b, 0x0b, 0x21, 0x2f, 0x61, 0xfd, 0x7c, 0xe7, 0xae, 0x9d, 0x5b,
-	0xdb, 0x73, 0x4b, 0xde, 0xf8, 0x4b, 0x7f, 0x67, 0xf0, 0x6b, 0x86, 0xbb, 0x1e, 0x28, 0x9e, 0x48,
-	0x0a, 0x79, 0x84, 0x72, 0xba, 0xd4, 0x3c, 0xc8, 0x47, 0x84, 0x91, 0x00, 0x9c, 0x0b, 0x5c, 0xbd,
-	0x7d, 0x80, 0xea, 0x4f, 0x80, 0xf9, 0x0f, 0x39, 0x25, 0x51, 0xf1, 0xae, 0xfe, 0x77, 0x94, 0x95,
-	0x5e, 0x7d, 0xf2, 0xb3, 0xb9, 0x32, 0x99, 0x36, 0xad, 0xaf, 0xd3, 0xa6, 0xf5, 0x63, 0xda, 0xb4,
-	0x46, 0x1b, 0xa9, 0xec, 0xee, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x23, 0x81, 0x36, 0x01, 0x49,
-	0x04, 0x00, 0x00,
+	// 826 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0x4f, 0x4f, 0x1b, 0x47,
+	0x14, 0x67, 0xbb, 0xd8, 0xc6, 0x63, 0xb7, 0xa2, 0x23, 0x4a, 0xa7, 0xa8, 0x32, 0xae, 0xa1, 0x95,
+	0x0f, 0x5b, 0x5b, 0xa5, 0x97, 0xaa, 0x92, 0x55, 0xd9, 0x86, 0x4a, 0xa8, 0xa6, 0x48, 0x0b, 0xe5,
+	0x8a, 0x86, 0xdd, 0x61, 0x59, 0xb1, 0x3b, 0xb3, 0x9d, 0xdd, 0xc5, 0x70, 0xeb, 0x67, 0xe8, 0x21,
+	0x8a, 0xf2, 0x05, 0x92, 0x53, 0x0e, 0xf9, 0x04, 0x39, 0x5a, 0x39, 0x45, 0xca, 0x21, 0x52, 0x0e,
+	0x88, 0xf8, 0x88, 0x14, 0xe5, 0x82, 0x73, 0xc8, 0x29, 0x9a, 0xd9, 0x3f, 0x36, 0xc4, 0x20, 0x5b,
+	0xc9, 0xc5, 0x7e, 0x7f, 0x7e, 0x6f, 0xde, 0xfb, 0xbd, 0x3f, 0x36, 0x00, 0xe4, 0x94, 0x18, 0x35,
+	0x8f, 0xb3, 0x80, 0xc1, 0x3c, 0x31, 0x2d, 0x22, 0xc5, 0xa5, 0xef, 0x2d, 0xc6, 0x2c, 0x87, 0xd4,
+	0xb1, 0x67, 0xd7, 0x31, 0xa5, 0x2c, 0xc0, 0x81, 0xcd, 0xa8, 0x1f, 0x01, 0x97, 0x7e, 0xb3, 0xec,
+	0xe0, 0x28, 0x3c, 0xa8, 0x19, 0xcc, 0xad, 0xbb, 0xec, 0xc0, 0x76, 0x44, 0xe0, 0x69, 0x5d, 0x7c,
+	0xfe, 0x6c, 0x38, 0x2c, 0x34, 0xeb, 0x12, 0x67, 0x11, 0x9a, 0x0a, 0x71, 0xe4, 0x82, 0xc5, 0x2c,
+	0x26, 0xc5, 0xba, 0x90, 0x62, 0xeb, 0x57, 0xd8, 0xf3, 0xf6, 0x6d, 0xea, 0x07, 0x91, 0x5e, 0xa9,
+	0x80, 0xac, 0x1e, 0xd2, 0xb6, 0x6b, 0x42, 0x04, 0x72, 0x06, 0x73, 0x5d, 0x4c, 0x4d, 0xa4, 0x94,
+	0x95, 0x6a, 0x5e, 0x4f, 0xd4, 0x4a, 0x1d, 0x14, 0xf5, 0x90, 0xee, 0x6d, 0xb5, 0x19, 0xf5, 0x99,
+	0x43, 0xe0, 0x32, 0x50, 0x43, 0xee, 0x44, 0xa8, 0xd6, 0x97, 0x8f, 0xae, 0x90, 0xf2, 0xff, 0x93,
+	0xef, 0x32, 0x94, 0x19, 0xae, 0xa7, 0x0b, 0x4f, 0xe5, 0x18, 0xe4, 0x76, 0x8e, 0x58, 0xb7, 0xc3,
+	0x2c, 0xb8, 0x00, 0x32, 0xbe, 0x4d, 0x0d, 0x12, 0xbf, 0x19, 0x29, 0x10, 0x82, 0xd9, 0x00, 0xdb,
+	0x0e, 0xfa, 0xa2, 0xac, 0x54, 0x33, 0xba, 0x94, 0x61, 0x09, 0x80, 0xc0, 0x76, 0x89, 0x1f, 0x60,
+	0xd7, 0xf3, 0x91, 0x5a, 0x56, 0xaa, 0x73, 0xfa, 0x88, 0x05, 0x2e, 0x82, 0xec, 0x21, 0x73, 0x1c,
+	0xd6, 0x45, 0xb3, 0xd2, 0x17, 0x6b, 0x95, 0x8b, 0x2c, 0x28, 0x6c, 0x9c, 0x12, 0x43, 0x27, 0xff,
+	0x86, 0xc4, 0x0f, 0x60, 0x03, 0x14, 0x13, 0x8e, 0xfb, 0xc7, 0xe4, 0x4c, 0x26, 0x2e, 0xac, 0x7d,
+	0x53, 0x4b, 0x3b, 0x5e, 0x6b, 0x7a, 0xde, 0x26, 0xf5, 0x83, 0xbf, 0xc8, 0x59, 0x6b, 0xb6, 0x77,
+	0xbe, 0x3c, 0xa3, 0x03, 0x9c, 0x5a, 0xe0, 0x0f, 0xa0, 0x68, 0x30, 0x1a, 0x60, 0x9b, 0x12, 0xbe,
+	0x6f, 0x9b, 0xb2, 0x90, 0xbc, 0x5e, 0x48, 0x6d, 0x9b, 0x26, 0x5c, 0x01, 0x19, 0x76, 0x78, 0x48,
+	0xb8, 0x2c, 0xe4, 0xa3, 0x0e, 0x44, 0x3e, 0xf8, 0x23, 0xc8, 0x62, 0xea, 0x77, 0x09, 0x47, 0x99,
+	0x71, 0xa8, 0xd8, 0x09, 0xe7, 0x81, 0x4a, 0x38, 0x47, 0x59, 0x99, 0x45, 0x88, 0x70, 0x05, 0xa8,
+	0x86, 0x6b, 0xa2, 0xbc, 0x2c, 0xfb, 0xeb, 0x91, 0xb2, 0xa3, 0x39, 0xe9, 0xc2, 0x0b, 0x57, 0x81,
+	0xea, 0x30, 0x0b, 0x01, 0x09, 0x82, 0x23, 0xa0, 0xb8, 0xef, 0xba, 0x70, 0xc3, 0x5f, 0xc4, 0x48,
+	0xe5, 0xcc, 0x50, 0x41, 0x22, 0xbf, 0xbd, 0xfe, 0x5c, 0x3a, 0x52, 0x3d, 0xc1, 0xc1, 0x9f, 0x40,
+	0x4e, 0xf4, 0x9c, 0x85, 0x01, 0x2a, 0x96, 0x95, 0xaa, 0xda, 0x2a, 0xbe, 0x3f, 0x5f, 0x9e, 0x5b,
+	0x0f, 0xb9, 0xdc, 0x4a, 0x3d, 0x71, 0xfe, 0x7e, 0xa9, 0x3e, 0xbd, 0x42, 0x4a, 0x4f, 0x70, 0x1a,
+	0xa0, 0xd5, 0x6d, 0x41, 0x59, 0x6b, 0x4a, 0x4a, 0xda, 0x06, 0xe7, 0x5a, 0xfc, 0x6e, 0xed, 0x1f,
+	0xee, 0x68, 0xbb, 0x51, 0xc8, 0x83, 0x01, 0x7a, 0xa8, 0x62, 0xcf, 0xa3, 0xd8, 0x25, 0x8d, 0xe1,
+	0x08, 0xc4, 0x34, 0xc4, 0xd7, 0xdf, 0xd8, 0x25, 0x1a, 0xf6, 0xbc, 0x13, 0xc2, 0xfd, 0x31, 0xee,
+	0x3d, 0xc2, 0x7d, 0x9b, 0x51, 0xcd, 0x24, 0x27, 0xc4, 0x61, 0x1e, 0xe1, 0x63, 0x30, 0xeb, 0x89,
+	0x2f, 0x7d, 0xcf, 0x70, 0x42, 0x3f, 0xb8, 0x8e, 0x6d, 0x47, 0xa6, 0x1b, 0xea, 0xcd, 0x88, 0xb1,
+	0x69, 0x6e, 0x84, 0xa6, 0xe9, 0x34, 0x79, 0x88, 0x0e, 0x09, 0xee, 0xcc, 0x13, 0x41, 0xd2, 0x44,
+	0x22, 0x10, 0x07, 0x8c, 0x4f, 0x18, 0xb3, 0x1d, 0xc3, 0x87, 0x85, 0x46, 0xc7, 0xd9, 0x68, 0xbb,
+	0x66, 0xad, 0x1d, 0xc9, 0x9a, 0x3c, 0xae, 0x46, 0x87, 0x59, 0xb5, 0x1d, 0x21, 0x69, 0xe2, 0xae,
+	0xa4, 0xba, 0x8b, 0x6d, 0x47, 0x1b, 0xde, 0x52, 0x64, 0x4b, 0x55, 0x2d, 0xba, 0x24, 0x69, 0xfd,
+	0x53, 0x8a, 0xcf, 0x06, 0x08, 0x0c, 0xeb, 0x5a, 0x7b, 0x9b, 0x01, 0x39, 0x71, 0x62, 0x4d, 0xcf,
+	0x86, 0x6f, 0x14, 0x00, 0xc4, 0x26, 0x46, 0x29, 0xe1, 0xe2, 0xc8, 0x46, 0x8d, 0x5c, 0xe1, 0xd2,
+	0x2d, 0xf6, 0xca, 0x63, 0xe5, 0xf2, 0x0a, 0x35, 0x75, 0xe2, 0xb3, 0x90, 0x1b, 0x24, 0xce, 0xe1,
+	0x6b, 0x4d, 0x43, 0xac, 0xd7, 0x16, 0xa6, 0xd8, 0x22, 0xda, 0x04, 0x93, 0x7d, 0x35, 0x6e, 0xe9,
+	0xe2, 0x45, 0xd3, 0x3a, 0xcc, 0x4a, 0x16, 0xb0, 0x3f, 0x40, 0x8b, 0xc3, 0xe7, 0xb4, 0x91, 0x66,
+	0x5d, 0x0e, 0xd0, 0xca, 0x04, 0xb3, 0x85, 0x2f, 0x13, 0xbe, 0xd1, 0x7d, 0x4c, 0xcb, 0xf7, 0xfe,
+	0x67, 0xe3, 0x5b, 0xbd, 0x9b, 0xaf, 0x6b, 0x26, 0x9c, 0x27, 0x65, 0xf6, 0x42, 0x01, 0x73, 0xf1,
+	0xcf, 0x85, 0x3f, 0x35, 0xaf, 0x7b, 0x82, 0xd7, 0x1f, 0xb7, 0xf0, 0xda, 0xb3, 0x49, 0xf7, 0x93,
+	0xa7, 0x38, 0x3d, 0xa3, 0xff, 0xde, 0x21, 0x05, 0xae, 0x83, 0xf9, 0x1d, 0x42, 0xcd, 0x0e, 0x33,
+	0xb0, 0x93, 0xfc, 0x25, 0x4c, 0x4b, 0x6e, 0xa6, 0x35, 0xdf, 0x7b, 0x5d, 0x9a, 0xe9, 0xf5, 0x4b,
+	0xca, 0xf3, 0x7e, 0x49, 0xb9, 0xe8, 0x97, 0x94, 0x83, 0xac, 0x84, 0xfd, 0xfa, 0x21, 0x00, 0x00,
+	0xff, 0xff, 0xa4, 0xc9, 0x35, 0xce, 0xc6, 0x07, 0x00, 0x00,
 }
