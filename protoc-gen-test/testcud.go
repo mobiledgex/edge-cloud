@@ -722,7 +722,7 @@ func (t *TestCud) genDummyMethod(service string, method *descriptor.MethodDescri
 		Outstream: gensupport.ServerStreaming(method),
 		OutList:   GetGenerateCud(out.DescriptorProto),
 		HasCache:  GetGenerateCache(in.DescriptorProto),
-		Show:      strings.HasPrefix(*method.Name, "Show"),
+		Show:      gensupport.IsShow(method),
 	}
 	if args.HasCache {
 		if strings.HasPrefix(*method.Name, "Create") {

@@ -6,12 +6,32 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 import "app_inst.proto";
 
+message RunCmd {
+  // Command or Shell
+  string command = 1;
+}
+
+message RunVMConsole {
+  // VM Console URL
+  string url = 1 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+}
+
+message ShowLog {
+  // Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)
+  string since = 1;
+  // Show only a recent number of lines
+  int32 tail = 2;
+  // Show timestamps
+  bool timestamps = 3;
+  // Stream data
+  bool follow = 4;
+}
+
+// ExecRequest is a common struct for enabling a webrtc connection do execute some work on a container.
 message ExecRequest {
   // Target AppInst
   AppInstKey app_inst_key = 1 [(gogoproto.nullable) = false];
-  // Command or Shell
-  string command = 2;
-  // ContainerID is the name of the target container, if applicable
+  // ContainerId is the name or ID of the target container, if applicable
   string container_id = 3;
   // WebRTC Offer
   string offer = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
@@ -19,21 +39,41 @@ message ExecRequest {
   string answer = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Any error message
   string err = 6;
-  // VM Console
-  bool console = 7;
-  // VM Console URL
-  string console_url = 8 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Command to run (one of)
+  RunCmd cmd = 9;
+  // Show log (one of)
+  ShowLog log = 10;
+  // Console (one of)
+  RunVMConsole console = 11;
+  // Timeout
+  int64 timeout = 12 [(gogoproto.casttype) = "Duration"];
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
-  option (protogen.noconfig) = "Offer,Answer,Err,ConsoleUrl,Console";
-  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name";
+  option (protogen.noconfig) = "Offer,Answer,Err,Console.Url,Timeout";
+  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow";
   option (protogen.also_required) = "AppInstKey";
 }
 
 service ExecApi {
-  // Run a Command or Shell on a container or VM
+  // Run a Command or Shell on a container
   rpc RunCommand(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.DeveloperKey.Name";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console";
+    option (protogen.method_also_required) = "AppInstKey,Cmd.Command";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
+  }
+  // Run console on a VM
+  rpc RunConsole(ExecRequest) returns (ExecRequest) {
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.DeveloperKey.Name";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
+  }
+  // View logs for AppInst
+  rpc ShowLogs(ExecRequest) returns (ExecRequest) {
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,AppInstKey.AppKey.DeveloperKey.Name";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
+    option (protogen.non_standard_show) = true;
   }
   // This is used internally to forward requests to other Controllers.
   rpc SendLocalRequest(ExecRequest) returns (ExecRequest) {}
