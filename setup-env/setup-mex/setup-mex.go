@@ -614,7 +614,7 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 			log.Printf("Unable to run api for %s, %v\n", action, mods)
 			errors = append(errors, "controller api failed")
 		}
-	case "runcommand":
+	case "exec":
 		if !apis.RunCommandAPI(actionSubtype, actionParam, spec.ApiFile, outputDir) {
 			log.Printf("Unable to run RunCommand api for %s, %v\n", action, mods)
 			errors = append(errors, "controller RunCommand api failed")
