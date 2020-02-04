@@ -203,6 +203,17 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	return false
 }
 
+func (s *AppInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, appinst := range s.cache.Objs {
+		if appinst.Key.AppKey.DeveloperKey.Name == key.Developer && appinst.PrivacyPolicy == key.Name {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	return s.createAppInstInternal(DefCallContext(), in, cb)
@@ -386,6 +397,17 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if in.SharedVolumeSize == 0 {
 			in.SharedVolumeSize = app.DefaultSharedVolumeSize
 		}
+		if in.PrivacyPolicy == "" {
+			in.PrivacyPolicy = app.DefaultPrivacyPolicy
+		}
+		if in.PrivacyPolicy != "" {
+			policy := edgeproto.PrivacyPolicy{}
+			err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.AppKey.DeveloperKey.Name, &policy)
+			if err != nil {
+				return err
+			}
+
+		}
 		return nil
 	})
 	if err != nil {
@@ -449,6 +471,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		clusterInst.IpAccess = in.AutoClusterIpAccess
 		clusterInst.Deployment = appDeploymentType
 		clusterInst.SharedVolumeSize = in.SharedVolumeSize
+		clusterInst.PrivacyPolicy = in.PrivacyPolicy
 		if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes ||
 			appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
 			clusterInst.Deployment = cloudcommon.AppDeploymentTypeKubernetes
