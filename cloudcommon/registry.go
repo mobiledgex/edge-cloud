@@ -216,10 +216,8 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, vaultConfig *vault.
 				return resp, nil
 			}
 			log.SpanLog(ctx, log.DebugLevelApi, "unable to handle www-auth", "err", err)
-		} else {
-			err = fmt.Errorf("Access denied to registry path")
 		}
-		return nil, err
+		return nil, fmt.Errorf("Access denied to registry path")
 	case http.StatusForbidden:
 		resp.Body.Close()
 		return nil, fmt.Errorf("Invalid credentials to access URL: %s", regUrl)
