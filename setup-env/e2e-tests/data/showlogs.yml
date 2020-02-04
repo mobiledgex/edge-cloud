@@ -13,6 +13,4 @@ request:
           name: dmuus
         name: dmuus-cloud-1
       developer: AcmeAppCo
-  cmd:
-    command: echo foo
-expectedoutput: foo
+expectedoutput: here's some logs
