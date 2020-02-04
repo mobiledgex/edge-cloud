@@ -80,6 +80,9 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 				return nil
 			})
 		}
+		if in.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_UPDATING)
+		}
 	}
 	if err != nil {
 		log.DebugLog(log.DebugLevelNotify, "CloudletInfo state transition error",
