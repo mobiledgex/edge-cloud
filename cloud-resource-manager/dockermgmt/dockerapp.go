@@ -217,7 +217,7 @@ func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *e
 
 func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	image := app.ImagePath
-	name := GetContainerName(app)
+	name := GetContainerName(&app.Key)
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", GetContainerName(&app.Key), image, app.Command)
 		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
