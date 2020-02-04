@@ -384,8 +384,22 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	fatal := make(chan bool, 1)
+	upgrade := make(chan bool, 1)
 
 	var err error
+
+	updateCloudletState := func(newState edgeproto.TrackedState) error {
+		cloudlet := edgeproto.Cloudlet{}
+		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			if !s.store.STMGet(stm, key, &cloudlet) {
+				return key.NotFoundError()
+			}
+			cloudlet.State = newState
+			s.store.STMPut(stm, &cloudlet)
+			return nil
+		})
+		return err
+	}
 
 	go func() {
 		err := cloudcommon.CrmServiceWait(*key)
@@ -442,6 +456,10 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 				done <- true
 			}
+		} else {
+			if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+				upgrade <- true
+			}
 		}
 	}
 
@@ -478,6 +496,12 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			err = nil
 			if successMsg != "" {
 				updateCallback(edgeproto.UpdateTask, successMsg)
+			}
+		case <-upgrade:
+			err = updateCloudletState(edgeproto.TrackedState_UPDATING)
+			if err == nil {
+				// Cloudlet started upgrading, now wait for it to be Ready
+				continue
 			}
 		case <-failed:
 			if cloudletInfoApi.cache.Get(key, &info) {
