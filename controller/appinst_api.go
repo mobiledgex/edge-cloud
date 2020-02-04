@@ -207,7 +207,7 @@ func (s *AppInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, appinst := range s.cache.Objs {
-		if appinst.Key.AppKey.DeveloperKey.Name == key.Developer && appinst.PrivacyPolicy == key.Name {
+		if edgeproto.GetOrg(appinst) == key.Developer && appinst.PrivacyPolicy == key.Name {
 			return true
 		}
 	}
