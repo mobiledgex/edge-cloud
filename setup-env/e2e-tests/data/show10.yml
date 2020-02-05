@@ -355,6 +355,10 @@ operators:
 - key:
     name: gcp
 
+operatorcodes:
+  - code: wifi
+    operatorname: tmus
+
 developers:
 - key:
     name: AcmeAppCo
