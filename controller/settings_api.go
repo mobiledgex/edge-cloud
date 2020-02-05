@@ -55,9 +55,21 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 			// nothing changed
 			return nil
 		}
+		for _, field := range in.Fields {
+			if field == edgeproto.SettingsFieldMasterNodeFlavor {
+				// check the value used for MasterNodeFlavor currently
+				// exists as a flavor, error if not.
+				flav := edgeproto.Flavor{}
+				flav.Key.Name = in.MasterNodeFlavor
+				if !flavorApi.store.STMGet(stm, &(flav.Key), &flav) {
+					return fmt.Errorf("Flavor name %s does not exist, must create it before updating MasterNodeFlavor in settings", in.MasterNodeFlavor)
+				}
+			}
+		}
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
+
 	return &edgeproto.Result{}, err
 }
 
