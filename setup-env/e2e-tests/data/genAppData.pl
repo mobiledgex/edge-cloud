@@ -199,6 +199,9 @@ operators:
     name: azure
 - key:
     name: gcp
+operatorcodes:
+- code: wifi
+  operatorname: $Operator
 ")
 }
 
