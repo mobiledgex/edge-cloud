@@ -350,7 +350,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				// should never be non empty and not found due to validation in update
 				// revert to using NodeFlavor (pre EC-1767) and log warning
 				in.MasterNodeFlavor = in.NodeFlavor
-				//vmspec.MasterNodeFlavor = in.NodeFlavor
 				log.SpanLog(ctx, log.DebugLevelApi, "Warning : Master Node Flavor does not exist using", "master flavor", in.MasterNodeFlavor)
 			}
 		}

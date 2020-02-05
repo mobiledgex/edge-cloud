@@ -56,8 +56,6 @@ func testMasterFlavor(t *testing.T, ctx context.Context) {
 	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !flavorApi.store.STMGet(stm, &flavorKey, &masterFlavor) {
 			// create the missing flavor
-			// create it for the tests if not exist
-
 			masterFlavor.Key.Name = "MasterNodeFlavor"
 			masterFlavor.Vcpus = 2
 			masterFlavor.Disk = 40
