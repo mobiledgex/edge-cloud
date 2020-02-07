@@ -1227,6 +1227,18 @@ func isIPAllocatedPerService(operator string) bool {
 
 func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs) error {
 
+	if isIPAllocatedPerService(cloudlet.Key.OperatorKey.Name) {
+		// we don't track IPs in public cloud
+		return nil
+	}
+	if inst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+		// shared, so no allocation needed
+		return nil
+	}
+	if inst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+		// This should have been modified already before coming here, this is a bug if this is hit
+		return fmt.Errorf("Unexpected IP_ACCESS_UNKNOWN ")
+	}
 	// Allocate a dedicated IP
 	if cloudlet.IpSupport == edgeproto.IpSupport_IP_SUPPORT_STATIC {
 		// TODO:
