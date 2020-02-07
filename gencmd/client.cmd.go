@@ -111,38 +111,39 @@ var AppInstClientApiCmds = []*cobra.Command{
 	ShowAppInstClientCmd.GenCmd(),
 }
 
-var AppInstClientKeyRequiredArgs = []string{}
+var AppInstClientKeyRequiredArgs = []string{
+	"key.appkey.developerkey.name",
+	"key.appkey.name",
+	"key.appkey.version",
+	"key.clusterinstkey.clusterkey.name",
+	"key.clusterinstkey.cloudletkey.operatorkey.name",
+	"key.clusterinstkey.cloudletkey.name",
+	"key.clusterinstkey.developer",
+}
 var AppInstClientKeyOptionalArgs = []string{
-	"appinstkey.appkey.developerkey.name",
-	"appinstkey.appkey.name",
-	"appinstkey.appkey.version",
-	"appinstkey.clusterinstkey.clusterkey.name",
-	"appinstkey.clusterinstkey.cloudletkey.operatorkey.name",
-	"appinstkey.clusterinstkey.cloudletkey.name",
-	"appinstkey.clusterinstkey.developer",
 	"uuid",
 }
 var AppInstClientKeyAliasArgs = []string{}
 var AppInstClientKeyComments = map[string]string{
-	"appinstkey.appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
-	"appinstkey.appkey.name":                                 "App name",
-	"appinstkey.appkey.version":                              "App version",
-	"appinstkey.clusterinstkey.clusterkey.name":              "Cluster name",
-	"appinstkey.clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"appinstkey.clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
-	"appinstkey.clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
-	"uuid":                                                   "App name",
+	"key.appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
+	"key.appkey.name":                                 "App name",
+	"key.appkey.version":                              "App version",
+	"key.clusterinstkey.clusterkey.name":              "Cluster name",
+	"key.clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"key.clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
+	"key.clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
+	"uuid":                                            "App name",
 }
 var AppInstClientKeySpecialArgs = map[string]string{}
 var AppInstClientRequiredArgs = []string{}
 var AppInstClientOptionalArgs = []string{
-	"clientkey.appinstkey.appkey.developerkey.name",
-	"clientkey.appinstkey.appkey.name",
-	"clientkey.appinstkey.appkey.version",
-	"clientkey.appinstkey.clusterinstkey.clusterkey.name",
-	"clientkey.appinstkey.clusterinstkey.cloudletkey.operatorkey.name",
-	"clientkey.appinstkey.clusterinstkey.cloudletkey.name",
-	"clientkey.appinstkey.clusterinstkey.developer",
+	"clientkey.key.appkey.developerkey.name",
+	"clientkey.key.appkey.name",
+	"clientkey.key.appkey.version",
+	"clientkey.key.clusterinstkey.clusterkey.name",
+	"clientkey.key.clusterinstkey.cloudletkey.operatorkey.name",
+	"clientkey.key.clusterinstkey.cloudletkey.name",
+	"clientkey.key.clusterinstkey.developer",
 	"clientkey.uuid",
 	"location.latitude",
 	"location.longitude",
@@ -158,22 +159,22 @@ var AppInstClientOptionalArgs = []string{
 }
 var AppInstClientAliasArgs = []string{}
 var AppInstClientComments = map[string]string{
-	"clientkey.appinstkey.appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
-	"clientkey.appinstkey.appkey.name":                                 "App name",
-	"clientkey.appinstkey.appkey.version":                              "App version",
-	"clientkey.appinstkey.clusterinstkey.clusterkey.name":              "Cluster name",
-	"clientkey.appinstkey.clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"clientkey.appinstkey.clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
-	"clientkey.appinstkey.clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
-	"clientkey.uuid":              "App name",
-	"location.latitude":           "latitude in WGS 84 coordinates",
-	"location.longitude":          "longitude in WGS 84 coordinates",
-	"location.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"location.verticalaccuracy":   "vertical accuracy (meters)",
-	"location.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"location.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"location.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"notifyid":                    "Id of client assigned by server (internal use only)",
-	"status":                      "Status return, one of FindUnknown, FindFound, FindNotfound",
+	"clientkey.key.appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
+	"clientkey.key.appkey.name":                                 "App name",
+	"clientkey.key.appkey.version":                              "App version",
+	"clientkey.key.clusterinstkey.clusterkey.name":              "Cluster name",
+	"clientkey.key.clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"clientkey.key.clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
+	"clientkey.key.clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
+	"clientkey.uuid":                                            "App name",
+	"location.latitude":                                         "latitude in WGS 84 coordinates",
+	"location.longitude":                                        "longitude in WGS 84 coordinates",
+	"location.horizontalaccuracy":                               "horizontal accuracy (radius in meters)",
+	"location.verticalaccuracy":                                 "vertical accuracy (meters)",
+	"location.altitude":                                         "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"location.course":                                           "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"location.speed":                                            "speed (IOS) / velocity (Android) (meters/sec)",
+	"notifyid":                                                  "Id of client assigned by server (internal use only)",
+	"status":                                                    "Status return, one of FindUnknown, FindFound, FindNotfound",
 }
 var AppInstClientSpecialArgs = map[string]string{}

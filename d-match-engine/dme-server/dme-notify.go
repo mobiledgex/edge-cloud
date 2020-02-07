@@ -40,6 +40,7 @@ func (s *AppInstHandler) Update(ctx context.Context, in *edgeproto.AppInst, rev 
 
 func (s *AppInstHandler) Delete(ctx context.Context, in *edgeproto.AppInst, rev int64) {
 	dmecommon.RemoveAppInst(in)
+	PurgeAppInstClients(ctx, &in.Key)
 }
 
 func (s *AppInstHandler) Prune(ctx context.Context, keys map[edgeproto.AppInstKey]struct{}) {
@@ -62,11 +63,30 @@ func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.Clou
 
 func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
 
+/* - NOt used
+func (s *AppInstClientKeyHandler) Update(ctx context.Context, in *edgeproto.AppInstClientKey, rev int64) {
+	log.DebugLog(log.DebugLevelDmereq, "Update App Inst Clients", "clientReq", in)
+	//SendCachedClients()
+}
+
+func (s *AppInstClientKeyHandler) Delete(ctx context.Context, in *edgeproto.AppInstClientKey, rev int64) {
+	// TODO - nothing, we just don't send this out
+}
+
+func (s *AppInstClientKeyHandler) Prune(ctx context.Context, keys map[edgeproto.AppInstKey]struct{}) {
+	// TODO - hm....not sure
+}
+
+func (s *AppInstClientKeyHandler) Flush(ctx context.Context, notifyId int64) {}
+*/
 var nodeCache edgeproto.NodeCache
 var ClientSender *notify.AppInstClientSend
+var appInstClientKeyCache edgeproto.AppInstClientKeyCache
 
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
+	edgeproto.InitAppInstClientKeyCache(&appInstClientKeyCache)
+	appInstClientKeyCache.SetUpdatedCb(SendCachedClients)
 	//	edgeproto.InitAppInstClientCache(&clientCache)
 	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(&dmecommon.Settings, dmecommon.SettingsUpdated))
@@ -75,8 +95,9 @@ func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	notifyClient.RegisterRecv(notify.NewAppRecv(&AppHandler{}))
 	notifyClient.RegisterRecv(notify.NewAppInstRecv(&AppInstHandler{}))
 	notifyClient.RegisterRecv(notify.NewClusterInstRecv(&dmecommon.DmeAppTbl.FreeReservableClusterInsts))
+	notifyClient.RegisterRecvAppInstClientKeyCache(&appInstClientKeyCache)
+
 	notifyClient.RegisterSendNodeCache(&nodeCache)
-	//	notifyClient.RegisterSendAppInstClientCache(&clientCache)
 	notifyClient.RegisterRecv(notify.NewCloudletInfoRecv(&CloudletInfoHandler{}))
 	ClientSender = notify.NewAppInstClientSend()
 	notifyClient.RegisterSend(ClientSender)

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -12,62 +11,41 @@ import (
 var AppInstClientQMaxClients = 500
 
 type AppInstClientQ struct {
-	//	client    edgeproto.AppInst - TODO - need to creat a new queue for each request
-	data       []*edgeproto.AppInstClient
+	data       []*edgeproto.AppInstClient // TODO - buffer for multiple receivers here
 	done       bool
 	mux        sync.Mutex
 	wg         sync.WaitGroup
 	Qfull      uint64
-	clientChan chan edgeproto.AppInstClient
+	clientChan map[edgeproto.AppInstKey]chan edgeproto.AppInstClient
 }
 
 func NewAppInstClientQ() *AppInstClientQ {
 	q := AppInstClientQ{}
-	q.data = make([]*edgeproto.AppInstClient, 100)
+	//	q.data = make([]*edgeproto.AppInstClient, 100)
+	q.clientChan = make(map[edgeproto.AppInstKey]chan edgeproto.AppInstClient)
 	return &q
 }
 
-func (q *AppInstClientQ) SetRecvChan(ch chan edgeproto.AppInstClient) {
-	q.clientChan = ch
-}
-
-func (q *AppInstClientQ) Start(addr string) error {
+func (q *AppInstClientQ) SetRecvChan(ch chan edgeproto.AppInstClient, key edgeproto.AppInstKey) {
 	q.mux.Lock()
 	defer q.mux.Unlock()
-	q.done = false
-	q.wg.Add(1)
-	go q.RunPush()
-	return nil
-}
-
-func (q *AppInstClientQ) RunPush() {
-	for !q.done {
-		select {
-		case <-time.After(time.Second):
-		}
-		if q.done {
-			break
-		}
-		q.mux.Lock()
-		if len(q.data) == 0 {
-			q.mux.Unlock()
-			continue
-		}
-		data := q.data
-		q.data = make([]*edgeproto.AppInstClient, 0)
-		q.mux.Unlock()
-
-		for _, metric := range data {
-			log.DebugLog(log.DebugLevelMetrics,
-				"metric new point", "metric", metric)
-		}
+	_, found := q.clientChan[key]
+	if found {
+		//TODO unsupported now - multiple clients for the same appInst, need to implement it
+		log.DebugLog(log.DebugLevelApi, "TOO MANY controller CLIENTS!!!", "key", key)
+		return
 	}
-	q.wg.Done()
+	log.DebugLog(log.DebugLevelApi, "Set channel for appInst", "key", key)
+	q.clientChan[key] = ch
 }
 
-func (q *AppInstClientQ) Stop() {
-	q.done = true
-	q.wg.Wait()
+func (q *AppInstClientQ) ClearRecvChan(key edgeproto.AppInstKey) {
+	q.mux.Lock()
+	defer q.mux.Unlock()
+	_, found := q.clientChan[key]
+	if found {
+		delete(q.clientChan, key)
+	}
 }
 
 func (q *AppInstClientQ) AddClient(clients ...*edgeproto.AppInstClient) {
@@ -79,17 +57,21 @@ func (q *AppInstClientQ) AddClient(clients ...*edgeproto.AppInstClient) {
 		q.Qfull++
 		return
 	}
-	for ii, _ := range clients {
+	for ii, client := range clients {
+		log.DebugLog(log.DebugLevelApi, "Got a client from DME", "client", client)
 		if clients[ii] != nil {
-			q.data = append(q.data, clients[ii])
-			if q.clientChan != nil {
-				q.clientChan <- *clients[ii]
+			//q.data = append(q.data, clients[ii])
+			c, found := q.clientChan[client.ClientKey.Key]
+			if found && c != nil {
+				log.DebugLog(log.DebugLevelApi, "Sending to channel")
+				c <- *clients[ii]
+			} else {
+				log.DebugLog(log.DebugLevelApi, "No channel")
 			}
 		}
 	}
 }
 
 func (q *AppInstClientQ) Recv(ctx context.Context, client *edgeproto.AppInstClient) {
-	log.SpanLog(ctx, log.DebugLevelApi, "Got a client from DME", "client", client)
 	q.AddClient(client)
 }

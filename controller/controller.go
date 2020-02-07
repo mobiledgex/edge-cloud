@@ -447,6 +447,7 @@ func InitApis(sync *Sync) {
 	InitResTagTableApi(sync)
 	InitPrivacyPolicyApi(sync)
 	InitSettingsApi(sync)
+	InitAppInstClientKeyApi(sync)
 	InitAppInstClientApi()
 
 	hostname, err := os.Hostname()
@@ -470,6 +471,7 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ *AppInstClientQ) {
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
 	notify.ServerMgrOne.RegisterSendPrivacyPolicyCache(&privacyPolicyApi.cache)
+	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
 
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 

@@ -101,6 +101,18 @@ func (mgr *ServerMgr) RegisterRecv(recvMany NotifyRecvMany) {
 	mgr.recvs = append(mgr.recvs, recvMany)
 }
 
+// Can be called after the initial register
+func (mgr *ServerMgr) AddRecv(recvMany NotifyRecvMany) {
+	mgr.mux.Lock()
+	defer mgr.mux.Unlock()
+	mgr.recvs = append(mgr.recvs, recvMany)
+	// Also, add it to the recv mgrs
+	for key, _ := range mgr.table {
+		recv := recvMany.NewRecv()
+		mgr.table[key].sendrecv.registerRecv(recv)
+	}
+}
+
 func (mgr *ServerMgr) Start(addr string, tlsCertFile string) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()

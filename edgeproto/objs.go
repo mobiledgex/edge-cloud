@@ -393,12 +393,8 @@ func (key *PolicyKey) ValidateKey() error {
 	return nil
 }
 
-func (s *AppInstClient) Validate(fields map[string]struct{}) error {
-	return nil
-}
-
-func (key *AppInstClientKey) ValidateKey() error {
-	return key.AppInstKey.ValidateKey()
+func (s *AppInstClientKey) Validate(fields map[string]struct{}) error {
+	return s.Key.ValidateKey()
 }
 
 // Validate fields. Note that specified fields is ignored, so this function

@@ -30,13 +30,15 @@ func InitAppInstClientApi() {
 
 func (s *AppInstClientApi) Prune(ctx context.Context, keys map[edgeproto.AppInstClientKey]struct{}) {}
 
-// TODO: stream forever
 func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClient, cb edgeproto.AppInstClientApi_ShowAppInstClientServer) error {
-	// DUmp debug
-	log.DebugLog(log.DebugLevelInfo, "DUMP appInstClients")
-	for _, client := range services.clientQ.data {
-		log.DebugLog(log.DebugLevelInfo, "appInstClient", "client", client)
-	}
+	// Request this AppInst to be sent
+	// TODO - check if it exists already and then just do the different thing
+	recvCh := make(chan edgeproto.AppInstClient, 1)
+	client := edgeproto.AppInstClient{}
+	services.clientQ.SetRecvChan(recvCh, in.ClientKey.Key)
+
+	log.DebugLog(log.DebugLevelInfo, "Send request for an appInst", "appinst", in.ClientKey.Key)
+	appInstClientKeyApi.Update(cb.Context(), &in.ClientKey, 0)
 
 	for _, client := range services.clientQ.data {
 		if client == nil {
@@ -46,9 +48,6 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClient, cb edg
 			return err
 		}
 	}
-	recvCh := make(chan edgeproto.AppInstClient, 1)
-	client := edgeproto.AppInstClient{}
-	services.clientQ.SetRecvChan(recvCh)
 	done := false
 	for !done {
 		log.DebugLog(log.DebugLevelInfo, "Waiting for more data....")
@@ -57,16 +56,51 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClient, cb edg
 			done = true
 		case client = <-recvCh:
 			if err := cb.Send(&client); err != nil {
-				services.clientQ.SetRecvChan(nil)
-				return err
+				done = true
 			}
 		}
 		if services.clientQ.done {
 			done = true
 		}
 	}
-	services.clientQ.SetRecvChan(nil)
+	services.clientQ.ClearRecvChan(in.ClientKey.Key)
+	log.DebugLog(log.DebugLevelInfo, "Done - closing connections.")
+	appInstClientKeyApi.Delete(cb.Context(), &in.ClientKey, 0)
 	return nil
 }
 
 func (s *AppInstClientApi) Flush(ctx context.Context, notifyId int64) {}
+
+type AppInstClientKeyApi struct {
+	sync  *Sync
+	store edgeproto.AppInstClientKeyStore
+	cache edgeproto.AppInstClientKeyCache
+}
+
+var appInstClientKeyApi = AppInstClientKeyApi{}
+
+func InitAppInstClientKeyApi(sync *Sync) {
+	appInstClientKeyApi.sync = sync
+	appInstClientKeyApi.store = edgeproto.NewAppInstClientKeyStore(sync.store)
+	edgeproto.InitAppInstClientKeyCache(&appInstClientKeyApi.cache)
+	sync.RegisterCache(&appInstClientKeyApi.cache)
+}
+
+func (s *AppInstClientKeyApi) Update(ctx context.Context, in *edgeproto.AppInstClientKey, rev int64) {
+	log.DebugLog(log.DebugLevelApi, "Update appinst clientKey", "client", in)
+	s.cache.Update(ctx, in, rev)
+}
+
+func (s *AppInstClientKeyApi) Delete(ctx context.Context, in *edgeproto.AppInstClientKey, rev int64) {
+	s.cache.Delete(ctx, in, rev)
+}
+
+func (s *AppInstClientKeyApi) Flush(ctx context.Context, notifyId int64) {
+	s.cache.Flush(ctx, notifyId)
+}
+
+func (s *AppInstClientKeyApi) Prune(ctx context.Context, keys map[edgeproto.AppInstKey]struct{}) {}
+
+func (s *AppInstClientKeyApi) HasApp(key *edgeproto.AppInstKey) bool {
+	return s.cache.HasKey(key)
+}
