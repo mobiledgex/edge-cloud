@@ -11,6 +11,7 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
+  loadbalancermaxportrange: 100
 flavors:
 - key:
     name: x1.tiny
@@ -125,6 +126,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -161,6 +163,7 @@ apps:
     name: x1.medium
   annotations: version=7.1.1
   deployment: helm
+  accesstype: AccessTypeLoadBalancer
   configs:
   - kind: hemlCustomizationYaml
     config: |
@@ -200,6 +203,7 @@ apps:
         enabled: false
       alertmanager:
         enabled: false
+  accesstype: AccessTypeLoadBalancer
 
 appinstances:
 - key:

@@ -11,7 +11,7 @@ settings:
   createclusterinsttimeout: 30m
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
-
+  loadbalancermaxportrange: 50
 flavors:
 - key:
     name: x1.tiny
@@ -354,6 +354,10 @@ operators:
     name: azure
 - key:
     name: gcp
+
+operatorcodes:
+  - code: wifi
+    operatorname: tmus
 
 developers:
 - key:

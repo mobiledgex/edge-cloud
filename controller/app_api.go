@@ -10,6 +10,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -72,6 +73,17 @@ func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
 	return false
 }
 
+func (s *AppApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, app := range s.cache.Objs {
+		if app.Key.DeveloperKey.Name == key.Developer && app.DefaultPrivacyPolicy == key.Name {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *AppApi) AutoDeleteAppsForDeveloper(ctx context.Context, key *edgeproto.DeveloperKey) {
 	apps := make(map[edgeproto.AppKey]*edgeproto.App)
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting Apps ", "developer", key)
@@ -125,6 +137,21 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 		}
 	}
 	return false
+}
+
+func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.AccessType) error {
+	maxPorts := settingsApi.Get().LoadBalancerMaxPortRange
+	for ii, _ := range ports {
+		ports[ii].PublicPort = ports[ii].InternalPort
+		if ports[ii].EndPort != 0 {
+			numPortsInRange := ports[ii].EndPort - ports[ii].PublicPort
+			// this is checked in app_api also, but this in case there are pre-existing apps which violate this new restriction
+			if accessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER && numPortsInRange > maxPorts {
+				return fmt.Errorf("Port range greater than max of %d for load balanced application", maxPorts)
+			}
+		}
+	}
+	return nil
 }
 
 // updates fields that need manipulation on setting, or fetched remotely
@@ -255,11 +282,11 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
 		return &edgeproto.Result{}, fmt.Errorf("Deployment is not valid for image type")
 	}
-	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment) 
-	if err != nil{
+	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment)
+	if err != nil {
 		return &edgeproto.Result{}, err
 	}
-	if in.AccessType != newAccessType{
+	if in.AccessType != newAccessType {
 		log.SpanLog(ctx, log.DebugLevelApi, "updating access type", "newAccessType", newAccessType)
 		in.AccessType = newAccessType
 	}
@@ -285,7 +312,10 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			return &edgeproto.Result{}, fmt.Errorf("Invalid deployment manifest, %v", err)
 		}
 	}
-
+	err = validatePortRangeForAccessType(ports, in.AccessType)
+	if err != nil {
+		return nil, err
+	}
 	if s.AndroidPackageConflicts(in) {
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another App", in.AndroidPackageName)
 	}
@@ -302,6 +332,14 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			apKey.Developer = in.Key.DeveloperKey.Name
 			apKey.Name = in.AutoProvPolicy
 			if !autoProvPolicyApi.store.STMGet(stm, &apKey, nil) {
+				return apKey.NotFoundError()
+			}
+		}
+		if in.DefaultPrivacyPolicy != "" {
+			apKey := edgeproto.PolicyKey{}
+			apKey.Developer = in.Key.DeveloperKey.Name
+			apKey.Name = in.DefaultPrivacyPolicy
+			if !privacyPolicyApi.store.STMGet(stm, &apKey, nil) {
 				return apKey.NotFoundError()
 			}
 		}

@@ -388,13 +388,13 @@ func RunControllerCLI(api string, ctrlname string, apiFile string, outputDir str
 }
 
 func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string) bool {
-	log.Printf("RunCommand using %s\n", apiFile)
+	log.Printf("Exec %s using %s\n", api, apiFile)
 
 	ctrl := util.GetController(ctrlname)
 
 	data := runCommandData{}
 	if apiFile == "" {
-		log.Println("Error: Cannot run RunCommand API without API file")
+		log.Printf("Error: Cannot exec %s API without API file\n", api)
 		return false
 	}
 	err := util.ReadYamlFile(apiFile, &data)
@@ -404,7 +404,13 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 	}
 	req := &data.Request
 
-	args := []string{"RunCommand"}
+	args := []string{}
+	if api == "runcommand" {
+		args = append(args, "RunCommand")
+	}
+	if api == "showlogs" {
+		args = append(args, "ShowLogs")
+	}
 	args = append(args, "developer="+req.AppInstKey.AppKey.DeveloperKey.Name)
 	args = append(args, "appname="+req.AppInstKey.AppKey.Name)
 	args = append(args, "appvers="+req.AppInstKey.AppKey.Version)
@@ -412,18 +418,35 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 	args = append(args, "operator="+req.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name)
 	args = append(args, "cluster="+req.AppInstKey.ClusterInstKey.ClusterKey.Name)
 	args = append(args, "clusterdeveloper="+req.AppInstKey.ClusterInstKey.Developer)
-	args = append(args, "command=\""+req.Command+"\"")
+	if api == "runcommand" && req.Cmd != nil {
+		args = append(args, "command=\""+req.Cmd.Command+"\"")
+	}
+	if api == "showlogs" && req.Log != nil {
+		if req.Log.Since != "" {
+			args = append(args, "since=\""+req.Log.Since+"\"")
+		}
+		if req.Log.Tail != 0 {
+			args = append(args, fmt.Sprintf("tail=%d", req.Log.Tail))
+		}
+		if req.Log.Timestamps {
+			args = append(args, "timestamps=true")
+		}
+		if req.Log.Follow {
+			args = append(args, "follow=true")
+		}
+	}
 	out, err := util.ControllerCLI(ctrl, args...)
 	if err != nil {
-		log.Printf("Error running RunCommand API %v\n", err)
+		log.Printf("Error running exec %s API %v\n", api, err)
 		return false
 	}
-	log.Printf("RunCommand output: %s\n", string(out))
+	log.Printf("Exec %s output: %s\n", api, string(out))
 	actual := strings.TrimSpace(string(out))
 	if actual != data.ExpectedOutput {
 		log.Printf("Did not get expected output: %s\n", data.ExpectedOutput)
 		return false
 	}
+
 	return true
 }
 

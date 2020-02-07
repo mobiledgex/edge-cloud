@@ -203,6 +203,17 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	return false
 }
 
+func (s *AppInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, appinst := range s.cache.Objs {
+		if edgeproto.GetOrg(appinst) == key.Developer && appinst.PrivacyPolicy == key.Name {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	return s.createAppInstInternal(DefCallContext(), in, cb)
@@ -386,6 +397,17 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if in.SharedVolumeSize == 0 {
 			in.SharedVolumeSize = app.DefaultSharedVolumeSize
 		}
+		if in.PrivacyPolicy == "" {
+			in.PrivacyPolicy = app.DefaultPrivacyPolicy
+		}
+		if in.PrivacyPolicy != "" {
+			policy := edgeproto.PrivacyPolicy{}
+			err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.AppKey.DeveloperKey.Name, &policy)
+			if err != nil {
+				return err
+			}
+
+		}
 		return nil
 	})
 	if err != nil {
@@ -449,6 +471,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		clusterInst.IpAccess = in.AutoClusterIpAccess
 		clusterInst.Deployment = appDeploymentType
 		clusterInst.SharedVolumeSize = in.SharedVolumeSize
+		clusterInst.PrivacyPolicy = in.PrivacyPolicy
 		if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes ||
 			appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
 			clusterInst.Deployment = cloudcommon.AppDeploymentTypeKubernetes
@@ -639,7 +662,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				}
 				// port range is validated on app create, but checked again here in case there were
 				// pre-existing apps which violate the supported range
-				err = edgeproto.ValidatePortRangeForAccessType(ports, app.AccessType)
+				err = validatePortRangeForAccessType(ports, app.AccessType)
 				if err != nil {
 					return err
 				}
@@ -753,7 +776,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 	if crmUpdateRequired {
 		RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
 
-		defer func () {
+		defer func() {
 			if reterr == nil {
 				RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
 			} else {

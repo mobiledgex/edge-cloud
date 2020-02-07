@@ -19,6 +19,7 @@ import (
 var nameMatch = regexp.MustCompile("^[0-9a-zA-Z][-_0-9a-zA-Z .&,!]*$")
 var k8sMatch = regexp.MustCompile("^[0-9a-zA-Z][-0-9a-zA-Z.]*$")
 var emailMatch = regexp.MustCompile(`(.+)@(.+)\.(.+)`)
+var dockerNameMatch = regexp.MustCompile(`^[0-9a-zA-Z][a-zA-Z0-9_.-]+$`)
 
 // region names are used in Vault approle names, which are very
 // restrictive in what characters they allow.
@@ -30,6 +31,10 @@ func ValidName(name string) bool {
 
 func ValidKubernetesName(name string) bool {
 	return k8sMatch.MatchString(name)
+}
+
+func ValidDockerName(name string) bool {
+	return dockerNameMatch.MatchString(name)
 }
 
 func ValidIp(ip []byte) bool {
