@@ -108,6 +108,7 @@ apps:
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
   officialfqdn: someapplication1.acmeappco.com
+  accesstype: AccessTypeLoadBalancer
   defaultflavor:
     name: x1.small
   cluster:
@@ -145,6 +146,7 @@ apps:
         name: standard
         defaultClass: true
   internalports: true
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -154,6 +156,7 @@ apps:
   imagetype: ImageTypeHelm
   accessports: tcp:9090
   internalports: true
+  accesstype: AccessTypeLoadBalancer
   defaultflavor:
     name: x1.medium
   annotations: version=7.1.1

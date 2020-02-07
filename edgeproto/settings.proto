@@ -34,8 +34,8 @@ message Settings {
   int64 update_cluster_inst_timeout = 12 [(gogoproto.casttype) = "Duration"];
   // Delete ClusterInst timeout (duration)
   int64 delete_cluster_inst_timeout = 13 [(gogoproto.casttype) = "Duration"];
-  // Default flavor for k8s and no workers, modest size
-  string master_node_flavor = 14 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Default flavor for k8s master VM and > 0  workers
+  string master_node_flavor = 14;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

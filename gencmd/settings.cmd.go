@@ -197,6 +197,7 @@ var SettingsOptionalArgs = []string{
 	"createclusterinsttimeout",
 	"updateclusterinsttimeout",
 	"deleteclusterinsttimeout",
+	"masternodeflavor",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -212,5 +213,6 @@ var SettingsComments = map[string]string{
 	"createclusterinsttimeout":          "Create ClusterInst timeout (duration)",
 	"updateclusterinsttimeout":          "Update ClusterInst timeout (duration)",
 	"deleteclusterinsttimeout":          "Delete ClusterInst timeout (duration)",
+	"masternodeflavor":                  "Default flavor for k8s master VM and > 0  workers",
 }
 var SettingsSpecialArgs = map[string]string{}

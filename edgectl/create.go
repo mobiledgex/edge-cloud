@@ -24,6 +24,7 @@ func runCreate(c *cli.Command, args []string) error {
 	data := c.ReqData.(*edgeproto.ApplicationData)
 	dataMap := edgeproto.ApplicationDataMap(mapped)
 
+	gencmd.CreateFlavors(c, data.Flavors, &err)
 	if data.Settings != nil {
 		objMap, err := cli.GetGenericObj(dataMap["settings"])
 		if err != nil {
@@ -32,7 +33,7 @@ func runCreate(c *cli.Command, args []string) error {
 		data.Settings.Fields = cli.GetSpecifiedFields(objMap, data.Settings, cli.JsonNamespace)
 		gencmd.UpdateSettingsBatch(c, data.Settings, &err)
 	}
-	gencmd.CreateFlavors(c, data.Flavors, &err)
+
 	gencmd.CreateOperators(c, data.Operators, &err)
 	gencmd.CreateOperatorCodes(c, data.OperatorCodes, &err)
 	gencmd.CreateDevelopers(c, data.Developers, &err)
@@ -74,9 +75,10 @@ func runDelete(c *cli.Command, args []string) error {
 	gencmd.DeleteDevelopers(c, data.Developers, &err)
 	gencmd.DeleteOperatorCodes(c, data.OperatorCodes, &err)
 	gencmd.DeleteOperators(c, data.Operators, &err)
-	gencmd.DeleteFlavors(c, data.Flavors, &err)
+
 	if data.Settings != nil {
 		gencmd.ResetSettingsBatch(c, data.Settings, &err)
 	}
+	gencmd.DeleteFlavors(c, data.Flavors, &err)
 	return err
 }

@@ -211,7 +211,7 @@ func (s *ResTagTableApi) optResLookup(ctx context.Context, stm concurrency.STM, 
 				count = request[2]
 			}
 			if numgpus, err = strconv.Atoi(count); err != nil {
-				return "", "", false, fmt.Errorf("Non-numertic resource count encountered for %s", nodeflavor.Key.Name)
+				return "", "", false, fmt.Errorf("GPU resource count for flavor %s must be greater than 0", nodeflavor.Key.Name)
 			}
 			if numgpus == 0 {
 				return "", "", false, fmt.Errorf("No GPU resources requested for flavor %s", nodeflavor.Key.Name)

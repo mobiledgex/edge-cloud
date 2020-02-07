@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
-
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"strings"
 )
 
 type FlavorApi struct {
@@ -33,6 +32,12 @@ func (s *FlavorApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 
 	if in.Key.Name == "" {
 		return &edgeproto.Result{}, errors.New("Invaid Flavor Key")
+	}
+
+	if in.OptResMap != nil {
+		if ok, err := resTagTableApi.ValidateOptResMapValues(in.OptResMap); !ok {
+			return &edgeproto.Result{}, err
+		}
 	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
@@ -73,8 +78,7 @@ func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 			return edgeproto.SettingsKeySingular.NotFoundError()
 		}
 		if settings.MasterNodeFlavor == in.Key.Name {
-			return fmt.Errorf("Attempted delete of current MasterNodeFlavor %s in settings in.Key.Name %s  delete from settings first",
-				settings.MasterNodeFlavor, in.Key.Name)
+			return fmt.Errorf("Flavor in use by Settings MasterNodeFlavor, change Settings.MasterNodeFlavor first")
 		}
 		return nil
 	})
