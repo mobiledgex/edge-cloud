@@ -616,6 +616,12 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Ram:   uint64(4096),
 				Disk:  uint64(40),
 			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.lg-master",
+				Vcpus: uint64(4),
+				Ram:   uint64(8192),
+				Disk:  uint64(60),
+			},
 			// restagtbl/clouldlet resource map tests
 			&edgeproto.FlavorInfo{
 				Name:    "flavor.large",
@@ -665,6 +671,12 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Vcpus: uint64(2),
 				Ram:   uint64(1024),
 				Disk:  uint64(20),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium1",
+				Vcpus: uint64(2),
+				Ram:   uint64(4096),
+				Disk:  uint64(40),
 			},
 		},
 	},
