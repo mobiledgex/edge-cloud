@@ -48,6 +48,7 @@ clusterinsts:
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
+  masternodeflavor: flavor1
 - key:
     clusterkey:
       name: autoclustersomeapplication1
@@ -66,6 +67,7 @@ clusterinsts:
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
+  masternodeflavor: flavor1
 - key:
     clusterkey:
       name: autoclustersomeapplication2
@@ -84,7 +86,7 @@ clusterinsts:
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
-
+  masternodeflavor: flavor1
 operators:
 - key:
     name: tmus

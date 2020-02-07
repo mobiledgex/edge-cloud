@@ -51,6 +51,8 @@ func (x LProto) String() string {
 }
 func (LProto) EnumDescriptor() ([]byte, []int) { return fileDescriptorAppcommon, []int{0} }
 
+// Application Port
+//
 // AppPort describes an L4 or L7 public access port/path mapping. This is used to track external to internal mappings for access via a shared load balancer or reverse proxy.
 type AppPort struct {
 	// TCP (L4), UDP (L4), or HTTP (L7) protocol
