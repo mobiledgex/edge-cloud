@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/vmspec"
 )
 
 type ClusterInstApi struct {
@@ -130,16 +131,12 @@ func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	in.Auto = false
-	err := s.createClusterInstInternal(DefCallContext(), in, cb)
-	if err == nil {
-		RecordClusterInstEvent(cb.Context(), in, cloudcommon.CREATED, cloudcommon.InstanceUp)
-	}
-	return err
+	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
 
 // createClusterInstInternal is used to create dynamic cluster insts internally,
 // bypassing static assignment. It is also used to create auto-cluster insts.
-func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
+func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
@@ -149,6 +146,13 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 	}
+
+	defer func() {
+		if reterr == nil {
+			RecordClusterInstEvent(cb.Context(), &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
+		}
+	}()
+
 	ctx := cb.Context()
 	if in.Key.Developer == "" {
 		return fmt.Errorf("Developer cannot be empty")
@@ -312,16 +316,43 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
+
 		var err error
-		vmspec, err := resTagTableApi.GetVMSpec(ctx, nodeFlavor, cloudlet, info)
+		var vmspec *vmspec.VMCreationSpec
+		vmspec, err = resTagTableApi.GetVMSpec(ctx, stm, nodeFlavor, cloudlet, info)
 		if err != nil {
 			return err
 		}
 		in.NodeFlavor = vmspec.FlavorName
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
+		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Node Flavor", "vmspec", vmspec, "master flavor", in.MasterNodeFlavor)
 
-		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Flavor", "vmspec", vmspec)
+		// check if MasterNodeFlavor required
+		if in.Deployment == cloudcommon.AppDeploymentTypeKubernetes && in.NumNodes > 0 {
+			masterFlavor := edgeproto.Flavor{}
+			masterFlavorKey := edgeproto.FlavorKey{}
+			settings := settingsApi.Get()
+			masterFlavorKey.Name = settings.MasterNodeFlavor
+
+			if flavorApi.store.STMGet(stm, &masterFlavorKey, &masterFlavor) {
+				log.SpanLog(ctx, log.DebugLevelApi, "MasterNodeFlavor found ", "MasterNodeFlavor", settings.MasterNodeFlavor)
+				vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, masterFlavor, cloudlet, info)
+				if err != nil {
+					// Unlikely with reasonably modest settings.MasterNodeFlavor sized flavor
+					log.SpanLog(ctx, log.DebugLevelApi, "Error K8s Master Node Flavor matches no eixsting OS flavor", "nodeFlavor", in.NodeFlavor)
+					return err
+				} else {
+					in.MasterNodeFlavor = vmspec.FlavorName
+					log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Master Node Flavor", "vmspec", vmspec, "master flavor", in.MasterNodeFlavor)
+				}
+			} else {
+				// should never be non empty and not found due to validation in update
+				// revert to using NodeFlavor (pre EC-1767) and log warning
+				in.MasterNodeFlavor = in.NodeFlavor
+				log.SpanLog(ctx, log.DebugLevelApi, "Warning : Master Node Flavor does not exist using", "master flavor", in.MasterNodeFlavor)
+			}
+		}
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
 		refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)
@@ -387,25 +418,14 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 }
 
 func (s *ClusterInstApi) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
-	err := s.deleteClusterInstInternal(DefCallContext(), in, cb)
-	if err == nil {
-		RecordClusterInstEvent(cb.Context(), in, cloudcommon.DELETED, cloudcommon.InstanceDown)
-	}
-	return err
+	return s.deleteClusterInstInternal(DefCallContext(), in, cb)
 }
 
 func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
-	RecordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
-	err := s.updateClusterInstInternal(DefCallContext(), in, cb)
-	if in.State != edgeproto.TrackedState_READY {
-		RecordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
-	} else {
-		RecordClusterInstEvent(cb.Context(), in, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
-	}
-	return err
+	return s.updateClusterInstInternal(DefCallContext(), in, cb)
 }
 
-func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
+func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "updateClusterInstInternal")
 	if err := in.Key.ValidateKey(); err != nil {
@@ -483,6 +503,16 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if changeCount == 0 {
 		return nil
 	}
+
+	RecordClusterInstEvent(ctx, &in.Key, cloudcommon.UPDATE_START, cloudcommon.InstanceDown)
+	defer func() {
+		if reterr == nil {
+			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.UPDATE_COMPLETE, cloudcommon.InstanceUp)
+		} else {
+			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
+		}
+	}()
+
 	if ignoreCRM(cctx) {
 		return nil
 	}
@@ -490,7 +520,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	return err
 }
 
-func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
+func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
@@ -530,6 +560,12 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil {
 		return err
 	}
+
+	defer func() {
+		if reterr == nil {
+			RecordClusterInstEvent(context.WithValue(ctx, in.Key, *in), &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
+		}
+	}()
 
 	// Delete appInsts that are set for autodelete
 	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cctx.Override, cb); err != nil {
@@ -613,6 +649,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if undoErr != nil {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to undo ClusterInst deletion: %v", undoErr)})
 			log.InfoLog("Undo delete ClusterInst", "undoErr", undoErr)
+			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.DELETE_ERROR, cloudcommon.InstanceDown)
 		}
 	}
 	return err
@@ -752,22 +789,25 @@ func (s *ClusterInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cl
 	})
 }
 
-func RecordClusterInstEvent(ctx context.Context, cluster *edgeproto.ClusterInst, event cloudcommon.InstanceEvent, serverStatus string) {
+func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.ClusterInstKey, event cloudcommon.InstanceEvent, serverStatus string) {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.ClusterInstEvent
 	ts, _ := types.TimestampProto(time.Now())
 	metric.Timestamp = *ts
-	metric.AddTag("operator", cluster.Key.CloudletKey.OperatorKey.Name)
-	metric.AddTag("cloudlet", cluster.Key.CloudletKey.Name)
-	metric.AddTag("cluster", cluster.Key.ClusterKey.Name)
-	metric.AddTag("dev", cluster.Key.Developer)
+	metric.AddTag("operator", clusterInstKey.CloudletKey.OperatorKey.Name)
+	metric.AddTag("cloudlet", clusterInstKey.CloudletKey.Name)
+	metric.AddTag("cluster", clusterInstKey.ClusterKey.Name)
+	metric.AddTag("dev", clusterInstKey.Developer)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
-	info := edgeproto.ClusterInst{}
-	if !clusterInstApi.cache.Get(&cluster.Key, &info) {
-		log.SpanLog(ctx, log.DebugLevelApi, "Cannot log event for invalid clusterinst")
-		return
+	info, ok := ctx.Value(*clusterInstKey).(edgeproto.ClusterInst)
+	if !ok { // if not provided (aka not recording a delete), get the flavorkey and numnodes ourself
+		info = edgeproto.ClusterInst{}
+		if !clusterInstApi.cache.Get(clusterInstKey, &info) {
+			log.SpanLog(ctx, log.DebugLevelApi, "Cannot log event for invalid clusterinst")
+			return
+		}
 	}
 	// errors should never happen here since to get to this point the flavor should have already been checked previously, but just in case
 	nodeFlavor := edgeproto.Flavor{}

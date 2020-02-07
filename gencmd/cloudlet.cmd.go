@@ -55,6 +55,28 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	}
 }
 
+func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.NotifyId = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Controller = ""
+	}
+	for i0 := 0; i0 < len(in.Flavors); i0++ {
+	}
+	for i0 := 0; i0 < len(in.AvailabilityZones); i0++ {
+	}
+	for i0 := 0; i0 < len(in.OsImages); i0++ {
+	}
+}
+
 var CloudletApiCmd edgeproto.CloudletApiClient
 
 var CreateCloudletCmd = &cli.Command{
@@ -557,6 +579,7 @@ func ShowCloudletInfo(c *cli.Command, in *edgeproto.CloudletInfo) error {
 			}
 			return fmt.Errorf("ShowCloudletInfo recv failed: %s", errstr)
 		}
+		CloudletInfoHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {

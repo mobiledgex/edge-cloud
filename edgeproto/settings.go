@@ -91,12 +91,14 @@ func GetDefaultSettings() *Settings {
 	s.AutoDeployIntervalSec = 300
 	s.AutoDeployOffsetSec = 20
 	s.AutoDeployMaxIntervals = 10
+	s.LoadBalancerMaxPortRange = 50
 	s.CreateAppInstTimeout = Duration(30 * time.Minute)
 	s.UpdateAppInstTimeout = Duration(30 * time.Minute)
 	s.DeleteAppInstTimeout = Duration(20 * time.Minute)
 	s.CreateClusterInstTimeout = Duration(30 * time.Minute)
 	s.UpdateClusterInstTimeout = Duration(20 * time.Minute)
 	s.DeleteClusterInstTimeout = Duration(20 * time.Minute)
+	s.MasterNodeFlavor = ""
 	return &s
 }
 

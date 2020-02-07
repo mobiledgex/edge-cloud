@@ -11,6 +11,8 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
+  masternodeflavor: x1.tiny
+  loadbalancermaxportrange: 100
 
 flavors:
 - key:
@@ -205,6 +207,7 @@ apps:
     name: x1.small
   cluster:
     name: SmallCluster
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: AcmeAppCo
@@ -230,6 +233,7 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   androidpackagename: com.acme.someapplication1
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: AcmeAppCo
@@ -254,6 +258,7 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   androidpackagename: com.acme.helmApplication
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -267,6 +272,7 @@ apps:
     name: x1.medium
   annotations: version=7.1.1
   deployment: helm
+  accesstype: AccessTypeLoadBalancer
   configs:
   - kind: hemlCustomizationYaml
     config: |
@@ -317,6 +323,7 @@ apps:
     name: x1.medium
   annotations: version=1.2.8
   deployment: helm
+  accesstype: AccessTypeLoadBalancer
   configs:
   - kind: hemlCustomizationYaml
     config: |
@@ -350,6 +357,7 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   deployment: vm
+  accesstype: AccessTypeDirect
 - key:
     developerkey:
       name: AcmeAppCo1
@@ -363,6 +371,7 @@ apps:
   cluster:
     name: DefaultVMCluster
   deployment: vm
+  accesstype: AccessTypeDirect
 - key:
     developerkey:
       name: AcmeAppCo
@@ -374,7 +383,7 @@ apps:
     name: x1.small
   deployment: kubernetes
   officialfqdn: noportsapp.acmeappco.com
-
+  accesstype: AccessTypeLoadBalancer
 appinstances:
 - key:
     appkey:

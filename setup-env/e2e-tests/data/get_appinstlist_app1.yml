@@ -5,7 +5,7 @@ registerclientrequest:
   authtoken: "GENTOKEN:authtoken_private.pem"
   cellid: 1000
 appinstlistrequest:
-  carriername: tmus
+  carriername: wifi
   gpslocation:
     latitude: 36.00
     longitude: -96.00

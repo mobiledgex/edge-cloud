@@ -647,6 +647,7 @@ var AppInstOptionalArgs = []string{
 	"configs.config",
 	"sharedvolumesize",
 	"healthcheck",
+	"privacypolicy",
 }
 var AppInstAliasArgs = []string{
 	"developer=key.appkey.developerkey.name",
@@ -694,6 +695,7 @@ var AppInstComments = map[string]string{
 	"configs.config":                 "config file contents or URI reference",
 	"sharedvolumesize":               "shared volume size when creating auto cluster",
 	"healthcheck":                    "Health Check status, one of HealthCheckOk, HealthCheckFailRootlbOffline, HealthCheckFailServerFail",
+	"privacypolicy":                  "Optional privacy policy name",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -774,6 +776,7 @@ var CreateAppInstOptionalArgs = []string{
 	"configs.config",
 	"sharedvolumesize",
 	"healthcheck",
+	"privacypolicy",
 }
 var RefreshAppInstRequiredArgs = []string{
 	"developer",
@@ -790,6 +793,7 @@ var RefreshAppInstOptionalArgs = []string{
 	"updatemultiple",
 	"sharedvolumesize",
 	"healthcheck",
+	"privacypolicy",
 }
 var UpdateAppInstRequiredArgs = []string{
 	"developer",
@@ -806,4 +810,5 @@ var UpdateAppInstOptionalArgs = []string{
 	"configs.config",
 	"sharedvolumesize",
 	"healthcheck",
+	"privacypolicy",
 }

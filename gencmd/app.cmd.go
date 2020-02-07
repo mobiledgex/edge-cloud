@@ -339,6 +339,8 @@ var AppOptionalArgs = []string{
 	"md5sum",
 	"defaultsharedvolumesize",
 	"autoprovpolicy",
+	"accesstype",
+	"defaultprivacypolicy",
 }
 var AppAliasArgs = []string{
 	"developer=key.developerkey.name",
@@ -371,5 +373,7 @@ var AppComments = map[string]string{
 	"md5sum":                  "MD5Sum of the VM-based app image",
 	"defaultsharedvolumesize": "shared volume size when creating auto cluster",
 	"autoprovpolicy":          "Auto provisioning policy name",
+	"accesstype":              "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
+	"defaultprivacypolicy":    "Privacy policy when creating auto cluster",
 }
 var AppSpecialArgs = map[string]string{}

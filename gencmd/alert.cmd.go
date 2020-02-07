@@ -78,6 +78,9 @@ It has these top-level messages:
 	Controller
 	DeveloperKey
 	Developer
+	RunCmd
+	RunVMConsole
+	ShowLog
 	ExecRequest
 	FlavorKey
 	Flavor

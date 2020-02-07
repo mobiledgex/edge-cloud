@@ -11,7 +11,7 @@ settings:
   createclusterinsttimeout: 30m
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
-
+  loadbalancermaxportrange: 50
 flavors:
 - key:
     name: x1.tiny
@@ -95,6 +95,7 @@ apps:
   cluster:
     name: SmallCluster
   accessports: "tcp:80,http:443,udp:10002"
+  accesstype: AccessTypeLoadBalancer
 - key:
     developerkey:
       name: MobiledgeX
@@ -108,6 +109,7 @@ apps:
     name: x1.medium
   annotations: version=7.1.1
   deployment: helm
+  accesstype: AccessTypeLoadBalancer
   configs:
   - kind: hemlCustomizationYaml
     config: |

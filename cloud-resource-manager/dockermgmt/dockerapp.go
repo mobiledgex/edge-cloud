@@ -20,9 +20,13 @@ var deleteZip = "deleteZip"
 var UseInternalPortInContainer = "internalPort"
 var UsePublicPortInContainer = "publicPort"
 
+func GetContainerName(appKey *edgeproto.AppKey) string {
+	return util.DNSSanitize(appKey.Name + appKey.Version)
+}
+
 // Helper function that generates the ports string for docker command
 // Example : "-p 80:80/http -p 7777:7777/tcp"
-func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMatch dme.LProto) []string {
+func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMatch dme.LProto, listenIP string) []string {
 	var cmdArgs []string
 
 	for _, p := range ports {
@@ -39,11 +43,23 @@ func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMat
 		if err != nil {
 			continue
 		}
+		publicPortStr := fmt.Sprintf("%d", p.PublicPort)
+		if p.EndPort != 0 && p.EndPort != p.PublicPort {
+			publicPortStr = fmt.Sprintf("%d-%d", p.PublicPort, p.EndPort)
+		}
 		containerPort := p.PublicPort
 		if containerPortType == UseInternalPortInContainer {
 			containerPort = p.InternalPort
 		}
-		pstr := fmt.Sprintf("%d:%d/%s", p.PublicPort, containerPort, proto)
+		containerPortStr := fmt.Sprintf("%d", containerPort)
+		if p.EndPort != 0 && p.EndPort != containerPort {
+			containerPortStr = fmt.Sprintf("%d-%d", containerPort, p.EndPort)
+		}
+		listenIPStr := ""
+		if listenIP != "" {
+			listenIPStr = listenIP + ":"
+		}
+		pstr := fmt.Sprintf("%s%s:%s/%s", listenIPStr, publicPortStr, containerPortStr, proto)
 		cmdArgs = append(cmdArgs, "-p", pstr)
 	}
 	return cmdArgs
@@ -176,7 +192,7 @@ func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *e
 
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d -l edge-cloud -l cloudlet=%s -l cluster=%s --restart=unless-stopped --name=%s %s %s %s", cloudlet, cluster, name,
-			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer, dme.LProto_L_PROTO_UNKNOWN), " "), image, app.Command)
+			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrAllInterfaces), " "), image, app.Command)
 		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 
 		out, err := client.Output(cmd)
@@ -201,9 +217,13 @@ func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *e
 
 func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	image := app.ImagePath
-	name := util.DockerSanitize(app.Key.Name)
+	name := GetContainerName(&app.Key)
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", name, image, app.Command)
+		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", GetContainerName(&app.Key), image, app.Command)
+		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
+			cmd = fmt.Sprintf("docker run -d -l edge-cloud --restart=unless-stopped --name=%s %s %s %s", name,
+				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
+		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 
 		out, err := client.Output(cmd)
@@ -232,7 +252,7 @@ func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto
 func DeleteAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 
 	if app.DeploymentManifest == "" {
-		name := util.DockerSanitize(app.Key.Name)
+		name := GetContainerName(&app.Key)
 		cmd := fmt.Sprintf("docker stop %s", name)
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker stop ", "cmd", cmd)
 
@@ -343,10 +363,30 @@ func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App,
 	if req.ContainerId == "" {
 		if appInst.RuntimeInfo.ContainerIds == nil ||
 			len(appInst.RuntimeInfo.ContainerIds) == 0 {
-			return "", fmt.Errorf("no containers to run command in")
+			return "", fmt.Errorf("no containers found for AppInst, please specify one")
 		}
 		req.ContainerId = appInst.RuntimeInfo.ContainerIds[0]
 	}
-	cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, req.Command)
-	return cmdStr, nil
+	if req.Cmd != nil {
+		cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, req.Cmd.Command)
+		return cmdStr, nil
+	}
+	if req.Log != nil {
+		cmdStr := "docker logs "
+		if req.Log.Since != "" {
+			cmdStr += fmt.Sprintf("--since %s ", req.Log.Since)
+		}
+		if req.Log.Tail != 0 {
+			cmdStr += fmt.Sprintf("--tail %d ", req.Log.Tail)
+		}
+		if req.Log.Timestamps {
+			cmdStr += "--timestamps "
+		}
+		if req.Log.Follow {
+			cmdStr += "--follow "
+		}
+		cmdStr += req.ContainerId
+		return cmdStr, nil
+	}
+	return "", fmt.Errorf("no command or log specified with exec request")
 }

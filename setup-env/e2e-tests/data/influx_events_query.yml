@@ -1,0 +1,2 @@
+database: events
+cmd: select * from appinst,clusterinst,cloudlet where dev != 'MobiledgeX'

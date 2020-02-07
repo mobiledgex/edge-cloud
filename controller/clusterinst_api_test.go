@@ -121,6 +121,7 @@ func TestClusterInstApi(t *testing.T) {
 	responder.SetSimulateClusterDeleteFailure(false)
 
 	testReservableClusterInst(t, ctx, commonApi)
+	testClusterInstOverrideTransientDelete(t, ctx, commonApi, responder)
 
 	dummy.Stop()
 }
@@ -245,4 +246,63 @@ func checkReservedBy(t *testing.T, ctx context.Context, api *testutil.ClusterIns
 	require.True(t, cinst.Reservable)
 	require.Equal(t, expected, cinst.ReservedBy)
 	require.Equal(t, cloudcommon.DeveloperMobiledgeX, cinst.Key.Developer)
+}
+
+// Test that Crm Override for Delete ClusterInst overrides any failures
+// on side-car auto-apps.
+func testClusterInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *testutil.ClusterInstCommonApi, responder *DummyInfoResponder) {
+	clust := testutil.ClusterInstData[0]
+	clust.Key.ClusterKey.Name = "crmoverride"
+
+	// autoapp
+	app := testutil.AppData[9] // auto-delete app
+	require.Equal(t, edgeproto.DeleteType_AUTO_DELETE, app.DelOpt)
+	_, err := appApi.CreateApp(ctx, &app)
+	require.Nil(t, err, "create App")
+
+	aiauto := edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey:         app.Key,
+			ClusterInstKey: clust.Key,
+		},
+	}
+
+	var obj edgeproto.ClusterInst
+	var ai edgeproto.AppInst
+	appCommon := testutil.NewInternalAppInstApi(&appInstApi)
+
+	responder.SetSimulateClusterDeleteFailure(true)
+	responder.SetSimulateAppDeleteFailure(true)
+	for val, stateName := range edgeproto.TrackedState_name {
+		state := edgeproto.TrackedState(val)
+		if !edgeproto.IsTransientState(state) {
+			continue
+		}
+		// create cluster
+		obj = clust
+		err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+		require.Nil(t, err, "create ClusterInst")
+		// create autoapp
+
+		ai = aiauto
+		err = appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+		require.Nil(t, err, "create auto AppInst")
+		// force bad states
+		err = forceAppInstState(ctx, &ai, state)
+		require.Nil(t, err, "force state")
+		checkAppInstState(t, ctx, appCommon, &ai, state)
+		err = forceClusterInstState(ctx, &obj, state)
+		require.Nil(t, err, "force state")
+		checkClusterInstState(t, ctx, api, &obj, state)
+		// delete cluster
+		obj = clust
+		obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE
+		err = clusterInstApi.DeleteClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+		require.Nil(t, err, "override crm and transient state %s", stateName)
+	}
+	responder.SetSimulateClusterDeleteFailure(false)
+	responder.SetSimulateAppDeleteFailure(false)
+
+	_, err = appApi.DeleteApp(ctx, &app)
+	require.Nil(t, err, "delete App")
 }

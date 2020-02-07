@@ -67,6 +67,7 @@ func init() {
 }
 
 func InitL7Proxy(ctx context.Context, client pc.PlatformClient, ops ...Op) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "InitL7Proxy")
 	out, err := client.Output("docker ps --format '{{.Names}}'")
 	if err != nil {
 		return err
@@ -77,7 +78,9 @@ func InitL7Proxy(ctx context.Context, client pc.PlatformClient, ops ...Op) error
 			return nil
 		}
 	}
-	return CreateNginxProxy(ctx, client, NginxL7Name, "", []dme.AppPort{}, ops...)
+	listenIP := ""
+	backendIP := ""
+	return CreateNginxProxy(ctx, client, NginxL7Name, listenIP, backendIP, []dme.AppPort{}, ops...)
 }
 
 func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {
@@ -99,19 +102,31 @@ func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {
 	return needEnvoy, needNginx
 }
 
-func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, originIP string, ports []dme.AppPort, ops ...Op) error {
+func getNginxContainerName(name string) string {
+	if name == NginxL7Name {
+		return name
+	}
+	return "nginx" + name
+}
+
+func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, listenIP, destIP string, ports []dme.AppPort, ops ...Op) error {
+
+	log.SpanLog(ctx, log.DebugLevelMexos, "CreateNginxProxy", "listenIP", listenIP, "destIP", destIP)
+	containerName := getNginxContainerName(name)
+
 	// check to see whether nginx or envoy is needed (or both)
 	envoyNeeded, nginxNeeded := CheckProtocols(name, ports)
 	if envoyNeeded {
-		err := CreateEnvoyProxy(ctx, client, name, originIP, ports, ops...)
+		err := CreateEnvoyProxy(ctx, client, name, listenIP, destIP, ports, ops...)
 		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelMexos, "CreateEnvoyProxy failed ", "err", err)
 			return fmt.Errorf("Create Envoy Proxy failed, %v", err)
 		}
 	}
 	if !nginxNeeded {
 		return nil
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "create nginx", "name", name, "originip", originIP, "ports", ports)
+	log.SpanLog(ctx, log.DebugLevelMexos, "create nginx", "name", name, "listenIP", listenIP, "destIP", destIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
 
@@ -153,14 +168,14 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, origi
 		return err
 	}
 	nconfName := dir + "/nginx.conf"
-	err = createNginxConf(ctx, client, nconfName, name, l7dir, originIP, ports, useTLS)
+	err = createNginxConf(ctx, client, nconfName, name, l7dir, listenIP, destIP, ports, useTLS)
 	if err != nil {
 		return fmt.Errorf("create nginx.conf failed, %v", err)
 	}
 
-	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", name}
+	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", containerName}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_UDP)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_UDP, listenIP)...)
 		if name == NginxL7Name {
 			// Special case. When the L7 nginx instance is created,
 			// there are no configs yet for L7. Expose the L7 port manually.
@@ -185,17 +200,17 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, origi
 		"-v", nconfName + ":/etc/nginx/nginx.conf",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/nginx-with-curl"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
-	log.SpanLog(ctx, log.DebugLevelMexos, "nginx docker command", "name", name,
+	log.SpanLog(ctx, log.DebugLevelMexos, "nginx docker command", "containerName", containerName,
 		"cmd", cmd)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't create nginx container %s, %s, %v", name, out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "created nginx container", "name", name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "created nginx container", "containerName", containerName)
 	return nil
 }
 
-func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, name, l7dir, originIP string, ports []dme.AppPort, useTLS bool) error {
+func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, name, l7dir, listenIP, backendIP string, ports []dme.AppPort, useTLS bool) error {
 	spec := ProxySpec{
 		Name:       name,
 		UseTLS:     useTLS,
@@ -208,13 +223,14 @@ func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, na
 		return err
 	}
 	for _, p := range ports {
-		origin := fmt.Sprintf("%s:%d", originIP, p.InternalPort)
 		switch p.Proto {
 		case dme.LProto_L_PROTO_HTTP:
 			httpPort := HTTPSpecDetail{
-				Port:       p.PublicPort,
-				PathPrefix: p.PathPrefix,
-				Origin:     origin,
+				ListenIP:    listenIP,
+				ListenPort:  p.PublicPort,
+				BackendIP:   backendIP,
+				BackendPort: p.InternalPort,
+				PathPrefix:  p.PathPrefix,
 			}
 			httpPorts = append(httpPorts, httpPort)
 			continue
@@ -222,9 +238,22 @@ func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, na
 			continue // have envoy handle the tcp stuff
 		case dme.LProto_L_PROTO_UDP:
 			udpPort := UDPSpecDetail{
-				Port:                 p.PublicPort,
-				Origin:               origin,
+				ListenIP:             listenIP,
+				BackendIP:            backendIP,
+				BackendPort:          p.InternalPort,
 				ConcurrentConnsPerIP: udpconns,
+			}
+			endPort := p.EndPort
+			if endPort == 0 {
+				endPort = p.PublicPort
+			} else {
+				// if we have a port range, the internal ports and external ports must match
+				if p.InternalPort != p.PublicPort {
+					return fmt.Errorf("public and internal ports must match when port range in use")
+				}
+			}
+			for pnum := p.PublicPort; pnum <= endPort; pnum++ {
+				udpPort.ListenPorts = append(udpPort.ListenPorts, pnum)
 			}
 			spec.UDPSpec = append(spec.UDPSpec, &udpPort)
 			spec.L4 = true
@@ -300,22 +329,27 @@ type ProxySpec struct {
 }
 
 type TCPSpecDetail struct {
-	Port            int32
-	Origin          string
-	OriginPort      int32
+	ListenIP        string
+	ListenPort      int32
+	BackendIP       string
+	BackendPort     int32
 	ConcurrentConns uint64
 }
 
 type UDPSpecDetail struct {
-	Port                 int32
-	Origin               string
+	ListenIP             string
+	ListenPorts          []int32
+	BackendIP            string
+	BackendPort          int32
 	ConcurrentConnsPerIP uint64
 }
 
 type HTTPSpecDetail struct {
-	Port       int32
-	PathPrefix string
-	Origin     string
+	ListenIP    string
+	ListenPort  int32
+	BackendIP   string
+	BackendPort int32
+	PathPrefix  string
 }
 
 var nginxConf = `
@@ -347,26 +381,28 @@ http {
 {{- end}}
         include /etc/nginx/L7/*.conf;
 	}
-	server {
-		listen 127.0.0.1:{{.MetricPort}};
-		server_name 127.0.0.1:{{.MetricPort}};
-		location /nginx_metrics {
-			stub_status;
-			allow 127.0.0.1;
-			deny all;
+    server {
+        listen 127.0.0.1:{{.MetricPort}};
+        server_name 127.0.0.1:{{.MetricPort}};
+        location /nginx_metrics {
+            stub_status;
+            allow 127.0.0.1;
+            deny all;
 		}
 	}
 }
 {{- end}}
 
 {{if .L4 -}}
-stream {
-	limit_conn_zone $binary_remote_addr zone=ipaddr:10m;
+stream { 
+    limit_conn_zone $binary_remote_addr zone=ipaddr:10m;
 	{{- range .UDPSpec}}
 	server {
-		limit_conn ipaddr {{.ConcurrentConnsPerIP}};
-		listen {{.Port}} udp;
-		proxy_pass {{.Origin}};
+		limit_conn ipaddr {{.ConcurrentConnsPerIP}}; 
+		{{range $portnum := .ListenPorts}}
+		listen {{$portnum}} udp; 
+		{{end}}
+		proxy_pass {{.BackendIP}}:$server_port;
 	}
 	{{- end}}
 }
@@ -376,21 +412,22 @@ stream {
 var nginxL7Conf = `
 {{- range .}}
 location /{{.PathPrefix}}/ {
-	proxy_pass http://{{.Origin}}/;
+	proxy_pass http://{{.BackendIP}}/;
 }
 {{- end}}
 `
 
 func DeleteNginxProxy(ctx context.Context, client pc.PlatformClient, name string) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx", "name", name)
-	out, err := client.Output("docker kill " + name)
+	containerName := getNginxContainerName(name)
+	out, err := client.Output("docker kill " + containerName)
 	deleteContainer := false
 	if err == nil {
 		deleteContainer = true
 	} else {
 		if strings.Contains(string(out), "No such container") {
 			log.SpanLog(ctx, log.DebugLevelMexos,
-				"nginx LB container already gone", "name", name)
+				"nginx LB container already gone", "containerName", containerName)
 		} else {
 			return fmt.Errorf("can't delete nginx container %s, %s, %v", name, out, err)
 		}
@@ -407,14 +444,14 @@ func DeleteNginxProxy(ctx context.Context, client pc.PlatformClient, name string
 		log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx dir", "name", name, "dir", nginxDir, "out", out, "err", err)
 	}
 	if deleteContainer {
-		out, err = client.Output("docker rm " + name)
+		out, err = client.Output("docker rm " + containerName)
 		if err != nil && !strings.Contains(string(out), "No such container") {
 			return fmt.Errorf("can't remove nginx container %s, %s, %v", name, out, err)
 		}
 	}
 	reloadNginxL7(client)
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "deleted nginx", "name", name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "deleted nginx", "containerName", containerName)
 	DeleteEnvoyProxy(ctx, client, name)
 	return nil
 }

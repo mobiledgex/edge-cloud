@@ -1,6 +1,9 @@
 package testutil
 
 import (
+	fmt "fmt"
+	"strings"
+
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -90,6 +93,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "http:443,tcp:10002,udp:10002",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
 	edgeproto.App{
@@ -100,6 +104,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "tcp:80,http:443",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
 	edgeproto.App{
@@ -110,6 +115,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "tcp:443,udp:11111",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{
@@ -121,6 +127,7 @@ var AppData = []edgeproto.App{
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
 		ImagePath:     "http://somerepo/image/path/ai/1.2.0#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "tcp:8080",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_DIRECT,
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{
@@ -132,6 +139,7 @@ var AppData = []edgeproto.App{
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
 		ImagePath:     "http://somerepo/image/path/myreality/0.0.1#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "udp:1024",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_DIRECT,
 		DefaultFlavor: FlavorData[2].Key,
 	},
 	edgeproto.App{
@@ -143,6 +151,7 @@ var AppData = []edgeproto.App{
 		Deployment:    "helm",
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_HELM,
 		AccessPorts:   "udp:2024",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[2].Key,
 	},
 	edgeproto.App{
@@ -153,6 +162,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "tcp:80,udp:8001,tcp:065535",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{
@@ -162,6 +172,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.0",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
 	edgeproto.App{
@@ -172,6 +183,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "tcp:80,http:443,udp:10002,tcp:5000-5002", // new port range notation
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
 	edgeproto.App{
@@ -181,6 +193,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.0",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 		DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	},
@@ -192,6 +205,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "tcp:443,udp:11111",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{
@@ -202,6 +216,7 @@ var AppData = []edgeproto.App{
 		},
 		ImageType:      edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:    "tcp:10003",
+		AccessType:     edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor:  FlavorData[0].Key,
 		AutoProvPolicy: AutoProvPolicyData[0].Key.Name,
 	},
@@ -461,28 +476,28 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 	},
 }
 var AppInstData = []edgeproto.AppInst{
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 0
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[0].Key,
 			ClusterInstKey: ClusterInstData[0].Key,
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 1
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[0].Key,
 			ClusterInstKey: ClusterInstData[3].Key,
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 2
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[0].Key,
 			ClusterInstKey: ClusterInstData[1].Key,
 		},
 		CloudletLoc: CloudletData[1].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 3
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[1].Key,
 			// ClusterInst is ClusterInstAutoData[0]
@@ -490,7 +505,7 @@ var AppInstData = []edgeproto.AppInst{
 		},
 		CloudletLoc: CloudletData[1].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 4
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[2].Key,
 			// ClusterInst is ClusterInstAutoData[1]
@@ -498,14 +513,14 @@ var AppInstData = []edgeproto.AppInst{
 		},
 		CloudletLoc: CloudletData[2].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 5
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[5].Key,
 			ClusterInstKey: ClusterInstData[2].Key,
 		},
 		CloudletLoc: CloudletData[2].Location,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 6
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[6].Key,
 			// ClusterInst is ClusterInstAutoData[2]
@@ -514,20 +529,33 @@ var AppInstData = []edgeproto.AppInst{
 		CloudletLoc:         CloudletData[2].Location,
 		AutoClusterIpAccess: edgeproto.IpAccess_IP_ACCESS_DEDICATED,
 	},
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 7
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[6].Key,
 			ClusterInstKey: ClusterInstData[0].Key,
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
-
-	edgeproto.AppInst{
+	edgeproto.AppInst{ // 8
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[7].Key,
 			ClusterInstKey: ClusterInstData[0].Key,
 		},
 		CloudletLoc: CloudletData[0].Location,
+	},
+	edgeproto.AppInst{ // 9
+		Key: edgeproto.AppInstKey{
+			AppKey:         AppData[9].Key, //auto-delete app
+			ClusterInstKey: ClusterInstData[0].Key,
+		},
+		CloudletLoc: CloudletData[0].Location,
+	},
+	edgeproto.AppInst{ // 10
+		Key: edgeproto.AppInstKey{
+			AppKey:         AppData[9].Key, //auto-delete app
+			ClusterInstKey: ClusterInstAutoData[0].Key,
+		},
+		CloudletLoc: CloudletData[1].Location,
 	},
 }
 var AppInstInfoData = []edgeproto.AppInstInfo{
@@ -588,6 +616,12 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Ram:   uint64(4096),
 				Disk:  uint64(40),
 			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.lg-master",
+				Vcpus: uint64(4),
+				Ram:   uint64(8192),
+				Disk:  uint64(60),
+			},
 			// restagtbl/clouldlet resource map tests
 			&edgeproto.FlavorInfo{
 				Name:    "flavor.large",
@@ -637,6 +671,12 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Vcpus: uint64(2),
 				Ram:   uint64(1024),
 				Disk:  uint64(20),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium1",
+				Vcpus: uint64(2),
+				Ram:   uint64(4096),
+				Disk:  uint64(40),
 			},
 		},
 	},
@@ -1150,4 +1190,16 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 			},
 		},
 	},
+}
+
+func IsAutoClusterAutoDeleteApp(key *edgeproto.AppInstKey) bool {
+	if !strings.HasPrefix(key.ClusterInstKey.ClusterKey.Name, "autocluster") {
+		return false
+	}
+	for _, app := range AppData {
+		if app.Key.Matches(&key.AppKey) {
+			return app.DelOpt == edgeproto.DeleteType_AUTO_DELETE
+		}
+	}
+	panic(fmt.Sprintf("App definition not found for %v", key))
 }

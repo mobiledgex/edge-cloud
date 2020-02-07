@@ -8,6 +8,9 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
+  masternodeflavor: x1.tiny
+  loadbalancermaxportrange: 100
+
 flavors:
 - key:
     name: x1.tiny
@@ -24,7 +27,6 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
-
 
 clusters:
 - key:

@@ -29,6 +29,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Flavor
+//
 // FlavorKey uniquely identifies a Flavor.
 type FlavorKey struct {
 	// Flavor name
@@ -40,6 +42,9 @@ func (m *FlavorKey) String() string            { return proto.CompactTextString(
 func (*FlavorKey) ProtoMessage()               {}
 func (*FlavorKey) Descriptor() ([]byte, []int) { return fileDescriptorFlavor, []int{0} }
 
+// Flavors define the compute, memory, and storage capacity of computing instances.
+// To put it simply, a flavor is an available hardware configuration for a server.
+// It defines the size of a virtual server that can be launched.
 type Flavor struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
