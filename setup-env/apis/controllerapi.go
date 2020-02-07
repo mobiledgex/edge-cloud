@@ -247,14 +247,14 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in operator API %v\n", err)
 				rc = false
 			}
-			err = testutil.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
-			if err != nil {
-				log.Printf("Error in flavor API %v\n", err)
-				rc = false
-			}
 			err = testutil.RunSettingsApi(ctrlapi, ctx, appData.Settings, appDataMap["settings"], "reset")
 			if err != nil {
 				log.Printf("Error in settings API %v\n", err)
+				rc = false
+			}
+			err = testutil.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
+			if err != nil {
+				log.Printf("Error in flavor API %v\n", err)
 				rc = false
 			}
 		case "create":
@@ -264,14 +264,14 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		case "refresh":
 			fallthrough
 		case "update":
-			err = testutil.RunSettingsApi(ctrlapi, ctx, appData.Settings, appDataMap["settings"], "update")
-			if err != nil {
-				log.Printf("Error in settigs API %v\n", err)
-				rc = false
-			}
 			err = testutil.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
 			if err != nil {
 				log.Printf("Error in flavor API %v\n", err)
+				rc = false
+			}
+			err = testutil.RunSettingsApi(ctrlapi, ctx, appData.Settings, appDataMap["settings"], "update")
+			if err != nil {
+				log.Printf("Error in settigs API %v\n", err)
 				rc = false
 			}
 			err = testutil.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)

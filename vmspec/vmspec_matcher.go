@@ -15,6 +15,7 @@ type VMCreationSpec struct {
 	AvailabilityZone   string
 	ImageName          string
 	PrivacyPolicy      *edgeproto.PrivacyPolicy
+	MasterNodeFlavor   string
 }
 
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
