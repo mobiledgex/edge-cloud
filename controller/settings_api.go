@@ -42,6 +42,7 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 		return &edgeproto.Result{}, err
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "update settings", "in", in)
+
 	cur := edgeproto.Settings{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &edgeproto.SettingsKeySingular, &cur) {
@@ -55,9 +56,27 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 			// nothing changed
 			return nil
 		}
+		for _, field := range in.Fields {
+			if field == edgeproto.SettingsFieldMasterNodeFlavor {
+				if in.MasterNodeFlavor == "" {
+					// allow a 'clear setting' operation
+					s.store.STMPut(stm, &cur)
+					return nil
+				}
+				// check the value used for MasterNodeFlavor currently
+				// exists as a flavor, error if not.
+
+				flav := edgeproto.Flavor{}
+				flav.Key.Name = in.MasterNodeFlavor
+				if !flavorApi.store.STMGet(stm, &(flav.Key), &flav) {
+					return fmt.Errorf("Flavor must preexist")
+				}
+			}
+		}
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
+
 	return &edgeproto.Result{}, err
 }
 

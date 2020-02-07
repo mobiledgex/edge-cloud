@@ -354,12 +354,12 @@ type RegisterClientRequest struct {
 	//
 	// Authentication Token
 	//
-	// More details about the auth token here
+	// _(optional)_ An authentication token supplied by the application.
 	AuthToken string `protobuf:"bytes,6,opt,name=auth_token,json=authToken,proto3" json:"auth_token,omitempty"`
 	//
 	// Cell ID
 	//
-	// Cell ID where the client is
+	// _(optional)_ Cellular ID of where the client is connected.
 	CellId uint32 `protobuf:"varint,7,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
 	//
 	// Unique ID Type
@@ -369,12 +369,12 @@ type RegisterClientRequest struct {
 	//
 	// Unique ID
 	//
-	// Optional. Unique identification of the client device or user. May be overridden by the server.
+	// _(optional)_ Unique identification of the client device or user. May be overridden by the server.
 	UniqueId string `protobuf:"bytes,9,opt,name=unique_id,json=uniqueId,proto3" json:"unique_id,omitempty"`
 	//
 	// Tags
 	//
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -400,9 +400,11 @@ type RegisterClientReply struct {
 	//
 	// Unique ID
 	//
-	// Optional. Unique identification of the client device or user
+	// _(optional)_ Unique identification of the client device or user
 	UniqueId string `protobuf:"bytes,6,opt,name=unique_id,json=uniqueId,proto3" json:"unique_id,omitempty"`
 	// Vendor specific data
+	//
+	// _(optional)_ Array of Tags.
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -447,12 +449,12 @@ type FindCloudletRequest struct {
 	//
 	// Cell ID
 	//
-	// Cell ID where the client is
+	// _(optional)_ Cell ID where the client is
 	CellId uint32 `protobuf:"varint,8,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
 	//
 	// Tags
 	//
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -472,7 +474,7 @@ type FindCloudletReply struct {
 	Ports []*AppPort `protobuf:"bytes,4,rep,name=ports" json:"ports,omitempty"`
 	// Location of the cloudlet
 	CloudletLocation *Loc `protobuf:"bytes,5,opt,name=cloudlet_location,json=cloudletLocation" json:"cloudlet_location,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -507,12 +509,12 @@ type VerifyLocationRequest struct {
 	//
 	// Cell ID
 	//
-	// Cell ID where the client is
+	// _(optional)_ Cell ID where the client is
 	CellId uint32 `protobuf:"varint,6,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
 	//
 	// Tags
 	//
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -530,7 +532,7 @@ type VerifyLocationReply struct {
 	// be within this number of kilometers.  Negative value
 	// means no verification was performed
 	GpsLocationAccuracyKm float64 `protobuf:"fixed64,4,opt,name=gps_location_accuracy_km,json=gpsLocationAccuracyKm,proto3" json:"gps_location_accuracy_km,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -546,9 +548,9 @@ type GetLocationRequest struct {
 	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
 	// Unique carrier identification (typically MCC + MNC)
 	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
-	// Cell id where the client is
+	// _(optional)_ Cell id where the client is
 	CellId uint32 `protobuf:"varint,4,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -566,7 +568,7 @@ type GetLocationReply struct {
 	Tower uint64 `protobuf:"varint,4,opt,name=tower,proto3" json:"tower,omitempty"`
 	// The GPS location of the user
 	NetworkLocation *Loc `protobuf:"bytes,5,opt,name=network_location,json=networkLocation" json:"network_location,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -584,9 +586,9 @@ type AppInstListRequest struct {
 	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// The GPS location of the user
 	GpsLocation *Loc `protobuf:"bytes,4,opt,name=gps_location,json=gpsLocation" json:"gps_location,omitempty"`
-	// Cell id where the client is
+	// _(optional)_ Cell id where the client is
 	CellId uint32 `protobuf:"varint,5,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -634,7 +636,7 @@ type AppInstListReply struct {
 	Ver       uint32                    `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	Status    AppInstListReply_AIStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.AppInstListReply_AIStatus" json:"status,omitempty"`
 	Cloudlets []*CloudletLocation       `protobuf:"bytes,3,rep,name=cloudlets" json:"cloudlets,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -648,9 +650,9 @@ type FqdnListRequest struct {
 	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Session Cookie from RegisterClientRequest
 	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
-	// Cell id where the client is
+	// _(optional)_ Cell id where the client is
 	CellId uint32 `protobuf:"varint,3,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -668,7 +670,7 @@ type AppFqdn struct {
 	DevName string `protobuf:"bytes,3,opt,name=dev_name,json=devName,proto3" json:"dev_name,omitempty"`
 	// App FQDN
 	Fqdns []string `protobuf:"bytes,4,rep,name=fqdns" json:"fqdns,omitempty"`
-	// Optional. Android package name
+	// _(optional)_ Android package name
 	AndroidPackageName string `protobuf:"bytes,5,opt,name=android_package_name,json=androidPackageName,proto3" json:"android_package_name,omitempty"`
 }
 
@@ -682,7 +684,7 @@ type FqdnListReply struct {
 	Ver      uint32                 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	AppFqdns []*AppFqdn             `protobuf:"bytes,3,rep,name=app_fqdns,json=appFqdns" json:"app_fqdns,omitempty"`
 	Status   FqdnListReply_FLStatus `protobuf:"varint,4,opt,name=status,proto3,enum=distributed_match_engine.FqdnListReply_FLStatus" json:"status,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -700,9 +702,9 @@ type DynamicLocGroupRequest struct {
 	CommType DynamicLocGroupRequest_DlgCommType `protobuf:"varint,11,opt,name=comm_type,json=commType,proto3,enum=distributed_match_engine.DynamicLocGroupRequest_DlgCommType" json:"comm_type,omitempty"`
 	// Unused
 	UserData string `protobuf:"bytes,12,opt,name=user_data,json=userData,proto3" json:"user_data,omitempty"`
-	// Cell id where the client is
+	// _(optional)_ Cell id where the client is
 	CellId uint32 `protobuf:"varint,13,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -719,7 +721,7 @@ type DynamicLocGroupReply struct {
 	ErrorCode uint32 `protobuf:"varint,3,opt,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
 	// Group Cookie for Secure Group Communication
 	GroupCookie string `protobuf:"bytes,5,opt,name=group_cookie,json=groupCookie,proto3" json:"group_cookie,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -762,13 +764,13 @@ type QosPositionRequest struct {
 	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
 	// list of positions
 	Positions []*QosPosition `protobuf:"bytes,3,rep,name=positions" json:"positions,omitempty"`
-	// Optional. Client's device LTE category number.
+	// _(optional)_ Client's device LTE category number.
 	LteCategory int32 `protobuf:"varint,4,opt,name=lte_category,json=lteCategory,proto3" json:"lte_category,omitempty"`
-	// Optional. Band list used by the client.
+	// _(optional)_ Band list used by the client.
 	BandSelection *BandSelection `protobuf:"bytes,5,opt,name=band_selection,json=bandSelection" json:"band_selection,omitempty"`
-	// Cell id where the client is
+	// _(optional)_ Cell id where the client is
 	CellId uint32 `protobuf:"varint,6,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 
@@ -805,7 +807,7 @@ type QosPositionKpiReply struct {
 	Status ReplyStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.ReplyStatus" json:"status,omitempty"`
 	// kpi details
 	PositionResults []*QosPositionKpiResult `protobuf:"bytes,3,rep,name=position_results,json=positionResults" json:"position_results,omitempty"`
-	// Vendor specific data
+	// _(optional)_ Vendor specific data
 	Tags []*Tag `protobuf:"bytes,99,rep,name=tags" json:"tags,omitempty"`
 }
 

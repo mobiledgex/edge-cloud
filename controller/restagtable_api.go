@@ -211,10 +211,10 @@ func (s *ResTagTableApi) optResLookup(ctx context.Context, stm concurrency.STM, 
 				count = request[2]
 			}
 			if numgpus, err = strconv.Atoi(count); err != nil {
-				return "", "", false, fmt.Errorf("Non-numertic resource count encountered")
+				return "", "", false, fmt.Errorf("GPU resource count for flavor %s must be greater than 0", nodeflavor.Key.Name)
 			}
 			if numgpus == 0 {
-				return "", "", false, fmt.Errorf("No GPU resources requested")
+				return "", "", false, fmt.Errorf("No GPU resources requested for flavor %s", nodeflavor.Key.Name)
 			}
 
 			tbl, err := s.GetCloudletResourceMap(ctx, stm, tblkey)
@@ -235,7 +235,7 @@ func (s *ResTagTableApi) optResLookup(ctx context.Context, stm concurrency.STM, 
 					log.InfoLog("optResLookup", "alias", alias)
 					if len(alias) == 2 {
 						if numres, err = strconv.Atoi(alias[1]); err != nil {
-							return "", "", false, fmt.Errorf("Non-numeric count found in os flavor props")
+							return "", "", false, fmt.Errorf("Non-numeric count found in os flavor props for %s", flavor.Name)
 						}
 					} else {
 						continue
