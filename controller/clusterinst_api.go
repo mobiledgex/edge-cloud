@@ -133,14 +133,14 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 
 	platName := edgeproto.PlatformType_name[int32(platformType)]
 
-	// GCP and Azure must be dedicated
-	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || platformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
+	// Operators such as GCP and Azure must be dedicated as they allocate a new IP per service
+	if isIPAllocatedPerService(clusterInst.Key.CloudletKey.OperatorKey.Name) {
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for platform: " + platName})
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for operator: " + clusterInst.Key.CloudletKey.OperatorKey.Name})
 			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
 		}
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-			return clusterInst.IpAccess, fmt.Errorf("IpAccessShared not supported for platform: %s", platName)
+			return clusterInst.IpAccess, fmt.Errorf("IpAccessShared not supported for operator: %s", clusterInst.Key.CloudletKey.OperatorKey.Name)
 		}
 		return clusterInst.IpAccess, nil
 	}

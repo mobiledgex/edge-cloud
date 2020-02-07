@@ -92,7 +92,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	// Support for local docker appInst
 	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
 		log.SpanLog(ctx, log.DebugLevelMexos, "run docker delete app for dind")
-		err = dockermgmt.DeleteAppInst(ctx, client, app, appInst, crmutil.RemoteServerNone)
+		err = dockermgmt.DeleteAppInst(ctx, s, client, app, appInst, crmutil.RemoteServerNone)
 		if err != nil {
 			return fmt.Errorf("DeleteAppInst error for docker %v", err)
 		}

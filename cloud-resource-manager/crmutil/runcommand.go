@@ -21,11 +21,12 @@ func RunCommand(ctx context.Context, plat platform.Platform, client pc.PlatformC
 			log.DebugLog(log.DebugLevelMexos, "cmd failed", "cmd", cmd, "err", err, "out", out)
 			return out, fmt.Errorf("command \"%s\" failed, %v", cmd, err)
 		}
+		return out, err
 	}
 	out, err := plat.RunRemoteCommand(ctx, client, remoteServer, cmd)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "cmd failed", "cmd", cmd, "err", err, "out", out)
-		return out, fmt.Errorf("command \"%s\" failed, %v", cmd, err)
+		return out, fmt.Errorf("remote command \"%s\" failed, %v", cmd, err)
 	}
 	return out, nil
 }
