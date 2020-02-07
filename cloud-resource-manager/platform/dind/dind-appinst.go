@@ -92,7 +92,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	// Support for local docker appInst
 	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
 		log.SpanLog(ctx, log.DebugLevelMexos, "run docker delete app for dind")
-		err = dockermgmt.DeleteAppInst(ctx, client, app, appInst)
+		err = dockermgmt.DeleteAppInst(ctx, client, app, appInst, crmutil.RemoteServerNone)
 		if err != nil {
 			return fmt.Errorf("DeleteAppInst error for docker %v", err)
 		}
@@ -178,4 +178,8 @@ func (s *Platform) GetContainerCommand(ctx context.Context, clusterInst *edgepro
 
 func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error) {
 	return "", nil
+}
+
+func (s *Platform) RunRemoteCommand(ctx context.Context, client pc.PlatformClient, remoteServer, command string) (string, error) {
+	return "", fmt.Errorf("RunRemoteCommand not implemented on DIND")
 }

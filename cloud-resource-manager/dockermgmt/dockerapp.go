@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -215,7 +217,7 @@ func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *e
 	return nil
 }
 
-func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func CreateAppInst(ctx context.Context, plat platform.Platform, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst, remoteServer string) error {
 	image := app.ImagePath
 	name := GetContainerName(app)
 	if app.DeploymentManifest == "" {
@@ -226,10 +228,11 @@ func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto
 		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 
-		out, err := client.Output(cmd)
+		out, err := crmutil.RunCommand(ctx, plat, client, remoteServer, cmd)
 		if err != nil {
-			return fmt.Errorf("error running app, %s, %v", out, err)
+			return fmt.Errorf("error running docker run, %s, %v", out, err)
 		}
+
 		log.SpanLog(ctx, log.DebugLevelMexos, "done docker run ")
 	} else {
 		if strings.HasSuffix(app.DeploymentManifest, ".zip") {
@@ -249,7 +252,7 @@ func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto
 	return nil
 }
 
-func DeleteAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func DeleteAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst, remoteServer string) error {
 
 	if app.DeploymentManifest == "" {
 		name := GetContainerName(app)
@@ -297,14 +300,14 @@ func DeleteAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto
 	return nil
 }
 
-func UpdateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func UpdateAppInst(ctx context.Context, plat platform.Platform, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst, remoteServer string) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "UpdateAppInst", "appkey", app.Key, "ImagePath", app.ImagePath)
 
-	err := DeleteAppInst(ctx, client, app, appInst)
+	err := DeleteAppInst(ctx, client, app, appInst, remoteServer)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "DeleteAppInst failed, proceeding with create", "appkey", app.Key, "err", err)
 	}
-	return CreateAppInst(ctx, client, app, appInst)
+	return CreateAppInst(ctx, plat, client, app, appInst, remoteServer)
 }
 
 func appendContainerIdsFromDockerComposeImages(client pc.PlatformClient, dockerComposeFile string, rt *edgeproto.AppInstRuntime) error {
