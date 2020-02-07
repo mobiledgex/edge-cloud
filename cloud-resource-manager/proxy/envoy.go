@@ -134,6 +134,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 					ListenIP:    listenIP,
 					BackendIP:   backendIP,
 					BackendPort: internalPort,
+					UseTLS:		 p.Tls,
 				}
 				tcpconns, err := getTCPConcurrentConnections()
 				if err != nil {
@@ -189,7 +190,7 @@ static_resources:
                   "client_address": "%DOWNSTREAM_REMOTE_ADDRESS%",
                   "upstream_cluster": "%UPSTREAM_CLUSTER%"
 				}
-     {{if $.Cert}}
+     {{if .UseTLS -}}
       tls_context:
         common_tls_context:
           tls_certificates:

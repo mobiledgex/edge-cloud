@@ -597,10 +597,11 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	strs := strings.Split(ports, ",")
 	for _, str := range strs {
 		vals := strings.Split(str, ":")
-		// within each vals, we may have a hyphenated range of ports ex: udp:M-N inclusive
-		if len(vals) != 2 {
-			// either case len is 2 if a valid string ex: udp:4500[-500]
-			return nil, fmt.Errorf("Invalid Access Ports format, expected proto:port[-endport] but was %s", vals[0])
+		// within each vals, we may have a hyphenated range of ports ex: udp:M-N inclusive. Also there is an option for encrypted ports ex: tcp:443:tls
+		if len(vals) != 2 && !(len(vals) == 3 && vals[2] == "tls") {
+			// either case len is 2 or 3 if a valid string ex: udp:4500[-500]:tls
+			return nil, fmt.Errorf("Invalid Access Ports format, expected proto:port[-endport][:tls] but was %s", ports)
+
 		}
 		// within each pp[1], we may have a hyphenated range of ports ex: udp:M-N inclusive
 		portrange := strings.Split(vals[1], "-")
@@ -639,6 +640,10 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 			Proto:        proto,
 			InternalPort: int32(baseport),
 			EndPort:      int32(endport),
+			Tls:		  false,
+		}
+		if len(vals) == 3 {
+			p.Tls = true
 		}
 		appports = append(appports, p)
 	}
