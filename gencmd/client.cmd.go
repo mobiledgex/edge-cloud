@@ -41,17 +41,17 @@ var AppInstClientApiCmd edgeproto.AppInstClientApiClient
 
 var ShowAppInstClientCmd = &cli.Command{
 	Use:          "ShowAppInstClient",
-	OptionalArgs: strings.Join(append(AppInstClientRequiredArgs, AppInstClientOptionalArgs...), " "),
-	AliasArgs:    strings.Join(AppInstClientAliasArgs, " "),
-	SpecialArgs:  &AppInstClientSpecialArgs,
-	Comments:     AppInstClientComments,
-	ReqData:      &edgeproto.AppInstClient{},
+	OptionalArgs: strings.Join(append(AppInstClientKeyRequiredArgs, AppInstClientKeyOptionalArgs...), " "),
+	AliasArgs:    strings.Join(AppInstClientKeyAliasArgs, " "),
+	SpecialArgs:  &AppInstClientKeySpecialArgs,
+	Comments:     AppInstClientKeyComments,
+	ReqData:      &edgeproto.AppInstClientKey{},
 	ReplyData:    &edgeproto.AppInstClient{},
 	Run:          runShowAppInstClient,
 }
 
 func runShowAppInstClient(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.AppInstClient)
+	obj := c.ReqData.(*edgeproto.AppInstClientKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ func runShowAppInstClient(c *cli.Command, args []string) error {
 	return ShowAppInstClient(c, obj)
 }
 
-func ShowAppInstClient(c *cli.Command, in *edgeproto.AppInstClient) error {
+func ShowAppInstClient(c *cli.Command, in *edgeproto.AppInstClientKey) error {
 	if AppInstClientApiCmd == nil {
 		return fmt.Errorf("AppInstClientApi client not initialized")
 	}
@@ -93,7 +93,7 @@ func ShowAppInstClient(c *cli.Command, in *edgeproto.AppInstClient) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func ShowAppInstClients(c *cli.Command, data []edgeproto.AppInstClient, err *error) {
+func ShowAppInstClients(c *cli.Command, data []edgeproto.AppInstClientKey, err *error) {
 	if *err != nil {
 		return
 	}
@@ -112,27 +112,33 @@ var AppInstClientApiCmds = []*cobra.Command{
 }
 
 var AppInstClientKeyRequiredArgs = []string{
-	"key.appkey.developerkey.name",
-	"key.appkey.name",
-	"key.appkey.version",
+	"developer",
+	"appname",
+	"appvers",
 	"key.clusterinstkey.clusterkey.name",
-	"key.clusterinstkey.cloudletkey.operatorkey.name",
-	"key.clusterinstkey.cloudletkey.name",
+	"operator",
+	"cloudlet",
 	"key.clusterinstkey.developer",
 }
 var AppInstClientKeyOptionalArgs = []string{
 	"uuid",
 }
-var AppInstClientKeyAliasArgs = []string{}
+var AppInstClientKeyAliasArgs = []string{
+	"developer=key.appkey.developerkey.name",
+	"appname=key.appkey.name",
+	"appvers=key.appkey.version",
+	"operator=key.clusterinstkey.cloudletkey.operatorkey.name",
+	"cloudlet=key.clusterinstkey.cloudletkey.name",
+}
 var AppInstClientKeyComments = map[string]string{
-	"key.appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
-	"key.appkey.name":                                 "App name",
-	"key.appkey.version":                              "App version",
-	"key.clusterinstkey.clusterkey.name":              "Cluster name",
-	"key.clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"key.clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
-	"key.clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
-	"uuid":                                            "App name",
+	"developer":                          "Organization or Company Name that a Developer is part of",
+	"appname":                            "App name",
+	"appvers":                            "App version",
+	"key.clusterinstkey.clusterkey.name": "Cluster name",
+	"operator":                           "Company or Organization name of the operator",
+	"cloudlet":                           "Name of the cloudlet",
+	"key.clusterinstkey.developer":       "Name of Developer that this cluster belongs to",
+	"uuid":                               "App name",
 }
 var AppInstClientKeySpecialArgs = map[string]string{}
 var AppInstClientRequiredArgs = []string{}

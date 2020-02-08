@@ -30,15 +30,14 @@ func InitAppInstClientApi() {
 
 func (s *AppInstClientApi) Prune(ctx context.Context, keys map[edgeproto.AppInstClientKey]struct{}) {}
 
-func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClient, cb edgeproto.AppInstClientApi_ShowAppInstClientServer) error {
+func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb edgeproto.AppInstClientApi_ShowAppInstClientServer) error {
 	// Request this AppInst to be sent
 	// TODO - check if it exists already and then just do the different thing
 	recvCh := make(chan edgeproto.AppInstClient, 1)
-	client := edgeproto.AppInstClient{}
-	services.clientQ.SetRecvChan(recvCh, in.ClientKey.Key)
+	services.clientQ.SetRecvChan(recvCh, in.Key)
 
-	log.DebugLog(log.DebugLevelInfo, "Send request for an appInst", "appinst", in.ClientKey.Key)
-	appInstClientKeyApi.Update(cb.Context(), &in.ClientKey, 0)
+	log.DebugLog(log.DebugLevelApi, "Send request for an appInst", "appinst", in)
+	appInstClientKeyApi.Update(cb.Context(), in, 0)
 
 	for _, client := range services.clientQ.data {
 		if client == nil {
@@ -49,13 +48,14 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClient, cb edg
 		}
 	}
 	done := false
+	appInstClient := edgeproto.AppInstClient{}
 	for !done {
 		log.DebugLog(log.DebugLevelInfo, "Waiting for more data....")
 		select {
 		case <-cb.Context().Done():
 			done = true
-		case client = <-recvCh:
-			if err := cb.Send(&client); err != nil {
+		case appInstClient = <-recvCh:
+			if err := cb.Send(&appInstClient); err != nil {
 				done = true
 			}
 		}
@@ -63,9 +63,8 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClient, cb edg
 			done = true
 		}
 	}
-	services.clientQ.ClearRecvChan(in.ClientKey.Key)
-	log.DebugLog(log.DebugLevelInfo, "Done - closing connections.")
-	appInstClientKeyApi.Delete(cb.Context(), &in.ClientKey, 0)
+	services.clientQ.ClearRecvChan(in.Key)
+	appInstClientKeyApi.Delete(cb.Context(), in, 0)
 	return nil
 }
 

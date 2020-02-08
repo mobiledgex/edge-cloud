@@ -24,6 +24,7 @@ message AppInstClientKey {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
+  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,developer=Key.AppKey.DeveloperKey.Name,cloudlet=Key.ClusterInstKey.CloudletKey.Name,operator=Key.ClusterInstKey.CloudletKey.OperatorKey.Name";
 }
 
 
@@ -51,12 +52,13 @@ message AppInstClientKey {
 
 service AppInstClientApi {
   // Show application instance clients.
-  rpc ShowAppInstClient(AppInstClient) returns (stream AppInstClient) {
+  rpc ShowAppInstClient(AppInstClientKey) returns (stream AppInstClient) {
     option (google.api.http) = {
       post: "/show/appinstclient"
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceAppInstClients,ActionView,ClientKey.AppInstKey.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppInstClients,ActionView,Key.AppKey.DeveloperKey.Name";
+//    option (protogen.non_standard_show) = true;
   }
 }

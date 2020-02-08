@@ -29,7 +29,7 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
 func request_AppInstClientApi_ShowAppInstClient_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstClientApiClient, req *http.Request, pathParams map[string]string) (AppInstClientApi_ShowAppInstClientClient, runtime.ServerMetadata, error) {
-	var protoReq AppInstClient
+	var protoReq AppInstClientKey
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
