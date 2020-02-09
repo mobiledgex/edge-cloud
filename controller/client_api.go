@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 )
 
@@ -32,25 +31,15 @@ func (s *AppInstClientApi) Prune(ctx context.Context, keys map[edgeproto.AppInst
 
 func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb edgeproto.AppInstClientApi_ShowAppInstClientServer) error {
 	// Request this AppInst to be sent
-	// TODO - check if it exists already and then just do the different thing
-	recvCh := make(chan edgeproto.AppInstClient, 1)
-	services.clientQ.SetRecvChan(recvCh, in.Key)
+	recvCh := make(chan edgeproto.AppInstClient, AppInstClientQMaxClients)
+	services.clientQ.SetRecvChan(in.Key, recvCh)
 
-	log.DebugLog(log.DebugLevelApi, "Send request for an appInst", "appinst", in)
-	appInstClientKeyApi.Update(cb.Context(), in, 0)
-
-	for _, client := range services.clientQ.data {
-		if client == nil {
-			continue
-		}
-		if err := cb.Send(client); err != nil {
-			return err
-		}
+	if !appInstClientKeyApi.HasApp(&in.Key) {
+		appInstClientKeyApi.Update(cb.Context(), in, 0)
 	}
 	done := false
 	appInstClient := edgeproto.AppInstClient{}
 	for !done {
-		log.DebugLog(log.DebugLevelInfo, "Waiting for more data....")
 		select {
 		case <-cb.Context().Done():
 			done = true
@@ -59,12 +48,10 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 				done = true
 			}
 		}
-		if services.clientQ.done {
-			done = true
-		}
 	}
-	services.clientQ.ClearRecvChan(in.Key)
-	appInstClientKeyApi.Delete(cb.Context(), in, 0)
+	if services.clientQ.ClearRecvChan(in.Key, recvCh) == 0 {
+		appInstClientKeyApi.Delete(cb.Context(), in, 0)
+	}
 	return nil
 }
 
@@ -86,7 +73,6 @@ func InitAppInstClientKeyApi(sync *Sync) {
 }
 
 func (s *AppInstClientKeyApi) Update(ctx context.Context, in *edgeproto.AppInstClientKey, rev int64) {
-	log.DebugLog(log.DebugLevelApi, "Update appinst clientKey", "client", in)
 	s.cache.Update(ctx, in, rev)
 }
 

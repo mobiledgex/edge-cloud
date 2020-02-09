@@ -8,65 +8,83 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-var AppInstClientQMaxClients = 500
+var AppInstClientQMaxClients = 3
 
 type AppInstClientQ struct {
-	data       []*edgeproto.AppInstClient // TODO - buffer for multiple receivers here
-	done       bool
-	mux        sync.Mutex
-	wg         sync.WaitGroup
-	Qfull      uint64
-	clientChan map[edgeproto.AppInstKey]chan edgeproto.AppInstClient
+	mux            sync.Mutex
+	appInstClients []*edgeproto.AppInstClient
+	clientChan     map[edgeproto.AppInstKey][]chan edgeproto.AppInstClient
 }
 
 func NewAppInstClientQ() *AppInstClientQ {
 	q := AppInstClientQ{}
-	//	q.data = make([]*edgeproto.AppInstClient, 100)
-	q.clientChan = make(map[edgeproto.AppInstKey]chan edgeproto.AppInstClient)
+	q.appInstClients = make([]*edgeproto.AppInstClient, 0)
+	q.clientChan = make(map[edgeproto.AppInstKey][]chan edgeproto.AppInstClient)
 	return &q
 }
 
-func (q *AppInstClientQ) SetRecvChan(ch chan edgeproto.AppInstClient, key edgeproto.AppInstKey) {
+func (q *AppInstClientQ) SetRecvChan(key edgeproto.AppInstKey, ch chan edgeproto.AppInstClient) {
 	q.mux.Lock()
 	defer q.mux.Unlock()
 	_, found := q.clientChan[key]
-	if found {
-		//TODO unsupported now - multiple clients for the same appInst, need to implement it
-		log.DebugLog(log.DebugLevelApi, "TOO MANY controller CLIENTS!!!", "key", key)
-		return
+	if !found {
+		q.clientChan[key] = []chan edgeproto.AppInstClient{ch}
+	} else {
+		q.clientChan[key] = append(q.clientChan[key], ch)
+		for ii, client := range q.appInstClients {
+			if client.ClientKey.Key.Matches(&key) {
+				ch <- *q.appInstClients[ii]
+			}
+		}
 	}
-	log.DebugLog(log.DebugLevelApi, "Set channel for appInst", "key", key)
-	q.clientChan[key] = ch
 }
 
-func (q *AppInstClientQ) ClearRecvChan(key edgeproto.AppInstKey) {
+// Returns numbere of channels in thee list that are left
+func (q *AppInstClientQ) ClearRecvChan(key edgeproto.AppInstKey, ch chan edgeproto.AppInstClient) int {
 	q.mux.Lock()
 	defer q.mux.Unlock()
 	_, found := q.clientChan[key]
-	if found {
-		delete(q.clientChan, key)
+	if !found {
+		log.DebugLog(log.DebugLevelApi, "Not client channels found for appInst", "appInst", key)
+		return -1
 	}
+	for ii, c := range q.clientChan[key] {
+		if c == ch {
+			// Found channel - delete it
+			q.clientChan[key] = append(q.clientChan[key][:ii], q.clientChan[key][ii+1:]...)
+			retLen := len(q.clientChan[key])
+			if retLen == 0 {
+				delete(q.clientChan, key)
+			}
+			return retLen
+		}
+	}
+	// We didn't find a channel....log it and return -1
+	log.DebugLog(log.DebugLevelApi, "Channel not found", "key", key, "chan", ch)
+	return -1
 }
 
 func (q *AppInstClientQ) AddClient(clients ...*edgeproto.AppInstClient) {
 	q.mux.Lock()
 	defer q.mux.Unlock()
-	if len(q.data) > AppInstClientQMaxClients {
-		// limit len to prevent out of memory if
-		// q is not reachable
-		q.Qfull++
-		return
-	}
 	for ii, client := range clients {
-		log.DebugLog(log.DebugLevelApi, "Got a client from DME", "client", client)
 		if clients[ii] != nil {
-			//q.data = append(q.data, clients[ii])
-			c, found := q.clientChan[client.ClientKey.Key]
-			if found && c != nil {
-				log.DebugLog(log.DebugLevelApi, "Sending to channel")
-				c <- *clients[ii]
-			} else {
-				log.DebugLog(log.DebugLevelApi, "No channel")
+			// Queue full - remove the oldest one(first) and append the new one
+			if len(q.appInstClients) == AppInstClientQMaxClients {
+				q.appInstClients = q.appInstClients[1:]
+			}
+			q.appInstClients = append(q.appInstClients, clients[ii])
+			cList, found := q.clientChan[client.ClientKey.Key]
+			if !found {
+				log.DebugLog(log.DebugLevelApi, "No recievers for this appInst")
+				return
+			}
+			for _, c := range cList {
+				if c != nil {
+					c <- *clients[ii]
+				} else {
+					log.DebugLog(log.DebugLevelApi, "Nil Channel")
+				}
 			}
 		}
 	}
