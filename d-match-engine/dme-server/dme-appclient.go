@@ -4,9 +4,10 @@ import (
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	log "github.com/mobiledgex/edge-cloud/log"
 	"golang.org/x/net/context"
 )
+
+var MaxDmeClients = 100
 
 type ClientsMap struct {
 	sync.RWMutex
@@ -21,19 +22,20 @@ func InitAppInstClients() {
 }
 
 // Add a new client to the list of clients
-// TODO - need to have a finite number of clients in an array
 func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 	clientsMap.Lock()
 	defer clientsMap.Unlock()
 	list, found := clientsMap.clients[msg.ClientKey.Key]
 	if !found {
 		clientsMap.clients[msg.ClientKey.Key] = []edgeproto.AppInstClient{*msg}
-		log.DebugLog(log.DebugLevelDmereq, "New AppInst client - never seen appinst", "AppInstClient", clientsMap.clients[msg.ClientKey.Key][0])
 	} else {
+		//  We reached the limit of clients - remove the first one
+		if len(list) == MaxDmeClients {
+			list = list[1:]
+		}
+
 		clientsMap.clients[msg.ClientKey.Key] = append(list, *msg)
-		log.DebugLog(log.DebugLevelDmereq, "New AppInst client key exists", "AppInstClient", list[len(list)-1], "key", msg.ClientKey.Key)
 	}
-	log.DebugLog(log.DebugLevelDmereq, "New array", "LIST", clientsMap.clients[msg.ClientKey.Key])
 	// If there is an outstanding request for this appInst, send it out
 	if appInstClientKeyCache.HasKey(msg.ClientKey.GetKey()) {
 		ClientSender.Update(ctx, msg)
@@ -51,30 +53,14 @@ func PurgeAppInstClients(ctx context.Context, msg *edgeproto.AppInstKey) {
 }
 
 func SendCachedClients(ctx context.Context, old *edgeproto.AppInstClientKey, new *edgeproto.AppInstClientKey) {
-	DebugDumpClients() // DEBUG
 	clientsMap.Lock()
 	defer clientsMap.Unlock()
 	list, found := clientsMap.clients[new.Key]
 	if !found {
-		log.DebugLog(log.DebugLevelDmereq, "No AppInst clients found ", "AppInstClient", new)
 		return
 	}
-	for ii, c := range list {
-		log.DebugLog(log.DebugLevelDmereq, "Sending client ", "AppInstClient", c)
+	for ii, _ := range list {
 		ClientSender.Update(ctx, &list[ii])
-	}
-}
-
-// Debug Dump
-func DebugDumpClients() {
-	log.DebugLog(log.DebugLevelDmereq, "XXX DUMP CLIENTS")
-	clientsMap.Lock()
-	defer clientsMap.Unlock()
-	for k, list := range clientsMap.clients {
-		log.DebugLog(log.DebugLevelDmereq, "Clients for AppInst", "AppInstKey", k)
-		for _, c := range list {
-			log.DebugLog(log.DebugLevelDmereq, "\t", "Client", c)
-		}
 	}
 }
 

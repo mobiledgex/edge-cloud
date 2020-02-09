@@ -10,7 +10,6 @@ import (
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	log "github.com/mobiledgex/edge-cloud/log"
 	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
 	"github.com/mobiledgex/edge-cloud/util"
 	"golang.org/x/net/context"
@@ -250,7 +249,6 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 			client.Location.Timestamp.Nanos = int32(ts.Nanosecond())
 			client.Status = getResultFromFindCloudletReply(resp.(*dme.FindCloudletReply))
 			// Update list of clients on the side and if there is a listener, send it
-			log.DebugLog(log.DebugLevelDmereq, "Update clients", "client", client)
 			go UpdateClientsBuffer(ctx, client)
 		}
 		call.key.AppKey.DeveloperKey.Name = ckey.DevName

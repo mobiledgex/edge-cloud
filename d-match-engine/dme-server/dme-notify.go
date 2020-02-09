@@ -63,22 +63,6 @@ func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.Clou
 
 func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
 
-/* - NOt used
-func (s *AppInstClientKeyHandler) Update(ctx context.Context, in *edgeproto.AppInstClientKey, rev int64) {
-	log.DebugLog(log.DebugLevelDmereq, "Update App Inst Clients", "clientReq", in)
-	//SendCachedClients()
-}
-
-func (s *AppInstClientKeyHandler) Delete(ctx context.Context, in *edgeproto.AppInstClientKey, rev int64) {
-	// TODO - nothing, we just don't send this out
-}
-
-func (s *AppInstClientKeyHandler) Prune(ctx context.Context, keys map[edgeproto.AppInstKey]struct{}) {
-	// TODO - hm....not sure
-}
-
-func (s *AppInstClientKeyHandler) Flush(ctx context.Context, notifyId int64) {}
-*/
 var nodeCache edgeproto.NodeCache
 var ClientSender *notify.AppInstClientSend
 var appInstClientKeyCache edgeproto.AppInstClientKeyCache

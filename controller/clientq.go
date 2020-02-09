@@ -8,7 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-var AppInstClientQMaxClients = 3
+var AppInstClientQMaxClients = 100
 
 type AppInstClientQ struct {
 	mux            sync.Mutex
