@@ -41,7 +41,8 @@ var AppInstClientApiCmd edgeproto.AppInstClientApiClient
 
 var ShowAppInstClientCmd = &cli.Command{
 	Use:          "ShowAppInstClient",
-	OptionalArgs: strings.Join(append(AppInstClientKeyRequiredArgs, AppInstClientKeyOptionalArgs...), " "),
+	RequiredArgs: strings.Join(ShowAppInstClientRequiredArgs, " "),
+	OptionalArgs: strings.Join(ShowAppInstClientOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppInstClientKeyAliasArgs, " "),
 	SpecialArgs:  &AppInstClientKeySpecialArgs,
 	Comments:     AppInstClientKeyComments,
@@ -184,3 +185,15 @@ var AppInstClientComments = map[string]string{
 	"status":                                                    "Status return, one of FindUnknown, FindFound, FindNotfound",
 }
 var AppInstClientSpecialArgs = map[string]string{}
+var ShowAppInstClientRequiredArgs = []string{
+	"developer",
+	"appname",
+	"appvers",
+	"operator",
+	"cloudlet",
+}
+var ShowAppInstClientOptionalArgs = []string{
+	"key.clusterinstkey.clusterkey.name",
+	"key.clusterinstkey.developer",
+	"uuid",
+}
