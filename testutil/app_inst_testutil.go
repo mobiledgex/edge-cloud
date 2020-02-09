@@ -634,11 +634,14 @@ func (s *DummyServer) ShowAppInst(in *edgeproto.AppInst, server edgeproto.AppIns
 	return err
 }
 
-func (s *DummyServer) SetAppInstPowerState(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
-	if s.CudNoop {
-		return &edgeproto.Result{}, nil
+func (s *DummyServer) SetAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_SetAppInstServer) error {
+	var err error
+	if true {
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
 	}
-	return &edgeproto.Result{}, nil
+	return err
 }
 
 func (s *DummyServer) ShowAppInstInfo(in *edgeproto.AppInstInfo, server edgeproto.AppInstInfoApi_ShowAppInstInfoServer) error {

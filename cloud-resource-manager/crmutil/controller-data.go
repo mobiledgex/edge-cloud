@@ -341,6 +341,18 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		if err != nil {
 			return
 		}
+		if new.PowerAction != edgeproto.PowerAction_POWER_NONE {
+			log.InfoLog("set power state on AppInst", "key", new.Key, "action", new.PowerAction)
+			err = cd.platform.SetPowerState(ctx, &app, new, updateAppCacheCallback)
+			if err != nil {
+				errstr := fmt.Sprintf("Set AppInst PowerState failed: %s", err)
+				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr)
+				log.InfoLog("can't set power state on AppInst", "error", err, "key", new.Key)
+			} else {
+				cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
+			}
+			return
+		}
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
 			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)

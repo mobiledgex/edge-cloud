@@ -1330,3 +1330,22 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 
 	services.events.AddMetric(&metric)
 }
+
+func (s *AppInstApi) SetAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_SetAppInstServer) error {
+	ctx := cb.Context()
+	log.SpanLog(ctx, log.DebugLevelApi, "setappinstpowerstate", "key", in.Key)
+	forceUpdate := true
+
+	// populate the clusterinst developer from the app developer if not already present
+	if in.Key.ClusterInstKey.Developer == "" {
+		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
+	}
+	s.setDefaultVMClusterKey(ctx, &in.Key)
+	if err := in.Key.AppKey.ValidateKey(); err != nil {
+		return err
+	}
+
+	_, err := s.refreshAppInstInternal(DefCallContext(), in.Key, cb, forceUpdate)
+	return err
+}

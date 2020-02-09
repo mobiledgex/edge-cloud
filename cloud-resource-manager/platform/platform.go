@@ -46,7 +46,7 @@ type Platform interface {
 	// Get the console URL of the VM app
 	GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error)
 	// Set power state of the AppInst
-	SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, powerState *edgeproto.PowerState) error
+	SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Create Cloudlet
 	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet

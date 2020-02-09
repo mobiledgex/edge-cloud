@@ -170,7 +170,7 @@ service AppInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
-    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple,ForceUpdate";
+    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple,ForceUpdate,PowerAction";
   }
   // Show Application Instances. Lists all the application instances managed by edge controller. Any fields specified will be used to filter results
   rpc ShowAppInst(AppInst) returns (stream AppInst) {
@@ -179,6 +179,17 @@ service AppInstApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.DeveloperKey.Name";
+  }
+  // Set Application Instance. Performs action on Application Instance
+  rpc SetAppInst(AppInst) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/set/appinst"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
+    option (protogen.method_also_required) = "PowerAction";
+    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple,ForceUpdate";
   }
 }
 
@@ -196,7 +207,7 @@ message AppInstInfo {
   repeated string errors = 5;
   // AppInst runtime information
   AppInstRuntime runtime_info = 6 [(gogoproto.nullable) = false];
-// status is used to reflect progress of creation or other events
+  // status is used to reflect progress of creation or other events
   StatusInfo status = 7 [(protogen.backend) = true, (gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

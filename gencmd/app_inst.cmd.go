@@ -441,53 +441,67 @@ func ShowAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	}
 }
 
-var SetAppInstPowerStateCmd = &cli.Command{
-	Use:          "SetAppInstPowerState",
-	RequiredArgs: strings.Join(SetAppInstPowerStateRequiredArgs, " "),
-	OptionalArgs: strings.Join(SetAppInstPowerStateOptionalArgs, " "),
+var SetAppInstCmd = &cli.Command{
+	Use:          "SetAppInst",
+	RequiredArgs: strings.Join(SetAppInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(SetAppInstOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
 	SpecialArgs:  &AppInstSpecialArgs,
 	Comments:     AppInstComments,
 	ReqData:      &edgeproto.AppInst{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runSetAppInstPowerState,
+	Run:          runSetAppInst,
 }
 
-func runSetAppInstPowerState(c *cli.Command, args []string) error {
+func runSetAppInst(c *cli.Command, args []string) error {
 	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return SetAppInstPowerState(c, obj)
+	return SetAppInst(c, obj)
 }
 
-func SetAppInstPowerState(c *cli.Command, in *edgeproto.AppInst) error {
+func SetAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 	if AppInstApiCmd == nil {
 		return fmt.Errorf("AppInstApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := AppInstApiCmd.SetAppInstPowerState(ctx, in)
+	stream, err := AppInstApiCmd.SetAppInst(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("SetAppInstPowerState failed: %s", errstr)
+		return fmt.Errorf("SetAppInst failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("SetAppInst recv failed: %s", errstr)
+		}
+		c.WriteOutput(obj, cli.OutputFormat)
+	}
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func SetAppInstPowerStates(c *cli.Command, data []edgeproto.AppInst, err *error) {
+func SetAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("SetAppInstPowerState %v\n", data[ii])
-		myerr := SetAppInstPowerState(c, &data[ii])
+		fmt.Printf("SetAppInst %v\n", data[ii])
+		myerr := SetAppInst(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -501,7 +515,7 @@ var AppInstApiCmds = []*cobra.Command{
 	RefreshAppInstCmd.GenCmd(),
 	UpdateAppInstCmd.GenCmd(),
 	ShowAppInstCmd.GenCmd(),
-	SetAppInstPowerStateCmd.GenCmd(),
+	SetAppInstCmd.GenCmd(),
 }
 
 var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient
@@ -703,7 +717,7 @@ var AppInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
-	"powerstate",
+	"poweraction",
 }
 var AppInstAliasArgs = []string{
 	"developer=key.appkey.developerkey.name",
@@ -752,7 +766,7 @@ var AppInstComments = map[string]string{
 	"sharedvolumesize":               "shared volume size when creating auto cluster",
 	"healthcheck":                    "Health Check status, one of HealthCheckOk, HealthCheckFailRootlbOffline, HealthCheckFailServerFail",
 	"privacypolicy":                  "Optional privacy policy name",
-	"powerstate":                     "Power state of the AppInst, one of PowerOn, PowerOff, Reboot",
+	"poweraction":                    "Power Action on AppInst, one of PowerNone, PowerOn, PowerOff, Reboot",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -917,68 +931,20 @@ var UpdateAppInstOptionalArgs = []string{
 	"healthcheck",
 	"privacypolicy",
 }
-var ShowAppInstRequiredArgs = []string{
+var SetAppInstRequiredArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
 	"cluster",
 	"operator",
 	"cloudlet",
+	"poweraction",
 }
-var ShowAppInstOptionalArgs = []string{
+var SetAppInstOptionalArgs = []string{
 	"clusterdeveloper",
-	"cloudletloc.latitude",
-	"cloudletloc.longitude",
-	"cloudletloc.horizontalaccuracy",
-	"cloudletloc.verticalaccuracy",
-	"cloudletloc.altitude",
-	"cloudletloc.course",
-	"cloudletloc.speed",
-	"cloudletloc.timestamp.seconds",
-	"cloudletloc.timestamp.nanos",
-	"uri",
-	"liveness",
-	"mappedports.proto",
-	"mappedports.internalport",
-	"mappedports.publicport",
-	"mappedports.pathprefix",
-	"mappedports.fqdnprefix",
-	"mappedports.endport",
-	"flavor",
-	"state",
-	"errors",
 	"crmoverride",
-	"runtimeinfo.containerids",
-	"createdat.seconds",
-	"createdat.nanos",
-	"autoclusteripaccess",
-	"status.tasknumber",
-	"status.maxtasks",
-	"status.taskname",
-	"status.stepname",
-	"revision",
-	"forceupdate",
-	"updatemultiple",
 	"configs.kind",
 	"configs.config",
-	"sharedvolumesize",
-	"healthcheck",
-	"privacypolicy",
-}
-var SetAppInstPowerStateRequiredArgs = []string{
-	"developer",
-	"appname",
-	"appvers",
-	"powerstate",
-}
-var SetAppInstPowerStateOptionalArgs = []string{
-	"cluster",
-	"operator",
-	"cloudlet",
-	"clusterdeveloper",
-	"crmoverride",
-	"forceupdate",
-	"updatemultiple",
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",

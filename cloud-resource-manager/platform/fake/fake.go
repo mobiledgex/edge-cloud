@@ -157,7 +157,7 @@ func (s *Platform) DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgep
 	return nil
 }
 
-func (s *Platform) SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, powerState *edgeproto.PowerState) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "Setting power state", "state", powerState)
+func (s *Platform) SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
+	log.SpanLog(ctx, log.DebugLevelMexos, "Setting power state", "state", appInst.PowerAction)
 	return nil
 }
