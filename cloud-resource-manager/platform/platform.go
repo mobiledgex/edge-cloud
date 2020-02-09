@@ -57,8 +57,6 @@ type Platform interface {
 	SaveCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, accessVarsIn map[string]string, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet AccessVars
 	DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
-	// RunSSHRemoteCommand runs a command on a remote server via the client.  The client itself can be remote, resulting in multiple hops
-	RunRemoteCommand(ctx context.Context, client pc.PlatformClient, remoteServer, command string) (string, error)
 }
 
 type ClusterSvc interface {

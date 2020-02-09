@@ -361,9 +361,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// Check if specified ClusterInst exists
 
 		var clusterInst edgeproto.ClusterInst
-
 		if !strings.HasPrefix(cikey.ClusterKey.Name, ClusterAutoPrefix) && cloudcommon.IsClusterInstReqd(&app) {
-			found := clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil)
+			found := clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst)
 			if !found && in.Key.ClusterInstKey.Developer == "" {
 				// developer may not be specified
 				// in clusterinst.
@@ -377,7 +376,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return errors.New("Specified ClusterInst not found")
 			}
 			if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT && clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-				return fmt.Errorf("Direct access App cannot be deployed on IP_ACCESS_SHARED ClusterInst")
+				return fmt.Errorf("Direct Access App cannot be deployed on IP_ACCESS_SHARED ClusterInst")
 			}
 			// cluster inst exists so we're good.
 			return nil

@@ -150,7 +150,3 @@ func (s *Platform) DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgep
 	log.SpanLog(ctx, log.DebugLevelMexos, "Deleting cloudlet access vars", "cloudletName", cloudlet.Key.Name)
 	return nil
 }
-
-func (s *Platform) RunRemoteCommand(ctx context.Context, client pc.PlatformClient, remoteServer, command string) (string, error) {
-	return "", fmt.Errorf("RunRemoteCommand not implemented on Fake platform")
-}

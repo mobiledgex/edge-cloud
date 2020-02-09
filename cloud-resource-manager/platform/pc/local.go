@@ -89,3 +89,8 @@ func (s *LocalClient) Wait() error {
 	s.cmd = nil
 	return err
 }
+
+// RemoteOutput is not supported
+func (s *LocalClient) RemoteOutput(remoteHost string, command string) (string, error) {
+	return "", fmt.Errorf("RemoteOutput not supported on LocalClient")
+}

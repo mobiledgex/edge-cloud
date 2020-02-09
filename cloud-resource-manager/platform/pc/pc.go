@@ -28,6 +28,8 @@ type PlatformClient interface {
 	// Wait waits for the command started by the Start function.
 	// The returned error follows the same logic as exec.Cmd.Wait.
 	Wait() error
+	// RemoteOutput the output of the command via the specified host
+	RemoteOutput(remoteHost string, command string) (string, error)
 }
 
 // Sudo is a toggle for executing as superuser

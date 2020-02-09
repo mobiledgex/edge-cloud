@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -217,19 +215,24 @@ func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *e
 	return nil
 }
 
-func CreateAppInst(ctx context.Context, plat platform.Platform, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst, remoteServer string) error {
+func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst, remoteServer string) error {
 	image := app.ImagePath
 	name := GetContainerName(app)
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", GetContainerName(app), image, app.Command)
-		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER && remoteServer == crmutil.RemoteServerNone {
+		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER && remoteServer == cloudcommon.RemoteServerNone {
 			// if running without a LB, or running on a VM separate from the LB, run in host mode
 			cmd = fmt.Sprintf("docker run -d -l edge-cloud --restart=unless-stopped --name=%s %s %s %s", name,
 				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
 		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker run ", "cmd", cmd)
-
-		out, err := crmutil.RunCommand(ctx, plat, client, remoteServer, cmd)
+		var out string
+		var err error
+		if remoteServer == cloudcommon.RemoteServerNone {
+			out, err = client.Output(cmd)
+		} else {
+			out, err = client.RemoteOutput(remoteServer, cmd)
+		}
 		if err != nil {
 			return fmt.Errorf("error running docker run, %s, %v", out, err)
 		}
@@ -253,7 +256,7 @@ func CreateAppInst(ctx context.Context, plat platform.Platform, client pc.Platfo
 	return nil
 }
 
-func DeleteAppInst(ctx context.Context, plat platform.Platform, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst, remoteServer string) error {
+func DeleteAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst, remoteServer string) error {
 
 	if app.DeploymentManifest == "" {
 		name := GetContainerName(app)
@@ -261,7 +264,13 @@ func DeleteAppInst(ctx context.Context, plat platform.Platform, client pc.Platfo
 
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker stop ", "cmd", cmd)
 		removeContainer := true
-		out, err := crmutil.RunCommand(ctx, plat, client, remoteServer, cmd)
+		var out string
+		var err error
+		if remoteServer == cloudcommon.RemoteServerNone {
+			out, err = client.Output(cmd)
+		} else {
+			out, err = client.RemoteOutput(remoteServer, cmd)
+		}
 		if err != nil {
 			if strings.Contains(out, "No such container") {
 				log.SpanLog(ctx, log.DebugLevelMexos, "container already removed", "cmd", cmd)
@@ -275,8 +284,13 @@ func DeleteAppInst(ctx context.Context, plat platform.Platform, client pc.Platfo
 		if removeContainer {
 			cmd = fmt.Sprintf("docker rm %s", name)
 			log.SpanLog(ctx, log.DebugLevelMexos, "running docker rm ", "cmd", cmd)
-
-			out, err = crmutil.RunCommand(ctx, plat, client, remoteServer, cmd)
+			var out string
+			var err error
+			if remoteServer == cloudcommon.RemoteServerNone {
+				out, err = client.Output(cmd)
+			} else {
+				out, err = client.RemoteOutput(remoteServer, cmd)
+			}
 			if err != nil {
 				return fmt.Errorf("error removing docker app, %s, %v", out, err)
 			}
@@ -301,14 +315,14 @@ func DeleteAppInst(ctx context.Context, plat platform.Platform, client pc.Platfo
 	return nil
 }
 
-func UpdateAppInst(ctx context.Context, plat platform.Platform, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst, remoteServer string) error {
+func UpdateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst, remoteServer string) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "UpdateAppInst", "appkey", app.Key, "ImagePath", app.ImagePath)
 
-	err := DeleteAppInst(ctx, plat, client, app, appInst, remoteServer)
+	err := DeleteAppInst(ctx, client, app, appInst, remoteServer)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "DeleteAppInst failed, proceeding with create", "appkey", app.Key, "err", err)
 	}
-	return CreateAppInst(ctx, plat, client, app, appInst, remoteServer)
+	return CreateAppInst(ctx, client, app, appInst, remoteServer)
 }
 
 func appendContainerIdsFromDockerComposeImages(client pc.PlatformClient, dockerComposeFile string, rt *edgeproto.AppInstRuntime) error {
