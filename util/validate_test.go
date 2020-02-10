@@ -107,23 +107,36 @@ func TestValidObjName(t *testing.T) {
 func TestVersion(t *testing.T) {
 	var err error
 
-	_, err = VersionParse("2011-10-11")
+	_, err = ContainerVersionParse("2011-10-11")
 	require.Nil(t, err, "valid version")
 
-	_, err = VersionParse("2011-30-11")
+	_, err = ContainerVersionParse("2011-30-11")
 	require.NotNil(t, err, "invalid version")
 
-	_, err = VersionParse("2011-30-99")
+	_, err = ContainerVersionParse("2011-30-99")
 	require.NotNil(t, err, "invalid version")
 
-	_, err = VersionParse("abcd")
+	_, err = ContainerVersionParse("abcd")
 	require.NotNil(t, err, "invalid version")
 
-	_, err = VersionParse("20111-11-11")
+	_, err = ContainerVersionParse("20111-11-11")
 	require.NotNil(t, err, "invalid version")
 
-	_, err = VersionParse("2011-1-1")
+	_, err = ContainerVersionParse("2011-1-1")
 	require.NotNil(t, err, "invalid version")
+
+	err = ValidateImageVersion("2.0.0")
+	require.Nil(t, err, "valid image version")
+
+	err = ValidateImageVersion("2.0-0")
+	require.Nil(t, err, "valid image version")
+
+	err = ValidateImageVersion("2.0_0")
+	require.Nil(t, err, "valid image version")
+
+	err = ValidateImageVersion(".2.0.0")
+	require.NotNil(t, err, "invalid image version")
+
 }
 
 func TestHeatSanitize(t *testing.T) {

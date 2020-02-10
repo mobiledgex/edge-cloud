@@ -9,7 +9,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  version: 2020-10-10
+  containerversion: 2020-10-10
   notifysrvaddr: 127.0.0.1:61001
 - key:
     operatorkey:
@@ -21,5 +21,5 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  version: 2020-10-10
+  containerversion: 2020-10-10
   notifysrvaddr: 127.0.0.1:61002

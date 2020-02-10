@@ -48,21 +48,24 @@ type Dme struct {
 	cmd         *exec.Cmd
 }
 type Crm struct {
-	Common        `yaml:",inline"`
-	NotifyAddrs   string
-	NotifySrvAddr string
-	CloudletKey   string
-	Platform      string
-	Plugin        string
-	TLS           TLSCerts
-	cmd           *exec.Cmd
-	VaultAddr     string
-	PhysicalName  string
-	TestMode      bool
-	Span          string
-	CleanupMode   bool
-	Version       string
-	Region        string
+	Common              `yaml:",inline"`
+	NotifyAddrs         string
+	NotifySrvAddr       string
+	CloudletKey         string
+	Platform            string
+	Plugin              string
+	TLS                 TLSCerts
+	cmd                 *exec.Cmd
+	VaultAddr           string
+	PhysicalName        string
+	TestMode            bool
+	Span                string
+	CleanupMode         bool
+	ContainerVersion    string
+	VMImageVersion      string
+	PackageVersion      string
+	CloudletVMImagePath string
+	Region              string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`
