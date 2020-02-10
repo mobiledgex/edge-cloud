@@ -341,8 +341,8 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		if err != nil {
 			return
 		}
-		if new.PowerAction != edgeproto.PowerAction_POWER_NONE {
-			log.InfoLog("set power state on AppInst", "key", new.Key, "action", new.PowerAction)
+		if new.PowerState != edgeproto.PowerState_POWER_NONE {
+			log.InfoLog("set power state on AppInst", "key", new.Key, "action", new.PowerState)
 			err = cd.platform.SetPowerState(ctx, &app, new, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Set AppInst PowerState failed: %s", err)

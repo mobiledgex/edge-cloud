@@ -42,7 +42,7 @@ enum HealthCheck {
 // Power Action
 //
 // Power Action on the AppInst
-enum PowerAction {
+enum PowerState {
   // None
   POWER_NONE = 0;
   // Power On
@@ -103,8 +103,8 @@ message AppInst {
   HealthCheck health_check = 29;  
   // Optional privacy policy name
   string privacy_policy = 30;
-  // Power Action on AppInst
-  PowerAction power_action = 31;
+  // Power State of the AppInst
+  PowerState power_state = 31;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -139,7 +139,7 @@ service AppInstApi {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
     option (protogen.mc2_custom_authz) = true;
     // add in UpdateMultiple for noconfig
-    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,UpdateMultiple,ForceUpdate,PowerAction";
+    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,UpdateMultiple,ForceUpdate,PowerState";
   }
   // Delete Application Instance. Deletes an instance of the App from the Cloudlet
   rpc DeleteAppInst(AppInst) returns (stream Result) {
@@ -149,7 +149,7 @@ service AppInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
-    option (protogen.method_noconfig) = "PowerAction";
+    option (protogen.method_noconfig) = "PowerState";
   }
   // Refresh Application Instance. Refresh restarts an application instance with new App settings or image
   rpc RefreshAppInst(AppInst) returns (stream Result) {
@@ -160,7 +160,7 @@ service AppInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
     option (protogen.method_not_required) = "Key.ClusterInstKey";
-    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,Configs,PowerAction";
+    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,Configs,PowerState";
   }
   // Update Application Instance. Updates an application instance and then refreshes it
   rpc UpdateAppInst(AppInst) returns (stream Result) {
@@ -170,7 +170,7 @@ service AppInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
-    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple,ForceUpdate,PowerAction";
+    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple,ForceUpdate,PowerState";
   }
   // Show Application Instances. Lists all the application instances managed by edge controller. Any fields specified will be used to filter results
   rpc ShowAppInst(AppInst) returns (stream AppInst) {
@@ -188,7 +188,7 @@ service AppInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
-    option (protogen.method_also_required) = "PowerAction";
+    option (protogen.method_also_required) = "PowerState";
     option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple,ForceUpdate";
   }
 }
