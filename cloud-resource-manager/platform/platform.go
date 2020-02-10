@@ -9,11 +9,14 @@ import (
 )
 
 type PlatformConfig struct {
-	CloudletKey  *edgeproto.CloudletKey
-	PhysicalName string
-	VaultAddr    string
-	Region       string
-	TestMode     bool
+	CloudletKey         *edgeproto.CloudletKey
+	PhysicalName        string
+	VaultAddr           string
+	Region              string
+	TestMode            bool
+	CloudletVMImagePath string
+	VMImageVersion      string
+	PackageVersion      string
 }
 
 // Platform abstracts the underlying cloudlet platform.
@@ -52,7 +55,7 @@ type Platform interface {
 	// Delete Cloudlet
 	DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Update Cloudlet
-	UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
+	UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) (edgeproto.CloudletAction, error)
 	// Cleanup Cloudlet
 	CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Save Cloudlet AccessVars

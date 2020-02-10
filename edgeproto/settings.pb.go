@@ -57,6 +57,8 @@ type Settings struct {
 	UpdateClusterInstTimeout Duration `protobuf:"varint,12,opt,name=update_cluster_inst_timeout,json=updateClusterInstTimeout,proto3,casttype=Duration" json:"update_cluster_inst_timeout,omitempty"`
 	// Delete ClusterInst timeout (duration)
 	DeleteClusterInstTimeout Duration `protobuf:"varint,13,opt,name=delete_cluster_inst_timeout,json=deleteClusterInstTimeout,proto3,casttype=Duration" json:"delete_cluster_inst_timeout,omitempty"`
+	// Default flavor for k8s master VM and > 0  workers
+	MasterNodeFlavor string `protobuf:"bytes,14,opt,name=master_node_flavor,json=masterNodeFlavor,proto3" json:"master_node_flavor,omitempty"`
 	// Max IP Port range when using a load balancer
 	LoadBalancerMaxPortRange int32 `protobuf:"varint,14,opt,name=load_balancer_max_port_range,json=loadBalancerMaxPortRange,proto3" json:"load_balancer_max_port_range,omitempty"`
 }
@@ -306,10 +308,16 @@ func (m *Settings) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintSettings(dAtA, i, uint64(m.DeleteClusterInstTimeout))
 	}
+	if len(m.MasterNodeFlavor) > 0 {
+		dAtA[i] = 0x72
+		i++
+		i = encodeVarintSettings(dAtA, i, uint64(len(m.MasterNodeFlavor)))
+		i += copy(dAtA[i:], m.MasterNodeFlavor)
+  }
 	if m.LoadBalancerMaxPortRange != 0 {
 		dAtA[i] = 0x70
 		i++
-		i = encodeVarintSettings(dAtA, i, uint64(m.LoadBalancerMaxPortRange))
+		i = encodeVarintSettings(dAtA, i, uint64(m.LoadBalancerMaxPortRange)
 	}
 	return i, nil
 }
@@ -392,6 +400,10 @@ func (m *Settings) Matches(o *Settings, fopts ...MatchOpt) bool {
 			return false
 		}
 	}
+	if !opts.Filter || o.MasterNodeFlavor != "" {
+		if o.MasterNodeFlavor != m.MasterNodeFlavor {
+      return false
+    }
 	if !opts.Filter || o.LoadBalancerMaxPortRange != 0 {
 		if o.LoadBalancerMaxPortRange != m.LoadBalancerMaxPortRange {
 			return false
@@ -412,7 +424,8 @@ const SettingsFieldDeleteAppInstTimeout = "10"
 const SettingsFieldCreateClusterInstTimeout = "11"
 const SettingsFieldUpdateClusterInstTimeout = "12"
 const SettingsFieldDeleteClusterInstTimeout = "13"
-const SettingsFieldLoadBalancerMaxPortRange = "14"
+const SettingsFieldMasterNodeFlavor = "14"
+const SettingsFieldLoadBalancerMaxPortRange = "15"
 
 var SettingsAllFields = []string{
 	SettingsFieldShepherdMetricsCollectionInterval,
@@ -427,6 +440,7 @@ var SettingsAllFields = []string{
 	SettingsFieldCreateClusterInstTimeout,
 	SettingsFieldUpdateClusterInstTimeout,
 	SettingsFieldDeleteClusterInstTimeout,
+	SettingsFieldMasterNodeFlavor,
 	SettingsFieldLoadBalancerMaxPortRange,
 }
 
@@ -443,6 +457,7 @@ var SettingsAllFieldsMap = map[string]struct{}{
 	SettingsFieldCreateClusterInstTimeout:          struct{}{},
 	SettingsFieldUpdateClusterInstTimeout:          struct{}{},
 	SettingsFieldDeleteClusterInstTimeout:          struct{}{},
+	SettingsFieldMasterNodeFlavor:                  struct{}{},
 	SettingsFieldLoadBalancerMaxPortRange:          struct{}{},
 }
 
@@ -459,6 +474,7 @@ var SettingsAllFieldsStringMap = map[string]string{
 	SettingsFieldCreateClusterInstTimeout:          "Create Cluster Inst Timeout",
 	SettingsFieldUpdateClusterInstTimeout:          "Update Cluster Inst Timeout",
 	SettingsFieldDeleteClusterInstTimeout:          "Delete Cluster Inst Timeout",
+	SettingsFieldMasterNodeFlavor:                  "Master Node Flavor",
 	SettingsFieldLoadBalancerMaxPortRange:          "Load Balancer Max Port Range",
 }
 
@@ -503,6 +519,9 @@ func (m *Settings) DiffFields(o *Settings, fields map[string]struct{}) {
 	if m.DeleteClusterInstTimeout != o.DeleteClusterInstTimeout {
 		fields[SettingsFieldDeleteClusterInstTimeout] = struct{}{}
 	}
+	if m.MasterNodeFlavor != o.MasterNodeFlavor {
+		fields[SettingsFieldMasterNodeFlavor] = struct{}{}
+  }
 	if m.LoadBalancerMaxPortRange != o.LoadBalancerMaxPortRange {
 		fields[SettingsFieldLoadBalancerMaxPortRange] = struct{}{}
 	}
@@ -584,6 +603,10 @@ func (m *Settings) CopyInFields(src *Settings) int {
 		}
 	}
 	if _, set := fmap["14"]; set {
+		if m.MasterNodeFlavor != src.MasterNodeFlavor {
+			m.MasterNodeFlavor = src.MasterNodeFlavor
+      changed++
+    }
 		if m.LoadBalancerMaxPortRange != src.LoadBalancerMaxPortRange {
 			m.LoadBalancerMaxPortRange = src.LoadBalancerMaxPortRange
 			changed++
@@ -1040,6 +1063,10 @@ func (m *Settings) Size() (n int) {
 	if m.DeleteClusterInstTimeout != 0 {
 		n += 1 + sovSettings(uint64(m.DeleteClusterInstTimeout))
 	}
+	l = len(m.MasterNodeFlavor)
+	if l > 0 {
+		n += 1 + l + sovSettings(uint64(l))
+  }
 	if m.LoadBalancerMaxPortRange != 0 {
 		n += 1 + sovSettings(uint64(m.LoadBalancerMaxPortRange))
 	}
@@ -1141,7 +1168,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				return fmt.Errorf("proto: wrong wireType = %d for field ShepherdHealthCheckRetries", wireType)
 			}
 			m.ShepherdHealthCheckRetries = 0
-			for shift := uint(0); ; shift += 7 {
+			for shift := uint(0); ; shift += 7 {o
 				if shift >= 64 {
 					return ErrIntOverflowSettings
 				}
@@ -1330,10 +1357,10 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 14:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LoadBalancerMaxPortRange", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MasterNodeFlavor", wireType)
 			}
-			m.LoadBalancerMaxPortRange = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSettings
@@ -1342,12 +1369,26 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 					return io.ErrUnexpectedEOF
 				}
 				b := dAtA[iNdEx]
-				iNdEx++
-				m.LoadBalancerMaxPortRange |= (int32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+        iNdEx++
+        stringLen != (uint64(b) & 0x7F) << shift
+        if b < 0x80 {
+          break
+        }
+      }
+	
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSettings
 			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MasterNodeFlavor = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+        
+        
+      
 		default:
 			iNdEx = preIndex
 			skippy, err := skipSettings(dAtA[iNdEx:])
@@ -1477,6 +1518,7 @@ var (
 func init() { proto.RegisterFile("settings.proto", fileDescriptorSettings) }
 
 var fileDescriptorSettings = []byte{
+
 	// 700 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0x4d, 0x6f, 0xd3, 0x4c,
 	0x14, 0x85, 0x5f, 0xb7, 0x6f, 0xbf, 0xa6, 0x69, 0x28, 0xee, 0x07, 0x43, 0x5a, 0x42, 0x08, 0x2c,
