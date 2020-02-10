@@ -43,6 +43,15 @@ func (s *PrivacyPolicyApi) CreatePrivacyPolicy(ctx context.Context, in *edgeprot
 func (s *PrivacyPolicyApi) UpdatePrivacyPolicy(ctx context.Context, in *edgeproto.PrivacyPolicy) (*edgeproto.Result, error) {
 	cur := edgeproto.PrivacyPolicy{}
 	changed := 0
+
+	// Updates not allowed if the policy is in use by a cluster or app inst.  Use by an App is OK.
+	if clusterInstApi.UsesPrivacyPolicy(&in.Key) {
+		return &edgeproto.Result{}, fmt.Errorf("Update not allowed because policy in use by Cluster Inst")
+	}
+	if appInstApi.UsesPrivacyPolicy(&in.Key) {
+		return &edgeproto.Result{}, fmt.Errorf("Update not allowed because policy in use by AppInst")
+	}
+
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
@@ -66,6 +75,12 @@ func (s *PrivacyPolicyApi) DeletePrivacyPolicy(ctx context.Context, in *edgeprot
 	}
 	if clusterInstApi.UsesPrivacyPolicy(&in.Key) {
 		return &edgeproto.Result{}, fmt.Errorf("Policy in use by ClusterInst")
+	}
+	if appApi.UsesPrivacyPolicy(&in.Key) {
+		return &edgeproto.Result{}, fmt.Errorf("Policy in use by App")
+	}
+	if appInstApi.UsesPrivacyPolicy(&in.Key) {
+		return &edgeproto.Result{}, fmt.Errorf("Policy in use by AppInst")
 	}
 	return s.store.Delete(ctx, in, s.sync.syncWait)
 }

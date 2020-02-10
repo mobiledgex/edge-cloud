@@ -86,7 +86,9 @@ message AppInst {
   // shared volume size when creating auto cluster
   uint64 shared_volume_size = 28;
   // Health Check status
-  HealthCheck health_check = 29;
+  HealthCheck health_check = 29;  
+  // Optional privacy policy name
+  string privacy_policy = 30;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

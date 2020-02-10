@@ -378,7 +378,7 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 		HasMethodArgs:        gensupport.HasMethodArgs(method),
 		SingularData:         gensupport.GetSingularData(in.DescriptorProto),
 	}
-	if strings.HasPrefix(*method.Name, "Show") {
+	if gensupport.IsShow(method) {
 		cmd.Show = true
 	}
 	if strings.HasPrefix(*method.Name, "Update"+cmd.InType) && gensupport.HasGrpcFields(in.DescriptorProto) {

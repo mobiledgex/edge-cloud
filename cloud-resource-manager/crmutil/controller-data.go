@@ -304,7 +304,17 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			cspan := log.StartSpan(log.DebugLevelMexos, "crm create AppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			defer cspan.Finish()
 
-			err = cd.platform.CreateAppInst(ctx, &clusterInst, &app, new, &flavor, updateAppCacheCallback)
+			policy := edgeproto.PrivacyPolicy{}
+			if new.PrivacyPolicy != "" {
+				policy.Key.Developer = new.Key.AppKey.DeveloperKey.Name
+				policy.Key.Name = new.PrivacyPolicy
+				if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
+					log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for AppInst", "policyName", policy.Key.Name)
+					cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, "Privacy Policy not found")
+					return
+				}
+			}
+			err = cd.platform.CreateAppInst(ctx, &clusterInst, &app, new, &flavor, &policy, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, errstr)

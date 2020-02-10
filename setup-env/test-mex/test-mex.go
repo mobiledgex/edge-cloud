@@ -46,7 +46,7 @@ var actionChoices = map[string]string{
 	"ctrlinfo":   "procname",
 	"dmeapi":     "procname",
 	"influxapi":  "procname",
-	"runcommand": "",
+	"exec":       "",
 	"cleanup":    "",
 	"gencerts":   "",
 	"cleancerts": "",
