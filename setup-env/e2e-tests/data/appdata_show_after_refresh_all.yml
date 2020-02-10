@@ -130,7 +130,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-1
-  version: 2020-10-10
+  containerversion: 2020-10-10
 - key:
     operatorkey:
       name: dmuus
@@ -144,7 +144,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-2
-  version: 2020-10-10
+  containerversion: 2020-10-10
 - key:
     operatorkey:
       name: dmuus
@@ -158,7 +158,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-3
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
     operatorkey:
       name: azure
@@ -172,7 +172,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: azure-cloud-4
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
     operatorkey:
       name: gcp
@@ -186,7 +186,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: gcp-cloud-5
-  version: 2019-10-24
+  containerversion: 2019-10-24
 
 apps:
 - key:

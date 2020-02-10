@@ -110,7 +110,7 @@ cloudlets:
   flavor:
     name: x1.medium
   physicalname: dmuus-cloud-1
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
     operatorkey:
       name: dmuus
@@ -125,7 +125,7 @@ cloudlets:
   flavor:
     name: x1.medium
   physicalname: dmuus-cloud-2
-  version: 2019-10-24
+  containerversion: 2019-10-24
 
 apps:
 - key:

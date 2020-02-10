@@ -55,8 +55,8 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	if !cloudletApi.cache.Get(&in.Key, &cloudlet) {
 		return
 	}
-	localVersion := cloudlet.Version
-	remoteVersion := in.Version
+	localVersion := cloudlet.ContainerVersion
+	remoteVersion := in.ContainerVersion
 
 	if !isVersionConflict(ctx, localVersion, remoteVersion) {
 		if in.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
@@ -75,13 +75,10 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 					return key.NotFoundError()
 				}
 				newCloudlet.State = edgeproto.TrackedState_CRM_INITOK
-				newCloudlet.Version = in.Version
+				newCloudlet.ContainerVersion = in.ContainerVersion
 				cloudletApi.store.STMPut(stm, &newCloudlet)
 				return nil
 			})
-		}
-		if in.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
-			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_UPDATING)
 		}
 	}
 	if err != nil {
