@@ -372,9 +372,21 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.CleanupMode {
 		args = append(args, "-cleanupMode")
 	}
-	if p.Version != "" {
-		args = append(args, "--version")
-		args = append(args, p.Version)
+	if p.ContainerVersion != "" {
+		args = append(args, "--containerVersion")
+		args = append(args, p.ContainerVersion)
+	}
+	if p.CloudletVMImagePath != "" {
+		args = append(args, "--cloudletVMImagePath")
+		args = append(args, p.CloudletVMImagePath)
+	}
+	if p.VMImageVersion != "" {
+		args = append(args, "--vmImageVersion")
+		args = append(args, p.VMImageVersion)
+	}
+	if p.PackageVersion != "" {
+		args = append(args, "--packageVersion")
+		args = append(args, p.PackageVersion)
 	}
 	if p.Region != "" {
 		args = append(args, "--region")

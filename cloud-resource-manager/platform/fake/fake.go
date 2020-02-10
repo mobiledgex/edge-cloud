@@ -121,7 +121,7 @@ func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	return nil
 }
 
-func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) (edgeproto.CloudletAction, error) {
 	// Doesn't do actual upgrade, but good enough
 	// for testing controller side code
 	log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet upgrade")
@@ -130,9 +130,9 @@ func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet create failed", "err", err)
-		return err
+		return edgeproto.CloudletAction_ACTION_NONE, err
 	}
-	return nil
+	return edgeproto.CloudletAction_ACTION_IN_PROGRESS, nil
 }
 
 func (s *Platform) CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
