@@ -99,11 +99,11 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 			// In case of cloudlet upgrade, Check if READY is recieved from
 			// appropriate cloudlet
 			cloudlet := edgeproto.Cloudlet{}
-			if buf.Version != "" && s.sendrecv.cloudletSend != nil {
+			if buf.ContainerVersion != "" && s.sendrecv.cloudletSend != nil {
 				if s.sendrecv.cloudletSend.handler.Get(&buf.Key, &cloudlet) &&
 					(cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
 						cloudlet.State == edgeproto.TrackedState_UPDATING) &&
-					cloudlet.Version != buf.Version {
+					cloudlet.ContainerVersion != buf.ContainerVersion {
 					return
 				}
 			}
