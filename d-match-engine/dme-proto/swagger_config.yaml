@@ -8,19 +8,19 @@ info:
   app-client.proto:
     version: "1.0"
     title: MobiledgeX Client API
-    description:
+    description: |
 
       # Introduction
 
-MobiledgeX provides a set of SDKs and Libraries containing a collection of operations and resources that assist in creating applications for the many services offered by MobiledgeX.
-Once an application is built and registered, our services locate the nearest cloudlet server, connecting you to one of our edge server instances.
-Our services will also verify a device's location, ensuring the optimum compute instance is used, and much more, once you are on the edge.
+      MobiledgeX provides a set of SDKs and Libraries containing a collection of operations and resources that assist in creating applications for the many services offered by MobiledgeX.
+      Once an application is built and registered, our services locate the nearest cloudlet server, connecting you to one of our edge server instances.
+      Our services will also verify a device's location, ensuring the optimum compute instance is used, and much more, once you are on the edge.
 
-MobiledgeX’s MatchingEngine SDKs and Libraries are available in different languages and platforms, which include Android, Unity, and iOS, allowing for easy application development.
-The Performance Metrics API can be used to help track the average latency characteristics of the edge network. To take advantage of this API, you must add your application server’s AppInst to a list of sites in order to periodically ping them.
+      MobiledgeX’s MatchingEngine SDKs and Libraries are available in different languages and platforms, which include Android, Unity, and iOS, allowing for easy application development.
+      The Performance Metrics API can be used to help track the average latency characteristics of the edge network. To take advantage of this API, you must add your application server’s AppInst to a list of sites in order to periodically ping them.
 
-Within the left navigational pane, scroll to the desired SDK, based on your preferred language or platform, to view the accompanying APIs.
-To reference these APIs, including their resources and schema, click Edge REST APIs.
+      Within the left navigational pane, scroll to the desired SDK, based on your preferred language or platform, to view the accompanying APIs.
+      To reference these APIs, including their resources and schema, click Edge REST APIs.
 
       # Edge SDK - Android
 
