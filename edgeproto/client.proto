@@ -8,7 +8,7 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "app_inst.proto";
 import "gogoproto/gogo.proto";
-
+import "google/protobuf/timestamp.proto";
 
 // AppKey uniquely identifies an App
 message AppInstClientKey {
@@ -16,6 +16,7 @@ message AppInstClientKey {
   AppInstKey key = 1 [(gogoproto.nullable) = false];
   // App name
   string uuid = 2;
+
   option (protogen.notify_message) = true;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -33,15 +34,10 @@ message AppInstClientKey {
   AppInstClientKey client_key = 2 [(gogoproto.nullable) = false];
   // Location of the Client
   distributed_match_engine.Loc location = 3 [(gogoproto.nullable) = false];
+  // Timestamp for this client
+  google.protobuf.Timestamp timestamp = 4 [(gogoproto.nullable) = false];
   // Id of client assigned by server (internal use only)
   int64 notify_id = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  enum FindStatus {
-    FIND_UNKNOWN = 0;
-    FIND_FOUND = 1;
-    FIND_NOTFOUND = 2;
-  }
-  // Status return
-  FindStatus status = 6;
 
   option (protogen.notify_message) = true;
   option (protogen.notify_print_send_recv) = false;
@@ -58,5 +54,6 @@ service AppInstClientApi {
     option (protogen.mc2_api) = "ResourceAppInstClients,ActionView,Key.AppKey.DeveloperKey.Name";
     option (protogen.method_not_required) = "Key.ClusterInstKey.Developer,Key.ClusterInstKey.ClusterKey";
     option (protogen.non_standard_show) = true;
+    option (protogen.streaming_show) = true;
   }
 }

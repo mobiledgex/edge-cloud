@@ -17,6 +17,7 @@ import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
 import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import _ "github.com/gogo/protobuf/gogoproto"
+import _ "github.com/gogo/protobuf/types"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -161,8 +162,9 @@ var AppInstClientOptionalArgs = []string{
 	"location.speed",
 	"location.timestamp.seconds",
 	"location.timestamp.nanos",
+	"timestamp.seconds",
+	"timestamp.nanos",
 	"notifyid",
-	"status",
 }
 var AppInstClientAliasArgs = []string{}
 var AppInstClientComments = map[string]string{
@@ -181,8 +183,9 @@ var AppInstClientComments = map[string]string{
 	"location.altitude":                                         "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"location.course":                                           "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"location.speed":                                            "speed (IOS) / velocity (Android) (meters/sec)",
+	"timestamp.seconds":                                         "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"timestamp.nanos":                                           "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"notifyid":                                                  "Id of client assigned by server (internal use only)",
-	"status":                                                    "Status return, one of FindUnknown, FindFound, FindNotfound",
 }
 var AppInstClientSpecialArgs = map[string]string{}
 var ShowAppInstClientRequiredArgs = []string{

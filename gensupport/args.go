@@ -268,6 +268,10 @@ func GetStreamOutIncremental(method *descriptor.MethodDescriptorProto) bool {
 	return proto.GetBoolExtension(method.Options, protogen.E_StreamOutIncremental, false)
 }
 
+func GetStreamingShow(method *descriptor.MethodDescriptorProto) bool {
+	return proto.GetBoolExtension(method.Options, protogen.E_StreamingShow, false)
+}
+
 func GetNoConfig(message *descriptor.DescriptorProto, method *descriptor.MethodDescriptorProto) string {
 	if method != nil {
 		str, found := FindStringExtension(method.Options, protogen.E_MethodNoconfig)

@@ -211,8 +211,8 @@ func getClientFromFindCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudlet
 	}
 }
 
-func getResultFromFindCloudletReply(mreq *dme.FindCloudletReply) edgeproto.AppInstClient_FindStatus {
-	return edgeproto.AppInstClient_FindStatus(mreq.Status)
+func getResultFromFindCloudletReply(mreq *dme.FindCloudletReply) dme.FindCloudletReply_FindStatus {
+	return mreq.Status
 }
 
 func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -237,19 +237,20 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 			return resp, err
 		}
 
-		// Update clients cache
-		client := getClientFromFindCloudlet(ckey, req.(*dme.FindCloudletRequest))
-		if client != nil {
-			client.ClientKey.Key.ClusterInstKey.CloudletKey = call.key.CloudletFound
-			client.ClientKey.Uuid = ckey.UniqueId
-			// GpsLocation timestamp can carry an arbitrary system time instead of a timestamp
-			client.Location.Timestamp = &dme.Timestamp{}
-			ts := time.Now()
-			client.Location.Timestamp.Seconds = ts.Unix()
-			client.Location.Timestamp.Nanos = int32(ts.Nanosecond())
-			client.Status = getResultFromFindCloudletReply(resp.(*dme.FindCloudletReply))
-			// Update list of clients on the side and if there is a listener, send it
-			go UpdateClientsBuffer(ctx, client)
+		// Update clients cache if we found the cloudlet
+		if getResultFromFindCloudletReply(resp.(*dme.FindCloudletReply)) == dme.FindCloudletReply_FIND_FOUND {
+			client := getClientFromFindCloudlet(ckey, req.(*dme.FindCloudletRequest))
+			if client != nil {
+				client.ClientKey.Key.ClusterInstKey.CloudletKey = call.key.CloudletFound
+				client.ClientKey.Uuid = ckey.UniqueId
+				// GpsLocation timestamp can carry an arbitrary system time instead of a timestamp
+				client.Location.Timestamp = &dme.Timestamp{}
+				ts := time.Now()
+				client.Timestamp.Seconds = ts.Unix()
+				client.Timestamp.Nanos = int32(ts.Nanosecond())
+				// Update list of clients on the side and if there is a listener, send it
+				go UpdateClientsBuffer(ctx, client)
+			}
 		}
 		call.key.AppKey.DeveloperKey.Name = ckey.DevName
 		call.key.AppKey.Name = ckey.AppName

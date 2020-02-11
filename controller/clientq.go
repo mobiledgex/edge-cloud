@@ -8,18 +8,18 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-var AppInstClientQMaxClients = 100
-
 type AppInstClientQ struct {
 	mux            sync.Mutex
 	appInstClients []*edgeproto.AppInstClient
 	clientChan     map[edgeproto.AppInstKey][]chan edgeproto.AppInstClient
+	maxClientsInQ  int
 }
 
-func NewAppInstClientQ() *AppInstClientQ {
+func NewAppInstClientQ(maxClientsInQ int) *AppInstClientQ {
 	q := AppInstClientQ{}
 	q.appInstClients = make([]*edgeproto.AppInstClient, 0)
 	q.clientChan = make(map[edgeproto.AppInstKey][]chan edgeproto.AppInstClient)
+	q.maxClientsInQ = maxClientsInQ
 	return &q
 }
 
@@ -39,13 +39,19 @@ func (q *AppInstClientQ) SetRecvChan(key edgeproto.AppInstKey, ch chan edgeproto
 	}
 }
 
-// Returns numbere of channels in thee list that are left
+func (q *AppInstClientQ) SetMaxQueueSize(size int) {
+	q.mux.Lock()
+	defer q.mux.Unlock()
+	q.maxClientsInQ = size
+}
+
+// Returns number of channels in the list that are left
 func (q *AppInstClientQ) ClearRecvChan(key edgeproto.AppInstKey, ch chan edgeproto.AppInstClient) int {
 	q.mux.Lock()
 	defer q.mux.Unlock()
 	_, found := q.clientChan[key]
 	if !found {
-		log.DebugLog(log.DebugLevelApi, "Not client channels found for appInst", "appInst", key)
+		log.DebugLog(log.DebugLevelApi, "No client channels found for appInst", "appInst", key)
 		return -1
 	}
 	for ii, c := range q.clientChan[key] {
@@ -64,27 +70,25 @@ func (q *AppInstClientQ) ClearRecvChan(key edgeproto.AppInstKey, ch chan edgepro
 	return -1
 }
 
-func (q *AppInstClientQ) AddClient(clients ...*edgeproto.AppInstClient) {
+func (q *AppInstClientQ) AddClient(client *edgeproto.AppInstClient) {
 	q.mux.Lock()
 	defer q.mux.Unlock()
-	for ii, client := range clients {
-		if clients[ii] != nil {
-			// Queue full - remove the oldest one(first) and append the new one
-			if len(q.appInstClients) == AppInstClientQMaxClients {
-				q.appInstClients = q.appInstClients[1:]
-			}
-			q.appInstClients = append(q.appInstClients, clients[ii])
-			cList, found := q.clientChan[client.ClientKey.Key]
-			if !found {
-				log.DebugLog(log.DebugLevelApi, "No recievers for this appInst")
-				return
-			}
-			for _, c := range cList {
-				if c != nil {
-					c <- *clients[ii]
-				} else {
-					log.DebugLog(log.DebugLevelApi, "Nil Channel")
-				}
+	if client != nil {
+		// Queue full - remove the oldest one(first) and append the new one
+		if len(q.appInstClients) == int(q.maxClientsInQ) {
+			q.appInstClients = q.appInstClients[1:]
+		}
+		q.appInstClients = append(q.appInstClients, client)
+		cList, found := q.clientChan[client.ClientKey.Key]
+		if !found {
+			log.DebugLog(log.DebugLevelApi, "No receivers for this appInst")
+			return
+		}
+		for _, c := range cList {
+			if c != nil {
+				c <- *client
+			} else {
+				log.DebugLog(log.DebugLevelApi, "Nil Channel")
 			}
 		}
 	}

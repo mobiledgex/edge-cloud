@@ -2,53 +2,52 @@ package main
 
 import (
 	"context"
-	"sync"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/notify"
 )
 
 type AppInstClientApi struct {
-	requests map[string]*ClientReq
-	mux      sync.Mutex
-}
-
-type ClientReq struct {
-	req  edgeproto.AppInstKey
-	q    *AppInstClientQ
-	done chan bool
 }
 
 var appInstClientApi = AppInstClientApi{}
 var appInstClientSendMany *notify.AppInstClientSendMany
 
 func InitAppInstClientApi() {
-	appInstClientApi.requests = make(map[string]*ClientReq)
 	appInstClientSendMany = notify.NewAppInstClientSendMany()
 }
 
 func (s *AppInstClientApi) Prune(ctx context.Context, keys map[edgeproto.AppInstClientKey]struct{}) {}
 
 func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb edgeproto.AppInstClientApi_ShowAppInstClientServer) error {
+	// Check if the AppInst exists
+	if !appInstApi.HasKey(&in.Key) {
+		return in.Key.NotFoundError()
+	}
+
+	// Since we don't care about the cluster developer and name set them to ""
+	in.Key.ClusterInstKey.ClusterKey.Name = ""
+	in.Key.ClusterInstKey.Developer = ""
+
 	// Request this AppInst to be sent
-	recvCh := make(chan edgeproto.AppInstClient, AppInstClientQMaxClients)
+	recvCh := make(chan edgeproto.AppInstClient, int(settingsApi.Get().MaxTrackedDmeClients))
 	services.clientQ.SetRecvChan(in.Key, recvCh)
 
 	if !appInstClientKeyApi.HasApp(&in.Key) {
 		appInstClientKeyApi.Update(cb.Context(), in, 0)
 	}
 	done := false
-	appInstClient := edgeproto.AppInstClient{}
 	for !done {
 		select {
 		case <-cb.Context().Done():
 			done = true
-		case appInstClient = <-recvCh:
+		case appInstClient := <-recvCh:
 			if err := cb.Send(&appInstClient); err != nil {
 				done = true
 			}
 		}
 	}
+	//TODO - there is a race below here - see Jon's comments
 	if services.clientQ.ClearRecvChan(in.Key, recvCh) == 0 {
 		appInstClientKeyApi.Delete(cb.Context(), in, 0)
 	}

@@ -3,11 +3,10 @@ package main
 import (
 	"sync"
 
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"golang.org/x/net/context"
 )
-
-var MaxDmeClients = 100
 
 type ClientsMap struct {
 	sync.RWMutex
@@ -30,7 +29,7 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 		clientsMap.clients[msg.ClientKey.Key] = []edgeproto.AppInstClient{*msg}
 	} else {
 		//  We reached the limit of clients - remove the first one
-		if len(list) == MaxDmeClients {
+		if len(list) == int(dmecommon.Settings.MaxTrackedDmeClients) {
 			list = list[1:]
 		}
 

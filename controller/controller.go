@@ -259,7 +259,7 @@ func startServices() error {
 	}
 	services.events = events
 
-	services.clientQ = NewAppInstClientQ()
+	services.clientQ = NewAppInstClientQ(int(settingsApi.Get().MaxTrackedDmeClients))
 
 	InitNotify(influxQ, services.clientQ)
 	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile)
@@ -331,7 +331,7 @@ func startServices() error {
 			edgeproto.RegisterResTagTableApiHandler,
 			edgeproto.RegisterPrivacyPolicyApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
-			edgeproto.RegisterAppInstApiHandler,
+			edgeproto.RegisterAppInstClientApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
