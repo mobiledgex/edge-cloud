@@ -28,11 +28,21 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 	if !found {
 		clientsMap.clients[msg.ClientKey.Key] = []edgeproto.AppInstClient{*msg}
 	} else {
+		// We need to either update, or add the client to the list
+		for ii, c := range clientsMap.clients[msg.ClientKey.Key] {
+			// Found the same client from before
+			if c.ClientKey.Uuid == msg.ClientKey.Uuid {
+				// remove this from the and append it at the end, since it's new
+				clientsMap.clients[msg.ClientKey.Key] =
+					append(clientsMap.clients[msg.ClientKey.Key][:ii],
+						clientsMap.clients[msg.ClientKey.Key][ii+1:]...)
+				break
+			}
+		}
 		//  We reached the limit of clients - remove the first one
 		if len(list) == int(dmecommon.Settings.MaxTrackedDmeClients) {
 			list = list[1:]
 		}
-
 		clientsMap.clients[msg.ClientKey.Key] = append(list, *msg)
 	}
 	// If there is an outstanding request for this appInst, send it out
