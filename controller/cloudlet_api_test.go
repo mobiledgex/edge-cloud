@@ -139,7 +139,7 @@ func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, sta
 	info := edgeproto.CloudletInfo{}
 	info.Key = *key
 	info.State = state
-	info.Version = version
+	info.ContainerVersion = version
 	cloudletInfoApi.Update(ctx, &info, 0)
 }
 
@@ -274,14 +274,16 @@ func testUpgradeScenario(t *testing.T, ctx context.Context, transitions *[]state
 	var err error
 	cloudlet := testutil.CloudletData[2]
 	cloudlet.Key.Name = "crmupgradetests"
-	cloudlet.Version = crm_v1
+	cloudlet.ContainerVersion = crm_v1
+	fmt.Printf("[testupgradescenarios] CreateCloudlet key: %v, scenario: %s\n", cloudlet.Key, scenario)
 	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 
 	go func() {
 		forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
-		cloudlet.Version = crm_v2
-		cloudlet.Fields = []string{edgeproto.CloudletFieldVersion}
+		cloudlet.ContainerVersion = crm_v2
+		cloudlet.Fields = []string{edgeproto.CloudletFieldContainerVersion}
+		fmt.Printf("[testupgradescenarios] UpgradeCloudlet key: %v, upgradeVersion: %s\n", cloudlet.Key, crm_v2)
 		err := cloudletApi.UpgradeCloudlet(ctx, &cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 		if scenario == "fail" {
 			require.NotNil(t, err, "upgrade cloudlet should fail")
@@ -294,6 +296,11 @@ func testUpgradeScenario(t *testing.T, ctx context.Context, transitions *[]state
 	require.Nil(t, err, "cloudlet state transtions")
 
 	for _, transition := range *transitions {
+		fmt.Printf("[testupgradescenarios] key: %v, forceState: %s, checkVersion: %s, "+
+			"expectedState: %s, ignoreState: %v\n",
+			cloudlet.Key, transition.triggerState,
+			transition.triggerVersion, transition.expectedState,
+			transition.ignoreState)
 		forceCloudletInfoState(ctx, &cloudlet.Key, transition.triggerState, transition.triggerVersion)
 		err = waitForState(&cloudlet.Key, transition.expectedState)
 		if transition.ignoreState {
@@ -303,6 +310,7 @@ func testUpgradeScenario(t *testing.T, ctx context.Context, transitions *[]state
 		}
 	}
 
+	fmt.Printf("[testupgradescenarios] DeleteCloudlet key: %v\n", cloudlet.Key)
 	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 }
@@ -324,7 +332,7 @@ func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
 
 	crm_notifyaddr := "127.0.0.1:0"
 	cloudlet := testutil.CloudletData[2]
-	cloudlet.Version = crm_v1
+	cloudlet.ContainerVersion = crm_v1
 	cloudlet.Key.Name = "testcloudletstates"
 	cloudlet.NotifySrvAddr = crm_notifyaddr
 	pfConfig, err := getPlatformConfig(ctx, &cloudlet)
@@ -360,7 +368,7 @@ func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
 
 		cloudlet.Config = *pfConfig
 		cloudlet.NotifySrvAddr = crm_notifyaddr
-		cloudlet.Version = crm_v2
+		cloudlet.ContainerVersion = crm_v2
 		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
@@ -393,7 +401,7 @@ func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
 
 		cloudlet.Config = *pfConfig
 		cloudlet.NotifySrvAddr = crm_notifyaddr
-		cloudlet.Version = crm_v2
+		cloudlet.ContainerVersion = crm_v2
 		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		// simulate cleanup failure
 		cloudlet.Config.CleanupMode = false
@@ -428,7 +436,7 @@ func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
 		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 0, crm_v1)
 
 		cloudlet.Config = *pfConfig
-		cloudlet.Version = crm_v2
+		cloudlet.ContainerVersion = crm_v2
 		cloudlet.NotifySrvAddr = "abcdef"
 		cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
@@ -454,7 +462,7 @@ func testUpgradeFailure(t *testing.T, ctx context.Context) {
 	var err error
 	cloudlet := testutil.CloudletData[2]
 	cloudlet.Key.Name = "crmfailuretests"
-	cloudlet.Version = crm_v1
+	cloudlet.ContainerVersion = crm_v1
 	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 
@@ -465,8 +473,8 @@ func testUpgradeFailure(t *testing.T, ctx context.Context) {
 	clusterInst.Key.CloudletKey = cloudlet.Key
 	clusterInstApi.cache.Update(ctx, &clusterInst, 0)
 
-	cloudlet.Version = crm_v2
-	cloudlet.Fields = []string{edgeproto.CloudletFieldVersion}
+	cloudlet.ContainerVersion = crm_v2
+	cloudlet.Fields = []string{edgeproto.CloudletFieldContainerVersion}
 	err = cloudletApi.UpgradeCloudlet(ctx, &cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err, "upgrade should fail as clusterinst will begin update")
 
@@ -477,8 +485,8 @@ func testUpgradeFailure(t *testing.T, ctx context.Context) {
 	appInst.Key.ClusterInstKey.CloudletKey = cloudlet.Key
 	appInstApi.cache.Update(ctx, &appInst, 0)
 
-	cloudlet.Version = crm_v2
-	cloudlet.Fields = []string{edgeproto.CloudletFieldVersion}
+	cloudlet.ContainerVersion = crm_v2
+	cloudlet.Fields = []string{edgeproto.CloudletFieldContainerVersion}
 	err = cloudletApi.UpgradeCloudlet(ctx, &cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err, "upgrade should fail as appinst creation is in progress")
 
@@ -527,7 +535,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	var err error
 	cloudlet := testutil.CloudletData[2]
 	cloudlet.Key.Name = "crmmanualbringup"
-	cloudlet.Version = crm_v1
+	cloudlet.ContainerVersion = crm_v1
 	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 
