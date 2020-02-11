@@ -195,15 +195,23 @@ func getClientFromFindCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudlet
 	if ckey.DevName == "" || ckey.AppName == "" || ckey.AppVers == "" {
 		return nil
 	}
+	developer := ckey.DevName
+	appname := ckey.AppName
+	appver := ckey.AppVers
+	if cloudcommon.IsPlatformApp(developer, appname) {
+		developer = mreq.DevName
+		appname = mreq.AppName
+		appver = mreq.AppVers
+	}
 	return &edgeproto.AppInstClient{
 		ClientKey: edgeproto.AppInstClientKey{
 			Key: edgeproto.AppInstKey{
 				AppKey: edgeproto.AppKey{
 					DeveloperKey: edgeproto.DeveloperKey{
-						Name: ckey.DevName,
+						Name: developer,
 					},
-					Name:    ckey.AppName,
-					Version: ckey.AppVers,
+					Name:    appname,
+					Version: appver,
 				},
 			},
 		},
@@ -246,8 +254,8 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 				// GpsLocation timestamp can carry an arbitrary system time instead of a timestamp
 				client.Location.Timestamp = &dme.Timestamp{}
 				ts := time.Now()
-				client.Timestamp.Seconds = ts.Unix()
-				client.Timestamp.Nanos = int32(ts.Nanosecond())
+				client.Location.Timestamp.Seconds = ts.Unix()
+				client.Location.Timestamp.Nanos = int32(ts.Nanosecond())
 				// Update list of clients on the side and if there is a listener, send it
 				go UpdateClientsBuffer(ctx, client)
 			}

@@ -47,10 +47,11 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 			}
 		}
 	}
-	//TODO - there is a race below here - see Jon's comments
-	if services.clientQ.ClearRecvChan(in.Key, recvCh) == 0 {
+	// Clear channel and while holding a lock delete this appInstClientKey
+	if services.clientQ.LockAndClearRecvChan(in.Key, recvCh) == 0 {
 		appInstClientKeyApi.Delete(cb.Context(), in, 0)
 	}
+	services.clientQ.Unlock()
 	return nil
 }
 

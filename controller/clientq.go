@@ -45,10 +45,12 @@ func (q *AppInstClientQ) SetMaxQueueSize(size int) {
 	q.maxClientsInQ = size
 }
 
-// Returns number of channels in the list that are left
-func (q *AppInstClientQ) ClearRecvChan(key edgeproto.AppInstKey, ch chan edgeproto.AppInstClient) int {
+func (q *AppInstClientQ) Unlock() {
+	q.mux.Unlock()
+}
+
+func (q *AppInstClientQ) LockAndClearRecvChan(key edgeproto.AppInstKey, ch chan edgeproto.AppInstClient) int {
 	q.mux.Lock()
-	defer q.mux.Unlock()
 	_, found := q.clientChan[key]
 	if !found {
 		log.DebugLog(log.DebugLevelApi, "No client channels found for appInst", "appInst", key)
@@ -68,6 +70,12 @@ func (q *AppInstClientQ) ClearRecvChan(key edgeproto.AppInstKey, ch chan edgepro
 	// We didn't find a channel....log it and return -1
 	log.DebugLog(log.DebugLevelApi, "Channel not found", "key", key, "chan", ch)
 	return -1
+}
+
+// Returns number of channels in the list that are left
+func (q *AppInstClientQ) ClearRecvChan(key edgeproto.AppInstKey, ch chan edgeproto.AppInstClient) int {
+	defer q.mux.Unlock()
+	return q.LockAndClearRecvChan(key, ch)
 }
 
 func (q *AppInstClientQ) AddClient(client *edgeproto.AppInstClient) {

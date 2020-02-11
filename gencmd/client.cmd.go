@@ -17,7 +17,6 @@ import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
 import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import _ "github.com/gogo/protobuf/gogoproto"
-import _ "github.com/gogo/protobuf/types"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -42,8 +41,8 @@ var AppInstClientApiCmd edgeproto.AppInstClientApiClient
 
 var ShowAppInstClientCmd = &cli.Command{
 	Use:          "ShowAppInstClient",
-	RequiredArgs: strings.Join(ShowAppInstClientRequiredArgs, " "),
-	OptionalArgs: strings.Join(ShowAppInstClientOptionalArgs, " "),
+	RequiredArgs: strings.Join(AppInstClientKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppInstClientKeyOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppInstClientKeyAliasArgs, " "),
 	SpecialArgs:  &AppInstClientKeySpecialArgs,
 	Comments:     AppInstClientKeyComments,
@@ -117,10 +116,10 @@ var AppInstClientKeyRequiredArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
-	"key.clusterinstkey.clusterkey.name",
+	"cluster",
 	"operator",
 	"cloudlet",
-	"key.clusterinstkey.developer",
+	"clusterdeveloper",
 }
 var AppInstClientKeyOptionalArgs = []string{
 	"uuid",
@@ -129,18 +128,20 @@ var AppInstClientKeyAliasArgs = []string{
 	"developer=key.appkey.developerkey.name",
 	"appname=key.appkey.name",
 	"appvers=key.appkey.version",
+	"cluster=key.clusterinstkey.clusterkey.name",
 	"operator=key.clusterinstkey.cloudletkey.operatorkey.name",
 	"cloudlet=key.clusterinstkey.cloudletkey.name",
+	"clusterdeveloper=key.clusterinstkey.developer",
 }
 var AppInstClientKeyComments = map[string]string{
-	"developer":                          "Organization or Company Name that a Developer is part of",
-	"appname":                            "App name",
-	"appvers":                            "App version",
-	"key.clusterinstkey.clusterkey.name": "Cluster name",
-	"operator":                           "Company or Organization name of the operator",
-	"cloudlet":                           "Name of the cloudlet",
-	"key.clusterinstkey.developer":       "Name of Developer that this cluster belongs to",
-	"uuid":                               "App name",
+	"developer":        "Organization or Company Name that a Developer is part of",
+	"appname":          "App name",
+	"appvers":          "App version",
+	"cluster":          "Cluster name",
+	"operator":         "Company or Organization name of the operator",
+	"cloudlet":         "Name of the cloudlet",
+	"clusterdeveloper": "Name of Developer that this cluster belongs to",
+	"uuid":             "AppInstClient UUID",
 }
 var AppInstClientKeySpecialArgs = map[string]string{}
 var AppInstClientRequiredArgs = []string{}
@@ -162,8 +163,6 @@ var AppInstClientOptionalArgs = []string{
 	"location.speed",
 	"location.timestamp.seconds",
 	"location.timestamp.nanos",
-	"timestamp.seconds",
-	"timestamp.nanos",
 	"notifyid",
 }
 var AppInstClientAliasArgs = []string{}
@@ -175,7 +174,7 @@ var AppInstClientComments = map[string]string{
 	"clientkey.key.clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
 	"clientkey.key.clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
 	"clientkey.key.clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
-	"clientkey.uuid":                                            "App name",
+	"clientkey.uuid":                                            "AppInstClient UUID",
 	"location.latitude":                                         "latitude in WGS 84 coordinates",
 	"location.longitude":                                        "longitude in WGS 84 coordinates",
 	"location.horizontalaccuracy":                               "horizontal accuracy (radius in meters)",
@@ -183,20 +182,6 @@ var AppInstClientComments = map[string]string{
 	"location.altitude":                                         "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"location.course":                                           "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"location.speed":                                            "speed (IOS) / velocity (Android) (meters/sec)",
-	"timestamp.seconds":                                         "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
-	"timestamp.nanos":                                           "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"notifyid":                                                  "Id of client assigned by server (internal use only)",
 }
 var AppInstClientSpecialArgs = map[string]string{}
-var ShowAppInstClientRequiredArgs = []string{
-	"developer",
-	"appname",
-	"appvers",
-	"operator",
-	"cloudlet",
-}
-var ShowAppInstClientOptionalArgs = []string{
-	"key.clusterinstkey.clusterkey.name",
-	"key.clusterinstkey.developer",
-	"uuid",
-}
