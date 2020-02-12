@@ -694,7 +694,7 @@ var AppInstComments = map[string]string{
 	"configs.kind":                   "kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config",
 	"configs.config":                 "config file contents or URI reference",
 	"sharedvolumesize":               "shared volume size when creating auto cluster",
-	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckOk, HealthCheckFailRootlbOffline, HealthCheckFailServerFail",
+	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"privacypolicy":                  "Optional privacy policy name",
 }
 var AppInstSpecialArgs = map[string]string{
