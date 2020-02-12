@@ -456,37 +456,35 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	// as it may have already changed to target state
 	checkState(key)
 
-	for {
-		select {
-		case <-done:
-			err = nil
-			if successMsg != "" {
-				updateCallback(edgeproto.UpdateTask, successMsg)
-			}
-		case <-failed:
-			if cloudletInfoApi.cache.Get(key, &info) {
-				errs := strings.Join(info.Errors, ", ")
-				err = fmt.Errorf("Encountered failures: %s", errs)
-			} else {
-				err = fmt.Errorf("Unknown failure")
-			}
-		case <-fatal:
-			out := ""
-			out, err = cloudcommon.GetCloudletLog(ctx, key)
-			if err != nil || out == "" {
-				out = fmt.Sprintf("Please look at %s for more details", cloudcommon.GetCloudletLogFile(key.Name))
-			} else {
-				out = fmt.Sprintf("Failure: %s", out)
-			}
-			updateCallback(edgeproto.UpdateTask, out)
-			err = errors.New(out)
-		case <-time.After(timeout):
-			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
-			updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
+	select {
+	case <-done:
+		err = nil
+		if successMsg != "" {
+			updateCallback(edgeproto.UpdateTask, successMsg)
 		}
-		cancel()
-		break
+	case <-failed:
+		if cloudletInfoApi.cache.Get(key, &info) {
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
+		} else {
+			err = fmt.Errorf("Unknown failure")
+		}
+	case <-fatal:
+		out := ""
+		out, err = cloudcommon.GetCloudletLog(ctx, key)
+		if err != nil || out == "" {
+			out = fmt.Sprintf("Please look at %s for more details", cloudcommon.GetCloudletLogFile(key.Name))
+		} else {
+			out = fmt.Sprintf("Failure: %s", out)
+		}
+		updateCallback(edgeproto.UpdateTask, out)
+		err = errors.New(out)
+	case <-time.After(timeout):
+		err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
+		updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
 	}
+
+	cancel()
 	// note: do not close done/failed, garbage collector will deal with it.
 
 	cloudlet := edgeproto.Cloudlet{}
