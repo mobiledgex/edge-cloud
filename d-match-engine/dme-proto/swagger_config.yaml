@@ -9,12 +9,18 @@ info:
     version: "1.0"
     title: MobiledgeX Client API
     description: |
+
       # Introduction
-      The MobiledgeX APIs provide you with a set of operations and resources to:
-         * Identify your application's backend software
-         * Locate where our backend is running
-         * Verify that the GPS coordinates accurately report the actual location of the device
-         * Find the closest cloudlet, and more.
+
+      MobiledgeX provides a set of SDKs and Libraries containing a collection of operations and resources that assist in creating applications for the many services offered by MobiledgeX.
+      Once an application is built and registered, our services locate the nearest cloudlet server, connecting you to one of our edge server instances.
+      Our services will also verify a device's location, ensuring the optimum compute instance is used, and much more, once you are on the edge.
+
+      MobiledgeX’s MatchingEngine SDKs and Libraries are available in different languages and platforms, which include Android, Unity, and iOS, allowing for easy application development.
+      The Performance Metrics API can be used to help track the average latency characteristics of the edge network. To take advantage of this API, you must add your application server’s AppInst to a list of sites in order to periodically ping them.
+
+      Within the left navigational pane, scroll to the desired SDK, based on your preferred language or platform, to view the accompanying APIs.
+      To reference these APIs, including their resources and schema, click Edge REST APIs.
 
       # Edge SDK - Android
 
@@ -24,7 +30,7 @@ info:
       Example Code:
       ```java
       import com.mobiledgex.matchingengine.MatchingEngine;
-      
+
       MatchingEngine me = new MatchingEngine(this);
       AppClient.Tag tag = AppClient.Tag.newBuilder()
           .setType(key)
@@ -35,10 +41,10 @@ info:
           .build();
       AppClient.RegisterClientReply registerClientReply = me.registerClient(registerClientRequest, 10000);
       ```
-      
+
       Example Response:
       ```java
-      distributed_match_engine.AppClient$RegisterClientReply@e3d72edd 
+      distributed_match_engine.AppClient$RegisterClientReply@e3d72edd
 
       session_cookie: "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1ODA0OTgwMTksImlhdCI6MTU4MDQxMTYxOSwia2V5Ijp7InBlZXJpcCI6IjEwLjI0MC4wLjgiLCJkZXZuYW1lIjoiTW9iaWxlZGdlWCIsImFwcG5hbWUiOiJNb2JpbGVkZ2VYIFNESyBEZW1vIiwiYXBwdmVycyI6IjEuMCIsInVuaXF1ZWlkdHlwZSI6ImRtZS1rc3VpZCIsInVuaXF1ZWlkIjoiMVg3eXFjdEZJNFA4R2lYNkhNYjFVQTRiUU1LIiwia2lkIjo0fX0.9kM38-mqfcRZhT59YRb3f3ZE1OuwchQgcBEHlRufg07gwgt55CkrMNubUeZvPmyGbwKHUYKr4z3cG8i4PfR1sA"
       status: RS_SUCCESS
@@ -52,14 +58,14 @@ info:
       Example Code:
       ```java
       import com.mobiledgex.matchingengine.MatchingEngine;
-      
-      MatchingEngine me = new MatchingEngine(this); 
+
+      MatchingEngine me = new MatchingEngine(this);
       AppClient.FindCloudletRequest findCloudletRequest = me.createDefaultFindCloudletRequest(activityContext, location)
           .setCarrierName(carrierName)
           .build();
       AppClient.FindCloudletReply findCloudletReply = me.findCloudlet(findCloudletRequest, 10000);
       ```
-      
+
       Example Response:
       ```java
       distributed_match_engine.AppClient$FindCloudletReply@2119fe09
@@ -81,7 +87,7 @@ info:
       }
       status: FIND_FOUND
       status_value: 1
-      ``` 
+      ```
 
       ## VerifyLocation
       Verifies that the GPS coordinates accurately report actual location of device
@@ -89,7 +95,7 @@ info:
       Example Code:
       ```java
       import com.mobiledgex.matchingengine.MatchingEngine;
-      
+
       MatchingEngine me = new MatchingEngine(this);
       AppClient.VerifyLocationRequest verifyRequest = me.createVerifyLocationRequest(activityContext, carrierName, location, cellID, tags);
       AppClient.VerifyLocationReply verifiedLocation = me.verifyLocation(verifyRequest, 10000);
@@ -97,7 +103,7 @@ info:
       Example Response
       ```java
       distributed_match_engine.AppClient$VerifyLocationReply@107c45be
-      
+
       gps_location_accuracy_km: -1.0
       gps_location_status: LOC_MISMATCH_SAME_COUNTRY
       gps_location_status_value: 2
@@ -110,12 +116,12 @@ info:
 
       Parameters:
          * `findCloudletReply` AppClient.FindCloudletReply:  Object returned from findCloudlet API
-         * `appPort` AppPort: AppPort object from Ports field in FindCloudletReply 
+         * `appPort` AppPort: AppPort object from Ports field in FindCloudletReply
          * `portNum` int: Used if developer specified a port range and wants a specific port (use -1 if it it doesn’t matter)
          * `timeoutMs` int: Milliseconds
 
       Return:
-      All return a Future object to facilitate asynchronous code 
+      All return a Future object to facilitate asynchronous code
          * `getTcpSocket` Future<Socket> (import java.net.Socket)
          * `getTcpSslSocket` Future<SSLSocket> (import javax.net.ssl.SSLSocket)
          * `getUdpSocket` Future<DatagramSocket> (import java.net.DatagramSocket)
@@ -150,8 +156,7 @@ info:
 
       ## PerformanceMetrics
 
-      com.mobiledgex.matchingengine.performancemetrics.NetTest
-      com.mobiledgex.matchingengine.performancemetrics.Site
+      Performance Metrics API is to track the average latency of the edge network for your application server’s AppInst. You must add the AppInst to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
 
       ### NetTest
 
@@ -214,25 +219,25 @@ info:
       Example Code:
       ```csharp
       using DistributedMatchEngine;
-      
+
       MatchingEngine me = new MatchingEngine();
       RegisterClientRequest registerClientRequest = me.CreateRegisterClientRequest(carrierName, devName, appName, appVers, authToken);
       RegisterClientReply registerClientReply = await me.RegisterClient(registerClientRequest);
       ```
-      
+
       Example Response:
       ```csharp
-      RegisterClientReply: 
+      RegisterClientReply:
 
       session_cookie: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1ODA1MTA3MTksImlhdCI6MTU4MDQyNDMxOSwia2V5Ijp7InBlZXJpcCI6IjEyN
       y4wLjAuMSIsImRldm5hbWUiOiJNb2JpbGVkZ2VYIiwiYXBwbmFtZSI6Ik1vYmlsZWRnZVggU0RLIERlbW8iLCJhcHB2ZXJzIjoiMS4wIiwidW5pcXVlaWR0eXBlIjo
       iZG1lLWtzdWlkIiwidW5pcXVlaWQiOiIxWDhPYWlSODVSejN3Z0F4V3BEVkpnYk9RSzciLCJraWQiOjJ9fQ.puGP07UCal3FbpWjj9mlrJe5F0Tjv9QvYMwXhmGq7y
-      cPcxNJ8vjnDNJa67dmRgNIsGXIAd0KXolj-3n_xNIL9A, 
-      status: RS_SUCCESS, 
-      tags: DistributedMatchEngine.Tag[], 
-      token_server_uri: http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc, 
-      unique_id: , 
-      unique_id_type: , 
+      cPcxNJ8vjnDNJa67dmRgNIsGXIAd0KXolj-3n_xNIL9A,
+      status: RS_SUCCESS,
+      tags: DistributedMatchEngine.Tag[],
+      token_server_uri: http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc,
+      unique_id: ,
+      unique_id_type: ,
       ver: 0
       ```
 
@@ -242,23 +247,23 @@ info:
       Example Code:
       ```csharp
       using DistributedMatchEngine;
-      
+
       MatchingEngine me = new MatchingEngine();
       FindCloudletRequest findCloudletRequest = CreateFindCloudletRequest(carrierName, developerName, appName, appVersion, loc);
       FindCloudletReply findCloudletReply = await FindCloudlet(findCloudletRequest);
       ```
       Example Response:
       ```csharp
-      FindCloudletReply: 
+      FindCloudletReply:
 
-      cloudlet_location: DistributedMatchEngine.Loc, 
-      fqdn: fairview-main.gddt.mobiledgex.net, 
-      ports: DistributedMatchEngine.AppPort[], 
-      status: FIND_FOUND, 
-      tags: DistributedMatchEngine.Tag[], 
-      ver: 0 
+      cloudlet_location: DistributedMatchEngine.Loc,
+      fqdn: fairview-main.gddt.mobiledgex.net,
+      ports: DistributedMatchEngine.AppPort[],
+      status: FIND_FOUND,
+      tags: DistributedMatchEngine.Tag[],
+      ver: 0
       ```
- 
+
       ## VerifyLocation
       Verifies that the GPS coordinates accurately report actual location of device
 
@@ -272,12 +277,12 @@ info:
       ```
       Example Response:
       ```csharp
-      VerifyLocationReply: 
-      
-      gps_location_accuracy_km: -1, 
-      gps_location_status: LOC_UNKNOWN, 
-      tags: DistributedMatchEngine.Tag[], 
-      tower_status: TOWER_UNKNOWN, 
+      VerifyLocationReply:
+
+      gps_location_accuracy_km: -1,
+      gps_location_status: LOC_UNKNOWN,
+      tags: DistributedMatchEngine.Tag[],
+      tower_status: TOWER_UNKNOWN,
       ver: 0
       ```
 
@@ -288,7 +293,7 @@ info:
 
       Parameters:
          * `reply` DistributedMatchEngine.FindCloudletReply: Object returned from findCloudlet API
-         * `appPort` DistributedMatchEngine.AppPort: AppPort object from Ports field in FindCloudletReply 
+         * `appPort` DistributedMatchEngine.AppPort: AppPort object from Ports field in FindCloudletReply
          * `desiredPort` int: Used if developer specified a port range and wants a specific port (use -1 if it it doesn’t matter)
          * `timeoutMs` int: Milliseconds. Throws a GetConnectionException if GetConnection takes longer than specified timeout
 
@@ -304,7 +309,7 @@ info:
       ```csharp
       try {
           reply = await me.RegisterAndFindCloudlet(carrierName, devName, appName, appVers, developerAuthToken, loc, cellID, uniqueIDType, uniqueID, tags);
-      } 
+      }
       catch (DmeDnsException dde) {
               /* handle exception */
       }
@@ -398,8 +403,8 @@ info:
 
       Example Code:
       ```swift
-      import MobiledgeXiOSLibrary 
-      
+      import MobiledgeXiOSLibrary
+
       let matchingEngine = MatchingEngine()
       let registerClientRequest = matchingEngine.createRegisterClientRequest(devName: devName, appName: appName, appVers: appVers, carrierName: carrierName, authToken: authToken)
       let registerClientReplyPromise = matchingEngine.registerClient(request: registerClientRequest)
@@ -410,15 +415,15 @@ info:
 
       Example Response:
       ```swift
-      ["unique_id": , 
-      "status": RS_SUCCESS, 
+      ["unique_id": ,
+      "status": RS_SUCCESS,
       "session_cookie": eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1ODA1MDAxMzIsImlhdCI6MTU4MDQxMzczMiwia2V5Ijp7InBlZXJpcCI6IjE
       yNy4wLjAuMSIsImRldm5hbWUiOiJNb2JpbGVkZ2VYIiwiYXBwbmFtZSI6Ik1vYmlsZWRnZVggU0RLIERlbW8iLCJhcHB2ZXJzIjoiMS4wIiwidW5pcXVlaWR0eXBlI
       joiZG1lLWtzdWlkIiwidW5pcXVlaWQiOiIxWDgzOEVNbWJsNjYzSlNnT0dSVHFPYko1M3AiLCJraWQiOjR9fQ.kcrmNOYRLV_irLpYpdN6-oCgj4EakuTgMbIInNs1
-      JvCPm5vCjshO3CCbY_pCbcovUL-EemXZcWXqxYmz_SqIow, 
-      "tags": <__NSArray0 0x7fff80615170>(), 
-      "unique_id_type": , 
-      "ver": 0, 
+      JvCPm5vCjshO3CCbY_pCbcovUL-EemXZcWXqxYmz_SqIow,
+      "tags": <__NSArray0 0x7fff80615170>(),
+      "unique_id_type": ,
+      "ver": 0,
       "token_server_uri": http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc]
       ```
 
@@ -427,8 +432,8 @@ info:
 
       Example Code:
       ```swift
-      import MobiledgeXiOSLibrary 
-      
+      import MobiledgeXiOSLibrary
+
       let matchingEngine = MatchingEngine()
       let findCloudletRequest = matchingEngine.createFindCloudletRequest(carrierName: carrierName, gpsLocation: loc, devName: devName, appName: appName, appVers: appVers)
       let findCloudletReplyPromise = matchingEngine.findCloudlet(request: findCloudletRequest)
@@ -439,7 +444,7 @@ info:
 
       Example Response:
       ```swift
-      ["tags": <__NSArray0 0x7fff80615170>(), 
+      ["tags": <__NSArray0 0x7fff80615170>(),
       "cloudlet_location": {
          altitude = 0;
          course = 0;
@@ -452,9 +457,9 @@ info:
            seconds = 0;
          };
          "vertical_accuracy" = 0;
-      }, 
-      "ver": 0, 
-      "fqdn": mobiledgexmobiledgexsdkdemo10.mexdemo-app-cluster.centralus-main.azure.mobiledgex.net, 
+      },
+      "ver": 0,
+      "fqdn": mobiledgexmobiledgexsdkdemo10.mexdemo-app-cluster.centralus-main.azure.mobiledgex.net,
       "ports": <__NSSingleObjectArrayI 0x600003d394f0>(
       {
         "end_port" = 0;
@@ -463,10 +468,10 @@ info:
         "path_prefix" = "";
         proto = "L_PROTO_TCP";
         "public_port" = 7777;
-      }), 
+      }),
       "status": FIND_FOUND]
       ```
- 
+
       ## VerifyLocation
       Verifies that the GPS coordinates accurately report actual location of device
 
@@ -479,18 +484,18 @@ info:
       let verifyLocationReplyPromise = matchingEngine.verifyLocation(request: verifyLocationRequest)
       .then { verifyLocationReply in
           /* handle verifyLocationReply */
-      }      
+      }
       ```
 
       Example Response:
       ```swift
-      ["gps_location_accuracy_km": -1, 
-      "gps_location_status": LOC_MISMATCH_SAME_COUNTRY, 
-      "tags": <__NSArray0 0x1f909f888>(), 
-      "ver": 0, 
+      ["gps_location_accuracy_km": -1,
+      "gps_location_status": LOC_MISMATCH_SAME_COUNTRY,
+      "tags": <__NSArray0 0x1f909f888>(),
+      "ver": 0,
       "tower_status": TOWER_UNKNOWN]
       ```
- 
+
       ## GetConnection
       Function that gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
@@ -498,14 +503,14 @@ info:
 
       Parameters:
          * `findCloudletReply` [String: AnyObject]: Object returned from findCloudlet API
-         * `appPort` [String: Any]: AppPort object from Ports field in FindCloudletReply 
+         * `appPort` [String: Any]: AppPort object from Ports field in FindCloudletReply
             * The developer chooses this by using get[Protocol]AppPorts which returns a dictionary (key: internal_port, value: appPort)
             * Using the known internal_port (specified on app deployment), get correct AppPort
          *  `desiredPort` int: Used if developer specified a port range and wants a specific port (use -1 if it it doesn’t matter)
          *  `timeout` Double: Milliseconds. Promise will return with timeout error if GetConnection takes longer than specified timeout
 
       Return:
-      All return a Google Promises object (PromisesSwift pod) to facilitate asynchronous code 
+      All return a Google Promises object (PromisesSwift pod) to facilitate asynchronous code
          *  `getTCPConnection` Promise<CFSocket>
          *  `getUDPConnection` Promise<CFSocket>
          *  `getTCPTLSConnection` Promise<NWConnection> (import Network)
