@@ -384,7 +384,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	fatal := make(chan bool, 1)
-	upgrade := make(chan bool, 1)
 
 	var err error
 
@@ -403,8 +402,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		lastStatusId = info.Status.TaskNumber
 	}
 
-	crmCheckpointReached := false
-	upgradeDone := false
 	checkState := func(key *edgeproto.CloudletKey) {
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.cache.Get(key, &cloudlet) {
@@ -419,38 +416,15 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		localVersion := cloudlet.ContainerVersion
 		remoteVersion := cloudletInfo.ContainerVersion
 
-		if !crmCheckpointReached {
-			if !isVersionConflict(ctx, localVersion, remoteVersion) {
-				if curState == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
-					crmCheckpointReached = true
-				}
-			}
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
-				crmCheckpointReached = true
-			}
-		}
-
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
 			return
 		}
 
-		// Wait for CRM to reach a checkpoint state from which controller
-		// will start tracking its progress.
-		if !crmCheckpointReached {
-			return
-		}
-
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY &&
+				(cloudlet.State != edgeproto.TrackedState_UPDATE_REQUESTED && cloudlet.State != edgeproto.TrackedState_CREATING) {
 				done <- true
-			}
-		} else {
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
-				if !upgradeDone {
-					upgradeDone = true
-					upgrade <- true
-				}
 			}
 		}
 	}
@@ -488,12 +462,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			err = nil
 			if successMsg != "" {
 				updateCallback(edgeproto.UpdateTask, successMsg)
-			}
-		case <-upgrade:
-			err = s.UpdateCloudletState(ctx, key, edgeproto.TrackedState_UPDATING)
-			if err == nil {
-				// Cloudlet started upgrading, now wait for it to be Ready
-				continue
 			}
 		case <-failed:
 			if cloudletInfoApi.cache.Get(key, &info) {
