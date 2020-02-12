@@ -1,15 +1,18 @@
 package cli
 
 import (
+	"bytes"
 	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
 	"strings"
 
+	"github.com/gorilla/websocket"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	mextls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -86,6 +89,43 @@ func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, errchan chan 
 	return nil
 }
 
+type WSStreamPayload struct {
+	Code int         `json:"code"`
+	Data interface{} `json:"data"`
+}
+
+func WebrtcShellWs(dataChan *webrtc.DataChannel, errchan chan error, ws *websocket.Conn) error {
+	wr := webrtcutil.NewDataChanWriter(dataChan)
+	dataChan.OnOpen(func() {
+		go func() {
+			for {
+				_, msg, err := ws.ReadMessage()
+				if err != nil {
+					errchan <- fmt.Errorf("failed to read from websocket, %v", err)
+				}
+				go func() {
+					io.Copy(wr, bytes.NewReader(msg))
+				}()
+			}
+		}()
+	})
+	dataChan.OnMessage(func(msg webrtc.DataChannelMessage) {
+		wsPayload := WSStreamPayload{
+			Code: http.StatusOK,
+			Data: msg.Data,
+		}
+		err := ws.WriteJSON(wsPayload)
+		//err := ws.WriteMessage(websocket.TextMessage, msg.Data)
+		if err != nil {
+			errchan <- fmt.Errorf("failed to write to websocket, %v", err)
+		}
+	})
+	dataChan.OnClose(func() {
+		errchan <- nil
+	})
+	return nil
+}
+
 func WebrtcShell(dataChan *webrtc.DataChannel, errchan chan error) error {
 	interactive := false
 	if terminal.IsTerminal(int(os.Stdin.Fd())) {
@@ -133,7 +173,7 @@ func WebrtcShell(dataChan *webrtc.DataChannel, errchan chan error) error {
 	return nil
 }
 
-func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error)) error {
+func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error), ws *websocket.Conn) error {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 
@@ -216,11 +256,17 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 			<-openurl
 			proxyUrl := strings.Replace(reply.Console.Url, urlObj.Host, connAddr, 1)
 			proxyUrl = strings.Replace(proxyUrl, "http:", "https:", 1)
+			dispUrl := strings.Replace(proxyUrl, "127.0.0.1", "<your-host-ip>", 1)
+			fmt.Print(fmt.Sprintf("Console URL: %s\n", dispUrl))
 			util.OpenUrl(proxyUrl)
 			fmt.Println("Press Ctrl-C to exit")
 		}()
 	} else {
-		err = WebrtcShell(dataChan, errchan)
+		if ws != nil {
+			err = WebrtcShellWs(dataChan, errchan, ws)
+		} else {
+			err = WebrtcShell(dataChan, errchan)
+		}
 		if err != nil {
 			return err
 		}

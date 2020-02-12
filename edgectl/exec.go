@@ -64,5 +64,5 @@ func runExecRequest(c *cli.Command, args []string, apiFunc execFunc) error {
 		}
 		return reply, &answer, nil
 	}
-	return webrtcshell.RunWebrtc(req, exchangeFunc)
+	return webrtcshell.RunWebrtc(req, exchangeFunc, nil)
 }
