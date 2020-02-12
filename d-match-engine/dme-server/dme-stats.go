@@ -198,7 +198,8 @@ func getClientFromFindCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudlet
 	developer := ckey.DevName
 	appname := ckey.AppName
 	appver := ckey.AppVers
-	if cloudcommon.IsPlatformApp(developer, appname) {
+	if cloudcommon.IsPlatformApp(developer, appname) &&
+		mreq.DevName != "" && mreq.AppName != "" && mreq.AppVers != "" {
 		developer = mreq.DevName
 		appname = mreq.AppName
 		appver = mreq.AppVers
