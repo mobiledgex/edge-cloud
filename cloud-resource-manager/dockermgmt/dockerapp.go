@@ -324,12 +324,27 @@ func appendContainerIdsFromDockerComposeImages(client pc.PlatformClient, dockerC
 	return nil
 }
 
-func GetAppInstRuntime(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
+func GetAppInstRuntime(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
 	rt := &edgeproto.AppInstRuntime{}
 	rt.ContainerIds = make([]string, 0)
+
+	// try to get the container names from the runtime environment
+	cmd := `docker ps --format "{{.Names}}"`
+	out, err := client.Output(cmd)
+	if err == nil {
+		for _, name := range strings.Split(out, "\n") {
+			name = strings.TrimSpace(name)
+			rt.ContainerIds = append(rt.ContainerIds, name)
+		}
+		return rt, nil
+	} else {
+		log.SpanLog(ctx, log.DebugLevelInfo, "GetAppInstRuntime cmd failed", "cmd", cmd, "err", err)
+	}
+
+	// get the expected names if couldn't get it from the runtime
 	if app.DeploymentManifest == "" {
 		//  just one container identified by the appinst uri
-		name := util.DockerSanitize(app.Key.Name)
+		name := GetContainerName(&app.Key)
 		rt.ContainerIds = append(rt.ContainerIds, name)
 	} else {
 		if strings.HasSuffix(app.DeploymentManifest, ".zip") {
