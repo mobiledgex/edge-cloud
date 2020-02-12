@@ -110,6 +110,16 @@ func TestAppInstApi(t *testing.T) {
 	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "delete overrides create error")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
+	// check override of error UPDATE_ERROR
+	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err, "create appinst")
+	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_UPDATE_ERROR)
+	require.Nil(t, err, "force state")
+	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_UPDATE_ERROR)
+	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err, "delete overrides create error")
+	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
 
 	// override CRM error
 	responder.SetSimulateAppCreateFailure(true)
