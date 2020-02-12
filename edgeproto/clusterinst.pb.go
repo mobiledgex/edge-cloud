@@ -169,13 +169,15 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for ClusterInstApi service
 
 type ClusterInstApiClient interface {
-	// Create Cluster Instance. Creates an instance of a Cluster on a Cloudlet, defined by a Cluster Key and a Cloudlet Key.
+	// Create Cluster Instance. Creates an instance of a Cluster on a Cloudlet,
+	// defined by a Cluster Key and a Cloudlet Key. ClusterInst is a collection of
+	// compute resources on a Cloudlet on which AppInsts are deployed.
 	CreateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_CreateClusterInstClient, error)
-	// Delete Cluster Instance. Deletes an instance of Cluster deployed on a Cloudlet
+	// Delete Cluster Instance. Deletes an instance of a Cluster deployed on a Cloudlet.
 	DeleteClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_DeleteClusterInstClient, error)
-	// Update Cluster Instance. Updates an instance of Cluster deployed on a Cloudlet
+	// Update Cluster Instance. Updates an instance of a Cluster deployed on a Cloudlet.
 	UpdateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_UpdateClusterInstClient, error)
-	// Show Cluster Instances. Lists all the cluster instances managed by edge controller
+	// Show Cluster Instances. Lists all the cluster instances managed by Edge Controller.
 	ShowClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_ShowClusterInstClient, error)
 }
 
@@ -318,13 +320,15 @@ func (x *clusterInstApiShowClusterInstClient) Recv() (*ClusterInst, error) {
 // Server API for ClusterInstApi service
 
 type ClusterInstApiServer interface {
-	// Create Cluster Instance. Creates an instance of a Cluster on a Cloudlet, defined by a Cluster Key and a Cloudlet Key.
+	// Create Cluster Instance. Creates an instance of a Cluster on a Cloudlet,
+	// defined by a Cluster Key and a Cloudlet Key. ClusterInst is a collection of
+	// compute resources on a Cloudlet on which AppInsts are deployed.
 	CreateClusterInst(*ClusterInst, ClusterInstApi_CreateClusterInstServer) error
-	// Delete Cluster Instance. Deletes an instance of Cluster deployed on a Cloudlet
+	// Delete Cluster Instance. Deletes an instance of a Cluster deployed on a Cloudlet.
 	DeleteClusterInst(*ClusterInst, ClusterInstApi_DeleteClusterInstServer) error
-	// Update Cluster Instance. Updates an instance of Cluster deployed on a Cloudlet
+	// Update Cluster Instance. Updates an instance of a Cluster deployed on a Cloudlet.
 	UpdateClusterInst(*ClusterInst, ClusterInstApi_UpdateClusterInstServer) error
-	// Show Cluster Instances. Lists all the cluster instances managed by edge controller
+	// Show Cluster Instances. Lists all the cluster instances managed by Edge Controller.
 	ShowClusterInst(*ClusterInst, ClusterInstApi_ShowClusterInstServer) error
 }
 

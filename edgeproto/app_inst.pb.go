@@ -227,15 +227,18 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for AppInstApi service
 
 type AppInstApiClient interface {
-	// Create Application Instance. Creates an instance of an App on a Cloudlet where it is defined by an App plus a ClusterInst key. Many of the fields here are inherited from the App definition
+	// Create Application Instance. Creates an instance of an App on a Cloudlet where it is
+	// defined by an App plus a ClusterInst key. Many of the fields here are inherited from
+	// the App definition.
 	CreateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_CreateAppInstClient, error)
-	// Delete Application Instance. Deletes an instance of the App from the Cloudlet
+	// Delete Application Instance. Deletes an instance of the App from the Cloudlet.
 	DeleteAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_DeleteAppInstClient, error)
-	// Refresh Application Instance. Refresh restarts an application instance with new App settings or image
+	// Refresh Application Instance. Restarts an App instance with new App settings or image.
 	RefreshAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_RefreshAppInstClient, error)
-	// Update Application Instance. Updates an application instance and then refreshes it
+	// Update Application Instance. Updates an Application instance and then refreshes it.
 	UpdateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_UpdateAppInstClient, error)
-	// Show Application Instances. Lists all the application instances managed by edge controller. Any fields specified will be used to filter results
+	// Show Application Instances. Lists all the Application instances managed by the Edge Controller.
+	// Any fields specified will be used to filter results.
 	ShowAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_ShowAppInstClient, error)
 }
 
@@ -410,15 +413,18 @@ func (x *appInstApiShowAppInstClient) Recv() (*AppInst, error) {
 // Server API for AppInstApi service
 
 type AppInstApiServer interface {
-	// Create Application Instance. Creates an instance of an App on a Cloudlet where it is defined by an App plus a ClusterInst key. Many of the fields here are inherited from the App definition
+	// Create Application Instance. Creates an instance of an App on a Cloudlet where it is
+	// defined by an App plus a ClusterInst key. Many of the fields here are inherited from
+	// the App definition.
 	CreateAppInst(*AppInst, AppInstApi_CreateAppInstServer) error
-	// Delete Application Instance. Deletes an instance of the App from the Cloudlet
+	// Delete Application Instance. Deletes an instance of the App from the Cloudlet.
 	DeleteAppInst(*AppInst, AppInstApi_DeleteAppInstServer) error
-	// Refresh Application Instance. Refresh restarts an application instance with new App settings or image
+	// Refresh Application Instance. Restarts an App instance with new App settings or image.
 	RefreshAppInst(*AppInst, AppInstApi_RefreshAppInstServer) error
-	// Update Application Instance. Updates an application instance and then refreshes it
+	// Update Application Instance. Updates an Application instance and then refreshes it.
 	UpdateAppInst(*AppInst, AppInstApi_UpdateAppInstServer) error
-	// Show Application Instances. Lists all the application instances managed by edge controller. Any fields specified will be used to filter results
+	// Show Application Instances. Lists all the Application instances managed by the Edge Controller.
+	// Any fields specified will be used to filter results.
 	ShowAppInst(*AppInst, AppInstApi_ShowAppInstServer) error
 }
 
