@@ -46,6 +46,7 @@ type DmeApp struct {
 	AndroidPackageName string
 	OfficialFqdn       string
 	AutoProvPolicy     *AutoProvPolicy
+	Deployment         string
 }
 
 type DmeCloudlet struct {
@@ -132,6 +133,7 @@ func AddApp(in *edgeproto.App) {
 	app.AuthPublicKey = in.AuthPublicKey
 	app.AndroidPackageName = in.AndroidPackageName
 	app.OfficialFqdn = in.OfficialFqdn
+	app.Deployment = in.Deployment
 	clearAutoProvStats := false
 	if app.AutoProvPolicy != nil && in.AutoProvPolicy == "" {
 		clearAutoProvStats = true
@@ -522,7 +524,7 @@ func findClosestForCarrier(ctx context.Context, carrierName string, key edgeprot
 				// make sure there's a free reservable ClusterInst
 				// on the cloudlet. if cinsts exists there is at
 				// least one free.
-				cinstKey := tbl.FreeReservableClusterInsts.GetForCloudlet(&cl.Key)
+				cinstKey := tbl.FreeReservableClusterInsts.GetForCloudlet(&cl.Key, app.Deployment)
 				if cinstKey == nil {
 					continue
 				}

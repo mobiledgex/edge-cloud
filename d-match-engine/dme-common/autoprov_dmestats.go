@@ -106,7 +106,7 @@ func (s *AutoProvStats) Increment(ctx context.Context, appKey *edgeproto.AppKey,
 	}
 	stats.count++
 	log.SpanLog(ctx, log.DebugLevelMetrics, "autoprovstats increment", "key", key, "idx", idx, "deployClientCount", deployClientCount, "intervalCount", intervalCount, "stats count", stats.count, "stats last count", stats.lastCount)
-	if uint32(stats.count-stats.lastCount) == deployClientCount && intervalCount <= 1 {
+	if uint32(stats.count-stats.lastCount) >= deployClientCount && intervalCount <= 1 {
 		// special case, duration is the same as the interval,
 		// and deploy count met, so stats upstream to handle
 		// this immediately.
