@@ -546,16 +546,16 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for CloudletApi service
 
 type CloudletApiClient interface {
-	// Create Cloudlet. Sets up cloudlet services on Operator's compute
-	// resources and makes it part of MobiledgeX edge resource portfolio.
-	// These resources will now be managed from edge controller
+	// Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
+	// and integrated as part of MobiledgeX edge resource portfolio.
+	// These resources are managed from the Edge Controller.
 	CreateCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_CreateCloudletClient, error)
-	// Delete Cloudlet. Removes cloudlet services and will no longer be
-	// managed from edge controller
+	// Delete Cloudlet. Removes the Cloudlet services where they are no longer managed
+	// from the Edge Controller.
 	DeleteCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_DeleteCloudletClient, error)
-	// Update Cloudlet. Updates cloudlet config and also manages upgrade of cloudlet services
+	// Update Cloudlet. Updates the Cloudlet configuration and manages the upgrade of Cloudlet services.
 	UpdateCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_UpdateCloudletClient, error)
-	// Show Cloudlets. Lists all the cloudlets managed from edge controller
+	// Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
 	ShowCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_ShowCloudletClient, error)
 	// Add Optional Resource tag table
 	AddCloudletResMapping(ctx context.Context, in *CloudletResMap, opts ...grpc.CallOption) (*Result, error)
@@ -731,16 +731,16 @@ func (c *cloudletApiClient) FindFlavorMatch(ctx context.Context, in *FlavorMatch
 // Server API for CloudletApi service
 
 type CloudletApiServer interface {
-	// Create Cloudlet. Sets up cloudlet services on Operator's compute
-	// resources and makes it part of MobiledgeX edge resource portfolio.
-	// These resources will now be managed from edge controller
+	// Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
+	// and integrated as part of MobiledgeX edge resource portfolio.
+	// These resources are managed from the Edge Controller.
 	CreateCloudlet(*Cloudlet, CloudletApi_CreateCloudletServer) error
-	// Delete Cloudlet. Removes cloudlet services and will no longer be
-	// managed from edge controller
+	// Delete Cloudlet. Removes the Cloudlet services where they are no longer managed
+	// from the Edge Controller.
 	DeleteCloudlet(*Cloudlet, CloudletApi_DeleteCloudletServer) error
-	// Update Cloudlet. Updates cloudlet config and also manages upgrade of cloudlet services
+	// Update Cloudlet. Updates the Cloudlet configuration and manages the upgrade of Cloudlet services.
 	UpdateCloudlet(*Cloudlet, CloudletApi_UpdateCloudletServer) error
-	// Show Cloudlets. Lists all the cloudlets managed from edge controller
+	// Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
 	ShowCloudlet(*Cloudlet, CloudletApi_ShowCloudletServer) error
 	// Add Optional Resource tag table
 	AddCloudletResMapping(context.Context, *CloudletResMap) (*Result, error)
