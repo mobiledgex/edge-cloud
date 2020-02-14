@@ -1,0 +1,54 @@
+// AppInstClient proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
+import "appinst.proto";
+import "gogoproto/gogo.proto";
+
+// AppKey uniquely identifies an App
+message AppInstClientKey {
+  // AppInst Key
+  AppInstKey key = 1 [(gogoproto.nullable) = false];
+  // AppInstClient UUID
+  string uuid = 2;
+
+  option (protogen.notify_message) = true;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,developer=Key.AppKey.DeveloperKey.Name,cluster=Key.ClusterInstKey.ClusterKey.Name,clusterdeveloper=Key.ClusterInstKey.Developer,cloudlet=Key.ClusterInstKey.CloudletKey.Name,operator=Key.ClusterInstKey.CloudletKey.OperatorKey.Name";
+}
+
+
+// Client is an AppInst client that called FindCloudlet DME Api
+message AppInstClient {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  AppInstClientKey client_key = 2 [(gogoproto.nullable) = false];
+  // Location of the Client
+  distributed_match_engine.Loc location = 3 [(gogoproto.nullable) = false];
+  // Id of client assigned by server (internal use only)
+  int64 notify_id = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+
+  option (protogen.notify_message) = true;
+  option (protogen.notify_print_send_recv) = false;
+}
+
+service AppInstClientApi {
+  // Show application instance clients.
+  rpc ShowAppInstClient(AppInstClientKey) returns (stream AppInstClient) {
+    option (google.api.http) = {
+      post: "/show/appinstclient"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceAppAnalytics,ActionView,Key.AppKey.DeveloperKey.Name";
+    option (protogen.non_standard_show) = true;
+  }
+}

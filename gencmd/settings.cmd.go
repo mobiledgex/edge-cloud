@@ -199,6 +199,7 @@ var SettingsOptionalArgs = []string{
 	"deleteclusterinsttimeout",
 	"masternodeflavor",
 	"loadbalancermaxportrange",
+	"maxtrackeddmeclients",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -216,5 +217,6 @@ var SettingsComments = map[string]string{
 	"deleteclusterinsttimeout":          "Delete ClusterInst timeout (duration)",
 	"masternodeflavor":                  "Default flavor for k8s master VM and > 0  workers",
 	"loadbalancermaxportrange":          "Max IP Port range when using a load balancer",
+	"maxtrackeddmeclients":              "Max DME clients to be tracked at the same time.",
 }
 var SettingsSpecialArgs = map[string]string{}
