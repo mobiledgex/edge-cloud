@@ -118,9 +118,9 @@ message CloudletInfraProperties{
 // Platform specific configuration required for Cloudlet management
 message PlatformConfig {
   // Path to Docker registry holding edge-cloud image
-  string registry_path = 1;
+  string container_registry_path = 1;
   // Path to platform base image
-  string image_path = 2;
+  string cloudlet_vm_image_path = 2;
   // Address of controller notify port (can be multiple of these)
   string notify_ctrl_addrs = 3;
   // Vault address
@@ -171,6 +171,18 @@ message CloudletResMap {
   option (protogen.also_required) = "Mapping";
 }
 
+// Cloudlet Action
+//
+// CloudletAction specifies state cloudlet action taken
+enum CloudletAction {
+	// No action taken
+	ACTION_NONE = 0;
+	// Action done
+	ACTION_DONE = 1;
+	// Action is in progress
+	ACTION_IN_PROGRESS = 2;
+}
+
 // Cloudlet
 //
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator. 
@@ -210,14 +222,18 @@ message Cloudlet {
   string physical_name = 18;
   // Single Key-Value pair of env var to be passed to CRM
   map<string, string> env_var = 19;
-  // Cloudlet version 
-  string version = 20;
+  // Cloudlet container version 
+  string container_version = 20;
   // Platform Config Info
   PlatformConfig config = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Optional resource to restagtbl key map key values = [gpu, nas, nic]
   map<string, edgeproto.ResTagTableKey> res_tag_map = 22 [(protogen.backend) = true];
   // Variables required to access cloudlet
   map<string, string> access_vars = 23;
+  // MobiledgeX baseimage version where CRM services reside
+  string vm_image_version = 24;
+  // MobiledgeX OS package version on baseimage where CRM services reside
+  string package_version = 25;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -240,9 +256,9 @@ message FlavorMatch {
 }
 
 service CloudletApi {
-  // Create Cloudlet. Sets up cloudlet services on Operator's compute
-  // resources and makes it part of MobiledgeX edge resource portfolio.
-  // These resources will now be managed from edge controller
+  // Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
+  // and integrated as part of MobiledgeX edge resource portfolio.
+  // These resources are managed from the Edge Controller.
   rpc CreateCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/cloudlet"
@@ -251,9 +267,10 @@ service CloudletApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
     option (protogen.method_also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
+    option (protogen.mc2_streamer_cache) = true;
   }
-  // Delete Cloudlet. Removes cloudlet services and will no longer be
-  // managed from edge controller
+  // Delete Cloudlet. Removes the Cloudlet services where they are no longer managed
+  // from the Edge Controller.
   rpc DeleteCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/cloudet"
@@ -261,8 +278,9 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_streamer_cache) = true;
   }
-  // Update Cloudlet. Updates cloudlet config and also manages upgrade of cloudlet services
+  // Update Cloudlet. Updates the Cloudlet configuration and manages the upgrade of Cloudlet services.
   rpc UpdateCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/cloudlet"
@@ -270,8 +288,9 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_streamer_cache) = true;
   }
-  // Show Cloudlets. Lists all the cloudlets managed from edge controller
+  // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
   rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
     option (google.api.http) = {
       post: "/show/cloudlet"
@@ -379,8 +398,8 @@ message CloudletInfo {
   repeated FlavorInfo flavors = 10;
   // status is used to reflect progress of creation or other events
   StatusInfo status = 11 [(gogoproto.nullable) = false];
-  // Cloudlet version
-  string version = 12;
+  // Cloudlet container version
+  string container_version = 12;
   // Availability Zones if any
   repeated OSAZone availability_zones = 13;
   // Local Images availble to cloudlet

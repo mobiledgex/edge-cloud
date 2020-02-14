@@ -149,11 +149,11 @@ func getCrmEnv(vars map[string]string) {
 
 func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edgeproto.PlatformConfig, error) {
 	pfConfig := edgeproto.PlatformConfig{}
-	pfConfig.PlatformTag = cloudlet.Version
+	pfConfig.PlatformTag = cloudlet.ContainerVersion
 	pfConfig.TlsCertFile = *tlsCertFile
 	pfConfig.VaultAddr = *vaultAddr
-	pfConfig.RegistryPath = *cloudletRegistryPath
-	pfConfig.ImagePath = *cloudletVMImagePath
+	pfConfig.ContainerRegistryPath = *cloudletRegistryPath
+	pfConfig.CloudletVmImagePath = *cloudletVMImagePath
 	pfConfig.TestMode = *testMode
 	pfConfig.EnvVar = make(map[string]string)
 	pfConfig.Region = *region
@@ -206,12 +206,27 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		cb.Send(&edgeproto.Result{Message: "Setting physicalname to match cloudlet name"})
 	}
 
-	if in.Version == "" {
-		in.Version = *versionTag
+	if in.ContainerVersion == "" {
+		in.ContainerVersion = *versionTag
 	}
 
-	if in.AccessVars != nil && in.DeploymentLocal {
-		return errors.New("Access vars is not supported for local deployment")
+	if in.DeploymentLocal {
+		if in.AccessVars != nil {
+			return errors.New("Access vars is not supported for local deployment")
+		}
+		if in.VmImageVersion != "" {
+			return errors.New("VM Image version is not supported for local deployment")
+		}
+		if in.PackageVersion != "" {
+			return errors.New("Package version is not supported for local deployment")
+		}
+	}
+
+	if in.VmImageVersion != "" {
+		if in.PackageVersion != "" {
+			return errors.New("Cannot set package version during creation")
+		}
+		in.PackageVersion = in.VmImageVersion
 	}
 
 	return s.createCloudletInternal(DefCallContext(), in, cb)
@@ -380,6 +395,8 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		}
 	}()
 
+	log.SpanLog(ctx, log.DebugLevelApi, "wait for cloudlet state", "key", key, "errorState", errorState)
+
 	info := edgeproto.CloudletInfo{}
 	if cloudletInfoApi.cache.Get(key, &info) {
 		lastStatusId = info.Status.TaskNumber
@@ -396,14 +413,17 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		}
 
 		curState := cloudletInfo.State
-		localVersion := cloudlet.Version
-		remoteVersion := cloudletInfo.Version
+		localVersion := cloudlet.ContainerVersion
+		remoteVersion := cloudletInfo.ContainerVersion
 
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
+			return
 		}
+
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY &&
+				(cloudlet.State != edgeproto.TrackedState_UPDATE_REQUESTED && cloudlet.State != edgeproto.TrackedState_CREATING) {
 				done <- true
 			}
 		}
@@ -436,37 +456,35 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	// as it may have already changed to target state
 	checkState(key)
 
-	for {
-		select {
-		case <-done:
-			err = nil
-			if successMsg != "" {
-				updateCallback(edgeproto.UpdateTask, successMsg)
-			}
-		case <-failed:
-			if cloudletInfoApi.cache.Get(key, &info) {
-				errs := strings.Join(info.Errors, ", ")
-				err = fmt.Errorf("Encountered failures: %s", errs)
-			} else {
-				err = fmt.Errorf("Unknown failure")
-			}
-		case <-fatal:
-			out := ""
-			out, err = cloudcommon.GetCloudletLog(ctx, key)
-			if err != nil || out == "" {
-				out = fmt.Sprintf("Please look at %s for more details", cloudcommon.GetCloudletLogFile(key.Name))
-			} else {
-				out = fmt.Sprintf("Failure: %s", out)
-			}
-			updateCallback(edgeproto.UpdateTask, out)
-			err = errors.New(out)
-		case <-time.After(timeout):
-			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
-			updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
+	select {
+	case <-done:
+		err = nil
+		if successMsg != "" {
+			updateCallback(edgeproto.UpdateTask, successMsg)
 		}
-		cancel()
-		break
+	case <-failed:
+		if cloudletInfoApi.cache.Get(key, &info) {
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
+		} else {
+			err = fmt.Errorf("Unknown failure")
+		}
+	case <-fatal:
+		out := ""
+		out, err = cloudcommon.GetCloudletLog(ctx, key)
+		if err != nil || out == "" {
+			out = fmt.Sprintf("Please look at %s for more details", cloudcommon.GetCloudletLogFile(key.Name))
+		} else {
+			out = fmt.Sprintf("Failure: %s", out)
+		}
+		updateCallback(edgeproto.UpdateTask, out)
+		err = errors.New(out)
+	case <-time.After(timeout):
+		err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
+		updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
 	}
+
+	cancel()
 	// note: do not close done/failed, garbage collector will deal with it.
 
 	cloudlet := edgeproto.Cloudlet{}
@@ -503,7 +521,7 @@ func getCloudletVersion(key *edgeproto.CloudletKey) (string, error) {
 		if obj.Key.CloudletKey != *key {
 			continue
 		}
-		return obj.ImageVersion, nil
+		return obj.ContainerVersion, nil
 	}
 	return "", fmt.Errorf("Unable to find Cloudlet node")
 }
@@ -518,17 +536,17 @@ func isCloudletUpgradeRequired(cloudlet *edgeproto.Cloudlet) error {
 		return nil
 	}
 
-	ctrl_vers, err := util.VersionParse(*versionTag)
+	ctrl_vers, err := util.ContainerVersionParse(*versionTag)
 	if err != nil {
 		return err
 	}
 
-	cloudlet_vers, err := util.VersionParse(cloudletVersion)
+	cloudlet_vers, err := util.ContainerVersionParse(cloudletVersion)
 	if err != nil {
 		return err
 	}
 
-	new_vers, err := util.VersionParse(cloudlet.Version)
+	new_vers, err := util.ContainerVersionParse(cloudlet.ContainerVersion)
 	if err != nil {
 		return err
 	}
@@ -579,13 +597,13 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	cur.CopyInFields(in)
 
 	upgrade := false
-	if _, found := fmap[edgeproto.CloudletFieldVersion]; found {
+	if _, found := fmap[edgeproto.CloudletFieldContainerVersion]; found {
 		err = isCloudletUpgradeRequired(cur)
 		if err != nil {
 			return err
 		}
 		// verify if image is available in registry
-		registry_path := *cloudletRegistryPath + ":" + in.Version
+		registry_path := *cloudletRegistryPath + ":" + in.ContainerVersion
 		err = cloudcommon.ValidateDockerRegistryPath(ctx, registry_path, vaultConfig)
 		if err != nil {
 			if *testMode {
@@ -593,6 +611,18 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			} else {
 				return err
 			}
+		}
+		upgrade = true
+	}
+
+	if _, found := fmap[edgeproto.CloudletFieldVmImageVersion]; found {
+		return errors.New("Cloudlet VM baseimage version upgrade is not yet supported")
+	}
+
+	if _, found := fmap[edgeproto.CloudletFieldPackageVersion]; found {
+		err = util.ValidateImageVersion(in.PackageVersion)
+		if err != nil {
+			return err
 		}
 		upgrade = true
 	}
@@ -654,6 +684,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if ignoreCRMState(cctx) {
 			cur.State = edgeproto.TrackedState_READY
 		}
+		if cur.State == edgeproto.TrackedState_READY {
+			cur.Errors = nil
+		}
 		s.store.STMPut(stm, cur)
 		return nil
 	})
@@ -661,7 +694,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	if err != nil {
 		return err
 	}
-	cb.Send(&edgeproto.Result{Message: "Updated Cloudlet successfully"})
 
 	// after the cloudlet change is committed, if the location changed,
 	// update app insts as well.

@@ -1,10 +1,10 @@
 nodes:
 - key:
     nodetype: NodeController
-  imageversion: 2019-10-24
+  containerversion: 2019-10-24
 - key:
     nodetype: NodeController
-  imageversion: 2019-10-24
+  containerversion: 2019-10-24
 - key:
     nodetype: NodeDme
     cloudletkey:

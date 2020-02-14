@@ -3,6 +3,7 @@ package edgeproto
 import (
 	"sync"
 
+	"github.com/mobiledgex/edge-cloud/log"
 	context "golang.org/x/net/context"
 )
 
@@ -54,30 +55,33 @@ func (s *FreeReservableClusterInstCache) Delete(ctx context.Context, in *Cluster
 	}
 }
 
-func (s *FreeReservableClusterInstCache) Prune(ctx context.Context, keys map[ClusterInstKey]struct{}) {
+func (s *FreeReservableClusterInstCache) Prune(ctx context.Context, validKeys map[ClusterInstKey]struct{}) {
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
-	for key, _ := range keys {
-		cinsts, found := s.InstsByCloudlet[key.CloudletKey]
-		if !found {
-			continue
+	for cloudletKey, cmap := range s.InstsByCloudlet {
+		for clusterInstKey, _ := range cmap {
+			if _, ok := validKeys[clusterInstKey]; !ok {
+				delete(cmap, clusterInstKey)
+			}
 		}
-		delete(cinsts, key)
-		if len(cinsts) == 0 {
-			delete(s.InstsByCloudlet, key.CloudletKey)
+		if len(cmap) == 0 {
+			delete(s.InstsByCloudlet, cloudletKey)
 		}
 	}
 }
 
 func (s *FreeReservableClusterInstCache) Flush(ctx context.Context, notifyId int64) {}
 
-func (s *FreeReservableClusterInstCache) GetForCloudlet(key *CloudletKey) *ClusterInstKey {
+func (s *FreeReservableClusterInstCache) GetForCloudlet(key *CloudletKey, deployment string) *ClusterInstKey {
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 	cinsts, found := s.InstsByCloudlet[*key]
+	log.DebugLog(log.DebugLevelDmereq, "GetForCloudlet", "key", *key, "found", found, "num-insts", len(cinsts))
 	if found && len(cinsts) > 0 {
-		for key, _ := range cinsts {
-			return &key
+		for key, clust := range cinsts {
+			if deployment == clust.Deployment {
+				return &key
+			}
 		}
 	}
 	return nil
