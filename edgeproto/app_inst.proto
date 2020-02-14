@@ -126,6 +126,7 @@ service AppInstApi {
     option (protogen.mc2_custom_authz) = true;
     // add in UpdateMultiple for noconfig
     option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,UpdateMultiple,ForceUpdate";
+    option (protogen.mc2_streamer_cache) = true;
   }
   // Delete Application Instance. Deletes an instance of the App from the Cloudlet.
   rpc DeleteAppInst(AppInst) returns (stream Result) {
@@ -135,6 +136,7 @@ service AppInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_streamer_cache) = true;
   }
   // Refresh Application Instance. Restarts an App instance with new App settings or image.
   rpc RefreshAppInst(AppInst) returns (stream Result) {
@@ -146,6 +148,7 @@ service AppInstApi {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
     option (protogen.method_not_required) = "Key.ClusterInstKey";
     option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,Configs";
+    option (protogen.mc2_streamer_cache) = true;
   }
   // Update Application Instance. Updates an Application instance and then refreshes it.
   rpc UpdateAppInst(AppInst) returns (stream Result) {
@@ -156,6 +159,7 @@ service AppInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
     option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple,ForceUpdate";
+    option (protogen.mc2_streamer_cache) = true;
   }
   // Show Application Instances. Lists all the Application instances managed by the Edge Controller.
   // Any fields specified will be used to filter results.

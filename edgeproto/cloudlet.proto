@@ -267,6 +267,7 @@ service CloudletApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
     option (protogen.method_also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
+    option (protogen.mc2_streamer_cache) = true;
   }
   // Delete Cloudlet. Removes the Cloudlet services where they are no longer managed
   // from the Edge Controller.
@@ -277,6 +278,7 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_streamer_cache) = true;
   }
   // Update Cloudlet. Updates the Cloudlet configuration and manages the upgrade of Cloudlet services.
   rpc UpdateCloudlet(Cloudlet) returns (stream Result) {
@@ -286,6 +288,7 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_streamer_cache) = true;
   }
   // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
   rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
