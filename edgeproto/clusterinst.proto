@@ -107,6 +107,7 @@ service ClusterInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
     option (protogen.mc2_custom_authz) = true;
+    option (protogen.mc2_streamer_cache) = true;
   }
   // Delete Cluster Instance. Deletes an instance of a Cluster deployed on a Cloudlet.
   rpc DeleteClusterInst(ClusterInst) returns (stream Result) {
@@ -116,6 +117,7 @@ service ClusterInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
+    option (protogen.mc2_streamer_cache) = true;
   }
   // Update Cluster Instance. Updates an instance of a Cluster deployed on a Cloudlet.
   rpc UpdateClusterInst(ClusterInst) returns (stream Result) {
@@ -125,6 +127,7 @@ service ClusterInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
+    option (protogen.mc2_streamer_cache) = true;
   }
   // Show Cluster Instances. Lists all the cluster instances managed by Edge Controller.
   rpc ShowClusterInst(ClusterInst) returns (stream ClusterInst) {
