@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -97,30 +96,32 @@ type WSStreamPayload struct {
 func WebrtcShellWs(dataChan *webrtc.DataChannel, errchan chan error, ws *websocket.Conn) error {
 	wr := webrtcutil.NewDataChanWriter(dataChan)
 	dataChan.OnOpen(func() {
-		go func() {
-			for {
-				_, msg, err := ws.ReadMessage()
-				if err != nil {
-					errchan <- fmt.Errorf("failed to read from websocket, %v", err)
-				}
-				go func() {
-					io.Copy(wr, bytes.NewReader(msg))
-				}()
+		for {
+			_, msg, err := ws.ReadMessage()
+			if err != nil {
+				errchan <- fmt.Errorf("failed to read from websocket, %v", err)
+				return
 			}
-		}()
+			_, err = wr.Write(msg)
+			if err != nil {
+				errchan <- fmt.Errorf("failed to write to datachannel, %v", err)
+				return
+			}
+		}
 	})
 	dataChan.OnMessage(func(msg webrtc.DataChannelMessage) {
 		wsPayload := WSStreamPayload{
 			Code: http.StatusOK,
-			Data: msg.Data,
+			Data: string(msg.Data),
 		}
 		err := ws.WriteJSON(wsPayload)
-		//err := ws.WriteMessage(websocket.TextMessage, msg.Data)
 		if err != nil {
 			errchan <- fmt.Errorf("failed to write to websocket, %v", err)
 		}
 	})
 	dataChan.OnClose(func() {
+		ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		ws.Close()
 		errchan <- nil
 	})
 	return nil
