@@ -191,6 +191,39 @@ func getCellIdFromDmeReq(req interface{}) uint32 {
 	return 0
 }
 
+func getClientFromFindCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest) *edgeproto.AppInstClient {
+	if ckey.DevName == "" || ckey.AppName == "" || ckey.AppVers == "" {
+		return nil
+	}
+	developer := ckey.DevName
+	appname := ckey.AppName
+	appver := ckey.AppVers
+	if cloudcommon.IsPlatformApp(developer, appname) &&
+		mreq.DevName != "" && mreq.AppName != "" && mreq.AppVers != "" {
+		developer = mreq.DevName
+		appname = mreq.AppName
+		appver = mreq.AppVers
+	}
+	return &edgeproto.AppInstClient{
+		ClientKey: edgeproto.AppInstClientKey{
+			Key: edgeproto.AppInstKey{
+				AppKey: edgeproto.AppKey{
+					DeveloperKey: edgeproto.DeveloperKey{
+						Name: developer,
+					},
+					Name:    appname,
+					Version: appver,
+				},
+			},
+		},
+		Location: *mreq.GpsLocation,
+	}
+}
+
+func getResultFromFindCloudletReply(mreq *dme.FindCloudletReply) dme.FindCloudletReply_FindStatus {
+	return mreq.Status
+}
+
 func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	start := time.Now()
 
@@ -207,6 +240,31 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		call.key.AppKey.DeveloperKey.Name = typ.DevName
 		call.key.AppKey.Name = typ.AppName
 		call.key.AppKey.Version = typ.AppVers
+	case *dme.FindCloudletRequest:
+		ckey, ok := dmecommon.CookieFromContext(ctx)
+		if !ok {
+			return resp, err
+		}
+
+		// Update clients cache if we found the cloudlet
+		if getResultFromFindCloudletReply(resp.(*dme.FindCloudletReply)) == dme.FindCloudletReply_FIND_FOUND {
+			client := getClientFromFindCloudlet(ckey, req.(*dme.FindCloudletRequest))
+			if client != nil {
+				client.ClientKey.Key.ClusterInstKey.CloudletKey = call.key.CloudletFound
+				client.ClientKey.Uuid = ckey.UniqueId
+				// GpsLocation timestamp can carry an arbitrary system time instead of a timestamp
+				client.Location.Timestamp = &dme.Timestamp{}
+				ts := time.Now()
+				client.Location.Timestamp.Seconds = ts.Unix()
+				client.Location.Timestamp.Nanos = int32(ts.Nanosecond())
+				// Update list of clients on the side and if there is a listener, send it
+				go UpdateClientsBuffer(ctx, client)
+			}
+		}
+		call.key.AppKey.DeveloperKey.Name = ckey.DevName
+		call.key.AppKey.Name = ckey.AppName
+		call.key.AppKey.Version = ckey.AppVers
+
 	default:
 		// All other API calls besides RegisterClient
 		// have the app info in the session cookie key.
