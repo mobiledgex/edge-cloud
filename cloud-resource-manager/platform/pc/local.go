@@ -90,7 +90,7 @@ func (s *LocalClient) Wait() error {
 	return err
 }
 
-// RemoteOutput is not supported
-func (s *LocalClient) RemoteOutput(remoteHost string, command string) (string, error) {
-	return "", fmt.Errorf("RemoteOutput not supported on LocalClient")
+// AddHop adds a new hop with the default config when the client was created
+func (s *LocalClient) AddHop(host string, port int) error {
+	return fmt.Errorf("AddHop not implemented on local client")
 }

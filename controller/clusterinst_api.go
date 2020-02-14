@@ -165,7 +165,6 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 		return clusterInst.IpAccess, nil
 	}
 	switch clusterInst.Deployment {
-
 	case cloudcommon.AppDeploymentTypeKubernetes:
 		fallthrough
 	case cloudcommon.AppDeploymentTypeHelm:
@@ -181,7 +180,6 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 		}
 	}
 	return clusterInst.IpAccess, nil
-
 }
 
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
