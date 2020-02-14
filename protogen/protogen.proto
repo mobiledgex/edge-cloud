@@ -133,8 +133,6 @@ extend google.protobuf.MethodOptions {
   // objects, so the auto-generators make certain assumptions and behaviors.
   // To avoid these behaviors, this can be overridden by the below option.
   bool non_standard_show = 51040;
-  // This method is a streaming show command.
-  bool streaming_show = 51041;
 }
 
 extend google.protobuf.ServiceOptions {

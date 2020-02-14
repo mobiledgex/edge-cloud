@@ -72,9 +72,6 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 					return fmt.Errorf("Flavor must preexist")
 				}
 			}
-			if field == edgeproto.SettingsFieldMaxTrackedDmeClients {
-				services.clientQ.SetMaxQueueSize(int(in.MaxTrackedDmeClients))
-			}
 		}
 		s.store.STMPut(stm, &cur)
 		return nil

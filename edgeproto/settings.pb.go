@@ -61,7 +61,7 @@ type Settings struct {
 	MasterNodeFlavor string `protobuf:"bytes,14,opt,name=master_node_flavor,json=masterNodeFlavor,proto3" json:"master_node_flavor,omitempty"`
 	// Max IP Port range when using a load balancer
 	LoadBalancerMaxPortRange int32 `protobuf:"varint,15,opt,name=load_balancer_max_port_range,json=loadBalancerMaxPortRange,proto3" json:"load_balancer_max_port_range,omitempty"`
-	// Max DME clients to be tracked at the sampe time.
+	// Max DME clients to be tracked at the same time.
 	MaxTrackedDmeClients int32 `protobuf:"varint,16,opt,name=max_tracked_dme_clients,json=maxTrackedDmeClients,proto3" json:"max_tracked_dme_clients,omitempty"`
 }
 

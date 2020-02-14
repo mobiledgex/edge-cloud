@@ -38,7 +38,7 @@ message Settings {
   string master_node_flavor = 14;
   // Max IP Port range when using a load balancer
   int32 load_balancer_max_port_range = 15;
-  // Max DME clients to be tracked at the sampe time.
+  // Max DME clients to be tracked at the same time.
   int32 max_tracked_dme_clients = 16;
 
   option (protogen.generate_matches) = true;

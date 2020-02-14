@@ -50,6 +50,5 @@ service AppInstClientApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInstClients,ActionView,Key.AppKey.DeveloperKey.Name";
     option (protogen.non_standard_show) = true;
-    option (protogen.streaming_show) = true;
   }
 }

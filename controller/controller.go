@@ -80,7 +80,6 @@ type Services struct {
 	notifyServerMgr bool
 	grpcServer      *grpc.Server
 	httpServer      *http.Server
-	clientQ         *AppInstClientQ
 }
 
 func main() {
@@ -259,9 +258,7 @@ func startServices() error {
 	}
 	services.events = events
 
-	services.clientQ = NewAppInstClientQ(int(settingsApi.Get().MaxTrackedDmeClients))
-
-	InitNotify(influxQ, services.clientQ)
+	InitNotify(influxQ, &appInstClientApi)
 	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile)
 	services.notifyServerMgr = true
 
@@ -457,7 +454,7 @@ func InitApis(sync *Sync) {
 	ControllerId = hostname + "@" + *externalApiAddr
 }
 
-func InitNotify(influxQ *influxq.InfluxQ, clientQ *AppInstClientQ) {
+func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
 	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
