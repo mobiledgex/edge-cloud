@@ -96,7 +96,9 @@ message ClusterInst {
 }
 
 service ClusterInstApi {
-  // Create Cluster Instance. Creates an instance of a Cluster on a Cloudlet, defined by a Cluster Key and a Cloudlet Key.
+  // Create Cluster Instance. Creates an instance of a Cluster on a Cloudlet,
+  // defined by a Cluster Key and a Cloudlet Key. ClusterInst is a collection of
+  // compute resources on a Cloudlet on which AppInsts are deployed.
   rpc CreateClusterInst(ClusterInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/clusterinst"
@@ -105,8 +107,9 @@ service ClusterInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
     option (protogen.mc2_custom_authz) = true;
+    option (protogen.mc2_streamer_cache) = true;
   }
-  // Delete Cluster Instance. Deletes an instance of Cluster deployed on a Cloudlet
+  // Delete Cluster Instance. Deletes an instance of a Cluster deployed on a Cloudlet.
   rpc DeleteClusterInst(ClusterInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/clusterinst"
@@ -114,8 +117,9 @@ service ClusterInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
+    option (protogen.mc2_streamer_cache) = true;
   }
-  // Update Cluster Instance. Updates an instance of Cluster deployed on a Cloudlet
+  // Update Cluster Instance. Updates an instance of a Cluster deployed on a Cloudlet.
   rpc UpdateClusterInst(ClusterInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/clusterinst"
@@ -123,8 +127,9 @@ service ClusterInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
+    option (protogen.mc2_streamer_cache) = true;
   }
-  // Show Cluster Instances. Lists all the cluster instances managed by edge controller
+  // Show Cluster Instances. Lists all the cluster instances managed by Edge Controller.
   rpc ShowClusterInst(ClusterInst) returns (stream ClusterInst) {
     option (google.api.http) = {
       post: "/show/clusterinst"

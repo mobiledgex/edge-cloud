@@ -27,6 +27,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/mobiledgex/edge-cloud/version"
 	"github.com/segmentio/ksuid"
 	"google.golang.org/grpc"
@@ -54,6 +55,7 @@ var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memo
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
 var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
+var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 
 // TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -307,6 +309,12 @@ func main() {
 	err = dmecommon.InitVault(*vaultAddr, *region)
 	if err != nil {
 		log.FatalLog("Failed to init vault", "err", err)
+	}
+	if *testMode {
+		// init JWK so Vault not required
+		dmecommon.Jwks.Keys[0] = &vault.JWK{
+			Secret: "secret",
+		}
 	}
 
 	dmecommon.SetupMatchEngine()
