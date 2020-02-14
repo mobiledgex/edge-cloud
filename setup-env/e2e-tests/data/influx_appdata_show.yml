@@ -12,6 +12,7 @@ settings:
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
   loadbalancermaxportrange: 100
+  maxtrackeddmeclients: 100
 flavors:
 - key:
     name: x1.tiny

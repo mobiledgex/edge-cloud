@@ -1192,6 +1192,46 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 	},
 }
 
+var AppInstClientKeyData = []edgeproto.AppInstClientKey{
+	edgeproto.AppInstClientKey{
+		Key: AppInstData[0].Key,
+	},
+	edgeproto.AppInstClientKey{
+		Key: AppInstData[3].Key,
+	},
+}
+
+var AppInstClientData = []edgeproto.AppInstClient{
+	edgeproto.AppInstClient{
+		ClientKey: AppInstClientKeyData[0],
+		Location: dme.Loc{
+			Latitude:  1.0,
+			Longitude: 1.0,
+		},
+	},
+	edgeproto.AppInstClient{
+		ClientKey: AppInstClientKeyData[0],
+		Location: dme.Loc{
+			Latitude:  1.0,
+			Longitude: 2.0,
+		},
+	},
+	edgeproto.AppInstClient{
+		ClientKey: AppInstClientKeyData[0],
+		Location: dme.Loc{
+			Latitude:  1.0,
+			Longitude: 3.0,
+		},
+	},
+	edgeproto.AppInstClient{
+		ClientKey: AppInstClientKeyData[1],
+		Location: dme.Loc{
+			Latitude:  1.0,
+			Longitude: 2.0,
+		},
+	},
+}
+
 func IsAutoClusterAutoDeleteApp(key *edgeproto.AppInstKey) bool {
 	if !strings.HasPrefix(key.ClusterInstKey.ClusterKey.Name, "autocluster") {
 		return false

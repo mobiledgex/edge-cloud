@@ -25,7 +25,7 @@
     - [AppApi](#edgeproto.AppApi)
   
 
-- [app_inst.proto](#app_inst.proto)
+- [appinst.proto](#appinst.proto)
     - [AppInst](#edgeproto.AppInst)
     - [AppInstInfo](#edgeproto.AppInstInfo)
     - [AppInstKey](#edgeproto.AppInstKey)
@@ -434,10 +434,10 @@ ImageType specifies image type of an App
 
 
 
-<a name="app_inst.proto"/>
+<a name="appinst.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
-## app_inst.proto
+## appinst.proto
 
 
 

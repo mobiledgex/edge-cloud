@@ -19,6 +19,7 @@ func TestVerifyLoc(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 
 	dmecommon.SetupMatchEngine()
+	InitAppInstClients()
 	operatorApiGw, _ = initOperator(ctx, "standalone")
 	setupJwks()
 
