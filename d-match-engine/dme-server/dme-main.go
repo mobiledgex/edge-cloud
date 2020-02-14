@@ -339,6 +339,8 @@ func main() {
 	autoProvStats.Start()
 	defer autoProvStats.Stop()
 
+	InitAppInstClients()
+
 	grpcOpts = append(grpcOpts,
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))
