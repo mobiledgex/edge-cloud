@@ -179,6 +179,35 @@ func (s *ResTagTableApi) findAZmatch(res string, cli edgeproto.CloudletInfo) (st
 	return "", false
 }
 
+func (s *ResTagTableApi) isOptResOSFlavor(ctx context.Context, stm concurrency.STM, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet) bool {
+
+	if len(flavor.PropMap) == 0 {
+		return false // can't be no properties at all.
+	}
+	if cl.ResTagMap == nil {
+		log.InfoLog("Cloudlet %s has no OptResMap to support Optional resource mappings\n", cl.Key.Name)
+		return false
+	}
+	tagtblkey := cl.ResTagMap["gpu"]
+	tbl, err := s.GetCloudletResourceMap(ctx, stm, tagtblkey)
+
+	if err != nil || tbl == nil {
+		// gpu requested and
+		// no gpu table, osFlavor fails
+		log.InfoLog("No OptResTagTable %s found for cloudlet %s\n", tagtblkey.Name, cl.Key.Name)
+		return false
+	}
+	// look in flavor.PropMap for hits
+	for _, flav_val := range flavor.PropMap {
+		for _, val := range tbl.Tags {
+			if strings.Contains(flav_val, val) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (s *ResTagTableApi) optResLookup(ctx context.Context, stm concurrency.STM, nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, string, bool, error) {
 	var resmap map[string]*edgeproto.ResTagTableKey = cl.ResTagMap
 	var img, az string
@@ -325,6 +354,12 @@ func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nod
 		var ok bool
 		if nodeflavor.OptResMap != nil {
 			if az, img, ok, _ = resTagTableApi.optResLookup(ctx, stm, nodeflavor, *flavor, cl, cli); !ok {
+				continue
+			}
+		} else {
+			// Finally, if the os flavor we're about to return happens to be offering an optional resource
+			// that was not requested, we need to skip it.
+			if s.isOptResOSFlavor(ctx, stm, *flavor, cl) {
 				continue
 			}
 		}
