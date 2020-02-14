@@ -7,8 +7,8 @@
 	It is generated from these files:
 		alert.proto
 		app.proto
-		app_inst.proto
-		app_inst_client.proto
+		appinst.proto
+		appinstclient.proto
 		autoprovpolicy.proto
 		autoscalepolicy.proto
 		cloudlet.proto

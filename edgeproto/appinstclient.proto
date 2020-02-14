@@ -6,7 +6,7 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
-import "app_inst.proto";
+import "appinst.proto";
 import "gogoproto/gogo.proto";
 
 // AppKey uniquely identifies an App
@@ -26,7 +26,7 @@ message AppInstClientKey {
 
 
 // Client is an AppInst client that called FindCloudlet DME Api
- message AppInstClient {
+message AppInstClient {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Unique identifier key
