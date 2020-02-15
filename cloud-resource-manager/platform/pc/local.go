@@ -91,6 +91,6 @@ func (s *LocalClient) Wait() error {
 }
 
 // AddHop for LocalClient returns an unmodified LocalClient
-func (s *LocalClient) AddHop(host string, port int) (PlatformClient, error) {
+func (s *LocalClient) AddHop(host string, port int) (interface{}, error) {
 	return s, nil
 }

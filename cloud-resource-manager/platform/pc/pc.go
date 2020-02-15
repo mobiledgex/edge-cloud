@@ -30,7 +30,7 @@ type PlatformClient interface {
 	Wait() error
 	// AddHpp adds a new host to the end of the list and returns a new client.
 	// The original client is unchanged
-	AddHop(host string, port int) (PlatformClient, error)
+	AddHop(host string, port int) (interface{}, error)
 }
 
 // Sudo is a toggle for executing as superuser
