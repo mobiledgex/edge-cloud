@@ -15,6 +15,7 @@ import (
 func TestAddRemove(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq)
 	dmecommon.SetupMatchEngine()
+	InitAppInstClients()
 	setupJwks()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
