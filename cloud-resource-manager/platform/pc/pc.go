@@ -28,8 +28,9 @@ type PlatformClient interface {
 	// Wait waits for the command started by the Start function.
 	// The returned error follows the same logic as exec.Cmd.Wait.
 	Wait() error
-	// AddHop adds a next hop server
-	AddHop(host string, port int) error
+	// AddHpp adds a new host to the end of the list and returns a new client.
+	// The original client is unchanged
+	AddHop(host string, port int) (PlatformClient, error)
 }
 
 // Sudo is a toggle for executing as superuser

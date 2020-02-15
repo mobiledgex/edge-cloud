@@ -90,7 +90,7 @@ func (s *LocalClient) Wait() error {
 	return err
 }
 
-// AddHop adds a new hop with the default config when the client was created
-func (s *LocalClient) AddHop(host string, port int) error {
-	return fmt.Errorf("AddHop not implemented on local client")
+// AddHop for LocalClient returns an unmodified LocalClient
+func (s *LocalClient) AddHop(host string, port int) (PlatformClient, error) {
+	return s, nil
 }
