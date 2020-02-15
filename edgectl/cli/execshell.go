@@ -258,7 +258,28 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 			proxyUrl := strings.Replace(reply.Console.Url, urlObj.Host, connAddr, 1)
 			proxyUrl = strings.Replace(proxyUrl, "http:", "https:", 1)
 			dispUrl := strings.Replace(proxyUrl, "127.0.0.1", "<your-host-ip>", 1)
-			fmt.Print(fmt.Sprintf("Console URL: %s\n", dispUrl))
+			if ws != nil {
+				wsPayload := WSStreamPayload{
+					Code: http.StatusOK,
+					Data: proxyUrl,
+				}
+				err := ws.WriteJSON(wsPayload)
+				if err != nil {
+					errchan <- fmt.Errorf("failed to write to websocket, %v", err)
+				}
+				// A close message is sent from client, hence just wait
+				// on getting a close message
+				_, _, err = ws.ReadMessage()
+				if _, ok := err.(*websocket.CloseError); !ok {
+					ws.WriteMessage(websocket.CloseMessage,
+						websocket.FormatCloseMessage(websocket.CloseAbnormalClosure, ""))
+					ws.Close()
+					signalChan <- nil
+				}
+				errchan <- err
+				return
+			}
+			fmt.Printf("Console URL: %s\n", dispUrl)
 			util.OpenUrl(proxyUrl)
 			fmt.Println("Press Ctrl-C to exit")
 		}()
