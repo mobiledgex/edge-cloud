@@ -54,6 +54,7 @@ info:
       ```
 
       ## FindCloudlet
+
       Locates the most optimal edge computing footprint, and allows the registered application to find the application backend by leveraging the location, application subscription, and service provider agreement.
       If there are no suitable cloudlet instances available, the client may connect to the application server located in the public cloud.
 
@@ -430,6 +431,7 @@ info:
       ```
 
       ## FindCloudlet
+
       Locates the most optimal edge computing footprint, and allows the registered application to find the application backend by leveraging the location, application subscription, and service provider agreement.
       If there are no suitable cloudlet instances available, the client may connect to the application server located in the public cloud.
 
