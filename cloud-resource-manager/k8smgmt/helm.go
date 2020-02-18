@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	ssh "github.com/mobiledgex/golang-ssh"
 )
 
 // this is an initial set of supported helm install options
@@ -24,7 +25,7 @@ var validHelmInstallOpts = map[string]struct{}{
 
 const AppConfigHelmYaml = "hemlCustomizationYaml"
 
-func getHelmOpts(ctx context.Context, client pc.PlatformClient, appName string, configs []*edgeproto.ConfigFile) (string, error) {
+func getHelmOpts(ctx context.Context, client ssh.Client, appName string, configs []*edgeproto.ConfigFile) (string, error) {
 	var ymls []string
 	var err error
 
@@ -126,7 +127,7 @@ func getHelmRepoAndChart(imagePath string) (string, string, error) {
 	return "", chart, nil
 }
 
-func CreateHelmAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func CreateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "create kubernetes helm app", "clusterInst", clusterInst, "kubeNames", names)
 
 	// install helm if it's not installed yet
@@ -173,7 +174,7 @@ func CreateHelmAppInst(ctx context.Context, client pc.PlatformClient, names *Kub
 	return nil
 }
 
-func UpdateHelmAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func UpdateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "update kubernetes helm app", "app", app, "kubeNames", names)
 	configs := append(app.Configs, appInst.Configs...)
 	helmOpts, err := getHelmOpts(ctx, client, names.AppName, configs)
@@ -190,7 +191,7 @@ func UpdateHelmAppInst(ctx context.Context, client pc.PlatformClient, names *Kub
 	return nil
 }
 
-func DeleteHelmAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, clusterInst *edgeproto.ClusterInst) error {
+func DeleteHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames, clusterInst *edgeproto.ClusterInst) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "delete kubernetes helm app")
 	cmd := fmt.Sprintf("%s helm delete --purge %s", names.KconfEnv, names.HelmAppName)
 	out, err := client.Output(cmd)
@@ -201,7 +202,7 @@ func DeleteHelmAppInst(ctx context.Context, client pc.PlatformClient, names *Kub
 	return nil
 }
 
-func InstallHelm(ctx context.Context, client pc.PlatformClient, names *KubeNames) error {
+func InstallHelm(ctx context.Context, client ssh.Client, names *KubeNames) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "installing helm into cluster", "kconf", names.KconfName)
 
 	// Add service account for tiller
