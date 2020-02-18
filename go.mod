@@ -29,6 +29,7 @@ require (
 	github.com/daviddengcn/go-colortext v0.0.0-20171126034257-17e75f6184bc
 	github.com/denisenkom/go-mssqldb v0.0.0-20190905012053-7920e8ef8898 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/docker/docker v1.13.1 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.3.3 // indirect
 	github.com/duosecurity/duo_api_golang v0.0.0-20190308151101-6c680f768e74 // indirect
@@ -42,6 +43,7 @@ require (
 	github.com/gogo/gateway v1.0.0
 	github.com/gogo/googleapis v1.0.0
 	github.com/gogo/protobuf v1.0.0
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
 	github.com/golang/protobuf v1.3.1
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
@@ -72,6 +74,7 @@ require (
 	github.com/hashicorp/vault v0.11.5
 	github.com/hashicorp/vault-plugin-secrets-kv v0.0.0-20190404212640-4807e6564154 // indirect
 	github.com/influxdata/influxdb v1.6.2
+	github.com/jcelliott/lumber v0.0.0-20160324203708-dd349441af25 // indirect
 	github.com/jefferai/jsonx v1.0.0 // indirect
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/json-iterator/go v0.0.0-20180315132816-ca39e5af3ece // indirect
@@ -82,6 +85,7 @@ require (
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2
+	github.com/mobiledgex/golang-ssh v0.0.5
 	github.com/mobiledgex/yaml/v2 v2.2.4
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180228065516-1df9eeb2bb81 // indirect
@@ -98,6 +102,7 @@ require (
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/common v0.0.0-20181218105931-67670fe90761 // indirect
 	github.com/prometheus/procfs v0.0.0-20190117184657-bf6a532e95b1 // indirect
+	github.com/rogpeppe/fastuuid v1.2.0
 	github.com/ryanuber/go-glob v0.0.0-20160226084822-572520ed46db // indirect
 	github.com/segmentio/ksuid v1.0.2
 	github.com/sirupsen/logrus v1.2.0 // indirect
@@ -121,7 +126,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421 // indirect
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
-	google.golang.org/genproto v0.0.0-20190307195333-5fe7a883aa19 // indirect
+	google.golang.org/genproto v0.0.0-20190307195333-5fe7a883aa19
 	google.golang.org/grpc v1.21.0
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
