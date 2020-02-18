@@ -26,8 +26,8 @@ type DockerNetworkingMode string
 var DockerHostMode DockerNetworkingMode = "hostMode"
 var DockerBridgeMode DockerNetworkingMode = "bridgeMode"
 
-func GetContainerName(app *edgeproto.App) string {
-	return util.DNSSanitize(app.Key.Name + app.Key.Version)
+func GetContainerName(appKey *edgeproto.AppKey) string {
+	return util.DNSSanitize(appKey.Name + appKey.Version)
 }
 
 // Helper function that generates the ports string for docker command
@@ -223,9 +223,9 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 
 func CreateAppInst(ctx context.Context, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, networkMode DockerNetworkingMode) error {
 	image := app.ImagePath
-	name := GetContainerName(app)
+	name := GetContainerName(&app.Key)
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", GetContainerName(app), image, app.Command)
+		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", GetContainerName(app.Key), image, app.Command)
 		if networkMode == DockerBridgeMode {
 			cmd = fmt.Sprintf("docker run -d -l edge-cloud --restart=unless-stopped --name=%s %s %s %s", name,
 				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
@@ -258,7 +258,7 @@ func CreateAppInst(ctx context.Context, client ssh.Client, app *edgeproto.App, a
 func DeleteAppInst(ctx context.Context, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 
 	if app.DeploymentManifest == "" {
-		name := GetContainerName(app)
+		name := GetContainerName(&app.Key)
 		cmd := fmt.Sprintf("docker stop %s", name)
 
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker stop ", "cmd", cmd)
@@ -330,12 +330,27 @@ func appendContainerIdsFromDockerComposeImages(client ssh.Client, dockerComposeF
 	return nil
 }
 
-func GetAppInstRuntime(client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
+func GetAppInstRuntime(ctx context.Context, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
 	rt := &edgeproto.AppInstRuntime{}
 	rt.ContainerIds = make([]string, 0)
+
+	// try to get the container names from the runtime environment
+	cmd := `docker ps --format "{{.Names}}"`
+	out, err := client.Output(cmd)
+	if err == nil {
+		for _, name := range strings.Split(out, "\n") {
+			name = strings.TrimSpace(name)
+			rt.ContainerIds = append(rt.ContainerIds, name)
+		}
+		return rt, nil
+	} else {
+		log.SpanLog(ctx, log.DebugLevelInfo, "GetAppInstRuntime cmd failed", "cmd", cmd, "err", err)
+	}
+
+	// get the expected names if couldn't get it from the runtime
 	if app.DeploymentManifest == "" {
 		//  just one container identified by the appinst uri
-		name := util.DockerSanitize(app.Key.Name)
+		name := GetContainerName(&app.Key)
 		rt.ContainerIds = append(rt.ContainerIds, name)
 	} else {
 		if strings.HasSuffix(app.DeploymentManifest, ".zip") {
@@ -369,10 +384,30 @@ func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App,
 	if req.ContainerId == "" {
 		if appInst.RuntimeInfo.ContainerIds == nil ||
 			len(appInst.RuntimeInfo.ContainerIds) == 0 {
-			return "", fmt.Errorf("no containers to run command in")
+			return "", fmt.Errorf("no containers found for AppInst, please specify one")
 		}
 		req.ContainerId = appInst.RuntimeInfo.ContainerIds[0]
 	}
-	cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, req.Command)
-	return cmdStr, nil
+	if req.Cmd != nil {
+		cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, req.Cmd.Command)
+		return cmdStr, nil
+	}
+	if req.Log != nil {
+		cmdStr := "docker logs "
+		if req.Log.Since != "" {
+			cmdStr += fmt.Sprintf("--since %s ", req.Log.Since)
+		}
+		if req.Log.Tail != 0 {
+			cmdStr += fmt.Sprintf("--tail %d ", req.Log.Tail)
+		}
+		if req.Log.Timestamps {
+			cmdStr += "--timestamps "
+		}
+		if req.Log.Follow {
+			cmdStr += "--follow "
+		}
+		cmdStr += req.ContainerId
+		return cmdStr, nil
+	}
+	return "", fmt.Errorf("no command or log specified with exec request")
 }

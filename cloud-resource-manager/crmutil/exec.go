@@ -63,8 +63,8 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			req.AppInstKey.AppKey.GetKeyString())
 	}
 
-	if req.Console {
-		req.ConsoleUrl, err = cd.platform.GetConsoleUrl(ctx, &app)
+	if req.Console != nil {
+		req.Console.Url, err = cd.platform.GetConsoleUrl(ctx, &app)
 		if err != nil {
 			return err
 		}
@@ -112,7 +112,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 	}
 
 	// register handlers
-	if req.Console {
+	if req.Console != nil {
 		peerConn.OnDataChannel(run.RTCTunnel)
 	} else {
 		peerConn.OnDataChannel(run.DataChannel)
@@ -184,9 +184,9 @@ func (s *WebrtcExec) DataChannel(d *webrtc.DataChannel) {
 func (s *WebrtcExec) RTCTunnel(d *webrtc.DataChannel) {
 	var sess *smux.Session
 	d.OnOpen(func() {
-		urlObj, err := url.Parse(s.req.ConsoleUrl)
+		urlObj, err := url.Parse(s.req.Console.Url)
 		if err != nil {
-			log.DebugLog(log.DebugLevelApi, "failed to parse console url", "url", s.req.ConsoleUrl, "err", err)
+			log.DebugLog(log.DebugLevelApi, "failed to parse console url", "url", s.req.Console.Url, "err", err)
 			return
 		}
 		dcconn, err := webrtcutil.WrapDataChannel(d)

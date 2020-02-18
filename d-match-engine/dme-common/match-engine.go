@@ -46,6 +46,7 @@ type DmeApp struct {
 	AndroidPackageName string
 	OfficialFqdn       string
 	AutoProvPolicy     *AutoProvPolicy
+	Deployment         string
 }
 
 type DmeCloudlet struct {
@@ -132,6 +133,7 @@ func AddApp(in *edgeproto.App) {
 	app.AuthPublicKey = in.AuthPublicKey
 	app.AndroidPackageName = in.AndroidPackageName
 	app.OfficialFqdn = in.OfficialFqdn
+	app.Deployment = in.Deployment
 	clearAutoProvStats := false
 	if app.AutoProvPolicy != nil && in.AutoProvPolicy == "" {
 		clearAutoProvStats = true
@@ -443,17 +445,26 @@ func SetInstStateForCloudlet(info *edgeproto.CloudletInfo) {
 	}
 }
 
+// translateCarrierName translates carrier name (mcc+mnc) to
+// mobiledgex operator name, otherwise returns original value
+func translateCarrierName(carrierName string) string {
+	tbl := DmeAppTbl
+
+	cname := carrierName
+	operCode := edgeproto.OperatorCode{}
+	operCodeKey := edgeproto.OperatorCodeKey(carrierName)
+	if tbl.OperatorCodes.Get(&operCodeKey, &operCode) {
+		cname = operCode.OperatorName
+	}
+	return cname
+}
+
 // given the carrier, update the reply if we find a cloudlet closer
 // than the max distance.  Return the distance and whether or not response was updated
 func findClosestForCarrier(ctx context.Context, carrierName string, key edgeproto.AppKey, loc *dme.Loc, maxDistance float64, mreply *dme.FindCloudletReply) (float64, bool) {
 	tbl := DmeAppTbl
-	// translate carrier name (mcc+mnc) to mobiledgex operator name,
-	// otherwise use as is.
-	operCode := edgeproto.OperatorCode{}
-	operCodeKey := edgeproto.OperatorCodeKey(carrierName)
-	if tbl.OperatorCodes.Get(&operCodeKey, &operCode) {
-		carrierName = operCode.OperatorName
-	}
+	carrierName = translateCarrierName(carrierName)
+
 	var d float64
 	var updated = false
 	var found *DmeAppInst
@@ -513,7 +524,7 @@ func findClosestForCarrier(ctx context.Context, carrierName string, key edgeprot
 				// make sure there's a free reservable ClusterInst
 				// on the cloudlet. if cinsts exists there is at
 				// least one free.
-				cinstKey := tbl.FreeReservableClusterInsts.GetForCloudlet(&cl.Key)
+				cinstKey := tbl.FreeReservableClusterInsts.GetForCloudlet(&cl.Key, app.Deployment)
 				if cinstKey == nil {
 					continue
 				}
@@ -674,6 +685,7 @@ func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.Ap
 	var tbl *DmeApps
 	tbl = DmeAppTbl
 	foundCloudlets := make(map[edgeproto.CloudletKey]*dme.CloudletLocation)
+	carrierName := translateCarrierName(mreq.CarrierName)
 
 	tbl.RLock()
 	defer tbl.RUnlock()
@@ -689,8 +701,8 @@ func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.Ap
 		}
 		for cname, c := range a.Carriers {
 			//if the carrier name was provided, only look for cloudlets for that carrier, or for public cloudlets
-			if mreq.CarrierName != "" && !isPublicCarrier(cname) && mreq.CarrierName != cname {
-				log.DebugLog(log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "mreq.CarrierName", mreq.CarrierName, "i.cloudletKey.OperatorKey.Name", cname)
+			if carrierName != "" && !isPublicCarrier(cname) && carrierName != cname {
+				log.DebugLog(log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "carrierName", carrierName, "i.cloudletKey.OperatorKey.Name", cname)
 				continue
 			}
 			for _, i := range c.Insts {

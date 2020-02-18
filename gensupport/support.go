@@ -531,6 +531,13 @@ func ServerStreaming(method *descriptor.MethodDescriptorProto) bool {
 	return *method.ServerStreaming
 }
 
+func IsShow(method *descriptor.MethodDescriptorProto) bool {
+	if proto.GetBoolExtension(method.Options, protogen.E_NonStandardShow, false) {
+		return false
+	}
+	return strings.HasPrefix(*method.Name, "Show")
+}
+
 type MethodInfo struct {
 	Name   string
 	Action string

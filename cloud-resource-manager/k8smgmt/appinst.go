@@ -236,7 +236,32 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 	if err != nil {
 		return "", fmt.Errorf("failed to get kube names, %v", err)
 	}
-	cmdStr := fmt.Sprintf("%s kubectl exec -it %s -- %s",
-		names.KconfEnv, req.ContainerId, req.Command)
-	return cmdStr, nil
+	if req.Cmd != nil {
+		cmdStr := fmt.Sprintf("%s kubectl exec -it %s -- %s",
+			names.KconfEnv, req.ContainerId, req.Cmd.Command)
+		return cmdStr, nil
+	}
+	if req.Log != nil {
+		cmdStr := fmt.Sprintf("%s kubectl logs ", names.KconfEnv)
+		if req.Log.Since != "" {
+			_, perr := time.ParseDuration(req.Log.Since)
+			if perr == nil {
+				cmdStr += fmt.Sprintf("--since=%s ", req.Log.Since)
+			} else {
+				cmdStr += fmt.Sprintf("--since-time=%s ", req.Log.Since)
+			}
+		}
+		if req.Log.Tail != 0 {
+			cmdStr += fmt.Sprintf("--tail=%d ", req.Log.Tail)
+		}
+		if req.Log.Timestamps {
+			cmdStr += "--timestamps=true "
+		}
+		if req.Log.Follow {
+			cmdStr += "-f "
+		}
+		cmdStr += req.ContainerId
+		return cmdStr, nil
+	}
+	return "", fmt.Errorf("no command or log specified with the exec request")
 }

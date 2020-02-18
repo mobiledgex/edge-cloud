@@ -83,7 +83,13 @@ func (s *Platform) GetPlatformClient(ctx context.Context, clusterInst *edgeproto
 }
 
 func (s *Platform) GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
-	return req.Command, nil
+	if req.Cmd != nil {
+		return req.Cmd.Command, nil
+	}
+	if req.Log != nil {
+		return "echo \"here's some logs\"", nil
+	}
+	return "", fmt.Errorf("no cmd or log specified in exec request")
 }
 
 func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error) {
@@ -116,7 +122,7 @@ func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	return nil
 }
 
-func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) (edgeproto.CloudletAction, error) {
 	// Doesn't do actual upgrade, but good enough
 	// for testing controller side code
 	log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet upgrade")
@@ -125,9 +131,9 @@ func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos, "fake cloudlet create failed", "err", err)
-		return err
+		return edgeproto.CloudletAction_ACTION_NONE, err
 	}
-	return nil
+	return edgeproto.CloudletAction_ACTION_IN_PROGRESS, nil
 }
 
 func (s *Platform) CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {

@@ -359,8 +359,33 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		in.NodeFlavor = vmspec.FlavorName
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
+		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Node Flavor", "vmspec", vmspec, "master flavor", in.MasterNodeFlavor)
 
-		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Flavor", "vmspec", vmspec)
+		// check if MasterNodeFlavor required
+		if in.Deployment == cloudcommon.AppDeploymentTypeKubernetes && in.NumNodes > 0 {
+			masterFlavor := edgeproto.Flavor{}
+			masterFlavorKey := edgeproto.FlavorKey{}
+			settings := settingsApi.Get()
+			masterFlavorKey.Name = settings.MasterNodeFlavor
+
+			if flavorApi.store.STMGet(stm, &masterFlavorKey, &masterFlavor) {
+				log.SpanLog(ctx, log.DebugLevelApi, "MasterNodeFlavor found ", "MasterNodeFlavor", settings.MasterNodeFlavor)
+				vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, masterFlavor, cloudlet, info)
+				if err != nil {
+					// Unlikely with reasonably modest settings.MasterNodeFlavor sized flavor
+					log.SpanLog(ctx, log.DebugLevelApi, "Error K8s Master Node Flavor matches no eixsting OS flavor", "nodeFlavor", in.NodeFlavor)
+					return err
+				} else {
+					in.MasterNodeFlavor = vmspec.FlavorName
+					log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Master Node Flavor", "vmspec", vmspec, "master flavor", in.MasterNodeFlavor)
+				}
+			} else {
+				// should never be non empty and not found due to validation in update
+				// revert to using NodeFlavor (pre EC-1767) and log warning
+				in.MasterNodeFlavor = in.NodeFlavor
+				log.SpanLog(ctx, log.DebugLevelApi, "Warning : Master Node Flavor does not exist using", "master flavor", in.MasterNodeFlavor)
+			}
+		}
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
 		refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)

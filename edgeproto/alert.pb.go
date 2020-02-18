@@ -7,7 +7,8 @@
 	It is generated from these files:
 		alert.proto
 		app.proto
-		app_inst.proto
+		appinst.proto
+		appinstclient.proto
 		autoprovpolicy.proto
 		autoscalepolicy.proto
 		cloudlet.proto
@@ -40,6 +41,8 @@
 		AppInstRuntime
 		AppInstInfo
 		AppInstMetrics
+		AppInstClientKey
+		AppInstClient
 		AutoProvPolicy
 		AutoProvCloudlet
 		AutoProvCount
@@ -75,6 +78,9 @@
 		Controller
 		DeveloperKey
 		Developer
+		RunCmd
+		RunVMConsole
+		ShowLog
 		ExecRequest
 		FlavorKey
 		Flavor
@@ -975,6 +981,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(PlatformType(0)):
 		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(CloudletAction(0)):
+		if en, ok := CloudletAction_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(CloudletState(0)):

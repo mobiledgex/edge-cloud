@@ -34,6 +34,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	testMode := false
 	span := ""
 	cleanupMode := false
+	cloudletVMImagePath := ""
 	region := ""
 	if pfConfig != nil {
 		for k, v := range pfConfig.EnvVar {
@@ -45,6 +46,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		testMode = pfConfig.TestMode
 		span = pfConfig.Span
 		cleanupMode = pfConfig.CleanupMode
+		cloudletVMImagePath = pfConfig.CloudletVmImagePath
 		region = pfConfig.Region
 	}
 	for envKey, envVal := range cloudlet.EnvVar {
@@ -65,13 +67,16 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		TLS: process.TLSCerts{
 			ServerCert: tlsCertFile,
 		},
-		VaultAddr:    vaultAddr,
-		PhysicalName: cloudlet.PhysicalName,
-		TestMode:     testMode,
-		Span:         span,
-		CleanupMode:  cleanupMode,
-		Version:      cloudlet.Version,
-		Region:       region,
+		VaultAddr:           vaultAddr,
+		PhysicalName:        cloudlet.PhysicalName,
+		TestMode:            testMode,
+		Span:                span,
+		CleanupMode:         cleanupMode,
+		ContainerVersion:    cloudlet.ContainerVersion,
+		VMImageVersion:      cloudlet.VmImageVersion,
+		PackageVersion:      cloudlet.PackageVersion,
+		CloudletVMImagePath: cloudletVMImagePath,
+		Region:              region,
 	}, opts, nil
 }
 

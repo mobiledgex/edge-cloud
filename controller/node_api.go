@@ -56,11 +56,11 @@ func (s *NodeApi) ShowNode(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeServ
 				Name:     obj.Key.Addr,
 				NodeType: edgeproto.NodeType_NODE_CONTROLLER,
 			},
-			BuildMaster:  obj.BuildMaster,
-			BuildHead:    obj.BuildHead,
-			BuildAuthor:  obj.BuildAuthor,
-			Hostname:     obj.Hostname,
-			ImageVersion: *versionTag,
+			BuildMaster:      obj.BuildMaster,
+			BuildHead:        obj.BuildHead,
+			BuildAuthor:      obj.BuildAuthor,
+			Hostname:         obj.Hostname,
+			ContainerVersion: *versionTag,
 		}
 		err := cb.Send(&node)
 		return err

@@ -19,6 +19,7 @@ import (
 var nameMatch = regexp.MustCompile("^[0-9a-zA-Z][-_0-9a-zA-Z .&,!]*$")
 var k8sMatch = regexp.MustCompile("^[0-9a-zA-Z][-0-9a-zA-Z.]*$")
 var emailMatch = regexp.MustCompile(`(.+)@(.+)\.(.+)`)
+var dockerNameMatch = regexp.MustCompile(`^[0-9a-zA-Z][a-zA-Z0-9_.-]+$`)
 
 // region names are used in Vault approle names, which are very
 // restrictive in what characters they allow.
@@ -30,6 +31,10 @@ func ValidName(name string) bool {
 
 func ValidKubernetesName(name string) bool {
 	return k8sMatch.MatchString(name)
+}
+
+func ValidDockerName(name string) bool {
+	return dockerNameMatch.MatchString(name)
 }
 
 func ValidIp(ip []byte) bool {
@@ -161,12 +166,20 @@ func ImagePathParse(imagepath string) (*url.URL, error) {
 	return url.Parse(imagepath)
 }
 
-func VersionParse(version string) (*time.Time, error) {
+func ContainerVersionParse(version string) (*time.Time, error) {
 	// 2nd Jan 2016
 	ref_layout := "2006-01-02"
 	vers, err := time.Parse(ref_layout, version)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse version: %v", err)
+		return nil, fmt.Errorf("failed to parse container version: %v", err)
 	}
 	return &vers, nil
+}
+
+func ValidateImageVersion(imgVersion string) error {
+	re := regexp.MustCompile("^[0-9a-zA-Z][-0-9a-zA-Z._]*$")
+	if !re.MatchString(imgVersion) {
+		return fmt.Errorf("ImageVersion can only contain letters, digits, -, ., _")
+	}
+	return nil
 }

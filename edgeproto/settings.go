@@ -98,6 +98,8 @@ func GetDefaultSettings() *Settings {
 	s.CreateClusterInstTimeout = Duration(30 * time.Minute)
 	s.UpdateClusterInstTimeout = Duration(20 * time.Minute)
 	s.DeleteClusterInstTimeout = Duration(20 * time.Minute)
+	s.MasterNodeFlavor = ""
+	s.MaxTrackedDmeClients = 100
 	return &s
 }
 

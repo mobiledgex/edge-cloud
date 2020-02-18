@@ -52,6 +52,9 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["nocmp"]; found {
 		in.ImageName = ""
 	}
+	if _, found := tags["nocmp"]; found {
+		in.MasterNodeFlavor = ""
+	}
 }
 
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
@@ -469,6 +472,7 @@ var ClusterInstOptionalArgs = []string{
 	"reservable",
 	"sharedvolumesize",
 	"privacypolicy",
+	"masternodeflavor",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -502,6 +506,7 @@ var ClusterInstComments = map[string]string{
 	"reservedby":         "For reservable MobiledgeX ClusterInsts, the current developer tenant",
 	"sharedvolumesize":   "Size of an optional shared volume to be mounted on the master",
 	"privacypolicy":      "Optional privacy policy name",
+	"masternodeflavor":   "Generic flavor for k8s master VM when worker nodes > 0",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors": "StringArray",

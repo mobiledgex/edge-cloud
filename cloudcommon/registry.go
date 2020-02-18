@@ -38,6 +38,10 @@ type RegistryTags struct {
 	Tags []string `json:"tags"`
 }
 
+type RequestConfig struct {
+	Timeout time.Duration
+}
+
 func getVaultRegistryPath(registry string) string {
 	return fmt.Sprintf("/secret/data/registry/%s", registry)
 }
@@ -76,8 +80,8 @@ func GetRegistryAuth(ctx context.Context, imgUrl string, vaultConfig *vault.Conf
 	return auth, nil
 }
 
-func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryAuth) (*http.Response, error) {
-	log.SpanLog(ctx, log.DebugLevelApi, "send http request", "method", method, "url", regUrl)
+func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryAuth, reqConfig *RequestConfig) (*http.Response, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "send http request", "method", method, "url", regUrl, "reqConfig", reqConfig)
 	client := &http.Client{
 		Transport: &http.Transport{
 			// Connection Timeout
@@ -95,6 +99,9 @@ func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryA
 		},
 		// Prevent endless redirects
 		Timeout: 10 * time.Minute,
+	}
+	if reqConfig != nil && reqConfig.Timeout > 10*time.Minute {
+		client.Timeout = reqConfig.Timeout
 	}
 	req, err := http.NewRequest(method, regUrl, nil)
 	if err != nil {
@@ -146,7 +153,7 @@ func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth 
 		if v, ok := m["scope"]; ok {
 			authURL += "&scope=" + v
 		}
-		resp, err := SendHTTPReqAuth(ctx, "GET", authURL, auth)
+		resp, err := SendHTTPReqAuth(ctx, "GET", authURL, auth, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -157,7 +164,7 @@ func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth 
 			authTok.AuthType = TokenAuth
 
 			log.SpanLog(ctx, log.DebugLevelApi, "retrying request with auth-token")
-			resp, err = SendHTTPReqAuth(ctx, method, regUrl, &authTok)
+			resp, err = SendHTTPReqAuth(ctx, method, regUrl, &authTok, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -194,12 +201,12 @@ func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth 
  * - The Registry authorizes the client by validating the Bearer token and the claim set embedded within
  *   it and begins the session as usual
  */
-func SendHTTPReq(ctx context.Context, method, regUrl string, vaultConfig *vault.Config) (*http.Response, error) {
+func SendHTTPReq(ctx context.Context, method, regUrl string, vaultConfig *vault.Config, reqConfig *RequestConfig) (*http.Response, error) {
 	auth, err := GetRegistryAuth(ctx, regUrl, vaultConfig)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
 	}
-	resp, err := SendHTTPReqAuth(ctx, method, regUrl, auth)
+	resp, err := SendHTTPReqAuth(ctx, method, regUrl, auth, reqConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -216,10 +223,8 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, vaultConfig *vault.
 				return resp, nil
 			}
 			log.SpanLog(ctx, log.DebugLevelApi, "unable to handle www-auth", "err", err)
-		} else {
-			err = fmt.Errorf("Access denied to registry path")
 		}
-		return nil, err
+		return nil, fmt.Errorf("Access denied to registry path")
 	case http.StatusForbidden:
 		resp.Body.Close()
 		return nil, fmt.Errorf("Invalid credentials to access URL: %s", regUrl)
@@ -263,7 +268,7 @@ func ValidateDockerRegistryPath(ctx context.Context, regUrl string, vaultConfig 
 	regUrl = fmt.Sprintf("%s://%s/%s%s/tags/list", urlObj.Scheme, urlObj.Host, version, regPath)
 	log.SpanLog(ctx, log.DebugLevelApi, "registry api url", "url", regUrl)
 
-	resp, err := SendHTTPReq(ctx, "GET", regUrl, vaultConfig)
+	resp, err := SendHTTPReq(ctx, "GET", regUrl, vaultConfig, nil)
 	if err != nil {
 		return err
 	}
@@ -295,7 +300,7 @@ func ValidateVMRegistryPath(ctx context.Context, imgUrl string, vaultConfig *vau
 		return fmt.Errorf("image path is empty")
 	}
 
-	resp, err := SendHTTPReq(ctx, "GET", imgUrl, vaultConfig)
+	resp, err := SendHTTPReq(ctx, "GET", imgUrl, vaultConfig, nil)
 	if err != nil {
 		return err
 	}

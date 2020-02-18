@@ -616,6 +616,12 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Ram:   uint64(4096),
 				Disk:  uint64(40),
 			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.lg-master",
+				Vcpus: uint64(4),
+				Ram:   uint64(8192),
+				Disk:  uint64(60),
+			},
 			// restagtbl/clouldlet resource map tests
 			&edgeproto.FlavorInfo{
 				Name:    "flavor.large",
@@ -665,6 +671,12 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Vcpus: uint64(2),
 				Ram:   uint64(1024),
 				Disk:  uint64(20),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium1",
+				Vcpus: uint64(2),
+				Ram:   uint64(4096),
+				Disk:  uint64(40),
 			},
 		},
 	},
@@ -1176,6 +1188,46 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 				RemoteCidr:   "47.186.0.0/16",
 				PortRangeMax: 22,
 			},
+		},
+	},
+}
+
+var AppInstClientKeyData = []edgeproto.AppInstClientKey{
+	edgeproto.AppInstClientKey{
+		Key: AppInstData[0].Key,
+	},
+	edgeproto.AppInstClientKey{
+		Key: AppInstData[3].Key,
+	},
+}
+
+var AppInstClientData = []edgeproto.AppInstClient{
+	edgeproto.AppInstClient{
+		ClientKey: AppInstClientKeyData[0],
+		Location: dme.Loc{
+			Latitude:  1.0,
+			Longitude: 1.0,
+		},
+	},
+	edgeproto.AppInstClient{
+		ClientKey: AppInstClientKeyData[0],
+		Location: dme.Loc{
+			Latitude:  1.0,
+			Longitude: 2.0,
+		},
+	},
+	edgeproto.AppInstClient{
+		ClientKey: AppInstClientKeyData[0],
+		Location: dme.Loc{
+			Latitude:  1.0,
+			Longitude: 3.0,
+		},
+	},
+	edgeproto.AppInstClient{
+		ClientKey: AppInstClientKeyData[1],
+		Location: dme.Loc{
+			Latitude:  1.0,
+			Longitude: 2.0,
 		},
 	},
 }

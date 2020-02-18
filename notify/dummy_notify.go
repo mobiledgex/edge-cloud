@@ -212,11 +212,11 @@ func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state ed
 		cloudletInfo := edgeproto.CloudletInfo{}
 		if s.CloudletInfoCache.Get(key, &cloudletInfo) {
 			if cloudletInfo.State == state {
-				if cloudletInfo.Version == version {
+				if cloudletInfo.ContainerVersion == version {
 					return nil
 				}
 				return fmt.Errorf("invalid cloudletInfo version: %s, should be %s",
-					cloudletInfo.Version,
+					cloudletInfo.ContainerVersion,
 					version)
 			}
 			lastState = cloudletInfo.State
@@ -235,7 +235,7 @@ func (s *DummyHandler) GetCloudletDetails(key *edgeproto.CloudletKey) (string, i
 		if obj.Key.CloudletKey != *key {
 			continue
 		}
-		return obj.ImageVersion, obj.NotifyId, nil
+		return obj.ContainerVersion, obj.NotifyId, nil
 	}
 	return "", -1, fmt.Errorf("Unable to find cloudlet in node list")
 }
