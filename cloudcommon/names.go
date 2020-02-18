@@ -55,11 +55,10 @@ var CloudletEvent = "cloudlet"
 var ClusterInstEvent = "clusterinst"
 var AppInstEvent = "appinst"
 
-
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"
 var IPAddrDockerHost = "172.17.0.1"
-
+var RemoteServerNone = ""
 
 type InstanceEvent string
 
@@ -69,7 +68,7 @@ const (
 	UPDATE_ERROR      InstanceEvent = "UPDATE_ERROR"
 	UPDATE_COMPLETE   InstanceEvent = "UPDATE_COMPLETE"
 	DELETED           InstanceEvent = "DELETED"
-	DELETE_ERROR	  InstanceEvent = "DELETE_ERROR"
+	DELETE_ERROR      InstanceEvent = "DELETE_ERROR"
 	HEALTH_CHECK_FAIL InstanceEvent = "HEALTH_CHECK_FAIL"
 	HEALTH_CHECK_OK   InstanceEvent = "HEALTH_CHECK_OK"
 )
