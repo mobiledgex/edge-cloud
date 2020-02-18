@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 
 	"github.com/gorilla/websocket"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -20,6 +21,39 @@ import (
 	"github.com/xtaci/smux"
 	"golang.org/x/crypto/ssh/terminal"
 )
+
+type ConsoleProxyObj struct {
+	mux      sync.Mutex
+	proxyMap map[string]string
+}
+
+var ConsoleProxy = &ConsoleProxyObj{}
+
+func (cp *ConsoleProxyObj) Add(token, port string) {
+	cp.mux.Lock()
+	defer cp.mux.Unlock()
+	if len(cp.proxyMap) == 0 {
+		cp.proxyMap = make(map[string]string)
+	}
+	cp.proxyMap[token] = port
+}
+
+func (cp *ConsoleProxyObj) Remove(token string) {
+	cp.mux.Lock()
+	defer cp.mux.Unlock()
+	if _, ok := cp.proxyMap[token]; ok {
+		delete(cp.proxyMap, token)
+	}
+}
+
+func (cp *ConsoleProxyObj) Get(token string) string {
+	cp.mux.Lock()
+	defer cp.mux.Unlock()
+	if out, ok := cp.proxyMap[token]; ok {
+		return out
+	}
+	return ""
+}
 
 func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, errchan chan error, openurl chan bool) error {
 	var sess *smux.Session
@@ -234,6 +268,12 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 		if err != nil {
 			return fmt.Errorf("unable to parse console url, %s, %v", reply.Console.Url, err)
 		}
+		queryArgs := urlObj.Query()
+		token, ok := queryArgs["token"]
+		if !ok || len(token) != 1 {
+			return fmt.Errorf("invalid console url: %s", reply.Console.Url)
+		}
+
 		tlsConfig, err := mextls.GetLocalTLSConfig()
 		if err != nil {
 			return fmt.Errorf("unable to fetch tls local server config, %v", err)
@@ -247,12 +287,18 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 
 		connAddr := conn.Addr().String()
 		ports := strings.Split(connAddr, ":")
-		connAddr = "127.0.0.1:" + ports[len(ports)-1]
+		connPort := ports[len(ports)-1]
+		connAddr = "127.0.0.1:" + connPort
 
 		err = WebrtcTunnel(conn, dataChan, errchan, openurl)
 		if err != nil {
 			return err
 		}
+
+		// Add token to port map for reverse proxy access
+		ConsoleProxy.Add(token[0], connPort)
+		defer ConsoleProxy.Remove(token[0])
+
 		go func() {
 			<-openurl
 			proxyUrl := strings.Replace(reply.Console.Url, urlObj.Host, connAddr, 1)
