@@ -225,7 +225,7 @@ func CreateAppInst(ctx context.Context, client ssh.Client, app *edgeproto.App, a
 	image := app.ImagePath
 	name := GetContainerName(&app.Key)
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", GetContainerName(app.Key), image, app.Command)
+		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", GetContainerName(&app.Key), image, app.Command)
 		if networkMode == DockerBridgeMode {
 			cmd = fmt.Sprintf("docker run -d -l edge-cloud --restart=unless-stopped --name=%s %s %s %s", name,
 				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
