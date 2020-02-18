@@ -13,6 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
+	ssh "github.com/mobiledgex/golang-ssh"
 )
 
 // Envoy is now handling all of our L4 TCP loadbalancing
@@ -29,7 +30,7 @@ func init() {
 	envoyYamlT = template.Must(template.New("yaml").Parse(envoyYaml))
 }
 
-func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, listenIP, backendIP string, ports []dme.AppPort, ops ...Op) error {
+func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, backendIP string, ports []dme.AppPort, ops ...Op) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "create envoy", "name", name, "listenIP", listenIP, "backendIP", backendIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
@@ -105,7 +106,7 @@ func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, liste
 	return nil
 }
 
-func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, name, listenIP, backendIP string, cert *access.TLSCert, ports []dme.AppPort) error {
+func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, listenIP, backendIP string, cert *access.TLSCert, ports []dme.AppPort) error {
 	spec := ProxySpec{
 		Name:       name,
 		MetricPort: cloudcommon.ProxyMetricsPort,
@@ -228,7 +229,7 @@ admin:
 {{- end}}
 `
 
-func DeleteEnvoyProxy(ctx context.Context, client pc.PlatformClient, name string) error {
+func DeleteEnvoyProxy(ctx context.Context, client ssh.Client, name string) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy", "name", "envoy"+name)
 	out, err := client.Output("docker kill " + "envoy" + name)
 	deleteContainer := false
