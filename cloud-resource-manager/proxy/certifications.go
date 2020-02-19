@@ -9,6 +9,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	ssh "github.com/mobiledgex/golang-ssh"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
@@ -17,7 +18,7 @@ var CertsDir = "etc/ssl/certs"
 
 // get certs from vault for rootlb, and pull a new one once a month
 // TODO: put this on dedicated lbs as well
-func GetRootLbCerts(ctx context.Context, commonName, vaultAddr string, client pc.PlatformClient) {
+func GetRootLbCerts(ctx context.Context, commonName, vaultAddr string, client ssh.Client) {
 	getRootLbCertsHelper(ctx, commonName, vaultAddr, client)
 	// refresh every 30 days
 	for {
@@ -28,7 +29,7 @@ func GetRootLbCerts(ctx context.Context, commonName, vaultAddr string, client pc
 	}
 }
 
-func getRootLbCertsHelper(ctx context.Context, commonName, vaultAddr string, client pc.PlatformClient) {
+func getRootLbCertsHelper(ctx context.Context, commonName, vaultAddr string, client ssh.Client) {
 	config, err := vault.BestConfig(vaultAddr)
 	if err == nil {
 		tls := access.TLSCert{}
