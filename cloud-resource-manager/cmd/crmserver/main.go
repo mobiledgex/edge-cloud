@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -192,11 +193,18 @@ func main() {
 		cspan.Finish()
 	}()
 
-	//setup crm notify listener (for shepherd)
+	// setup crm notify listener (for shepherd)
 	var notifyServer notify.ServerMgr
 	initSrvNotify(&notifyServer)
 	notifyServer.Start(*notifySrvAddr, *tlsCertFile)
 	defer notifyServer.Stop()
+
+	// setup rootlb certs
+	commonName := "*." + strings.ToLower(myCloudlet.Key.OperatorKey.Name) + ".mobiledgex.net" // ex: *.tdg.mobiledgex.net
+	rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
+	if err != nil {
+		go proxy.GetRootLbCerts(ctx, commonName, *vaultAddr, rootlb)
+	}
 
 	span.Finish()
 

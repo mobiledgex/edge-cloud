@@ -61,26 +61,6 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
 	}
 
-	certDir := dir + "/certs"
-	err = pc.Run(client, "mkdir -p "+certDir)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos,
-			"envoy %s can't create cert dir %s", name, certDir)
-		return err
-	}
-	if opts.Cert != nil {
-		certFile := certDir + "/" + opts.Cert.CommonName + ".crt"
-		err = pc.WriteFile(client, certFile, opts.Cert.CertString, "tls cert", pc.NoSudo)
-		if err != nil {
-			return err
-		}
-		keyFile := certDir + "/" + opts.Cert.CommonName + ".key"
-		err = pc.WriteFile(client, keyFile, opts.Cert.KeyString, "tls key", pc.NoSudo)
-		if err != nil {
-			return err
-		}
-	}
-
 	// container name is envoy+name for now to avoid conflicts with the nginx containers
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", "envoy" + name}
 	if opts.DockerPublishPorts {
@@ -91,7 +71,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		cmdArgs = append(cmdArgs, "--network", opts.DockerNetwork)
 	}
 	cmdArgs = append(cmdArgs, []string{
-		"-v", certDir + ":/etc/envoy/certs",
+		"-v", CertsDir + ":/etc/envoy/certs",
 		"-v", accesslogFile + ":/var/log/access.log",
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl"}...)
@@ -134,7 +114,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 					ListenIP:    listenIP,
 					BackendIP:   backendIP,
 					BackendPort: internalPort,
-					UseTLS:		 p.Tls,
+					UseTLS:      p.Tls,
 				}
 				tcpconns, err := getTCPConcurrentConnections()
 				if err != nil {

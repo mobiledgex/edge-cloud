@@ -146,13 +146,13 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 		return err
 	}
 
-	useTLS := false
+	usesTLS := false
 	err = pc.Run(client, "ls cert.pem && ls key.pem")
 	if err == nil {
-		useTLS = true
+		usesTLS = true
 	}
 	log.SpanLog(ctx, log.DebugLevelMexos, "nginx certs check",
-		"name", name, "useTLS", useTLS)
+		"name", name, "usesTLS", usesTLS)
 
 	errlogFile := dir + "/err.log"
 	err = pc.Run(client, "touch "+errlogFile)
@@ -169,7 +169,7 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 		return err
 	}
 	nconfName := dir + "/nginx.conf"
-	err = createNginxConf(ctx, client, nconfName, name, l7dir, listenIP, destIP, ports, useTLS)
+	err = createNginxConf(ctx, client, nconfName, name, l7dir, listenIP, destIP, ports, usesTLS)
 	if err != nil {
 		return fmt.Errorf("create nginx.conf failed, %v", err)
 	}
@@ -188,7 +188,7 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 		// For dind, we use the network which the dind cluster is on.
 		cmdArgs = append(cmdArgs, "--network", opts.DockerNetwork)
 	}
-	if useTLS {
+	if usesTLS {
 		cmdArgs = append(cmdArgs, "-v", pwd+"/cert.pem:/etc/ssl/certs/server.crt")
 		cmdArgs = append(cmdArgs, "-v", pwd+"/key.pem:/etc/ssl/certs/server.key")
 	}
@@ -211,10 +211,10 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 	return nil
 }
 
-func createNginxConf(ctx context.Context, client ssh.Client, confname, name, l7dir, listenIP, backendIP string, ports []dme.AppPort, useTLS bool) error {
+func createNginxConf(ctx context.Context, client ssh.Client, confname, name, l7dir, listenIP, backendIP string, ports []dme.AppPort, usesTLS bool) error {
 	spec := ProxySpec{
 		Name:       name,
-		UseTLS:     useTLS,
+		UsesTLS:     usesTLS,
 		MetricPort: cloudcommon.ProxyMetricsPort,
 	}
 	httpPorts := []HTTPSpecDetail{}
@@ -324,7 +324,7 @@ type ProxySpec struct {
 	UDPSpec    []*UDPSpecDetail
 	TCPSpec    []*TCPSpecDetail
 	L7Port     int32
-	UseTLS     bool // To be removed
+	UsesTLS     bool // To be removed
 	MetricPort int32
 	Cert       *access.TLSCert
 }
@@ -335,7 +335,7 @@ type TCPSpecDetail struct {
 	BackendIP       string
 	BackendPort     int32
 	ConcurrentConns uint64
-	UseTLS			bool  // for port specific TLS termination
+	UseTLS          bool // for port specific TLS termination
 }
 
 type UDPSpecDetail struct {
@@ -376,8 +376,8 @@ http {
     keepalive_timeout  65;
     server_tokens off;
     server {
-        listen {{.L7Port}}{{if .UseTLS}} ssl{{end}};
-{{- if .UseTLS}}
+        listen {{.L7Port}}{{if .UsesTLS}} ssl{{end}};
+{{- if .UsesTLS}}
         ssl_certificate        /etc/ssl/certs/server.crt;
         ssl_certificate_key    /etc/ssl/certs/server.key;
 {{- end}}
