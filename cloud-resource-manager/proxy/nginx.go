@@ -413,7 +413,7 @@ stream {
 var nginxL7Conf = `
 {{- range .}}
 location /{{.PathPrefix}}/ {
-	proxy_pass http://{{.BackendIP}}/;
+	proxy_pass http://{{.BackendIP}}:{{.BackendPort}}/;
 }
 {{- end}}
 `
