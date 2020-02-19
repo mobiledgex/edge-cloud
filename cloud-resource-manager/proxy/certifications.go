@@ -14,7 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/vault"
 )
 
-var CertsDir = "etc/ssl/certs"
+var CertsDir = "/etc/ssl/certs"
 
 // get certs from vault for rootlb, and pull a new one once a month
 // TODO: put this on dedicated lbs as well
