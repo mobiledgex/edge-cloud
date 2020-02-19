@@ -121,6 +121,9 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 			if appPort.EndPort != 0 {
 				// We have a range-port notation on the dme.AppPort
 				// while our manifest exhaustively enumerates each as a kubePort
+				if appPort.Proto == dme.LProto_L_PROTO_HTTP {
+					return fmt.Errorf("Port range not allowed for HTTP")
+				}
 				start := appPort.InternalPort
 				end := appPort.EndPort
 				for i := start; i <= end; i++ {

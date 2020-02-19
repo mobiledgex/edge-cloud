@@ -144,6 +144,9 @@ func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.Ac
 	for ii, _ := range ports {
 		ports[ii].PublicPort = ports[ii].InternalPort
 		if ports[ii].EndPort != 0 {
+			if ports[ii].Proto == dme.LProto_L_PROTO_HTTP {
+				return fmt.Errorf("Port range not valid for HTTP port")
+			}
 			numPortsInRange := ports[ii].EndPort - ports[ii].PublicPort
 			// this is checked in app_api also, but this in case there are pre-existing apps which violate this new restriction
 			if accessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER && numPortsInRange > maxPorts {
