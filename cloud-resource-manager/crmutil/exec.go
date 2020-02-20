@@ -9,10 +9,10 @@ import (
 	"net"
 	"net/url"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
+	ssh "github.com/mobiledgex/golang-ssh"
 	opentracing "github.com/opentracing/opentracing-go"
 	webrtc "github.com/pion/webrtc/v2"
 	"github.com/xtaci/smux"
@@ -155,7 +155,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 
 type WebrtcExec struct {
 	req     *edgeproto.ExecRequest
-	client  pc.PlatformClient
+	client  ssh.Client
 	contcmd string
 	sin     io.WriteCloser
 }

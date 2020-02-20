@@ -355,20 +355,28 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		in.Revision = app.Revision
 		appDeploymentType = app.Deployment
+		if in.AutoClusterIpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED && app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+			return fmt.Errorf("Cannot specify AutoClusterIpAccess as IP_ACCESS_SHARED if App access type is ACCESS_TYPE_DIRECT")
+		}
 		// Check if specified ClusterInst exists
+
+		var clusterInst edgeproto.ClusterInst
 		if !strings.HasPrefix(cikey.ClusterKey.Name, ClusterAutoPrefix) && cloudcommon.IsClusterInstReqd(&app) {
-			found := clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil)
+			found := clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst)
 			if !found && in.Key.ClusterInstKey.Developer == "" {
 				// developer may not be specified
 				// in clusterinst.
 				in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
-				found = clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil)
+				found = clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst)
 				if found {
 					cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 				}
 			}
 			if !found {
 				return errors.New("Specified ClusterInst not found")
+			}
+			if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT && clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+				return fmt.Errorf("Direct Access App cannot be deployed on IP_ACCESS_SHARED ClusterInst")
 			}
 			// cluster inst exists so we're good.
 			return nil
@@ -1217,9 +1225,9 @@ func isIPAllocatedPerService(operator string) bool {
 }
 
 func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs) error {
+
 	if isIPAllocatedPerService(cloudlet.Key.OperatorKey.Name) {
-		// public cloud implements dedicated access
-		inst.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
+		// we don't track IPs in public cloud
 		return nil
 	}
 	if inst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
@@ -1227,12 +1235,9 @@ func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, refs 
 		return nil
 	}
 	if inst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-		// set to shared, as CRM does not implement dedicated
-		// ip assignment yet.
-		inst.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
-		return nil
+		// This should have been modified already before coming here, this is a bug if this is hit
+		return fmt.Errorf("Unexpected IP_ACCESS_UNKNOWN ")
 	}
-
 	// Allocate a dedicated IP
 	if cloudlet.IpSupport == edgeproto.IpSupport_IP_SUPPORT_STATIC {
 		// TODO:

@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/kr/pty"
+	ssh "github.com/mobiledgex/golang-ssh"
 )
 
 // Implements nanobox-io's ssh.Client interface, but runs commands locally.
@@ -88,4 +89,9 @@ func (s *LocalClient) Wait() error {
 	err := s.cmd.Wait()
 	s.cmd = nil
 	return err
+}
+
+// AddHop for LocalClient returns an unmodified LocalClient
+func (s *LocalClient) AddHop(host string, port int) (ssh.Client, error) {
+	return s, nil
 }
