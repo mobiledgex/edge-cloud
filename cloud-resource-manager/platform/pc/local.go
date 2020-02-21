@@ -18,7 +18,7 @@ type LocalClient struct {
 
 // Output returns the output of the command run on the remote host.
 func (s *LocalClient) Output(command string) (string, error) {
-	cmd := exec.Command("sh", "-c", command)
+	cmd := exec.Command("bash", "-c", command)
 	out, err := cmd.CombinedOutput()
 	return string(out), err
 }
