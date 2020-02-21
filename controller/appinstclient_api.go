@@ -148,6 +148,7 @@ func (s *AppInstClientApi) StreamAppInstClientsLocal(in *edgeproto.AppInstClient
 }
 
 func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb edgeproto.AppInstClientApi_ShowAppInstClientServer) error {
+	var connsMux sync.Mutex
 	var ctrlConns []*grpc.ClientConn
 
 	// Check if the AppInst exists
@@ -160,14 +161,18 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 	in.Key.ClusterInstKey.Developer = ""
 
 	ctrlConns = make([]*grpc.ClientConn, 0)
+	done := false
 	err := controllerApi.RunJobs(func(arg interface{}, addr string) error {
 		if addr == *externalApiAddr {
 			// local node
 			err := s.StreamAppInstClientsLocal(in, cb)
 			// Close grpc connections to other controllers
+			connsMux.Lock()
+			done = true
 			for _, conn := range ctrlConns {
 				conn.Close()
 			}
+			connsMux.Unlock()
 			return err
 		} else { // This will get clients from the remote controllers and proxy them as well
 			// connect to remote node
@@ -175,8 +180,16 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 			if err != nil {
 				return err
 			}
-			// Strore the connection, to close when the local api terminates
-			ctrlConns = append(ctrlConns, conn)
+			connsMux.Lock()
+			if done {
+				conn.Close()
+				connsMux.Unlock()
+				return nil
+			} else {
+				// Strore the connection, to close when the local api terminates
+				ctrlConns = append(ctrlConns, conn)
+			}
+			connsMux.Unlock()
 
 			appInstClient := edgeproto.NewAppInstClientApiClient(conn)
 			// Recv forever - when the local API call terminates, it will close the connection
