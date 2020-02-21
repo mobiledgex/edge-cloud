@@ -188,7 +188,6 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 			}
 			for {
 				client, err := stream.Recv()
-				log.DebugLog(log.DebugLevelApi, "Got a client from remote controller", "addr", addr, "client", client)
 				if err != nil {
 					if err == io.EOF {
 						err = nil
@@ -197,7 +196,7 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 				}
 				err = cb.Send(client)
 				if err != nil {
-					log.DebugLog(log.DebugLevelApi, "Failed to print a client", "client", client)
+					log.SpanLog(cb.Context(), log.DebugLevelApi, "Failed to print a client", "client", client)
 					break
 				}
 			}
