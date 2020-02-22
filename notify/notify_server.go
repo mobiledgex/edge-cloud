@@ -59,6 +59,7 @@ type ServerMgr struct {
 	notifyId int64
 	serv     *grpc.Server
 	name     string
+	regServ  func(s *grpc.Server)
 }
 
 // NotifySendMany and NotifyRecvMany are implemented by auto-generated code.
@@ -83,12 +84,6 @@ type NotifyRecvMany interface {
 
 var ServerMgrOne ServerMgr
 
-func (mgr *ServerMgr) Init() {
-	mgr.sends = make([]NotifySendMany, 0)
-	mgr.recvs = make([]NotifyRecvMany, 0)
-	mgr.name = "server"
-}
-
 func (mgr *ServerMgr) RegisterSend(sendMany NotifySendMany) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
@@ -101,6 +96,10 @@ func (mgr *ServerMgr) RegisterRecv(recvMany NotifyRecvMany) {
 	mgr.recvs = append(mgr.recvs, recvMany)
 }
 
+func (mgr *ServerMgr) RegisterServerCb(registerServer func(s *grpc.Server)) {
+	mgr.regServ = registerServer
+}
+
 func (mgr *ServerMgr) Start(addr string, tlsCertFile string) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
@@ -108,6 +107,8 @@ func (mgr *ServerMgr) Start(addr string, tlsCertFile string) {
 	if mgr.table != nil {
 		return
 	}
+	mgr.name = "server"
+	mgr.notifyId = 1
 	mgr.table = make(map[string]*Server)
 
 	lis, err := net.Listen("tcp", addr)
@@ -121,6 +122,9 @@ func (mgr *ServerMgr) Start(addr string, tlsCertFile string) {
 	}
 	mgr.serv = grpc.NewServer(grpc.Creds(creds), grpc.KeepaliveParams(serverParams), grpc.KeepaliveEnforcementPolicy(serverEnforcement))
 	edgeproto.RegisterNotifyApiServer(mgr.serv, mgr)
+	if mgr.regServ != nil {
+		mgr.regServ(mgr.serv)
+	}
 	log.DebugLog(log.DebugLevelNotify, "ServerMgr listening", "addr", addr)
 	go func() {
 		err = mgr.serv.Serve(lis)
@@ -171,10 +175,12 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 		recv := recvMany.NewRecv()
 		server.sendrecv.registerRecv(recv)
 	}
+	server.notifyId = mgr.notifyId
+	mgr.notifyId++
 	mgr.mux.Unlock()
 
 	// do initial version exchange
-	err := server.negotiate(stream)
+	err := server.negotiate(spctx, stream)
 	if err != nil {
 		server.logDisconnect(spctx, err)
 		close(server.running)
@@ -185,8 +191,6 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	// register server by client addr
 	mgr.mux.Lock()
 	mgr.table[peerAddr] = &server
-	server.notifyId = mgr.notifyId
-	mgr.notifyId++
 	mgr.mux.Unlock()
 
 	span.Finish()
@@ -246,7 +250,7 @@ func (mgr *ServerMgr) GetStats(peerAddr string) *Stats {
 	return stats
 }
 
-func (s *Server) negotiate(stream edgeproto.NotifyApi_StreamNoticeServer) error {
+func (s *Server) negotiate(ctx context.Context, stream edgeproto.NotifyApi_StreamNoticeServer) error {
 	var notice edgeproto.Notice
 	// initial connection is version exchange
 	// this also sets the connection Id so we can ignore spurious old
@@ -278,9 +282,10 @@ func (s *Server) negotiate(stream edgeproto.NotifyApi_StreamNoticeServer) error 
 		s.sendrecv.stats.NegotiateErrors++
 		return err
 	}
-	log.DebugLog(log.DebugLevelNotify, "Notify server connected",
+	log.SpanLog(ctx, log.DebugLevelNotify, "Notify server connected",
 		"client", s.peerAddr, "version", s.version,
 		"supported-version", NotifyVersion,
+		"notifyid", s.notifyId,
 		"remoteWanted", s.sendrecv.remoteWanted,
 		"filterCloudletKey", s.sendrecv.filterCloudletKeys)
 	return nil

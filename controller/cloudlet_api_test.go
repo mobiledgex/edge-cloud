@@ -29,7 +29,7 @@ const (
 )
 
 func TestCloudletApi(t *testing.T) {
-	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify)
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
@@ -319,8 +319,8 @@ func testNotifyId(t *testing.T, ctrlHandler *notify.DummyHandler, key *edgeproto
 	require.Equal(t, nodeCount, len(ctrlHandler.NodeCache.Objs), "node count matches")
 	nodeVersion, nodeNotifyId, err := ctrlHandler.GetCloudletDetails(key)
 	require.Nil(t, err, "get cloudlet version & notifyId from node cache")
-	require.Equal(t, nodeVersion, crmVersion, "node version matches")
-	require.Equal(t, nodeNotifyId, int64(notifyId), "node notifyId matches")
+	require.Equal(t, crmVersion, nodeVersion, "node version matches")
+	require.Equal(t, int64(notifyId), nodeNotifyId, "node notifyId matches")
 }
 
 func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
@@ -364,7 +364,7 @@ func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
 		// Tracked state transition
 		//   UpdateRequested -> Updating -> CrmInitOk -> Ready
 
-		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 0, crm_v1)
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 1, crm_v1)
 
 		cloudlet.Config = *pfConfig
 		cloudlet.NotifySrvAddr = crm_notifyaddr
@@ -390,14 +390,14 @@ func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
 		cloudlet.State = edgeproto.TrackedState_READY
 		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 1, crm_v2)
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 2, crm_v2)
 	case "success-cleanupfailure":
 		// Cloudlet state transition:
 		//   Upgrade (crmv1) -> Init (crmv2) -> Ready (crmv2)
 		// Tracked state transition
 		//   UpdateRequested -> Updating -> CrmInitOk -> Ready
 
-		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 0, crm_v1)
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 1, crm_v1)
 
 		cloudlet.Config = *pfConfig
 		cloudlet.NotifySrvAddr = crm_notifyaddr
@@ -425,7 +425,7 @@ func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
 		cloudlet.State = edgeproto.TrackedState_READY
 		ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 1, crm_v2)
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 2, crm_v2)
 	case "failure":
 		// upgrade will fail because notifySrvAddr is invalid
 		// Cloudlet state transition:
@@ -433,7 +433,7 @@ func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
 		// Tracked state transition
 		//   UpdateRequested ->  UpdateError
 
-		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 0, crm_v1)
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 1, crm_v1)
 
 		cloudlet.Config = *pfConfig
 		cloudlet.ContainerVersion = crm_v2
@@ -450,7 +450,7 @@ func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
 		err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
 		require.Nil(t, err, "cloudlet state transition")
 
-		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 0, crm_v1)
+		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 1, crm_v1)
 	}
 
 	// Delete CRM

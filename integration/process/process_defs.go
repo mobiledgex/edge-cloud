@@ -21,6 +21,7 @@ type Controller struct {
 	ApiAddr              string
 	HttpAddr             string
 	NotifyAddr           string
+	NotifyParentAddrs    string
 	VaultAddr            string
 	InfluxAddr           string
 	TLS                  TLSCerts

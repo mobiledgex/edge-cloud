@@ -3315,6 +3315,7 @@ func (c *AppInstInfoCache) GetCount() int {
 }
 
 func (c *AppInstInfoCache) Flush(ctx context.Context, notifyId int64) {
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstInfo", "notifyId", notifyId)
 	flushed := make(map[AppInstKey]*AppInstInfo)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -3322,6 +3323,7 @@ func (c *AppInstInfoCache) Flush(ctx context.Context, notifyId int64) {
 			continue
 		}
 		flushed[key] = c.Objs[key]
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstInfo delete", "key", key)
 		delete(c.Objs, key)
 	}
 	c.Mux.Unlock()

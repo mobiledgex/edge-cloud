@@ -58,7 +58,7 @@ func TestAppInstClientApi(t *testing.T) {
 
 	qSize := int(settingsApi.Get().MaxTrackedDmeClients)
 	// Add a client for a non-existent AppInst
-	appInstClientApi.Recv(ctx, &testutil.AppInstClientData[0])
+	appInstClientApi.RecvAppInstClient(ctx, &testutil.AppInstClientData[0])
 	// Make sure that we didn't save it
 	err = appInstClientApi.ShowAppInstClient(&testutil.AppInstClientKeyData[0], &showServer)
 	require.NotNil(t, err, "Found an unexpected client")
