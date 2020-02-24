@@ -52,6 +52,7 @@ func testUpdateMasterNodeFlavor(t *testing.T, ctx context.Context) {
 		masterFlavor.Ram = 4096
 		masterFlavor.Vcpus = 2
 		masterFlavor.Ram = 4096
+		masterFlavor.Disk = 40
 		_, err = flavorApi.CreateFlavor(ctx, &masterFlavor)
 		require.Nil(t, err, "CreateFlavor")
 
