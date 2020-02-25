@@ -538,6 +538,10 @@ func IsShow(method *descriptor.MethodDescriptorProto) bool {
 	return strings.HasPrefix(*method.Name, "Show")
 }
 
+func GetEnumBackend(enumVal *descriptor.EnumValueDescriptorProto) bool {
+	return proto.GetBoolExtension(enumVal.Options, protogen.E_EnumBackend, false)
+}
+
 type MethodInfo struct {
 	Name   string
 	Action string

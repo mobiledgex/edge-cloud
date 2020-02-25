@@ -266,7 +266,7 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 	if err != nil {
 		return
 	}
-	if app.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
+	if app.Deployment == cloudcommon.AppDeploymentTypeVM {
 		key.ClusterInstKey.ClusterKey.Name = cloudcommon.DefaultVMCluster
 	}
 }
@@ -920,6 +920,18 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		}
 		return fmt.Errorf("specified fields %s cannot be modified", strings.Join(badstrs, ","))
 	}
+	powerState := edgeproto.PowerState_POWER_STATE_UNKNOWN
+	if _, found := fmap[edgeproto.AppInstFieldPowerState]; found {
+		if len(allowedFields) > 0 {
+			return fmt.Errorf("If powerstate is to be updated, then no other fields can be modified")
+		}
+		allowedFields = append(allowedFields, edgeproto.AppInstFieldPowerState)
+		// Get the request state as user has specified action and not state
+		powerState = edgeproto.GetNextPowerState(in.PowerState, edgeproto.RequestState)
+		if powerState == edgeproto.PowerState_POWER_STATE_UNKNOWN {
+			return fmt.Errorf("Invalid power state specified")
+		}
+	}
 	in.Fields = allowedFields
 	if len(allowedFields) == 0 {
 		return fmt.Errorf("Nothing specified to modify")
@@ -938,6 +950,16 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		if changeCount == 0 {
 			// nothing changed
 			return nil
+		}
+		if !ignoreCRM(cctx) && powerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
+			var app edgeproto.App
+			if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+				return in.Key.AppKey.NotFoundError()
+			}
+			if app.Deployment != cloudcommon.AppDeploymentTypeVM {
+				return fmt.Errorf("Updating powerstate is only support for VM deployment")
+			}
+			cur.PowerState = powerState
 		}
 		s.store.STMPut(stm, &cur)
 		return nil
@@ -1334,23 +1356,4 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 	metric.AddStringVal("status", serverStatus)
 
 	services.events.AddMetric(&metric)
-}
-
-func (s *AppInstApi) SetAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_SetAppInstServer) error {
-	ctx := cb.Context()
-	log.SpanLog(ctx, log.DebugLevelApi, "setappinstpowerstate", "key", in.Key)
-	forceUpdate := true
-
-	// populate the clusterinst developer from the app developer if not already present
-	if in.Key.ClusterInstKey.Developer == "" {
-		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
-		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
-	}
-	s.setDefaultVMClusterKey(ctx, &in.Key)
-	if err := in.Key.AppKey.ValidateKey(); err != nil {
-		return err
-	}
-
-	_, err := s.refreshAppInstInternal(DefCallContext(), in.Key, cb, forceUpdate)
-	return err
 }

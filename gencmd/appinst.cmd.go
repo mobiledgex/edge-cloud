@@ -441,81 +441,12 @@ func ShowAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	}
 }
 
-var SetAppInstCmd = &cli.Command{
-	Use:          "SetAppInst",
-	RequiredArgs: strings.Join(SetAppInstRequiredArgs, " "),
-	OptionalArgs: strings.Join(SetAppInstOptionalArgs, " "),
-	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
-	SpecialArgs:  &AppInstSpecialArgs,
-	Comments:     AppInstComments,
-	ReqData:      &edgeproto.AppInst{},
-	ReplyData:    &edgeproto.Result{},
-	Run:          runSetAppInst,
-}
-
-func runSetAppInst(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.AppInst)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return SetAppInst(c, obj)
-}
-
-func SetAppInst(c *cli.Command, in *edgeproto.AppInst) error {
-	if AppInstApiCmd == nil {
-		return fmt.Errorf("AppInstApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := AppInstApiCmd.SetAppInst(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("SetAppInst failed: %s", errstr)
-	}
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("SetAppInst recv failed: %s", errstr)
-		}
-		c.WriteOutput(obj, cli.OutputFormat)
-	}
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func SetAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("SetAppInst %v\n", data[ii])
-		myerr := SetAppInst(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
 var AppInstApiCmds = []*cobra.Command{
 	CreateAppInstCmd.GenCmd(),
 	DeleteAppInstCmd.GenCmd(),
 	RefreshAppInstCmd.GenCmd(),
 	UpdateAppInstCmd.GenCmd(),
 	ShowAppInstCmd.GenCmd(),
-	SetAppInstCmd.GenCmd(),
 }
 
 var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient
@@ -766,7 +697,7 @@ var AppInstComments = map[string]string{
 	"sharedvolumesize":               "shared volume size when creating auto cluster",
 	"healthcheck":                    "Health Check status, one of HealthCheckOk, HealthCheckFailRootlbOffline, HealthCheckFailServerFail",
 	"privacypolicy":                  "Optional privacy policy name",
-	"powerstate":                     "Power State of the AppInst, one of PowerNone, PowerOn, PowerOff, Reboot",
+	"powerstate":                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -801,6 +732,7 @@ var AppInstInfoOptionalArgs = []string{
 	"status.maxtasks",
 	"status.taskname",
 	"status.stepname",
+	"powerstate",
 }
 var AppInstInfoAliasArgs = []string{}
 var AppInstInfoComments = map[string]string{
@@ -815,6 +747,7 @@ var AppInstInfoComments = map[string]string{
 	"state":                                           "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"errors":                                          "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"runtimeinfo.containerids":                        "List of container names",
+	"powerstate":                                      "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 }
 var AppInstInfoSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -930,22 +863,5 @@ var UpdateAppInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
-}
-var SetAppInstRequiredArgs = []string{
-	"developer",
-	"appname",
-	"appvers",
-	"cluster",
-	"operator",
-	"cloudlet",
 	"powerstate",
-}
-var SetAppInstOptionalArgs = []string{
-	"clusterdeveloper",
-	"crmoverride",
-	"configs.kind",
-	"configs.config",
-	"sharedvolumesize",
-	"healthcheck",
-	"privacypolicy",
 }
