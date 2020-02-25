@@ -32,10 +32,17 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 		for ii, c := range clientsMap.clients[msg.ClientKey.Key] {
 			// Found the same client from before
 			if c.ClientKey.Uuid == msg.ClientKey.Uuid {
-				// remove this from the and append it at the end, since it's new
-				clientsMap.clients[msg.ClientKey.Key] =
-					append(clientsMap.clients[msg.ClientKey.Key][:ii],
-						clientsMap.clients[msg.ClientKey.Key][ii+1:]...)
+				if len(clientsMap.clients[msg.ClientKey.Key]) > ii+1 {
+					// remove this client the and append it at the end, since it's new
+					clientsMap.clients[msg.ClientKey.Key] =
+						append(clientsMap.clients[msg.ClientKey.Key][:ii],
+							clientsMap.clients[msg.ClientKey.Key][ii+1:]...)
+				} else {
+					// if this is already the last element
+					clientsMap.clients[msg.ClientKey.Key] =
+						clientsMap.clients[msg.ClientKey.Key][:ii]
+
+				}
 				break
 			}
 		}

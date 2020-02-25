@@ -18,7 +18,7 @@ info:
 
       MobiledgeX’s MatchingEngine SDKs and Libraries are available in different languages and platforms, which include Android, Unity, and iOS, allowing for easy application development.
 
-      The Performance Metrics API, provided with each SDKs, can be used to help track the average latency characteristics of the edge network. To take advantage of this API, you must add your application server’s Application Instance to a list of sites in order to periodically ping them.
+      The Performance Metrics API, provided with each SDKs, tracks the average latency characteristics of the edge network. To take advantage of this API, you must add your application server’s Application Instance to a list of sites in order to periodically ping them.
 
       Within the left navigational menu, scroll to the desired SDK, based on your preferred language or platform, to view the accompanying APIs.
       To reference these APIs, including their resources and schema, click Edge REST APIs.
@@ -55,7 +55,7 @@ info:
 
       ## FindCloudlet
 
-      Locates the most optimal edge computing footprint, and allows the registered application to find the application backend by leveraging the location, application subscription, and service provider agreement.
+      Locates the most optimal edge computing footprint and allows the registered application to find the application backend by leveraging the location, application subscription, and service provider agreement.
       If there are no suitable cloudlet instances available, the client may connect to the application server located in the public cloud.
 
       Example Code:
@@ -159,7 +159,7 @@ info:
 
       ## PerformanceMetrics
 
-      Performance Metrics API is to track the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
+      Performance Metrics API tracks the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
 
       ### NetTest
 
@@ -338,7 +338,7 @@ info:
 
       ## PerformanceMetrics
 
-      Performance Metrics API is to track the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
+      Performance Metrics API tracks the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
 
       ### NetTest
 
@@ -432,7 +432,7 @@ info:
 
       ## FindCloudlet
 
-      Locates the most optimal edge computing footprint, and allows the registered application to find the application backend by leveraging the location, application subscription, and service provider agreement.
+      Locates the most optimal edge computing footprint and allows the registered application to find the application backend by leveraging the location, application subscription, and service provider agreement.
       If there are no suitable cloudlet instances available, the client may connect to the application server located in the public cloud.
 
       Example Code:
@@ -548,7 +548,7 @@ info:
 
       ## PerformanceMetrics
 
-      Performance Metrics API is to track the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
+      Performance Metrics API tracks the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
 
 
       ### NetTest
