@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"io"
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"google.golang.org/grpc"
 )
 
 type AppInstClientApi struct {
@@ -60,6 +62,17 @@ func (s *AppInstClientApi) ClearRecvChan(ctx context.Context, in *edgeproto.AppI
 			if retLen == 0 {
 				delete(s.clientChan, in.Key)
 				appInstClientKeyApi.Delete(ctx, in, 0)
+				// We also need to clean up our local buffer - it will be out of sync since DME won't update it
+				for ii, client := range s.appInstClients {
+					if client.ClientKey.Key.Matches(&in.Key) {
+						if len(s.appInstClients) > ii+1 {
+							s.appInstClients = append(s.appInstClients[:ii], s.appInstClients[ii+1:]...)
+						} else {
+							// if this is already the last element
+							s.appInstClients = s.appInstClients[:ii]
+						}
+					}
+				}
 			}
 			return retLen
 		}
@@ -73,14 +86,28 @@ func (s *AppInstClientApi) AddAppInstClient(ctx context.Context, client *edgepro
 	s.queueMux.Lock()
 	defer s.queueMux.Unlock()
 	if client != nil {
-		// Queue full - remove the oldest one(first) and append the new one
-		if len(s.appInstClients) == int(settingsApi.Get().MaxTrackedDmeClients) {
-			s.appInstClients = s.appInstClients[1:]
-		}
 		cList, found := s.clientChan[client.ClientKey.Key]
 		if !found {
 			log.SpanLog(ctx, log.DebugLevelApi, "No receivers for this appInst")
 			return
+		}
+		// We need to either update, or add the client to the list
+		for ii, c := range s.appInstClients {
+			// Found the same client from before
+			if c.ClientKey.Uuid == client.ClientKey.Uuid {
+				if len(s.appInstClients) > ii+1 {
+					// remove this client the and append it at the end, since it's new
+					s.appInstClients = append(s.appInstClients[:ii], s.appInstClients[ii+1:]...)
+				} else {
+					// if this is already the last element
+					s.appInstClients = s.appInstClients[:ii]
+				}
+				break
+			}
+		}
+		// Queue full - remove the oldest one(first) and append the new one
+		if len(s.appInstClients) == int(settingsApi.Get().MaxTrackedDmeClients) {
+			s.appInstClients = s.appInstClients[1:]
 		}
 		s.appInstClients = append(s.appInstClients, client)
 		for _, c := range cList {
@@ -99,16 +126,7 @@ func (s *AppInstClientApi) Recv(ctx context.Context, client *edgeproto.AppInstCl
 
 func (s *AppInstClientApi) Prune(ctx context.Context, keys map[edgeproto.AppInstClientKey]struct{}) {}
 
-func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb edgeproto.AppInstClientApi_ShowAppInstClientServer) error {
-	// Check if the AppInst exists
-	if !appInstApi.HasKey(&in.Key) {
-		return in.Key.NotFoundError()
-	}
-
-	// Since we don't care about the cluster developer and name set them to ""
-	in.Key.ClusterInstKey.ClusterKey.Name = ""
-	in.Key.ClusterInstKey.Developer = ""
-
+func (s *AppInstClientApi) StreamAppInstClientsLocal(in *edgeproto.AppInstClientKey, cb edgeproto.AppInstClientApi_StreamAppInstClientsLocalServer) error {
 	// Resuest this AppInst to be sent
 	recvCh := make(chan edgeproto.AppInstClient, int(settingsApi.Get().MaxTrackedDmeClients))
 	s.SetRecvChan(cb.Context(), in, recvCh)
@@ -126,6 +144,82 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 	}
 	// Clear channel and while holding a lock delete this appInstClientKey
 	s.ClearRecvChan(cb.Context(), in, recvCh)
+	return nil
+}
+
+func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb edgeproto.AppInstClientApi_ShowAppInstClientServer) error {
+	var connsMux sync.Mutex
+	var ctrlConns []*grpc.ClientConn
+
+	// Check if the AppInst exists
+	if !appInstApi.HasKey(&in.Key) {
+		return in.Key.NotFoundError()
+	}
+
+	// Since we don't care about the cluster developer and name set them to ""
+	in.Key.ClusterInstKey.ClusterKey.Name = ""
+	in.Key.ClusterInstKey.Developer = ""
+
+	ctrlConns = make([]*grpc.ClientConn, 0)
+	done := false
+	err := controllerApi.RunJobs(func(arg interface{}, addr string) error {
+		if addr == *externalApiAddr {
+			// local node
+			err := s.StreamAppInstClientsLocal(in, cb)
+			// Close grpc connections to other controllers
+			connsMux.Lock()
+			done = true
+			for _, conn := range ctrlConns {
+				conn.Close()
+			}
+			connsMux.Unlock()
+			return err
+		} else { // This will get clients from the remote controllers and proxy them as well
+			// connect to remote node
+			conn, err := ControllerConnect(addr)
+			if err != nil {
+				return err
+			}
+			connsMux.Lock()
+			if done {
+				conn.Close()
+				connsMux.Unlock()
+				return nil
+			} else {
+				// Strore the connection, to close when the local api terminates
+				ctrlConns = append(ctrlConns, conn)
+			}
+			connsMux.Unlock()
+
+			appInstClient := edgeproto.NewAppInstClientApiClient(conn)
+			// Recv forever - when the local API call terminates, it will close the connection
+			stream, err := appInstClient.StreamAppInstClientsLocal(context.Background(), in)
+			if err != nil {
+				log.SpanLog(cb.Context(), log.DebugLevelApi, "Failed to dispatch Show to controller", "controller", addr,
+					"key", in, "err", err)
+				return err
+			}
+			for {
+				client, err := stream.Recv()
+				if err != nil {
+					if err == io.EOF {
+						err = nil
+					}
+					break
+				}
+				err = cb.Send(client)
+				if err != nil {
+					log.SpanLog(cb.Context(), log.DebugLevelApi, "Failed to print a client", "client", client)
+					break
+				}
+			}
+			return nil
+		}
+	}, nil)
+	if err != nil {
+		log.SpanLog(cb.Context(), log.DebugLevelApi, "Failed to dispatch Show to all controllers", "key", in, "err", err)
+		return err
+	}
 	return nil
 }
 
