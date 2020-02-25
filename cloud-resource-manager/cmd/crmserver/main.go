@@ -14,12 +14,12 @@ import (
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
-	"github.com/mobiledgex/edge-cloud/version"
 	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -48,7 +48,7 @@ var cleanupMode = flag.Bool("cleanupMode", false, "cleanup previous versions of 
 // The key for myCloudlet is provided as a configuration - either command line or
 // from a file. The rest of the data is extraced from Openstack.
 var myCloudlet edgeproto.CloudletInfo //XXX this effectively makes one CRM per cloudlet
-var myNode edgeproto.Node
+var nodeMgr *node.NodeMgr
 
 var sigChan chan os.Signal
 var mainStarted chan struct{}
@@ -77,7 +77,7 @@ func main() {
 
 	standalone := false
 	cloudcommon.ParseMyCloudletKey(standalone, cloudletKeyStr, &myCloudlet.Key)
-	cloudcommon.SetNodeKey(hostname, edgeproto.NodeType_NODE_CRM, &myCloudlet.Key, &myNode.Key)
+	nodeMgr = node.Init(ctx, node.NodeTypeCRM, node.WithName(*hostname), node.WithCloudletKey(&myCloudlet.Key), node.WithNoUpdateMyNode())
 	if *platformName == "" {
 		// see if env var was set
 		*platformName = os.Getenv("PLATFORM")
@@ -186,20 +186,14 @@ func main() {
 		// trigger send of info upstream to controller
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudlet, 0)
 
-		myNode.BuildMaster = version.BuildMaster
-		myNode.BuildHead = version.BuildHead
-		myNode.BuildAuthor = version.BuildAuthor
-		myNode.Hostname = cloudcommon.Hostname()
-		myNode.ContainerVersion = cloudletContainerVersion
-
-		controllerData.NodeCache.Update(ctx, &myNode, 0)
+		nodeMgr.MyNode.ContainerVersion = cloudletContainerVersion
+		nodeMgr.UpdateMyNode(ctx)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 		cspan.Finish()
 	}()
 
 	//setup crm notify listener (for shepherd)
 	var notifyServer notify.ServerMgr
-	notifyServer.Init()
 	initSrvNotify(&notifyServer)
 	notifyServer.Start(*notifySrvAddr, *tlsCertFile)
 	defer notifyServer.Stop()

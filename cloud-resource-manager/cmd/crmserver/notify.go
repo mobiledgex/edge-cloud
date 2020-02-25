@@ -23,13 +23,12 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	client.RegisterSendCloudletInfoCache(&cd.CloudletInfoCache)
 	client.RegisterSendAppInstInfoCache(&cd.AppInstInfoCache)
 	client.RegisterSendClusterInstInfoCache(&cd.ClusterInstInfoCache)
-	client.RegisterSendNodeCache(&cd.NodeCache)
 	client.RegisterSend(cd.ExecReqSend)
 	sendMetric = notify.NewMetricSend()
 	client.RegisterSend(sendMetric)
 	client.RegisterSendAlertCache(&cd.AlertCache)
 	client.RegisterRecvPrivacyPolicyCache(&cd.PrivacyPolicyCache)
-
+	nodeMgr.RegisterClient(client)
 }
 
 func initSrvNotify(notifyServer *notify.ServerMgr) {
@@ -39,11 +38,12 @@ func initSrvNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
 	notifyServer.RegisterRecv(notify.NewMetricRecvMany(&CrmMetricsReceiver{}))
 	notifyServer.RegisterRecvAlertCache(&controllerData.AlertCache)
+	nodeMgr.RegisterServer(notifyServer)
 }
 
 type CrmMetricsReceiver struct{}
 
 // forward to controller
-func (r *CrmMetricsReceiver) Recv(ctx context.Context, metric *edgeproto.Metric) {
+func (r *CrmMetricsReceiver) RecvMetric(ctx context.Context, metric *edgeproto.Metric) {
 	sendMetric.Update(ctx, metric)
 }

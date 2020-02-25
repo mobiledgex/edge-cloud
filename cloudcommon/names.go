@@ -191,18 +191,6 @@ func ParseMyCloudletKey(standalone bool, keystr *string, mykey *edgeproto.Cloudl
 	}
 }
 
-func SetNodeKey(hostname *string, nodeType edgeproto.NodeType, cloudletKey *edgeproto.CloudletKey, key *edgeproto.NodeKey) {
-	if *hostname == "" {
-		*hostname, _ = os.Hostname()
-		if *hostname == "" {
-			*hostname = "nohostname"
-		}
-	}
-	key.Name = *hostname
-	key.NodeType = nodeType
-	key.CloudletKey = *cloudletKey
-}
-
 func IsClusterInstReqd(app *edgeproto.App) bool {
 	if app.Deployment == AppDeploymentTypeVM {
 		return false

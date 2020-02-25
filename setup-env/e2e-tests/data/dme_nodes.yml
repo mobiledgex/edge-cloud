@@ -1,19 +1,23 @@
 nodes:
 - key:
-    nodetype: NodeController
+    type: controller
   containerversion: 2019-10-24
 - key:
-    nodetype: NodeController
+    type: controller
   containerversion: 2019-10-24
 - key:
-    nodetype: NodeDme
+    type: dme
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-1
 - key:
-    nodetype: NodeDme
+    type: dme
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-2
+- key:
+    type: cluster-svc
+- key:
+    type: cluster-svc

@@ -17,6 +17,7 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	op "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
@@ -28,7 +29,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vault"
-	"github.com/mobiledgex/edge-cloud/version"
 	"github.com/segmentio/ksuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -71,7 +71,7 @@ type server struct{}
 // The key for myCloudlet is provided as a configuration - either command line or
 // from a file.
 var myCloudletKey edgeproto.CloudletKey
-var myNode edgeproto.Node
+var nodeMgr *node.NodeMgr
 
 var sigChan chan os.Signal
 
@@ -292,7 +292,7 @@ func main() {
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &myCloudletKey)
-	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NODE_DME, &myCloudletKey, &myNode.Key)
+	nodeMgr = node.Init(ctx, node.NodeTypeDME, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey))
 	var err error
 	operatorApiGw, err = initOperator(ctx, *carrier)
 	if err != nil {
@@ -325,6 +325,7 @@ func main() {
 	notifyClient.RegisterSend(sendMetric)
 	sendAutoProvCounts := notify.NewAutoProvCountsSend()
 	notifyClient.RegisterSend(sendAutoProvCounts)
+	nodeMgr.RegisterClient(notifyClient)
 
 	notifyClient.Start()
 	defer notifyClient.Stop()
@@ -335,7 +336,7 @@ func main() {
 	defer stats.Stop()
 
 	dmecommon.Settings = *edgeproto.GetDefaultSettings()
-	autoProvStats := dmecommon.InitAutoProvStats(dmecommon.Settings.AutoDeployIntervalSec, 0, *statsShards, &myNode.Key, sendAutoProvCounts.Update)
+	autoProvStats := dmecommon.InitAutoProvStats(dmecommon.Settings.AutoDeployIntervalSec, 0, *statsShards, &nodeMgr.MyNode.Key, sendAutoProvCounts.Update)
 	autoProvStats.Start()
 	defer autoProvStats.Stop()
 
@@ -344,12 +345,6 @@ func main() {
 	grpcOpts = append(grpcOpts,
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))
-
-	myNode.BuildMaster = version.BuildMaster
-	myNode.BuildHead = version.BuildHead
-	myNode.BuildAuthor = version.BuildAuthor
-	myNode.Hostname = cloudcommon.Hostname()
-	nodeCache.Update(ctx, &myNode, 0)
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {

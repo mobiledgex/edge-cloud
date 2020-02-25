@@ -1,54 +1,58 @@
 nodes:
 - key:
-    nodetype: NodeController
+    type: controller
   containerversion: 2019-10-24
 - key:
-    nodetype: NodeController
+    type: controller
   containerversion: 2019-10-24
 - key:
-    nodetype: NodeDme
+    type: dme
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-1
 - key:
-    nodetype: NodeDme
+    type: dme
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-2
 - key:
-    nodetype: NodeCrm
+    type: crm
     cloudletkey:
       operatorkey:
         name: gcp
       name: gcp-cloud-5
   containerversion: 2019-10-24
 - key:
-    nodetype: NodeCrm
+    type: crm
     cloudletkey:
       operatorkey:
         name: azure
       name: azure-cloud-4
   containerversion: 2019-10-24
 - key:
-    nodetype: NodeCrm
+    type: crm
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-2
   containerversion: 2020-10-10
 - key:
-    nodetype: NodeCrm
+    type: crm
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-3
   containerversion: 2019-10-24
 - key:
-    nodetype: NodeCrm
+    type: crm
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-1
   containerversion: 2020-10-10
+- key:
+    type: cluster-svc
+- key:
+    type: cluster-svc

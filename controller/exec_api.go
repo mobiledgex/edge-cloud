@@ -209,7 +209,7 @@ func (s *ExecApi) SendLocalRequest(ctx context.Context, req *edgeproto.ExecReque
 }
 
 // Receive message from notify framework
-func (s *ExecApi) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
+func (s *ExecApi) RecvExecRequest(ctx context.Context, msg *edgeproto.ExecRequest) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	sr, ok := s.requests[msg.Offer]

@@ -119,6 +119,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--cloudletVMImagePath")
 		args = append(args, p.CloudletVMImagePath)
 	}
+	if p.NotifyParentAddrs != "" {
+		args = append(args, "--notifyParentAddrs")
+		args = append(args, p.NotifyParentAddrs)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -546,6 +550,7 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 	if p.PluginRequired {
 		args = append(args, "--pluginRequired")
 	}
+	args = append(args, "--hostname", p.Name)
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -574,7 +579,7 @@ func (p *ClusterSvc) StopLocal() {
 
 func (p *ClusterSvc) GetExeName() string { return "cluster-svc" }
 
-func (p *ClusterSvc) LookupArgs() string { return "" }
+func (p *ClusterSvc) LookupArgs() string { return p.Name }
 
 // Vault
 
