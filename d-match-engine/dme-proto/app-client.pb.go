@@ -865,17 +865,23 @@ type MatchEngineApiClient interface {
 	//
 	// RegisterClient
 	//
-	// Register the device
+	// Registers the client with the closest Distributed Matching Engine (the
+	// nearest edge location in the Operator network) and validates the
+	// legitimacy of the mobile subscriber. All session information is encrypted.
 	RegisterClient(ctx context.Context, in *RegisterClientRequest, opts ...grpc.CallOption) (*RegisterClientReply, error)
 	//
 	// FindCloudlet
 	//
-	// Determines, with our current GPS co-ordinates, the closest cloudlet running our backend
+	// Locates the most optimal edge computing footprint and allows the
+	// registered application to find the application backend by leveraging the
+	// location, application subscription, and service provider agreement. If
+	// there are no suitable cloudlet instances available, the client may connect
+	// to the application server located in the public cloud.
 	FindCloudlet(ctx context.Context, in *FindCloudletRequest, opts ...grpc.CallOption) (*FindCloudletReply, error)
 	//
 	// VerifyLocation
 	//
-	// Verifies that the GPS coordinates accurately report actual location of device
+	// Verifies that the GPS coordinates accurately report the actual location of the device.
 	VerifyLocation(ctx context.Context, in *VerifyLocationRequest, opts ...grpc.CallOption) (*VerifyLocationReply, error)
 	GetLocation(ctx context.Context, in *GetLocationRequest, opts ...grpc.CallOption) (*GetLocationReply, error)
 	AddUserToGroup(ctx context.Context, in *DynamicLocGroupRequest, opts ...grpc.CallOption) (*DynamicLocGroupReply, error)
@@ -993,17 +999,23 @@ type MatchEngineApiServer interface {
 	//
 	// RegisterClient
 	//
-	// Register the device
+	// Registers the client with the closest Distributed Matching Engine (the
+	// nearest edge location in the Operator network) and validates the
+	// legitimacy of the mobile subscriber. All session information is encrypted.
 	RegisterClient(context.Context, *RegisterClientRequest) (*RegisterClientReply, error)
 	//
 	// FindCloudlet
 	//
-	// Determines, with our current GPS co-ordinates, the closest cloudlet running our backend
+	// Locates the most optimal edge computing footprint and allows the
+	// registered application to find the application backend by leveraging the
+	// location, application subscription, and service provider agreement. If
+	// there are no suitable cloudlet instances available, the client may connect
+	// to the application server located in the public cloud.
 	FindCloudlet(context.Context, *FindCloudletRequest) (*FindCloudletReply, error)
 	//
 	// VerifyLocation
 	//
-	// Verifies that the GPS coordinates accurately report actual location of device
+	// Verifies that the GPS coordinates accurately report the actual location of the device.
 	VerifyLocation(context.Context, *VerifyLocationRequest) (*VerifyLocationReply, error)
 	GetLocation(context.Context, *GetLocationRequest) (*GetLocationReply, error)
 	AddUserToGroup(context.Context, *DynamicLocGroupRequest) (*DynamicLocGroupReply, error)
