@@ -256,9 +256,9 @@ message FlavorMatch {
 }
 
 service CloudletApi {
-  // Create Cloudlet. Sets up cloudlet services on Operator's compute
-  // resources and makes it part of MobiledgeX edge resource portfolio.
-  // These resources will now be managed from edge controller
+  // Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
+  // and integrated as part of MobiledgeX edge resource portfolio.
+  // These resources are managed from the Edge Controller.
   rpc CreateCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/cloudlet"
@@ -267,9 +267,10 @@ service CloudletApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
     option (protogen.method_also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
+    option (protogen.mc2_streamer_cache) = true;
   }
-  // Delete Cloudlet. Removes cloudlet services and will no longer be
-  // managed from edge controller
+  // Delete Cloudlet. Removes the Cloudlet services where they are no longer managed
+  // from the Edge Controller.
   rpc DeleteCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/cloudet"
@@ -277,8 +278,9 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_streamer_cache) = true;
   }
-  // Update Cloudlet. Updates cloudlet config and also manages upgrade of cloudlet services
+  // Update Cloudlet. Updates the Cloudlet configuration and manages the upgrade of Cloudlet services.
   rpc UpdateCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/cloudlet"
@@ -286,8 +288,9 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_streamer_cache) = true;
   }
-  // Show Cloudlets. Lists all the cloudlets managed from edge controller
+  // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
   rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
     option (google.api.http) = {
       post: "/show/cloudlet"

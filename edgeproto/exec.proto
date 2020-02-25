@@ -4,7 +4,7 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
-import "app_inst.proto";
+import "appinst.proto";
 
 message RunCmd {
   // Command or Shell

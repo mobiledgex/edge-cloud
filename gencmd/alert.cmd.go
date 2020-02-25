@@ -7,7 +7,8 @@ Package gencmd is a generated protocol buffer package.
 It is generated from these files:
 	alert.proto
 	app.proto
-	app_inst.proto
+	appinst.proto
+	appinstclient.proto
 	autoprovpolicy.proto
 	autoscalepolicy.proto
 	cloudlet.proto
@@ -40,6 +41,8 @@ It has these top-level messages:
 	AppInstRuntime
 	AppInstInfo
 	AppInstMetrics
+	AppInstClientKey
+	AppInstClient
 	AutoProvPolicy
 	AutoProvCloudlet
 	AutoProvCount

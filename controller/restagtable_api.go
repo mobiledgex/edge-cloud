@@ -179,6 +179,35 @@ func (s *ResTagTableApi) findAZmatch(res string, cli edgeproto.CloudletInfo) (st
 	return "", false
 }
 
+func (s *ResTagTableApi) isOptResOSFlavor(ctx context.Context, stm concurrency.STM, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet) bool {
+
+	if len(flavor.PropMap) == 0 {
+		return false // can't be no properties at all.
+	}
+	if cl.ResTagMap == nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "No OptResMap for", "cloudlet", cl.Key.Name)
+		return false
+	}
+	tagtblkey := cl.ResTagMap["gpu"]
+	tbl, err := s.GetCloudletResourceMap(ctx, stm, tagtblkey)
+
+	if err != nil || tbl == nil {
+		// gpu requested and
+		// no gpu table, osFlavor fails
+		log.SpanLog(ctx, log.DebugLevelApi, "No ResTagTable", "named", cl.Key.Name, "for cloudlet", cl.Key.Name)
+		return false
+	}
+	// look in flavor.PropMap for hits
+	for _, flav_val := range flavor.PropMap {
+		for _, val := range tbl.Tags {
+			if strings.Contains(flav_val, val) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (s *ResTagTableApi) optResLookup(ctx context.Context, stm concurrency.STM, nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, string, bool, error) {
 	var resmap map[string]*edgeproto.ResTagTableKey = cl.ResTagMap
 	var img, az string
@@ -232,7 +261,6 @@ func (s *ResTagTableApi) optResLookup(ctx context.Context, stm concurrency.STM, 
 				for flav_key, flav_val := range flavor.PropMap {
 					// How many resources are supplied by this os flavor?
 					alias = strings.Split(flav_val, ":")
-					log.InfoLog("optResLookup", "alias", alias)
 					if len(alias) == 2 {
 						if numres, err = strconv.Atoi(alias[1]); err != nil {
 							return "", "", false, fmt.Errorf("Non-numeric count found in os flavor props for %s", flavor.Name)
@@ -263,9 +291,7 @@ func (s *ResTagTableApi) optResLookup(ctx context.Context, stm concurrency.STM, 
 		flavor_found:
 			az, _ = s.findAZmatch("gpu", cli)
 			img, _ = s.findImagematch("gpu", cli)
-
-			log.InfoLog("OptResLookup", "mex flavor", nodeflavor.Key.Name, "os flavor", flavor.Name)
-
+			log.SpanLog(ctx, log.DebugLevelApi, "Mapped", "mex flavor:", nodeflavor.Key.Name, "os flavor:", flavor.Name)
 			return az, img, true, nil
 
 			// Other resources TBI
@@ -274,7 +300,7 @@ func (s *ResTagTableApi) optResLookup(ctx context.Context, stm concurrency.STM, 
 		case int32(edgeproto.OptResNames_NIC):
 			break
 		default:
-			log.InfoLog("Unhandled resource", "res", res)
+			log.SpanLog(ctx, log.DebugLevelApi, "Unhandled resource", "res", res)
 		}
 	}
 	return "", "", false, nil
@@ -288,7 +314,8 @@ func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nod
 	var az, img string
 
 	flavorList = cli.Flavors
-	log.InfoLog("GetVMSpec with closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
+	log.SpanLog(ctx, log.DebugLevelApi, "GetVMSpec with closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
+
 	sort.Slice(flavorList[:], func(i, j int) bool {
 		if flavorList[i].Vcpus < flavorList[j].Vcpus {
 			return true
@@ -327,11 +354,17 @@ func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nod
 			if az, img, ok, _ = resTagTableApi.optResLookup(ctx, stm, nodeflavor, *flavor, cl, cli); !ok {
 				continue
 			}
+		} else {
+			// Finally, if the os flavor we're about to return happens to be offering an optional resource
+			// that was not requested, we need to skip it.
+			if s.isOptResOSFlavor(ctx, stm, *flavor, cl) {
+				continue
+			}
 		}
 		vmspec.FlavorName = flavor.Name
 		vmspec.AvailabilityZone = az
 		vmspec.ImageName = img
-		log.InfoLog("Found closest flavor", "flavor", flavor, "vmspec", vmspec)
+		log.SpanLog(ctx, log.DebugLevelApi, "Found closest flavor", "flavor", flavor, "vmspec", vmspec)
 
 		return &vmspec, nil
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
+	ssh "github.com/mobiledgex/golang-ssh"
 	yaml "github.com/mobiledgex/yaml/v2"
 )
 
@@ -19,6 +20,11 @@ var deleteZip = "deleteZip"
 
 var UseInternalPortInContainer = "internalPort"
 var UsePublicPortInContainer = "publicPort"
+
+type DockerNetworkingMode string
+
+var DockerHostMode DockerNetworkingMode = "hostMode"
+var DockerBridgeMode DockerNetworkingMode = "bridgeMode"
 
 func GetContainerName(appKey *edgeproto.AppKey) string {
 	return util.DNSSanitize(appKey.Name + appKey.Version)
@@ -65,11 +71,11 @@ func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMat
 	return cmdArgs
 }
 
-func getDockerComposeFileName(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) string {
+func getDockerComposeFileName(client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) string {
 	return util.DNSSanitize("docker-compose-"+app.Key.Name+app.Key.Version) + ".yml"
 }
 
-func parseDockerComposeManifest(client pc.PlatformClient, dir string, dm *cloudcommon.DockerManifest) error {
+func parseDockerComposeManifest(client ssh.Client, dir string, dm *cloudcommon.DockerManifest) error {
 	cmd := fmt.Sprintf("cat %s/%s", dir, "manifest.yml")
 	out, err := client.Output(cmd)
 	if err != nil {
@@ -82,7 +88,7 @@ func parseDockerComposeManifest(client pc.PlatformClient, dir string, dm *cloudc
 	return nil
 }
 
-func handleDockerZipfile(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
+func handleDockerZipfile(ctx context.Context, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
 	dir := util.DockerSanitize(app.Key.Name + app.Key.DeveloperKey.Name + app.Key.Version)
 	filename := dir + "/manifest.zip"
 	log.SpanLog(ctx, log.DebugLevelMexos, "docker zip", "filename", filename, "action", action)
@@ -169,7 +175,7 @@ func handleDockerZipfile(ctx context.Context, client pc.PlatformClient, app *edg
 }
 
 //createDockerComposeFile creates a docker compose file and returns the file name
-func createDockerComposeFile(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) (string, error) {
+func createDockerComposeFile(client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) (string, error) {
 	filename := getDockerComposeFileName(client, app, appInst)
 	log.DebugLog(log.DebugLevelMexos, "creating docker compose file", "filename", filename)
 
@@ -184,7 +190,7 @@ func createDockerComposeFile(client pc.PlatformClient, app *edgeproto.App, appIn
 // Local Docker AppInst create is different due to fact that MacOS doesn't like '--network=host' option.
 // Instead on MacOS docker needs to have port mapping  explicity specified with '-p' option.
 // As a result we have a separate function specifically for a docker app creation on a MacOS laptop
-func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	image := app.ImagePath
 	name := util.DockerSanitize(app.Key.Name)
 	cloudlet := util.DockerSanitize(appInst.Key.ClusterInstKey.CloudletKey.Name)
@@ -215,21 +221,21 @@ func CreateAppInstLocal(client pc.PlatformClient, app *edgeproto.App, appInst *e
 	return nil
 }
 
-func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func CreateAppInst(ctx context.Context, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, networkMode DockerNetworkingMode) error {
 	image := app.ImagePath
 	name := GetContainerName(&app.Key)
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", GetContainerName(&app.Key), image, app.Command)
-		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
+		if networkMode == DockerBridgeMode {
 			cmd = fmt.Sprintf("docker run -d -l edge-cloud --restart=unless-stopped --name=%s %s %s %s", name,
 				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
 		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker run ", "cmd", cmd)
-
 		out, err := client.Output(cmd)
 		if err != nil {
-			return fmt.Errorf("error running app, %s, %v", out, err)
+			return fmt.Errorf("error running docker run, %s, %v", out, err)
 		}
+
 		log.SpanLog(ctx, log.DebugLevelMexos, "done docker run ")
 	} else {
 		if strings.HasSuffix(app.DeploymentManifest, ".zip") {
@@ -249,15 +255,16 @@ func CreateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto
 	return nil
 }
 
-func DeleteAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func DeleteAppInst(ctx context.Context, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 
 	if app.DeploymentManifest == "" {
 		name := GetContainerName(&app.Key)
 		cmd := fmt.Sprintf("docker stop %s", name)
-		log.SpanLog(ctx, log.DebugLevelMexos, "running docker stop ", "cmd", cmd)
 
+		log.SpanLog(ctx, log.DebugLevelMexos, "running docker stop ", "cmd", cmd)
 		removeContainer := true
 		out, err := client.Output(cmd)
+
 		if err != nil {
 			if strings.Contains(out, "No such container") {
 				log.SpanLog(ctx, log.DebugLevelMexos, "container already removed", "cmd", cmd)
@@ -266,13 +273,12 @@ func DeleteAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto
 				return fmt.Errorf("error stopping docker app, %s, %v", out, err)
 			}
 		}
-		log.SpanLog(ctx, log.DebugLevelMexos, "done docker stop")
+		log.SpanLog(ctx, log.DebugLevelMexos, "done docker stop", "out", out, "err", err)
 
 		if removeContainer {
 			cmd = fmt.Sprintf("docker rm %s", name)
 			log.SpanLog(ctx, log.DebugLevelMexos, "running docker rm ", "cmd", cmd)
-
-			out, err = client.Output(cmd)
+			out, err := client.Output(cmd)
 			if err != nil {
 				return fmt.Errorf("error removing docker app, %s, %v", out, err)
 			}
@@ -297,17 +303,17 @@ func DeleteAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto
 	return nil
 }
 
-func UpdateAppInst(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func UpdateAppInst(ctx context.Context, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, dockerMode DockerNetworkingMode) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "UpdateAppInst", "appkey", app.Key, "ImagePath", app.ImagePath)
 
 	err := DeleteAppInst(ctx, client, app, appInst)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "DeleteAppInst failed, proceeding with create", "appkey", app.Key, "err", err)
 	}
-	return CreateAppInst(ctx, client, app, appInst)
+	return CreateAppInst(ctx, client, app, appInst, dockerMode)
 }
 
-func appendContainerIdsFromDockerComposeImages(client pc.PlatformClient, dockerComposeFile string, rt *edgeproto.AppInstRuntime) error {
+func appendContainerIdsFromDockerComposeImages(client ssh.Client, dockerComposeFile string, rt *edgeproto.AppInstRuntime) error {
 	cmd := fmt.Sprintf("docker-compose -f %s images", dockerComposeFile)
 	log.DebugLog(log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
 	out, err := client.Output(cmd)
@@ -324,7 +330,7 @@ func appendContainerIdsFromDockerComposeImages(client pc.PlatformClient, dockerC
 	return nil
 }
 
-func GetAppInstRuntime(ctx context.Context, client pc.PlatformClient, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
+func GetAppInstRuntime(ctx context.Context, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
 	rt := &edgeproto.AppInstRuntime{}
 	rt.ContainerIds = make([]string, 0)
 

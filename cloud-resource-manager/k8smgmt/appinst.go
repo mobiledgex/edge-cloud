@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	ssh "github.com/mobiledgex/golang-ssh"
 	appsv1 "k8s.io/api/apps/v1"
 )
 
@@ -25,7 +26,7 @@ var createManifest = "create"
 
 // WaitForAppInst waits for pods to either start or result in an error if WaitRunning specified,
 // or if WaitDeleted is specified then wait for them to all disappear.
-func WaitForAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, waitFor string) error {
+func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, waitFor string) error {
 	// wait half as long as the total controller wait time, which includes all tasks
 	log.SpanLog(ctx, log.DebugLevelMexos, "waiting for appinst pods", "appName", app.Key.Name, "maxWait", maxWait, "waitFor", waitFor)
 	start := time.Now()
@@ -133,7 +134,7 @@ func WaitForAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNa
 	return nil
 }
 
-func createOrUpdateAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
+func createOrUpdateAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
 	mf, err := cloudcommon.GetDeploymentManifest(app.DeploymentManifest)
 	if err != nil {
 		return err
@@ -160,11 +161,11 @@ func createOrUpdateAppInst(ctx context.Context, client pc.PlatformClient, names 
 
 }
 
-func CreateAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func CreateAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	return createOrUpdateAppInst(ctx, client, names, app, appInst, createManifest)
 }
 
-func UpdateAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func UpdateAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	err := createOrUpdateAppInst(ctx, client, names, app, appInst, applyManifest)
 	if err != nil {
 		return err
@@ -172,7 +173,7 @@ func UpdateAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNam
 	return WaitForAppInst(ctx, client, names, app, WaitRunning)
 }
 
-func DeleteAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func DeleteAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "deleting app", "name", names.AppName)
 	file := names.AppName + names.AppRevision + ".yaml"
 	cmd := fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, file)
@@ -191,7 +192,7 @@ func DeleteAppInst(ctx context.Context, client pc.PlatformClient, names *KubeNam
 	return WaitForAppInst(ctx, client, names, app, WaitDeleted)
 }
 
-func GetAppInstRuntime(ctx context.Context, client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
+func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
 	rt := &edgeproto.AppInstRuntime{}
 	rt.ContainerIds = make([]string, 0)
 

@@ -15,6 +15,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
+	ssh "github.com/mobiledgex/golang-ssh"
 )
 
 // Nginx is used to proxy connections from the external network to
@@ -66,7 +67,7 @@ func init() {
 	nginxL7ConfT = template.Must(template.New("l7app").Parse(nginxL7Conf))
 }
 
-func InitL7Proxy(ctx context.Context, client pc.PlatformClient, ops ...Op) error {
+func InitL7Proxy(ctx context.Context, client ssh.Client, ops ...Op) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "InitL7Proxy")
 	out, err := client.Output("docker ps --format '{{.Names}}'")
 	if err != nil {
@@ -109,7 +110,7 @@ func getNginxContainerName(name string) string {
 	return "nginx" + name
 }
 
-func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, listenIP, destIP string, ports []dme.AppPort, ops ...Op) error {
+func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, destIP string, ports []dme.AppPort, ops ...Op) error {
 
 	log.SpanLog(ctx, log.DebugLevelMexos, "CreateNginxProxy", "listenIP", listenIP, "destIP", destIP)
 	containerName := getNginxContainerName(name)
@@ -210,7 +211,7 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, liste
 	return nil
 }
 
-func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, name, l7dir, listenIP, backendIP string, ports []dme.AppPort, useTLS bool) error {
+func createNginxConf(ctx context.Context, client ssh.Client, confname, name, l7dir, listenIP, backendIP string, ports []dme.AppPort, useTLS bool) error {
 	spec := ProxySpec{
 		Name:       name,
 		UseTLS:     useTLS,
@@ -308,7 +309,7 @@ func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, na
 	return nil
 }
 
-func reloadNginxL7(client pc.PlatformClient) error {
+func reloadNginxL7(client ssh.Client) error {
 	err := pc.Run(client, "docker exec "+NginxL7Name+" nginx -s reload")
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos,
@@ -412,12 +413,12 @@ stream {
 var nginxL7Conf = `
 {{- range .}}
 location /{{.PathPrefix}}/ {
-	proxy_pass http://{{.BackendIP}}/;
+	proxy_pass http://{{.BackendIP}}:{{.BackendPort}}/;
 }
 {{- end}}
 `
 
-func DeleteNginxProxy(ctx context.Context, client pc.PlatformClient, name string) error {
+func DeleteNginxProxy(ctx context.Context, client ssh.Client, name string) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx", "name", name)
 	containerName := getNginxContainerName(name)
 	out, err := client.Output("docker kill " + containerName)
