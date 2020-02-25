@@ -51,4 +51,6 @@ service AppInstClientApi {
     option (protogen.mc2_api) = "ResourceAppAnalytics,ActionView,Key.AppKey.DeveloperKey.Name";
     option (protogen.non_standard_show) = true;
   }
+  // This is used unternally to forward AppInstClients to other Controllers
+  rpc StreamAppInstClientsLocal(AppInstClientKey) returns (stream AppInstClient) {}
 }
