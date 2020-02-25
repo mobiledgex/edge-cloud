@@ -10,6 +10,7 @@ type PortSpec struct {
 	Proto   string
 	Port    string
 	EndPort string // mfw XXX ? why two type and parse rtns for AppPort? (3 actually kube.go is another)
+	Tls		bool
 }
 
 func ParsePorts(accessPorts string) ([]PortSpec, error) {
@@ -22,8 +23,8 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 
 	for _, pstr := range pstrs {
 		pp := strings.Split(pstr, ":")
-		if len(pp) != 2 {
-			return nil, fmt.Errorf("invalid AccessPorts format %s", pstr)
+		if len(pp) != 2 && !(len(pp) == 3 && pp[2] == "tls") {
+			return nil, fmt.Errorf("invalid AccessPorts format '%s'", pstr)
 		}
 		// within each pp[1], we may have a hypenated range of ports ex: udp:M-N inclusive
 		portrange := strings.Split(pp[1], "-")
@@ -60,6 +61,9 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 			Proto:   strings.ToLower(pp[0]),
 			Port:    strconv.FormatInt(baseport, 10),
 			EndPort: strconv.FormatInt(endport, 10),
+		}
+		if len(pp) == 3 {
+			portSpec.Tls = true
 		}
 		ports = append(ports, portSpec)
 	}

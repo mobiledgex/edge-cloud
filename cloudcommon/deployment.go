@@ -112,6 +112,9 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 					continue
 				}
 				appPort.InternalPort = int32(kp.TargetPort.IntValue())
+				if strings.HasSuffix(kp.Name, "tls") {
+					appPort.Tls = true
+				} 
 				objPorts[appPort.String()] = struct{}{}
 			}
 		}
@@ -132,6 +135,7 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 						Proto:        appPort.Proto,
 						InternalPort: int32(i),
 						EndPort:      int32(0),
+						Tls:		  appPort.Tls,
 					}
 					if appPort.Proto == dme.LProto_L_PROTO_HTTP {
 						appPort.Proto = dme.LProto_L_PROTO_TCP

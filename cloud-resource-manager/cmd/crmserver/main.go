@@ -129,6 +129,8 @@ func main() {
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
 	reflection.Register(grpcServer)
 
+	finishedInit := make(chan bool)
+
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
@@ -191,6 +193,7 @@ func main() {
 		nodeMgr.UpdateMyNode(ctx)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 		cspan.Finish()
+		finishedInit <- true
 	}()
 
 	// setup crm notify listener (for shepherd)
@@ -200,12 +203,15 @@ func main() {
 	defer notifyServer.Stop()
 
 	// setup rootlb certs
-	commonName := "*." + strings.ToLower(myCloudlet.Key.OperatorKey.Name) + ".mobiledgex.net" // ex: *.tdg.mobiledgex.net
-	rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
-	if err != nil {
-		go proxy.GetRootLbCerts(ctx, commonName, *vaultAddr, rootlb)
-	}
-
+	go func() {
+		<- finishedInit // wait for rootlb to finish setting up before trying to ssh in
+		commonName := "*." + strings.ToLower(myCloudlet.Key.OperatorKey.Name) + ".mobiledgex.net" // ex: *.tdg.mobiledgex.net
+		rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
+		if err == nil {
+			proxy.GetRootLbCerts(ctx, commonName, *vaultAddr, rootlb)
+		}
+	
+	}()
 	span.Finish()
 
 	if mainStarted != nil {
