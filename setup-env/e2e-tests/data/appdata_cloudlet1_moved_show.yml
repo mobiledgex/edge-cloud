@@ -13,6 +13,7 @@ settings:
   deleteclusterinsttimeout: 2s
   masternodeflavor: x1.tiny
   loadbalancermaxportrange: 100
+  maxtrackeddmeclients: 100
 
 flavors:
 - key:

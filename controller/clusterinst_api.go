@@ -12,7 +12,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/vmspec"
 )
 
 type ClusterInstApi struct {
@@ -128,6 +127,61 @@ func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	return false
 }
 
+// validateAndDefaultIPAccess checks that the IP access type is valid if it is set.  If it is not set
+// it returns the new value based on the other parameters
+func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType edgeproto.PlatformType, cb edgeproto.ClusterInstApi_CreateClusterInstServer) (edgeproto.IpAccess, error) {
+
+	platName := edgeproto.PlatformType_name[int32(platformType)]
+
+	// Operators such as GCP and Azure must be dedicated as they allocate a new IP per service
+	if isIPAllocatedPerService(clusterInst.Key.CloudletKey.OperatorKey.Name) {
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for operator: " + clusterInst.Key.CloudletKey.OperatorKey.Name})
+			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
+		}
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+			return clusterInst.IpAccess, fmt.Errorf("IpAccessShared not supported for operator: %s", clusterInst.Key.CloudletKey.OperatorKey.Name)
+		}
+		return clusterInst.IpAccess, nil
+	}
+	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND || platformType == edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX {
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessShared for platform " + platName})
+			return edgeproto.IpAccess_IP_ACCESS_SHARED, nil
+		}
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+			return clusterInst.IpAccess, fmt.Errorf("IpAccessDedicated not supported platform: %s", platformType)
+		}
+	}
+	// Privacy Policy required dedicated
+	if clusterInst.PrivacyPolicy != "" {
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for privacy policy enabled cluster "})
+			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
+		}
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+			return clusterInst.IpAccess, fmt.Errorf("IpAccessShared not supported for privacy policy enabled cluster")
+		}
+		return clusterInst.IpAccess, nil
+	}
+	switch clusterInst.Deployment {
+	case cloudcommon.AppDeploymentTypeKubernetes:
+		fallthrough
+	case cloudcommon.AppDeploymentTypeHelm:
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessShared for deployment " + clusterInst.Deployment})
+			return edgeproto.IpAccess_IP_ACCESS_SHARED, nil
+		}
+		return clusterInst.IpAccess, nil
+	case cloudcommon.AppDeploymentTypeDocker:
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for deployment " + clusterInst.Deployment})
+			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
+		}
+	}
+	return clusterInst.IpAccess, nil
+}
+
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	in.Auto = false
@@ -238,36 +292,18 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
-		isSharedOnly := cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX
-		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
-		if isSharedOnly {
-			if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-				return fmt.Errorf("IpAccess must be shared for cloudlet platform type %s", platName)
-			}
-			// override unknown
-			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
-		} else if in.Deployment == cloudcommon.AppDeploymentTypeDocker {
-			// docker must be dedicated
-			if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-				return fmt.Errorf("IpAccess must be dedicated for deployment type %s cloudlet platform type %s", cloudcommon.AppDeploymentTypeDocker, platName)
-			}
-			// override unknown
-			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
+		var err error
+		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
+		if err != nil {
+			return err
 		}
-
+		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
 		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
 		if in.PrivacyPolicy != "" {
 			if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
 				return fmt.Errorf("Privacy Policy not supported on %s", platName)
-			}
-			if in.IpAccess != edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-				if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-					in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
-				} else {
-					return fmt.Errorf("PrivacyPolicy only supported for IP_ACCESS_DEDICATED")
-				}
 			}
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
@@ -316,10 +352,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
-
-		var err error
-		var vmspec *vmspec.VMCreationSpec
-		vmspec, err = resTagTableApi.GetVMSpec(ctx, stm, nodeFlavor, cloudlet, info)
+		vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, nodeFlavor, cloudlet, info)
 		if err != nil {
 			return err
 		}

@@ -8,6 +8,7 @@ import (
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
@@ -154,7 +155,7 @@ func (s *AutoProvPolicyApi) Recv(ctx context.Context, msg *edgeproto.AutoProvCou
 		target := msg.Counts[0]
 		log.SpanLog(ctx, log.DebugLevelMetrics, "auto-prov count recv immedate", "target", target)
 		go func() {
-			span := log.StartSpan(log.DebugLevelMetrics, "AutoProvCreateAppInst")
+			span := log.StartSpan(log.DebugLevelMetrics, "AutoProvCreateAppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			ctx := log.ContextWithSpan(context.Background(), span)
 			stream := streamoutAppInst{
 				ctx:      ctx,

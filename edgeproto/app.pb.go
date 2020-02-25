@@ -255,13 +255,15 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for AppApi service
 
 type AppApiClient interface {
-	// Create Application. Create definition for an application instance which will be deployed on a Cloudlet
+	// Create Application. Creates a definition for an application instance for Cloudlet deployment.
 	CreateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
-	// Delete Application. Delete definition of an application instance. This requires that no application instance with this definition exists. If it exists, then user must delete those first
+	// Delete Application. Deletes a definition of an Application instance. Make sure no other application
+	// instances exist with that definition. If they do exist, you must delete those Application instances first.
 	DeleteApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
-	// Update Application. Update definition of an application instance
+	// Update Application. Updates the definition of an Application instance.
 	UpdateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
-	// Show Applications. Lists all application definitions managed from edge controller. Any fields specified will be used to filter results
+	// Show Applications. Lists all Application definitions managed from the Edge Controller.
+	// Any fields specified will be used to filter results.
 	ShowApp(ctx context.Context, in *App, opts ...grpc.CallOption) (AppApi_ShowAppClient, error)
 }
 
@@ -335,13 +337,15 @@ func (x *appApiShowAppClient) Recv() (*App, error) {
 // Server API for AppApi service
 
 type AppApiServer interface {
-	// Create Application. Create definition for an application instance which will be deployed on a Cloudlet
+	// Create Application. Creates a definition for an application instance for Cloudlet deployment.
 	CreateApp(context.Context, *App) (*Result, error)
-	// Delete Application. Delete definition of an application instance. This requires that no application instance with this definition exists. If it exists, then user must delete those first
+	// Delete Application. Deletes a definition of an Application instance. Make sure no other application
+	// instances exist with that definition. If they do exist, you must delete those Application instances first.
 	DeleteApp(context.Context, *App) (*Result, error)
-	// Update Application. Update definition of an application instance
+	// Update Application. Updates the definition of an Application instance.
 	UpdateApp(context.Context, *App) (*Result, error)
-	// Show Applications. Lists all application definitions managed from edge controller. Any fields specified will be used to filter results
+	// Show Applications. Lists all Application definitions managed from the Edge Controller.
+	// Any fields specified will be used to filter results.
 	ShowApp(*App, AppApi_ShowAppServer) error
 }
 

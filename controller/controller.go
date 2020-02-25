@@ -252,7 +252,7 @@ func startServices() error {
 	}
 	services.events = events
 
-	InitNotify(influxQ)
+	InitNotify(influxQ, &appInstClientApi)
 	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile)
 	services.notifyServerMgr = true
 
@@ -285,7 +285,7 @@ func startServices() error {
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
 	edgeproto.RegisterPrivacyPolicyApiServer(server, &privacyPolicyApi)
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
-
+	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -322,6 +322,7 @@ func startServices() error {
 			edgeproto.RegisterResTagTableApiHandler,
 			edgeproto.RegisterPrivacyPolicyApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
+			edgeproto.RegisterAppInstClientApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -437,6 +438,9 @@ func InitApis(sync *Sync) {
 	InitResTagTableApi(sync)
 	InitPrivacyPolicyApi(sync)
 	InitSettingsApi(sync)
+	InitAppInstClientKeyApi(sync)
+	InitAppInstClientApi()
+
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "nohostname"
@@ -444,7 +448,7 @@ func InitApis(sync *Sync) {
 	ControllerId = hostname + "@" + *externalApiAddr
 }
 
-func InitNotify(influxQ *influxq.InfluxQ) {
+func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
 	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
@@ -458,6 +462,7 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
 	notify.ServerMgrOne.RegisterSendPrivacyPolicyCache(&privacyPolicyApi.cache)
+	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
 
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
@@ -470,6 +475,7 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterRecv(notify.NewAlertRecvMany(&alertApi))
 	autoProvPolicyApi.SetInfluxQ(influxQ)
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
 }
 
 // This is for figuring out the "external" address when

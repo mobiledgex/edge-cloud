@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	ssh "github.com/mobiledgex/golang-ssh"
 )
 
 type PlatformConfig struct {
@@ -43,7 +43,7 @@ type Platform interface {
 	// Get AppInst runtime information
 	GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error)
 	// Get the Platform Client to run commands against
-	GetPlatformClient(ctx context.Context, clusterInst *edgeproto.ClusterInst) (pc.PlatformClient, error)
+	GetPlatformClient(ctx context.Context, clusterInst *edgeproto.ClusterInst) (ssh.Client, error)
 	// Get the command to pass to PlatformClient for the container command
 	GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error)
 	// Get the console URL of the VM app

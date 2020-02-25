@@ -17,15 +17,16 @@ info:
       Our services will also verify a device's location, ensuring the optimum compute instance is used, and much more, once you are on the edge.
 
       MobiledgeX’s MatchingEngine SDKs and Libraries are available in different languages and platforms, which include Android, Unity, and iOS, allowing for easy application development.
-      The Performance Metrics API can be used to help track the average latency characteristics of the edge network. To take advantage of this API, you must add your application server’s AppInst to a list of sites in order to periodically ping them.
 
-      Within the left navigational pane, scroll to the desired SDK, based on your preferred language or platform, to view the accompanying APIs.
+      The Performance Metrics API, provided with each SDKs, tracks the average latency characteristics of the edge network. To take advantage of this API, you must add your application server’s Application Instance to a list of sites in order to periodically ping them.
+
+      Within the left navigational menu, scroll to the desired SDK, based on your preferred language or platform, to view the accompanying APIs.
       To reference these APIs, including their resources and schema, click Edge REST APIs.
 
       # Edge SDK - Android
 
       ## RegisterClient
-      Register the device
+      Registers the client with the closest Distributed Matching Engine (the nearest edge location in the Operator network) and validates the legitimacy of the mobile subscriber. All session information is encrypted.
 
       Example Code:
       ```java
@@ -53,7 +54,9 @@ info:
       ```
 
       ## FindCloudlet
-      Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
+
+      Locates the most optimal edge computing footprint and allows the registered application to find the application backend by leveraging the location, application subscription, and service provider agreement.
+      If there are no suitable cloudlet instances available, the client may connect to the application server located in the public cloud.
 
       Example Code:
       ```java
@@ -90,7 +93,7 @@ info:
       ```
 
       ## VerifyLocation
-      Verifies that the GPS coordinates accurately report actual location of device
+      Verifies that the GPS coordinates accurately report the actual location of the device.
 
       Example Code:
       ```java
@@ -111,8 +114,8 @@ info:
 
       ## GetConnection
       Function that gets a “connection” object (depending on Protocol of
-      specified connection and language) bound to cellular interface and
-      connected to application backend (as specified by findCloudletReply).
+      specified connection and language) bound to the cellular interface and
+      connected to the application backend (as specified by findCloudletReply).
 
       Parameters:
          * `findCloudletReply` AppClient.FindCloudletReply:  Object returned from findCloudlet API
@@ -156,7 +159,7 @@ info:
 
       ## PerformanceMetrics
 
-      Performance Metrics API is to track the average latency of the edge network for your application server’s AppInst. You must add the AppInst to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
+      Performance Metrics API tracks the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
 
       ### NetTest
 
@@ -214,7 +217,7 @@ info:
       # Edge SDK - Unity
 
       ## RegisterClient
-      Register the device
+      Registers the client with the closest Distributed Matching Engine (the nearest edge location in the Operator network) and validates the legitimacy of the mobile subscriber. All session information is encrypted.
 
       Example Code:
       ```csharp
@@ -242,7 +245,8 @@ info:
       ```
 
       ## FindCloudlet
-      Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
+      Locates the most optimal edge computing footprint and allows the registered application to find the application backend by leveraging location, application subscription, and service provider agreement.
+      If there are no suitable cloudlet instances available, the client may connect to the application server located in the public cloud.
 
       Example Code:
       ```csharp
@@ -265,7 +269,7 @@ info:
       ```
 
       ## VerifyLocation
-      Verifies that the GPS coordinates accurately report actual location of device
+      Verifies that the GPS coordinates accurately report the actual location of the device.
 
       Example Code:
       ```csharp
@@ -334,8 +338,7 @@ info:
 
       ## PerformanceMetrics
 
-      DistributedMatchEngine.PerformanceMetrics.NetTest
-      DistributedMatchEngine.PerformanceMetrics.NetTest.Site
+      Performance Metrics API tracks the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
 
       ### NetTest
 
@@ -399,7 +402,7 @@ info:
       # Edge SDK - iOS
 
       ## RegisterClient
-      Register the device
+      Registers the client with the closest Distributed Matching Engine (the nearest edge location in the Operator network) and validates the legitimacy of the mobile subscriber. All session information is encrypted.
 
       Example Code:
       ```swift
@@ -428,7 +431,9 @@ info:
       ```
 
       ## FindCloudlet
-      Determines, with our current GPS co-ordinates, the closest cloudlet running our backend.
+
+      Locates the most optimal edge computing footprint and allows the registered application to find the application backend by leveraging the location, application subscription, and service provider agreement.
+      If there are no suitable cloudlet instances available, the client may connect to the application server located in the public cloud.
 
       Example Code:
       ```swift
@@ -473,7 +478,7 @@ info:
       ```
 
       ## VerifyLocation
-      Verifies that the GPS coordinates accurately report actual location of device
+      Verifies that the GPS coordinates accurately report the actual location of the device.
 
       Example Code:
       ```swift
@@ -543,8 +548,8 @@ info:
 
       ## PerformanceMetrics
 
-      MobiledgeXiOSLibrary.PerformanceMetrics.NetTest
-      MobiledgeXiOSLibrary.PerformanceMetrics.Site
+      Performance Metrics API tracks the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
+
 
       ### NetTest
 
