@@ -108,8 +108,83 @@ func ShowAppInstClients(c *cli.Command, data []edgeproto.AppInstClientKey, err *
 	}
 }
 
+var StreamAppInstClientsLocalCmd = &cli.Command{
+	Use:          "StreamAppInstClientsLocal",
+	RequiredArgs: strings.Join(AppInstClientKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppInstClientKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppInstClientKeyAliasArgs, " "),
+	SpecialArgs:  &AppInstClientKeySpecialArgs,
+	Comments:     AppInstClientKeyComments,
+	ReqData:      &edgeproto.AppInstClientKey{},
+	ReplyData:    &edgeproto.AppInstClient{},
+	Run:          runStreamAppInstClientsLocal,
+}
+
+func runStreamAppInstClientsLocal(c *cli.Command, args []string) error {
+	obj := c.ReqData.(*edgeproto.AppInstClientKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return StreamAppInstClientsLocal(c, obj)
+}
+
+func StreamAppInstClientsLocal(c *cli.Command, in *edgeproto.AppInstClientKey) error {
+	if AppInstClientApiCmd == nil {
+		return fmt.Errorf("AppInstClientApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := AppInstClientApiCmd.StreamAppInstClientsLocal(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("StreamAppInstClientsLocal failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.AppInstClient, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("StreamAppInstClientsLocal recv failed: %s", errstr)
+		}
+		AppInstClientHideTags(obj)
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func StreamAppInstClientsLocals(c *cli.Command, data []edgeproto.AppInstClientKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("StreamAppInstClientsLocal %v\n", data[ii])
+		myerr := StreamAppInstClientsLocal(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var AppInstClientApiCmds = []*cobra.Command{
 	ShowAppInstClientCmd.GenCmd(),
+	StreamAppInstClientsLocalCmd.GenCmd(),
 }
 
 var AppInstClientKeyRequiredArgs = []string{

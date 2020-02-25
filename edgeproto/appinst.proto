@@ -31,12 +31,14 @@ message AppInstKey {
 //
 // Health check status gets set by external, or rootLB health check
 enum HealthCheck {
-  // Health Check is ok
-  HEALTH_CHECK_OK = 0;
+  // Health Check is unknown
+  HEALTH_CHECK_UNKNOWN = 0;  
   // Health Check failure due to RootLB being offline
   HEALTH_CHECK_FAIL_ROOTLB_OFFLINE = 1;
   // Health Check failure due to Backend server being unavailable
   HEALTH_CHECK_FAIL_SERVER_FAIL = 2;
+  // Health Check is ok
+  HEALTH_CHECK_OK = 3;
 }
 
 // Application Instance

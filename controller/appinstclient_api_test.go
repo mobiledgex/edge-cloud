@@ -84,15 +84,14 @@ func TestAppInstClientApi(t *testing.T) {
 	// Delete channel 2 - check that list is 0
 	count := appInstClientApi.ClearRecvChan(ctx, &testutil.AppInstClientKeyData[1], ch2)
 	assert.Equal(t, 0, count)
+	// Make sure we clean up the buffer and there is nothing
+	assert.Equal(t, 0, len(appInstClientApi.appInstClients))
 	// Delete non-existent channel, return is -1
 	count = appInstClientApi.ClearRecvChan(ctx, &testutil.AppInstClientKeyData[1], ch2)
 	assert.Equal(t, -1, count)
 	// Add a second Channel for AppInst1
 	ch12 := make(chan edgeproto.AppInstClient, qSize)
 	appInstClientApi.SetRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch12)
-	// Check that AppInst1 client is received
-	appInstClient = <-ch12
-	assert.Equal(t, testutil.AppInstClientData[0], appInstClient)
 	// Add a client 2 for AppInst1
 	appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[1])
 	// Check that both of the channels recieve the AppInstClient
