@@ -661,6 +661,13 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		},
 		Tags: map[string]string{"vgpu": "nvidia-63:1", "pci": "t4:1", "gpu": "T4:1"},
 	}
+
+	var nastab = edgeproto.ResTagTable{
+		Key: edgeproto.ResTagTableKey{
+			Name: "nasmap",
+		},
+		Tags: map[string]string{"nas": "ceph:1"},
+	}
 	_, err := resTagTableApi.CreateResTagTable(ctx, &gputab)
 	require.Nil(t, nil, err, "CreateResTagTable")
 
@@ -684,7 +691,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Vcpus: 10,
 		Disk:  40,
 		// This requests a passthru
-		OptResMap: map[string]string{"gpu": "pci:1", "nas": "ceph-20:1"},
+		OptResMap: map[string]string{"gpu": "pci:1"},
 	}
 
 	// map to a generic nvidia vgpu type, should match flavor.large-nvidia
@@ -696,8 +703,10 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Vcpus: 10,
 		Disk:  40,
 		// This requests 2 vgpu instances, (not supported by nvidia yet)
-		OptResMap: map[string]string{"gpu": "vgpu:1", "nas": "ceph-20:1"},
+		OptResMap: map[string]string{"gpu": "vgpu:1"},
 	}
+	// don't care what kind of gpu resource
+
 	// don't care what kind of gpu resource
 	var testflavor = edgeproto.Flavor{
 		Key: edgeproto.FlavorKey{
@@ -707,8 +716,20 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Vcpus: 8,
 		Disk:  40,
 		// This says I want one gpu, don't care if it's vgpu or passthrough
+		OptResMap: map[string]string{"gpu": "gpu:1"},
+	}
+	// request two optional resources
+	var testflavor2 = edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.large-2-Resources",
+		},
+		Ram:   8192,
+		Vcpus: 8,
+		Disk:  40,
+		// This says I want one gpu, don't care if it's vgpu or passthrough
 		OptResMap: map[string]string{"gpu": "gpu:1", "nas": "ceph-20:1"},
 	}
+
 	// test request for a specific type of pci  ( one T4 )
 	// should match flavor.large from testutils.
 	var testPciT4flavor = edgeproto.Flavor{
@@ -719,7 +740,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Vcpus: 8,
 		Disk:  40,
 		// This says I want one gpu, don't care if it's vgpu or passthrough
-		OptResMap: map[string]string{"gpu": "pci:t4:1", "nas": "ceph-20:1"},
+		OptResMap: map[string]string{"gpu": "pci:t4:1"},
 	}
 
 	var flavorVgpuNvidiaMatch = edgeproto.Flavor{
@@ -730,7 +751,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Vcpus: 10,
 		Disk:  40,
 		// This requests 2 vgpu instances, (not supported by nvidia yet)
-		OptResMap: map[string]string{"gpu": "vgpu:nvidia-63:1", "nas": "ceph-20:1"},
+		OptResMap: map[string]string{"gpu": "vgpu:nvidia-63:1"},
 	}
 	taz := edgeproto.OSAZone{Name: "AZ1_GPU", Status: "available"}
 	timg := edgeproto.OSImage{Name: "gpu_image"}
@@ -773,11 +794,33 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		require.Nil(t, vmerr, "GetVmSpec")
 		require.Equal(t, "flavor.large-nvidia", spec.FlavorName)
 
+		// Now try 2 optional resources requested by one flavor, first non-nominal, no res tag table for nas tags
+		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor2, *cl, cli)
+		if vmerr != nil {
+			require.Equal(t, "no suitable platform flavor found for x1.large-2-Resources, please try a smaller flavor", vmerr.Error())
+		}
+
+		// now, add cloudlet mapping for nas to the cloudlet, making the above test nominal...
+		cl.ResTagMap["nas"] = &nastab.Key
+
+		// ...and actually create the new nas res tag table
+		_, err := resTagTableApi.CreateResTagTable(ctx, &nastab)
+		require.Nil(t, err)
+
+		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor2, *cl, cli)
+		require.Nil(t, err, "GetVMSpec")
+		require.Equal(t, "flavor.large2", spec.FlavorName)
+
+		// Non-nominal: flavor requests optional resource, while cloudlet's OptResMap is nil (cloudlet supports none)
+		cl.ResTagMap = nil
+		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor, *cl, cli)
+		require.Equal(t, "Optional resource requested by x1.large-mex , cloudlet test invalid lat-long supports none", vmerr.Error())
+
 		nulCL := edgeproto.Cloudlet{}
-		// and finally, make sure GetVMSpec ignores a nil tbl if none exist or desired, behavior
-		// is only a flavor with 'gpu' in the name will trigger a gpu request match.
+		// and finally, Non-nominal, request a resource, and cloudlet has none to give (nil cloudlet/cloudlet.ResTagMap)
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor, nulCL, cli)
-		require.Equal(t, "no suitable platform flavor found for x1.large-mex, please try a smaller flavor", vmerr.Error(), "nil table")
+		require.Equal(t, "Optional resource requested by x1.large-mex , cloudlet  supports none", vmerr.Error(), "nil table")
+
 		return nil
 
 	})

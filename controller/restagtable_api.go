@@ -21,6 +21,7 @@ type ResTagTableApi struct {
 }
 
 var resTagTableApi = ResTagTableApi{}
+var verbose bool = false
 
 func InitResTagTableApi(sync *Sync) {
 	resTagTableApi.sync = sync
@@ -179,132 +180,179 @@ func (s *ResTagTableApi) findAZmatch(res string, cli edgeproto.CloudletInfo) (st
 	return "", false
 }
 
+// Irrespective of any requesting mex flavor, do we think this OS flavor offers any optional resources, given the current cloudlet's mappings?
+// TODO: this could be handy as a standalone CLI diagnostic along side FindFlavorMatch
 func (s *ResTagTableApi) isOptResOSFlavor(ctx context.Context, stm concurrency.STM, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet) bool {
 
 	if len(flavor.PropMap) == 0 {
-		return false // can't be no properties at all.
+		// optional resources are defined via os flavor properties
+		return false
 	}
 	if cl.ResTagMap == nil {
+		// given cloudlet has no resource mappings currently
 		log.SpanLog(ctx, log.DebugLevelApi, "No OptResMap for", "cloudlet", cl.Key.Name)
 		return false
 	}
-	tagtblkey := cl.ResTagMap["gpu"]
-	tbl, err := s.GetCloudletResourceMap(ctx, stm, tagtblkey)
-
-	if err != nil || tbl == nil {
-		// gpu requested and
-		// no gpu table, osFlavor fails
-		log.SpanLog(ctx, log.DebugLevelApi, "No ResTagTable", "named", cl.Key.Name, "for cloudlet", cl.Key.Name)
-		return false
-	}
-	// look in flavor.PropMap for hits
-	for _, flav_val := range flavor.PropMap {
-		for _, val := range tbl.Tags {
-			if strings.Contains(flav_val, val) {
-				return true
+	// for all optional resources configured for the given cloudlet
+	for res, key := range cl.ResTagMap {
+		tbl, err := s.GetCloudletResourceMap(ctx, stm, key)
+		if err != nil || tbl == nil {
+			fmt.Printf("\n\n isOptResOSFlavor-I-no tbl found for resource: %s in cloudlet %s\n", res, cl.Key.Name)
+			continue // don't care for any specific resource
+		}
+		// look in flavor.PropMap for hints
+		for _, flav_val := range flavor.PropMap {
+			for _, val := range tbl.Tags {
+				if strings.Contains(flav_val, val) {
+					if verbose {
+						fmt.Printf("\n\n favor %s  prop %s contains tagtbl val: %s true\n\n", flavor.Name, flav_val, val)
+					}
+					return true
+				}
 			}
 		}
 	}
 	return false
 }
 
-func (s *ResTagTableApi) optResLookup(ctx context.Context, stm concurrency.STM, nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, string, bool, error) {
-	var resmap map[string]*edgeproto.ResTagTableKey = cl.ResTagMap
-	var img, az string
+// Check the match for any given request 'req' for resource 'resname' in OS flavor 'flavor'.
+func (s *ResTagTableApi) match(ctx context.Context, stm concurrency.STM, resname string, req string, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet) (bool, error) {
+
+	var reqcnt, flavcnt int
+	var err error
+	var count string
 	var wildcard bool = false
-	// Run the extent of the resource map. If the nodeflavor requests
-	// an optional resource, look into that restagtbl for hints to match
-	// the given flavorInfo's properities.
 
-	for res, tblkey := range resmap {
+	if verbose {
+		fmt.Printf("\n\n\tmatch:consider resource %s request %s osflavor %s\n\n", resname, req, flavor.Name)
+	}
 
-		resname := edgeproto.OptResNames_value[strings.ToUpper(res)]
-		switch resname {
+	// Get the res tag table key for this resource, if any
+	tblkey := cl.ResTagMap[resname]
+	if tblkey == nil {
+		if verbose {
+			fmt.Printf("Match fail: Cloudlet %s no tbl key for %s", cl.Key.Name, resname)
+		}
+		// no key = no table = no match possible
+		return false, fmt.Errorf("cloudlet %s no tbl key for %s", cl.Key.Name, resname)
+	}
 
-		case int32(edgeproto.OptResNames_GPU):
-			var numgpus, numres int
-			var err error
-			var count string
-			gpuval := nodeflavor.OptResMap[strings.ToLower(edgeproto.OptResNames_name[resname])]
-			request := strings.Split(gpuval, ":")
-			if len(request) == 1 {
-				// should not happen with CLI validation in place
-				return "", "", false, fmt.Errorf("invalid optresmap entry encountered flavor %s request %s",
-					nodeflavor.Key.Name, gpuval)
-			}
-			if len(request) == 2 {
-				// generic request for res type, no res specifier present
-				wildcard = true
-				count = request[1]
-			} else if len(request) == 3 {
-				count = request[2]
-			}
-			if numgpus, err = strconv.Atoi(count); err != nil {
-				return "", "", false, fmt.Errorf("GPU resource count for flavor %s must be greater than 0", nodeflavor.Key.Name)
-			}
-			if numgpus == 0 {
-				return "", "", false, fmt.Errorf("No GPU resources requested for flavor %s", nodeflavor.Key.Name)
-			}
+	// fetch the res tag table
+	tbl, err := s.GetCloudletResourceMap(ctx, stm, tblkey)
+	if err != nil || tbl == nil {
+		if verbose {
+			fmt.Printf("Match fail: No res tag tbl name %s found for resource %s on cloudlet %s\n",
+				tblkey.Name, resname, cl.Key.Name)
+		}
+		return false, fmt.Errorf("cloudlet %s no res tag tbl named %s for resource %s", cl.Key.Name, tblkey.Name, resname)
+	}
 
-			tbl, err := s.GetCloudletResourceMap(ctx, stm, tblkey)
-			if err != nil || tbl == nil {
-				// gpu requested and
-				// no gpu table, osFlavor fails
-				return "", "", false, err
-			}
-			// check for key match
-			// If found, take the value of that tag entry and search our flavors properties map
-			// for a match. If found, this is our flavor.
+	// break request into spec and count
+	request := strings.Split(req, ":")
+	if len(request) == 1 {
+		// should not happen with CLI validation in place
+		if verbose {
+			fmt.Printf("Match fail:cloudlet %s bad request format for resource %s request: %s\n", cl.Key.Name, resname, request)
+		}
+		// XXX in all cases?
+		return false, fmt.Errorf("invalid optresmap request %s", request)
+	}
+	if len(request) == 2 {
+		// generic request for res type, no res specifier present
+		wildcard = true
+		count = request[1]
+	} else if len(request) == 3 {
+		count = request[2]
+	}
+	if reqcnt, err = strconv.Atoi(count); err != nil {
+		if verbose {
+			fmt.Printf("Match fail: Non-numeric resource count found for cloudlet  %s resource %s request %s\n", cl.Key.Name, resname, request)
+		}
+		return false, fmt.Errorf("Match fail: resource count %s request %s resource %s ", count, request, resname)
+	}
+	if reqcnt == 0 {
+		// auto convert to 1? XXX
+		if verbose {
+			fmt.Printf("\n\n\tNo %s resource count for request %s", resname, request)
+		}
+		return false, fmt.Errorf("No %s resource count for request %s", resname, request)
+	}
 
-			for tag_key, tag_val := range tbl.Tags {
-				var alias []string
-				for flav_key, flav_val := range flavor.PropMap {
-					// How many resources are supplied by this os flavor?
-					alias = strings.Split(flav_val, ":")
-					if len(alias) == 2 {
-						if numres, err = strconv.Atoi(alias[1]); err != nil {
-							return "", "", false, fmt.Errorf("Non-numeric count found in os flavor props for %s", flavor.Name)
-						}
-					} else {
-						continue
+	// Finally, run the available tags looking for match
+	for tag_key, tag_val := range tbl.Tags {
+		var alias []string
+		for flav_key, flav_val := range flavor.PropMap {
+			// How many resources are supplied by this os flavor?
+			alias = strings.Split(flav_val, ":")
+			if len(alias) == 2 {
+				if flavcnt, err = strconv.Atoi(alias[1]); err != nil {
+					if verbose {
+						fmt.Printf("\n\n\tNon-numeric count found in OS flavor %s  alias: %s\n", flavor.Name, alias)
 					}
-					if wildcard {
-						// we have just the $kind:1 as in gpu=gpu:1
-						if strings.Contains(flav_key, tag_key) && numres >= numgpus {
-							goto flavor_found
-
-						}
-					} else {
-						if request[0] == tag_key {
-							if strings.Contains(flav_key, tag_key) { // pci_passthrough == pic or vgpu = vgpu
-								if strings.Contains(flav_val, tag_val) && numres >= numgpus {
-									goto flavor_found
-								}
-
+					return false, fmt.Errorf("Non-numeric count found in os flavor props for %s", flavor.Name)
+				}
+			} else {
+				if verbose {
+					fmt.Printf("Match skipping flavor prop k: %s v: %s of flavor %s alias len: %d\n", flav_key, flav_val, flavor.Name, len(alias))
+				}
+				continue
+			}
+			if wildcard {
+				// we have just the $kind:1 as in gpu=gpu:1
+				if strings.Contains(flav_key, tag_key) && flavcnt >= reqcnt {
+					if verbose {
+						fmt.Printf("Match: wildcard Match found for OS flavor %s  key %s contains key %s \n", flavor.Name, flav_key, tag_key)
+					}
+					return true, nil
+				}
+			} else {
+				if request[0] == tag_key {
+					if strings.Contains(flav_key, tag_key) {
+						if strings.Contains(flav_val, tag_val) && flavcnt >= reqcnt {
+							if verbose {
+								fmt.Printf("Match found for OS flavor %s key %s val %s containes %s \n", flavor.Name, flav_key, flav_val, tag_val)
 							}
+							return true, nil
 						}
 					}
 				}
 			}
-			return "", "", false, fmt.Errorf("no matching tag found for mex flavor  %s\n\n", nodeflavor.Key.Name)
-
-		flavor_found:
-			az, _ = s.findAZmatch("gpu", cli)
-			img, _ = s.findImagematch("gpu", cli)
-			log.SpanLog(ctx, log.DebugLevelApi, "Mapped", "mex flavor:", nodeflavor.Key.Name, "os flavor:", flavor.Name)
-			return az, img, true, nil
-
-			// Other resources TBI
-		case int32(edgeproto.OptResNames_NAS):
-			break
-		case int32(edgeproto.OptResNames_NIC):
-			break
-		default:
-			log.SpanLog(ctx, log.DebugLevelApi, "Unhandled resource", "res", res)
 		}
 	}
-	return "", "", false, nil
+	if verbose {
+		fmt.Printf("Match fail: exhausted all tags for resource %s OS flavor %s no match\n", resname, flavor.Name)
+	}
+	return false, fmt.Errorf("No match found for flavor %s", flavor.Name)
+}
 
+// For all  optional resources requested by nodeflavor, check if flavor can satisfy them. We know the nominal resources requested
+// by nodeflavor are satisfied by flavor already.
+func (s *ResTagTableApi) resLookup(ctx context.Context, stm concurrency.STM, nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, string, bool, error) {
+	var img, az string
+	rescount := len(nodeflavor.OptResMap)
+	for res, request := range nodeflavor.OptResMap {
+		if verbose {
+			fmt.Printf("lookup test resource %s request %s against os flavor %s\n", res, request, flavor.Name)
+		}
+
+		if ok, err := s.match(ctx, stm, res, request, flavor, cl); ok {
+			if verbose {
+				fmt.Printf("Flavor %s matched for resource %s request: %s\n", flavor.Name, res, request)
+			}
+			continue
+		} else {
+			if verbose {
+				fmt.Printf("Flavor %s Failed match for resource %s request: %s err: %s\n", flavor.Name, res, request, err.Error())
+			}
+			return "", "", false, fmt.Errorf("no matching tag found for mex flavor  %s\n\n", nodeflavor.Key.Name)
+		}
+	}
+	if verbose {
+		fmt.Printf("\n\nAll %d resources matched return true\n", rescount)
+	}
+	az, _ = s.findAZmatch("gpu", cli)
+	img, _ = s.findImagematch("gpu", cli)
+	return az, img, true, nil
 }
 
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
@@ -312,6 +360,12 @@ func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nod
 	var flavorList []*edgeproto.FlavorInfo
 	var vmspec vmspec.VMCreationSpec
 	var az, img string
+
+	// If nodeflavor requests an optional resource, and there is no OptResMap in cl to support it, don't bother looking.
+	if nodeflavor.OptResMap != nil && cl.ResTagMap == nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "GetVMSpec no optional resource supported", "cloudlet", cl.Key.Name, "flavor", nodeflavor.Key.Name)
+		return nil, fmt.Errorf("Optional resource requested by %s , cloudlet %s supports none", nodeflavor.Key.Name, cl.Key.Name)
+	}
 
 	flavorList = cli.Flavors
 	log.SpanLog(ctx, log.DebugLevelApi, "GetVMSpec with closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
@@ -351,7 +405,7 @@ func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nod
 		// If any specific resource fails, the flavor is rejected.
 		var ok bool
 		if nodeflavor.OptResMap != nil {
-			if az, img, ok, _ = resTagTableApi.optResLookup(ctx, stm, nodeflavor, *flavor, cl, cli); !ok {
+			if az, img, ok, _ = s.resLookup(ctx, stm, nodeflavor, *flavor, cl, cli); !ok {
 				continue
 			}
 		} else {
@@ -391,7 +445,7 @@ func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool
 	//
 	// 2) Requests a vGPU resource, of any kind.
 	// 3) Requests a dedicated PCI passthru GPU, of any kind.
-	// 4 and 5 allow specific types of resource instances and are also optional.
+	//    4 and 5 allow specific types of resource instances and are also optional.
 	// 4) optresmap=gpu=vgpu:nvidia-63:1   = specific vgpu type, 1 instance.
 	// 5) optresmap=gpu=pci:T4:2           = specific pci passthru, 2 instances.
 	//
