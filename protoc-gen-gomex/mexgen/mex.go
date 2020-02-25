@@ -1073,6 +1073,7 @@ func (c *{{.Name}}Cache) GetCount() int {
 
 func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
 {{- if .NotifyFlush}}
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush {{.Name}}", "notifyId", notifyId)
 	flushed := make(map[{{.KeyType}}]*{{.Name}})
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -1080,6 +1081,7 @@ func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
 			continue
 		}
 		flushed[key] = c.Objs[key]
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush {{.Name}} delete", "key", key)
 		delete(c.Objs, key)
 	}
 	c.Mux.Unlock()

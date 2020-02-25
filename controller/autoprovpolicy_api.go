@@ -150,7 +150,7 @@ func (s *AutoProvPolicyApi) STMFind(stm concurrency.STM, name, dev string, polic
 	return nil
 }
 
-func (s *AutoProvPolicyApi) Recv(ctx context.Context, msg *edgeproto.AutoProvCounts) {
+func (s *AutoProvPolicyApi) RecvAutoProvCounts(ctx context.Context, msg *edgeproto.AutoProvCounts) {
 	if len(msg.Counts) == 1 && msg.Counts[0].ProcessNow {
 		target := msg.Counts[0]
 		log.SpanLog(ctx, log.DebugLevelMetrics, "auto-prov count recv immedate", "target", target)

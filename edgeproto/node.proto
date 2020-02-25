@@ -8,24 +8,12 @@ import "cloudlet.proto";
 import "gogoproto/gogo.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 
-// NodeType defines the type of Node
-enum NodeType {
-  // Unknown
-  NODE_UNKNOWN = 0;
-  // Distributed Matching Engine
-  NODE_DME = 1;
-  // Cloudlet Resource Manager
-  NODE_CRM = 2;
-  // Controller Node
-  NODE_CONTROLLER = 3;
-}
-
 // NodeKey uniquely identifies a DME or CRM node
 message NodeKey {
   // Name or hostname of node
   string name = 1 [(protogen.hidetag) = "nocmp"];
   // Node type
-  NodeType node_type = 2;
+  string type = 4;
   // Cloudlet on which node is running, or is associated with
   CloudletKey cloudlet_key = 3 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
@@ -74,5 +62,6 @@ service NodeApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionView,";
+    option (protogen.mc2_api_notifyroot) = true;
   }
 }
