@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 
+	"github.com/gorilla/websocket"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	mextls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -19,7 +22,40 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, errchan chan error, openurl chan bool) error {
+type ConsoleProxyObj struct {
+	mux      sync.Mutex
+	proxyMap map[string]string
+}
+
+var ConsoleProxy = &ConsoleProxyObj{}
+
+func (cp *ConsoleProxyObj) Add(token, port string) {
+	cp.mux.Lock()
+	defer cp.mux.Unlock()
+	if len(cp.proxyMap) == 0 {
+		cp.proxyMap = make(map[string]string)
+	}
+	cp.proxyMap[token] = port
+}
+
+func (cp *ConsoleProxyObj) Remove(token string) {
+	cp.mux.Lock()
+	defer cp.mux.Unlock()
+	if _, ok := cp.proxyMap[token]; ok {
+		delete(cp.proxyMap, token)
+	}
+}
+
+func (cp *ConsoleProxyObj) Get(token string) string {
+	cp.mux.Lock()
+	defer cp.mux.Unlock()
+	if out, ok := cp.proxyMap[token]; ok {
+		return out
+	}
+	return ""
+}
+
+func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, errchan chan error, openurl chan bool) {
 	var sess *smux.Session
 	dataChan.OnOpen(func() {
 		dcconn, err := webrtcutil.WrapDataChannel(dataChan)
@@ -82,7 +118,126 @@ func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, errchan chan 
 		}
 		errchan <- nil
 	})
+}
 
+// VM Console Handling over edgectl/cli
+// - Setup a TCP server on controller to proxy to Infra console URL
+//   and make it accessible over end-user's host using edgectl/cli
+func SetupLocalConsoleTunnel(consoleUrl string, dataChan *webrtc.DataChannel, errchan chan error, ws *websocket.Conn) {
+	urlObj, err := url.Parse(consoleUrl)
+	if err != nil {
+		errchan <- fmt.Errorf("unable to parse console url, %s, %v", consoleUrl, err)
+		return
+	}
+	queryArgs := urlObj.Query()
+	token, ok := queryArgs["token"]
+	if !ok || len(token) != 1 {
+		errchan <- fmt.Errorf("invalid console url: %s", consoleUrl)
+		return
+	}
+	tlsConfig, err := mextls.GetLocalTLSConfig()
+	if err != nil {
+		errchan <- fmt.Errorf("unable to fetch tls local server config, %v", err)
+		return
+	}
+
+	conn, err := tls.Listen("tcp", "0.0.0.0:0", tlsConfig)
+	if err != nil {
+		errchan <- fmt.Errorf("failed to start server, %v", err)
+		return
+	}
+	defer func() {
+		conn.Close()
+	}()
+
+	connAddr := conn.Addr().String()
+	ports := strings.Split(connAddr, ":")
+	connPort := ports[len(ports)-1]
+	connAddr = "127.0.0.1:" + connPort
+
+	tunnelErrChan := make(chan error, 1)
+	openurl := make(chan bool, 1)
+	WebrtcTunnel(conn, dataChan, tunnelErrChan, openurl)
+
+	// Add token to port map for reverse proxy access
+	ConsoleProxy.Add(token[0], connPort)
+	defer ConsoleProxy.Remove(token[0])
+
+	for {
+		select {
+		case <-openurl:
+			proxyUrl := strings.Replace(consoleUrl, urlObj.Host, connAddr, 1)
+			proxyUrl = strings.Replace(proxyUrl, "http:", "https:", 1)
+			if ws != nil {
+				wsPayload := WSStreamPayload{
+					Code: http.StatusOK,
+					Data: proxyUrl,
+				}
+				err := ws.WriteJSON(wsPayload)
+				if err != nil {
+					errchan <- fmt.Errorf("failed to write to websocket, %v", err)
+					return
+				}
+				// A close message is sent from client, hence just wait
+				// on getting a close message
+				_, _, err = ws.ReadMessage()
+				if _, ok := err.(*websocket.CloseError); !ok {
+					ws.WriteMessage(websocket.CloseMessage,
+						websocket.FormatCloseMessage(websocket.CloseAbnormalClosure, ""))
+					ws.Close()
+					errchan <- nil
+					return
+				}
+				errchan <- err
+				return
+			}
+			dispUrl := strings.Replace(proxyUrl, "127.0.0.1", "<your-host-ip>", 1)
+			fmt.Printf("Console URL: %s\n", dispUrl)
+			util.OpenUrl(proxyUrl)
+			fmt.Println("Press Ctrl-C to exit")
+		case err := <-tunnelErrChan:
+			errchan <- err
+			return
+		}
+	}
+}
+
+type WSStreamPayload struct {
+	Code int         `json:"code"`
+	Data interface{} `json:"data"`
+}
+
+func WebrtcShellWs(dataChan *webrtc.DataChannel, errchan chan error, ws *websocket.Conn) error {
+	wr := webrtcutil.NewDataChanWriter(dataChan)
+	dataChan.OnOpen(func() {
+		for {
+			_, msg, err := ws.ReadMessage()
+			if err != nil {
+				errchan <- fmt.Errorf("failed to read from websocket, %v", err)
+				return
+			}
+			_, err = wr.Write(msg)
+			if err != nil {
+				errchan <- fmt.Errorf("failed to write to datachannel, %v", err)
+				return
+			}
+		}
+	})
+	dataChan.OnMessage(func(msg webrtc.DataChannelMessage) {
+		wsPayload := WSStreamPayload{
+			Code: http.StatusOK,
+			Data: string(msg.Data),
+		}
+		err := ws.WriteJSON(wsPayload)
+		if err != nil {
+			errchan <- fmt.Errorf("failed to write to websocket, %v", err)
+		}
+	})
+	dataChan.OnClose(func() {
+		ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		ws.Close()
+		errchan <- nil
+	})
 	return nil
 }
 
@@ -133,7 +288,7 @@ func WebrtcShell(dataChan *webrtc.DataChannel, errchan chan error) error {
 	return nil
 }
 
-func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error)) error {
+func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error), ws *websocket.Conn, setupConsoleTunnel func(consoleUrl string, dataChan *webrtc.DataChannel, errchan chan error, ws *websocket.Conn)) error {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 
@@ -182,55 +337,35 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 		return err
 	}
 
+	defer dataChan.Close()
+
 	errchan := make(chan error, 1)
-	openurl := make(chan bool, 1)
 
 	if reply.Console != nil {
 		if reply.Console.Url == "" {
 			return fmt.Errorf("unable to fetch console URL from webrtc reply")
 		}
-		urlObj, err := url.Parse(reply.Console.Url)
+		_, err := url.Parse(reply.Console.Url)
 		if err != nil {
 			return fmt.Errorf("unable to parse console url, %s, %v", reply.Console.Url, err)
 		}
-		tlsConfig, err := mextls.GetLocalTLSConfig()
-		if err != nil {
-			return fmt.Errorf("unable to fetch tls local server config, %v", err)
-		}
-
-		conn, err := tls.Listen("tcp", "0.0.0.0:0", tlsConfig)
-		if err != nil {
-			return fmt.Errorf("failed to start server, %v", err)
-		}
-		defer conn.Close()
-
-		connAddr := conn.Addr().String()
-		ports := strings.Split(connAddr, ":")
-		connAddr = "127.0.0.1:" + ports[len(ports)-1]
-
-		err = WebrtcTunnel(conn, dataChan, errchan, openurl)
-		if err != nil {
-			return err
-		}
-		go func() {
-			<-openurl
-			proxyUrl := strings.Replace(reply.Console.Url, urlObj.Host, connAddr, 1)
-			proxyUrl = strings.Replace(proxyUrl, "http:", "https:", 1)
-			util.OpenUrl(proxyUrl)
-			fmt.Println("Press Ctrl-C to exit")
-		}()
+		go setupConsoleTunnel(reply.Console.Url, dataChan, errchan, ws)
 	} else {
-		err = WebrtcShell(dataChan, errchan)
+		if ws != nil {
+			err = WebrtcShellWs(dataChan, errchan, ws)
+		} else {
+			err = WebrtcShell(dataChan, errchan)
+		}
 		if err != nil {
 			return err
 		}
 	}
 
-	go func() {
-		<-signalChan
-		dataChan.Close()
-	}()
-
 	// wait for connection to complete
-	return <-errchan
+	select {
+	case <-signalChan:
+		return nil
+	case err := <-errchan:
+		return err
+	}
 }
