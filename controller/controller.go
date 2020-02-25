@@ -19,6 +19,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -44,6 +45,7 @@ var apiAddr = flag.String("apiAddr", "127.0.0.1:55001", "API listener address")
 var externalApiAddr = flag.String("externalApiAddr", "", "External API listener address if behind proxy/LB. Defaults to apiAddr")
 var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address")
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
+var notifyParentAddrs = flag.String("notifyParentAddrs", "", "Comma separated list of notify parents")
 var vaultAddr = flag.String("vaultAddr", "", "Vault address; local vault runs at http://127.0.0.1:8200")
 var publicAddr = flag.String("publicAddr", "127.0.0.1", "Public facing address/hostname of controller")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
@@ -71,6 +73,7 @@ var ErrCtrlUpgradeRequired = errors.New("data mode upgrade required")
 var sigChan chan os.Signal
 var services Services
 var vaultConfig *vault.Config
+var nodeMgr *node.NodeMgr
 
 type Services struct {
 	etcdLocal       *process.Etcd
@@ -80,6 +83,7 @@ type Services struct {
 	notifyServerMgr bool
 	grpcServer      *grpc.Server
 	httpServer      *http.Server
+	notifyClient    *notify.Client
 }
 
 func main() {
@@ -134,16 +138,9 @@ func startServices() error {
 	log.SetDebugLevelStrs(*debugLevels)
 
 	if *externalApiAddr == "" {
-		*externalApiAddr = *apiAddr
-		host, port, err := net.SplitHostPort(*externalApiAddr)
+		*externalApiAddr, err = util.GetExternalApiAddr(*apiAddr)
 		if err != nil {
-			return fmt.Errorf("Failed to parse externalApiAddr %s, %v", *externalApiAddr, err)
-		}
-		if host == "0.0.0.0" {
-			addr, err := resolveExternalAddr()
-			if err == nil {
-				*externalApiAddr = addr + ":" + port
-			}
+			return err
 		}
 	}
 	log.InitTracer(*tlsCertFile)
@@ -151,6 +148,12 @@ func startServices() error {
 	span.SetTag("level", "init")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "nohostname"
+	}
+	ControllerId = hostname + "@" + *externalApiAddr
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
 	// region number for etcd is a deprecated concept since we decided
@@ -170,6 +173,7 @@ func startServices() error {
 	if err != nil {
 		return err
 	}
+	nodeMgr = node.Init(ctx, node.NodeTypeController, node.WithName(ControllerId), node.WithContainerVersion(*versionTag))
 
 	if *localEtcd {
 		opts := []process.StartOp{}
@@ -252,6 +256,13 @@ func startServices() error {
 	}
 	services.events = events
 
+	if *notifyParentAddrs != "" {
+		addrs := strings.Split(*notifyParentAddrs, ",")
+		notifyClient := notify.NewClient(addrs, *tlsCertFile)
+		notifyClient.Start()
+		services.notifyClient = notifyClient
+		nodeMgr.RegisterClient(notifyClient)
+	}
 	InitNotify(influxQ, &appInstClientApi)
 	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile)
 	services.notifyServerMgr = true
@@ -372,6 +383,9 @@ func stopServices() {
 	if services.notifyServerMgr {
 		notify.ServerMgrOne.Stop()
 	}
+	if services.notifyClient != nil {
+		services.notifyClient.Stop()
+	}
 	if services.influxQ != nil {
 		services.influxQ.Stop()
 	}
@@ -428,7 +442,6 @@ func InitApis(sync *Sync) {
 	InitClusterInstInfoApi(sync)
 	InitCloudletRefsApi(sync)
 	InitControllerApi(sync)
-	InitNodeApi(sync)
 	InitCloudletPoolApi(sync)
 	InitCloudletPoolMemberApi(sync)
 	InitExecApi()
@@ -440,12 +453,6 @@ func InitApis(sync *Sync) {
 	InitSettingsApi(sync)
 	InitAppInstClientKeyApi(sync)
 	InitAppInstClientApi()
-
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = "nohostname"
-	}
-	ControllerId = hostname + "@" + *externalApiAddr
 }
 
 func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
@@ -466,29 +473,14 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
+	nodeMgr.RegisterServer(&notify.ServerMgrOne)
 	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletInfoRecvMany(&cloudletInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(&appInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewClusterInstInfoRecvMany(&clusterInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(influxQ))
-	notify.ServerMgrOne.RegisterRecv(notify.NewNodeRecvMany(&nodeApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(&execApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAlertRecvMany(&alertApi))
 	autoProvPolicyApi.SetInfluxQ(influxQ)
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
-}
-
-// This is for figuring out the "external" address when
-// running under kubernetes, which is really the internal CNI
-// address that containers can use to talk to each other.
-func resolveExternalAddr() (string, error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return "", err
-	}
-	addrs, err := net.LookupHost(hostname)
-	if err != nil {
-		return "", err
-	}
-	return addrs[0], nil
 }

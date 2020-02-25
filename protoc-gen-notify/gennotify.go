@@ -145,7 +145,7 @@ type Recv{{.Name}}Handler interface {
 }
 {{- else}}
 type Recv{{.Name}}Handler interface {
-	Recv(ctx context.Context, msg *{{.NameType}})
+	Recv{{.Name}}(ctx context.Context, msg *{{.NameType}})
 }
 {{- end}}
 
@@ -483,7 +483,7 @@ func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, noti
 		s.handler.Delete(ctx, buf, 0)
 	}
 {{- else}}
-	s.handler.Recv(ctx, buf)
+	s.handler.Recv{{.Name}}(ctx, buf)
 {{- end}}
 	s.sendrecv.stats.Recv++
 	// object specific counter

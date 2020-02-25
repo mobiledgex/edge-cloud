@@ -30,7 +30,7 @@ func NewExecReqHandler(cd *ControllerData) *ExecReqHandler {
 	return &ExecReqHandler{cd: cd}
 }
 
-func (s *ExecReqHandler) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
+func (s *ExecReqHandler) RecvExecRequest(ctx context.Context, msg *edgeproto.ExecRequest) {
 	// spawn go process so we don't stall notify messages
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelApi, "process exec req", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
