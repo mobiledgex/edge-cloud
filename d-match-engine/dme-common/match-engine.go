@@ -102,7 +102,7 @@ func IsAppInstUsable(appInst *DmeAppInst) bool {
 		return false
 	}
 	if appInst.cloudletState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-		return appInst.appInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_OK
+		return appInst.appInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_OK || appInst.appInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN
 	}
 	return false
 }
