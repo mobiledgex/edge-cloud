@@ -19,6 +19,7 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	influxclient "github.com/influxdata/influxdb/client/v2"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -450,7 +451,7 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 	var y2 interface{}
 	copts := []cmp.Option{}
 
-	if fileType == "appdata" {
+	if fileType == "appdata" || fileType == "appdata-showcmp" {
 		//for appdata, use the ApplicationData type so we can sort it
 		var a1 edgeproto.ApplicationData
 		var a2 edgeproto.ApplicationData
@@ -461,6 +462,11 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		a2.Sort()
 		y1 = a1
 		y2 = a2
+
+		copts = append(copts, cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}))
+		if fileType == "appdata" {
+			copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
+		}
 	} else if fileType == "findcloudlet" {
 		var f1 dmeproto.FindCloudletReply
 		var f2 dmeproto.FindCloudletReply

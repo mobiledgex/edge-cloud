@@ -2621,6 +2621,7 @@ func (c *ClusterInstInfoCache) GetCount() int {
 }
 
 func (c *ClusterInstInfoCache) Flush(ctx context.Context, notifyId int64) {
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInstInfo", "notifyId", notifyId)
 	flushed := make(map[ClusterInstKey]*ClusterInstInfo)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -2628,6 +2629,7 @@ func (c *ClusterInstInfoCache) Flush(ctx context.Context, notifyId int64) {
 			continue
 		}
 		flushed[key] = c.Objs[key]
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInstInfo delete", "key", key)
 		delete(c.Objs, key)
 	}
 	c.Mux.Unlock()

@@ -19,6 +19,7 @@ enum VersionHash {
   HASH_60febe402fd8f1a1ded0762dbc72a5a8 = 8;
   HASH_d4ca5418a77d22d968ce7a2afc549dfe = 9;
   HASH_7848d42e3a2eaf36e53bbd3af581b13a = 10 [(protogen.upgrade_func) = "SetDefaultLoadBalancerMaxPortRange"];
+  HASH_f31b7a9d7e06f72107e0ab13c708704e = 11;
   option (protogen.version_hash) = true;
   option (protogen.version_hash_salt) = "1";
 }

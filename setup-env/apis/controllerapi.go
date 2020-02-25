@@ -48,24 +48,12 @@ func readAppDataFileGeneric(file string) {
 	}
 }
 
-const (
-	HideCmp bool = false
-	ShowCmp bool = true
-)
-
-func runShow(ctrl *process.Controller, showCmds []string, outputDir string, cmp bool) bool {
+func runShow(ctrl *process.Controller, showCmds []string, outputDir string) bool {
 	errFound := false
 	for i, c := range showCmds {
 		label := strings.Split(c, " ")[0]
 		cmdstr := strings.Split(c, " ")[1]
 		var cmdargs = []string{cmdstr}
-		if cmp == HideCmp {
-			cmdargs = append(cmdargs, "--hidetags")
-			cmdargs = append(cmdargs, "nocmp,timestamp")
-		} else {
-			cmdargs = append(cmdargs, "--hidetags")
-			cmdargs = append(cmdargs, "timestamp")
-		}
 		log.Printf("generating output for %s\n", label)
 		out, _ := util.ControllerCLI(ctrl, cmdargs...)
 		truncate := false
@@ -92,7 +80,7 @@ func runShow(ctrl *process.Controller, showCmds []string, outputDir string, cmp 
 	return !errFound
 }
 
-func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool {
+func runShowCommands(ctrl *process.Controller, outputDir string) bool {
 	var showCmds = []string{
 		"settings: ShowSettings",
 		"flavors: ShowFlavor",
@@ -118,7 +106,7 @@ func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool 
 		if ii != 0 {
 			time.Sleep(100 * time.Millisecond)
 		}
-		ret := runShow(ctrl, showCmds, outputDir, cmp)
+		ret := runShow(ctrl, showCmds, outputDir)
 		if ret {
 			return true
 		}
@@ -126,11 +114,11 @@ func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool 
 	return false
 }
 
-func runNodeShow(ctrl *process.Controller, outputDir string, cmp bool) bool {
+func runNodeShow(ctrl *process.Controller, outputDir string) bool {
 	var showCmds = []string{
 		"nodes: ShowNode",
 	}
-	return runShow(ctrl, showCmds, outputDir, cmp)
+	return runShow(ctrl, showCmds, outputDir)
 }
 
 func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir string, mods []string) bool {
@@ -152,13 +140,10 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 
 	if api == "show" {
 		//handled separately since it uses edgectl not direct api connection
-		return runShowCommands(ctrl, outputDir, HideCmp)
-	}
-	if api == "showcmp" {
-		return runShowCommands(ctrl, outputDir, ShowCmp)
+		return runShowCommands(ctrl, outputDir)
 	}
 	if api == "nodeshow" {
-		return runNodeShow(ctrl, outputDir, HideCmp)
+		return runNodeShow(ctrl, outputDir)
 	}
 
 	if apiFile == "" {
@@ -350,13 +335,10 @@ func RunControllerCLI(api string, ctrlname string, apiFile string, outputDir str
 	ctrl := util.GetController(ctrlname)
 
 	if api == "show" {
-		return runShowCommands(ctrl, outputDir, HideCmp)
-	}
-	if api == "showcmp" {
-		return runShowCommands(ctrl, outputDir, ShowCmp)
+		return runShowCommands(ctrl, outputDir)
 	}
 	if api == "nodeshow" {
-		return runNodeShow(ctrl, outputDir, HideCmp)
+		return runNodeShow(ctrl, outputDir)
 	}
 
 	if apiFile == "" {
