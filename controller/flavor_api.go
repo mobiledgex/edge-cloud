@@ -30,8 +30,8 @@ func (s *FlavorApi) HasFlavor(key *edgeproto.FlavorKey) bool {
 
 func (s *FlavorApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
 
-	if in.Key.Name == "" {
-		return &edgeproto.Result{}, errors.New("Invaid Flavor Key")
+	if err := in.Validate(edgeproto.FlavorAllFieldsMap); err != nil {
+		return &edgeproto.Result{}, err
 	}
 
 	if in.OptResMap != nil {
