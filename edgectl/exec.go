@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/mobiledgex/edge-cloud/cli"
-	webrtcshell "github.com/mobiledgex/edge-cloud/edgectl/cli"
+	edgecli "github.com/mobiledgex/edge-cloud/edgectl/cli"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	webrtc "github.com/pion/webrtc/v2"
 	"google.golang.org/grpc"
@@ -64,5 +64,5 @@ func runExecRequest(c *cli.Command, args []string, apiFunc execFunc) error {
 		}
 		return reply, &answer, nil
 	}
-	return webrtcshell.RunWebrtc(req, exchangeFunc)
+	return edgecli.RunWebrtc(req, exchangeFunc, nil, edgecli.SetupLocalConsoleTunnel)
 }
