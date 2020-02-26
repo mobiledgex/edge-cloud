@@ -120,3 +120,8 @@ type Traefik struct {
 	TLS    TLSCerts
 	cmd    *exec.Cmd
 }
+type NotifyRoot struct {
+	Common `yaml:",inline"`
+	TLS    TLSCerts
+	cmd    *exec.Cmd
+}
