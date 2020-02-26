@@ -48,13 +48,6 @@ message Node {
 }
 
 service NodeApi {
-  // Show Nodes connected locally only
-  rpc ShowNodeLocal(Node) returns (stream Node) {
-    option (google.api.http) = {
-      post: "/show/nodelocal"
-      body: "*"
-    };
-  }
   // Show all Nodes connected to all Controllers
   rpc ShowNode(Node) returns (stream Node) {
     option (google.api.http) = {

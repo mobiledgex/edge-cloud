@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -119,6 +120,22 @@ func ControllerConnect(addr string) (*grpc.ClientConn, error) {
 	conn, err := grpc.Dial(addr, dialOption)
 	if err != nil {
 		return nil, fmt.Errorf("Connect to server %s failed: %s", addr, err.Error())
+	}
+	return conn, nil
+}
+
+func notifyRootConnect() (*grpc.ClientConn, error) {
+	if *notifyParentAddrs == "" {
+		return nil, fmt.Errorf("No parent notify address specified, cannot connect to notify root")
+	}
+	addrs := strings.Split(*notifyParentAddrs, ",")
+	dialOption, err := tls.GetTLSClientDialOption(addrs[0], *tlsCertFile, false)
+	if err != nil {
+		return nil, err
+	}
+	conn, err := grpc.Dial(addrs[0], dialOption)
+	if err != nil {
+		return nil, fmt.Errorf("Connect to server %s failed: %s", addrs[0], err.Error())
 	}
 	return conn, nil
 }

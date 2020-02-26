@@ -66,79 +66,6 @@ func NodeHideTags(in *edgeproto.Node) {
 
 var NodeApiCmd edgeproto.NodeApiClient
 
-var ShowNodeLocalCmd = &cli.Command{
-	Use:          "ShowNodeLocal",
-	OptionalArgs: strings.Join(append(NodeRequiredArgs, NodeOptionalArgs...), " "),
-	AliasArgs:    strings.Join(NodeAliasArgs, " "),
-	SpecialArgs:  &NodeSpecialArgs,
-	Comments:     NodeComments,
-	ReqData:      &edgeproto.Node{},
-	ReplyData:    &edgeproto.Node{},
-	Run:          runShowNodeLocal,
-}
-
-func runShowNodeLocal(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.Node)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return ShowNodeLocal(c, obj)
-}
-
-func ShowNodeLocal(c *cli.Command, in *edgeproto.Node) error {
-	if NodeApiCmd == nil {
-		return fmt.Errorf("NodeApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := NodeApiCmd.ShowNodeLocal(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("ShowNodeLocal failed: %s", errstr)
-	}
-	objs := make([]*edgeproto.Node, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowNodeLocal recv failed: %s", errstr)
-		}
-		NodeHideTags(obj)
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(objs, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func ShowNodeLocals(c *cli.Command, data []edgeproto.Node, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("ShowNodeLocal %v\n", data[ii])
-		myerr := ShowNodeLocal(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
 var ShowNodeCmd = &cli.Command{
 	Use:          "ShowNode",
 	OptionalArgs: strings.Join(append(NodeRequiredArgs, NodeOptionalArgs...), " "),
@@ -213,7 +140,6 @@ func ShowNodes(c *cli.Command, data []edgeproto.Node, err *error) {
 }
 
 var NodeApiCmds = []*cobra.Command{
-	ShowNodeLocalCmd.GenCmd(),
 	ShowNodeCmd.GenCmd(),
 }
 
