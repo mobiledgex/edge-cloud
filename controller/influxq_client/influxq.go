@@ -164,7 +164,7 @@ func (q *InfluxQ) RunPush() {
 	q.wg.Done()
 }
 
-func (q *InfluxQ) Recv(ctx context.Context, metric *edgeproto.Metric) {
+func (q *InfluxQ) RecvMetric(ctx context.Context, metric *edgeproto.Metric) {
 	q.AddMetric(metric)
 }
 

@@ -83,7 +83,12 @@ func (a *ApplicationData) Sort() {
 		return a.ClusterInstInfos[i].Key.GetKeyString() < a.ClusterInstInfos[j].Key.GetKeyString()
 	})
 	sort.Slice(a.Nodes[:], func(i, j int) bool {
-		return a.Nodes[i].Key.GetKeyString() < a.Nodes[j].Key.GetKeyString()
+		// ignore name for sorting because it is ignored for comparison
+		ikey := a.Nodes[i].Key
+		ikey.Name = ""
+		jkey := a.Nodes[j].Key
+		jkey.Name = ""
+		return ikey.GetKeyString() < jkey.GetKeyString()
 	})
 	sort.Slice(a.CloudletPools[:], func(i, j int) bool {
 		return a.CloudletPools[i].Key.GetKeyString() < a.CloudletPools[j].Key.GetKeyString()
@@ -649,6 +654,7 @@ func IgnoreTaggedFields(taglist string) []cmp.Option {
 	opts = append(opts, IgnoreClusterInstInfoFields(taglist))
 	opts = append(opts, IgnoreCloudletFields(taglist))
 	opts = append(opts, IgnoreCloudletInfoFields(taglist))
+	opts = append(opts, IgnoreNodeFields(taglist))
 	return opts
 }
 

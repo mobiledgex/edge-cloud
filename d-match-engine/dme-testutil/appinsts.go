@@ -104,6 +104,7 @@ func MakeAppInst(a *App, c *Cloudlet) *edgeproto.AppInst {
 	inst.CloudletLoc = c.Location
 	inst.Uri = c.Uri
 	inst.State = edgeproto.TrackedState_READY
+	inst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK // HEALTH_CHECK_OK is not default now
 	return &inst
 }
 

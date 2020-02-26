@@ -139,6 +139,8 @@ extend google.protobuf.MethodOptions {
   // Implement a streamer cache to cache a return stream data so it can be
   // retrieved via a separate api.
   bool mc2_streamer_cache = 51041;
+  // MC connect to notify root instead of controller for rpc
+  bool mc2_api_notifyroot = 51042;
 }
 
 extend google.protobuf.ServiceOptions {

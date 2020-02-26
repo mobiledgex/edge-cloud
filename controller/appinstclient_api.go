@@ -120,7 +120,7 @@ func (s *AppInstClientApi) AddAppInstClient(ctx context.Context, client *edgepro
 	}
 }
 
-func (s *AppInstClientApi) Recv(ctx context.Context, client *edgeproto.AppInstClient) {
+func (s *AppInstClientApi) RecvAppInstClient(ctx context.Context, client *edgeproto.AppInstClient) {
 	s.AddAppInstClient(ctx, client)
 }
 
