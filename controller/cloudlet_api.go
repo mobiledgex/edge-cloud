@@ -13,6 +13,7 @@ import (
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -512,10 +513,10 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 }
 
 func getCloudletVersion(key *edgeproto.CloudletKey) (string, error) {
-	nodeApi.cache.Mux.Lock()
-	defer nodeApi.cache.Mux.Unlock()
-	for _, obj := range nodeApi.cache.Objs {
-		if obj.Key.NodeType != edgeproto.NodeType_NODE_CRM {
+	nodeMgr.NodeCache.Mux.Lock()
+	defer nodeMgr.NodeCache.Mux.Unlock()
+	for _, obj := range nodeMgr.NodeCache.Objs {
+		if obj.Key.Type != node.NodeTypeCRM {
 			continue
 		}
 		if obj.Key.CloudletKey != *key {

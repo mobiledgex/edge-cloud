@@ -17,6 +17,7 @@ import (
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -37,6 +38,7 @@ var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics co
 var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc applications")
 var upgradeInstances = flag.Bool("updateAll", false, "Upgrade all Instances of Prometheus operator")
 var pluginRequired = flag.Bool("pluginRequired", false, "Require plugin")
+var hostname = flag.String("hostname", "", "Unique hostname")
 
 var prometheusT *template.Template
 var nfsT *template.Template
@@ -110,6 +112,7 @@ var sigChan chan os.Signal
 
 var AutoScalePolicyCache edgeproto.AutoScalePolicyCache
 var ClusterInstCache edgeproto.ClusterInstCache
+var nodeMgr *node.NodeMgr
 
 type promCustomizations struct {
 	Interval string
@@ -620,6 +623,8 @@ func main() {
 	if err = validateAppRevision(ctx, &NFSAutoProvAppKey); err != nil {
 		log.FatalLog("Validate NFSAutoProvision version", "error", err)
 	}
+	nodeMgr = node.Init(ctx, node.NodeTypeClusterSvc, node.WithName(*hostname))
+
 	// Update prometheus instances in a separate go routine
 	go updateAppInsts(ctx, &MEXPrometheusAppKey)
 
@@ -629,6 +634,7 @@ func main() {
 	notifyClient := initNotifyClient(ctx, *notifyAddrs, *tlsCertFile)
 	notifyClient.RegisterRecvClusterInstCache(&ClusterInstCache)
 	notifyClient.RegisterRecvAutoScalePolicyCache(&AutoScalePolicyCache)
+	nodeMgr.RegisterClient(notifyClient)
 	notifyClient.Start()
 	defer notifyClient.Stop()
 

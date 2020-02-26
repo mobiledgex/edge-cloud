@@ -738,6 +738,7 @@ func (c *AlertCache) GetCount() int {
 }
 
 func (c *AlertCache) Flush(ctx context.Context, notifyId int64) {
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Alert", "notifyId", notifyId)
 	flushed := make(map[AlertKey]*Alert)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -745,6 +746,7 @@ func (c *AlertCache) Flush(ctx context.Context, notifyId int64) {
 			continue
 		}
 		flushed[key] = c.Objs[key]
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Alert delete", "key", key)
 		delete(c.Objs, key)
 	}
 	c.Mux.Unlock()
@@ -993,10 +995,6 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(HealthCheck(0)):
 		if en, ok := HealthCheck_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(NodeType(0)):
-		if en, ok := NodeType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(NoticeAction(0)):
