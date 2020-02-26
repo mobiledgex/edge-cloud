@@ -51,6 +51,7 @@ controllers:
   registryfqdn: "docker.mobiledgex.net"
   testmode: true
   versiontag: "2019-10-24"
+  notifyparentaddrs: "127.0.0.1:53001"
 
 - name: ctrl2
   etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
@@ -65,6 +66,7 @@ controllers:
   registryfqdn: "docker.mobiledgex.net"
   testmode: true
   versiontag: "2019-10-24"
+  notifyparentaddrs: "127.0.0.1:53001"
 
 clustersvcs:
 - name: cluster-svc1
@@ -119,3 +121,9 @@ traefiks:
 jaegers:
 - name: jaeger-e2e
   hostname: "127.0.0.1"
+
+notifyroots:
+- name: notifyroot
+  hostname: "127.0.0.1"
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"

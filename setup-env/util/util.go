@@ -101,6 +101,7 @@ type DeploymentData struct {
 	Crms        []*process.Crm        `yaml:"crms"`
 	Jaegers     []*process.Jaeger     `yaml:"jaegers"`
 	Traefiks    []*process.Traefik    `yaml:"traefiks"`
+	NotifyRoots []*process.NotifyRoot `yaml:"notifyroots"`
 }
 
 type errorReply struct {
@@ -142,6 +143,9 @@ func GetAllProcesses() []process.Process {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.Traefiks {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.NotifyRoots {
 		all = append(all, p)
 	}
 	return all
