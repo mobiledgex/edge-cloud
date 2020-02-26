@@ -1,5 +1,7 @@
 nodes:
 - key:
+    type: notifyroot
+- key:
     type: controller
   containerversion: 2019-10-24
 - key:

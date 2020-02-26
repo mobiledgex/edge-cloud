@@ -932,6 +932,31 @@ func (p *Jaeger) GetExeName() string { return "docker" }
 
 func (p *Jaeger) LookupArgs() string { return p.Name }
 
+func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
+	args := []string{}
+	if p.TLS.ServerCert != "" {
+		args = append(args, "--tls")
+		args = append(args, p.TLS.ServerCert)
+	}
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.Debug != "" {
+		args = append(args, "-d")
+		args = append(args, options.Debug)
+	}
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	return err
+}
+
+func (p *NotifyRoot) StopLocal() {
+	StopLocal(p.cmd)
+}
+
+func (p *NotifyRoot) GetExeName() string { return "notifyroot" }
+
+func (p *NotifyRoot) LookupArgs() string { return "" }
+
 // Support funcs
 
 func StartLocal(name, bin string, args, envs []string, logfile string) (*exec.Cmd, error) {

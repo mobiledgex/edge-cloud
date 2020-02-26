@@ -19,50 +19,31 @@ type NodeApi struct{}
 
 var nodeApi = NodeApi{}
 
-func (s *NodeApi) ShowNodeLocal(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeLocalServer) error {
-	err := nodeMgr.NodeCache.Show(in, func(obj *edgeproto.Node) error {
-		err := cb.Send(obj)
-		return err
-	})
-	return err
-}
-
 func (s *NodeApi) ShowNode(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeServer) error {
-	err := controllerApi.RunJobs(func(arg interface{}, addr string) error {
-		if addr == *externalApiAddr {
-			// local node
-			return s.ShowNodeLocal(in, cb)
+	conn, err := notifyRootConnect()
+	if err != nil {
+		return err
+	}
+	client := edgeproto.NewNodeApiClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stream, err := client.ShowNode(ctx, in)
+	if err != nil {
+		return err
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
 		}
-		// connect to remote node
-		conn, err := ControllerConnect(addr)
 		if err != nil {
-			return nil
+			return fmt.Errorf("ShowNode failed, %v", err)
 		}
-		defer conn.Close()
-
-		cmd := edgeproto.NewNodeApiClient(conn)
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-
-		stream, err := cmd.ShowNodeLocal(ctx, in)
+		err = cb.Send(obj)
 		if err != nil {
 			return err
 		}
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowNodeLocal %s: failed: %s",
-					addr, err.Error())
-			}
-			err = cb.Send(obj)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}, nil)
-	return err
+	}
+	return nil
 }
