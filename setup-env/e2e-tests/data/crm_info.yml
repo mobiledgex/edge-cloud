@@ -370,6 +370,7 @@ appinstances:
   flavor:
     name: x1.small
   state: Ready
+  powerstate: PowerOn
 - key:
     appkey:
       developerkey:
@@ -396,6 +397,7 @@ appinstances:
   flavor:
     name: x1.medium
   state: Ready
+  powerstate: PowerOn
 - key:
     appkey:
       developerkey:
@@ -422,6 +424,7 @@ appinstances:
   flavor:
     name: x1.medium
   state: Ready
+  powerstate: PowerOn
 - key:
     appkey:
       developerkey:
@@ -453,6 +456,7 @@ appinstances:
   flavor:
     name: x1.small
   state: Ready
+  powerstate: PowerOn
 - key:
     appkey:
       developerkey:
@@ -488,6 +492,7 @@ appinstances:
   flavor:
     name: x1.small
   state: Ready
+  powerstate: PowerOn
 - key:
     appkey:
       developerkey:
@@ -514,4 +519,5 @@ appinstances:
   flavor:
     name: x1.medium
   state: Ready
+  powerstate: PowerOn
 
