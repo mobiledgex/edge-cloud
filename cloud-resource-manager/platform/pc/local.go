@@ -5,6 +5,7 @@ import (
 	"io"
 	"os/exec"
 	"sync"
+	"time"
 
 	"github.com/kr/pty"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -94,4 +95,9 @@ func (s *LocalClient) Wait() error {
 // AddHop for LocalClient returns an unmodified LocalClient
 func (s *LocalClient) AddHop(host string, port int) (ssh.Client, error) {
 	return s, nil
+}
+
+// For local, timeout is irrelevant
+func (s *LocalClient) OutputWithTimeout(command string, timeout time.Duration) (string, error) {
+	return s.Output(command)
 }
