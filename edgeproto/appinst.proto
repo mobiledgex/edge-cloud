@@ -120,7 +120,7 @@ message AppInst {
   // Optional privacy policy name
   string privacy_policy = 30;
   // Power State of the AppInst
-  PowerState power_state = 31;
+  PowerState power_state = 31 [(protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
