@@ -5,6 +5,7 @@ import (
 	"time"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
@@ -15,51 +16,76 @@ import (
 )
 
 var CertsDir = "/etc/ssl/certs"
+var CertName = "envoyTlsCerts" // cannot use common name as filename since envoy doesn't know if the app is dedicated or not
+var certFile = CertsDir + "/" + CertName + ".crt"
+var keyFile = CertsDir + "/" + CertName + ".key"
 
-// get certs from vault for rootlb, and pull a new one once a month
-// TODO: put this on dedicated lbs as well
-func GetRootLbCerts(ctx context.Context, commonName, vaultAddr string, client ssh.Client) {
-	getRootLbCertsHelper(ctx, commonName, vaultAddr, client)
+var SharedRootLbClient ssh.Client
+var DedicatedClients map[string]ssh.Client
+var DedicatedTls access.TLSCert
+var DedicatedMux sync.Mutex
+
+
+// get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
+func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultAddr string, client ssh.Client) {
+	SharedRootLbClient = client
+	DedicatedClients = make(map[string]ssh.Client)
+	getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr)
 	// refresh every 30 days
 	for {
 		select {
 		case <-time.After(30*24*time.Hour):
-			getRootLbCertsHelper(ctx, commonName, vaultAddr, client)			
+			getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr)			
 		}
 	}
 }
 
-func getRootLbCertsHelper(ctx context.Context, commonName, vaultAddr string, client ssh.Client) {
+func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, vaultAddr string) {
 	config, err := vault.BestConfig(vaultAddr)
 	if err == nil {
+		// rootlb
 		tls := access.TLSCert{}
-		err = GetCertFromVault(ctx, config, commonName, &tls)
+		err = getCertFromVault(ctx, config, commonName, &tls)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "unable to pull certs from vault", "err", err)
 		} else {
-			// write it to rootlb
-			err = pc.Run(client, "mkdir -p "+CertsDir)
-			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelMexos, "can't create cert dir on rootlb", "certDir", CertsDir)
-			} else {
-				certFile := CertsDir + "/" + tls.CommonName + ".crt"
-				err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", pc.NoSudo)
-				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelMexos, "unable to write tls cert file to rootlb", "err", err)
-				}
-				keyFile := CertsDir + "/" + tls.CommonName + ".key"
-				err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", pc.NoSudo)
-				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelMexos, "unable to write tls key file to rootlb", "err", err)
-				}	
+			writeCertToRootLb(ctx, &tls, SharedRootLbClient)
+		}
+
+		// dedicated lbs
+		DedicatedMux.Lock()
+		err = getCertFromVault(ctx, config, dedicatedCommonName, &DedicatedTls)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "unable to pull dedicated certs from vault", "err", err)
+		} else {
+			for _, client := range DedicatedClients {
+				writeCertToRootLb(ctx, &DedicatedTls, client)
 			}
 		}
+		DedicatedMux.Unlock()
+	}
+}
+
+func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Client) {
+	// write it to rootlb
+	err := pc.Run(client, "mkdir -p "+CertsDir)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelMexos, "can't create cert dir on rootlb", "certDir", CertsDir)
+	} else {
+		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", pc.SudoOn)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelMexos, "unable to write tls cert file to rootlb", "err", err)
+		}
+		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", pc.SudoOn)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelMexos, "unable to write tls key file to rootlb", "err", err)
+		}	
 	}
 }
 
 // GetCertFromVault fills in the cert fields by calling the vault  plugin.  The vault plugin will 
 // return a new cert if one is not already available, or a cached copy of an existing cert.
-func GetCertFromVault(ctx context.Context, config *vault.Config, commonName string, tlsCert *access.TLSCert) error {
+func getCertFromVault(ctx context.Context, config *vault.Config, commonName string, tlsCert *access.TLSCert) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "GetCertFromVault", "commonName", commonName)
 	client, err := config.Login()
 	if err != nil {
@@ -90,4 +116,17 @@ func GetCertFromVault(ctx context.Context, config *vault.Config, commonName stri
 	}
 	tlsCert.CommonName = commonName
 	return nil
+}
+
+func NewDedicatedCluster(ctx context.Context, clustername string, client ssh.Client) {
+	DedicatedMux.Lock()
+	defer DedicatedMux.Unlock()
+	DedicatedClients[clustername] = client
+	writeCertToRootLb(ctx, &DedicatedTls, client)
+}
+
+func RemoveDedicatedCluster(ctx context.Context, clustername string) {
+	DedicatedMux.Lock()
+	defer DedicatedMux.Unlock()
+	delete(DedicatedClients, clustername)
 }

@@ -90,7 +90,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 	spec := ProxySpec{
 		Name:       name,
 		MetricPort: cloudcommon.ProxyMetricsPort,
-		Cert:       cert,
+		CertName:   CertName,
 	}
 	for _, p := range ports {
 		endPort := p.EndPort
@@ -170,15 +170,15 @@ static_resources:
                   "client_address": "%DOWNSTREAM_REMOTE_ADDRESS%",
                   "upstream_cluster": "%UPSTREAM_CLUSTER%"
 				}
-     {{if .UseTLS -}}
+      {{if .UseTLS -}}
       tls_context:
         common_tls_context:
           tls_certificates:
             - certificate_chain:
-                filename: "/etc/envoy/certs/{{$.Cert.CommonName}}.crt"
+                filename: "/etc/envoy/certs/{{$.CertName}}.crt"
               private_key:
-                filename: "/etc/envoy/certs/{{$.Cert.CommonName}}.key"
-     {{- end}}
+                filename: "/etc/envoy/certs/{{$.CertName}}.key"
+      {{- end}}
   {{- end}}
   clusters:
   {{- range .TCPSpec}}

@@ -326,7 +326,7 @@ type ProxySpec struct {
 	L7Port     int32
 	UsesTLS     bool // To be removed
 	MetricPort int32
-	Cert       *access.TLSCert
+	CertName   string
 }
 
 type TCPSpecDetail struct {

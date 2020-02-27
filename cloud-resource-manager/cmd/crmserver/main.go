@@ -205,10 +205,11 @@ func main() {
 	// setup rootlb certs
 	go func() {
 		<- finishedInit // wait for rootlb to finish setting up before trying to ssh in
-		commonName := "*." + strings.ToLower(myCloudlet.Key.OperatorKey.Name) + ".mobiledgex.net" // ex: *.tdg.mobiledgex.net
+		commonName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
+		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
 		rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
 		if err == nil {
-			proxy.GetRootLbCerts(ctx, commonName, *vaultAddr, rootlb)
+			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, *vaultAddr, rootlb)
 		}
 	
 	}()
