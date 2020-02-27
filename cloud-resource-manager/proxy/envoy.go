@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"strings"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/dockermgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -56,7 +55,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		return err
 	}
 	eyamlName := dir + "/envoy.yaml"
-	err = createEnvoyYaml(ctx, client, eyamlName, name, listenIP, backendIP, opts.Cert, ports)
+	err = createEnvoyYaml(ctx, client, eyamlName, name, listenIP, backendIP, ports)
 	if err != nil {
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
 	}
@@ -86,7 +85,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	return nil
 }
 
-func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, listenIP, backendIP string, cert *access.TLSCert, ports []dme.AppPort) error {
+func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, listenIP, backendIP string, ports []dme.AppPort) error {
 	spec := ProxySpec{
 		Name:       name,
 		MetricPort: cloudcommon.ProxyMetricsPort,
