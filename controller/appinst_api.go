@@ -266,7 +266,7 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 	if err != nil {
 		return
 	}
-	if app.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
+	if app.Deployment == cloudcommon.AppDeploymentTypeVM {
 		key.ClusterInstKey.ClusterKey.Name = cloudcommon.DefaultVMCluster
 	}
 }
@@ -903,6 +903,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	for _, field := range in.Fields {
 		if field == edgeproto.AppInstFieldCrmOverride ||
 			field == edgeproto.AppInstFieldKey ||
+			field == edgeproto.AppInstFieldPowerState ||
 			in.IsKeyField(field) {
 			continue
 		} else if field == edgeproto.AppInstFieldConfigs || field == edgeproto.AppInstFieldConfigsKind || field == edgeproto.AppInstFieldConfigsConfig {
@@ -919,6 +920,18 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 			badstrs = append(badstrs, edgeproto.AppInstAllFieldsStringMap[bad])
 		}
 		return fmt.Errorf("specified fields %s cannot be modified", strings.Join(badstrs, ","))
+	}
+	powerState := edgeproto.PowerState_POWER_STATE_UNKNOWN
+	if _, found := fmap[edgeproto.AppInstFieldPowerState]; found {
+		if len(allowedFields) > 0 {
+			return fmt.Errorf("If powerstate is to be updated, then no other fields can be modified")
+		}
+		allowedFields = append(allowedFields, edgeproto.AppInstFieldPowerState)
+		// Get the request state as user has specified action and not state
+		powerState = edgeproto.GetNextPowerState(in.PowerState, edgeproto.RequestState)
+		if powerState == edgeproto.PowerState_POWER_STATE_UNKNOWN {
+			return fmt.Errorf("Invalid power state specified")
+		}
 	}
 	in.Fields = allowedFields
 	if len(allowedFields) == 0 {
@@ -938,6 +951,16 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		if changeCount == 0 {
 			// nothing changed
 			return nil
+		}
+		if !ignoreCRM(cctx) && powerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
+			var app edgeproto.App
+			if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+				return in.Key.AppKey.NotFoundError()
+			}
+			if app.Deployment != cloudcommon.AppDeploymentTypeVM {
+				return fmt.Errorf("Updating powerstate is only supported for VM deployment")
+			}
+			cur.PowerState = powerState
 		}
 		s.store.STMPut(stm, &cur)
 		return nil
@@ -1136,12 +1159,15 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 }
 
 func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status)
+	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
 			return nil
+		}
+		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
+			inst.PowerState = in.PowerState
 		}
 		if inst.State == in.State {
 			// already in that state

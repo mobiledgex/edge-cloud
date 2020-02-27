@@ -179,3 +179,7 @@ func (s *Platform) GetContainerCommand(ctx context.Context, clusterInst *edgepro
 func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error) {
 	return "", nil
 }
+
+func (s *Platform) SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
+	return nil
+}

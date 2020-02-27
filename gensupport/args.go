@@ -216,6 +216,9 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 			en := enumDesc.EnumDescriptorProto
 			strs := make([]string, 0, len(en.Value))
 			for _, val := range en.Value {
+				if GetEnumBackend(val) {
+					continue
+				}
 				strs = append(strs, util.CamelCase(*val.Name))
 			}
 			text := "one of"

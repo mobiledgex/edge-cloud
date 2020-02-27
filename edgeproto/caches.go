@@ -150,6 +150,29 @@ func StateConflict(oldState, newState TrackedState) error {
 	return nil
 }
 
+func PowerStateConflict(oldState, newState PowerState) error {
+	busyStates := []PowerState{
+		PowerState_POWERING_ON,
+		PowerState_POWERING_OFF,
+		PowerState_REBOOTING,
+	}
+
+	oldBusy := false
+	newBusy := false
+	for _, state := range busyStates {
+		if oldState == state {
+			oldBusy = true
+		}
+		if newState == state {
+			newBusy = true
+		}
+	}
+	if oldBusy && newBusy {
+		return fmt.Errorf("conflicting state: %s", oldState)
+	}
+	return nil
+}
+
 func IsTransientState(state TrackedState) bool {
 	if state == TrackedState_CREATING ||
 		state == TrackedState_CREATING_DEPENDENCIES ||
@@ -162,6 +185,66 @@ func IsTransientState(state TrackedState) bool {
 		return true
 	}
 	return false
+}
+
+type PowerStateType int
+
+const (
+	RequestState   PowerStateType = 0
+	TransientState PowerStateType = 1
+	FinalState     PowerStateType = 2
+)
+
+func GetNextPowerState(state PowerState, stateType PowerStateType) PowerState {
+	switch stateType {
+	case RequestState:
+		if state == PowerState_POWER_ON {
+			return PowerState_POWER_ON_REQUESTED
+		} else if state == PowerState_POWER_OFF {
+			return PowerState_POWER_OFF_REQUESTED
+		} else if state == PowerState_REBOOT {
+			return PowerState_REBOOT_REQUESTED
+		}
+	case TransientState:
+		if state == PowerState_POWER_ON_REQUESTED {
+			return PowerState_POWERING_ON
+		} else if state == PowerState_POWER_OFF_REQUESTED {
+			return PowerState_POWERING_OFF
+		} else if state == PowerState_REBOOT_REQUESTED {
+			return PowerState_REBOOTING
+		}
+	case FinalState:
+		if state == PowerState_POWERING_ON {
+			return PowerState_POWER_ON
+		} else if state == PowerState_POWERING_OFF {
+			return PowerState_POWER_OFF
+		} else if state == PowerState_REBOOTING {
+			return PowerState_POWER_ON
+		}
+	}
+	return PowerState_POWER_STATE_UNKNOWN
+}
+
+func (s *AppInstInfoCache) SetPowerState(ctx context.Context, key *AppInstKey, state PowerState) error {
+	var err error
+	s.UpdateModFunc(ctx, key, 0, func(old *AppInstInfo) (newObj *AppInstInfo, changed bool) {
+		info := &AppInstInfo{}
+		if old == nil {
+			info.Key = *key
+		} else {
+			err = PowerStateConflict(old.PowerState, state)
+			if err != nil {
+				log.DebugLog(log.DebugLevelApi, "SetPowerState conflict", "oldState", old.PowerState, "newState", state, "err", err)
+				return old, false
+			}
+			*info = *old
+		}
+		info.Errors = nil
+		info.PowerState = state
+		info.Status = StatusInfo{}
+		return info, true
+	})
+	return err
 }
 
 func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state TrackedState) error {
