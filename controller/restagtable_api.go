@@ -181,38 +181,43 @@ func (s *ResTagTableApi) findAZmatch(res string, cli edgeproto.CloudletInfo) (st
 }
 
 // Irrespective of any requesting mex flavor, do we think this OS flavor offers any optional resources, given the current cloudlet's mappings?
-// TODO: this could be handy as a standalone CLI diagnostic along side FindFlavorMatch
-func (s *ResTagTableApi) isOptResOSFlavor(ctx context.Context, stm concurrency.STM, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet) bool {
+// Return count and resource type values discovered in flavor.
+func (s *ResTagTableApi) osFlavorResources(ctx context.Context, stm concurrency.STM, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet) (offered []string, count int) {
+	var rescnt int
+	var resources []string
 
 	if len(flavor.PropMap) == 0 {
 		// optional resources are defined via os flavor properties
-		return false
+		return resources, 0
 	}
 	if cl.ResTagMap == nil {
 		// given cloudlet has no resource mappings currently
 		log.SpanLog(ctx, log.DebugLevelApi, "No OptResMap for", "cloudlet", cl.Key.Name)
-		return false
+		return resources, 0
 	}
 	// for all optional resources configured for the given cloudlet
 	for res, key := range cl.ResTagMap {
 		tbl, err := s.GetCloudletResourceMap(ctx, stm, key)
 		if err != nil || tbl == nil {
-			fmt.Printf("\n\n isOptResOSFlavor-I-no tbl found for resource: %s in cloudlet %s\n", res, cl.Key.Name)
-			continue // don't care for any specific resource
+			if verbose {
+				log.SpanLog(ctx, log.DebugLevelApi, "no tbl found", "resource", res, "cloudlet", cl.Key.Name)
+			}
+			continue
 		}
 		// look in flavor.PropMap for hints
 		for _, flav_val := range flavor.PropMap {
 			for _, val := range tbl.Tags {
 				if strings.Contains(flav_val, val) {
 					if verbose {
-						fmt.Printf("\n\n favor %s  prop %s contains tagtbl val: %s true\n\n", flavor.Name, flav_val, val)
+						log.SpanLog(ctx, log.DebugLevelApi, "match", "flavor", flavor.Name, "prop", flav_val, "val", val)
 					}
-					return true
+					resources = append(resources, res)
+					rescnt++
 				}
 			}
 		}
 	}
-	return false
+	return resources, rescnt
 }
 
 // Check the match for any given request 'req' for resource 'resname' in OS flavor 'flavor'.
@@ -224,14 +229,14 @@ func (s *ResTagTableApi) match(ctx context.Context, stm concurrency.STM, resname
 	var wildcard bool = false
 
 	if verbose {
-		fmt.Printf("\n\n\tmatch:consider resource %s request %s osflavor %s\n\n", resname, req, flavor.Name)
+		log.SpanLog(ctx, log.DebugLevelApi, "match", "resource", resname, "osflavor", flavor.Name)
 	}
 
 	// Get the res tag table key for this resource, if any
 	tblkey := cl.ResTagMap[resname]
 	if tblkey == nil {
 		if verbose {
-			fmt.Printf("Match fail: Cloudlet %s no tbl key for %s", cl.Key.Name, resname)
+			log.SpanLog(ctx, log.DebugLevelApi, "Match fail no tbl key", "Cloudlet", cl.Key.Name, "resource", resname)
 		}
 		// no key = no table = no match possible
 		return false, fmt.Errorf("cloudlet %s no tbl key for %s", cl.Key.Name, resname)
@@ -241,8 +246,7 @@ func (s *ResTagTableApi) match(ctx context.Context, stm concurrency.STM, resname
 	tbl, err := s.GetCloudletResourceMap(ctx, stm, tblkey)
 	if err != nil || tbl == nil {
 		if verbose {
-			fmt.Printf("Match fail: No res tag tbl name %s found for resource %s on cloudlet %s\n",
-				tblkey.Name, resname, cl.Key.Name)
+			log.SpanLog(ctx, log.DebugLevelApi, "Match fail No res tag tbl", "name", tblkey.Name, "resource", resname)
 		}
 		return false, fmt.Errorf("cloudlet %s no res tag tbl named %s for resource %s", cl.Key.Name, tblkey.Name, resname)
 	}
@@ -252,7 +256,7 @@ func (s *ResTagTableApi) match(ctx context.Context, stm concurrency.STM, resname
 	if len(request) == 1 {
 		// should not happen with CLI validation in place
 		if verbose {
-			fmt.Printf("Match fail:cloudlet %s bad request format for resource %s request: %s\n", cl.Key.Name, resname, request)
+			log.SpanLog(ctx, log.DebugLevelApi, "Match fail bad request format", "cloudlet", cl.Key.Name, "resource", resname, "request", request)
 		}
 		// XXX in all cases?
 		return false, fmt.Errorf("invalid optresmap request %s", request)
@@ -266,14 +270,14 @@ func (s *ResTagTableApi) match(ctx context.Context, stm concurrency.STM, resname
 	}
 	if reqcnt, err = strconv.Atoi(count); err != nil {
 		if verbose {
-			fmt.Printf("Match fail: Non-numeric resource count found for cloudlet  %s resource %s request %s\n", cl.Key.Name, resname, request)
+			log.SpanLog(ctx, log.DebugLevelApi, "Match fail Non-numeric resource count", "cloudlet", cl.Key.Name, "resource", resname, "request", request)
 		}
 		return false, fmt.Errorf("Match fail: resource count %s request %s resource %s ", count, request, resname)
 	}
 	if reqcnt == 0 {
 		// auto convert to 1? XXX
 		if verbose {
-			fmt.Printf("\n\n\tNo %s resource count for request %s", resname, request)
+			log.SpanLog(ctx, log.DebugLevelApi, "Match fail resource request count zero for", "request", request)
 		}
 		return false, fmt.Errorf("No %s resource count for request %s", resname, request)
 	}
@@ -287,13 +291,13 @@ func (s *ResTagTableApi) match(ctx context.Context, stm concurrency.STM, resname
 			if len(alias) == 2 {
 				if flavcnt, err = strconv.Atoi(alias[1]); err != nil {
 					if verbose {
-						fmt.Printf("\n\n\tNon-numeric count found in OS flavor %s  alias: %s\n", flavor.Name, alias)
+						log.SpanLog(ctx, log.DebugLevelApi, "Match fail Non-numeric count found in OS", "flavor", flavor.Name, "alias", alias)
 					}
 					return false, fmt.Errorf("Non-numeric count found in os flavor props for %s", flavor.Name)
 				}
 			} else {
 				if verbose {
-					fmt.Printf("Match skipping flavor prop k: %s v: %s of flavor %s alias len: %d\n", flav_key, flav_val, flavor.Name, len(alias))
+					log.SpanLog(ctx, log.DebugLevelApi, "Match skipping", "flavor", flavor.Name, "prop key", flav_key, "val", flav_val, "len", len(alias))
 				}
 				continue
 			}
@@ -301,7 +305,7 @@ func (s *ResTagTableApi) match(ctx context.Context, stm concurrency.STM, resname
 				// we have just the $kind:1 as in gpu=gpu:1
 				if strings.Contains(flav_key, tag_key) && flavcnt >= reqcnt {
 					if verbose {
-						fmt.Printf("Match: wildcard Match found for OS flavor %s  key %s contains key %s \n", flavor.Name, flav_key, tag_key)
+						log.SpanLog(ctx, log.DebugLevelApi, "Match: wildcard", "flavor", flavor.Name, "fkey", flav_key, "tkey", tag_key)
 					}
 					return true, nil
 				}
@@ -310,7 +314,7 @@ func (s *ResTagTableApi) match(ctx context.Context, stm concurrency.STM, resname
 					if strings.Contains(flav_key, tag_key) {
 						if strings.Contains(flav_val, tag_val) && flavcnt >= reqcnt {
 							if verbose {
-								fmt.Printf("Match found for OS flavor %s key %s val %s containes %s \n", flavor.Name, flav_key, flav_val, tag_val)
+								log.SpanLog(ctx, log.DebugLevelApi, "Match:", "flavor", flavor.Name, "fkey", flav_key, "fval", flav_val, "tval", tag_val)
 							}
 							return true, nil
 						}
@@ -320,7 +324,7 @@ func (s *ResTagTableApi) match(ctx context.Context, stm concurrency.STM, resname
 		}
 	}
 	if verbose {
-		fmt.Printf("Match fail: exhausted all tags for resource %s OS flavor %s no match\n", resname, flavor.Name)
+		log.SpanLog(ctx, log.DebugLevelApi, "Match fail: exhausted", "resource", resname, "flavor", flavor.Name)
 	}
 	return false, fmt.Errorf("No match found for flavor %s", flavor.Name)
 }
@@ -332,23 +336,31 @@ func (s *ResTagTableApi) resLookup(ctx context.Context, stm concurrency.STM, nod
 	rescount := len(nodeflavor.OptResMap)
 	for res, request := range nodeflavor.OptResMap {
 		if verbose {
-			fmt.Printf("lookup test resource %s request %s against os flavor %s\n", res, request, flavor.Name)
+			log.SpanLog(ctx, log.DebugLevelApi, "lookup", "resource", res, "request", request, "flavor", flavor.Name)
 		}
 
 		if ok, err := s.match(ctx, stm, res, request, flavor, cl); ok {
 			if verbose {
-				fmt.Printf("Flavor %s matched for resource %s request: %s\n", flavor.Name, res, request)
+				log.SpanLog(ctx, log.DebugLevelApi, "lookup", "flavor", flavor.Name, "resource", res, "request", request)
 			}
 			continue
 		} else {
 			if verbose {
-				fmt.Printf("Flavor %s Failed match for resource %s request: %s err: %s\n", flavor.Name, res, request, err.Error())
+				log.SpanLog(ctx, log.DebugLevelApi, "lookup fail", "flavor", nodeflavor.Key.Name, "resource", res, "request", request, "err", err.Error())
 			}
 			return "", "", false, fmt.Errorf("no matching tag found for mex flavor  %s\n\n", nodeflavor.Key.Name)
 		}
 	}
+	if resources, cnt := s.osFlavorResources(ctx, stm, flavor, cl); cnt > rescount {
+		fmt.Printf("\n\nresLookup-I-reject os flavor %s has %d resources requested %d resources\n\n", flavor.Name, cnt, rescount)
+		for i, val := range resources {
+			fmt.Printf("resLookup flavor %s resource %d = %s\n\n", flavor.Name, i, val)
+		}
+		// The os flavor offers some additional recognized resource, reject it.
+		return "", "", false, fmt.Errorf("Flavor %s satifies request, holds additional resources not requested", flavor.Name)
+	}
 	if verbose {
-		fmt.Printf("\n\nAll %d resources matched return true\n", rescount)
+		log.SpanLog(ctx, log.DebugLevelApi, "lookup+", "flavor", flavor.Name)
 	}
 	az, _ = s.findAZmatch("gpu", cli)
 	img, _ = s.findImagematch("gpu", cli)
@@ -411,7 +423,7 @@ func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nod
 		} else {
 			// Finally, if the os flavor we're about to return happens to be offering an optional resource
 			// that was not requested, we need to skip it.
-			if s.isOptResOSFlavor(ctx, stm, *flavor, cl) {
+			if _, cnt := s.osFlavorResources(ctx, stm, *flavor, cl); cnt != 0 {
 				continue
 			}
 		}

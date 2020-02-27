@@ -729,6 +729,17 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		// This says I want one gpu, don't care if it's vgpu or passthrough
 		OptResMap: map[string]string{"gpu": "gpu:1", "nas": "ceph-20:1"},
 	}
+	// request nas optional resource only
+	var testflavorNas = edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.large-2-Resources",
+		},
+		Ram:   8192,
+		Vcpus: 8,
+		Disk:  40,
+		// This says I want one gpu, don't care if it's vgpu or passthrough
+		OptResMap: map[string]string{"nas": "ceph-20:1"},
+	}
 
 	// test request for a specific type of pci  ( one T4 )
 	// should match flavor.large from testutils.
@@ -811,6 +822,10 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		require.Nil(t, err, "GetVMSpec")
 		require.Equal(t, "flavor.large2", spec.FlavorName)
 
+		// Non-nominal: ask for nas only, should reject testflavor2 as there are no
+		// os flavors with only a nas resource
+		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavorNas, *cl, cli)
+		require.Equal(t, "no suitable platform flavor found for x1.large-2-Resources, please try a smaller flavor", vmerr.Error())
 		// Non-nominal: flavor requests optional resource, while cloudlet's OptResMap is nil (cloudlet supports none)
 		cl.ResTagMap = nil
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor, *cl, cli)
@@ -820,8 +835,6 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		// and finally, Non-nominal, request a resource, and cloudlet has none to give (nil cloudlet/cloudlet.ResTagMap)
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor, nulCL, cli)
 		require.Equal(t, "Optional resource requested by x1.large-mex , cloudlet  supports none", vmerr.Error(), "nil table")
-
 		return nil
-
 	})
 }
