@@ -903,6 +903,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	for _, field := range in.Fields {
 		if field == edgeproto.AppInstFieldCrmOverride ||
 			field == edgeproto.AppInstFieldKey ||
+			field == edgeproto.AppInstFieldPowerState ||
 			in.IsKeyField(field) {
 			continue
 		} else if field == edgeproto.AppInstFieldConfigs || field == edgeproto.AppInstFieldConfigsKind || field == edgeproto.AppInstFieldConfigsConfig {
@@ -957,7 +958,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 				return in.Key.AppKey.NotFoundError()
 			}
 			if app.Deployment != cloudcommon.AppDeploymentTypeVM {
-				return fmt.Errorf("Updating powerstate is only support for VM deployment")
+				return fmt.Errorf("Updating powerstate is only supported for VM deployment")
 			}
 			cur.PowerState = powerState
 		}
@@ -1158,12 +1159,15 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 }
 
 func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status)
+	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
 			return nil
+		}
+		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
+			inst.PowerState = in.PowerState
 		}
 		if inst.State == in.State {
 			// already in that state

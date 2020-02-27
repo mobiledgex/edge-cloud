@@ -65,6 +65,8 @@ enum PowerState {
   REBOOTING = 8 [(protogen.enum_backend) = true];
   // Reboot
   REBOOT = 9;
+  // Error
+  POWER_STATE_ERROR = 10 [(protogen.enum_backend) = true];
 }
 
 // Application Instance

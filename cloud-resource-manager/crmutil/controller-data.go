@@ -344,15 +344,15 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		nextPowerState := edgeproto.GetNextPowerState(new.PowerState, edgeproto.TransientState)
 		if nextPowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
 			cd.appInstInfoPowerState(ctx, &new.Key, nextPowerState)
-			log.SpanLog(ctx, log.DebugLevelMexos, "set power state on AppInst", "key", new.Key, "action", new.PowerState)
+			log.SpanLog(ctx, log.DebugLevelMexos, "set power state on AppInst", "key", new.Key, "powerState", new.PowerState, "nextPowerState", nextPowerState)
 			err = cd.platform.SetPowerState(ctx, &app, new, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Set AppInst PowerState failed: %s", err)
-				cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.PowerState_POWER_STATE_UNKNOWN)
+				cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.PowerState_POWER_STATE_ERROR)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr)
 				log.SpanLog(ctx, log.DebugLevelMexos, "can't set power state on AppInst", "error", err, "key", new.Key)
 			} else {
-				cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.GetNextPowerState(new.PowerState, edgeproto.FinalState))
+				cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.GetNextPowerState(nextPowerState, edgeproto.FinalState))
 				cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
 			}
 			return

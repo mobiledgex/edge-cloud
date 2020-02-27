@@ -219,7 +219,7 @@ func GetNextPowerState(state PowerState, stateType PowerStateType) PowerState {
 		} else if state == PowerState_POWERING_OFF {
 			return PowerState_POWER_OFF
 		} else if state == PowerState_REBOOTING {
-			return PowerState_REBOOT
+			return PowerState_POWER_ON
 		}
 	}
 	return PowerState_POWER_STATE_UNKNOWN
