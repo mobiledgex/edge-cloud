@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"sort"
 
 	"strconv"
@@ -182,9 +183,9 @@ func (s *ResTagTableApi) findAZmatch(res string, cli edgeproto.CloudletInfo) (st
 
 // Irrespective of any requesting mex flavor, do we think this OS flavor offers any optional resources, given the current cloudlet's mappings?
 // Return count and resource type values discovered in flavor.
-func (s *ResTagTableApi) osFlavorResources(ctx context.Context, stm concurrency.STM, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet) (offered []string, count int) {
+func (s *ResTagTableApi) osFlavorResources(ctx context.Context, stm concurrency.STM, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet) (offered map[string]struct{}, count int) {
 	var rescnt int
-	var resources []string
+	resources := make(map[string]struct{})
 
 	if len(flavor.PropMap) == 0 {
 		// optional resources are defined via os flavor properties
@@ -211,7 +212,7 @@ func (s *ResTagTableApi) osFlavorResources(ctx context.Context, stm concurrency.
 					if verbose {
 						log.SpanLog(ctx, log.DebugLevelApi, "match", "flavor", flavor.Name, "prop", flav_val, "val", val)
 					}
-					resources = append(resources, res)
+					resources[res] = struct{}{}
 					rescnt++
 				}
 			}
@@ -333,7 +334,8 @@ func (s *ResTagTableApi) match(ctx context.Context, stm concurrency.STM, resname
 // by nodeflavor are satisfied by flavor already.
 func (s *ResTagTableApi) resLookup(ctx context.Context, stm concurrency.STM, nodeflavor edgeproto.Flavor, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (string, string, bool, error) {
 	var img, az string
-	rescount := len(nodeflavor.OptResMap)
+
+	nodeResources := make(map[string]struct{})
 	for res, request := range nodeflavor.OptResMap {
 		if verbose {
 			log.SpanLog(ctx, log.DebugLevelApi, "lookup", "resource", res, "request", request, "flavor", flavor.Name)
@@ -343,6 +345,7 @@ func (s *ResTagTableApi) resLookup(ctx context.Context, stm concurrency.STM, nod
 			if verbose {
 				log.SpanLog(ctx, log.DebugLevelApi, "lookup", "flavor", flavor.Name, "resource", res, "request", request)
 			}
+			nodeResources[res] = struct{}{}
 			continue
 		} else {
 			if verbose {
@@ -351,13 +354,10 @@ func (s *ResTagTableApi) resLookup(ctx context.Context, stm concurrency.STM, nod
 			return "", "", false, fmt.Errorf("no matching tag found for mex flavor  %s\n\n", nodeflavor.Key.Name)
 		}
 	}
-	if resources, cnt := s.osFlavorResources(ctx, stm, flavor, cl); cnt > rescount {
-		fmt.Printf("\n\nresLookup-I-reject os flavor %s has %d resources requested %d resources\n\n", flavor.Name, cnt, rescount)
-		for i, val := range resources {
-			fmt.Printf("resLookup flavor %s resource %d = %s\n\n", flavor.Name, i, val)
-		}
-		// The os flavor offers some additional recognized resource, reject it.
-		return "", "", false, fmt.Errorf("Flavor %s satifies request, holds additional resources not requested", flavor.Name)
+
+	flavorResources, _ := s.osFlavorResources(ctx, stm, flavor, cl)
+	if !reflect.DeepEqual(nodeResources, flavorResources) {
+		return "", "", false, fmt.Errorf("Flavor %s satifies request, yet provides additional resources not requested", flavor.Name)
 	}
 	if verbose {
 		log.SpanLog(ctx, log.DebugLevelApi, "lookup+", "flavor", flavor.Name)
