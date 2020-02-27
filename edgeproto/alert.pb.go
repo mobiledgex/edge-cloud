@@ -997,6 +997,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := HealthCheck_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(PowerState(0)):
+		if en, ok := PowerState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(NoticeAction(0)):
 		if en, ok := NoticeAction_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
