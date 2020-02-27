@@ -129,7 +129,6 @@ func main() {
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
 	reflection.Register(grpcServer)
 
-	finishedInit := make(chan bool)
 
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
@@ -193,7 +192,14 @@ func main() {
 		nodeMgr.UpdateMyNode(ctx)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 		cspan.Finish()
-		finishedInit <- true
+
+		// setup rootlb certs
+		commonName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
+		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
+		rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
+		if err == nil {
+			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, *vaultAddr, rootlb)
+		}
 	}()
 
 	// setup crm notify listener (for shepherd)
@@ -202,17 +208,6 @@ func main() {
 	notifyServer.Start(*notifySrvAddr, *tlsCertFile)
 	defer notifyServer.Stop()
 
-	// setup rootlb certs
-	go func() {
-		<- finishedInit // wait for rootlb to finish setting up before trying to ssh in
-		commonName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
-		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
-		rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
-		if err == nil {
-			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, *vaultAddr, rootlb)
-		}
-	
-	}()
 	span.Finish()
 
 	if mainStarted != nil {

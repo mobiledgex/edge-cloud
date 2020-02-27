@@ -63,6 +63,8 @@ func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, 
 			}
 		}
 		DedicatedMux.Unlock()
+	} else {
+		log.SpanLog(ctx, log.DebugLevelInfo, "unable to get vault config", "err", err)
 	}
 }
 

@@ -63,6 +63,9 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 			EndPort: strconv.FormatInt(endport, 10),
 		}
 		if len(pp) == 3 {
+			if portSpec.Proto != "http" && portSpec.Proto != "tcp" {
+				return nil, fmt.Errorf("Invalid protocol %s, not available for tls support", portSpec.Proto)
+			}
 			portSpec.Tls = true
 		}
 		ports = append(ports, portSpec)

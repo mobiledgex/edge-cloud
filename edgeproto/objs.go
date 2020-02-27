@@ -643,6 +643,9 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 			Tls:		  false,
 		}
 		if len(vals) == 3 {
+			if p.Proto !=  dme.LProto_L_PROTO_TCP && p.Proto != dme.LProto_L_PROTO_HTTP {
+				return nil, fmt.Errorf("Invalid protocol %s, not available for tls support", p.Proto)
+			}
 			p.Tls = true
 		}
 		appports = append(appports, p)
