@@ -6,7 +6,6 @@ package gencmd
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import _ "github.com/gogo/googleapis/google/api"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
