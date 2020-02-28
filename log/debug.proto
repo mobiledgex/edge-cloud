@@ -16,19 +16,3 @@ enum DebugLevel {
   info = 9;
   sampled = 10;
 }
-
-message DebugLevels {
-  // comma separated list of debug level names
-  repeated DebugLevel levels = 1;
-}
-
-message DebugResult {
-  string status = 1;
-  uint32 code = 2;
-}
-
-service DebugApi {
-  rpc EnableDebugLevels(DebugLevels) returns (DebugResult) {}
-  rpc DisableDebugLevels(DebugLevels) returns (DebugResult) {}
-  rpc ShowDebugLevels(DebugLevels) returns (DebugLevels) {}
-}

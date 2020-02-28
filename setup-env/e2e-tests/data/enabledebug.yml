@@ -1,0 +1,13 @@
+requests:
+- node:
+    type: controller
+  levels: upgrade
+- node:
+    type: dme
+  levels: etcd,sampled
+- node:
+    type: crm
+  levels: metrics,sampled,upgrade
+- node:
+    type: cluster-svc
+  levels: metrics,etcd

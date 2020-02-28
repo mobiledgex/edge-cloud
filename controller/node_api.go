@@ -20,12 +20,20 @@ type NodeApi struct{}
 var nodeApi = NodeApi{}
 
 func (s *NodeApi) ShowNode(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeServer) error {
+	if *notifyParentAddrs == "" {
+		// assume this is the root
+		return nodeMgr.NodeCache.Show(in, func(obj *edgeproto.Node) error {
+			err := cb.Send(obj)
+			return err
+		})
+	}
+
 	conn, err := notifyRootConnect()
 	if err != nil {
 		return err
 	}
 	client := edgeproto.NewNodeApiClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(cb.Context(), 3*time.Second)
 	defer cancel()
 
 	stream, err := client.ShowNode(ctx, in)

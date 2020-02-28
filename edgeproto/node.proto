@@ -16,6 +16,8 @@ message NodeKey {
   string type = 4;
   // Cloudlet on which node is running, or is associated with
   CloudletKey cloudlet_key = 3 [(gogoproto.nullable) = false];
+  // Region the node is in
+  string region = 5;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
@@ -45,6 +47,7 @@ message Node {
   option (protogen.generate_show_test) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
+  option (protogen.alias) = "name=Key.Name,type=Key.Type,cloudlet=Key.CloudletKey.Name,operator=Key.CloudletKey.OperatorKey.Name,region=Key.Region";
 }
 
 service NodeApi {

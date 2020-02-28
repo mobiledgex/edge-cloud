@@ -645,6 +645,16 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	return appports, nil
 }
 
+func CmpSortDebugReply(a DebugReply, b DebugReply) bool {
+	// e2e tests ignore Name for comparison, so name cannot
+	// be used to sort.
+	aKey := a.Node
+	aKey.Name = ""
+	bKey := b.Node
+	bKey.Name = ""
+	return aKey.GetKeyString() < bKey.GetKeyString()
+}
+
 func IgnoreTaggedFields(taglist string) []cmp.Option {
 	opts := []cmp.Option{}
 	opts = append(opts, IgnoreAppFields(taglist))
