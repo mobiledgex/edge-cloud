@@ -129,7 +129,6 @@ func main() {
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
 	reflection.Register(grpcServer)
 
-
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
@@ -194,12 +193,14 @@ func main() {
 		cspan.Finish()
 
 		// setup rootlb certs
+		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		commonName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
 		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
 		rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
 		if err == nil {
 			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, *vaultAddr, rootlb)
 		}
+		tlsSpan.Finish()
 	}()
 
 	// setup crm notify listener (for shepherd)
