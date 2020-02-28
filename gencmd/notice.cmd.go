@@ -7,8 +7,6 @@ import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
 import _ "github.com/gogo/protobuf/types"
 import _ "github.com/gogo/protobuf/gogoproto"
 
