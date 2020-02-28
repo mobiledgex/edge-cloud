@@ -4,11 +4,7 @@
 syntax = "proto3";
 package edgeproto;
 
-import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "result.proto";
-import "developer.proto";
-import "flavor.proto";
 import "gogoproto/gogo.proto";
 
 // ClusterKey uniquely identifies a Cluster.
