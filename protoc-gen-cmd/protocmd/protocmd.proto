@@ -1,9 +1,0 @@
-// proto-gen-cmd options
-// This is a separate file in case we plan to open source
-// the proto-gen-cmd code as it's own repo.
-
-syntax = "proto3";
-package protocmd;
-
-import "google/protobuf/descriptor.proto";
-
