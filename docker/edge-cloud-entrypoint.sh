@@ -41,6 +41,10 @@ case "$1" in
 	shift
 	mcctl $*
 	;;
+    notifyroot)
+	shift
+	notifyroot $*
+	;;
     tok-srv-sim)
 	shift
 	tok-srv-sim $*
