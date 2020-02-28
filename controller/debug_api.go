@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -40,7 +39,7 @@ func (s *DebugApi) RunDebug(req *edgeproto.DebugRequest, cb edgeproto.DebugApi_R
 		return err
 	}
 	client := edgeproto.NewDebugApiClient(conn)
-	ctx, cancel := context.WithTimeout(cb.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(cb.Context(), node.DebugTimeout)
 	defer cancel()
 
 	stream, err := client.RunDebug(ctx, req)

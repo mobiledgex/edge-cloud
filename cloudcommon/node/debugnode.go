@@ -14,6 +14,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 )
 
+var DebugTimeout = 10 * time.Second
+
 type DebugFunc func(ctx context.Context, req *edgeproto.DebugRequest) string
 
 const (
@@ -139,7 +141,7 @@ func (s *DebugNode) handleRequest(ctx context.Context, req *edgeproto.DebugReque
 	if count > 0 {
 		select {
 		case <-call.done:
-		case <-time.After(10 * time.Second):
+		case <-time.After(DebugTimeout):
 			timedout = true
 		}
 	}
