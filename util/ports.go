@@ -45,7 +45,7 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 
 		if (baseport < 1 || baseport > 65535) ||
 			(endport < 1 || endport > 65535) {
-			return nil, fmt.Errorf("Range ports out of range")
+			return nil, fmt.Errorf("App ports out of range")
 		}
 		if endport < baseport {
 			// after some debate, error on this potential typo len(portrange)

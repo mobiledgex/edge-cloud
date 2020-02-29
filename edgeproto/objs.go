@@ -586,68 +586,49 @@ func L4ProtoStr(proto dme.LProto) (string, error) {
 }
 
 func ParseAppPorts(ports string) ([]dme.AppPort, error) {
-	var baseport int64
-	var endport int64
-	var err error
-
 	appports := make([]dme.AppPort, 0)
 	if ports == "" {
 		return appports, nil
 	}
-	strs := strings.Split(ports, ",")
-	for _, str := range strs {
-		vals := strings.Split(str, ":")
-		// within each vals, we may have a hyphenated range of ports ex: udp:M-N inclusive. Also there is an option for encrypted ports ex: tcp:443:tls
-		if len(vals) != 2 && !(len(vals) == 3 && vals[2] == "tls") {
-			// either case len is 2 or 3 if a valid string ex: udp:4500[-500]:tls
-			return nil, fmt.Errorf("Invalid Access Ports format, expected proto:port[-endport][:tls] but was %s", ports)
 
-		}
-		// within each pp[1], we may have a hyphenated range of ports ex: udp:M-N inclusive
-		portrange := strings.Split(vals[1], "-")
-		// len of portrange is 2 if a range, 1 if simple single port value
-		// in either case, baseport is the first elem of portrange
+	portSpecs, err := util.ParsePorts(ports)
 
-		baseport, err = strconv.ParseInt(portrange[0], 10, 32)
-		if len(portrange) == 2 {
-			endport, err = strconv.ParseInt(portrange[1], 10, 32)
-			if err != nil {
-				return nil, fmt.Errorf("unable to convert port range base value")
-			}
-		} else {
-			// accomodate tests below
-			endport = baseport
+	if err != nil {
+		return nil, err
+	}
+
+	var proto dme.LProto
+	var baseport int64
+	var endport int64
+
+	for _, portSpec := range portSpecs {
+		switch portSpec.Proto {
+		case "http":
+			proto = dme.LProto_L_PROTO_HTTP
+		case "tcp":
+			proto = dme.LProto_L_PROTO_TCP
+		case "udp":
+			proto = dme.LProto_L_PROTO_UDP
+		default:
+			proto = dme.LProto_L_PROTO_UNKNOWN
 		}
 
-		if (baseport < 1 || baseport > 65535) ||
-			(endport < 1 || endport > 65535) {
-			return nil, fmt.Errorf("App ports out of range")
-		}
-		if endport < baseport {
-			// after some debate, error on this potential typo/
-			// don't second guess the client, make 'em fix it.
-			return nil, fmt.Errorf("App ports out of range")
-		}
-		if baseport == endport {
-			// ex: tcp:5000-5000 or a single value.
-			endport = 0
-		}
-		proto, err := GetLProto(vals[0])
+		baseport, err = strconv.ParseInt(portSpec.Port, 10, 32)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unable to convert port range base value")
 		}
+		endport, err = strconv.ParseInt(portSpec.EndPort, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("unable to conver port range end value")
+		}
+
 		p := dme.AppPort{
 			Proto:        proto,
 			InternalPort: int32(baseport),
 			EndPort:      int32(endport),
-			Tls:		  false,
+			Tls:          portSpec.Tls,
 		}
-		if len(vals) == 3 {
-			if p.Proto !=  dme.LProto_L_PROTO_TCP && p.Proto != dme.LProto_L_PROTO_HTTP {
-				return nil, fmt.Errorf("Invalid protocol %s, not available for tls support", p.Proto)
-			}
-			p.Tls = true
-		}
+
 		appports = append(appports, p)
 	}
 	return appports, nil
