@@ -143,6 +143,13 @@ type Recv{{.Name}}Handler interface {
 	Prune(ctx context.Context, keys map[{{.KeyType}}]struct{})
 	Flush(ctx context.Context, notifyId int64)
 }
+
+type {{.Name}}CacheHandler interface {
+	Send{{.Name}}Handler
+	Recv{{.Name}}Handler
+	SetNotifyCb(fn func(ctx context.Context, obj *{{.KeyType}}, old *{{.NameType}}))
+}
+
 {{- else}}
 type Recv{{.Name}}Handler interface {
 	Recv{{.Name}}(ctx context.Context, msg *{{.NameType}})
@@ -162,6 +169,7 @@ type {{.Name}}Send struct {
 	Ctxs []context.Context
 	ctxsToSend []context.Context
 {{- end}}
+	notifyId int64
 	Mux sync.Mutex
 	buf {{.NameType}}
 	SendCount uint64
@@ -199,6 +207,10 @@ func (s *{{.Name}}Send) GetName() string {
 
 func (s *{{.Name}}Send) GetSendCount() uint64 {
 	return s.SendCount
+}
+
+func (s *{{.Name}}Send) GetNotifyId() int64 {
+	return s.notifyId
 }
 
 {{- if .Cache}}
@@ -357,12 +369,13 @@ func New{{.Name}}SendMany() *{{.Name}}SendMany {
 	return s
 }
 
-func (s *{{.Name}}SendMany) NewSend(peerAddr string) NotifySend {
+func (s *{{.Name}}SendMany) NewSend(peerAddr string, notifyId int64) NotifySend {
 {{- if .Cache}}
 	send := New{{.Name}}Send(s.handler)
 {{- else}}
 	send := New{{.Name}}Send()
 {{- end}}
+	send.notifyId = notifyId
 	s.Mux.Lock()
 	s.sends[peerAddr] = send
 	s.Mux.Unlock()
@@ -397,6 +410,21 @@ func (s *{{.Name}}SendMany) Update(ctx context.Context, msg *{{.NameType}}) int 
 	defer s.Mux.Unlock()
 	count := 0
 	for _, send := range s.sends {
+		if send.Update(ctx, msg) {
+			count++
+		}
+	}
+	return count
+}
+
+func (s *{{.Name}}SendMany) UpdateFiltered(ctx context.Context, msg *{{.NameType}}, sendOk func(ctx context.Context, send *{{.Name}}Send, msg *{{.NameType}}) bool) int {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+	count := 0
+	for _, send := range s.sends {
+		if !sendOk(ctx, send, msg) {
+			continue
+		}
 		if send.Update(ctx, msg) {
 			count++
 		}
@@ -541,24 +569,24 @@ func (s *{{.Name}}RecvMany) Flush(ctx context.Context, notifyId int64) {
 }
 
 {{- if .Cache}}
-func (mgr *ServerMgr) RegisterSend{{.Name}}Cache(cache *edgeproto.{{.Name}}Cache) {
+func (mgr *ServerMgr) RegisterSend{{.Name}}Cache(cache {{.Name}}CacheHandler) {
 	send := New{{.Name}}SendMany(cache)
 	mgr.RegisterSend(send)
 	cache.SetNotifyCb(send.Update)
 }
 
-func (mgr *ServerMgr) RegisterRecv{{.Name}}Cache(cache *edgeproto.{{.Name}}Cache) {
+func (mgr *ServerMgr) RegisterRecv{{.Name}}Cache(cache {{.Name}}CacheHandler) {
 	recv := New{{.Name}}RecvMany(cache)
 	mgr.RegisterRecv(recv)
 }
 
-func (s *Client) RegisterSend{{.Name}}Cache(cache *edgeproto.{{.Name}}Cache) {
+func (s *Client) RegisterSend{{.Name}}Cache(cache {{.Name}}CacheHandler) {
 	send := New{{.Name}}Send(cache)
 	s.RegisterSend(send)
 	cache.SetNotifyCb(send.Update)
 }
 
-func (s *Client) RegisterRecv{{.Name}}Cache(cache *edgeproto.{{.Name}}Cache) {
+func (s *Client) RegisterRecv{{.Name}}Cache(cache {{.Name}}CacheHandler) {
 	recv := New{{.Name}}Recv(cache)
 	s.RegisterRecv(recv)
 }

@@ -35,6 +35,7 @@ func main() {
 	nodeMgr.RegisterServer(notifyServer)
 	notifyServer.RegisterServerCb(func(s *grpc.Server) {
 		edgeproto.RegisterNodeApiServer(s, &nodeApi)
+		edgeproto.RegisterDebugApiServer(s, &debugApi)
 	})
 	notifyServer.Start(*notifyAddr, *tlsCertFile)
 	defer notifyServer.Stop()
