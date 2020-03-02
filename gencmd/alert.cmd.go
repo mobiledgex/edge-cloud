@@ -17,6 +17,7 @@ It is generated from these files:
 	clusterinst.proto
 	common.proto
 	controller.proto
+	debug.proto
 	developer.proto
 	exec.proto
 	flavor.proto
@@ -76,6 +77,8 @@ It has these top-level messages:
 	StatusInfo
 	ControllerKey
 	Controller
+	DebugRequest
+	DebugReply
 	DeveloperKey
 	Developer
 	RunCmd

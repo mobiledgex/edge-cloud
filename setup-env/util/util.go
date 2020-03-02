@@ -110,6 +110,14 @@ type errorReply struct {
 	Details []string
 }
 
+type DebugData struct {
+	Requests []edgeproto.DebugRequest
+}
+
+type DebugOutput struct {
+	Replies [][]edgeproto.DebugReply
+}
+
 func GetAllProcesses() []process.Process {
 	all := make([]process.Process, 0)
 	for _, p := range Deployment.Locsims {
@@ -522,6 +530,16 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		clearInfluxTime(r1)
 		clearInfluxTime(r2)
 
+		y1 = r1
+		y2 = r2
+	} else if fileType == "debugoutput" {
+		var r1 DebugOutput
+		var r2 DebugOutput
+
+		err1 = ReadYamlFile(firstYamlFile, &r1)
+		err2 = ReadYamlFile(secondYamlFile, &r2)
+		copts = append(copts, edgeproto.IgnoreDebugReplyFields("nocmp"))
+		copts = append(copts, cmpopts.SortSlices(edgeproto.CmpSortDebugReply))
 		y1 = r1
 		y2 = r2
 	} else {

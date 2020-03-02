@@ -17,6 +17,7 @@
 		clusterinst.proto
 		common.proto
 		controller.proto
+		debug.proto
 		developer.proto
 		exec.proto
 		flavor.proto
@@ -76,6 +77,8 @@
 		StatusInfo
 		ControllerKey
 		Controller
+		DebugRequest
+		DebugReply
 		DeveloperKey
 		Developer
 		RunCmd

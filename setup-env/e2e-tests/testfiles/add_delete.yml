@@ -69,6 +69,8 @@ tests:
   apifile: "{{datadir}}/showlogs.yml"
   actions: [exec-showlogs]
 
+- includefile: debugtest.yml
+
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]
   apifile: "{{datadir}}/appdata.yml"

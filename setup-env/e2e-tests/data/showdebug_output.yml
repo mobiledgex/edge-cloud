@@ -1,0 +1,76 @@
+replies:
+- - node:
+      type: notifyroot
+    output: api,notify
+  - node:
+      type: controller
+      region: local
+    output: etcd,api,notify,metrics
+  - node:
+      type: controller
+      region: local
+    output: etcd,api,notify,metrics
+  - node:
+      type: dme
+      region: local
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-1
+    output: notify,dmedb,dmereq,locapi,metrics
+  - node:
+      type: dme
+      region: local
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
+    output: notify,dmedb,dmereq,locapi,metrics
+  - node:
+      type: crm
+      region: local
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-1
+    output: api,notify,mexos,info
+  - node:
+      type: crm
+      region: local
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
+    output: api,notify,mexos,info
+  - node:
+      type: crm
+      region: local
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-3
+    output: api,notify,mexos,info
+  - node:
+      type: crm
+      region: local
+      cloudletkey:
+        operatorkey:
+          name: azure
+        name: azure-cloud-4
+    output: api,notify,mexos,info
+  - node:
+      type: crm
+      region: local
+      cloudletkey:
+        operatorkey:
+          name: gcp
+        name: gcp-cloud-5
+    output: api,notify,mexos,info
+  - node:
+      type: cluster-svc
+      region: local
+    output: api,notify,mexos
+  - node:
+      type: cluster-svc
+      region: local
+    output: api,notify,mexos

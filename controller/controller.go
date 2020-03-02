@@ -173,7 +173,7 @@ func startServices() error {
 	if err != nil {
 		return err
 	}
-	nodeMgr = node.Init(ctx, node.NodeTypeController, node.WithName(ControllerId), node.WithContainerVersion(*versionTag))
+	nodeMgr = node.Init(ctx, node.NodeTypeController, node.WithName(ControllerId), node.WithContainerVersion(*versionTag), node.WithSetRegion(*region))
 
 	if *localEtcd {
 		opts := []process.StartOp{}
@@ -272,8 +272,8 @@ func startServices() error {
 		return fmt.Errorf("get TLS Credentials failed, %v", err)
 	}
 	server := grpc.NewServer(grpc.Creds(creds),
-		grpc.UnaryInterceptor(AuditUnaryInterceptor),
-		grpc.StreamInterceptor(AuditStreamInterceptor))
+		grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor),
+		grpc.StreamInterceptor(cloudcommon.AuditStreamInterceptor))
 	edgeproto.RegisterDeveloperApiServer(server, &developerApi)
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
@@ -297,7 +297,7 @@ func startServices() error {
 	edgeproto.RegisterPrivacyPolicyApiServer(server, &privacyPolicyApi)
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
-	log.RegisterDebugApiServer(server, &log.Api{})
+	edgeproto.RegisterDebugApiServer(server, &debugApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -334,6 +334,7 @@ func startServices() error {
 			edgeproto.RegisterPrivacyPolicyApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
 			edgeproto.RegisterAppInstClientApiHandler,
+			edgeproto.RegisterDebugApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
