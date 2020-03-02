@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -17,11 +18,15 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"gopkg.in/yaml.v2"
+	yaml "github.com/mobiledgex/yaml/v2"
+	"google.golang.org/grpc"
 )
 
 var appData edgeproto.ApplicationData
 var appDataMap edgeproto.ApplicationDataMap
+
+var apiConnectTimeout = 5 * time.Second
+var apiTimeout = 30 * time.Minute
 
 type runCommandData struct {
 	Request        edgeproto.ExecRequest
@@ -128,22 +133,26 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			runCLI = true
 		}
 	}
+	if strings.HasPrefix(api, "debug") {
+		// no cli support for now
+		runCLI = false
+	}
+
 	if runCLI {
 		return RunControllerCLI(api, ctrlname, apiFile, outputDir, mods)
 	}
 
 	log.Printf("Applying data via APIs for %s\n", apiFile)
-	apiConnectTimeout := 5 * time.Second
-	apiTimeout := 30 * time.Minute
 
 	ctrl := util.GetController(ctrlname)
 
 	if api == "show" {
 		//handled separately since it uses edgectl not direct api connection
 		return runShowCommands(ctrl, outputDir)
-	}
-	if api == "nodeshow" {
+	} else if api == "nodeshow" {
 		return runNodeShow(ctrl, outputDir)
+	} else if strings.HasPrefix(api, "debug") {
+		return runDebug(ctrl, api, apiFile, outputDir)
 	}
 
 	if apiFile == "" {
@@ -495,4 +504,103 @@ func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string) err
 		}
 	}
 	return nil
+}
+
+func runDebug(ctrl *process.Controller, api, apiFile, outputDir string) bool {
+	data := util.DebugData{}
+	log.Printf("Applying debug via APIs for %s\n", apiFile)
+
+	if apiFile == "" {
+		log.Println("Error: Cannot run Debug API without API file")
+		return false
+	}
+	err := util.ReadYamlFile(apiFile, &data)
+	if err != nil {
+		log.Printf("Error in unmarshal for file %s, %v\n", apiFile, err)
+		os.Exit(1)
+	}
+
+	conn, err := ctrl.ConnectAPI(apiConnectTimeout)
+	if err != nil {
+		log.Printf("Error connecting to controller api: %v, %v\n", ctrl.ApiAddr, err)
+		return false
+	}
+	defer conn.Close()
+
+	debugApi := edgeproto.NewDebugApiClient(conn)
+	log.Printf("Connected to controller %v success", ctrl.Name)
+	ctx, cancel := context.WithTimeout(context.Background(), apiTimeout)
+	defer cancel()
+
+	rc := true
+	output := util.DebugOutput{}
+
+	switch api {
+	case "debugenable":
+		runDebugApi(ctx, debugApi, "EnableDebugLevels", data.Requests, &output.Replies, &rc)
+	case "debugdisable":
+		runDebugApi(ctx, debugApi, "DisableDebugLevels", data.Requests, &output.Replies, &rc)
+	case "debugshow":
+		runDebugApi(ctx, debugApi, "ShowDebugLevels", data.Requests, &output.Replies, &rc)
+	case "debugrun":
+		runDebugApi(ctx, debugApi, "RunDebug", data.Requests, &output.Replies, &rc)
+	}
+
+	ymlOut, err := yaml.Marshal(output)
+	if err != nil {
+		log.Printf("Failed to marshal debug output, %v\n", err)
+		rc = false
+	} else {
+		util.PrintToFile("api-output.yml", outputDir, string(ymlOut), true)
+	}
+	return rc
+}
+
+type debugReplyStream interface {
+	Recv() (*edgeproto.DebugReply, error)
+	grpc.ClientStream
+}
+
+func runDebugApi(ctx context.Context, client edgeproto.DebugApiClient, api string, reqs []edgeproto.DebugRequest, out *[][]edgeproto.DebugReply, rc *bool) {
+	for _, req := range reqs {
+		var stream debugReplyStream
+		var err error
+		switch api {
+		case "EnableDebugLevels":
+			stream, err = client.EnableDebugLevels(ctx, &req)
+		case "DisableDebugLevels":
+			stream, err = client.DisableDebugLevels(ctx, &req)
+		case "ShowDebugLevels":
+			stream, err = client.ShowDebugLevels(ctx, &req)
+		case "RunDebug":
+			stream, err = client.RunDebug(ctx, &req)
+		default:
+			log.Printf("Unknown debug API %s\n", api)
+			*rc = false
+		}
+		if err != nil {
+			log.Printf("debug api %s for request %v failed %v", api, req, err)
+			*rc = false
+			continue
+		}
+		replies := []edgeproto.DebugReply{}
+		for {
+			reply, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Printf("debug api %s stream out for request %v failed %v", api, req, err)
+				*rc = false
+				break
+			}
+			replies = append(replies, *reply)
+		}
+		if len(replies) > 0 {
+			if *out == nil {
+				*out = make([][]edgeproto.DebugReply, 0)
+			}
+			*out = append(*out, replies)
+		}
+	}
 }

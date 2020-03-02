@@ -3,7 +3,6 @@
 package log
 
 import (
-	"context"
 	"strings"
 	"sync"
 
@@ -119,35 +118,48 @@ func ClearDebugLevels(vals []DebugLevel) {
 	}
 }
 
+func stringToDebugLevel(val string) (DebugLevel, bool) {
+	val = strings.ToLower(strings.TrimSpace(val))
+	lvl, ok := DebugLevel_value[val]
+	return DebugLevel(lvl), ok
+}
+
 func SetDebugLevelStrs(list string) {
 	strs := strings.Split(list, ",")
 	for _, str := range strs {
-		val, ok := DebugLevel_value[str]
+		val, ok := stringToDebugLevel(str)
 		if ok {
-			SetDebugLevelEnum(DebugLevel(val))
+			SetDebugLevelEnum(val)
 		}
 	}
 }
 
-type Api struct{}
-
-func (*Api) EnableDebugLevels(ctx context.Context, lvls *DebugLevels) (*DebugResult, error) {
-	SetDebugLevels(lvls.Levels)
-	return &DebugResult{}, nil
+func ClearDebugLevelStrs(list string) {
+	strs := strings.Split(list, ",")
+	for _, str := range strs {
+		val, ok := stringToDebugLevel(str)
+		if ok {
+			ClearDebugLevelEnum(val)
+		}
+	}
 }
 
-func (*Api) DisableDebugLevels(ctx context.Context, lvls *DebugLevels) (*DebugResult, error) {
-	ClearDebugLevels(lvls.Levels)
-	return &DebugResult{}, nil
-}
-
-func (*Api) ShowDebugLevels(ctx context.Context, in *DebugLevels) (*DebugLevels, error) {
-	lvls := DebugLevels{}
-	lvls.Levels = make([]DebugLevel, 0)
+func DebugLevels() []DebugLevel {
+	lvls := make([]DebugLevel, 0)
 	for ii := 0; ii < 64; ii++ {
 		if (debugLevel & (uint64(1) << uint(ii))) != 0 {
-			lvls.Levels = append(lvls.Levels, DebugLevel(ii))
+			lvls = append(lvls, DebugLevel(ii))
 		}
 	}
-	return &lvls, nil
+	return lvls
+}
+
+func GetDebugLevelStrs() string {
+	lvls := make([]string, 0)
+	for ii := 0; ii < 64; ii++ {
+		if (debugLevel & (uint64(1) << uint(ii))) != 0 {
+			lvls = append(lvls, DebugLevel_name[int32(ii)])
+		}
+	}
+	return strings.Join(lvls, ",")
 }

@@ -23,6 +23,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/tls"
@@ -70,7 +71,7 @@ type ServerMgr struct {
 
 type NotifySendMany interface {
 	// Allocate a new Send object
-	NewSend(peerAddr string) NotifySend
+	NewSend(peerAddr string, notifyId int64) NotifySend
 	// Free a Send object
 	DoneSend(peerAddr string, send NotifySend)
 }
@@ -120,7 +121,12 @@ func (mgr *ServerMgr) Start(addr string, tlsCertFile string) {
 	if err != nil {
 		log.FatalLog("Failed to get TLS creds", "err", err)
 	}
-	mgr.serv = grpc.NewServer(grpc.Creds(creds), grpc.KeepaliveParams(serverParams), grpc.KeepaliveEnforcementPolicy(serverEnforcement))
+	mgr.serv = grpc.NewServer(grpc.Creds(creds),
+		grpc.KeepaliveParams(serverParams),
+		grpc.KeepaliveEnforcementPolicy(serverEnforcement),
+		grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor),
+		grpc.StreamInterceptor(cloudcommon.AuditStreamInterceptor),
+	)
 	edgeproto.RegisterNotifyApiServer(mgr.serv, mgr)
 	if mgr.regServ != nil {
 		mgr.regServ(mgr.serv)
@@ -167,16 +173,16 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	server.sendrecv.cliserv = "server"
 
 	mgr.mux.Lock()
+	server.notifyId = mgr.notifyId
+	mgr.notifyId++
 	for _, sendMany := range mgr.sends {
-		send := sendMany.NewSend(peerAddr)
+		send := sendMany.NewSend(peerAddr, server.notifyId)
 		server.sendrecv.registerSend(send)
 	}
 	for _, recvMany := range mgr.recvs {
 		recv := recvMany.NewRecv()
 		server.sendrecv.registerRecv(recv)
 	}
-	server.notifyId = mgr.notifyId
-	mgr.notifyId++
 	mgr.mux.Unlock()
 
 	// do initial version exchange

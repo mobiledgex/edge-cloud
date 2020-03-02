@@ -1,0 +1,33 @@
+tests:
+
+- name: show debug levels
+  apifile: "{{datadir}}/showdebug.yml"
+  actions: [ctrlapi-debugshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/api-output.yml"
+    yaml2: "{{datadir}}/showdebug_output.yml"
+    filetype: debugoutput
+
+- name: enable debug levels
+  apifile: "{{datadir}}/enabledebug.yml"
+  actions: [ctrlapi-debugenable]
+
+- name: show debug levels (enabled)
+  apifile: "{{datadir}}/showdebug.yml"
+  actions: [ctrlapi-debugshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/api-output.yml"
+    yaml2: "{{datadir}}/enabledebug_output.yml"
+    filetype: debugoutput
+
+- name: disable debug levels
+  apifile: "{{datadir}}/enabledebug.yml"
+  actions: [ctrlapi-debugdisable]
+
+- name: show debug levels (restored)
+  apifile: "{{datadir}}/showdebug.yml"
+  actions: [ctrlapi-debugshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/api-output.yml"
+    yaml2: "{{datadir}}/showdebug_output.yml"
+    filetype: debugoutput

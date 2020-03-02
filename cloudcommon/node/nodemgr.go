@@ -18,7 +18,8 @@ var NodeTypeClusterSvc = "cluster-svc"
 // requests over all nodes.
 type NodeMgr struct {
 	MyNode    edgeproto.Node
-	NodeCache edgeproto.NodeCache
+	NodeCache RegionNodeCache
+	Debug     DebugNode
 }
 
 func Init(ctx context.Context, nodeType string, ops ...NodeOp) *NodeMgr {
@@ -34,6 +35,7 @@ func Init(ctx context.Context, nodeType string, ops ...NodeOp) *NodeMgr {
 	} else {
 		s.MyNode.Key.Name = cloudcommon.Hostname()
 	}
+	s.MyNode.Key.Region = opts.setRegion
 	s.MyNode.Key.CloudletKey = opts.cloudletKey
 	s.MyNode.BuildMaster = version.BuildMaster
 	s.MyNode.BuildHead = version.BuildHead
@@ -41,7 +43,10 @@ func Init(ctx context.Context, nodeType string, ops ...NodeOp) *NodeMgr {
 	s.MyNode.Hostname = cloudcommon.Hostname()
 	s.MyNode.ContainerVersion = opts.containerVersion
 
-	edgeproto.InitNodeCache(&s.NodeCache)
+	edgeproto.InitNodeCache(&s.NodeCache.NodeCache)
+	s.NodeCache.setRegion = opts.setRegion
+	s.Debug.Init(&s)
+
 	if opts.updateMyNode {
 		s.UpdateMyNode(ctx)
 	}
@@ -53,6 +58,7 @@ type NodeOptions struct {
 	cloudletKey      edgeproto.CloudletKey
 	updateMyNode     bool
 	containerVersion string
+	setRegion        string
 }
 
 type NodeOp func(s *NodeOptions)
@@ -73,14 +79,20 @@ func WithContainerVersion(ver string) NodeOp {
 	return func(opts *NodeOptions) { opts.containerVersion = ver }
 }
 
+func WithSetRegion(setRegion string) NodeOp {
+	return func(opts *NodeOptions) { opts.setRegion = setRegion }
+}
+
 func (s *NodeMgr) UpdateMyNode(ctx context.Context) {
 	s.NodeCache.Update(ctx, &s.MyNode, 0)
 }
 
 func (s *NodeMgr) RegisterClient(client *notify.Client) {
 	client.RegisterSendNodeCache(&s.NodeCache)
+	s.Debug.RegisterClient(client)
 }
 
 func (s *NodeMgr) RegisterServer(server *notify.ServerMgr) {
 	server.RegisterRecvNodeCache(&s.NodeCache)
+	s.Debug.RegisterServer(server)
 }

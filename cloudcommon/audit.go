@@ -1,9 +1,8 @@
-package main
+package cloudcommon
 
 import (
 	"context"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/opentracing/opentracing-go"
@@ -12,7 +11,7 @@ import (
 )
 
 func AuditUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	_, cmd := cloudcommon.ParseGrpcMethod(info.FullMethod)
+	_, cmd := ParseGrpcMethod(info.FullMethod)
 	pr, ok := peer.FromContext(ctx)
 	client := "unknown"
 	if ok {
@@ -33,7 +32,7 @@ func AuditUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.Unar
 }
 
 func AuditStreamInterceptor(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	_, cmd := cloudcommon.ParseGrpcMethod(info.FullMethod)
+	_, cmd := ParseGrpcMethod(info.FullMethod)
 	pr, ok := peer.FromContext(stream.Context())
 	client := "unknown"
 	if ok {
