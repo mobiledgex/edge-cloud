@@ -117,7 +117,10 @@ func ControllerConnect(addr string) (*grpc.ClientConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn, err := grpc.Dial(addr, dialOption)
+	conn, err := grpc.Dial(addr, dialOption,
+		grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc),
+		grpc.WithStreamInterceptor(log.StreamClientTraceGrpc),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("Connect to server %s failed: %s", addr, err.Error())
 	}
@@ -133,7 +136,10 @@ func notifyRootConnect() (*grpc.ClientConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn, err := grpc.Dial(addrs[0], dialOption)
+	conn, err := grpc.Dial(addrs[0], dialOption,
+		grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc),
+		grpc.WithStreamInterceptor(log.StreamClientTraceGrpc),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("Connect to server %s failed: %s", addrs[0], err.Error())
 	}

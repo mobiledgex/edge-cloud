@@ -3,24 +3,29 @@ nodes:
     type: notifyroot
 - key:
     type: controller
+    region: local
   containerversion: 2019-10-24
 - key:
     type: controller
+    region: local
   containerversion: 2019-10-24
 - key:
     type: dme
+    region: local
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-1
 - key:
     type: dme
+    region: local
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-2
 - key:
     type: crm
+    region: local
     cloudletkey:
       operatorkey:
         name: gcp
@@ -28,6 +33,7 @@ nodes:
   containerversion: 2019-10-24
 - key:
     type: crm
+    region: local
     cloudletkey:
       operatorkey:
         name: azure
@@ -35,6 +41,7 @@ nodes:
   containerversion: 2019-10-24
 - key:
     type: crm
+    region: local
     cloudletkey:
       operatorkey:
         name: dmuus
@@ -42,6 +49,7 @@ nodes:
   containerversion: 2019-10-24
 - key:
     type: crm
+    region: local
     cloudletkey:
       operatorkey:
         name: dmuus
@@ -49,6 +57,7 @@ nodes:
   containerversion: 2019-10-24
 - key:
     type: crm
+    region: local
     cloudletkey:
       operatorkey:
         name: dmuus
@@ -56,5 +65,7 @@ nodes:
   containerversion: 2019-10-24
 - key:
     type: cluster-svc
+    region: local
 - key:
     type: cluster-svc
+    region: local
