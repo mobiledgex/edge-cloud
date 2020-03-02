@@ -17,7 +17,7 @@ message DebugRequest {
   // if possible, make output pretty
   bool pretty = 4;
   // Id used internally
-  uint64 id = 5;
+  uint64 id = 5 [(protogen.backend) = true];
   option (protogen.alias) = "name=Node.Name,type=Node.Type,cloudlet=Node.CloudletKey.Name,operator=Node.CloudletKey.OperatorKey.Name,region=Node.Region";
   option (protogen.notify_message) = true;
 }
@@ -28,7 +28,7 @@ message DebugReply {
   // Debug output, if any
   string output = 2;
   // Id used internally
-  uint64 id = 3;
+  uint64 id = 3 [(protogen.backend) = true];
   option (protogen.notify_message) = true;
 }
 

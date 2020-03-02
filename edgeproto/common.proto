@@ -3,8 +3,6 @@
 syntax = "proto3";
 package edgeproto;
 
-import "google/api/annotations.proto";
-
 // Liveness Options
 //
 // Liveness indicates if an object was created statically via an external API call, or dynamically via an internal algorithm.
