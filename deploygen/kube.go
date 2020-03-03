@@ -30,6 +30,7 @@ type kubePort struct {
 	Proto     string
 	KubeProto string
 	Port      string
+	Tls		  bool
 }
 
 func kubeBasic(app *AppSpec) (string, error) {
@@ -81,6 +82,7 @@ func setKubePorts(ports []util.PortSpec) []kubePort {
 				case "udp":
 					kp.KubeProto = "UDP"
 				}
+				kp.Tls = port.Tls
 				kports = append(kports, kp)
 			}
 
@@ -99,6 +101,7 @@ func setKubePorts(ports []util.PortSpec) []kubePort {
 			case "udp":
 				kp.KubeProto = "UDP"
 			}
+			kp.Tls = port.Tls
 			kports = append(kports, kp)
 		}
 	}
@@ -152,7 +155,7 @@ spec:
   type: LoadBalancer
   ports:
 {{- range .Ports}}
-  - name: {{.Proto}}{{.Port}}
+  - name: {{.Proto}}{{.Port}}{{if .Tls}}tls{{end}}
     protocol: {{.KubeProto}}
     port: {{.Port}}
     targetPort: {{.Port}}
