@@ -35,6 +35,7 @@ type ApiStat struct {
 	errs    uint64
 	latency grpcstats.LatencyMetric
 	mux     sync.Mutex
+	changed bool
 }
 
 type MapShard struct {
@@ -59,6 +60,9 @@ func NewDmeStats(interval time.Duration, numShards uint, send func(ctx context.C
 	s.numShards = numShards
 	for ii, _ := range s.shards {
 		s.shards[ii].apiStatMap = make(map[dmecommon.StatKey]*ApiStat)
+		for _, stat := range s.shards[ii].apiStatMap {
+			stat.changed = true
+		}
 	}
 	s.interval = interval
 	s.send = send
@@ -94,6 +98,7 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 		stat.errs++
 	}
 	stat.latency.AddLatency(call.latency)
+	stat.changed = true
 	shard.mux.Unlock()
 }
 
@@ -110,7 +115,10 @@ func (s *DmeStats) RunNotify() {
 			for ii, _ := range s.shards {
 				s.shards[ii].mux.Lock()
 				for key, stat := range s.shards[ii].apiStatMap {
-					s.send(ctx, ApiStatToMetric(ts, &key, stat))
+					if stat.changed {
+						s.send(ctx, ApiStatToMetric(ts, &key, stat))
+						stat.changed = false
+					}
 				}
 				s.shards[ii].mux.Unlock()
 			}
