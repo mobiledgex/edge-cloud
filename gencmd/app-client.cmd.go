@@ -639,6 +639,7 @@ var FindCloudletReplyOptionalArgs = []string{
 	"ports.pathprefix",
 	"ports.fqdnprefix",
 	"ports.endport",
+	"ports.tls",
 	"cloudletlocation.latitude",
 	"cloudletlocation.longitude",
 	"cloudletlocation.horizontalaccuracy",
@@ -662,6 +663,7 @@ var FindCloudletReplyComments = map[string]string{
 	"ports.pathprefix":                    "Public facing path for HTTP L7 access.",
 	"ports.fqdnprefix":                    "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"ports.endport":                       "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"ports.tls":                           "TLS termination for this port",
 	"cloudletlocation.latitude":           "latitude in WGS 84 coordinates",
 	"cloudletlocation.longitude":          "longitude in WGS 84 coordinates",
 	"cloudletlocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -828,6 +830,7 @@ var AppinstanceOptionalArgs = []string{
 	"ports.pathprefix",
 	"ports.fqdnprefix",
 	"ports.endport",
+	"ports.tls",
 }
 var AppinstanceAliasArgs = []string{}
 var AppinstanceComments = map[string]string{
@@ -840,6 +843,7 @@ var AppinstanceComments = map[string]string{
 	"ports.pathprefix":   "Public facing path for HTTP L7 access.",
 	"ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"ports.tls":          "TLS termination for this port",
 }
 var AppinstanceSpecialArgs = map[string]string{}
 var CloudletLocationRequiredArgs = []string{}
@@ -865,6 +869,7 @@ var CloudletLocationOptionalArgs = []string{
 	"appinstances.ports.pathprefix",
 	"appinstances.ports.fqdnprefix",
 	"appinstances.ports.endport",
+	"appinstances.ports.tls",
 }
 var CloudletLocationAliasArgs = []string{}
 var CloudletLocationComments = map[string]string{
@@ -887,6 +892,7 @@ var CloudletLocationComments = map[string]string{
 	"appinstances.ports.pathprefix":   "Public facing path for HTTP L7 access.",
 	"appinstances.ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"appinstances.ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"appinstances.ports.tls":          "TLS termination for this port",
 }
 var CloudletLocationSpecialArgs = map[string]string{}
 var AppInstListReplyRequiredArgs = []string{}
@@ -914,6 +920,7 @@ var AppInstListReplyOptionalArgs = []string{
 	"cloudlets.appinstances.ports.pathprefix",
 	"cloudlets.appinstances.ports.fqdnprefix",
 	"cloudlets.appinstances.ports.endport",
+	"cloudlets.appinstances.ports.tls",
 	"tags.type",
 	"tags.data",
 }
@@ -940,6 +947,7 @@ var AppInstListReplyComments = map[string]string{
 	"cloudlets.appinstances.ports.pathprefix":   "Public facing path for HTTP L7 access.",
 	"cloudlets.appinstances.ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"cloudlets.appinstances.ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"cloudlets.appinstances.ports.tls":          "TLS termination for this port",
 	"tags.type":                                 "type of data",
 	"tags.data":                                 "data value",
 }

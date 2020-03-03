@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -190,9 +191,19 @@ func main() {
 		nodeMgr.UpdateMyNode(ctx)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 		cspan.Finish()
+
+		// setup rootlb certs
+		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+		commonName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
+		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
+		rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
+		if err == nil {
+			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, *vaultAddr, rootlb)
+		}
+		tlsSpan.Finish()
 	}()
 
-	//setup crm notify listener (for shepherd)
+	// setup crm notify listener (for shepherd)
 	var notifyServer notify.ServerMgr
 	initSrvNotify(&notifyServer)
 	notifyServer.Start(*notifySrvAddr, *tlsCertFile)
