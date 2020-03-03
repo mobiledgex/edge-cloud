@@ -21,6 +21,7 @@ var AppPortOptionalArgs = []string{
 	"pathprefix",
 	"fqdnprefix",
 	"endport",
+	"tls",
 }
 var AppPortAliasArgs = []string{}
 var AppPortComments = map[string]string{
@@ -30,5 +31,6 @@ var AppPortComments = map[string]string{
 	"pathprefix":   "Public facing path for HTTP L7 access.",
 	"fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"tls":          "TLS termination for this port",
 }
 var AppPortSpecialArgs = map[string]string{}
