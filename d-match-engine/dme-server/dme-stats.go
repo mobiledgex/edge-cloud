@@ -60,9 +60,6 @@ func NewDmeStats(interval time.Duration, numShards uint, send func(ctx context.C
 	s.numShards = numShards
 	for ii, _ := range s.shards {
 		s.shards[ii].apiStatMap = make(map[dmecommon.StatKey]*ApiStat)
-		for _, stat := range s.shards[ii].apiStatMap {
-			stat.changed = true
-		}
 	}
 	s.interval = interval
 	s.send = send
