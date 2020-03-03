@@ -1,13 +1,13 @@
 package log
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
 
 	yaml "github.com/mobiledgex/yaml/v2"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type yamltest struct {
@@ -61,23 +61,25 @@ func TestBits(t *testing.T) {
 	assert.True(t, debugLevel&DebugLevelEtcd == 0)
 	ClearDebugLevels([]DebugLevel{DebugLevel_api, DebugLevel_etcd})
 	assert.Equal(t, uint64(0), debugLevel)
+}
 
-	api := &Api{}
-	lvls := DebugLevels{}
-	lvls.Levels = []DebugLevel{DebugLevel_etcd, DebugLevel_api}
-	_, err := api.EnableDebugLevels(context.TODO(), &lvls)
-	assert.Nil(t, err)
-	assert.True(t, debugLevel&DebugLevelApi != 0)
-	assert.True(t, debugLevel&DebugLevelEtcd != 0)
-	assert.True(t, debugLevel&DebugLevelNotify == 0)
-	lvlsout, err := api.ShowDebugLevels(context.TODO(), &lvls)
-	assert.Nil(t, err)
-	assert.Equal(t, &lvls, lvlsout)
-	_, err = api.DisableDebugLevels(context.TODO(), &lvls)
-	assert.Nil(t, err)
-	assert.Equal(t, uint64(0), debugLevel)
-	lvlsout, err = api.ShowDebugLevels(context.TODO(), &lvls)
-	assert.Nil(t, err)
-	lvls = DebugLevels{Levels: []DebugLevel{}}
-	assert.Equal(t, &lvls, lvlsout)
+func TestDebugStrs(t *testing.T) {
+	testDebugStrsAdd(t, "etcd,dmereq", "etcd,dmereq")
+	testDebugStrsAdd(t, "notify,locapi", "etcd,notify,dmereq,locapi")
+	testDebugStrsClear(t, "etcd,locapi", "notify,dmereq")
+	testDebugStrsAdd(t, "api,mexos,metrics", "api,notify,dmereq,mexos,metrics")
+	testDebugStrsClear(t, "mexos", "api,notify,dmereq,metrics")
+	testDebugStrsClear(t, "api,notify,dmereq,metrics", "")
+}
+
+func testDebugStrsAdd(t *testing.T, add, expected string) {
+	SetDebugLevelStrs(add)
+	actual := GetDebugLevelStrs()
+	require.Equal(t, expected, actual)
+}
+
+func testDebugStrsClear(t *testing.T, remove, expected string) {
+	ClearDebugLevelStrs(remove)
+	actual := GetDebugLevelStrs()
+	require.Equal(t, expected, actual)
 }

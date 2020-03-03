@@ -8,7 +8,6 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/gencmd"
-	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -77,7 +76,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.AppInstInfoApiCmd = edgeproto.NewAppInstInfoApiClient(conn)
 	gencmd.ClusterInstInfoApiCmd = edgeproto.NewClusterInstInfoApiClient(conn)
 	gencmd.MatchEngineApiCmd = dme.NewMatchEngineApiClient(conn)
-	gencmd.DebugApiCmd = log.NewDebugApiClient(conn)
+	gencmd.DebugApiCmd = edgeproto.NewDebugApiClient(conn)
 	gencmd.ControllerApiCmd = edgeproto.NewControllerApiClient(conn)
 	gencmd.NodeApiCmd = edgeproto.NewNodeApiClient(conn)
 	gencmd.CloudletPoolApiCmd = edgeproto.NewCloudletPoolApiClient(conn)

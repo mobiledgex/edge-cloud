@@ -149,6 +149,7 @@ var NodeKeyOptionalArgs = []string{
 	"type",
 	"cloudletkey.operatorkey.name",
 	"cloudletkey.name",
+	"region",
 }
 var NodeKeyAliasArgs = []string{}
 var NodeKeyComments = map[string]string{
@@ -156,13 +157,15 @@ var NodeKeyComments = map[string]string{
 	"type":                         "Node type",
 	"cloudletkey.operatorkey.name": "Company or Organization name of the operator",
 	"cloudletkey.name":             "Name of the cloudlet",
+	"region":                       "Region the node is in",
 }
 var NodeKeySpecialArgs = map[string]string{}
 var NodeRequiredArgs = []string{
-	"key.name",
-	"key.type",
-	"key.cloudletkey.operatorkey.name",
-	"key.cloudletkey.name",
+	"name",
+	"type",
+	"operator",
+	"cloudlet",
+	"region",
 }
 var NodeOptionalArgs = []string{
 	"notifyid",
@@ -172,17 +175,24 @@ var NodeOptionalArgs = []string{
 	"hostname",
 	"containerversion",
 }
-var NodeAliasArgs = []string{}
+var NodeAliasArgs = []string{
+	"name=key.name",
+	"type=key.type",
+	"operator=key.cloudletkey.operatorkey.name",
+	"cloudlet=key.cloudletkey.name",
+	"region=key.region",
+}
 var NodeComments = map[string]string{
-	"key.name":                         "Name or hostname of node",
-	"key.type":                         "Node type",
-	"key.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"key.cloudletkey.name":             "Name of the cloudlet",
-	"notifyid":                         "Id of client assigned by server (internal use only)",
-	"buildmaster":                      "Build Master Version",
-	"buildhead":                        "Build Head Version",
-	"buildauthor":                      "Build Author",
-	"hostname":                         "Hostname",
-	"containerversion":                 "Docker edge-cloud container version which node instance use",
+	"name":             "Name or hostname of node",
+	"type":             "Node type",
+	"operator":         "Company or Organization name of the operator",
+	"cloudlet":         "Name of the cloudlet",
+	"region":           "Region the node is in",
+	"notifyid":         "Id of client assigned by server (internal use only)",
+	"buildmaster":      "Build Master Version",
+	"buildhead":        "Build Head Version",
+	"buildauthor":      "Build Author",
+	"hostname":         "Hostname",
+	"containerversion": "Docker edge-cloud container version which node instance use",
 }
 var NodeSpecialArgs = map[string]string{}
