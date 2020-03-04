@@ -199,6 +199,7 @@ static_resources:
         unhealthy_threshold: 3
         healthy_threshold: 3
         tcp_health_check: {}
+        no_traffic_interval: 5s
 {{- end}}
 admin:
   access_log_path: "/var/log/admin.log"
