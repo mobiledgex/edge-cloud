@@ -18,6 +18,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vmspec"
+	"google.golang.org/grpc"
 )
 
 type CloudletApi struct {
@@ -512,10 +513,34 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	return err
 }
 
+type ShowNode struct {
+	Data map[string]edgeproto.Node
+	grpc.ServerStream
+	Ctx context.Context
+}
+
+func (x *ShowNode) Send(m *edgeproto.Node) error {
+	x.Data[m.GetKey().GetKeyString()] = *m
+	return nil
+}
+
+func (x *ShowNode) Context() context.Context {
+	return x.Ctx
+}
+
+func (x *ShowNode) Init() {
+	x.Data = make(map[string]edgeproto.Node)
+}
+
 func getCloudletVersion(key *edgeproto.CloudletKey) (string, error) {
-	nodeMgr.NodeCache.Mux.Lock()
-	defer nodeMgr.NodeCache.Mux.Unlock()
-	for _, obj := range nodeMgr.NodeCache.Objs {
+	show := ShowNode{}
+	show.Init()
+	filter := edgeproto.Node{}
+	err := nodeApi.ShowNode(&filter, &show)
+	if err != nil {
+		return "", fmt.Errorf("Unable to find Cloudlet node: %v", err)
+	}
+	for _, obj := range show.Data {
 		if obj.Key.Type != node.NodeTypeCRM {
 			continue
 		}
