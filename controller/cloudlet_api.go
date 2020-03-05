@@ -532,9 +532,10 @@ func (x *ShowNode) Init() {
 	x.Data = make(map[string]edgeproto.Node)
 }
 
-func getCloudletVersion(key *edgeproto.CloudletKey) (string, error) {
+func getCloudletVersion(ctx context.Context, key *edgeproto.CloudletKey) (string, error) {
 	show := ShowNode{}
 	show.Init()
+	show.Ctx = ctx
 	filter := edgeproto.Node{}
 	err := nodeApi.ShowNode(&filter, &show)
 	if err != nil {
@@ -552,8 +553,8 @@ func getCloudletVersion(key *edgeproto.CloudletKey) (string, error) {
 	return "", fmt.Errorf("Unable to find Cloudlet node")
 }
 
-func isCloudletUpgradeRequired(cloudlet *edgeproto.Cloudlet) error {
-	cloudletVersion, err := getCloudletVersion(&cloudlet.Key)
+func isCloudletUpgradeRequired(ctx context.Context, cloudlet *edgeproto.Cloudlet) error {
+	cloudletVersion, err := getCloudletVersion(ctx, &cloudlet.Key)
 	if err != nil {
 		return fmt.Errorf("unable to fetch cloudlet version: %v", err)
 	}
@@ -624,7 +625,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 	upgrade := false
 	if _, found := fmap[edgeproto.CloudletFieldContainerVersion]; found {
-		err = isCloudletUpgradeRequired(cur)
+		err = isCloudletUpgradeRequired(ctx, cur)
 		if err != nil {
 			return err
 		}
