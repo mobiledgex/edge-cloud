@@ -141,6 +141,7 @@ func getCrmEnv(vars map[string]string) {
 	for _, key := range []string{
 		"GITHUB_ID",
 		"VAULT_TOKEN",
+		"JAEGER_ENDPOINT",
 	} {
 		if val, ok := os.LookupEnv(key); ok {
 			vars[key] = val
