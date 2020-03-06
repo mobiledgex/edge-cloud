@@ -356,19 +356,19 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return in.Key.AppKey.NotFoundError()
 		}
 
-		// Now that we have a cloudlet, and cloudletInfo, we can valiate the flavor requested
+		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
 		}
-		nodeFlavor := edgeproto.Flavor{}
-		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
-			return fmt.Errorf("flavor %s not found line 409", in.Flavor.Name)
+		vmFlavor := edgeproto.Flavor{}
+		if !flavorApi.store.STMGet(stm, &in.Flavor, &vmFlavor) {
+			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
 		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &info) {
 			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.ClusterInstKey.CloudletKey)
 		}
-		vmspec, verr := resTagTableApi.GetVMSpec(ctx, stm, nodeFlavor, cloudlet, info)
+		vmspec, verr := resTagTableApi.GetVMSpec(ctx, stm, vmFlavor, cloudlet, info)
 		if verr != nil {
 			return verr
 		}
