@@ -274,6 +274,7 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
+	var clusterInst edgeproto.ClusterInst
 	ctx := cb.Context()
 
 	defer func() {
@@ -340,7 +341,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 		}
 		// make sure cloudlet exists
-		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, nil) {
+		cloudlet := edgeproto.Cloudlet{}
+		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
 
@@ -353,6 +355,30 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return in.Key.AppKey.NotFoundError()
 		}
+
+		// Now that we have a cloudlet, and cloudletInfo, we can valiate the flavor requested
+		if in.Flavor.Name == "" {
+			in.Flavor = app.DefaultFlavor
+		}
+		nodeFlavor := edgeproto.Flavor{}
+		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
+			return fmt.Errorf("flavor %s not found line 409", in.Flavor.Name)
+		}
+		info := edgeproto.CloudletInfo{}
+		if !cloudletInfoApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &info) {
+			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.ClusterInstKey.CloudletKey)
+		}
+		vmspec, verr := resTagTableApi.GetVMSpec(ctx, stm, nodeFlavor, cloudlet, info)
+		if verr != nil {
+			return verr
+		}
+		// if needed, master node flavor will be looked up from createClusterInst
+		// save original in.Flavor.Name in that case
+		in.NodeFlavor = vmspec.FlavorName
+		in.AvailabilityZone = vmspec.AvailabilityZone
+		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
+		log.SpanLog(ctx, log.DebugLevelApi, "Selected AppInst Node Flavor", "vmspec", vmspec.FlavorName)
+
 		in.Revision = app.Revision
 		appDeploymentType = app.Deployment
 		if in.AutoClusterIpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED && app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
@@ -398,10 +424,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			autocluster = true
 		}
 
-		if in.Flavor.Name == "" {
-			// find flavor from app
-			in.Flavor = app.DefaultFlavor
-		}
 		if in.SharedVolumeSize == 0 {
 			in.SharedVolumeSize = app.DefaultSharedVolumeSize
 		}
@@ -414,7 +436,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if err != nil {
 				return err
 			}
-
 		}
 		return nil
 	})
@@ -467,7 +488,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	if autocluster {
 		// auto-create cluster inst
-		clusterInst := edgeproto.ClusterInst{}
 		clusterInst.Key = in.Key.ClusterInstKey
 		clusterInst.Auto = true
 		log.DebugLog(log.DebugLevelApi,
@@ -475,7 +495,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			"key", clusterInst.Key,
 			"AppInst", in)
 
-		clusterInst.Flavor = in.Flavor
+		clusterInst.Flavor.Name = in.Flavor.Name
 		clusterInst.IpAccess = in.AutoClusterIpAccess
 		clusterInst.Deployment = appDeploymentType
 		clusterInst.SharedVolumeSize = in.SharedVolumeSize
@@ -529,11 +549,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
 		}
-
-		if !flavorApi.store.STMGet(stm, &in.Flavor, nil) {
-			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
-		}
-
 		var clusterKey *edgeproto.ClusterKey
 		ipaccess := edgeproto.IpAccess_IP_ACCESS_SHARED
 		if cloudcommon.IsClusterInstReqd(&app) {

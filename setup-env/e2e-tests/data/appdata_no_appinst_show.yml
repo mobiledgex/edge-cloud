@@ -94,7 +94,7 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   reservable: true
-
+  masternodeflavor: x1.small
 operators:
 - key:
     name: tmus

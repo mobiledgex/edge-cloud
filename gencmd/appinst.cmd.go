@@ -65,6 +65,15 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.PowerState = 0
 	}
+	if _, found := tags["nocmp"]; found {
+		in.ExternalVolumeSize = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.AvailabilityZone = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.NodeFlavor = ""
+	}
 }
 
 func AppInstRuntimeHideTags(in *edgeproto.AppInstRuntime) {
@@ -652,6 +661,8 @@ var AppInstOptionalArgs = []string{
 	"healthcheck",
 	"privacypolicy",
 	"powerstate",
+	"externalvolumesize",
+	"availabilityzone",
 }
 var AppInstAliasArgs = []string{
 	"developer=key.appkey.developerkey.name",
@@ -701,6 +712,9 @@ var AppInstComments = map[string]string{
 	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"privacypolicy":                  "Optional privacy policy name",
 	"powerstate":                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
+	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
+	"availabilityzone":               "Optional Availability Zone if any",
+	"nodeflavor":                     "OS node flavor to use",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -784,6 +798,9 @@ var CreateAppInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
+	"externalvolumesize",
+	"availabilityzone",
+	"nodeflavor",
 }
 var DeleteAppInstRequiredArgs = []string{
 	"developer",
@@ -832,6 +849,9 @@ var DeleteAppInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
+	"externalvolumesize",
+	"availabilityzone",
+	"nodeflavor",
 }
 var RefreshAppInstRequiredArgs = []string{
 	"developer",
@@ -849,6 +869,9 @@ var RefreshAppInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
+	"externalvolumesize",
+	"availabilityzone",
+	"nodeflavor",
 }
 var UpdateAppInstRequiredArgs = []string{
 	"developer",
@@ -867,4 +890,7 @@ var UpdateAppInstOptionalArgs = []string{
 	"healthcheck",
 	"privacypolicy",
 	"powerstate",
+	"externalvolumesize",
+	"availabilityzone",
+	"nodeflavor",
 }
