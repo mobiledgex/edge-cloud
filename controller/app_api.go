@@ -282,7 +282,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
 		return &edgeproto.Result{}, fmt.Errorf("Deployment is not valid for image type")
 	}
-	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment)
+	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment, in.DeploymentManifest)
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
@@ -290,8 +290,9 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		log.SpanLog(ctx, log.DebugLevelApi, "updating access type", "newAccessType", newAccessType)
 		in.AccessType = newAccessType
 	}
+
 	if in.Deployment == cloudcommon.AppDeploymentTypeDocker && in.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
-		dtype := getDockerDeployType(in.DeploymentManifest)
+		dtype := cloudcommon.GetDockerDeployType(in.DeploymentManifest)
 		if dtype != "docker" {
 			// docker-compose manifests introduce a lot of complexity for LB solution because the port mappings will have
 			// to change, and there may be multiple containers which communicate together over the host network.
@@ -358,16 +359,6 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	return &edgeproto.Result{}, err
 }
 
-func getDockerDeployType(manifest string) string {
-	if manifest == "" {
-		return "docker"
-	}
-	if strings.HasSuffix(manifest, ".zip") {
-		return "docker-compose-zip"
-	}
-	return "docker-compose"
-}
-
 func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	if s.AndroidPackageConflicts(in) {
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another App", in.AndroidPackageName)
@@ -406,8 +397,8 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 			// don't allow change from regular docker to docker-compose or docker-compose zip if instances exist
 			if cur.Deployment == cloudcommon.AppDeploymentTypeDocker {
-				curType := getDockerDeployType(cur.DeploymentManifest)
-				newType := getDockerDeployType(in.DeploymentManifest)
+				curType := cloudcommon.GetDockerDeployType(cur.DeploymentManifest)
+				newType := cloudcommon.GetDockerDeployType(in.DeploymentManifest)
 				if curType != newType {
 					return fmt.Errorf("Cannot change App manifest from : %s to: %s when AppInsts exist", curType, newType)
 				}

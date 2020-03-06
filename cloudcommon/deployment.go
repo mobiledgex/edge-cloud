@@ -60,9 +60,19 @@ func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string)
 	return false
 }
 
+func GetDockerDeployType(manifest string) string {
+	if manifest == "" {
+		return "docker"
+	}
+	if strings.HasSuffix(manifest, ".zip") {
+		return "docker-compose-zip"
+	}
+	return "docker-compose"
+}
+
 // GetMappedAccessType gets the default access type for the deployment if AccessType_ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT
 // is specified.  It returns an error if the access type is not valid for the deployment
-func GetMappedAccessType(accessType edgeproto.AccessType, deployment string) (edgeproto.AccessType, error) {
+func GetMappedAccessType(accessType edgeproto.AccessType, deployment, deploymentManifest string) (edgeproto.AccessType, error) {
 	switch accessType {
 
 	case edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER:
@@ -76,6 +86,14 @@ func GetMappedAccessType(accessType edgeproto.AccessType, deployment string) (ed
 	case edgeproto.AccessType_ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT:
 		if deployment == AppDeploymentTypeVM {
 			return edgeproto.AccessType_ACCESS_TYPE_DIRECT, nil
+		}
+		if deployment == AppDeploymentTypeDocker {
+			dtype := GetDockerDeployType(deploymentManifest)
+			if dtype != "docker" {
+				// Because of the complexity with managing port mappings with
+				// docker-compose manifests do not default to LB
+				return accessType, nil
+			}
 		}
 		// all others default to LB
 		return edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER, nil
@@ -114,7 +132,7 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 				appPort.InternalPort = int32(kp.TargetPort.IntValue())
 				if strings.HasSuffix(kp.Name, "tls") {
 					appPort.Tls = true
-				} 
+				}
 				objPorts[appPort.String()] = struct{}{}
 			}
 		}
@@ -135,7 +153,7 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 						Proto:        appPort.Proto,
 						InternalPort: int32(i),
 						EndPort:      int32(0),
-						Tls:		  appPort.Tls,
+						Tls:          appPort.Tls,
 					}
 					if appPort.Proto == dme.LProto_L_PROTO_HTTP {
 						appPort.Proto = dme.LProto_L_PROTO_TCP
