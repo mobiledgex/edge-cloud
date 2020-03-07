@@ -139,7 +139,7 @@ func createOrUpdateAppInst(ctx context.Context, client ssh.Client, names *KubeNa
 	if err != nil {
 		return err
 	}
-	mf, err = MergeEnvVars(ctx, mf, app.Configs, names.ImagePullSecret)
+	mf, err = MergeEnvVars(ctx, mf, app, names.ImagePullSecret)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos, "failed to merge env vars", "error", err)
 	}

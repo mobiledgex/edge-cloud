@@ -49,8 +49,16 @@ func addMexLabel(meta *metav1.ObjectMeta, label string) {
 	meta.Labels[MexAppLabel] = label
 }
 
+// Add app details to the deployment as labela
+// these labels will be picked up by Pormetheus and added to the metrics
+func addAppInstLabels(meta *metav1.ObjectMeta, app *edgeproto.App) {
+	meta.Labels["AppName"] = app.Key.Name
+	meta.Labels["AppVersion"] = app.Key.Version
+	meta.Labels["AppDeveloper"] = app.Key.DeveloperKey.Name
+}
+
 // Merge in all the environment variables into
-func MergeEnvVars(ctx context.Context, kubeManifest string, configs []*edgeproto.ConfigFile, imagePullSecret string) (string, error) {
+func MergeEnvVars(ctx context.Context, kubeManifest string, app *edgeproto.App, imagePullSecret string) (string, error) {
 	var envVars []v1.EnvVar
 	var files []string
 	var err error
@@ -59,7 +67,7 @@ func MergeEnvVars(ctx context.Context, kubeManifest string, configs []*edgeproto
 	log.SpanLog(ctx, log.DebugLevelMexos, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecret", imagePullSecret)
 
 	// Walk the Configs in the App and get all the environment variables together
-	for _, v := range configs {
+	for _, v := range app.Configs {
 		if v.Kind == AppConfigEnvYaml {
 			var curVars []v1.EnvVar
 			cfg := v.Config
@@ -108,12 +116,15 @@ func MergeEnvVars(ctx context.Context, kubeManifest string, configs []*edgeproto
 		case *appsv1.Deployment:
 			addEnvVars(ctx, &obj.Spec.Template, envVars)
 			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
+			// Add labels for all the appKey data
+			addAppInstLabels(&obj.Spec.Template.ObjectMeta, app)
 			if imagePullSecret != "" {
 				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecret)
 			}
 		case *appsv1.DaemonSet:
 			addEnvVars(ctx, &obj.Spec.Template, envVars)
 			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
+			addAppInstLabels(&obj.Spec.Template.ObjectMeta, app)
 			if imagePullSecret != "" {
 				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecret)
 			}
