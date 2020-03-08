@@ -35,7 +35,7 @@ message PrivacyPolicy {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,developer=Key.Developer";
+  option (protogen.alias) = "name=Key.Name,organization=Key.Organization";
 }
 
 service PrivacyPolicyApi {

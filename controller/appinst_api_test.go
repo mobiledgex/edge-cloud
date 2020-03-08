@@ -40,9 +40,7 @@ func TestAppInstApi(t *testing.T) {
 	}
 
 	// create supporting data
-	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
@@ -264,9 +262,7 @@ func TestAutoClusterInst(t *testing.T) {
 
 	reduceInfoTimeouts(t, ctx)
 	// create supporting data
-	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
@@ -333,8 +329,8 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 			ClusterKey: edgeproto.ClusterKey{
 				Name: util.K8SSanitize(ClusterAutoPrefix + "override-clust"),
 			},
-			CloudletKey: testutil.CloudletData[1].Key,
-			Developer:   testutil.AppData[0].Key.DeveloperKey.Name,
+			CloudletKey:  testutil.CloudletData[1].Key,
+			Organization: testutil.AppData[0].Key.Organization,
 		},
 	}
 	// autocluster app

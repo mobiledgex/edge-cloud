@@ -6,7 +6,6 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "developer.proto";
 import "flavor.proto";
 import "gogoproto/gogo.proto";
 
@@ -18,8 +17,8 @@ import "gogoproto/gogo.proto";
 //
 // AppKey uniquely identifies an App
 message AppKey {
-  // Developer key
-  DeveloperKey developer_key = 1 [(gogoproto.nullable) = false];
+  // Developer Organization
+  string organization = 1;
   // App name
   string name = 2;
   // App version
@@ -74,7 +73,7 @@ message ConfigFile {
 
 // Application
 //
-// App belongs to developers and is used to provide information about their application.
+// App belongs to developer organizations and is used to provide information about their application.
  message App {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
@@ -136,7 +135,7 @@ message ConfigFile {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
-  option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,developer=Key.DeveloperKey.Name,defaultflavor=DefaultFlavor.Name";
+  option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,organization=Key.Organization,defaultflavor=DefaultFlavor.Name";
   option (protogen.noconfig) = "Revision";
 }
 

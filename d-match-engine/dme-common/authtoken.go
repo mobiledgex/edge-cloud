@@ -12,7 +12,7 @@ import (
 
 type authClaims struct {
 	jwt.StandardClaims
-	DevName string `json:"devname,omitempty"`
+	OrgName string `json:"devname,omitempty"`
 	AppName string `json:"appname,omitempty"`
 	AppVers string `json:"appvers,omitempty"`
 }
@@ -39,7 +39,7 @@ func VerifyAuthToken(token string, pubkey string, devname string, appname string
 	}
 
 	//check that the values in the token match
-	if devname != authClaims.DevName {
+	if devname != authClaims.OrgName {
 		return errors.New("token developer mismatch")
 	}
 	if appname != authClaims.AppName {
@@ -65,7 +65,7 @@ func GenerateAuthToken(privKeyFile string, devname string, appname string, appve
 			StandardClaims: jwt.StandardClaims{
 				IssuedAt:  time.Now().Unix(),
 				ExpiresAt: expireTime},
-			DevName: devname,
+			OrgName: devname,
 			AppName: appname,
 			AppVers: appvers,
 		})

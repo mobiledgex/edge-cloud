@@ -21,18 +21,9 @@ clusters:
   defaultflavor:
     name: x1.small
 
-developers:
-- key:
-    name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -47,17 +38,15 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: default
-      developer: AcmeAppCo
+      organization: AcmeAppCo
       cloudletkey:
-        operatorkey:
-          name: developer
+        organization: developer
         name: default
   liveness: LivenessStatic
   flavor:

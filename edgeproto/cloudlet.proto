@@ -6,7 +6,6 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "flavor.proto";
-import "operator.proto";
 import "result.proto";
 import "restagtable.proto";
 import "common.proto";
@@ -18,13 +17,12 @@ import "gogoproto/gogo.proto";
 // CloudletKey uniquely identifies a Cloudlet.
 message CloudletKey {
   // Operator of the cloudlet site
-  OperatorKey operator_key = 1 [(gogoproto.nullable) = false];
+  string organization = 1;
   // Name of the cloudlet
   string name = 2;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
-  option (protogen.alias) = "operator=OperatorKey.Name";
 }
 
 // Operation time limits
@@ -167,7 +165,7 @@ message CloudletResMap {
   CloudletKey key = 1[(gogoproto.nullable) = false];
   // Resource mapping info
   map<string, string> mapping = 2;
-  option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
+  option (protogen.alias) = "cloudlet=Key.Name";
   option (protogen.also_required) = "Mapping";
 }
 
@@ -244,7 +242,7 @@ message Cloudlet {
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
   option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr";
-  option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
+  option (protogen.alias) = "cloudlet=Key.Name,organization=Key.Operator";
 }
 
 message FlavorMatch {
@@ -252,7 +250,7 @@ message FlavorMatch {
   CloudletKey key = 1 [(gogoproto.nullable) = false];
   string flavor_name = 3;
   string availability_zone = 4;
- option (protogen.alias) = "cloudlet=Key.Name,operator=Key.OperatorKey.Name,flavor=FlavorName";
+ option (protogen.alias) = "cloudlet=Key.Name,organization=Key.Organization,flavor=FlavorName";
 }
 
 service CloudletApi {
@@ -411,7 +409,7 @@ message CloudletInfo {
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
+  option (protogen.alias) = "cloudlet=Key.Name,organziation=Key.organization";
 }
 
 service CloudletInfoApi {

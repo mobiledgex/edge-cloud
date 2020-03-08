@@ -316,13 +316,13 @@ var ShowLogComments = map[string]string{
 }
 var ShowLogSpecialArgs = map[string]string{}
 var ExecRequestRequiredArgs = []string{
-	"developer",
+	"organization",
 	"appname",
 	"appvers",
 	"cluster",
-	"operator",
+	"operatororg",
 	"cloudlet",
-	"clusterdeveloper",
+	"clusterdevorg",
 }
 var ExecRequestOptionalArgs = []string{
 	"containerid",
@@ -333,13 +333,13 @@ var ExecRequestOptionalArgs = []string{
 	"follow",
 }
 var ExecRequestAliasArgs = []string{
-	"developer=appinstkey.appkey.developerkey.name",
+	"organization=appinstkey.appkey.organization",
 	"appname=appinstkey.appkey.name",
 	"appvers=appinstkey.appkey.version",
 	"cluster=appinstkey.clusterinstkey.clusterkey.name",
-	"operator=appinstkey.clusterinstkey.cloudletkey.operatorkey.name",
+	"operatororg=appinstkey.clusterinstkey.cloudletkey.organization",
 	"cloudlet=appinstkey.clusterinstkey.cloudletkey.name",
-	"clusterdeveloper=appinstkey.clusterinstkey.developer",
+	"clusterdevorg=appinstkey.clusterinstkey.organization",
 	"command=cmd.command",
 	"since=log.since",
 	"tail=log.tail",
@@ -347,61 +347,61 @@ var ExecRequestAliasArgs = []string{
 	"follow=log.follow",
 }
 var ExecRequestComments = map[string]string{
-	"developer":        "Organization or Company Name that a Developer is part of",
-	"appname":          "App name",
-	"appvers":          "App version",
-	"cluster":          "Cluster name",
-	"operator":         "Company or Organization name of the operator",
-	"cloudlet":         "Name of the cloudlet",
-	"clusterdeveloper": "Name of Developer that this cluster belongs to",
-	"containerid":      "ContainerId is the name or ID of the target container, if applicable",
-	"offer":            "WebRTC Offer",
-	"answer":           "WebRTC Answer",
-	"err":              "Any error message",
-	"command":          "Command or Shell",
-	"since":            "Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)",
-	"tail":             "Show only a recent number of lines",
-	"timestamps":       "Show timestamps",
-	"follow":           "Stream data",
-	"console.url":      "VM Console URL",
-	"timeout":          "Timeout",
+	"organization":  "Developer Organization",
+	"appname":       "App name",
+	"appvers":       "App version",
+	"cluster":       "Cluster name",
+	"operatororg":   "Operator of the cloudlet site",
+	"cloudlet":      "Name of the cloudlet",
+	"clusterdevorg": "Name of Developer organization that this cluster belongs to",
+	"containerid":   "ContainerId is the name or ID of the target container, if applicable",
+	"offer":         "WebRTC Offer",
+	"answer":        "WebRTC Answer",
+	"err":           "Any error message",
+	"command":       "Command or Shell",
+	"since":         "Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)",
+	"tail":          "Show only a recent number of lines",
+	"timestamps":    "Show timestamps",
+	"follow":        "Stream data",
+	"console.url":   "VM Console URL",
+	"timeout":       "Timeout",
 }
 var ExecRequestSpecialArgs = map[string]string{}
 var RunCommandRequiredArgs = []string{
-	"developer",
+	"organization",
 	"appname",
 	"appvers",
 	"cluster",
-	"operator",
+	"operatororg",
 	"cloudlet",
+	"clusterdevorg",
 	"command",
 }
 var RunCommandOptionalArgs = []string{
-	"clusterdeveloper",
 	"containerid",
 }
 var RunConsoleRequiredArgs = []string{
-	"developer",
+	"organization",
 	"appname",
 	"appvers",
 	"cluster",
-	"operator",
+	"operatororg",
 	"cloudlet",
+	"clusterdevorg",
 }
 var RunConsoleOptionalArgs = []string{
-	"clusterdeveloper",
 	"containerid",
 }
 var ShowLogsRequiredArgs = []string{
-	"developer",
+	"organization",
 	"appname",
 	"appvers",
 	"cluster",
-	"operator",
+	"operatororg",
 	"cloudlet",
+	"clusterdevorg",
 }
 var ShowLogsOptionalArgs = []string{
-	"clusterdeveloper",
 	"containerid",
 	"since",
 	"tail",

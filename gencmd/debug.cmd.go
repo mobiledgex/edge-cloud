@@ -357,7 +357,7 @@ var DebugRequestRequiredArgs = []string{}
 var DebugRequestOptionalArgs = []string{
 	"name",
 	"type",
-	"operator",
+	"node.cloudletkey.organization",
 	"cloudlet",
 	"region",
 	"levels",
@@ -368,27 +368,26 @@ var DebugRequestOptionalArgs = []string{
 var DebugRequestAliasArgs = []string{
 	"name=node.name",
 	"type=node.type",
-	"operator=node.cloudletkey.operatorkey.name",
 	"cloudlet=node.cloudletkey.name",
 	"region=node.region",
 }
 var DebugRequestComments = map[string]string{
-	"name":     "Name or hostname of node",
-	"type":     "Node type",
-	"operator": "Company or Organization name of the operator",
-	"cloudlet": "Name of the cloudlet",
-	"region":   "Region the node is in",
-	"levels":   "Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,mexos,metrics,upgrade,info,sampled",
-	"cmd":      "Debug command",
-	"pretty":   "if possible, make output pretty",
-	"id":       "Id used internally",
+	"name":                          "Name or hostname of node",
+	"type":                          "Node type",
+	"node.cloudletkey.organization": "Operator of the cloudlet site",
+	"cloudlet":                      "Name of the cloudlet",
+	"region":                        "Region the node is in",
+	"levels":                        "Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,mexos,metrics,upgrade,info,sampled",
+	"cmd":                           "Debug command",
+	"pretty":                        "if possible, make output pretty",
+	"id":                            "Id used internally",
 }
 var DebugRequestSpecialArgs = map[string]string{}
 var DebugReplyRequiredArgs = []string{}
 var DebugReplyOptionalArgs = []string{
 	"node.name",
 	"node.type",
-	"node.cloudletkey.operatorkey.name",
+	"node.cloudletkey.organization",
 	"node.cloudletkey.name",
 	"node.region",
 	"output",
@@ -396,13 +395,13 @@ var DebugReplyOptionalArgs = []string{
 }
 var DebugReplyAliasArgs = []string{}
 var DebugReplyComments = map[string]string{
-	"node.name":                         "Name or hostname of node",
-	"node.type":                         "Node type",
-	"node.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"node.cloudletkey.name":             "Name of the cloudlet",
-	"node.region":                       "Region the node is in",
-	"output":                            "Debug output, if any",
-	"id":                                "Id used internally",
+	"node.name":                     "Name or hostname of node",
+	"node.type":                     "Node type",
+	"node.cloudletkey.organization": "Operator of the cloudlet site",
+	"node.cloudletkey.name":         "Name of the cloudlet",
+	"node.region":                   "Region the node is in",
+	"output":                        "Debug output, if any",
+	"id":                            "Id used internally",
 }
 var DebugReplySpecialArgs = map[string]string{}
 var EnableDebugLevelsRequiredArgs = []string{
@@ -411,7 +410,7 @@ var EnableDebugLevelsRequiredArgs = []string{
 var EnableDebugLevelsOptionalArgs = []string{
 	"name",
 	"type",
-	"operator",
+	"node.cloudletkey.organization",
 	"cloudlet",
 	"region",
 	"pretty",
@@ -423,7 +422,7 @@ var DisableDebugLevelsRequiredArgs = []string{
 var DisableDebugLevelsOptionalArgs = []string{
 	"name",
 	"type",
-	"operator",
+	"node.cloudletkey.organization",
 	"cloudlet",
 	"region",
 	"pretty",
@@ -433,7 +432,7 @@ var ShowDebugLevelsRequiredArgs = []string{}
 var ShowDebugLevelsOptionalArgs = []string{
 	"name",
 	"type",
-	"operator",
+	"node.cloudletkey.organization",
 	"cloudlet",
 	"region",
 	"pretty",
@@ -443,7 +442,7 @@ var RunDebugRequiredArgs = []string{}
 var RunDebugOptionalArgs = []string{
 	"name",
 	"type",
-	"operator",
+	"node.cloudletkey.organization",
 	"cloudlet",
 	"region",
 	"cmd",

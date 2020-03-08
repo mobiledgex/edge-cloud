@@ -61,23 +61,19 @@ func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.A
 	appInst := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: edgeproto.AppKey{
-				DeveloperKey: edgeproto.DeveloperKey{
-					Name: dev,
-				},
-				Name:    appName,
-				Version: appVer,
+				Organization: dev,
+				Name:         appName,
+				Version:      appVer,
 			},
 			ClusterInstKey: edgeproto.ClusterInstKey{
 				ClusterKey: edgeproto.ClusterKey{
 					Name: cluster,
 				},
 				CloudletKey: edgeproto.CloudletKey{
-					OperatorKey: edgeproto.OperatorKey{
-						Name: oper,
-					},
-					Name: cloudlet,
+					Organization: oper,
+					Name:         cloudlet,
 				},
-				Developer: dev,
+				Organization: dev,
 			},
 		},
 	}

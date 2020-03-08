@@ -147,23 +147,23 @@ var NodeKeyRequiredArgs = []string{}
 var NodeKeyOptionalArgs = []string{
 	"name",
 	"type",
-	"cloudletkey.operatorkey.name",
+	"cloudletkey.organization",
 	"cloudletkey.name",
 	"region",
 }
 var NodeKeyAliasArgs = []string{}
 var NodeKeyComments = map[string]string{
-	"name":                         "Name or hostname of node",
-	"type":                         "Node type",
-	"cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"cloudletkey.name":             "Name of the cloudlet",
-	"region":                       "Region the node is in",
+	"name":                     "Name or hostname of node",
+	"type":                     "Node type",
+	"cloudletkey.organization": "Operator of the cloudlet site",
+	"cloudletkey.name":         "Name of the cloudlet",
+	"region":                   "Region the node is in",
 }
 var NodeKeySpecialArgs = map[string]string{}
 var NodeRequiredArgs = []string{
 	"name",
 	"type",
-	"operator",
+	"organization",
 	"cloudlet",
 	"region",
 }
@@ -178,14 +178,14 @@ var NodeOptionalArgs = []string{
 var NodeAliasArgs = []string{
 	"name=key.name",
 	"type=key.type",
-	"operator=key.cloudletkey.operatorkey.name",
+	"organization=key.cloudletkey.organization",
 	"cloudlet=key.cloudletkey.name",
 	"region=key.region",
 }
 var NodeComments = map[string]string{
 	"name":             "Name or hostname of node",
 	"type":             "Node type",
-	"operator":         "Company or Organization name of the operator",
+	"organization":     "Operator of the cloudlet site",
 	"cloudlet":         "Name of the cloudlet",
 	"region":           "Region the node is in",
 	"notifyid":         "Id of client assigned by server (internal use only)",

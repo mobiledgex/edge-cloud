@@ -574,18 +574,18 @@ var CloudletPoolComments = map[string]string{
 var CloudletPoolSpecialArgs = map[string]string{}
 var CloudletPoolMemberRequiredArgs = []string{
 	"pool",
-	"operator",
+	"organization",
 	"cloudlet",
 }
 var CloudletPoolMemberOptionalArgs = []string{}
 var CloudletPoolMemberAliasArgs = []string{
 	"pool=poolkey.name",
-	"operator=cloudletkey.operatorkey.name",
+	"organization=cloudletkey.organization",
 	"cloudlet=cloudletkey.name",
 }
 var CloudletPoolMemberComments = map[string]string{
-	"pool":     "CloudletPool Name",
-	"operator": "Company or Organization name of the operator",
-	"cloudlet": "Name of the cloudlet",
+	"pool":         "CloudletPool Name",
+	"organization": "Operator of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
 }
 var CloudletPoolMemberSpecialArgs = map[string]string{}

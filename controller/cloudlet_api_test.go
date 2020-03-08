@@ -43,8 +43,6 @@ func TestCloudletApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	// create operators
-	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	// create flavors
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 

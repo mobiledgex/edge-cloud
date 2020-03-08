@@ -6,7 +6,6 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
-import "operator.proto";
 import "gogoproto/gogo.proto";
 
 enum OptResNames {
@@ -17,12 +16,11 @@ enum OptResNames {
 message ResTagTableKey {
   // Resource Table Name
   string name = 1;
-  // Operator of the cloudlet site.
-  OperatorKey operator_key = 2 [(gogoproto.nullable) = false];
+  // Operator organization of the cloudlet site.
+  string organization = 2;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
-  option (protogen.alias) = "operator=OperatorKey.Name";
 }
 
 message ResTagTable {
@@ -40,7 +38,7 @@ message ResTagTable {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_message) = true;
-  option (protogen.alias) = "res=Key.Name,operator=Key.OperatorKey.Name";
+  option (protogen.alias) = "res=Key.Name,organzation=Key.Organization";
   option (protogen.also_required) = "Tags";
   }
 

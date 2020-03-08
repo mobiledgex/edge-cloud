@@ -538,7 +538,7 @@ var TagSpecialArgs = map[string]string{}
 var RegisterClientRequestRequiredArgs = []string{}
 var RegisterClientRequestOptionalArgs = []string{
 	"ver",
-	"devname",
+	"orgname",
 	"appname",
 	"appvers",
 	"carriername",
@@ -552,7 +552,7 @@ var RegisterClientRequestOptionalArgs = []string{
 var RegisterClientRequestAliasArgs = []string{}
 var RegisterClientRequestComments = map[string]string{
 	"ver":          "API version",
-	"devname":      "App Developer Name",
+	"orgname":      "App Developer Name",
 	"appname":      "App Name",
 	"appvers":      "App Version",
 	"carriername":  "Carrier Name _Not currently used_",
@@ -601,7 +601,7 @@ var FindCloudletRequestOptionalArgs = []string{
 	"gpslocation.speed",
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
-	"devname",
+	"orgname",
 	"appname",
 	"appvers",
 	"cellid",
@@ -620,7 +620,7 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"devname":                        "Dev Name Applicable to Platform apps only",
+	"orgname":                        "Dev Name Applicable to Platform apps only",
 	"appname":                        "App Name Applicable to Platform apps only",
 	"appvers":                        "App Version Applicable to Platform apps only",
 	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
@@ -973,7 +973,7 @@ var AppFqdnRequiredArgs = []string{}
 var AppFqdnOptionalArgs = []string{
 	"appname",
 	"appvers",
-	"devname",
+	"orgname",
 	"fqdns",
 	"androidpackagename",
 }
@@ -981,7 +981,7 @@ var AppFqdnAliasArgs = []string{}
 var AppFqdnComments = map[string]string{
 	"appname":            "App  Name",
 	"appvers":            "App Version",
-	"devname":            "developer name",
+	"orgname":            "developer name",
 	"fqdns":              "App FQDN",
 	"androidpackagename": "_(optional)_ Android package name",
 }
@@ -993,7 +993,7 @@ var FqdnListReplyOptionalArgs = []string{
 	"ver",
 	"appfqdns.appname",
 	"appfqdns.appvers",
-	"appfqdns.devname",
+	"appfqdns.orgname",
 	"appfqdns.fqdns",
 	"appfqdns.androidpackagename",
 	"status",
@@ -1005,7 +1005,7 @@ var FqdnListReplyComments = map[string]string{
 	"ver":                         "API version",
 	"appfqdns.appname":            "App  Name",
 	"appfqdns.appvers":            "App Version",
-	"appfqdns.devname":            "developer name",
+	"appfqdns.orgname":            "developer name",
 	"appfqdns.fqdns":              "App FQDN",
 	"appfqdns.androidpackagename": "_(optional)_ Android package name",
 	"status":                      ", one of FlUndefined, FlSuccess, FlFail",

@@ -20,8 +20,8 @@ message ClusterInstKey {
   ClusterKey cluster_key = 1 [(gogoproto.nullable) = false];
   // Name of Cloudlet on which the Cluster is instantiated
   CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
-  // Name of Developer that this cluster belongs to
-  string developer = 3;
+  // Name of Developer organization that this cluster belongs to
+  string organization = 3;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
@@ -91,7 +91,7 @@ message ClusterInst {
   option (protogen.notify_filter_cloudlet_key) = true;
   option (protogen.noconfig) = "Liveness,Auto,MasterFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy";
   option (protogen.generate_wait_for_state) = "TrackedState";
-  option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,operator=Key.CloudletKey.OperatorKey.Name,developer=Key.Developer,flavor=Flavor.Name";
+  option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,operatororg=Key.CloudletKey.Organization,developerorg=Key.Organization,flavor=Flavor.Name";
   option (protogen.mc2_target_cloudlet) = "Key.CloudletKey";
 }
 

@@ -21,7 +21,7 @@ message AppInstClientKey {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,developer=Key.AppKey.DeveloperKey.Name,cluster=Key.ClusterInstKey.ClusterKey.Name,clusterdeveloper=Key.ClusterInstKey.Developer,cloudlet=Key.ClusterInstKey.CloudletKey.Name,operator=Key.ClusterInstKey.CloudletKey.OperatorKey.Name";
+  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,developer.organization=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,clusterdevorg=Key.ClusterInstKey.DeveloperOrganization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,operatororg=Key.ClusterInstKey.CloudletKey.Organization";
 }
 
 

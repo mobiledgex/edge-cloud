@@ -86,7 +86,7 @@ func main() {
 	}
 	if *platformName == "" {
 		// if not specified, platform is derived from operator name
-		*platformName = myCloudlet.Key.OperatorKey.Name
+		*platformName = myCloudlet.Key.Organization
 	}
 	if *physicalName == "" {
 		*physicalName = myCloudlet.Key.Name
@@ -226,7 +226,7 @@ func main() {
 //initializePlatform *Must be called as a seperate goroutine.*
 func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache, updateCallback edgeproto.CacheUpdateCallback) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
-	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
+	oper := util.DNSSanitize(cloudlet.Key.Organization)
 
 	pc := pf.PlatformConfig{
 		CloudletKey:         &cloudlet.Key,

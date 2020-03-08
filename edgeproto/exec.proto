@@ -49,7 +49,7 @@ message ExecRequest {
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.noconfig) = "Offer,Answer,Err,Console.Url,Timeout";
-  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow";
+  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,organization=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdevorg=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operatororg=AppInstKey.ClusterInstKey.CloudletKey.Organization,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow";
   option (protogen.also_required) = "AppInstKey";
 }
 

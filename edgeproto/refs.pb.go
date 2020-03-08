@@ -529,8 +529,8 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 
 func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 	changed := 0
-	if m.Key.OperatorKey.Name != src.Key.OperatorKey.Name {
-		m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
 		changed++
 	}
 	if m.Key.Name != src.Key.Name {
@@ -1062,16 +1062,16 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
 		m.Key.ClusterKey.Name = src.Key.ClusterKey.Name
 		changed++
 	}
-	if m.Key.CloudletKey.OperatorKey.Name != src.Key.CloudletKey.OperatorKey.Name {
-		m.Key.CloudletKey.OperatorKey.Name = src.Key.CloudletKey.OperatorKey.Name
+	if m.Key.CloudletKey.Organization != src.Key.CloudletKey.Organization {
+		m.Key.CloudletKey.Organization = src.Key.CloudletKey.Organization
 		changed++
 	}
 	if m.Key.CloudletKey.Name != src.Key.CloudletKey.Name {
 		m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
 		changed++
 	}
-	if m.Key.Developer != src.Key.Developer {
-		m.Key.Developer = src.Key.Developer
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
 		changed++
 	}
 	if m.Apps == nil || len(m.Apps) != len(src.Apps) {
@@ -1079,8 +1079,8 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
 		changed++
 	}
 	for i0 := 0; i0 < len(src.Apps); i0++ {
-		if m.Apps[i0].DeveloperKey.Name != src.Apps[i0].DeveloperKey.Name {
-			m.Apps[i0].DeveloperKey.Name = src.Apps[i0].DeveloperKey.Name
+		if m.Apps[i0].Organization != src.Apps[i0].Organization {
+			m.Apps[i0].Organization = src.Apps[i0].Organization
 			changed++
 		}
 		if m.Apps[i0].Name != src.Apps[i0].Name {

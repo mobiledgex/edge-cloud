@@ -18,13 +18,12 @@
 		common.proto
 		controller.proto
 		debug.proto
-		developer.proto
 		exec.proto
 		flavor.proto
 		metric.proto
 		node.proto
 		notice.proto
-		operator.proto
+		operatorcode.proto
 		privacypolicy.proto
 		refs.proto
 		restagtable.proto
@@ -79,8 +78,6 @@
 		Controller
 		DebugRequest
 		DebugReply
-		DeveloperKey
-		Developer
 		RunCmd
 		RunVMConsole
 		ShowLog
@@ -93,8 +90,6 @@
 		NodeKey
 		Node
 		Notice
-		OperatorKey
-		Operator
 		OperatorCode
 		OutboundSecurityRule
 		PrivacyPolicy

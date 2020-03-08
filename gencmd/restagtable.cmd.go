@@ -435,19 +435,17 @@ var ResTagTableApiCmds = []*cobra.Command{
 var ResTagTableKeyRequiredArgs = []string{}
 var ResTagTableKeyOptionalArgs = []string{
 	"name",
-	"operator",
+	"organization",
 }
-var ResTagTableKeyAliasArgs = []string{
-	"operator=operatorkey.name",
-}
+var ResTagTableKeyAliasArgs = []string{}
 var ResTagTableKeyComments = map[string]string{
-	"name":     "Resource Table Name",
-	"operator": "Company or Organization name of the operator",
+	"name":         "Resource Table Name",
+	"organization": "Operator organization of the cloudlet site.",
 }
 var ResTagTableKeySpecialArgs = map[string]string{}
 var ResTagTableRequiredArgs = []string{
 	"res",
-	"operator",
+	"organzation",
 	"tags",
 }
 var ResTagTableOptionalArgs = []string{
@@ -455,13 +453,13 @@ var ResTagTableOptionalArgs = []string{
 }
 var ResTagTableAliasArgs = []string{
 	"res=key.name",
-	"operator=key.operatorkey.name",
+	"organzation=key.organization",
 }
 var ResTagTableComments = map[string]string{
-	"res":      "Resource Table Name",
-	"operator": "Company or Organization name of the operator",
-	"tags":     "one or more string tags",
-	"azone":    "availability zone(s) of resource if required",
+	"res":         "Resource Table Name",
+	"organzation": "Operator organization of the cloudlet site.",
+	"tags":        "one or more string tags",
+	"azone":       "availability zone(s) of resource if required",
 }
 var ResTagTableSpecialArgs = map[string]string{
 	"tags": "StringToString",

@@ -48,12 +48,12 @@ func TestStatDrops(t *testing.T) {
 		wg.Add(1)
 		go func(id int) {
 			key := dmecommon.StatKey{}
-			key.AppKey.DeveloperKey.Name = "dev" + strconv.Itoa(id)
+			key.AppKey.Organization = "dev" + strconv.Itoa(id)
 			key.AppKey.Name = "app"
 			key.AppKey.Version = "1.0.0"
 			key.Method = "findCloudlet"
 			key.CloudletFound.Name = "UnitTest"
-			key.CloudletFound.OperatorKey.Name = "unittest"
+			key.CloudletFound.Organization = "unittest"
 			key.CellId = 1000
 
 			ch := time.After(10 * notifyInterval)

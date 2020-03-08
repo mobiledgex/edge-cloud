@@ -90,9 +90,7 @@ func runShowCommands(ctrl *process.Controller, outputDir string) bool {
 		"settings: ShowSettings",
 		"flavors: ShowFlavor",
 		"clusterinsts: ShowClusterInst",
-		"operators: ShowOperator",
 		"operatorcodes: ShowOperatorCode",
-		"developers: ShowDeveloper",
 		"cloudlets: ShowCloudlet",
 		"apps: ShowApp",
 		"appinstances: ShowAppInst",
@@ -226,19 +224,9 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in cloudlet API %v\n", err)
 				rc = false
 			}
-			err = testutil.RunDeveloperApi(ctrlapi, ctx, &appData.Developers, appDataMap["developers"], api)
-			if err != nil {
-				log.Printf("Error in developer API %v\n", err)
-				rc = false
-			}
 			err = testutil.RunOperatorCodeApi(ctrlapi, ctx, &appData.OperatorCodes, appDataMap["operatorcodes"], api)
 			if err != nil {
 				log.Printf("Error in operator code API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
-			if err != nil {
-				log.Printf("Error in operator API %v\n", err)
 				rc = false
 			}
 			err = testutil.RunSettingsApi(ctrlapi, ctx, appData.Settings, appDataMap["settings"], "reset")
@@ -268,19 +256,9 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in settigs API %v\n", err)
 				rc = false
 			}
-			err = testutil.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
-			if err != nil {
-				log.Printf("Error in operator API %v\n", err)
-				rc = false
-			}
 			err = testutil.RunOperatorCodeApi(ctrlapi, ctx, &appData.OperatorCodes, appDataMap["operatorcodes"], api)
 			if err != nil {
 				log.Printf("Error in operator code API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunDeveloperApi(ctrlapi, ctx, &appData.Developers, appDataMap["developers"], api)
-			if err != nil {
-				log.Printf("Error in developer API %v\n", err)
 				rc = false
 			}
 			err = testutil.RunCloudletApi(ctrlapi, ctx, &appData.Cloudlets, appDataMap["cloudlets"], api)
@@ -295,7 +273,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			}
 			err = testutil.RunAutoProvPolicyApi(ctrlapi, ctx, &appData.AutoProvPolicies, appDataMap["autoprovpolicies"], api)
 			if err != nil {
-				log.Printf("Error in auto prov policy API %v\n", err)
+				log.Printf(" %v\n", err)
 				rc = false
 			}
 			err = testutil.RunAutoProvPolicyApi_AutoProvPolicyCloudlet(ctrlapi, ctx, &appData.AutoProvPolicyCloudlets, appDataMap["autoprovpolicycloudlets"], api)
@@ -402,13 +380,13 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 	if api == "showlogs" {
 		args = append(args, "ShowLogs")
 	}
-	args = append(args, "developer="+req.AppInstKey.AppKey.DeveloperKey.Name)
+	args = append(args, "organization="+req.AppInstKey.AppKey.Organization)
 	args = append(args, "appname="+req.AppInstKey.AppKey.Name)
 	args = append(args, "appvers="+req.AppInstKey.AppKey.Version)
 	args = append(args, "cloudlet="+req.AppInstKey.ClusterInstKey.CloudletKey.Name)
-	args = append(args, "operator="+req.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	args = append(args, "operatororg="+req.AppInstKey.ClusterInstKey.CloudletKey.Organization)
 	args = append(args, "cluster="+req.AppInstKey.ClusterInstKey.ClusterKey.Name)
-	args = append(args, "clusterdeveloper="+req.AppInstKey.ClusterInstKey.Developer)
+	args = append(args, "clusterdevorg="+req.AppInstKey.ClusterInstKey.Organization)
 	if api == "runcommand" && req.Cmd != nil {
 		args = append(args, "command=\""+req.Cmd.Command+"\"")
 	}

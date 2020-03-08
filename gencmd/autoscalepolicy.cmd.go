@@ -269,17 +269,17 @@ var AutoScalePolicyApiCmds = []*cobra.Command{
 
 var PolicyKeyRequiredArgs = []string{}
 var PolicyKeyOptionalArgs = []string{
-	"developer",
+	"organization",
 	"name",
 }
 var PolicyKeyAliasArgs = []string{}
 var PolicyKeyComments = map[string]string{
-	"developer": "Name of the Developer that this policy belongs to",
-	"name":      "Policy name",
+	"organization": "Name of the organization that this policy belongs to",
+	"name":         "Policy name",
 }
 var PolicyKeySpecialArgs = map[string]string{}
 var AutoScalePolicyRequiredArgs = []string{
-	"developer",
+	"organization",
 	"name",
 }
 var AutoScalePolicyOptionalArgs = []string{
@@ -290,11 +290,11 @@ var AutoScalePolicyOptionalArgs = []string{
 	"triggertimesec",
 }
 var AutoScalePolicyAliasArgs = []string{
-	"developer=key.developer",
+	"organization=key.organization",
 	"name=key.name",
 }
 var AutoScalePolicyComments = map[string]string{
-	"developer":          "Name of the Developer that this policy belongs to",
+	"organization":       "Name of the organization that this policy belongs to",
 	"name":               "Policy name",
 	"minnodes":           "Minimum number of cluster nodes",
 	"maxnodes":           "Maximum number of cluster nodes",
@@ -304,7 +304,7 @@ var AutoScalePolicyComments = map[string]string{
 }
 var AutoScalePolicySpecialArgs = map[string]string{}
 var CreateAutoScalePolicyRequiredArgs = []string{
-	"developer",
+	"organization",
 	"name",
 	"minnodes",
 	"maxnodes",

@@ -291,15 +291,15 @@ var AppApiCmds = []*cobra.Command{
 
 var AppKeyRequiredArgs = []string{}
 var AppKeyOptionalArgs = []string{
-	"developerkey.name",
+	"organization",
 	"name",
 	"version",
 }
 var AppKeyAliasArgs = []string{}
 var AppKeyComments = map[string]string{
-	"developerkey.name": "Organization or Company Name that a Developer is part of",
-	"name":              "App name",
-	"version":           "App version",
+	"organization": "Developer Organization",
+	"name":         "App name",
+	"version":      "App version",
 }
 var AppKeySpecialArgs = map[string]string{}
 var ConfigFileRequiredArgs = []string{}
@@ -314,7 +314,7 @@ var ConfigFileComments = map[string]string{
 }
 var ConfigFileSpecialArgs = map[string]string{}
 var AppRequiredArgs = []string{
-	"developer",
+	"organization",
 	"appname",
 	"appvers",
 }
@@ -343,13 +343,13 @@ var AppOptionalArgs = []string{
 	"defaultprivacypolicy",
 }
 var AppAliasArgs = []string{
-	"developer=key.developerkey.name",
+	"organization=key.organization",
 	"appname=key.name",
 	"appvers=key.version",
 	"defaultflavor=defaultflavor.name",
 }
 var AppComments = map[string]string{
-	"developer":               "Organization or Company Name that a Developer is part of",
+	"organization":            "Developer Organization",
 	"appname":                 "App name",
 	"appvers":                 "App version",
 	"imagepath":               "URI of where image resides",

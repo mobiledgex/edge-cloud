@@ -14,56 +14,49 @@ replies:
       type: dme
       region: local
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
     output: etcd,notify,dmedb,dmereq,locapi,metrics,sampled
   - node:
       type: dme
       region: local
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
     output: etcd,notify,dmedb,dmereq,locapi,metrics,sampled
   - node:
       type: crm
       region: local
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
     output: api,notify,mexos,metrics,upgrade,info,sampled
   - node:
       type: crm
       region: local
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
     output: api,notify,mexos,metrics,upgrade,info,sampled
   - node:
       type: crm
       region: local
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-3
     output: api,notify,mexos,metrics,upgrade,info,sampled
   - node:
       type: crm
       region: local
       cloudletkey:
-        operatorkey:
-          name: azure
+        organization: azure
         name: azure-cloud-4
     output: api,notify,mexos,metrics,upgrade,info,sampled
   - node:
       type: crm
       region: local
       cloudletkey:
-        operatorkey:
-          name: gcp
+        organization: gcp
         name: gcp-cloud-5
     output: api,notify,mexos,metrics,upgrade,info,sampled
   - node:
