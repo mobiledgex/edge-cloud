@@ -234,6 +234,8 @@ message Cloudlet {
   string vm_image_version = 24;
   // MobiledgeX OS package version on baseimage where CRM services reside
   string package_version = 25;
+  // Tls option for cloudlets
+  bool tls = 26;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

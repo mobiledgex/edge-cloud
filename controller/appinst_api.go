@@ -624,6 +624,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			initCloudletRefs(&cloudletRefs, &in.Key.ClusterInstKey.CloudletKey)
 		}
 
+		if strings.Contains(app.AccessPorts, "tls") && !cloudlet.Tls {
+			return fmt.Errorf("Cannot create App requiring tls termination on a cloudlet without tls support")
+		}
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
 		if !cloudcommon.IsClusterInstReqd(&app) {
 			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey)

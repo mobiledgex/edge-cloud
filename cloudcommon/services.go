@@ -77,6 +77,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		PackageVersion:      cloudlet.PackageVersion,
 		CloudletVMImagePath: cloudletVMImagePath,
 		Region:              region,
+		TlsSupport:          cloudlet.Tls,
 	}, opts, nil
 }
 

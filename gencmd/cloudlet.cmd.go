@@ -1088,6 +1088,7 @@ var CloudletOptionalArgs = []string{
 	"accessvars",
 	"vmimageversion",
 	"packageversion",
+	"tls",
 }
 var CloudletAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -1139,6 +1140,7 @@ var CloudletComments = map[string]string{
 	"accessvars":                          "Variables required to access cloudlet",
 	"vmimageversion":                      "MobiledgeX baseimage version where CRM services reside",
 	"packageversion":                      "MobiledgeX OS package version on baseimage where CRM services reside",
+	"tls":                                 "Tls option for cloudlets",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1310,4 +1312,5 @@ var CreateCloudletOptionalArgs = []string{
 	"accessvars",
 	"vmimageversion",
 	"packageversion",
+	"tls",
 }
