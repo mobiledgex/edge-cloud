@@ -661,8 +661,6 @@ var AppInstOptionalArgs = []string{
 	"healthcheck",
 	"privacypolicy",
 	"powerstate",
-	"externalvolumesize",
-	"availabilityzone",
 	"vmflavor",
 }
 var AppInstAliasArgs = []string{
