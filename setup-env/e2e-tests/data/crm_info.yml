@@ -45,11 +45,11 @@ clusterinsts:
   auto: true
   state: Ready
   ipaccess: IpAccessShared
-  nodeflavor: flavor1
+  nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
-  masternodeflavor: flavor1
+  masternodeflavor: x1.small
 - key:
     clusterkey:
       name: autoclustersomeapplication1
@@ -64,11 +64,11 @@ clusterinsts:
   auto: true
   state: Ready
   ipaccess: IpAccessShared
-  nodeflavor: flavor1
+  nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
-  masternodeflavor: flavor1
+  masternodeflavor: x1.small
 - key:
     clusterkey:
       name: autoclustersomeapplication2
@@ -83,11 +83,11 @@ clusterinsts:
   auto: true
   state: Ready
   ipaccess: IpAccessShared
-  nodeflavor: flavor1
+  nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
-  masternodeflavor: flavor1
+  masternodeflavor: x1.small
 operators:
 - key:
     name: dmuus
@@ -371,6 +371,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  vmflavor: x1.small
 - key:
     appkey:
       developerkey:
@@ -398,6 +399,7 @@ appinstances:
     name: x1.medium
   state: Ready
   powerstate: PowerOn
+  vmflavor: x1.small
 - key:
     appkey:
       developerkey:
@@ -425,6 +427,7 @@ appinstances:
     name: x1.medium
   state: Ready
   powerstate: PowerOn
+  vmflavor: x1.small
 - key:
     appkey:
       developerkey:
@@ -457,6 +460,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  vmflavor: x1.small
 - key:
     appkey:
       developerkey:
@@ -493,6 +497,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  vmflavor: x1.small
 - key:
     appkey:
       developerkey:
@@ -520,4 +525,4 @@ appinstances:
     name: x1.medium
   state: Ready
   powerstate: PowerOn
-
+  vmflavor: x1.small

@@ -376,7 +376,7 @@ func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nod
 	// If nodeflavor requests an optional resource, and there is no OptResMap in cl to support it, don't bother looking.
 	if nodeflavor.OptResMap != nil && cl.ResTagMap == nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "GetVMSpec no optional resource supported", "cloudlet", cl.Key.Name, "flavor", nodeflavor.Key.Name)
-		return nil, fmt.Errorf("Optional resource requested by %s , cloudlet %s supports none", nodeflavor.Key.Name, cl.Key.Name)
+		return nil, fmt.Errorf("Optional resource requested by %s, cloudlet %s supports none", nodeflavor.Key.Name, cl.Key.Name)
 	}
 
 	flavorList = cli.Flavors

@@ -33,7 +33,7 @@ func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.Cloud
 	info.OsMaxVolGb = 5000
 	info.Flavors = []*edgeproto.FlavorInfo{
 		&edgeproto.FlavorInfo{
-			Name:  "flavor1",
+			Name:  "x1.small",
 			Vcpus: uint64(10),
 			Ram:   uint64(101024),
 			Disk:  uint64(500),
