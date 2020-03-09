@@ -625,6 +625,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		if strings.Contains(app.AccessPorts, "tls") && !cloudlet.Tls {
+			fmt.Printf("why am i here\n")
 			return fmt.Errorf("Cannot create App requiring tls termination on a cloudlet without tls support")
 		}
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
