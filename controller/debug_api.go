@@ -34,7 +34,7 @@ func (s *DebugApi) RunDebug(req *edgeproto.DebugRequest, cb edgeproto.DebugApi_R
 		return nodeMgr.Debug.DebugRequest(req, cb)
 	}
 
-	conn, err := notifyRootConnect()
+	conn, err := notifyRootConnect(*notifyParentAddrs)
 	if err != nil {
 		return err
 	}
