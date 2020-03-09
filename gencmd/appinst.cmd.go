@@ -72,7 +72,7 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 		in.AvailabilityZone = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.NodeFlavor = ""
+		in.VmFlavor = ""
 	}
 }
 
@@ -663,6 +663,7 @@ var AppInstOptionalArgs = []string{
 	"powerstate",
 	"externalvolumesize",
 	"availabilityzone",
+	"vmflavor",
 }
 var AppInstAliasArgs = []string{
 	"developer=key.appkey.developerkey.name",
@@ -714,7 +715,7 @@ var AppInstComments = map[string]string{
 	"powerstate":                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"availabilityzone":               "Optional Availability Zone if any",
-	"nodeflavor":                     "OS node flavor to use",
+	"vmflavor":                       "OS node flavor to use",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -800,7 +801,7 @@ var CreateAppInstOptionalArgs = []string{
 	"privacypolicy",
 	"externalvolumesize",
 	"availabilityzone",
-	"nodeflavor",
+	"vmflavor",
 }
 var DeleteAppInstRequiredArgs = []string{
 	"developer",
@@ -851,7 +852,7 @@ var DeleteAppInstOptionalArgs = []string{
 	"privacypolicy",
 	"externalvolumesize",
 	"availabilityzone",
-	"nodeflavor",
+	"vmflavor",
 }
 var RefreshAppInstRequiredArgs = []string{
 	"developer",
@@ -871,7 +872,7 @@ var RefreshAppInstOptionalArgs = []string{
 	"privacypolicy",
 	"externalvolumesize",
 	"availabilityzone",
-	"nodeflavor",
+	"vmflavor",
 }
 var UpdateAppInstRequiredArgs = []string{
 	"developer",
@@ -892,5 +893,5 @@ var UpdateAppInstOptionalArgs = []string{
 	"powerstate",
 	"externalvolumesize",
 	"availabilityzone",
-	"nodeflavor",
+	"vmflavor",
 }

@@ -126,7 +126,7 @@ message AppInst {
   // Optional Availability Zone if any
   string availability_zone = 33 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
   // OS node flavor to use
-  string node_flavor = 34 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
+  string vm_flavor = 34 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

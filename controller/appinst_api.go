@@ -374,7 +374,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		// if needed, master node flavor will be looked up from createClusterInst
 		// save original in.Flavor.Name in that case
-		in.NodeFlavor = vmspec.FlavorName
+		in.VmFlavor = vmspec.FlavorName
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
 		log.SpanLog(ctx, log.DebugLevelApi, "Selected AppInst Node Flavor", "vmspec", vmspec.FlavorName)

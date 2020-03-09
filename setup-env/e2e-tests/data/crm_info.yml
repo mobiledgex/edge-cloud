@@ -371,7 +371,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
-  nodeflavor: x1.small
+  vmflavor: x1.small
 - key:
     appkey:
       developerkey:
@@ -399,7 +399,7 @@ appinstances:
     name: x1.medium
   state: Ready
   powerstate: PowerOn
-  nodeflavor: x1.small
+  vmflavor: x1.small
 - key:
     appkey:
       developerkey:
@@ -427,7 +427,7 @@ appinstances:
     name: x1.medium
   state: Ready
   powerstate: PowerOn
-  nodeflavor: x1.small
+  vmflavor: x1.small
 - key:
     appkey:
       developerkey:
@@ -460,7 +460,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
-  nodeflavor: x1.small
+  vmflavor: x1.small
 - key:
     appkey:
       developerkey:
@@ -497,7 +497,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
-  nodeflavor: x1.small
+  vmflavor: x1.small
 - key:
     appkey:
       developerkey:
@@ -525,4 +525,4 @@ appinstances:
     name: x1.medium
   state: Ready
   powerstate: PowerOn
-  nodeflavor: x1.small
+  vmflavor: x1.small
