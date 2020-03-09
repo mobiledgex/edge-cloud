@@ -263,7 +263,7 @@ service CloudletApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
     option (protogen.mc2_streamer_cache) = true;
   }
@@ -275,7 +275,7 @@ service CloudletApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Update Cloudlet. Updates the Cloudlet configuration and manages the upgrade of Cloudlet services.
@@ -285,7 +285,7 @@ service CloudletApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
@@ -304,7 +304,7 @@ service CloudletApi {
     post: "/addmapping/cloudlet"
     body: "*"
   };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
   // Add Optional Resource tag table
   rpc RemoveCloudletResMapping(CloudletResMap) returns (Result) {
@@ -312,7 +312,7 @@ service CloudletApi {
       post: "/rmmapping/cloudlet"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
 
   // Discover if flavor produces a matching platform flavor
@@ -321,7 +321,7 @@ service CloudletApi {
     post: "/findmapping/cloudlet"
     body: "*"
   };
-  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.OperatorKey.Name";
+  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
   }
 }
 
@@ -419,7 +419,7 @@ service CloudletInfoApi {
       post: "/show/cloudletinfo"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Key.Organization";
   }
   // Inject (create) a CloudletInfo for regression testing
   rpc InjectCloudletInfo(CloudletInfo) returns (Result) {}

@@ -48,7 +48,7 @@ service AppInstClientApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceAppAnalytics,ActionView,Key.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppAnalytics,ActionView,Key.AppKey.Organization";
     option (protogen.non_standard_show) = true;
   }
   // This is used unternally to forward AppInstClients to other Controllers

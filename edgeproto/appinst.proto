@@ -154,7 +154,7 @@ service AppInstApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
     option (protogen.mc2_custom_authz) = true;
     // add in UpdateMultiple for noconfig
     option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,UpdateMultiple,ForceUpdate,PowerState";
@@ -167,7 +167,7 @@ service AppInstApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
     option (protogen.method_noconfig) = "PowerState";
     option (protogen.mc2_streamer_cache) = true;
   }
@@ -178,7 +178,7 @@ service AppInstApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
     option (protogen.method_not_required) = "Key.ClusterInstKey";
     option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,Configs,PowerState";
     option (protogen.mc2_streamer_cache) = true;
@@ -190,7 +190,7 @@ service AppInstApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
     option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple,ForceUpdate";
     option (protogen.mc2_streamer_cache) = true;
   }
@@ -201,7 +201,7 @@ service AppInstApi {
       post: "/show/appinst"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.Organization";
   }
 }
 
