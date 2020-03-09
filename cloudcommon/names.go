@@ -49,6 +49,9 @@ var NFSAutoProvisionAppName = "NFSAutoProvision"
 var ProxyMetricsPort = int32(65121)
 var AutoProvMeasurement = "auto-prov-counts"
 
+// AppLabels for the application containers
+var MexAppInstanceLabel = "app.kubernetes.io/instance"
+
 // Instance Lifecycle variables
 var EventsDbName = "events"
 var CloudletEvent = "cloudlet"
@@ -204,4 +207,10 @@ func Hostname() string {
 		return "nohostname"
 	}
 	return hostname
+}
+
+// This returns a common metadata label for the appInst
+// Corresponding label is MexAppInstanceLabel
+func GetAppMetaLabel(appKey *edgeproto.AppKey) string {
+	return util.DNSSanitize(appKey.Name + "v" + appKey.Version)
 }

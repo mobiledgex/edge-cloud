@@ -52,9 +52,7 @@ func addMexLabel(meta *metav1.ObjectMeta, label string) {
 // Add app details to the deployment as labela
 // these labels will be picked up by Pormetheus and added to the metrics
 func addAppInstLabels(meta *metav1.ObjectMeta, app *edgeproto.App) {
-	meta.Labels["AppName"] = app.Key.Name
-	meta.Labels["AppVersion"] = app.Key.Version
-	meta.Labels["AppDeveloper"] = app.Key.DeveloperKey.Name
+	meta.Labels[cloudcommon.MexAppInstanceLabel] = cloudcommon.GetAppMetaLabel(&app.Key)
 }
 
 // Merge in all the environment variables into

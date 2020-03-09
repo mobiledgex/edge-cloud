@@ -223,11 +223,14 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 
 func CreateAppInst(ctx context.Context, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, networkMode DockerNetworkingMode) error {
 	image := app.ImagePath
+	labelVal := cloudcommon.GetAppMetaLabel(&app.Key)
 	name := GetContainerName(&app.Key)
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", GetContainerName(&app.Key), image, app.Command)
+		cmd := fmt.Sprintf("docker run -d -l %s=%s --restart=unless-stopped --network=host --name=%s %s %s",
+			cloudcommon.MexAppInstanceLabel, labelVal, GetContainerName(&app.Key), image, app.Command)
 		if networkMode == DockerBridgeMode {
-			cmd = fmt.Sprintf("docker run -d -l edge-cloud --restart=unless-stopped --name=%s %s %s %s", name,
+			cmd = fmt.Sprintf("docker run -d -l edge-cloud -l %s=%s --restart=unless-stopped --name=%s %s %s %s",
+				cloudcommon.MexAppInstanceLabel, labelVal, name,
 				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
 		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker run ", "cmd", cmd)
@@ -245,6 +248,10 @@ func CreateAppInst(ctx context.Context, client ssh.Client, app *edgeproto.App, a
 		if err != nil {
 			return err
 		}
+		// TODO - missing a label for the metaAppInst label.
+		// There is a feature request in docker for it - https://github.com/docker/compose/issues/6159
+		// Once that's merged we can add label here too
+		// cmd := fmt.Sprintf("docker-compose -f %s -l %s=%s up -d", filename, cloudcommon.MexAppInstanceLabel, labelVal)
 		cmd := fmt.Sprintf("docker-compose -f %s up -d", filename)
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
