@@ -20,7 +20,7 @@ type NodeApi struct{}
 var nodeApi = NodeApi{}
 
 func (s *NodeApi) ShowNode(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeServer) error {
-	if *notifyParentAddrs == "" {
+	if *notifyRootAddrs == "" && *notifyParentAddrs == "" {
 		// assume this is the root
 		return nodeMgr.NodeCache.Show(in, func(obj *edgeproto.Node) error {
 			err := cb.Send(obj)
@@ -28,7 +28,15 @@ func (s *NodeApi) ShowNode(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeServ
 		})
 	}
 
-	conn, err := notifyRootConnect()
+	// ShowNode should directly communicate with NotifyRoot and not via MC
+	notifyAddrs := *notifyRootAddrs
+	if notifyAddrs == "" {
+		// In case notifyrootaddrs is not specified,
+		// fallback to notifyparentaddrs
+		notifyAddrs = *notifyParentAddrs
+	}
+
+	conn, err := notifyRootConnect(notifyAddrs)
 	if err != nil {
 		return err
 	}

@@ -76,7 +76,7 @@ func GetMappedAccessType(accessType edgeproto.AccessType, deployment, deployment
 	switch accessType {
 
 	case edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER:
-		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeHelm || deployment == AppDeploymentTypeDocker {
+		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeHelm || deployment == AppDeploymentTypeDocker || deployment == AppDeploymentTypeVM {
 			return accessType, nil
 		}
 	case edgeproto.AccessType_ACCESS_TYPE_DIRECT:
