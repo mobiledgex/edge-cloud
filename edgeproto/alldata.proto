@@ -1,0 +1,45 @@
+syntax = "proto3";
+package edgeproto;
+
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "settings.proto";
+import "operator.proto";
+import "developer.proto";
+import "flavor.proto";
+import "restagtable.proto";
+import "cloudlet.proto";
+import "cloudletpool.proto";
+import "autoprovpolicy.proto";
+import "autoscalepolicy.proto";
+import "privacypolicy.proto";
+import "clusterinst.proto";
+import "app.proto";
+import "appinst.proto";
+import "gogoproto/gogo.proto";
+
+// AllData contains all data that may be used for declarative
+// create/delete, or as input for e2e tests.
+// The order of fields here is important, as objects will be
+// created in the order they are specified here, and deleted
+// in the opposite order. The field ID (number) doesn't matter.
+message AllData {
+  repeated Flavor flavors = 2 [(gogoproto.nullable) = false];
+  Settings settings = 1;
+  repeated Operator operators = 3 [(gogoproto.nullable) = false];
+  repeated OperatorCode operator_codes = 4 [(gogoproto.nullable) = false];
+  repeated Developer developers = 5 [(gogoproto.nullable) = false];
+  repeated ResTagTable res_tag_tables = 6 [(gogoproto.nullable) = false];
+  repeated Cloudlet cloudlets = 7 [(gogoproto.nullable) = false];
+  repeated CloudletInfo cloudlet_infos = 8 [(gogoproto.nullable) = false];
+  repeated CloudletPool cloudlet_pools = 9 [(gogoproto.nullable) = false];
+  repeated CloudletPoolMember cloudlet_pool_members = 10 [(gogoproto.nullable) = false];
+  repeated AutoProvPolicy auto_prov_policies = 11 [(gogoproto.nullable) = false];
+  repeated AutoProvPolicyCloudlet auto_prov_policy_cloudlets = 12 [(gogoproto.nullable) = false];
+  repeated AutoScalePolicy auto_scale_policies = 13 [(gogoproto.nullable) = false];
+  repeated PrivacyPolicy privacy_policies = 14 [(gogoproto.nullable) = false];
+  repeated App apps = 15 [(gogoproto.nullable) = false];
+  repeated ClusterInst cluster_insts = 16 [(gogoproto.nullable) = false];
+  repeated AppInst app_instances = 18 [(gogoproto.nullable) = false];
+  option (protogen.e2edata) = true;
+  option (protogen.generate_copy_in_fields) = false;
+}

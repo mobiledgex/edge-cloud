@@ -111,6 +111,9 @@ var CreateAppInstCmd = &cli.Command{
 }
 
 func runCreateAppInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -133,6 +136,8 @@ func CreateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 		}
 		return fmt.Errorf("CreateAppInst failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -146,8 +151,16 @@ func CreateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			}
 			return fmt.Errorf("CreateAppInst recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -179,6 +192,9 @@ var DeleteAppInstCmd = &cli.Command{
 }
 
 func runDeleteAppInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -201,6 +217,8 @@ func DeleteAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 		}
 		return fmt.Errorf("DeleteAppInst failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -214,8 +232,16 @@ func DeleteAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			}
 			return fmt.Errorf("DeleteAppInst recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -247,6 +273,9 @@ var RefreshAppInstCmd = &cli.Command{
 }
 
 func runRefreshAppInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -269,6 +298,8 @@ func RefreshAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 		}
 		return fmt.Errorf("RefreshAppInst failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -282,8 +313,16 @@ func RefreshAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			}
 			return fmt.Errorf("RefreshAppInst recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -315,6 +354,9 @@ var UpdateAppInstCmd = &cli.Command{
 }
 
 func runUpdateAppInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInst)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -338,6 +380,8 @@ func UpdateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 		}
 		return fmt.Errorf("UpdateAppInst failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -351,8 +395,16 @@ func UpdateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			}
 			return fmt.Errorf("UpdateAppInst recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -383,6 +435,9 @@ var ShowAppInstCmd = &cli.Command{
 }
 
 func runShowAppInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -405,6 +460,7 @@ func ShowAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 		}
 		return fmt.Errorf("ShowAppInst failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.AppInst, 0)
 	for {
 		obj, err := stream.Recv()
@@ -466,6 +522,9 @@ var ShowAppInstInfoCmd = &cli.Command{
 }
 
 func runShowAppInstInfo(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInstInfo)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -488,6 +547,7 @@ func ShowAppInstInfo(c *cli.Command, in *edgeproto.AppInstInfo) error {
 		}
 		return fmt.Errorf("ShowAppInstInfo failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.AppInstInfo, 0)
 	for {
 		obj, err := stream.Recv()
@@ -545,6 +605,9 @@ var ShowAppInstMetricsCmd = &cli.Command{
 }
 
 func runShowAppInstMetrics(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInstMetrics)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -567,6 +630,7 @@ func ShowAppInstMetrics(c *cli.Command, in *edgeproto.AppInstMetrics) error {
 		}
 		return fmt.Errorf("ShowAppInstMetrics failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.AppInstMetrics, 0)
 	for {
 		obj, err := stream.Recv()
@@ -634,11 +698,11 @@ var AppInstRequiredArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
-	"cluster",
 	"operator",
 	"cloudlet",
 }
 var AppInstOptionalArgs = []string{
+	"cluster",
 	"clusterdeveloper",
 	"flavor",
 	"state",
@@ -664,6 +728,7 @@ var AppInstAliasArgs = []string{
 	"flavor=flavor.name",
 }
 var AppInstComments = map[string]string{
+	"fields":                         "Fields are used for the Update API to specify which fields to apply",
 	"developer":                      "Organization or Company Name that a Developer is part of",
 	"appname":                        "App name",
 	"appvers":                        "App version",
@@ -705,6 +770,7 @@ var AppInstComments = map[string]string{
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
+	"fields":                   "StringArray",
 	"runtimeinfo.containerids": "StringArray",
 }
 var AppInstRuntimeRequiredArgs = []string{}
@@ -740,6 +806,7 @@ var AppInstInfoOptionalArgs = []string{
 }
 var AppInstInfoAliasArgs = []string{}
 var AppInstInfoComments = map[string]string{
+	"fields":                                          "Fields are used for the Update API to specify which fields to apply",
 	"key.appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
 	"key.appkey.name":                                 "App name",
 	"key.appkey.version":                              "App version",
@@ -755,6 +822,7 @@ var AppInstInfoComments = map[string]string{
 }
 var AppInstInfoSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
+	"fields":                   "StringArray",
 	"runtimeinfo.containerids": "StringArray",
 }
 var AppInstMetricsRequiredArgs = []string{}
@@ -770,11 +838,11 @@ var CreateAppInstRequiredArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
-	"cluster",
 	"operator",
 	"cloudlet",
 }
 var CreateAppInstOptionalArgs = []string{
+	"cluster",
 	"clusterdeveloper",
 	"flavor",
 	"state",
@@ -790,11 +858,11 @@ var DeleteAppInstRequiredArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
-	"cluster",
 	"operator",
 	"cloudlet",
 }
 var DeleteAppInstOptionalArgs = []string{
+	"cluster",
 	"clusterdeveloper",
 	"cloudletloc.latitude",
 	"cloudletloc.longitude",
@@ -856,11 +924,11 @@ var UpdateAppInstRequiredArgs = []string{
 	"developer",
 	"appname",
 	"appvers",
-	"cluster",
 	"operator",
 	"cloudlet",
 }
 var UpdateAppInstOptionalArgs = []string{
+	"cluster",
 	"clusterdeveloper",
 	"crmoverride",
 	"configs.kind",

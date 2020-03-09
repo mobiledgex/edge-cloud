@@ -11,6 +11,7 @@ import "context"
 import "time"
 import "github.com/stretchr/testify/require"
 import "github.com/mobiledgex/edge-cloud/log"
+import "github.com/mobiledgex/edge-cloud/edgectl/wrapper"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -388,6 +389,27 @@ func FindClusterRefsData(key *edgeproto.ClusterInstKey, testData []edgeproto.Clu
 	return nil, false
 }
 
+func (r *Run) CloudletRefsApi(data *[]edgeproto.CloudletRefs, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for CloudletRefs", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.CloudletRefs{}
+		if data != nil && len(*data) > 0 {
+			obj = &(*data)[0]
+		}
+		out, err := r.client.ShowCloudletRefs(r.ctx, obj)
+		if err != nil {
+			r.logErr("CloudletRefsApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.CloudletRefs)
+			if !ok {
+				panic(fmt.Sprintf("RunCloudletRefsApi expected dataOut type *[]edgeproto.CloudletRefs, but was %T", dataOut))
+			}
+			*outp = out
+		}
+		return
+	}
+}
+
 func (s *DummyServer) ShowCloudletRefs(in *edgeproto.CloudletRefs, server edgeproto.CloudletRefsApi_ShowCloudletRefsServer) error {
 	var err error
 	obj := &edgeproto.CloudletRefs{}
@@ -403,6 +425,27 @@ func (s *DummyServer) ShowCloudletRefs(in *edgeproto.CloudletRefs, server edgepr
 	return err
 }
 
+func (r *Run) ClusterRefsApi(data *[]edgeproto.ClusterRefs, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for ClusterRefs", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.ClusterRefs{}
+		if data != nil && len(*data) > 0 {
+			obj = &(*data)[0]
+		}
+		out, err := r.client.ShowClusterRefs(r.ctx, obj)
+		if err != nil {
+			r.logErr("ClusterRefsApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.ClusterRefs)
+			if !ok {
+				panic(fmt.Sprintf("RunClusterRefsApi expected dataOut type *[]edgeproto.ClusterRefs, but was %T", dataOut))
+			}
+			*outp = out
+		}
+		return
+	}
+}
+
 func (s *DummyServer) ShowClusterRefs(in *edgeproto.ClusterRefs, server edgeproto.ClusterRefsApi_ShowClusterRefsServer) error {
 	var err error
 	obj := &edgeproto.ClusterRefs{}
@@ -416,4 +459,82 @@ func (s *DummyServer) ShowClusterRefs(in *edgeproto.ClusterRefs, server edgeprot
 		return err
 	})
 	return err
+}
+
+type CloudletRefsStream interface {
+	Recv() (*edgeproto.CloudletRefs, error)
+}
+
+func CloudletRefsReadStream(stream CloudletRefsStream) ([]edgeproto.CloudletRefs, error) {
+	output := []edgeproto.CloudletRefs{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read CloudletRefs stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowCloudletRefs(ctx context.Context, in *edgeproto.CloudletRefs) ([]edgeproto.CloudletRefs, error) {
+	api := edgeproto.NewCloudletRefsApiClient(s.Conn)
+	stream, err := api.ShowCloudletRefs(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return CloudletRefsReadStream(stream)
+}
+
+func (s *CliClient) ShowCloudletRefs(ctx context.Context, in *edgeproto.CloudletRefs) ([]edgeproto.CloudletRefs, error) {
+	output := []edgeproto.CloudletRefs{}
+	args := append(s.BaseArgs, "controller", "ShowCloudletRefs")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type CloudletRefsApiClient interface {
+	ShowCloudletRefs(ctx context.Context, in *edgeproto.CloudletRefs) ([]edgeproto.CloudletRefs, error)
+}
+
+type ClusterRefsStream interface {
+	Recv() (*edgeproto.ClusterRefs, error)
+}
+
+func ClusterRefsReadStream(stream ClusterRefsStream) ([]edgeproto.ClusterRefs, error) {
+	output := []edgeproto.ClusterRefs{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read ClusterRefs stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowClusterRefs(ctx context.Context, in *edgeproto.ClusterRefs) ([]edgeproto.ClusterRefs, error) {
+	api := edgeproto.NewClusterRefsApiClient(s.Conn)
+	stream, err := api.ShowClusterRefs(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ClusterRefsReadStream(stream)
+}
+
+func (s *CliClient) ShowClusterRefs(ctx context.Context, in *edgeproto.ClusterRefs) ([]edgeproto.ClusterRefs, error) {
+	output := []edgeproto.ClusterRefs{}
+	args := append(s.BaseArgs, "controller", "ShowClusterRefs")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type ClusterRefsApiClient interface {
+	ShowClusterRefs(ctx context.Context, in *edgeproto.ClusterRefs) ([]edgeproto.ClusterRefs, error)
 }

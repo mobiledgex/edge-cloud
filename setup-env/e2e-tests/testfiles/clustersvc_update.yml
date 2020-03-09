@@ -20,10 +20,8 @@ tests:
 - name: start cluster-svc with a different scrapeInterval
   actions: [start-argument=cluster-svc1 scrapeInterval=30s updateAll]
 
-- name: show provisioning after 
+- name: show provisioning after refresh
   actions: [ctrlapi-show]
-
-- name: compare results of ctrl1 show provisioning
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_show_prometheus_30s_interval.yml"

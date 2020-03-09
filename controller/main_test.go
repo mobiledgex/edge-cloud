@@ -250,7 +250,6 @@ appinstances:
   liveness: 1
   port: 8080
   ip: [10,100,10,4]
-
 cloudletinfos:
 - key:
     operatorkey:
@@ -262,7 +261,7 @@ cloudletinfos:
   osmaxvolgb: 500
   rootlbfqdn: mexlb.cloud2.tmus.mobiledgex.net
 `
-	data := edgeproto.ApplicationData{}
+	data := edgeproto.AllData{}
 	err = yaml.Unmarshal([]byte(yamlData), &data)
 	require.Nil(t, err, "unmarshal data")
 
@@ -270,7 +269,7 @@ cloudletinfos:
 	require.Nil(t, err, "create dev")
 	_, err = flavorClient.CreateFlavor(ctx, &data.Flavors[0])
 	require.Nil(t, err, "create flavor")
-	_, err = appClient.CreateApp(ctx, &data.Applications[0])
+	_, err = appClient.CreateApp(ctx, &data.Apps[0])
 	require.Nil(t, err, "create app")
 	_, err = operClient.CreateOperator(ctx, &data.Operators[0])
 	require.Nil(t, err, "create operator")

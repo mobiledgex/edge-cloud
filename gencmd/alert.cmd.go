@@ -6,6 +6,7 @@ Package gencmd is a generated protocol buffer package.
 
 It is generated from these files:
 	alert.proto
+	alldata.proto
 	app.proto
 	appinst.proto
 	appinstclient.proto
@@ -34,6 +35,7 @@ It is generated from these files:
 
 It has these top-level messages:
 	Alert
+	AllData
 	AppKey
 	ConfigFile
 	App
@@ -79,6 +81,7 @@ It has these top-level messages:
 	Controller
 	DebugRequest
 	DebugReply
+	DebugData
 	DeveloperKey
 	Developer
 	RunCmd
@@ -92,6 +95,7 @@ It has these top-level messages:
 	Metric
 	NodeKey
 	Node
+	NodeData
 	Notice
 	OperatorKey
 	Operator
@@ -158,6 +162,9 @@ var ShowAlertCmd = &cli.Command{
 }
 
 func runShowAlert(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Alert)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -180,6 +187,7 @@ func ShowAlert(c *cli.Command, in *edgeproto.Alert) error {
 		}
 		return fmt.Errorf("ShowAlert failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.Alert, 0)
 	for {
 		obj, err := stream.Recv()

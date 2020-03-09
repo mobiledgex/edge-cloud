@@ -36,6 +36,9 @@ var ShowCloudletRefsCmd = &cli.Command{
 }
 
 func runShowCloudletRefs(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletRefs)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -58,6 +61,7 @@ func ShowCloudletRefs(c *cli.Command, in *edgeproto.CloudletRefs) error {
 		}
 		return fmt.Errorf("ShowCloudletRefs failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.CloudletRefs, 0)
 	for {
 		obj, err := stream.Recv()
@@ -114,6 +118,9 @@ var ShowClusterRefsCmd = &cli.Command{
 }
 
 func runShowClusterRefs(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ClusterRefs)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -136,6 +143,7 @@ func ShowClusterRefs(c *cli.Command, in *edgeproto.ClusterRefs) error {
 		}
 		return fmt.Errorf("ShowClusterRefs failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.ClusterRefs, 0)
 	for {
 		obj, err := stream.Recv()
