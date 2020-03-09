@@ -2,17 +2,17 @@ package proxy
 
 import (
 	"context"
-	"time"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
-	ssh "github.com/mobiledgex/golang-ssh"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
+	ssh "github.com/mobiledgex/golang-ssh"
 )
 
 var CertsDir = "/etc/ssl/certs"
@@ -25,17 +25,19 @@ var DedicatedClients map[string]ssh.Client
 var DedicatedTls access.TLSCert
 var DedicatedMux sync.Mutex
 
+func init() {
+	DedicatedClients = make(map[string]ssh.Client)
+}
 
 // get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
 func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultAddr string, client ssh.Client) {
 	SharedRootLbClient = client
-	DedicatedClients = make(map[string]ssh.Client)
 	getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr)
 	// refresh every 30 days
 	for {
 		select {
-		case <-time.After(30*24*time.Hour):
-			getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr)			
+		case <-time.After(30 * 24 * time.Hour):
+			getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr)
 		}
 	}
 }
@@ -81,11 +83,11 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", pc.SudoOn)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelMexos, "unable to write tls key file to rootlb", "err", err)
-		}	
+		}
 	}
 }
 
-// GetCertFromVault fills in the cert fields by calling the vault  plugin.  The vault plugin will 
+// GetCertFromVault fills in the cert fields by calling the vault  plugin.  The vault plugin will
 // return a new cert if one is not already available, or a cached copy of an existing cert.
 func getCertFromVault(ctx context.Context, config *vault.Config, commonName string, tlsCert *access.TLSCert) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "GetCertFromVault", "commonName", commonName)
