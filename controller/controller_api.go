@@ -127,11 +127,11 @@ func ControllerConnect(addr string) (*grpc.ClientConn, error) {
 	return conn, nil
 }
 
-func notifyRootConnect() (*grpc.ClientConn, error) {
-	if *notifyParentAddrs == "" {
+func notifyRootConnect(notifyAddrs string) (*grpc.ClientConn, error) {
+	if notifyAddrs == "" {
 		return nil, fmt.Errorf("No parent notify address specified, cannot connect to notify root")
 	}
-	addrs := strings.Split(*notifyParentAddrs, ",")
+	addrs := strings.Split(notifyAddrs, ",")
 	dialOption, err := tls.GetTLSClientDialOption(addrs[0], *tlsCertFile, false)
 	if err != nil {
 		return nil, err

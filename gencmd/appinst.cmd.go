@@ -65,6 +65,15 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.PowerState = 0
 	}
+	if _, found := tags["nocmp"]; found {
+		in.ExternalVolumeSize = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.AvailabilityZone = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.VmFlavor = ""
+	}
 }
 
 func AppInstRuntimeHideTags(in *edgeproto.AppInstRuntime) {
@@ -652,6 +661,7 @@ var AppInstOptionalArgs = []string{
 	"healthcheck",
 	"privacypolicy",
 	"powerstate",
+	"vmflavor",
 }
 var AppInstAliasArgs = []string{
 	"developer=key.appkey.developerkey.name",
@@ -686,6 +696,7 @@ var AppInstComments = map[string]string{
 	"mappedports.pathprefix":         "Public facing path for HTTP L7 access.",
 	"mappedports.fqdnprefix":         "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"mappedports.endport":            "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"mappedports.tls":                "TLS termination for this port",
 	"flavor":                         "Flavor name",
 	"state":                          "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
@@ -701,6 +712,9 @@ var AppInstComments = map[string]string{
 	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"privacypolicy":                  "Optional privacy policy name",
 	"powerstate":                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
+	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
+	"availabilityzone":               "Optional Availability Zone if any",
+	"vmflavor":                       "OS node flavor to use",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -784,6 +798,9 @@ var CreateAppInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
+	"externalvolumesize",
+	"availabilityzone",
+	"vmflavor",
 }
 var DeleteAppInstRequiredArgs = []string{
 	"developer",
@@ -812,6 +829,7 @@ var DeleteAppInstOptionalArgs = []string{
 	"mappedports.pathprefix",
 	"mappedports.fqdnprefix",
 	"mappedports.endport",
+	"mappedports.tls",
 	"flavor",
 	"state",
 	"errors",
@@ -832,6 +850,9 @@ var DeleteAppInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
+	"externalvolumesize",
+	"availabilityzone",
+	"vmflavor",
 }
 var RefreshAppInstRequiredArgs = []string{
 	"developer",
@@ -849,6 +870,9 @@ var RefreshAppInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
+	"externalvolumesize",
+	"availabilityzone",
+	"vmflavor",
 }
 var UpdateAppInstRequiredArgs = []string{
 	"developer",
@@ -867,4 +891,7 @@ var UpdateAppInstOptionalArgs = []string{
 	"healthcheck",
 	"privacypolicy",
 	"powerstate",
+	"externalvolumesize",
+	"availabilityzone",
+	"vmflavor",
 }

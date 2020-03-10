@@ -13,6 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -43,6 +44,7 @@ var vmImageVersion = flag.String("vmImageVersion", "", "CRM VM baseimage version
 var packageVersion = flag.String("packageVersion", "", "CRM VM baseimage debian package version")
 var cloudletVMImagePath = flag.String("cloudletVMImagePath", "", "Image path where CRM VM baseimages are present")
 var cleanupMode = flag.Bool("cleanupMode", false, "cleanup previous versions of CRM if present")
+var generateCerts = flag.Bool("generateCerts", false, "Get TLS certs for this cloudlet")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
@@ -190,9 +192,21 @@ func main() {
 		nodeMgr.UpdateMyNode(ctx)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 		cspan.Finish()
+
+		// setup rootlb certs
+		if *generateCerts {
+			tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			commonName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
+			dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
+			rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
+			if err == nil {
+				proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, *vaultAddr, rootlb)
+			}
+			tlsSpan.Finish()
+		}
 	}()
 
-	//setup crm notify listener (for shepherd)
+	// setup crm notify listener (for shepherd)
 	var notifyServer notify.ServerMgr
 	initSrvNotify(&notifyServer)
 	notifyServer.Start(*notifySrvAddr, *tlsCertFile)

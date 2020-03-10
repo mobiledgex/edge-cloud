@@ -2936,6 +2936,10 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 				m.Ports[i0].EndPort = src.Ports[i0].EndPort
 				changed++
 			}
+			if m.Ports[i0].Tls != src.Ports[i0].Tls {
+				m.Ports[i0].Tls = src.Ports[i0].Tls
+				changed++
+			}
 		}
 	} else if m.Ports != nil {
 		m.Ports = nil
@@ -3499,6 +3503,10 @@ func (m *Appinstance) CopyInFields(src *Appinstance) int {
 				m.Ports[i0].EndPort = src.Ports[i0].EndPort
 				changed++
 			}
+			if m.Ports[i0].Tls != src.Ports[i0].Tls {
+				m.Ports[i0].Tls = src.Ports[i0].Tls
+				changed++
+			}
 		}
 	} else if m.Ports != nil {
 		m.Ports = nil
@@ -3627,6 +3635,10 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 					}
 					if m.Appinstances[i0].Ports[i1].EndPort != src.Appinstances[i0].Ports[i1].EndPort {
 						m.Appinstances[i0].Ports[i1].EndPort = src.Appinstances[i0].Ports[i1].EndPort
+						changed++
+					}
+					if m.Appinstances[i0].Ports[i1].Tls != src.Appinstances[i0].Ports[i1].Tls {
+						m.Appinstances[i0].Ports[i1].Tls = src.Appinstances[i0].Ports[i1].Tls
 						changed++
 					}
 				}
@@ -3780,6 +3792,10 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 							}
 							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort != src.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort {
 								m.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort
+								changed++
+							}
+							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls != src.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls {
+								m.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls
 								changed++
 							}
 						}

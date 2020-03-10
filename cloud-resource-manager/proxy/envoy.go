@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"strings"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/dockermgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -56,29 +55,9 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		return err
 	}
 	eyamlName := dir + "/envoy.yaml"
-	err = createEnvoyYaml(ctx, client, eyamlName, name, listenIP, backendIP, opts.Cert, ports)
+	err = createEnvoyYaml(ctx, client, eyamlName, name, listenIP, backendIP, ports)
 	if err != nil {
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
-	}
-
-	certDir := dir + "/certs"
-	err = pc.Run(client, "mkdir -p "+certDir)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos,
-			"envoy %s can't create cert dir %s", name, certDir)
-		return err
-	}
-	if opts.Cert != nil {
-		certFile := certDir + "/" + opts.Cert.CommonName + ".crt"
-		err = pc.WriteFile(client, certFile, opts.Cert.CertString, "tls cert", pc.NoSudo)
-		if err != nil {
-			return err
-		}
-		keyFile := certDir + "/" + opts.Cert.CommonName + ".key"
-		err = pc.WriteFile(client, keyFile, opts.Cert.KeyString, "tls key", pc.NoSudo)
-		if err != nil {
-			return err
-		}
 	}
 
 	// container name is envoy+name for now to avoid conflicts with the nginx containers
@@ -91,7 +70,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		cmdArgs = append(cmdArgs, "--network", opts.DockerNetwork)
 	}
 	cmdArgs = append(cmdArgs, []string{
-		"-v", certDir + ":/etc/envoy/certs",
+		"-v", CertsDir + ":/etc/envoy/certs",
 		"-v", accesslogFile + ":/var/log/access.log",
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl"}...)
@@ -106,11 +85,11 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	return nil
 }
 
-func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, listenIP, backendIP string, cert *access.TLSCert, ports []dme.AppPort) error {
+func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, listenIP, backendIP string, ports []dme.AppPort) error {
 	spec := ProxySpec{
 		Name:       name,
 		MetricPort: cloudcommon.ProxyMetricsPort,
-		Cert:       cert,
+		CertName:   CertName,
 	}
 	for _, p := range ports {
 		endPort := p.EndPort
@@ -134,6 +113,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 					ListenIP:    listenIP,
 					BackendIP:   backendIP,
 					BackendPort: internalPort,
+					UseTLS:      p.Tls,
 				}
 				tcpconns, err := getTCPConcurrentConnections()
 				if err != nil {
@@ -189,15 +169,15 @@ static_resources:
                   "client_address": "%DOWNSTREAM_REMOTE_ADDRESS%",
                   "upstream_cluster": "%UPSTREAM_CLUSTER%"
 				}
-     {{if $.Cert}}
+      {{if .UseTLS -}}
       tls_context:
         common_tls_context:
           tls_certificates:
             - certificate_chain:
-                filename: "/etc/envoy/certs/{{$.Cert.CommonName}}.crt"
+                filename: "/etc/envoy/certs/{{$.CertName}}.crt"
               private_key:
-                filename: "/etc/envoy/certs/{{$.Cert.CommonName}}.key"
-     {{- end}}
+                filename: "/etc/envoy/certs/{{$.CertName}}.key"
+      {{- end}}
   {{- end}}
   clusters:
   {{- range .TCPSpec}}
@@ -219,6 +199,7 @@ static_resources:
         unhealthy_threshold: 3
         healthy_threshold: 3
         tcp_health_check: {}
+        no_traffic_interval: 5s
 {{- end}}
 admin:
   access_log_path: "/var/log/admin.log"

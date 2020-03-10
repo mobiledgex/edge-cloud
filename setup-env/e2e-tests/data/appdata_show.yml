@@ -64,6 +64,7 @@ clusterinsts:
   flavor:
     name: x1.small
   sharedvolumesize: 100
+  
   liveness: LivenessStatic
   ipaccess: IpAccessShared
   deployment: kubernetes
@@ -198,7 +199,7 @@ apps:
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  accessports: tcp:80,http:443,udp:10002
+  accessports: tcp:80,http:443,udp:10002,tcp:81:tls,http:444:tls
   officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
     name: x1.small
@@ -382,7 +383,7 @@ apps:
   officialfqdn: noportsapp.acmeappco.com
   accesstype: AccessTypeLoadBalancer
 appinstances:
-- key:
+- key: 
     appkey:
       developerkey:
         name: MobiledgeX
@@ -399,6 +400,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
+  uri: smallcluster.tmus-cloud-1.tmus.mobiledgex.net   
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -406,8 +408,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.medium
-
-- key:
+- key: 
     appkey:
       developerkey:
         name: MobiledgeX
@@ -428,7 +429,7 @@ appinstances:
   flavor:
     name: x1.medium
 
-- key:
+- key: 
     appkey:
       developerkey:
         name: AcmeAppCo
@@ -459,6 +460,16 @@ appinstances:
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
+  - proto: LProtoTcp
+    internalport: 81
+    publicport: 81
+    fqdnprefix: someapplication1-tcp.
+    tls: true
+  - proto: LProtoHttp
+    internalport: 444
+    publicport: 443
+    pathprefix: acmeappco/someapplication110/p444
+    tls: true
   flavor:
     name: x1.small
 - key:
@@ -516,9 +527,19 @@ appinstances:
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
+  - proto: LProtoTcp
+    internalport: 81
+    publicport: 81
+    fqdnprefix: someapplication1-tcp.
+    tls: true
+  - proto: LProtoTcp
+    internalport: 444
+    publicport: 444
+    fqdnprefix: someapplication1-tcp.
+    tls: true
   flavor:
     name: x1.small
-- key:
+- key: 
     appkey:
       developerkey:
         name: AcmeAppCo
@@ -602,7 +623,7 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
-- key:
+- key: 
     appkey:
       developerkey:
         name: AcmeAppCo
