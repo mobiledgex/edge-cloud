@@ -637,9 +637,9 @@ var AppInstRequiredArgs = []string{
 	"cluster",
 	"operatororg",
 	"cloudlet",
-	"clusterdevorg",
 }
 var AppInstOptionalArgs = []string{
+	"clusterdevorg",
 	"flavor",
 	"state",
 	"crmoverride",
@@ -773,9 +773,9 @@ var CreateAppInstRequiredArgs = []string{
 	"cluster",
 	"operatororg",
 	"cloudlet",
-	"clusterdevorg",
 }
 var CreateAppInstOptionalArgs = []string{
+	"clusterdevorg",
 	"flavor",
 	"state",
 	"crmoverride",
@@ -793,9 +793,9 @@ var DeleteAppInstRequiredArgs = []string{
 	"cluster",
 	"operatororg",
 	"cloudlet",
-	"clusterdevorg",
 }
 var DeleteAppInstOptionalArgs = []string{
+	"clusterdevorg",
 	"cloudletloc.latitude",
 	"cloudletloc.longitude",
 	"cloudletloc.horizontalaccuracy",
@@ -859,9 +859,9 @@ var UpdateAppInstRequiredArgs = []string{
 	"cluster",
 	"operatororg",
 	"cloudlet",
-	"clusterdevorg",
 }
 var UpdateAppInstOptionalArgs = []string{
+	"clusterdevorg",
 	"crmoverride",
 	"configs.kind",
 	"configs.config",

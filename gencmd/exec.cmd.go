@@ -374,10 +374,10 @@ var RunCommandRequiredArgs = []string{
 	"cluster",
 	"operatororg",
 	"cloudlet",
-	"clusterdevorg",
 	"command",
 }
 var RunCommandOptionalArgs = []string{
+	"clusterdevorg",
 	"containerid",
 }
 var RunConsoleRequiredArgs = []string{
@@ -387,9 +387,9 @@ var RunConsoleRequiredArgs = []string{
 	"cluster",
 	"operatororg",
 	"cloudlet",
-	"clusterdevorg",
 }
 var RunConsoleOptionalArgs = []string{
+	"clusterdevorg",
 	"containerid",
 }
 var ShowLogsRequiredArgs = []string{
@@ -399,9 +399,9 @@ var ShowLogsRequiredArgs = []string{
 	"cluster",
 	"operatororg",
 	"cloudlet",
-	"clusterdevorg",
 }
 var ShowLogsOptionalArgs = []string{
+	"clusterdevorg",
 	"containerid",
 	"since",
 	"tail",

@@ -59,19 +59,19 @@ service ExecApi {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console";
     option (protogen.method_also_required) = "AppInstKey,Cmd.Command";
-    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
   }
   // Run console on a VM
   rpc RunConsole(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console";
-    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
   }
   // View logs for AppInst
   rpc ShowLogs(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,AppInstKey.AppKey.Organization";
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console";
-    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
     option (protogen.non_standard_show) = true;
   }
   // This is used internally to forward requests to other Controllers.

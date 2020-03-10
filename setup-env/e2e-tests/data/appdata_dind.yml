@@ -60,8 +60,8 @@ apps:
   configs:
    - kind: appAccessCustomization
      config: |
-       dnsOverride: "*.[[.Deployment.DeveloperName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"
-       lbTlsCertCommonName: "*.[[.Deployment.DeveloperName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"
+       dnsOverride: "*.[[.Deployment.DeveloperOrg]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"
+       lbTlsCertCommonName: "*.[[.Deployment.DeveloperOrg]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"
 - key:
     organization: MobiledgeX
     name: Face Detection Demo

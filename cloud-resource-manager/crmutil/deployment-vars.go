@@ -16,8 +16,8 @@ type CrmReplaceVars struct {
 	CloudletName string
 	// Cluster Name
 	ClusterName string
-	// Developer Name
-	DeveloperName string
+	// Developer Organization
+	DeveloperOrg string
 	// DNS zone
 	DnsZone string
 }

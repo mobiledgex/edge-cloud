@@ -45,7 +45,7 @@ var testConfigFile = `nfs:
 var testClusterIp = "10.1.1.1"
 var testCloudletName = "TestCloudlet"
 var testClusterName = "TestCluster"
-var testDeveloperName = "AcmeAppCo"
+var testDeveloperOrg = "AcmeAppCo"
 var testDnsZone = "mobiledgex-test.net"
 
 var testManifestResult = `apiVersion: apps/v1
@@ -87,8 +87,8 @@ var testConfigFileWrongVar = `nfs:
 `
 
 var testAppAccessConfig = `
-dnsOverride: "*.[[.Deployment.DeveloperName]]-[[.Deployment.ClusterName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"
-lbTlsCertCommonName: ""*.[[.Deployment.DeveloperName]]-[[.Deployment.ClusterName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"`
+dnsOverride: "*.[[.Deployment.DeveloperOrg]]-[[.Deployment.ClusterName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"
+lbTlsCertCommonName: ""*.[[.Deployment.DeveloperOrg]]-[[.Deployment.ClusterName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"`
 
 var testAppAccessConfigResult = `
 dnsOverride: "*.AcmeAppCo-TestCluster-TestCloudlet.mobiledgex-test.net"
@@ -97,11 +97,11 @@ lbTlsCertCommonName: ""*.AcmeAppCo-TestCluster-TestCloudlet.mobiledgex-test.net"
 func TestCrmDeploymentVars(t *testing.T) {
 	deploymentVars := DeploymentReplaceVars{
 		Deployment: CrmReplaceVars{
-			ClusterIp:     testClusterIp,
-			CloudletName:  testCloudletName,
-			ClusterName:   testClusterName,
-			DeveloperName: testDeveloperName,
-			DnsZone:       testDnsZone,
+			ClusterIp:    testClusterIp,
+			CloudletName: testCloudletName,
+			ClusterName:  testClusterName,
+			DeveloperOrg: testDeveloperOrg,
+			DnsZone:      testDnsZone,
 		},
 	}
 	// positive tests

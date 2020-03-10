@@ -105,7 +105,7 @@ service ClusterInstApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Organization";
     option (protogen.mc2_custom_authz) = true;
     option (protogen.mc2_streamer_cache) = true;
   }
@@ -116,7 +116,7 @@ service ClusterInstApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Organization";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Update Cluster Instance. Updates an instance of a Cluster deployed on a Cloudlet.
@@ -126,7 +126,7 @@ service ClusterInstApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Organization";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Show Cluster Instances. Lists all the cluster instances managed by Edge Controller.
@@ -135,7 +135,7 @@ service ClusterInstApi {
       post: "/show/clusterinst"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,Key.Developer";
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,Key.Organization";
   }
 }
 
