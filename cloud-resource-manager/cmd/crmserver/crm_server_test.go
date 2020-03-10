@@ -135,7 +135,7 @@ func TestCRM(t *testing.T) {
 
 	notifyAddr := "127.0.0.1:61245"
 
-	data := edgeproto.ApplicationData{}
+	data := edgeproto.AllData{}
 	err = yaml.Unmarshal([]byte(yamlData), &data)
 	require.Nil(t, err, "unmarshal yaml data")
 

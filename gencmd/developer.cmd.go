@@ -38,6 +38,9 @@ var CreateDeveloperCmd = &cli.Command{
 }
 
 func runCreateDeveloper(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Developer)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -92,6 +95,9 @@ var DeleteDeveloperCmd = &cli.Command{
 }
 
 func runDeleteDeveloper(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Developer)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -146,6 +152,9 @@ var UpdateDeveloperCmd = &cli.Command{
 }
 
 func runUpdateDeveloper(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Developer)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -200,6 +209,9 @@ var ShowDeveloperCmd = &cli.Command{
 }
 
 func runShowDeveloper(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Developer)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -222,6 +234,7 @@ func ShowDeveloper(c *cli.Command, in *edgeproto.Developer) error {
 		}
 		return fmt.Errorf("ShowDeveloper failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.Developer, 0)
 	for {
 		obj, err := stream.Recv()
@@ -284,6 +297,9 @@ var DeveloperAliasArgs = []string{
 	"name=key.name",
 }
 var DeveloperComments = map[string]string{
-	"name": "Organization or Company Name that a Developer is part of",
+	"fields": "Fields are used for the Update API to specify which fields to apply",
+	"name":   "Organization or Company Name that a Developer is part of",
 }
-var DeveloperSpecialArgs = map[string]string{}
+var DeveloperSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}

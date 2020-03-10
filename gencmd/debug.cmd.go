@@ -49,6 +49,21 @@ func DebugReplyHideTags(in *edgeproto.DebugReply) {
 	}
 }
 
+func DebugDataHideTags(in *edgeproto.DebugData) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	for i0 := 0; i0 < len(in.Requests); i0++ {
+		if _, found := tags["nocmp"]; found {
+			in.Requests[i0].Node.Name = ""
+		}
+	}
+}
+
 var DebugApiCmd edgeproto.DebugApiClient
 
 var EnableDebugLevelsCmd = &cli.Command{
@@ -64,6 +79,9 @@ var EnableDebugLevelsCmd = &cli.Command{
 }
 
 func runEnableDebugLevels(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.DebugRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -86,6 +104,7 @@ func EnableDebugLevels(c *cli.Command, in *edgeproto.DebugRequest) error {
 		}
 		return fmt.Errorf("EnableDebugLevels failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.DebugReply, 0)
 	for {
 		obj, err := stream.Recv()
@@ -138,6 +157,9 @@ var DisableDebugLevelsCmd = &cli.Command{
 }
 
 func runDisableDebugLevels(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.DebugRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -160,6 +182,7 @@ func DisableDebugLevels(c *cli.Command, in *edgeproto.DebugRequest) error {
 		}
 		return fmt.Errorf("DisableDebugLevels failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.DebugReply, 0)
 	for {
 		obj, err := stream.Recv()
@@ -201,7 +224,8 @@ func DisableDebugLevelss(c *cli.Command, data []edgeproto.DebugRequest, err *err
 
 var ShowDebugLevelsCmd = &cli.Command{
 	Use:          "ShowDebugLevels",
-	OptionalArgs: strings.Join(append(DebugRequestRequiredArgs, DebugRequestOptionalArgs...), " "),
+	RequiredArgs: strings.Join(ShowDebugLevelsRequiredArgs, " "),
+	OptionalArgs: strings.Join(ShowDebugLevelsOptionalArgs, " "),
 	AliasArgs:    strings.Join(DebugRequestAliasArgs, " "),
 	SpecialArgs:  &DebugRequestSpecialArgs,
 	Comments:     DebugRequestComments,
@@ -211,6 +235,9 @@ var ShowDebugLevelsCmd = &cli.Command{
 }
 
 func runShowDebugLevels(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.DebugRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -233,6 +260,7 @@ func ShowDebugLevels(c *cli.Command, in *edgeproto.DebugRequest) error {
 		}
 		return fmt.Errorf("ShowDebugLevels failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.DebugReply, 0)
 	for {
 		obj, err := stream.Recv()
@@ -285,6 +313,9 @@ var RunDebugCmd = &cli.Command{
 }
 
 func runRunDebug(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.DebugRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -307,6 +338,7 @@ func RunDebug(c *cli.Command, in *edgeproto.DebugRequest) error {
 		}
 		return fmt.Errorf("RunDebug failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.DebugReply, 0)
 	for {
 		obj, err := stream.Recv()
@@ -405,6 +437,31 @@ var DebugReplyComments = map[string]string{
 	"id":                                "Id used internally",
 }
 var DebugReplySpecialArgs = map[string]string{}
+var DebugDataRequiredArgs = []string{}
+var DebugDataOptionalArgs = []string{
+	"requests.node.name",
+	"requests.node.type",
+	"requests.node.cloudletkey.operatorkey.name",
+	"requests.node.cloudletkey.name",
+	"requests.node.region",
+	"requests.levels",
+	"requests.cmd",
+	"requests.pretty",
+	"requests.id",
+}
+var DebugDataAliasArgs = []string{}
+var DebugDataComments = map[string]string{
+	"requests.node.name":                         "Name or hostname of node",
+	"requests.node.type":                         "Node type",
+	"requests.node.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"requests.node.cloudletkey.name":             "Name of the cloudlet",
+	"requests.node.region":                       "Region the node is in",
+	"requests.levels":                            "Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,mexos,metrics,upgrade,info,sampled",
+	"requests.cmd":                               "Debug command",
+	"requests.pretty":                            "if possible, make output pretty",
+	"requests.id":                                "Id used internally",
+}
+var DebugDataSpecialArgs = map[string]string{}
 var EnableDebugLevelsRequiredArgs = []string{
 	"levels",
 }

@@ -38,6 +38,9 @@ var CreateOperatorCmd = &cli.Command{
 }
 
 func runCreateOperator(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Operator)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -92,6 +95,9 @@ var DeleteOperatorCmd = &cli.Command{
 }
 
 func runDeleteOperator(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Operator)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -146,6 +152,9 @@ var UpdateOperatorCmd = &cli.Command{
 }
 
 func runUpdateOperator(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Operator)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -200,6 +209,9 @@ var ShowOperatorCmd = &cli.Command{
 }
 
 func runShowOperator(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Operator)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -222,6 +234,7 @@ func ShowOperator(c *cli.Command, in *edgeproto.Operator) error {
 		}
 		return fmt.Errorf("ShowOperator failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.Operator, 0)
 	for {
 		obj, err := stream.Recv()
@@ -282,6 +295,9 @@ var CreateOperatorCodeCmd = &cli.Command{
 }
 
 func runCreateOperatorCode(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.OperatorCode)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -336,6 +352,9 @@ var DeleteOperatorCodeCmd = &cli.Command{
 }
 
 func runDeleteOperatorCode(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.OperatorCode)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -389,6 +408,9 @@ var ShowOperatorCodeCmd = &cli.Command{
 }
 
 func runShowOperatorCode(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.OperatorCode)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -411,6 +433,7 @@ func ShowOperatorCode(c *cli.Command, in *edgeproto.OperatorCode) error {
 		}
 		return fmt.Errorf("ShowOperatorCode failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.OperatorCode, 0)
 	for {
 		obj, err := stream.Recv()
@@ -472,9 +495,12 @@ var OperatorAliasArgs = []string{
 	"name=key.name",
 }
 var OperatorComments = map[string]string{
-	"name": "Company or Organization name of the operator",
+	"fields": "Fields are used for the Update API to specify which fields to apply",
+	"name":   "Company or Organization name of the operator",
 }
-var OperatorSpecialArgs = map[string]string{}
+var OperatorSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}
 var OperatorCodeRequiredArgs = []string{}
 var OperatorCodeOptionalArgs = []string{
 	"code",

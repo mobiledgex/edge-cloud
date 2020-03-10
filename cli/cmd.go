@@ -17,6 +17,8 @@ var Parsable bool
 var Data string
 var Datafile string
 var Debug bool
+var OutputStream bool
+var SilenceUsage bool
 var OutputFormat = OutputFormatYaml
 
 func AddInputFlags(flagSet *pflag.FlagSet) {
@@ -27,10 +29,12 @@ func AddInputFlags(flagSet *pflag.FlagSet) {
 func AddOutputFlags(flagSet *pflag.FlagSet) {
 	flagSet.StringVar(&OutputFormat, "output-format", OutputFormatYaml, fmt.Sprintf("output format: %s, %s, or %s", OutputFormatYaml, OutputFormatJson, OutputFormatJsonCompact))
 	flagSet.BoolVar(&Parsable, "parsable", false, "generate parsable output")
+	flagSet.BoolVar(&OutputStream, "output-stream", true, "stream output incrementally if supported by command")
 }
 
 func AddDebugFlag(flagSet *pflag.FlagSet) {
 	flagSet.BoolVar(&Debug, "debug", false, "debug")
+	flagSet.BoolVar(&SilenceUsage, "silence-usage", false, "silence-usage")
 }
 
 // HideTags is a comma separated list of tag names that are matched

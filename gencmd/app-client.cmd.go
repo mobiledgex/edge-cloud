@@ -75,6 +75,9 @@ var RegisterClientCmd = &cli.Command{
 }
 
 func runRegisterClient(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.RegisterClientRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -129,6 +132,9 @@ var FindCloudletCmd = &cli.Command{
 }
 
 func runFindCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.FindCloudletRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -183,6 +189,9 @@ var VerifyLocationCmd = &cli.Command{
 }
 
 func runVerifyLocation(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.VerifyLocationRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -237,6 +246,9 @@ var GetLocationCmd = &cli.Command{
 }
 
 func runGetLocation(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.GetLocationRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -291,6 +303,9 @@ var AddUserToGroupCmd = &cli.Command{
 }
 
 func runAddUserToGroup(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.DynamicLocGroupRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -345,6 +360,9 @@ var GetAppInstListCmd = &cli.Command{
 }
 
 func runGetAppInstList(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.AppInstListRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -399,6 +417,9 @@ var GetFqdnListCmd = &cli.Command{
 }
 
 func runGetFqdnList(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.FqdnListRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -453,6 +474,9 @@ var GetQosPositionKpiCmd = &cli.Command{
 }
 
 func runGetQosPositionKpi(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.QosPositionRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -475,6 +499,7 @@ func GetQosPositionKpi(c *cli.Command, in *distributed_match_engine.QosPositionR
 		}
 		return fmt.Errorf("GetQosPositionKpi failed: %s", errstr)
 	}
+
 	objs := make([]*distributed_match_engine.QosPositionKpiReply, 0)
 	for {
 		obj, err := stream.Recv()
