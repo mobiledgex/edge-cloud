@@ -109,7 +109,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  tls: true
 - key:
     operatorkey:
       name: tmus
@@ -120,7 +119,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  tls: true
 - key:
     operatorkey:
       name: tmus

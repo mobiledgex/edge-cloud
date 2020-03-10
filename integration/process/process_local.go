@@ -406,8 +406,8 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
-	if p.TlsSupport {
-		args = append(args, "-generateCerts")
+	if p.CommercialCerts {
+		args = append(args, "-commercialCerts")
 	}
 	return args
 }

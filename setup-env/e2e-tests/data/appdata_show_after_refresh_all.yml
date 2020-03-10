@@ -132,7 +132,6 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-1
   containerversion: 2020-10-10
-  tls: true
 - key:
     operatorkey:
       name: tmus
@@ -147,7 +146,6 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-2
   containerversion: 2020-10-10
-  tls: true
 - key:
     operatorkey:
       name: tmus

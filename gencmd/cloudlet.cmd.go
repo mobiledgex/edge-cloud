@@ -1018,6 +1018,7 @@ var PlatformConfigOptionalArgs = []string{
 	"span",
 	"cleanupmode",
 	"region",
+	"commercialcerts",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -1032,6 +1033,7 @@ var PlatformConfigComments = map[string]string{
 	"span":                  "Span string",
 	"cleanupmode":           "Internal cleanup flag",
 	"region":                "Region",
+	"commercialcerts":       "Get certs from vault or generate your own",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -1088,7 +1090,6 @@ var CloudletOptionalArgs = []string{
 	"accessvars",
 	"vmimageversion",
 	"packageversion",
-	"tls",
 }
 var CloudletAliasArgs = []string{
 	"operator=key.operatorkey.name",
@@ -1135,12 +1136,12 @@ var CloudletComments = map[string]string{
 	"config.span":                         "Span string",
 	"config.cleanupmode":                  "Internal cleanup flag",
 	"config.region":                       "Region",
+	"config.commercialcerts":              "Get certs from vault or generate your own",
 	"restagmap.value.name":                "Resource Table Name",
 	"restagmap.value.operatorkey.name":    "Company or Organization name of the operator",
 	"accessvars":                          "Variables required to access cloudlet",
 	"vmimageversion":                      "MobiledgeX baseimage version where CRM services reside",
 	"packageversion":                      "MobiledgeX OS package version on baseimage where CRM services reside",
-	"tls":                                 "Tls option for cloudlets",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1312,5 +1313,4 @@ var CreateCloudletOptionalArgs = []string{
 	"accessvars",
 	"vmimageversion",
 	"packageversion",
-	"tls",
 }

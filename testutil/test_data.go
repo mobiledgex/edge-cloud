@@ -297,7 +297,6 @@ var CloudletData = []edgeproto.Cloudlet{
 		NotifySrvAddr: "127.0.0.1:51002",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
 		PhysicalName:  "NewYorkSite",
-		Tls:           true,
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
