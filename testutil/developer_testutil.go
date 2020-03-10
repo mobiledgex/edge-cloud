@@ -314,9 +314,6 @@ func (r *Run) DeveloperApi(data *[]edgeproto.Developer, dataMap interface{}, dat
 	log.DebugLog(log.DebugLevelApi, "API for Developer", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.Developer{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowDeveloper(r.ctx, obj)
 		if err != nil {
 			r.logErr("DeveloperApi", err)
@@ -325,7 +322,7 @@ func (r *Run) DeveloperApi(data *[]edgeproto.Developer, dataMap interface{}, dat
 			if !ok {
 				panic(fmt.Sprintf("RunDeveloperApi expected dataOut type *[]edgeproto.Developer, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
 	}
@@ -376,6 +373,17 @@ func (r *Run) DeveloperApi(data *[]edgeproto.Developer, dataMap interface{}, dat
 					panic(fmt.Sprintf("RunDeveloperApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
 				}
 				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowDeveloper(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("DeveloperApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Developer)
+				if !ok {
+					panic(fmt.Sprintf("RunDeveloperApi expected dataOut type *[]edgeproto.Developer, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
 			}
 		}
 	}

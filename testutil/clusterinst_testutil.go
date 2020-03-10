@@ -541,9 +541,6 @@ func (r *Run) ClusterInstApi(data *[]edgeproto.ClusterInst, dataMap interface{},
 	log.DebugLog(log.DebugLevelApi, "API for ClusterInst", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.ClusterInst{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowClusterInst(r.ctx, obj)
 		if err != nil {
 			r.logErr("ClusterInstApi", err)
@@ -552,7 +549,7 @@ func (r *Run) ClusterInstApi(data *[]edgeproto.ClusterInst, dataMap interface{},
 			if !ok {
 				panic(fmt.Sprintf("RunClusterInstApi expected dataOut type *[]edgeproto.ClusterInst, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
 	}
@@ -603,6 +600,17 @@ func (r *Run) ClusterInstApi(data *[]edgeproto.ClusterInst, dataMap interface{},
 					panic(fmt.Sprintf("RunClusterInstApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
 				}
 				*outp = append(*outp, out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowClusterInst(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("ClusterInstApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.ClusterInst)
+				if !ok {
+					panic(fmt.Sprintf("RunClusterInstApi expected dataOut type *[]edgeproto.ClusterInst, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
 			}
 		}
 	}
@@ -660,9 +668,6 @@ func (r *Run) ClusterInstInfoApi(data *[]edgeproto.ClusterInstInfo, dataMap inte
 	log.DebugLog(log.DebugLevelApi, "API for ClusterInstInfo", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.ClusterInstInfo{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowClusterInstInfo(r.ctx, obj)
 		if err != nil {
 			r.logErr("ClusterInstInfoApi", err)
@@ -671,9 +676,25 @@ func (r *Run) ClusterInstInfoApi(data *[]edgeproto.ClusterInstInfo, dataMap inte
 			if !ok {
 				panic(fmt.Sprintf("RunClusterInstInfoApi expected dataOut type *[]edgeproto.ClusterInstInfo, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "showfiltered":
+			out, err := r.client.ShowClusterInstInfo(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("ClusterInstInfoApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.ClusterInstInfo)
+				if !ok {
+					panic(fmt.Sprintf("RunClusterInstInfoApi expected dataOut type *[]edgeproto.ClusterInstInfo, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		}
 	}
 }
 

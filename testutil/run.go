@@ -2,9 +2,12 @@ package testutil
 
 import (
 	"context"
+	"log"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
+
+const TagExpectErr = "expecterr"
 
 type Run struct {
 	client Client
@@ -39,6 +42,18 @@ func (r *Run) logErr(desc string, err error) {
 		Msg:  err.Error(),
 	}
 	r.Errs = append(r.Errs, e)
+}
+
+func (r *Run) CheckErrs(api, tag string) {
+	if tag == TagExpectErr {
+		// comparing output, do not fail for api errors
+		return
+	}
+	// should not be any errors
+	for _, err := range r.Errs {
+		log.Printf("\"%s\" run %s failed: %s\n", api, err.Desc, err.Msg)
+		*r.Rc = false
+	}
 }
 
 func FilterStreamResults(in [][]edgeproto.Result) [][]edgeproto.Result {
