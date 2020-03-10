@@ -1439,15 +1439,17 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	}
 
 	msgtyp := m.gen.TypeName(desc)
-	m.P("func (m *", msgtyp, ") CopyInFields(src *", msgtyp, ") int {")
-	m.P("changed := 0")
-	if gensupport.HasGrpcFields(message) {
-		m.P("fmap := MakeFieldMap(src.Fields)")
+	if GetGenerateCopyInFields(message) {
+		m.P("func (m *", msgtyp, ") CopyInFields(src *", msgtyp, ") int {")
+		m.P("changed := 0")
+		if gensupport.HasGrpcFields(message) {
+			m.P("fmap := MakeFieldMap(src.Fields)")
+		}
+		m.generateCopyIn(make([]string, 0), make([]string, 0), desc, make([]*generator.Descriptor, 0), gensupport.HasGrpcFields(message))
+		m.P("return changed")
+		m.P("}")
+		m.P("")
 	}
-	m.generateCopyIn(make([]string, 0), make([]string, 0), desc, make([]*generator.Descriptor, 0), gensupport.HasGrpcFields(message))
-	m.P("return changed")
-	m.P("}")
-	m.P("")
 
 	if GetGenerateCud(message) {
 		keyType, err := m.support.GetMessageKeyType(m.gen, desc)
@@ -1794,6 +1796,10 @@ func (m *mex) generateMethod(file *generator.FileDescriptor, service *descriptor
 
 func GetGenerateMatches(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateMatches, false)
+}
+
+func GetGenerateCopyInFields(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCopyInFields, true)
 }
 
 func GetGenerateCud(message *descriptor.DescriptorProto) bool {

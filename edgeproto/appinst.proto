@@ -138,7 +138,8 @@ message AppInst {
   option (protogen.notify_filter_cloudlet_key) = true;
   option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,NodeFlavor,ExternalVolumeSize,AvailabilityZone";
   option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,developer=Key.AppKey.DeveloperKey.Name,cluster=Key.ClusterInstKey.ClusterKey.Name,clusterdeveloper=Key.ClusterInstKey.Developer,cloudlet=Key.ClusterInstKey.CloudletKey.Name,operator=Key.ClusterInstKey.CloudletKey.OperatorKey.Name,flavor=Flavor.Name";
-  option (protogen.not_required) = "Key.ClusterInstKey.Developer";
+  // cluster key gets set to default value for VMs if not set
+  option (protogen.not_required) = "Key.ClusterInstKey.Developer,Key.ClusterInstKey.ClusterKey.Name";
   option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
 }
 

@@ -130,9 +130,6 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 	// generate aliases
 	g.P("var ", msgname, "AliasArgs = []string{")
 	for _, arg := range allargs {
-		if arg.Name == "Fields" {
-			continue
-		}
 		// keep noconfig ones here because aliases
 		// may be used for tabular output later.
 
@@ -158,7 +155,7 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 	// generate comments
 	g.P("var ", msgname, "Comments = map[string]string{")
 	for _, arg := range allargs {
-		if arg.Name == "Fields" || arg.Comment == "" {
+		if arg.Comment == "" {
 			continue
 		}
 		alias, ok := aliasMap[arg.Name]
@@ -179,6 +176,9 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 	sort.Strings(keys)
 	for _, arg := range keys {
 		argType := specialArgs[arg]
+		if prefixMessageToAlias {
+			arg = *message.Name + "." + arg
+		}
 		g.P("\"", strings.ToLower(arg), "\": \"", argType, "\",")
 	}
 	g.P("}")
@@ -228,7 +228,7 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 			arg.Comment = arg.Comment + ", " + text + " " + strings.Join(strs, ", ")
 			allargs = append(allargs, arg)
 		} else {
-			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED && *field.Type == descriptor.FieldDescriptorProto_TYPE_STRING && name != "Fields" {
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED && *field.Type == descriptor.FieldDescriptorProto_TYPE_STRING {
 				specialArgs[hierName] = "StringArray"
 			}
 			allargs = append(allargs, arg)

@@ -59,6 +59,9 @@ var ShowControllerCmd = &cli.Command{
 }
 
 func runShowController(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Controller)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -81,6 +84,7 @@ func ShowController(c *cli.Command, in *edgeproto.Controller) error {
 		}
 		return fmt.Errorf("ShowController failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.Controller, 0)
 	for {
 		obj, err := stream.Recv()
@@ -144,10 +148,13 @@ var ControllerOptionalArgs = []string{
 }
 var ControllerAliasArgs = []string{}
 var ControllerComments = map[string]string{
+	"fields":      "Fields are used for the Update API to specify which fields to apply",
 	"key.addr":    "external API address",
 	"buildmaster": "Build Master Version",
 	"buildhead":   "Build Head Version",
 	"buildauthor": "Build Author",
 	"hostname":    "Hostname",
 }
-var ControllerSpecialArgs = map[string]string{}
+var ControllerSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}
