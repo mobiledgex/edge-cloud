@@ -123,6 +123,13 @@ func (s *ExecApi) RunConsole(ctx context.Context, req *edgeproto.ExecRequest) (*
 }
 
 func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+	if !req.Webrtc {
+		// Make sure EdgeTurn Server Address is present
+		if *edgeTurnAddr == "" {
+			return nil, fmt.Errorf("EdgeTurn server address is required to run commands in Non Webrtc mode")
+		}
+		req.EdgeTurnAddr = *edgeTurnAddr
+	}
 	// Forward the offer.
 	// Currently we don't know which controller has the CRM connected
 	// (or if it's even present), so just broadcast to all.

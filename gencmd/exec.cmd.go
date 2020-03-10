@@ -331,6 +331,7 @@ var ExecRequestOptionalArgs = []string{
 	"tail",
 	"timestamps",
 	"follow",
+	"webrtc",
 }
 var ExecRequestAliasArgs = []string{
 	"developer=appinstkey.appkey.developerkey.name",
@@ -365,6 +366,8 @@ var ExecRequestComments = map[string]string{
 	"follow":           "Stream data",
 	"console.url":      "VM Console URL",
 	"timeout":          "Timeout",
+	"webrtc":           "WebRTC",
+	"edgeturnaddr":     "EdgeTurn Server Address",
 }
 var ExecRequestSpecialArgs = map[string]string{}
 var RunCommandRequiredArgs = []string{
@@ -379,6 +382,7 @@ var RunCommandRequiredArgs = []string{
 var RunCommandOptionalArgs = []string{
 	"clusterdeveloper",
 	"containerid",
+	"webrtc",
 }
 var RunConsoleRequiredArgs = []string{
 	"developer",
@@ -391,6 +395,7 @@ var RunConsoleRequiredArgs = []string{
 var RunConsoleOptionalArgs = []string{
 	"clusterdeveloper",
 	"containerid",
+	"webrtc",
 }
 var ShowLogsRequiredArgs = []string{
 	"developer",
@@ -407,4 +412,5 @@ var ShowLogsOptionalArgs = []string{
 	"tail",
 	"timestamps",
 	"follow",
+	"webrtc",
 }

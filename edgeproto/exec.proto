@@ -46,9 +46,13 @@ message ExecRequest {
   RunVMConsole console = 11;
   // Timeout
   int64 timeout = 12 [(gogoproto.casttype) = "Duration"];
+  // WebRTC
+  bool webrtc = 13;
+  // EdgeTurn Server Address
+  string edge_turn_addr = 14 [(protogen.backend) = true];
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
-  option (protogen.noconfig) = "Offer,Answer,Err,Console.Url,Timeout";
+  option (protogen.noconfig) = "Offer,Answer,Err,Console.Url,Timeout,EdgeTurnAddr";
   option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow";
   option (protogen.also_required) = "AppInstKey";
 }
@@ -57,20 +61,20 @@ service ExecApi {
   // Run a Command or Shell on a container
   rpc RunCommand(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.DeveloperKey.Name";
-    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,EdgeTurnAddr";
     option (protogen.method_also_required) = "AppInstKey,Cmd.Command";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
   }
   // Run console on a VM
   rpc RunConsole(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.DeveloperKey.Name";
-    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console,EdgeTurnAddr";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
   }
   // View logs for AppInst
   rpc ShowLogs(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,AppInstKey.AppKey.DeveloperKey.Name";
-    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console,EdgeTurnAddr";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
     option (protogen.non_standard_show) = true;
   }

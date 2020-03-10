@@ -8,9 +8,11 @@ import (
 	"io"
 	"net"
 	"net/url"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
 	ssh "github.com/mobiledgex/golang-ssh"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -63,8 +65,9 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			req.AppInstKey.AppKey.GetKeyString())
 	}
 
+	consoleUrl := ""
 	if req.Console != nil {
-		req.Console.Url, err = cd.platform.GetConsoleUrl(ctx, &app)
+		consoleUrl, err = cd.platform.GetConsoleUrl(ctx, &app)
 		if err != nil {
 			return err
 		}
@@ -87,69 +90,108 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		}
 	}
 
-	offer := webrtc.SessionDescription{}
-	err = json.Unmarshal([]byte(req.Offer), &offer)
-	if err != nil {
-		return fmt.Errorf("unable to decode offer, %v", err)
-	}
+	if req.Webrtc {
+		offer := webrtc.SessionDescription{}
+		err = json.Unmarshal([]byte(req.Offer), &offer)
+		if err != nil {
+			return fmt.Errorf("unable to decode offer, %v", err)
+		}
 
-	// hard code config for now
-	config := webrtc.Configuration{
-		ICEServers: []webrtc.ICEServer{
-			{
-				URLs: []string{"stun:stun.mobiledgex.net:19302"},
+		// hard code config for now
+		config := webrtc.Configuration{
+			ICEServers: []webrtc.ICEServer{
+				{
+					URLs: []string{"stun:stun.mobiledgex.net:19302"},
+				},
 			},
-		},
-	}
+		}
 
-	// create a new peer connection
-	peerConn, err := webrtc.NewPeerConnection(config)
-	if err != nil {
-		log.DebugLog(log.DebugLevelApi,
-			"failed to establish peer connection",
-			"config", config, "err", err)
-		return fmt.Errorf("failed to establish peer connection, %v", err)
-	}
+		// create a new peer connection
+		peerConn, err := webrtc.NewPeerConnection(config)
+		if err != nil {
+			log.DebugLog(log.DebugLevelApi,
+				"failed to establish peer connection",
+				"config", config, "err", err)
+			return fmt.Errorf("failed to establish peer connection, %v", err)
+		}
 
-	// register handlers
-	if req.Console != nil {
-		peerConn.OnDataChannel(run.RTCTunnel)
+		// register handlers
+		if req.Console != nil {
+			peerConn.OnDataChannel(run.RTCTunnel)
+		} else {
+			peerConn.OnDataChannel(run.DataChannel)
+		}
+
+		// set remote description
+		err = peerConn.SetRemoteDescription(offer)
+		if err != nil {
+			log.DebugLog(log.DebugLevelApi,
+				"failed to set remote description",
+				"offer", offer, "peerConn", peerConn, "err", err)
+			return fmt.Errorf("failed to set remote description, %v", err)
+		}
+		// create answer
+		answer, err := peerConn.CreateAnswer(nil)
+		if err != nil {
+			log.DebugLog(log.DebugLevelApi,
+				"failed to create answer",
+				"peerConn", peerConn, "err", err)
+			return fmt.Errorf("failed to set answer, %v", err)
+		}
+		// set local description, and starts out UDP listeners
+		err = peerConn.SetLocalDescription(answer)
+		if err != nil {
+			log.DebugLog(log.DebugLevelApi,
+				"failed to set local description",
+				"peerConn", peerConn, "err", err)
+			return fmt.Errorf("failed to set local description, %v", err)
+		}
+
+		// send back answer
+		answerBytes, err := json.Marshal(answer)
+		if err != nil {
+			return fmt.Errorf("failed to encode answer, %v", err)
+		}
+		req.Answer = string(answerBytes)
+		log.DebugLog(log.DebugLevelApi, "returning answer")
 	} else {
-		peerConn.OnDataChannel(run.DataChannel)
+		if req.EdgeTurnAddr == "" {
+			return fmt.Errorf("no edgeturn server address specified")
+		}
+
+		turnConn, err := tls.Dial("tcp", req.EdgeTurnAddr, &tls.Config{
+			InsecureSkipVerify: true,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to connect to edgeturn server: %v", err)
+		}
+		defer turnConn.Close()
+
+		// Fetch session info
+		var sessInfo util.SessionInfo
+		d := json.NewDecoder(turnConn)
+		err = d.Decode(&sessInfo)
+		if err != nil {
+			return fmt.Errorf("failed to decode session info: %v", err)
+		}
+		log.DebugLog(log.DebugLevelApi, "recieved session info from edgeturn server", "info", sessInfo)
+
+		if req.Console != nil {
+			//TODO: Get proper URL
+			consoleUrlParts := strings.Split(consoleUrl, "?token=")
+			addrParts := strings.Split(req.EdgeTurnAddr, ":")
+
+			proxyUrl := addrParts[0] + ":" + sessInfo.Port + "/" + consoleUrlParts[len(consoleUrlParts)-1]
+			req.Console.Url = proxyUrl
+
+			// Notify controller about the new proxy Console URL
+			cd.ExecReqSend.Update(ctx, req)
+			run.proxyConsoleConn(consoleUrl, turnConn)
+		} else {
+			run.proxyRawConn(turnConn)
+		}
 	}
 
-	// set remote description
-	err = peerConn.SetRemoteDescription(offer)
-	if err != nil {
-		log.DebugLog(log.DebugLevelApi,
-			"failed to set remote description",
-			"offer", offer, "peerConn", peerConn, "err", err)
-		return fmt.Errorf("failed to set remote description, %v", err)
-	}
-	// create answer
-	answer, err := peerConn.CreateAnswer(nil)
-	if err != nil {
-		log.DebugLog(log.DebugLevelApi,
-			"failed to create answer",
-			"peerConn", peerConn, "err", err)
-		return fmt.Errorf("failed to set answer, %v", err)
-	}
-	// set local description, and starts out UDP listeners
-	err = peerConn.SetLocalDescription(answer)
-	if err != nil {
-		log.DebugLog(log.DebugLevelApi,
-			"failed to set local description",
-			"peerConn", peerConn, "err", err)
-		return fmt.Errorf("failed to set local description, %v", err)
-	}
-
-	// send back answer
-	answerBytes, err := json.Marshal(answer)
-	if err != nil {
-		return fmt.Errorf("failed to encode answer, %v", err)
-	}
-	req.Answer = string(answerBytes)
-	log.DebugLog(log.DebugLevelApi, "returning answer")
 	return nil
 }
 
@@ -182,81 +224,94 @@ func (s *WebrtcExec) DataChannel(d *webrtc.DataChannel) {
 }
 
 func (s *WebrtcExec) RTCTunnel(d *webrtc.DataChannel) {
-	var sess *smux.Session
 	d.OnOpen(func() {
-		urlObj, err := url.Parse(s.req.Console.Url)
-		if err != nil {
-			log.DebugLog(log.DebugLevelApi, "failed to parse console url", "url", s.req.Console.Url, "err", err)
-			return
-		}
 		dcconn, err := webrtcutil.WrapDataChannel(d)
 		if err != nil {
 			log.DebugLog(log.DebugLevelApi, "failed to wrap webrtc datachannel", "err", err)
 			return
 		}
-		sess, err = smux.Server(dcconn, nil)
+		s.proxyConsoleConn(s.req.Console.Url, dcconn)
+	})
+}
+
+func (s *WebrtcExec) proxyConsoleConn(fromUrl string, toConn io.ReadWriteCloser) {
+	urlObj, err := url.Parse(fromUrl)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "failed to parse console url", "url", fromUrl, "err", err)
+		return
+	}
+	sess, err := smux.Server(toConn, nil)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "failed to setup smux server", "err", err)
+		return
+	}
+	defer sess.Close()
+	log.DebugLog(log.DebugLevelApi, "Successfully started proxy", "fromUrl", fromUrl)
+	for {
+		stream, err := sess.AcceptStream()
 		if err != nil {
-			log.DebugLog(log.DebugLevelApi, "failed to setup smux server", "err", err)
+			if err.Error() != io.ErrClosedPipe.Error() {
+				log.DebugLog(log.DebugLevelApi, "failed to setup smux acceptstream", "err", err)
+			}
 			return
 		}
-		log.DebugLog(log.DebugLevelApi, "Successfully started console proxy")
-		for {
-			stream, err := sess.AcceptStream()
+		var server net.Conn
+		if urlObj.Scheme == "http" {
+			server, err = net.Dial("tcp", urlObj.Host)
 			if err != nil {
-				if err.Error() != io.ErrClosedPipe.Error() {
-					log.DebugLog(log.DebugLevelApi, "failed to setup smux acceptstream", "err", err)
-				}
+				log.DebugLog(log.DebugLevelApi, "failed to get console", "err", err)
 				return
 			}
-			var server net.Conn
-			if urlObj.Scheme == "http" {
-				server, err = net.Dial("tcp", urlObj.Host)
-				if err != nil {
-					log.DebugLog(log.DebugLevelApi, "failed to get console", "err", err)
-					return
-				}
-			} else if urlObj.Scheme == "https" {
-				server, err = tls.Dial("tcp", urlObj.Host, &tls.Config{
-					InsecureSkipVerify: true,
-				})
-				if err != nil {
-					log.DebugLog(log.DebugLevelApi, "failed to get console", "err", err)
-					return
-				}
-			} else {
-				log.DebugLog(log.DebugLevelApi, "unsupported scheme", "scheme", urlObj.Scheme)
+		} else if urlObj.Scheme == "https" {
+			server, err = tls.Dial("tcp", urlObj.Host, &tls.Config{
+				InsecureSkipVerify: true,
+			})
+			if err != nil {
+				log.DebugLog(log.DebugLevelApi, "failed to get console", "err", err)
 				return
 			}
-			go func(server net.Conn, stream *smux.Stream) {
-				buf := make([]byte, 1500)
-				for {
-					n, err := stream.Read(buf)
-					if err != nil {
-						break
-					}
-					server.Write(buf[:n])
+		} else {
+			log.DebugLog(log.DebugLevelApi, "unsupported scheme", "scheme", urlObj.Scheme)
+			return
+		}
+		go func(server net.Conn, stream *smux.Stream) {
+			buf := make([]byte, 1500)
+			for {
+				n, err := stream.Read(buf)
+				if err != nil {
+					break
 				}
-				stream.Close()
-				server.Close()
-			}(server, stream)
+				server.Write(buf[:n])
+			}
+			stream.Close()
+			server.Close()
+		}(server, stream)
 
-			go func(server net.Conn, stream *smux.Stream) {
-				buf := make([]byte, 1500)
-				for {
-					n, err := server.Read(buf)
-					if err != nil {
-						break
-					}
-					stream.Write(buf[:n])
+		go func(server net.Conn, stream *smux.Stream) {
+			buf := make([]byte, 1500)
+			for {
+				n, err := server.Read(buf)
+				if err != nil {
+					break
 				}
-				stream.Close()
-				server.Close()
-			}(server, stream)
-		}
-	})
-	d.OnClose(func() {
-		if sess != nil {
-			sess.Close()
-		}
-	})
+				stream.Write(buf[:n])
+			}
+			stream.Close()
+			server.Close()
+		}(server, stream)
+	}
+}
+
+func (s *WebrtcExec) proxyRawConn(toConn io.ReadWriteCloser) {
+	go io.Copy(s.sin, toConn)
+
+	prd, pwr := io.Pipe()
+	s.sin = pwr
+
+	err := s.client.Shell(prd, toConn, toConn, s.contcmd)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi,
+			"failed to exec",
+			"cmd", s.contcmd, "err", err)
+	}
 }
