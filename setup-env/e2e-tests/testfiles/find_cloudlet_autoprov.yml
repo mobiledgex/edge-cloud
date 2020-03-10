@@ -39,7 +39,7 @@ tests:
     filetype: appdata
 
 - name: check influx stats for auto-provisioning
-  actions: [influxapi]
+  actions: [sleep=0.4,influxapi]
   apifile: "{{datadir}}/influx_autoprov_query.yml"
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"

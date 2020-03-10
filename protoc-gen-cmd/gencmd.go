@@ -241,6 +241,9 @@ var {{.Method}}Cmd = &cli.Command{
 }
 
 func run{{.Method}}(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*{{.FQInType}})
 {{- if .SetFields}}
 	jsonMap, err := c.ParseInput(args)
@@ -273,9 +276,7 @@ func {{.Method}}(c *cli.Command, in *{{.FQInType}}) error {
 		return fmt.Errorf("{{.Method}} failed: %s", errstr)
 	}
 
-	{{- if not .StreamOutIncremental}}
 	objs := make([]*{{.FQOutType}}, 0)
-	{{- end}}
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -293,16 +294,17 @@ func {{.Method}}(c *cli.Command, in *{{.FQInType}}) error {
 		{{.OutType}}HideTags(obj)
 	{{- end}}
 	{{- if .StreamOutIncremental}}
-		c.WriteOutput(obj, cli.OutputFormat)
-	}
-	{{- else}}
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+	{{- end}}
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
 		return nil
 	}
 	c.WriteOutput(objs, cli.OutputFormat)
-	{{- end}}
 {{- else}}
 	obj, err := {{.Service}}Cmd.{{.Method}}(ctx, in)
 	if err != nil {
