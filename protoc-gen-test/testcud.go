@@ -635,7 +635,6 @@ func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, serv
 	t.P("func (r *Run) ", apiName, "(", dataIn, ", dataMap interface{}, dataOut interface{}) {")
 	t.P("log.DebugLog(log.DebugLevelApi, \"API for ", inType, "\", \"mode\", r.Mode)")
 	t.importLog = true
-	//t.P("var err error")
 	for _, mInfo := range group.MethodInfos {
 		if !mInfo.IsShow {
 			continue
