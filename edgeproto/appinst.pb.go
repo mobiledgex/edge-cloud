@@ -3,33 +3,44 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import distributed_match_engine1 "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	fmt "fmt"
 
-import strings "strings"
-import reflect "reflect"
+	proto "github.com/gogo/protobuf/proto"
 
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
+	math "math"
 
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import "errors"
-import "strconv"
-import "time"
-import "github.com/google/go-cmp/cmp"
-import "github.com/google/go-cmp/cmp/cmpopts"
+	_ "github.com/gogo/googleapis/google/api"
 
-import io "io"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+
+	distributed_match_engine1 "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+
+	_ "github.com/gogo/protobuf/gogoproto"
+
+	strings "strings"
+
+	reflect "reflect"
+
+	context "golang.org/x/net/context"
+
+	"encoding/json"
+	"errors"
+	"strconv"
+	"time"
+
+	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+
+	io "io"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -199,6 +210,12 @@ type AppInst struct {
 	PrivacyPolicy string `protobuf:"bytes,30,opt,name=privacy_policy,json=privacyPolicy,proto3" json:"privacy_policy,omitempty"`
 	// Power State of the AppInst
 	PowerState PowerState `protobuf:"varint,31,opt,name=power_state,json=powerState,proto3,enum=edgeproto.PowerState" json:"power_state,omitempty"`
+	// Size of external volume to be attached to nodes.  This is for the root partition
+	ExternalVolumeSize uint64 `protobuf:"varint,32,opt,name=external_volume_size,json=externalVolumeSize,proto3" json:"external_volume_size,omitempty"`
+	// Optional Availability Zone if any
+	AvailabilityZone string `protobuf:"bytes,33,opt,name=availability_zone,json=availabilityZone,proto3" json:"availability_zone,omitempty"`
+	// OS node flavor to use
+	VmFlavor string `protobuf:"bytes,34,opt,name=vm_flavor,json=vmFlavor,proto3" json:"vm_flavor,omitempty"`
 }
 
 func (m *AppInst) Reset()                    { *m = AppInst{} }
@@ -1077,6 +1094,29 @@ func (m *AppInst) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAppinst(dAtA, i, uint64(m.PowerState))
 	}
+	if m.ExternalVolumeSize != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintAppinst(dAtA, i, uint64(m.ExternalVolumeSize))
+	}
+	if len(m.AvailabilityZone) > 0 {
+		dAtA[i] = 0x8a
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintAppinst(dAtA, i, uint64(len(m.AvailabilityZone)))
+		i += copy(dAtA[i:], m.AvailabilityZone)
+	}
+	if len(m.VmFlavor) > 0 {
+		dAtA[i] = 0x92
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintAppinst(dAtA, i, uint64(len(m.VmFlavor)))
+		i += copy(dAtA[i:], m.VmFlavor)
+	}
 	return i, nil
 }
 
@@ -1448,6 +1488,27 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 			return false
 		}
 	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.ExternalVolumeSize != 0 {
+			if o.ExternalVolumeSize != m.ExternalVolumeSize {
+				return false
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.AvailabilityZone != "" {
+			if o.AvailabilityZone != m.AvailabilityZone {
+				return false
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.VmFlavor != "" {
+			if o.VmFlavor != m.VmFlavor {
+				return false
+			}
+		}
+	}
 	return true
 }
 
@@ -1510,6 +1571,9 @@ const AppInstFieldSharedVolumeSize = "28"
 const AppInstFieldHealthCheck = "29"
 const AppInstFieldPrivacyPolicy = "30"
 const AppInstFieldPowerState = "31"
+const AppInstFieldExternalVolumeSize = "32"
+const AppInstFieldAvailabilityZone = "33"
+const AppInstFieldVmFlavor = "34"
 
 var AppInstAllFields = []string{
 	AppInstFieldKeyAppKeyOrganization,
@@ -1558,6 +1622,9 @@ var AppInstAllFields = []string{
 	AppInstFieldHealthCheck,
 	AppInstFieldPrivacyPolicy,
 	AppInstFieldPowerState,
+	AppInstFieldExternalVolumeSize,
+	AppInstFieldAvailabilityZone,
+	AppInstFieldVmFlavor,
 }
 
 var AppInstAllFieldsMap = map[string]struct{}{
@@ -1881,6 +1948,15 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 	}
 	if m.PowerState != o.PowerState {
 		fields[AppInstFieldPowerState] = struct{}{}
+	}
+	if m.ExternalVolumeSize != o.ExternalVolumeSize {
+		fields[AppInstFieldExternalVolumeSize] = struct{}{}
+	}
+	if m.AvailabilityZone != o.AvailabilityZone {
+		fields[AppInstFieldAvailabilityZone] = struct{}{}
+	}
+	if m.VmFlavor != o.VmFlavor {
+		fields[AppInstFieldVmFlavor] = struct{}{}
 	}
 }
 
@@ -2214,6 +2290,24 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 	if _, set := fmap["31"]; set {
 		if m.PowerState != src.PowerState {
 			m.PowerState = src.PowerState
+			changed++
+		}
+	}
+	if _, set := fmap["32"]; set {
+		if m.ExternalVolumeSize != src.ExternalVolumeSize {
+			m.ExternalVolumeSize = src.ExternalVolumeSize
+			changed++
+		}
+	}
+	if _, set := fmap["33"]; set {
+		if m.AvailabilityZone != src.AvailabilityZone {
+			m.AvailabilityZone = src.AvailabilityZone
+			changed++
+		}
+	}
+	if _, set := fmap["34"]; set {
+		if m.VmFlavor != src.VmFlavor {
+			m.VmFlavor = src.VmFlavor
 			changed++
 		}
 	}
@@ -2793,6 +2887,15 @@ func IgnoreAppInstFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "PowerState")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "ExternalVolumeSize")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "AvailabilityZone")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "VmFlavor")
 	}
 	return cmpopts.IgnoreFields(AppInst{}, names...)
 }
@@ -3944,6 +4047,17 @@ func (m *AppInst) Size() (n int) {
 	if m.PowerState != 0 {
 		n += 2 + sovAppinst(uint64(m.PowerState))
 	}
+	if m.ExternalVolumeSize != 0 {
+		n += 2 + sovAppinst(uint64(m.ExternalVolumeSize))
+	}
+	l = len(m.AvailabilityZone)
+	if l > 0 {
+		n += 2 + l + sovAppinst(uint64(l))
+	}
+	l = len(m.VmFlavor)
+	if l > 0 {
+		n += 2 + l + sovAppinst(uint64(l))
+	}
 	return n
 }
 
@@ -4703,6 +4817,83 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 32:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExternalVolumeSize", wireType)
+			}
+			m.ExternalVolumeSize = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ExternalVolumeSize |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 33:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AvailabilityZone", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AvailabilityZone = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 34:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VmFlavor", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VmFlavor = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAppinst(dAtA[iNdEx:])

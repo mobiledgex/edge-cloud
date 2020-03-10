@@ -18,7 +18,7 @@ flavors:
 clusterflavors:
 - key:
     name: c1.tiny
-  nodeflavor:
+  vmflavor:
     name: x1.tiny
   masterflavor:
     name: x1.tiny
@@ -27,7 +27,7 @@ clusterflavors:
   nummasters: 1
 - key:
     name: c1.small
-  nodeflavor:
+  vmflavor:
     name: x1.small
   masterflavor:
     name: x1.small
@@ -36,7 +36,7 @@ clusterflavors:
   nummasters: 1
 - key:
     name: c1.medium
-  nodeflavor:
+  vmflavor:
     name: x1.medium
   masterflavor:
     name: x1.medium

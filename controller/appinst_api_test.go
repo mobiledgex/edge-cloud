@@ -183,7 +183,7 @@ func TestAppInstApi(t *testing.T) {
 			require.Equal(t, test_prefix, port.FqdnPrefix, "check port fqdn prefix")
 		}
 	}
-
+	testAppFlavorRequest(t, ctx, commonApi, responder)
 	dummy.Stop()
 }
 
@@ -318,6 +318,26 @@ func forceAppInstState(ctx context.Context, in *edgeproto.AppInst, state edgepro
 		return nil
 	})
 	return err
+}
+
+func testAppFlavorRequest(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, responder *DummyInfoResponder) {
+	// Non-nomial test, request an optional resource from a cloudlet that offers none.
+	var testflavor = edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.large-mex",
+		},
+		Ram:       8192,
+		Vcpus:     8,
+		Disk:      40,
+		OptResMap: map[string]string{"gpu": "gpu:1"},
+	}
+	_, err := flavorApi.CreateFlavor(ctx, &testflavor)
+	require.Nil(t, err, "CreateFlavor")
+	nonNomApp := testutil.AppInstData[0]
+	nonNomApp.Flavor = testflavor.Key
+	err = appInstApi.CreateAppInst(&nonNomApp, testutil.NewCudStreamoutAppInst(ctx))
+	require.NotNil(t, err, "non-nom-app-create")
+	require.Equal(t, "Optional resource requested by x1.large-mex, cloudlet San Jose Site supports none", err.Error())
 }
 
 // Test that Crm Override for Delete App overrides any failures
