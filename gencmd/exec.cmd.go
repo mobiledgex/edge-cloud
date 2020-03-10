@@ -68,6 +68,9 @@ var RunCommandCmd = &cli.Command{
 }
 
 func runRunCommand(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ExecRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -123,6 +126,9 @@ var RunConsoleCmd = &cli.Command{
 }
 
 func runRunConsole(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ExecRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -178,6 +184,9 @@ var ShowLogsCmd = &cli.Command{
 }
 
 func runShowLogs(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ExecRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -233,6 +242,9 @@ var SendLocalRequestCmd = &cli.Command{
 }
 
 func runSendLocalRequest(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ExecRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {

@@ -64,6 +64,36 @@ func NodeHideTags(in *edgeproto.Node) {
 	}
 }
 
+func NodeDataHideTags(in *edgeproto.NodeData) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	for i0 := 0; i0 < len(in.Nodes); i0++ {
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].Key.Name = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].NotifyId = 0
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].BuildMaster = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].BuildHead = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].BuildAuthor = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].Hostname = ""
+		}
+	}
+}
+
 var NodeApiCmd edgeproto.NodeApiClient
 
 var ShowNodeCmd = &cli.Command{
@@ -78,6 +108,9 @@ var ShowNodeCmd = &cli.Command{
 }
 
 func runShowNode(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Node)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -100,6 +133,7 @@ func ShowNode(c *cli.Command, in *edgeproto.Node) error {
 		}
 		return fmt.Errorf("ShowNode failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.Node, 0)
 	for {
 		obj, err := stream.Recv()
@@ -183,6 +217,7 @@ var NodeAliasArgs = []string{
 	"region=key.region",
 }
 var NodeComments = map[string]string{
+	"fields":           "Fields are used for the Update API to specify which fields to apply",
 	"name":             "Name or hostname of node",
 	"type":             "Node type",
 	"operator":         "Company or Organization name of the operator",
@@ -195,4 +230,39 @@ var NodeComments = map[string]string{
 	"hostname":         "Hostname",
 	"containerversion": "Docker edge-cloud container version which node instance use",
 }
-var NodeSpecialArgs = map[string]string{}
+var NodeSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}
+var NodeDataRequiredArgs = []string{}
+var NodeDataOptionalArgs = []string{
+	"nodes.fields",
+	"nodes.key.name",
+	"nodes.key.type",
+	"nodes.key.cloudletkey.operatorkey.name",
+	"nodes.key.cloudletkey.name",
+	"nodes.key.region",
+	"nodes.notifyid",
+	"nodes.buildmaster",
+	"nodes.buildhead",
+	"nodes.buildauthor",
+	"nodes.hostname",
+	"nodes.containerversion",
+}
+var NodeDataAliasArgs = []string{}
+var NodeDataComments = map[string]string{
+	"nodes.fields":                           "Fields are used for the Update API to specify which fields to apply",
+	"nodes.key.name":                         "Name or hostname of node",
+	"nodes.key.type":                         "Node type",
+	"nodes.key.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
+	"nodes.key.cloudletkey.name":             "Name of the cloudlet",
+	"nodes.key.region":                       "Region the node is in",
+	"nodes.notifyid":                         "Id of client assigned by server (internal use only)",
+	"nodes.buildmaster":                      "Build Master Version",
+	"nodes.buildhead":                        "Build Head Version",
+	"nodes.buildauthor":                      "Build Author",
+	"nodes.hostname":                         "Hostname",
+	"nodes.containerversion":                 "Docker edge-cloud container version which node instance use",
+}
+var NodeDataSpecialArgs = map[string]string{
+	"nodes.fields": "StringArray",
+}

@@ -38,6 +38,9 @@ var CreateFlavorCmd = &cli.Command{
 }
 
 func runCreateFlavor(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -92,6 +95,9 @@ var DeleteFlavorCmd = &cli.Command{
 }
 
 func runDeleteFlavor(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -146,6 +152,9 @@ var UpdateFlavorCmd = &cli.Command{
 }
 
 func runUpdateFlavor(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -200,6 +209,9 @@ var ShowFlavorCmd = &cli.Command{
 }
 
 func runShowFlavor(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -222,6 +234,7 @@ func ShowFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 		}
 		return fmt.Errorf("ShowFlavor failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.Flavor, 0)
 	for {
 		obj, err := stream.Recv()
@@ -273,6 +286,9 @@ var AddFlavorResCmd = &cli.Command{
 }
 
 func runAddFlavorRes(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -327,6 +343,9 @@ var RemoveFlavorResCmd = &cli.Command{
 }
 
 func runRemoveFlavorRes(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -399,6 +418,7 @@ var FlavorAliasArgs = []string{
 	"name=key.name",
 }
 var FlavorComments = map[string]string{
+	"fields":    "Fields are used for the Update API to specify which fields to apply",
 	"name":      "Flavor name",
 	"ram":       "RAM in megabytes",
 	"vcpus":     "Number of virtual CPUs",
@@ -406,6 +426,7 @@ var FlavorComments = map[string]string{
 	"optresmap": "Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci] form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpus:nvidia-63:1",
 }
 var FlavorSpecialArgs = map[string]string{
+	"fields":    "StringArray",
 	"optresmap": "StringToString",
 }
 var CreateFlavorRequiredArgs = []string{

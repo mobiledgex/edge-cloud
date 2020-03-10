@@ -37,6 +37,9 @@ var UpdateSettingsCmd = &cli.Command{
 }
 
 func runUpdateSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Settings)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -89,6 +92,9 @@ var ResetSettingsCmd = &cli.Command{
 }
 
 func runResetSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Settings)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -139,6 +145,9 @@ var ShowSettingsCmd = &cli.Command{
 }
 
 func runShowSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Settings)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -203,6 +212,7 @@ var SettingsOptionalArgs = []string{
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
+	"fields":                            "Fields are used for the Update API to specify which fields to apply",
 	"shepherdmetricscollectioninterval": "Shepherd metrics collection interval for k8s and docker appInstances (duration)",
 	"shepherdhealthcheckretries":        "Number of times Shepherd Health Check fails before we mark appInst down",
 	"shepherdhealthcheckinterval":       "Health Checking probing frequency (duration)",
@@ -219,4 +229,6 @@ var SettingsComments = map[string]string{
 	"loadbalancermaxportrange":          "Max IP Port range when using a load balancer",
 	"maxtrackeddmeclients":              "Max DME clients to be tracked at the same time.",
 }
-var SettingsSpecialArgs = map[string]string{}
+var SettingsSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}
