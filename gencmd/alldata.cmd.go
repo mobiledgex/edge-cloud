@@ -161,6 +161,15 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].PowerState = 0
 		}
+		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].ExternalVolumeSize = 0
+		}
+		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].AvailabilityZone = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].VmFlavor = ""
+		}
 	}
 }
 
@@ -421,6 +430,9 @@ var AllDataOptionalArgs = []string{
 	"appinstances.healthcheck",
 	"appinstances.privacypolicy",
 	"appinstances.powerstate",
+	"appinstances.externalvolumesize",
+	"appinstances.availabilityzone",
+	"appinstances.vmflavor",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -651,6 +663,9 @@ var AllDataComments = map[string]string{
 	"appinstances.healthcheck":                                     "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"appinstances.privacypolicy":                                   "Optional privacy policy name",
 	"appinstances.powerstate":                                      "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
+	"appinstances.externalvolumesize":                              "Size of external volume to be attached to nodes.  This is for the root partition",
+	"appinstances.availabilityzone":                                "Optional Availability Zone if any",
+	"appinstances.vmflavor":                                        "OS node flavor to use",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances.errors":                   "StringArray",

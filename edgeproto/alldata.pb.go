@@ -468,6 +468,15 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.PowerState")
 	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "AppInstances.ExternalVolumeSize")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "AppInstances.AvailabilityZone")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "AppInstances.VmFlavor")
+	}
 	return cmpopts.IgnoreFields(AllData{}, names...)
 }
 

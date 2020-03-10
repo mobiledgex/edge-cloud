@@ -64,6 +64,7 @@ clusterinsts:
   flavor:
     name: x1.small
   sharedvolumesize: 100
+  
   liveness: LivenessStatic
   ipaccess: IpAccessShared
   deployment: kubernetes
@@ -382,7 +383,7 @@ apps:
   officialfqdn: noportsapp.acmeappco.com
   accesstype: AccessTypeLoadBalancer
 appinstances:
-- key:
+- key: 
     appkey:
       developerkey:
         name: MobiledgeX
@@ -399,6 +400,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
+  uri: smallcluster.tmus-cloud-1.tmus.mobiledgex.net   
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -406,8 +408,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.medium
-
-- key:
+- key: 
     appkey:
       developerkey:
         name: MobiledgeX
@@ -428,7 +429,7 @@ appinstances:
   flavor:
     name: x1.medium
 
-- key:
+- key: 
     appkey:
       developerkey:
         name: AcmeAppCo
@@ -538,7 +539,7 @@ appinstances:
     tls: true
   flavor:
     name: x1.small
-- key:
+- key: 
     appkey:
       developerkey:
         name: AcmeAppCo
@@ -622,7 +623,7 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
-- key:
+- key: 
     appkey:
       developerkey:
         name: AcmeAppCo
