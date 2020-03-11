@@ -21,39 +21,13 @@ var AutoScaleMaxNodes uint32 = 10
 var minPort uint32 = 1
 var maxPort uint32 = 65535
 
-// contains sets of each applications for yaml marshalling
-type ApplicationData struct {
-	Operators               []Operator               `yaml:"operators"`
-	OperatorCodes           []OperatorCode           `yaml:"operatorcodes"`
-	Cloudlets               []Cloudlet               `yaml:"cloudlets"`
-	Flavors                 []Flavor                 `yaml:"flavors"`
-	ClusterInsts            []ClusterInst            `yaml:"clusterinsts"`
-	Developers              []Developer              `yaml:"developers"`
-	Applications            []App                    `yaml:"apps"`
-	AppInstances            []AppInst                `yaml:"appinstances"`
-	CloudletInfos           []CloudletInfo           `yaml:"cloudletinfos"`
-	AppInstInfos            []AppInstInfo            `yaml:"appinstinfos"`
-	ClusterInstInfos        []ClusterInstInfo        `yaml:"clusterinstinfos"`
-	Nodes                   []Node                   `yaml:"nodes"`
-	CloudletPools           []CloudletPool           `yaml:"cloudletpools"`
-	CloudletPoolMembers     []CloudletPoolMember     `yaml:"cloudletpoolmembers"`
-	AutoScalePolicies       []AutoScalePolicy        `yaml:"autoscalepolicies"`
-	AutoProvPolicies        []AutoProvPolicy         `yaml:"autoprovpolicies"`
-	AutoProvPolicyCloudlets []AutoProvPolicyCloudlet `yaml:"autoprovpolicycloudlets"`
-	PrivacyPolicies         []PrivacyPolicy          `yaml:"privacypolicies"`
-	ResTagTables            []ResTagTable            `ymal:"restagtables"`
-	Settings                *Settings                `yaml:"settings"`
-}
-
-type ApplicationDataMap map[string]interface{}
-
 // sort each slice by key
-func (a *ApplicationData) Sort() {
+func (a *AllData) Sort() {
 	sort.Slice(a.AppInstances[:], func(i, j int) bool {
 		return a.AppInstances[i].Key.GetKeyString() < a.AppInstances[j].Key.GetKeyString()
 	})
-	sort.Slice(a.Applications[:], func(i, j int) bool {
-		return a.Applications[i].Key.GetKeyString() < a.Applications[j].Key.GetKeyString()
+	sort.Slice(a.Apps[:], func(i, j int) bool {
+		return a.Apps[i].Key.GetKeyString() < a.Apps[j].Key.GetKeyString()
 	})
 	sort.Slice(a.Cloudlets[:], func(i, j int) bool {
 		return a.Cloudlets[i].Key.GetKeyString() < a.Cloudlets[j].Key.GetKeyString()
@@ -75,20 +49,6 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.CloudletInfos[:], func(i, j int) bool {
 		return a.CloudletInfos[i].Key.GetKeyString() < a.CloudletInfos[j].Key.GetKeyString()
-	})
-	sort.Slice(a.AppInstInfos[:], func(i, j int) bool {
-		return a.AppInstInfos[i].Key.GetKeyString() < a.AppInstInfos[j].Key.GetKeyString()
-	})
-	sort.Slice(a.ClusterInstInfos[:], func(i, j int) bool {
-		return a.ClusterInstInfos[i].Key.GetKeyString() < a.ClusterInstInfos[j].Key.GetKeyString()
-	})
-	sort.Slice(a.Nodes[:], func(i, j int) bool {
-		// ignore name for sorting because it is ignored for comparison
-		ikey := a.Nodes[i].Key
-		ikey.Name = ""
-		jkey := a.Nodes[j].Key
-		jkey.Name = ""
-		return ikey.GetKeyString() < jkey.GetKeyString()
 	})
 	sort.Slice(a.CloudletPools[:], func(i, j int) bool {
 		return a.CloudletPools[i].Key.GetKeyString() < a.CloudletPools[j].Key.GetKeyString()
@@ -113,6 +73,17 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.ResTagTables[:], func(i, j int) bool {
 		return a.ResTagTables[i].Key.GetKeyString() < a.ResTagTables[j].Key.GetKeyString()
+	})
+}
+
+func (a *NodeData) Sort() {
+	sort.Slice(a.Nodes[:], func(i, j int) bool {
+		// ignore name for sorting because it is ignored for comparison
+		ikey := a.Nodes[i].Key
+		ikey.Name = ""
+		jkey := a.Nodes[j].Key
+		jkey.Name = ""
+		return ikey.GetKeyString() < jkey.GetKeyString()
 	})
 }
 

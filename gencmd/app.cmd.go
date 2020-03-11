@@ -59,6 +59,9 @@ var CreateAppCmd = &cli.Command{
 }
 
 func runCreateApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -113,6 +116,9 @@ var DeleteAppCmd = &cli.Command{
 }
 
 func runDeleteApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -167,6 +173,9 @@ var UpdateAppCmd = &cli.Command{
 }
 
 func runUpdateApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -221,6 +230,9 @@ var ShowAppCmd = &cli.Command{
 }
 
 func runShowApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -243,6 +255,7 @@ func ShowApp(c *cli.Command, in *edgeproto.App) error {
 		}
 		return fmt.Errorf("ShowApp failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.App, 0)
 	for {
 		obj, err := stream.Recv()
@@ -349,6 +362,7 @@ var AppAliasArgs = []string{
 	"defaultflavor=defaultflavor.name",
 }
 var AppComments = map[string]string{
+	"fields":                  "Fields are used for the Update API to specify which fields to apply",
 	"developer":               "Organization or Company Name that a Developer is part of",
 	"appname":                 "App name",
 	"appvers":                 "App version",
@@ -376,4 +390,6 @@ var AppComments = map[string]string{
 	"accesstype":              "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"defaultprivacypolicy":    "Privacy policy when creating auto cluster",
 }
-var AppSpecialArgs = map[string]string{}
+var AppSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}
