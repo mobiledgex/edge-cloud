@@ -374,7 +374,7 @@ var DebugRequestAliasArgs = []string{
 var DebugRequestComments = map[string]string{
 	"name":                          "Name or hostname of node",
 	"type":                          "Node type",
-	"node.cloudletkey.organization": "Operator of the cloudlet site",
+	"node.cloudletkey.organization": "Organization of the cloudlet site",
 	"cloudlet":                      "Name of the cloudlet",
 	"region":                        "Region the node is in",
 	"levels":                        "Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,mexos,metrics,upgrade,info,sampled",
@@ -397,7 +397,7 @@ var DebugReplyAliasArgs = []string{}
 var DebugReplyComments = map[string]string{
 	"node.name":                     "Name or hostname of node",
 	"node.type":                     "Node type",
-	"node.cloudletkey.organization": "Operator of the cloudlet site",
+	"node.cloudletkey.organization": "Organization of the cloudlet site",
 	"node.cloudletkey.name":         "Name of the cloudlet",
 	"node.region":                   "Region the node is in",
 	"output":                        "Debug output, if any",

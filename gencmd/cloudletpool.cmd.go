@@ -585,7 +585,7 @@ var CloudletPoolMemberAliasArgs = []string{
 }
 var CloudletPoolMemberComments = map[string]string{
 	"pool":         "CloudletPool Name",
-	"organization": "Operator of the cloudlet site",
+	"organization": "Organization of the cloudlet site",
 	"cloudlet":     "Name of the cloudlet",
 }
 var CloudletPoolMemberSpecialArgs = map[string]string{}

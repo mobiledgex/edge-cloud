@@ -155,7 +155,7 @@ var NodeKeyAliasArgs = []string{}
 var NodeKeyComments = map[string]string{
 	"name":                     "Name or hostname of node",
 	"type":                     "Node type",
-	"cloudletkey.organization": "Operator of the cloudlet site",
+	"cloudletkey.organization": "Organization of the cloudlet site",
 	"cloudletkey.name":         "Name of the cloudlet",
 	"region":                   "Region the node is in",
 }
@@ -185,7 +185,7 @@ var NodeAliasArgs = []string{
 var NodeComments = map[string]string{
 	"name":             "Name or hostname of node",
 	"type":             "Node type",
-	"organization":     "Operator of the cloudlet site",
+	"organization":     "Organization of the cloudlet site",
 	"cloudlet":         "Name of the cloudlet",
 	"region":           "Region the node is in",
 	"notifyid":         "Id of client assigned by server (internal use only)",

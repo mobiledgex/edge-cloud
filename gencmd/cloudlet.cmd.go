@@ -803,7 +803,7 @@ var CloudletKeyOptionalArgs = []string{
 }
 var CloudletKeyAliasArgs = []string{}
 var CloudletKeyComments = map[string]string{
-	"organization": "Operator of the cloudlet site",
+	"organization": "Organization of the cloudlet site",
 	"name":         "Name of the cloudlet",
 }
 var CloudletKeySpecialArgs = map[string]string{}
@@ -978,7 +978,7 @@ var CloudletResMapAliasArgs = []string{
 	"cloudlet=key.name",
 }
 var CloudletResMapComments = map[string]string{
-	"key.organization": "Operator of the cloudlet site",
+	"key.organization": "Organization of the cloudlet site",
 	"cloudlet":         "Name of the cloudlet",
 	"mapping":          "Resource mapping info",
 }
@@ -986,7 +986,7 @@ var CloudletResMapSpecialArgs = map[string]string{
 	"mapping": "StringToString",
 }
 var CloudletRequiredArgs = []string{
-	"key.organization",
+	"organization",
 	"cloudlet",
 }
 var CloudletOptionalArgs = []string{
@@ -1021,10 +1021,11 @@ var CloudletOptionalArgs = []string{
 	"packageversion",
 }
 var CloudletAliasArgs = []string{
+	"organization=key.organization",
 	"cloudlet=key.name",
 }
 var CloudletComments = map[string]string{
-	"key.organization":                    "Operator of the cloudlet site",
+	"organization":                        "Organization of the cloudlet site",
 	"cloudlet":                            "Name of the cloudlet",
 	"location.latitude":                   "latitude in WGS 84 coordinates",
 	"location.longitude":                  "longitude in WGS 84 coordinates",
@@ -1089,7 +1090,7 @@ var FlavorMatchAliasArgs = []string{
 	"flavor=flavorname",
 }
 var FlavorMatchComments = map[string]string{
-	"organization": "Operator of the cloudlet site",
+	"organization": "Organization of the cloudlet site",
 	"cloudlet":     "Name of the cloudlet",
 }
 var FlavorMatchSpecialArgs = map[string]string{}
@@ -1136,7 +1137,7 @@ var OSImageComments = map[string]string{
 }
 var OSImageSpecialArgs = map[string]string{}
 var CloudletInfoRequiredArgs = []string{
-	"key.organization",
+	"organization",
 	"cloudlet",
 }
 var CloudletInfoOptionalArgs = []string{
@@ -1165,10 +1166,11 @@ var CloudletInfoOptionalArgs = []string{
 	"osimages.diskformat",
 }
 var CloudletInfoAliasArgs = []string{
+	"organization=key.organization",
 	"cloudlet=key.name",
 }
 var CloudletInfoComments = map[string]string{
-	"key.organization":    "Operator of the cloudlet site",
+	"organization":        "Organization of the cloudlet site",
 	"cloudlet":            "Name of the cloudlet",
 	"state":               "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
 	"notifyid":            "Id of client assigned by server (internal use only)",
@@ -1202,7 +1204,7 @@ var CloudletMetricsComments = map[string]string{
 }
 var CloudletMetricsSpecialArgs = map[string]string{}
 var CreateCloudletRequiredArgs = []string{
-	"key.organization",
+	"organization",
 	"cloudlet",
 	"location.latitude",
 	"location.longitude",

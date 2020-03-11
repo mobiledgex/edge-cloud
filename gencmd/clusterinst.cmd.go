@@ -446,7 +446,7 @@ var ClusterInstKeyOptionalArgs = []string{
 var ClusterInstKeyAliasArgs = []string{}
 var ClusterInstKeyComments = map[string]string{
 	"clusterkey.name":          "Cluster name",
-	"cloudletkey.organization": "Operator of the cloudlet site",
+	"cloudletkey.organization": "Organization of the cloudlet site",
 	"cloudletkey.name":         "Name of the cloudlet",
 	"organization":             "Name of Developer organization that this cluster belongs to",
 }
@@ -483,7 +483,7 @@ var ClusterInstAliasArgs = []string{
 }
 var ClusterInstComments = map[string]string{
 	"cluster":            "Cluster name",
-	"operatororg":        "Operator of the cloudlet site",
+	"operatororg":        "Organization of the cloudlet site",
 	"cloudlet":           "Name of the cloudlet",
 	"developerorg":       "Name of Developer organization that this cluster belongs to",
 	"flavor":             "Flavor name",
@@ -529,7 +529,7 @@ var ClusterInstInfoOptionalArgs = []string{
 var ClusterInstInfoAliasArgs = []string{}
 var ClusterInstInfoComments = map[string]string{
 	"key.clusterkey.name":          "Cluster name",
-	"key.cloudletkey.organization": "Operator of the cloudlet site",
+	"key.cloudletkey.organization": "Organization of the cloudlet site",
 	"key.cloudletkey.name":         "Name of the cloudlet",
 	"key.organization":             "Name of Developer organization that this cluster belongs to",
 	"notifyid":                     "Id of client assigned by server (internal use only)",

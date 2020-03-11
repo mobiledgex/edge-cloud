@@ -316,7 +316,7 @@ var ShowLogComments = map[string]string{
 }
 var ShowLogSpecialArgs = map[string]string{}
 var ExecRequestRequiredArgs = []string{
-	"organization",
+	"developerorg",
 	"appname",
 	"appvers",
 	"cluster",
@@ -333,7 +333,7 @@ var ExecRequestOptionalArgs = []string{
 	"follow",
 }
 var ExecRequestAliasArgs = []string{
-	"organization=appinstkey.appkey.organization",
+	"developerorg=appinstkey.appkey.organization",
 	"appname=appinstkey.appkey.name",
 	"appvers=appinstkey.appkey.version",
 	"cluster=appinstkey.clusterinstkey.clusterkey.name",
@@ -347,11 +347,11 @@ var ExecRequestAliasArgs = []string{
 	"follow=log.follow",
 }
 var ExecRequestComments = map[string]string{
-	"organization":  "Developer Organization",
+	"developerorg":  "Developer Organization",
 	"appname":       "App name",
 	"appvers":       "App version",
 	"cluster":       "Cluster name",
-	"operatororg":   "Operator of the cloudlet site",
+	"operatororg":   "Organization of the cloudlet site",
 	"cloudlet":      "Name of the cloudlet",
 	"clusterdevorg": "Name of Developer organization that this cluster belongs to",
 	"containerid":   "ContainerId is the name or ID of the target container, if applicable",
@@ -368,7 +368,7 @@ var ExecRequestComments = map[string]string{
 }
 var ExecRequestSpecialArgs = map[string]string{}
 var RunCommandRequiredArgs = []string{
-	"organization",
+	"developerorg",
 	"appname",
 	"appvers",
 	"cluster",
@@ -381,7 +381,7 @@ var RunCommandOptionalArgs = []string{
 	"containerid",
 }
 var RunConsoleRequiredArgs = []string{
-	"organization",
+	"developerorg",
 	"appname",
 	"appvers",
 	"cluster",
@@ -393,7 +393,7 @@ var RunConsoleOptionalArgs = []string{
 	"containerid",
 }
 var ShowLogsRequiredArgs = []string{
-	"organization",
+	"developerorg",
 	"appname",
 	"appvers",
 	"cluster",

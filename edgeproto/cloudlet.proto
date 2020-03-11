@@ -16,7 +16,7 @@ import "gogoproto/gogo.proto";
 //
 // CloudletKey uniquely identifies a Cloudlet.
 message CloudletKey {
-  // Operator of the cloudlet site
+  // Organization of the cloudlet site
   string organization = 1;
   // Name of the cloudlet
   string name = 2;
@@ -242,7 +242,7 @@ message Cloudlet {
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
   option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr";
-  option (protogen.alias) = "cloudlet=Key.Name,organization=Key.Operator";
+  option (protogen.alias) = "cloudlet=Key.Name,organization=Key.Organization";
 }
 
 message FlavorMatch {
@@ -409,7 +409,7 @@ message CloudletInfo {
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.alias) = "cloudlet=Key.Name,organziation=Key.organization";
+  option (protogen.alias) = "cloudlet=Key.Name,organization=Key.Organization";
 }
 
 service CloudletInfoApi {
