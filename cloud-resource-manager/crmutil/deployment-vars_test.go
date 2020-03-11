@@ -87,8 +87,8 @@ var testConfigFileWrongVar = `nfs:
 `
 
 var testAppAccessConfig = `
-dnsOverride: "*.[[.Deployment.DeveloperOrg]]-[[.Deployment.ClusterName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"
-lbTlsCertCommonName: ""*.[[.Deployment.DeveloperOrg]]-[[.Deployment.ClusterName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"`
+dnsOverride: "*.[[.Deployment.AppOrg]]-[[.Deployment.ClusterName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"
+lbTlsCertCommonName: ""*.[[.Deployment.AppOrg]]-[[.Deployment.ClusterName]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"`
 
 var testAppAccessConfigResult = `
 dnsOverride: "*.AcmeAppCo-TestCluster-TestCloudlet.mobiledgex-test.net"
@@ -100,7 +100,7 @@ func TestCrmDeploymentVars(t *testing.T) {
 			ClusterIp:    testClusterIp,
 			CloudletName: testCloudletName,
 			ClusterName:  testClusterName,
-			DeveloperOrg: testDeveloperOrg,
+			AppOrg:       testDeveloperOrg,
 			DnsZone:      testDnsZone,
 		},
 	}
