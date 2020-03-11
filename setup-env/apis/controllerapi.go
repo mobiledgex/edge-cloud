@@ -106,7 +106,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		filter := &edgeproto.AllData{}
 		output := &edgeproto.AllData{}
 		testutil.RunAllDataShowApis(run, filter, output)
-		writeOutput(output, "show-commands.yml", outputDir, &rc)
+		util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
 		// Some objects are generated asynchronously in response to
 		// other objects being created. For example, Prometheus metric
 		// AppInst is created after a cluster create. Because its run
@@ -119,7 +119,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		output := &edgeproto.NodeData{}
 		run.Mode = "show"
 		testutil.RunNodeDataShowApis(run, filter, output)
-		writeOutput(&output, "show-commands.yml", outputDir, &rc)
+		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "debug") {
 		runDebug(run, api, apiFile, outputDir)
 	} else {
@@ -138,7 +138,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			//run in reverse order to delete child keys
 			output := &testutil.AllDataOut{}
 			testutil.RunAllDataReverseApis(run, &appData, appDataMap, output)
-			writeOutput(output, "api-output.yml", outputDir, &rc)
+			util.PrintToYamlFile("api-output.yml", outputDir, output, true)
 		case "create":
 			fallthrough
 		case "add":
@@ -148,16 +148,13 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		case "update":
 			output := &testutil.AllDataOut{}
 			testutil.RunAllDataApis(run, &appData, appDataMap, output)
-			writeOutput(output, "api-output.yml", outputDir, &rc)
+			util.PrintToYamlFile("api-output.yml", outputDir, output, true)
 		default:
 			log.Printf("Error: unsupported controller API %s\n", api)
 			rc = false
 		}
 	}
-	if tag != "expecterr" {
-		// no errors expected
-		failOnErrs(api, run)
-	}
+	run.CheckErrs(api, tag)
 	return rc
 }
 
@@ -319,22 +316,5 @@ func runDebug(run *testutil.Run, api, apiFile, outputDir string) {
 		return
 	}
 	testutil.RunDebugDataApis(run, &data, make(map[string]interface{}), &output)
-	writeOutput(&output, "api-output.yml", outputDir, run.Rc)
-}
-
-func writeOutput(output interface{}, fileName, outputDir string, rc *bool) {
-	ymlOut, err := yaml.Marshal(output)
-	if err != nil {
-		log.Printf("Failed to marshal debug output, %v\n", err)
-		*rc = false
-	} else {
-		util.PrintToFile(fileName, outputDir, string(ymlOut), true)
-	}
-}
-
-func failOnErrs(api string, run *testutil.Run) {
-	for _, err := range run.Errs {
-		log.Printf("\"%s\" run %s failed: %s\n", api, err.Desc, err.Msg)
-		*run.Rc = false
-	}
+	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
 }

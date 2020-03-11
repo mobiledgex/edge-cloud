@@ -393,9 +393,6 @@ func (r *Run) CloudletRefsApi(data *[]edgeproto.CloudletRefs, dataMap interface{
 	log.DebugLog(log.DebugLevelApi, "API for CloudletRefs", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.CloudletRefs{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowCloudletRefs(r.ctx, obj)
 		if err != nil {
 			r.logErr("CloudletRefsApi", err)
@@ -404,9 +401,25 @@ func (r *Run) CloudletRefsApi(data *[]edgeproto.CloudletRefs, dataMap interface{
 			if !ok {
 				panic(fmt.Sprintf("RunCloudletRefsApi expected dataOut type *[]edgeproto.CloudletRefs, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "showfiltered":
+			out, err := r.client.ShowCloudletRefs(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletRefsApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.CloudletRefs)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletRefsApi expected dataOut type *[]edgeproto.CloudletRefs, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		}
 	}
 }
 
@@ -429,9 +442,6 @@ func (r *Run) ClusterRefsApi(data *[]edgeproto.ClusterRefs, dataMap interface{},
 	log.DebugLog(log.DebugLevelApi, "API for ClusterRefs", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.ClusterRefs{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowClusterRefs(r.ctx, obj)
 		if err != nil {
 			r.logErr("ClusterRefsApi", err)
@@ -440,9 +450,25 @@ func (r *Run) ClusterRefsApi(data *[]edgeproto.ClusterRefs, dataMap interface{},
 			if !ok {
 				panic(fmt.Sprintf("RunClusterRefsApi expected dataOut type *[]edgeproto.ClusterRefs, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "showfiltered":
+			out, err := r.client.ShowClusterRefs(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("ClusterRefsApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.ClusterRefs)
+				if !ok {
+					panic(fmt.Sprintf("RunClusterRefsApi expected dataOut type *[]edgeproto.ClusterRefs, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		}
 	}
 }
 
