@@ -453,9 +453,9 @@ var ClusterInstKeyComments = map[string]string{
 var ClusterInstKeySpecialArgs = map[string]string{}
 var ClusterInstRequiredArgs = []string{
 	"cluster",
-	"cloudlet.org",
+	"cloudlet-org",
 	"cloudlet",
-	"cluster.org",
+	"cluster-org",
 }
 var ClusterInstOptionalArgs = []string{
 	"flavor",
@@ -476,16 +476,16 @@ var ClusterInstOptionalArgs = []string{
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
-	"cloudlet.org=key.cloudletkey.organization",
+	"cloudlet-org=key.cloudletkey.organization",
 	"cloudlet=key.cloudletkey.name",
-	"cluster.org=key.organization",
+	"cluster-org=key.organization",
 	"flavor=flavor.name",
 }
 var ClusterInstComments = map[string]string{
 	"cluster":            "Cluster name",
-	"cloudlet.org":       "Organization of the cloudlet site",
+	"cloudlet-org":       "Organization of the cloudlet site",
 	"cloudlet":           "Name of the cloudlet",
-	"cluster.org":        "Name of Developer organization that this cluster belongs to",
+	"cluster-org":        "Name of Developer organization that this cluster belongs to",
 	"flavor":             "Flavor name",
 	"liveness":           "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
 	"auto":               "Auto is set to true when automatically created by back-end (internal use only)",

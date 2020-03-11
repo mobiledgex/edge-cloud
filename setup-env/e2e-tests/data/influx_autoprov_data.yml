@@ -6,8 +6,8 @@
     - app
     - cloudlet
     - count
-    - app.org
-    - cloudlet.org
+    - apporg
+    - cloudletorg
     - ver
     values:
     - - "2019-12-12T23:45:19.491217Z"

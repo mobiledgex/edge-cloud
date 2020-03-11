@@ -53,11 +53,11 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for OperatorCodeApi service
 
 type OperatorCodeApiClient interface {
-	// Create a code for an Operator.
+	// Create Operator Code. Create a code for an Operator.
 	CreateOperatorCode(ctx context.Context, in *OperatorCode, opts ...grpc.CallOption) (*Result, error)
-	// Delete a code for an Operator.
+	// Delete Operator Code. Delete a code for an Operator.
 	DeleteOperatorCode(ctx context.Context, in *OperatorCode, opts ...grpc.CallOption) (*Result, error)
-	// Show OperatorCodes
+	// Delete Operator Code.  Show Codes for an Operator
 	ShowOperatorCode(ctx context.Context, in *OperatorCode, opts ...grpc.CallOption) (OperatorCodeApi_ShowOperatorCodeClient, error)
 }
 
@@ -122,11 +122,11 @@ func (x *operatorCodeApiShowOperatorCodeClient) Recv() (*OperatorCode, error) {
 // Server API for OperatorCodeApi service
 
 type OperatorCodeApiServer interface {
-	// Create a code for an Operator.
+	// Create Operator Code. Create a code for an Operator.
 	CreateOperatorCode(context.Context, *OperatorCode) (*Result, error)
-	// Delete a code for an Operator.
+	// Delete Operator Code. Delete a code for an Operator.
 	DeleteOperatorCode(context.Context, *OperatorCode) (*Result, error)
-	// Show OperatorCodes
+	// Delete Operator Code.  Show Codes for an Operator
 	ShowOperatorCode(*OperatorCode, OperatorCodeApi_ShowOperatorCodeServer) error
 }
 

@@ -163,7 +163,7 @@ var NodeKeySpecialArgs = map[string]string{}
 var NodeRequiredArgs = []string{
 	"name",
 	"type",
-	"organization",
+	"cloudlet-org",
 	"cloudlet",
 	"region",
 }
@@ -178,14 +178,14 @@ var NodeOptionalArgs = []string{
 var NodeAliasArgs = []string{
 	"name=key.name",
 	"type=key.type",
-	"organization=key.cloudletkey.organization",
+	"cloudlet-org=key.cloudletkey.organization",
 	"cloudlet=key.cloudletkey.name",
 	"region=key.region",
 }
 var NodeComments = map[string]string{
 	"name":             "Name or hostname of node",
 	"type":             "Node type",
-	"organization":     "Organization of the cloudlet site",
+	"cloudlet-org":     "Organization of the cloudlet site",
 	"cloudlet":         "Name of the cloudlet",
 	"region":           "Region the node is in",
 	"notifyid":         "Id of client assigned by server (internal use only)",

@@ -563,24 +563,22 @@ func updateContextWithCloudletDetails(ctx context.Context, cloudlet, carrier str
 	}
 }
 
-// returns true if if the requested app allows the registered app to
-// access APIs on its behalf
-func requestedAppPermitsRegisteredApp(requestedApp edgeproto.AppKey, registeredApp edgeproto.AppKey) bool {
-	// if the 2 apps match, allow it.  It means the client requested the same app as was registered
+// returns true if if the requested app exists and the requesting app is a platform app
+func verifyRegisteredAppForAppRequestedApp(requestedApp edgeproto.AppKey, registeredApp edgeproto.AppKey) error {
 	var tbl *DmeApps
 	tbl = DmeAppTbl
 
-	if requestedApp == registeredApp {
-		return true
-	}
 	if !cloudcommon.IsPlatformApp(registeredApp.Organization, registeredApp.Name) {
-		return false
+		return grpc.Errorf(codes.PermissionDenied, "Specifying AppName, AppVers or OrgName is not permitted for a non-platform app after registration")
 	}
-	// now find the app and see if it permits platform apps
+	// just check that the app exists, there is no longer a permitsPlatformApp concept
 	tbl.Lock()
 	defer tbl.Unlock()
 	_, ok := tbl.Apps[requestedApp]
-	return ok
+	if !ok {
+		return grpc.Errorf(codes.NotFound, "Requested app: OrgName: %s Appname: %s AppVers: %s not found", requestedApp.Organization, requestedApp.Name, requestedApp.Version)
+	}
+	return nil
 }
 
 func FindCloudlet(ctx context.Context, ckey *CookieKey, mreq *dme.FindCloudletRequest, mreply *dme.FindCloudletReply) error {
@@ -599,9 +597,9 @@ func FindCloudlet(ctx context.Context, ckey *CookieKey, mreq *dme.FindCloudletRe
 		reqkey.Organization = mreq.OrgName
 		reqkey.Name = mreq.AppName
 		reqkey.Version = mreq.AppVers
-		if !requestedAppPermitsRegisteredApp(reqkey, appkey) {
-			return grpc.Errorf(codes.PermissionDenied, "Access to requested app: Devname: %s Appname: %s AppVers: %s not allowed for the registered app: Devname: %s Appname: %s Appvers: %s",
-				mreq.OrgName, mreq.AppName, mreq.AppVers, appkey.Organization, appkey.Name, appkey.Version)
+		err := verifyRegisteredAppForAppRequestedApp(reqkey, appkey)
+		if err != nil {
+			return err
 		}
 		//update the appkey to use the requested key
 		appkey = reqkey

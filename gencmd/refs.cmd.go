@@ -226,7 +226,7 @@ var ClusterRefsComments = map[string]string{
 	"key.cloudletkey.organization": "Organization of the cloudlet site",
 	"key.cloudletkey.name":         "Name of the cloudlet",
 	"key.organization":             "Name of Developer organization that this cluster belongs to",
-	"apps.organization":            "Developer Organization",
+	"apps.organization":            "App developer organization",
 	"apps.name":                    "App name",
 	"apps.version":                 "App version",
 	"usedram":                      "Used RAM in MB",

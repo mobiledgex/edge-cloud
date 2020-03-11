@@ -380,13 +380,13 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 	if api == "showlogs" {
 		args = append(args, "ShowLogs")
 	}
-	args = append(args, "app.org="+req.AppInstKey.AppKey.Organization)
+	args = append(args, "app-org="+req.AppInstKey.AppKey.Organization)
 	args = append(args, "appname="+req.AppInstKey.AppKey.Name)
 	args = append(args, "appvers="+req.AppInstKey.AppKey.Version)
 	args = append(args, "cloudlet="+req.AppInstKey.ClusterInstKey.CloudletKey.Name)
-	args = append(args, "cloudlet.org="+req.AppInstKey.ClusterInstKey.CloudletKey.Organization)
+	args = append(args, "cloudlet-org="+req.AppInstKey.ClusterInstKey.CloudletKey.Organization)
 	args = append(args, "cluster="+req.AppInstKey.ClusterInstKey.ClusterKey.Name)
-	args = append(args, "cluster.org="+req.AppInstKey.ClusterInstKey.Organization)
+	args = append(args, "cluster-org="+req.AppInstKey.ClusterInstKey.Organization)
 	if api == "runcommand" && req.Cmd != nil {
 		args = append(args, "command=\""+req.Cmd.Command+"\"")
 	}

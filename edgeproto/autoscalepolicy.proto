@@ -9,7 +9,7 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 
 message PolicyKey {
-  // Name of the organization that this policy belongs to
+  // Name of the organization for the cluster that this policy will apply to
   string organization = 1;
   // Policy name
   string name = 2;
@@ -40,7 +40,7 @@ message AutoScalePolicy {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,organization=Key.Organization";
+  option (protogen.alias) = "name=Key.Name,cluster-org=Key.Organization";
 }
 
 service AutoScalePolicyApi {

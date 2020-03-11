@@ -125,10 +125,10 @@ func ApiStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *ApiStat)
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
 	metric.Name = "dme-api"
-	metric.AddTag("dev", key.AppKey.Organization)
+	metric.AddTag("apporg", key.AppKey.Organization)
 	metric.AddTag("app", key.AppKey.Name)
 	metric.AddTag("ver", key.AppKey.Version)
-	metric.AddTag("oper", myCloudletKey.Organization)
+	metric.AddTag("cloudletorg", myCloudletKey.Organization)
 	metric.AddTag("cloudlet", myCloudletKey.Name)
 	metric.AddTag("id", *scaleID)
 	metric.AddTag("method", key.Method)

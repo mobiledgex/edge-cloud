@@ -274,12 +274,12 @@ var PolicyKeyOptionalArgs = []string{
 }
 var PolicyKeyAliasArgs = []string{}
 var PolicyKeyComments = map[string]string{
-	"organization": "Name of the organization that this policy belongs to",
+	"organization": "Name of the organization for the cluster that this policy will apply to",
 	"name":         "Policy name",
 }
 var PolicyKeySpecialArgs = map[string]string{}
 var AutoScalePolicyRequiredArgs = []string{
-	"organization",
+	"cluster-org",
 	"name",
 }
 var AutoScalePolicyOptionalArgs = []string{
@@ -290,11 +290,11 @@ var AutoScalePolicyOptionalArgs = []string{
 	"triggertimesec",
 }
 var AutoScalePolicyAliasArgs = []string{
-	"organization=key.organization",
+	"cluster-org=key.organization",
 	"name=key.name",
 }
 var AutoScalePolicyComments = map[string]string{
-	"organization":       "Name of the organization that this policy belongs to",
+	"cluster-org":        "Name of the organization for the cluster that this policy will apply to",
 	"name":               "Policy name",
 	"minnodes":           "Minimum number of cluster nodes",
 	"maxnodes":           "Maximum number of cluster nodes",
@@ -304,7 +304,7 @@ var AutoScalePolicyComments = map[string]string{
 }
 var AutoScalePolicySpecialArgs = map[string]string{}
 var CreateAutoScalePolicyRequiredArgs = []string{
-	"organization",
+	"cluster-org",
 	"name",
 	"minnodes",
 	"maxnodes",

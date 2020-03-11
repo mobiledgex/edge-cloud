@@ -137,7 +137,7 @@ message AppInst {
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
   option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,NodeFlavor,ExternalVolumeSize,AvailabilityZone";
-  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,organization=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster.org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet.org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
+  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
   option (protogen.not_required) = "Key.ClusterInstKey.Organization";
   option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
 }

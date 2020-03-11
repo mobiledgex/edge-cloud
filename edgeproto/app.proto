@@ -17,7 +17,7 @@ import "gogoproto/gogo.proto";
 //
 // AppKey uniquely identifies an App
 message AppKey {
-  // Developer Organization
+  // App developer organization
   string organization = 1;
   // App name
   string name = 2;
@@ -135,7 +135,7 @@ message ConfigFile {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
-  option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,organization=Key.Organization,defaultflavor=DefaultFlavor.Name";
+  option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
   option (protogen.noconfig) = "Revision";
 }
 

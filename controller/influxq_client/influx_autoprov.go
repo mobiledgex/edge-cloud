@@ -42,10 +42,10 @@ func (q *InfluxQ) PushAutoProvCounts(ctx context.Context, msg *edgeproto.AutoPro
 
 func AutoProvCountToPt(apCount *edgeproto.AutoProvCount, dmeid string, ts time.Time) (*client.Point, error) {
 	tags := make(map[string]string)
-	tags["app.org"] = apCount.AppKey.Organization
+	tags["apporg"] = apCount.AppKey.Organization
 	tags["app"] = apCount.AppKey.Name
 	tags["ver"] = apCount.AppKey.Version
-	tags["cloudlet.org"] = apCount.CloudletKey.Organization
+	tags["cloudletorg"] = apCount.CloudletKey.Organization
 	tags["cloudlet"] = apCount.CloudletKey.Name
 	tags["dme-id"] = dmeid
 	fields := make(map[string]interface{})
@@ -61,13 +61,13 @@ func ParseAutoProvCount(cols []string, values []interface{}) (*edgeproto.AutoPro
 		val := values[c]
 		var err error
 		switch name {
-		case "app.org":
+		case "apporg":
 			ap.AppKey.Organization, err = influxsup.ConvString(val)
 		case "app":
 			ap.AppKey.Name, err = influxsup.ConvString(val)
 		case "ver":
 			ap.AppKey.Version, err = influxsup.ConvString(val)
-		case "cloudlet.org":
+		case "cloudletorg":
 			ap.CloudletKey.Organization, err = influxsup.ConvString(val)
 		case "cloudlet":
 			ap.CloudletKey.Name, err = influxsup.ConvString(val)

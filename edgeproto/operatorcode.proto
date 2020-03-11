@@ -13,7 +13,6 @@ message OperatorCode {
   string code = 1;
    // Operator Organization name 
   string organization = 2;
-  // MobiledgeX operator name
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -24,7 +23,7 @@ message OperatorCode {
 }
 
 service OperatorCodeApi {
-  // Create a code for an Operator.
+  // Create Operator Code. Create a code for an Operator.
   rpc CreateOperatorCode(OperatorCode) returns (Result) {
     option (google.api.http) = {
       post: "/create/operatorcode"
@@ -32,7 +31,7 @@ service OperatorCodeApi {
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
   }
-  // Delete a code for an Operator.
+  // Delete Operator Code. Delete a code for an Operator.
   rpc DeleteOperatorCode(OperatorCode) returns (Result) {
     option (google.api.http) = {
       post: "/delete/operatorcode"
@@ -40,7 +39,7 @@ service OperatorCodeApi {
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
   }
-  // Show OperatorCodes
+  // Delete Operator Code.  Show Codes for an Operator
   rpc ShowOperatorCode(OperatorCode) returns (stream OperatorCode) {
     option (google.api.http) = {
       post: "/show/operatorcode"

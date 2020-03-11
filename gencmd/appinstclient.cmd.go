@@ -188,34 +188,34 @@ var AppInstClientApiCmds = []*cobra.Command{
 }
 
 var AppInstClientKeyRequiredArgs = []string{
-	"app.org",
+	"app-org",
 	"appname",
 	"appvers",
 	"cluster",
-	"cloudlet.org",
+	"cloudlet-org",
 	"cloudlet",
-	"cluster.org",
+	"cluster-org",
 }
 var AppInstClientKeyOptionalArgs = []string{
 	"uuid",
 }
 var AppInstClientKeyAliasArgs = []string{
-	"app.org=key.appkey.organization",
+	"app-org=key.appkey.organization",
 	"appname=key.appkey.name",
 	"appvers=key.appkey.version",
 	"cluster=key.clusterinstkey.clusterkey.name",
-	"cloudlet.org=key.clusterinstkey.cloudletkey.organization",
+	"cloudlet-org=key.clusterinstkey.cloudletkey.organization",
 	"cloudlet=key.clusterinstkey.cloudletkey.name",
-	"cluster.org=key.clusterinstkey.organization",
+	"cluster-org=key.clusterinstkey.organization",
 }
 var AppInstClientKeyComments = map[string]string{
-	"app.org":      "Developer Organization",
+	"app-org":      "App developer organization",
 	"appname":      "App name",
 	"appvers":      "App version",
 	"cluster":      "Cluster name",
-	"cloudlet.org": "Organization of the cloudlet site",
+	"cloudlet-org": "Organization of the cloudlet site",
 	"cloudlet":     "Name of the cloudlet",
-	"cluster.org":  "Name of Developer organization that this cluster belongs to",
+	"cluster-org":  "Name of Developer organization that this cluster belongs to",
 	"uuid":         "AppInstClient UUID",
 }
 var AppInstClientKeySpecialArgs = map[string]string{}
@@ -242,7 +242,7 @@ var AppInstClientOptionalArgs = []string{
 }
 var AppInstClientAliasArgs = []string{}
 var AppInstClientComments = map[string]string{
-	"clientkey.key.appkey.organization":                     "Developer Organization",
+	"clientkey.key.appkey.organization":                     "App developer organization",
 	"clientkey.key.appkey.name":                             "App name",
 	"clientkey.key.appkey.version":                          "App version",
 	"clientkey.key.clusterinstkey.clusterkey.name":          "Cluster name",

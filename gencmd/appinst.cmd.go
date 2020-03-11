@@ -630,7 +630,7 @@ var AppInstKeyOptionalArgs = []string{
 }
 var AppInstKeyAliasArgs = []string{}
 var AppInstKeyComments = map[string]string{
-	"appkey.organization":                     "Developer Organization",
+	"appkey.organization":                     "App developer organization",
 	"appkey.name":                             "App name",
 	"appkey.version":                          "App version",
 	"clusterinstkey.clusterkey.name":          "Cluster name",
@@ -640,15 +640,15 @@ var AppInstKeyComments = map[string]string{
 }
 var AppInstKeySpecialArgs = map[string]string{}
 var AppInstRequiredArgs = []string{
-	"organization",
+	"app-org",
 	"appname",
 	"appvers",
 	"cluster",
-	"cloudlet.org",
+	"cloudlet-org",
 	"cloudlet",
 }
 var AppInstOptionalArgs = []string{
-	"cluster.org",
+	"cluster-org",
 	"flavor",
 	"state",
 	"crmoverride",
@@ -664,23 +664,23 @@ var AppInstOptionalArgs = []string{
 	"vmflavor",
 }
 var AppInstAliasArgs = []string{
-	"organization=key.appkey.organization",
+	"app-org=key.appkey.organization",
 	"appname=key.appkey.name",
 	"appvers=key.appkey.version",
 	"cluster=key.clusterinstkey.clusterkey.name",
-	"cloudlet.org=key.clusterinstkey.cloudletkey.organization",
+	"cloudlet-org=key.clusterinstkey.cloudletkey.organization",
 	"cloudlet=key.clusterinstkey.cloudletkey.name",
-	"cluster.org=key.clusterinstkey.organization",
+	"cluster-org=key.clusterinstkey.organization",
 	"flavor=flavor.name",
 }
 var AppInstComments = map[string]string{
-	"organization":                   "Developer Organization",
+	"app-org":                        "App developer organization",
 	"appname":                        "App name",
 	"appvers":                        "App version",
 	"cluster":                        "Cluster name",
-	"cloudlet.org":                   "Organization of the cloudlet site",
+	"cloudlet-org":                   "Organization of the cloudlet site",
 	"cloudlet":                       "Name of the cloudlet",
-	"cluster.org":                    "Name of Developer organization that this cluster belongs to",
+	"cluster-org":                    "Name of Developer organization that this cluster belongs to",
 	"cloudletloc.latitude":           "latitude in WGS 84 coordinates",
 	"cloudletloc.longitude":          "longitude in WGS 84 coordinates",
 	"cloudletloc.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -753,7 +753,7 @@ var AppInstInfoOptionalArgs = []string{
 }
 var AppInstInfoAliasArgs = []string{}
 var AppInstInfoComments = map[string]string{
-	"key.appkey.organization":                     "Developer Organization",
+	"key.appkey.organization":                     "App developer organization",
 	"key.appkey.name":                             "App name",
 	"key.appkey.version":                          "App version",
 	"key.clusterinstkey.clusterkey.name":          "Cluster name",
@@ -780,15 +780,15 @@ var AppInstMetricsComments = map[string]string{
 }
 var AppInstMetricsSpecialArgs = map[string]string{}
 var CreateAppInstRequiredArgs = []string{
-	"organization",
+	"app-org",
 	"appname",
 	"appvers",
 	"cluster",
-	"cloudlet.org",
+	"cloudlet-org",
 	"cloudlet",
 }
 var CreateAppInstOptionalArgs = []string{
-	"cluster.org",
+	"cluster-org",
 	"flavor",
 	"state",
 	"crmoverride",
@@ -803,15 +803,15 @@ var CreateAppInstOptionalArgs = []string{
 	"vmflavor",
 }
 var DeleteAppInstRequiredArgs = []string{
-	"organization",
+	"app-org",
 	"appname",
 	"appvers",
 	"cluster",
-	"cloudlet.org",
+	"cloudlet-org",
 	"cloudlet",
 }
 var DeleteAppInstOptionalArgs = []string{
-	"cluster.org",
+	"cluster-org",
 	"cloudletloc.latitude",
 	"cloudletloc.longitude",
 	"cloudletloc.horizontalaccuracy",
@@ -855,15 +855,15 @@ var DeleteAppInstOptionalArgs = []string{
 	"vmflavor",
 }
 var RefreshAppInstRequiredArgs = []string{
-	"organization",
+	"app-org",
 	"appname",
 	"appvers",
 }
 var RefreshAppInstOptionalArgs = []string{
 	"cluster",
-	"cloudlet.org",
+	"cloudlet-org",
 	"cloudlet",
-	"cluster.org",
+	"cluster-org",
 	"crmoverride",
 	"forceupdate",
 	"updatemultiple",
@@ -875,15 +875,15 @@ var RefreshAppInstOptionalArgs = []string{
 	"vmflavor",
 }
 var UpdateAppInstRequiredArgs = []string{
-	"organization",
+	"app-org",
 	"appname",
 	"appvers",
 	"cluster",
-	"cloudlet.org",
+	"cloudlet-org",
 	"cloudlet",
 }
 var UpdateAppInstOptionalArgs = []string{
-	"cluster.org",
+	"cluster-org",
 	"crmoverride",
 	"configs.kind",
 	"configs.config",
