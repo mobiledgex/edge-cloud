@@ -91,10 +91,10 @@ func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, 
 		if commercialCerts {
 			err = getCertFromVault(ctx, config, &tls, commonName, dedicatedCommonName)
 		} else {
-			getSelfSignedCerts(ctx, &tls, commonName, dedicatedCommonName)
+			err = getSelfSignedCerts(ctx, &tls, commonName, dedicatedCommonName)
 		}
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "unable to pull certs from vault", "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfo, "Unable to get certs", "err", err)
 		} else {
 			writeCertToRootLb(ctx, &tls, SharedRootLbClient)
 			DedicatedMux.Lock()
@@ -191,8 +191,6 @@ func getSelfSignedCerts(ctx context.Context, tlsCert *access.TLSCert, commonName
 	// Get the private key
 	start := strings.Index(output, privKeyStart)
 	end := strings.Index(output, privKeyEnd)
-	fmt.Println(output)
-	fmt.Printf("%d %d\n", start, end)
 	if start == -1 || end == -1 {
 		return fmt.Errorf("Cert generation failed, could not find start or end of private key")
 	}
