@@ -542,9 +542,6 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 	log.DebugLog(log.DebugLevelApi, "API for Cloudlet", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.Cloudlet{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowCloudlet(r.ctx, obj)
 		if err != nil {
 			r.logErr("CloudletApi", err)
@@ -553,7 +550,7 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 			if !ok {
 				panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[]edgeproto.Cloudlet, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
 	}
@@ -604,6 +601,17 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
 				}
 				*outp = append(*outp, out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowCloudlet(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Cloudlet)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[]edgeproto.Cloudlet, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
 			}
 		}
 	}
@@ -715,9 +723,6 @@ func (r *Run) CloudletInfoApi(data *[]edgeproto.CloudletInfo, dataMap interface{
 	log.DebugLog(log.DebugLevelApi, "API for CloudletInfo", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.CloudletInfo{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowCloudletInfo(r.ctx, obj)
 		if err != nil {
 			r.logErr("CloudletInfoApi", err)
@@ -726,13 +731,24 @@ func (r *Run) CloudletInfoApi(data *[]edgeproto.CloudletInfo, dataMap interface{
 			if !ok {
 				panic(fmt.Sprintf("RunCloudletInfoApi expected dataOut type *[]edgeproto.CloudletInfo, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
 	}
 	for ii, objD := range *data {
 		obj := &objD
 		switch r.Mode {
+		case "showfiltered":
+			out, err := r.client.ShowCloudletInfo(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletInfoApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.CloudletInfo)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletInfoApi expected dataOut type *[]edgeproto.CloudletInfo, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
 		case "inject":
 			out, err := r.client.InjectCloudletInfo(r.ctx, obj)
 			if err != nil {
@@ -794,9 +810,6 @@ func (r *Run) CloudletMetricsApi(data *[]edgeproto.CloudletMetrics, dataMap inte
 	log.DebugLog(log.DebugLevelApi, "API for CloudletMetrics", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.CloudletMetrics{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowCloudletMetrics(r.ctx, obj)
 		if err != nil {
 			r.logErr("CloudletMetricsApi", err)
@@ -805,9 +818,25 @@ func (r *Run) CloudletMetricsApi(data *[]edgeproto.CloudletMetrics, dataMap inte
 			if !ok {
 				panic(fmt.Sprintf("RunCloudletMetricsApi expected dataOut type *[]edgeproto.CloudletMetrics, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "showfiltered":
+			out, err := r.client.ShowCloudletMetrics(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletMetricsApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.CloudletMetrics)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletMetricsApi expected dataOut type *[]edgeproto.CloudletMetrics, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		}
 	}
 }
 

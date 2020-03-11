@@ -314,9 +314,6 @@ func (r *Run) AppApi(data *[]edgeproto.App, dataMap interface{}, dataOut interfa
 	log.DebugLog(log.DebugLevelApi, "API for App", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.App{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowApp(r.ctx, obj)
 		if err != nil {
 			r.logErr("AppApi", err)
@@ -325,7 +322,7 @@ func (r *Run) AppApi(data *[]edgeproto.App, dataMap interface{}, dataOut interfa
 			if !ok {
 				panic(fmt.Sprintf("RunAppApi expected dataOut type *[]edgeproto.App, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
 	}
@@ -376,6 +373,17 @@ func (r *Run) AppApi(data *[]edgeproto.App, dataMap interface{}, dataOut interfa
 					panic(fmt.Sprintf("RunAppApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
 				}
 				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowApp(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("AppApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.App)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi expected dataOut type *[]edgeproto.App, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
 			}
 		}
 	}
