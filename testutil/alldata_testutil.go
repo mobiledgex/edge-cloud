@@ -31,8 +31,8 @@ type AllDataOut struct {
 	AutoProvPolicyCloudlets []edgeproto.Result
 	AutoScalePolicies       []edgeproto.Result
 	PrivacyPolicies         []edgeproto.Result
-	Apps                    []edgeproto.Result
 	ClusterInsts            [][]edgeproto.Result
+	Apps                    []edgeproto.Result
 	AppInstances            [][]edgeproto.Result
 	Errors                  []Err
 }
@@ -52,16 +52,16 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	run.AutoProvPolicyApi_AutoProvPolicyCloudlet(&in.AutoProvPolicyCloudlets, inMap["autoprovpolicycloudlets"], &out.AutoProvPolicyCloudlets)
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, inMap["autoscalepolicies"], &out.AutoScalePolicies)
 	run.PrivacyPolicyApi(&in.PrivacyPolicies, inMap["privacypolicies"], &out.PrivacyPolicies)
-	run.AppApi(&in.Apps, inMap["apps"], &out.Apps)
 	run.ClusterInstApi(&in.ClusterInsts, inMap["clusterinsts"], &out.ClusterInsts)
+	run.AppApi(&in.Apps, inMap["apps"], &out.Apps)
 	run.AppInstApi(&in.AppInstances, inMap["appinstances"], &out.AppInstances)
 	out.Errors = run.Errs
 }
 
 func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{}, out *AllDataOut) {
 	run.AppInstApi(&in.AppInstances, inMap["appinstances"], &out.AppInstances)
-	run.ClusterInstApi(&in.ClusterInsts, inMap["clusterinsts"], &out.ClusterInsts)
 	run.AppApi(&in.Apps, inMap["apps"], &out.Apps)
+	run.ClusterInstApi(&in.ClusterInsts, inMap["clusterinsts"], &out.ClusterInsts)
 	run.PrivacyPolicyApi(&in.PrivacyPolicies, inMap["privacypolicies"], &out.PrivacyPolicies)
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, inMap["autoscalepolicies"], &out.AutoScalePolicies)
 	run.AutoProvPolicyApi_AutoProvPolicyCloudlet(&in.AutoProvPolicyCloudlets, inMap["autoprovpolicycloudlets"], &out.AutoProvPolicyCloudlets)
@@ -93,7 +93,7 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.AutoProvPolicyApi(&in.AutoProvPolicies, nil, &out.AutoProvPolicies)
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, nil, &out.AutoScalePolicies)
 	run.PrivacyPolicyApi(&in.PrivacyPolicies, nil, &out.PrivacyPolicies)
-	run.AppApi(&in.Apps, nil, &out.Apps)
 	run.ClusterInstApi(&in.ClusterInsts, nil, &out.ClusterInsts)
+	run.AppApi(&in.Apps, nil, &out.Apps)
 	run.AppInstApi(&in.AppInstances, nil, &out.AppInstances)
 }

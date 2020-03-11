@@ -584,9 +584,6 @@ func (r *Run) OperatorApi(data *[]edgeproto.Operator, dataMap interface{}, dataO
 	log.DebugLog(log.DebugLevelApi, "API for Operator", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.Operator{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowOperator(r.ctx, obj)
 		if err != nil {
 			r.logErr("OperatorApi", err)
@@ -595,7 +592,7 @@ func (r *Run) OperatorApi(data *[]edgeproto.Operator, dataMap interface{}, dataO
 			if !ok {
 				panic(fmt.Sprintf("RunOperatorApi expected dataOut type *[]edgeproto.Operator, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
 	}
@@ -647,6 +644,17 @@ func (r *Run) OperatorApi(data *[]edgeproto.Operator, dataMap interface{}, dataO
 				}
 				*outp = append(*outp, *out)
 			}
+		case "showfiltered":
+			out, err := r.client.ShowOperator(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("OperatorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Operator)
+				if !ok {
+					panic(fmt.Sprintf("RunOperatorApi expected dataOut type *[]edgeproto.Operator, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
 		}
 	}
 }
@@ -694,9 +702,6 @@ func (r *Run) OperatorCodeApi(data *[]edgeproto.OperatorCode, dataMap interface{
 	log.DebugLog(log.DebugLevelApi, "API for OperatorCode", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.OperatorCode{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowOperatorCode(r.ctx, obj)
 		if err != nil {
 			r.logErr("OperatorCodeApi", err)
@@ -705,7 +710,7 @@ func (r *Run) OperatorCodeApi(data *[]edgeproto.OperatorCode, dataMap interface{
 			if !ok {
 				panic(fmt.Sprintf("RunOperatorCodeApi expected dataOut type *[]edgeproto.OperatorCode, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
 	}
@@ -733,6 +738,17 @@ func (r *Run) OperatorCodeApi(data *[]edgeproto.OperatorCode, dataMap interface{
 					panic(fmt.Sprintf("RunOperatorCodeApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
 				}
 				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowOperatorCode(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("OperatorCodeApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.OperatorCode)
+				if !ok {
+					panic(fmt.Sprintf("RunOperatorCodeApi expected dataOut type *[]edgeproto.OperatorCode, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
 			}
 		}
 	}

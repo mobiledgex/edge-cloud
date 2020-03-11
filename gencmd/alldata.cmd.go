@@ -90,19 +90,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i1 := 0; i1 < len(in.PrivacyPolicies[i0].OutboundSecurityRules); i1++ {
 		}
 	}
-	for i0 := 0; i0 < len(in.Apps); i0++ {
-		if _, found := tags["nocmp"]; found {
-			in.Apps[i0].DeploymentManifest = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Apps[i0].DeploymentGenerator = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Apps[i0].DelOpt = 0
-		}
-		for i1 := 0; i1 < len(in.Apps[i0].Configs); i1++ {
-		}
-	}
 	for i0 := 0; i0 < len(in.ClusterInsts); i0++ {
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].State = 0
@@ -127,6 +114,22 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].MasterNodeFlavor = ""
+		}
+	}
+	for i0 := 0; i0 < len(in.Apps); i0++ {
+		if _, found := tags["nocmp"]; found {
+			in.Apps[i0].DeploymentManifest = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Apps[i0].DeploymentGenerator = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Apps[i0].DelOpt = 0
+		}
+		for i1 := 0; i1 < len(in.Apps[i0].Configs); i1++ {
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Apps[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.AppInstances); i0++ {
@@ -326,33 +329,6 @@ var AllDataOptionalArgs = []string{
 	"privacypolicies.outboundsecurityrules.portrangemin",
 	"privacypolicies.outboundsecurityrules.portrangemax",
 	"privacypolicies.outboundsecurityrules.remotecidr",
-	"apps.fields",
-	"apps.key.developerkey.name",
-	"apps.key.name",
-	"apps.key.version",
-	"apps.imagepath",
-	"apps.imagetype",
-	"apps.accessports",
-	"apps.defaultflavor.name",
-	"apps.authpublickey",
-	"apps.command",
-	"apps.annotations",
-	"apps.deployment",
-	"apps.deploymentmanifest",
-	"apps.deploymentgenerator",
-	"apps.androidpackagename",
-	"apps.delopt",
-	"apps.configs.kind",
-	"apps.configs.config",
-	"apps.scalewithcluster",
-	"apps.internalports",
-	"apps.revision",
-	"apps.officialfqdn",
-	"apps.md5sum",
-	"apps.defaultsharedvolumesize",
-	"apps.autoprovpolicy",
-	"apps.accesstype",
-	"apps.defaultprivacypolicy",
 	"clusterinsts.fields",
 	"clusterinsts.key.clusterkey.name",
 	"clusterinsts.key.cloudletkey.operatorkey.name",
@@ -383,6 +359,34 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts.sharedvolumesize",
 	"clusterinsts.privacypolicy",
 	"clusterinsts.masternodeflavor",
+	"apps.fields",
+	"apps.key.developerkey.name",
+	"apps.key.name",
+	"apps.key.version",
+	"apps.imagepath",
+	"apps.imagetype",
+	"apps.accessports",
+	"apps.defaultflavor.name",
+	"apps.authpublickey",
+	"apps.command",
+	"apps.annotations",
+	"apps.deployment",
+	"apps.deploymentmanifest",
+	"apps.deploymentgenerator",
+	"apps.androidpackagename",
+	"apps.delopt",
+	"apps.configs.kind",
+	"apps.configs.config",
+	"apps.scalewithcluster",
+	"apps.internalports",
+	"apps.revision",
+	"apps.officialfqdn",
+	"apps.md5sum",
+	"apps.defaultsharedvolumesize",
+	"apps.autoprovpolicy",
+	"apps.accesstype",
+	"apps.defaultprivacypolicy",
+	"apps.deleteprepare",
 	"appinstances.fields",
 	"appinstances.key.appkey.developerkey.name",
 	"appinstances.key.appkey.name",
@@ -571,6 +575,32 @@ var AllDataComments = map[string]string{
 	"privacypolicies.outboundsecurityrules.portrangemin":           "TCP or UDP port range start",
 	"privacypolicies.outboundsecurityrules.portrangemax":           "TCP or UDP port range end",
 	"privacypolicies.outboundsecurityrules.remotecidr":             "remote CIDR X.X.X.X/X",
+	"clusterinsts.fields":                                          "Fields are used for the Update API to specify which fields to apply",
+	"clusterinsts.key.clusterkey.name":                             "Cluster name",
+	"clusterinsts.key.cloudletkey.operatorkey.name":                "Company or Organization name of the operator",
+	"clusterinsts.key.cloudletkey.name":                            "Name of the cloudlet",
+	"clusterinsts.key.developer":                                   "Name of Developer that this cluster belongs to",
+	"clusterinsts.flavor.name":                                     "Flavor name",
+	"clusterinsts.liveness":                                        "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
+	"clusterinsts.auto":                                            "Auto is set to true when automatically created by back-end (internal use only)",
+	"clusterinsts.state":                                           "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"clusterinsts.errors":                                          "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
+	"clusterinsts.crmoverride":                                     "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+	"clusterinsts.ipaccess":                                        "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
+	"clusterinsts.allocatedip":                                     "Allocated IP for dedicated access",
+	"clusterinsts.nodeflavor":                                      "Cloudlet specific node flavor",
+	"clusterinsts.deployment":                                      "Deployment type (kubernetes or docker)",
+	"clusterinsts.nummasters":                                      "Number of k8s masters (In case of docker deployment, this field is not required)",
+	"clusterinsts.numnodes":                                        "Number of k8s nodes (In case of docker deployment, this field is not required)",
+	"clusterinsts.externalvolumesize":                              "Size of external volume to be attached to nodes.  This is for the root partition",
+	"clusterinsts.autoscalepolicy":                                 "Auto scale policy name",
+	"clusterinsts.availabilityzone":                                "Optional Resource AZ if any",
+	"clusterinsts.imagename":                                       "Optional resource specific image to launch",
+	"clusterinsts.reservable":                                      "If ClusterInst is reservable",
+	"clusterinsts.reservedby":                                      "For reservable MobiledgeX ClusterInsts, the current developer tenant",
+	"clusterinsts.sharedvolumesize":                                "Size of an optional shared volume to be mounted on the master",
+	"clusterinsts.privacypolicy":                                   "Optional privacy policy name",
+	"clusterinsts.masternodeflavor":                                "Generic flavor for k8s master VM when worker nodes > 0",
 	"apps.fields":                                                  "Fields are used for the Update API to specify which fields to apply",
 	"apps.key.developerkey.name":                                   "Organization or Company Name that a Developer is part of",
 	"apps.key.name":                                                "App name",
@@ -598,32 +628,7 @@ var AllDataComments = map[string]string{
 	"apps.autoprovpolicy":                                          "Auto provisioning policy name",
 	"apps.accesstype":                                              "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"apps.defaultprivacypolicy":                                    "Privacy policy when creating auto cluster",
-	"clusterinsts.fields":                                          "Fields are used for the Update API to specify which fields to apply",
-	"clusterinsts.key.clusterkey.name":                             "Cluster name",
-	"clusterinsts.key.cloudletkey.operatorkey.name":                "Company or Organization name of the operator",
-	"clusterinsts.key.cloudletkey.name":                            "Name of the cloudlet",
-	"clusterinsts.key.developer":                                   "Name of Developer that this cluster belongs to",
-	"clusterinsts.flavor.name":                                     "Flavor name",
-	"clusterinsts.liveness":                                        "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
-	"clusterinsts.auto":                                            "Auto is set to true when automatically created by back-end (internal use only)",
-	"clusterinsts.state":                                           "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
-	"clusterinsts.errors":                                          "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
-	"clusterinsts.crmoverride":                                     "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
-	"clusterinsts.ipaccess":                                        "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
-	"clusterinsts.allocatedip":                                     "Allocated IP for dedicated access",
-	"clusterinsts.nodeflavor":                                      "Cloudlet specific node flavor",
-	"clusterinsts.deployment":                                      "Deployment type (kubernetes or docker)",
-	"clusterinsts.nummasters":                                      "Number of k8s masters (In case of docker deployment, this field is not required)",
-	"clusterinsts.numnodes":                                        "Number of k8s nodes (In case of docker deployment, this field is not required)",
-	"clusterinsts.externalvolumesize":                              "Size of external volume to be attached to nodes.  This is for the root partition",
-	"clusterinsts.autoscalepolicy":                                 "Auto scale policy name",
-	"clusterinsts.availabilityzone":                                "Optional Resource AZ if any",
-	"clusterinsts.imagename":                                       "Optional resource specific image to launch",
-	"clusterinsts.reservable":                                      "If ClusterInst is reservable",
-	"clusterinsts.reservedby":                                      "For reservable MobiledgeX ClusterInsts, the current developer tenant",
-	"clusterinsts.sharedvolumesize":                                "Size of an optional shared volume to be mounted on the master",
-	"clusterinsts.privacypolicy":                                   "Optional privacy policy name",
-	"clusterinsts.masternodeflavor":                                "Generic flavor for k8s master VM when worker nodes > 0",
+	"apps.deleteprepare":                                           "Preparing to be deleted",
 	"appinstances.fields":                                          "Fields are used for the Update API to specify which fields to apply",
 	"appinstances.key.appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
 	"appinstances.key.appkey.name":                                 "App name",

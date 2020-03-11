@@ -42,6 +42,9 @@ func AppHideTags(in *edgeproto.App) {
 	}
 	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
 }
 
 var AppApiCmd edgeproto.AppApiClient
@@ -389,6 +392,7 @@ var AppComments = map[string]string{
 	"autoprovpolicy":          "Auto provisioning policy name",
 	"accesstype":              "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"defaultprivacypolicy":    "Privacy policy when creating auto cluster",
+	"deleteprepare":           "Preparing to be deleted",
 }
 var AppSpecialArgs = map[string]string{
 	"fields": "StringArray",
