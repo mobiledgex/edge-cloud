@@ -933,12 +933,12 @@ func GetCloudletUsedDisk(indices ...int) uint64 {
 var AlertData = []edgeproto.Alert{
 	edgeproto.Alert{
 		Labels: map[string]string{
-			"alertname":    "AutoScaleUp",
-			"operatororg":  ClusterInstData[0].Key.CloudletKey.Organization,
-			"cloudlet":     ClusterInstData[0].Key.CloudletKey.Name,
-			"cluster":      ClusterInstData[0].Key.ClusterKey.Name,
-			"developerorg": ClusterInstData[0].Key.Organization,
-			"severity":     "none",
+			"alertname":   "AutoScaleUp",
+			"cloudletorg": ClusterInstData[0].Key.CloudletKey.Organization,
+			"cloudlet":    ClusterInstData[0].Key.CloudletKey.Name,
+			"cluster":     ClusterInstData[0].Key.ClusterKey.Name,
+			"clusterorg":  ClusterInstData[0].Key.Organization,
+			"severity":    "none",
 		},
 		Annotations: map[string]string{
 			"message": "Policy threshold to scale up cluster reached",
@@ -952,12 +952,12 @@ var AlertData = []edgeproto.Alert{
 	},
 	edgeproto.Alert{
 		Labels: map[string]string{
-			"alertname":    "AutoScaleDown",
-			"operatororg":  ClusterInstData[0].Key.CloudletKey.Organization,
-			"cloudlet":     ClusterInstData[0].Key.CloudletKey.Name,
-			"cluster":      ClusterInstData[0].Key.ClusterKey.Name,
-			"developerorg": ClusterInstData[0].Key.Organization,
-			"severity":     "none",
+			"alertname":   "AutoScaleDown",
+			"cloudletorg": ClusterInstData[0].Key.CloudletKey.Organization,
+			"cloudlet":    ClusterInstData[0].Key.CloudletKey.Name,
+			"cluster":     ClusterInstData[0].Key.ClusterKey.Name,
+			"clusterorg":  ClusterInstData[0].Key.Organization,
+			"severity":    "none",
 		},
 		Annotations: map[string]string{
 			"message": "Policy threshold to scale down cluster reached",
@@ -971,12 +971,12 @@ var AlertData = []edgeproto.Alert{
 	},
 	edgeproto.Alert{
 		Labels: map[string]string{
-			"alertname":    "AutoScaleUp",
-			"operatororg":  ClusterInstData[1].Key.CloudletKey.Organization,
-			"cloudlet":     ClusterInstData[1].Key.CloudletKey.Name,
-			"cluster":      ClusterInstData[1].Key.ClusterKey.Name,
-			"developerorg": ClusterInstData[1].Key.Organization,
-			"severity":     "critical",
+			"alertname":   "AutoScaleUp",
+			"cloudletorg": ClusterInstData[1].Key.CloudletKey.Organization,
+			"cloudlet":    ClusterInstData[1].Key.CloudletKey.Name,
+			"cluster":     ClusterInstData[1].Key.ClusterKey.Name,
+			"clusterorg":  ClusterInstData[1].Key.Organization,
+			"severity":    "critical",
 		},
 		Annotations: map[string]string{
 			"message": "Cluster offline",

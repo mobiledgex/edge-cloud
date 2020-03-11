@@ -500,24 +500,24 @@ var AutoProvCountsComments = map[string]string{
 }
 var AutoProvCountsSpecialArgs = map[string]string{}
 var AutoProvPolicyCloudletRequiredArgs = []string{
-	"developer.organization",
+	"organization",
 	"name",
 }
 var AutoProvPolicyCloudletOptionalArgs = []string{
-	"operatororg",
+	"cloudlet.org",
 	"cloudlet",
 }
 var AutoProvPolicyCloudletAliasArgs = []string{
-	"developer.organization=key.organization",
+	"organization=key.organization",
 	"name=key.name",
-	"operatororg=cloudletkey.organization",
+	"cloudlet.org=cloudletkey.organization",
 	"cloudlet=cloudletkey.name",
 }
 var AutoProvPolicyCloudletComments = map[string]string{
-	"developer.organization": "Name of the organization that this policy belongs to",
-	"name":                   "Policy name",
-	"operatororg":            "Organization of the cloudlet site",
-	"cloudlet":               "Name of the cloudlet",
+	"organization": "Name of the organization that this policy belongs to",
+	"name":         "Policy name",
+	"cloudlet.org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
 }
 var AutoProvPolicyCloudletSpecialArgs = map[string]string{}
 var CreateAutoProvPolicyRequiredArgs = []string{

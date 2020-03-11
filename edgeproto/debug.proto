@@ -18,7 +18,7 @@ message DebugRequest {
   bool pretty = 4;
   // Id used internally
   uint64 id = 5 [(protogen.backend) = true];
-  option (protogen.alias) = "name=Node.Name,type=Node.Type,cloudlet=Node.CloudletKey.Name,organization=Node.CloudletKey.Operator,region=Node.Region";
+  option (protogen.alias) = "name=Node.Name,type=Node.Type,cloudlet=Node.CloudletKey.Name,organization=Node.CloudletKey.Organization,region=Node.Region";
   option (protogen.notify_message) = true;
 }
 

@@ -188,35 +188,35 @@ var AppInstClientApiCmds = []*cobra.Command{
 }
 
 var AppInstClientKeyRequiredArgs = []string{
-	"developerorg",
+	"app.org",
 	"appname",
 	"appvers",
 	"cluster",
-	"operatororg",
+	"cloudlet.org",
 	"cloudlet",
-	"clusterdevorg",
+	"cluster.org",
 }
 var AppInstClientKeyOptionalArgs = []string{
 	"uuid",
 }
 var AppInstClientKeyAliasArgs = []string{
-	"developerorg=key.appkey.organization",
+	"app.org=key.appkey.organization",
 	"appname=key.appkey.name",
 	"appvers=key.appkey.version",
 	"cluster=key.clusterinstkey.clusterkey.name",
-	"operatororg=key.clusterinstkey.cloudletkey.organization",
+	"cloudlet.org=key.clusterinstkey.cloudletkey.organization",
 	"cloudlet=key.clusterinstkey.cloudletkey.name",
-	"clusterdevorg=key.clusterinstkey.organization",
+	"cluster.org=key.clusterinstkey.organization",
 }
 var AppInstClientKeyComments = map[string]string{
-	"developerorg":  "Developer Organization",
-	"appname":       "App name",
-	"appvers":       "App version",
-	"cluster":       "Cluster name",
-	"operatororg":   "Organization of the cloudlet site",
-	"cloudlet":      "Name of the cloudlet",
-	"clusterdevorg": "Name of Developer organization that this cluster belongs to",
-	"uuid":          "AppInstClient UUID",
+	"app.org":      "Developer Organization",
+	"appname":      "App name",
+	"appvers":      "App version",
+	"cluster":      "Cluster name",
+	"cloudlet.org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"cluster.org":  "Name of Developer organization that this cluster belongs to",
+	"uuid":         "AppInstClient UUID",
 }
 var AppInstClientKeySpecialArgs = map[string]string{}
 var AppInstClientRequiredArgs = []string{}

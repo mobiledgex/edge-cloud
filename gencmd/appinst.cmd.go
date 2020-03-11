@@ -644,11 +644,11 @@ var AppInstRequiredArgs = []string{
 	"appname",
 	"appvers",
 	"cluster",
-	"operatororg",
+	"cloudlet.org",
 	"cloudlet",
 }
 var AppInstOptionalArgs = []string{
-	"clusterdevorg",
+	"cluster.org",
 	"flavor",
 	"state",
 	"crmoverride",
@@ -668,9 +668,9 @@ var AppInstAliasArgs = []string{
 	"appname=key.appkey.name",
 	"appvers=key.appkey.version",
 	"cluster=key.clusterinstkey.clusterkey.name",
-	"operatororg=key.clusterinstkey.cloudletkey.organization",
+	"cloudlet.org=key.clusterinstkey.cloudletkey.organization",
 	"cloudlet=key.clusterinstkey.cloudletkey.name",
-	"clusterdevorg=key.clusterinstkey.organization",
+	"cluster.org=key.clusterinstkey.organization",
 	"flavor=flavor.name",
 }
 var AppInstComments = map[string]string{
@@ -678,9 +678,9 @@ var AppInstComments = map[string]string{
 	"appname":                        "App name",
 	"appvers":                        "App version",
 	"cluster":                        "Cluster name",
-	"operatororg":                    "Organization of the cloudlet site",
+	"cloudlet.org":                   "Organization of the cloudlet site",
 	"cloudlet":                       "Name of the cloudlet",
-	"clusterdevorg":                  "Name of Developer organization that this cluster belongs to",
+	"cluster.org":                    "Name of Developer organization that this cluster belongs to",
 	"cloudletloc.latitude":           "latitude in WGS 84 coordinates",
 	"cloudletloc.longitude":          "longitude in WGS 84 coordinates",
 	"cloudletloc.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -784,11 +784,11 @@ var CreateAppInstRequiredArgs = []string{
 	"appname",
 	"appvers",
 	"cluster",
-	"operatororg",
+	"cloudlet.org",
 	"cloudlet",
 }
 var CreateAppInstOptionalArgs = []string{
-	"clusterdevorg",
+	"cluster.org",
 	"flavor",
 	"state",
 	"crmoverride",
@@ -807,11 +807,11 @@ var DeleteAppInstRequiredArgs = []string{
 	"appname",
 	"appvers",
 	"cluster",
-	"operatororg",
+	"cloudlet.org",
 	"cloudlet",
 }
 var DeleteAppInstOptionalArgs = []string{
-	"clusterdevorg",
+	"cluster.org",
 	"cloudletloc.latitude",
 	"cloudletloc.longitude",
 	"cloudletloc.horizontalaccuracy",
@@ -861,9 +861,9 @@ var RefreshAppInstRequiredArgs = []string{
 }
 var RefreshAppInstOptionalArgs = []string{
 	"cluster",
-	"operatororg",
+	"cloudlet.org",
 	"cloudlet",
-	"clusterdevorg",
+	"cluster.org",
 	"crmoverride",
 	"forceupdate",
 	"updatemultiple",
@@ -879,11 +879,11 @@ var UpdateAppInstRequiredArgs = []string{
 	"appname",
 	"appvers",
 	"cluster",
-	"operatororg",
+	"cloudlet.org",
 	"cloudlet",
 }
 var UpdateAppInstOptionalArgs = []string{
-	"clusterdevorg",
+	"cluster.org",
 	"crmoverride",
 	"configs.kind",
 	"configs.config",

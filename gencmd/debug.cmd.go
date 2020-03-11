@@ -357,7 +357,7 @@ var DebugRequestRequiredArgs = []string{}
 var DebugRequestOptionalArgs = []string{
 	"name",
 	"type",
-	"node.cloudletkey.organization",
+	"organization",
 	"cloudlet",
 	"region",
 	"levels",
@@ -368,19 +368,20 @@ var DebugRequestOptionalArgs = []string{
 var DebugRequestAliasArgs = []string{
 	"name=node.name",
 	"type=node.type",
+	"organization=node.cloudletkey.organization",
 	"cloudlet=node.cloudletkey.name",
 	"region=node.region",
 }
 var DebugRequestComments = map[string]string{
-	"name":                          "Name or hostname of node",
-	"type":                          "Node type",
-	"node.cloudletkey.organization": "Organization of the cloudlet site",
-	"cloudlet":                      "Name of the cloudlet",
-	"region":                        "Region the node is in",
-	"levels":                        "Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,mexos,metrics,upgrade,info,sampled",
-	"cmd":                           "Debug command",
-	"pretty":                        "if possible, make output pretty",
-	"id":                            "Id used internally",
+	"name":         "Name or hostname of node",
+	"type":         "Node type",
+	"organization": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"region":       "Region the node is in",
+	"levels":       "Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,mexos,metrics,upgrade,info,sampled",
+	"cmd":          "Debug command",
+	"pretty":       "if possible, make output pretty",
+	"id":           "Id used internally",
 }
 var DebugRequestSpecialArgs = map[string]string{}
 var DebugReplyRequiredArgs = []string{}
@@ -410,7 +411,7 @@ var EnableDebugLevelsRequiredArgs = []string{
 var EnableDebugLevelsOptionalArgs = []string{
 	"name",
 	"type",
-	"node.cloudletkey.organization",
+	"organization",
 	"cloudlet",
 	"region",
 	"pretty",
@@ -422,7 +423,7 @@ var DisableDebugLevelsRequiredArgs = []string{
 var DisableDebugLevelsOptionalArgs = []string{
 	"name",
 	"type",
-	"node.cloudletkey.organization",
+	"organization",
 	"cloudlet",
 	"region",
 	"pretty",
@@ -432,7 +433,7 @@ var ShowDebugLevelsRequiredArgs = []string{}
 var ShowDebugLevelsOptionalArgs = []string{
 	"name",
 	"type",
-	"node.cloudletkey.organization",
+	"organization",
 	"cloudlet",
 	"region",
 	"pretty",
@@ -442,7 +443,7 @@ var RunDebugRequiredArgs = []string{}
 var RunDebugOptionalArgs = []string{
 	"name",
 	"type",
-	"node.cloudletkey.organization",
+	"organization",
 	"cloudlet",
 	"region",
 	"cmd",
