@@ -209,13 +209,13 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 
 	ctx := cb.Context()
 	if in.Key.Organization == "" {
-		return fmt.Errorf("Developer cannot be empty")
+		return fmt.Errorf("ClusterInst Organization cannot be empty")
 	}
 	if in.Key.CloudletKey.Name == "" {
 		return fmt.Errorf("Cloudlet name cannot be empty")
 	}
 	if in.Key.CloudletKey.Organization == "" {
-		return fmt.Errorf("Operator name cannot be empty")
+		return fmt.Errorf("Cloudlet Organization name cannot be empty")
 	}
 	if in.Key.ClusterKey.Name == "" {
 		return fmt.Errorf("Cluster name cannot be empty")

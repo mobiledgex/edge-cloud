@@ -84,7 +84,7 @@ clusterinsts:
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
-  masternodeflavor: flavor1
+  masternodeflavor: x1.small
 cloudlets:
 - key:
     organization: tmus
