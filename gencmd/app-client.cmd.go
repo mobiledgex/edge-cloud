@@ -620,7 +620,7 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"orgname":                        "Dev Name Applicable to Platform apps only",
+	"orgname":                        "Organization Name Applicable to Platform apps only",
 	"appname":                        "App Name Applicable to Platform apps only",
 	"appvers":                        "App Version Applicable to Platform apps only",
 	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
@@ -831,6 +831,7 @@ var AppinstanceOptionalArgs = []string{
 	"ports.fqdnprefix",
 	"ports.endport",
 	"ports.tls",
+	"orgname",
 }
 var AppinstanceAliasArgs = []string{}
 var AppinstanceComments = map[string]string{
@@ -844,6 +845,7 @@ var AppinstanceComments = map[string]string{
 	"ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"ports.tls":          "TLS termination for this port",
+	"orgname":            "App Organization Name",
 }
 var AppinstanceSpecialArgs = map[string]string{}
 var CloudletLocationRequiredArgs = []string{}
@@ -870,6 +872,7 @@ var CloudletLocationOptionalArgs = []string{
 	"appinstances.ports.fqdnprefix",
 	"appinstances.ports.endport",
 	"appinstances.ports.tls",
+	"appinstances.orgname",
 }
 var CloudletLocationAliasArgs = []string{}
 var CloudletLocationComments = map[string]string{
@@ -893,6 +896,7 @@ var CloudletLocationComments = map[string]string{
 	"appinstances.ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"appinstances.ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"appinstances.ports.tls":          "TLS termination for this port",
+	"appinstances.orgname":            "App Organization Name",
 }
 var CloudletLocationSpecialArgs = map[string]string{}
 var AppInstListReplyRequiredArgs = []string{}
@@ -921,6 +925,7 @@ var AppInstListReplyOptionalArgs = []string{
 	"cloudlets.appinstances.ports.fqdnprefix",
 	"cloudlets.appinstances.ports.endport",
 	"cloudlets.appinstances.ports.tls",
+	"cloudlets.appinstances.orgname",
 	"tags.type",
 	"tags.data",
 }
@@ -948,6 +953,7 @@ var AppInstListReplyComments = map[string]string{
 	"cloudlets.appinstances.ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"cloudlets.appinstances.ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"cloudlets.appinstances.ports.tls":          "TLS termination for this port",
+	"cloudlets.appinstances.orgname":            "App Organization Name",
 	"tags.type":                                 "type of data",
 	"tags.data":                                 "data value",
 }

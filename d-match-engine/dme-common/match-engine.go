@@ -724,6 +724,7 @@ func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.Ap
 				ai := dme.Appinstance{}
 				ai.AppName = a.AppKey.Name
 				ai.AppVers = a.AppKey.Version
+				ai.OrgName = a.AppKey.Organization
 				ai.Fqdn = i.uri
 				ai.Ports = copyPorts(i)
 				cloc.Appinstances = append(cloc.Appinstances, &ai)
