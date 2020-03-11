@@ -314,9 +314,6 @@ func (r *Run) FlavorApi(data *[]edgeproto.Flavor, dataMap interface{}, dataOut i
 	log.DebugLog(log.DebugLevelApi, "API for Flavor", "mode", r.Mode)
 	if r.Mode == "show" {
 		obj := &edgeproto.Flavor{}
-		if data != nil && len(*data) > 0 {
-			obj = &(*data)[0]
-		}
 		out, err := r.client.ShowFlavor(r.ctx, obj)
 		if err != nil {
 			r.logErr("FlavorApi", err)
@@ -325,7 +322,7 @@ func (r *Run) FlavorApi(data *[]edgeproto.Flavor, dataMap interface{}, dataOut i
 			if !ok {
 				panic(fmt.Sprintf("RunFlavorApi expected dataOut type *[]edgeproto.Flavor, but was %T", dataOut))
 			}
-			*outp = out
+			*outp = append(*outp, out...)
 		}
 		return
 	}
@@ -376,6 +373,17 @@ func (r *Run) FlavorApi(data *[]edgeproto.Flavor, dataMap interface{}, dataOut i
 					panic(fmt.Sprintf("RunFlavorApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
 				}
 				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowFlavor(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("FlavorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Flavor)
+				if !ok {
+					panic(fmt.Sprintf("RunFlavorApi expected dataOut type *[]edgeproto.Flavor, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
 			}
 		case "addflavorres":
 			out, err := r.client.AddFlavorRes(r.ctx, obj)

@@ -635,32 +635,21 @@ func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, serv
 	t.P("func (r *Run) ", apiName, "(", dataIn, ", dataMap interface{}, dataOut interface{}) {")
 	t.P("log.DebugLog(log.DebugLevelApi, \"API for ", inType, "\", \"mode\", r.Mode)")
 	t.importLog = true
+	looped := false
 	for _, mInfo := range group.MethodInfos {
 		if !mInfo.IsShow {
 			continue
 		}
 		t.P("if r.Mode == \"show\" {")
 		if group.SingularData {
-			t.P("if obj == nil {")
 			t.P("obj = &", inPkg, inType, "{}")
-			t.P("}")
 		} else {
 			t.P("obj := &", inPkg, inType, "{}")
-			t.P("if data != nil && len(*data) > 0 {")
-			t.P("obj = &(*data)[0]")
-			t.P("}")
 		}
-		t.runApiOutput(apiName, mInfo, group)
+		t.runApiOutput(apiName, mInfo, group, looped)
 		t.P("return")
 		t.P("}")
 		break
-	}
-
-	if group.HasShow && len(group.MethodInfos) <= 1 {
-		// no more methods
-		t.P("}")
-		t.P()
-		return
 	}
 
 	if group.SingularData {
@@ -668,13 +657,15 @@ func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, serv
 	} else {
 		t.P("for ii, objD := range *data {")
 		t.P("obj := &objD")
+		looped = true
 	}
 	t.P("switch r.Mode {")
 	for _, mInfo := range group.MethodInfos {
+		prefix := strings.ToLower(mInfo.Prefix)
 		if mInfo.IsShow {
-			continue
+			prefix = "showfiltered"
 		}
-		t.P("case \"", strings.ToLower(mInfo.Prefix), "\":")
+		t.P("case \"", prefix, "\":")
 		if group.SingularData && mInfo.Prefix == "Update" {
 			t.P("fallthrough")
 			t.P("case \"create\":")
@@ -699,7 +690,7 @@ func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, serv
 			t.P("obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)")
 			t.P()
 		}
-		t.runApiOutput(apiName, mInfo, group)
+		t.runApiOutput(apiName, mInfo, group, looped)
 	}
 	t.P("}")
 	if !group.SingularData {
@@ -708,7 +699,7 @@ func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, serv
 	t.P("}")
 }
 
-func (t *TestCud) runApiOutput(apiName string, info *gensupport.MethodInfo, group *gensupport.MethodGroup) {
+func (t *TestCud) runApiOutput(apiName string, info *gensupport.MethodInfo, group *gensupport.MethodGroup, looped bool) {
 	hasKey := gensupport.GetMessageKey(group.In.DescriptorProto) != nil || gensupport.GetObjAndKey(group.In.DescriptorProto)
 	t.P("out, err := r.client.", info.Name, "(r.ctx, obj)")
 	t.P("if err != nil {")
@@ -716,7 +707,7 @@ func (t *TestCud) runApiOutput(apiName string, info *gensupport.MethodInfo, grou
 		t.P("err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)")
 	}
 	desc := "\"" + apiName + "\""
-	if !group.SingularData && !info.IsShow {
+	if looped {
 		desc = "fmt.Sprintf(\"" + apiName + "[%d]\", ii)"
 	}
 	t.P("r.logErr(", desc, ", err)")
@@ -726,8 +717,10 @@ func (t *TestCud) runApiOutput(apiName string, info *gensupport.MethodInfo, grou
 	t.P("if !ok {")
 	t.P("panic(fmt.Sprintf(\"Run", apiName, " expected dataOut type ", outType, ", but was %T\", dataOut))")
 	t.P("}")
-	if info.IsShow || group.SingularData {
+	if group.SingularData {
 		t.P("*outp = out")
+	} else if info.IsShow {
+		t.P("*outp = append(*outp, out...)")
 	} else if info.Stream {
 		t.P("*outp = append(*outp, out)")
 	} else {
