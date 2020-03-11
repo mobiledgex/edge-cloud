@@ -203,6 +203,7 @@ func (s *AppInstApi) AutoDelete(ctx context.Context, in *edgeproto.AppKey) error
 	}
 	s.cache.Mux.Unlock()
 	failed := 0
+	deleted := 0
 	for key, val := range appinsts {
 		log.SpanLog(ctx, log.DebugLevelApi, "Auto-delete AppInst for App", "AppInst", key)
 		stream := streamoutAppInst{}
@@ -212,10 +213,12 @@ func (s *AppInstApi) AutoDelete(ctx context.Context, in *edgeproto.AppKey) error
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Failed to auto-delete AppInst", "AppInst", key)
 			failed++
+		} else {
+			deleted++
 		}
 	}
 	if failed > 0 {
-		return fmt.Errorf("Failed to auto-delete %d AppInsts for App", failed)
+		return fmt.Errorf("Auto-deleted %d AppInsts but failed to delete %d AppInsts for App", deleted, failed)
 	}
 	return nil
 }
