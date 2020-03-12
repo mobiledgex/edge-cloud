@@ -97,13 +97,10 @@ func handleDockerZipfile(ctx context.Context, client ssh.Client, app *edgeproto.
 	if action == createZip {
 		dockerComposeCommand = "up -d"
 
-		//create a directory for the app and its files
-		output, err := client.Output("mkdir " + dir)
+		// create a directory for the app and its files
+		err := pc.CreateDir(ctx, client, dir, pc.Overwrite)
 		if err != nil {
-			if !strings.Contains(output, "File exists") {
-				log.SpanLog(ctx, log.DebugLevelMexos, "mkdir err", "out", output, "err", err)
-				return err
-			}
+			return err
 		}
 		// pull the zipfile
 		_, err = client.Output("wget -T 60 -P " + dir + " " + app.DeploymentManifest)
