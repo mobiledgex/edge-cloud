@@ -85,10 +85,11 @@ func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultA
 
 func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, vaultAddr string, commercialCerts bool) {
 	var err error
+	var config *vault.Config
 	tls := access.TLSCert{}
 	if commercialCerts {
-		config, err := vault.BestConfig(vaultAddr)
-		if err != nil {
+		config, err = vault.BestConfig(vaultAddr)
+		if err == nil {
 			err = getCertFromVault(ctx, config, &tls, commonName, dedicatedCommonName)
 		}
 	} else {
