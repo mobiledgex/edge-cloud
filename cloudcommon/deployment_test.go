@@ -1,13 +1,16 @@
 package cloudcommon
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 )
@@ -15,6 +18,11 @@ import (
 var deploymentMF = "some deployment manifest"
 
 func TestDeployment(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify)
+	log.InitTracer("")
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
 	app := &testutil.AppData[0]
 
 	// start up http server to serve deployment manifest
@@ -27,20 +35,20 @@ func TestDeployment(t *testing.T) {
 	app.Deployment = AppDeploymentTypeKubernetes
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = ""
-	testAppDeployment(t, app, true)
+	testAppDeployment(ctx, t, app, true)
 
 	// specify manifest inline
 	app.DeploymentManifest = deploymentMF
-	testAppDeployment(t, app, true)
+	testAppDeployment(ctx, t, app, true)
 
 	// specific remote manifest
 	app.DeploymentManifest = tsManifest.URL
-	testAppDeployment(t, app, true)
+	testAppDeployment(ctx, t, app, true)
 
 	// locally specified generator
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = deploygen.KubernetesBasic
-	testAppDeployment(t, app, true)
+	testAppDeployment(ctx, t, app, true)
 
 	// Docker image type for Kubernetes deployment
 	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_DOCKER
@@ -50,7 +58,7 @@ func TestDeployment(t *testing.T) {
 	app.Deployment = AppDeploymentTypeVM
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = ""
-	testAppDeployment(t, app, true)
+	testAppDeployment(ctx, t, app, true)
 
 	// untested - remote generator
 
@@ -62,7 +70,7 @@ func TestDeployment(t *testing.T) {
 	app.Deployment = AppDeploymentTypeHelm
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = ""
-	testAppDeployment(t, app, true)
+	testAppDeployment(ctx, t, app, true)
 
 	// No image type for Helm deployment
 	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_HELM
@@ -76,17 +84,17 @@ func TestDeployment(t *testing.T) {
 	app.Deployment = AppDeploymentTypeKubernetes
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = "invalid"
-	testAppDeployment(t, app, false)
+	testAppDeployment(ctx, t, app, false)
 
 	// negative test - invalid image type
 	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_QCOW
 	testValidImageDeployment(t, app, false)
 }
 
-func testAppDeployment(t *testing.T, app *edgeproto.App, valid bool) {
+func testAppDeployment(ctx context.Context, t *testing.T, app *edgeproto.App, valid bool) {
 	fmt.Printf("test deployment %s, manifest %s, generator %s\n",
 		app.Deployment, app.DeploymentManifest, app.DeploymentGenerator)
-	_, err := GetAppDeploymentManifest(app)
+	_, err := GetAppDeploymentManifest(ctx, nil, app)
 	if valid {
 		require.Nil(t, err)
 	} else {
@@ -103,4 +111,16 @@ func testValidImageDeployment(t *testing.T, app *edgeproto.App, valid bool) {
 		require.False(t, v)
 	}
 
+}
+
+func TestTimeout(t *testing.T) {
+	var val time.Duration
+
+	oneG := 1073741824
+	val = GetTimeout(0)
+	require.Equal(t, val, 10*time.Minute)
+	val = GetTimeout(5 * oneG)
+	require.Equal(t, val, 10*time.Minute)
+	val = GetTimeout(10 * oneG)
+	require.Equal(t, val, 20*time.Minute)
 }

@@ -69,7 +69,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
 
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
-		err = k8smgmt.CreateAppInst(ctx, client, names, app, appInst)
+		err = k8smgmt.CreateAppInst(ctx, nil, client, names, app, appInst)
 		if err == nil {
 			err = k8smgmt.WaitForAppInst(ctx, client, names, app, k8smgmt.WaitRunning)
 		}
@@ -92,7 +92,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	// Support for local docker appInst
 	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
 		log.SpanLog(ctx, log.DebugLevelMexos, "run docker delete app for dind")
-		err = dockermgmt.DeleteAppInst(ctx, client, app, appInst)
+		err = dockermgmt.DeleteAppInst(ctx, nil, client, app, appInst)
 		if err != nil {
 			return fmt.Errorf("DeleteAppInst error for docker %v", err)
 		}
@@ -152,7 +152,7 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
 
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
-		return k8smgmt.UpdateAppInst(ctx, client, names, app, appInst)
+		return k8smgmt.UpdateAppInst(ctx, nil, client, names, app, appInst)
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
 		return k8smgmt.UpdateHelmAppInst(ctx, client, names, app, appInst)
 	}
