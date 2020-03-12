@@ -98,7 +98,7 @@ func handleDockerZipfile(ctx context.Context, client ssh.Client, app *edgeproto.
 		dockerComposeCommand = "up -d"
 
 		// create a directory for the app and its files
-		err := pc.CreateDir(ctx, client, dir, true)
+		err := pc.CreateDir(ctx, client, dir, pc.Overwrite)
 		if err != nil {
 			return err
 		}
