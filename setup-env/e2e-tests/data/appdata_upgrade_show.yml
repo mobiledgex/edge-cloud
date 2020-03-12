@@ -134,7 +134,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-1
-  containerversion: 2020-10-10 
+  containerversion: 2020-10-10
 - key:
     operatorkey:
       name: dmuus
@@ -148,7 +148,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-2
-  containerversion: 2020-10-10 
+  containerversion: 2020-10-10
 - key:
     operatorkey:
       name: dmuus
