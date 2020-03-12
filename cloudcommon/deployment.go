@@ -3,16 +3,22 @@ package cloudcommon
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/vault"
 	yaml "github.com/mobiledgex/yaml/v2"
 	v1 "k8s.io/api/core/v1"
 )
@@ -212,9 +218,9 @@ func GetImageTypeForDeployment(deployment string) (edgeproto.ImageType, error) {
 }
 
 // GetAppDeploymentManifest gets the deployment-specific manifest.
-func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
+func GetAppDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, app *edgeproto.App) (string, error) {
 	if app.DeploymentManifest != "" {
-		return GetDeploymentManifest(app.DeploymentManifest)
+		return GetDeploymentManifest(ctx, vaultConfig, app.DeploymentManifest)
 	} else if app.DeploymentGenerator != "" {
 		return GenerateManifest(app)
 	} else if app.Deployment == AppDeploymentTypeKubernetes {
@@ -230,9 +236,9 @@ func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
 	return "", nil
 }
 
-func validateRemoteZipManifest(manifest string) error {
+func validateRemoteZipManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) error {
 	zipfile := "/tmp/temp.zip"
-	err := GetRemoteManifestToFile(manifest, zipfile)
+	err := GetRemoteManifestToFile(ctx, vaultConfig, manifest, zipfile)
 	if err != nil {
 		return fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
 	}
@@ -274,15 +280,15 @@ func validateRemoteZipManifest(manifest string) error {
 	return nil
 }
 
-func GetDeploymentManifest(manifest string) (string, error) {
+func GetDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) (string, error) {
 	// manifest may be remote target or inline json/yaml
 	if strings.HasPrefix(manifest, "http://") || strings.HasPrefix(manifest, "https://") {
 
 		if strings.HasSuffix(manifest, ".zip") {
 			log.DebugLog(log.DebugLevelApi, "zipfile manifest found", "manifest", manifest)
-			return manifest, validateRemoteZipManifest(manifest)
+			return manifest, validateRemoteZipManifest(ctx, vaultConfig, manifest)
 		}
-		mf, err := GetRemoteManifest(manifest)
+		mf, err := GetRemoteManifest(ctx, vaultConfig, manifest)
 		if err != nil {
 			return "", fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
 		}
@@ -306,34 +312,85 @@ func GenerateManifest(app *edgeproto.App) (string, error) {
 	return "", fmt.Errorf("invalid deployment generator %s", target)
 }
 
-func GetRemoteManifest(target string) (string, error) {
-	resp, err := http.Get(target)
+func GetRemoteManifest(ctx context.Context, vaultConfig *vault.Config, target string) (string, error) {
+	var content string
+	err := DownloadFile(ctx, vaultConfig, target, "", &content)
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("bad response from remote manifest %d", resp.StatusCode)
-	}
-	manifestBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(manifestBytes), nil
+	return content, nil
 }
 
-func GetRemoteManifestToFile(target string, filename string) error {
-	resp, err := http.Get(target)
+func GetRemoteManifestToFile(ctx context.Context, vaultConfig *vault.Config, target string, filename string) error {
+	return DownloadFile(ctx, vaultConfig, target, filename, nil)
+}
+
+// 5GB = 10minutes
+func GetTimeout(cLen int) time.Duration {
+	fileSizeInGB := float64(cLen) / (1024.0 * 1024.0 * 1024.0)
+	timeoutUnit := int(math.Ceil(fileSizeInGB / 5.0))
+	if fileSizeInGB > 5 {
+		return time.Duration(timeoutUnit) * 10 * time.Minute
+	}
+	return 10 * time.Minute
+}
+
+func DownloadFile(ctx context.Context, vaultConfig *vault.Config, fileUrlPath string, filePath string, content *string) error {
+	var reqConfig *RequestConfig
+
+	log.SpanLog(ctx, log.DebugLevelApi, "attempt to download file", "file-url", fileUrlPath)
+
+	// Adjust request timeout based on File Size
+	//  - Timeout is increased by 10min for every 5GB
+	//  - If less than 5GB, then use default timeout
+	resp, err := SendHTTPReq(ctx, "HEAD", fileUrlPath, vaultConfig, nil)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("bad response from remote manifest %d", resp.StatusCode)
+	contentLength := resp.Header.Get("Content-Length")
+	cLen, err := strconv.Atoi(contentLength)
+	if err == nil && cLen > 0 {
+		timeout := GetTimeout(cLen)
+		if timeout > 0 {
+			reqConfig = &RequestConfig{
+				Timeout: timeout,
+			}
+			log.SpanLog(ctx, log.DebugLevelApi, "increased request timeout", "file-url", fileUrlPath, "timeout", timeout.String())
+		}
 	}
-	manifestBytes, err := ioutil.ReadAll(resp.Body)
+
+	resp, err = SendHTTPReq(ctx, "GET", fileUrlPath, vaultConfig, reqConfig)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, manifestBytes, 0644)
+	defer resp.Body.Close()
+	// Check server response
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	if filePath != "" {
+		// Create the file
+		out, err := os.Create(filePath)
+		if err != nil {
+			return err
+		}
+		defer out.Close()
+
+		_, err = io.Copy(out, resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to download file %v", err)
+		}
+	}
+
+	if content != nil {
+		contentBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		*content = string(contentBytes)
+	}
+
+	return nil
 }
