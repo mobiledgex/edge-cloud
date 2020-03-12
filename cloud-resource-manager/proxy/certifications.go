@@ -84,27 +84,25 @@ func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultA
 }
 
 func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, vaultAddr string, commercialCerts bool) {
-	config, err := vault.BestConfig(vaultAddr)
-	if err == nil {
-		// rootlb
-		tls := access.TLSCert{}
-		if commercialCerts {
-			err = getCertFromVault(ctx, config, &tls, commonName, dedicatedCommonName)
-		} else {
-			err = getSelfSignedCerts(ctx, &tls, commonName, dedicatedCommonName)
-		}
+	var err error
+	tls := access.TLSCert{}
+	if commercialCerts {
+		config, err := vault.BestConfig(vaultAddr)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "Unable to get certs", "err", err)
-		} else {
-			writeCertToRootLb(ctx, &tls, SharedRootLbClient)
-			DedicatedMux.Lock()
-			for _, client := range DedicatedClients {
-				writeCertToRootLb(ctx, &tls, client)
-			}
-			DedicatedMux.Unlock()
+			err = getCertFromVault(ctx, config, &tls, commonName, dedicatedCommonName)
 		}
 	} else {
-		log.SpanLog(ctx, log.DebugLevelInfo, "unable to get vault config", "err", err)
+		err = getSelfSignedCerts(ctx, &tls, commonName, dedicatedCommonName)
+	}
+	if err == nil {
+		writeCertToRootLb(ctx, &tls, SharedRootLbClient)
+		DedicatedMux.Lock()
+		for _, client := range DedicatedClients {
+			writeCertToRootLb(ctx, &tls, client)
+		}
+		DedicatedMux.Unlock()
+	} else {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Unable to get certs", "err", err)
 	}
 }
 
