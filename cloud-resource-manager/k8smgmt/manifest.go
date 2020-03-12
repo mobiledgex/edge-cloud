@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,7 +53,8 @@ func addMexLabel(meta *metav1.ObjectMeta, label string) {
 // Add app details to the deployment as labela
 // these labels will be picked up by Pormetheus and added to the metrics
 func addAppInstLabels(meta *metav1.ObjectMeta, app *edgeproto.App) {
-	meta.Labels[cloudcommon.MexAppInstanceLabel] = cloudcommon.GetAppMetaLabel(&app.Key)
+	meta.Labels[cloudcommon.MexAppNameLabel] = util.DNSSanitize(app.Key.Name)
+	meta.Labels[cloudcommon.MexAppVersionLabel] = util.DNSSanitize(app.Key.Version)
 }
 
 // Merge in all the environment variables into

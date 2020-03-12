@@ -192,14 +192,15 @@ func createDockerComposeFile(client ssh.Client, app *edgeproto.App, appInst *edg
 // As a result we have a separate function specifically for a docker app creation on a MacOS laptop
 func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	image := app.ImagePath
-	labelVal := cloudcommon.GetAppMetaLabel(&app.Key)
+	nameLabelVal := util.DNSSanitize(app.Key.Name)
+	versionLabelVal := util.DNSSanitize(app.Key.Version)
 	name := util.DockerSanitize(app.Key.Name)
 	cloudlet := util.DockerSanitize(appInst.Key.ClusterInstKey.CloudletKey.Name)
 	cluster := util.DockerSanitize(appInst.Key.ClusterInstKey.Developer + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name)
 
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d -l edge-cloud -l cloudlet=%s -l cluster=%s  -l %s=%s --restart=unless-stopped --name=%s %s %s %s",
-			cloudlet, cluster, cloudcommon.MexAppInstanceLabel, labelVal, name,
+		cmd := fmt.Sprintf("docker run -d -l edge-cloud -l cloudlet=%s -l cluster=%s  -l %s=%s -l %s=%s --restart=unless-stopped --name=%s %s %s %s",
+			cloudlet, cluster, cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel, versionLabelVal, name,
 			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrAllInterfaces), " "), image, app.Command)
 		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 
@@ -229,14 +230,16 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 
 func CreateAppInst(ctx context.Context, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, networkMode DockerNetworkingMode) error {
 	image := app.ImagePath
-	labelVal := cloudcommon.GetAppMetaLabel(&app.Key)
+	nameLabelVal := util.DNSSanitize(app.Key.Name)
+	versionLabelVal := util.DNSSanitize(app.Key.Version)
 	name := GetContainerName(&app.Key)
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d -l %s=%s --restart=unless-stopped --network=host --name=%s %s %s",
-			cloudcommon.MexAppInstanceLabel, labelVal, GetContainerName(&app.Key), image, app.Command)
+		cmd := fmt.Sprintf("docker run -d -l %s=%s -l %s=%s --restart=unless-stopped --network=host --name=%s %s %s",
+			cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel,
+			versionLabelVal, GetContainerName(&app.Key), image, app.Command)
 		if networkMode == DockerBridgeMode {
-			cmd = fmt.Sprintf("docker run -d -l edge-cloud -l %s=%s --restart=unless-stopped --name=%s %s %s %s",
-				cloudcommon.MexAppInstanceLabel, labelVal, name,
+			cmd = fmt.Sprintf("docker run -d -l edge-cloud -l %s=%s -l %s=%s --restart=unless-stopped --name=%s %s %s %s",
+				cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel, versionLabelVal, name,
 				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
 		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker run ", "cmd", cmd)

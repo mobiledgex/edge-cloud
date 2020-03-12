@@ -696,7 +696,7 @@ var AppInstComments = map[string]string{
 	"revision":                       "Revision increments each time the App is updated.  Updating the App Instance will sync the revision with that of the App",
 	"forceupdate":                    "Force Appinst refresh even if revision number matches App revision number.",
 	"updatemultiple":                 "Allow multiple instances to be updated at once",
-	"configs.kind":                   "kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config",
+	"configs.kind":                   "kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml",
 	"configs.config":                 "config file contents or URI reference",
 	"sharedvolumesize":               "shared volume size when creating auto cluster",
 	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
