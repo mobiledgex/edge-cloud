@@ -12,6 +12,7 @@ import "time"
 import "github.com/stretchr/testify/require"
 import "github.com/mobiledgex/edge-cloud/log"
 import "github.com/mobiledgex/edge-cloud/cli"
+import "github.com/mobiledgex/edge-cloud/edgectl/wrapper"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -309,34 +310,83 @@ func FindDeveloperData(key *edgeproto.DeveloperKey, testData []edgeproto.Develop
 	return nil, false
 }
 
-func RunDeveloperApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Developer, dataMap interface{}, mode string) error {
-	developerApi := edgeproto.NewDeveloperApiClient(conn)
-	var err error
+func (r *Run) DeveloperApi(data *[]edgeproto.Developer, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for Developer", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.Developer{}
+		out, err := r.client.ShowDeveloper(r.ctx, obj)
+		if err != nil {
+			r.logErr("DeveloperApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.Developer)
+			if !ok {
+				panic(fmt.Sprintf("RunDeveloperApi expected dataOut type *[]edgeproto.Developer, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
 	for ii, objD := range *data {
 		obj := &objD
-		log.DebugLog(log.DebugLevelApi, "API %v for Developer: %v", mode, obj.GetKey())
-		switch mode {
+		switch r.Mode {
 		case "create":
-			_, err = developerApi.CreateDeveloper(ctx, obj)
+			out, err := r.client.CreateDeveloper(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("DeveloperApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunDeveloperApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		case "delete":
-			_, err = developerApi.DeleteDeveloper(ctx, obj)
+			out, err := r.client.DeleteDeveloper(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("DeveloperApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunDeveloperApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		case "update":
+			// set specified fields
 			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
 			if err != nil {
-				return fmt.Errorf("bad dataMap for Developer: %v", err)
+				log.DebugLog(log.DebugLevelApi, "bad dataMap for Developer", "err", err)
+				*r.Rc = false
+				return
 			}
 			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
-			_, err = developerApi.UpdateDeveloper(ctx, obj)
-		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Developer: %v", mode, obj.GetKey())
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
+
+			out, err := r.client.UpdateDeveloper(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("DeveloperApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunDeveloperApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowDeveloper(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("DeveloperApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Developer)
+				if !ok {
+					panic(fmt.Sprintf("RunDeveloperApi expected dataOut type *[]edgeproto.Developer, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
 		}
 	}
-	return nil
 }
 
 func (s *DummyServer) CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
@@ -376,4 +426,82 @@ func (s *DummyServer) ShowDeveloper(in *edgeproto.Developer, server edgeproto.De
 		return err
 	})
 	return err
+}
+
+func (s *ApiClient) CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	api := edgeproto.NewDeveloperApiClient(s.Conn)
+	return api.CreateDeveloper(ctx, in)
+}
+
+func (s *CliClient) CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "CreateDeveloper")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) DeleteDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	api := edgeproto.NewDeveloperApiClient(s.Conn)
+	return api.DeleteDeveloper(ctx, in)
+}
+
+func (s *CliClient) DeleteDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "DeleteDeveloper")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) UpdateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	api := edgeproto.NewDeveloperApiClient(s.Conn)
+	return api.UpdateDeveloper(ctx, in)
+}
+
+func (s *CliClient) UpdateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "UpdateDeveloper")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type DeveloperStream interface {
+	Recv() (*edgeproto.Developer, error)
+}
+
+func DeveloperReadStream(stream DeveloperStream) ([]edgeproto.Developer, error) {
+	output := []edgeproto.Developer{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read Developer stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowDeveloper(ctx context.Context, in *edgeproto.Developer) ([]edgeproto.Developer, error) {
+	api := edgeproto.NewDeveloperApiClient(s.Conn)
+	stream, err := api.ShowDeveloper(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return DeveloperReadStream(stream)
+}
+
+func (s *CliClient) ShowDeveloper(ctx context.Context, in *edgeproto.Developer) ([]edgeproto.Developer, error) {
+	output := []edgeproto.Developer{}
+	args := append(s.BaseArgs, "controller", "ShowDeveloper")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type DeveloperApiClient interface {
+	CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error)
+	DeleteDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error)
+	UpdateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error)
+	ShowDeveloper(ctx context.Context, in *edgeproto.Developer) ([]edgeproto.Developer, error)
 }

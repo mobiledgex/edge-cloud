@@ -62,7 +62,7 @@ func GetActionArgs(a string) []string {
 
 // actions can be split with a dash like ctrlapi-show
 func GetActionSubtype(a string) (string, string) {
-	argslice := strings.Split(a, "-")
+	argslice := strings.SplitN(a, "-", 2)
 	action := argslice[0]
 	actionSubtype := ""
 	if len(argslice) > 1 {
@@ -551,7 +551,7 @@ func Cleanup(ctx context.Context) error {
 	return CleanupDIND()
 }
 
-func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec, mods []string, vars map[string]string) []string {
+func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec, mods []string, vars map[string]string, retry *bool) []string {
 	var actionArgs []string
 
 	act, actionParam := GetActionParam(actionSpec)
@@ -616,7 +616,7 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 			}
 		}
 	case "ctrlapi":
-		if !apis.RunControllerAPI(actionSubtype, actionParam, spec.ApiFile, outputDir, mods) {
+		if !apis.RunControllerAPI(actionSubtype, actionParam, spec.ApiFile, outputDir, mods, retry) {
 			log.Printf("Unable to run api for %s, %v\n", action, mods)
 			errors = append(errors, "controller api failed")
 		}
@@ -641,7 +641,7 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 			errors = append(errors, err.Error())
 		}
 	case "sleep":
-		t, err := strconv.ParseUint(actionParam, 10, 32)
+		t, err := strconv.ParseFloat(actionParam, 64)
 		if err == nil {
 			time.Sleep(time.Second * time.Duration(t))
 		} else {

@@ -3,10 +3,8 @@ package apis
 // interacts with the controller APIs for use by the e2e test tool
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,16 +12,16 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/edgectl/wrapper"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	yaml "github.com/mobiledgex/yaml/v2"
-	"google.golang.org/grpc"
 )
 
-var appData edgeproto.ApplicationData
-var appDataMap edgeproto.ApplicationDataMap
+var appData edgeproto.AllData
+var appDataMap map[string]interface{}
 
 var apiConnectTimeout = 5 * time.Second
 var apiTimeout = 30 * time.Minute
@@ -53,204 +51,94 @@ func readAppDataFileGeneric(file string) {
 	}
 }
 
-func runShow(ctrl *process.Controller, showCmds []string, outputDir string) bool {
-	errFound := false
-	for i, c := range showCmds {
-		label := strings.Split(c, " ")[0]
-		cmdstr := strings.Split(c, " ")[1]
-		var cmdargs = []string{cmdstr}
-		log.Printf("generating output for %s\n", label)
-		out, _ := util.ControllerCLI(ctrl, cmdargs...)
-		truncate := false
-		//truncate the file for the first command output, afterwards append
-		if i == 0 {
-			truncate = true
-		}
-		//edgectl returns exitcode 0 even if it cannot connect, so look for the error
-		if strings.Contains(string(out), cmdstr+" failed") {
-			log.Printf("Found failure in show output\n")
-			errFound = true
-		}
-		// contents under label needs to be indented for non-lists
-		buf := bytes.Buffer{}
-		for _, line := range strings.Split(string(out), "\n") {
-			if line != "" {
-				buf.WriteString("  ")
-				buf.WriteString(line)
-			}
-			buf.WriteString("\n")
-		}
-		util.PrintToFile("show-commands.yml", outputDir, label+"\n"+buf.String()+"\n", truncate)
-	}
-	return !errFound
-}
-
-func runShowCommands(ctrl *process.Controller, outputDir string) bool {
-	var showCmds = []string{
-		"settings: ShowSettings",
-		"flavors: ShowFlavor",
-		"clusterinsts: ShowClusterInst",
-		"operators: ShowOperator",
-		"operatorcodes: ShowOperatorCode",
-		"developers: ShowDeveloper",
-		"cloudlets: ShowCloudlet",
-		"apps: ShowApp",
-		"appinstances: ShowAppInst",
-		"autoscalepolicies: ShowAutoScalePolicy",
-		"autoprovpolicies: ShowAutoProvPolicy",
-		"privacypolicies: ShowPrivacyPolicy",
-	}
-	// Some objects are generated asynchronously in response to
-	// other objects being created. For example, Prometheus metric
-	// AppInst is created after a cluster create. Because its run
-	// asynchronously, it may or may not be there before the show
-	// command. So if show fails, we retry a few times to see
-	// these objects show up a little later.
-	tries := 10
-	for ii := 0; ii < tries; ii++ {
-		if ii != 0 {
-			time.Sleep(100 * time.Millisecond)
-		}
-		ret := runShow(ctrl, showCmds, outputDir)
-		if ret {
-			return true
-		}
-	}
-	return false
-}
-
-func runNodeShow(ctrl *process.Controller, outputDir string) bool {
-	var showCmds = []string{
-		"nodes: ShowNode",
-	}
-	return runShow(ctrl, showCmds, outputDir)
-}
-
-func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir string, mods []string) bool {
+func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir string, mods []string, retry *bool) bool {
 	runCLI := false
 	for _, mod := range mods {
 		if mod == "cli" {
 			runCLI = true
 		}
 	}
-	if strings.HasPrefix(api, "debug") {
-		// no cli support for now
-		runCLI = false
-	}
 
-	if runCLI {
-		return RunControllerCLI(api, ctrlname, apiFile, outputDir, mods)
+	tag := ""
+	apiParams := strings.Split(api, "-")
+	if len(apiParams) > 1 {
+		api = apiParams[0]
+		tag = apiParams[1]
 	}
-
-	log.Printf("Applying data via APIs for %s\n", apiFile)
 
 	ctrl := util.GetController(ctrlname)
-
-	if api == "show" {
-		//handled separately since it uses edgectl not direct api connection
-		return runShowCommands(ctrl, outputDir)
-	} else if api == "nodeshow" {
-		return runNodeShow(ctrl, outputDir)
-	} else if strings.HasPrefix(api, "debug") {
-		return runDebug(ctrl, api, apiFile, outputDir)
+	var client testutil.Client
+	if runCLI {
+		args := []string{"--output-stream=false", "--silence-usage"}
+		if ctrl.TLS.ClientCert != "" {
+			args = append(args, "--tls", ctrl.TLS.ClientCert)
+		}
+		if ctrl.ApiAddr != "" {
+			args = append(args, "--addr", ctrl.ApiAddr)
+		}
+		client = &testutil.CliClient{
+			BaseArgs: args,
+			RunOps: []wrapper.RunOp{
+				wrapper.WithDebug(),
+			},
+		}
+	} else {
+		log.Printf("Connecting to controller %v at address %v", ctrl.Name, ctrl.ApiAddr)
+		conn, err := ctrl.ConnectAPI(apiConnectTimeout)
+		if err != nil {
+			log.Printf("Error connecting to controller api: %v\n", ctrl.ApiAddr)
+			return false
+		}
+		client = &testutil.ApiClient{
+			Conn: conn,
+		}
+		defer conn.Close()
 	}
 
-	if apiFile == "" {
-		log.Println("Error: Cannot run controller APIs without API file")
-		return false
-	}
-
-	readAppDataFile(apiFile)
-	readAppDataFileGeneric(apiFile)
-
-	log.Printf("Connecting to controller %v at address %v", ctrl.Name, ctrl.ApiAddr)
-	ctrlapi, err := ctrl.ConnectAPI(apiConnectTimeout)
+	log.Printf("Applying %s via APIs for mods %v, apiFile %s\n", api, mods, apiFile)
+	ctx, cancel := context.WithTimeout(context.Background(), apiTimeout)
+	defer cancel()
 
 	rc := true
+	run := testutil.NewRun(client, ctx, api, &rc)
 
-	if err != nil {
-		log.Printf("Error connecting to controller api: %v\n", ctrl.ApiAddr)
-		return false
+	if api == "show" {
+		filter := &edgeproto.AllData{}
+		output := &edgeproto.AllData{}
+		testutil.RunAllDataShowApis(run, filter, output)
+		util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
+		// Some objects are generated asynchronously in response to
+		// other objects being created. For example, Prometheus metric
+		// AppInst is created after a cluster create. Because its run
+		// asynchronously, it may or may not be there before the show
+		// command. Tell caller that if compareyaml fails, retry this
+		// show action.
+		*retry = true
+	} else if api == "nodeshow" {
+		filter := &edgeproto.NodeData{}
+		output := &edgeproto.NodeData{}
+		run.Mode = "show"
+		testutil.RunNodeDataShowApis(run, filter, output)
+		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
+	} else if strings.HasPrefix(api, "debug") {
+		runDebug(run, api, apiFile, outputDir)
 	} else {
-		log.Printf("Connected to controller %v success", ctrl.Name)
-		ctx, cancel := context.WithTimeout(context.Background(), apiTimeout)
+		if apiFile == "" {
+			log.Println("Error: Cannot run controller APIs without API file")
+			return false
+		}
 
-		var err error
+		readAppDataFile(apiFile)
+		readAppDataFileGeneric(apiFile)
+
 		switch api {
 		case "delete":
 			fallthrough
 		case "remove":
 			//run in reverse order to delete child keys
-			err = testutil.RunAppInstApi(ctrlapi, ctx, &appData.AppInstances, appDataMap["appinstances"], api)
-			if err != nil {
-				log.Printf("Error in appinst API %v \n", err)
-				rc = false
-			}
-			err = testutil.RunClusterInstApi(ctrlapi, ctx, &appData.ClusterInsts, appDataMap["clusterinsts"], api)
-			if err != nil {
-				log.Printf("Error in clusterinst API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunAppApi(ctrlapi, ctx, &appData.Applications, appDataMap["apps"], api)
-			if err != nil {
-				log.Printf("Error in app API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunAutoScalePolicyApi(ctrlapi, ctx, &appData.AutoScalePolicies, appDataMap["autoscalepolicies"], api)
-			if err != nil {
-				log.Printf("Error in auto scale policy API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunAutoProvPolicyApi_AutoProvPolicyCloudlet(ctrlapi, ctx, &appData.AutoProvPolicyCloudlets, appDataMap["autoprovpolicycloudlets"], api)
-			if err != nil {
-				log.Printf("Error in auto prov policy cloudlet API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunAutoProvPolicyApi(ctrlapi, ctx, &appData.AutoProvPolicies, appDataMap["autoprovpolicies"], api)
-			if err != nil {
-				log.Printf("Error in auto prov policy API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunPrivacyPolicyApi(ctrlapi, ctx, &appData.PrivacyPolicies, appDataMap["privacypolicies"], api)
-			if err != nil {
-				log.Printf("Error in privacy policy API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunCloudletInfoApi(ctrlapi, ctx, &appData.CloudletInfos, appDataMap["cloudletinfos"], api)
-			if err != nil {
-				log.Printf("Error in cloudletInfo API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunCloudletApi(ctrlapi, ctx, &appData.Cloudlets, appDataMap["cloudlets"], api)
-			if err != nil {
-				log.Printf("Error in cloudlet API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunDeveloperApi(ctrlapi, ctx, &appData.Developers, appDataMap["developers"], api)
-			if err != nil {
-				log.Printf("Error in developer API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunOperatorCodeApi(ctrlapi, ctx, &appData.OperatorCodes, appDataMap["operatorcodes"], api)
-			if err != nil {
-				log.Printf("Error in operator code API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
-			if err != nil {
-				log.Printf("Error in operator API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunSettingsApi(ctrlapi, ctx, appData.Settings, appDataMap["settings"], "reset")
-			if err != nil {
-				log.Printf("Error in settings API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
-			if err != nil {
-				log.Printf("Error in flavor API %v\n", err)
-				rc = false
-			}
+			output := &testutil.AllDataOut{}
+			testutil.RunAllDataReverseApis(run, &appData, appDataMap, output)
+			util.PrintToYamlFile("api-output.yml", outputDir, output, true)
 		case "create":
 			fallthrough
 		case "add":
@@ -258,124 +146,16 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		case "refresh":
 			fallthrough
 		case "update":
-			err = testutil.RunFlavorApi(ctrlapi, ctx, &appData.Flavors, appDataMap["flavors"], api)
-			if err != nil {
-				log.Printf("Error in flavor API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunSettingsApi(ctrlapi, ctx, appData.Settings, appDataMap["settings"], "update")
-			if err != nil {
-				log.Printf("Error in settigs API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunOperatorApi(ctrlapi, ctx, &appData.Operators, appDataMap["operators"], api)
-			if err != nil {
-				log.Printf("Error in operator API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunOperatorCodeApi(ctrlapi, ctx, &appData.OperatorCodes, appDataMap["operatorcodes"], api)
-			if err != nil {
-				log.Printf("Error in operator code API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunDeveloperApi(ctrlapi, ctx, &appData.Developers, appDataMap["developers"], api)
-			if err != nil {
-				log.Printf("Error in developer API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunCloudletApi(ctrlapi, ctx, &appData.Cloudlets, appDataMap["cloudlets"], api)
-			if err != nil {
-				log.Printf("Error in cloudlet API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunCloudletInfoApi(ctrlapi, ctx, &appData.CloudletInfos, appDataMap["cloudletinfos"], api)
-			if err != nil {
-				log.Printf("Error in cloudletInfo API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunAutoProvPolicyApi(ctrlapi, ctx, &appData.AutoProvPolicies, appDataMap["autoprovpolicies"], api)
-			if err != nil {
-				log.Printf("Error in auto prov policy API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunAutoProvPolicyApi_AutoProvPolicyCloudlet(ctrlapi, ctx, &appData.AutoProvPolicyCloudlets, appDataMap["autoprovpolicycloudlets"], api)
-			if err != nil {
-				log.Printf("Error in auto prov policy cloudlet API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunAutoScalePolicyApi(ctrlapi, ctx, &appData.AutoScalePolicies, appDataMap["autoscalepolicies"], api)
-			if err != nil {
-				log.Printf("Error in auto scale policy API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunPrivacyPolicyApi(ctrlapi, ctx, &appData.PrivacyPolicies, appDataMap["privacypolicies"], api)
-			if err != nil {
-				log.Printf("Error in privacy policy API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunAppApi(ctrlapi, ctx, &appData.Applications, appDataMap["apps"], api)
-			if err != nil {
-				log.Printf("Error in app API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunClusterInstApi(ctrlapi, ctx, &appData.ClusterInsts, appDataMap["clusterinsts"], api)
-			if err != nil {
-				log.Printf("Error in clusterinst API %v\n", err)
-				rc = false
-			}
-			err = testutil.RunAppInstApi(ctrlapi, ctx, &appData.AppInstances, appDataMap["appinstances"], api)
-			if err != nil {
-				log.Printf("Error in appinst API %v\n", err)
-				rc = false
-			}
+			output := &testutil.AllDataOut{}
+			testutil.RunAllDataApis(run, &appData, appDataMap, output)
+			util.PrintToYamlFile("api-output.yml", outputDir, output, true)
 		default:
 			log.Printf("Error: unsupported controller API %s\n", api)
 			rc = false
 		}
-		cancel()
 	}
-	ctrlapi.Close()
+	run.CheckErrs(api, tag)
 	return rc
-}
-
-func RunControllerCLI(api string, ctrlname string, apiFile string, outputDir string, mods []string) bool {
-	log.Printf("Applying data via CLI for %s\n", apiFile)
-
-	ctrl := util.GetController(ctrlname)
-
-	if api == "show" {
-		return runShowCommands(ctrl, outputDir)
-	}
-	if api == "nodeshow" {
-		return runNodeShow(ctrl, outputDir)
-	}
-
-	if apiFile == "" {
-		log.Println("Error: Cannot run controller APIs without API file")
-		return false
-	}
-
-	log.Printf("Using controller %v at address %v", ctrl.Name, ctrl.ApiAddr)
-	switch api {
-	case "create":
-		out, err := util.ControllerCLI(ctrl, "Create", "--datafile", apiFile)
-		log.Println(string(out))
-		if err != nil {
-			log.Printf("Error running Create CLI %v\n", err)
-			return false
-		}
-	case "delete":
-		out, err := util.ControllerCLI(ctrl, "Delete", "--datafile", apiFile)
-		log.Println(string(out))
-		if err != nil {
-			log.Printf("Error running Delete CLI %v\n", err)
-			return false
-		}
-	default:
-		log.Printf("Error: unsupported controller CLI %s\n", api)
-		return false
-	}
-	return true
 }
 
 func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string) bool {
@@ -506,13 +286,13 @@ func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string) err
 	return nil
 }
 
-func runDebug(ctrl *process.Controller, api, apiFile, outputDir string) bool {
-	data := util.DebugData{}
-	log.Printf("Applying debug via APIs for %s\n", apiFile)
+func runDebug(run *testutil.Run, api, apiFile, outputDir string) {
+	data := edgeproto.DebugData{}
 
 	if apiFile == "" {
 		log.Println("Error: Cannot run Debug API without API file")
-		return false
+		*run.Rc = false
+		return
 	}
 	err := util.ReadYamlFile(apiFile, &data)
 	if err != nil {
@@ -520,87 +300,21 @@ func runDebug(ctrl *process.Controller, api, apiFile, outputDir string) bool {
 		os.Exit(1)
 	}
 
-	conn, err := ctrl.ConnectAPI(apiConnectTimeout)
-	if err != nil {
-		log.Printf("Error connecting to controller api: %v, %v\n", ctrl.ApiAddr, err)
-		return false
-	}
-	defer conn.Close()
-
-	debugApi := edgeproto.NewDebugApiClient(conn)
-	log.Printf("Connected to controller %v success", ctrl.Name)
-	ctx, cancel := context.WithTimeout(context.Background(), apiTimeout)
-	defer cancel()
-
-	rc := true
-	output := util.DebugOutput{}
-
+	output := testutil.DebugDataOut{}
 	switch api {
 	case "debugenable":
-		runDebugApi(ctx, debugApi, "EnableDebugLevels", data.Requests, &output.Replies, &rc)
+		run.Mode = "enabledebuglevels"
 	case "debugdisable":
-		runDebugApi(ctx, debugApi, "DisableDebugLevels", data.Requests, &output.Replies, &rc)
+		run.Mode = "disabledebuglevels"
 	case "debugshow":
-		runDebugApi(ctx, debugApi, "ShowDebugLevels", data.Requests, &output.Replies, &rc)
+		run.Mode = "show"
 	case "debugrun":
-		runDebugApi(ctx, debugApi, "RunDebug", data.Requests, &output.Replies, &rc)
+		run.Mode = "rundebug"
+	default:
+		log.Printf("Invalid debug api %s\n", api)
+		*run.Rc = false
+		return
 	}
-
-	ymlOut, err := yaml.Marshal(output)
-	if err != nil {
-		log.Printf("Failed to marshal debug output, %v\n", err)
-		rc = false
-	} else {
-		util.PrintToFile("api-output.yml", outputDir, string(ymlOut), true)
-	}
-	return rc
-}
-
-type debugReplyStream interface {
-	Recv() (*edgeproto.DebugReply, error)
-	grpc.ClientStream
-}
-
-func runDebugApi(ctx context.Context, client edgeproto.DebugApiClient, api string, reqs []edgeproto.DebugRequest, out *[][]edgeproto.DebugReply, rc *bool) {
-	for _, req := range reqs {
-		var stream debugReplyStream
-		var err error
-		switch api {
-		case "EnableDebugLevels":
-			stream, err = client.EnableDebugLevels(ctx, &req)
-		case "DisableDebugLevels":
-			stream, err = client.DisableDebugLevels(ctx, &req)
-		case "ShowDebugLevels":
-			stream, err = client.ShowDebugLevels(ctx, &req)
-		case "RunDebug":
-			stream, err = client.RunDebug(ctx, &req)
-		default:
-			log.Printf("Unknown debug API %s\n", api)
-			*rc = false
-		}
-		if err != nil {
-			log.Printf("debug api %s for request %v failed %v", api, req, err)
-			*rc = false
-			continue
-		}
-		replies := []edgeproto.DebugReply{}
-		for {
-			reply, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				log.Printf("debug api %s stream out for request %v failed %v", api, req, err)
-				*rc = false
-				break
-			}
-			replies = append(replies, *reply)
-		}
-		if len(replies) > 0 {
-			if *out == nil {
-				*out = make([][]edgeproto.DebugReply, 0)
-			}
-			*out = append(*out, replies)
-		}
-	}
+	testutil.RunDebugDataApis(run, &data, make(map[string]interface{}), &output)
+	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
 }

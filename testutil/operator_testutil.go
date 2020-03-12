@@ -12,6 +12,7 @@ import "time"
 import "github.com/stretchr/testify/require"
 import "github.com/mobiledgex/edge-cloud/log"
 import "github.com/mobiledgex/edge-cloud/cli"
+import "github.com/mobiledgex/edge-cloud/edgectl/wrapper"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -579,34 +580,83 @@ func FindOperatorCodeData(key *edgeproto.OperatorCodeKey, testData []edgeproto.O
 	return nil, false
 }
 
-func RunOperatorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Operator, dataMap interface{}, mode string) error {
-	operatorApi := edgeproto.NewOperatorApiClient(conn)
-	var err error
+func (r *Run) OperatorApi(data *[]edgeproto.Operator, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for Operator", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.Operator{}
+		out, err := r.client.ShowOperator(r.ctx, obj)
+		if err != nil {
+			r.logErr("OperatorApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.Operator)
+			if !ok {
+				panic(fmt.Sprintf("RunOperatorApi expected dataOut type *[]edgeproto.Operator, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
 	for ii, objD := range *data {
 		obj := &objD
-		log.DebugLog(log.DebugLevelApi, "API %v for Operator: %v", mode, obj.GetKey())
-		switch mode {
+		switch r.Mode {
 		case "create":
-			_, err = operatorApi.CreateOperator(ctx, obj)
+			out, err := r.client.CreateOperator(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("OperatorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunOperatorApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		case "delete":
-			_, err = operatorApi.DeleteOperator(ctx, obj)
+			out, err := r.client.DeleteOperator(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("OperatorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunOperatorApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		case "update":
+			// set specified fields
 			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
 			if err != nil {
-				return fmt.Errorf("bad dataMap for Operator: %v", err)
+				log.DebugLog(log.DebugLevelApi, "bad dataMap for Operator", "err", err)
+				*r.Rc = false
+				return
 			}
 			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
-			_, err = operatorApi.UpdateOperator(ctx, obj)
-		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Operator: %v", mode, obj.GetKey())
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
+
+			out, err := r.client.UpdateOperator(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("OperatorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunOperatorApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowOperator(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("OperatorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Operator)
+				if !ok {
+					panic(fmt.Sprintf("RunOperatorApi expected dataOut type *[]edgeproto.Operator, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
 		}
 	}
-	return nil
 }
 
 func (s *DummyServer) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
@@ -648,27 +698,60 @@ func (s *DummyServer) ShowOperator(in *edgeproto.Operator, server edgeproto.Oper
 	return err
 }
 
-func RunOperatorCodeApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.OperatorCode, dataMap interface{}, mode string) error {
-	operatorCodeApi := edgeproto.NewOperatorCodeApiClient(conn)
-	var err error
-	for _, objD := range *data {
-		obj := &objD
-		log.DebugLog(log.DebugLevelApi, "API %v for OperatorCode: %v", mode, obj.GetKey())
-		switch mode {
-		case "create":
-			_, err = operatorCodeApi.CreateOperatorCode(ctx, obj)
-		case "delete":
-			_, err = operatorCodeApi.DeleteOperatorCode(ctx, obj)
-		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for OperatorCode: %v", mode, obj.GetKey())
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
+func (r *Run) OperatorCodeApi(data *[]edgeproto.OperatorCode, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for OperatorCode", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.OperatorCode{}
+		out, err := r.client.ShowOperatorCode(r.ctx, obj)
 		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
+			r.logErr("OperatorCodeApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.OperatorCode)
+			if !ok {
+				panic(fmt.Sprintf("RunOperatorCodeApi expected dataOut type *[]edgeproto.OperatorCode, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "create":
+			out, err := r.client.CreateOperatorCode(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("OperatorCodeApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunOperatorCodeApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "delete":
+			out, err := r.client.DeleteOperatorCode(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("OperatorCodeApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunOperatorCodeApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowOperatorCode(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("OperatorCodeApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.OperatorCode)
+				if !ok {
+					panic(fmt.Sprintf("RunOperatorCodeApi expected dataOut type *[]edgeproto.OperatorCode, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
 		}
 	}
-	return nil
 }
 
 func (s *DummyServer) CreateOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error) {
@@ -700,4 +783,147 @@ func (s *DummyServer) ShowOperatorCode(in *edgeproto.OperatorCode, server edgepr
 		return err
 	})
 	return err
+}
+
+func (s *ApiClient) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	api := edgeproto.NewOperatorApiClient(s.Conn)
+	return api.CreateOperator(ctx, in)
+}
+
+func (s *CliClient) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "CreateOperator")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) DeleteOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	api := edgeproto.NewOperatorApiClient(s.Conn)
+	return api.DeleteOperator(ctx, in)
+}
+
+func (s *CliClient) DeleteOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "DeleteOperator")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) UpdateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	api := edgeproto.NewOperatorApiClient(s.Conn)
+	return api.UpdateOperator(ctx, in)
+}
+
+func (s *CliClient) UpdateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "UpdateOperator")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type OperatorStream interface {
+	Recv() (*edgeproto.Operator, error)
+}
+
+func OperatorReadStream(stream OperatorStream) ([]edgeproto.Operator, error) {
+	output := []edgeproto.Operator{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read Operator stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowOperator(ctx context.Context, in *edgeproto.Operator) ([]edgeproto.Operator, error) {
+	api := edgeproto.NewOperatorApiClient(s.Conn)
+	stream, err := api.ShowOperator(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return OperatorReadStream(stream)
+}
+
+func (s *CliClient) ShowOperator(ctx context.Context, in *edgeproto.Operator) ([]edgeproto.Operator, error) {
+	output := []edgeproto.Operator{}
+	args := append(s.BaseArgs, "controller", "ShowOperator")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type OperatorApiClient interface {
+	CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error)
+	DeleteOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error)
+	UpdateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error)
+	ShowOperator(ctx context.Context, in *edgeproto.Operator) ([]edgeproto.Operator, error)
+}
+
+func (s *ApiClient) CreateOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error) {
+	api := edgeproto.NewOperatorCodeApiClient(s.Conn)
+	return api.CreateOperatorCode(ctx, in)
+}
+
+func (s *CliClient) CreateOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "CreateOperatorCode")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) DeleteOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error) {
+	api := edgeproto.NewOperatorCodeApiClient(s.Conn)
+	return api.DeleteOperatorCode(ctx, in)
+}
+
+func (s *CliClient) DeleteOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "DeleteOperatorCode")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type OperatorCodeStream interface {
+	Recv() (*edgeproto.OperatorCode, error)
+}
+
+func OperatorCodeReadStream(stream OperatorCodeStream) ([]edgeproto.OperatorCode, error) {
+	output := []edgeproto.OperatorCode{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read OperatorCode stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) ([]edgeproto.OperatorCode, error) {
+	api := edgeproto.NewOperatorCodeApiClient(s.Conn)
+	stream, err := api.ShowOperatorCode(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return OperatorCodeReadStream(stream)
+}
+
+func (s *CliClient) ShowOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) ([]edgeproto.OperatorCode, error) {
+	output := []edgeproto.OperatorCode{}
+	args := append(s.BaseArgs, "controller", "ShowOperatorCode")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type OperatorCodeApiClient interface {
+	CreateOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error)
+	DeleteOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error)
+	ShowOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) ([]edgeproto.OperatorCode, error)
 }

@@ -119,6 +119,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--cloudletVMImagePath")
 		args = append(args, p.CloudletVMImagePath)
 	}
+	if p.NotifyRootAddrs != "" {
+		args = append(args, "--notifyRootAddrs")
+		args = append(args, p.NotifyRootAddrs)
+	}
 	if p.NotifyParentAddrs != "" {
 		args = append(args, "--notifyParentAddrs")
 		args = append(args, p.NotifyParentAddrs)

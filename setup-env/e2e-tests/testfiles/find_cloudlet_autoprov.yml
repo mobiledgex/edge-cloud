@@ -30,6 +30,14 @@ tests:
     yaml2: "{{datadir}}/appdata_no_appinst_autoprov_show.yml"
     filetype: appdata
 
+- name: check influx stats for auto-provisioning
+  actions: [sleep=1.1,influxapi]
+  apifile: "{{datadir}}/influx_autoprov_query.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/influx_autoprov_data.yml"
+    filetype: influxdata
+
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]
   apifile: "{{datadir}}/appdata_no_appinst.yml"
@@ -37,11 +45,3 @@ tests:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
-
-- name: check influx stats for auto-provisioning
-  actions: [influxapi]
-  apifile: "{{datadir}}/influx_autoprov_query.yml"
-  compareyaml:
-    yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/influx_autoprov_data.yml"
-    filetype: influxdata

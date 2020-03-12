@@ -12,6 +12,7 @@ import "time"
 import "github.com/stretchr/testify/require"
 import "github.com/mobiledgex/edge-cloud/log"
 import "github.com/mobiledgex/edge-cloud/cli"
+import "github.com/mobiledgex/edge-cloud/edgectl/wrapper"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -68,11 +69,7 @@ func NewCudStreamoutCloudlet(ctx context.Context) *CudStreamoutCloudlet {
 	}
 }
 
-type CloudletStream interface {
-	Recv() (*edgeproto.Result, error)
-}
-
-func CloudletReadResultStream(stream CloudletStream, err error) error {
+func CloudletReadResultStream(stream ResultStream, err error) error {
 	if err != nil {
 		return err
 	}
@@ -541,59 +538,137 @@ func FindCloudletInfoData(key *edgeproto.CloudletKey, testData []edgeproto.Cloud
 	return nil, false
 }
 
-func RunCloudletApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Cloudlet, dataMap interface{}, mode string) error {
-	cloudletApi := edgeproto.NewCloudletApiClient(conn)
-	var err error
+func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for Cloudlet", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.Cloudlet{}
+		out, err := r.client.ShowCloudlet(r.ctx, obj)
+		if err != nil {
+			r.logErr("CloudletApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.Cloudlet)
+			if !ok {
+				panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[]edgeproto.Cloudlet, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
 	for ii, objD := range *data {
 		obj := &objD
-		log.DebugLog(log.DebugLevelApi, "API %v for Cloudlet: %v", mode, obj.GetKey())
-		var stream CloudletStream
-		switch mode {
+		switch r.Mode {
 		case "create":
-			stream, err = cloudletApi.CreateCloudlet(ctx, obj)
+			out, err := r.client.CreateCloudlet(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
 		case "delete":
-			stream, err = cloudletApi.DeleteCloudlet(ctx, obj)
+			out, err := r.client.DeleteCloudlet(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
 		case "update":
+			// set specified fields
 			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
 			if err != nil {
-				return fmt.Errorf("bad dataMap for Cloudlet: %v", err)
+				log.DebugLog(log.DebugLevelApi, "bad dataMap for Cloudlet", "err", err)
+				*r.Rc = false
+				return
 			}
 			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
-			stream, err = cloudletApi.UpdateCloudlet(ctx, obj)
-		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Cloudlet: %v", mode, obj.GetKey())
-			return nil
-		}
-		err = CloudletReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
+
+			out, err := r.client.UpdateCloudlet(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowCloudlet(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Cloudlet)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[]edgeproto.Cloudlet, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
 		}
 	}
-	return nil
 }
 
-func RunCloudletApi_CloudletResMap(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.CloudletResMap, dataMap interface{}, mode string) error {
-	cloudletResMapApi := edgeproto.NewCloudletApiClient(conn)
-	var err error
-	for _, objD := range *data {
+func (r *Run) CloudletApi_CloudletResMap(data *[]edgeproto.CloudletResMap, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for CloudletResMap", "mode", r.Mode)
+	for ii, objD := range *data {
 		obj := &objD
-		log.DebugLog(log.DebugLevelApi, "API %v for CloudletResMap: %v", mode, obj.GetKey())
-		switch mode {
-		case "add":
-			_, err = cloudletResMapApi.AddCloudletResMapping(ctx, obj)
-		case "remove":
-			_, err = cloudletResMapApi.RemoveCloudletResMapping(ctx, obj)
-		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for CloudletResMap: %v", mode, obj.GetKey())
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
+		switch r.Mode {
+		case "addcloudletresmapping":
+			out, err := r.client.AddCloudletResMapping(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletApi_CloudletResMap[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi_CloudletResMap expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "removecloudletresmapping":
+			out, err := r.client.RemoveCloudletResMapping(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletApi_CloudletResMap[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi_CloudletResMap expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		}
 	}
-	return nil
+}
+
+func (r *Run) CloudletApi_FlavorMatch(data *[]edgeproto.FlavorMatch, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for FlavorMatch", "mode", r.Mode)
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "find":
+			out, err := r.client.FindFlavorMatch(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletApi_FlavorMatch[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.FlavorMatch)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi_FlavorMatch expected dataOut type *[]edgeproto.FlavorMatch, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		}
+	}
 }
 
 func (s *DummyServer) CreateCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_CreateCloudletServer) error {
@@ -644,27 +719,62 @@ func (s *DummyServer) ShowCloudlet(in *edgeproto.Cloudlet, server edgeproto.Clou
 	return err
 }
 
-func RunCloudletInfoApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.CloudletInfo, dataMap interface{}, mode string) error {
-	cloudletInfoApi := edgeproto.NewCloudletInfoApiClient(conn)
-	var err error
-	for _, objD := range *data {
-		obj := &objD
-		log.DebugLog(log.DebugLevelApi, "API %v for CloudletInfo: %v", mode, obj.GetKey())
-		switch mode {
-		case "create":
-			_, err = cloudletInfoApi.InjectCloudletInfo(ctx, obj)
-		case "delete":
-			_, err = cloudletInfoApi.EvictCloudletInfo(ctx, obj)
-		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for CloudletInfo: %v", mode, obj.GetKey())
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
+func (r *Run) CloudletInfoApi(data *[]edgeproto.CloudletInfo, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for CloudletInfo", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.CloudletInfo{}
+		out, err := r.client.ShowCloudletInfo(r.ctx, obj)
 		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
+			r.logErr("CloudletInfoApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.CloudletInfo)
+			if !ok {
+				panic(fmt.Sprintf("RunCloudletInfoApi expected dataOut type *[]edgeproto.CloudletInfo, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "showfiltered":
+			out, err := r.client.ShowCloudletInfo(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletInfoApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.CloudletInfo)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletInfoApi expected dataOut type *[]edgeproto.CloudletInfo, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		case "inject":
+			out, err := r.client.InjectCloudletInfo(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletInfoApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletInfoApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "evict":
+			out, err := r.client.EvictCloudletInfo(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletInfoApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletInfoApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		}
 	}
-	return nil
 }
 
 func (s *DummyServer) ShowCloudletInfo(in *edgeproto.CloudletInfo, server edgeproto.CloudletInfoApi_ShowCloudletInfoServer) error {
@@ -694,4 +804,290 @@ func (s *DummyServer) EvictCloudletInfo(ctx context.Context, in *edgeproto.Cloud
 		return &edgeproto.Result{}, nil
 	}
 	return &edgeproto.Result{}, nil
+}
+
+func (r *Run) CloudletMetricsApi(data *[]edgeproto.CloudletMetrics, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for CloudletMetrics", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.CloudletMetrics{}
+		out, err := r.client.ShowCloudletMetrics(r.ctx, obj)
+		if err != nil {
+			r.logErr("CloudletMetricsApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.CloudletMetrics)
+			if !ok {
+				panic(fmt.Sprintf("RunCloudletMetricsApi expected dataOut type *[]edgeproto.CloudletMetrics, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "showfiltered":
+			out, err := r.client.ShowCloudletMetrics(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletMetricsApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.CloudletMetrics)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletMetricsApi expected dataOut type *[]edgeproto.CloudletMetrics, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		}
+	}
+}
+
+type ResultStream interface {
+	Recv() (*edgeproto.Result, error)
+}
+
+func ResultReadStream(stream ResultStream) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read Result stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	stream, err := api.CreateCloudlet(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "CreateCloudlet")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	stream, err := api.DeleteCloudlet(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "DeleteCloudlet")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	stream, err := api.UpdateCloudlet(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "UpdateCloudlet")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type CloudletStream interface {
+	Recv() (*edgeproto.Cloudlet, error)
+}
+
+func CloudletReadStream(stream CloudletStream) ([]edgeproto.Cloudlet, error) {
+	output := []edgeproto.Cloudlet{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read Cloudlet stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Cloudlet, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	stream, err := api.ShowCloudlet(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return CloudletReadStream(stream)
+}
+
+func (s *CliClient) ShowCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Cloudlet, error) {
+	output := []edgeproto.Cloudlet{}
+	args := append(s.BaseArgs, "controller", "ShowCloudlet")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	return api.AddCloudletResMapping(ctx, in)
+}
+
+func (s *CliClient) AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "AddCloudletResMapping")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	return api.RemoveCloudletResMapping(ctx, in)
+}
+
+func (s *CliClient) RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "RemoveCloudletResMapping")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	return api.FindFlavorMatch(ctx, in)
+}
+
+func (s *CliClient) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error) {
+	out := edgeproto.FlavorMatch{}
+	args := append(s.BaseArgs, "controller", "FindFlavorMatch")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type CloudletApiClient interface {
+	CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
+	DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
+	UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
+	ShowCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Cloudlet, error)
+	AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
+	RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
+	FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error)
+}
+
+type CloudletInfoStream interface {
+	Recv() (*edgeproto.CloudletInfo, error)
+}
+
+func CloudletInfoReadStream(stream CloudletInfoStream) ([]edgeproto.CloudletInfo, error) {
+	output := []edgeproto.CloudletInfo{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read CloudletInfo stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) ([]edgeproto.CloudletInfo, error) {
+	api := edgeproto.NewCloudletInfoApiClient(s.Conn)
+	stream, err := api.ShowCloudletInfo(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return CloudletInfoReadStream(stream)
+}
+
+func (s *CliClient) ShowCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) ([]edgeproto.CloudletInfo, error) {
+	output := []edgeproto.CloudletInfo{}
+	args := append(s.BaseArgs, "controller", "ShowCloudletInfo")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) InjectCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	api := edgeproto.NewCloudletInfoApiClient(s.Conn)
+	return api.InjectCloudletInfo(ctx, in)
+}
+
+func (s *CliClient) InjectCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "InjectCloudletInfo")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) EvictCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	api := edgeproto.NewCloudletInfoApiClient(s.Conn)
+	return api.EvictCloudletInfo(ctx, in)
+}
+
+func (s *CliClient) EvictCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "EvictCloudletInfo")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type CloudletInfoApiClient interface {
+	ShowCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) ([]edgeproto.CloudletInfo, error)
+	InjectCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error)
+	EvictCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error)
+}
+
+type CloudletMetricsStream interface {
+	Recv() (*edgeproto.CloudletMetrics, error)
+}
+
+func CloudletMetricsReadStream(stream CloudletMetricsStream) ([]edgeproto.CloudletMetrics, error) {
+	output := []edgeproto.CloudletMetrics{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read CloudletMetrics stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowCloudletMetrics(ctx context.Context, in *edgeproto.CloudletMetrics) ([]edgeproto.CloudletMetrics, error) {
+	api := edgeproto.NewCloudletMetricsApiClient(s.Conn)
+	stream, err := api.ShowCloudletMetrics(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return CloudletMetricsReadStream(stream)
+}
+
+func (s *CliClient) ShowCloudletMetrics(ctx context.Context, in *edgeproto.CloudletMetrics) ([]edgeproto.CloudletMetrics, error) {
+	output := []edgeproto.CloudletMetrics{}
+	args := append(s.BaseArgs, "controller", "ShowCloudletMetrics")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type CloudletMetricsApiClient interface {
+	ShowCloudletMetrics(ctx context.Context, in *edgeproto.CloudletMetrics) ([]edgeproto.CloudletMetrics, error)
 }
