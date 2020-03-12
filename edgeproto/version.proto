@@ -8,14 +8,7 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 // Below enum lists hashes as well as corresponding versions
 enum VersionHash {
   HASH_d41d8cd98f00b204e9800998ecf8427e = 0;
-  HASH_b35326df0fcd1550b7c0cf6460c4bca2 = 1 [(protogen.upgrade_func) = "TestUpgradeExample"];
-  HASH_52e6980599cd59bbbd0de8d5f4d53d4b = 2;
-  HASH_00bdcfa956ca4ee42be87abcd8fcaf1c = 3 [(protogen.upgrade_func) = "AddClusterInstKeyToAppInstKey"];
-  HASH_0d2d9c0b07ad989e96fb3b3a44924316 = 4 [(protogen.upgrade_func) = "LintFixAppInstFields"];
-  HASH_2b79f0b6e402045ee5f68d697b9386ae = 5 [(protogen.upgrade_func) = "AddClusterInstDeploymentField"];
-  HASH_536a69a5e27bf7cf5152d85eba21aa74 = 6 [(protogen.upgrade_func) = "AddInternalPortsForPrometheus"];
-  HASH_caedcdeef911bc00d5dceacf8e55890a = 7;
-  HASH_60febe402fd8f1a1ded0762dbc72a5a8 = 8;
+  //interim versions deleted
   HASH_d4ca5418a77d22d968ce7a2afc549dfe = 9;
   HASH_7848d42e3a2eaf36e53bbd3af581b13a = 10 [(protogen.upgrade_func) = "SetDefaultLoadBalancerMaxPortRange"];
   HASH_f31b7a9d7e06f72107e0ab13c708704e = 11;

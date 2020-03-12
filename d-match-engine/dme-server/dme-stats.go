@@ -147,7 +147,7 @@ func MetricToStat(metric *edgeproto.Metric) (*dmecommon.StatKey, *ApiStat) {
 	stat := &ApiStat{}
 	for _, tag := range metric.Tags {
 		switch tag.Name {
-		case "dev":
+		case "apporg":
 			key.AppKey.Organization = tag.Val
 		case "app":
 			key.AppKey.Name = tag.Val
