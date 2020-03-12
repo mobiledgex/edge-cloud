@@ -68,6 +68,7 @@ type Crm struct {
 	PackageVersion      string
 	CloudletVMImagePath string
 	Region              string
+	CommercialCerts     bool
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`
