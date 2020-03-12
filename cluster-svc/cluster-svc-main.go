@@ -82,11 +82,9 @@ grafana:
   enabled: false
 alertmanager:
   enabled: false
-{{if .AppLabel}}
 commonLabels:
-  {{.AppLabel}}: "{{.AppLabelVal}}"
-  {{.AppVersionLabel}}: "{{.AppVersionLabelVal}}"
-{{end}}
+  {{if .AppLabel}}{{.AppLabel}}: "{{.AppLabelVal}}"{{end}}
+  {{if .AppVersionLabel}}{{.AppVersionLabel}}: "{{.AppVersionLabelVal}}"{{end}}
 `
 
 var MEXPrometheusAppName = cloudcommon.MEXPrometheusAppName

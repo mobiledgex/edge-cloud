@@ -307,6 +307,9 @@ apps:
         enabled: false
       alertmanager:
         enabled: false
+      commonLabels:
+        mexAppName: "mexprometheusappname"
+        mexAppVersion: "10"
   revision: 1
   accesstype: AccessTypeLoadBalancer
 - key:
