@@ -47,7 +47,7 @@ func getVaultRegistryPath(registry string) string {
 }
 
 func GetRegistryAuth(ctx context.Context, imgUrl string, vaultConfig *vault.Config) (*RegistryAuth, error) {
-	if vaultConfig.Addr == "" {
+	if vaultConfig == nil || vaultConfig.Addr == "" {
 		return nil, fmt.Errorf("no vault specified")
 	}
 	urlObj, err := util.ImagePathParse(imgUrl)
