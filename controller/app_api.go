@@ -244,7 +244,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 		in.DeploymentManifest = ""
 	}
 
-	deploymf, err := cloudcommon.GetAppDeploymentManifest(in)
+	deploymf, err := cloudcommon.GetAppDeploymentManifest(ctx, vaultConfig, in)
 	if err != nil {
 		return err
 	}
