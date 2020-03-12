@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"runtime"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/log"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -46,6 +47,35 @@ func WriteFile(client ssh.Client, file string, contents string, kind string, sud
 		return fmt.Errorf("error writing %s, %s, %s, %v", kind, cmd, out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "wrote file", "kind", kind)
+	return nil
+}
+
+func CreateDir(ctx context.Context, client ssh.Client, dir string, overwrite bool) error {
+	output, err := client.Output("mkdir " + dir)
+	if err == nil {
+		return nil
+	}
+	if !strings.Contains(output, "File exists") {
+		log.SpanLog(ctx, log.DebugLevelMexos, "mkdir err", "out", output, "err", err)
+		return err
+	}
+
+	if !overwrite {
+		return nil
+	}
+
+	// If overwrite is true, then try deleting the directory and recreate it
+	err = DeleteDir(ctx, client, dir)
+	if err != nil {
+		delerr := fmt.Errorf("unable to delete already existing directory: %v", err)
+		log.SpanLog(ctx, log.DebugLevelMexos, "mkdir err", "err", delerr)
+		return err
+	}
+	output, err = client.Output("mkdir " + dir)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelMexos, "mkdir err", "out", output, "err", err)
+		return err
+	}
 	return nil
 }
 
