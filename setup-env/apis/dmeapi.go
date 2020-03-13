@@ -198,7 +198,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		//if the current app is different, re-register
 		readMatchEngineStatus(outputDir+"/register.yml", &registerStatus)
 		if apiRequest.Rcreq.AppName != "" &&
-			(registerStatus.Req.DevName != apiRequest.Rcreq.DevName ||
+			(registerStatus.Req.OrgName != apiRequest.Rcreq.OrgName ||
 				registerStatus.Req.AppName != apiRequest.Rcreq.AppName ||
 				registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers ||
 				time.Since(registerStatus.At) > time.Hour) {
@@ -242,7 +242,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		if strings.Contains(apiRequest.Rcreq.AuthToken, "GENTOKEN:") {
 			privKeyFile := filepath.Dir(apiFile) + "/" + strings.Split(apiRequest.Rcreq.AuthToken, ":")[1]
 			expTime := time.Now().Add(time.Duration(expirySeconds) * time.Second).Unix()
-			token, err := dmecommon.GenerateAuthToken(privKeyFile, apiRequest.Rcreq.DevName,
+			token, err := dmecommon.GenerateAuthToken(privKeyFile, apiRequest.Rcreq.OrgName,
 				apiRequest.Rcreq.AppName, apiRequest.Rcreq.AppVers, expTime)
 			if err == nil {
 				log.Printf("Got AuthToken: %s\n", token)

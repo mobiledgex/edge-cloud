@@ -73,7 +73,7 @@ message ClusterRefs {
 service CloudletRefsApi {
   // Show CloudletRefs (debug only)
   rpc ShowCloudletRefs(CloudletRefs) returns (stream CloudletRefs) {
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
   }
 }
 

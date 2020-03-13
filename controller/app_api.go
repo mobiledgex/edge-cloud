@@ -40,17 +40,6 @@ func (s *AppApi) Get(key *edgeproto.AppKey, buf *edgeproto.App) bool {
 	return s.cache.Get(key, buf)
 }
 
-func (s *AppApi) UsesDeveloper(in *edgeproto.DeveloperKey) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for key, app := range s.cache.Objs {
-		if key.DeveloperKey.Matches(in) && app.DelOpt != edgeproto.DeleteType_AUTO_DELETE {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -66,7 +55,7 @@ func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, app := range s.cache.Objs {
-		if app.Key.DeveloperKey.Name == key.Developer && app.AutoProvPolicy == key.Name {
+		if app.Key.Organization == key.Organization && app.AutoProvPolicy == key.Name {
 			return true
 		}
 	}
@@ -77,19 +66,19 @@ func (s *AppApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, app := range s.cache.Objs {
-		if app.Key.DeveloperKey.Name == key.Developer && app.DefaultPrivacyPolicy == key.Name {
+		if app.Key.Organization == key.Organization && app.DefaultPrivacyPolicy == key.Name {
 			return true
 		}
 	}
 	return false
 }
 
-func (s *AppApi) AutoDeleteAppsForDeveloper(ctx context.Context, key *edgeproto.DeveloperKey) {
+func (s *AppApi) AutoDeleteAppsForOrganization(ctx context.Context, org string) {
 	apps := make(map[edgeproto.AppKey]*edgeproto.App)
-	log.DebugLog(log.DebugLevelApi, "Auto-deleting Apps ", "developer", key)
+	log.DebugLog(log.DebugLevelApi, "Auto-deleting Apps ", "org", org)
 	s.cache.Mux.Lock()
 	for k, app := range s.cache.Objs {
-		if app.Key.DeveloperKey.Matches(key) && app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
+		if app.Key.Organization == org && app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
 			apps[k] = app
 		}
 	}
@@ -131,7 +120,7 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	defer s.cache.Mux.Unlock()
 	for _, app := range s.cache.Objs {
 		if app.AndroidPackageName == a.AndroidPackageName {
-			if (a.Key.DeveloperKey.Name != app.Key.DeveloperKey.Name) || (a.Key.Name != app.Key.Name) {
+			if (a.Key.Organization != app.Key.Organization) || (a.Key.Name != app.Key.Name) {
 				return true
 			}
 		}
@@ -163,7 +152,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 				return fmt.Errorf("No image path specified and no default registryFQDN to fall back upon. Please specify the image path")
 			}
 			in.ImagePath = *registryFQDN + "/" +
-				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
+				util.DockerSanitize(in.Key.Organization) + "/images/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
 		} else if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
@@ -174,14 +163,14 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 				return fmt.Errorf("No image path specified and no default artifactoryFQDN to fall back upon. Please specify the image path")
 			}
 			in.ImagePath = *artifactoryFQDN + "repo-" +
-				in.Key.DeveloperKey.Name + "/" +
+				in.Key.Organization + "/" +
 				in.Key.Name + ".qcow2#md5:" + in.Md5Sum
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
 			if *registryFQDN == "" {
 				return fmt.Errorf("No image path specified and no default registryFQDN to fall back upon. Please specify the image path")
 			}
 			in.ImagePath = *registryFQDN + "/" +
-				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
+				util.DockerSanitize(in.Key.Organization) + "/images/" +
 				util.DockerSanitize(in.Key.Name)
 		} else {
 			in.ImagePath = "image path required"
@@ -201,7 +190,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 		return fmt.Errorf("app scaling is only supported for Kubernetes deployments")
 	}
 
-	if !cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) {
+	if !cloudcommon.IsPlatformApp(in.Key.Organization, in.Key.Name) {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
 			parts := strings.Split(in.ImagePath, "/")
 			// Append default registry address for internal image paths
@@ -228,7 +217,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 	}
 
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER &&
-		!cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) {
+		!cloudcommon.IsPlatformApp(in.Key.Organization, in.Key.Name) {
 		err := cloudcommon.ValidateDockerRegistryPath(ctx, in.ImagePath, vaultConfig)
 		if err != nil {
 			if *testMode {
@@ -339,7 +328,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		if in.AutoProvPolicy != "" {
 			apKey := edgeproto.PolicyKey{}
-			apKey.Developer = in.Key.DeveloperKey.Name
+			apKey.Organization = in.Key.Organization
 			apKey.Name = in.AutoProvPolicy
 			if !autoProvPolicyApi.store.STMGet(stm, &apKey, nil) {
 				return apKey.NotFoundError()
@@ -347,7 +336,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		if in.DefaultPrivacyPolicy != "" {
 			apKey := edgeproto.PolicyKey{}
-			apKey.Developer = in.Key.DeveloperKey.Name
+			apKey.Organization = in.Key.Organization
 			apKey.Name = in.DefaultPrivacyPolicy
 			if !privacyPolicyApi.store.STMGet(stm, &apKey, nil) {
 				return apKey.NotFoundError()

@@ -22,30 +22,16 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
 
-operators:
-- key:
-    name: tmus
-
-developers:
-- key:
-    name: AcmeAppCo
-  username: AcmeAppCo-user
-  passhash: "123456789012345670"
-  address: 1234 AcmeAppCo street
-  email: AcmeAppCo@gmail.com
-
 cloudlets:
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-1
   accessuri: tmus.tmus-cloud-1
   location:
@@ -56,8 +42,7 @@ cloudlets:
 
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -71,13 +56,11 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
     id: 1
   cloudletloc:
@@ -86,8 +69,7 @@ appinstances:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0

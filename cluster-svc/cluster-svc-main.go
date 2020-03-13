@@ -87,11 +87,9 @@ var MEXPrometheusAppName = cloudcommon.MEXPrometheusAppName
 var MEXPrometheusAppVer = "1.0"
 
 var MEXPrometheusAppKey = edgeproto.AppKey{
-	Name:    MEXPrometheusAppName,
-	Version: MEXPrometheusAppVer,
-	DeveloperKey: edgeproto.DeveloperKey{
-		Name: cloudcommon.DeveloperMobiledgeX,
-	},
+	Name:         MEXPrometheusAppName,
+	Version:      MEXPrometheusAppVer,
+	Organization: cloudcommon.DeveloperMobiledgeX,
 }
 
 // Define prometheus operator App.
@@ -126,11 +124,9 @@ var NFSAutoProvisionAppName = cloudcommon.NFSAutoProvisionAppName
 var NFSAutoProvAppVers = "1.0"
 
 var NFSAutoProvAppKey = edgeproto.AppKey{
-	Name:    NFSAutoProvisionAppName,
-	Version: NFSAutoProvAppVers,
-	DeveloperKey: edgeproto.DeveloperKey{
-		Name: cloudcommon.DeveloperMobiledgeX,
-	},
+	Name:         NFSAutoProvisionAppName,
+	Version:      NFSAutoProvAppVers,
+	Organization: cloudcommon.DeveloperMobiledgeX,
 }
 
 var NFSAutoProvisionApp = edgeproto.App{
@@ -192,7 +188,7 @@ func autoScalePolicyCb(ctx context.Context, old *edgeproto.AutoScalePolicy, new 
 	insts := []edgeproto.ClusterInst{}
 	ClusterInstCache.Mux.Lock()
 	for k, v := range ClusterInstCache.Objs {
-		if new.Key.Developer == k.Developer && new.Key.Name == v.AutoScalePolicy {
+		if new.Key.Organization == k.Organization && new.Key.Name == v.AutoScalePolicy {
 			insts = append(insts, *v)
 		}
 	}
@@ -316,7 +312,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 	if clusterSvcPlugin != nil && clusterInst.AutoScalePolicy != "" {
 		policy := edgeproto.AutoScalePolicy{}
 		policyKey := edgeproto.PolicyKey{}
-		policyKey.Developer = clusterInst.Key.Developer
+		policyKey.Organization = clusterInst.Key.Organization
 		policyKey.Name = clusterInst.AutoScalePolicy
 		if !AutoScalePolicyCache.Get(&policyKey, &policy) {
 			return fmt.Errorf("Auto scale policy %s not found for ClusterInst %s", clusterInst.AutoScalePolicy, clusterInst.Key.GetKeyString())

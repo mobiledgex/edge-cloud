@@ -71,7 +71,7 @@ func (s *AutoScalePolicyApi) ShowAutoScalePolicy(in *edgeproto.AutoScalePolicy, 
 func (s *AutoScalePolicyApi) STMFind(stm concurrency.STM, name, dev string, policy *edgeproto.AutoScalePolicy) error {
 	key := edgeproto.PolicyKey{}
 	key.Name = name
-	key.Developer = dev
+	key.Organization = dev
 	if !s.store.STMGet(stm, &key, policy) {
 		return fmt.Errorf("AutoScalePolicy %s for developer %s not found", name, dev)
 	}

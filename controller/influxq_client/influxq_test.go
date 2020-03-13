@@ -143,10 +143,10 @@ func testAutoProvCounts(t *testing.T, ctx context.Context, q *influxq.InfluxQ) {
 	require.Nil(t, err, "clear test metrics")
 
 	ap := edgeproto.AutoProvCount{}
-	ap.AppKey.DeveloperKey.Name = "dev1"
+	ap.AppKey.Organization = "dev1"
 	ap.AppKey.Name = "app1"
 	ap.AppKey.Version = "1.0.0"
-	ap.CloudletKey.OperatorKey.Name = "oper1"
+	ap.CloudletKey.Organization = "oper1"
 	ap.CloudletKey.Name = "cloudlet1"
 	ap.Count = 42
 
