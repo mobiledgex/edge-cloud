@@ -13,54 +13,47 @@ nodes:
     type: dme
     region: local
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-1
 - key:
     type: dme
     region: local
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-2
 - key:
     type: crm
     region: local
     cloudletkey:
-      operatorkey:
-        name: gcp
+      organization: gcp
       name: gcp-cloud-5
   containerversion: 2019-10-24
 - key:
     type: crm
     region: local
     cloudletkey:
-      operatorkey:
-        name: azure
+      organization: azure
       name: azure-cloud-4
   containerversion: 2019-10-24
 - key:
     type: crm
     region: local
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-2
   containerversion: 2019-10-24
 - key:
     type: crm
     region: local
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-3
   containerversion: 2019-10-24
 - key:
     type: crm
     region: local
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-1
   containerversion: 2019-10-24
 - key:

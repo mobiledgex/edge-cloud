@@ -165,7 +165,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 			policy := edgeproto.PrivacyPolicy{}
 			if new.PrivacyPolicy != "" {
-				policy.Key.Developer = new.Key.Developer
+				policy.Key.Organization = new.Key.Organization
 				policy.Key.Name = new.PrivacyPolicy
 				if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
 					log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
@@ -194,7 +194,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		log.SpanLog(ctx, log.DebugLevelMexos, "update cluster inst", "ClusterInst", *new)
 		policy := edgeproto.PrivacyPolicy{}
 		if new.PrivacyPolicy != "" {
-			policy.Key.Developer = new.Key.Developer
+			policy.Key.Organization = new.Key.Organization
 			policy.Key.Name = new.PrivacyPolicy
 			if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
 				log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
@@ -304,7 +304,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 
 			policy := edgeproto.PrivacyPolicy{}
 			if new.PrivacyPolicy != "" {
-				policy.Key.Developer = new.Key.AppKey.DeveloperKey.Name
+				policy.Key.Organization = new.Key.AppKey.Organization
 				policy.Key.Name = new.PrivacyPolicy
 				if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
 					log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for AppInst", "policyName", policy.Key.Name)

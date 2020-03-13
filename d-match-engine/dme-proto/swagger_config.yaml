@@ -253,7 +253,7 @@ info:
       using DistributedMatchEngine;
 
       MatchingEngine me = new MatchingEngine();
-      FindCloudletRequest findCloudletRequest = CreateFindCloudletRequest(carrierName, developerName, appName, appVersion, loc);
+      FindCloudletRequest findCloudletRequest = CreateFindCloudletRequest(carrierName, orgName, appName, appVersion, loc);
       FindCloudletReply findCloudletReply = await FindCloudlet(findCloudletRequest);
       ```
       Example Response:

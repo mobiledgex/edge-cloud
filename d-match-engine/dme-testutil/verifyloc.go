@@ -20,7 +20,7 @@ const ErrorOther = dme.VerifyLocationReply_LOC_ERROR_OTHER
 var VerifyLocData = []VerifyLocRR{
 	VerifyLocRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Untomt",
+			OrgName: "Untomt",
 			AppName: "Untomt",
 			AppVers: "1.1",
 		},
@@ -34,7 +34,7 @@ var VerifyLocData = []VerifyLocRR{
 	},
 	VerifyLocRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Untomt",
+			OrgName: "Untomt",
 			AppName: "Untomt",
 			AppVers: "1.1",
 		},
@@ -48,7 +48,7 @@ var VerifyLocData = []VerifyLocRR{
 	},
 	VerifyLocRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Untomt",
+			OrgName: "Untomt",
 			AppName: "Untomt",
 			AppVers: "1.1",
 		},
@@ -63,7 +63,7 @@ var VerifyLocData = []VerifyLocRR{
 	},
 	VerifyLocRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Untomt",
+			OrgName: "Untomt",
 			AppName: "Untomt",
 			AppVers: "1.1",
 		},
@@ -78,7 +78,7 @@ var VerifyLocData = []VerifyLocRR{
 	},
 	VerifyLocRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Atlantic Labs",
+			OrgName: "Atlantic Labs",
 			AppName: "Pillimo-go",
 			AppVers: "2.1",
 		},
@@ -92,7 +92,7 @@ var VerifyLocData = []VerifyLocRR{
 	},
 	VerifyLocRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Atlantic Labs",
+			OrgName: "Atlantic Labs",
 			AppName: "HarryPotter-go",
 			AppVers: "1.0",
 		},
@@ -106,7 +106,7 @@ var VerifyLocData = []VerifyLocRR{
 	},
 	VerifyLocRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Ever.AI",
+			OrgName: "Ever.AI",
 			AppName: "Ever",
 			AppVers: "1.7",
 		},

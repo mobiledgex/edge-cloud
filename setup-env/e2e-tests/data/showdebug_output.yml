@@ -14,56 +14,49 @@ replies:
       type: dme
       region: local
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-1
     output: notify,dmedb,dmereq,locapi,metrics
   - node:
       type: dme
       region: local
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-2
     output: notify,dmedb,dmereq,locapi,metrics
   - node:
       type: crm
       region: local
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-1
     output: api,notify,mexos,info
   - node:
       type: crm
       region: local
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-2
     output: api,notify,mexos,info
   - node:
       type: crm
       region: local
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-3
     output: api,notify,mexos,info
   - node:
       type: crm
       region: local
       cloudletkey:
-        operatorkey:
-          name: azure
+        organization: azure
         name: azure-cloud-4
     output: api,notify,mexos,info
   - node:
       type: crm
       region: local
       cloudletkey:
-        operatorkey:
-          name: gcp
+        organization: gcp
         name: gcp-cloud-5
     output: api,notify,mexos,info
   - node:

@@ -29,7 +29,7 @@ flavors:
 
 privacypolicies:
 -  key:
-      developer: AcmeAppCo
+      organization: AcmeAppCo
       name: PrivPolicy1
    outboundsecurityrules:
     - protocol:  tcp
@@ -50,10 +50,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -62,22 +61,13 @@ clusterinsts:
   nummasters: 1
   numnodes: 2
 
-operators:
-- key:
-    name: dmuus
-
 operatorcodes:
 - code: 31026
-  operatorname: dmuus
-
-developers:
-- key:
-    name: AcmeAppCo
+  organization: dmuus
 
 cloudlets:
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-1
   location:
     latitude: 31
@@ -88,8 +78,7 @@ cloudlets:
 
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -105,18 +94,16 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91

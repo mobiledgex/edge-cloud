@@ -3,9 +3,8 @@ package edgeproto;
 
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "settings.proto";
-import "operator.proto";
-import "developer.proto";
 import "flavor.proto";
+import "operatorcode.proto";
 import "restagtable.proto";
 import "cloudlet.proto";
 import "cloudletpool.proto";
@@ -25,9 +24,7 @@ import "gogoproto/gogo.proto";
 message AllData {
   repeated Flavor flavors = 2 [(gogoproto.nullable) = false];
   Settings settings = 1;
-  repeated Operator operators = 3 [(gogoproto.nullable) = false];
   repeated OperatorCode operator_codes = 4 [(gogoproto.nullable) = false];
-  repeated Developer developers = 5 [(gogoproto.nullable) = false];
   repeated ResTagTable res_tag_tables = 6 [(gogoproto.nullable) = false];
   repeated Cloudlet cloudlets = 7 [(gogoproto.nullable) = false];
   repeated CloudletInfo cloudlet_infos = 8 [(gogoproto.nullable) = false];

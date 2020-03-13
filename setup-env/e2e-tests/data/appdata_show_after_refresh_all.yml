@@ -33,7 +33,7 @@ flavors:
 
 privacypolicies:
 - key:
-    developer: AcmeAppCo
+    organization: AcmeAppCo
     name: PrivPolicy1
   outboundsecurityrules:
   - protocol: tcp
@@ -56,10 +56,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   sharedvolumesize: 100
@@ -72,10 +71,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -85,42 +83,13 @@ clusterinsts:
   numnodes: 2
   privacypolicy: PrivPolicy1
 
-operators:
-- key:
-    name: dmuus
-- key:
-    name: azure
-- key:
-    name: gcp
-
 operatorcodes:
 - code: 31026
-  operatorname: dmuus
-
-developers:
-- key:
-    name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-- key:
-    name: AcmeAppCo1
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-- key:
-    name: platos
-  username: sammy
-  passhash: aaaabbbccdfdfad444449941
-  address: 1 Samstreet, platos Town, South Korea
-  email: platos@xxxx.com
+  organization: dmuus
 
 cloudlets:
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-1
   location:
     latitude: 31
@@ -133,8 +102,7 @@ cloudlets:
   physicalname: dmuus-cloud-1
   containerversion: 2020-10-10
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-2
   location:
     latitude: 35
@@ -147,8 +115,7 @@ cloudlets:
   physicalname: dmuus-cloud-2
   containerversion: 2020-10-10
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-3
   location:
     latitude: 35
@@ -161,8 +128,7 @@ cloudlets:
   physicalname: dmuus-cloud-3
   containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: azure
+    organization: azure
     name: azure-cloud-4
   location:
     latitude: 32
@@ -175,8 +141,7 @@ cloudlets:
   physicalname: azure-cloud-4
   containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: gcp
+    organization: gcp
     name: gcp-cloud-5
   location:
     latitude: 36
@@ -191,8 +156,7 @@ cloudlets:
 
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:2.0
@@ -218,8 +182,7 @@ apps:
   revision: 1
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: helmApplication
     version: "1.0"
   imagepath: mobiledgex/AcmeAppCo/helmApplication
@@ -243,8 +206,7 @@ apps:
   androidpackagename: com.acme.helmApplication
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: platos
+    organization: platos
     name: PlatosEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
@@ -257,8 +219,7 @@ apps:
   deployment: kubernetes
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: MobiledgeX
+    organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
@@ -310,8 +271,7 @@ apps:
       alertmanager:
         enabled: false
 - key:
-    developerkey:
-      name: MobiledgeX
+    organization: MobiledgeX
     name: NFSAutoProvision
     version: "1.0"
   imagepath: stable/nfs-client-provisioner
@@ -332,8 +292,7 @@ apps:
         defaultClass: true
   internalports: true
 - key:
-    developerkey:
-      name: AcmeAppCo1
+    organization: AcmeAppCo1
     name: vmapp1
     version: "1.0"
   imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
@@ -356,8 +315,7 @@ apps:
   deployment: vm
   accesstype: AccessTypeDirect
 - key:
-    developerkey:
-      name: AcmeAppCo1
+    organization: AcmeAppCo1
     name: vmapp2
     version: "1.0"
   imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
@@ -370,8 +328,7 @@ apps:
   deployment: vm
   accesstype: AccessTypeDirect
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: NoPortsApp
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/noportsapp:1.0
@@ -385,18 +342,16 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -409,18 +364,16 @@ appinstances:
     name: x1.medium
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: NFSAutoProvision
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -429,18 +382,16 @@ appinstances:
     name: x1.medium
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -473,18 +424,16 @@ appinstances:
   revision: 1
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -497,18 +446,16 @@ appinstances:
     name: x1.medium
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -541,18 +488,16 @@ appinstances:
   revision: 1
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: helmApplication
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -565,18 +510,16 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo1
+      organization: AcmeAppCo1
       name: vmapp1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: DefaultVMCluster
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-1
-      developer: AcmeAppCo1
+      organization: AcmeAppCo1
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -595,18 +538,16 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo1
+      organization: AcmeAppCo1
       name: vmapp2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: DefaultVMCluster
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-2
-      developer: AcmeAppCo1
+      organization: AcmeAppCo1
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -625,18 +566,16 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: NoPortsApp
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91

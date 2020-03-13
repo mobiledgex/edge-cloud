@@ -74,7 +74,7 @@ func TestAddRemove(t *testing.T) {
 				"findCloudletData[%d]", ii)
 			// Check the filled in cloudlet details
 			assert.Equal(t, rr.ReplyCarrier,
-				call.key.CloudletFound.OperatorKey.Name, "findCloudletData[%d]", ii)
+				call.key.CloudletFound.Organization, "findCloudletData[%d]", ii)
 			assert.Equal(t, rr.ReplyCloudlet,
 				call.key.CloudletFound.Name, "findCloudletData[%d]", ii)
 		}

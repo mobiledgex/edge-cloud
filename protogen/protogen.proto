@@ -117,7 +117,7 @@ extend google.protobuf.FieldOptions {
 extend google.protobuf.MethodOptions {
   // Comma separated list of three strings: resource name, action, org field path.
   // These are used in RBAC for Master Controller. Example:
-  // ResourceApps,ActionManage,Key.DeveloperKey.Name
+  // ResourceApps,ActionManage,Key.Organization
   string mc2_api = 51021;
   // show stream output objects incrementally as they come, rather than
   // collecting them into one output format. Only applies to commands

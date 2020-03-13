@@ -1,7 +1,6 @@
 cloudlets:
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-2
   accessuri: cloud2.tmo
   location:
