@@ -181,23 +181,23 @@ var NodeKeyRequiredArgs = []string{}
 var NodeKeyOptionalArgs = []string{
 	"name",
 	"type",
-	"cloudletkey.operatorkey.name",
+	"cloudletkey.organization",
 	"cloudletkey.name",
 	"region",
 }
 var NodeKeyAliasArgs = []string{}
 var NodeKeyComments = map[string]string{
-	"name":                         "Name or hostname of node",
-	"type":                         "Node type",
-	"cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"cloudletkey.name":             "Name of the cloudlet",
-	"region":                       "Region the node is in",
+	"name":                     "Name or hostname of node",
+	"type":                     "Node type",
+	"cloudletkey.organization": "Organization of the cloudlet site",
+	"cloudletkey.name":         "Name of the cloudlet",
+	"region":                   "Region the node is in",
 }
 var NodeKeySpecialArgs = map[string]string{}
 var NodeRequiredArgs = []string{
 	"name",
 	"type",
-	"operator",
+	"cloudlet-org",
 	"cloudlet",
 	"region",
 }
@@ -212,7 +212,7 @@ var NodeOptionalArgs = []string{
 var NodeAliasArgs = []string{
 	"name=key.name",
 	"type=key.type",
-	"operator=key.cloudletkey.operatorkey.name",
+	"cloudlet-org=key.cloudletkey.organization",
 	"cloudlet=key.cloudletkey.name",
 	"region=key.region",
 }
@@ -220,7 +220,7 @@ var NodeComments = map[string]string{
 	"fields":           "Fields are used for the Update API to specify which fields to apply",
 	"name":             "Name or hostname of node",
 	"type":             "Node type",
-	"operator":         "Company or Organization name of the operator",
+	"cloudlet-org":     "Organization of the cloudlet site",
 	"cloudlet":         "Name of the cloudlet",
 	"region":           "Region the node is in",
 	"notifyid":         "Id of client assigned by server (internal use only)",
@@ -238,7 +238,7 @@ var NodeDataOptionalArgs = []string{
 	"nodes.fields",
 	"nodes.key.name",
 	"nodes.key.type",
-	"nodes.key.cloudletkey.operatorkey.name",
+	"nodes.key.cloudletkey.organization",
 	"nodes.key.cloudletkey.name",
 	"nodes.key.region",
 	"nodes.notifyid",
@@ -250,18 +250,18 @@ var NodeDataOptionalArgs = []string{
 }
 var NodeDataAliasArgs = []string{}
 var NodeDataComments = map[string]string{
-	"nodes.fields":                           "Fields are used for the Update API to specify which fields to apply",
-	"nodes.key.name":                         "Name or hostname of node",
-	"nodes.key.type":                         "Node type",
-	"nodes.key.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"nodes.key.cloudletkey.name":             "Name of the cloudlet",
-	"nodes.key.region":                       "Region the node is in",
-	"nodes.notifyid":                         "Id of client assigned by server (internal use only)",
-	"nodes.buildmaster":                      "Build Master Version",
-	"nodes.buildhead":                        "Build Head Version",
-	"nodes.buildauthor":                      "Build Author",
-	"nodes.hostname":                         "Hostname",
-	"nodes.containerversion":                 "Docker edge-cloud container version which node instance use",
+	"nodes.fields":                       "Fields are used for the Update API to specify which fields to apply",
+	"nodes.key.name":                     "Name or hostname of node",
+	"nodes.key.type":                     "Node type",
+	"nodes.key.cloudletkey.organization": "Organization of the cloudlet site",
+	"nodes.key.cloudletkey.name":         "Name of the cloudlet",
+	"nodes.key.region":                   "Region the node is in",
+	"nodes.notifyid":                     "Id of client assigned by server (internal use only)",
+	"nodes.buildmaster":                  "Build Master Version",
+	"nodes.buildhead":                    "Build Head Version",
+	"nodes.buildauthor":                  "Build Author",
+	"nodes.hostname":                     "Hostname",
+	"nodes.containerversion":             "Docker edge-cloud container version which node instance use",
 }
 var NodeDataSpecialArgs = map[string]string{
 	"nodes.fields": "StringArray",

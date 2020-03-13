@@ -13,7 +13,7 @@ var Generators = map[string]func(app *AppSpec) (string, error){
 
 type AppSpec struct {
 	Name             string          `json:"name"`
-	DevName          string          `json:"devname"`
+	OrgName          string          `json:"orgname"`
 	Version          string          `json:"version"`
 	ImagePath        string          `json:"imagepath"`
 	ImageType        string          `json:"imagetype"`
@@ -29,7 +29,7 @@ func NewAppSpec(app *edgeproto.App) (*AppSpec, error) {
 	var err error
 	out := &AppSpec{
 		Name:             app.Key.Name,
-		DevName:          app.Key.DeveloperKey.Name,
+		OrgName:          app.Key.Organization,
 		Version:          app.Key.Version,
 		ImagePath:        app.ImagePath,
 		ImageType:        edgeproto.ImageType_name[int32(app.ImageType)],

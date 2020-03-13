@@ -23,7 +23,7 @@ func getGrpcClient(t *testing.T) (*grpc.ClientConn, error) {
 }
 
 func TestController(t *testing.T) {
-	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify | log.DebugLevelApi)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify | log.DebugLevelApi | log.DebugLevelUpgrade)
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
@@ -60,9 +60,7 @@ func TestController(t *testing.T) {
 	go dmeClient.Start()
 	defer dmeClient.Stop()
 
-	devClient := edgeproto.NewDeveloperApiClient(conn)
 	appClient := edgeproto.NewAppApiClient(conn)
-	operClient := edgeproto.NewOperatorApiClient(conn)
 	cloudletClient := edgeproto.NewCloudletApiClient(conn)
 	appInstClient := edgeproto.NewAppInstApiClient(conn)
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
@@ -74,12 +72,10 @@ func TestController(t *testing.T) {
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
 
-	testutil.ClientDeveloperTest(t, "cud", devClient, testutil.DevData)
 	testutil.ClientFlavorTest(t, "cud", flavorClient, testutil.FlavorData)
 	testutil.ClientAutoProvPolicyTest(t, "cud", autoProvPolicyClient, testutil.AutoProvPolicyData)
 	testutil.ClientAutoScalePolicyTest(t, "cud", autoScalePolicyClient, testutil.AutoScalePolicyData)
 	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
-	testutil.ClientOperatorTest(t, "cud", operClient, testutil.OperatorData)
 	testutil.ClientCloudletTest(t, "cud", cloudletClient, testutil.CloudletData)
 	testutil.ClientClusterInstTest(t, "cud", clusterInstClient, testutil.ClusterInstData)
 	testutil.ClientAppInstTest(t, "cud", appInstClient, testutil.AppInstData)
@@ -106,10 +102,6 @@ func TestController(t *testing.T) {
 	}
 
 	// test that delete checks disallow deletes of dependent objects
-	_, err = devClient.DeleteDeveloper(ctx, &testutil.DevData[0])
-	require.NotNil(t, err)
-	_, err = operClient.DeleteOperator(ctx, &testutil.OperatorData[0])
-	require.NotNil(t, err)
 	stream, err := cloudletClient.DeleteCloudlet(ctx, &testutil.CloudletData[0])
 	err = testutil.CloudletReadResultStream(stream, err)
 	require.NotNil(t, err)
@@ -144,14 +136,6 @@ func TestController(t *testing.T) {
 		err = testutil.CloudletReadResultStream(stream, err)
 		require.Nil(t, err)
 	}
-	for _, obj := range testutil.OperatorData {
-		_, err = operClient.DeleteOperator(ctx, &obj)
-		require.Nil(t, err)
-	}
-	for _, obj := range testutil.DevData {
-		_, err = devClient.DeleteDeveloper(ctx, &obj)
-		require.Nil(t, err)
-	}
 
 	// make sure dynamic app insts were deleted along with Apps
 	dmeNotify.WaitForAppInsts(0)
@@ -170,7 +154,7 @@ func TestDataGen(t *testing.T) {
 	}
 	for _, obj := range testutil.DevData {
 		val, err := json.Marshal(&obj)
-		require.Nil(t, err, "marshal %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "marshal %s", obj)
 		out.Write(val)
 		out.WriteString("\n")
 	}
@@ -197,17 +181,12 @@ func TestEdgeCloudBug26(t *testing.T) {
 	require.Nil(t, err, "grcp client")
 	defer conn.Close()
 
-	devClient := edgeproto.NewDeveloperApiClient(conn)
 	appClient := edgeproto.NewAppApiClient(conn)
-	operClient := edgeproto.NewOperatorApiClient(conn)
 	cloudletClient := edgeproto.NewCloudletApiClient(conn)
 	appInstClient := edgeproto.NewAppInstApiClient(conn)
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
 
 	yamlData := `
-operators:
-- key:
-    name: DMUUS
 cloudlets:
 - key:
     operatorkey:
@@ -215,19 +194,16 @@ cloudlets:
     name: cloud2
   ipsupport: IpSupportDynamic
   numdynamicips: 100
+
 flavors:
 - key:
     name: m1.small
   ram: 1024
   vcpus: 1
   disk: 1
-developers:
-- key:
-    name: AcmeAppCo
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someApplication
     version: 1.0
   defaultflavor:
@@ -238,13 +214,11 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someApplication
       version: 1.0
     cloudletkey:
-      operatorkey:
-        name: DMUUS
+      organization: DMUUS
       name: cloud2
     id: 99
   liveness: 1
@@ -252,8 +226,7 @@ appinstances:
   ip: [10,100,10,4]
 cloudletinfos:
 - key:
-    operatorkey:
-      name: DMUUS
+    organization: DMUUS
     name: cloud2
   state: CloudletStateReady
   osmaxram: 65536
@@ -265,14 +238,10 @@ cloudletinfos:
 	err = yaml.Unmarshal([]byte(yamlData), &data)
 	require.Nil(t, err, "unmarshal data")
 
-	_, err = devClient.CreateDeveloper(ctx, &data.Developers[0])
-	require.Nil(t, err, "create dev")
 	_, err = flavorClient.CreateFlavor(ctx, &data.Flavors[0])
 	require.Nil(t, err, "create flavor")
 	_, err = appClient.CreateApp(ctx, &data.Apps[0])
 	require.Nil(t, err, "create app")
-	_, err = operClient.CreateOperator(ctx, &data.Operators[0])
-	require.Nil(t, err, "create operator")
 	_, err = cloudletClient.CreateCloudlet(ctx, &data.Cloudlets[0])
 	require.Nil(t, err, "create cloudlet")
 	insertCloudletInfo(ctx, data.CloudletInfos)

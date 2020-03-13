@@ -16,7 +16,7 @@ type FindCloudletRR struct {
 var FindCloudletData = []FindCloudletRR{
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Untomt",
+			OrgName: "Untomt",
 			AppName: "Untomt",
 			AppVers: "1.1",
 		},
@@ -34,7 +34,7 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Untomt",
+			OrgName: "Untomt",
 			AppName: "Untomt",
 			AppVers: "1.1",
 		},
@@ -52,7 +52,7 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Untomt",
+			OrgName: "Untomt",
 			AppName: "Untomt",
 			AppVers: "1.1",
 		}, // ATT does not exist and so should return default cloudlet
@@ -66,7 +66,7 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Untomt",
+			OrgName: "Untomt",
 			AppName: "Untomt",
 			AppVers: "1.1",
 		},
@@ -84,7 +84,7 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Atlantic Labs",
+			OrgName: "Atlantic Labs",
 			AppName: "Pillimo-go",
 			AppVers: "2.1",
 		},
@@ -102,7 +102,7 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Atlantic Labs",
+			OrgName: "Atlantic Labs",
 			AppName: "HarryPotter-go",
 			AppVers: "1.0",
 		},
@@ -120,7 +120,7 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Ever.AI",
+			OrgName: "Ever.AI",
 			AppName: "Ever",
 			AppVers: "1.7",
 		},
@@ -141,7 +141,7 @@ var FindCloudletData = []FindCloudletRR{
 // copy of FindCloudletData[3] with a changed reply to Sunnydale cloudlet
 var DisabledCloudletRR = FindCloudletRR{
 	Reg: dme.RegisterClientRequest{
-		DevName: "Untomt",
+		OrgName: "Untomt",
 		AppName: "Untomt",
 		AppVers: "1.1",
 	},

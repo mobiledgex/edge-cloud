@@ -21,8 +21,7 @@ import (
 var yamlData = `
 cloudlets:
 - key:
-    operatorkey:
-      name: DMUUS
+    organization: DMUUS
     name: cloud2
 
 flavors:
@@ -47,8 +46,7 @@ clusterinsts:
     clusterkey:
       name: pillimo_cluster
     cloudletkey:
-      operatorkey:
-        name: DMUUS
+      organization: DMUUS
       name: cloud2
   flavor:
     name: x1.tiny
@@ -58,8 +56,7 @@ clusterinsts:
     clusterkey:
       name: Untomt_cluster
     cloudletkey:
-      operatorkey:
-        name: DMUUS
+      organization: DMUUS
       name: cloud2
   flavor:
     name: x1.small
@@ -69,16 +66,14 @@ clusterinsts:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: Atlantic
+      organization: Atlantic
       name: Pillimo Go
       version: 1.0.0
     clusterinstkey:
       clusterkey:
         name: pillimo_cluster
       cloudletkey:
-        operatorkey:
-          name: DMUUS
+        organization: DMUUS
         name: cloud2
       developer: Atlantic
   cloudletloc:
@@ -89,16 +84,14 @@ appinstances:
     name: x1.tiny
 - key:
     appkey:
-      developerkey:
-        name: Untomt
+      organization: Untomt
       name: VRmax
       version: 1.0.0
     clusterinstkey:
       clusterkey:
         name: Untomt_cluster
       cloudletkey:
-        operatorkey:
-          name: DMUUS
+        organization: DMUUS
         name: cloud2
       developer: Untomt
   cloudletloc:

@@ -28,14 +28,14 @@ func InitAlertApi(sync *Sync) {
 
 // AppInstDown alert needs to set the HealthCheck in AppInst
 func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.Alert, state edgeproto.HealthCheck) {
-	dev, ok := alert.Labels[cloudcommon.AlertLabelDev]
+	dev, ok := alert.Labels[cloudcommon.AlertLabelClusterOrg]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Dev label in Alert", "alert", alert)
 		return
 	}
-	oper, ok := alert.Labels[cloudcommon.AlertLabelOperator]
+	clorg, ok := alert.Labels[cloudcommon.AlertLabelCloudletOrg]
 	if !ok {
-		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Operator label in Alert", "alert", alert)
+		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Cloudlet Org label in Alert", "alert", alert)
 		return
 	}
 	cloudlet, ok := alert.Labels[cloudcommon.AlertLabelCloudlet]
@@ -61,23 +61,19 @@ func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.A
 	appInst := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: edgeproto.AppKey{
-				DeveloperKey: edgeproto.DeveloperKey{
-					Name: dev,
-				},
-				Name:    appName,
-				Version: appVer,
+				Organization: dev,
+				Name:         appName,
+				Version:      appVer,
 			},
 			ClusterInstKey: edgeproto.ClusterInstKey{
 				ClusterKey: edgeproto.ClusterKey{
 					Name: cluster,
 				},
 				CloudletKey: edgeproto.CloudletKey{
-					OperatorKey: edgeproto.OperatorKey{
-						Name: oper,
-					},
-					Name: cloudlet,
+					Organization: clorg,
+					Name:         cloudlet,
 				},
-				Developer: dev,
+				Organization: dev,
 			},
 		},
 	}

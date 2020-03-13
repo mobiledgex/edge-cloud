@@ -27,8 +27,7 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: GDDT
+      organization: GDDT
       name: gddtcloud1
   flavor:
     name: x1.small
@@ -38,38 +37,23 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: GDDT
+      organization: GDDT
       name: gddtcloud2
   flavor:
     name: x1.small
   nodes: 3
   liveness: LivenessStatic
 
-operators:
-- key:
-    name: GDDT
-
-developers:
-- key:
-    name: MEX
-  username: mex
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 735 Sand Hill Road, Menlo Park, CA 94025
-  email: mex@xxxx.com
-
 cloudlets:
 - key:
-    operatorkey:
-      name: GDDT
+    organization: GDDT
     name: gddtcloud1
   accessuri: cloud1.gddt
   location:
     latitude: 31
     longitude: -91
 - key:
-    operatorkey:
-      name: GDDT
+    organization: GDDT
     name: gddtcloud2
   accessuri: cloud2.gddt
   location:
@@ -78,8 +62,7 @@ cloudlets:
 
 apps:
 - key:
-    developerkey:
-      name: MEX
+    organization: MEX
     name: sampleApplication
     version: "1.0"
   imagepath: docker.mobiledgex.net/mobiledgex/images/mobiledgex/mexexample
@@ -93,16 +76,14 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: MEX
+      organization: MEX
       name: sampleApplication
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: GDDT
+        organization: GDDT
         name: gddtcloud1
   cloudletloc:
     latitude: 31
@@ -117,16 +98,14 @@ appinstances:
 
 - key:
     appkey:
-      developerkey:
-        name: MEX
+      organization: MEX
       name: sampleApplication
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: GDDT
+        organization: GDDT
         name: gddtcloud2
   cloudletloc:
     latitude: 35

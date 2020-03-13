@@ -14,20 +14,12 @@ flavors:
   disk: 2
 
 
-operators:
-- key:
-    name: dmuus
-- key:
-    name: azure
-- key:
-    name: gcp
 operatorcodes:
 - code: wifi
-  operatorname: dmuus
+  organization: dmuus
 cloudlets:
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-1
   accessuri: dmuus-cloud.1
   location:
@@ -42,8 +34,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-2
   accessuri: dmuus-cloud.2
   location:
@@ -58,8 +49,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-3
   accessuri: dmuus-cloud.3
   location:
@@ -74,8 +64,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-4
   accessuri: dmuus-cloud.4
   location:
@@ -90,8 +79,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-5
   accessuri: dmuus-cloud.5
   location:
@@ -106,8 +94,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-6
   accessuri: dmuus-cloud.6
   location:
@@ -122,8 +109,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-7
   accessuri: dmuus-cloud.7
   location:
@@ -138,8 +124,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-8
   accessuri: dmuus-cloud.8
   location:
@@ -154,8 +139,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-9
   accessuri: dmuus-cloud.9
   location:
@@ -170,8 +154,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-10
   accessuri: dmuus-cloud.10
   location:
@@ -186,8 +169,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-11
   accessuri: dmuus-cloud.11
   location:
@@ -202,8 +184,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-12
   accessuri: dmuus-cloud.12
   location:
@@ -218,8 +199,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-13
   accessuri: dmuus-cloud.13
   location:
@@ -234,8 +214,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-14
   accessuri: dmuus-cloud.14
   location:
@@ -250,8 +229,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-15
   accessuri: dmuus-cloud.15
   location:
@@ -266,8 +244,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-16
   accessuri: dmuus-cloud.16
   location:
@@ -282,8 +259,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-17
   accessuri: dmuus-cloud.17
   location:
@@ -298,8 +274,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-18
   accessuri: dmuus-cloud.18
   location:
@@ -314,8 +289,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-19
   accessuri: dmuus-cloud.19
   location:
@@ -330,8 +304,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-20
   accessuri: dmuus-cloud.20
   location:
@@ -346,8 +319,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-21
   accessuri: dmuus-cloud.21
   location:
@@ -362,8 +334,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-22
   accessuri: dmuus-cloud.22
   location:
@@ -378,8 +349,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-23
   accessuri: dmuus-cloud.23
   location:
@@ -394,8 +364,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-24
   accessuri: dmuus-cloud.24
   location:
@@ -410,8 +379,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-25
   accessuri: dmuus-cloud.25
   location:
@@ -426,8 +394,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-26
   accessuri: dmuus-cloud.26
   location:
@@ -442,8 +409,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-27
   accessuri: dmuus-cloud.27
   location:
@@ -458,8 +424,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-28
   accessuri: dmuus-cloud.28
   location:
@@ -474,8 +439,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-29
   accessuri: dmuus-cloud.29
   location:
@@ -490,8 +454,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-30
   accessuri: dmuus-cloud.30
   location:
@@ -506,8 +469,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-31
   accessuri: dmuus-cloud.31
   location:
@@ -522,8 +484,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-32
   accessuri: dmuus-cloud.32
   location:
@@ -538,8 +499,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-33
   accessuri: dmuus-cloud.33
   location:
@@ -554,8 +514,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-34
   accessuri: dmuus-cloud.34
   location:
@@ -570,8 +529,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-35
   accessuri: dmuus-cloud.35
   location:
@@ -586,8 +544,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-36
   accessuri: dmuus-cloud.36
   location:
@@ -602,8 +559,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-37
   accessuri: dmuus-cloud.37
   location:
@@ -618,8 +574,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-38
   accessuri: dmuus-cloud.38
   location:
@@ -634,8 +589,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-39
   accessuri: dmuus-cloud.39
   location:
@@ -650,8 +604,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-40
   accessuri: dmuus-cloud.40
   location:
@@ -666,8 +619,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-41
   accessuri: dmuus-cloud.41
   location:
@@ -682,8 +634,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-42
   accessuri: dmuus-cloud.42
   location:
@@ -698,8 +649,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-43
   accessuri: dmuus-cloud.43
   location:
@@ -714,8 +664,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-44
   accessuri: dmuus-cloud.44
   location:
@@ -730,8 +679,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-45
   accessuri: dmuus-cloud.45
   location:
@@ -746,8 +694,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-46
   accessuri: dmuus-cloud.46
   location:
@@ -762,8 +709,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-47
   accessuri: dmuus-cloud.47
   location:
@@ -778,8 +724,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-48
   accessuri: dmuus-cloud.48
   location:
@@ -794,8 +739,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-49
   accessuri: dmuus-cloud.49
   location:
@@ -810,8 +754,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-50
   accessuri: dmuus-cloud.50
   location:
@@ -826,8 +769,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-51
   accessuri: dmuus-cloud.51
   location:
@@ -842,8 +784,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-52
   accessuri: dmuus-cloud.52
   location:
@@ -858,8 +799,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-53
   accessuri: dmuus-cloud.53
   location:
@@ -874,8 +814,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-54
   accessuri: dmuus-cloud.54
   location:
@@ -890,8 +829,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-55
   accessuri: dmuus-cloud.55
   location:
@@ -906,8 +844,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-56
   accessuri: dmuus-cloud.56
   location:
@@ -922,8 +859,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-57
   accessuri: dmuus-cloud.57
   location:
@@ -938,8 +874,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-58
   accessuri: dmuus-cloud.58
   location:
@@ -954,8 +889,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-59
   accessuri: dmuus-cloud.59
   location:
@@ -970,8 +904,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-60
   accessuri: dmuus-cloud.60
   location:
@@ -986,8 +919,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-61
   accessuri: dmuus-cloud.61
   location:
@@ -1002,8 +934,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-62
   accessuri: dmuus-cloud.62
   location:
@@ -1018,8 +949,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-63
   accessuri: dmuus-cloud.63
   location:
@@ -1034,8 +964,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-64
   accessuri: dmuus-cloud.64
   location:
@@ -1050,8 +979,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-65
   accessuri: dmuus-cloud.65
   location:
@@ -1066,8 +994,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-66
   accessuri: dmuus-cloud.66
   location:
@@ -1082,8 +1009,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-67
   accessuri: dmuus-cloud.67
   location:
@@ -1098,8 +1024,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-68
   accessuri: dmuus-cloud.68
   location:
@@ -1114,8 +1039,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-69
   accessuri: dmuus-cloud.69
   location:
@@ -1130,8 +1054,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-70
   accessuri: dmuus-cloud.70
   location:
@@ -1146,8 +1069,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-71
   accessuri: dmuus-cloud.71
   location:
@@ -1162,8 +1084,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-72
   accessuri: dmuus-cloud.72
   location:
@@ -1178,8 +1099,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-73
   accessuri: dmuus-cloud.73
   location:
@@ -1194,8 +1114,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-74
   accessuri: dmuus-cloud.74
   location:
@@ -1210,8 +1129,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-75
   accessuri: dmuus-cloud.75
   location:
@@ -1226,8 +1144,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-76
   accessuri: dmuus-cloud.76
   location:
@@ -1242,8 +1159,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-77
   accessuri: dmuus-cloud.77
   location:
@@ -1258,8 +1174,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-78
   accessuri: dmuus-cloud.78
   location:
@@ -1274,8 +1189,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-79
   accessuri: dmuus-cloud.79
   location:
@@ -1290,8 +1204,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-80
   accessuri: dmuus-cloud.80
   location:
@@ -1306,8 +1219,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-81
   accessuri: dmuus-cloud.81
   location:
@@ -1322,8 +1234,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-82
   accessuri: dmuus-cloud.82
   location:
@@ -1338,8 +1249,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-83
   accessuri: dmuus-cloud.83
   location:
@@ -1354,8 +1264,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-84
   accessuri: dmuus-cloud.84
   location:
@@ -1370,8 +1279,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-85
   accessuri: dmuus-cloud.85
   location:
@@ -1386,8 +1294,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-86
   accessuri: dmuus-cloud.86
   location:
@@ -1402,8 +1309,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-87
   accessuri: dmuus-cloud.87
   location:
@@ -1418,8 +1324,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-88
   accessuri: dmuus-cloud.88
   location:
@@ -1434,8 +1339,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-89
   accessuri: dmuus-cloud.89
   location:
@@ -1450,8 +1354,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-90
   accessuri: dmuus-cloud.90
   location:
@@ -1466,8 +1369,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-91
   accessuri: dmuus-cloud.91
   location:
@@ -1482,8 +1384,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-92
   accessuri: dmuus-cloud.92
   location:
@@ -1498,8 +1399,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-93
   accessuri: dmuus-cloud.93
   location:
@@ -1514,8 +1414,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-94
   accessuri: dmuus-cloud.94
   location:
@@ -1530,8 +1429,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-95
   accessuri: dmuus-cloud.95
   location:
@@ -1546,8 +1444,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-96
   accessuri: dmuus-cloud.96
   location:
@@ -1562,8 +1459,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-97
   accessuri: dmuus-cloud.97
   location:
@@ -1578,8 +1474,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-98
   accessuri: dmuus-cloud.98
   location:
@@ -1594,8 +1489,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: azure
+    organization: azure
     name: azure-cloud-99
   accessuri: azure-cloud.99
   location:
@@ -1610,8 +1504,7 @@ cloudlets:
 
 
 - key:
-    operatorkey:
-      name: gcp
+    organization: gcp
     name: gcp-cloud-100
   accessuri: gcp-cloud.100
   location:
@@ -1625,26 +1518,9 @@ cloudlets:
     name: x1.tiny
 
 
-developers:
-- key:
-    name: AcmeAppCo
-  username: AcmeAppCo-user
-  passhash: 123456789012345670
-  address: 1234 AcmeAppCo street
-  email: AcmeAppCo@gmail.com
-
-
-- key:
-    name: platos
-  username: platos-user
-  passhash: 123456789012345670
-  address: 1234 platos street
-  email: platos@gmail.com
-
 apps:
 - key:
-    developerkey:
-      name: platos
+    organization: platos
     name: PlatosEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
@@ -1654,8 +1530,7 @@ apps:
   accessports: "tcp:64000"
 
 - key:
-    developerkey:
-       name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version : "1.0"
   imagetype: ImageTypeDocker
@@ -1666,8 +1541,7 @@ apps:
   androidpackagename: com.acmeappco.someapplication1
   authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
 - key:
-    developerkey:
-       name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication2
     version : "1.0"
   imagetype: ImageTypeDocker
@@ -1680,3600 +1554,3200 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 1
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 1
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 2
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 2
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-3
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 3
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-3
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 3
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-4
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 4
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-4
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 4
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-5
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 5
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-5
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 5
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-6
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 6
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-6
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 6
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-7
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 7
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-7
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 7
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-8
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 8
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-8
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 8
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-9
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 9
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-9
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 9
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-10
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 10
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-10
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 10
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-11
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 11
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-11
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 11
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-12
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 12
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-12
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 12
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-13
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 13
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-13
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 13
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-14
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 14
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-14
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 14
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-15
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 15
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-15
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 15
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-16
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 16
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-16
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 16
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-17
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 17
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-17
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 17
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-18
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 18
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-18
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 18
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-19
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 19
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-19
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 19
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-20
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 20
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-20
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 20
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-21
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 21
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-21
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 21
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-22
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 22
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-22
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 22
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-23
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 23
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-23
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 23
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-24
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 24
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-24
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 24
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-25
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 25
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-25
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 25
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-26
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 26
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-26
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 26
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-27
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 27
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-27
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 27
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-28
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 28
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-28
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 28
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-29
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 29
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-29
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 29
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-30
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 30
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-30
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 30
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-31
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 31
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-31
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 31
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-32
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 32
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-32
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 32
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-33
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 33
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-33
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 33
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-34
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 34
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-34
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 34
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-35
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 35
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-35
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 35
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-36
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 36
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-36
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 36
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-37
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 37
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-37
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 37
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-38
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 38
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-38
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 38
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-39
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 39
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-39
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 39
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-40
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 40
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-40
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 40
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-41
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 41
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-41
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 41
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-42
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 42
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-42
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 42
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-43
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 43
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-43
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 43
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-44
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 44
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-44
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 44
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-45
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 45
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-45
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 45
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-46
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 46
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-46
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 46
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-47
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 47
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-47
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 47
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-48
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 48
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-48
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 48
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-49
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 49
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-49
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 49
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-50
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 50
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-50
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 50
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-51
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 51
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-51
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 51
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-52
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 52
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-52
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 52
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-53
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 53
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-53
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 53
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-54
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 54
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-54
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 54
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-55
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 55
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-55
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 55
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-56
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 56
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-56
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 56
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-57
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 57
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-57
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 57
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-58
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 58
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-58
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 58
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-59
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 59
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-59
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 59
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-60
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 60
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-60
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 60
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-61
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 61
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-61
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 61
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-62
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 62
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-62
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 62
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-63
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 63
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-63
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 63
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-64
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 64
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-64
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 64
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-65
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 65
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-65
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 65
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-66
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 66
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-66
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 66
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-67
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 67
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-67
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 67
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-68
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 68
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-68
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 68
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-69
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 69
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-69
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 69
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-70
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 70
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-70
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 70
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-71
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 71
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-71
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 71
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-72
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 72
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-72
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 72
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-73
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 73
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-73
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 73
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-74
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 74
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-74
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 74
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-75
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 75
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-75
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 75
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-76
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 76
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-76
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 76
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-77
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 77
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-77
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 77
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-78
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 78
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-78
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 78
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-79
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 79
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-79
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 79
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-80
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 80
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-80
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 80
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-81
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 81
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-81
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 81
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-82
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 82
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-82
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 82
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-83
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 83
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-83
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 83
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-84
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 84
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-84
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 84
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-85
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 85
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-85
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 85
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-86
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 86
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-86
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 86
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-87
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 87
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-87
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 87
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-88
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 88
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-88
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 88
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-89
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 89
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-89
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 89
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-90
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 90
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-90
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 90
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-91
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 91
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-91
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 91
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-92
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 92
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-92
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 92
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-93
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 93
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-93
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 93
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-94
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 94
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-94
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 94
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-95
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 95
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-95
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 95
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-96
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 96
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-96
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 96
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-97
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 97
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-97
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 97
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-98
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 98
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-98
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 98
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: azure
+        organization: azure
         name: azure-cloud-99
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 99
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: azure
+        organization: azure
         name: azure-cloud-99
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 99
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: gcp
+        organization: gcp
         name: gcp-cloud-100
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 100
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: gcp
+        organization: gcp
         name: gcp-cloud-100
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 100

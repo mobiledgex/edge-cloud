@@ -38,7 +38,7 @@ func TestResTagTableApi(t *testing.T) {
 		Key: testutil.Restblkeys[0],
 	}
 	_, err := resTagTableApi.CreateResTagTable(ctx, &tab)
-	require.Equal(t, "ResTagTable key {\"name\":\"gpu\",\"operator_key\":{\"name\":\"AT\\u0026T Inc.\"}} already exists", err.Error(), "create tag table EEXIST expected")
+	require.Equal(t, "ResTagTable key {\"name\":\"gpu\",\"organization\":\"AT\\u0026T Inc.\"} already exists", err.Error(), "create tag table EEXIST expected")
 
 	testags := map[string]string{"tag1": "val1"} //  "tag2": "val2", "tag3": "val3"}
 	multi_tag := map[string]string{"multi-tag1": "val1", "multi-tag2": "val2", "multi-tag3": "val2"}
@@ -47,7 +47,7 @@ func TestResTagTableApi(t *testing.T) {
 	var tbl edgeproto.ResTagTable
 	var tkey edgeproto.ResTagTableKey
 	tkey.Name = "gpu"
-	tkey.OperatorKey.Name = "testOp"
+	tkey.Organization = "testOp"
 	tbl.Key = tkey
 
 	_, err = resTagTableApi.CreateResTagTable(ctx, &tbl)

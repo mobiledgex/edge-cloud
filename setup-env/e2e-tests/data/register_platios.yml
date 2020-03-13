@@ -1,5 +1,5 @@
 registerclientrequest:
-  devname: platos
+  orgname: platos
   appname: PlatosEnablingLayer
   appvers: "1.0"
 

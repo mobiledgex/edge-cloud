@@ -1,7 +1,7 @@
 # this is a platform findcloudlet request because
 # it specifies the app within the api not the register
 findcloudletrequest:
-  devname: AcmeAppCo
+  orgname: AcmeAppCo
   appname: someapplication1
   appvers: "1.0"
   carriername: dmuus

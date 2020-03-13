@@ -1,7 +1,6 @@
 cloudlets:
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-1
   location:
     latitude: 31
@@ -12,8 +11,7 @@ cloudlets:
   containerversion: 2020-10-10
   notifysrvaddr: 127.0.0.1:61001
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-2
   location:
     latitude: 35

@@ -43,7 +43,7 @@ message CloudletPoolMember {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_test_update) = false;
   option (protogen.generate_cache) = true;
-  option (protogen.alias) = "pool=PoolKey.Name,cloudlet=CloudletKey.Name,operator=CloudletKey.OperatorKey.Name";
+  option (protogen.alias) = "pool=PoolKey.Name,cloudlet=CloudletKey.Name,organization=CloudletKey.Organization";
 }
 
 service CloudletPoolApi {

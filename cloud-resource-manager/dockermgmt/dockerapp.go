@@ -90,7 +90,7 @@ func parseDockerComposeManifest(client ssh.Client, dir string, dm *cloudcommon.D
 }
 
 func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
-	dir := util.DockerSanitize(app.Key.Name + app.Key.DeveloperKey.Name + app.Key.Version)
+	dir := util.DockerSanitize(app.Key.Name + app.Key.Organization + app.Key.Version)
 	filename := dir + "/manifest.zip"
 	log.SpanLog(ctx, log.DebugLevelMexos, "docker zip", "filename", filename, "action", action)
 	var dockerComposeCommand string
@@ -208,7 +208,7 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 	image := app.ImagePath
 	name := util.DockerSanitize(app.Key.Name)
 	cloudlet := util.DockerSanitize(appInst.Key.ClusterInstKey.CloudletKey.Name)
-	cluster := util.DockerSanitize(appInst.Key.ClusterInstKey.Developer + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name)
+	cluster := util.DockerSanitize(appInst.Key.ClusterInstKey.Organization + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name)
 
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("docker run -d -l edge-cloud -l cloudlet=%s -l cluster=%s --restart=unless-stopped --name=%s %s %s %s", cloudlet, cluster, name,
@@ -370,7 +370,7 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, app *edgeproto.Ap
 		if strings.HasSuffix(app.DeploymentManifest, ".zip") {
 
 			var dm cloudcommon.DockerManifest
-			dir := util.DockerSanitize(app.Key.Name + app.Key.DeveloperKey.Name + app.Key.Version)
+			dir := util.DockerSanitize(app.Key.Name + app.Key.Organization + app.Key.Version)
 			err := parseDockerComposeManifest(client, dir, &dm)
 			if err != nil {
 				return rt, err

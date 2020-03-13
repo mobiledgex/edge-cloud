@@ -1,15 +1,13 @@
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: dmuus
+        organization: dmuus
         name: dmuus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo

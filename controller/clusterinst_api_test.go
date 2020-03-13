@@ -40,7 +40,6 @@ func TestClusterInstApi(t *testing.T) {
 
 	// create support data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
@@ -197,25 +196,25 @@ func testReservableClusterInst(t *testing.T, ctx context.Context, api *testutil.
 	appinst.Key.ClusterInstKey = cinst.Key
 	err := appInstApi.CreateAppInst(&appinst, streamOut)
 	require.Nil(t, err, "create AppInst")
-	checkReservedBy(t, ctx, api, &cinst.Key, appinst.Key.AppKey.DeveloperKey.Name)
+	checkReservedBy(t, ctx, api, &cinst.Key, appinst.Key.AppKey.Organization)
 
 	// Cannot create another AppInst on it from different developer
 	appinst2 := edgeproto.AppInst{}
 	appinst2.Key.AppKey = testutil.AppData[10].Key
 	appinst2.Key.ClusterInstKey = cinst.Key
-	require.NotEqual(t, appinst.Key.AppKey.DeveloperKey.Name, appinst2.Key.AppKey.DeveloperKey.Name)
+	require.NotEqual(t, appinst.Key.AppKey.Organization, appinst2.Key.AppKey.Organization)
 	err = appInstApi.CreateAppInst(&appinst2, streamOut)
 	require.NotNil(t, err, "create AppInst on already reserved ClusterInst")
 	// Cannot create another AppInst on it from the same developer
 	appinst3 := edgeproto.AppInst{}
 	appinst3.Key.AppKey = testutil.AppData[1].Key
 	appinst3.Key.ClusterInstKey = cinst.Key
-	require.Equal(t, appinst.Key.AppKey.DeveloperKey.Name, appinst3.Key.AppKey.DeveloperKey.Name)
+	require.Equal(t, appinst.Key.AppKey.Organization, appinst3.Key.AppKey.Organization)
 	err = appInstApi.CreateAppInst(&appinst3, streamOut)
 	require.NotNil(t, err, "create AppInst on already reserved ClusterInst")
 
 	// Make sure above changes have not affected ReservedBy setting
-	checkReservedBy(t, ctx, api, &cinst.Key, appinst.Key.AppKey.DeveloperKey.Name)
+	checkReservedBy(t, ctx, api, &cinst.Key, appinst.Key.AppKey.Organization)
 
 	// Deleting AppInst should removed ReservedBy
 	err = appInstApi.DeleteAppInst(&appinst, streamOut)
@@ -225,7 +224,7 @@ func testReservableClusterInst(t *testing.T, ctx context.Context, api *testutil.
 	// Can now create AppInst from different developer
 	err = appInstApi.CreateAppInst(&appinst2, streamOut)
 	require.Nil(t, err, "create AppInst on reservable ClusterInst")
-	checkReservedBy(t, ctx, api, &cinst.Key, appinst2.Key.AppKey.DeveloperKey.Name)
+	checkReservedBy(t, ctx, api, &cinst.Key, appinst2.Key.AppKey.Organization)
 
 	// Delete AppInst
 	err = appInstApi.DeleteAppInst(&appinst2, streamOut)
@@ -245,7 +244,7 @@ func checkReservedBy(t *testing.T, ctx context.Context, api *testutil.ClusterIns
 	require.True(t, found, "get ClusterInst")
 	require.True(t, cinst.Reservable)
 	require.Equal(t, expected, cinst.ReservedBy)
-	require.Equal(t, cloudcommon.DeveloperMobiledgeX, cinst.Key.Developer)
+	require.Equal(t, cloudcommon.DeveloperMobiledgeX, cinst.Key.Organization)
 }
 
 // Test that Crm Override for Delete ClusterInst overrides any failures

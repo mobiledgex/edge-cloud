@@ -39,10 +39,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -53,10 +52,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -67,10 +65,9 @@ clusterinsts:
     clusterkey:
       name: ReservableCluster
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-1
-    developer: MobiledgeX
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -82,10 +79,9 @@ clusterinsts:
     clusterkey:
       name: ReservableCluster2
     cloudletkey:
-      operatorkey:
-        name: dmuus
+      organization: dmuus
       name: dmuus-cloud-2
-    developer: MobiledgeX
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -94,42 +90,13 @@ clusterinsts:
   numnodes: 1
   reservable: true
 
-operators:
-- key:
-    name: dmuus
-- key:
-    name: azure
-- key:
-    name: gcp
-
 operatorcodes:
 - code: 31026
-  operatorname: dmuus
-
-developers:
-- key:
-    name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-- key:
-    name: AcmeAppCo1
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-- key:
-    name: platos
-  username: sammy
-  passhash: aaaabbbccdfdfad444449941
-  address: 1 Samstreet, platos Town, South Korea
-  email: platos@xxxx.com
+  organization: dmuus
 
 cloudlets:
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-1
   accessuri: cloud1.tmo
   location:
@@ -142,8 +109,7 @@ cloudlets:
   flavor:
     name: x1.small
 - key:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-2
   accessuri: cloud2.tmo
   location:
@@ -156,8 +122,7 @@ cloudlets:
   flavor:
     name: x1.small
 - key:
-    operatorkey:
-      name: azure
+    organization: azure
     name: azure-cloud-4
   accessuri: cloud4.azure
   location:
@@ -170,8 +135,7 @@ cloudlets:
   flavor:
     name: x1.small
 - key:
-    operatorkey:
-      name: gcp
+    organization: gcp
     name: gcp-cloud-5
   accessuri: cloud5.gcp
   location:
@@ -187,38 +151,34 @@ cloudlets:
 autoprovpolicies:
 - key:
     name: autoprov1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   deployclientcount: 1
   deployintervalcount: 1
   cloudlets:
   - key:
       name: dmuus-cloud-1
-      operatorkey:
-        name: dmuus
+      organization: dmuus
 - key:
     name: autoprov2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   deployclientcount: 10
   deployintervalcount: 4
   cloudlets:
   - key:
       name: dmuus-cloud-1
-      operatorkey:
-        name: dmuus
+      organization: dmuus
 
 autoprovpolicycloudlets:
 - key:
     name: autoprov1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   cloudletkey:
-    operatorkey:
-      name: dmuus
+    organization: dmuus
     name: dmuus-cloud-2
 
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -232,8 +192,7 @@ apps:
   androidpackagename: com.acme.someapplication1
   authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: autoprovapp
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -246,8 +205,7 @@ apps:
   accessports: "tcp:81"
   autoprovpolicy: autoprov1
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: autoprovapp2
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -260,8 +218,7 @@ apps:
   accessports: "tcp:82"
   autoprovpolicy: autoprov2
 - key:
-    developerkey:
-      name: platos
+    organization: platos
     name: PlatosEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue

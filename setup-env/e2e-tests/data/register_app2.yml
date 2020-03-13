@@ -1,6 +1,6 @@
 findcloudletrequest:
   carriername: dmuus
-  devname: AcmeAppCo
+  orgname: AcmeAppCo
   appname: someapplication1
   appvers: "1.0"
 
