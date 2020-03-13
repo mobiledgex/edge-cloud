@@ -65,10 +65,8 @@ func TestNotify(t *testing.T) {
 	// update cloudletInfo for a single cloudlet and make sure it gets propagated to appInsts
 	cloudletInfo := edgeproto.CloudletInfo{
 		Key: edgeproto.CloudletKey{
-			OperatorKey: edgeproto.OperatorKey{
-				Name: dmetest.Cloudlets[2].CarrierName,
-			},
-			Name: dmetest.Cloudlets[2].Name,
+			Organization: dmetest.Cloudlets[2].CarrierName,
+			Name:         dmetest.Cloudlets[2].Name,
 		},
 		State: edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE,
 	}
@@ -93,7 +91,7 @@ func waitAndCheckCloudletforApps(t *testing.T, key *edgeproto.CloudletKey) {
 	var still_enabled bool
 
 	tbl := dmecommon.DmeAppTbl
-	carrier := key.OperatorKey.Name
+	carrier := key.Organization
 	for i := 0; i < 10; i++ {
 		still_enabled = false
 		for _, app := range tbl.Apps {

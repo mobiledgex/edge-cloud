@@ -33,9 +33,7 @@ func runCreate(c *cli.Command, args []string) error {
 		gencmd.UpdateSettingsBatch(c, data.Settings, &err)
 	}
 
-	gencmd.CreateOperators(c, data.Operators, &err)
 	gencmd.CreateOperatorCodes(c, data.OperatorCodes, &err)
-	gencmd.CreateDevelopers(c, data.Developers, &err)
 	gencmd.CreateCloudlets(c, data.Cloudlets, &err)
 	gencmd.CreateAutoScalePolicys(c, data.AutoScalePolicies, &err)
 	gencmd.CreateAutoProvPolicys(c, data.AutoProvPolicies, &err)
@@ -69,9 +67,7 @@ func runDelete(c *cli.Command, args []string) error {
 	gencmd.DeleteAutoProvPolicys(c, data.AutoProvPolicies, &err)
 	gencmd.DeleteAutoScalePolicys(c, data.AutoScalePolicies, &err)
 	gencmd.DeleteCloudlets(c, data.Cloudlets, &err)
-	gencmd.DeleteDevelopers(c, data.Developers, &err)
 	gencmd.DeleteOperatorCodes(c, data.OperatorCodes, &err)
-	gencmd.DeleteOperators(c, data.Operators, &err)
 
 	if data.Settings != nil {
 		gencmd.ResetSettingsBatch(c, data.Settings, &err)

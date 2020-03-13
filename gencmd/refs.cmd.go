@@ -187,7 +187,7 @@ var ClusterRefsApiCmds = []*cobra.Command{
 }
 
 var CloudletRefsRequiredArgs = []string{
-	"key.operatorkey.name",
+	"key.organization",
 	"key.name",
 }
 var CloudletRefsOptionalArgs = []string{
@@ -204,24 +204,24 @@ var CloudletRefsOptionalArgs = []string{
 }
 var CloudletRefsAliasArgs = []string{}
 var CloudletRefsComments = map[string]string{
-	"key.operatorkey.name": "Company or Organization name of the operator",
-	"key.name":             "Name of the cloudlet",
-	"clusters.name":        "Cluster name",
-	"usedram":              "Used RAM in MB",
-	"usedvcores":           "Used VCPU cores",
-	"useddisk":             "Used disk in GB",
-	"useddynamicips":       "Used dynamic IPs",
-	"usedstaticips":        "Used static IPs",
+	"key.organization": "Organization of the cloudlet site",
+	"key.name":         "Name of the cloudlet",
+	"clusters.name":    "Cluster name",
+	"usedram":          "Used RAM in MB",
+	"usedvcores":       "Used VCPU cores",
+	"useddisk":         "Used disk in GB",
+	"useddynamicips":   "Used dynamic IPs",
+	"usedstaticips":    "Used static IPs",
 }
 var CloudletRefsSpecialArgs = map[string]string{}
 var ClusterRefsRequiredArgs = []string{
 	"key.clusterkey.name",
-	"key.cloudletkey.operatorkey.name",
+	"key.cloudletkey.organization",
 	"key.cloudletkey.name",
-	"key.developer",
+	"key.organization",
 }
 var ClusterRefsOptionalArgs = []string{
-	"apps.developerkey.name",
+	"apps.organization",
 	"apps.name",
 	"apps.version",
 	"usedram",
@@ -230,15 +230,15 @@ var ClusterRefsOptionalArgs = []string{
 }
 var ClusterRefsAliasArgs = []string{}
 var ClusterRefsComments = map[string]string{
-	"key.clusterkey.name":              "Cluster name",
-	"key.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"key.cloudletkey.name":             "Name of the cloudlet",
-	"key.developer":                    "Name of Developer that this cluster belongs to",
-	"apps.developerkey.name":           "Organization or Company Name that a Developer is part of",
-	"apps.name":                        "App name",
-	"apps.version":                     "App version",
-	"usedram":                          "Used RAM in MB",
-	"usedvcores":                       "Used VCPU cores",
-	"useddisk":                         "Used disk in GB",
+	"key.clusterkey.name":          "Cluster name",
+	"key.cloudletkey.organization": "Organization of the cloudlet site",
+	"key.cloudletkey.name":         "Name of the cloudlet",
+	"key.organization":             "Name of Developer organization that this cluster belongs to",
+	"apps.organization":            "App developer organization",
+	"apps.name":                    "App name",
+	"apps.version":                 "App version",
+	"usedram":                      "Used RAM in MB",
+	"usedvcores":                   "Used VCPU cores",
+	"useddisk":                     "Used disk in GB",
 }
 var ClusterRefsSpecialArgs = map[string]string{}

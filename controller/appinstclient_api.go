@@ -158,7 +158,7 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 
 	// Since we don't care about the cluster developer and name set them to ""
 	in.Key.ClusterInstKey.ClusterKey.Name = ""
-	in.Key.ClusterInstKey.Developer = ""
+	in.Key.ClusterInstKey.Organization = ""
 
 	ctrlConns = make([]*grpc.ClientConn, 0)
 	done := false

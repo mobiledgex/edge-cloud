@@ -49,29 +49,29 @@ message ExecRequest {
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.noconfig) = "Offer,Answer,Err,Console.Url,Timeout";
-  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow";
+  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,app-org=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=AppInstKey.ClusterInstKey.CloudletKey.Organization,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow";
   option (protogen.also_required) = "AppInstKey";
 }
 
 service ExecApi {
   // Run a Command or Shell on a container
   rpc RunCommand(ExecRequest) returns (ExecRequest) {
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console";
     option (protogen.method_also_required) = "AppInstKey,Cmd.Command";
-    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
   }
   // Run console on a VM
   rpc RunConsole(ExecRequest) returns (ExecRequest) {
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console";
-    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
   }
   // View logs for AppInst
   rpc ShowLogs(ExecRequest) returns (ExecRequest) {
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,AppInstKey.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,AppInstKey.AppKey.Organization";
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console";
-    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Developer";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
     option (protogen.non_standard_show) = true;
   }
   // This is used internally to forward requests to other Controllers.

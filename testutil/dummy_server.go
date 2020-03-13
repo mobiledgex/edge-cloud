@@ -24,7 +24,7 @@ func (s *DummyServer) AddDummyObjs(ctx context.Context, num int) {
 		member := edgeproto.CloudletPoolMember{}
 		member.PoolKey.Name = name
 		member.CloudletKey.Name = name
-		member.CloudletKey.OperatorKey.Name = name
+		member.CloudletKey.Organization = name
 		s.CloudletPoolMemberCache.Update(ctx, &member, int64(ii))
 	}
 }
@@ -34,22 +34,22 @@ func (s *DummyServer) AddDummyOrgObjs(ctx context.Context, org string, num int) 
 		name := fmt.Sprintf("%d", ii)
 
 		app := edgeproto.App{}
-		app.Key.DeveloperKey.Name = org
+		app.Key.Organization = org
 		app.Key.Name = name
 		s.AppCache.Update(ctx, &app, int64(ii))
 
 		appinst := edgeproto.AppInst{}
-		appinst.Key.AppKey.DeveloperKey.Name = org
+		appinst.Key.AppKey.Organization = org
 		appinst.Key.AppKey.Name = name
 		s.AppInstCache.Update(ctx, &appinst, int64(ii))
 
 		cinst := edgeproto.ClusterInst{}
-		cinst.Key.Developer = org
+		cinst.Key.Organization = org
 		cinst.Key.ClusterKey.Name = name
 		s.ClusterInstCache.Update(ctx, &cinst, int64(ii))
 
 		cloudlet := edgeproto.Cloudlet{}
-		cloudlet.Key.OperatorKey.Name = org
+		cloudlet.Key.Organization = org
 		cloudlet.Key.Name = name
 		s.CloudletCache.Update(ctx, &cloudlet, int64(ii))
 	}

@@ -23,6 +23,7 @@ cloudlets:
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
+    orgname: AcmeAppCo
 - carriername: gcp
   cloudletname: gcp-cloud-10
   gpslocation:
@@ -46,6 +47,7 @@ cloudlets:
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
+    orgname: AcmeAppCo
 - carriername: tmus
   cloudletname: tmus-cloud-1
   gpslocation:
@@ -69,6 +71,7 @@ cloudlets:
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
+    orgname: AcmeAppCo
 - carriername: tmus
   cloudletname: tmus-cloud-2
   gpslocation:
@@ -92,6 +95,7 @@ cloudlets:
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
+    orgname: AcmeAppCo
 - carriername: tmus
   cloudletname: tmus-cloud-3
   gpslocation:
@@ -115,6 +119,7 @@ cloudlets:
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
+    orgname: AcmeAppCo
 - carriername: tmus
   cloudletname: tmus-cloud-4
   gpslocation:
@@ -138,6 +143,7 @@ cloudlets:
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
+    orgname: AcmeAppCo
 - carriername: tmus
   cloudletname: tmus-cloud-5
   gpslocation:
@@ -161,6 +167,7 @@ cloudlets:
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
+    orgname: AcmeAppCo
 - carriername: tmus
   cloudletname: tmus-cloud-6
   gpslocation:
@@ -184,6 +191,7 @@ cloudlets:
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
+    orgname: AcmeAppCo
 - carriername: tmus
   cloudletname: tmus-cloud-7
   gpslocation:
@@ -207,6 +215,7 @@ cloudlets:
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
+    orgname: AcmeAppCo
 - carriername: tmus
   cloudletname: tmus-cloud-8
   gpslocation:
@@ -230,3 +239,4 @@ cloudlets:
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
+    orgname: AcmeAppCo
