@@ -436,14 +436,11 @@ func (p *Crm) LookupArgs() string { return "--cloudletKey " + p.CloudletKey }
 func (p *Crm) String(opts ...StartOp) string {
 	cmd_str := p.GetExeName()
 	args := p.GetArgs(opts...)
-	key := true
 	for _, v := range args {
-		if key {
+		if strings.HasPrefix(v, "-") {
 			cmd_str += " " + v
-			key = false
 		} else {
 			cmd_str += " '" + v + "'"
-			key = true
 		}
 	}
 	return cmd_str
