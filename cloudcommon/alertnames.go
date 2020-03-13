@@ -6,7 +6,7 @@ var AlertAutoScaleDown = "AutoScaleDown"
 var AlertAppInstDown = "AppInstDown"
 
 // Alert label keys
-var AlertLabelDev = "dev"
+var AlertLabelClusterOrg = "clusterorg"
 var AlertLabelCloudletOrg = "cloudletorg"
 var AlertLabelCloudlet = "cloudlet"
 var AlertLabelCluster = "cluster"

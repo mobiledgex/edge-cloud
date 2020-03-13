@@ -28,7 +28,7 @@ func InitAlertApi(sync *Sync) {
 
 // AppInstDown alert needs to set the HealthCheck in AppInst
 func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.Alert, state edgeproto.HealthCheck) {
-	dev, ok := alert.Labels[cloudcommon.AlertLabelDev]
+	dev, ok := alert.Labels[cloudcommon.AlertLabelClusterOrg]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Dev label in Alert", "alert", alert)
 		return
