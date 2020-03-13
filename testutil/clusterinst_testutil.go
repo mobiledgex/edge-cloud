@@ -12,6 +12,7 @@ import "time"
 import "github.com/stretchr/testify/require"
 import "github.com/mobiledgex/edge-cloud/log"
 import "github.com/mobiledgex/edge-cloud/cli"
+import "github.com/mobiledgex/edge-cloud/edgectl/wrapper"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -67,11 +68,7 @@ func NewCudStreamoutClusterInst(ctx context.Context) *CudStreamoutClusterInst {
 	}
 }
 
-type ClusterInstStream interface {
-	Recv() (*edgeproto.Result, error)
-}
-
-func ClusterInstReadResultStream(stream ClusterInstStream, err error) error {
+func ClusterInstReadResultStream(stream ResultStream, err error) error {
 	if err != nil {
 		return err
 	}
@@ -540,36 +537,83 @@ func FindClusterInstInfoData(key *edgeproto.ClusterInstKey, testData []edgeproto
 	return nil, false
 }
 
-func RunClusterInstApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.ClusterInst, dataMap interface{}, mode string) error {
-	clusterInstApi := edgeproto.NewClusterInstApiClient(conn)
-	var err error
+func (r *Run) ClusterInstApi(data *[]edgeproto.ClusterInst, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for ClusterInst", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.ClusterInst{}
+		out, err := r.client.ShowClusterInst(r.ctx, obj)
+		if err != nil {
+			r.logErr("ClusterInstApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.ClusterInst)
+			if !ok {
+				panic(fmt.Sprintf("RunClusterInstApi expected dataOut type *[]edgeproto.ClusterInst, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
 	for ii, objD := range *data {
 		obj := &objD
-		log.DebugLog(log.DebugLevelApi, "API %v for ClusterInst: %v", mode, obj.GetKey())
-		var stream ClusterInstStream
-		switch mode {
+		switch r.Mode {
 		case "create":
-			stream, err = clusterInstApi.CreateClusterInst(ctx, obj)
+			out, err := r.client.CreateClusterInst(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("ClusterInstApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunClusterInstApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
 		case "delete":
-			stream, err = clusterInstApi.DeleteClusterInst(ctx, obj)
+			out, err := r.client.DeleteClusterInst(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("ClusterInstApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunClusterInstApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
 		case "update":
+			// set specified fields
 			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
 			if err != nil {
-				return fmt.Errorf("bad dataMap for ClusterInst: %v", err)
+				log.DebugLog(log.DebugLevelApi, "bad dataMap for ClusterInst", "err", err)
+				*r.Rc = false
+				return
 			}
 			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
-			stream, err = clusterInstApi.UpdateClusterInst(ctx, obj)
-		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for ClusterInst: %v", mode, obj.GetKey())
-			return nil
-		}
-		err = ClusterInstReadResultStream(stream, err)
-		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
+
+			out, err := r.client.UpdateClusterInst(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("ClusterInstApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunClusterInstApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowClusterInst(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("ClusterInstApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.ClusterInst)
+				if !ok {
+					panic(fmt.Sprintf("RunClusterInstApi expected dataOut type *[]edgeproto.ClusterInst, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
 		}
 	}
-	return nil
 }
 
 func (s *DummyServer) CreateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_CreateClusterInstServer) error {
@@ -620,6 +664,40 @@ func (s *DummyServer) ShowClusterInst(in *edgeproto.ClusterInst, server edgeprot
 	return err
 }
 
+func (r *Run) ClusterInstInfoApi(data *[]edgeproto.ClusterInstInfo, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for ClusterInstInfo", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.ClusterInstInfo{}
+		out, err := r.client.ShowClusterInstInfo(r.ctx, obj)
+		if err != nil {
+			r.logErr("ClusterInstInfoApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.ClusterInstInfo)
+			if !ok {
+				panic(fmt.Sprintf("RunClusterInstInfoApi expected dataOut type *[]edgeproto.ClusterInstInfo, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "showfiltered":
+			out, err := r.client.ShowClusterInstInfo(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("ClusterInstInfoApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.ClusterInstInfo)
+				if !ok {
+					panic(fmt.Sprintf("RunClusterInstInfoApi expected dataOut type *[]edgeproto.ClusterInstInfo, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		}
+	}
+}
+
 func (s *DummyServer) ShowClusterInstInfo(in *edgeproto.ClusterInstInfo, server edgeproto.ClusterInstInfoApi_ShowClusterInstInfoServer) error {
 	var err error
 	obj := &edgeproto.ClusterInstInfo{}
@@ -633,4 +711,133 @@ func (s *DummyServer) ShowClusterInstInfo(in *edgeproto.ClusterInstInfo, server 
 		return err
 	})
 	return err
+}
+
+func (s *ApiClient) CreateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error) {
+	api := edgeproto.NewClusterInstApiClient(s.Conn)
+	stream, err := api.CreateClusterInst(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) CreateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "CreateClusterInst")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) DeleteClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error) {
+	api := edgeproto.NewClusterInstApiClient(s.Conn)
+	stream, err := api.DeleteClusterInst(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) DeleteClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "DeleteClusterInst")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error) {
+	api := edgeproto.NewClusterInstApiClient(s.Conn)
+	stream, err := api.UpdateClusterInst(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "UpdateClusterInst")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type ClusterInstStream interface {
+	Recv() (*edgeproto.ClusterInst, error)
+}
+
+func ClusterInstReadStream(stream ClusterInstStream) ([]edgeproto.ClusterInst, error) {
+	output := []edgeproto.ClusterInst{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read ClusterInst stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.ClusterInst, error) {
+	api := edgeproto.NewClusterInstApiClient(s.Conn)
+	stream, err := api.ShowClusterInst(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ClusterInstReadStream(stream)
+}
+
+func (s *CliClient) ShowClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.ClusterInst, error) {
+	output := []edgeproto.ClusterInst{}
+	args := append(s.BaseArgs, "controller", "ShowClusterInst")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type ClusterInstApiClient interface {
+	CreateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error)
+	DeleteClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error)
+	UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error)
+	ShowClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.ClusterInst, error)
+}
+
+type ClusterInstInfoStream interface {
+	Recv() (*edgeproto.ClusterInstInfo, error)
+}
+
+func ClusterInstInfoReadStream(stream ClusterInstInfoStream) ([]edgeproto.ClusterInstInfo, error) {
+	output := []edgeproto.ClusterInstInfo{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read ClusterInstInfo stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowClusterInstInfo(ctx context.Context, in *edgeproto.ClusterInstInfo) ([]edgeproto.ClusterInstInfo, error) {
+	api := edgeproto.NewClusterInstInfoApiClient(s.Conn)
+	stream, err := api.ShowClusterInstInfo(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ClusterInstInfoReadStream(stream)
+}
+
+func (s *CliClient) ShowClusterInstInfo(ctx context.Context, in *edgeproto.ClusterInstInfo) ([]edgeproto.ClusterInstInfo, error) {
+	output := []edgeproto.ClusterInstInfo{}
+	args := append(s.BaseArgs, "controller", "ShowClusterInstInfo")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type ClusterInstInfoApiClient interface {
+	ShowClusterInstInfo(ctx context.Context, in *edgeproto.ClusterInstInfo) ([]edgeproto.ClusterInstInfo, error)
 }

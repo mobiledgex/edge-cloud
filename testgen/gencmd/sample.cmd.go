@@ -78,6 +78,9 @@ var RequestCmd = &cli.Command{
 }
 
 func runRequest(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*testgen.TestGen)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -273,7 +276,8 @@ var TestGenComments = map[string]string{
 	"unused":                                "xxx win import of strings. xxx",
 }
 var TestGenSpecialArgs = map[string]string{
-	"names": "StringArray",
+	"fields": "StringArray",
+	"names":  "StringArray",
 }
 var InnerMessageRequiredArgs = []string{}
 var InnerMessageOptionalArgs = []string{

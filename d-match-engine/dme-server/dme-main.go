@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"plugin"
+	"strings"
 	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -283,6 +284,24 @@ func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, e
 	return getOperatorFunc(ctx, operatorName)
 }
 
+// allowCORS allows Cross Origin Resoruce Sharing from any origin.
+func allowCORS(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if origin := r.Header.Get("Origin"); origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			if r.Method == "OPTIONS" && r.Header.Get("Access-Control-Request-Method") != "" {
+				// preflight headers
+				headers := []string{"Content-Type", "Accept"}
+				w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
+				methods := []string{"GET", "HEAD", "POST", "PUT", "DELETE"}
+				w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
+				return
+			}
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
@@ -408,7 +427,7 @@ func main() {
 
 	httpServer := &http.Server{
 		Addr:      *httpAddr,
-		Handler:   mux,
+		Handler:   allowCORS(mux),
 		TLSConfig: tlscfg,
 		ErrorLog:  &nullLogger,
 	}

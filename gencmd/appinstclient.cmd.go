@@ -52,6 +52,9 @@ var ShowAppInstClientCmd = &cli.Command{
 }
 
 func runShowAppInstClient(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInstClientKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -74,6 +77,8 @@ func ShowAppInstClient(c *cli.Command, in *edgeproto.AppInstClientKey) error {
 		}
 		return fmt.Errorf("ShowAppInstClient failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.AppInstClient, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -88,8 +93,16 @@ func ShowAppInstClient(c *cli.Command, in *edgeproto.AppInstClientKey) error {
 			return fmt.Errorf("ShowAppInstClient recv failed: %s", errstr)
 		}
 		AppInstClientHideTags(obj)
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -121,6 +134,9 @@ var StreamAppInstClientsLocalCmd = &cli.Command{
 }
 
 func runStreamAppInstClientsLocal(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInstClientKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -143,6 +159,7 @@ func StreamAppInstClientsLocal(c *cli.Command, in *edgeproto.AppInstClientKey) e
 		}
 		return fmt.Errorf("StreamAppInstClientsLocal failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.AppInstClient, 0)
 	for {
 		obj, err := stream.Recv()
@@ -242,6 +259,7 @@ var AppInstClientOptionalArgs = []string{
 }
 var AppInstClientAliasArgs = []string{}
 var AppInstClientComments = map[string]string{
+	"fields":                                                "Fields are used for the Update API to specify which fields to apply",
 	"clientkey.key.appkey.organization":                     "App developer organization",
 	"clientkey.key.appkey.name":                             "App name",
 	"clientkey.key.appkey.version":                          "App version",
@@ -259,4 +277,6 @@ var AppInstClientComments = map[string]string{
 	"location.speed":                                        "speed (IOS) / velocity (Android) (meters/sec)",
 	"notifyid":                                              "Id of client assigned by server (internal use only)",
 }
-var AppInstClientSpecialArgs = map[string]string{}
+var AppInstClientSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}

@@ -133,6 +133,12 @@ func TestConversion(t *testing.T) {
 	for _, appinst := range testutil.AppInstData {
 		testConversion(t, &appinst, &edgeproto.AppInst{}, &edgeproto.AppInst{})
 	}
+	for _, pp := range testutil.PrivacyPolicyData {
+		testConversion(t, &pp, &edgeproto.PrivacyPolicy{}, &edgeproto.PrivacyPolicy{})
+	}
+	settings := edgeproto.GetDefaultSettings()
+	settings.Fields = []string{"16", "4", "9", "2.2"}
+	testConversion(t, settings, &edgeproto.Settings{}, &edgeproto.Settings{})
 	// CloudletInfo and CloudletRefs have arrays which aren't supported yet.
 }
 
@@ -141,7 +147,10 @@ func testConversion(t *testing.T, obj interface{}, buf, buf2 interface{}) {
 	args, err := cli.MarshalArgs(obj, nil)
 	require.Nil(t, err, "marshal %v", obj)
 	input := cli.Input{
-		DecodeHook: edgeproto.EnumDecodeHook,
+		DecodeHook: edgeproto.DecodeHook,
+		SpecialArgs: &map[string]string{
+			"fields": "StringArray",
+		},
 	}
 	fmt.Printf("args: %v\n", args)
 
@@ -159,6 +168,7 @@ func testConversion(t *testing.T, obj interface{}, buf, buf2 interface{}) {
 	// simulate client to server, check that matches original
 	byt, err := json.Marshal(jsmap)
 	require.Nil(t, err, "marshal")
+	fmt.Printf("json string: %s\n", string(byt))
 	err = json.Unmarshal(byt, buf2)
 	require.Nil(t, err, "unmarshal")
 	require.Equal(t, obj, buf2)
@@ -250,7 +260,7 @@ clusterinsts:
          "disk": 4
       }
    ],
-   "clusterinsts": [
+   "cluster_insts": [
       {
          "key": {
             "cluster_key": {
@@ -291,10 +301,10 @@ clusterinsts:
       }
    ]
 }`,
-		obj1: &edgeproto.ApplicationData{},
-		obj2: &edgeproto.ApplicationData{},
-		obj3: &edgeproto.ApplicationData{},
-		obj4: &edgeproto.ApplicationData{},
+		obj1: &edgeproto.AllData{},
+		obj2: &edgeproto.AllData{},
+		obj3: &edgeproto.AllData{},
+		obj4: &edgeproto.AllData{},
 	},
 }
 

@@ -32,7 +32,7 @@ func InitVault(addr, region string) error {
 
 type CookieKey struct {
 	PeerIP       string `json:"peerip,omitempty"`
-	OrgName      string `json:"devname,omitempty"`
+	OrgName      string `json:"orgname,omitempty"`
 	AppName      string `json:"appname,omitempty"`
 	AppVers      string `json:"appvers,omitempty"`
 	UniqueIdType string `json:"uniqueidtype,omitempty"`

@@ -13,7 +13,7 @@ var Generators = map[string]func(app *AppSpec) (string, error){
 
 type AppSpec struct {
 	Name             string          `json:"name"`
-	OrgName          string          `json:"devname"`
+	OrgName          string          `json:"orgname"`
 	Version          string          `json:"version"`
 	ImagePath        string          `json:"imagepath"`
 	ImageType        string          `json:"imagetype"`

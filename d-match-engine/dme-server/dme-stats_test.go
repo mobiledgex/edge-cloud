@@ -91,3 +91,36 @@ func TestStatDrops(t *testing.T) {
 	assert.Equal(t, count, dbCount, "api requests")
 	fmt.Printf("served %d requests\n", count)
 }
+
+func TestStatChanged(t *testing.T) {
+	db := testdb{}
+	db.Init()
+	notifyInterval := 20 * time.Millisecond
+	stats := NewDmeStats(notifyInterval, 1, db.send)
+	stats.Start()
+	defer stats.Stop()
+	var mux = &sync.Mutex{}
+
+	key := dmecommon.StatKey{}
+	key.AppKey.Organization = "dev"
+	key.AppKey.Name = "app"
+	key.AppKey.Version = "1.0.0"
+	key.Method = "findCloudlet"
+	key.CloudletFound.Name = "UnitTest"
+	key.CloudletFound.Organization = "unittest"
+	key.CellId = 1000
+
+	mux.Lock()
+	stats.RecordApiStatCall(&ApiStatCall{
+		key:     key,
+		fail:    false,
+		latency: 50 * time.Millisecond,
+	})
+	time.Sleep(100 * time.Microsecond)
+	assert.True(t, stats.shards[0].apiStatMap[key].changed)
+	mux.Unlock()
+
+	// sleep two intervals to make sure that stats are uploaded to the controller
+	time.Sleep(2 * notifyInterval)
+	assert.False(t, stats.shards[0].apiStatMap[key].changed)
+}

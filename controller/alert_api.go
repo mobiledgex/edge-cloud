@@ -33,9 +33,9 @@ func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.A
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Dev label in Alert", "alert", alert)
 		return
 	}
-	oper, ok := alert.Labels[cloudcommon.AlertLabelOperator]
+	clorg, ok := alert.Labels[cloudcommon.AlertLabelCloudletOrg]
 	if !ok {
-		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Operator label in Alert", "alert", alert)
+		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Cloudlet Org label in Alert", "alert", alert)
 		return
 	}
 	cloudlet, ok := alert.Labels[cloudcommon.AlertLabelCloudlet]
@@ -70,7 +70,7 @@ func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.A
 					Name: cluster,
 				},
 				CloudletKey: edgeproto.CloudletKey{
-					Organization: oper,
+					Organization: clorg,
 					Name:         cloudlet,
 				},
 				Organization: dev,

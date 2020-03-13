@@ -206,32 +206,34 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 			if hasTag("inline", tagvals) {
 				subjson = js
 			} else {
-				subjson = getSubMap(js, jsonName)
+				subjson = getSubMap(js, jsonName, -1)
 			}
 			err := MapJsonNamesT(subargs, subjson, sf.Type, inputNS)
 			if err != nil {
 				return err
 			}
-		} else if list, ok := val.([]interface{}); ok {
+		} else if list, ok := val.([]map[string]interface{}); ok {
+			// arrayed struct
 			if sf.Type.Kind() != reflect.Slice {
 				return fmt.Errorf("key %s value is an array but type %v is not", key, sf.Type)
 			}
 			elemt := sf.Type.Elem()
-			jslist := make([]interface{}, 0, len(list))
+			jslist := make([]map[string]interface{}, 0, len(list))
 			for ii, _ := range list {
-				if item, ok := list[ii].(map[string]interface{}); ok {
-					// struct in list
-					out := make(map[string]interface{})
-					err := MapJsonNamesT(item, out, elemt, inputNS)
-					if err != nil {
-						return err
-					}
-					jslist = append(jslist, out)
-				} else {
-					jslist = append(jslist, list[ii])
+				out := make(map[string]interface{})
+				err := MapJsonNamesT(list[ii], out, elemt, inputNS)
+				if err != nil {
+					return err
 				}
+				jslist = append(jslist, out)
 			}
 			js[jsonName] = jslist
+		} else if reflect.TypeOf(val).Kind() == reflect.Slice {
+			// array of built-in types
+			if sf.Type.Kind() != reflect.Slice {
+				return fmt.Errorf("key %s value is an array but type %v is not", key, sf.Type)
+			}
+			js[jsonName] = val
 		} else {
 			if sf.Type.Kind() == reflect.Map {
 				// must be map of basic built-in types
@@ -290,7 +292,35 @@ func FindField(t reflect.Type, name string, ns FieldNamespace) (reflect.StructFi
 	}
 }
 
-func getSubMap(cur map[string]interface{}, key string) map[string]interface{} {
+func getSubMap(cur map[string]interface{}, key string, arrIdx int) map[string]interface{} {
+	if arrIdx > -1 {
+		// arrayed struct
+		var arr []map[string]interface{}
+		val, ok := cur[key]
+		if ok {
+			// check that it's the right type
+			arr, ok = val.([]map[string]interface{})
+		}
+		if !ok {
+			// didn't exist, or wrong type (so overwrite)
+			arr = make([]map[string]interface{}, arrIdx+1)
+			cur[key] = arr
+			for ii, _ := range arr {
+				arr[ii] = make(map[string]interface{})
+			}
+		}
+		// increase length if needed
+		if len(arr) <= arrIdx {
+			newarr := make([]map[string]interface{}, arrIdx+1)
+			copy(newarr, arr)
+			for ii := len(arr); ii < len(newarr); ii++ {
+				newarr[ii] = make(map[string]interface{})
+			}
+			arr = newarr
+			cur[key] = arr
+		}
+		return arr[arrIdx]
+	}
 	var sub map[string]interface{}
 	val, ok := cur[key]
 	if !ok {
@@ -359,7 +389,16 @@ func setKeyVal(dat map[string]interface{}, key string, val interface{}, argType 
 				}
 			}
 		} else {
-			dat = getSubMap(dat, part)
+			arrIdx := -1
+			// if field is repeated (arrayed) struct, it will have a :# suffix.
+			colonIdx := strings.LastIndex(part, ":")
+			if colonIdx != -1 && len(part) > colonIdx+1 {
+				if idx, err := strconv.ParseUint(part[colonIdx+1:], 10, 32); err == nil {
+					arrIdx = int(idx)
+					part = part[:colonIdx]
+				}
+			}
+			dat = getSubMap(dat, part, arrIdx)
 		}
 	}
 }
@@ -438,6 +477,21 @@ func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]st
 		if sub, ok := v.(map[string]interface{}); ok {
 			subargs := MapToArgs(append(prefix, k), sub, ignore)
 			args = append(args, subargs...)
+			continue
+		}
+		if sub, ok := v.([]interface{}); ok {
+			for ii, subv := range sub {
+				key := k
+				if reflect.ValueOf(subv).Kind() == reflect.Map {
+					// repeated struct
+					key = fmt.Sprintf("%s:%d", k, ii)
+				}
+				submap := map[string]interface{}{
+					key: subv,
+				}
+				subargs := MapToArgs(prefix, submap, ignore)
+				args = append(args, subargs...)
+			}
 			continue
 		}
 		keys := append(prefix, k)

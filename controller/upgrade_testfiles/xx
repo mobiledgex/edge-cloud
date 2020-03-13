@@ -1,0 +1,2 @@
+1/App/{"developer_key":{"name":"AMP"},"name":"facedetection","version":"latest"}
+{"key":{"developer_key":{"name":"AMP"},"name":"facedetection","version":"latest"},"image_path":"docker.mobiledgex.net/amp/images/facedetection:latest","image_type":1,"access_ports":"TCP:8011,TCP:8008","default_flavor":{"name":"m4.xlarge"},"command":"docker run --restart=always facedetection:latest","deployment":"docker"}

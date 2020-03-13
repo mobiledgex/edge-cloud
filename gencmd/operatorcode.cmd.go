@@ -37,6 +37,9 @@ var CreateOperatorCodeCmd = &cli.Command{
 }
 
 func runCreateOperatorCode(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.OperatorCode)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -91,6 +94,9 @@ var DeleteOperatorCodeCmd = &cli.Command{
 }
 
 func runDeleteOperatorCode(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.OperatorCode)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -144,6 +150,9 @@ var ShowOperatorCodeCmd = &cli.Command{
 }
 
 func runShowOperatorCode(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.OperatorCode)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -166,6 +175,7 @@ func ShowOperatorCode(c *cli.Command, in *edgeproto.OperatorCode) error {
 		}
 		return fmt.Errorf("ShowOperatorCode failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.OperatorCode, 0)
 	for {
 		obj, err := stream.Recv()

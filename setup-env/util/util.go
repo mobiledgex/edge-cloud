@@ -110,14 +110,6 @@ type errorReply struct {
 	Details []string
 }
 
-type DebugData struct {
-	Requests []edgeproto.DebugRequest
-}
-
-type DebugOutput struct {
-	Replies [][]edgeproto.DebugReply
-}
-
 func GetAllProcesses() []process.Process {
 	all := make([]process.Process, 0)
 	for _, p := range Deployment.Locsims {
@@ -464,14 +456,17 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 	copts := []cmp.Option{}
 
 	if fileType == "appdata" || fileType == "appdata-showcmp" {
-		//for appdata, use the ApplicationData type so we can sort it
-		var a1 edgeproto.ApplicationData
-		var a2 edgeproto.ApplicationData
+		//for appdata, use the AllData type so we can sort it
+		var a1 edgeproto.AllData
+		var a2 edgeproto.AllData
 
 		err1 = ReadYamlFile(firstYamlFile, &a1)
 		err2 = ReadYamlFile(secondYamlFile, &a2)
 		a1.Sort()
 		a2.Sort()
+		// "show" used to not include CloudletInfos, so remove them.
+		a1.CloudletInfos = nil
+		a2.CloudletInfos = nil
 		y1 = a1
 		y2 = a2
 
@@ -479,6 +474,19 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		if fileType == "appdata" {
 			copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
 		}
+	} else if fileType == "appdata-output" {
+		var a1 testutil.AllDataOut
+		var a2 testutil.AllDataOut
+
+		err1 = ReadYamlFile(firstYamlFile, &a1)
+		err2 = ReadYamlFile(secondYamlFile, &a2)
+		// remove results for AppInst/ClusterInst/Cloudlet because
+		// they are non-deterministic
+		ClearAppDataOutputStatus(&a1)
+		ClearAppDataOutputStatus(&a2)
+
+		y1 = a1
+		y2 = a2
 	} else if fileType == "findcloudlet" {
 		var f1 dmeproto.FindCloudletReply
 		var f2 dmeproto.FindCloudletReply
@@ -533,8 +541,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		y1 = r1
 		y2 = r2
 	} else if fileType == "debugoutput" {
-		var r1 DebugOutput
-		var r2 DebugOutput
+		var r1 testutil.DebugDataOut
+		var r2 testutil.DebugDataOut
 
 		err1 = ReadYamlFile(firstYamlFile, &r1)
 		err2 = ReadYamlFile(secondYamlFile, &r2)
@@ -632,4 +640,10 @@ func clearInfluxTime(results []influxclient.Result) {
 			}
 		}
 	}
+}
+
+func ClearAppDataOutputStatus(output *testutil.AllDataOut) {
+	output.Cloudlets = testutil.FilterStreamResults(output.Cloudlets)
+	output.ClusterInsts = testutil.FilterStreamResults(output.ClusterInsts)
+	output.AppInstances = testutil.FilterStreamResults(output.AppInstances)
 }

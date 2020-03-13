@@ -40,6 +40,9 @@ var CreateAutoProvPolicyCmd = &cli.Command{
 }
 
 func runCreateAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -94,6 +97,9 @@ var DeleteAutoProvPolicyCmd = &cli.Command{
 }
 
 func runDeleteAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -148,6 +154,9 @@ var UpdateAutoProvPolicyCmd = &cli.Command{
 }
 
 func runUpdateAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicy)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -202,6 +211,9 @@ var ShowAutoProvPolicyCmd = &cli.Command{
 }
 
 func runShowAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -224,6 +236,7 @@ func ShowAutoProvPolicy(c *cli.Command, in *edgeproto.AutoProvPolicy) error {
 		}
 		return fmt.Errorf("ShowAutoProvPolicy failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.AutoProvPolicy, 0)
 	for {
 		obj, err := stream.Recv()
@@ -275,6 +288,9 @@ var AddAutoProvPolicyCloudletCmd = &cli.Command{
 }
 
 func runAddAutoProvPolicyCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicyCloudlet)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -329,6 +345,9 @@ var RemoveAutoProvPolicyCloudletCmd = &cli.Command{
 }
 
 func runRemoveAutoProvPolicyCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicyCloudlet)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -392,6 +411,7 @@ var AutoProvPolicyAliasArgs = []string{
 	"name=key.name",
 }
 var AutoProvPolicyComments = map[string]string{
+	"fields":                           "Fields are used for the Update API to specify which fields to apply",
 	"app-org":                          "Name of the organization for the cluster that this policy will apply to",
 	"name":                             "Policy name",
 	"deployclientcount":                "Minimum number of clients within the auto deploy interval to trigger deployment",
@@ -406,7 +426,9 @@ var AutoProvPolicyComments = map[string]string{
 	"cloudlets.loc.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudlets.loc.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 }
-var AutoProvPolicySpecialArgs = map[string]string{}
+var AutoProvPolicySpecialArgs = map[string]string{
+	"fields": "StringArray",
+}
 var AutoProvCloudletRequiredArgs = []string{
 	"key.organization",
 	"key.name",

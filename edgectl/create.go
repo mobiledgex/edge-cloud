@@ -11,7 +11,7 @@ import (
 var createCmd = &cli.Command{
 	Use:          "Create",
 	DataFlagOnly: true,
-	ReqData:      &edgeproto.ApplicationData{},
+	ReqData:      &edgeproto.AllData{},
 	ReplyData:    &edgeproto.Result{},
 	Run:          runCreate,
 }
@@ -21,12 +21,11 @@ func runCreate(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	data := c.ReqData.(*edgeproto.ApplicationData)
-	dataMap := edgeproto.ApplicationDataMap(mapped)
+	data := c.ReqData.(*edgeproto.AllData)
 
 	gencmd.CreateFlavors(c, data.Flavors, &err)
 	if data.Settings != nil {
-		objMap, err := cli.GetGenericObj(dataMap["settings"])
+		objMap, err := cli.GetGenericObj(mapped["settings"])
 		if err != nil {
 			return fmt.Errorf("invalid data map for settings: %v", err)
 		}
@@ -36,10 +35,9 @@ func runCreate(c *cli.Command, args []string) error {
 
 	gencmd.CreateOperatorCodes(c, data.OperatorCodes, &err)
 	gencmd.CreateCloudlets(c, data.Cloudlets, &err)
-	gencmd.InjectCloudletInfos(c, data.CloudletInfos, &err)
 	gencmd.CreateAutoScalePolicys(c, data.AutoScalePolicies, &err)
 	gencmd.CreateAutoProvPolicys(c, data.AutoProvPolicies, &err)
-	gencmd.CreateApps(c, data.Applications, &err)
+	gencmd.CreateApps(c, data.Apps, &err)
 	gencmd.CreatePrivacyPolicys(c, data.PrivacyPolicies, &err)
 	gencmd.CreateClusterInsts(c, data.ClusterInsts, &err)
 	gencmd.CreateAppInsts(c, data.AppInstances, &err)
@@ -50,7 +48,7 @@ func runCreate(c *cli.Command, args []string) error {
 var deleteCmd = &cli.Command{
 	Use:          "Delete",
 	DataFlagOnly: true,
-	ReqData:      &edgeproto.ApplicationData{},
+	ReqData:      &edgeproto.AllData{},
 	ReplyData:    &edgeproto.Result{},
 	Run:          runDelete,
 }
@@ -60,15 +58,14 @@ func runDelete(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	data := c.ReqData.(*edgeproto.ApplicationData)
+	data := c.ReqData.(*edgeproto.AllData)
 
 	gencmd.DeleteAppInsts(c, data.AppInstances, &err)
 	gencmd.DeleteClusterInsts(c, data.ClusterInsts, &err)
 	gencmd.DeletePrivacyPolicys(c, data.PrivacyPolicies, &err)
-	gencmd.DeleteApps(c, data.Applications, &err)
+	gencmd.DeleteApps(c, data.Apps, &err)
 	gencmd.DeleteAutoProvPolicys(c, data.AutoProvPolicies, &err)
 	gencmd.DeleteAutoScalePolicys(c, data.AutoScalePolicies, &err)
-	gencmd.EvictCloudletInfos(c, data.CloudletInfos, &err)
 	gencmd.DeleteCloudlets(c, data.Cloudlets, &err)
 	gencmd.DeleteOperatorCodes(c, data.OperatorCodes, &err)
 

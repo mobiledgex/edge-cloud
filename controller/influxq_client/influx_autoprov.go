@@ -47,7 +47,7 @@ func AutoProvCountToPt(apCount *edgeproto.AutoProvCount, dmeid string, ts time.T
 	tags["ver"] = apCount.AppKey.Version
 	tags["cloudletorg"] = apCount.CloudletKey.Organization
 	tags["cloudlet"] = apCount.CloudletKey.Name
-	tags["dme-id"] = dmeid
+	tags["dmeid"] = dmeid
 	fields := make(map[string]interface{})
 	fields["count"] = int64(apCount.Count)
 	return client.NewPoint(cloudcommon.AutoProvMeasurement, tags, fields, ts)
@@ -71,7 +71,7 @@ func ParseAutoProvCount(cols []string, values []interface{}) (*edgeproto.AutoPro
 			ap.CloudletKey.Organization, err = influxsup.ConvString(val)
 		case "cloudlet":
 			ap.CloudletKey.Name, err = influxsup.ConvString(val)
-		case "dme-id":
+		case "dmeid":
 			id, err = influxsup.ConvString(val)
 		case "count":
 			var count int64

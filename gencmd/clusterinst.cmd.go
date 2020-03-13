@@ -85,6 +85,9 @@ var CreateClusterInstCmd = &cli.Command{
 }
 
 func runCreateClusterInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ClusterInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -107,6 +110,8 @@ func CreateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 		}
 		return fmt.Errorf("CreateClusterInst failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -120,8 +125,16 @@ func CreateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 			}
 			return fmt.Errorf("CreateClusterInst recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -153,6 +166,9 @@ var DeleteClusterInstCmd = &cli.Command{
 }
 
 func runDeleteClusterInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ClusterInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -175,6 +191,8 @@ func DeleteClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 		}
 		return fmt.Errorf("DeleteClusterInst failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -188,8 +206,16 @@ func DeleteClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 			}
 			return fmt.Errorf("DeleteClusterInst recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -221,6 +247,9 @@ var UpdateClusterInstCmd = &cli.Command{
 }
 
 func runUpdateClusterInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ClusterInst)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -244,6 +273,8 @@ func UpdateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 		}
 		return fmt.Errorf("UpdateClusterInst failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -257,8 +288,16 @@ func UpdateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 			}
 			return fmt.Errorf("UpdateClusterInst recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -289,6 +328,9 @@ var ShowClusterInstCmd = &cli.Command{
 }
 
 func runShowClusterInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ClusterInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -311,6 +353,7 @@ func ShowClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 		}
 		return fmt.Errorf("ShowClusterInst failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.ClusterInst, 0)
 	for {
 		obj, err := stream.Recv()
@@ -371,6 +414,9 @@ var ShowClusterInstInfoCmd = &cli.Command{
 }
 
 func runShowClusterInstInfo(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ClusterInstInfo)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -393,6 +439,7 @@ func ShowClusterInstInfo(c *cli.Command, in *edgeproto.ClusterInstInfo) error {
 		}
 		return fmt.Errorf("ShowClusterInstInfo failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.ClusterInstInfo, 0)
 	for {
 		obj, err := stream.Recv()
@@ -482,6 +529,7 @@ var ClusterInstAliasArgs = []string{
 	"flavor=flavor.name",
 }
 var ClusterInstComments = map[string]string{
+	"fields":             "Fields are used for the Update API to specify which fields to apply",
 	"cluster":            "Cluster name",
 	"cloudlet-org":       "Organization of the cloudlet site",
 	"cloudlet":           "Name of the cloudlet",
@@ -510,6 +558,7 @@ var ClusterInstComments = map[string]string{
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors": "StringArray",
+	"fields": "StringArray",
 }
 var ClusterInstInfoRequiredArgs = []string{
 	"key.clusterkey.name",
@@ -528,6 +577,7 @@ var ClusterInstInfoOptionalArgs = []string{
 }
 var ClusterInstInfoAliasArgs = []string{}
 var ClusterInstInfoComments = map[string]string{
+	"fields":                       "Fields are used for the Update API to specify which fields to apply",
 	"key.clusterkey.name":          "Cluster name",
 	"key.cloudletkey.organization": "Organization of the cloudlet site",
 	"key.cloudletkey.name":         "Name of the cloudlet",
@@ -538,4 +588,5 @@ var ClusterInstInfoComments = map[string]string{
 }
 var ClusterInstInfoSpecialArgs = map[string]string{
 	"errors": "StringArray",
+	"fields": "StringArray",
 }

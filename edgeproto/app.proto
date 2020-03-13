@@ -129,6 +129,8 @@ message ConfigFile {
   AccessType access_type = 29; 
   // Privacy policy when creating auto cluster
   string default_privacy_policy = 30;
+  // Preparing to be deleted
+  bool delete_prepare = 31 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -136,7 +138,7 @@ message ConfigFile {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
-  option (protogen.noconfig) = "Revision";
+  option (protogen.noconfig) = "Revision,DeletePrepare";
 }
 
 service AppApi {

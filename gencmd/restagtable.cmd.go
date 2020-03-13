@@ -38,6 +38,9 @@ var CreateResTagTableCmd = &cli.Command{
 }
 
 func runCreateResTagTable(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -92,6 +95,9 @@ var DeleteResTagTableCmd = &cli.Command{
 }
 
 func runDeleteResTagTable(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -146,6 +152,9 @@ var UpdateResTagTableCmd = &cli.Command{
 }
 
 func runUpdateResTagTable(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -200,6 +209,9 @@ var ShowResTagTableCmd = &cli.Command{
 }
 
 func runShowResTagTable(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -222,6 +234,7 @@ func ShowResTagTable(c *cli.Command, in *edgeproto.ResTagTable) error {
 		}
 		return fmt.Errorf("ShowResTagTable failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.ResTagTable, 0)
 	for {
 		obj, err := stream.Recv()
@@ -273,6 +286,9 @@ var AddResTagCmd = &cli.Command{
 }
 
 func runAddResTag(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -327,6 +343,9 @@ var RemoveResTagCmd = &cli.Command{
 }
 
 func runRemoveResTag(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -381,6 +400,9 @@ var GetResTagTableCmd = &cli.Command{
 }
 
 func runGetResTagTable(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTableKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -462,5 +484,6 @@ var ResTagTableComments = map[string]string{
 	"azone":       "availability zone(s) of resource if required",
 }
 var ResTagTableSpecialArgs = map[string]string{
-	"tags": "StringToString",
+	"fields": "StringArray",
+	"tags":   "StringToString",
 }

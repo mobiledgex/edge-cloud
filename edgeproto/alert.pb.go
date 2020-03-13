@@ -6,6 +6,7 @@
 
 	It is generated from these files:
 		alert.proto
+		alldata.proto
 		app.proto
 		appinst.proto
 		appinstclient.proto
@@ -33,6 +34,7 @@
 
 	It has these top-level messages:
 		Alert
+		AllData
 		AppKey
 		ConfigFile
 		App
@@ -78,6 +80,7 @@
 		Controller
 		DebugRequest
 		DebugReply
+		DebugData
 		RunCmd
 		RunVMConsole
 		ShowLog
@@ -89,6 +92,7 @@
 		Metric
 		NodeKey
 		Node
+		NodeData
 		Notice
 		OperatorCode
 		OutboundSecurityRule
@@ -943,18 +947,6 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		return data, nil
 	}
 	switch to {
-	case reflect.TypeOf(ImageType(0)):
-		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(DeleteType(0)):
-		if en, ok := DeleteType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(AccessType(0)):
-		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
 	case reflect.TypeOf(OptResNames(0)):
 		if en, ok := OptResNames_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -989,6 +981,18 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(CloudletState(0)):
 		if en, ok := CloudletState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(ImageType(0)):
+		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(DeleteType(0)):
+		if en, ok := DeleteType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(AccessType(0)):
+		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(HealthCheck(0)):

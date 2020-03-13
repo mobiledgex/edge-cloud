@@ -192,6 +192,37 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverri
 	return nil
 }
 
+func (s *AppInstApi) AutoDelete(ctx context.Context, in *edgeproto.AppKey) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "Auto-deleting AppInsts for App", "app", in)
+	appinsts := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
+	s.cache.Mux.Lock()
+	for key, val := range s.cache.Objs {
+		if key.AppKey.Matches(in) {
+			appinsts[key] = val
+		}
+	}
+	s.cache.Mux.Unlock()
+	failed := 0
+	deleted := 0
+	for key, val := range appinsts {
+		log.SpanLog(ctx, log.DebugLevelApi, "Auto-delete AppInst for App", "AppInst", key)
+		stream := streamoutAppInst{}
+		stream.ctx = ctx
+		stream.debugLvl = log.DebugLevelApi
+		err := s.DeleteAppInst(val, &stream)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to auto-delete AppInst", "AppInst", key)
+			failed++
+		} else {
+			deleted++
+		}
+	}
+	if failed > 0 {
+		return fmt.Errorf("Auto-deleted %d AppInsts but failed to delete %d AppInsts for App", deleted, failed)
+	}
+	return nil
+}
+
 func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -354,6 +385,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		var app edgeproto.App
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return in.Key.AppKey.NotFoundError()
+		}
+		if app.DeletePrepare {
+			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
 		}
 
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested

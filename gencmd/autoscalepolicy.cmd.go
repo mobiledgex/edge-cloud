@@ -38,6 +38,9 @@ var CreateAutoScalePolicyCmd = &cli.Command{
 }
 
 func runCreateAutoScalePolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoScalePolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -92,6 +95,9 @@ var DeleteAutoScalePolicyCmd = &cli.Command{
 }
 
 func runDeleteAutoScalePolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoScalePolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -146,6 +152,9 @@ var UpdateAutoScalePolicyCmd = &cli.Command{
 }
 
 func runUpdateAutoScalePolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoScalePolicy)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -200,6 +209,9 @@ var ShowAutoScalePolicyCmd = &cli.Command{
 }
 
 func runShowAutoScalePolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoScalePolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -222,6 +234,7 @@ func ShowAutoScalePolicy(c *cli.Command, in *edgeproto.AutoScalePolicy) error {
 		}
 		return fmt.Errorf("ShowAutoScalePolicy failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.AutoScalePolicy, 0)
 	for {
 		obj, err := stream.Recv()
@@ -294,6 +307,7 @@ var AutoScalePolicyAliasArgs = []string{
 	"name=key.name",
 }
 var AutoScalePolicyComments = map[string]string{
+	"fields":             "Fields are used for the Update API to specify which fields to apply",
 	"cluster-org":        "Name of the organization for the cluster that this policy will apply to",
 	"name":               "Policy name",
 	"minnodes":           "Minimum number of cluster nodes",
@@ -302,7 +316,9 @@ var AutoScalePolicyComments = map[string]string{
 	"scaledowncputhresh": "Scale down cpu threshold (percentage 1 to 100)",
 	"triggertimesec":     "Trigger time defines how long trigger threshold must be satified in seconds before acting upon it.",
 }
-var AutoScalePolicySpecialArgs = map[string]string{}
+var AutoScalePolicySpecialArgs = map[string]string{
+	"fields": "StringArray",
+}
 var CreateAutoScalePolicyRequiredArgs = []string{
 	"cluster-org",
 	"name",

@@ -415,7 +415,37 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// disallow delete if static instances are present
 		return &edgeproto.Result{}, errors.New("Application in use by static AppInst")
 	}
+	// set state to prevent new AppInsts from being created from this App
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, in) {
+			return in.Key.NotFoundError()
+		}
+		in.DeletePrepare = true
+		s.store.STMPut(stm, in)
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+
+	// delete auto-appinsts
+	if err = appInstApi.AutoDelete(ctx, &in.Key); err != nil {
+		// failed, so remove delete prepare and don't delete
+		unseterr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			if !s.store.STMGet(stm, &in.Key, in) {
+				return in.Key.NotFoundError()
+			}
+			in.DeletePrepare = false
+			s.store.STMPut(stm, in)
+			return nil
+		})
+		if unseterr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Delete App unset delete prepare", "unseterr", unseterr)
+		}
+		return &edgeproto.Result{}, err
+	}
+
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		app := edgeproto.App{}
 		if !s.store.STMGet(stm, &in.Key, &app) {
 			// already deleted
@@ -425,21 +455,6 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		s.store.STMDel(stm, &in.Key)
 		return nil
 	})
-	if err == nil && len(dynInsts) > 0 {
-		// delete dynamic instances
-		for key, _ := range dynInsts {
-			appInst := edgeproto.AppInst{Key: key}
-			stream := streamoutAppInst{}
-			stream.ctx = ctx
-			stream.debugLvl = log.DebugLevelApi
-			derr := appInstApi.DeleteAppInst(&appInst, &stream)
-			if derr != nil {
-				log.DebugLog(log.DebugLevelApi,
-					"Failed to delete dynamic AppInst",
-					"err", derr)
-			}
-		}
-	}
 	return &edgeproto.Result{}, err
 }
 
