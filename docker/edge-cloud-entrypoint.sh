@@ -11,51 +11,51 @@ fi
 case "$1" in
     controller)
 	shift
-	controller $*
+	controller "$@"
 	;;
     cluster-svc)
 	shift
-	cluster-svc $*
+	cluster-svc "$@"
 	;;
     crmserver)
 	shift
-	crmserver $*
+	crmserver "$@"
 	;;
     dme-server)
 	shift
-	dme-server $*
+	dme-server "$@"
 	;;
     edgectl)
 	shift
-	edgectl $*
+	edgectl "$@"
 	;;
     loc-api-sim)
 	shift
-	loc-api-sim $*
+	loc-api-sim "$@"
 	;;
     mc)
 	shift
-	mc $*
+	mc "$@"
 	;;
     mcctl)
 	shift
-	mcctl $*
+	mcctl "$@"
 	;;
     notifyroot)
 	shift
-	notifyroot $*
+	notifyroot "$@"
 	;;
     tok-srv-sim)
 	shift
-	tok-srv-sim $*
+	tok-srv-sim "$@"
 	;;
     test-edgectl)
 	shift
-	test-edgectl.sh $*
+	test-edgectl.sh "$@"
 	;;
     shepherd)
 	shift
-	shepherd $*
+	shepherd "$@"
 	;;
     dump-docs)
 	shift
@@ -72,7 +72,7 @@ case "$1" in
 	;;
     bash)
 	shift
-	/bin/bash $*
+	/bin/bash "$@"
 	;;
     *)
 	echo invalid program $1
