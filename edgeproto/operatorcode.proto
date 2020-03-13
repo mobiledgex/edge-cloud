@@ -1,4 +1,4 @@
-// Operator proto
+// OperatorCode proto
 
 syntax = "proto3";
 package edgeproto;

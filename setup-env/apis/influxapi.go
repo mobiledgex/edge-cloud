@@ -37,8 +37,6 @@ func RunInfluxAPI(api, influxname, apiFile, outputDir string) bool {
 		return false
 	}
 	query := client.NewQuery(data.Cmd, data.Database, "")
-	log.Printf("XXXXX QUERY %+v\n", query)
-
 	resp, err := cl.Query(query)
 	if err == nil {
 		err = resp.Error()
