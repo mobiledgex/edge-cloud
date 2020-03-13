@@ -61,6 +61,7 @@ var versionTag = flag.String("versionTag", "", "edge-cloud image tag indicating 
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
+var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs from LetsEncrypt. If false then CRM will generate its onwn self-signed cert")
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName
 

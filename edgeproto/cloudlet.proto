@@ -137,6 +137,8 @@ message PlatformConfig {
   bool cleanup_mode = 11;
   // Region
   string region = 12;
+  // Get certs from vault or generate your own
+  bool commercial_certs = 13;
 }
 
 // Platform Type

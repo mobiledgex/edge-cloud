@@ -103,7 +103,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-1
-  containerversion: 2020-10-10 
+  containerversion: 2020-10-10
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -116,7 +116,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-2
-  containerversion: 2020-10-10 
+  containerversion: 2020-10-10
 - key:
     organization: tmus
     name: tmus-cloud-3
