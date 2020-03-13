@@ -1012,7 +1012,7 @@ var AppFqdnAliasArgs = []string{}
 var AppFqdnComments = map[string]string{
 	"appname":            "App  Name",
 	"appvers":            "App Version",
-	"orgname":            "developer name",
+	"orgname":            "App organization name",
 	"fqdns":              "App FQDN",
 	"androidpackagename": "_(optional)_ Android package name",
 }
@@ -1036,7 +1036,7 @@ var FqdnListReplyComments = map[string]string{
 	"ver":                         "API version",
 	"appfqdns.appname":            "App  Name",
 	"appfqdns.appvers":            "App Version",
-	"appfqdns.orgname":            "developer name",
+	"appfqdns.orgname":            "App organization name",
 	"appfqdns.fqdns":              "App FQDN",
 	"appfqdns.androidpackagename": "_(optional)_ Android package name",
 	"status":                      ", one of FlUndefined, FlSuccess, FlFail",

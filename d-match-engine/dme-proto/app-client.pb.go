@@ -668,7 +668,7 @@ type AppFqdn struct {
 	AppName string `protobuf:"bytes,1,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
 	// App Version
 	AppVers string `protobuf:"bytes,2,opt,name=app_vers,json=appVers,proto3" json:"app_vers,omitempty"`
-	// developer name
+	// App organization name
 	OrgName string `protobuf:"bytes,3,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
 	// App FQDN
 	Fqdns []string `protobuf:"bytes,4,rep,name=fqdns" json:"fqdns,omitempty"`
