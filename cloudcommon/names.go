@@ -209,9 +209,3 @@ func Hostname() string {
 	}
 	return hostname
 }
-
-// This returns a common metadata label for the appInst
-// Corresponding label is MexAppInstanceLabel
-func GetAppMetaLabel(appKey *edgeproto.AppKey) string {
-	return util.DNSSanitize(appKey.Name + "v" + appKey.Version)
-}
