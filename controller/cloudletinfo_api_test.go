@@ -25,7 +25,6 @@ func TestCloudletInfo(t *testing.T) {
 	defer sync.Done()
 
 	// create supporting data
-	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)

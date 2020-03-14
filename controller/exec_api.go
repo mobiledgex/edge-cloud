@@ -39,8 +39,8 @@ func InitExecApi() {
 }
 
 func (s *ExecApi) getApp(req *edgeproto.ExecRequest, app *edgeproto.App) error {
-	if req.AppInstKey.ClusterInstKey.Developer == "" {
-		req.AppInstKey.ClusterInstKey.Developer = req.AppInstKey.AppKey.DeveloperKey.Name
+	if req.AppInstKey.ClusterInstKey.Organization == "" {
+		req.AppInstKey.ClusterInstKey.Organization = req.AppInstKey.AppKey.Organization
 	}
 	if !appInstApi.HasKey(&req.AppInstKey) {
 		return req.AppInstKey.NotFoundError()

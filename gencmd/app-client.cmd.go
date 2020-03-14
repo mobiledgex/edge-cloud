@@ -75,6 +75,9 @@ var RegisterClientCmd = &cli.Command{
 }
 
 func runRegisterClient(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.RegisterClientRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -129,6 +132,9 @@ var FindCloudletCmd = &cli.Command{
 }
 
 func runFindCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.FindCloudletRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -183,6 +189,9 @@ var VerifyLocationCmd = &cli.Command{
 }
 
 func runVerifyLocation(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.VerifyLocationRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -237,6 +246,9 @@ var GetLocationCmd = &cli.Command{
 }
 
 func runGetLocation(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.GetLocationRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -291,6 +303,9 @@ var AddUserToGroupCmd = &cli.Command{
 }
 
 func runAddUserToGroup(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.DynamicLocGroupRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -345,6 +360,9 @@ var GetAppInstListCmd = &cli.Command{
 }
 
 func runGetAppInstList(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.AppInstListRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -399,6 +417,9 @@ var GetFqdnListCmd = &cli.Command{
 }
 
 func runGetFqdnList(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.FqdnListRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -453,6 +474,9 @@ var GetQosPositionKpiCmd = &cli.Command{
 }
 
 func runGetQosPositionKpi(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.QosPositionRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -475,6 +499,7 @@ func GetQosPositionKpi(c *cli.Command, in *distributed_match_engine.QosPositionR
 		}
 		return fmt.Errorf("GetQosPositionKpi failed: %s", errstr)
 	}
+
 	objs := make([]*distributed_match_engine.QosPositionKpiReply, 0)
 	for {
 		obj, err := stream.Recv()
@@ -538,7 +563,7 @@ var TagSpecialArgs = map[string]string{}
 var RegisterClientRequestRequiredArgs = []string{}
 var RegisterClientRequestOptionalArgs = []string{
 	"ver",
-	"devname",
+	"orgname",
 	"appname",
 	"appvers",
 	"carriername",
@@ -552,7 +577,7 @@ var RegisterClientRequestOptionalArgs = []string{
 var RegisterClientRequestAliasArgs = []string{}
 var RegisterClientRequestComments = map[string]string{
 	"ver":          "API version",
-	"devname":      "App Developer Name",
+	"orgname":      "App Developer Name",
 	"appname":      "App Name",
 	"appvers":      "App Version",
 	"carriername":  "Carrier Name _Not currently used_",
@@ -601,7 +626,7 @@ var FindCloudletRequestOptionalArgs = []string{
 	"gpslocation.speed",
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
-	"devname",
+	"orgname",
 	"appname",
 	"appvers",
 	"cellid",
@@ -620,7 +645,7 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"devname":                        "Dev Name Applicable to Platform apps only",
+	"orgname":                        "Organization Name Applicable to Platform apps only",
 	"appname":                        "App Name Applicable to Platform apps only",
 	"appvers":                        "App Version Applicable to Platform apps only",
 	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
@@ -831,6 +856,7 @@ var AppinstanceOptionalArgs = []string{
 	"ports.fqdnprefix",
 	"ports.endport",
 	"ports.tls",
+	"orgname",
 }
 var AppinstanceAliasArgs = []string{}
 var AppinstanceComments = map[string]string{
@@ -844,6 +870,7 @@ var AppinstanceComments = map[string]string{
 	"ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"ports.tls":          "TLS termination for this port",
+	"orgname":            "App Organization Name",
 }
 var AppinstanceSpecialArgs = map[string]string{}
 var CloudletLocationRequiredArgs = []string{}
@@ -870,6 +897,7 @@ var CloudletLocationOptionalArgs = []string{
 	"appinstances.ports.fqdnprefix",
 	"appinstances.ports.endport",
 	"appinstances.ports.tls",
+	"appinstances.orgname",
 }
 var CloudletLocationAliasArgs = []string{}
 var CloudletLocationComments = map[string]string{
@@ -893,6 +921,7 @@ var CloudletLocationComments = map[string]string{
 	"appinstances.ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"appinstances.ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"appinstances.ports.tls":          "TLS termination for this port",
+	"appinstances.orgname":            "App Organization Name",
 }
 var CloudletLocationSpecialArgs = map[string]string{}
 var AppInstListReplyRequiredArgs = []string{}
@@ -921,6 +950,7 @@ var AppInstListReplyOptionalArgs = []string{
 	"cloudlets.appinstances.ports.fqdnprefix",
 	"cloudlets.appinstances.ports.endport",
 	"cloudlets.appinstances.ports.tls",
+	"cloudlets.appinstances.orgname",
 	"tags.type",
 	"tags.data",
 }
@@ -948,6 +978,7 @@ var AppInstListReplyComments = map[string]string{
 	"cloudlets.appinstances.ports.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"cloudlets.appinstances.ports.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"cloudlets.appinstances.ports.tls":          "TLS termination for this port",
+	"cloudlets.appinstances.orgname":            "App Organization Name",
 	"tags.type":                                 "type of data",
 	"tags.data":                                 "data value",
 }
@@ -973,7 +1004,7 @@ var AppFqdnRequiredArgs = []string{}
 var AppFqdnOptionalArgs = []string{
 	"appname",
 	"appvers",
-	"devname",
+	"orgname",
 	"fqdns",
 	"androidpackagename",
 }
@@ -981,7 +1012,7 @@ var AppFqdnAliasArgs = []string{}
 var AppFqdnComments = map[string]string{
 	"appname":            "App  Name",
 	"appvers":            "App Version",
-	"devname":            "developer name",
+	"orgname":            "App organization name",
 	"fqdns":              "App FQDN",
 	"androidpackagename": "_(optional)_ Android package name",
 }
@@ -993,7 +1024,7 @@ var FqdnListReplyOptionalArgs = []string{
 	"ver",
 	"appfqdns.appname",
 	"appfqdns.appvers",
-	"appfqdns.devname",
+	"appfqdns.orgname",
 	"appfqdns.fqdns",
 	"appfqdns.androidpackagename",
 	"status",
@@ -1005,7 +1036,7 @@ var FqdnListReplyComments = map[string]string{
 	"ver":                         "API version",
 	"appfqdns.appname":            "App  Name",
 	"appfqdns.appvers":            "App Version",
-	"appfqdns.devname":            "developer name",
+	"appfqdns.orgname":            "App organization name",
 	"appfqdns.fqdns":              "App FQDN",
 	"appfqdns.androidpackagename": "_(optional)_ Android package name",
 	"status":                      ", one of FlUndefined, FlSuccess, FlFail",

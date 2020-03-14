@@ -21,48 +21,16 @@ var AutoScaleMaxNodes uint32 = 10
 var minPort uint32 = 1
 var maxPort uint32 = 65535
 
-// contains sets of each applications for yaml marshalling
-type ApplicationData struct {
-	Operators               []Operator               `yaml:"operators"`
-	OperatorCodes           []OperatorCode           `yaml:"operatorcodes"`
-	Cloudlets               []Cloudlet               `yaml:"cloudlets"`
-	Flavors                 []Flavor                 `yaml:"flavors"`
-	ClusterInsts            []ClusterInst            `yaml:"clusterinsts"`
-	Developers              []Developer              `yaml:"developers"`
-	Applications            []App                    `yaml:"apps"`
-	AppInstances            []AppInst                `yaml:"appinstances"`
-	CloudletInfos           []CloudletInfo           `yaml:"cloudletinfos"`
-	AppInstInfos            []AppInstInfo            `yaml:"appinstinfos"`
-	ClusterInstInfos        []ClusterInstInfo        `yaml:"clusterinstinfos"`
-	Nodes                   []Node                   `yaml:"nodes"`
-	CloudletPools           []CloudletPool           `yaml:"cloudletpools"`
-	CloudletPoolMembers     []CloudletPoolMember     `yaml:"cloudletpoolmembers"`
-	AutoScalePolicies       []AutoScalePolicy        `yaml:"autoscalepolicies"`
-	AutoProvPolicies        []AutoProvPolicy         `yaml:"autoprovpolicies"`
-	AutoProvPolicyCloudlets []AutoProvPolicyCloudlet `yaml:"autoprovpolicycloudlets"`
-	PrivacyPolicies         []PrivacyPolicy          `yaml:"privacypolicies"`
-	ResTagTables            []ResTagTable            `ymal:"restagtables"`
-	Settings                *Settings                `yaml:"settings"`
-}
-
-type ApplicationDataMap map[string]interface{}
-
 // sort each slice by key
-func (a *ApplicationData) Sort() {
+func (a *AllData) Sort() {
 	sort.Slice(a.AppInstances[:], func(i, j int) bool {
 		return a.AppInstances[i].Key.GetKeyString() < a.AppInstances[j].Key.GetKeyString()
 	})
-	sort.Slice(a.Applications[:], func(i, j int) bool {
-		return a.Applications[i].Key.GetKeyString() < a.Applications[j].Key.GetKeyString()
+	sort.Slice(a.Apps[:], func(i, j int) bool {
+		return a.Apps[i].Key.GetKeyString() < a.Apps[j].Key.GetKeyString()
 	})
 	sort.Slice(a.Cloudlets[:], func(i, j int) bool {
 		return a.Cloudlets[i].Key.GetKeyString() < a.Cloudlets[j].Key.GetKeyString()
-	})
-	sort.Slice(a.Developers[:], func(i, j int) bool {
-		return a.Developers[i].Key.GetKeyString() < a.Developers[j].Key.GetKeyString()
-	})
-	sort.Slice(a.Operators[:], func(i, j int) bool {
-		return a.Operators[i].Key.GetKeyString() < a.Operators[j].Key.GetKeyString()
 	})
 	sort.Slice(a.OperatorCodes[:], func(i, j int) bool {
 		return a.OperatorCodes[i].GetKey().GetKeyString() < a.OperatorCodes[j].GetKey().GetKeyString()
@@ -75,20 +43,6 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.CloudletInfos[:], func(i, j int) bool {
 		return a.CloudletInfos[i].Key.GetKeyString() < a.CloudletInfos[j].Key.GetKeyString()
-	})
-	sort.Slice(a.AppInstInfos[:], func(i, j int) bool {
-		return a.AppInstInfos[i].Key.GetKeyString() < a.AppInstInfos[j].Key.GetKeyString()
-	})
-	sort.Slice(a.ClusterInstInfos[:], func(i, j int) bool {
-		return a.ClusterInstInfos[i].Key.GetKeyString() < a.ClusterInstInfos[j].Key.GetKeyString()
-	})
-	sort.Slice(a.Nodes[:], func(i, j int) bool {
-		// ignore name for sorting because it is ignored for comparison
-		ikey := a.Nodes[i].Key
-		ikey.Name = ""
-		jkey := a.Nodes[j].Key
-		jkey.Name = ""
-		return ikey.GetKeyString() < jkey.GetKeyString()
 	})
 	sort.Slice(a.CloudletPools[:], func(i, j int) bool {
 		return a.CloudletPools[i].Key.GetKeyString() < a.CloudletPools[j].Key.GetKeyString()
@@ -116,36 +70,22 @@ func (a *ApplicationData) Sort() {
 	})
 }
 
+func (a *NodeData) Sort() {
+	sort.Slice(a.Nodes[:], func(i, j int) bool {
+		// ignore name for sorting because it is ignored for comparison
+		ikey := a.Nodes[i].Key
+		ikey.Name = ""
+		jkey := a.Nodes[j].Key
+		jkey.Name = ""
+		return ikey.GetKeyString() < jkey.GetKeyString()
+	})
+}
+
 // Validate functions to validate user input
-
-func (key *DeveloperKey) ValidateKey() error {
-	if err := util.ValidObjName(key.Name); err != nil {
-		errstring := err.Error()
-		// lowercase the first letter of the error message
-		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
-		return fmt.Errorf("Invalid developer name, " + errstring)
-	}
-	return nil
-}
-
-func (s *Developer) Validate(fields map[string]struct{}) error {
-	return s.GetKey().ValidateKey()
-}
-
-func (key *OperatorKey) ValidateKey() error {
-	if !util.ValidName(key.Name) {
-		return errors.New("Invalid operator name")
-	}
-	return nil
-}
-
-func (s *Operator) Validate(fields map[string]struct{}) error {
-	return s.GetKey().ValidateKey()
-}
 
 func (key *OperatorCodeKey) ValidateKey() error {
 	if key.GetKeyString() == "" {
-		return errors.New("No code specified")
+		return errors.New("No organization specified")
 	}
 	return nil
 }
@@ -154,8 +94,8 @@ func (s *OperatorCode) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
-	if s.OperatorName == "" {
-		return errors.New("No operator name specified")
+	if s.Organization == "" {
+		return errors.New("No organization specified")
 	}
 	return nil
 }
@@ -212,9 +152,6 @@ func (key *AppKey) ValidateKey() error {
 	if !util.ValidName(key.Version) {
 		return errors.New("Invalid app version string")
 	}
-	if err := key.DeveloperKey.ValidateKey(); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -244,8 +181,8 @@ func (s *App) Validate(fields map[string]struct{}) error {
 }
 
 func (key *CloudletKey) ValidateKey() error {
-	if err := key.OperatorKey.ValidateKey(); err != nil {
-		return err
+	if !util.ValidName(key.Organization) {
+		return errors.New("Invalid organization name")
 	}
 	if !util.ValidName(key.Name) {
 		return errors.New("Invalid cloudlet name")
@@ -397,11 +334,11 @@ func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
 }
 
 func (key *PolicyKey) ValidateKey() error {
-	if err := util.ValidObjName(key.Developer); err != nil {
+	if err := util.ValidObjName(key.Organization); err != nil {
 		errstring := err.Error()
 		// lowercase the first letter of the error message
 		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
-		return fmt.Errorf("Invalid developer name, " + errstring)
+		return fmt.Errorf("Invalid organization, " + errstring)
 	}
 	if key.Name == "" {
 		return errors.New("Policy name cannot be empty")
@@ -662,8 +599,6 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortApp))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAppInst))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudlet))
-	opts = append(opts, cmpopts.SortSlices(CmpSortDeveloper))
-	opts = append(opts, cmpopts.SortSlices(CmpSortOperator))
 	opts = append(opts, cmpopts.SortSlices(CmpSortOperatorCode))
 	opts = append(opts, cmpopts.SortSlices(CmpSortClusterInst))
 	opts = append(opts, cmpopts.SortSlices(CmpSortFlavor))
@@ -680,18 +615,16 @@ func CmpSortSlices() []cmp.Option {
 
 func GetOrg(obj interface{}) string {
 	switch v := obj.(type) {
-	case *Operator:
-		return v.Key.Name
-	case *Developer:
-		return v.Key.Name
+	case *OperatorCode:
+		return v.Organization
 	case *Cloudlet:
-		return v.Key.OperatorKey.Name
+		return v.Key.Organization
 	case *ClusterInst:
-		return v.Key.Developer
+		return v.Key.Organization
 	case *App:
-		return v.Key.DeveloperKey.Name
+		return v.Key.Organization
 	case *AppInst:
-		return v.Key.AppKey.DeveloperKey.Name
+		return v.Key.AppKey.Organization
 	default:
 		return "mobiledgex"
 	}

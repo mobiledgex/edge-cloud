@@ -121,14 +121,8 @@ func TestConversion(t *testing.T) {
 	for _, flavor := range testutil.FlavorData {
 		testConversion(t, &flavor, &edgeproto.Flavor{}, &edgeproto.Flavor{})
 	}
-	for _, dev := range testutil.DevData {
-		testConversion(t, &dev, &edgeproto.Developer{}, &edgeproto.Developer{})
-	}
 	for _, app := range testutil.AppData {
 		testConversion(t, &app, &edgeproto.App{}, &edgeproto.App{})
-	}
-	for _, op := range testutil.OperatorData {
-		testConversion(t, &op, &edgeproto.Operator{}, &edgeproto.Operator{})
 	}
 	for _, cloudlet := range testutil.CloudletData {
 		testConversion(t, &cloudlet, &edgeproto.Cloudlet{}, &edgeproto.Cloudlet{})
@@ -139,6 +133,12 @@ func TestConversion(t *testing.T) {
 	for _, appinst := range testutil.AppInstData {
 		testConversion(t, &appinst, &edgeproto.AppInst{}, &edgeproto.AppInst{})
 	}
+	for _, pp := range testutil.PrivacyPolicyData {
+		testConversion(t, &pp, &edgeproto.PrivacyPolicy{}, &edgeproto.PrivacyPolicy{})
+	}
+	settings := edgeproto.GetDefaultSettings()
+	settings.Fields = []string{"16", "4", "9", "2.2"}
+	testConversion(t, settings, &edgeproto.Settings{}, &edgeproto.Settings{})
 	// CloudletInfo and CloudletRefs have arrays which aren't supported yet.
 }
 
@@ -147,7 +147,10 @@ func testConversion(t *testing.T, obj interface{}, buf, buf2 interface{}) {
 	args, err := cli.MarshalArgs(obj, nil)
 	require.Nil(t, err, "marshal %v", obj)
 	input := cli.Input{
-		DecodeHook: edgeproto.EnumDecodeHook,
+		DecodeHook: edgeproto.DecodeHook,
+		SpecialArgs: &map[string]string{
+			"fields": "StringArray",
+		},
 	}
 	fmt.Printf("args: %v\n", args)
 
@@ -165,6 +168,7 @@ func testConversion(t *testing.T, obj interface{}, buf, buf2 interface{}) {
 	// simulate client to server, check that matches original
 	byt, err := json.Marshal(jsmap)
 	require.Nil(t, err, "marshal")
+	fmt.Printf("json string: %s\n", string(byt))
 	err = json.Unmarshal(byt, buf2)
 	require.Nil(t, err, "unmarshal")
 	require.Equal(t, obj, buf2)
@@ -204,10 +208,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -219,10 +222,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -258,19 +260,17 @@ clusterinsts:
          "disk": 4
       }
    ],
-   "clusterinsts": [
+   "cluster_insts": [
       {
          "key": {
             "cluster_key": {
                "name": "SmallCluster"
             },
             "cloudlet_key": {
-               "operator_key": {
-                  "name": "tmus"
-               },
+               "organization": "tmus",
                "name": "tmus-cloud-1"
             },
-            "developer": "AcmeAppCo"
+            "organization": "AcmeAppCo"
          },
          "flavor": {
             "name": "x1.small"
@@ -286,12 +286,10 @@ clusterinsts:
                "name": "SmallCluster"
             },
             "cloudlet_key": {
-               "operator_key": {
-                  "name": "tmus"
-               },
+               "organization": "tmus",
                "name": "tmus-cloud-2"
             },
-            "developer": "AcmeAppCo"
+            "organization": "AcmeAppCo"
          },
          "flavor": {
             "name": "x1.small"
@@ -303,10 +301,10 @@ clusterinsts:
       }
    ]
 }`,
-		obj1: &edgeproto.ApplicationData{},
-		obj2: &edgeproto.ApplicationData{},
-		obj3: &edgeproto.ApplicationData{},
-		obj4: &edgeproto.ApplicationData{},
+		obj1: &edgeproto.AllData{},
+		obj2: &edgeproto.AllData{},
+		obj3: &edgeproto.AllData{},
+		obj4: &edgeproto.AllData{},
 	},
 }
 

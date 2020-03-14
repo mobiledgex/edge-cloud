@@ -44,7 +44,7 @@ RUN make
 
 # Buld the docs
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
-RUN go get -u github.com/go-swagger/go-swagger/cmd/swagger
+COPY --from=registry.mobiledgex.net:5000/mobiledgex/swagger:2020-03-12 /swagger /go/bin/swagger
 RUN make doc
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud
 RUN make doc

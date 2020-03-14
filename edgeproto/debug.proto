@@ -18,7 +18,7 @@ message DebugRequest {
   bool pretty = 4;
   // Id used internally
   uint64 id = 5 [(protogen.backend) = true];
-  option (protogen.alias) = "name=Node.Name,type=Node.Type,cloudlet=Node.CloudletKey.Name,operator=Node.CloudletKey.OperatorKey.Name,region=Node.Region";
+  option (protogen.alias) = "name=Node.Name,type=Node.Type,cloudlet=Node.CloudletKey.Name,organization=Node.CloudletKey.Organization,region=Node.Region";
   option (protogen.notify_message) = true;
 }
 
@@ -61,6 +61,7 @@ service DebugApi {
     option (protogen.method_noconfig) = "Levels,Cmd";
     option (protogen.mc2_api) = "ResourceConfig,ActionView,";
     option (protogen.mc2_api_notifyroot) = true;
+    option (protogen.non_standard_show) = true;
   }
   rpc RunDebug(DebugRequest) returns (stream DebugReply) {
     option (google.api.http) = {
@@ -71,4 +72,10 @@ service DebugApi {
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
     option (protogen.mc2_api_notifyroot) = true;
   }
+}
+
+message DebugData {
+  repeated DebugRequest requests = 1 [(gogoproto.nullable) = false];
+  option (protogen.e2edata) = true;
+  option (protogen.generate_copy_in_fields) = false;
 }

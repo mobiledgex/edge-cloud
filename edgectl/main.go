@@ -61,9 +61,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", addr, err.Error())
 	}
-	gencmd.DeveloperApiCmd = edgeproto.NewDeveloperApiClient(conn)
 	gencmd.AppApiCmd = edgeproto.NewAppApiClient(conn)
-	gencmd.OperatorApiCmd = edgeproto.NewOperatorApiClient(conn)
 	gencmd.OperatorCodeApiCmd = edgeproto.NewOperatorCodeApiClient(conn)
 	gencmd.FlavorApiCmd = edgeproto.NewFlavorApiClient(conn)
 	gencmd.AutoScalePolicyApiCmd = edgeproto.NewAutoScalePolicyApiClient(conn)
@@ -108,9 +106,7 @@ func main() {
 	cli.AddDebugFlag(rootCmd.PersistentFlags())
 	cli.AddHideTagsFormatFlag(rootCmd.PersistentFlags())
 
-	controllerCmd.AddCommand(gencmd.DeveloperApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppApiCmds...)
-	controllerCmd.AddCommand(gencmd.OperatorApiCmds...)
 	controllerCmd.AddCommand(gencmd.OperatorCodeApiCmds...)
 	controllerCmd.AddCommand(gencmd.FlavorApiCmds...)
 	controllerCmd.AddCommand(gencmd.AutoScalePolicyApiCmds...)

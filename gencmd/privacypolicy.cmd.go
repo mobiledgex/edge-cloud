@@ -38,6 +38,9 @@ var CreatePrivacyPolicyCmd = &cli.Command{
 }
 
 func runCreatePrivacyPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.PrivacyPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -92,6 +95,9 @@ var DeletePrivacyPolicyCmd = &cli.Command{
 }
 
 func runDeletePrivacyPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.PrivacyPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -146,6 +152,9 @@ var UpdatePrivacyPolicyCmd = &cli.Command{
 }
 
 func runUpdatePrivacyPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.PrivacyPolicy)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -200,6 +209,9 @@ var ShowPrivacyPolicyCmd = &cli.Command{
 }
 
 func runShowPrivacyPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.PrivacyPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -222,6 +234,7 @@ func ShowPrivacyPolicy(c *cli.Command, in *edgeproto.PrivacyPolicy) error {
 		}
 		return fmt.Errorf("ShowPrivacyPolicy failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.PrivacyPolicy, 0)
 	for {
 		obj, err := stream.Recv()
@@ -283,7 +296,7 @@ var OutboundSecurityRuleComments = map[string]string{
 }
 var OutboundSecurityRuleSpecialArgs = map[string]string{}
 var PrivacyPolicyRequiredArgs = []string{
-	"developer",
+	"cluster-org",
 	"name",
 }
 var PrivacyPolicyOptionalArgs = []string{
@@ -293,15 +306,18 @@ var PrivacyPolicyOptionalArgs = []string{
 	"outboundsecurityrules.remotecidr",
 }
 var PrivacyPolicyAliasArgs = []string{
-	"developer=key.developer",
+	"cluster-org=key.organization",
 	"name=key.name",
 }
 var PrivacyPolicyComments = map[string]string{
-	"developer":                          "Name of the Developer that this policy belongs to",
+	"fields":                             "Fields are used for the Update API to specify which fields to apply",
+	"cluster-org":                        "Name of the organization for the cluster that this policy will apply to",
 	"name":                               "Policy name",
 	"outboundsecurityrules.protocol":     "tcp, udp, icmp",
 	"outboundsecurityrules.portrangemin": "TCP or UDP port range start",
 	"outboundsecurityrules.portrangemax": "TCP or UDP port range end",
 	"outboundsecurityrules.remotecidr":   "remote CIDR X.X.X.X/X",
 }
-var PrivacyPolicySpecialArgs = map[string]string{}
+var PrivacyPolicySpecialArgs = map[string]string{
+	"fields": "StringArray",
+}

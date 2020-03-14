@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"plugin"
+	"strings"
 	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -57,7 +58,7 @@ var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 
-// TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
+// TODO: carrier arg is redundant with Organization in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
 // verify location API behavior and e2e test setups.
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for no external APIs")
@@ -110,8 +111,8 @@ func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dm
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 	// normal applications are not allowed to access this, only special platform developer/app combos
-	if !cloudcommon.IsPlatformApp(ckey.DevName, ckey.AppName) {
-		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.DevName, ckey.AppName)
+	if !cloudcommon.IsPlatformApp(ckey.OrgName, ckey.AppName) {
+		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.OrgName, ckey.AppName)
 	}
 
 	dmecommon.GetFqdnList(req, flist)
@@ -177,10 +178,10 @@ func (s *server) RegisterClient(ctx context.Context,
 
 	log.DebugLog(log.DebugLevelDmereq, "RegisterClient received", "request", req)
 
-	if req.DevName == "" {
-		log.DebugLog(log.DebugLevelDmereq, "DevName cannot be empty")
+	if req.OrgName == "" {
+		log.DebugLog(log.DebugLevelDmereq, "OrgName cannot be empty")
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
-		return mstatus, grpc.Errorf(codes.InvalidArgument, "DevName cannot be empty")
+		return mstatus, grpc.Errorf(codes.InvalidArgument, "OrgName cannot be empty")
 	}
 	if req.AppName == "" {
 		log.DebugLog(log.DebugLevelDmereq, "AppName cannot be empty")
@@ -192,7 +193,7 @@ func (s *server) RegisterClient(ctx context.Context,
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
 		return mstatus, grpc.Errorf(codes.InvalidArgument, "AppVers cannot be empty")
 	}
-	authkey, err := dmecommon.GetAuthPublicKey(req.DevName, req.AppName, req.AppVers)
+	authkey, err := dmecommon.GetAuthPublicKey(req.OrgName, req.AppName, req.AppVers)
 	if err != nil {
 		log.DebugLog(log.DebugLevelDmereq, "fail to get public key", "err", err)
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
@@ -217,7 +218,7 @@ func (s *server) RegisterClient(ctx context.Context,
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
 			return mstatus, grpc.Errorf(codes.Unauthenticated, "No authkey found to validate token")
 		}
-		err := dmecommon.VerifyAuthToken(req.AuthToken, authkey, req.DevName, req.AppName, req.AppVers)
+		err := dmecommon.VerifyAuthToken(req.AuthToken, authkey, req.OrgName, req.AppName, req.AppVers)
 		if err != nil {
 			log.DebugLog(log.DebugLevelDmereq, "Failed to verify token", "err", err)
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
@@ -228,7 +229,7 @@ func (s *server) RegisterClient(ctx context.Context,
 	// Generate KSUID
 	uid := ksuid.New()
 	key := dmecommon.CookieKey{
-		DevName:      req.DevName,
+		OrgName:      req.OrgName,
 		AppName:      req.AppName,
 		AppVers:      req.AppVers,
 		UniqueIdType: "dme-ksuid",
@@ -281,6 +282,24 @@ func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, e
 		log.FatalLog("plugin GetOperatorApiGw symbol does not implement func(ctx context.Context, opername string) (op.OperatorApiGw, error)", "plugin", *solib)
 	}
 	return getOperatorFunc(ctx, operatorName)
+}
+
+// allowCORS allows Cross Origin Resoruce Sharing from any origin.
+func allowCORS(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if origin := r.Header.Get("Origin"); origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			if r.Method == "OPTIONS" && r.Header.Get("Access-Control-Request-Method") != "" {
+				// preflight headers
+				headers := []string{"Content-Type", "Accept"}
+				w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
+				methods := []string{"GET", "HEAD", "POST", "PUT", "DELETE"}
+				w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
+				return
+			}
+		}
+		h.ServeHTTP(w, r)
+	})
 }
 
 func main() {
@@ -408,7 +427,7 @@ func main() {
 
 	httpServer := &http.Server{
 		Addr:      *httpAddr,
-		Handler:   mux,
+		Handler:   allowCORS(mux),
 		TLSConfig: tlscfg,
 		ErrorLog:  &nullLogger,
 	}

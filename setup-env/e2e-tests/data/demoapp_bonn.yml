@@ -1,19 +1,6 @@
-operators:
-- key:
-    name: TDG
-
-developers:
-- key:
-    name: MobiledgeX SDK Demo
-  username: bruce
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 000 Nowhere Street, Gainesville, FL 32604
-  email: empty@xxxx.com
-
 cloudlets:
 - key:
-    operatorkey:
-      name: TDG
+    organization: TDG
     name: bonn3cloudlet
   accessuri:
   location:
@@ -24,8 +11,7 @@ cloudlets:
 
 apps:
 - key:
-    developerkey:
-      name: MobiledgeX SDK Demo
+    organization: MobiledgeX
     name: MobiledgeX SDK Demo
     version: "1.0"
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
@@ -40,16 +26,14 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
+      organization: MobiledgeX
       name: MobiledgeX SDK Demo
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: TDG
+        organization: TDG
         name: bonn3cloudlet
   liveness: LivenessStatic
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1

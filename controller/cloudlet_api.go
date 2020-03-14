@@ -95,17 +95,6 @@ func (s *CloudletApi) HasKey(key *edgeproto.CloudletKey) bool {
 	return s.cache.HasKey(key)
 }
 
-func (s *CloudletApi) UsesOperator(in *edgeproto.OperatorKey) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for key, _ := range s.cache.Objs {
-		if key.OperatorKey.Matches(in) {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *CloudletApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cloudlet, newState edgeproto.TrackedState) {
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.Cloudlet{}
@@ -160,6 +149,7 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	pfConfig.TestMode = *testMode
 	pfConfig.EnvVar = make(map[string]string)
 	pfConfig.Region = *region
+	pfConfig.CommercialCerts = *commercialCerts
 	getCrmEnv(pfConfig.EnvVar)
 	addrObjs := strings.Split(*notifyAddr, ":")
 	if len(addrObjs) != 2 {
@@ -993,7 +983,7 @@ func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.C
 		resource = strings.ToLower(resource)
 		var key edgeproto.ResTagTableKey
 		key.Name = tblname
-		key.OperatorKey = in.Key.OperatorKey
+		key.Organization = in.Key.Organization
 		tbl, err := resTagTableApi.GetResTagTable(ctx, &key)
 
 		if err != nil && err.Error() == key.NotFoundError().Error() {
@@ -1013,8 +1003,8 @@ func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.C
 		}
 		for resource, tblname := range in.Mapping {
 			key := edgeproto.ResTagTableKey{
-				Name:        tblname,
-				OperatorKey: in.Key.OperatorKey,
+				Name:         tblname,
+				Organization: in.Key.Organization,
 			}
 			cl.ResTagMap[resource] = &key
 		}
@@ -1120,7 +1110,7 @@ func RecordCloudletEvent(ctx context.Context, cloudletKey *edgeproto.CloudletKey
 	metric.Name = cloudcommon.CloudletEvent
 	ts, _ := types.TimestampProto(time.Now())
 	metric.Timestamp = *ts
-	metric.AddTag("operator", cloudletKey.OperatorKey.Name)
+	metric.AddTag("operator", cloudletKey.Organization)
 	metric.AddTag("cloudlet", cloudletKey.Name)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)

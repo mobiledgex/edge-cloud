@@ -38,6 +38,9 @@ var CreateCloudletPoolCmd = &cli.Command{
 }
 
 func runCreateCloudletPool(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletPool)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -92,6 +95,9 @@ var DeleteCloudletPoolCmd = &cli.Command{
 }
 
 func runDeleteCloudletPool(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletPool)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -145,6 +151,9 @@ var ShowCloudletPoolCmd = &cli.Command{
 }
 
 func runShowCloudletPool(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletPool)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -167,6 +176,7 @@ func ShowCloudletPool(c *cli.Command, in *edgeproto.CloudletPool) error {
 		}
 		return fmt.Errorf("ShowCloudletPool failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.CloudletPool, 0)
 	for {
 		obj, err := stream.Recv()
@@ -226,6 +236,9 @@ var CreateCloudletPoolMemberCmd = &cli.Command{
 }
 
 func runCreateCloudletPoolMember(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -280,6 +293,9 @@ var DeleteCloudletPoolMemberCmd = &cli.Command{
 }
 
 func runDeleteCloudletPoolMember(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -333,6 +349,9 @@ var ShowCloudletPoolMemberCmd = &cli.Command{
 }
 
 func runShowCloudletPoolMember(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -355,6 +374,7 @@ func ShowCloudletPoolMember(c *cli.Command, in *edgeproto.CloudletPoolMember) er
 		}
 		return fmt.Errorf("ShowCloudletPoolMember failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.CloudletPoolMember, 0)
 	for {
 		obj, err := stream.Recv()
@@ -414,6 +434,9 @@ var ShowPoolsForCloudletCmd = &cli.Command{
 }
 
 func runShowPoolsForCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -436,6 +459,7 @@ func ShowPoolsForCloudlet(c *cli.Command, in *edgeproto.CloudletKey) error {
 		}
 		return fmt.Errorf("ShowPoolsForCloudlet failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.CloudletPool, 0)
 	for {
 		obj, err := stream.Recv()
@@ -487,6 +511,9 @@ var ShowCloudletsForPoolCmd = &cli.Command{
 }
 
 func runShowCloudletsForPool(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletPoolKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -509,6 +536,7 @@ func ShowCloudletsForPool(c *cli.Command, in *edgeproto.CloudletPoolKey) error {
 		}
 		return fmt.Errorf("ShowCloudletsForPool failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.Cloudlet, 0)
 	for {
 		obj, err := stream.Recv()
@@ -569,23 +597,26 @@ var CloudletPoolAliasArgs = []string{
 	"name=key.name",
 }
 var CloudletPoolComments = map[string]string{
-	"name": "CloudletPool Name",
+	"fields": "Fields are used for the Update API to specify which fields to apply",
+	"name":   "CloudletPool Name",
 }
-var CloudletPoolSpecialArgs = map[string]string{}
+var CloudletPoolSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}
 var CloudletPoolMemberRequiredArgs = []string{
 	"pool",
-	"operator",
+	"organization",
 	"cloudlet",
 }
 var CloudletPoolMemberOptionalArgs = []string{}
 var CloudletPoolMemberAliasArgs = []string{
 	"pool=poolkey.name",
-	"operator=cloudletkey.operatorkey.name",
+	"organization=cloudletkey.organization",
 	"cloudlet=cloudletkey.name",
 }
 var CloudletPoolMemberComments = map[string]string{
-	"pool":     "CloudletPool Name",
-	"operator": "Company or Organization name of the operator",
-	"cloudlet": "Name of the cloudlet",
+	"pool":         "CloudletPool Name",
+	"organization": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
 }
 var CloudletPoolMemberSpecialArgs = map[string]string{}

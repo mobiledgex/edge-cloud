@@ -35,6 +35,7 @@ type ApiStat struct {
 	errs    uint64
 	latency grpcstats.LatencyMetric
 	mux     sync.Mutex
+	changed bool
 }
 
 type MapShard struct {
@@ -79,7 +80,7 @@ func (s *DmeStats) Stop() {
 }
 
 func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
-	idx := util.GetShardIndex(call.key.Method+call.key.AppKey.DeveloperKey.Name+call.key.AppKey.Name, s.numShards)
+	idx := util.GetShardIndex(call.key.Method+call.key.AppKey.Organization+call.key.AppKey.Name, s.numShards)
 
 	shard := &s.shards[idx]
 	shard.mux.Lock()
@@ -94,6 +95,7 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 		stat.errs++
 	}
 	stat.latency.AddLatency(call.latency)
+	stat.changed = true
 	shard.mux.Unlock()
 }
 
@@ -110,7 +112,10 @@ func (s *DmeStats) RunNotify() {
 			for ii, _ := range s.shards {
 				s.shards[ii].mux.Lock()
 				for key, stat := range s.shards[ii].apiStatMap {
-					s.send(ctx, ApiStatToMetric(ts, &key, stat))
+					if stat.changed {
+						s.send(ctx, ApiStatToMetric(ts, &key, stat))
+						stat.changed = false
+					}
 				}
 				s.shards[ii].mux.Unlock()
 			}
@@ -125,17 +130,17 @@ func ApiStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *ApiStat)
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
 	metric.Name = "dme-api"
-	metric.AddTag("dev", key.AppKey.DeveloperKey.Name)
+	metric.AddTag("apporg", key.AppKey.Organization)
 	metric.AddTag("app", key.AppKey.Name)
 	metric.AddTag("ver", key.AppKey.Version)
-	metric.AddTag("oper", myCloudletKey.OperatorKey.Name)
+	metric.AddTag("cloudletorg", myCloudletKey.Organization)
 	metric.AddTag("cloudlet", myCloudletKey.Name)
 	metric.AddTag("id", *scaleID)
 	metric.AddTag("method", key.Method)
 	metric.AddIntVal("reqs", stat.reqs)
 	metric.AddIntVal("errs", stat.errs)
 	metric.AddTag("foundCloudlet", key.CloudletFound.Name)
-	metric.AddTag("foundOperator", key.CloudletFound.OperatorKey.Name)
+	metric.AddTag("foundOperator", key.CloudletFound.Organization)
 	// Cell ID is just a unique number - keep it as a string
 	metric.AddTag("cellID", strconv.FormatUint(uint64(key.CellId), 10))
 	stat.latency.AddToMetric(&metric)
@@ -147,8 +152,8 @@ func MetricToStat(metric *edgeproto.Metric) (*dmecommon.StatKey, *ApiStat) {
 	stat := &ApiStat{}
 	for _, tag := range metric.Tags {
 		switch tag.Name {
-		case "dev":
-			key.AppKey.DeveloperKey.Name = tag.Val
+		case "apporg":
+			key.AppKey.Organization = tag.Val
 		case "app":
 			key.AppKey.Name = tag.Val
 		case "ver":
@@ -192,15 +197,15 @@ func getCellIdFromDmeReq(req interface{}) uint32 {
 }
 
 func getClientFromFindCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest) *edgeproto.AppInstClient {
-	if ckey.DevName == "" || ckey.AppName == "" || ckey.AppVers == "" {
+	if ckey.OrgName == "" || ckey.AppName == "" || ckey.AppVers == "" {
 		return nil
 	}
-	developer := ckey.DevName
+	developer := ckey.OrgName
 	appname := ckey.AppName
 	appver := ckey.AppVers
 	if cloudcommon.IsPlatformApp(developer, appname) &&
-		mreq.DevName != "" && mreq.AppName != "" && mreq.AppVers != "" {
-		developer = mreq.DevName
+		mreq.OrgName != "" && mreq.AppName != "" && mreq.AppVers != "" {
+		developer = mreq.OrgName
 		appname = mreq.AppName
 		appver = mreq.AppVers
 	}
@@ -208,11 +213,9 @@ func getClientFromFindCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudlet
 		ClientKey: edgeproto.AppInstClientKey{
 			Key: edgeproto.AppInstKey{
 				AppKey: edgeproto.AppKey{
-					DeveloperKey: edgeproto.DeveloperKey{
-						Name: developer,
-					},
-					Name:    appname,
-					Version: appver,
+					Organization: developer,
+					Name:         appname,
+					Version:      appver,
 				},
 			},
 		},
@@ -237,7 +240,7 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 
 	switch typ := req.(type) {
 	case *dme.RegisterClientRequest:
-		call.key.AppKey.DeveloperKey.Name = typ.DevName
+		call.key.AppKey.Organization = typ.OrgName
 		call.key.AppKey.Name = typ.AppName
 		call.key.AppKey.Version = typ.AppVers
 	case *dme.FindCloudletRequest:
@@ -261,7 +264,7 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 				go UpdateClientsBuffer(ctx, client)
 			}
 		}
-		call.key.AppKey.DeveloperKey.Name = ckey.DevName
+		call.key.AppKey.Organization = ckey.OrgName
 		call.key.AppKey.Name = ckey.AppName
 		call.key.AppKey.Version = ckey.AppVers
 
@@ -272,7 +275,7 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		if !ok {
 			return resp, err
 		}
-		call.key.AppKey.DeveloperKey.Name = ckey.DevName
+		call.key.AppKey.Organization = ckey.OrgName
 		call.key.AppKey.Name = ckey.AppName
 		call.key.AppKey.Version = ckey.AppVers
 	}

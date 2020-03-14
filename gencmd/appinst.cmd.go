@@ -65,6 +65,15 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.PowerState = 0
 	}
+	if _, found := tags["nocmp"]; found {
+		in.ExternalVolumeSize = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.AvailabilityZone = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.VmFlavor = ""
+	}
 }
 
 func AppInstRuntimeHideTags(in *edgeproto.AppInstRuntime) {
@@ -111,6 +120,9 @@ var CreateAppInstCmd = &cli.Command{
 }
 
 func runCreateAppInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -133,6 +145,8 @@ func CreateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 		}
 		return fmt.Errorf("CreateAppInst failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -146,8 +160,16 @@ func CreateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			}
 			return fmt.Errorf("CreateAppInst recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -179,6 +201,9 @@ var DeleteAppInstCmd = &cli.Command{
 }
 
 func runDeleteAppInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -201,6 +226,8 @@ func DeleteAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 		}
 		return fmt.Errorf("DeleteAppInst failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -214,8 +241,16 @@ func DeleteAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			}
 			return fmt.Errorf("DeleteAppInst recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -247,6 +282,9 @@ var RefreshAppInstCmd = &cli.Command{
 }
 
 func runRefreshAppInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -269,6 +307,8 @@ func RefreshAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 		}
 		return fmt.Errorf("RefreshAppInst failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -282,8 +322,16 @@ func RefreshAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			}
 			return fmt.Errorf("RefreshAppInst recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -315,6 +363,9 @@ var UpdateAppInstCmd = &cli.Command{
 }
 
 func runUpdateAppInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInst)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -338,6 +389,8 @@ func UpdateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 		}
 		return fmt.Errorf("UpdateAppInst failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -351,8 +404,16 @@ func UpdateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			}
 			return fmt.Errorf("UpdateAppInst recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -383,6 +444,9 @@ var ShowAppInstCmd = &cli.Command{
 }
 
 func runShowAppInst(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInst)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -405,6 +469,7 @@ func ShowAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 		}
 		return fmt.Errorf("ShowAppInst failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.AppInst, 0)
 	for {
 		obj, err := stream.Recv()
@@ -466,6 +531,9 @@ var ShowAppInstInfoCmd = &cli.Command{
 }
 
 func runShowAppInstInfo(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInstInfo)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -488,6 +556,7 @@ func ShowAppInstInfo(c *cli.Command, in *edgeproto.AppInstInfo) error {
 		}
 		return fmt.Errorf("ShowAppInstInfo failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.AppInstInfo, 0)
 	for {
 		obj, err := stream.Recv()
@@ -545,6 +614,9 @@ var ShowAppInstMetricsCmd = &cli.Command{
 }
 
 func runShowAppInstMetrics(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AppInstMetrics)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -567,6 +639,7 @@ func ShowAppInstMetrics(c *cli.Command, in *edgeproto.AppInstMetrics) error {
 		}
 		return fmt.Errorf("ShowAppInstMetrics failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.AppInstMetrics, 0)
 	for {
 		obj, err := stream.Recv()
@@ -611,35 +684,35 @@ var AppInstMetricsApiCmds = []*cobra.Command{
 
 var AppInstKeyRequiredArgs = []string{}
 var AppInstKeyOptionalArgs = []string{
-	"appkey.developerkey.name",
+	"appkey.organization",
 	"appkey.name",
 	"appkey.version",
 	"clusterinstkey.clusterkey.name",
-	"clusterinstkey.cloudletkey.operatorkey.name",
+	"clusterinstkey.cloudletkey.organization",
 	"clusterinstkey.cloudletkey.name",
-	"clusterinstkey.developer",
+	"clusterinstkey.organization",
 }
 var AppInstKeyAliasArgs = []string{}
 var AppInstKeyComments = map[string]string{
-	"appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
-	"appkey.name":                                 "App name",
-	"appkey.version":                              "App version",
-	"clusterinstkey.clusterkey.name":              "Cluster name",
-	"clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
-	"clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
+	"appkey.organization":                     "App developer organization",
+	"appkey.name":                             "App name",
+	"appkey.version":                          "App version",
+	"clusterinstkey.clusterkey.name":          "Cluster name",
+	"clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
+	"clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
+	"clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
 }
 var AppInstKeySpecialArgs = map[string]string{}
 var AppInstRequiredArgs = []string{
-	"developer",
+	"app-org",
 	"appname",
 	"appvers",
-	"cluster",
-	"operator",
+	"cloudlet-org",
 	"cloudlet",
 }
 var AppInstOptionalArgs = []string{
-	"clusterdeveloper",
+	"cluster",
+	"cluster-org",
 	"flavor",
 	"state",
 	"crmoverride",
@@ -652,25 +725,27 @@ var AppInstOptionalArgs = []string{
 	"healthcheck",
 	"privacypolicy",
 	"powerstate",
+	"vmflavor",
 }
 var AppInstAliasArgs = []string{
-	"developer=key.appkey.developerkey.name",
+	"app-org=key.appkey.organization",
 	"appname=key.appkey.name",
 	"appvers=key.appkey.version",
 	"cluster=key.clusterinstkey.clusterkey.name",
-	"operator=key.clusterinstkey.cloudletkey.operatorkey.name",
+	"cloudlet-org=key.clusterinstkey.cloudletkey.organization",
 	"cloudlet=key.clusterinstkey.cloudletkey.name",
-	"clusterdeveloper=key.clusterinstkey.developer",
+	"cluster-org=key.clusterinstkey.organization",
 	"flavor=flavor.name",
 }
 var AppInstComments = map[string]string{
-	"developer":                      "Organization or Company Name that a Developer is part of",
+	"fields":                         "Fields are used for the Update API to specify which fields to apply",
+	"app-org":                        "App developer organization",
 	"appname":                        "App name",
 	"appvers":                        "App version",
 	"cluster":                        "Cluster name",
-	"operator":                       "Company or Organization name of the operator",
+	"cloudlet-org":                   "Organization of the cloudlet site",
 	"cloudlet":                       "Name of the cloudlet",
-	"clusterdeveloper":               "Name of Developer that this cluster belongs to",
+	"cluster-org":                    "Name of Developer organization that this cluster belongs to",
 	"cloudletloc.latitude":           "latitude in WGS 84 coordinates",
 	"cloudletloc.longitude":          "longitude in WGS 84 coordinates",
 	"cloudletloc.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -702,9 +777,13 @@ var AppInstComments = map[string]string{
 	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"privacypolicy":                  "Optional privacy policy name",
 	"powerstate":                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
+	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
+	"availabilityzone":               "Optional Availability Zone if any",
+	"vmflavor":                       "OS node flavor to use",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
+	"fields":                   "StringArray",
 	"runtimeinfo.containerids": "StringArray",
 }
 var AppInstRuntimeRequiredArgs = []string{}
@@ -719,13 +798,13 @@ var AppInstRuntimeSpecialArgs = map[string]string{
 	"containerids": "StringArray",
 }
 var AppInstInfoRequiredArgs = []string{
-	"key.appkey.developerkey.name",
+	"key.appkey.organization",
 	"key.appkey.name",
 	"key.appkey.version",
 	"key.clusterinstkey.clusterkey.name",
-	"key.clusterinstkey.cloudletkey.operatorkey.name",
+	"key.clusterinstkey.cloudletkey.organization",
 	"key.clusterinstkey.cloudletkey.name",
-	"key.clusterinstkey.developer",
+	"key.clusterinstkey.organization",
 }
 var AppInstInfoOptionalArgs = []string{
 	"notifyid",
@@ -740,21 +819,23 @@ var AppInstInfoOptionalArgs = []string{
 }
 var AppInstInfoAliasArgs = []string{}
 var AppInstInfoComments = map[string]string{
-	"key.appkey.developerkey.name":                    "Organization or Company Name that a Developer is part of",
-	"key.appkey.name":                                 "App name",
-	"key.appkey.version":                              "App version",
-	"key.clusterinstkey.clusterkey.name":              "Cluster name",
-	"key.clusterinstkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"key.clusterinstkey.cloudletkey.name":             "Name of the cloudlet",
-	"key.clusterinstkey.developer":                    "Name of Developer that this cluster belongs to",
-	"notifyid":                                        "Id of client assigned by server (internal use only)",
-	"state":                                           "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
-	"errors":                                          "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
-	"runtimeinfo.containerids":                        "List of container names",
-	"powerstate":                                      "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
+	"fields":                                      "Fields are used for the Update API to specify which fields to apply",
+	"key.appkey.organization":                     "App developer organization",
+	"key.appkey.name":                             "App name",
+	"key.appkey.version":                          "App version",
+	"key.clusterinstkey.clusterkey.name":          "Cluster name",
+	"key.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
+	"key.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
+	"key.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
+	"notifyid":                                    "Id of client assigned by server (internal use only)",
+	"state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"errors":                                      "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
+	"runtimeinfo.containerids":                    "List of container names",
+	"powerstate":                                  "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 }
 var AppInstInfoSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
+	"fields":                   "StringArray",
 	"runtimeinfo.containerids": "StringArray",
 }
 var AppInstMetricsRequiredArgs = []string{}
@@ -767,15 +848,15 @@ var AppInstMetricsComments = map[string]string{
 }
 var AppInstMetricsSpecialArgs = map[string]string{}
 var CreateAppInstRequiredArgs = []string{
-	"developer",
+	"app-org",
 	"appname",
 	"appvers",
-	"cluster",
-	"operator",
+	"cloudlet-org",
 	"cloudlet",
 }
 var CreateAppInstOptionalArgs = []string{
-	"clusterdeveloper",
+	"cluster",
+	"cluster-org",
 	"flavor",
 	"state",
 	"crmoverride",
@@ -785,17 +866,20 @@ var CreateAppInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
+	"externalvolumesize",
+	"availabilityzone",
+	"vmflavor",
 }
 var DeleteAppInstRequiredArgs = []string{
-	"developer",
+	"app-org",
 	"appname",
 	"appvers",
-	"cluster",
-	"operator",
+	"cloudlet-org",
 	"cloudlet",
 }
 var DeleteAppInstOptionalArgs = []string{
-	"clusterdeveloper",
+	"cluster",
+	"cluster-org",
 	"cloudletloc.latitude",
 	"cloudletloc.longitude",
 	"cloudletloc.horizontalaccuracy",
@@ -834,34 +918,40 @@ var DeleteAppInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
+	"externalvolumesize",
+	"availabilityzone",
+	"vmflavor",
 }
 var RefreshAppInstRequiredArgs = []string{
-	"developer",
+	"app-org",
 	"appname",
 	"appvers",
 }
 var RefreshAppInstOptionalArgs = []string{
 	"cluster",
-	"operator",
+	"cloudlet-org",
 	"cloudlet",
-	"clusterdeveloper",
+	"cluster-org",
 	"crmoverride",
 	"forceupdate",
 	"updatemultiple",
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
+	"externalvolumesize",
+	"availabilityzone",
+	"vmflavor",
 }
 var UpdateAppInstRequiredArgs = []string{
-	"developer",
+	"app-org",
 	"appname",
 	"appvers",
-	"cluster",
-	"operator",
+	"cloudlet-org",
 	"cloudlet",
 }
 var UpdateAppInstOptionalArgs = []string{
-	"clusterdeveloper",
+	"cluster",
+	"cluster-org",
 	"crmoverride",
 	"configs.kind",
 	"configs.config",
@@ -869,4 +959,7 @@ var UpdateAppInstOptionalArgs = []string{
 	"healthcheck",
 	"privacypolicy",
 	"powerstate",
+	"externalvolumesize",
+	"availabilityzone",
+	"vmflavor",
 }

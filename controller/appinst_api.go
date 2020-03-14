@@ -192,6 +192,37 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverri
 	return nil
 }
 
+func (s *AppInstApi) AutoDelete(ctx context.Context, in *edgeproto.AppKey) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "Auto-deleting AppInsts for App", "app", in)
+	appinsts := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
+	s.cache.Mux.Lock()
+	for key, val := range s.cache.Objs {
+		if key.AppKey.Matches(in) {
+			appinsts[key] = val
+		}
+	}
+	s.cache.Mux.Unlock()
+	failed := 0
+	deleted := 0
+	for key, val := range appinsts {
+		log.SpanLog(ctx, log.DebugLevelApi, "Auto-delete AppInst for App", "AppInst", key)
+		stream := streamoutAppInst{}
+		stream.ctx = ctx
+		stream.debugLvl = log.DebugLevelApi
+		err := s.DeleteAppInst(val, &stream)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to auto-delete AppInst", "AppInst", key)
+			failed++
+		} else {
+			deleted++
+		}
+	}
+	if failed > 0 {
+		return fmt.Errorf("Auto-deleted %d AppInsts but failed to delete %d AppInsts for App", deleted, failed)
+	}
+	return nil
+}
+
 func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -207,7 +238,7 @@ func (s *AppInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, appinst := range s.cache.Objs {
-		if edgeproto.GetOrg(appinst) == key.Developer && appinst.PrivacyPolicy == key.Name {
+		if edgeproto.GetOrg(appinst) == key.Organization && appinst.PrivacyPolicy == key.Name {
 			return true
 		}
 	}
@@ -274,6 +305,7 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
+	var clusterInst edgeproto.ClusterInst
 	ctx := cb.Context()
 
 	defer func() {
@@ -283,8 +315,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}()
 
 	// populate the clusterinst developer from the app developer if not already present
-	if in.Key.ClusterInstKey.Developer == "" {
-		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+	if in.Key.ClusterInstKey.Organization == "" {
+		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 	}
 	s.setDefaultVMClusterKey(ctx, &in.Key)
@@ -307,15 +339,15 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// See if we need to create auto-cluster.
 	// This also sets up the correct ClusterInstKey in "in".
 
-	if in.Key.AppKey.DeveloperKey.Name != in.Key.ClusterInstKey.Developer {
+	if in.Key.AppKey.Organization != in.Key.ClusterInstKey.Organization {
 		// both are specified, make sure they match
-		if in.Key.AppKey.DeveloperKey.Name == cloudcommon.DeveloperMobiledgeX {
+		if in.Key.AppKey.Organization == cloudcommon.DeveloperMobiledgeX {
 			// mobiledgex apps on dev ClusterInst, like prometheus
-		} else if in.Key.ClusterInstKey.Developer == cloudcommon.DeveloperMobiledgeX {
+		} else if in.Key.ClusterInstKey.Organization == cloudcommon.DeveloperMobiledgeX {
 			// developer apps on reservable mobiledgex ClusterInst
 			tenant = true
 		} else {
-			return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.DeveloperKey.Name, in.Key.ClusterInstKey.Developer)
+			return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.Organization, in.Key.ClusterInstKey.Organization)
 		}
 	}
 	appDeploymentType := ""
@@ -340,7 +372,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 		}
 		// make sure cloudlet exists
-		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, nil) {
+		cloudlet := edgeproto.Cloudlet{}
+		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
 
@@ -353,6 +386,33 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return in.Key.AppKey.NotFoundError()
 		}
+		if app.DeletePrepare {
+			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
+		}
+
+		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested
+		if in.Flavor.Name == "" {
+			in.Flavor = app.DefaultFlavor
+		}
+		vmFlavor := edgeproto.Flavor{}
+		if !flavorApi.store.STMGet(stm, &in.Flavor, &vmFlavor) {
+			return in.Flavor.NotFoundError()
+		}
+		info := edgeproto.CloudletInfo{}
+		if !cloudletInfoApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &info) {
+			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.ClusterInstKey.CloudletKey)
+		}
+		vmspec, verr := resTagTableApi.GetVMSpec(ctx, stm, vmFlavor, cloudlet, info)
+		if verr != nil {
+			return verr
+		}
+		// if needed, master node flavor will be looked up from createClusterInst
+		// save original in.Flavor.Name in that case
+		in.VmFlavor = vmspec.FlavorName
+		in.AvailabilityZone = vmspec.AvailabilityZone
+		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
+		log.SpanLog(ctx, log.DebugLevelApi, "Selected AppInst Node Flavor", "vmspec", vmspec.FlavorName)
+
 		in.Revision = app.Revision
 		appDeploymentType = app.Deployment
 		if in.AutoClusterIpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED && app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
@@ -363,10 +423,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		var clusterInst edgeproto.ClusterInst
 		if !strings.HasPrefix(cikey.ClusterKey.Name, ClusterAutoPrefix) && cloudcommon.IsClusterInstReqd(&app) {
 			found := clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst)
-			if !found && in.Key.ClusterInstKey.Developer == "" {
+			if !found && in.Key.ClusterInstKey.Organization == "" {
 				// developer may not be specified
 				// in clusterinst.
-				in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+				in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
 				found = clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst)
 				if found {
 					cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
@@ -392,16 +452,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return fmt.Errorf("Autodelete App %s requires an existing ClusterInst", app.Key.Name)
 			}
 			cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
-			if cikey.Developer == "" {
-				cikey.Developer = in.Key.AppKey.DeveloperKey.Name
+			if cikey.Organization == "" {
+				cikey.Organization = in.Key.AppKey.Organization
 			}
 			autocluster = true
 		}
 
-		if in.Flavor.Name == "" {
-			// find flavor from app
-			in.Flavor = app.DefaultFlavor
-		}
 		if in.SharedVolumeSize == 0 {
 			in.SharedVolumeSize = app.DefaultSharedVolumeSize
 		}
@@ -410,11 +466,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		if in.PrivacyPolicy != "" {
 			policy := edgeproto.PrivacyPolicy{}
-			err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.AppKey.DeveloperKey.Name, &policy)
+			err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.AppKey.Organization, &policy)
 			if err != nil {
 				return err
 			}
-
 		}
 		return nil
 	})
@@ -467,7 +522,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	if autocluster {
 		// auto-create cluster inst
-		clusterInst := edgeproto.ClusterInst{}
 		clusterInst.Key = in.Key.ClusterInstKey
 		clusterInst.Auto = true
 		log.DebugLog(log.DebugLevelApi,
@@ -475,7 +529,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			"key", clusterInst.Key,
 			"AppInst", in)
 
-		clusterInst.Flavor = in.Flavor
+		clusterInst.Flavor.Name = in.Flavor.Name
 		clusterInst.IpAccess = in.AutoClusterIpAccess
 		clusterInst.Deployment = appDeploymentType
 		clusterInst.SharedVolumeSize = in.SharedVolumeSize
@@ -529,11 +583,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
 		}
-
-		if !flavorApi.store.STMGet(stm, &in.Flavor, nil) {
-			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
-		}
-
 		var clusterKey *edgeproto.ClusterKey
 		ipaccess := edgeproto.IpAccess_IP_ACCESS_SHARED
 		if cloudcommon.IsClusterInstReqd(&app) {
@@ -564,7 +613,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			ipaccess = clusterInst.IpAccess
 			clusterKey = &clusterInst.Key.ClusterKey
 			if tenant {
-				clusterInst.ReservedBy = in.Key.AppKey.DeveloperKey.Name
+				clusterInst.ReservedBy = in.Key.AppKey.Organization
 				clusterInstApi.store.STMPut(stm, &clusterInst)
 			}
 		}
@@ -635,7 +684,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefsChanged = true
 			}
 		} else {
-			if isIPAllocatedPerService(in.Key.ClusterInstKey.CloudletKey.OperatorKey.Name) {
+			if isIPAllocatedPerService(in.Key.ClusterInstKey.CloudletKey.Organization) {
 				//dedicated access in which each service gets a different ip
 				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey)
 				for ii, _ := range ports {
@@ -810,8 +859,8 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		}
 	} else {
 		// populate the clusterinst developer from the app developer if not already present
-		if in.Key.ClusterInstKey.Developer == "" {
-			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+		if in.Key.ClusterInstKey.Organization == "" {
+			in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
 			cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 		}
 
@@ -995,8 +1044,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
 	// populate the clusterinst developer from the app developer if not already present
-	if in.Key.ClusterInstKey.Developer == "" {
-		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+	if in.Key.ClusterInstKey.Organization == "" {
+		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 	}
 	s.setDefaultVMClusterKey(ctx, &in.Key)
@@ -1011,13 +1060,13 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 
 	// check if we are deleting an autocluster instance we need to set the key correctly.
-	if strings.HasPrefix(in.Key.ClusterInstKey.ClusterKey.Name, ClusterAutoPrefix) && in.Key.ClusterInstKey.Developer == "" {
-		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+	if strings.HasPrefix(in.Key.ClusterInstKey.ClusterKey.Name, ClusterAutoPrefix) && in.Key.ClusterInstKey.Organization == "" {
+		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
 	}
 	clusterInstKey := edgeproto.ClusterInstKey{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
-			if in.Key.ClusterInstKey.Developer == "" {
+			if in.Key.ClusterInstKey.Organization == "" {
 				// create still allows it be unset on input,
 				// but will set it internally. But it is required
 				// on delete just in case another ClusterInst
@@ -1075,7 +1124,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		clusterInst := edgeproto.ClusterInst{}
 		if clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst) {
-			if clusterInst.ReservedBy != "" && clusterInst.ReservedBy == in.Key.AppKey.DeveloperKey.Name {
+			if clusterInst.ReservedBy != "" && clusterInst.ReservedBy == in.Key.AppKey.Organization {
 				clusterInst.ReservedBy = ""
 				clusterInstApi.store.STMPut(stm, &clusterInst)
 			}
@@ -1252,7 +1301,7 @@ func isIPAllocatedPerService(operator string) bool {
 
 func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs) error {
 
-	if isIPAllocatedPerService(cloudlet.Key.OperatorKey.Name) {
+	if isIPAllocatedPerService(cloudlet.Key.Organization) {
 		// we don't track IPs in public cloud
 		return nil
 	}
@@ -1350,10 +1399,10 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 	metric.Name = cloudcommon.AppInstEvent
 	ts, _ := types.TimestampProto(time.Now())
 	metric.Timestamp = *ts
-	metric.AddTag("operator", appInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	metric.AddTag("operator", appInstKey.ClusterInstKey.CloudletKey.Organization)
 	metric.AddTag("cloudlet", appInstKey.ClusterInstKey.CloudletKey.Name)
 	metric.AddTag("cluster", appInstKey.ClusterInstKey.ClusterKey.Name)
-	metric.AddTag("dev", appInstKey.AppKey.DeveloperKey.Name)
+	metric.AddTag("dev", appInstKey.AppKey.Organization)
 	metric.AddTag("app", appInstKey.AppKey.Name)
 	metric.AddTag("version", appInstKey.AppKey.Version)
 	metric.AddStringVal("event", string(event))

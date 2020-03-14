@@ -21,8 +21,7 @@ import (
 var yamlData = `
 cloudlets:
 - key:
-    operatorkey:
-      name: TMUS
+    organization: TMUS
     name: cloud2
 
 flavors:
@@ -47,8 +46,7 @@ clusterinsts:
     clusterkey:
       name: pokemon_cluster
     cloudletkey:
-      operatorkey:
-        name: TMUS
+      organization: TMUS
       name: cloud2
   flavor:
     name: x1.tiny
@@ -58,8 +56,7 @@ clusterinsts:
     clusterkey:
       name: 1000realities_cluster
     cloudletkey:
-      operatorkey:
-        name: TMUS
+      organization: TMUS
       name: cloud2
   flavor:
     name: x1.small
@@ -69,16 +66,14 @@ clusterinsts:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: Niantic
+      organization: Niantic
       name: Pokemon Go
       version: 1.0.0
     clusterinstkey:
       clusterkey:
         name: pokemon_cluster
       cloudletkey:
-        operatorkey:
-          name: TMUS
+        organization: TMUS
         name: cloud2
       developer: Niantic
   cloudletloc:
@@ -89,16 +84,14 @@ appinstances:
     name: x1.tiny
 - key:
     appkey:
-      developerkey:
-        name: 1000realities
+      organization: 1000realities
       name: VRmax
       version: 1.0.0
     clusterinstkey:
       clusterkey:
         name: 1000realities_cluster
       cloudletkey:
-        operatorkey:
-          name: TMUS
+        organization: TMUS
         name: cloud2
       developer: 1000realities
   cloudletloc:
@@ -135,7 +128,7 @@ func TestCRM(t *testing.T) {
 
 	notifyAddr := "127.0.0.1:61245"
 
-	data := edgeproto.ApplicationData{}
+	data := edgeproto.AllData{}
 	err = yaml.Unmarshal([]byte(yamlData), &data)
 	require.Nil(t, err, "unmarshal yaml data")
 

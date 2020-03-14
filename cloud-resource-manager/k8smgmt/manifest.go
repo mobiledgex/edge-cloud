@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/vault"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -58,7 +59,7 @@ func addAppInstLabels(meta *metav1.ObjectMeta, app *edgeproto.App) {
 }
 
 // Merge in all the environment variables into
-func MergeEnvVars(ctx context.Context, kubeManifest string, app *edgeproto.App, imagePullSecret string) (string, error) {
+func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto.App, kubeManifest string, imagePullSecret string) (string, error) {
 	var envVars []v1.EnvVar
 	var files []string
 	var err error
@@ -90,7 +91,7 @@ func MergeEnvVars(ctx context.Context, kubeManifest string, app *edgeproto.App, 
 		}
 	}
 	log.SpanLog(ctx, log.DebugLevelMexos, "Merging environment variables", "envVars", envVars)
-	mf, err := cloudcommon.GetDeploymentManifest(kubeManifest)
+	mf, err := cloudcommon.GetDeploymentManifest(ctx, vaultConfig, kubeManifest)
 	if err != nil {
 		return mf, err
 	}

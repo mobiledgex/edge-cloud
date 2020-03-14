@@ -79,6 +79,10 @@ extend google.protobuf.MessageOptions {
   string custom_key_type = 51038;
   // Data is singular in system (never more than one)
   bool singular_data = 51039;
+  // Message is e2e test data struct
+  bool e2edata = 51043;
+  // Option to skip generating CopyInFields func
+  bool generate_copy_in_fields = 51044;
 }
 
 extend google.protobuf.EnumOptions {
@@ -113,7 +117,7 @@ extend google.protobuf.FieldOptions {
 extend google.protobuf.MethodOptions {
   // Comma separated list of three strings: resource name, action, org field path.
   // These are used in RBAC for Master Controller. Example:
-  // ResourceApps,ActionManage,Key.DeveloperKey.Name
+  // ResourceApps,ActionManage,Key.Organization
   string mc2_api = 51021;
   // show stream output objects incrementally as they come, rather than
   // collecting them into one output format. Only applies to commands

@@ -43,8 +43,6 @@ func TestCloudletApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	// create operators
-	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	// create flavors
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 
@@ -829,12 +827,12 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		// Non-nominal: flavor requests optional resource, while cloudlet's OptResMap is nil (cloudlet supports none)
 		cl.ResTagMap = nil
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor, *cl, cli)
-		require.Equal(t, "Optional resource requested by x1.large-mex , cloudlet test invalid lat-long supports none", vmerr.Error())
+		require.Equal(t, "Optional resource requested by x1.large-mex, cloudlet test invalid lat-long supports none", vmerr.Error())
 
 		nulCL := edgeproto.Cloudlet{}
 		// and finally, Non-nominal, request a resource, and cloudlet has none to give (nil cloudlet/cloudlet.ResTagMap)
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor, nulCL, cli)
-		require.Equal(t, "Optional resource requested by x1.large-mex , cloudlet  supports none", vmerr.Error(), "nil table")
+		require.Equal(t, "Optional resource requested by x1.large-mex, cloudlet  supports none", vmerr.Error(), "nil table")
 		return nil
 	})
 }

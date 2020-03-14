@@ -44,7 +44,7 @@ var vmImageVersion = flag.String("vmImageVersion", "", "CRM VM baseimage version
 var packageVersion = flag.String("packageVersion", "", "CRM VM baseimage debian package version")
 var cloudletVMImagePath = flag.String("cloudletVMImagePath", "", "Image path where CRM VM baseimages are present")
 var cleanupMode = flag.Bool("cleanupMode", false, "cleanup previous versions of CRM if present")
-var generateCerts = flag.Bool("generateCerts", false, "Get TLS certs for this cloudlet")
+var commercialCerts = flag.Bool("commercialCerts", false, "Get TLS certs from LetsEncrypt. If false CRM will generate its own self-signed certs")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
@@ -86,7 +86,7 @@ func main() {
 	}
 	if *platformName == "" {
 		// if not specified, platform is derived from operator name
-		*platformName = myCloudlet.Key.OperatorKey.Name
+		*platformName = myCloudlet.Key.Organization
 	}
 	if *physicalName == "" {
 		*physicalName = myCloudlet.Key.Name
@@ -194,16 +194,14 @@ func main() {
 		cspan.Finish()
 
 		// setup rootlb certs
-		if *generateCerts {
-			tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-			commonName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
-			dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
-			rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
-			if err == nil {
-				proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, *vaultAddr, rootlb)
-			}
-			tlsSpan.Finish()
+		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+		commonName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
+		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
+		rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
+		if err == nil {
+			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, *vaultAddr, rootlb, *commercialCerts)
 		}
+		tlsSpan.Finish()
 	}()
 
 	// setup crm notify listener (for shepherd)
@@ -226,7 +224,7 @@ func main() {
 //initializePlatform *Must be called as a seperate goroutine.*
 func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache, updateCallback edgeproto.CacheUpdateCallback) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
-	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
+	oper := util.DNSSanitize(cloudlet.Key.Organization)
 
 	pc := pf.PlatformConfig{
 		CloudletKey:         &cloudlet.Key,

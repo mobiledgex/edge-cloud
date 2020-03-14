@@ -42,6 +42,9 @@ func AppHideTags(in *edgeproto.App) {
 	}
 	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
 }
 
 var AppApiCmd edgeproto.AppApiClient
@@ -59,6 +62,9 @@ var CreateAppCmd = &cli.Command{
 }
 
 func runCreateApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -113,6 +119,9 @@ var DeleteAppCmd = &cli.Command{
 }
 
 func runDeleteApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -167,6 +176,9 @@ var UpdateAppCmd = &cli.Command{
 }
 
 func runUpdateApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -221,6 +233,9 @@ var ShowAppCmd = &cli.Command{
 }
 
 func runShowApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -243,6 +258,7 @@ func ShowApp(c *cli.Command, in *edgeproto.App) error {
 		}
 		return fmt.Errorf("ShowApp failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.App, 0)
 	for {
 		obj, err := stream.Recv()
@@ -291,15 +307,15 @@ var AppApiCmds = []*cobra.Command{
 
 var AppKeyRequiredArgs = []string{}
 var AppKeyOptionalArgs = []string{
-	"developerkey.name",
+	"organization",
 	"name",
 	"version",
 }
 var AppKeyAliasArgs = []string{}
 var AppKeyComments = map[string]string{
-	"developerkey.name": "Organization or Company Name that a Developer is part of",
-	"name":              "App name",
-	"version":           "App version",
+	"organization": "App developer organization",
+	"name":         "App name",
+	"version":      "App version",
 }
 var AppKeySpecialArgs = map[string]string{}
 var ConfigFileRequiredArgs = []string{}
@@ -314,7 +330,7 @@ var ConfigFileComments = map[string]string{
 }
 var ConfigFileSpecialArgs = map[string]string{}
 var AppRequiredArgs = []string{
-	"developer",
+	"app-org",
 	"appname",
 	"appvers",
 }
@@ -343,13 +359,14 @@ var AppOptionalArgs = []string{
 	"defaultprivacypolicy",
 }
 var AppAliasArgs = []string{
-	"developer=key.developerkey.name",
+	"app-org=key.organization",
 	"appname=key.name",
 	"appvers=key.version",
 	"defaultflavor=defaultflavor.name",
 }
 var AppComments = map[string]string{
-	"developer":               "Organization or Company Name that a Developer is part of",
+	"fields":                  "Fields are used for the Update API to specify which fields to apply",
+	"app-org":                 "App developer organization",
 	"appname":                 "App name",
 	"appvers":                 "App version",
 	"imagepath":               "URI of where image resides",
@@ -375,5 +392,8 @@ var AppComments = map[string]string{
 	"autoprovpolicy":          "Auto provisioning policy name",
 	"accesstype":              "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"defaultprivacypolicy":    "Privacy policy when creating auto cluster",
+	"deleteprepare":           "Preparing to be deleted",
 }
-var AppSpecialArgs = map[string]string{}
+var AppSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}

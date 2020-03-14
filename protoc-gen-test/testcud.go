@@ -13,15 +13,16 @@ import (
 	"github.com/mobiledgex/edge-cloud/protogen"
 )
 
-const edgeproto = "edgeproto"
-
 type TestCud struct {
 	*generator.Generator
 	support         gensupport.PluginSupport
 	cudTmpl         *template.Template
 	methodTmpl      *template.Template
+	clientTmpl      *template.Template
+	recvStreamFuncs map[string]struct{}
+	methodGroups    map[string]*gensupport.MethodGroup
 	firstFile       bool
-	importEdgeproto bool
+	importProtoPkg  bool
 	importIO        bool
 	importTesting   bool
 	importContext   bool
@@ -30,6 +31,7 @@ type TestCud struct {
 	importGrpc      bool
 	importLog       bool
 	importCli       bool
+	importWrapper   bool
 }
 
 func (t *TestCud) Name() string {
@@ -41,7 +43,24 @@ func (t *TestCud) Init(g *generator.Generator) {
 	t.support.Init(g.Request)
 	t.cudTmpl = template.Must(template.New("cud").Parse(tmpl))
 	t.methodTmpl = template.Must(template.New("method").Parse(methodTmpl))
+	t.clientTmpl = template.Must(template.New("client").Parse(clientTmpl))
+	t.recvStreamFuncs = make(map[string]struct{})
+	t.methodGroups = make(map[string]*gensupport.MethodGroup)
 	t.firstFile = true
+	for _, file := range t.Generator.Request.ProtoFile {
+		if len(file.Service) == 0 {
+			continue
+		}
+		for _, service := range file.Service {
+			groups := gensupport.GetMethodGroups(g, service)
+			for _, group := range groups {
+				if _, found := t.methodGroups[group.InType]; found {
+					continue
+				}
+				t.methodGroups[group.InType] = group
+			}
+		}
+	}
 }
 
 type cudFunc struct {
@@ -110,11 +129,7 @@ func NewCudStreamout{{.Name}}(ctx context.Context) *CudStreamout{{.Name}} {
 	}
 }
 
-type {{.Name}}Stream interface {
-	Recv() (*{{.Pkg}}.Result, error)
-}
-
-func {{.Name}}ReadResultStream(stream {{.Name}}Stream, err error) error {
+func {{.Name}}ReadResultStream(stream ResultStream, err error) error {
 	if err != nil {
 		return err
 	}
@@ -424,8 +439,8 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 	if t.importGrpc {
 		t.PrintImport("", "google.golang.org/grpc")
 	}
-	if t.importEdgeproto {
-		t.PrintImport("", "github.com/mobiledgex/edge-cloud/edgeproto")
+	if t.importProtoPkg {
+		t.PrintImport("", t.support.PackageImportPath)
 	}
 	if t.importIO {
 		t.PrintImport("", "io")
@@ -448,11 +463,14 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 	if t.importCli {
 		t.PrintImport("", "github.com/mobiledgex/edge-cloud/cli")
 	}
+	if t.importWrapper {
+		t.PrintImport("", "github.com/mobiledgex/edge-cloud/edgectl/wrapper")
+	}
 }
 
 func (t *TestCud) Generate(file *generator.FileDescriptor) {
 	t.importGrpc = false
-	t.importEdgeproto = false
+	t.importProtoPkg = false
 	t.importIO = false
 	t.importTesting = false
 	t.importContext = false
@@ -460,59 +478,75 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 	t.importRequire = false
 	t.importLog = false
 	t.importCli = false
+	t.importWrapper = false
 	t.support.InitFile()
 	if !t.support.GenFile(*file.FileDescriptorProto.Name) {
 		return
 	}
-	hasCudMethod := false
-	if len(file.FileDescriptorProto.Service) != 0 {
+	hasMethod := false
+	if len(file.FileDescriptorProto.Service) > 0 {
 		for _, service := range file.FileDescriptorProto.Service {
-			if len(service.Method) > 0 {
-				for _, method := range service.Method {
-					in := gensupport.GetDesc(t.Generator,
-						method.GetInputType())
-					if GetGenerateCud(in.DescriptorProto) {
-						hasCudMethod = true
-						break
-					}
-				}
+			if hasSupportedMethod(service) {
+				hasMethod = true
+				break
 			}
 		}
 	}
-	hasGenerateCudTest := false
+	hasE2edata := false
 	for _, msg := range file.Messages() {
-		if GetGenerateCudTest(msg.DescriptorProto) ||
-			GetGenerateShowTest(msg.DescriptorProto) {
-			hasGenerateCudTest = true
+		if gensupport.GetE2edata(msg.DescriptorProto) {
+			hasE2edata = true
 			break
 		}
 	}
-	if !hasGenerateCudTest && !hasCudMethod {
+	if !hasMethod && !hasE2edata {
 		return
 	}
+
 	t.P(gensupport.AutoGenComment)
 	for _, msg := range file.Messages() {
 		if GetGenerateCudTest(msg.DescriptorProto) ||
 			GetGenerateShowTest(msg.DescriptorProto) {
 			t.generateCudTest(msg)
 		}
-	}
-	if len(file.FileDescriptorProto.Service) != 0 {
-		for _, service := range file.FileDescriptorProto.Service {
-			if len(service.Method) == 0 {
-				continue
-			}
-			t.generateRunApi(file.FileDescriptorProto, service)
-			for _, method := range service.Method {
-				t.genDummyMethod(*service.Name, method)
-			}
+		if gensupport.GetE2edata(msg.DescriptorProto) {
+			t.genE2edata(msg)
 		}
+	}
+	for _, service := range file.FileDescriptorProto.Service {
+		if len(service.Method) == 0 {
+			continue
+		}
+		t.generateRunApi(file.FileDescriptorProto, service)
+		for _, method := range service.Method {
+			t.genDummyMethod(*service.Name, method)
+		}
+	}
+	for _, service := range file.FileDescriptorProto.Service {
+		if len(service.Method) == 0 {
+			continue
+		}
+		t.genClientInterface(service)
 	}
 	if t.firstFile {
 		t.genDummyServer()
+		t.genClient()
 		t.firstFile = false
 	}
 	gensupport.RunParseCheck(t.Generator, file)
+}
+
+func hasSupportedMethod(service *descriptor.ServiceDescriptorProto) bool {
+	if len(service.Method) == 0 {
+		return false
+	}
+	for _, method := range service.Method {
+		if gensupport.ClientStreaming(method) {
+			continue
+		}
+		return true
+	}
+	return false
 }
 
 func (t *TestCud) generateCudTest(desc *generator.Descriptor) {
@@ -522,7 +556,7 @@ func (t *TestCud) generateCudTest(desc *generator.Descriptor) {
 		keystr = "key not found"
 	}
 	args := tmplArgs{
-		Pkg:       edgeproto,
+		Pkg:       t.support.GetPackageName(desc),
 		Name:      *message.Name,
 		KeyName:   keystr,
 		ShowOnly:  GetGenerateShowTest(message),
@@ -571,7 +605,7 @@ func (t *TestCud) generateCudTest(desc *generator.Descriptor) {
 	}
 	t.cudTmpl.Execute(t, args)
 	t.importGrpc = true
-	t.importEdgeproto = true
+	t.importProtoPkg = true
 	t.importIO = true
 	t.importTesting = true
 	t.importContext = true
@@ -582,112 +616,167 @@ func (t *TestCud) generateCudTest(desc *generator.Descriptor) {
 
 func (t *TestCud) generateRunApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {
 	// group methods by input type
-	groups := gensupport.GetMethodGroups(t.Generator, service, nil)
+	groups := gensupport.GetMethodGroups(t.Generator, service)
 	for _, group := range groups {
 		t.generateRunGroupApi(file, service, group)
 	}
 }
 
 func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, group *gensupport.MethodGroup) {
-	apiName := *service.Name + group.Suffix
+	apiName := group.ApiName()
 	inType := group.InType
-	objApiStr := strings.ToLower(string(inType[0])) + string(inType[1:len(inType)]) + "Api"
-	objKey := "obj.GetKey()"
-	dataIn := "data *[]edgeproto." + inType
+	inPkg := t.support.GetPackage(group.In)
+	dataIn := "data *[]" + inPkg + inType
 	if group.SingularData {
-		dataIn = "obj *edgeproto." + inType
+		dataIn = "obj *" + inPkg + inType
 	}
 
 	t.P()
-	t.P("func Run", apiName, "(conn *grpc.ClientConn, ctx context.Context, ", dataIn, ", dataMap interface{}, mode string) error {")
-	t.P(objApiStr, " := edgeproto.New", service.Name, "Client(conn)")
-	t.P("var err error")
-	if group.SingularData {
-		t.P("if obj == nil { return nil }")
-	} else {
-		if group.HasUpdate {
-			t.P("for ii, objD := range *data {")
-		} else {
-			t.P("for _, objD := range *data {")
-		}
-		t.P("obj := &objD")
-	}
-	t.P("log.DebugLog(log.DebugLevelApi, \"API %v for ", inType, ": %v\", mode, ", objKey, ")")
-	if group.HasStream {
-		t.P("var stream ", inType, "Stream")
-	}
-	t.P("switch mode {")
+	t.P("func (r *Run) ", apiName, "(", dataIn, ", dataMap interface{}, dataOut interface{}) {")
+	t.P("log.DebugLog(log.DebugLevelApi, \"API for ", inType, "\", \"mode\", r.Mode)")
+	t.importLog = true
+	looped := false
 	for _, mInfo := range group.MethodInfos {
-		t.P("case \"", mInfo.Action, "\":")
-		if mInfo.Action == "update" {
+		if !mInfo.IsShow {
+			continue
+		}
+		t.P("if r.Mode == \"show\" {")
+		if group.SingularData {
+			t.P("obj = &", inPkg, inType, "{}")
+		} else {
+			t.P("obj := &", inPkg, inType, "{}")
+		}
+		t.runApiOutput(apiName, mInfo, group, looped)
+		t.P("return")
+		t.P("}")
+		break
+	}
+
+	if group.SingularData {
+		t.P("if obj == nil { return }")
+	} else {
+		t.P("for ii, objD := range *data {")
+		t.P("obj := &objD")
+		looped = true
+	}
+	t.P("switch r.Mode {")
+	for _, mInfo := range group.MethodInfos {
+		prefix := strings.ToLower(mInfo.Prefix)
+		if mInfo.IsShow {
+			prefix = "showfiltered"
+		}
+		t.P("case \"", prefix, "\":")
+		if group.SingularData && mInfo.Prefix == "Update" {
+			t.P("fallthrough")
+			t.P("case \"create\":")
+		}
+		if group.SingularData && mInfo.Prefix == "Reset" {
+			t.P("fallthrough")
+			t.P("case \"delete\":")
+		}
+		if mInfo.IsUpdate {
 			t.importCli = true
+			t.P("// set specified fields")
 			if group.SingularData {
 				t.P("objMap, err := cli.GetGenericObj(dataMap)")
 			} else {
 				t.P("objMap, err := cli.GetGenericObjFromList(dataMap, ii)")
 			}
 			t.P("if err != nil {")
-			t.P("return fmt.Errorf(\"bad dataMap for ", inType, ": %v\", err)")
+			t.P("log.DebugLog(log.DebugLevelApi, \"bad dataMap for ", inType, "\", \"err\", err)")
+			t.P("*r.Rc = false")
+			t.P("return")
 			t.P("}")
 			t.P("obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)")
+			t.P()
 		}
-		if mInfo.Stream {
-			t.P("stream, err = ", objApiStr, ".", mInfo.Name, "(ctx, obj)")
-		} else {
-			t.P("_, err = ", objApiStr, ".", mInfo.Name, "(ctx, obj)")
-		}
+		t.runApiOutput(apiName, mInfo, group, looped)
 	}
-	t.P("default:")
-	t.P("log.DebugLog(log.DebugLevelApi, \"Unsupported API %v for ", inType, ": %v\", mode, ", objKey, ")")
-	t.P("return nil")
-	t.P("}")
-	if group.HasStream {
-		t.P("err = ", inType, "ReadResultStream(stream, err)")
-	}
-	t.P("err = ignoreExpectedErrors(mode, ", objKey, ", err)")
-	t.P("if err != nil {")
-	t.P("return fmt.Errorf(\"API %s failed for %v -- err %v\", mode, ", objKey, ", err)")
 	t.P("}")
 	if !group.SingularData {
 		t.P("}")
 	}
-	t.P("return nil")
 	t.P("}")
-	t.importGrpc = true
-	t.importLog = true
+}
+
+func (t *TestCud) runApiOutput(apiName string, info *gensupport.MethodInfo, group *gensupport.MethodGroup, looped bool) {
+	hasKey := gensupport.GetMessageKey(group.In.DescriptorProto) != nil || gensupport.GetObjAndKey(group.In.DescriptorProto)
+	t.P("out, err := r.client.", info.Name, "(r.ctx, obj)")
+	t.P("if err != nil {")
+	if !info.IsShow && hasKey {
+		t.P("err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)")
+	}
+	desc := "\"" + apiName + "\""
+	if looped {
+		desc = "fmt.Sprintf(\"" + apiName + "[%d]\", ii)"
+	}
+	t.P("r.logErr(", desc, ", err)")
+	t.P("} else {")
+	outType := "*" + t.getOutputType(info, group)
+	t.P("outp, ok := dataOut.(", outType, ")")
+	t.P("if !ok {")
+	t.P("panic(fmt.Sprintf(\"Run", apiName, " expected dataOut type ", outType, ", but was %T\", dataOut))")
+	t.P("}")
+	if group.SingularData {
+		t.P("*outp = out")
+	} else if info.IsShow {
+		t.P("*outp = append(*outp, out...)")
+	} else if info.Stream {
+		t.P("*outp = append(*outp, out)")
+	} else {
+		t.P("*outp = append(*outp, *out)")
+	}
+	t.P("}")
+}
+
+func (t *TestCud) getOutputType(info *gensupport.MethodInfo, group *gensupport.MethodGroup) string {
+	outPkg := t.support.GetPackage(info.Out)
+	outType := outPkg + info.OutType
+	if group.SingularData {
+		outType = "*" + outType
+	} else {
+		outType = "[]" + outType
+	}
+	if info.Stream && !info.IsShow {
+		outType = "[]" + outType
+	}
+	return outType
 }
 
 type methodArgs struct {
-	Service   string
-	Method    string
-	InName    string
-	OutName   string
-	Outstream bool
-	OutList   bool
-	HasCache  bool
-	Show      bool
-	CacheFunc string
+	Pkg            string
+	Service        string
+	Method         string
+	InName         string
+	OutName        string
+	Outstream      bool
+	OutList        bool
+	HasCache       bool
+	Show           bool
+	CacheFunc      string
+	OutData        string
+	RecvStreamFunc bool
 }
 
 var methodTmpl = `
 {{- if .Outstream}}
-func (s *DummyServer) {{.Method}}(in *edgeproto.{{.InName}}, server edgeproto.{{.Service}}_{{.Method}}Server) error {
+func (s *DummyServer) {{.Method}}(in *{{.Pkg}}.{{.InName}}, server {{.Pkg}}.{{.Service}}_{{.Method}}Server) error {
 	var err error
 {{- if .CacheFunc}}
 	s.{{.InName}}Cache.{{.CacheFunc}}(server.Context(), in, 0)
 {{- end}}
 {{- if (eq .InName .OutName)}}
-	obj := &edgeproto.{{.OutName}}{}
-	if obj.Matches(in, edgeproto.MatchFilter()) {
+	obj := &{{.Pkg}}.{{.OutName}}{}
+	if obj.Matches(in, {{.Pkg}}.MatchFilter()) {
 {{- else}}
 	if true {
 {{- end}}
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&edgeproto.{{.OutName}}{})
+			server.Send(&{{.Pkg}}.{{.OutName}}{})
 		}
 	}
 {{- if and .OutList .HasCache}}
-	err = s.{{.InName}}Cache.Show(in, func(obj *edgeproto.{{.InName}}) error {
+	err = s.{{.InName}}Cache.Show(in, func(obj *{{.Pkg}}.{{.InName}}) error {
 		err := server.Send(obj)
 		return err
 	})
@@ -695,26 +784,24 @@ func (s *DummyServer) {{.Method}}(in *edgeproto.{{.InName}}, server edgeproto.{{
 	return err
 }
 {{- else}}
-func (s *DummyServer) {{.Method}}(ctx context.Context, in *edgeproto.{{.InName}}) (*edgeproto.{{.OutName}}, error) {
+func (s *DummyServer) {{.Method}}(ctx context.Context, in *{{.Pkg}}.{{.InName}}) (*{{.Pkg}}.{{.OutName}}, error) {
 	if s.CudNoop {
-		return &edgeproto.{{.OutName}}{}, nil	
+		return &{{.Pkg}}.{{.OutName}}{}, nil	
 	}
 {{- if .CacheFunc}}
 	s.{{.InName}}Cache.{{.CacheFunc}}(ctx, in, 0)
 {{- end}}
-	return &edgeproto.{{.OutName}}{}, nil	
+	return &{{.Pkg}}.{{.OutName}}{}, nil	
 }
 {{- end}}
 
 `
 
-func (t *TestCud) genDummyMethod(service string, method *descriptor.MethodDescriptorProto) {
+func (t *TestCud) getMethodArgs(service string, method *descriptor.MethodDescriptorProto) *methodArgs {
 	in := gensupport.GetDesc(t.Generator, method.GetInputType())
 	out := gensupport.GetDesc(t.Generator, method.GetOutputType())
-	if !GetGenerateCud(in.DescriptorProto) {
-		return
-	}
 	args := methodArgs{
+		Pkg:       t.support.GetPackageName(in),
 		Service:   service,
 		Method:    *method.Name,
 		InName:    *in.DescriptorProto.Name,
@@ -733,11 +820,24 @@ func (t *TestCud) genDummyMethod(service string, method *descriptor.MethodDescri
 			args.CacheFunc = "Update"
 		}
 	}
-	err := t.methodTmpl.Execute(t, &args)
+	args.OutData = "*" + args.Pkg + "." + args.OutName
+	if args.Outstream {
+		args.OutData = "[]" + args.Pkg + "." + args.OutName
+	}
+	return &args
+}
+
+func (t *TestCud) genDummyMethod(service string, method *descriptor.MethodDescriptorProto) {
+	in := gensupport.GetDesc(t.Generator, method.GetInputType())
+	if !GetGenerateCud(in.DescriptorProto) {
+		return
+	}
+	args := t.getMethodArgs(service, method)
+	err := t.methodTmpl.Execute(t, args)
 	if err != nil {
 		t.Fail("Failed to execute method template: ", err.Error())
 	}
-	t.importEdgeproto = true
+	t.importProtoPkg = true
 	if !args.Outstream {
 		t.importContext = true
 	}
@@ -806,6 +906,213 @@ func (t *TestCud) genDummyServer() {
 	t.P("}")
 	t.P()
 	t.importGrpc = true
+}
+
+var clientTmpl = `
+{{- if .Outstream}}
+{{- if .RecvStreamFunc}}
+type {{.OutName}}Stream interface {
+	Recv() (*{{.Pkg}}.{{.OutName}}, error)
+}
+
+func {{.OutName}}ReadStream(stream {{.OutName}}Stream) ([]{{.Pkg}}.{{.OutName}}, error) {
+	output := []{{.Pkg}}.{{.OutName}}{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read {{.OutName}} stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+{{- end}}
+
+func (s *ApiClient) {{.Method}}(ctx context.Context, in *{{.Pkg}}.{{.InName}}) ([]{{.Pkg}}.{{.OutName}}, error) {
+	api := {{.Pkg}}.New{{.Service}}Client(s.Conn)
+	stream, err := api.{{.Method}}(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return {{.OutName}}ReadStream(stream)
+}
+
+func (s *CliClient) {{.Method}}(ctx context.Context, in *{{.Pkg}}.{{.InName}}) ([]{{.Pkg}}.{{.OutName}}, error) {
+	output := []{{.Pkg}}.{{.OutName}}{}
+	args := append(s.BaseArgs, "controller", "{{.Method}}")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+{{- else}}
+func (s *ApiClient) {{.Method}}(ctx context.Context, in *{{.Pkg}}.{{.InName}}) (*{{.Pkg}}.{{.OutName}}, error) {
+	api := {{.Pkg}}.New{{.Service}}Client(s.Conn)
+	return api.{{.Method}}(ctx, in)
+}
+
+func (s *CliClient) {{.Method}}(ctx context.Context, in *{{.Pkg}}.{{.InName}}) (*{{.Pkg}}.{{.OutName}}, error) {
+	out := {{.Pkg}}.{{.OutName}}{}
+	args := append(s.BaseArgs, "controller", "{{.Method}}")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+{{- end}}
+
+`
+
+func (t *TestCud) genClientInterface(service *descriptor.ServiceDescriptorProto) {
+	if len(service.Method) == 0 {
+		return
+	}
+	methods := []*methodArgs{}
+
+	for _, method := range service.Method {
+		if gensupport.ClientStreaming(method) {
+			continue
+		}
+		args := t.getMethodArgs(*service.Name, method)
+		methods = append(methods, args)
+		if args.Outstream {
+			if _, found := t.recvStreamFuncs[args.OutName]; !found {
+				args.RecvStreamFunc = true
+				t.recvStreamFuncs[args.OutName] = struct{}{}
+			}
+		}
+		err := t.clientTmpl.Execute(t, args)
+		if err != nil {
+			t.Fail("Failed to execute client template: ", err.Error())
+		}
+		t.importWrapper = true
+		t.importContext = true
+		t.importProtoPkg = true
+		if args.RecvStreamFunc {
+			t.importIO = true
+		}
+	}
+	if len(methods) == 0 {
+		return
+	}
+
+	t.P("type ", service.Name, "Client interface {")
+	for _, args := range methods {
+		t.P(args.Method, "(ctx context.Context, in *", args.Pkg, ".", args.InName, ") (", args.OutData, ", error)")
+	}
+	t.P("}")
+	t.P()
+}
+
+func (t *TestCud) genClient() {
+	t.P("type ApiClient struct {")
+	t.P("Conn *grpc.ClientConn")
+	t.P("}")
+	t.P()
+	t.P("type CliClient struct{")
+	t.P("BaseArgs []string")
+	t.P("RunOps []wrapper.RunOp")
+	t.P("}")
+	t.P()
+	t.P("type Client interface {")
+	for _, file := range t.Generator.Request.ProtoFile {
+		if len(file.Service) == 0 {
+			continue
+		}
+		for _, service := range file.Service {
+			if hasSupportedMethod(service) {
+				t.P(service.Name, "Client")
+			}
+		}
+	}
+	t.P("}")
+	t.P()
+	t.importGrpc = true
+	t.importWrapper = true
+}
+
+type e2eFieldInfo struct {
+	fieldName string
+	ref       string
+	group     *gensupport.MethodGroup
+	info      *gensupport.MethodInfo
+}
+
+func (t *TestCud) genE2edata(desc *generator.Descriptor) {
+	message := desc.DescriptorProto
+	pkg := t.support.GetPackage(desc)
+	t.importProtoPkg = true
+
+	// Get groups per field. For output data struct, use first
+	// method. Show data assumes input struct type is used to store
+	// output show data.
+	fieldInfos := []e2eFieldInfo{}
+	showFieldInfos := []e2eFieldInfo{}
+	for _, field := range message.Field {
+		fieldDesc := gensupport.GetDesc(t.Generator, field.GetTypeName())
+		inType := *fieldDesc.DescriptorProto.Name
+		group, found := t.methodGroups[inType]
+		if !found {
+			continue
+		}
+		foundShow := false
+		foundInfo := false
+		for _, info := range group.MethodInfos {
+			finfo := e2eFieldInfo{
+				fieldName: generator.CamelCase(*field.Name),
+				group:     group,
+				info:      info,
+				ref:       "&",
+			}
+			if group.SingularData {
+				finfo.ref = ""
+			}
+			if info.IsShow && !foundShow {
+				showFieldInfos = append(showFieldInfos, finfo)
+				foundShow = true
+			}
+			if !info.IsShow && !foundInfo {
+				fieldInfos = append(fieldInfos, finfo)
+				foundInfo = true
+			}
+			if foundShow && foundInfo {
+				break
+			}
+		}
+	}
+
+	outstruct := *message.Name + "Out"
+	t.P("type ", outstruct, " struct {")
+	for _, finfo := range fieldInfos {
+		outType := t.getOutputType(finfo.info, finfo.group)
+		t.P(finfo.fieldName, " ", outType)
+	}
+	t.P("Errors []Err")
+	t.P("}")
+	t.P()
+
+	t.P("func Run", message.Name, "Apis(run *Run, in *", pkg, message.Name, ", inMap map[string]interface{}, out *", outstruct, ") {")
+	for _, finfo := range fieldInfos {
+		t.P("run.", finfo.group.ApiName(), "(", finfo.ref, "in.", finfo.fieldName, ", inMap[\"", strings.ToLower(finfo.fieldName), "\"], &out.", finfo.fieldName, ")")
+	}
+	t.P("out.Errors = run.Errs")
+	t.P("}")
+	t.P()
+
+	t.P("func Run", message.Name, "ReverseApis(run *Run, in *", pkg, message.Name, ", inMap map[string]interface{}, out *", outstruct, ") {")
+	for ii := len(fieldInfos) - 1; ii >= 0; ii-- {
+		finfo := fieldInfos[ii]
+		t.P("run.", finfo.group.ApiName(), "(", finfo.ref, "in.", finfo.fieldName, ", inMap[\"", strings.ToLower(finfo.fieldName), "\"], &out.", finfo.fieldName, ")")
+	}
+	t.P("out.Errors = run.Errs")
+	t.P("}")
+	t.P()
+
+	t.P("func Run", message.Name, "ShowApis(run *Run, in *", pkg, message.Name, ", out *", pkg, message.Name, ") {")
+	for _, finfo := range showFieldInfos {
+		t.P("run.", finfo.group.ApiName(), "(", finfo.ref, "in.", finfo.fieldName, ", nil, &out.", finfo.fieldName, ")")
+	}
+	t.P("}")
+	t.P()
 }
 
 func GetGenerateCud(message *descriptor.DescriptorProto) bool {

@@ -1,10 +1,6 @@
-operators:
-- key:
-    name: mexdev
 cloudlets:
 - key:
-    operatorkey:
-      name: mexdev
+    organization: mexdev
     name: localtest
   accessuri: localtest.tmo
   location:
@@ -34,26 +30,17 @@ clusterinsts:
     clusterkey:
       name: AppCluster
     cloudletkey:
-      operatorkey:
-        name: mexdev
+      organization: mexdev
       name: localtest
-    developer: MobiledgeX
+    organization: MobiledgeX
   deployment: docker
   ipaccess: IpAccessShared
   flavor:
     name: x1.medium
   liveness: LivenessStatic
-developers:
-- key:
-    name: MobiledgeX
-  username: mex
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
 apps:
 - key:
-    developerkey:
-      name: MobiledgeX
+    organization: MobiledgeX
     name: MobiledgeX SDK Demo
     version: "1.0"
   imagepath: docker.mobiledgex.net/mobiledgex/mobiledgex_public/mobiledgexsdkdemo
@@ -66,8 +53,7 @@ apps:
   deployment: docker
   androidpackagename: com.mobiledgex.sdkdemo
 - key:
-    developerkey:
-      name: MobiledgeX
+    organization: MobiledgeX
     name: Face Detection Demo
     version: "1.0"
   imagepath: docker.mobiledgex.net/mobiledgex/mobiledgex_public/facedetection
@@ -93,29 +79,25 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: MobiledgeX SDK Demo
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: AppCluster
       cloudletkey:
-        operatorkey:
-          name: mexdev
+        organization: mexdev
         name: localtest
-      developer: MobiledgeX
+      organization: MobiledgeX
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: Face Detection Demo
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: AppCluster
       cloudletkey:
-        operatorkey:
-          name: mexdev
+        organization: mexdev
         name: localtest
-      developer: MobiledgeX
+      organization: MobiledgeX

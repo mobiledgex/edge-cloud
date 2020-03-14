@@ -40,9 +40,7 @@ func TestAppInstApi(t *testing.T) {
 	}
 
 	// create supporting data
-	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
@@ -185,7 +183,7 @@ func TestAppInstApi(t *testing.T) {
 			require.Equal(t, test_prefix, port.FqdnPrefix, "check port fqdn prefix")
 		}
 	}
-
+	testAppFlavorRequest(t, ctx, commonApi, responder)
 	dummy.Stop()
 }
 
@@ -264,9 +262,7 @@ func TestAutoClusterInst(t *testing.T) {
 
 	reduceInfoTimeouts(t, ctx)
 	// create supporting data
-	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
@@ -324,6 +320,26 @@ func forceAppInstState(ctx context.Context, in *edgeproto.AppInst, state edgepro
 	return err
 }
 
+func testAppFlavorRequest(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, responder *DummyInfoResponder) {
+	// Non-nomial test, request an optional resource from a cloudlet that offers none.
+	var testflavor = edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.large-mex",
+		},
+		Ram:       8192,
+		Vcpus:     8,
+		Disk:      40,
+		OptResMap: map[string]string{"gpu": "gpu:1"},
+	}
+	_, err := flavorApi.CreateFlavor(ctx, &testflavor)
+	require.Nil(t, err, "CreateFlavor")
+	nonNomApp := testutil.AppInstData[0]
+	nonNomApp.Flavor = testflavor.Key
+	err = appInstApi.CreateAppInst(&nonNomApp, testutil.NewCudStreamoutAppInst(ctx))
+	require.NotNil(t, err, "non-nom-app-create")
+	require.Equal(t, "Optional resource requested by x1.large-mex, cloudlet San Jose Site supports none", err.Error())
+}
+
 // Test that Crm Override for Delete App overrides any failures
 // on both side-car auto-apps and an underlying auto-cluster.
 func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, responder *DummyInfoResponder) {
@@ -333,8 +349,8 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 			ClusterKey: edgeproto.ClusterKey{
 				Name: util.K8SSanitize(ClusterAutoPrefix + "override-clust"),
 			},
-			CloudletKey: testutil.CloudletData[1].Key,
-			Developer:   testutil.AppData[0].Key.DeveloperKey.Name,
+			CloudletKey:  testutil.CloudletData[1].Key,
+			Organization: testutil.AppData[0].Key.Organization,
 		},
 	}
 	// autocluster app
