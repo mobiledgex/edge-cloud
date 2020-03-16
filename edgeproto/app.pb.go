@@ -139,7 +139,7 @@ func (*AppKey) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{0}
 
 // ConfigFile
 type ConfigFile struct {
-	// kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config
+	// kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml
 	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
 	// config file contents or URI reference
 	Config string `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
