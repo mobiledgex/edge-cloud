@@ -49,6 +49,10 @@ var NFSAutoProvisionAppName = "NFSAutoProvision"
 var ProxyMetricsPort = int32(65121)
 var AutoProvMeasurement = "auto-prov-counts"
 
+// AppLabels for the application containers
+var MexAppNameLabel = "mexAppName"
+var MexAppVersionLabel = "mexAppVersion"
+
 // Instance Lifecycle variables
 var EventsDbName = "events"
 var CloudletEvent = "cloudlet"
