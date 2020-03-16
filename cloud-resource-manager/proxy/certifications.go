@@ -20,7 +20,7 @@ var CertsDir = "/etc/ssl/certs"
 var CertName = "envoyTlsCerts" // cannot use common name as filename since envoy doesn't know if the app is dedicated or not
 var certFile = CertsDir + "/" + CertName + ".crt"
 var keyFile = CertsDir + "/" + CertName + ".key"
-var permission pc.Sudo
+var permission = pc.SudoOn
 
 const LETS_ENCRYPT_MAX_DOMAINS_PER_CERT = 100
 
@@ -79,8 +79,6 @@ func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultA
 		certFile = CertsDir + "/" + CertName + ".crt"
 		keyFile = CertsDir + "/" + CertName + ".key"
 		permission = pc.NoSudo
-	} else {
-		permission = pc.SudoOn
 	}
 	SharedRootLbClient = client
 	getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr, commercialCerts)
