@@ -4,14 +4,15 @@
     columns:
     - time
     - app
+    - apporg
     - cloudlet
+    - cloudletorg
     - cluster
-    - dev
+    - clusterorg
     - disk
     - event
     - flavor
     - nodeCount
-    - operator
     - other
     - ram
     - status
@@ -20,14 +21,15 @@
     values:
     - - "2020-01-28T21:44:17.757749Z"
       - someapplication1
+      - AcmeAppCo
       - tmus-cloud-1
+      - tmus
       - SmallCluster
       - AcmeAppCo
       - null
       - CREATED
       - null
       - null
-      - tmus
       - null
       - null
       - UP
@@ -35,14 +37,15 @@
       - "1.0"
     - - "2020-01-28T21:44:19.842019Z"
       - someapplication1
+      - AcmeAppCo
       - tmus-cloud-1
+      - tmus
       - SmallCluster
       - AcmeAppCo
       - null
       - DELETED
       - null
       - null
-      - tmus
       - null
       - null
       - DOWN
@@ -50,14 +53,15 @@
       - "1.0"
     - - "2020-01-28T21:44:20.073059Z"
       - someapplication1
+      - AcmeAppCo
       - tmus-cloud-1
+      - tmus
       - SmallCluster
       - AcmeAppCo
       - null
       - CREATED
       - null
       - null
-      - tmus
       - null
       - null
       - UP
@@ -65,14 +69,15 @@
       - "1.0"
     - - "2020-01-28T21:44:20.270832Z"
       - someapplication1
+      - AcmeAppCo
       - tmus-cloud-1
+      - tmus
       - SmallCluster
       - AcmeAppCo
       - null
       - DELETED
       - null
       - null
-      - tmus
       - null
       - null
       - DOWN
@@ -84,14 +89,15 @@
     columns:
     - time
     - app
+    - apporg
     - cloudlet
+    - cloudletorg
     - cluster
-    - dev
+    - clusterorg
     - disk
     - event
     - flavor
     - nodeCount
-    - operator
     - other
     - ram
     - status
@@ -100,14 +106,15 @@
     values:
     - - "2020-01-28T21:44:17.248106Z"
       - null
+      - null
       - tmus-cloud-1
+      - tmus
       - null
       - null
       - null
       - CREATED
       - null
       - null
-      - tmus
       - null
       - null
       - UP
@@ -115,14 +122,15 @@
       - null
     - - "2020-01-28T21:44:20.605077Z"
       - null
+      - null
       - tmus-cloud-1
+      - tmus
       - null
       - null
       - null
       - DELETED
       - null
       - null
-      - tmus
       - null
       - null
       - DOWN
@@ -134,14 +142,15 @@
     columns:
     - time
     - app
+    - apporg
     - cloudlet
+    - cloudletorg
     - cluster
-    - dev
+    - clusterorg
     - disk
     - event
     - flavor
     - nodeCount
-    - operator
     - other
     - ram
     - status
@@ -150,14 +159,15 @@
     values:
     - - "2020-01-28T21:44:17.53257Z"
       - null
+      - null
       - tmus-cloud-1
+      - tmus
       - SmallCluster
       - AcmeAppCo
       - 2
       - CREATED
       - x1.small
       - 3
-      - tmus
       - map[]
       - 2048
       - UP
@@ -165,14 +175,15 @@
       - null
     - - "2020-01-31T19:35:26.643773Z"
       - null
+      - null
       - tmus-cloud-1
+      - tmus
       - SmallCluster
       - AcmeAppCo
       - 2
       - DELETED
       - x1.small
       - 3
-      - tmus
       - map[]
       - 2048
       - DOWN
