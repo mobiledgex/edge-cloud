@@ -206,12 +206,15 @@ func createDockerComposeFile(client ssh.Client, app *edgeproto.App, appInst *edg
 // As a result we have a separate function specifically for a docker app creation on a MacOS laptop
 func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	image := app.ImagePath
+	nameLabelVal := util.DNSSanitize(app.Key.Name)
+	versionLabelVal := util.DNSSanitize(app.Key.Version)
 	name := util.DockerSanitize(app.Key.Name)
 	cloudlet := util.DockerSanitize(appInst.Key.ClusterInstKey.CloudletKey.Name)
 	cluster := util.DockerSanitize(appInst.Key.ClusterInstKey.Organization + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name)
 
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d -l edge-cloud -l cloudlet=%s -l cluster=%s --restart=unless-stopped --name=%s %s %s %s", cloudlet, cluster, name,
+		cmd := fmt.Sprintf("docker run -d -l edge-cloud -l cloudlet=%s -l cluster=%s  -l %s=%s -l %s=%s --restart=unless-stopped --name=%s %s %s %s",
+			cloudlet, cluster, cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel, versionLabelVal, name,
 			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrAllInterfaces), " "), image, app.Command)
 		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
 
@@ -225,6 +228,10 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 		if err != nil {
 			return err
 		}
+		// TODO - missing a label for the metaAppInst label.
+		// There is a feature request in docker for it - https://github.com/docker/compose/issues/6159
+		// Once that's merged we can add label here too
+		// cmd := fmt.Sprintf("docker-compose -f %s -l %s=%s up -d", filename, cloudcommon.MexAppInstanceLabel, labelVal)
 		cmd := fmt.Sprintf("docker-compose -f %s up -d", filename)
 		log.DebugLog(log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
@@ -237,11 +244,16 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 
 func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, networkMode DockerNetworkingMode) error {
 	image := app.ImagePath
+	nameLabelVal := util.DNSSanitize(app.Key.Name)
+	versionLabelVal := util.DNSSanitize(app.Key.Version)
 	name := GetContainerName(&app.Key)
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d --restart=unless-stopped --network=host --name=%s %s %s", GetContainerName(&app.Key), image, app.Command)
+		cmd := fmt.Sprintf("docker run -d -l %s=%s -l %s=%s --restart=unless-stopped --network=host --name=%s %s %s",
+			cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel,
+			versionLabelVal, GetContainerName(&app.Key), image, app.Command)
 		if networkMode == DockerBridgeMode {
-			cmd = fmt.Sprintf("docker run -d -l edge-cloud --restart=unless-stopped --name=%s %s %s %s", name,
+			cmd = fmt.Sprintf("docker run -d -l edge-cloud -l %s=%s -l %s=%s --restart=unless-stopped --name=%s %s %s %s",
+				cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel, versionLabelVal, name,
 				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
 		}
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker run ", "cmd", cmd)
@@ -259,6 +271,10 @@ func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 		if err != nil {
 			return err
 		}
+		// TODO - missing a label for the metaAppInst label.
+		// There is a feature request in docker for it - https://github.com/docker/compose/issues/6159
+		// Once that's merged we can add label here too
+		// cmd := fmt.Sprintf("docker-compose -f %s -l %s=%s up -d", filename, cloudcommon.MexAppInstanceLabel, labelVal)
 		cmd := fmt.Sprintf("docker-compose -f %s up -d", filename)
 		log.SpanLog(ctx, log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)

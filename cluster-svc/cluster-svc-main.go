@@ -22,6 +22,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/tls"
+	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
@@ -81,6 +82,9 @@ grafana:
   enabled: false
 alertmanager:
   enabled: false
+commonLabels:
+  {{if .AppLabel}}{{.AppLabel}}: "{{.AppLabelVal}}"{{end}}
+  {{if .AppVersionLabel}}{{.AppVersionLabel}}: "{{.AppVersionLabelVal}}"{{end}}
 `
 
 var MEXPrometheusAppName = cloudcommon.MEXPrometheusAppName
@@ -113,7 +117,11 @@ var ClusterInstCache edgeproto.ClusterInstCache
 var nodeMgr *node.NodeMgr
 
 type promCustomizations struct {
-	Interval string
+	Interval           string
+	AppLabel           string
+	AppLabelVal        string
+	AppVersionLabel    string
+	AppVersionLabelVal string
 }
 
 // nothing yet to customize
@@ -139,7 +147,6 @@ var NFSAutoProvisionApp = edgeproto.App{
 	Annotations:   "version=1.2.8",
 }
 
-// TODO: change this IP once we integrate with the Helm Customization feature
 var NFSAutoProvisionAppTemplate = `nfs:
   path: /share
   server: [[ .Deployment.ClusterIp ]]
@@ -376,7 +383,11 @@ func fillAppConfigs(app *edgeproto.App, interval time.Duration) error {
 	switch app.Key.Name {
 	case MEXPrometheusAppName:
 		ex := promCustomizations{
-			Interval: scrapeStr,
+			Interval:           scrapeStr,
+			AppLabel:           cloudcommon.MexAppNameLabel,
+			AppLabelVal:        util.DNSSanitize(app.Key.Name),
+			AppVersionLabel:    cloudcommon.MexAppVersionLabel,
+			AppVersionLabelVal: util.DNSSanitize(app.Key.Version),
 		}
 		buf := bytes.Buffer{}
 		err := prometheusT.Execute(&buf, &ex)
