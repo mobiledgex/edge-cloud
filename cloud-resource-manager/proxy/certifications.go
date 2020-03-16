@@ -20,6 +20,7 @@ var CertsDir = "/etc/ssl/certs"
 var CertName = "envoyTlsCerts" // cannot use common name as filename since envoy doesn't know if the app is dedicated or not
 var certFile = CertsDir + "/" + CertName + ".crt"
 var keyFile = CertsDir + "/" + CertName + ".key"
+var permission pc.Sudo
 
 const LETS_ENCRYPT_MAX_DOMAINS_PER_CERT = 100
 
@@ -77,6 +78,9 @@ func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultA
 		CertsDir = "/tmp/ssl/certs"
 		certFile = CertsDir + "/" + CertName + ".crt"
 		keyFile = CertsDir + "/" + CertName + ".key"
+		permission = pc.NoSudo
+	} else {
+		permission = pc.SudoOn
 	}
 	SharedRootLbClient = client
 	getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr, commercialCerts)
@@ -119,11 +123,11 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos, "can't create cert dir on rootlb", "certDir", CertsDir)
 	} else {
-		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", pc.NoSudo)
+		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", permission)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelMexos, "unable to write tls cert file to rootlb", "err", err)
 		}
-		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", pc.NoSudo)
+		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", permission)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelMexos, "unable to write tls key file to rootlb", "err", err)
 		}
