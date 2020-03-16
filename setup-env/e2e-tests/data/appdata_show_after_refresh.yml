@@ -291,6 +291,9 @@ apps:
         enabled: false
       alertmanager:
         enabled: false
+      commonLabels:
+        mexAppName: "mexprometheusappname"
+        mexAppVersion: "10"
 - key:
     organization: AcmeAppCo1
     name: vmapp1

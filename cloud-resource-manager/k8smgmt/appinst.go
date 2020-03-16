@@ -140,7 +140,7 @@ func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, clien
 	if err != nil {
 		return err
 	}
-	mf, err = MergeEnvVars(ctx, vaultConfig, mf, app.Configs, names.ImagePullSecret)
+	mf, err = MergeEnvVars(ctx, vaultConfig, app, mf, names.ImagePullSecret)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos, "failed to merge env vars", "error", err)
 	}
