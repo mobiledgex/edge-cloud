@@ -36,6 +36,7 @@ message PrivacyPolicy {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.alias) = "name=Key.Name,cluster-org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
 }
 
 service PrivacyPolicyApi {
@@ -46,6 +47,7 @@ service PrivacyPolicyApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
   // Delete a Privacy policy
   rpc DeletePrivacyPolicy(PrivacyPolicy) returns (Result) {

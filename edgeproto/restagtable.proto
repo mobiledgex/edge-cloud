@@ -40,7 +40,8 @@ message ResTagTable {
   option (protogen.notify_message) = true;
   option (protogen.alias) = "res=Key.Name,organzation=Key.Organization";
   option (protogen.also_required) = "Tags";
-  }
+  option (protogen.uses_org) = "key=Organization";
+}
 
 // This API should be admin-only
 service ResTagTableApi {
@@ -51,7 +52,8 @@ service ResTagTableApi {
       post: "/create/gputagtbl"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+    option (protogen.mc2_api) = "ResourceResTagTable,ActionManage,Key.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
   // Delete TagTable
   rpc DeleteResTagTable(ResTagTable) returns (Result) {
@@ -59,7 +61,7 @@ service ResTagTableApi {
       post: "/delete/gputagtbl"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+    option (protogen.mc2_api) = "ResourceResTagTable,ActionManage,Key.Organization";
   }
 
   rpc UpdateResTagTable(ResTagTable) returns (Result) {
@@ -67,7 +69,7 @@ service ResTagTableApi {
       post: "/update/gputagtbl"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+    option (protogen.mc2_api) = "ResourceResTagTable,ActionManage,Key.Organization";
   }
   // show TagTable
   rpc ShowResTagTable(ResTagTable) returns (stream ResTagTable) {
@@ -75,7 +77,7 @@ service ResTagTableApi {
         post: "/show/gputagtbl"
         body: "*"
       };
-      option(protogen.mc2_api) = "ResourceResTagTable,ActionView,";
+      option(protogen.mc2_api) = "ResourceResTagTable,ActionView,Key.Organization";
   }
   // add new tag(s) to TagTable
   rpc AddResTag(ResTagTable) returns (Result) {
@@ -83,7 +85,7 @@ service ResTagTableApi {
         post: "/add/gputagtbl"
         body: "*"
       };
-      option(protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+      option(protogen.mc2_api) = "ResourceResTagTable,ActionManage,Key.Organization";
       option(protogen.input_required) = true;
   }
   // remove existing tag(s) from TagTable
@@ -92,7 +94,7 @@ service ResTagTableApi {
         post: "/rm/gputagtbl"
         body: "*"
       };
-      option(protogen.mc2_api) = "ResourceResTagTable,ActionManage,";
+      option(protogen.mc2_api) = "ResourceResTagTable,ActionManage,Key.Organization";
       option (protogen.input_required) = true;
   }
   // Fetch a copy of the TagTable

@@ -47,6 +47,7 @@ message Settings {
   option (protogen.notify_cache) = true;
   option (protogen.custom_key_type) = "SettingsKey";
   option (protogen.singular_data) = true;
+  option (protogen.uses_org) = "none";
 }
 
 service SettingsApi {

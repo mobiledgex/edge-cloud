@@ -629,3 +629,14 @@ func GetOrg(obj interface{}) string {
 		return "mobiledgex"
 	}
 }
+
+func (c *ClusterInstCache) UsesOrg(org string) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, val := range c.Objs {
+		if val.Key.Organization == org || val.Key.CloudletKey.Organization == org || (val.Reservable && val.ReservedBy == org) {
+			return true
+		}
+	}
+	return false
+}
