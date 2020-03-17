@@ -35,10 +35,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -54,10 +53,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -73,10 +71,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -88,18 +85,9 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   masternodeflavor: x1.small
-operators:
-- key:
-    name: tmus
-
-developers:
-- key:
-    name: AcmeAppCo
-
 cloudlets:
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-1
   location:
     latitude: 31
@@ -113,8 +101,7 @@ cloudlets:
   physicalname: tmus-cloud-1
   containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-2
   location:
     latitude: 35
@@ -130,8 +117,7 @@ cloudlets:
 
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -208,8 +194,7 @@ apps:
   deploymentgenerator: kubernetes-basic
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication2
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication2:1.0
@@ -280,8 +265,7 @@ apps:
   scalewithcluster: true
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: MobiledgeX
+    organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
@@ -331,24 +315,25 @@ apps:
         enabled: false
       alertmanager:
         enabled: false
+      commonLabels:
+        mexAppName: "mexprometheusappname"
+        mexAppVersion: "10"
   internalports: true
   accesstype: AccessTypeLoadBalancer
 
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -374,18 +359,16 @@ appinstances:
   vmflavor: x1.small
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -402,18 +385,16 @@ appinstances:
   vmflavor: x1.small
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -430,18 +411,16 @@ appinstances:
   vmflavor: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -463,18 +442,16 @@ appinstances:
   vmflavor: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -500,18 +477,16 @@ appinstances:
   vmflavor: x1.small
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91

@@ -141,8 +141,8 @@ func AddApp(in *edgeproto.App) {
 	app.AutoProvPolicy = nil
 	if in.AutoProvPolicy != "" {
 		ppKey := edgeproto.PolicyKey{
-			Developer: in.Key.DeveloperKey.Name,
-			Name:      in.AutoProvPolicy,
+			Organization: in.Key.Organization,
+			Name:         in.AutoProvPolicy,
 		}
 		if pp, found := tbl.AutoProvPolicies[ppKey]; found {
 			app.AutoProvPolicy = pp
@@ -158,7 +158,7 @@ func AddApp(in *edgeproto.App) {
 func AddAppInst(appInst *edgeproto.AppInst) {
 	var cNew *DmeAppInst
 
-	carrierName := appInst.Key.ClusterInstKey.CloudletKey.OperatorKey.Name
+	carrierName := appInst.Key.ClusterInstKey.CloudletKey.Organization
 
 	tbl := DmeAppTbl
 	appkey := appInst.Key.AppKey
@@ -241,7 +241,7 @@ func RemoveAppInst(appInst *edgeproto.AppInst) {
 
 	tbl = DmeAppTbl
 	appkey := appInst.Key.AppKey
-	carrierName := appInst.Key.ClusterInstKey.CloudletKey.OperatorKey.Name
+	carrierName := appInst.Key.ClusterInstKey.CloudletKey.Organization
 	tbl.Lock()
 	defer tbl.Unlock()
 	app, ok := tbl.Apps[appkey]
@@ -318,7 +318,7 @@ func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 func DeleteCloudletInfo(info *edgeproto.CloudletInfo) {
 	log.DebugLog(log.DebugLevelDmereq, "DeleteCloudletInfo called")
 	tbl := DmeAppTbl
-	carrier := info.Key.OperatorKey.Name
+	carrier := info.Key.Organization
 	tbl.Lock()
 	defer tbl.Unlock()
 
@@ -384,12 +384,12 @@ func (s *AutoProvPolicyHandler) Update(ctx context.Context, in *edgeproto.AutoPr
 	pp.Cloudlets = make(map[string][]*edgeproto.AutoProvCloudlet)
 	if in.Cloudlets != nil {
 		for _, provCloudlet := range in.Cloudlets {
-			list, found := pp.Cloudlets[provCloudlet.Key.OperatorKey.Name]
+			list, found := pp.Cloudlets[provCloudlet.Key.Organization]
 			if !found {
 				list = make([]*edgeproto.AutoProvCloudlet, 0)
 			}
 			list = append(list, provCloudlet)
-			pp.Cloudlets[provCloudlet.Key.OperatorKey.Name] = list
+			pp.Cloudlets[provCloudlet.Key.Organization] = list
 		}
 	}
 }
@@ -418,7 +418,7 @@ func (s *AutoProvPolicyHandler) Flush(ctx context.Context, notifyId int64) {}
 // This gets called when a cloudlet goes offline, or comes back online
 func SetInstStateForCloudlet(info *edgeproto.CloudletInfo) {
 	log.DebugLog(log.DebugLevelDmereq, "SetInstStateForCloudlet called", "cloudlet", info)
-	carrier := info.Key.OperatorKey.Name
+	carrier := info.Key.Organization
 	tbl := DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
@@ -454,7 +454,7 @@ func translateCarrierName(carrierName string) string {
 	operCode := edgeproto.OperatorCode{}
 	operCodeKey := edgeproto.OperatorCodeKey(carrierName)
 	if tbl.OperatorCodes.Get(&operCodeKey, &operCode) {
-		cname = operCode.OperatorName
+		cname = operCode.Organization
 	}
 	return cname
 }
@@ -559,34 +559,32 @@ func updateContextWithCloudletDetails(ctx context.Context, cloudlet, carrier str
 	statKey, ok := ctx.Value(StatKeyContextKey).(*StatKey)
 	if ok {
 		statKey.CloudletFound.Name = cloudlet
-		statKey.CloudletFound.OperatorKey.Name = carrier
+		statKey.CloudletFound.Organization = carrier
 	}
 }
 
-// returns true if if the requested app allows the registered app to
-// access APIs on its behalf
-func requestedAppPermitsRegisteredApp(requestedApp edgeproto.AppKey, registeredApp edgeproto.AppKey) bool {
-	// if the 2 apps match, allow it.  It means the client requested the same app as was registered
+// returns true if if the requested app exists and the requesting app is a platform app
+func verifyRegisteredAppForAppRequestedApp(requestedApp edgeproto.AppKey, registeredApp edgeproto.AppKey) error {
 	var tbl *DmeApps
 	tbl = DmeAppTbl
 
-	if requestedApp == registeredApp {
-		return true
+	if !cloudcommon.IsPlatformApp(registeredApp.Organization, registeredApp.Name) {
+		return grpc.Errorf(codes.PermissionDenied, "Specifying AppName, AppVers or OrgName is not permitted for a non-platform app after registration")
 	}
-	if !cloudcommon.IsPlatformApp(registeredApp.DeveloperKey.Name, registeredApp.Name) {
-		return false
-	}
-	// now find the app and see if it permits platform apps
+	// just check that the app exists, there is no longer a permitsPlatformApp concept
 	tbl.Lock()
 	defer tbl.Unlock()
 	_, ok := tbl.Apps[requestedApp]
-	return ok
+	if !ok {
+		return grpc.Errorf(codes.NotFound, "Requested app: OrgName: %s Appname: %s AppVers: %s not found", requestedApp.Organization, requestedApp.Name, requestedApp.Version)
+	}
+	return nil
 }
 
 func FindCloudlet(ctx context.Context, ckey *CookieKey, mreq *dme.FindCloudletRequest, mreply *dme.FindCloudletReply) error {
 	var appkey edgeproto.AppKey
 	publicCloudPadding := 100.0 // public clouds have to be this much closer in km
-	appkey.DeveloperKey.Name = ckey.DevName
+	appkey.Organization = ckey.OrgName
 	appkey.Name = ckey.AppName
 	appkey.Version = ckey.AppVers
 	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
@@ -594,25 +592,25 @@ func FindCloudlet(ctx context.Context, ckey *CookieKey, mreq *dme.FindCloudletRe
 
 	// specifying an app in the request is allowed for platform apps only,
 	// and should require permission from the developer of the actual app
-	if mreq.AppName != "" || mreq.DevName != "" || mreq.AppVers != "" {
+	if mreq.AppName != "" || mreq.OrgName != "" || mreq.AppVers != "" {
 		var reqkey edgeproto.AppKey
-		reqkey.DeveloperKey.Name = mreq.DevName
+		reqkey.Organization = mreq.OrgName
 		reqkey.Name = mreq.AppName
 		reqkey.Version = mreq.AppVers
-		if !requestedAppPermitsRegisteredApp(reqkey, appkey) {
-			return grpc.Errorf(codes.PermissionDenied, "Access to requested app: Devname: %s Appname: %s AppVers: %s not allowed for the registered app: Devname: %s Appname: %s Appvers: %s",
-				mreq.DevName, mreq.AppName, mreq.AppVers, appkey.DeveloperKey.Name, appkey.Name, appkey.Version)
+		err := verifyRegisteredAppForAppRequestedApp(reqkey, appkey)
+		if err != nil {
+			return err
 		}
 		//update the appkey to use the requested key
 		appkey = reqkey
 	}
 
 	// if the app itself is a platform app, it is not returned here
-	if cloudcommon.IsPlatformApp(appkey.DeveloperKey.Name, appkey.Name) {
+	if cloudcommon.IsPlatformApp(appkey.Organization, appkey.Name) {
 		return nil
 	}
 
-	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", mreq.CarrierName, "app", appkey.Name, "developer", appkey.DeveloperKey.Name, "version", appkey.Version)
+	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", mreq.CarrierName, "app", appkey.Name, "developer", appkey.Organization, "version", appkey.Version)
 
 	// first find carrier cloudlet
 	bestDistance, updated := findClosestForCarrier(ctx, mreq.CarrierName, appkey, mreq.GpsLocation, InfiniteDistance, mreply)
@@ -664,14 +662,14 @@ func GetFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 	defer tbl.RUnlock()
 	for _, a := range tbl.Apps {
 		// if the app itself is a platform app, it is not returned here
-		if cloudcommon.IsPlatformApp(a.AppKey.DeveloperKey.Name, a.AppKey.Name) {
+		if cloudcommon.IsPlatformApp(a.AppKey.Organization, a.AppKey.Name) {
 			continue
 		}
 		if a.OfficialFqdn != "" {
 			fqdns := strings.Split(a.OfficialFqdn, ",")
 			aq := dme.AppFqdn{
 				AppName:            a.AppKey.Name,
-				DevName:            a.AppKey.DeveloperKey.Name,
+				OrgName:            a.AppKey.Organization,
 				AppVers:            a.AppKey.Version,
 				Fqdns:              fqdns,
 				AndroidPackageName: a.AndroidPackageName}
@@ -702,7 +700,7 @@ func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.Ap
 		for cname, c := range a.Carriers {
 			//if the carrier name was provided, only look for cloudlets for that carrier, or for public cloudlets
 			if carrierName != "" && !isPublicCarrier(cname) && carrierName != cname {
-				log.DebugLog(log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "carrierName", carrierName, "i.cloudletKey.OperatorKey.Name", cname)
+				log.DebugLog(log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "carrierName", carrierName, "i.cloudletKey.Organization", cname)
 				continue
 			}
 			for _, i := range c.Insts {
@@ -717,13 +715,14 @@ func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.Ap
 
 					d = DistanceBetween(*mreq.GpsLocation, i.location)
 					cloc.GpsLocation = &i.location
-					cloc.CarrierName = i.clusterInstKey.CloudletKey.OperatorKey.Name
+					cloc.CarrierName = i.clusterInstKey.CloudletKey.Organization
 					cloc.CloudletName = i.clusterInstKey.CloudletKey.Name
 					cloc.Distance = d
 				}
 				ai := dme.Appinstance{}
 				ai.AppName = a.AppKey.Name
 				ai.AppVers = a.AppKey.Version
+				ai.OrgName = a.AppKey.Organization
 				ai.Fqdn = i.uri
 				ai.Ports = copyPorts(i)
 				cloc.Appinstances = append(cloc.Appinstances, &ai)
@@ -777,12 +776,12 @@ func copyPorts(cappInst *DmeAppInst) []*dme.AppPort {
 	return ports
 }
 
-func GetAuthPublicKey(devname string, appname string, appvers string) (string, error) {
+func GetAuthPublicKey(orgname string, appname string, appvers string) (string, error) {
 	var key edgeproto.AppKey
 	var tbl *DmeApps
 	tbl = DmeAppTbl
 
-	key.DeveloperKey.Name = devname
+	key.Organization = orgname
 	key.Name = appname
 	key.Version = appvers
 	tbl.Lock()
@@ -795,9 +794,9 @@ func GetAuthPublicKey(devname string, appname string, appvers string) (string, e
 	return "", grpc.Errorf(codes.NotFound, "app not found")
 }
 
-func AppExists(devname string, appname string, appvers string) bool {
+func AppExists(orgname string, appname string, appvers string) bool {
 	var key edgeproto.AppKey
-	key.DeveloperKey.Name = devname
+	key.Organization = orgname
 	key.Name = appname
 	key.Version = appvers
 

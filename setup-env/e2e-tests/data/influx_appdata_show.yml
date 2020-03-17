@@ -32,7 +32,7 @@ flavors:
 
 privacypolicies:
 - key:
-    developer: AcmeAppCo
+    organization: AcmeAppCo
     name: PrivPolicy1
   outboundsecurityrules:
   - protocol: tcp
@@ -55,10 +55,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   sharedvolumesize: 100
@@ -68,26 +67,13 @@ clusterinsts:
   nummasters: 1
   numnodes: 2
 
-operators:
-- key:
-    name: tmus
-
 operatorcodes:
 - code: 31026
-  operatorname: tmus
-
-developers:
-- key:
-    name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
+  organization: tmus
 
 cloudlets:
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-1
   location:
     latitude: 31
@@ -102,8 +88,7 @@ cloudlets:
 
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -129,8 +114,7 @@ apps:
   androidpackagename: com.acme.someapplication1
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: MobiledgeX
+    organization: MobiledgeX
     name: NFSAutoProvision
     version: "1.0"
   imagepath: stable/nfs-client-provisioner
@@ -151,8 +135,7 @@ apps:
   internalports: true
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: MobiledgeX
+    organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
@@ -204,23 +187,24 @@ apps:
         enabled: false
       alertmanager:
         enabled: false
-  accesstype: AccessTypeLoadBalancer
+      commonLabels:
+        mexAppName: "mexprometheusappname"
+        mexAppVersion: "10"
+accesstype: AccessTypeLoadBalancer
 
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -234,18 +218,16 @@ appinstances:
 
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: NFSAutoProvision
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -255,18 +237,16 @@ appinstances:
 
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91

@@ -12,7 +12,7 @@ import (
 
 type authClaims struct {
 	jwt.StandardClaims
-	DevName string `json:"devname,omitempty"`
+	OrgName string `json:"orgname,omitempty"`
 	AppName string `json:"appname,omitempty"`
 	AppVers string `json:"appvers,omitempty"`
 }
@@ -39,7 +39,7 @@ func VerifyAuthToken(token string, pubkey string, devname string, appname string
 	}
 
 	//check that the values in the token match
-	if devname != authClaims.DevName {
+	if devname != authClaims.OrgName {
 		return errors.New("token developer mismatch")
 	}
 	if appname != authClaims.AppName {
@@ -55,7 +55,7 @@ func VerifyAuthToken(token string, pubkey string, devname string, appname string
 
 // GenerateAuthToken is used only for test purposes, as the DME never
 // generates auth tokens it only verifies them
-func GenerateAuthToken(privKeyFile string, devname string, appname string, appvers string, expireTime int64) (string, error) {
+func GenerateAuthToken(privKeyFile string, appOrg string, appname string, appvers string, expireTime int64) (string, error) {
 	privkey, err := ioutil.ReadFile(privKeyFile)
 	if err != nil {
 		return "", fmt.Errorf("Cannot read private key file %s -- %v", privKeyFile, err)
@@ -65,7 +65,7 @@ func GenerateAuthToken(privKeyFile string, devname string, appname string, appve
 			StandardClaims: jwt.StandardClaims{
 				IssuedAt:  time.Now().Unix(),
 				ExpiresAt: expireTime},
-			DevName: devname,
+			OrgName: appOrg,
 			AppName: appname,
 			AppVers: appvers,
 		})

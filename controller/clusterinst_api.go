@@ -79,7 +79,7 @@ func (s *ClusterInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, cluster := range s.cache.Objs {
-		if cluster.PrivacyPolicy == key.Name && cluster.Key.Developer == key.Developer {
+		if cluster.PrivacyPolicy == key.Name && cluster.Key.Organization == key.Organization {
 			return true
 		}
 	}
@@ -134,13 +134,13 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 	platName := edgeproto.PlatformType_name[int32(platformType)]
 
 	// Operators such as GCP and Azure must be dedicated as they allocate a new IP per service
-	if isIPAllocatedPerService(clusterInst.Key.CloudletKey.OperatorKey.Name) {
+	if isIPAllocatedPerService(clusterInst.Key.CloudletKey.Organization) {
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for operator: " + clusterInst.Key.CloudletKey.OperatorKey.Name})
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for operator: " + clusterInst.Key.CloudletKey.Organization})
 			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
 		}
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-			return clusterInst.IpAccess, fmt.Errorf("IpAccessShared not supported for operator: %s", clusterInst.Key.CloudletKey.OperatorKey.Name)
+			return clusterInst.IpAccess, fmt.Errorf("IpAccessShared not supported for operator: %s", clusterInst.Key.CloudletKey.Organization)
 		}
 		return clusterInst.IpAccess, nil
 	}
@@ -208,19 +208,19 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	}()
 
 	ctx := cb.Context()
-	if in.Key.Developer == "" {
-		return fmt.Errorf("Developer cannot be empty")
+	if in.Key.Organization == "" {
+		return fmt.Errorf("ClusterInst Organization cannot be empty")
 	}
 	if in.Key.CloudletKey.Name == "" {
 		return fmt.Errorf("Cloudlet name cannot be empty")
 	}
-	if in.Key.CloudletKey.OperatorKey.Name == "" {
-		return fmt.Errorf("Operator name cannot be empty")
+	if in.Key.CloudletKey.Organization == "" {
+		return fmt.Errorf("Cloudlet Organization name cannot be empty")
 	}
 	if in.Key.ClusterKey.Name == "" {
 		return fmt.Errorf("Cluster name cannot be empty")
 	}
-	if in.Reservable && in.Key.Developer != cloudcommon.DeveloperMobiledgeX {
+	if in.Reservable && in.Key.Organization != cloudcommon.DeveloperMobiledgeX {
 		return fmt.Errorf("Only %s ClusterInsts may be reservable", cloudcommon.DeveloperMobiledgeX)
 	}
 
@@ -319,7 +319,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		if in.AutoScalePolicy != "" {
 			policy := edgeproto.AutoScalePolicy{}
-			if err := autoScalePolicyApi.STMFind(stm, in.AutoScalePolicy, in.Key.Developer, &policy); err != nil {
+			if err := autoScalePolicyApi.STMFind(stm, in.AutoScalePolicy, in.Key.Organization, &policy); err != nil {
 				return err
 			}
 			if in.NumNodes < policy.MinNodes {
@@ -331,7 +331,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		if in.PrivacyPolicy != "" {
 			policy := edgeproto.PrivacyPolicy{}
-			if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Developer, &policy); err != nil {
+			if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Organization, &policy); err != nil {
 				return err
 			}
 		}
@@ -827,10 +827,10 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	metric.Name = cloudcommon.ClusterInstEvent
 	ts, _ := types.TimestampProto(time.Now())
 	metric.Timestamp = *ts
-	metric.AddTag("operator", clusterInstKey.CloudletKey.OperatorKey.Name)
+	metric.AddTag("operator", clusterInstKey.CloudletKey.Organization)
 	metric.AddTag("cloudlet", clusterInstKey.CloudletKey.Name)
 	metric.AddTag("cluster", clusterInstKey.ClusterKey.Name)
-	metric.AddTag("dev", clusterInstKey.Developer)
+	metric.AddTag("dev", clusterInstKey.Organization)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 

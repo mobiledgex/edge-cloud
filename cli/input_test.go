@@ -121,14 +121,8 @@ func TestConversion(t *testing.T) {
 	for _, flavor := range testutil.FlavorData {
 		testConversion(t, &flavor, &edgeproto.Flavor{}, &edgeproto.Flavor{})
 	}
-	for _, dev := range testutil.DevData {
-		testConversion(t, &dev, &edgeproto.Developer{}, &edgeproto.Developer{})
-	}
 	for _, app := range testutil.AppData {
 		testConversion(t, &app, &edgeproto.App{}, &edgeproto.App{})
-	}
-	for _, op := range testutil.OperatorData {
-		testConversion(t, &op, &edgeproto.Operator{}, &edgeproto.Operator{})
 	}
 	for _, cloudlet := range testutil.CloudletData {
 		testConversion(t, &cloudlet, &edgeproto.Cloudlet{}, &edgeproto.Cloudlet{})
@@ -214,10 +208,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -229,10 +222,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -275,12 +267,10 @@ clusterinsts:
                "name": "SmallCluster"
             },
             "cloudlet_key": {
-               "operator_key": {
-                  "name": "tmus"
-               },
+               "organization": "tmus",
                "name": "tmus-cloud-1"
             },
-            "developer": "AcmeAppCo"
+            "organization": "AcmeAppCo"
          },
          "flavor": {
             "name": "x1.small"
@@ -296,12 +286,10 @@ clusterinsts:
                "name": "SmallCluster"
             },
             "cloudlet_key": {
-               "operator_key": {
-                  "name": "tmus"
-               },
+               "organization": "tmus",
                "name": "tmus-cloud-2"
             },
-            "developer": "AcmeAppCo"
+            "organization": "AcmeAppCo"
          },
          "flavor": {
             "name": "x1.small"

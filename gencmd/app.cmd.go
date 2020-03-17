@@ -307,15 +307,15 @@ var AppApiCmds = []*cobra.Command{
 
 var AppKeyRequiredArgs = []string{}
 var AppKeyOptionalArgs = []string{
-	"developerkey.name",
+	"organization",
 	"name",
 	"version",
 }
 var AppKeyAliasArgs = []string{}
 var AppKeyComments = map[string]string{
-	"developerkey.name": "Organization or Company Name that a Developer is part of",
-	"name":              "App name",
-	"version":           "App version",
+	"organization": "App developer organization",
+	"name":         "App name",
+	"version":      "App version",
 }
 var AppKeySpecialArgs = map[string]string{}
 var ConfigFileRequiredArgs = []string{}
@@ -325,12 +325,12 @@ var ConfigFileOptionalArgs = []string{
 }
 var ConfigFileAliasArgs = []string{}
 var ConfigFileComments = map[string]string{
-	"kind":   "kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config",
+	"kind":   "kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml",
 	"config": "config file contents or URI reference",
 }
 var ConfigFileSpecialArgs = map[string]string{}
 var AppRequiredArgs = []string{
-	"developer",
+	"app-org",
 	"appname",
 	"appvers",
 }
@@ -359,14 +359,14 @@ var AppOptionalArgs = []string{
 	"defaultprivacypolicy",
 }
 var AppAliasArgs = []string{
-	"developer=key.developerkey.name",
+	"app-org=key.organization",
 	"appname=key.name",
 	"appvers=key.version",
 	"defaultflavor=defaultflavor.name",
 }
 var AppComments = map[string]string{
 	"fields":                  "Fields are used for the Update API to specify which fields to apply",
-	"developer":               "Organization or Company Name that a Developer is part of",
+	"app-org":                 "App developer organization",
 	"appname":                 "App name",
 	"appvers":                 "App version",
 	"imagepath":               "URI of where image resides",
@@ -381,7 +381,7 @@ var AppComments = map[string]string{
 	"deploymentgenerator":     "Deployment generator target to generate a basic deployment manifest",
 	"androidpackagename":      "Android package name used to match the App name from the Android package",
 	"delopt":                  "Override actions to Controller, one of NoAutoDelete, AutoDelete",
-	"configs.kind":            "kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config",
+	"configs.kind":            "kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml",
 	"configs.config":          "config file contents or URI reference",
 	"scalewithcluster":        "Option to run App on all nodes of the cluster",
 	"internalports":           "Should this app have access to outside world?",

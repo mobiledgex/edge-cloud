@@ -16,13 +16,12 @@ func TestGetSpecifiedFields(t *testing.T) {
 		[]string{"2.2", "2.3", "13", "23", "25"})
 	// test App args, make sure empty string value still sets field
 	testGetFieldsArgs(t, &edgeproto.App{},
-		[]string{"Key.DeveloperKey.Name=niantic", `Key.Name="Pokemon Go!"`, "ImageType=ImageTypeDocker", `AccessPorts=""`, "DefaultFlavor.Name=x1.small"},
-		[]string{"2.1.2", "2.2", "5", "7", "9.1"})
+		[]string{"Key.Organization=niantic", `Key.Name="Pokemon Go!"`, "ImageType=ImageTypeDocker", `AccessPorts=""`, "DefaultFlavor.Name=x1.small"},
+		[]string{"2.1", "2.2", "5", "7", "9.1"})
 
 	dat := `
 key:
-  developerkey:
-    name: AcmeAppCo
+  organization: AcmeAppCo
   name: someapplication1
   version: "1.0"
 imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -36,7 +35,7 @@ androidpackagename: com.acme.someapplication1
 authpublickey: "-----BEGIN PUBLIC KEY-----\nsomekey\n-----END PUBLIC KEY-----\n"
 `
 	testGetFieldsYaml(t, &edgeproto.App{}, dat,
-		[]string{"2.1.2", "2.2", "2.3", "4", "5", "15", "9.1", "7", "25", "18", "12"})
+		[]string{"2.1", "2.2", "2.3", "4", "5", "15", "9.1", "7", "25", "18", "12"})
 }
 
 func testGetFieldsArgs(t *testing.T, obj interface{}, args []string, expected []string) {

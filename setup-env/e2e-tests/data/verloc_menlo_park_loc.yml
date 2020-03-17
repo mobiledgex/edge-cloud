@@ -1,5 +1,5 @@
 registerclientrequest:
-  devname: EmptyMatchEngineApp
+  orgname: EmptyMatchEngineApp
   appname: EmptyMatchEngineApp
   appvers: "1.0"
 verifylocationrequest:

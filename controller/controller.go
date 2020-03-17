@@ -276,10 +276,8 @@ func startServices() error {
 	server := grpc.NewServer(grpc.Creds(creds),
 		grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor),
 		grpc.StreamInterceptor(cloudcommon.AuditStreamInterceptor))
-	edgeproto.RegisterDeveloperApiServer(server, &developerApi)
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
-	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
 	edgeproto.RegisterOperatorCodeApiServer(server, &operatorCodeApi)
 	edgeproto.RegisterFlavorApiServer(server, &flavorApi)
 	edgeproto.RegisterClusterInstApiServer(server, &clusterInstApi)
@@ -315,10 +313,8 @@ func startServices() error {
 		ApiAddr:     *apiAddr,
 		TlsCertFile: *tlsCertFile,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
-			edgeproto.RegisterDeveloperApiHandler,
 			edgeproto.RegisterAppApiHandler,
 			edgeproto.RegisterAppInstApiHandler,
-			edgeproto.RegisterOperatorApiHandler,
 			edgeproto.RegisterOperatorCodeApiHandler,
 			edgeproto.RegisterCloudletApiHandler,
 			edgeproto.RegisterCloudletInfoApiHandler,
@@ -432,9 +428,7 @@ func checkVersion(ctx context.Context, objStore objstore.KVStore) (string, error
 }
 
 func InitApis(sync *Sync) {
-	InitDeveloperApi(sync)
 	InitAppApi(sync)
-	InitOperatorApi(sync)
 	InitOperatorCodeApi(sync)
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
