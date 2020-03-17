@@ -17,7 +17,7 @@
     - ram
     - status
     - vcpu
-    - version
+    - ver
     values:
     - - "2020-01-28T21:44:17.757749Z"
       - someapplication1
@@ -102,7 +102,7 @@
     - ram
     - status
     - vcpu
-    - version
+    - ver
     values:
     - - "2020-01-28T21:44:17.248106Z"
       - null
@@ -155,7 +155,7 @@
     - ram
     - status
     - vcpu
-    - version
+    - ver
     values:
     - - "2020-01-28T21:44:17.53257Z"
       - null

@@ -1405,7 +1405,7 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 	metric.AddTag("clusterorg", appInstKey.ClusterInstKey.Organization)
 	metric.AddTag("apporg", appInstKey.AppKey.Organization)
 	metric.AddTag("app", appInstKey.AppKey.Name)
-	metric.AddTag("version", appInstKey.AppKey.Version)
+	metric.AddTag("ver", appInstKey.AppKey.Version)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
