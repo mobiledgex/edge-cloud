@@ -827,10 +827,10 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	metric.Name = cloudcommon.ClusterInstEvent
 	ts, _ := types.TimestampProto(time.Now())
 	metric.Timestamp = *ts
-	metric.AddTag("operator", clusterInstKey.CloudletKey.Organization)
+	metric.AddTag("cloudletorg", clusterInstKey.CloudletKey.Organization)
 	metric.AddTag("cloudlet", clusterInstKey.CloudletKey.Name)
 	metric.AddTag("cluster", clusterInstKey.ClusterKey.Name)
-	metric.AddTag("dev", clusterInstKey.Organization)
+	metric.AddTag("clusterorg", clusterInstKey.Organization)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
