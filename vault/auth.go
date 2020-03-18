@@ -31,5 +31,9 @@ func BestAuth(ops ...BestOp) (Auth, error) {
 	if token != "" {
 		return NewTokenAuth(token), nil
 	}
-	return nil, fmt.Errorf("No appropriate Vault auth found, please set VAULT_ROLE_ID and VAULT_SECRET_ID for approle auth, GITHUB_ID for github token auth, or VAULT_TOKEN for token auth.")
+	ldapID := opts.env.Getenv("LDAP_ID")
+	if ldapID != "" {
+		return NewLdapAuth(ldapID, opts.env.Getenv("LDAP_PASS")), nil
+	}
+	return nil, fmt.Errorf("No appropriate Vault auth found, please set VAULT_ROLE_ID and VAULT_SECRET_ID for approle auth, GITHUB_ID for github token auth, or VAULT_TOKEN for token auth, or LDAP_ID for LDAP auth.")
 }
