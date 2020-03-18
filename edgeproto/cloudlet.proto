@@ -245,6 +245,7 @@ message Cloudlet {
   option (protogen.notify_recv_hook) = true;
   option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
 }
 
 message FlavorMatch {
@@ -268,6 +269,7 @@ service CloudletApi {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
     option (protogen.mc2_streamer_cache) = true;
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
   // Delete Cloudlet. Removes the Cloudlet services where they are no longer managed
   // from the Edge Controller.
@@ -412,6 +414,7 @@ message CloudletInfo {
   option (protogen.notify_flush) = true;
   option (protogen.notify_recv_hook) = true;
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.uses_org) = "none";
 }
 
 service CloudletInfoApi {

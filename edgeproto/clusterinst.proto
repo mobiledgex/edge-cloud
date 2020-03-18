@@ -93,6 +93,7 @@ message ClusterInst {
   option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,cloudlet-org=Key.CloudletKey.Organization,cluster-org=Key.Organization,flavor=Flavor.Name";
   option (protogen.mc2_target_cloudlet) = "Key.CloudletKey";
+  option (protogen.uses_org) = "custom";
 }
 
 service ClusterInstApi {
@@ -159,6 +160,7 @@ message ClusterInstInfo {
   option (protogen.generate_show_test) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
+  option (protogen.uses_org) = "none";
 }
 
 service ClusterInstInfoApi {
