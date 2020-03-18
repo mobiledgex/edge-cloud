@@ -29,7 +29,7 @@ func (s *LdapAuth) Type() string {
 
 func (s *LdapAuth) Login(client *api.Client) error {
 	if s.password == "" {
-		server := "ldap.vault"
+		server := client.Address() + "/ldap"
 		log.DebugLog(log.DebugLevelInfo, "ldap.vault secret lookup", "account", s.username, "server", server)
 		password, err := FindKeychainSecret(s.username, server)
 		if err != nil {
