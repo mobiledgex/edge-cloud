@@ -1489,6 +1489,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			m.importTime = true
 			m.importStrings = true
 		}
+		m.generateUsesOrg(message)
 	}
 	if GetObjKey(message) || gensupport.GetObjAndKey(message) {
 		// this is a key object
@@ -1782,6 +1783,51 @@ func (m *mex) generateEnumDecodeHook() {
 	m.importReflect = true
 }
 
+func (m *mex) generateUsesOrg(message *descriptor.DescriptorProto) {
+	usesOrg := GetUsesOrg(message)
+	if usesOrg == "" {
+		m.gen.Fail(*message.Name, "protogen.generate_cache option also requires protogen.uses_org option")
+	}
+	if usesOrg == "custom" {
+		return
+	}
+	m.P()
+	m.P("func (c *", message.Name, "Cache) UsesOrg(org string) bool {")
+	if usesOrg == "none" {
+		m.P("return false")
+		m.P("}")
+		return
+	}
+	keyIter := "_"
+	valIter := "_"
+	usesChecks := strings.Split(usesOrg, ",")
+	kvChecks := [][]string{}
+	for _, check := range usesChecks {
+		kv := strings.Split(check, "=")
+		if len(kv) != 2 {
+			m.gen.Fail(*message.Name, "invalid uses_org check spec, expected a=b but was ", check)
+			continue
+		}
+		if kv[0] == "key" {
+			keyIter = "key"
+		} else if kv[0] == "val" {
+			valIter = "val"
+		} else {
+			m.gen.Fail(*message.Name, "invalid key in uses_org check spec, expected \"key\" or \"val\", but was ", kv[0])
+		}
+		kvChecks = append(kvChecks, kv)
+	}
+	m.P("c.Mux.Lock()")
+	m.P("defer c.Mux.Unlock()")
+	m.P("for ", keyIter, ", ", valIter, " := range c.Objs {")
+	for _, kv := range kvChecks {
+		m.P("if ", kv[0], ".", kv[1], " == org { return true }")
+	}
+	m.P("}")
+	m.P("return false")
+	m.P("}")
+}
+
 func (m *mex) generateService(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto) {
 	if len(service.Method) != 0 {
 		for _, method := range service.Method {
@@ -1824,6 +1870,10 @@ func GetNotifyFlush(message *descriptor.DescriptorProto) bool {
 
 func GetObjKey(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_ObjKey, false)
+}
+
+func GetUsesOrg(message *descriptor.DescriptorProto) string {
+	return gensupport.GetStringExtension(message.Options, protogen.E_UsesOrg, "")
 }
 
 func GetBackend(field *descriptor.FieldDescriptorProto) bool {

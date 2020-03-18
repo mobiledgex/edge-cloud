@@ -20,6 +20,7 @@ message OperatorCode {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.custom_key_type) = "OperatorCodeKey";
+  option (protogen.uses_org) = "val=Organization";
 }
 
 service OperatorCodeApi {
@@ -29,7 +30,8 @@ service OperatorCodeApi {
       post: "/create/operatorcode"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
+    option (protogen.mc2_api_requires_org) = "Organization";
   }
   // Delete Operator Code. Delete a code for an Operator.
   rpc DeleteOperatorCode(OperatorCode) returns (Result) {
@@ -37,14 +39,14 @@ service OperatorCodeApi {
       post: "/delete/operatorcode"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
   }
-  // Delete Operator Code.  Show Codes for an Operator
+  // Show Operator Code. Show Codes for an Operator.
   rpc ShowOperatorCode(OperatorCode) returns (stream OperatorCode) {
     option (google.api.http) = {
       post: "/show/operatorcode"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionView,";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Organization";
   }
 }

@@ -44,6 +44,7 @@ message CloudletRefs {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.generate_show_test) = true;
+  option (protogen.uses_org) = "none";
 }
 
 // Track app insts created on a ClusterInst.
@@ -67,6 +68,7 @@ message ClusterRefs {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.generate_show_test) = true;
+  option (protogen.uses_org) = "none";
 }
 
 // This API should be admin-only

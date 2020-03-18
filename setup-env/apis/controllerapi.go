@@ -122,6 +122,8 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "debug") {
 		runDebug(run, api, apiFile, outputDir)
+	} else if strings.HasPrefix(api, "organization") {
+		runOrg(run, api, apiFile, outputDir)
 	} else {
 		if apiFile == "" {
 			log.Println("Error: Cannot run controller APIs without API file")
@@ -316,5 +318,24 @@ func runDebug(run *testutil.Run, api, apiFile, outputDir string) {
 		return
 	}
 	testutil.RunDebugDataApis(run, &data, make(map[string]interface{}), &output)
+	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
+}
+
+func runOrg(run *testutil.Run, api, apiFile, outputDir string) {
+	data := edgeproto.OrganizationData{}
+
+	if apiFile == "" {
+		log.Println("Error: Cannot run Org API without API file")
+		*run.Rc = false
+		return
+	}
+	err := util.ReadYamlFile(apiFile, &data)
+	if err != nil {
+		log.Printf("Error in unmarshal for file %s, %v\n", apiFile, err)
+		os.Exit(1)
+	}
+
+	output := testutil.OrganizationDataOut{}
+	testutil.RunOrganizationDataApis(run, &data, make(map[string]interface{}), &output)
 	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
 }
