@@ -21,6 +21,7 @@ var OperatorAzure = "azure"
 
 var DeveloperSamsung = "Samsung"
 var DeveloperMobiledgeX = "MobiledgeX"
+var DeveloperEdgeBox = "EdgeBox"
 
 const DefaultVMCluster string = "DefaultVMCluster"
 
