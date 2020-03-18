@@ -83,6 +83,13 @@ extend google.protobuf.MessageOptions {
   bool e2edata = 51043;
   // Option to skip generating CopyInFields func
   bool generate_copy_in_fields = 51044;
+  // Definition of org for UsesOrg check. One of:
+  // 1. "none" (does not reference org)
+  // 2. comma separated list of:
+  // - key=<path.to.org> (hierarchical struct path to org in key)
+  // - val=<path.to.org> (hierarchical struct path to org in val)
+  // 3. "custom" (custom hand-written org check func)
+  string uses_org = 51046;
 }
 
 extend google.protobuf.EnumOptions {
@@ -118,6 +125,7 @@ extend google.protobuf.MethodOptions {
   // Comma separated list of three strings: resource name, action, org field path.
   // These are used in RBAC for Master Controller. Example:
   // ResourceApps,ActionManage,Key.Organization
+  // Third field may be left blank to indicate the API is admin only.
   string mc2_api = 51021;
   // show stream output objects incrementally as they come, rather than
   // collecting them into one output format. Only applies to commands
@@ -145,6 +153,8 @@ extend google.protobuf.MethodOptions {
   bool mc2_streamer_cache = 51041;
   // MC connect to notify root instead of controller for rpc
   bool mc2_api_notifyroot = 51042;
+  // Specifies the org field path and requires to the org to exist
+  string mc2_api_requires_org = 51045;
 }
 
 extend google.protobuf.ServiceOptions {

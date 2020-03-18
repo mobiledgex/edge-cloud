@@ -37,6 +37,7 @@ message Alert {
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
   option (protogen.custom_key_type) = "AlertKey";
+  option (protogen.uses_org) = "none";
 }
 
 service AlertApi {

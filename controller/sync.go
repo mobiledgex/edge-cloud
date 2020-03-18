@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -28,6 +29,7 @@ type ObjCache interface {
 	SyncListStart(ctx context.Context)
 	SyncListEnd(ctx context.Context)
 	GetTypeString() string
+	UsesOrg(org string) bool
 }
 
 func InitSync(store objstore.KVStore) *Sync {
@@ -155,4 +157,15 @@ func (s *Sync) ApplySTMWait(ctx context.Context, apply func(concurrency.STM) err
 		s.syncWait(rev)
 	}
 	return err
+}
+
+func (s *Sync) usesOrg(org string) []string {
+	usedBy := []string{}
+	for _, cache := range s.caches {
+		if cache.UsesOrg(org) {
+			usedBy = append(usedBy, cache.GetTypeString())
+		}
+	}
+	sort.Strings(usedBy)
+	return usedBy
 }
