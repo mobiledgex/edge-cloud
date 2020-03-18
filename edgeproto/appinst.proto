@@ -140,6 +140,7 @@ message AppInst {
   option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
   option (protogen.not_required) = "Key.ClusterInstKey.Organization,Key.ClusterInstKey.ClusterKey.Name";
   option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
+  option (protogen.uses_org) = "key=AppKey.Organization,key=ClusterInstKey.Organization,key=ClusterInstKey.CloudletKey.Organization";
 }
 
 // AppInst Runtime Info
@@ -235,6 +236,7 @@ message AppInstInfo {
   option (protogen.generate_show_test) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
+  option (protogen.uses_org) = "none";
 }
 
 service AppInstInfoApi {

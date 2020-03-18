@@ -139,6 +139,7 @@ message ConfigFile {
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
   option (protogen.noconfig) = "Revision,DeletePrepare";
+  option (protogen.uses_org) = "key=Organization";
 }
 
 service AppApi {

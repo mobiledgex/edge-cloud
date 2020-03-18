@@ -41,6 +41,7 @@ message AutoScalePolicy {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.alias) = "name=Key.Name,cluster-org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
 }
 
 service AutoScalePolicyApi {
@@ -52,6 +53,7 @@ service AutoScalePolicyApi {
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "MinNodes,MaxNodes";
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
   // Delete an Auto Scale Policy
   rpc DeleteAutoScalePolicy(AutoScalePolicy) returns (Result) {
