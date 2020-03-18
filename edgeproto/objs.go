@@ -85,7 +85,7 @@ func (a *NodeData) Sort() {
 
 func (key *OperatorCodeKey) ValidateKey() error {
 	if key.GetKeyString() == "" {
-		return errors.New("No organization specified")
+		return errors.New("No code specified")
 	}
 	return nil
 }
