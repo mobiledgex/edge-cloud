@@ -176,7 +176,8 @@ func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 
 func DeleteAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "deleting app", "name", names.AppName)
-	file := names.AppName + names.AppRevision + ".yaml"
+	// for delete, we use the appInst revision which may be behind the app revision
+	file := names.AppName + names.AppInstRevision + ".yaml"
 	cmd := fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, file)
 	out, err := client.Output(cmd)
 	if err != nil {
