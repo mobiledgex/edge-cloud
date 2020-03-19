@@ -19,6 +19,7 @@
 		common.proto
 		controller.proto
 		debug.proto
+		device.proto
 		exec.proto
 		flavor.proto
 		metric.proto
@@ -81,6 +82,8 @@
 		DebugRequest
 		DebugReply
 		DebugData
+		DeviceKey
+		Device
 		RunCmd
 		RunVMConsole
 		ShowLog

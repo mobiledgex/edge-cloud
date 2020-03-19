@@ -480,4 +480,5 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	autoProvPolicyApi.SetInfluxQ(influxQ)
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
+	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
 }

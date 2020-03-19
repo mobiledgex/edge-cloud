@@ -1,0 +1,56 @@
+// Device identification messages
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
+import "result.proto";
+import "google/protobuf/timestamp.proto";
+
+
+// DeviceKey is an identifier for a given device on the MobiledgeX platform
+// It is defined by a unique id and unique id type
+// And example of such a device is a MEL device that hosts several applications
+message DeviceKey {
+  // Type of unique ID provided by the client
+  string unique_id_type = 1;
+  // Unique identification of the client device or user. May be overridden by the server.
+  string unique_id = 2;
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+// Device represents a device on the MobiledgeX platform
+// We record when this device first showed up on our platform
+message Device {
+  repeated string fields = 1;
+  // Key 
+  DeviceKey key = 2 [(gogoproto.nullable) = false];
+  // Timestamp when the device was registered
+  google.protobuf.Timestamp timestamp = 3 [(gogoproto.nullable) = false];
+
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+}
+
+service DeviceApi {
+  rpc CreateDevice(Device) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/device"
+      body: "*"
+    };
+  }
+  rpc ShowDevice(Device) returns (stream Device) {
+    option (google.api.http) = {
+      post: "/show/device"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionView,";
+  }
+
+}

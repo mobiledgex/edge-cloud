@@ -227,6 +227,27 @@ func getResultFromFindCloudletReply(mreq *dme.FindCloudletReply) dme.FindCloudle
 	return mreq.Status
 }
 
+// Helper function to keep track of the registered devices
+func recordDevice(ctx context.Context, req *dme.RegisterClientRequest) {
+	devKey := edgeproto.DeviceKey{
+		UniqueId:     req.UniqueId,
+		UniqueIdType: req.UniqueIdType,
+	}
+	if platformClientsCache.HasKey(&devKey) {
+		return
+	}
+	ts, err := types.TimestampProto(time.Now())
+	if err != nil {
+		return
+	}
+	dev := edgeproto.Device{
+		Key:       devKey,
+		Timestamp: *ts,
+	}
+	// Update local cache, which will trigger a send to controller
+	platformClientsCache.Update(ctx, &dev, 0)
+}
+
 func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	start := time.Now()
 
@@ -243,6 +264,13 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		call.key.AppKey.Organization = typ.OrgName
 		call.key.AppKey.Name = typ.AppName
 		call.key.AppKey.Version = typ.AppVers
+		// For platform App clients we need to do accounting of devices
+		if err == nil {
+			if cloudcommon.IsPlatformApp(typ.OrgName, typ.AppName) {
+				go recordDevice(ctx, typ)
+			}
+		}
+
 	case *dme.FindCloudletRequest:
 		ckey, ok := dmecommon.CookieFromContext(ctx)
 		if !ok {
