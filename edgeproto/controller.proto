@@ -33,6 +33,7 @@ message Controller {
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
+  option (protogen.uses_org) = "none";
 }
 
 service ControllerApi {
