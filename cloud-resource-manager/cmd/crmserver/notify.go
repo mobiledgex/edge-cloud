@@ -36,6 +36,7 @@ func initSrvNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendAppCache(&controllerData.AppCache)
 	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
 	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
+	notifyServer.RegisterSendCloudletCache(&controllerData.CloudletCache)
 	notifyServer.RegisterRecv(notify.NewMetricRecvMany(&CrmMetricsReceiver{}))
 	notifyServer.RegisterRecvAlertCache(&controllerData.AlertCache)
 	nodeMgr.RegisterServer(notifyServer)

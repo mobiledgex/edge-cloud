@@ -163,7 +163,7 @@ func main() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err := initPlatform(ctx, &myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
+		if err := initPlatform(ctx, &cloudlet, &myCloudlet, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
 			myCloudlet.Errors = append(myCloudlet.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudlet.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
@@ -222,12 +222,12 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache, updateCallback edgeproto.CacheUpdateCallback) error {
-	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
-	oper := util.DNSSanitize(cloudlet.Key.Organization)
+func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache, updateCallback edgeproto.CacheUpdateCallback) error {
+	loc := util.DNSSanitize(cloudletInfo.Key.Name) //XXX  key.name => loc
+	oper := util.DNSSanitize(cloudletInfo.Key.Organization)
 
 	pc := pf.PlatformConfig{
-		CloudletKey:         &cloudlet.Key,
+		CloudletKey:         &cloudletInfo.Key,
 		PhysicalName:        physicalName,
 		VaultAddr:           vaultAddr,
 		Region:              *region,
@@ -235,6 +235,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.CloudletInfo, physica
 		CloudletVMImagePath: *cloudletVMImagePath,
 		VMImageVersion:      *vmImageVersion,
 		PackageVersion:      *packageVersion,
+		EnvVars:             cloudlet.EnvVar,
 	}
 	log.SpanLog(ctx, log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
 	err := platform.Init(ctx, &pc, updateCallback)
