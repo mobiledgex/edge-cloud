@@ -39,6 +39,11 @@ func initSrvNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendCloudletCache(&controllerData.CloudletCache)
 	notifyServer.RegisterRecv(notify.NewMetricRecvMany(&CrmMetricsReceiver{}))
 	notifyServer.RegisterRecvAlertCache(&controllerData.AlertCache)
+	// Dummy CloudletInfoCache receiver to avoid sending
+	// cloudletInfo updates to controller from Shepherd
+	var DummyCloudletInfoRecvCache edgeproto.CloudletInfoCache
+	edgeproto.InitCloudletInfoCache(&DummyCloudletInfoRecvCache)
+	notifyServer.RegisterRecvCloudletInfoCache(&DummyCloudletInfoRecvCache)
 	nodeMgr.RegisterServer(notifyServer)
 }
 
