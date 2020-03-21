@@ -143,6 +143,7 @@ func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, clien
 	mf, err = MergeEnvVars(ctx, vaultConfig, app, mf, names.ImagePullSecret)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos, "failed to merge env vars", "error", err)
+		return fmt.Errorf("error merging environment variables config file: %s", err)
 	}
 	log.SpanLog(ctx, log.DebugLevelMexos, "writing config file", "kubeManifest", mf)
 	file := names.AppName + names.AppRevision + ".yaml"
