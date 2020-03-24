@@ -341,9 +341,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	if in.Key.AppKey.Organization != in.Key.ClusterInstKey.Organization {
 		// both are specified, make sure they match
-		if in.Key.AppKey.Organization == cloudcommon.DeveloperMobiledgeX {
+		if in.Key.AppKey.Organization == cloudcommon.OrganizationMobiledgeX {
 			// mobiledgex apps on dev ClusterInst, like prometheus
-		} else if in.Key.ClusterInstKey.Organization == cloudcommon.DeveloperMobiledgeX {
+		} else if in.Key.ClusterInstKey.Organization == cloudcommon.OrganizationMobiledgeX {
 			// developer apps on reservable mobiledgex ClusterInst
 			tenant = true
 		} else {
@@ -1410,4 +1410,14 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 	metric.AddStringVal("status", serverStatus)
 
 	services.events.AddMetric(&metric)
+
+	// check to see if it was autoprovisioned and they used a reserved clusterinst, then log the start and stop of the clusterinst as well
+	if appInstKey.ClusterInstKey.Organization == cloudcommon.OrganizationMobiledgeX && appInstKey.AppKey.Organization != cloudcommon.OrganizationMobiledgeX &&
+		(event == cloudcommon.CREATED || event == cloudcommon.DELETED) {
+		clusterEvent := cloudcommon.RESERVED
+		if event == cloudcommon.DELETED {
+			clusterEvent = cloudcommon.UNRESERVED
+		}
+		RecordClusterInstEvent(ctx, &appInstKey.ClusterInstKey, clusterEvent, serverStatus)
+	}
 }

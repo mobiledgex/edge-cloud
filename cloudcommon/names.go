@@ -19,9 +19,9 @@ var AppDNSRoot = "mobiledgex.net"
 var OperatorGCP = "gcp"
 var OperatorAzure = "azure"
 
-var DeveloperSamsung = "Samsung"
-var DeveloperMobiledgeX = "MobiledgeX"
-var DeveloperEdgeBox = "EdgeBox"
+var OrganizationSamsung = "Samsung"
+var OrganizationMobiledgeX = "MobiledgeX"
+var OrganizationEdgeBox = "EdgeBox"
 
 const DefaultVMCluster string = "DefaultVMCluster"
 
@@ -76,6 +76,8 @@ const (
 	DELETE_ERROR      InstanceEvent = "DELETE_ERROR"
 	HEALTH_CHECK_FAIL InstanceEvent = "HEALTH_CHECK_FAIL"
 	HEALTH_CHECK_OK   InstanceEvent = "HEALTH_CHECK_OK"
+	RESERVED          InstanceEvent = "RESERVED"
+	UNRESERVED        InstanceEvent = "UNRESERVED"
 )
 
 var InstanceUp = "UP"
@@ -92,7 +94,7 @@ const MaxClusterNameLength = 40
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
 var platformApps = map[string]bool{
-	DeveloperSamsung + ":" + SamsungEnablingLayer: true,
+	OrganizationSamsung + ":" + SamsungEnablingLayer: true,
 }
 
 // Common regular expression for quoted strings parse

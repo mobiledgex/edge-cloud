@@ -220,8 +220,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if in.Key.ClusterKey.Name == "" {
 		return fmt.Errorf("Cluster name cannot be empty")
 	}
-	if in.Reservable && in.Key.Organization != cloudcommon.DeveloperMobiledgeX {
-		return fmt.Errorf("Only %s ClusterInsts may be reservable", cloudcommon.DeveloperMobiledgeX)
+	if in.Reservable && in.Key.Organization != cloudcommon.OrganizationMobiledgeX {
+		return fmt.Errorf("Only %s ClusterInsts may be reservable", cloudcommon.OrganizationMobiledgeX)
 	}
 
 	// validate deployment
@@ -830,7 +830,6 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	metric.AddTag("cloudletorg", clusterInstKey.CloudletKey.Organization)
 	metric.AddTag("cloudlet", clusterInstKey.CloudletKey.Name)
 	metric.AddTag("cluster", clusterInstKey.ClusterKey.Name)
-	metric.AddTag("clusterorg", clusterInstKey.Organization)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
@@ -842,6 +841,12 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 			return
 		}
 	}
+	// if this is a clusterinst use the org its reserved for instead of MobiledgeX
+	org := clusterInstKey.Organization
+	if event == cloudcommon.RESERVED || event == cloudcommon.UNRESERVED {
+		org = info.ReservedBy
+	}
+	metric.AddTag("clusterorg", org)
 	// errors should never happen here since to get to this point the flavor should have already been checked previously, but just in case
 	nodeFlavor := edgeproto.Flavor{}
 	if !flavorApi.cache.Get(&info.Flavor, &nodeFlavor) {
