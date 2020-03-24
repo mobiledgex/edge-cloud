@@ -859,6 +859,13 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 		metric.AddIntVal("nodeCount", uint64(info.NumMasters+info.NumNodes))
 		metric.AddStringVal("other", fmt.Sprintf("%v", nodeFlavor.OptResMap))
 	}
-
 	services.events.AddMetric(&metric)
+
+	// if its a delete, create a usage record of it
+	// we need start time, all the downtimes between the starttime and now, and the `cluster-network stat`
+
+	// get all the logs for this clusterinst since the last checkpoint
+	influxLogQuery := `SELECT %s from %s WHERE "clusterorg"='%s' AND "cluster"='%s' AND "cloudlet"='%s' "cloudletorg"='%s' AND time >= '%s' order by time desc`
+	selectors := "event,status"
+
 }
