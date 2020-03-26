@@ -850,6 +850,7 @@ type FlavorCache struct {
 	Objs        map[FlavorKey]*Flavor
 	Mux         util.Mutex
 	List        map[FlavorKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *FlavorKey, old *Flavor)
 	UpdatedCb   func(ctx context.Context, old *Flavor, new *Flavor)
 	KeyWatchers map[FlavorKey][]*FlavorKeyWatcher
@@ -966,6 +967,18 @@ func (c *FlavorCache) GetCount() int {
 }
 
 func (c *FlavorCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Flavor", "notifyId", notifyId)
+		flushed := make(map[FlavorKey]*Flavor)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Flavor delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *FlavorCache) Show(filter *Flavor, cb func(ret *Flavor) error) error {
@@ -998,6 +1011,10 @@ func (c *FlavorCache) SetNotifyCb(fn func(ctx context.Context, obj *FlavorKey, o
 
 func (c *FlavorCache) SetUpdatedCb(fn func(ctx context.Context, old *Flavor, new *Flavor)) {
 	c.UpdatedCb = fn
+}
+
+func (c *FlavorCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *FlavorCache) WatchKey(key *FlavorKey, cb func(ctx context.Context)) context.CancelFunc {

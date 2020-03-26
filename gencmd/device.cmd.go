@@ -159,9 +159,67 @@ func ShowDevices(c *cli.Command, data []edgeproto.Device, err *error) {
 	}
 }
 
+var EvictDeviceCmd = &cli.Command{
+	Use:          "EvictDevice",
+	RequiredArgs: strings.Join(DeviceRequiredArgs, " "),
+	OptionalArgs: strings.Join(DeviceOptionalArgs, " "),
+	AliasArgs:    strings.Join(DeviceAliasArgs, " "),
+	SpecialArgs:  &DeviceSpecialArgs,
+	Comments:     DeviceComments,
+	ReqData:      &edgeproto.Device{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runEvictDevice,
+}
+
+func runEvictDevice(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.Device)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return EvictDevice(c, obj)
+}
+
+func EvictDevice(c *cli.Command, in *edgeproto.Device) error {
+	if DeviceApiCmd == nil {
+		return fmt.Errorf("DeviceApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := DeviceApiCmd.EvictDevice(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("EvictDevice failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func EvictDevices(c *cli.Command, data []edgeproto.Device, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("EvictDevice %v\n", data[ii])
+		myerr := EvictDevice(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var DeviceApiCmds = []*cobra.Command{
 	CreateDeviceCmd.GenCmd(),
 	ShowDeviceCmd.GenCmd(),
+	EvictDeviceCmd.GenCmd(),
 }
 
 var DeviceKeyRequiredArgs = []string{}

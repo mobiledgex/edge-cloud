@@ -710,6 +710,7 @@ type PrivacyPolicyCache struct {
 	Objs        map[PolicyKey]*PrivacyPolicy
 	Mux         util.Mutex
 	List        map[PolicyKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *PrivacyPolicy)
 	UpdatedCb   func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy)
 	KeyWatchers map[PolicyKey][]*PrivacyPolicyKeyWatcher
@@ -826,6 +827,18 @@ func (c *PrivacyPolicyCache) GetCount() int {
 }
 
 func (c *PrivacyPolicyCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush PrivacyPolicy", "notifyId", notifyId)
+		flushed := make(map[PolicyKey]*PrivacyPolicy)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush PrivacyPolicy delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *PrivacyPolicyCache) Show(filter *PrivacyPolicy, cb func(ret *PrivacyPolicy) error) error {
@@ -858,6 +871,10 @@ func (c *PrivacyPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *Polic
 
 func (c *PrivacyPolicyCache) SetUpdatedCb(fn func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy)) {
 	c.UpdatedCb = fn
+}
+
+func (c *PrivacyPolicyCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *PrivacyPolicyCache) WatchKey(key *PolicyKey, cb func(ctx context.Context)) context.CancelFunc {

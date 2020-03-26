@@ -3919,6 +3919,7 @@ type CloudletCache struct {
 	Objs        map[CloudletKey]*Cloudlet
 	Mux         util.Mutex
 	List        map[CloudletKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *Cloudlet)
 	UpdatedCb   func(ctx context.Context, old *Cloudlet, new *Cloudlet)
 	KeyWatchers map[CloudletKey][]*CloudletKeyWatcher
@@ -4035,6 +4036,18 @@ func (c *CloudletCache) GetCount() int {
 }
 
 func (c *CloudletCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Cloudlet", "notifyId", notifyId)
+		flushed := make(map[CloudletKey]*Cloudlet)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Cloudlet delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *CloudletCache) Show(filter *Cloudlet, cb func(ret *Cloudlet) error) error {
@@ -4067,6 +4080,10 @@ func (c *CloudletCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKe
 
 func (c *CloudletCache) SetUpdatedCb(fn func(ctx context.Context, old *Cloudlet, new *Cloudlet)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *CloudletCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -5108,6 +5125,7 @@ type CloudletInfoCache struct {
 	Objs        map[CloudletKey]*CloudletInfo
 	Mux         util.Mutex
 	List        map[CloudletKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *CloudletInfo)
 	UpdatedCb   func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)
 	KeyWatchers map[CloudletKey][]*CloudletInfoKeyWatcher
@@ -5224,6 +5242,18 @@ func (c *CloudletInfoCache) GetCount() int {
 }
 
 func (c *CloudletInfoCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletInfo", "notifyId", notifyId)
+		flushed := make(map[CloudletKey]*CloudletInfo)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletInfo delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletInfo", "notifyId", notifyId)
 	flushed := make(map[CloudletKey]*CloudletInfo)
 	c.Mux.Lock()
@@ -5276,6 +5306,10 @@ func (c *CloudletInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *Cloudl
 
 func (c *CloudletInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletInfoCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *CloudletInfoCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) context.CancelFunc {

@@ -732,6 +732,7 @@ type CloudletRefsCache struct {
 	Objs        map[CloudletKey]*CloudletRefs
 	Mux         util.Mutex
 	List        map[CloudletKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *CloudletRefs)
 	UpdatedCb   func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)
 	KeyWatchers map[CloudletKey][]*CloudletRefsKeyWatcher
@@ -848,6 +849,18 @@ func (c *CloudletRefsCache) GetCount() int {
 }
 
 func (c *CloudletRefsCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletRefs", "notifyId", notifyId)
+		flushed := make(map[CloudletKey]*CloudletRefs)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletRefs delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *CloudletRefsCache) Show(filter *CloudletRefs, cb func(ret *CloudletRefs) error) error {
@@ -880,6 +893,10 @@ func (c *CloudletRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *Cloudl
 
 func (c *CloudletRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletRefsCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *CloudletRefsCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -1251,6 +1268,7 @@ type ClusterRefsCache struct {
 	Objs        map[ClusterInstKey]*ClusterRefs
 	Mux         util.Mutex
 	List        map[ClusterInstKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs)
 	UpdatedCb   func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)
 	KeyWatchers map[ClusterInstKey][]*ClusterRefsKeyWatcher
@@ -1367,6 +1385,18 @@ func (c *ClusterRefsCache) GetCount() int {
 }
 
 func (c *ClusterRefsCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterRefs", "notifyId", notifyId)
+		flushed := make(map[ClusterInstKey]*ClusterRefs)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterRefs delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *ClusterRefsCache) Show(filter *ClusterRefs, cb func(ret *ClusterRefs) error) error {
@@ -1399,6 +1429,10 @@ func (c *ClusterRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *Cluster
 
 func (c *ClusterRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ClusterRefsCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ClusterRefsCache) WatchKey(key *ClusterInstKey, cb func(ctx context.Context)) context.CancelFunc {

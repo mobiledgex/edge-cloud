@@ -84,6 +84,7 @@ func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 
 	notifyClient.RegisterSendNodeCache(&nodeCache)
 	notifyClient.RegisterSendDeviceCache(&platformClientsCache)
+	platformClientsCache.SetFlushAll()
 	notifyClient.RegisterRecv(notify.NewCloudletInfoRecv(&CloudletInfoHandler{}))
 	ClientSender = notify.NewAppInstClientSend()
 	notifyClient.RegisterSend(ClientSender)

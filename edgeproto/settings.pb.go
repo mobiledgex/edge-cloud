@@ -803,6 +803,7 @@ type SettingsCache struct {
 	Objs        map[SettingsKey]*Settings
 	Mux         util.Mutex
 	List        map[SettingsKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *SettingsKey, old *Settings)
 	UpdatedCb   func(ctx context.Context, old *Settings, new *Settings)
 	KeyWatchers map[SettingsKey][]*SettingsKeyWatcher
@@ -919,6 +920,18 @@ func (c *SettingsCache) GetCount() int {
 }
 
 func (c *SettingsCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Settings", "notifyId", notifyId)
+		flushed := make(map[SettingsKey]*Settings)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Settings delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *SettingsCache) Show(filter *Settings, cb func(ret *Settings) error) error {
@@ -951,6 +964,10 @@ func (c *SettingsCache) SetNotifyCb(fn func(ctx context.Context, obj *SettingsKe
 
 func (c *SettingsCache) SetUpdatedCb(fn func(ctx context.Context, old *Settings, new *Settings)) {
 	c.UpdatedCb = fn
+}
+
+func (c *SettingsCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *SettingsCache) WatchKey(key *SettingsKey, cb func(ctx context.Context)) context.CancelFunc {

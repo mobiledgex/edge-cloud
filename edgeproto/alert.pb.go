@@ -627,6 +627,7 @@ type AlertCache struct {
 	Objs        map[AlertKey]*Alert
 	Mux         util.Mutex
 	List        map[AlertKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *AlertKey, old *Alert)
 	UpdatedCb   func(ctx context.Context, old *Alert, new *Alert)
 	KeyWatchers map[AlertKey][]*AlertKeyWatcher
@@ -743,6 +744,18 @@ func (c *AlertCache) GetCount() int {
 }
 
 func (c *AlertCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Alert", "notifyId", notifyId)
+		flushed := make(map[AlertKey]*Alert)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Alert delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Alert", "notifyId", notifyId)
 	flushed := make(map[AlertKey]*Alert)
 	c.Mux.Lock()
@@ -795,6 +808,10 @@ func (c *AlertCache) SetNotifyCb(fn func(ctx context.Context, obj *AlertKey, old
 
 func (c *AlertCache) SetUpdatedCb(fn func(ctx context.Context, old *Alert, new *Alert)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AlertCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AlertCache) WatchKey(key *AlertKey, cb func(ctx context.Context)) context.CancelFunc {

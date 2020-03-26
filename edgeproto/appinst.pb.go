@@ -2467,6 +2467,7 @@ type AppInstCache struct {
 	Objs        map[AppInstKey]*AppInst
 	Mux         util.Mutex
 	List        map[AppInstKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *AppInstKey, old *AppInst)
 	UpdatedCb   func(ctx context.Context, old *AppInst, new *AppInst)
 	KeyWatchers map[AppInstKey][]*AppInstKeyWatcher
@@ -2583,6 +2584,18 @@ func (c *AppInstCache) GetCount() int {
 }
 
 func (c *AppInstCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInst", "notifyId", notifyId)
+		flushed := make(map[AppInstKey]*AppInst)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInst delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error {
@@ -2615,6 +2628,10 @@ func (c *AppInstCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInstKey,
 
 func (c *AppInstCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInst, new *AppInst)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AppInstCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AppInstCache) WatchKey(key *AppInstKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -3420,6 +3437,7 @@ type AppInstInfoCache struct {
 	Objs        map[AppInstKey]*AppInstInfo
 	Mux         util.Mutex
 	List        map[AppInstKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *AppInstKey, old *AppInstInfo)
 	UpdatedCb   func(ctx context.Context, old *AppInstInfo, new *AppInstInfo)
 	KeyWatchers map[AppInstKey][]*AppInstInfoKeyWatcher
@@ -3536,6 +3554,18 @@ func (c *AppInstInfoCache) GetCount() int {
 }
 
 func (c *AppInstInfoCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstInfo", "notifyId", notifyId)
+		flushed := make(map[AppInstKey]*AppInstInfo)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstInfo delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstInfo", "notifyId", notifyId)
 	flushed := make(map[AppInstKey]*AppInstInfo)
 	c.Mux.Lock()
@@ -3588,6 +3618,10 @@ func (c *AppInstInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInst
 
 func (c *AppInstInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInstInfo, new *AppInstInfo)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AppInstInfoCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AppInstInfoCache) WatchKey(key *AppInstKey, cb func(ctx context.Context)) context.CancelFunc {

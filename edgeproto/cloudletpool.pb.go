@@ -964,6 +964,7 @@ type CloudletPoolCache struct {
 	Objs        map[CloudletPoolKey]*CloudletPool
 	Mux         util.Mutex
 	List        map[CloudletPoolKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *CloudletPoolKey, old *CloudletPool)
 	UpdatedCb   func(ctx context.Context, old *CloudletPool, new *CloudletPool)
 	KeyWatchers map[CloudletPoolKey][]*CloudletPoolKeyWatcher
@@ -1080,6 +1081,18 @@ func (c *CloudletPoolCache) GetCount() int {
 }
 
 func (c *CloudletPoolCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletPool", "notifyId", notifyId)
+		flushed := make(map[CloudletPoolKey]*CloudletPool)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletPool delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *CloudletPoolCache) Show(filter *CloudletPool, cb func(ret *CloudletPool) error) error {
@@ -1112,6 +1125,10 @@ func (c *CloudletPoolCache) SetNotifyCb(fn func(ctx context.Context, obj *Cloudl
 
 func (c *CloudletPoolCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletPool, new *CloudletPool)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletPoolCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *CloudletPoolCache) WatchKey(key *CloudletPoolKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -1411,6 +1428,7 @@ type CloudletPoolMemberCache struct {
 	Objs        map[CloudletPoolMember]*CloudletPoolMember
 	Mux         util.Mutex
 	List        map[CloudletPoolMember]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *CloudletPoolMember, old *CloudletPoolMember)
 	UpdatedCb   func(ctx context.Context, old *CloudletPoolMember, new *CloudletPoolMember)
 	KeyWatchers map[CloudletPoolMember][]*CloudletPoolMemberKeyWatcher
@@ -1527,6 +1545,18 @@ func (c *CloudletPoolMemberCache) GetCount() int {
 }
 
 func (c *CloudletPoolMemberCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletPoolMember", "notifyId", notifyId)
+		flushed := make(map[CloudletPoolMember]*CloudletPoolMember)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletPoolMember delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *CloudletPoolMemberCache) Show(filter *CloudletPoolMember, cb func(ret *CloudletPoolMember) error) error {
@@ -1559,6 +1589,10 @@ func (c *CloudletPoolMemberCache) SetNotifyCb(fn func(ctx context.Context, obj *
 
 func (c *CloudletPoolMemberCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletPoolMember, new *CloudletPoolMember)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletPoolMemberCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *CloudletPoolMemberCache) WatchKey(key *CloudletPoolMember, cb func(ctx context.Context)) context.CancelFunc {

@@ -910,6 +910,7 @@ type ResTagTableCache struct {
 	Objs        map[ResTagTableKey]*ResTagTable
 	Mux         util.Mutex
 	List        map[ResTagTableKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *ResTagTableKey, old *ResTagTable)
 	UpdatedCb   func(ctx context.Context, old *ResTagTable, new *ResTagTable)
 	KeyWatchers map[ResTagTableKey][]*ResTagTableKeyWatcher
@@ -1026,6 +1027,18 @@ func (c *ResTagTableCache) GetCount() int {
 }
 
 func (c *ResTagTableCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ResTagTable", "notifyId", notifyId)
+		flushed := make(map[ResTagTableKey]*ResTagTable)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ResTagTable delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *ResTagTableCache) Show(filter *ResTagTable, cb func(ret *ResTagTable) error) error {
@@ -1058,6 +1071,10 @@ func (c *ResTagTableCache) SetNotifyCb(fn func(ctx context.Context, obj *ResTagT
 
 func (c *ResTagTableCache) SetUpdatedCb(fn func(ctx context.Context, old *ResTagTable, new *ResTagTable)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ResTagTableCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ResTagTableCache) WatchKey(key *ResTagTableKey, cb func(ctx context.Context)) context.CancelFunc {

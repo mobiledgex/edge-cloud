@@ -1559,6 +1559,7 @@ type AppCache struct {
 	Objs        map[AppKey]*App
 	Mux         util.Mutex
 	List        map[AppKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *AppKey, old *App)
 	UpdatedCb   func(ctx context.Context, old *App, new *App)
 	KeyWatchers map[AppKey][]*AppKeyWatcher
@@ -1675,6 +1676,18 @@ func (c *AppCache) GetCount() int {
 }
 
 func (c *AppCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush App", "notifyId", notifyId)
+		flushed := make(map[AppKey]*App)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush App delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {
@@ -1707,6 +1720,10 @@ func (c *AppCache) SetNotifyCb(fn func(ctx context.Context, obj *AppKey, old *Ap
 
 func (c *AppCache) SetUpdatedCb(fn func(ctx context.Context, old *App, new *App)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AppCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AppCache) WatchKey(key *AppKey, cb func(ctx context.Context)) context.CancelFunc {

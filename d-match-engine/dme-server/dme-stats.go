@@ -242,7 +242,7 @@ func recordDevice(ctx context.Context, req *dme.RegisterClientRequest) {
 	}
 	dev := edgeproto.Device{
 		Key:       devKey,
-		Timestamp: *ts,
+		Timestamp: ts,
 	}
 	// Update local cache, which will trigger a send to controller
 	platformClientsCache.Update(ctx, &dev, 0)

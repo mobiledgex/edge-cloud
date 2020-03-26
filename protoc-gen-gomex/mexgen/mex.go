@@ -956,6 +956,7 @@ type {{.Name}}Cache struct {
 	Objs map[{{.KeyType}}]*{{.Name}}
 	Mux util.Mutex
 	List map[{{.KeyType}}]struct{}
+	FlushAll bool
 	NotifyCb func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}})
 	UpdatedCb func(ctx context.Context, old *{{.Name}}, new *{{.Name}})
 	KeyWatchers map[{{.KeyType}}][]*{{.Name}}KeyWatcher
@@ -1072,6 +1073,18 @@ func (c *{{.Name}}Cache) GetCount() int {
 }
 
 func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush {{.Name}}", "notifyId", notifyId)
+		flushed := make(map[{{.KeyType}}]*{{.Name}})
+		c.Mux.Lock()	
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush {{.Name}} delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return 
+	}
 {{- if .NotifyFlush}}
 	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush {{.Name}}", "notifyId", notifyId)
 	flushed := make(map[{{.KeyType}}]*{{.Name}})
@@ -1129,6 +1142,10 @@ func (c *{{.Name}}Cache) SetNotifyCb(fn func(ctx context.Context, obj *{{.KeyTyp
 
 func (c *{{.Name}}Cache) SetUpdatedCb(fn func(ctx context.Context, old *{{.Name}}, new *{{.Name}})) {
 	c.UpdatedCb = fn
+}
+
+func (c *{{.Name}}Cache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *{{.Name}}Cache) WatchKey(key *{{.KeyType}}, cb func(ctx context.Context)) context.CancelFunc {

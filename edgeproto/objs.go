@@ -424,7 +424,7 @@ func (s *PrivacyPolicy) Validate(fields map[string]struct{}) error {
 }
 
 func (key *DeviceKey) ValidateKey() error {
-	if key.GetKeyString() == "" {
+	if key.UniqueId == "" || key.UniqueIdType == "" {
 		return errors.New("Device id cannot be empty")
 	}
 	return nil

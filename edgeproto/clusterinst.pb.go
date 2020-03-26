@@ -1698,6 +1698,7 @@ type ClusterInstCache struct {
 	Objs        map[ClusterInstKey]*ClusterInst
 	Mux         util.Mutex
 	List        map[ClusterInstKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *ClusterInstKey, old *ClusterInst)
 	UpdatedCb   func(ctx context.Context, old *ClusterInst, new *ClusterInst)
 	KeyWatchers map[ClusterInstKey][]*ClusterInstKeyWatcher
@@ -1814,6 +1815,18 @@ func (c *ClusterInstCache) GetCount() int {
 }
 
 func (c *ClusterInstCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInst", "notifyId", notifyId)
+		flushed := make(map[ClusterInstKey]*ClusterInst)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInst delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *ClusterInstCache) Show(filter *ClusterInst, cb func(ret *ClusterInst) error) error {
@@ -1846,6 +1859,10 @@ func (c *ClusterInstCache) SetNotifyCb(fn func(ctx context.Context, obj *Cluster
 
 func (c *ClusterInstCache) SetUpdatedCb(fn func(ctx context.Context, old *ClusterInst, new *ClusterInst)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ClusterInstCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ClusterInstCache) WatchKey(key *ClusterInstKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -2497,6 +2514,7 @@ type ClusterInstInfoCache struct {
 	Objs        map[ClusterInstKey]*ClusterInstInfo
 	Mux         util.Mutex
 	List        map[ClusterInstKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *ClusterInstKey, old *ClusterInstInfo)
 	UpdatedCb   func(ctx context.Context, old *ClusterInstInfo, new *ClusterInstInfo)
 	KeyWatchers map[ClusterInstKey][]*ClusterInstInfoKeyWatcher
@@ -2613,6 +2631,18 @@ func (c *ClusterInstInfoCache) GetCount() int {
 }
 
 func (c *ClusterInstInfoCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInstInfo", "notifyId", notifyId)
+		flushed := make(map[ClusterInstKey]*ClusterInstInfo)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInstInfo delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInstInfo", "notifyId", notifyId)
 	flushed := make(map[ClusterInstKey]*ClusterInstInfo)
 	c.Mux.Lock()
@@ -2665,6 +2695,10 @@ func (c *ClusterInstInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *Clu
 
 func (c *ClusterInstInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *ClusterInstInfo, new *ClusterInstInfo)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ClusterInstInfoCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ClusterInstInfoCache) WatchKey(key *ClusterInstKey, cb func(ctx context.Context)) context.CancelFunc {

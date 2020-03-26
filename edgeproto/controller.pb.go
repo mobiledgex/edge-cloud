@@ -632,6 +632,7 @@ type ControllerCache struct {
 	Objs        map[ControllerKey]*Controller
 	Mux         util.Mutex
 	List        map[ControllerKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *ControllerKey, old *Controller)
 	UpdatedCb   func(ctx context.Context, old *Controller, new *Controller)
 	KeyWatchers map[ControllerKey][]*ControllerKeyWatcher
@@ -748,6 +749,18 @@ func (c *ControllerCache) GetCount() int {
 }
 
 func (c *ControllerCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Controller", "notifyId", notifyId)
+		flushed := make(map[ControllerKey]*Controller)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Controller delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *ControllerCache) Show(filter *Controller, cb func(ret *Controller) error) error {
@@ -780,6 +793,10 @@ func (c *ControllerCache) SetNotifyCb(fn func(ctx context.Context, obj *Controll
 
 func (c *ControllerCache) SetUpdatedCb(fn func(ctx context.Context, old *Controller, new *Controller)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ControllerCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ControllerCache) WatchKey(key *ControllerKey, cb func(ctx context.Context)) context.CancelFunc {

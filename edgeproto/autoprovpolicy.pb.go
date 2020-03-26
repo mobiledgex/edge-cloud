@@ -1123,6 +1123,7 @@ type AutoProvPolicyCache struct {
 	Objs        map[PolicyKey]*AutoProvPolicy
 	Mux         util.Mutex
 	List        map[PolicyKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy)
 	UpdatedCb   func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy)
 	KeyWatchers map[PolicyKey][]*AutoProvPolicyKeyWatcher
@@ -1239,6 +1240,18 @@ func (c *AutoProvPolicyCache) GetCount() int {
 }
 
 func (c *AutoProvPolicyCache) Flush(ctx context.Context, notifyId int64) {
+	if c.FlushAll {
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AutoProvPolicy", "notifyId", notifyId)
+		flushed := make(map[PolicyKey]*AutoProvPolicy)
+		c.Mux.Lock()
+		for key, _ := range c.Objs {
+			flushed[key] = c.Objs[key]
+			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AutoProvPolicy delete", "key", key)
+			delete(c.Objs, key)
+		}
+		c.Mux.Unlock()
+		return
+	}
 }
 
 func (c *AutoProvPolicyCache) Show(filter *AutoProvPolicy, cb func(ret *AutoProvPolicy) error) error {
@@ -1271,6 +1284,10 @@ func (c *AutoProvPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *Poli
 
 func (c *AutoProvPolicyCache) SetUpdatedCb(fn func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AutoProvPolicyCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AutoProvPolicyCache) WatchKey(key *PolicyKey, cb func(ctx context.Context)) context.CancelFunc {
