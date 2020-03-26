@@ -33,6 +33,7 @@ message AutoProvPolicy {
   option (protogen.notify_cache) = true;
   option (protogen.noconfig) = "Cloudlets";
   option (protogen.alias) = "name=Key.Name,app-org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
 }
 
 // AutoProvCloudlet stores the potential cloudlet and location for DME lookup
@@ -87,6 +88,7 @@ service AutoProvPolicyApi {
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "MinNodes,MaxNodes";
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
   // Delete an Auto Provisioning Policy
   rpc DeleteAutoProvPolicy(AutoProvPolicy) returns (Result) {

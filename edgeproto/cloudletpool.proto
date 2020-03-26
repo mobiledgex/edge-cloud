@@ -29,6 +29,7 @@ message CloudletPool {
   option (protogen.generate_cache) = true;
   option (protogen.noconfig) = "Members";
   option (protogen.alias) = "name=Key.Name";
+  option (protogen.uses_org) = "none";
 }
 
 message CloudletPoolMember {
@@ -44,6 +45,7 @@ message CloudletPoolMember {
   option (protogen.generate_cud_test_update) = false;
   option (protogen.generate_cache) = true;
   option (protogen.alias) = "pool=PoolKey.Name,cloudlet=CloudletKey.Name,organization=CloudletKey.Organization";
+  option (protogen.uses_org) = "none";
 }
 
 service CloudletPoolApi {

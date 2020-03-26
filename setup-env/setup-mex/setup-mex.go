@@ -145,15 +145,18 @@ func ReadSetupFile(setupfile string, deployment interface{}, vars map[string]str
 	//to get these variables, and then ingest again to parse the setup data with the variables
 	var setupVars util.SetupVariables
 
-	//{{tlsoutdir}} is relative to the GO dir.
-	goPath := os.Getenv("GOPATH")
-	if goPath == "" {
-		fmt.Fprintf(os.Stderr, "GOPATH not set, cannot calculate tlsoutdir")
-		return false
+	_, exist := vars["tlsoutdir"]
+	if !exist {
+		//{{tlsoutdir}} is relative to the GO dir.
+		goPath := os.Getenv("GOPATH")
+		if goPath == "" {
+			fmt.Fprintf(os.Stderr, "GOPATH not set, cannot calculate tlsoutdir")
+			return false
+		}
+		tlsDir = goPath + "/src/github.com/mobiledgex/edge-cloud/tls"
+		tlsOutDir = tlsDir + "/out"
+		vars["tlsoutdir"] = tlsOutDir
 	}
-	tlsDir = goPath + "/src/github.com/mobiledgex/edge-cloud/tls"
-	tlsOutDir = tlsDir + "/out"
-	vars["tlsoutdir"] = tlsOutDir
 
 	setupdir := filepath.Dir(setupfile)
 	vars["setupdir"] = setupdir

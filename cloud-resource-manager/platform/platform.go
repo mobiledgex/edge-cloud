@@ -17,6 +17,7 @@ type PlatformConfig struct {
 	CloudletVMImagePath string
 	VMImageVersion      string
 	PackageVersion      string
+	EnvVars             map[string]string
 }
 
 // Platform abstracts the underlying cloudlet platform.

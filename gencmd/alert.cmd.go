@@ -26,6 +26,7 @@ It is generated from these files:
 	node.proto
 	notice.proto
 	operatorcode.proto
+	org.proto
 	privacypolicy.proto
 	refs.proto
 	restagtable.proto
@@ -98,6 +99,8 @@ It has these top-level messages:
 	NodeData
 	Notice
 	OperatorCode
+	Organization
+	OrganizationData
 	OutboundSecurityRule
 	PrivacyPolicy
 	CloudletRefs

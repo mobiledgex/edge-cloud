@@ -85,7 +85,7 @@ func (a *NodeData) Sort() {
 
 func (key *OperatorCodeKey) ValidateKey() error {
 	if key.GetKeyString() == "" {
-		return errors.New("No organization specified")
+		return errors.New("No code specified")
 	}
 	return nil
 }
@@ -642,4 +642,15 @@ func GetOrg(obj interface{}) string {
 	default:
 		return "mobiledgex"
 	}
+}
+
+func (c *ClusterInstCache) UsesOrg(org string) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, val := range c.Objs {
+		if val.Key.Organization == org || val.Key.CloudletKey.Organization == org || (val.Reservable && val.ReservedBy == org) {
+			return true
+		}
+	}
+	return false
 }

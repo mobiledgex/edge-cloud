@@ -37,6 +37,7 @@ message Device {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.generate_show_test) = true;
+  option (protogen.uses_org) = "none";
 }
 
 service DeviceApi {

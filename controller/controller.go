@@ -299,6 +299,7 @@ func startServices() error {
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
 	edgeproto.RegisterDeviceApiServer(server, &deviceApi)
+	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -335,6 +336,7 @@ func startServices() error {
 			edgeproto.RegisterAppInstClientApiHandler,
 			edgeproto.RegisterDebugApiHandler,
 			edgeproto.RegisterDeviceApiHandler,
+			edgeproto.RegisterOrganizationApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -453,6 +455,7 @@ func InitApis(sync *Sync) {
 	InitAppInstClientKeyApi(sync)
 	InitAppInstClientApi()
 	InitDeviceApi(sync)
+	InitOrganizationApi(sync)
 }
 
 func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {

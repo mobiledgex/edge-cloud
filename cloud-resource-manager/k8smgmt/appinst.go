@@ -143,6 +143,7 @@ func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, clien
 	mf, err = MergeEnvVars(ctx, vaultConfig, app, mf, names.ImagePullSecret)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos, "failed to merge env vars", "error", err)
+		return fmt.Errorf("error merging environment variables config file: %s", err)
 	}
 	log.SpanLog(ctx, log.DebugLevelMexos, "writing config file", "kubeManifest", mf)
 	file := names.AppName + names.AppRevision + ".yaml"
@@ -176,7 +177,8 @@ func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 
 func DeleteAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "deleting app", "name", names.AppName)
-	file := names.AppName + names.AppRevision + ".yaml"
+	// for delete, we use the appInst revision which may be behind the app revision
+	file := names.AppName + names.AppInstRevision + ".yaml"
 	cmd := fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, file)
 	out, err := client.Output(cmd)
 	if err != nil {
