@@ -24,6 +24,33 @@ type ClusterCheckpoint struct {
 var InfluxMinimumTimestamp, _ = time.Parse(time.RFC3339, "1677-09-21T00:13:44Z")
 var PrevCheckpoint = InfluxMinimumTimestamp
 
+func InitUsage() error {
+	//set PrevCheckpoint, should not necessarily start at InfluxMinimumTimestamp if controller was restarted halway through operation
+	influxQuery := fmt.Sprintf(`SELECT * from "%s" order by time desc limit 1`, cloudcommon.ClusterInstCheckpoint)
+	checkpoint, err := services.events.QueryDB(influxQuery)
+	if err != nil {
+		return fmt.Errorf("Unable to query influx: %v", err)
+	}
+	if len(checkpoint) == 0 || len(checkpoint[0].Series) == 0 {
+		//nothing in checkpoint db, use influxMinimumTimestamp
+		return nil
+	} else if len(checkpoint) != 1 ||
+		len(checkpoint[0].Series) != 1 ||
+		len(checkpoint[0].Series[0].Values) == 0 ||
+		len(checkpoint[0].Series[0].Values[0]) == 0 ||
+		checkpoint[0].Series[0].Name != cloudcommon.ClusterInstCheckpoint {
+		// should only be 1 series, the 'clusterinst' one
+		return fmt.Errorf("Error parsing influx response")
+	}
+	//we don't care aobut what the checkpoint actually is, just the timestamp of it
+	PrevCheckpoint, err = time.Parse(time.RFC3339, fmt.Sprintf("%v", checkpoint[0].Series[0].Values[0][0]))
+	if err != nil {
+		PrevCheckpoint = InfluxMinimumTimestamp
+		return fmt.Errorf("Error creating parsing checkpoint time: %v", err)
+	}
+	return nil
+}
+
 func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterInst, endTime time.Time) error {
 	var metric *edgeproto.Metric
 	// query from the checkpoint up to the delete
@@ -74,8 +101,7 @@ func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterIns
 		services.events.AddMetric(metric)
 		return nil
 	} else if len(logs) != 1 || len(logs[0].Series) != 1 || logs[0].Series[0].Name != cloudcommon.ClusterInstEvent { // should only be 1 series, the 'clusterinst' one
-		fmt.Printf("logs: %+v\n", logs)
-		return fmt.Errorf("Error parsing influx response, too many")
+		return fmt.Errorf("Error parsing influx response, too many series")
 	}
 	for _, values := range logs[0].Series[0].Values {
 		// value should be of the format [timestamp event status]
@@ -378,11 +404,15 @@ func GetClusterCheckpoint(ctx context.Context, org string, timestamp time.Time) 
 func runClusterCheckpoints(ctx context.Context) {
 	checkpointSpan := log.StartSpan(log.DebugLevelInfo, "Cluster Checkpointing thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 	defer checkpointSpan.Finish()
+	err := InitUsage()
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Error setting up checkpoints", "err", err)
+	}
 	for {
 		select {
 		case <-time.After(*checkpointInterval):
 			t := time.Now()
-			err := CreateClusterCheckpoint(ctx, t)
+			err = CreateClusterCheckpoint(ctx, t)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create checkpoint", "time", t, "err", err)
 			}
