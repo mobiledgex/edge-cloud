@@ -1676,18 +1676,6 @@ func (c *AppCache) GetCount() int {
 }
 
 func (c *AppCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush App", "notifyId", notifyId)
-		flushed := make(map[AppKey]*App)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush App delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {

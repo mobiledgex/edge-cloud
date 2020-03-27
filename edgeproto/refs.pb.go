@@ -849,18 +849,6 @@ func (c *CloudletRefsCache) GetCount() int {
 }
 
 func (c *CloudletRefsCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletRefs", "notifyId", notifyId)
-		flushed := make(map[CloudletKey]*CloudletRefs)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletRefs delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *CloudletRefsCache) Show(filter *CloudletRefs, cb func(ret *CloudletRefs) error) error {
@@ -1389,18 +1377,6 @@ func (c *ClusterRefsCache) GetCount() int {
 }
 
 func (c *ClusterRefsCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterRefs", "notifyId", notifyId)
-		flushed := make(map[ClusterInstKey]*ClusterRefs)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterRefs delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *ClusterRefsCache) Show(filter *ClusterRefs, cb func(ret *ClusterRefs) error) error {

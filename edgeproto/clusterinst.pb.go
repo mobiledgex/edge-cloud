@@ -1815,18 +1815,6 @@ func (c *ClusterInstCache) GetCount() int {
 }
 
 func (c *ClusterInstCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInst", "notifyId", notifyId)
-		flushed := make(map[ClusterInstKey]*ClusterInst)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInst delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *ClusterInstCache) Show(filter *ClusterInst, cb func(ret *ClusterInst) error) error {
@@ -2631,23 +2619,11 @@ func (c *ClusterInstInfoCache) GetCount() int {
 }
 
 func (c *ClusterInstInfoCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInstInfo", "notifyId", notifyId)
-		flushed := make(map[ClusterInstKey]*ClusterInstInfo)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInstInfo delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
-	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInstInfo", "notifyId", notifyId)
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInstInfo", "notifyId", notifyId, "FlushAll", c.FlushAll)
 	flushed := make(map[ClusterInstKey]*ClusterInstInfo)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if val.NotifyId != notifyId {
+		if !c.FlushAll && val.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]

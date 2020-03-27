@@ -24,10 +24,23 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func DeviceHideTags(in *edgeproto.Device) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.NotifyId = 0
+	}
+}
+
 var DeviceApiCmd edgeproto.DeviceApiClient
 
-var CreateDeviceCmd = &cli.Command{
-	Use:          "CreateDevice",
+var InjectDeviceCmd = &cli.Command{
+	Use:          "InjectDevice",
 	RequiredArgs: strings.Join(DeviceRequiredArgs, " "),
 	OptionalArgs: strings.Join(DeviceOptionalArgs, " "),
 	AliasArgs:    strings.Join(DeviceAliasArgs, " "),
@@ -35,10 +48,10 @@ var CreateDeviceCmd = &cli.Command{
 	Comments:     DeviceComments,
 	ReqData:      &edgeproto.Device{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runCreateDevice,
+	Run:          runInjectDevice,
 }
 
-func runCreateDevice(c *cli.Command, args []string) error {
+func runInjectDevice(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
@@ -47,35 +60,35 @@ func runCreateDevice(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return CreateDevice(c, obj)
+	return InjectDevice(c, obj)
 }
 
-func CreateDevice(c *cli.Command, in *edgeproto.Device) error {
+func InjectDevice(c *cli.Command, in *edgeproto.Device) error {
 	if DeviceApiCmd == nil {
 		return fmt.Errorf("DeviceApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := DeviceApiCmd.CreateDevice(ctx, in)
+	obj, err := DeviceApiCmd.InjectDevice(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("CreateDevice failed: %s", errstr)
+		return fmt.Errorf("InjectDevice failed: %s", errstr)
 	}
 	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func CreateDevices(c *cli.Command, data []edgeproto.Device, err *error) {
+func InjectDevices(c *cli.Command, data []edgeproto.Device, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("CreateDevice %v\n", data[ii])
-		myerr := CreateDevice(c, &data[ii])
+		fmt.Printf("InjectDevice %v\n", data[ii])
+		myerr := InjectDevice(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -135,6 +148,7 @@ func ShowDevice(c *cli.Command, in *edgeproto.Device) error {
 			}
 			return fmt.Errorf("ShowDevice recv failed: %s", errstr)
 		}
+		DeviceHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -217,7 +231,7 @@ func EvictDevices(c *cli.Command, data []edgeproto.Device, err *error) {
 }
 
 var DeviceApiCmds = []*cobra.Command{
-	CreateDeviceCmd.GenCmd(),
+	InjectDeviceCmd.GenCmd(),
 	ShowDeviceCmd.GenCmd(),
 	EvictDeviceCmd.GenCmd(),
 }
@@ -238,15 +252,21 @@ var DeviceRequiredArgs = []string{
 	"key.uniqueid",
 }
 var DeviceOptionalArgs = []string{
-	"timestamp.seconds",
-	"timestamp.nanos",
+	"firstseen.seconds",
+	"firstseen.nanos",
+	"lastseen.seconds",
+	"lastseen.nanos",
+	"notifyid",
 }
 var DeviceAliasArgs = []string{}
 var DeviceComments = map[string]string{
 	"key.uniqueidtype":  "Type of unique ID provided by the client",
 	"key.uniqueid":      "Unique identification of the client device or user. May be overridden by the server.",
-	"timestamp.seconds": "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
-	"timestamp.nanos":   "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"firstseen.seconds": "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"firstseen.nanos":   "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"lastseen.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"lastseen.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"notifyid":          "Id of client assigned by server (internal use only)",
 }
 var DeviceSpecialArgs = map[string]string{
 	"fields": "StringArray",

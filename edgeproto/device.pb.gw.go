@@ -28,7 +28,7 @@ var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-func request_DeviceApi_CreateDevice_0(ctx context.Context, marshaler runtime.Marshaler, client DeviceApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_DeviceApi_InjectDevice_0(ctx context.Context, marshaler runtime.Marshaler, client DeviceApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Device
 	var metadata runtime.ServerMetadata
 
@@ -40,7 +40,7 @@ func request_DeviceApi_CreateDevice_0(ctx context.Context, marshaler runtime.Mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateDevice(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.InjectDevice(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -125,7 +125,7 @@ func RegisterDeviceApiHandler(ctx context.Context, mux *runtime.ServeMux, conn *
 // "DeviceApiClient" to call the correct interceptors.
 func RegisterDeviceApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, client DeviceApiClient) error {
 
-	mux.Handle("POST", pattern_DeviceApi_CreateDevice_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_DeviceApi_InjectDevice_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -134,14 +134,14 @@ func RegisterDeviceApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_DeviceApi_CreateDevice_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_DeviceApi_InjectDevice_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_DeviceApi_CreateDevice_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_DeviceApi_InjectDevice_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -189,7 +189,7 @@ func RegisterDeviceApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 }
 
 var (
-	pattern_DeviceApi_CreateDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "device"}, ""))
+	pattern_DeviceApi_InjectDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "device"}, ""))
 
 	pattern_DeviceApi_ShowDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "device"}, ""))
 
@@ -197,7 +197,7 @@ var (
 )
 
 var (
-	forward_DeviceApi_CreateDevice_0 = runtime.ForwardResponseMessage
+	forward_DeviceApi_InjectDevice_0 = runtime.ForwardResponseMessage
 
 	forward_DeviceApi_ShowDevice_0 = runtime.ForwardResponseStream
 

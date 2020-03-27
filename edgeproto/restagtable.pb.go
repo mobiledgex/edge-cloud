@@ -1027,18 +1027,6 @@ func (c *ResTagTableCache) GetCount() int {
 }
 
 func (c *ResTagTableCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ResTagTable", "notifyId", notifyId)
-		flushed := make(map[ResTagTableKey]*ResTagTable)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ResTagTable delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *ResTagTableCache) Show(filter *ResTagTable, cb func(ret *ResTagTable) error) error {

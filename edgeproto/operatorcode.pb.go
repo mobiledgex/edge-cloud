@@ -549,18 +549,6 @@ func (c *OperatorCodeCache) GetCount() int {
 }
 
 func (c *OperatorCodeCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush OperatorCode", "notifyId", notifyId)
-		flushed := make(map[OperatorCodeKey]*OperatorCode)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush OperatorCode delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *OperatorCodeCache) Show(filter *OperatorCode, cb func(ret *OperatorCode) error) error {

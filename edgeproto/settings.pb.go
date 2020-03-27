@@ -920,18 +920,6 @@ func (c *SettingsCache) GetCount() int {
 }
 
 func (c *SettingsCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Settings", "notifyId", notifyId)
-		flushed := make(map[SettingsKey]*Settings)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Settings delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *SettingsCache) Show(filter *Settings, cb func(ret *Settings) error) error {

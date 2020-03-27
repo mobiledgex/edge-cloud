@@ -641,18 +641,6 @@ func (c *AppInstClientKeyCache) GetCount() int {
 }
 
 func (c *AppInstClientKeyCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstClientKey", "notifyId", notifyId)
-		flushed := make(map[AppInstKey]*AppInstClientKey)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstClientKey delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *AppInstClientKeyCache) Show(filter *AppInstClientKey, cb func(ret *AppInstClientKey) error) error {

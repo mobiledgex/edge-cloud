@@ -749,18 +749,6 @@ func (c *ControllerCache) GetCount() int {
 }
 
 func (c *ControllerCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Controller", "notifyId", notifyId)
-		flushed := make(map[ControllerKey]*Controller)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Controller delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *ControllerCache) Show(filter *Controller, cb func(ret *Controller) error) error {

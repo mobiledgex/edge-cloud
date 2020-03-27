@@ -34,7 +34,7 @@ func TestDeviceApi(t *testing.T) {
 	testutil.InternalDeviceTest(t, "show", &deviceApi, testutil.PlarformDeviceClientData)
 	// Add the existing platform device with the new timestamp
 	dev := testutil.PlarformDeviceClientData[0]
-	dev.Timestamp = testutil.GetTimestamp(time.Date(2009, time.November, 11, 23, 0, 0, 0, time.UTC))
+	dev.FirstSeen = testutil.GetTimestamp(time.Date(2009, time.November, 11, 23, 0, 0, 0, time.UTC))
 	deviceApi.Update(ctx, &dev, 0)
 	testutil.InternalDeviceTest(t, "show", &deviceApi, testutil.PlarformDeviceClientData)
 	// Test Update of a platform device without uniqueID
@@ -50,9 +50,9 @@ func TestDeviceApi(t *testing.T) {
 		deviceApi.EvictDevice(ctx, &obj)
 	}
 	testutil.InternalDeviceTest(t, "show", &deviceApi, []edgeproto.Device{})
-	// Test Create of the platform devices
+	// Test Inject of the platform devices
 	for _, obj := range testutil.PlarformDeviceClientData {
-		deviceApi.CreateDevice(ctx, &obj)
+		deviceApi.InjectDevice(ctx, &obj)
 	}
 	testutil.InternalDeviceTest(t, "show", &deviceApi, testutil.PlarformDeviceClientData)
 

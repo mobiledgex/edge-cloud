@@ -747,23 +747,11 @@ func (c *AlertCache) GetCount() int {
 }
 
 func (c *AlertCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Alert", "notifyId", notifyId)
-		flushed := make(map[AlertKey]*Alert)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Alert delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
-	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Alert", "notifyId", notifyId)
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Alert", "notifyId", notifyId, "FlushAll", c.FlushAll)
 	flushed := make(map[AlertKey]*Alert)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if val.NotifyId != notifyId {
+		if !c.FlushAll && val.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]

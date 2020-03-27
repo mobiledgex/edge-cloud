@@ -30,7 +30,11 @@ message Device {
   // Key 
   DeviceKey key = 2 [(gogoproto.nullable) = false];
   // Timestamp when the device was registered
-  google.protobuf.Timestamp timestamp = 3;
+  google.protobuf.Timestamp first_seen = 3;
+  // Timestamp when the device was last seen(Future use)
+  google.protobuf.Timestamp last_seen = 4;
+  // Id of client assigned by server (internal use only)
+  int64 notify_id = 5 [(protogen.hidetag) = "nocmp"];
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -38,28 +42,29 @@ message Device {
   option (protogen.notify_cache) = true;
   option (protogen.generate_show_test) = true;
   option (protogen.uses_org) = "none";
+  option (protogen.notify_flush) = true;
 }
 
 service DeviceApi {
-  rpc CreateDevice(Device) returns (Result) {
+  rpc InjectDevice(Device) returns (Result) {
     option (google.api.http) = {
       post: "/create/device"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceDevice,ActionManage,";
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
   }
   rpc ShowDevice(Device) returns (stream Device) {
     option (google.api.http) = {
       post: "/show/device"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceDevice,ActionView,";
+    option (protogen.mc2_api) = "ResourceConfig,ActionView,";
   }
   rpc EvictDevice(Device) returns (Result) {
     option (google.api.http) = {
       post: "/evict/device"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceDevice,ActionManage,";
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
   }
 }

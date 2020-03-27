@@ -1081,18 +1081,6 @@ func (c *CloudletPoolCache) GetCount() int {
 }
 
 func (c *CloudletPoolCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletPool", "notifyId", notifyId)
-		flushed := make(map[CloudletPoolKey]*CloudletPool)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletPool delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *CloudletPoolCache) Show(filter *CloudletPool, cb func(ret *CloudletPool) error) error {
@@ -1549,18 +1537,6 @@ func (c *CloudletPoolMemberCache) GetCount() int {
 }
 
 func (c *CloudletPoolMemberCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletPoolMember", "notifyId", notifyId)
-		flushed := make(map[CloudletPoolMember]*CloudletPoolMember)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletPoolMember delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *CloudletPoolMemberCache) Show(filter *CloudletPoolMember, cb func(ret *CloudletPoolMember) error) error {

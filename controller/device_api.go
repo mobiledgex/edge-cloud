@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -24,8 +25,7 @@ func InitDeviceApi(sync *Sync) {
 }
 
 func (s *DeviceApi) ShowDevice(in *edgeproto.Device, cb edgeproto.DeviceApi_ShowDeviceServer) error {
-	filter := edgeproto.Device{}
-	err := s.cache.Show(&filter, func(obj *edgeproto.Device) error {
+	err := s.cache.Show(in, func(obj *edgeproto.Device) error {
 		log.SpanLog(cb.Context(), log.DebugLevelApi, "Showing client", "client", obj)
 		err := cb.Send(obj)
 		return err
@@ -34,6 +34,11 @@ func (s *DeviceApi) ShowDevice(in *edgeproto.Device, cb edgeproto.DeviceApi_Show
 }
 
 func (s *DeviceApi) CreateDevice(ctx context.Context, in *edgeproto.Device) (*edgeproto.Result, error) {
+	// Unsupported - use InjectDevice instead
+	return &edgeproto.Result{}, fmt.Errorf("Use InjectDevice instead")
+}
+
+func (s *DeviceApi) InjectDevice(ctx context.Context, in *edgeproto.Device) (*edgeproto.Result, error) {
 	if err := in.Validate(edgeproto.DeviceAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
 	}
@@ -54,12 +59,8 @@ func (s *DeviceApi) EvictDevice(ctx context.Context, in *edgeproto.Device) (*edg
 
 // Does the same as create - once the device is stored it's there forever
 func (s *DeviceApi) Update(ctx context.Context, in *edgeproto.Device, rev int64) {
-	if err := in.Validate(edgeproto.DeviceAllFieldsMap); err != nil {
-		return
-	}
-
 	if !s.HasDevice(&in.Key) {
-		if _, err := s.CreateDevice(ctx, in); err != nil {
+		if _, err := s.InjectDevice(ctx, in); err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Failed to add platform client",
 				"client", in)
 		}

@@ -898,18 +898,6 @@ func (c *AutoScalePolicyCache) GetCount() int {
 }
 
 func (c *AutoScalePolicyCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AutoScalePolicy", "notifyId", notifyId)
-		flushed := make(map[PolicyKey]*AutoScalePolicy)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AutoScalePolicy delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *AutoScalePolicyCache) Show(filter *AutoScalePolicy, cb func(ret *AutoScalePolicy) error) error {

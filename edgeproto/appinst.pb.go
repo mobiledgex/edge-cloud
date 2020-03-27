@@ -2584,18 +2584,6 @@ func (c *AppInstCache) GetCount() int {
 }
 
 func (c *AppInstCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInst", "notifyId", notifyId)
-		flushed := make(map[AppInstKey]*AppInst)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInst delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error {
@@ -3571,23 +3559,11 @@ func (c *AppInstInfoCache) GetCount() int {
 }
 
 func (c *AppInstInfoCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstInfo", "notifyId", notifyId)
-		flushed := make(map[AppInstKey]*AppInstInfo)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstInfo delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
-	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstInfo", "notifyId", notifyId)
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstInfo", "notifyId", notifyId, "FlushAll", c.FlushAll)
 	flushed := make(map[AppInstKey]*AppInstInfo)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if val.NotifyId != notifyId {
+		if !c.FlushAll && val.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]

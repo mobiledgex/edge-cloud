@@ -1073,24 +1073,12 @@ func (c *{{.Name}}Cache) GetCount() int {
 }
 
 func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush {{.Name}}", "notifyId", notifyId)
-		flushed := make(map[{{.KeyType}}]*{{.Name}})
-		c.Mux.Lock()	
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush {{.Name}} delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return 
-	}
 {{- if .NotifyFlush}}
-	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush {{.Name}}", "notifyId", notifyId)
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush {{.Name}}", "notifyId", notifyId, "FlushAll", c.FlushAll)
 	flushed := make(map[{{.KeyType}}]*{{.Name}})
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if val.NotifyId != notifyId {
+		if !c.FlushAll && val.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]

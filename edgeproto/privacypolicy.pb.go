@@ -827,18 +827,6 @@ func (c *PrivacyPolicyCache) GetCount() int {
 }
 
 func (c *PrivacyPolicyCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush PrivacyPolicy", "notifyId", notifyId)
-		flushed := make(map[PolicyKey]*PrivacyPolicy)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush PrivacyPolicy delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *PrivacyPolicyCache) Show(filter *PrivacyPolicy, cb func(ret *PrivacyPolicy) error) error {

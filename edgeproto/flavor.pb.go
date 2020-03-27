@@ -967,18 +967,6 @@ func (c *FlavorCache) GetCount() int {
 }
 
 func (c *FlavorCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Flavor", "notifyId", notifyId)
-		flushed := make(map[FlavorKey]*Flavor)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Flavor delete", "key", key)
-			delete(c.Objs, key)
-		}
-		c.Mux.Unlock()
-		return
-	}
 }
 
 func (c *FlavorCache) Show(filter *Flavor, cb func(ret *Flavor) error) error {

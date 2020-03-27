@@ -22,6 +22,8 @@ import "github.com/mobiledgex/edge-cloud/objstore"
 import "github.com/coreos/etcd/clientv3/concurrency"
 import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
+import "github.com/google/go-cmp/cmp"
+import "github.com/google/go-cmp/cmp/cmpopts"
 import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
@@ -53,7 +55,11 @@ type Device struct {
 	// Key
 	Key DeviceKey `protobuf:"bytes,2,opt,name=key" json:"key"`
 	// Timestamp when the device was registered
-	Timestamp *google_protobuf1.Timestamp `protobuf:"bytes,3,opt,name=timestamp" json:"timestamp,omitempty"`
+	FirstSeen *google_protobuf1.Timestamp `protobuf:"bytes,3,opt,name=first_seen,json=firstSeen" json:"first_seen,omitempty"`
+	// Timestamp when the device was last seen(Future use)
+	LastSeen *google_protobuf1.Timestamp `protobuf:"bytes,4,opt,name=last_seen,json=lastSeen" json:"last_seen,omitempty"`
+	// Id of client assigned by server (internal use only)
+	NotifyId int64 `protobuf:"varint,5,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
 }
 
 func (m *Device) Reset()                    { *m = Device{} }
@@ -96,7 +102,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for DeviceApi service
 
 type DeviceApiClient interface {
-	CreateDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (*Result, error)
+	InjectDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (*Result, error)
 	ShowDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (DeviceApi_ShowDeviceClient, error)
 	EvictDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (*Result, error)
 }
@@ -109,9 +115,9 @@ func NewDeviceApiClient(cc *grpc.ClientConn) DeviceApiClient {
 	return &deviceApiClient{cc}
 }
 
-func (c *deviceApiClient) CreateDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (*Result, error) {
+func (c *deviceApiClient) InjectDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.DeviceApi/CreateDevice", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/edgeproto.DeviceApi/InjectDevice", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +168,7 @@ func (c *deviceApiClient) EvictDevice(ctx context.Context, in *Device, opts ...g
 // Server API for DeviceApi service
 
 type DeviceApiServer interface {
-	CreateDevice(context.Context, *Device) (*Result, error)
+	InjectDevice(context.Context, *Device) (*Result, error)
 	ShowDevice(*Device, DeviceApi_ShowDeviceServer) error
 	EvictDevice(context.Context, *Device) (*Result, error)
 }
@@ -171,20 +177,20 @@ func RegisterDeviceApiServer(s *grpc.Server, srv DeviceApiServer) {
 	s.RegisterService(&_DeviceApi_serviceDesc, srv)
 }
 
-func _DeviceApi_CreateDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _DeviceApi_InjectDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Device)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DeviceApiServer).CreateDevice(ctx, in)
+		return srv.(DeviceApiServer).InjectDevice(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/edgeproto.DeviceApi/CreateDevice",
+		FullMethod: "/edgeproto.DeviceApi/InjectDevice",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeviceApiServer).CreateDevice(ctx, req.(*Device))
+		return srv.(DeviceApiServer).InjectDevice(ctx, req.(*Device))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -233,8 +239,8 @@ var _DeviceApi_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*DeviceApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateDevice",
-			Handler:    _DeviceApi_CreateDevice_Handler,
+			MethodName: "InjectDevice",
+			Handler:    _DeviceApi_InjectDevice_Handler,
 		},
 		{
 			MethodName: "EvictDevice",
@@ -319,15 +325,30 @@ func (m *Device) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n1
-	if m.Timestamp != nil {
+	if m.FirstSeen != nil {
 		dAtA[i] = 0x1a
 		i++
-		i = encodeVarintDevice(dAtA, i, uint64(m.Timestamp.Size()))
-		n2, err := m.Timestamp.MarshalTo(dAtA[i:])
+		i = encodeVarintDevice(dAtA, i, uint64(m.FirstSeen.Size()))
+		n2, err := m.FirstSeen.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n2
+	}
+	if m.LastSeen != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintDevice(dAtA, i, uint64(m.LastSeen.Size()))
+		n3, err := m.LastSeen.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	if m.NotifyId != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintDevice(dAtA, i, uint64(m.NotifyId))
 	}
 	return i, nil
 }
@@ -416,13 +437,27 @@ func (m *Device) Matches(o *Device, fopts ...MatchOpt) bool {
 	if !m.Key.Matches(&o.Key, fopts...) {
 		return false
 	}
-	if !opts.Filter || o.Timestamp != nil {
-		if m.Timestamp == nil && o.Timestamp != nil || m.Timestamp != nil && o.Timestamp == nil {
+	if !opts.Filter || o.FirstSeen != nil {
+		if m.FirstSeen == nil && o.FirstSeen != nil || m.FirstSeen != nil && o.FirstSeen == nil {
 			return false
-		} else if m.Timestamp != nil && o.Timestamp != nil {
-			if m.Timestamp.Seconds != o.Timestamp.Seconds || m.Timestamp.Nanos != o.Timestamp.Nanos {
+		} else if m.FirstSeen != nil && o.FirstSeen != nil {
+			if m.FirstSeen.Seconds != o.FirstSeen.Seconds || m.FirstSeen.Nanos != o.FirstSeen.Nanos {
 				return false
 			}
+		}
+	}
+	if !opts.Filter || o.LastSeen != nil {
+		if m.LastSeen == nil && o.LastSeen != nil || m.LastSeen != nil && o.LastSeen == nil {
+			return false
+		} else if m.LastSeen != nil && o.LastSeen != nil {
+			if m.LastSeen.Seconds != o.LastSeen.Seconds || m.LastSeen.Nanos != o.LastSeen.Nanos {
+				return false
+			}
+		}
+	}
+	if !opts.Filter || o.NotifyId != 0 {
+		if o.NotifyId != m.NotifyId {
+			return false
 		}
 	}
 	return true
@@ -431,29 +466,42 @@ func (m *Device) Matches(o *Device, fopts ...MatchOpt) bool {
 const DeviceFieldKey = "2"
 const DeviceFieldKeyUniqueIdType = "2.1"
 const DeviceFieldKeyUniqueId = "2.2"
-const DeviceFieldTimestamp = "3"
-const DeviceFieldTimestampSeconds = "3.1"
-const DeviceFieldTimestampNanos = "3.2"
+const DeviceFieldFirstSeen = "3"
+const DeviceFieldFirstSeenSeconds = "3.1"
+const DeviceFieldFirstSeenNanos = "3.2"
+const DeviceFieldLastSeen = "4"
+const DeviceFieldLastSeenSeconds = "4.1"
+const DeviceFieldLastSeenNanos = "4.2"
+const DeviceFieldNotifyId = "5"
 
 var DeviceAllFields = []string{
 	DeviceFieldKeyUniqueIdType,
 	DeviceFieldKeyUniqueId,
-	DeviceFieldTimestampSeconds,
-	DeviceFieldTimestampNanos,
+	DeviceFieldFirstSeenSeconds,
+	DeviceFieldFirstSeenNanos,
+	DeviceFieldLastSeenSeconds,
+	DeviceFieldLastSeenNanos,
+	DeviceFieldNotifyId,
 }
 
 var DeviceAllFieldsMap = map[string]struct{}{
 	DeviceFieldKeyUniqueIdType:  struct{}{},
 	DeviceFieldKeyUniqueId:      struct{}{},
-	DeviceFieldTimestampSeconds: struct{}{},
-	DeviceFieldTimestampNanos:   struct{}{},
+	DeviceFieldFirstSeenSeconds: struct{}{},
+	DeviceFieldFirstSeenNanos:   struct{}{},
+	DeviceFieldLastSeenSeconds:  struct{}{},
+	DeviceFieldLastSeenNanos:    struct{}{},
+	DeviceFieldNotifyId:         struct{}{},
 }
 
 var DeviceAllFieldsStringMap = map[string]string{
 	DeviceFieldKeyUniqueIdType:  "Key Unique Id Type",
 	DeviceFieldKeyUniqueId:      "Key Unique Id",
-	DeviceFieldTimestampSeconds: "Timestamp Seconds",
-	DeviceFieldTimestampNanos:   "Timestamp Nanos",
+	DeviceFieldFirstSeenSeconds: "First Seen Seconds",
+	DeviceFieldFirstSeenNanos:   "First Seen Nanos",
+	DeviceFieldLastSeenSeconds:  "Last Seen Seconds",
+	DeviceFieldLastSeenNanos:    "Last Seen Nanos",
+	DeviceFieldNotifyId:         "Notify Id",
 }
 
 func (m *Device) IsKeyField(s string) bool {
@@ -469,17 +517,32 @@ func (m *Device) DiffFields(o *Device, fields map[string]struct{}) {
 		fields[DeviceFieldKeyUniqueId] = struct{}{}
 		fields[DeviceFieldKey] = struct{}{}
 	}
-	if m.Timestamp != nil && o.Timestamp != nil {
-		if m.Timestamp.Seconds != o.Timestamp.Seconds {
-			fields[DeviceFieldTimestampSeconds] = struct{}{}
-			fields[DeviceFieldTimestamp] = struct{}{}
+	if m.FirstSeen != nil && o.FirstSeen != nil {
+		if m.FirstSeen.Seconds != o.FirstSeen.Seconds {
+			fields[DeviceFieldFirstSeenSeconds] = struct{}{}
+			fields[DeviceFieldFirstSeen] = struct{}{}
 		}
-		if m.Timestamp.Nanos != o.Timestamp.Nanos {
-			fields[DeviceFieldTimestampNanos] = struct{}{}
-			fields[DeviceFieldTimestamp] = struct{}{}
+		if m.FirstSeen.Nanos != o.FirstSeen.Nanos {
+			fields[DeviceFieldFirstSeenNanos] = struct{}{}
+			fields[DeviceFieldFirstSeen] = struct{}{}
 		}
-	} else if (m.Timestamp != nil && o.Timestamp == nil) || (m.Timestamp == nil && o.Timestamp != nil) {
-		fields[DeviceFieldTimestamp] = struct{}{}
+	} else if (m.FirstSeen != nil && o.FirstSeen == nil) || (m.FirstSeen == nil && o.FirstSeen != nil) {
+		fields[DeviceFieldFirstSeen] = struct{}{}
+	}
+	if m.LastSeen != nil && o.LastSeen != nil {
+		if m.LastSeen.Seconds != o.LastSeen.Seconds {
+			fields[DeviceFieldLastSeenSeconds] = struct{}{}
+			fields[DeviceFieldLastSeen] = struct{}{}
+		}
+		if m.LastSeen.Nanos != o.LastSeen.Nanos {
+			fields[DeviceFieldLastSeenNanos] = struct{}{}
+			fields[DeviceFieldLastSeen] = struct{}{}
+		}
+	} else if (m.LastSeen != nil && o.LastSeen == nil) || (m.LastSeen == nil && o.LastSeen != nil) {
+		fields[DeviceFieldLastSeen] = struct{}{}
+	}
+	if m.NotifyId != o.NotifyId {
+		fields[DeviceFieldNotifyId] = struct{}{}
 	}
 }
 
@@ -501,22 +564,48 @@ func (m *Device) CopyInFields(src *Device) int {
 		}
 	}
 	if _, set := fmap["3"]; set {
-		if src.Timestamp != nil {
-			m.Timestamp = &google_protobuf.Timestamp{}
+		if src.FirstSeen != nil {
+			m.FirstSeen = &google_protobuf.Timestamp{}
 			if _, set := fmap["3.1"]; set {
-				if m.Timestamp.Seconds != src.Timestamp.Seconds {
-					m.Timestamp.Seconds = src.Timestamp.Seconds
+				if m.FirstSeen.Seconds != src.FirstSeen.Seconds {
+					m.FirstSeen.Seconds = src.FirstSeen.Seconds
 					changed++
 				}
 			}
 			if _, set := fmap["3.2"]; set {
-				if m.Timestamp.Nanos != src.Timestamp.Nanos {
-					m.Timestamp.Nanos = src.Timestamp.Nanos
+				if m.FirstSeen.Nanos != src.FirstSeen.Nanos {
+					m.FirstSeen.Nanos = src.FirstSeen.Nanos
 					changed++
 				}
 			}
-		} else if m.Timestamp != nil {
-			m.Timestamp = nil
+		} else if m.FirstSeen != nil {
+			m.FirstSeen = nil
+			changed++
+		}
+	}
+	if _, set := fmap["4"]; set {
+		if src.LastSeen != nil {
+			m.LastSeen = &google_protobuf.Timestamp{}
+			if _, set := fmap["4.1"]; set {
+				if m.LastSeen.Seconds != src.LastSeen.Seconds {
+					m.LastSeen.Seconds = src.LastSeen.Seconds
+					changed++
+				}
+			}
+			if _, set := fmap["4.2"]; set {
+				if m.LastSeen.Nanos != src.LastSeen.Nanos {
+					m.LastSeen.Nanos = src.LastSeen.Nanos
+					changed++
+				}
+			}
+		} else if m.LastSeen != nil {
+			m.LastSeen = nil
+			changed++
+		}
+	}
+	if _, set := fmap["5"]; set {
+		if m.NotifyId != src.NotifyId {
+			m.NotifyId = src.NotifyId
 			changed++
 		}
 	}
@@ -798,17 +887,25 @@ func (c *DeviceCache) GetCount() int {
 }
 
 func (c *DeviceCache) Flush(ctx context.Context, notifyId int64) {
-	if c.FlushAll {
-		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Device", "notifyId", notifyId)
-		flushed := make(map[DeviceKey]*Device)
-		c.Mux.Lock()
-		for key, _ := range c.Objs {
-			flushed[key] = c.Objs[key]
-			log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Device delete", "key", key)
-			delete(c.Objs, key)
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Device", "notifyId", notifyId, "FlushAll", c.FlushAll)
+	flushed := make(map[DeviceKey]*Device)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if !c.FlushAll && val.NotifyId != notifyId {
+			continue
 		}
-		c.Mux.Unlock()
-		return
+		flushed[key] = c.Objs[key]
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Device delete", "key", key)
+		delete(c.Objs, key)
+	}
+	c.Mux.Unlock()
+	if len(flushed) > 0 {
+		for key, old := range flushed {
+			if c.NotifyCb != nil {
+				c.NotifyCb(ctx, &key, old)
+			}
+			c.TriggerKeyWatchers(ctx, &key)
+		}
 	}
 }
 
@@ -970,6 +1067,18 @@ func (m *Device) ValidateEnums() error {
 	return nil
 }
 
+func IgnoreDeviceFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "NotifyId")
+	}
+	return cmpopts.IgnoreFields(Device{}, names...)
+}
+
 func (m *DeviceKey) Size() (n int) {
 	var l int
 	_ = l
@@ -995,9 +1104,16 @@ func (m *Device) Size() (n int) {
 	}
 	l = m.Key.Size()
 	n += 1 + l + sovDevice(uint64(l))
-	if m.Timestamp != nil {
-		l = m.Timestamp.Size()
+	if m.FirstSeen != nil {
+		l = m.FirstSeen.Size()
 		n += 1 + l + sovDevice(uint64(l))
+	}
+	if m.LastSeen != nil {
+		l = m.LastSeen.Size()
+		n += 1 + l + sovDevice(uint64(l))
+	}
+	if m.NotifyId != 0 {
+		n += 1 + sovDevice(uint64(m.NotifyId))
 	}
 	return n
 }
@@ -1213,7 +1329,7 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field FirstSeen", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1237,13 +1353,65 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Timestamp == nil {
-				m.Timestamp = &google_protobuf1.Timestamp{}
+			if m.FirstSeen == nil {
+				m.FirstSeen = &google_protobuf1.Timestamp{}
 			}
-			if err := m.Timestamp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.FirstSeen.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastSeen", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDevice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDevice
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.LastSeen == nil {
+				m.LastSeen = &google_protobuf1.Timestamp{}
+			}
+			if err := m.LastSeen.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NotifyId", wireType)
+			}
+			m.NotifyId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDevice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NotifyId |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipDevice(dAtA[iNdEx:])
@@ -1373,36 +1541,40 @@ var (
 func init() { proto.RegisterFile("device.proto", fileDescriptorDevice) }
 
 var fileDescriptorDevice = []byte{
-	// 488 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0xcf, 0x6b, 0xd4, 0x40,
-	0x14, 0xc7, 0x3b, 0xbb, 0x65, 0x31, 0xd3, 0x58, 0xec, 0x58, 0x64, 0x88, 0xcb, 0x6e, 0x09, 0x1e,
-	0x8a, 0xac, 0x19, 0xa9, 0x08, 0xeb, 0xde, 0x5a, 0xf5, 0x20, 0xe2, 0x25, 0x16, 0x4f, 0x42, 0xc9,
-	0x26, 0xaf, 0xd9, 0xa1, 0x49, 0x26, 0x6e, 0x26, 0x5d, 0xf7, 0x26, 0xfe, 0x05, 0x82, 0xff, 0x40,
-	0x4f, 0x9e, 0xc5, 0xbf, 0x62, 0x8f, 0x82, 0x17, 0x4f, 0xa2, 0x8b, 0x07, 0xe9, 0x49, 0xd8, 0x20,
-	0x1e, 0x25, 0x93, 0x1f, 0x2b, 0xe8, 0x61, 0x7b, 0x09, 0xef, 0xbd, 0x7c, 0xde, 0xfb, 0xbe, 0xef,
-	0x4b, 0xb0, 0xee, 0xc1, 0x29, 0x77, 0xc1, 0x8a, 0xc7, 0x42, 0x0a, 0xa2, 0x81, 0xe7, 0x83, 0x0a,
-	0x8d, 0xb6, 0x2f, 0x84, 0x1f, 0x00, 0x73, 0x62, 0xce, 0x9c, 0x28, 0x12, 0xd2, 0x91, 0x5c, 0x44,
-	0x49, 0x01, 0x1a, 0x7d, 0x9f, 0xcb, 0x51, 0x3a, 0xb4, 0x5c, 0x11, 0xb2, 0x50, 0x0c, 0x79, 0x90,
-	0x37, 0xbe, 0x64, 0xf9, 0xf3, 0x96, 0x1b, 0x88, 0xd4, 0x63, 0x8a, 0xf3, 0x21, 0xaa, 0x83, 0xb2,
-	0x73, 0xdb, 0x17, 0xbe, 0x50, 0x21, 0xcb, 0xa3, 0xb2, 0xaa, 0x8f, 0x21, 0x49, 0x03, 0x59, 0x66,
-	0xdd, 0x52, 0x5b, 0x65, 0xc3, 0xf4, 0x98, 0x49, 0x1e, 0x42, 0x22, 0x9d, 0x30, 0x2e, 0x00, 0xf3,
-	0x39, 0xd6, 0x1e, 0xa8, 0xbd, 0x1f, 0xc3, 0x94, 0xdc, 0xc0, 0x9b, 0x69, 0xc4, 0x5f, 0xa4, 0x70,
-	0xc4, 0xbd, 0x23, 0x39, 0x8d, 0x81, 0xa2, 0x1d, 0xb4, 0xab, 0xd9, 0x7a, 0x51, 0x7d, 0xe4, 0x1d,
-	0x4e, 0x63, 0x20, 0xd7, 0xb1, 0x56, 0x53, 0xb4, 0xa1, 0x80, 0x4b, 0x15, 0x30, 0xd0, 0x7f, 0x2c,
-	0x28, 0xfa, 0xbd, 0xa0, 0xe8, 0xfd, 0x59, 0x17, 0x99, 0xef, 0x10, 0x6e, 0x15, 0xe3, 0xc9, 0x35,
-	0xdc, 0x3a, 0xe6, 0x10, 0x78, 0x09, 0x45, 0x3b, 0xcd, 0x5d, 0xcd, 0x2e, 0x33, 0xd2, 0xc3, 0xcd,
-	0x13, 0x98, 0xaa, 0x39, 0x1b, 0x7b, 0xdb, 0x56, 0x7d, 0x36, 0xab, 0x5e, 0xeb, 0x60, 0x7d, 0xf6,
-	0xa5, 0xbb, 0x66, 0xe7, 0x18, 0xe9, 0x63, 0xad, 0x76, 0x40, 0x9b, 0xaa, 0xc7, 0xb0, 0x0a, 0x8f,
-	0x56, 0xe5, 0xd1, 0x3a, 0xac, 0x08, 0x7b, 0x09, 0x0f, 0xda, 0xf9, 0x62, 0x3f, 0x17, 0x14, 0xbd,
-	0xca, 0x28, 0x7a, 0x93, 0x51, 0x74, 0x96, 0x51, 0xf4, 0xe1, 0x17, 0x5d, 0x8f, 0x44, 0x04, 0x7b,
-	0x9f, 0x1b, 0xd5, 0x1d, 0xf6, 0x63, 0x4e, 0x04, 0xd6, 0xef, 0x8f, 0xc1, 0x91, 0x50, 0xee, 0xbe,
-	0xf5, 0xcf, 0x5a, 0xc6, 0xdf, 0x25, 0x5b, 0x5d, 0xdc, 0xbc, 0x77, 0x9e, 0xd1, 0xb6, 0x0d, 0x89,
-	0x48, 0xc7, 0x6e, 0xd9, 0xd9, 0xdb, 0x77, 0xf3, 0x6f, 0xfd, 0xc4, 0x89, 0x1c, 0x1f, 0x7a, 0xaf,
-	0x3f, 0x7d, 0x7f, 0xdb, 0xb8, 0x6a, 0x6e, 0x32, 0x57, 0x0d, 0x67, 0xc5, 0x0f, 0x33, 0x40, 0x37,
-	0xc9, 0x09, 0xc6, 0x4f, 0x47, 0x62, 0xb2, 0x9a, 0x5c, 0x51, 0x32, 0xef, 0x9e, 0x67, 0xd4, 0xf8,
-	0xaf, 0xdc, 0x33, 0x0e, 0x93, 0x42, 0x6c, 0xcb, 0xd4, 0x59, 0x32, 0x12, 0x93, 0xa5, 0xd4, 0x6d,
-	0x44, 0x42, 0xbc, 0xf1, 0xf0, 0x94, 0xbb, 0xf2, 0x42, 0xe6, 0xfa, 0x2b, 0x99, 0x23, 0xe6, 0x65,
-	0x96, 0xbf, 0x93, 0x4b, 0xc1, 0x83, 0x2b, 0xb3, 0x6f, 0x9d, 0xb5, 0xd9, 0xbc, 0x83, 0x3e, 0xce,
-	0x3b, 0xe8, 0xeb, 0xbc, 0x83, 0x86, 0x2d, 0x35, 0xf9, 0xce, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x4f, 0x03, 0x6b, 0xc6, 0x32, 0x03, 0x00, 0x00,
+	// 547 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0x41, 0x6b, 0x13, 0x4f,
+	0x18, 0xc6, 0x3b, 0x49, 0x1b, 0xba, 0xd3, 0xfd, 0x97, 0x7f, 0xd7, 0x22, 0x63, 0x2c, 0x49, 0x58,
+	0x44, 0x82, 0xc4, 0x1d, 0xa9, 0x88, 0x6d, 0x6e, 0x8d, 0x7a, 0x08, 0xe2, 0x65, 0x5b, 0x3c, 0x09,
+	0x61, 0xb3, 0xfb, 0x66, 0x33, 0x76, 0x33, 0xb3, 0x66, 0x67, 0x1b, 0x73, 0x13, 0xcf, 0x1e, 0x44,
+	0xbf, 0x40, 0x3f, 0x82, 0xf4, 0x53, 0xe4, 0x28, 0x78, 0xf1, 0x24, 0x35, 0x78, 0x90, 0x9e, 0x84,
+	0x2c, 0xe2, 0x51, 0x76, 0x76, 0x93, 0x0a, 0x0a, 0xd6, 0x4b, 0x78, 0xe7, 0xcd, 0xef, 0x79, 0x9f,
+	0x79, 0xde, 0x1d, 0xac, 0x7b, 0x70, 0xc4, 0x5c, 0xb0, 0xc2, 0xa1, 0x90, 0xc2, 0xd0, 0xc0, 0xf3,
+	0x41, 0x95, 0xe5, 0x2d, 0x5f, 0x08, 0x3f, 0x00, 0xea, 0x84, 0x8c, 0x3a, 0x9c, 0x0b, 0xe9, 0x48,
+	0x26, 0x78, 0x94, 0x81, 0xe5, 0x1d, 0x9f, 0xc9, 0x7e, 0xdc, 0xb5, 0x5c, 0x31, 0xa0, 0x03, 0xd1,
+	0x65, 0x41, 0x2a, 0x7c, 0x4e, 0xd3, 0xdf, 0x9b, 0x6e, 0x20, 0x62, 0x8f, 0x2a, 0xce, 0x07, 0xbe,
+	0x28, 0x72, 0xe5, 0xa6, 0x2f, 0x7c, 0xa1, 0x4a, 0x9a, 0x56, 0x79, 0x57, 0x1f, 0x42, 0x14, 0x07,
+	0x32, 0x3f, 0x55, 0x73, 0x6f, 0x75, 0xea, 0xc6, 0x3d, 0x2a, 0xd9, 0x00, 0x22, 0xe9, 0x0c, 0xc2,
+	0x0c, 0x30, 0x9f, 0x60, 0xed, 0xbe, 0xba, 0xf7, 0x43, 0x18, 0x1b, 0xd7, 0xf0, 0x7a, 0xcc, 0xd9,
+	0xb3, 0x18, 0x3a, 0xcc, 0xeb, 0xc8, 0x71, 0x08, 0x04, 0xd5, 0x50, 0x5d, 0xb3, 0xf5, 0xac, 0xdb,
+	0xf6, 0x0e, 0xc6, 0x21, 0x18, 0x57, 0xb1, 0xb6, 0xa0, 0x48, 0x41, 0x01, 0xab, 0x73, 0xa0, 0xa9,
+	0x7f, 0x9d, 0x11, 0xf4, 0x63, 0x46, 0xd0, 0xbb, 0xe3, 0x2a, 0x32, 0x5f, 0x15, 0x70, 0x29, 0x1b,
+	0x6f, 0x5c, 0xc6, 0xa5, 0x1e, 0x83, 0xc0, 0x8b, 0x08, 0xaa, 0x15, 0xeb, 0x9a, 0x9d, 0x9f, 0x8c,
+	0x06, 0x2e, 0x1e, 0xc2, 0x58, 0xcd, 0x59, 0xdb, 0xde, 0xb4, 0x16, 0x6b, 0xb3, 0x16, 0xd7, 0x6a,
+	0x2d, 0x4f, 0x3e, 0x55, 0x97, 0xec, 0x14, 0x33, 0x76, 0x31, 0xee, 0xb1, 0x61, 0x24, 0x3b, 0x11,
+	0x00, 0x27, 0x45, 0x25, 0x2a, 0x5b, 0x59, 0x48, 0x6b, 0x1e, 0xd2, 0x3a, 0x98, 0x87, 0xb4, 0x35,
+	0x45, 0xef, 0x03, 0x70, 0xe3, 0x2e, 0xd6, 0x02, 0x67, 0xae, 0x5c, 0xfe, 0xab, 0x72, 0x35, 0x85,
+	0x95, 0xf0, 0x3a, 0xd6, 0xb8, 0x90, 0xac, 0x37, 0x4e, 0xf3, 0xae, 0xd4, 0x50, 0xbd, 0xd8, 0xd2,
+	0xde, 0x9c, 0x5c, 0x59, 0xe1, 0xc2, 0x4d, 0xb9, 0xec, 0xbf, 0xb6, 0xd7, 0xac, 0xa5, 0xd1, 0xbf,
+	0xcd, 0x08, 0x7a, 0x91, 0x10, 0xf4, 0x3a, 0x21, 0xe8, 0x38, 0x21, 0xe8, 0x34, 0x21, 0xe8, 0xe4,
+	0x3b, 0x59, 0xe6, 0x82, 0xc3, 0xf6, 0xc7, 0xc2, 0x7c, 0xdb, 0x7b, 0x21, 0x33, 0x04, 0xd6, 0xdb,
+	0xfc, 0x29, 0xb8, 0x32, 0xdf, 0xd0, 0xc6, 0x6f, 0xe1, 0xcb, 0xbf, 0xb6, 0x6c, 0xf5, 0x5d, 0xcd,
+	0xdd, 0xb3, 0x84, 0x6c, 0xd9, 0x10, 0x89, 0x78, 0xe8, 0xc2, 0x3d, 0xc1, 0x7b, 0xcc, 0x6f, 0xec,
+	0xb9, 0xe9, 0x8b, 0x7a, 0xe4, 0x70, 0xc7, 0x87, 0xc6, 0xcb, 0x0f, 0x5f, 0xde, 0x16, 0x2e, 0x99,
+	0xeb, 0xd4, 0x1d, 0x82, 0x23, 0x81, 0x66, 0xcf, 0xb2, 0x89, 0x6e, 0x18, 0x87, 0x18, 0xef, 0xf7,
+	0xc5, 0xe8, 0x62, 0x76, 0x59, 0xcb, 0xbc, 0x73, 0x96, 0x90, 0xf2, 0x1f, 0xed, 0x1e, 0x33, 0x18,
+	0x65, 0x66, 0x1b, 0xa6, 0x4e, 0xa3, 0xbe, 0x18, 0x9d, 0x5b, 0xdd, 0x42, 0xc6, 0x00, 0xaf, 0x3d,
+	0x38, 0x62, 0xff, 0x18, 0x6e, 0xe7, 0x42, 0xe1, 0x0c, 0xf3, 0x3f, 0x9a, 0x8e, 0x90, 0xe7, 0x86,
+	0xad, 0xff, 0x27, 0x9f, 0x2b, 0x4b, 0x93, 0x69, 0x05, 0xbd, 0x9f, 0x56, 0xd0, 0xe9, 0xb4, 0x82,
+	0xba, 0x25, 0x35, 0xf9, 0xf6, 0xcf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd2, 0x94, 0xd5, 0x0c, 0x98,
+	0x03, 0x00, 0x00,
 }
