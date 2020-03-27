@@ -423,6 +423,11 @@ func (s *PrivacyPolicy) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+// Always valid
+func (s *DeviceReport) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
 func (key *DeviceKey) ValidateKey() error {
 	if key.UniqueId == "" || key.UniqueIdType == "" {
 		return errors.New("Device id cannot be empty")

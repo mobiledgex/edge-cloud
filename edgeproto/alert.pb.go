@@ -83,6 +83,7 @@
 		DebugRequest
 		DebugReply
 		DebugData
+		DeviceReport
 		DeviceKey
 		Device
 		RunCmd

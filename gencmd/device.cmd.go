@@ -230,12 +230,110 @@ func EvictDevices(c *cli.Command, data []edgeproto.Device, err *error) {
 	}
 }
 
+var ShowDeviceReportCmd = &cli.Command{
+	Use:          "ShowDeviceReport",
+	OptionalArgs: strings.Join(append(DeviceReportRequiredArgs, DeviceReportOptionalArgs...), " "),
+	AliasArgs:    strings.Join(DeviceReportAliasArgs, " "),
+	SpecialArgs:  &DeviceReportSpecialArgs,
+	Comments:     DeviceReportComments,
+	ReqData:      &edgeproto.DeviceReport{},
+	ReplyData:    &edgeproto.Device{},
+	Run:          runShowDeviceReport,
+}
+
+func runShowDeviceReport(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.DeviceReport)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowDeviceReport(c, obj)
+}
+
+func ShowDeviceReport(c *cli.Command, in *edgeproto.DeviceReport) error {
+	if DeviceApiCmd == nil {
+		return fmt.Errorf("DeviceApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := DeviceApiCmd.ShowDeviceReport(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowDeviceReport failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.Device, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowDeviceReport recv failed: %s", errstr)
+		}
+		DeviceHideTags(obj)
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowDeviceReports(c *cli.Command, data []edgeproto.DeviceReport, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowDeviceReport %v\n", data[ii])
+		myerr := ShowDeviceReport(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var DeviceApiCmds = []*cobra.Command{
 	InjectDeviceCmd.GenCmd(),
 	ShowDeviceCmd.GenCmd(),
 	EvictDeviceCmd.GenCmd(),
+	ShowDeviceReportCmd.GenCmd(),
 }
 
+var DeviceReportRequiredArgs = []string{
+	"key.uniqueidtype",
+	"key.uniqueid",
+}
+var DeviceReportOptionalArgs = []string{
+	"begin.seconds",
+	"begin.nanos",
+	"end.seconds",
+	"end.nanos",
+}
+var DeviceReportAliasArgs = []string{}
+var DeviceReportComments = map[string]string{
+	"key.uniqueidtype": "Type of unique ID provided by the client",
+	"key.uniqueid":     "Unique identification of the client device or user. May be overridden by the server.",
+	"begin.seconds":    "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"begin.nanos":      "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"end.seconds":      "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"end.nanos":        "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+}
+var DeviceReportSpecialArgs = map[string]string{}
 var DeviceKeyRequiredArgs = []string{}
 var DeviceKeyOptionalArgs = []string{
 	"uniqueidtype",

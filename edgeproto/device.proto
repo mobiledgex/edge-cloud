@@ -9,6 +9,18 @@ import "gogoproto/gogo.proto";
 import "result.proto";
 import "google/protobuf/timestamp.proto";
 
+// DeviceReport is a reporting message. It takes a begining and end time
+// for the report
+message DeviceReport {
+  // Device Key
+  DeviceKey key = 1 [(gogoproto.nullable) = false];
+  // Timestamp of the beginning of the report
+  google.protobuf.Timestamp begin = 2;
+  // Timestamp of the beginning of the report
+  google.protobuf.Timestamp end = 3;
+
+  option (protogen.generate_cud) = true;
+}
 
 // DeviceKey is an identifier for a given device on the MobiledgeX platform
 // It is defined by a unique id and unique id type
@@ -66,5 +78,13 @@ service DeviceApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Device Reports API.
+  rpc ShowDeviceReport(DeviceReport) returns (stream Device) {
+      option (google.api.http) = {
+      post: "/show/devicereport"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionView,";
   }
 }

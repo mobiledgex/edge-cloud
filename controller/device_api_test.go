@@ -45,6 +45,17 @@ func TestDeviceApi(t *testing.T) {
 	// Test that flush doesn't remove the entries
 	deviceApi.Flush(ctx, 0)
 	testutil.InternalDeviceTest(t, "show", &deviceApi, testutil.PlarformDeviceClientData)
+	// Test report to show only a single device in December
+	/*
+		report := edgeproto.DeviceReport{
+			Begin: testutil.GetTimestamp(time.Date(2009, time.December, 1, 23, 0, 0, 0, time.UTC)),
+			End:   testutil.GetTimestamp(time.Date(2009, time.December, 31, 23, 0, 0, 0, time.UTC)),
+		}
+	*/
+	// TODO- run report
+	//api := testutil.NewInternalDeviceApi(&deviceApi)
+	// I want to call testutil.ApiClient.ShowDeviceReport()...
+
 	// Evict all the platform device
 	for _, obj := range testutil.PlarformDeviceClientData {
 		deviceApi.EvictDevice(ctx, &obj)

@@ -26,7 +26,6 @@ func InitDeviceApi(sync *Sync) {
 
 func (s *DeviceApi) ShowDevice(in *edgeproto.Device, cb edgeproto.DeviceApi_ShowDeviceServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.Device) error {
-		log.SpanLog(cb.Context(), log.DebugLevelApi, "Showing client", "client", obj)
 		err := cb.Send(obj)
 		return err
 	})
@@ -55,6 +54,22 @@ func (s *DeviceApi) InjectDevice(ctx context.Context, in *edgeproto.Device) (*ed
 // This api deletes the device from the controller cache
 func (s *DeviceApi) EvictDevice(ctx context.Context, in *edgeproto.Device) (*edgeproto.Result, error) {
 	return s.store.Delete(ctx, in, s.sync.syncWait)
+}
+
+// Show devices that showed up in this timestamp
+func (s *DeviceApi) ShowDeviceReport(in *edgeproto.DeviceReport, cb edgeproto.DeviceApi_ShowDeviceReportServer) error {
+	filter := edgeproto.Device{
+		Key: in.Key,
+	}
+	err := s.cache.Show(&filter, func(obj *edgeproto.Device) error {
+		if (in.Begin == nil || obj.FirstSeen.Compare(in.Begin) >= 0) &&
+			(in.End == nil || obj.FirstSeen.Compare(in.End) <= 0) {
+			err := cb.Send(obj)
+			return err
+		}
+		return nil
+	})
+	return err
 }
 
 // Does the same as create - once the device is stored it's there forever

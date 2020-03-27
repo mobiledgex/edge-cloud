@@ -83,6 +83,7 @@ It has these top-level messages:
 	DebugRequest
 	DebugReply
 	DebugData
+	DeviceReport
 	DeviceKey
 	Device
 	RunCmd
