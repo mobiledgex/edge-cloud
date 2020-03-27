@@ -23,8 +23,11 @@ type ClusterCheckpoint struct {
 // earliest possible timestamp influx can handle (64-bit int min in time form)
 var InfluxMinimumTimestamp, _ = time.Parse(time.RFC3339, "1677-09-21T00:13:44Z")
 var PrevCheckpoint = InfluxMinimumTimestamp
+var NextCheckpoint time.Time
 
 func InitUsage() error {
+	// set the first NextCheckpoint,
+	NextCheckpoint = time.Now().Truncate(time.Minute).Add(*checkpointInterval)
 	//set PrevCheckpoint, should not necessarily start at InfluxMinimumTimestamp if controller was restarted halway through operation
 	influxQuery := fmt.Sprintf(`SELECT * from "%s" order by time desc limit 1`, cloudcommon.ClusterInstCheckpoint)
 	checkpoint, err := services.events.QueryDB(influxQuery)
@@ -335,7 +338,7 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 // There is a race condition here between GetClusterCheckpoint and CreateClusterCheckpoint,
 // if someone calls GetClusterCheckpoint in between the timestamp arg to CreateClusterCheckpoint and the actual call to CreateClusterCheckpoint,
 // it will end up referencing the old checkpoint and not the latest one
-// Somehow we need to prevent calls to GetClusterCheckpoint with a timestamp after the timestamp passed in CreateClusterCheckpoint until CreateClusterCheckpoint
+// So we need to prevent calls to GetClusterCheckpoint with a timestamp after the timestamp passed in CreateClusterCheckpoint until CreateClusterCheckpoint
 // actually gets run and finishes its call with that checkpoint.
 
 //ie. timeline: checkpoint 1 time -------------- checkpoint 2 time --- timestampX ----A----B--- ,
@@ -345,6 +348,10 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 
 // returns all the clusterinsts that were running at the time belonging to that org
 func GetClusterCheckpoint(ctx context.Context, org string, timestamp time.Time) (*ClusterCheckpoint, error) {
+	// wait until the current checkpoint is done if we want to access it, see the above comment about race conditions
+	for timestamp.After(NextCheckpoint) {
+		time.Sleep(time.Second)
+	}
 	// query from the checkpoint up to the delete
 	influxCheckpointQueryTemplate := `SELECT %s from "%s" WHERE "org"='%s' AND time <= '%s' order by time desc`
 	selectors := []string{"\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\"", "\"status\""}
@@ -409,13 +416,14 @@ func runClusterCheckpoints(ctx context.Context) {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Error setting up checkpoints", "err", err)
 	}
 	for {
-		select {
-		case <-time.After(*checkpointInterval):
-			t := time.Now()
-			err = CreateClusterCheckpoint(ctx, t)
+		if time.Now().After(NextCheckpoint) {
+			checkpointTime := NextCheckpoint
+			err = CreateClusterCheckpoint(ctx, checkpointTime)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create checkpoint", "time", t, "err", err)
+				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create checkpoint", "time", checkpointTime, "err", err)
 			}
+			// this must be AFTER the checkpoint is created, see the comments about race conditions above GetClusterCheckpoint
+			NextCheckpoint = NextCheckpoint.Add(*checkpointInterval)
 		}
 	}
 }
