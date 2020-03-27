@@ -341,7 +341,7 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 // So we need to prevent calls to GetClusterCheckpoint with a timestamp after the timestamp passed in CreateClusterCheckpoint until CreateClusterCheckpoint
 // actually gets run and finishes its call with that checkpoint.
 
-//ie. timeline: checkpoint 1 time -------------- checkpoint 2 time --- timestampX ----A----B--- ,
+//ie. timeline: checkpoint 1 time -------------- checkpoint 2 time --- timestampX ----eventA----eventB--- ,
 // GetClusterCheckpoint gets called with timestampX at time A, and CreateClusterCheckpoint with timestamp=checkpoint2Time doesnt go off until time B (this window should be very small)
 // GetClusterCheckpoint will return checkpoint 1 instead of checkpoint 2 and could theoretically result in a usage record greater than the length of a billing period
 // as well as usage times being double counted by CreateClusterCheckpoints usage record generation
