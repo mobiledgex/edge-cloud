@@ -339,7 +339,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// See if we need to create auto-cluster.
 	// This also sets up the correct ClusterInstKey in "in".
 
-	if in.Key.AppKey.Organization != in.Key.ClusterInstKey.Organization && in.Key.AppKey.Organization == cloudcommon.OrganizationMobiledgeX && !tenant {
+	if in.Key.AppKey.Organization != in.Key.ClusterInstKey.Organization && in.Key.AppKey.Organization != cloudcommon.OrganizationMobiledgeX && !tenant {
 		return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.Organization, in.Key.ClusterInstKey.Organization)
 	}
 	appDeploymentType := ""
