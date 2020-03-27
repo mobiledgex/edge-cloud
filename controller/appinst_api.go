@@ -335,20 +335,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 
 	var autocluster bool
-	var tenant bool
+	tenant := isTenantAppInst(&in.Key)
 	// See if we need to create auto-cluster.
 	// This also sets up the correct ClusterInstKey in "in".
 
-	if in.Key.AppKey.Organization != in.Key.ClusterInstKey.Organization {
-		// both are specified, make sure they match
-		if in.Key.AppKey.Organization == cloudcommon.OrganizationMobiledgeX {
-			// mobiledgex apps on dev ClusterInst, like prometheus
-		} else if in.Key.ClusterInstKey.Organization == cloudcommon.OrganizationMobiledgeX {
-			// developer apps on reservable mobiledgex ClusterInst
-			tenant = true
-		} else {
-			return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.Organization, in.Key.ClusterInstKey.Organization)
-		}
+	if in.Key.AppKey.Organization != in.Key.ClusterInstKey.Organization && in.Key.AppKey.Organization == cloudcommon.OrganizationMobiledgeX && !tenant {
+		return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.Organization, in.Key.ClusterInstKey.Organization)
 	}
 	appDeploymentType := ""
 
@@ -1412,12 +1404,15 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 	services.events.AddMetric(&metric)
 
 	// check to see if it was autoprovisioned and they used a reserved clusterinst, then log the start and stop of the clusterinst as well
-	if appInstKey.ClusterInstKey.Organization == cloudcommon.OrganizationMobiledgeX && appInstKey.AppKey.Organization != cloudcommon.OrganizationMobiledgeX &&
-		(event == cloudcommon.CREATED || event == cloudcommon.DELETED) {
+	if isTenantAppInst(appInstKey) && (event == cloudcommon.CREATED || event == cloudcommon.DELETED) {
 		clusterEvent := cloudcommon.RESERVED
 		if event == cloudcommon.DELETED {
 			clusterEvent = cloudcommon.UNRESERVED
 		}
 		RecordClusterInstEvent(ctx, &appInstKey.ClusterInstKey, clusterEvent, serverStatus)
 	}
+}
+
+func isTenantAppInst(appInstKey *edgeproto.AppInstKey) bool {
+	return appInstKey.ClusterInstKey.Organization == cloudcommon.OrganizationMobiledgeX && appInstKey.AppKey.Organization != cloudcommon.OrganizationMobiledgeX
 }
