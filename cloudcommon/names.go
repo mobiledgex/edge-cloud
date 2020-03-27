@@ -58,6 +58,8 @@ var MexAppVersionLabel = "mexAppVersion"
 var EventsDbName = "events"
 var CloudletEvent = "cloudlet"
 var ClusterInstEvent = "clusterinst"
+var ClusterInstUsage = "clusterinst-usage"
+var ClusterInstCheckpoint = "clusterinst-checkpoint"
 var AppInstEvent = "appinst"
 
 var IPAddrAllInterfaces = "0.0.0.0"

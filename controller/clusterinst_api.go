@@ -825,11 +825,13 @@ func (s *ClusterInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cl
 func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.ClusterInstKey, event cloudcommon.InstanceEvent, serverStatus string) {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.ClusterInstEvent
-	ts, _ := types.TimestampProto(time.Now())
+	now := time.Now()
+	ts, _ := types.TimestampProto(now)
 	metric.Timestamp = *ts
 	metric.AddTag("cloudletorg", clusterInstKey.CloudletKey.Organization)
 	metric.AddTag("cloudlet", clusterInstKey.CloudletKey.Name)
 	metric.AddTag("cluster", clusterInstKey.ClusterKey.Name)
+	metric.AddTag("clusterorg", clusterInstKey.Organization)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
@@ -837,20 +839,16 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	if !ok { // if not provided (aka not recording a delete), get the flavorkey and numnodes ourself
 		info = edgeproto.ClusterInst{}
 		if !clusterInstApi.cache.Get(clusterInstKey, &info) {
-			log.SpanLog(ctx, log.DebugLevelApi, "Cannot log event for invalid clusterinst")
+			log.SpanLog(ctx, log.DebugLevelMetrics, "Cannot log event for invalid clusterinst")
 			return
 		}
 	}
 	// if this is a clusterinst use the org its reserved for instead of MobiledgeX
-	org := clusterInstKey.Organization
-	if event == cloudcommon.RESERVED || event == cloudcommon.UNRESERVED {
-		org = info.ReservedBy
-	}
-	metric.AddTag("clusterorg", org)
+	metric.AddTag("reservedBy", info.ReservedBy)
 	// errors should never happen here since to get to this point the flavor should have already been checked previously, but just in case
 	nodeFlavor := edgeproto.Flavor{}
 	if !flavorApi.cache.Get(&info.Flavor, &nodeFlavor) {
-		log.SpanLog(ctx, log.DebugLevelApi, "flavor not found for recording clusterInst lifecycle", "flavor name", info.Flavor.Name)
+		log.SpanLog(ctx, log.DebugLevelMetrics, "flavor not found for recording clusterInst lifecycle", "flavor name", info.Flavor.Name)
 	} else {
 		metric.AddTag("flavor", info.Flavor.Name)
 		metric.AddIntVal("ram", nodeFlavor.Ram)
@@ -862,10 +860,11 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	services.events.AddMetric(&metric)
 
 	// if its a delete, create a usage record of it
-	// we need start time, all the downtimes between the starttime and now, and the `cluster-network stat`
-
 	// get all the logs for this clusterinst since the last checkpoint
-	influxLogQuery := `SELECT %s from %s WHERE "clusterorg"='%s' AND "cluster"='%s' AND "cloudlet"='%s' "cloudletorg"='%s' AND time >= '%s' order by time desc`
-	selectors := "event,status"
-
+	if event == cloudcommon.DELETED || event == cloudcommon.UNRESERVED {
+		err := CreateClusterUsageRecord(ctx, &info, now)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelMetrics, "unable to create cluster usage record", "cluster", clusterInstKey, "err", err)
+		}
+	}
 }

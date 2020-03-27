@@ -62,6 +62,8 @@ var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version h
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs from LetsEncrypt. If false then CRM will generate its onwn self-signed cert")
+var checkpointInterval = flag.Duration("checkpointInterval", time.Hour*24*30, "Interval at which to checkpoint cluster usage")
+
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName
 
@@ -369,6 +371,9 @@ func startServices() error {
 	}
 	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
 	services.httpServer = httpServer
+
+	// start the checkpointer
+	go runClusterCheckpoints(ctx)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	return nil
