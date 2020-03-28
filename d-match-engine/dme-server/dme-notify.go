@@ -8,6 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"google.golang.org/grpc"
 )
 
 // Implement notify.RecvAppInstHandler
@@ -67,11 +68,11 @@ var nodeCache edgeproto.NodeCache
 var ClientSender *notify.AppInstClientSend
 var appInstClientKeyCache edgeproto.AppInstClientKeyCache
 
-func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
+func initNotifyClient(addrs string, tlsDialOption grpc.DialOption) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
 	edgeproto.InitAppInstClientKeyCache(&appInstClientKeyCache)
 	appInstClientKeyCache.SetUpdatedCb(SendCachedClients)
-	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
+	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsDialOption)
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(&dmecommon.Settings, dmecommon.SettingsUpdated))
 	notifyClient.RegisterRecv(notify.NewAutoProvPolicyRecv(&dmecommon.AutoProvPolicyHandler{}))
 	notifyClient.RegisterRecv(notify.NewOperatorCodeRecv(&dmecommon.DmeAppTbl.OperatorCodes))

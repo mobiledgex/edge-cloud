@@ -36,7 +36,7 @@ func (s *NodeApi) ShowNode(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeServ
 		notifyAddrs = *notifyParentAddrs
 	}
 
-	conn, err := notifyRootConnect(notifyAddrs)
+	conn, err := notifyRootConnect(cb.Context(), notifyAddrs)
 	if err != nil {
 		return err
 	}

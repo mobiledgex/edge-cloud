@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	ctls "crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
@@ -47,10 +46,8 @@ var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address"
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
 var notifyRootAddrs = flag.String("notifyRootAddrs", "", "Comma separated list of notifyroots")
 var notifyParentAddrs = flag.String("notifyParentAddrs", "", "Comma separated list of notify parents")
-var vaultAddr = flag.String("vaultAddr", "", "Vault address; local vault runs at http://127.0.0.1:8200")
 var publicAddr = flag.String("publicAddr", "127.0.0.1", "Public facing address/hostname of controller")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
-var tlsCertFile = flag.String("tls", "", "server tls cert file. Keyfile and CA file must be in same directory")
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "http://127.0.0.1:8086", "InfluxDB listener address")
 var registryFQDN = flag.String("registryFQDN", "", "default docker image registry FQDN")
@@ -75,7 +72,7 @@ var ErrCtrlUpgradeRequired = errors.New("data mode upgrade required")
 var sigChan chan os.Signal
 var services Services
 var vaultConfig *vault.Config
-var nodeMgr *node.NodeMgr
+var nodeMgr node.NodeMgr
 
 type Services struct {
 	etcdLocal       *process.Etcd
@@ -89,6 +86,7 @@ type Services struct {
 }
 
 func main() {
+	nodeMgr.InitFlags()
 	flag.Parse()
 
 	err := startServices()
@@ -145,7 +143,7 @@ func startServices() error {
 			return err
 		}
 	}
-	log.InitTracer(*tlsCertFile)
+	log.InitTracer(nodeMgr.TlsCertFile)
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	span.SetTag("level", "init")
 	defer span.Finish()
@@ -165,17 +163,15 @@ func startServices() error {
 		return fmt.Errorf("invalid region name")
 	}
 
-	vaultConfig, err = vault.BestConfig(*vaultAddr)
-	if err != nil {
-		return err
-	}
-	log.SpanLog(ctx, log.DebugLevelInfo, "vault auth", "type", vaultConfig.Auth.Type())
-
 	err = validateFields(ctx)
 	if err != nil {
 		return err
 	}
-	nodeMgr = node.Init(ctx, node.NodeTypeController, node.WithName(ControllerId), node.WithContainerVersion(*versionTag), node.WithSetRegion(*region))
+	err = nodeMgr.Init(ctx, node.NodeTypeController, node.WithName(ControllerId), node.WithContainerVersion(*versionTag), node.WithRegion(*region))
+	if err != nil {
+		return err
+	}
+	vaultConfig = nodeMgr.VaultConfig
 
 	if *localEtcd {
 		opts := []process.StartOp{}
@@ -260,20 +256,44 @@ func startServices() error {
 
 	if *notifyParentAddrs != "" {
 		addrs := strings.Split(*notifyParentAddrs, ",")
-		notifyClient := notify.NewClient(addrs, *tlsCertFile)
+		tlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
+			nodeMgr.CommonName(),
+			node.CertIssuerRegional,
+			[]node.MatchCA{node.GlobalMatchCA()})
+		if err != nil {
+			return err
+		}
+		dialOption := tls.GetGrpcDialOption(tlsConfig)
+		notifyClient := notify.NewClient(addrs, dialOption)
 		notifyClient.Start()
 		services.notifyClient = notifyClient
 		nodeMgr.RegisterClient(notifyClient)
 	}
+	notifyServerTls, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegional,
+		[]node.MatchCA{
+			node.SameRegionalMatchCA(),
+			node.SameRegionalCloudletMatchCA(),
+		})
+	if err != nil {
+		return err
+	}
 	InitNotify(influxQ, &appInstClientApi)
-	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile)
+	notify.ServerMgrOne.Start(*notifyAddr, notifyServerTls)
 	services.notifyServerMgr = true
 
-	creds, err := tls.GetTLSServerCreds(*tlsCertFile, true)
+	apiTlsConfig, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegional,
+		[]node.MatchCA{
+			node.GlobalMatchCA(),
+			node.SameRegionalMatchCA(),
+		})
 	if err != nil {
-		return fmt.Errorf("get TLS Credentials failed, %v", err)
+		return err
 	}
-	server := grpc.NewServer(grpc.Creds(creds),
+	server := grpc.NewServer(cloudcommon.GrpcCreds(apiTlsConfig),
 		grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor),
 		grpc.StreamInterceptor(cloudcommon.AuditStreamInterceptor))
 	edgeproto.RegisterAppApiServer(server, &appApi)
@@ -311,8 +331,7 @@ func startServices() error {
 	// REST gateway
 	mux := http.NewServeMux()
 	gwcfg := &cloudcommon.GrpcGWConfig{
-		ApiAddr:     *apiAddr,
-		TlsCertFile: *tlsCertFile,
+		ApiAddr: *apiAddr,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 			edgeproto.RegisterAppApiHandler,
 			edgeproto.RegisterAppInstApiHandler,
@@ -342,19 +361,6 @@ func startServices() error {
 		return fmt.Errorf("Failed to create grpc gateway, %v", err)
 	}
 	mux.Handle("/", gw)
-	tlscfg := &ctls.Config{
-		MinVersion:               ctls.VersionTLS12,
-		CurvePreferences:         []ctls.CurveID{ctls.CurveP521, ctls.CurveP384, ctls.CurveP256},
-		PreferServerCipherSuites: true,
-		CipherSuites: []uint16{
-			ctls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-			ctls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-			ctls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-			ctls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-			ctls.TLS_RSA_WITH_AES_256_CBC_SHA,
-		},
-	}
-
 	// Suppress contant stream of TLS error logs due to LB health check. There is discussion in the community
 	//to get rid of some of these logs, but as of now this a the way around it.   We could miss other logs here but
 	// the excessive error logs are drowning out everthing else.
@@ -364,10 +370,20 @@ func startServices() error {
 	httpServer := &http.Server{
 		Addr:      *httpAddr,
 		Handler:   mux,
-		TLSConfig: tlscfg,
+		TLSConfig: apiTlsConfig,
 		ErrorLog:  &nullLogger,
 	}
-	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
+	go func() {
+		var err error
+		if httpServer.TLSConfig == nil {
+			err = httpServer.ListenAndServe()
+		} else {
+			err = httpServer.ListenAndServeTLS("", "")
+		}
+		if err != nil && err != http.ErrServerClosed {
+			log.FatalLog("Failed to server grpc gateway", "err", err)
+		}
+	}()
 	services.httpServer = httpServer
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")

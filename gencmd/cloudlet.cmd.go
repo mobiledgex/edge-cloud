@@ -1017,6 +1017,7 @@ var PlatformConfigOptionalArgs = []string{
 	"cleanupmode",
 	"region",
 	"commercialcerts",
+	"usevaultcerts",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -1031,7 +1032,8 @@ var PlatformConfigComments = map[string]string{
 	"span":                  "Span string",
 	"cleanupmode":           "Internal cleanup flag",
 	"region":                "Region",
-	"commercialcerts":       "Get certs from vault or generate your own",
+	"commercialcerts":       "Get certs from vault or generate your own for the root load balancer",
+	"usevaultcerts":         "Use Vault certs for internal TLS communication",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -1134,7 +1136,8 @@ var CloudletComments = map[string]string{
 	"config.span":                         "Span string",
 	"config.cleanupmode":                  "Internal cleanup flag",
 	"config.region":                       "Region",
-	"config.commercialcerts":              "Get certs from vault or generate your own",
+	"config.commercialcerts":              "Get certs from vault or generate your own for the root load balancer",
+	"config.usevaultcerts":                "Use Vault certs for internal TLS communication",
 	"restagmap.value.name":                "Resource Table Name",
 	"restagmap.value.organization":        "Operator organization of the cloudlet site.",
 	"accessvars":                          "Variables required to access cloudlet",

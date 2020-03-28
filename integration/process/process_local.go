@@ -127,6 +127,12 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--notifyParentAddrs")
 		args = append(args, p.NotifyParentAddrs)
 	}
+	if p.Region != "" {
+		args = append(args, "--region", p.Region)
+	}
+	if p.UseVaultCerts {
+		args = append(args, "--useVaultCerts")
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -152,9 +158,12 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		if err != nil {
 			return err
 		}
+		rr := roles.GetRegionRoles(p.Region)
 		envs = []string{
-			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.CtrlRoleID),
-			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.CtrlSecretID),
+			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.CtrlRoleID),
+			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.CtrlSecretID),
+			fmt.Sprintf("VAULT_CRM_ROLE_ID=%s", rr.CRMRoleID),
+			fmt.Sprintf("VAULT_CRM_SECRET_ID=%s", rr.CRMSecretID),
 		}
 		log.Printf("controller envs: %v\n", envs)
 	}
@@ -208,8 +217,19 @@ func connectAPIImpl(timeout time.Duration, apiaddr string, tlsConfig *tls.Config
 	return conn, err
 }
 
+func (p *Controller) GetTlsFile() string {
+	if p.UseVaultCerts && p.VaultAddr != "" {
+		region := p.Region
+		if region == "" {
+			region = "local"
+		}
+		return "/tmp/edgectl." + region + "/mex.crt"
+	}
+	return p.TLS.ClientCert
+}
+
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.TLS.ClientCert, "", false)
+	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.GetTlsFile(), "", false)
 	if err != nil {
 		return nil, err
 	}
@@ -265,9 +285,15 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
 	}
+	if p.UseVaultCerts {
+		args = append(args, "--useVaultCerts")
+	}
 	if p.CookieExpr != "" {
 		args = append(args, "--cookieExpiration")
 		args = append(args, p.CookieExpr)
+	}
+	if p.Region != "" {
+		args = append(args, "--region", p.Region)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -286,9 +312,10 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		if err != nil {
 			return err
 		}
+		rr := roles.GetRegionRoles(p.Region)
 		envs = []string{
-			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.DmeRoleID),
-			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.DmeSecretID),
+			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.DmeRoleID),
+			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.DmeSecretID),
 		}
 		log.Printf("dme envs: %v\n", envs)
 	}
@@ -399,6 +426,9 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.Region != "" {
 		args = append(args, "--region")
 		args = append(args, p.Region)
+	}
+	if p.UseVaultCerts {
+		args = append(args, "--useVaultCerts")
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -554,12 +584,37 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 	if p.PluginRequired {
 		args = append(args, "--pluginRequired")
 	}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
+	}
+	if p.UseVaultCerts {
+		args = append(args, "--useVaultCerts")
+	}
 	args = append(args, "--hostname", p.Name)
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
+	}
+	var envs []string
+	if options.RolesFile != "" {
+		dat, err := ioutil.ReadFile(options.RolesFile)
+		if err != nil {
+			return err
+		}
+		roles := VaultRoles{}
+		err = yaml.Unmarshal(dat, &roles)
+		if err != nil {
+			return err
+		}
+		rr := roles.GetRegionRoles(p.Region)
+		envs = []string{
+			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.ClusterSvcRoleID),
+			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.ClusterSvcSecretID),
+		}
+		log.Printf("dme envs: %v\n", envs)
 	}
 	// Append extra args convert from [arg1=val1, arg2] into ["-arg1", "val1", "-arg2"]
 	if len(options.ExtraArgs) > 0 {
@@ -573,7 +628,7 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 	}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envs, logfile)
 	return err
 }
 
@@ -591,14 +646,29 @@ func (p *ClusterSvc) LookupArgs() string { return p.Name }
 var VaultAddress = "http://127.0.0.1:8200"
 
 type VaultRoles struct {
-	DmeRoleID       string `json:"dmeroleid"`
-	DmeSecretID     string `json:"dmesecretid"`
-	CRMRoleID       string `json:"crmroleid"`
-	CRMSecretID     string `json:"crmsecretid"`
-	RotatorRoleID   string `json:"rotatorroleid"`
-	RotatorSecretID string `json:"rotatorsecretid"`
-	CtrlRoleID      string `json:"controllerroleid"`
-	CtrlSecretID    string `json:"controllersecretid"`
+	NotifyRootRoleID   string `json:"notifyrootroleid"`
+	NotifyRootSecretID string `json:"notifyrootsecretid"`
+	RegionRoles        map[string]*VaultRegionRoles
+}
+
+type VaultRegionRoles struct {
+	DmeRoleID          string `json:"dmeroleid"`
+	DmeSecretID        string `json:"dmesecretid"`
+	CRMRoleID          string `json:"crmroleid"`
+	CRMSecretID        string `json:"crmsecretid"`
+	RotatorRoleID      string `json:"rotatorroleid"`
+	RotatorSecretID    string `json:"rotatorsecretid"`
+	CtrlRoleID         string `json:"controllerroleid"`
+	CtrlSecretID       string `json:"controllersecretid"`
+	ClusterSvcRoleID   string `json:"clustersvcroleid"`
+	ClusterSvcSecretID string `json:"clustersvcsecretid"`
+}
+
+func (s *VaultRoles) GetRegionRoles(region string) *VaultRegionRoles {
+	if region == "" {
+		region = "local"
+	}
+	return s.RegionRoles[region]
 }
 
 func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
@@ -626,35 +696,53 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 		time.Sleep(10 * time.Millisecond)
 	}
 
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+
 	// run setup script
 	gopath := os.Getenv("GOPATH")
-	region := "local"
-	setup := gopath + "/src/github.com/mobiledgex/edge-cloud/vault/setup.sh " + region
+	setup := gopath + "/src/github.com/mobiledgex/edge-cloud/vault/setup.sh"
 	out := p.Run("/bin/sh", setup, &err)
 	if err != nil {
 		fmt.Println(out)
 	}
 	// get roleIDs and secretIDs
-	roles := VaultRoles{}
-	p.GetAppRole(region, "dme", &roles.DmeRoleID, &roles.DmeSecretID, &err)
-	p.GetAppRole(region, "crm", &roles.CRMRoleID, &roles.CRMSecretID, &err)
-	p.GetAppRole(region, "rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
-	p.GetAppRole(region, "controller", &roles.CtrlRoleID, &roles.CtrlSecretID, &err)
-	p.PutSecret(region, "dme", p.DmeSecret+"-old", &err)
-	p.PutSecret(region, "dme", p.DmeSecret, &err)
-	// Get the directory where the influx.json file is
-	if _, serr := os.Stat(InfluxCredsFile); !os.IsNotExist(serr) {
-		path := "secret/" + region + "/accounts/influxdb"
-		p.PutSecretsJson(path, InfluxCredsFile, &err)
+	vroles := VaultRoles{}
+	vroles.RegionRoles = make(map[string]*VaultRegionRoles)
+	p.GetAppRole("", "notifyroot", &vroles.NotifyRootRoleID, &vroles.NotifyRootSecretID, &err)
+
+	if p.Regions == "" {
+		p.Regions = "local"
 	}
-	if err != nil {
-		p.StopLocal()
-		return err
+	for _, region := range strings.Split(p.Regions, ",") {
+		// run setup script
+		setup := gopath + "/src/github.com/mobiledgex/edge-cloud/vault/setup-region.sh " + region
+		out := p.Run("/bin/sh", setup, &err)
+		if err != nil {
+			fmt.Println(out)
+		}
+		// get roleIDs and secretIDs
+		roles := VaultRegionRoles{}
+		p.GetAppRole(region, "dme", &roles.DmeRoleID, &roles.DmeSecretID, &err)
+		p.GetAppRole(region, "crm", &roles.CRMRoleID, &roles.CRMSecretID, &err)
+		p.GetAppRole(region, "rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
+		p.GetAppRole(region, "controller", &roles.CtrlRoleID, &roles.CtrlSecretID, &err)
+		p.GetAppRole(region, "cluster-svc", &roles.ClusterSvcRoleID, &roles.ClusterSvcSecretID, &err)
+		p.PutSecret(region, "dme", p.DmeSecret+"-old", &err)
+		p.PutSecret(region, "dme", p.DmeSecret, &err)
+		vroles.RegionRoles[region] = &roles
+		// Get the directory where the influx.json file is
+		if _, serr := os.Stat(InfluxCredsFile); !os.IsNotExist(serr) {
+			path := "secret/" + region + "/accounts/influxdb"
+			p.PutSecretsJson(path, InfluxCredsFile, &err)
+		}
+		if err != nil {
+			p.StopLocal()
+			return err
+		}
 	}
-	options := StartOptions{}
-	options.ApplyStartOptions(opts...)
 	if options.RolesFile != "" {
-		roleYaml, err := yaml.Marshal(&roles)
+		roleYaml, err := yaml.Marshal(&vroles)
 		if err != nil {
 			p.StopLocal()
 			return err
@@ -938,9 +1026,16 @@ func (p *Jaeger) LookupArgs() string { return p.Name }
 
 func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
+	}
 	if p.TLS.ServerCert != "" {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
+	}
+	if p.UseVaultCerts {
+		args = append(args, "--useVaultCerts")
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -948,8 +1043,26 @@ func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
+	var envs []string
+	if options.RolesFile != "" {
+		dat, err := ioutil.ReadFile(options.RolesFile)
+		if err != nil {
+			return err
+		}
+		roles := VaultRoles{}
+		err = yaml.Unmarshal(dat, &roles)
+		if err != nil {
+			return err
+		}
+		envs = []string{
+			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.NotifyRootRoleID),
+			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.NotifyRootSecretID),
+		}
+		log.Printf("notifyroot envs: %v\n", envs)
+	}
+
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envs, logfile)
 	return err
 }
 
