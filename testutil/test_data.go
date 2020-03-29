@@ -3,7 +3,9 @@ package testutil
 import (
 	fmt "fmt"
 	"strings"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -1199,6 +1201,43 @@ var AppInstClientData = []edgeproto.AppInstClient{
 			Longitude: 2.0,
 		},
 	},
+}
+var PlarformDeviceClientDataKeys = []edgeproto.DeviceKey{
+	edgeproto.DeviceKey{
+		UniqueIdType: "platos",
+		UniqueId:     "1",
+	},
+	edgeproto.DeviceKey{
+		UniqueIdType: "platos",
+		UniqueId:     "2",
+	},
+	edgeproto.DeviceKey{
+		UniqueIdType: "Mex",
+		UniqueId:     "1",
+	},
+}
+
+var PlarformDeviceClientData = []edgeproto.Device{
+	edgeproto.Device{
+		Key: PlarformDeviceClientDataKeys[0],
+		// 2009-11-10 23:00:00 +0000 UTC
+		FirstSeen: GetTimestamp(time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)),
+	},
+	edgeproto.Device{
+		Key: PlarformDeviceClientDataKeys[1],
+		// 2009-11-10 23:00:00 +0000 UTC
+		FirstSeen: GetTimestamp(time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)),
+	},
+	edgeproto.Device{
+		Key: PlarformDeviceClientDataKeys[2],
+		// 2009-12-10 23:00:00 +0000 UTC
+		FirstSeen: GetTimestamp(time.Date(2009, time.December, 10, 23, 0, 0, 0, time.UTC)),
+	},
+}
+
+func GetTimestamp(t time.Time) *types.Timestamp {
+	ts, _ := types.TimestampProto(t)
+	return ts
 }
 
 func IsAutoClusterAutoDeleteApp(key *edgeproto.AppInstKey) bool {
