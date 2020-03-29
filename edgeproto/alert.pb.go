@@ -19,6 +19,7 @@
 		common.proto
 		controller.proto
 		debug.proto
+		device.proto
 		exec.proto
 		flavor.proto
 		metric.proto
@@ -82,6 +83,9 @@
 		DebugRequest
 		DebugReply
 		DebugData
+		DeviceReport
+		DeviceKey
+		Device
 		RunCmd
 		RunVMConsole
 		ShowLog
@@ -627,6 +631,7 @@ type AlertCache struct {
 	Objs        map[AlertKey]*Alert
 	Mux         util.Mutex
 	List        map[AlertKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *AlertKey, old *Alert)
 	UpdatedCb   func(ctx context.Context, old *Alert, new *Alert)
 	KeyWatchers map[AlertKey][]*AlertKeyWatcher
@@ -743,11 +748,11 @@ func (c *AlertCache) GetCount() int {
 }
 
 func (c *AlertCache) Flush(ctx context.Context, notifyId int64) {
-	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Alert", "notifyId", notifyId)
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Alert", "notifyId", notifyId, "FlushAll", c.FlushAll)
 	flushed := make(map[AlertKey]*Alert)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if val.NotifyId != notifyId {
+		if !c.FlushAll && val.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]
@@ -795,6 +800,10 @@ func (c *AlertCache) SetNotifyCb(fn func(ctx context.Context, obj *AlertKey, old
 
 func (c *AlertCache) SetUpdatedCb(fn func(ctx context.Context, old *Alert, new *Alert)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AlertCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AlertCache) WatchKey(key *AlertKey, cb func(ctx context.Context)) context.CancelFunc {

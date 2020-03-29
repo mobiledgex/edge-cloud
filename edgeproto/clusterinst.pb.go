@@ -1698,6 +1698,7 @@ type ClusterInstCache struct {
 	Objs        map[ClusterInstKey]*ClusterInst
 	Mux         util.Mutex
 	List        map[ClusterInstKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *ClusterInstKey, old *ClusterInst)
 	UpdatedCb   func(ctx context.Context, old *ClusterInst, new *ClusterInst)
 	KeyWatchers map[ClusterInstKey][]*ClusterInstKeyWatcher
@@ -1846,6 +1847,10 @@ func (c *ClusterInstCache) SetNotifyCb(fn func(ctx context.Context, obj *Cluster
 
 func (c *ClusterInstCache) SetUpdatedCb(fn func(ctx context.Context, old *ClusterInst, new *ClusterInst)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ClusterInstCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ClusterInstCache) WatchKey(key *ClusterInstKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -2497,6 +2502,7 @@ type ClusterInstInfoCache struct {
 	Objs        map[ClusterInstKey]*ClusterInstInfo
 	Mux         util.Mutex
 	List        map[ClusterInstKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *ClusterInstKey, old *ClusterInstInfo)
 	UpdatedCb   func(ctx context.Context, old *ClusterInstInfo, new *ClusterInstInfo)
 	KeyWatchers map[ClusterInstKey][]*ClusterInstInfoKeyWatcher
@@ -2613,11 +2619,11 @@ func (c *ClusterInstInfoCache) GetCount() int {
 }
 
 func (c *ClusterInstInfoCache) Flush(ctx context.Context, notifyId int64) {
-	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInstInfo", "notifyId", notifyId)
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush ClusterInstInfo", "notifyId", notifyId, "FlushAll", c.FlushAll)
 	flushed := make(map[ClusterInstKey]*ClusterInstInfo)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if val.NotifyId != notifyId {
+		if !c.FlushAll && val.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]
@@ -2665,6 +2671,10 @@ func (c *ClusterInstInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *Clu
 
 func (c *ClusterInstInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *ClusterInstInfo, new *ClusterInstInfo)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ClusterInstInfoCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ClusterInstInfoCache) WatchKey(key *ClusterInstKey, cb func(ctx context.Context)) context.CancelFunc {

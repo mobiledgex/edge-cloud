@@ -15,6 +15,7 @@ enum VersionHash {
   HASH_03fad51f0343d41f617329151f474d2b = 12 [(protogen.upgrade_func) = "SetDefaultMaxTrackedDmeClients"];
   HASH_7d32a983fafc3da768e045b1dc4d5f50 = 13;
   HASH_747c14bdfe2043f09d251568e4a722c6 = 14 [(protogen.upgrade_func) = "OrgRestructure"];
+  HASH_c7fb20f545a5bc9869b00bb770753c31 = 15;
   option (protogen.version_hash) = true;
   option (protogen.version_hash_salt) = "0";
 }

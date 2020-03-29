@@ -24,6 +24,7 @@ type DummyHandler struct {
 	NodeCache            edgeproto.NodeCache
 	AutoScalePolicyCache edgeproto.AutoScalePolicyCache
 	AutoProvPolicyCache  edgeproto.AutoProvPolicyCache
+	DeviceCache          edgeproto.DeviceCache
 }
 
 func NewDummyHandler() *DummyHandler {
@@ -40,6 +41,7 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitNodeCache(&h.NodeCache)
 	edgeproto.InitAutoScalePolicyCache(&h.AutoScalePolicyCache)
 	edgeproto.InitAutoProvPolicyCache(&h.AutoProvPolicyCache)
+	edgeproto.InitDeviceCache(&h.DeviceCache)
 	return h
 }
 
@@ -59,6 +61,7 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterRecvCloudletInfoCache(&s.CloudletInfoCache)
 	mgr.RegisterRecvAlertCache(&s.AlertCache)
 	mgr.RegisterRecvNodeCache(&s.NodeCache)
+	mgr.RegisterRecvDeviceCache(&s.DeviceCache)
 }
 
 func (s *DummyHandler) RegisterCRMClient(cl *Client) {
@@ -79,6 +82,7 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 func (s *DummyHandler) RegisterDMEClient(cl *Client) {
 	cl.RegisterRecvAppCache(&s.AppCache)
 	cl.RegisterRecvAppInstCache(&s.AppInstCache)
+	cl.RegisterSendDeviceCache(&s.DeviceCache)
 }
 
 type CacheType int
@@ -238,6 +242,10 @@ func (s *DummyHandler) GetCloudletDetails(key *edgeproto.CloudletKey) (string, i
 		return obj.ContainerVersion, obj.NotifyId, nil
 	}
 	return "", -1, fmt.Errorf("Unable to find cloudlet in node list")
+}
+
+func (s *DummyHandler) WaitForDevices(count int) {
+	WaitFor(&s.DeviceCache, count)
 }
 
 func (s *Client) WaitForConnect(connect uint64) {

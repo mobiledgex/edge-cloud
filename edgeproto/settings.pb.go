@@ -803,6 +803,7 @@ type SettingsCache struct {
 	Objs        map[SettingsKey]*Settings
 	Mux         util.Mutex
 	List        map[SettingsKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *SettingsKey, old *Settings)
 	UpdatedCb   func(ctx context.Context, old *Settings, new *Settings)
 	KeyWatchers map[SettingsKey][]*SettingsKeyWatcher
@@ -951,6 +952,10 @@ func (c *SettingsCache) SetNotifyCb(fn func(ctx context.Context, obj *SettingsKe
 
 func (c *SettingsCache) SetUpdatedCb(fn func(ctx context.Context, old *Settings, new *Settings)) {
 	c.UpdatedCb = fn
+}
+
+func (c *SettingsCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *SettingsCache) WatchKey(key *SettingsKey, cb func(ctx context.Context)) context.CancelFunc {
