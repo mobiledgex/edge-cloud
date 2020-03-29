@@ -2467,6 +2467,7 @@ type AppInstCache struct {
 	Objs        map[AppInstKey]*AppInst
 	Mux         util.Mutex
 	List        map[AppInstKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *AppInstKey, old *AppInst)
 	UpdatedCb   func(ctx context.Context, old *AppInst, new *AppInst)
 	KeyWatchers map[AppInstKey][]*AppInstKeyWatcher
@@ -2615,6 +2616,10 @@ func (c *AppInstCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInstKey,
 
 func (c *AppInstCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInst, new *AppInst)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AppInstCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AppInstCache) WatchKey(key *AppInstKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -3437,6 +3442,7 @@ type AppInstInfoCache struct {
 	Objs        map[AppInstKey]*AppInstInfo
 	Mux         util.Mutex
 	List        map[AppInstKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *AppInstKey, old *AppInstInfo)
 	UpdatedCb   func(ctx context.Context, old *AppInstInfo, new *AppInstInfo)
 	KeyWatchers map[AppInstKey][]*AppInstInfoKeyWatcher
@@ -3553,11 +3559,11 @@ func (c *AppInstInfoCache) GetCount() int {
 }
 
 func (c *AppInstInfoCache) Flush(ctx context.Context, notifyId int64) {
-	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstInfo", "notifyId", notifyId)
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AppInstInfo", "notifyId", notifyId, "FlushAll", c.FlushAll)
 	flushed := make(map[AppInstKey]*AppInstInfo)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if val.NotifyId != notifyId {
+		if !c.FlushAll && val.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]
@@ -3605,6 +3611,10 @@ func (c *AppInstInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInst
 
 func (c *AppInstInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInstInfo, new *AppInstInfo)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AppInstInfoCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AppInstInfoCache) WatchKey(key *AppInstKey, cb func(ctx context.Context)) context.CancelFunc {

@@ -2,4 +2,6 @@ registerclientrequest:
   orgname: platos
   appname: PlatosEnablingLayer
   appvers: "1.0"
+  uniqueidtype: "platos"
+  uniqueid: "123"
 
