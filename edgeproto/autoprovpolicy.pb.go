@@ -1123,6 +1123,7 @@ type AutoProvPolicyCache struct {
 	Objs        map[PolicyKey]*AutoProvPolicy
 	Mux         util.Mutex
 	List        map[PolicyKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy)
 	UpdatedCb   func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy)
 	KeyWatchers map[PolicyKey][]*AutoProvPolicyKeyWatcher
@@ -1271,6 +1272,10 @@ func (c *AutoProvPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *Poli
 
 func (c *AutoProvPolicyCache) SetUpdatedCb(fn func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AutoProvPolicyCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AutoProvPolicyCache) WatchKey(key *PolicyKey, cb func(ctx context.Context)) context.CancelFunc {

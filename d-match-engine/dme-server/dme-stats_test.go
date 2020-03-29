@@ -11,7 +11,10 @@ import (
 	"time"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
+	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -123,4 +126,54 @@ func TestStatChanged(t *testing.T) {
 	// sleep two intervals to make sure that stats are uploaded to the controller
 	time.Sleep(2 * notifyInterval)
 	assert.False(t, stats.shards[0].apiStatMap[key].changed)
+}
+
+func TestDeviceRecord(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelNotify)
+	log.InitTracer("")
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+	dmecommon.SetupMatchEngine()
+
+	// test dummy server sending notices to dme
+	addr := "127.0.0.1:60001"
+
+	// dummy server side
+	serverHandler := notify.NewDummyHandler()
+	serverMgr := notify.ServerMgr{}
+	serverHandler.RegisterServer(&serverMgr)
+	serverMgr.Start(addr, "")
+
+	// client (dme) side
+	client := initNotifyClient(addr, "")
+	client.Start()
+
+	// add a new device - see that it makes it to the server
+	for _, reg := range dmetest.DeviceData {
+		recordDevice(ctx, &reg)
+	}
+	// verify the devices were added to the server
+	count := len(dmetest.DeviceData) - 1 // Since one is a duplicate
+	// verify that devices are in local cache
+	assert.Equal(t, count, len(platformClientsCache.Objs))
+	serverHandler.WaitForDevices(count)
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
+	// Delete all elements from local cache directly
+	for _, obj := range platformClientsCache.Objs {
+		delete(platformClientsCache.Objs, obj.GetKeyVal())
+		delete(platformClientsCache.List, obj.GetKeyVal())
+	}
+	assert.Equal(t, 0, len(platformClientsCache.Objs))
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
+	// Add a single device - make sure count in local cache is updated
+	recordDevice(ctx, &dmetest.DeviceData[0])
+	assert.Equal(t, 1, len(platformClientsCache.Objs))
+	// Make sure that count in the server cache is the same
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
+	// Add the same device, check that nothing is updated
+	recordDevice(ctx, &dmetest.DeviceData[0])
+	assert.Equal(t, 1, len(platformClientsCache.Objs))
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
+	serverMgr.Stop()
+	client.Stop()
 }

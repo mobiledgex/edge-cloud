@@ -850,6 +850,7 @@ type FlavorCache struct {
 	Objs        map[FlavorKey]*Flavor
 	Mux         util.Mutex
 	List        map[FlavorKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *FlavorKey, old *Flavor)
 	UpdatedCb   func(ctx context.Context, old *Flavor, new *Flavor)
 	KeyWatchers map[FlavorKey][]*FlavorKeyWatcher
@@ -998,6 +999,10 @@ func (c *FlavorCache) SetNotifyCb(fn func(ctx context.Context, obj *FlavorKey, o
 
 func (c *FlavorCache) SetUpdatedCb(fn func(ctx context.Context, old *Flavor, new *Flavor)) {
 	c.UpdatedCb = fn
+}
+
+func (c *FlavorCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *FlavorCache) WatchKey(key *FlavorKey, cb func(ctx context.Context)) context.CancelFunc {

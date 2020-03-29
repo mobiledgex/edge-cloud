@@ -732,6 +732,7 @@ type CloudletRefsCache struct {
 	Objs        map[CloudletKey]*CloudletRefs
 	Mux         util.Mutex
 	List        map[CloudletKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *CloudletRefs)
 	UpdatedCb   func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)
 	KeyWatchers map[CloudletKey][]*CloudletRefsKeyWatcher
@@ -880,6 +881,10 @@ func (c *CloudletRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *Cloudl
 
 func (c *CloudletRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletRefsCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *CloudletRefsCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -1255,6 +1260,7 @@ type ClusterRefsCache struct {
 	Objs        map[ClusterInstKey]*ClusterRefs
 	Mux         util.Mutex
 	List        map[ClusterInstKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs)
 	UpdatedCb   func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)
 	KeyWatchers map[ClusterInstKey][]*ClusterRefsKeyWatcher
@@ -1403,6 +1409,10 @@ func (c *ClusterRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *Cluster
 
 func (c *ClusterRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ClusterRefsCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ClusterRefsCache) WatchKey(key *ClusterInstKey, cb func(ctx context.Context)) context.CancelFunc {

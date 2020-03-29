@@ -19,6 +19,7 @@ It is generated from these files:
 	common.proto
 	controller.proto
 	debug.proto
+	device.proto
 	exec.proto
 	flavor.proto
 	metric.proto
@@ -82,6 +83,9 @@ It has these top-level messages:
 	DebugRequest
 	DebugReply
 	DebugData
+	DeviceReport
+	DeviceKey
+	Device
 	RunCmd
 	RunVMConsole
 	ShowLog

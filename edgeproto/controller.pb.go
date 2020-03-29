@@ -632,6 +632,7 @@ type ControllerCache struct {
 	Objs        map[ControllerKey]*Controller
 	Mux         util.Mutex
 	List        map[ControllerKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *ControllerKey, old *Controller)
 	UpdatedCb   func(ctx context.Context, old *Controller, new *Controller)
 	KeyWatchers map[ControllerKey][]*ControllerKeyWatcher
@@ -780,6 +781,10 @@ func (c *ControllerCache) SetNotifyCb(fn func(ctx context.Context, obj *Controll
 
 func (c *ControllerCache) SetUpdatedCb(fn func(ctx context.Context, old *Controller, new *Controller)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ControllerCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ControllerCache) WatchKey(key *ControllerKey, cb func(ctx context.Context)) context.CancelFunc {
