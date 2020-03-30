@@ -45,7 +45,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if len(appInst.MappedPorts) > 0 {
 		log.SpanLog(ctx, log.DebugLevelMexos, "Add Proxy for dind", "ports", appInst.MappedPorts)
 		err = proxy.CreateNginxProxy(ctx, client,
-			names.AppName,
+			dockermgmt.GetContainerName(&app.Key),
 			cloudcommon.IPAddrAllInterfaces,
 			masterIP,
 			appInst.MappedPorts,
