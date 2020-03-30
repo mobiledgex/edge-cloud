@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	client "github.com/influxdata/influxdb/client/v2"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -24,6 +25,10 @@ type ClusterCheckpoint struct {
 var InfluxMinimumTimestamp, _ = time.Parse(time.RFC3339, "1677-09-21T00:13:44Z")
 var PrevCheckpoint = InfluxMinimumTimestamp
 var NextCheckpoint time.Time
+
+var ClusterUsageInfluxQueryTemplate = `SELECT %s from "%s" WHERE "clusterorg"='%s' AND "cluster"='%s' AND "cloudlet"='%s' AND "cloudletorg"='%s' %sAND time >= '%s' AND time < '%s' order by time desc`
+var GetCheckpointInfluxQueryTemplate = `SELECT %s from "%s" WHERE "org"='%s' AND time <= '%s' order by time desc`
+var CreateClusterInfluxQueryTemplate = `SELECT %s from "%s" WHERE time >= '%s' AND time < '%s' order by time desc`
 
 func InitUsage() error {
 	// set the first NextCheckpoint,
@@ -45,7 +50,7 @@ func InitUsage() error {
 		// should only be 1 series, the 'clusterinst' one
 		return fmt.Errorf("Error parsing influx response")
 	}
-	//we don't care aobut what the checkpoint actually is, just the timestamp of it
+	//we don't care about what the checkpoint actually is, just the timestamp of it
 	PrevCheckpoint, err = time.Parse(time.RFC3339, fmt.Sprintf("%v", checkpoint[0].Series[0].Values[0][0]))
 	if err != nil {
 		PrevCheckpoint = InfluxMinimumTimestamp
@@ -57,7 +62,6 @@ func InitUsage() error {
 func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterInst, endTime time.Time) error {
 	var metric *edgeproto.Metric
 	// query from the checkpoint up to the delete
-	influxLogQueryTemplate := `SELECT %s from "%s" WHERE "clusterorg"='%s' AND "cluster"='%s' AND "cloudlet"='%s' AND "cloudletorg"='%s' %sAND time >= '%s' AND time < '%s' order by time desc`
 	selectors := []string{"\"event\"", "\"status\""}
 	reservedByOption := ""
 	org := cluster.Key.Organization
@@ -69,7 +73,7 @@ func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterIns
 	if err != nil {
 		return fmt.Errorf("unable to retrieve Checkpoint: %v", err)
 	}
-	influxLogQuery := fmt.Sprintf(influxLogQueryTemplate,
+	influxLogQuery := fmt.Sprintf(ClusterUsageInfluxQueryTemplate,
 		strings.Join(selectors, ","),
 		cloudcommon.ClusterInstEvent,
 		cluster.Key.Organization,
@@ -92,7 +96,11 @@ func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterIns
 			checkpointStatus = checkpoint.Status[i]
 		}
 	}
-	if len(logs) == 0 || len(logs[0].Series) == 0 {
+
+	empty, err := checkInfluxQueryOutput(logs, cloudcommon.ClusterInstEvent)
+	if err != nil {
+		return err
+	} else if empty {
 		//there are no logs between endTime and the checkpoint
 		var totalRunTime time.Duration
 		if checkpointStatus == cloudcommon.InstanceDown {
@@ -103,9 +111,8 @@ func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterIns
 		metric = createClusterUsageMetric(cluster, checkpoint.Timestamp, endTime, totalRunTime)
 		services.events.AddMetric(metric)
 		return nil
-	} else if len(logs) != 1 || len(logs[0].Series) != 1 || logs[0].Series[0].Name != cloudcommon.ClusterInstEvent { // should only be 1 series, the 'clusterinst' one
-		return fmt.Errorf("Error parsing influx response, too many series")
 	}
+
 	for _, values := range logs[0].Series[0].Values {
 		// value should be of the format [timestamp event status]
 		if len(values) != len(selectors)+1 {
@@ -178,9 +185,8 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 		return fmt.Errorf("Cannot create a checkpoint for the future")
 	}
 	// query from the previous checkpoint to this one
-	influxLogQueryTemplate := `SELECT %s from "%s" WHERE time >= '%s' AND time < '%s' order by time desc`
 	selectors := []string{"\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\"", "\"event\"", "\"status\""}
-	influxLogQuery := fmt.Sprintf(influxLogQueryTemplate,
+	influxLogQuery := fmt.Sprintf(CreateClusterInfluxQueryTemplate,
 		strings.Join(selectors, ","),
 		cloudcommon.ClusterInstEvent,
 		PrevCheckpoint.Format(time.RFC3339),
@@ -189,13 +195,15 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 	if err != nil {
 		return fmt.Errorf("Unable to query influx: %v", err)
 	}
-	if len(logs) == 0 || len(logs[0].Series) == 0 {
+
+	empty, err := checkInfluxQueryOutput(logs, cloudcommon.ClusterInstEvent)
+	if err != nil {
+		return err
+	} else if empty {
 		//there are no logs between endTime and the checkpoint, just copy over the checkpoint
 		skipLogCheck = true
-	} else if len(logs) != 1 || len(logs[0].Series) != 1 || logs[0].Series[0].Name != cloudcommon.ClusterInstEvent {
-		// should only be 1 series, the 'clusterinst' one
-		return fmt.Errorf("Error parsing influx response, too many series")
 	}
+
 	seenClusters := make(map[edgeproto.ClusterInstKey]bool)
 	metrics := make([]*edgeproto.Metric, 0)
 	if !skipLogCheck {
@@ -255,27 +263,26 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 	}
 
 	// check for apps that got checkpointed but did not have any log events between PrevCheckpoint and this one
-	influxCheckpointQueryTemplate := `SELECT %s from "%s" WHERE time <= '%s' AND time >= '%s' order by time desc`
 	selectors = []string{"\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\"", "\"org\"", "\"status\""}
-	influxCheckpointQuery := fmt.Sprintf(influxCheckpointQueryTemplate,
+	influxCheckpointQuery := fmt.Sprintf(CreateClusterInfluxQueryTemplate,
 		strings.Join(selectors, ","),
 		cloudcommon.ClusterInstCheckpoint,
-		PrevCheckpoint.Add(time.Minute).Format(time.RFC3339), //small delta to account for conversion rounding inconsistencies
-		PrevCheckpoint.Add(-1*time.Minute).Format(time.RFC3339))
+		PrevCheckpoint.Add(-1*time.Minute).Format(time.RFC3339), //small delta to account for conversion rounding inconsistencies
+		PrevCheckpoint.Add(time.Minute).Format(time.RFC3339))
 	checkpoints, err := services.events.QueryDB(influxCheckpointQuery)
 	if err != nil {
 		return fmt.Errorf("Unable to query influx: %v", err)
 	}
 
-	if len(checkpoints) == 0 || len(checkpoints[0].Series) == 0 {
+	empty, err = checkInfluxQueryOutput(checkpoints, cloudcommon.ClusterInstCheckpoint)
+	if err != nil {
+		return err
+	} else if empty {
 		// no checkpoints made yet, or nothing got checkpointed last time, dont need to do this check
 		services.events.AddMetric(metrics...)
 		services.events.DoPush() // flush these right away for subsequent calls to GetClusterCheckpoint
 		PrevCheckpoint = timestamp
 		return nil
-		// should only be 1 series, the 'clusterinst-checkpoints' one
-	} else if len(checkpoints) != 1 || len(checkpoints[0].Series) != 1 || checkpoints[0].Series[0].Name != cloudcommon.ClusterInstCheckpoint {
-		return fmt.Errorf("Error parsing influx response, too many series")
 	}
 
 	for _, values := range checkpoints[0].Series[0].Values {
@@ -335,27 +342,15 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 	return nil
 }
 
-// There is a race condition here between GetClusterCheckpoint and CreateClusterCheckpoint,
-// if someone calls GetClusterCheckpoint in between the timestamp arg to CreateClusterCheckpoint and the actual call to CreateClusterCheckpoint,
-// it will end up referencing the old checkpoint and not the latest one
-// So we need to prevent calls to GetClusterCheckpoint with a timestamp after the timestamp passed in CreateClusterCheckpoint until CreateClusterCheckpoint
-// actually gets run and finishes its call with that checkpoint.
-
-//ie. timeline: checkpoint 1 time -------------- checkpoint 2 time --- timestampX ----eventA----eventB--- ,
-// GetClusterCheckpoint gets called with timestampX at time A, and CreateClusterCheckpoint with timestamp=checkpoint2Time doesnt go off until time B (this window should be very small)
-// GetClusterCheckpoint will return checkpoint 1 instead of checkpoint 2 and could theoretically result in a usage record greater than the length of a billing period
-// as well as usage times being double counted by CreateClusterCheckpoints usage record generation
-
 // returns all the clusterinsts that were running at the time belonging to that org
 func GetClusterCheckpoint(ctx context.Context, org string, timestamp time.Time) (*ClusterCheckpoint, error) {
-	// wait until the current checkpoint is done if we want to access it, see the above comment about race conditions
+	// wait until the current checkpoint is done if we want to access it, to prevent race conditions with CreateCheckpoint
 	for timestamp.After(NextCheckpoint) {
 		time.Sleep(time.Second)
 	}
 	// query from the checkpoint up to the delete
-	influxCheckpointQueryTemplate := `SELECT %s from "%s" WHERE "org"='%s' AND time <= '%s' order by time desc`
 	selectors := []string{"\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\"", "\"status\""}
-	influxCheckpointQuery := fmt.Sprintf(influxCheckpointQueryTemplate, strings.Join(selectors, ","), cloudcommon.ClusterInstCheckpoint, org, timestamp.Format(time.RFC3339))
+	influxCheckpointQuery := fmt.Sprintf(GetCheckpointInfluxQueryTemplate, strings.Join(selectors, ","), cloudcommon.ClusterInstCheckpoint, org, timestamp.Format(time.RFC3339))
 	checkpoints, err := services.events.QueryDB(influxCheckpointQuery)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to query influx: %v", err)
@@ -367,12 +362,11 @@ func GetClusterCheckpoint(ctx context.Context, org string, timestamp time.Time) 
 		Status:    make([]string, 0),
 	}
 
-	if len(checkpoints) == 0 || len(checkpoints[0].Series) == 0 {
-		// no checkpoints made yet
+	empty, err := checkInfluxQueryOutput(checkpoints, cloudcommon.ClusterInstCheckpoint)
+	if err != nil {
+		return nil, err
+	} else if empty {
 		return &result, nil
-		// should only be 1 series, the 'clusterinst-checkpoints' one
-	} else if len(checkpoints) != 1 || len(checkpoints[0].Series) != 1 || checkpoints[0].Series[0].Name != cloudcommon.ClusterInstCheckpoint {
-		return nil, fmt.Errorf("Error parsing influx response, too many series")
 	}
 
 	for i, values := range checkpoints[0].Series[0].Values {
@@ -426,4 +420,21 @@ func runClusterCheckpoints(ctx context.Context) {
 			NextCheckpoint = NextCheckpoint.Add(*checkpointInterval)
 		}
 	}
+}
+
+// checks the output of the influx log query and checks to see if it is empty(first return value) and if it is not empty then the format is what we expect(second return value)
+func checkInfluxQueryOutput(result []client.Result, dbName string) (bool, error) {
+	empty := false
+	var valid error
+	if len(result) == 0 || len(result[0].Series) == 0 {
+		empty = true
+	} else if len(result) != 1 ||
+		len(result[0].Series) != 1 ||
+		len(result[0].Series[0].Values) == 0 ||
+		len(result[0].Series[0].Values[0]) == 0 ||
+		result[0].Series[0].Name != dbName {
+		// should only be 1 series, the 'dbName' one
+		valid = fmt.Errorf("Error parsing influx, unexpected format")
+	}
+	return empty, valid
 }
