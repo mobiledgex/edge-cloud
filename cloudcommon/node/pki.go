@@ -18,11 +18,11 @@ import (
 	"github.com/mobiledgex/edge-cloud/vault"
 )
 
-var refreshCertInterval = 70 * time.Hour
+var refreshCertInterval = 48 * time.Hour
 
 type internalPki struct {
 	// Internal PKI supports either cert files supplied on the
-	// command line or retreived from Vault.
+	// command line or retrieved from Vault.
 	// Command line certs are supported if specified.
 	// Vault certs are supported if the VaultAddr is specified.
 	// The UseVaultCerts arg determines which sets of certs to use
@@ -34,11 +34,11 @@ type internalPki struct {
 	fileCAs  []*x509.Certificate
 
 	// Certs map contains certs that identify this node, issued by Vault.
-	// These certs are retreived dynamically by the tls config because
+	// These certs are retrieved dynamically by the tls config because
 	// they may be refreshed periodically, so cannot be copied into
 	// the tls config.
 	// CA certs do not change frequently, and the tls config doesn't
-	// provide any way to retreive them dynamically anyway. They are
+	// provide any way to retrieve them dynamically anyway. They are
 	// still cached to avoid talking to Vault for every new connection.
 	certs map[certId]*tls.Certificate
 	cas   map[string][]*x509.Certificate
@@ -138,7 +138,7 @@ func (s *internalPki) refreshCerts() {
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "refresh pki certs failures", "err", err)
 				// retry again soon
-				interval = 20 * time.Minute
+				interval = time.Hour
 			} else {
 				interval = refreshCertInterval
 			}
