@@ -142,7 +142,6 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 		if addr == *externalApiAddr {
 			// local node
 			reply, err = s.SendLocalRequest(ctx, req)
-			log.DebugLog(log.DebugLevelApi, "ASHCHECK answered got reply", "req", req, "reply", reply, "err", err)
 		} else {
 			// connect to remote node
 			conn, err := ControllerConnect(addr)
@@ -155,7 +154,6 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 			ctx, cancel := context.WithTimeout(context.Background(), req.Timeout.TimeDuration()+2)
 			defer cancel()
 			reply, err = cmd.SendLocalRequest(ctx, req)
-			log.DebugLog(log.DebugLevelApi, "ASHCHECK 2 answered got reply", "req", req, "reply", reply, "err", err)
 		}
 		if err == nil && reply != nil {
 			req.Answer = reply.Answer
@@ -191,7 +189,6 @@ func (s *ExecApi) SendLocalRequest(ctx context.Context, req *edgeproto.ExecReque
 	}
 	s.requests[req.Offer] = sr
 	s.mux.Unlock()
-	log.DebugLog(log.DebugLevelApi, "ASHCHECK added offer to request", "offer", req.Offer)
 
 	// SendMany filters based on CloudletKey, so will not send if
 	// the attached CRM(s) aren't for that CloudletKey. This will
@@ -214,7 +211,6 @@ func (s *ExecApi) SendLocalRequest(ctx context.Context, req *edgeproto.ExecReque
 	s.mux.Lock()
 	delete(s.requests, req.Offer)
 	s.mux.Unlock()
-	log.DebugLog(log.DebugLevelApi, "ASHCHECK done processing request, remove it", "offer", req.Offer, "err", err)
 
 	if err != nil {
 		return nil, err

@@ -385,12 +385,13 @@ func RunEdgeTurn(req *edgeproto.ExecRequest, exchangeFunc func(offer *webrtc.Ses
 			return fmt.Errorf("unable to fetch console URL from webrtc reply")
 		}
 		fmt.Printf("Console URL: %s\n", reply.Console.Url)
-		util.OpenUrl(reply.Console.Url)
 	} else {
 		reqHeader := make(http.Header, 1)
 		reqHeader.Set("edgetoken", reply.AccessToken)
 		d := websocket.Dialer{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
-		ws, _, err := d.Dial("wss://127.0.0.1:8443/edgeshell", reqHeader)
+		addrParts := strings.Split(reply.EdgeTurnAddr, ":")
+		accessUrl := "wss://" + addrParts[0] + ":8443/edgeshell"
+		ws, _, err := d.Dial(accessUrl, reqHeader)
 		if err != nil {
 			return err
 		}

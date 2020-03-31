@@ -102,6 +102,7 @@ type DeploymentData struct {
 	Jaegers     []*process.Jaeger     `yaml:"jaegers"`
 	Traefiks    []*process.Traefik    `yaml:"traefiks"`
 	NotifyRoots []*process.NotifyRoot `yaml:"notifyroots"`
+	EdgeTurns   []*process.EdgeTurn   `yaml:"edgeturns"`
 }
 
 type errorReply struct {
@@ -146,6 +147,9 @@ func GetAllProcesses() []process.Process {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.NotifyRoots {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.EdgeTurns {
 		all = append(all, p)
 	}
 	return all

@@ -34,8 +34,6 @@ var testMode = flag.Bool("testMode", false, "Run EdgeTurn in test mode")
 const (
 	ShellConnTimeout   = 5 * time.Minute
 	ConsoleConnTimeout = 20 * time.Minute
-	//ShellConnTimeout   = 1 * time.Minute
-	//ConsoleConnTimeout = 1 * time.Minute
 )
 
 type ProxyValue struct {

@@ -129,3 +129,10 @@ notifyroots:
   hostname: "127.0.0.1"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
+
+edgeturns:
+- name: edgeturn
+  hostname: "127.0.0.1"
+  testmode: true
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"

@@ -490,6 +490,12 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 			return false
 		}
 	}
+	for _, p := range util.Deployment.EdgeTurns {
+		opts = append(opts, process.WithDebug("api,notify"))
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
 	for _, p := range util.Deployment.Controllers {
 		opts = append(opts, process.WithDebug("etcd,api,notify,metrics"))
 		if !StartLocal(processName, outputDir, p, opts...) {

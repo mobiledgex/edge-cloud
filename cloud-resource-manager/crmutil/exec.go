@@ -78,11 +78,6 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		if err != nil {
 			return fmt.Errorf("unable to parse console url, %s, %v", req.Console.Url, err)
 		}
-		queryArgs := urlObj.Query()
-		token, ok := queryArgs["token"]
-		if !ok || len(token) != 1 {
-			return fmt.Errorf("invalid console url: %s", req.Console.Url)
-		}
 		execReqType = cloudcommon.ExecReqConsole
 		initURL = urlObj
 	} else {
@@ -186,8 +181,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 
 		// Send ExecReqInfo to EdgeTurn server
 		execReqInfo := cloudcommon.ExecReqInfo{
-			Type: execReqType,
-			//ConsoleToken: execReqConsoleToken,
+			Type:    execReqType,
 			InitURL: initURL,
 		}
 		out, err := json.Marshal(&execReqInfo)
@@ -215,7 +209,6 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			// Notify controller about the new proxy console URL & access token
 			turnAddrParts := strings.Split(req.EdgeTurnAddr, ":")
 			proxyAddr := urlObj.Scheme + "://" + turnAddrParts[0] + ":8443/edgeconsole?token=" + sessInfo.Token
-			//req.Console.Url = strings.Replace(req.Console.Url, urlObj.Host, proxyAddr, 1)
 			req.Console.Url = proxyAddr
 			req.AccessToken = sessInfo.Token
 			cd.ExecReqSend.Update(ctx, req)
