@@ -423,6 +423,25 @@ func (s *PrivacyPolicy) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+// Always valid
+func (s *DeviceReport) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
+func (key *DeviceKey) ValidateKey() error {
+	if key.UniqueId == "" || key.UniqueIdType == "" {
+		return errors.New("Device id cannot be empty")
+	}
+	return nil
+}
+func (s *Device) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	// TODO - we might want to validate timestamp in the future
+	return nil
+}
+
 func MakeFieldMap(fields []string) map[string]struct{} {
 	fmap := make(map[string]struct{})
 	if fields == nil {

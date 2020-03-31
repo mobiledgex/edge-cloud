@@ -299,6 +299,7 @@ func startServices() error {
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
+	edgeproto.RegisterDeviceApiServer(server, &deviceApi)
 	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
 
 	go func() {
@@ -335,6 +336,7 @@ func startServices() error {
 			edgeproto.RegisterSettingsApiHandler,
 			edgeproto.RegisterAppInstClientApiHandler,
 			edgeproto.RegisterDebugApiHandler,
+			edgeproto.RegisterDeviceApiHandler,
 			edgeproto.RegisterOrganizationApiHandler,
 		},
 	}
@@ -453,6 +455,7 @@ func InitApis(sync *Sync) {
 	InitSettingsApi(sync)
 	InitAppInstClientKeyApi(sync)
 	InitAppInstClientApi()
+	InitDeviceApi(sync)
 	InitOrganizationApi(sync)
 }
 
@@ -484,4 +487,5 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	autoProvPolicyApi.SetInfluxQ(influxQ)
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
+	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
 }

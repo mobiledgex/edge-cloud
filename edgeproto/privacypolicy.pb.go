@@ -710,6 +710,7 @@ type PrivacyPolicyCache struct {
 	Objs        map[PolicyKey]*PrivacyPolicy
 	Mux         util.Mutex
 	List        map[PolicyKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *PrivacyPolicy)
 	UpdatedCb   func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy)
 	KeyWatchers map[PolicyKey][]*PrivacyPolicyKeyWatcher
@@ -858,6 +859,10 @@ func (c *PrivacyPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *Polic
 
 func (c *PrivacyPolicyCache) SetUpdatedCb(fn func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy)) {
 	c.UpdatedCb = fn
+}
+
+func (c *PrivacyPolicyCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *PrivacyPolicyCache) WatchKey(key *PolicyKey, cb func(ctx context.Context)) context.CancelFunc {
