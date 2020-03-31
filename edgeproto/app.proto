@@ -6,7 +6,6 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "developer.proto";
 import "flavor.proto";
 import "gogoproto/gogo.proto";
 
@@ -18,8 +17,8 @@ import "gogoproto/gogo.proto";
 //
 // AppKey uniquely identifies an App
 message AppKey {
-  // Developer key
-  DeveloperKey developer_key = 1 [(gogoproto.nullable) = false];
+  // App developer organization
+  string organization = 1;
   // App name
   string name = 2;
   // App version
@@ -66,7 +65,7 @@ enum AccessType {
 
 // ConfigFile
 message ConfigFile {
-  // kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config
+  // kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml
   string kind = 1;
   // config file contents or URI reference
   string config = 2;
@@ -74,7 +73,7 @@ message ConfigFile {
 
 // Application
 //
-// App belongs to developers and is used to provide information about their application.
+// App belongs to developer organizations and is used to provide information about their application.
  message App {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
@@ -138,8 +137,9 @@ message ConfigFile {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
-  option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,developer=Key.DeveloperKey.Name,defaultflavor=DefaultFlavor.Name";
+  option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
   option (protogen.noconfig) = "Revision,DeletePrepare";
+  option (protogen.uses_org) = "key=Organization";
 }
 
 service AppApi {
@@ -149,7 +149,7 @@ service AppApi {
       post: "/create/app"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.Organization";
     option (protogen.mc2_custom_authz) = true;
   }
   // Delete Application. Deletes a definition of an Application instance. Make sure no other application
@@ -159,7 +159,7 @@ service AppApi {
       post: "/delete/app"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.Organization";
   }
   // Update Application. Updates the definition of an Application instance.
   rpc UpdateApp(App) returns (Result) {
@@ -167,7 +167,7 @@ service AppApi {
       post: "/update/app"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.Organization";
     option (protogen.mc2_custom_authz) = true;
   }
   // Show Applications. Lists all Application definitions managed from the Edge Controller.
@@ -177,6 +177,6 @@ service AppApi {
       post: "/show/app"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceApps,ActionView,Key.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceApps,ActionView,Key.Organization";
   }
 }

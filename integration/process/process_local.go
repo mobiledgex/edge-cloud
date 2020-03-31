@@ -127,6 +127,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--notifyParentAddrs")
 		args = append(args, p.NotifyParentAddrs)
 	}
+	if p.EdgeTurnAddr != "" {
+		args = append(args, "--edgeTurnAddr")
+		args = append(args, p.EdgeTurnAddr)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -406,6 +410,9 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
+	if p.CommercialCerts {
+		args = append(args, "-commercialCerts")
+	}
 	return args
 }
 
@@ -436,14 +443,11 @@ func (p *Crm) LookupArgs() string { return "--cloudletKey " + p.CloudletKey }
 func (p *Crm) String(opts ...StartOp) string {
 	cmd_str := p.GetExeName()
 	args := p.GetArgs(opts...)
-	key := true
 	for _, v := range args {
-		if key {
+		if strings.HasPrefix(v, "-") {
 			cmd_str += " " + v
-			key = false
 		} else {
 			cmd_str += " '" + v + "'"
-			key = true
 		}
 	}
 	return cmd_str
@@ -960,6 +964,42 @@ func (p *NotifyRoot) StopLocal() {
 func (p *NotifyRoot) GetExeName() string { return "notifyroot" }
 
 func (p *NotifyRoot) LookupArgs() string { return "" }
+
+func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
+	args := []string{}
+	if p.ListenAddr != "" {
+		args = append(args, "--listenAddr")
+		args = append(args, p.ListenAddr)
+	}
+	if p.ProxyAddr != "" {
+		args = append(args, "--proxyAddr")
+		args = append(args, p.ProxyAddr)
+	}
+	if p.TLS.ServerCert != "" {
+		args = append(args, "--tls")
+		args = append(args, p.TLS.ServerCert)
+	}
+	if p.TestMode {
+		args = append(args, "--testMode")
+	}
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.Debug != "" {
+		args = append(args, "-d")
+		args = append(args, options.Debug)
+	}
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	return err
+}
+
+func (p *EdgeTurn) StopLocal() {
+	StopLocal(p.cmd)
+}
+
+func (p *EdgeTurn) GetExeName() string { return "edgeturn" }
+
+func (p *EdgeTurn) LookupArgs() string { return "" }
 
 // Support funcs
 

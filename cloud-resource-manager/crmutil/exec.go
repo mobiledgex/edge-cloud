@@ -10,9 +10,11 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/util"
+	edgetls "github.com/mobiledgex/edge-cloud/tls"
+	"github.com/mobiledgex/edge-cloud/util/proxyutil"
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
 	ssh "github.com/mobiledgex/golang-ssh"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -65,13 +67,26 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			req.AppInstKey.AppKey.GetKeyString())
 	}
 
-	consoleUrl := ""
+	var execReqType cloudcommon.ExecReqType
+	var initURL *url.URL
 	if req.Console != nil {
-		consoleUrl, err = cd.platform.GetConsoleUrl(ctx, &app)
+		req.Console.Url, err = cd.platform.GetConsoleUrl(ctx, &app)
 		if err != nil {
 			return err
 		}
+		urlObj, err := url.Parse(req.Console.Url)
+		if err != nil {
+			return fmt.Errorf("unable to parse console url, %s, %v", req.Console.Url, err)
+		}
+		queryArgs := urlObj.Query()
+		token, ok := queryArgs["token"]
+		if !ok || len(token) != 1 {
+			return fmt.Errorf("invalid console url: %s", req.Console.Url)
+		}
+		execReqType = cloudcommon.ExecReqConsole
+		initURL = urlObj
 	} else {
+		execReqType = cloudcommon.ExecReqShell
 		clusterInst := edgeproto.ClusterInst{}
 		found = cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
 		if !found {
@@ -155,39 +170,64 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		req.Answer = string(answerBytes)
 		log.DebugLog(log.DebugLevelApi, "returning answer")
 	} else {
+		// Connect to EdgeTurn server
 		if req.EdgeTurnAddr == "" {
 			return fmt.Errorf("no edgeturn server address specified")
 		}
-
-		turnConn, err := tls.Dial("tcp", req.EdgeTurnAddr, &tls.Config{
-			InsecureSkipVerify: true,
-		})
+		tlsConfig, err := edgetls.GetTLSClientConfig(req.EdgeTurnAddr, cd.TlsCertFile, "", false)
+		if err != nil {
+			return err
+		}
+		turnConn, err := tls.Dial("tcp", req.EdgeTurnAddr, tlsConfig)
 		if err != nil {
 			return fmt.Errorf("failed to connect to edgeturn server: %v", err)
 		}
 		defer turnConn.Close()
 
-		// Fetch session info
-		var sessInfo util.SessionInfo
+		// Send ExecReqInfo to EdgeTurn server
+		execReqInfo := cloudcommon.ExecReqInfo{
+			Type: execReqType,
+			//ConsoleToken: execReqConsoleToken,
+			InitURL: initURL,
+		}
+		out, err := json.Marshal(&execReqInfo)
+		if err != nil {
+			return fmt.Errorf("failed to marshal execReqInfo %v, %v", execReqInfo, err)
+		}
+		turnConn.Write(out)
+		log.DebugLog(log.DebugLevelApi, "sent execreq info", "info", string(out))
+
+		// Fetch session info from EdgeTurn server
+		var sessInfo cloudcommon.SessionInfo
 		d := json.NewDecoder(turnConn)
 		err = d.Decode(&sessInfo)
 		if err != nil {
 			return fmt.Errorf("failed to decode session info: %v", err)
 		}
-		log.DebugLog(log.DebugLevelApi, "recieved session info from edgeturn server", "info", sessInfo)
+		log.DebugLog(log.DebugLevelApi, "received session info from edgeturn server", "info", sessInfo)
 
 		if req.Console != nil {
-			//TODO: Get proper URL
-			consoleUrlParts := strings.Split(consoleUrl, "?token=")
-			addrParts := strings.Split(req.EdgeTurnAddr, ":")
-
-			proxyUrl := addrParts[0] + ":" + sessInfo.Port + "/" + consoleUrlParts[len(consoleUrlParts)-1]
-			req.Console.Url = proxyUrl
-
-			// Notify controller about the new proxy Console URL
+			consoleUrl := req.Console.Url
+			urlObj, err := url.Parse(req.Console.Url)
+			if err != nil {
+				return fmt.Errorf("unable to parse console url, %s, %v", req.Console.Url, err)
+			}
+			// Notify controller about the new proxy console URL & access token
+			turnAddrParts := strings.Split(req.EdgeTurnAddr, ":")
+			proxyAddr := urlObj.Scheme + "://" + turnAddrParts[0] + ":8443/edgeconsole?token=" + sessInfo.Token
+			//req.Console.Url = strings.Replace(req.Console.Url, urlObj.Host, proxyAddr, 1)
+			req.Console.Url = proxyAddr
+			req.AccessToken = sessInfo.Token
 			cd.ExecReqSend.Update(ctx, req)
-			run.proxyConsoleConn(consoleUrl, turnConn)
+
+			err = proxyutil.ProxyMuxServer(turnConn, consoleUrl)
+			if err != nil {
+				return err
+			}
 		} else {
+			// Notify controller about access token
+			req.AccessToken = sessInfo.Token
+			cd.ExecReqSend.Update(ctx, req)
 			run.proxyRawConn(turnConn)
 		}
 	}
@@ -234,7 +274,7 @@ func (s *WebrtcExec) RTCTunnel(d *webrtc.DataChannel) {
 	})
 }
 
-func (s *WebrtcExec) proxyConsoleConn(fromUrl string, toConn io.ReadWriteCloser) {
+func (s *WebrtcExec) proxyConsoleConn(fromUrl string, toConn net.Conn) {
 	urlObj, err := url.Parse(fromUrl)
 	if err != nil {
 		log.DebugLog(log.DebugLevelApi, "failed to parse console url", "url", fromUrl, "err", err)
@@ -302,13 +342,10 @@ func (s *WebrtcExec) proxyConsoleConn(fromUrl string, toConn io.ReadWriteCloser)
 	}
 }
 
-func (s *WebrtcExec) proxyRawConn(toConn io.ReadWriteCloser) {
-	go io.Copy(s.sin, toConn)
-
+func (s *WebrtcExec) proxyRawConn(turnConn net.Conn) {
 	prd, pwr := io.Pipe()
-	s.sin = pwr
-
-	err := s.client.Shell(prd, toConn, toConn, s.contcmd)
+	go io.Copy(pwr, turnConn)
+	err := s.client.Shell(prd, turnConn, turnConn, s.contcmd)
 	if err != nil {
 		log.DebugLog(log.DebugLevelApi,
 			"failed to exec",

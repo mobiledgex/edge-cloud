@@ -23,6 +23,7 @@ type Controller struct {
 	NotifyAddr           string
 	NotifyRootAddrs      string
 	NotifyParentAddrs    string
+	EdgeTurnAddr         string
 	VaultAddr            string
 	InfluxAddr           string
 	TLS                  TLSCerts
@@ -68,6 +69,7 @@ type Crm struct {
 	PackageVersion      string
 	CloudletVMImagePath string
 	Region              string
+	CommercialCerts     bool
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`
@@ -125,4 +127,12 @@ type NotifyRoot struct {
 	Common `yaml:",inline"`
 	TLS    TLSCerts
 	cmd    *exec.Cmd
+}
+type EdgeTurn struct {
+	Common     `yaml:",inline"`
+	TLS        TLSCerts
+	cmd        *exec.Cmd
+	ListenAddr string
+	ProxyAddr  string
+	TestMode   bool
 }

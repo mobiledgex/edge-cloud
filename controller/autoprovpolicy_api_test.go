@@ -28,7 +28,6 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	testutil.InternalAutoProvPolicyTest(t, "cud", &autoProvPolicyApi, testutil.AutoProvPolicyData)
 
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 
 	// test adding cloudlet to policy

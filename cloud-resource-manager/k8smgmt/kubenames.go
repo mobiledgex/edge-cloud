@@ -17,6 +17,7 @@ type KubeNames struct {
 	AppURI            string
 	AppImage          string
 	AppRevision       string
+	AppInstRevision   string
 	ClusterName       string
 	K8sNodeNameSuffix string
 	OperatorName      string
@@ -30,13 +31,13 @@ type KubeNames struct {
 func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
 	return fmt.Sprintf("%s.%s.kubeconfig",
 		clusterInst.Key.ClusterKey.Name,
-		clusterInst.Key.CloudletKey.OperatorKey.Name)
+		clusterInst.Key.CloudletKey.Organization)
 }
 
 func GetK8sNodeNameSuffix(clusterInstKey *edgeproto.ClusterInstKey) string {
 	cloudletName := clusterInstKey.CloudletKey.Name
 	clusterName := clusterInstKey.ClusterKey.Name
-	devName := clusterInstKey.Developer
+	devName := clusterInstKey.Organization
 	if devName != "" {
 		return NormalizeName(cloudletName + "-" + clusterName + "-" + devName)
 	}
@@ -60,18 +61,20 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 		return nil, fmt.Errorf("nil app inst")
 	}
 	kubeNames := KubeNames{}
-	kubeNames.ClusterName = NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
+	kubeNames.ClusterName = NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
 	kubeNames.K8sNodeNameSuffix = GetK8sNodeNameSuffix(&clusterInst.Key)
 	kubeNames.AppName = NormalizeName(app.Key.Name)
 	// Helm app name has to conform to DNS naming standards
 	kubeNames.HelmAppName = util.DNSSanitize(app.Key.Name + "v" + app.Key.Version)
 	kubeNames.AppURI = appInst.Uri
 	if app.Revision > 0 {
-		// if revision is zero, skip this for backwards compatibility
 		kubeNames.AppRevision = fmt.Sprintf("%d", app.Revision)
 	}
+	if appInst.Revision > 0 {
+		kubeNames.AppInstRevision = fmt.Sprintf("%d", appInst.Revision)
+	}
 	kubeNames.AppImage = NormalizeName(app.ImagePath)
-	kubeNames.OperatorName = NormalizeName(clusterInst.Key.CloudletKey.OperatorKey.Name)
+	kubeNames.OperatorName = NormalizeName(clusterInst.Key.CloudletKey.Organization)
 	kubeNames.KconfName = GetKconfName(clusterInst)
 	kubeNames.KconfEnv = "KUBECONFIG=" + kubeNames.KconfName
 	kubeNames.DeploymentType = app.Deployment

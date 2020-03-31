@@ -46,6 +46,7 @@ message Flavor {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.alias) = "name=Key.Name";
+  option (protogen.uses_org) = "none";
 }
 
 service FlavorApi {

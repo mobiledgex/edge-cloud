@@ -62,6 +62,7 @@ var versionTag = flag.String("versionTag", "", "edge-cloud image tag indicating 
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
+var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs from LetsEncrypt. If false then CRM will generate its onwn self-signed cert")
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName
 
@@ -276,10 +277,8 @@ func startServices() error {
 	server := grpc.NewServer(grpc.Creds(creds),
 		grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor),
 		grpc.StreamInterceptor(cloudcommon.AuditStreamInterceptor))
-	edgeproto.RegisterDeveloperApiServer(server, &developerApi)
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
-	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
 	edgeproto.RegisterOperatorCodeApiServer(server, &operatorCodeApi)
 	edgeproto.RegisterFlavorApiServer(server, &flavorApi)
 	edgeproto.RegisterClusterInstApiServer(server, &clusterInstApi)
@@ -300,6 +299,7 @@ func startServices() error {
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
+	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -315,10 +315,8 @@ func startServices() error {
 		ApiAddr:     *apiAddr,
 		TlsCertFile: *tlsCertFile,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
-			edgeproto.RegisterDeveloperApiHandler,
 			edgeproto.RegisterAppApiHandler,
 			edgeproto.RegisterAppInstApiHandler,
-			edgeproto.RegisterOperatorApiHandler,
 			edgeproto.RegisterOperatorCodeApiHandler,
 			edgeproto.RegisterCloudletApiHandler,
 			edgeproto.RegisterCloudletInfoApiHandler,
@@ -337,6 +335,7 @@ func startServices() error {
 			edgeproto.RegisterSettingsApiHandler,
 			edgeproto.RegisterAppInstClientApiHandler,
 			edgeproto.RegisterDebugApiHandler,
+			edgeproto.RegisterOrganizationApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -432,9 +431,7 @@ func checkVersion(ctx context.Context, objStore objstore.KVStore) (string, error
 }
 
 func InitApis(sync *Sync) {
-	InitDeveloperApi(sync)
 	InitAppApi(sync)
-	InitOperatorApi(sync)
 	InitOperatorCodeApi(sync)
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
@@ -456,6 +453,7 @@ func InitApis(sync *Sync) {
 	InitSettingsApi(sync)
 	InitAppInstClientKeyApi(sync)
 	InitAppInstClientApi()
+	InitOrganizationApi(sync)
 }
 
 func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {

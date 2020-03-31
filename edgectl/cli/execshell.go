@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -14,7 +15,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	mextls "github.com/mobiledgex/edge-cloud/tls"
+	edgetls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
 	webrtc "github.com/pion/webrtc/v2"
@@ -135,7 +136,7 @@ func SetupLocalConsoleTunnel(consoleUrl string, dataChan *webrtc.DataChannel, er
 		errchan <- fmt.Errorf("invalid console url: %s", consoleUrl)
 		return
 	}
-	tlsConfig, err := mextls.GetLocalTLSConfig()
+	tlsConfig, err := edgetls.GetLocalTLSConfig()
 	if err != nil {
 		errchan <- fmt.Errorf("unable to fetch tls local server config, %v", err)
 		return
@@ -288,7 +289,7 @@ func WebrtcShell(dataChan *webrtc.DataChannel, errchan chan error) error {
 	return nil
 }
 
-func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error), ws *websocket.Conn, setupConsoleTunnel func(consoleUrl string, dataChan *webrtc.DataChannel, errchan chan error, ws *websocket.Conn)) error {
+func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer *webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error), ws *websocket.Conn, setupConsoleTunnel func(consoleUrl string, dataChan *webrtc.DataChannel, errchan chan error, ws *websocket.Conn)) error {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 
@@ -327,7 +328,7 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 		return err
 	}
 
-	reply, answer, err := exchangeFunc(offer)
+	reply, answer, err := exchangeFunc(&offer)
 	if err != nil {
 		return err
 	}
@@ -368,4 +369,54 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 	case err := <-errchan:
 		return err
 	}
+}
+
+func RunEdgeTurn(req *edgeproto.ExecRequest, exchangeFunc func(offer *webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error), ws *websocket.Conn) error {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+
+	reply, _, err := exchangeFunc(nil)
+	if err != nil {
+		return err
+	}
+
+	if reply.Console != nil {
+		if reply.Console.Url == "" {
+			return fmt.Errorf("unable to fetch console URL from webrtc reply")
+		}
+		fmt.Printf("Console URL: %s\n", reply.Console.Url)
+		util.OpenUrl(reply.Console.Url)
+	} else {
+		reqHeader := make(http.Header, 1)
+		reqHeader.Set("edgetoken", reply.AccessToken)
+		d := websocket.Dialer{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+		ws, _, err := d.Dial("wss://127.0.0.1:8443/edgeshell", reqHeader)
+		if err != nil {
+			return err
+		}
+		defer ws.Close()
+
+		reader := bufio.NewReader(os.Stdin)
+		go func() {
+			for {
+				text, err := reader.ReadString('\n')
+				if err == io.EOF {
+					break
+				}
+				err = ws.WriteMessage(websocket.TextMessage, []byte(text))
+				if err != nil {
+					break
+				}
+			}
+		}()
+		for {
+			_, msg, err := ws.ReadMessage()
+			if err != nil {
+				break
+			}
+			os.Stdout.Write(msg)
+		}
+	}
+
+	return nil
 }

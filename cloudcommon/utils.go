@@ -11,6 +11,22 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
+type SessionInfo struct {
+	Token string
+}
+
+type ExecReqInfo struct {
+	Type    ExecReqType
+	InitURL *url.URL
+}
+
+type ExecReqType int
+
+const (
+	ExecReqConsole ExecReqType = 0
+	ExecReqShell   ExecReqType = 1
+)
+
 func GetFileNameWithExt(fileUrlPath string) (string, error) {
 	log.DebugLog(log.DebugLevelMexos, "get file name with extension from url", "file-url", fileUrlPath)
 	fileUrl, err := url.Parse(fileUrlPath)

@@ -1,7 +1,6 @@
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:2.0

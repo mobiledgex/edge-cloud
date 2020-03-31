@@ -214,7 +214,7 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 func createNginxConf(ctx context.Context, client ssh.Client, confname, name, l7dir, listenIP, backendIP string, ports []dme.AppPort, usesTLS bool) error {
 	spec := ProxySpec{
 		Name:       name,
-		UsesTLS:     usesTLS,
+		UsesTLS:    usesTLS,
 		MetricPort: cloudcommon.ProxyMetricsPort,
 	}
 	httpPorts := []HTTPSpecDetail{}
@@ -255,6 +255,11 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, l7d
 			}
 			for pnum := p.PublicPort; pnum <= endPort; pnum++ {
 				udpPort.ListenPorts = append(udpPort.ListenPorts, pnum)
+			}
+			// if there is more than one listen port, we don't use the backend port as the
+			// listen port is used as the backend port in the case of a range
+			if len(udpPort.ListenPorts) > 1 {
+				udpPort.BackendPort = 0
 			}
 			spec.UDPSpec = append(spec.UDPSpec, &udpPort)
 			spec.L4 = true
@@ -324,7 +329,7 @@ type ProxySpec struct {
 	UDPSpec    []*UDPSpecDetail
 	TCPSpec    []*TCPSpecDetail
 	L7Port     int32
-	UsesTLS     bool // To be removed
+	UsesTLS    bool // To be removed
 	MetricPort int32
 	CertName   string
 }
@@ -404,7 +409,12 @@ stream {
 		{{range $portnum := .ListenPorts}}
 		listen {{$portnum}} udp; 
 		{{end}}
+		{{if eq .BackendPort 0}}
 		proxy_pass {{.BackendIP}}:$server_port;
+		{{- end}}
+		{{if ne .BackendPort 0}}
+		proxy_pass {{.BackendIP}}:{{.BackendPort}};
+		{{- end}}
 	}
 	{{- end}}
 }

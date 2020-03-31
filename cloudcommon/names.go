@@ -21,6 +21,7 @@ var OperatorAzure = "azure"
 
 var DeveloperSamsung = "Samsung"
 var DeveloperMobiledgeX = "MobiledgeX"
+var DeveloperEdgeBox = "EdgeBox"
 
 const DefaultVMCluster string = "DefaultVMCluster"
 
@@ -48,6 +49,10 @@ var PrometheusPort = int32(9090)
 var NFSAutoProvisionAppName = "NFSAutoProvision"
 var ProxyMetricsPort = int32(65121)
 var AutoProvMeasurement = "auto-prov-counts"
+
+// AppLabels for the application containers
+var MexAppNameLabel = "mexAppName"
+var MexAppVersionLabel = "mexAppVersion"
 
 // Instance Lifecycle variables
 var EventsDbName = "events"
@@ -107,7 +112,7 @@ var RootLBL7Port int32 = 443
 // for apps using "shared" IP access.
 func GetRootLBFQDN(key *edgeproto.CloudletKey) string {
 	loc := util.DNSSanitize(key.Name)
-	oper := util.DNSSanitize(key.OperatorKey.Name)
+	oper := util.DNSSanitize(key.Organization)
 	return fmt.Sprintf("%s.%s.%s", loc, oper, AppDNSRoot)
 }
 
@@ -116,14 +121,14 @@ func GetRootLBFQDN(key *edgeproto.CloudletKey) string {
 func GetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey) string {
 	clust := util.DNSSanitize(clusterKey.Name)
 	loc := util.DNSSanitize(cloudletKey.Name)
-	oper := util.DNSSanitize(cloudletKey.OperatorKey.Name)
+	oper := util.DNSSanitize(cloudletKey.Organization)
 	return fmt.Sprintf("%s.%s.%s.%s", clust, loc, oper, AppDNSRoot)
 }
 
 // Get Fully Qualified Name for the App i.e. with developer & version info
 func GetAppFQN(key *edgeproto.AppKey) string {
 	app := util.DNSSanitize(key.Name)
-	dev := util.DNSSanitize(key.DeveloperKey.Name)
+	dev := util.DNSSanitize(key.Organization)
 	ver := util.DNSSanitize(key.Version)
 	return fmt.Sprintf("%s%s%s", dev, app, ver)
 }
@@ -156,7 +161,7 @@ func ServiceFQDN(svcName, baseFQDN string) string {
 // global Load Balancer (reverse proxy). This only the path and
 // does not include the Fqdn and port.
 func GetL7Path(key *edgeproto.AppInstKey, internalPort int32) string {
-	dev := util.DNSSanitize(key.AppKey.DeveloperKey.Name)
+	dev := util.DNSSanitize(key.AppKey.Organization)
 	app := util.DNSSanitize(key.AppKey.Name)
 	ver := util.DNSSanitize(key.AppKey.Version)
 	return fmt.Sprintf("%s/%s%s/p%d", dev, app, ver, internalPort)
@@ -187,7 +192,7 @@ func ParseMyCloudletKey(standalone bool, keystr *string, mykey *edgeproto.Cloudl
 
 	err = mykey.ValidateKey()
 	if err != nil {
-		log.FatalLog("Invalid cloudletKey", "err", err)
+		log.FatalLog("Invalid cloudletKey", "key", mykey, "err", err)
 	}
 }
 

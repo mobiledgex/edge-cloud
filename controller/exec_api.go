@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/segmentio/ksuid"
 )
 
 type ExecApi struct {
@@ -39,8 +40,8 @@ func InitExecApi() {
 }
 
 func (s *ExecApi) getApp(req *edgeproto.ExecRequest, app *edgeproto.App) error {
-	if req.AppInstKey.ClusterInstKey.Developer == "" {
-		req.AppInstKey.ClusterInstKey.Developer = req.AppInstKey.AppKey.DeveloperKey.Name
+	if req.AppInstKey.ClusterInstKey.Organization == "" {
+		req.AppInstKey.ClusterInstKey.Organization = req.AppInstKey.AppKey.Organization
 	}
 	if !appInstApi.HasKey(&req.AppInstKey) {
 		return req.AppInstKey.NotFoundError()
@@ -129,6 +130,8 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 			return nil, fmt.Errorf("EdgeTurn server address is required to run commands in Non Webrtc mode")
 		}
 		req.EdgeTurnAddr = *edgeTurnAddr
+		reqId := ksuid.New()
+		req.Offer = reqId.String()
 	}
 	// Forward the offer.
 	// Currently we don't know which controller has the CRM connected
@@ -139,6 +142,7 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 		if addr == *externalApiAddr {
 			// local node
 			reply, err = s.SendLocalRequest(ctx, req)
+			log.DebugLog(log.DebugLevelApi, "ASHCHECK answered got reply", "req", req, "reply", reply, "err", err)
 		} else {
 			// connect to remote node
 			conn, err := ControllerConnect(addr)
@@ -151,10 +155,12 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 			ctx, cancel := context.WithTimeout(context.Background(), req.Timeout.TimeDuration()+2)
 			defer cancel()
 			reply, err = cmd.SendLocalRequest(ctx, req)
+			log.DebugLog(log.DebugLevelApi, "ASHCHECK 2 answered got reply", "req", req, "reply", reply, "err", err)
 		}
 		if err == nil && reply != nil {
 			req.Answer = reply.Answer
 			req.Err = reply.Err
+			req.AccessToken = reply.AccessToken
 			if req.Console != nil && reply.Console != nil {
 				req.Console.Url = reply.Console.Url
 			}
@@ -167,7 +173,7 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 	if req.Err != "" {
 		return nil, fmt.Errorf("%s", req.Err)
 	}
-	if req.Answer == "" {
+	if req.Webrtc && req.Answer == "" {
 		return nil, fmt.Errorf("no one answered the offer")
 	}
 	log.DebugLog(log.DebugLevelApi, "ExecRequest answered", "req", req)
@@ -185,6 +191,7 @@ func (s *ExecApi) SendLocalRequest(ctx context.Context, req *edgeproto.ExecReque
 	}
 	s.requests[req.Offer] = sr
 	s.mux.Unlock()
+	log.DebugLog(log.DebugLevelApi, "ASHCHECK added offer to request", "offer", req.Offer)
 
 	// SendMany filters based on CloudletKey, so will not send if
 	// the attached CRM(s) aren't for that CloudletKey. This will
@@ -207,6 +214,7 @@ func (s *ExecApi) SendLocalRequest(ctx context.Context, req *edgeproto.ExecReque
 	s.mux.Lock()
 	delete(s.requests, req.Offer)
 	s.mux.Unlock()
+	log.DebugLog(log.DebugLevelApi, "ASHCHECK done processing request, remove it", "offer", req.Offer, "err", err)
 
 	if err != nil {
 		return nil, err
@@ -221,7 +229,7 @@ func (s *ExecApi) RecvExecRequest(ctx context.Context, msg *edgeproto.ExecReques
 	defer s.mux.Unlock()
 	sr, ok := s.requests[msg.Offer]
 	if !ok {
-		log.DebugLog(log.DebugLevelApi, "unregistered ExecRequest recv", "msg", msg)
+		log.DebugLog(log.DebugLevelApi, "unregistered ExecRequest recv", "msg", msg, "requests", s.requests)
 		return
 	}
 	sr.req.Answer = msg.Answer
@@ -229,5 +237,6 @@ func (s *ExecApi) RecvExecRequest(ctx context.Context, msg *edgeproto.ExecReques
 	if sr.req.Console != nil && msg.Console != nil {
 		sr.req.Console.Url = msg.Console.Url
 	}
+	sr.req.AccessToken = msg.AccessToken
 	sr.done <- true
 }

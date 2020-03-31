@@ -60,16 +60,17 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	// Add crm local replace variables
 	deploymentVars := crmutil.DeploymentReplaceVars{
 		Deployment: crmutil.CrmReplaceVars{
-			ClusterIp:     masterIP,
-			CloudletName:  k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Name),
-			ClusterName:   k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name),
-			DeveloperName: k8smgmt.NormalizeName(app.Key.DeveloperKey.Name),
+			ClusterIp:    masterIP,
+			CloudletName: k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Name),
+			ClusterName:  k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name),
+			CloudletOrg:  k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Organization),
+			AppOrg:       k8smgmt.NormalizeName(app.Key.Organization),
 		},
 	}
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
 
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
-		err = k8smgmt.CreateAppInst(ctx, client, names, app, appInst)
+		err = k8smgmt.CreateAppInst(ctx, nil, client, names, app, appInst)
 		if err == nil {
 			err = k8smgmt.WaitForAppInst(ctx, client, names, app, k8smgmt.WaitRunning)
 		}
@@ -92,7 +93,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	// Support for local docker appInst
 	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
 		log.SpanLog(ctx, log.DebugLevelMexos, "run docker delete app for dind")
-		err = dockermgmt.DeleteAppInst(ctx, client, app, appInst)
+		err = dockermgmt.DeleteAppInst(ctx, nil, client, app, appInst)
 		if err != nil {
 			return fmt.Errorf("DeleteAppInst error for docker %v", err)
 		}
@@ -143,16 +144,17 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	// Add crm local replace variables
 	deploymentVars := crmutil.DeploymentReplaceVars{
 		Deployment: crmutil.CrmReplaceVars{
-			ClusterIp:     cluster.MasterAddr,
-			CloudletName:  k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Name),
-			ClusterName:   k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name),
-			DeveloperName: k8smgmt.NormalizeName(app.Key.DeveloperKey.Name),
+			ClusterIp:    cluster.MasterAddr,
+			CloudletName: k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Name),
+			ClusterName:  k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name),
+			CloudletOrg:  k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Organization),
+			AppOrg:       k8smgmt.NormalizeName(app.Key.Organization),
 		},
 	}
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
 
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
-		return k8smgmt.UpdateAppInst(ctx, client, names, app, appInst)
+		return k8smgmt.UpdateAppInst(ctx, nil, client, names, app, appInst)
 	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
 		return k8smgmt.UpdateHelmAppInst(ctx, client, names, app, appInst)
 	}

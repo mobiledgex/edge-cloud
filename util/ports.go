@@ -6,10 +6,6 @@ import (
 	"strings"
 )
 
-type SessionInfo struct {
-	Port string
-}
-
 type PortSpec struct {
 	Proto   string
 	Port    string

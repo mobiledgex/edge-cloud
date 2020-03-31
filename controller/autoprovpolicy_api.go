@@ -143,7 +143,7 @@ func (s *AutoProvPolicyApi) RemoveAutoProvPolicyCloudlet(ctx context.Context, in
 func (s *AutoProvPolicyApi) STMFind(stm concurrency.STM, name, dev string, policy *edgeproto.AutoProvPolicy) error {
 	key := edgeproto.PolicyKey{}
 	key.Name = name
-	key.Developer = dev
+	key.Organization = dev
 	if !s.store.STMGet(stm, &key, policy) {
 		return fmt.Errorf("AutoProvPolicy %s for developer %s not found", name, dev)
 	}

@@ -96,7 +96,7 @@ func (s *PrivacyPolicyApi) ShowPrivacyPolicy(in *edgeproto.PrivacyPolicy, cb edg
 func (s *PrivacyPolicyApi) STMFind(stm concurrency.STM, name, dev string, policy *edgeproto.PrivacyPolicy) error {
 	key := edgeproto.PolicyKey{}
 	key.Name = name
-	key.Developer = dev
+	key.Organization = dev
 	if !s.store.STMGet(stm, &key, policy) {
 		return fmt.Errorf("PrivacyPolicy %s for developer %s not found", name, dev)
 	}

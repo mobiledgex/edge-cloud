@@ -47,7 +47,8 @@ message Node {
   option (protogen.generate_show_test) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
-  option (protogen.alias) = "name=Key.Name,type=Key.Type,cloudlet=Key.CloudletKey.Name,operator=Key.CloudletKey.OperatorKey.Name,region=Key.Region";
+  option (protogen.alias) = "name=Key.Name,type=Key.Type,cloudlet=Key.CloudletKey.Name,cloudlet-org=Key.CloudletKey.Organization,region=Key.Region";
+  option (protogen.uses_org) = "none";
 }
 
 service NodeApi {

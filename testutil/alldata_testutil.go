@@ -19,9 +19,7 @@ var _ = math.Inf
 type AllDataOut struct {
 	Flavors                 []edgeproto.Result
 	Settings                *edgeproto.Result
-	Operators               []edgeproto.Result
 	OperatorCodes           []edgeproto.Result
-	Developers              []edgeproto.Result
 	ResTagTables            []edgeproto.Result
 	Cloudlets               [][]edgeproto.Result
 	CloudletInfos           []edgeproto.Result
@@ -40,9 +38,7 @@ type AllDataOut struct {
 func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{}, out *AllDataOut) {
 	run.FlavorApi(&in.Flavors, inMap["flavors"], &out.Flavors)
 	run.SettingsApi(in.Settings, inMap["settings"], &out.Settings)
-	run.OperatorApi(&in.Operators, inMap["operators"], &out.Operators)
 	run.OperatorCodeApi(&in.OperatorCodes, inMap["operatorcodes"], &out.OperatorCodes)
-	run.DeveloperApi(&in.Developers, inMap["developers"], &out.Developers)
 	run.ResTagTableApi(&in.ResTagTables, inMap["restagtables"], &out.ResTagTables)
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
@@ -71,9 +67,7 @@ func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]int
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
 	run.ResTagTableApi(&in.ResTagTables, inMap["restagtables"], &out.ResTagTables)
-	run.DeveloperApi(&in.Developers, inMap["developers"], &out.Developers)
 	run.OperatorCodeApi(&in.OperatorCodes, inMap["operatorcodes"], &out.OperatorCodes)
-	run.OperatorApi(&in.Operators, inMap["operators"], &out.Operators)
 	run.SettingsApi(in.Settings, inMap["settings"], &out.Settings)
 	run.FlavorApi(&in.Flavors, inMap["flavors"], &out.Flavors)
 	out.Errors = run.Errs
@@ -82,9 +76,7 @@ func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]int
 func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData) {
 	run.FlavorApi(&in.Flavors, nil, &out.Flavors)
 	run.SettingsApi(in.Settings, nil, &out.Settings)
-	run.OperatorApi(&in.Operators, nil, &out.Operators)
 	run.OperatorCodeApi(&in.OperatorCodes, nil, &out.OperatorCodes)
-	run.DeveloperApi(&in.Developers, nil, &out.Developers)
 	run.ResTagTableApi(&in.ResTagTables, nil, &out.ResTagTables)
 	run.CloudletApi(&in.Cloudlets, nil, &out.Cloudlets)
 	run.CloudletInfoApi(&in.CloudletInfos, nil, &out.CloudletInfos)

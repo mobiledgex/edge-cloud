@@ -52,6 +52,7 @@ controllers:
   testmode: true
   versiontag: "2019-10-24"
   notifyparentaddrs: "127.0.0.1:53001"
+  edgeturnaddr: "127.0.0.1:6080"
 
 - name: ctrl2
   etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
@@ -67,6 +68,7 @@ controllers:
   testmode: true
   versiontag: "2019-10-24"
   notifyparentaddrs: "127.0.0.1:53001"
+  edgeturnaddr: "127.0.0.1:6080"
 
 clustersvcs:
 - name: cluster-svc1
@@ -90,7 +92,7 @@ dmes:
   apiaddr: "0.0.0.0:50051"
   httpaddr: "0.0.0.0:38001"
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-1"}'
+  cloudletkey: '{"organization":"tmus","name":"tmus-cloud-1"}'
   vaultaddr: "http://127.0.0.1:8200"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
@@ -102,7 +104,7 @@ dmes:
   apiaddr: "0.0.0.0:50052"
   httpaddr: "0.0.0.0:38002"
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-2"}'
+  cloudletkey: '{"organization":"tmus","name":"tmus-cloud-2"}'
   vaultaddr: "http://127.0.0.1:8200"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"

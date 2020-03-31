@@ -32,7 +32,7 @@ func InitVault(addr, region string) error {
 
 type CookieKey struct {
 	PeerIP       string `json:"peerip,omitempty"`
-	DevName      string `json:"devname,omitempty"`
+	OrgName      string `json:"orgname,omitempty"`
 	AppName      string `json:"appname,omitempty"`
 	AppVers      string `json:"appvers,omitempty"`
 	UniqueIdType string `json:"uniqueidtype,omitempty"`
@@ -77,8 +77,8 @@ func VerifyCookie(cookie string) (*CookieKey, error) {
 	}
 	// It is possible that the App was deleted after this cookie was issued.  If so, the cookie is no longer valid
 	// Note that returning an error from from here will result in an Unauthorized error code, rather than a NotFound
-	if !AppExists(claims.Key.DevName, claims.Key.AppName, claims.Key.AppVers) {
-		return nil, fmt.Errorf("app not found -- developer: %s, app: %s, appvers: %s", claims.Key.DevName, claims.Key.AppName, claims.Key.AppVers)
+	if !AppExists(claims.Key.OrgName, claims.Key.AppName, claims.Key.AppVers) {
+		return nil, fmt.Errorf("app not found -- developer: %s, app: %s, appvers: %s", claims.Key.OrgName, claims.Key.AppName, claims.Key.AppVers)
 	}
 	log.DebugLog(log.DebugLevelDmereq, "verified cookie", "cookie", cookie, "expires", claims.ExpiresAt)
 	return claims.Key, nil

@@ -26,6 +26,14 @@ tests:
     yaml2: "{{datadir}}/nodes.yml"
     filetype: appdata
 
+- name: check orgs in use
+  apifile: "{{datadir}}/orgsinuse.yml"
+  actions: [ctrlapi-organizationinuse]
+  compareyaml:
+    yaml1: "{{outputdir}}/api-output.yml"
+    yaml2: "{{datadir}}/orgsinuse_show.yml"
+    filetype: orgdata
+
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]
   apifile: "{{datadir}}/appdata.yml"
