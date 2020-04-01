@@ -11,14 +11,14 @@ var AtlanticUniqueId = "AtlanticLabs"
 // Device - used to test devices that send registered
 var DeviceData = []dme.RegisterClientRequest{
 	dme.RegisterClientRequest{
-		OrgName:      cloudcommon.Developerplatos,
+		OrgName:      cloudcommon.Organizationplatos,
 		AppName:      cloudcommon.PlatosEnablingLayer,
 		AppVers:      "1.1",
 		UniqueIdType: platosUniqueId,
 		UniqueId:     "device1",
 	},
 	dme.RegisterClientRequest{
-		OrgName:      cloudcommon.Developerplatos,
+		OrgName:      cloudcommon.Organizationplatos,
 		AppName:      cloudcommon.PlatosEnablingLayer,
 		AppVers:      "2.1",
 		UniqueIdType: platosUniqueId,
@@ -33,7 +33,7 @@ var DeviceData = []dme.RegisterClientRequest{
 	},
 	// Duplicate Register
 	dme.RegisterClientRequest{
-		OrgName:      cloudcommon.Developerplatos,
+		OrgName:      cloudcommon.Organizationplatos,
 		AppName:      cloudcommon.PlatosEnablingLayer,
 		AppVers:      "2.1",
 		UniqueIdType: platosUniqueId,
