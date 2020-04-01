@@ -863,7 +863,7 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	// if it's a delete, create a usage record of it
 	// get all the logs for this clusterinst since the last checkpoint
 	if event == cloudcommon.DELETED || event == cloudcommon.UNRESERVED {
-		err := CreateClusterUsageRecord(ctx, &info, now, false)
+		err := CreateClusterUsageRecord(ctx, &info, now, cloudcommon.USAGE_EVENT_END)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelMetrics, "unable to create cluster usage record", "cluster", clusterInstKey, "err", err)
 		}

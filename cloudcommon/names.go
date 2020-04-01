@@ -59,7 +59,6 @@ var EventsDbName = "events"
 var CloudletEvent = "cloudlet"
 var ClusterInstEvent = "clusterinst"
 var ClusterInstUsage = "clusterinst-usage"
-var ClusterInstCheckpoint = "clusterinst-checkpoint"
 var AppInstEvent = "appinst"
 
 var IPAddrAllInterfaces = "0.0.0.0"
@@ -84,6 +83,15 @@ const (
 
 var InstanceUp = "UP"
 var InstanceDown = "DOWN"
+
+type Usage_event string
+
+const (
+	// checkpoint
+	USAGE_EVENT_CHECKPOINT = "CHECKPOINT"
+	// end record, delete/unreserved
+	USAGE_EVENT_END = "END"
+)
 
 // DIND script to pull from kubeadm-dind-cluster
 var DindScriptName = "dind-cluster-v1.14.sh"
