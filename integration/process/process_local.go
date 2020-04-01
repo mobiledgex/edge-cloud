@@ -144,6 +144,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--versionTag")
 		args = append(args, p.VersionTag)
 	}
+	if p.CheckpointingInterval != "" {
+		args = append(args, "--checkpointInterval")
+		args = append(args, p.CheckpointingInterval)
+	}
 
 	var envs []string
 	if options.RolesFile != "" {
