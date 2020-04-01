@@ -828,7 +828,8 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	now := time.Now()
 	ts, _ := types.TimestampProto(now)
 	metric.Timestamp = *ts
-	metric.AddTag("cloudletorg", clusterInstKey.CloudletKey.Organization)
+	// influx requires that at least one field must be specified when querying so these cant be all tags
+	metric.AddStringVal("cloudletorg", clusterInstKey.CloudletKey.Organization)
 	metric.AddTag("cloudlet", clusterInstKey.CloudletKey.Name)
 	metric.AddTag("cluster", clusterInstKey.ClusterKey.Name)
 	metric.AddTag("clusterorg", clusterInstKey.Organization)
@@ -862,7 +863,7 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	// if it's a delete, create a usage record of it
 	// get all the logs for this clusterinst since the last checkpoint
 	if event == cloudcommon.DELETED || event == cloudcommon.UNRESERVED {
-		err := CreateClusterUsageRecord(ctx, &info, now)
+		err := CreateClusterUsageRecord(ctx, &info, now, false)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelMetrics, "unable to create cluster usage record", "cluster", clusterInstKey, "err", err)
 		}
