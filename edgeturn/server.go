@@ -34,11 +34,12 @@ var testMode = flag.Bool("testMode", false, "Run EdgeTurn in test mode")
 const (
 	ShellConnTimeout   = 5 * time.Minute
 	ConsoleConnTimeout = 20 * time.Minute
+	ClientAccessPort   = "443"
 )
 
 type ProxyValue struct {
-	port    string
-	initURL *url.URL
+	Port    string
+	InitURL *url.URL
 }
 
 type TurnProxyObj struct {
@@ -111,7 +112,7 @@ func main() {
 }
 
 func startServers(ctx context.Context, errChan chan error) {
-	started := make(chan bool, 2)
+	started := make(chan bool)
 	go func() {
 		if *listenAddr == "" {
 			log.FatalLog("listenAddr is empty")
@@ -155,7 +156,7 @@ func setupTurnServer(ctx context.Context, started chan bool) error {
 	}
 	defer turnConn.Close()
 
-	log.SpanLog(ctx, log.DebugLevelInfo, "Started EdgeTurn Server")
+	log.SpanLog(ctx, log.DebugLevelInfo, "started edgeturn server")
 	started <- true
 
 	for {
@@ -195,14 +196,14 @@ func handleConnection(ctx context.Context, tlsConfig *tls.Config, crmConn net.Co
 		log.SpanLog(ctx, log.DebugLevelInfo, "failed to decode execreq info", "err", err)
 		return
 	}
-	log.SpanLog(ctx, log.DebugLevelInfo, "Recieved execreq info", "info", execReqInfo)
+	log.SpanLog(ctx, log.DebugLevelInfo, "received execreq info", "info", execReqInfo)
 
 	// Generate session token
 	tokObj := ksuid.New()
 	token := tokObj.String()
 	proxyVal := &ProxyValue{
-		port:    connPort,
-		initURL: execReqInfo.InitURL,
+		Port:    connPort,
+		InitURL: execReqInfo.InitURL,
 	}
 	TurnProxy.Add(token, proxyVal)
 	defer func() {
@@ -211,7 +212,14 @@ func handleConnection(ctx context.Context, tlsConfig *tls.Config, crmConn net.Co
 
 	// Send Initial Information about the connection
 	sessInfo := cloudcommon.SessionInfo{
-		Token: token,
+		Token:      token,
+		AccessPort: ClientAccessPort,
+	}
+	if *testMode {
+		// For testing, use internal access port,
+		// as it is not fronted by LB
+		addrParts := strings.Split(*proxyAddr, ":")
+		sessInfo.AccessPort = addrParts[1]
 	}
 	out, err := json.Marshal(&sessInfo)
 	if err != nil {
@@ -243,7 +251,9 @@ func handleConnection(ctx context.Context, tlsConfig *tls.Config, crmConn net.Co
 			return
 		}
 		defer serverConn.Close()
-		go io.Copy(crmConn, serverConn)
+		go func() {
+			io.Copy(crmConn, serverConn)
+		}()
 		io.Copy(serverConn, crmConn)
 	case cloudcommon.ExecReqConsole:
 		go func() {
@@ -259,7 +269,7 @@ func handleConnection(ctx context.Context, tlsConfig *tls.Config, crmConn net.Co
 			log.SpanLog(ctx, log.DebugLevelInfo, "closing console connection, user must reconnect with new token")
 		}
 	default:
-		log.SpanLog(ctx, log.DebugLevelInfo, "Unknown execreq type", "type", execReqInfo.Type)
+		log.SpanLog(ctx, log.DebugLevelInfo, "unknown execreq type", "type", execReqInfo.Type)
 		return
 	}
 }
@@ -282,16 +292,21 @@ func setupProxyServer(ctx context.Context, started chan bool) error {
 			token = tokenVals[0]
 			copyURL = true
 		}
+		if token == "" {
+			req.Close = true
+			return
+		}
+
 		proxyVal := TurnProxy.Get(token)
-		if proxyVal == nil || proxyVal.port == "" || proxyVal.initURL == nil {
+		if proxyVal == nil || proxyVal.Port == "" || proxyVal.InitURL == nil {
 			req.Close = true
 			return
 		}
 		if copyURL {
-			req.URL = proxyVal.initURL
+			req.URL = proxyVal.InitURL
 		}
 		req.URL.Scheme = "https"
-		req.URL.Host = "127.0.0.1:" + proxyVal.port
+		req.URL.Host = "127.0.0.1:" + proxyVal.Port
 		if _, ok := req.Header["User-Agent"]; !ok {
 			// explicitly disable User-Agent so it's not set to default value
 			req.Header.Set("User-Agent", "")
@@ -311,11 +326,13 @@ func setupProxyServer(ctx context.Context, started chan bool) error {
 		},
 	}
 
+	// proxy.Director will take care of token validation
+	http.HandleFunc("/", proxy.ServeHTTP)
+
 	http.HandleFunc("/edgeconsole", func(w http.ResponseWriter, r *http.Request) {
 		queryArgs := r.URL.Query()
 		tokenVals, ok := queryArgs["token"]
 		if ok && len(tokenVals) == 1 {
-			token := tokenVals[0]
 			expire := time.Now().Add(10 * time.Minute)
 			cookie := http.Cookie{
 				Name:    "edgetoken",
@@ -323,33 +340,39 @@ func setupProxyServer(ctx context.Context, started chan bool) error {
 				Expires: expire,
 			}
 			http.SetCookie(w, &cookie)
-			log.SpanLog(ctx, log.DebugLevelInfo, "setup console proxy cookies", "url", r.URL, "token", token)
+			log.SpanLog(ctx, log.DebugLevelInfo, "setup console proxy cookies", "path", r.URL)
+			proxy.ServeHTTP(w, r)
+		} else {
+			log.SpanLog(ctx, log.DebugLevelInfo, "no token found")
+			r.Close = true
 		}
-		proxy.ServeHTTP(w, r)
 	})
 
 	var upgrader = websocket.Upgrader{} // use default options
 	http.HandleFunc("/edgeshell", func(w http.ResponseWriter, r *http.Request) {
+		queryArgs := r.URL.Query()
+		tokenVals, ok := queryArgs["token"]
+		token := ""
+		if ok && len(tokenVals) == 1 {
+			token = tokenVals[0]
+		}
+		if token == "" {
+			log.SpanLog(ctx, log.DebugLevelInfo, "no token found")
+			r.Close = true
+			return
+		}
 		c, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "failed to upgrade to websocket", "err", err)
 			return
 		}
-		token := r.Header.Get("edgetoken")
-		log.SpanLog(ctx, log.DebugLevelInfo, "Found edgetoken", "token", token)
-		if token == "" {
-			log.SpanLog(ctx, log.DebugLevelInfo, "no edgetoken found")
-			r.Close = true
-			return
-		}
 		proxyVal := TurnProxy.Get(token)
 		port := ""
-		if proxyVal != nil && proxyVal.port != "" {
-			port = proxyVal.port
+		if proxyVal != nil && proxyVal.Port != "" {
+			port = proxyVal.Port
 		}
-		log.SpanLog(ctx, log.DebugLevelInfo, "Found shell port", "port", port)
 		if port == "" {
-			log.SpanLog(ctx, log.DebugLevelInfo, "No port found for edgetoken", "token", token)
+			log.SpanLog(ctx, log.DebugLevelInfo, "unable to find port", "token", token)
 			r.Close = true
 			return
 		}
@@ -358,7 +381,7 @@ func setupProxyServer(ctx context.Context, started chan bool) error {
 			InsecureSkipVerify: true,
 		})
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "Error dialing backend", "target", target, "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfo, "error connecting to backend port", "target", target, "err", err)
 			return
 		}
 		defer proxyConn.Close()
@@ -377,30 +400,38 @@ func setupProxyServer(ctx context.Context, started chan bool) error {
 					if err != io.EOF {
 						log.SpanLog(ctx, log.DebugLevelInfo, "failed to write to proxyConn", "err", err)
 					}
+					break
 				}
 			}
 		}()
 		for {
+			done := false
 			buf := make([]byte, 1500)
-			_, err = proxyConn.Read(buf)
+			n, err := proxyConn.Read(buf)
 			if err != nil {
 				if err != io.EOF {
 					log.SpanLog(ctx, log.DebugLevelInfo, "failed to read from proxyConn", "err", err)
 				}
-				break
+				if n <= 0 {
+					break
+				}
+				done = true
 			}
 
-			err = c.WriteMessage(websocket.TextMessage, buf)
+			err = c.WriteMessage(websocket.TextMessage, buf[:n])
 			if err != nil {
 				if err != io.EOF {
 					log.SpanLog(ctx, log.DebugLevelInfo, "failed to write to websocket", "err", err)
 				}
 				break
 			}
+			if done {
+				break
+			}
 		}
 	})
 
-	log.SpanLog(ctx, log.DebugLevelInfo, "Starting EdgeTurn Proxy Server")
+	log.SpanLog(ctx, log.DebugLevelInfo, "starting edgeturn proxy server")
 	started <- true
 
 	var err error

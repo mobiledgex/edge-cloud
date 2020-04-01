@@ -200,26 +200,25 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		}
 		log.DebugLog(log.DebugLevelApi, "received session info from edgeturn server", "info", sessInfo)
 
+		turnAddrParts := strings.Split(req.EdgeTurnAddr, ":")
+		if len(turnAddrParts) != 2 {
+			return fmt.Errorf("invalid edgeturn Addr: %s", req.EdgeTurnAddr)
+		}
+
 		if req.Console != nil {
-			consoleUrl := req.Console.Url
-			urlObj, err := url.Parse(req.Console.Url)
-			if err != nil {
-				return fmt.Errorf("unable to parse console url, %s, %v", req.Console.Url, err)
-			}
 			// Notify controller about the new proxy console URL & access token
-			turnAddrParts := strings.Split(req.EdgeTurnAddr, ":")
-			proxyAddr := urlObj.Scheme + "://" + turnAddrParts[0] + ":8443/edgeconsole?token=" + sessInfo.Token
-			req.Console.Url = proxyAddr
-			req.AccessToken = sessInfo.Token
+			proxyAddr := "https://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeconsole?token=" + sessInfo.Token
+			req.AccessUrl = proxyAddr
 			cd.ExecReqSend.Update(ctx, req)
 
-			err = proxyutil.ProxyMuxServer(turnConn, consoleUrl)
+			err = proxyutil.ProxyMuxServer(turnConn, req.Console.Url)
 			if err != nil {
 				return err
 			}
 		} else {
 			// Notify controller about access token
-			req.AccessToken = sessInfo.Token
+			proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?token=" + sessInfo.Token
+			req.AccessUrl = proxyAddr
 			cd.ExecReqSend.Update(ctx, req)
 			run.proxyRawConn(turnConn)
 		}

@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
 	"flag"
-	"net/http"
 	"testing"
 
 	"github.com/gorilla/websocket"
@@ -34,7 +32,7 @@ func TestEdgeTurnServer(t *testing.T) {
 
 	// Test session info received for ExecReqShell
 
-	// Connect to EdgeTurn Server
+	// CRM connection to EdgeTurn
 	tlsConfig, err := edgetls.GetLocalTLSConfig()
 	require.Nil(t, err, "get local tls config")
 	turnConn, err := tls.Dial("tcp", "127.0.0.1:6080", tlsConfig)
@@ -56,16 +54,16 @@ func TestEdgeTurnServer(t *testing.T) {
 	err = d.Decode(&sessInfo)
 	require.Nil(t, err, "decode session info from EdgeTurn server")
 	require.NotEqual(t, "", sessInfo.Token, "token is not empty")
+	require.Equal(t, "8443", sessInfo.AccessPort, "accessport is set to default value")
 
 	proxyVal := TurnProxy.Get(sessInfo.Token)
 	require.NotNil(t, proxyVal, "proxyValue is present")
-	port := proxyVal.port
+	port := proxyVal.Port
 	require.NotEqual(t, "", port, "port is not empty")
 
-	reqHeader := make(http.Header, 1)
-	reqHeader.Set("edgetoken", sessInfo.Token)
+	// Client connection to EdgeTurn
 	dialer := websocket.Dialer{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
-	ws, _, err := dialer.Dial("wss://127.0.0.1:8443/edgeshell", reqHeader)
+	ws, _, err := dialer.Dial("wss://127.0.0.1:8443/edgeshell?token="+sessInfo.Token, nil)
 	require.Nil(t, err, "client websocket connection to EdgeTurn server")
 	defer ws.Close()
 	err = ws.WriteMessage(websocket.TextMessage, []byte("test msg1"))
@@ -80,6 +78,5 @@ func TestEdgeTurnServer(t *testing.T) {
 
 	_, msg, err := ws.ReadMessage()
 	require.Nil(t, err, "client read message from EdgeTurn server")
-	n = bytes.Index(msg, []byte{0})
-	require.Equal(t, "test msg2", string(msg[:n]), "received message from crm")
+	require.Equal(t, "test msg2", string(msg), "received message from crm")
 }

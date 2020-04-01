@@ -158,10 +158,10 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 		if err == nil && reply != nil {
 			req.Answer = reply.Answer
 			req.Err = reply.Err
-			req.AccessToken = reply.AccessToken
 			if req.Console != nil && reply.Console != nil {
 				req.Console.Url = reply.Console.Url
 			}
+			req.AccessUrl = reply.AccessUrl
 		}
 		return nil
 	}, nil)
@@ -233,6 +233,6 @@ func (s *ExecApi) RecvExecRequest(ctx context.Context, msg *edgeproto.ExecReques
 	if sr.req.Console != nil && msg.Console != nil {
 		sr.req.Console.Url = msg.Console.Url
 	}
-	sr.req.AccessToken = msg.AccessToken
+	sr.req.AccessUrl = msg.AccessUrl
 	sr.done <- true
 }

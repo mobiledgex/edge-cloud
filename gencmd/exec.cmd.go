@@ -379,7 +379,7 @@ var ExecRequestComments = map[string]string{
 	"console.url":  "VM Console URL",
 	"timeout":      "Timeout",
 	"webrtc":       "WebRTC",
-	"accesstoken":  "Access Token",
+	"accessurl":    "Access URL",
 	"edgeturnaddr": "EdgeTurn Server Address",
 }
 var ExecRequestSpecialArgs = map[string]string{}

@@ -12,7 +12,8 @@ import (
 )
 
 type SessionInfo struct {
-	Token string
+	Token      string
+	AccessPort string
 }
 
 type ExecReqInfo struct {
