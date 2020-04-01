@@ -25,6 +25,7 @@ type Controller struct {
 	NotifyParentAddrs    string
 	VaultAddr            string
 	InfluxAddr           string
+	Region               string
 	TLS                  TLSCerts
 	cmd                  *exec.Cmd
 	TestMode             bool

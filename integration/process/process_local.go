@@ -127,6 +127,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--notifyParentAddrs")
 		args = append(args, p.NotifyParentAddrs)
 	}
+	if p.Region != "" {
+		args = append(args, "--region")
+		args = append(args, p.Region)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
