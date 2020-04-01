@@ -385,7 +385,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:   ClusterKeys[4],
 			CloudletKey:  CloudletData[0].Key,
-			Organization: "MobiledgeX", // cloudcommon.DeveloperMobiledgeX
+			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
 		},
 		Flavor:     FlavorData[0].Key,
 		IpAccess:   edgeproto.IpAccess_IP_ACCESS_SHARED,

@@ -244,7 +244,7 @@ func checkReservedBy(t *testing.T, ctx context.Context, api *testutil.ClusterIns
 	require.True(t, found, "get ClusterInst")
 	require.True(t, cinst.Reservable)
 	require.Equal(t, expected, cinst.ReservedBy)
-	require.Equal(t, cloudcommon.DeveloperMobiledgeX, cinst.Key.Organization)
+	require.Equal(t, cloudcommon.OrganizationMobiledgeX, cinst.Key.Organization)
 }
 
 // Test that Crm Override for Delete ClusterInst overrides any failures
