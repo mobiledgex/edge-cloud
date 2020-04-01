@@ -202,6 +202,13 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 		}
 		if subargs, ok := val.(map[string]interface{}); ok {
 			// sub struct
+			kind := sf.Type.Kind()
+			if kind == reflect.Ptr {
+				kind = sf.Type.Elem().Kind()
+			}
+			if kind != reflect.Struct {
+				return fmt.Errorf("key %s value %v is a map (struct) but expected %v", key, val, sf.Type)
+			}
 			var subjson map[string]interface{}
 			if hasTag("inline", tagvals) {
 				subjson = js
@@ -215,7 +222,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 		} else if list, ok := val.([]map[string]interface{}); ok {
 			// arrayed struct
 			if sf.Type.Kind() != reflect.Slice {
-				return fmt.Errorf("key %s value is an array but type %v is not", key, sf.Type)
+				return fmt.Errorf("key %s value %v is an array but expected %v", key, val, sf.Type)
 			}
 			elemt := sf.Type.Elem()
 			jslist := make([]map[string]interface{}, 0, len(list))
@@ -231,7 +238,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 		} else if reflect.TypeOf(val).Kind() == reflect.Slice {
 			// array of built-in types
 			if sf.Type.Kind() != reflect.Slice {
-				return fmt.Errorf("key %s value is an array but type %v is not", key, sf.Type)
+				return fmt.Errorf("key %s value %v is an array but expected type %v", key, val, sf.Type)
 			}
 			js[jsonName] = val
 		} else {
