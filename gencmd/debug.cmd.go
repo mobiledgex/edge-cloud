@@ -439,27 +439,27 @@ var DebugReplyComments = map[string]string{
 var DebugReplySpecialArgs = map[string]string{}
 var DebugDataRequiredArgs = []string{}
 var DebugDataOptionalArgs = []string{
-	"requests.node.name",
-	"requests.node.type",
-	"requests.node.cloudletkey.organization",
-	"requests.node.cloudletkey.name",
-	"requests.node.region",
-	"requests.levels",
-	"requests.cmd",
-	"requests.pretty",
-	"requests.id",
+	"requests[#].node.name",
+	"requests[#].node.type",
+	"requests[#].node.cloudletkey.organization",
+	"requests[#].node.cloudletkey.name",
+	"requests[#].node.region",
+	"requests[#].levels",
+	"requests[#].cmd",
+	"requests[#].pretty",
+	"requests[#].id",
 }
 var DebugDataAliasArgs = []string{}
 var DebugDataComments = map[string]string{
-	"requests.node.name":                     "Name or hostname of node",
-	"requests.node.type":                     "Node type",
-	"requests.node.cloudletkey.organization": "Organization of the cloudlet site",
-	"requests.node.cloudletkey.name":         "Name of the cloudlet",
-	"requests.node.region":                   "Region the node is in",
-	"requests.levels":                        "Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,mexos,metrics,upgrade,info,sampled",
-	"requests.cmd":                           "Debug command",
-	"requests.pretty":                        "if possible, make output pretty",
-	"requests.id":                            "Id used internally",
+	"requests[#].node.name":                     "Name or hostname of node",
+	"requests[#].node.type":                     "Node type",
+	"requests[#].node.cloudletkey.organization": "Organization of the cloudlet site",
+	"requests[#].node.cloudletkey.name":         "Name of the cloudlet",
+	"requests[#].node.region":                   "Region the node is in",
+	"requests[#].levels":                        "Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,mexos,metrics,upgrade,info,sampled",
+	"requests[#].cmd":                           "Debug command",
+	"requests[#].pretty":                        "if possible, make output pretty",
+	"requests[#].id":                            "Id used internally",
 }
 var DebugDataSpecialArgs = map[string]string{}
 var EnableDebugLevelsRequiredArgs = []string{
