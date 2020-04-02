@@ -40,10 +40,6 @@ vault write -format=json pki/root/sign-intermediate csr=@pki_global.csr \
       format=pem_bundle | jq -r '.data.certificate' > global.cert.pem
 # imported signed intermediate cert
 vault write pki-global/intermediate/set-signed certificate=@global.cert.pem
-vault write pki-global/roles/edgecloud \
-      allow_localhost=true \
-      allowed_domains="mobiledgex.net" \
-      allow_subdomains=true
 
 # enable regional secure intermediate pki
 vault secrets enable -path=pki-regional pki
