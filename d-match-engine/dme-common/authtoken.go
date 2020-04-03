@@ -1,6 +1,7 @@
 package dmecommon
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -19,7 +20,7 @@ type authClaims struct {
 
 // VerifyAuthToken verifies the token against the provided public key.  JWT contents for devname,
 // appname and appvers must match the contents of the token
-func VerifyAuthToken(token string, pubkey string, devname string, appname string, appvers string) error {
+func VerifyAuthToken(ctx context.Context, token string, pubkey string, devname string, appname string, appvers string) error {
 	if token == "" {
 		return fmt.Errorf("empty token")
 	}
@@ -49,7 +50,7 @@ func VerifyAuthToken(token string, pubkey string, devname string, appname string
 		return errors.New("token appvers mismatch")
 	}
 
-	log.DebugLog(log.DebugLevelDmereq, "verified token", "token", token, "expires", authClaims.ExpiresAt)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "verified token", "token", token, "expires", authClaims.ExpiresAt)
 	return nil
 }
 

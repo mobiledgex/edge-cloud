@@ -36,12 +36,12 @@ func (s ServerStreamWrapper) Context() context.Context {
 }
 
 func (s ServerStreamWrapper) SendMsg(m interface{}) error {
-	log.DebugLog(log.DebugLevelDmereq, "SendMsg Streamed message", "type", reflect.TypeOf(m).String())
+	log.SpanLog(s.Context(), log.DebugLevelDmereq, "SendMsg Streamed message", "type", reflect.TypeOf(m).String())
 	return s.inner.SendMsg(m)
 }
 
 func (a ServerStreamWrapper) RecvMsg(m interface{}) error {
-	log.DebugLog(log.DebugLevelDmereq, "RecvMsg Streamed message", "type", reflect.TypeOf(m).String())
+	log.SpanLog(a.Context(), log.DebugLevelDmereq, "RecvMsg Streamed message", "type", reflect.TypeOf(m).String())
 	var cookie string
 
 	err := a.inner.RecvMsg(m)
@@ -49,8 +49,8 @@ func (a ServerStreamWrapper) RecvMsg(m interface{}) error {
 	case *dme.QosPositionRequest:
 		cookie = typ.SessionCookie
 		// Verify session cookie
-		ckey, err := VerifyCookie(cookie)
-		log.DebugLog(log.DebugLevelDmereq, "VerifyCookie result", "ckey", ckey, "err", err)
+		ckey, err := VerifyCookie(a.Context(), cookie)
+		log.SpanLog(a.Context(), log.DebugLevelDmereq, "VerifyCookie result", "ckey", ckey, "err", err)
 		if err != nil {
 			return grpc.Errorf(codes.Unauthenticated, err.Error())
 		}
