@@ -308,8 +308,6 @@ func main() {
 	log.InitTracer(*tlsCertFile)
 	defer log.FinishTracer()
 	span := log.StartSpan(log.DebugLevelInfo, "main")
-	defer span.Finish()
-
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &myCloudletKey)
@@ -317,11 +315,13 @@ func main() {
 	var err error
 	operatorApiGw, err = initOperator(ctx, *carrier)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
 	}
 	var servers = operator.OperatorApiGwServers{VaultAddr: *vaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl}
 	err = operatorApiGw.Init(*carrier, &servers)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Unable to init API GW", "err", err)
 
 	}
@@ -329,6 +329,7 @@ func main() {
 
 	err = dmecommon.InitVault(*vaultAddr, *region)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed to init vault", "err", err)
 	}
 	if *testMode {
@@ -369,11 +370,13 @@ func main() {
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed to listen", "addr", *apiAddr, "err", err)
 	}
 
 	creds, err := tls.ServerAuthServerCreds(*tlsApiCertFile, *tlsApiKeyFile)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
 	grpcOpts = append(grpcOpts, grpc.Creds(creds))
@@ -385,6 +388,7 @@ func main() {
 	reflection.Register(s)
 	go func() {
 		if err := s.Serve(lis); err != nil {
+			span.Finish()
 			log.FatalLog("Failed to server", "err", err)
 		}
 	}()
@@ -401,6 +405,7 @@ func main() {
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed to start grpc Gateway", "err", err)
 	}
 	mux.Handle("/", gw)
@@ -437,6 +442,7 @@ func main() {
 	signal.Notify(sigChan, os.Interrupt)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
+	span.Finish()
 
 	// wait until process in killed/interrupted
 	sig := <-sigChan
