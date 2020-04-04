@@ -327,7 +327,7 @@ func InfluxUsageUnitTestSetup(t *testing.T) {
 		defer p.StopLocal()
 	}
 
-	q := influxq.NewInfluxQ("events", "", "")
+	q := influxq.NewInfluxQ(cloudcommon.EventsDbName, "", "")
 	err = q.Start(addr)
 	require.Nil(t, err, "new influx q")
 	defer q.Stop()
