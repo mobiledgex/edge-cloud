@@ -119,7 +119,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		// create a new peer connection
 		peerConn, err := webrtc.NewPeerConnection(config)
 		if err != nil {
-			log.DebugLog(log.DebugLevelApi,
+			log.SpanLog(ctx, log.DebugLevelApi,
 				"failed to establish peer connection",
 				"config", config, "err", err)
 			return fmt.Errorf("failed to establish peer connection, %v", err)
@@ -135,7 +135,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		// set remote description
 		err = peerConn.SetRemoteDescription(offer)
 		if err != nil {
-			log.DebugLog(log.DebugLevelApi,
+			log.SpanLog(ctx, log.DebugLevelApi,
 				"failed to set remote description",
 				"offer", offer, "peerConn", peerConn, "err", err)
 			return fmt.Errorf("failed to set remote description, %v", err)
@@ -143,7 +143,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		// create answer
 		answer, err := peerConn.CreateAnswer(nil)
 		if err != nil {
-			log.DebugLog(log.DebugLevelApi,
+			log.SpanLog(ctx, log.DebugLevelApi,
 				"failed to create answer",
 				"peerConn", peerConn, "err", err)
 			return fmt.Errorf("failed to set answer, %v", err)
@@ -151,7 +151,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		// set local description, and starts out UDP listeners
 		err = peerConn.SetLocalDescription(answer)
 		if err != nil {
-			log.DebugLog(log.DebugLevelApi,
+			log.SpanLog(ctx, log.DebugLevelApi,
 				"failed to set local description",
 				"peerConn", peerConn, "err", err)
 			return fmt.Errorf("failed to set local description, %v", err)
@@ -163,7 +163,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			return fmt.Errorf("failed to encode answer, %v", err)
 		}
 		req.Answer = string(answerBytes)
-		log.DebugLog(log.DebugLevelApi, "returning answer")
+		log.SpanLog(ctx, log.DebugLevelApi, "returning answer")
 	} else {
 		// Connect to EdgeTurn server
 		if req.EdgeTurnAddr == "" {
@@ -189,7 +189,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			return fmt.Errorf("failed to marshal execReqInfo %v, %v", execReqInfo, err)
 		}
 		turnConn.Write(out)
-		log.DebugLog(log.DebugLevelApi, "sent execreq info", "info", string(out))
+		log.SpanLog(ctx, log.DebugLevelApi, "sent execreq info", "info", string(out))
 
 		// Fetch session info from EdgeTurn server
 		var sessInfo cloudcommon.SessionInfo
@@ -198,7 +198,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		if err != nil {
 			return fmt.Errorf("failed to decode session info: %v", err)
 		}
-		log.DebugLog(log.DebugLevelApi, "received session info from edgeturn server", "info", sessInfo)
+		log.SpanLog(ctx, log.DebugLevelApi, "received session info from edgeturn server", "info", sessInfo)
 
 		turnAddrParts := strings.Split(req.EdgeTurnAddr, ":")
 		if len(turnAddrParts) != 2 {
@@ -206,8 +206,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		}
 
 		if req.Console != nil {
-			// Notify controller about the new proxy console URL & access token
-			proxyAddr := "https://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeconsole?token=" + sessInfo.Token
+			proxyAddr := "https://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeconsole?edgetoken=" + sessInfo.Token
 			req.AccessUrl = proxyAddr
 			cd.ExecReqSend.Update(ctx, req)
 
@@ -216,7 +215,6 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 				return err
 			}
 		} else {
-			// Notify controller about access token
 			proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?token=" + sessInfo.Token
 			req.AccessUrl = proxyAddr
 			cd.ExecReqSend.Update(ctx, req)

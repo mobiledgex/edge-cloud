@@ -395,24 +395,55 @@ func RunEdgeTurn(req *edgeproto.ExecRequest, exchangeFunc func(offer *webrtc.Ses
 		defer ws.Close()
 
 		reader := bufio.NewReader(os.Stdin)
+		errChan := make(chan error, 2)
 		go func() {
 			for {
 				text, err := reader.ReadString('\n')
-				if err == io.EOF {
+				if err != nil {
+					if err == io.EOF {
+						errChan <- nil
+					} else {
+						errChan <- err
+					}
 					break
 				}
 				err = ws.WriteMessage(websocket.TextMessage, []byte(text))
 				if err != nil {
+					if _, ok := err.(*websocket.CloseError); ok {
+						errChan <- nil
+					} else {
+						errChan <- err
+					}
 					break
 				}
 			}
 		}()
-		for {
-			_, msg, err := ws.ReadMessage()
-			if err != nil {
-				break
+		go func() {
+			for {
+				_, msg, err := ws.ReadMessage()
+				if err != nil {
+					if _, ok := err.(*websocket.CloseError); ok {
+						errChan <- nil
+					} else {
+						errChan <- err
+					}
+					break
+				}
+				_, err = os.Stdout.Write(msg)
+				if err != nil {
+					if err == io.EOF {
+						errChan <- nil
+					} else {
+						errChan <- err
+					}
+					break
+				}
 			}
-			os.Stdout.Write(msg)
+		}()
+		select {
+		case <-signalChan:
+		case err = <-errChan:
+			return err
 		}
 	}
 

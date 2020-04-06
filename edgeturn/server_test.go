@@ -1,11 +1,11 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -18,20 +18,28 @@ func TestEdgeTurnServer(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelApi | log.DebugLevelInfo)
 	log.InitTracer("")
 	defer log.FinishTracer()
-	ctx := log.StartTestSpan(context.Background())
 	flag.Parse() // set defaults
 
 	*testMode = true
 
-	errChan := make(chan error, 2)
-	startServers(ctx, errChan)
+	started := make(chan bool)
 	go func() {
-		err := <-errChan
-		require.Nil(t, err, "start services on EdgeTurn server")
+		err := setupTurnServer(started)
+		if err != nil {
+			log.FatalLog(err.Error())
+		}
 	}()
+	<-started
+
+	go func() {
+		err := setupProxyServer(started)
+		if err != nil {
+			log.FatalLog(err.Error())
+		}
+	}()
+	<-started
 
 	// Test session info received for ExecReqShell
-
 	// CRM connection to EdgeTurn
 	tlsConfig, err := edgetls.GetLocalTLSConfig()
 	require.Nil(t, err, "get local tls config")
@@ -57,15 +65,13 @@ func TestEdgeTurnServer(t *testing.T) {
 	require.Equal(t, "8443", sessInfo.AccessPort, "accessport is set to default value")
 
 	proxyVal := TurnProxy.Get(sessInfo.Token)
-	require.NotNil(t, proxyVal, "proxyValue is present")
-	port := proxyVal.Port
-	require.NotEqual(t, "", port, "port is not empty")
+	require.NotNil(t, proxyVal, "proxyValue is present, hence not nil")
+	require.NotNil(t, proxyVal.CrmConn, "crm connection is not nil")
 
 	// Client connection to EdgeTurn
 	dialer := websocket.Dialer{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
-	ws, _, err := dialer.Dial("wss://127.0.0.1:8443/edgeshell?token="+sessInfo.Token, nil)
+	ws, _, err := dialer.Dial("wss://127.0.0.1:8443/edgeshell?edgetoken="+sessInfo.Token, nil)
 	require.Nil(t, err, "client websocket connection to EdgeTurn server")
-	defer ws.Close()
 	err = ws.WriteMessage(websocket.TextMessage, []byte("test msg1"))
 	require.Nil(t, err, "client write message to EdgeTurn server")
 	buf := make([]byte, 50)
@@ -79,4 +85,12 @@ func TestEdgeTurnServer(t *testing.T) {
 	_, msg, err := ws.ReadMessage()
 	require.Nil(t, err, "client read message from EdgeTurn server")
 	require.Equal(t, "test msg2", string(msg), "received message from crm")
+
+	// Client closes connection, this should cleanup connection
+	// from EdgeTurn server side as well
+	ws.Close()
+	time.Sleep(1 * time.Second)
+
+	proxyVal = TurnProxy.Get(sessInfo.Token)
+	require.Nil(t, proxyVal, "proxyValue should not exist as client exited")
 }
