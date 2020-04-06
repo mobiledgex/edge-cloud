@@ -215,7 +215,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 				return err
 			}
 		} else {
-			proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?token=" + sessInfo.Token
+			proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?edgetoken=" + sessInfo.Token
 			req.AccessUrl = proxyAddr
 			cd.ExecReqSend.Update(ctx, req)
 			run.proxyRawConn(turnConn)
