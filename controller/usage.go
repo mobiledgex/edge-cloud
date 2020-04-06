@@ -21,10 +21,12 @@ type ClusterCheckpoint struct {
 	Status    []string // either cloudcommon.InstanceUp or cloudcommon.InstanceDown
 }
 
-// earliest possible timestamp influx can handle (64-bit int min in time form)
+// influx timestamp ranges can handle (64-bit int min in time form)
 var InfluxMinimumTimestamp, _ = time.Parse(time.RFC3339, "1677-09-21T00:13:44Z")
+var InfluxMaximumTimestamp, _ = time.Parse(time.RFC3339, "2262-04-11T23:47:15Z")
+
 var PrevCheckpoint = InfluxMinimumTimestamp
-var NextCheckpoint time.Time
+var NextCheckpoint = InfluxMaximumTimestamp //for unit tests, so getClusterCheckpoint will never sleep
 
 var ClusterUsageInfluxQueryTemplate = `SELECT %s from "%s" WHERE "clusterorg"='%s' AND "cluster"='%s' AND "cloudlet"='%s' AND "cloudletorg"='%s' %sAND time >= '%s' AND time < '%s' order by time desc`
 var GetCheckpointInfluxQueryTemplate = `SELECT %s from "%s" WHERE "org"='%s' AND "checkpoint"='CHECKPOINT' AND time <= '%s' order by time desc`
@@ -385,7 +387,8 @@ func runClusterCheckpoints(ctx context.Context) {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Error setting up checkpoints", "err", err)
 	}
 	for {
-		if time.Now().After(NextCheckpoint) {
+		select {
+		case <-time.After(NextCheckpoint.Sub(time.Now())):
 			checkpointTime := NextCheckpoint
 			err = CreateClusterCheckpoint(ctx, checkpointTime)
 			if err != nil {
