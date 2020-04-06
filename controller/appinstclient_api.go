@@ -176,7 +176,7 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 			return err
 		} else { // This will get clients from the remote controllers and proxy them as well
 			// connect to remote node
-			conn, err := ControllerConnect(addr)
+			conn, err := ControllerConnect(cb.Context(), addr)
 			if err != nil {
 				return err
 			}

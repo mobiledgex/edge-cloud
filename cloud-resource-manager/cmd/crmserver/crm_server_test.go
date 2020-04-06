@@ -149,7 +149,7 @@ func TestCRM(t *testing.T) {
 	ctrlHandler := notify.NewDummyHandler()
 	ctrlMgr := notify.ServerMgr{}
 	ctrlHandler.RegisterServer(&ctrlMgr)
-	ctrlMgr.Start(notifyAddr, "")
+	ctrlMgr.Start(notifyAddr, nil)
 
 	notifyClient.WaitForConnect(1)
 	stats := notify.Stats{}

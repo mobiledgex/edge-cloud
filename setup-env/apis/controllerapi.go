@@ -70,8 +70,9 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 	var client testutil.Client
 	if runCLI {
 		args := []string{"--output-stream=false", "--silence-usage"}
-		if ctrl.TLS.ClientCert != "" {
-			args = append(args, "--tls", ctrl.TLS.ClientCert)
+		tlsFile := ctrl.GetTlsFile()
+		if tlsFile != "" {
+			args = append(args, "--tls", tlsFile)
 		}
 		if ctrl.ApiAddr != "" {
 			args = append(args, "--addr", ctrl.ApiAddr)
@@ -248,11 +249,16 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		if err != nil {
 			return err
 		}
-		roles := process.VaultRoles{}
-		err = yaml.Unmarshal(dat, &roles)
+		vroles := process.VaultRoles{}
+		err = yaml.Unmarshal(dat, &vroles)
 		if err != nil {
 			return err
 		}
+		region := ctrl.Region
+		if region == "" {
+			region = "local"
+		}
+		roles := vroles.RegionRoles[region]
 		pfConfig.EnvVar = make(map[string]string)
 		pfConfig.EnvVar["VAULT_ROLE_ID"] = roles.CRMRoleID
 		pfConfig.EnvVar["VAULT_SECRET_ID"] = roles.CRMSecretID
@@ -260,6 +266,7 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		// Defaults
 		pfConfig.PlatformTag = ""
 		pfConfig.TlsCertFile = ctrl.TLS.ServerCert
+		pfConfig.UseVaultCerts = ctrl.UseVaultCerts
 		pfConfig.VaultAddr = "http://127.0.0.1:8200"
 		pfConfig.ContainerRegistryPath = "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
 		pfConfig.TestMode = true

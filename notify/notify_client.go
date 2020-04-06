@@ -9,7 +9,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -19,16 +18,16 @@ import (
 )
 
 type Client struct {
-	sendrecv    SendRecv
-	addrs       []string
-	tlsCertFile string
-	version     uint32
-	stats       ClientStats
-	addrIdx     int
-	mux         util.Mutex
-	conn        *grpc.ClientConn
-	cancel      context.CancelFunc
-	running     chan struct{}
+	sendrecv      SendRecv
+	addrs         []string
+	tlsDialOption grpc.DialOption
+	version       uint32
+	stats         ClientStats
+	addrIdx       int
+	mux           util.Mutex
+	conn          *grpc.ClientConn
+	cancel        context.CancelFunc
+	running       chan struct{}
 	// localAddr has its own lock because its called in some
 	// grpc interceptor context
 	localAddr    string
@@ -40,10 +39,13 @@ type ClientStats struct {
 
 func cancelNoop() {}
 
-func NewClient(addrs []string, tlsCertFile string) *Client {
+func NewClient(addrs []string, tlsDialOption grpc.DialOption) *Client {
 	s := Client{}
 	s.addrs = addrs
-	s.tlsCertFile = tlsCertFile
+	if tlsDialOption == nil {
+		tlsDialOption = grpc.WithInsecure()
+	}
+	s.tlsDialOption = tlsDialOption
 	s.sendrecv.init("client")
 	return &s
 }
@@ -124,19 +126,15 @@ func (s *Client) connect() (StreamNotify, error) {
 	s.mux.Unlock()
 
 	ctx, cancel := context.WithTimeout(context.Background(), NotifyRetryTime)
-	dialOption, err := tls.GetTLSClientDialOption(addr, s.tlsCertFile, false)
-	if err != nil {
-		return nil, err
-	}
 	conn, err := grpc.DialContext(ctx, addr,
-		dialOption,
+		s.tlsDialOption,
 		grpc.WithStatsHandler(&grpcStatsHandler{client: s}),
 		grpc.WithKeepaliveParams(clientParams))
 	cancel()
 	if err != nil {
 		return nil, err
 	}
-	log.DebugLog(log.DebugLevelNotify, "creating notify client", "addr", addr, "tlsCert", s.tlsCertFile)
+	log.DebugLog(log.DebugLevelNotify, "creating notify client", "addr", addr)
 
 	api := edgeproto.NewNotifyApiClient(conn)
 	ctx, cancel = context.WithCancel(context.Background())
