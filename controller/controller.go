@@ -59,6 +59,8 @@ var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version h
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs from LetsEncrypt. If false then CRM will generate its onwn self-signed cert")
+var checkpointInterval = flag.Duration("checkpointInterval", time.Hour*24*30, "Interval at which to checkpoint cluster usage")
+
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName
 
@@ -163,15 +165,16 @@ func startServices() error {
 		return fmt.Errorf("invalid region name")
 	}
 
-	err = validateFields(ctx)
-	if err != nil {
-		return err
-	}
 	err = nodeMgr.Init(ctx, node.NodeTypeController, node.WithName(ControllerId), node.WithContainerVersion(*versionTag), node.WithRegion(*region))
 	if err != nil {
 		return err
 	}
 	vaultConfig = nodeMgr.VaultConfig
+
+	err = validateFields(ctx)
+	if err != nil {
+		return err
+	}
 
 	if *localEtcd {
 		opts := []process.StartOp{}
@@ -318,6 +321,7 @@ func startServices() error {
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
+	edgeproto.RegisterDeviceApiServer(server, &deviceApi)
 	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
 
 	go func() {
@@ -353,6 +357,7 @@ func startServices() error {
 			edgeproto.RegisterSettingsApiHandler,
 			edgeproto.RegisterAppInstClientApiHandler,
 			edgeproto.RegisterDebugApiHandler,
+			edgeproto.RegisterDeviceApiHandler,
 			edgeproto.RegisterOrganizationApiHandler,
 		},
 	}
@@ -385,6 +390,9 @@ func startServices() error {
 		}
 	}()
 	services.httpServer = httpServer
+
+	// start the checkpointer
+	go runClusterCheckpoints(ctx)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	return nil
@@ -468,6 +476,7 @@ func InitApis(sync *Sync) {
 	InitSettingsApi(sync)
 	InitAppInstClientKeyApi(sync)
 	InitAppInstClientApi()
+	InitDeviceApi(sync)
 	InitOrganizationApi(sync)
 }
 
@@ -499,4 +508,5 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	autoProvPolicyApi.SetInfluxQ(influxQ)
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
+	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
 }

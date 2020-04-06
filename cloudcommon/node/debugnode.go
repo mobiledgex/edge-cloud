@@ -23,6 +23,9 @@ const (
 	DisableDebugLevels   = "disable-debug-levels"
 	ShowDebugLevels      = "show-debug-levels"
 	RefreshInternalCerts = "refresh-internal-certs"
+	StartCpuProfileCmd   = "start-cpu-profile"
+	StopCpuProfileCmd    = "stop-cpu-profile"
+	GetMemProfileCmd     = "get-mem-profile"
 )
 
 type DebugNode struct {
@@ -52,6 +55,18 @@ func (s *DebugNode) Init(mgr *NodeMgr) {
 		func(ctx context.Context, req *edgeproto.DebugRequest) string {
 			mgr.InternalPki.triggerRefresh()
 			return "triggered refresh"
+		})
+	s.AddDebugFunc(StartCpuProfileCmd,
+		func(ctx context.Context, req *edgeproto.DebugRequest) string {
+			return StartCpuProfile()
+		})
+	s.AddDebugFunc(StopCpuProfileCmd,
+		func(ctx context.Context, req *edgeproto.DebugRequest) string {
+			return StopCpuProfile()
+		})
+	s.AddDebugFunc(GetMemProfileCmd,
+		func(ctx context.Context, req *edgeproto.DebugRequest) string {
+			return GetMemProfile()
 		})
 }
 

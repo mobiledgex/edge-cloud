@@ -3949,6 +3949,7 @@ type CloudletCache struct {
 	Objs        map[CloudletKey]*Cloudlet
 	Mux         util.Mutex
 	List        map[CloudletKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *Cloudlet)
 	UpdatedCb   func(ctx context.Context, old *Cloudlet, new *Cloudlet)
 	KeyWatchers map[CloudletKey][]*CloudletKeyWatcher
@@ -4097,6 +4098,10 @@ func (c *CloudletCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKe
 
 func (c *CloudletCache) SetUpdatedCb(fn func(ctx context.Context, old *Cloudlet, new *Cloudlet)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *CloudletCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -5149,6 +5154,7 @@ type CloudletInfoCache struct {
 	Objs        map[CloudletKey]*CloudletInfo
 	Mux         util.Mutex
 	List        map[CloudletKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *CloudletInfo)
 	UpdatedCb   func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)
 	KeyWatchers map[CloudletKey][]*CloudletInfoKeyWatcher
@@ -5265,11 +5271,11 @@ func (c *CloudletInfoCache) GetCount() int {
 }
 
 func (c *CloudletInfoCache) Flush(ctx context.Context, notifyId int64) {
-	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletInfo", "notifyId", notifyId)
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletInfo", "notifyId", notifyId, "FlushAll", c.FlushAll)
 	flushed := make(map[CloudletKey]*CloudletInfo)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if val.NotifyId != notifyId {
+		if !c.FlushAll && val.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]
@@ -5317,6 +5323,10 @@ func (c *CloudletInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *Cloudl
 
 func (c *CloudletInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletInfoCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *CloudletInfoCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) context.CancelFunc {

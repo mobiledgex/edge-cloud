@@ -432,6 +432,7 @@ type OperatorCodeCache struct {
 	Objs        map[OperatorCodeKey]*OperatorCode
 	Mux         util.Mutex
 	List        map[OperatorCodeKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *OperatorCodeKey, old *OperatorCode)
 	UpdatedCb   func(ctx context.Context, old *OperatorCode, new *OperatorCode)
 	KeyWatchers map[OperatorCodeKey][]*OperatorCodeKeyWatcher
@@ -580,6 +581,10 @@ func (c *OperatorCodeCache) SetNotifyCb(fn func(ctx context.Context, obj *Operat
 
 func (c *OperatorCodeCache) SetUpdatedCb(fn func(ctx context.Context, old *OperatorCode, new *OperatorCode)) {
 	c.UpdatedCb = fn
+}
+
+func (c *OperatorCodeCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *OperatorCodeCache) WatchKey(key *OperatorCodeKey, cb func(ctx context.Context)) context.CancelFunc {

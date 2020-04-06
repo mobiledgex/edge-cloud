@@ -17,25 +17,26 @@ type Etcd struct {
 	cmd            *exec.Cmd
 }
 type Controller struct {
-	Common               `yaml:",inline"`
-	EtcdAddrs            string
-	ApiAddr              string
-	HttpAddr             string
-	NotifyAddr           string
-	NotifyRootAddrs      string
-	NotifyParentAddrs    string
-	VaultAddr            string
-	InfluxAddr           string
-	Region               string
-	TLS                  TLSCerts
-	UseVaultCerts        bool
-	cmd                  *exec.Cmd
-	TestMode             bool
-	RegistryFQDN         string
-	ArtifactoryFQDN      string
-	CloudletRegistryPath string
-	VersionTag           string
-	CloudletVMImagePath  string
+	Common                `yaml:",inline"`
+	EtcdAddrs             string
+	ApiAddr               string
+	HttpAddr              string
+	NotifyAddr            string
+	NotifyRootAddrs       string
+	NotifyParentAddrs     string
+	VaultAddr             string
+	InfluxAddr            string
+	Region                string
+	TLS                   TLSCerts
+	UseVaultCerts         bool
+	cmd                   *exec.Cmd
+	TestMode              bool
+	RegistryFQDN          string
+	ArtifactoryFQDN       string
+	CloudletRegistryPath  string
+	VersionTag            string
+	CloudletVMImagePath   string
+	CheckpointingInterval string
 }
 type Dme struct {
 	Common        `yaml:",inline"`

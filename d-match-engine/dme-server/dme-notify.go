@@ -67,10 +67,12 @@ func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
 var nodeCache edgeproto.NodeCache
 var ClientSender *notify.AppInstClientSend
 var appInstClientKeyCache edgeproto.AppInstClientKeyCache
+var platformClientsCache edgeproto.DeviceCache
 
 func initNotifyClient(addrs string, tlsDialOption grpc.DialOption) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
 	edgeproto.InitAppInstClientKeyCache(&appInstClientKeyCache)
+	edgeproto.InitDeviceCache(&platformClientsCache)
 	appInstClientKeyCache.SetUpdatedCb(SendCachedClients)
 	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsDialOption)
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(&dmecommon.Settings, dmecommon.SettingsUpdated))
@@ -82,6 +84,8 @@ func initNotifyClient(addrs string, tlsDialOption grpc.DialOption) *notify.Clien
 	notifyClient.RegisterRecvAppInstClientKeyCache(&appInstClientKeyCache)
 
 	notifyClient.RegisterSendNodeCache(&nodeCache)
+	notifyClient.RegisterSendDeviceCache(&platformClientsCache)
+	platformClientsCache.SetFlushAll()
 	notifyClient.RegisterRecv(notify.NewCloudletInfoRecv(&CloudletInfoHandler{}))
 	ClientSender = notify.NewAppInstClientSend()
 	notifyClient.RegisterSend(ClientSender)

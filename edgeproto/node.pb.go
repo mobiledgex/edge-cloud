@@ -889,6 +889,7 @@ type NodeCache struct {
 	Objs        map[NodeKey]*Node
 	Mux         util.Mutex
 	List        map[NodeKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *NodeKey, old *Node)
 	UpdatedCb   func(ctx context.Context, old *Node, new *Node)
 	KeyWatchers map[NodeKey][]*NodeKeyWatcher
@@ -1005,11 +1006,11 @@ func (c *NodeCache) GetCount() int {
 }
 
 func (c *NodeCache) Flush(ctx context.Context, notifyId int64) {
-	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Node", "notifyId", notifyId)
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Node", "notifyId", notifyId, "FlushAll", c.FlushAll)
 	flushed := make(map[NodeKey]*Node)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if val.NotifyId != notifyId {
+		if !c.FlushAll && val.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]
@@ -1057,6 +1058,10 @@ func (c *NodeCache) SetNotifyCb(fn func(ctx context.Context, obj *NodeKey, old *
 
 func (c *NodeCache) SetUpdatedCb(fn func(ctx context.Context, old *Node, new *Node)) {
 	c.UpdatedCb = fn
+}
+
+func (c *NodeCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *NodeCache) WatchKey(key *NodeKey, cb func(ctx context.Context)) context.CancelFunc {

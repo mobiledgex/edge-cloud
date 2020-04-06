@@ -781,6 +781,7 @@ type AutoScalePolicyCache struct {
 	Objs        map[PolicyKey]*AutoScalePolicy
 	Mux         util.Mutex
 	List        map[PolicyKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *AutoScalePolicy)
 	UpdatedCb   func(ctx context.Context, old *AutoScalePolicy, new *AutoScalePolicy)
 	KeyWatchers map[PolicyKey][]*AutoScalePolicyKeyWatcher
@@ -929,6 +930,10 @@ func (c *AutoScalePolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *Pol
 
 func (c *AutoScalePolicyCache) SetUpdatedCb(fn func(ctx context.Context, old *AutoScalePolicy, new *AutoScalePolicy)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AutoScalePolicyCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AutoScalePolicyCache) WatchKey(key *PolicyKey, cb func(ctx context.Context)) context.CancelFunc {

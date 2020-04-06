@@ -524,6 +524,7 @@ type AppInstClientKeyCache struct {
 	Objs        map[AppInstKey]*AppInstClientKey
 	Mux         util.Mutex
 	List        map[AppInstKey]struct{}
+	FlushAll    bool
 	NotifyCb    func(ctx context.Context, obj *AppInstKey, old *AppInstClientKey)
 	UpdatedCb   func(ctx context.Context, old *AppInstClientKey, new *AppInstClientKey)
 	KeyWatchers map[AppInstKey][]*AppInstClientKeyKeyWatcher
@@ -672,6 +673,10 @@ func (c *AppInstClientKeyCache) SetNotifyCb(fn func(ctx context.Context, obj *Ap
 
 func (c *AppInstClientKeyCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInstClientKey, new *AppInstClientKey)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AppInstClientKeyCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AppInstClientKeyCache) WatchKey(key *AppInstKey, cb func(ctx context.Context)) context.CancelFunc {
