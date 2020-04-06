@@ -142,8 +142,9 @@ func getCrmEnv(vars map[string]string) {
 func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edgeproto.PlatformConfig, error) {
 	pfConfig := edgeproto.PlatformConfig{}
 	pfConfig.PlatformTag = cloudlet.ContainerVersion
-	pfConfig.TlsCertFile = *tlsCertFile
-	pfConfig.VaultAddr = *vaultAddr
+	pfConfig.TlsCertFile = nodeMgr.TlsCertFile
+	pfConfig.VaultAddr = nodeMgr.VaultAddr
+	pfConfig.UseVaultCerts = nodeMgr.InternalPki.UseVaultCerts
 	pfConfig.ContainerRegistryPath = *cloudletRegistryPath
 	pfConfig.CloudletVmImagePath = *cloudletVMImagePath
 	pfConfig.TestMode = *testMode

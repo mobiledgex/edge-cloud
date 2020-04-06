@@ -2,6 +2,7 @@ package cloudcommon
 
 import (
 	"context"
+	ctls "crypto/tls"
 	"net/http"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func ParseGrpcMethod(method string) (path string, cmd string) {
@@ -88,4 +90,12 @@ func TimeToTimestamp(t time.Time) dme.Timestamp {
 
 func TimestampToTime(ts dme.Timestamp) time.Time {
 	return time.Unix(ts.Seconds, int64(ts.Nanos))
+}
+
+func GrpcCreds(cfg *ctls.Config) grpc.ServerOption {
+	if cfg == nil {
+		return grpc.Creds(nil)
+	} else {
+		return grpc.Creds(credentials.NewTLS(cfg))
+	}
 }

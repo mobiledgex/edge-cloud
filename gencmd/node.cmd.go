@@ -208,6 +208,7 @@ var NodeOptionalArgs = []string{
 	"buildauthor",
 	"hostname",
 	"containerversion",
+	"internalpki",
 }
 var NodeAliasArgs = []string{
 	"name=key.name",
@@ -229,6 +230,7 @@ var NodeComments = map[string]string{
 	"buildauthor":      "Build Author",
 	"hostname":         "Hostname",
 	"containerversion": "Docker edge-cloud container version which node instance use",
+	"internalpki":      "Internal PKI Config",
 }
 var NodeSpecialArgs = map[string]string{
 	"fields": "StringArray",
@@ -247,6 +249,7 @@ var NodeDataOptionalArgs = []string{
 	"nodes[#].buildauthor",
 	"nodes[#].hostname",
 	"nodes[#].containerversion",
+	"nodes[#].internalpki",
 }
 var NodeDataAliasArgs = []string{}
 var NodeDataComments = map[string]string{
@@ -262,6 +265,7 @@ var NodeDataComments = map[string]string{
 	"nodes[#].buildauthor":                  "Build Author",
 	"nodes[#].hostname":                     "Hostname",
 	"nodes[#].containerversion":             "Docker edge-cloud container version which node instance use",
+	"nodes[#].internalpki":                  "Internal PKI Config",
 }
 var NodeDataSpecialArgs = map[string]string{
 	"nodes[#].fields": "StringArray",
