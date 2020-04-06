@@ -1391,7 +1391,7 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 	metric.Name = cloudcommon.AppInstEvent
 	ts, _ := types.TimestampProto(time.Now())
 	metric.Timestamp = *ts
-	metric.AddTag("cloudletorg", appInstKey.ClusterInstKey.CloudletKey.Organization)
+	metric.AddStringVal("cloudletorg", appInstKey.ClusterInstKey.CloudletKey.Organization)
 	metric.AddTag("cloudlet", appInstKey.ClusterInstKey.CloudletKey.Name)
 	metric.AddTag("cluster", appInstKey.ClusterInstKey.ClusterKey.Name)
 	metric.AddTag("clusterorg", appInstKey.ClusterInstKey.Organization)
