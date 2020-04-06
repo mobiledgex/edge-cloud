@@ -14,6 +14,7 @@ import (
 )
 
 var AppDNSRoot = "mobiledgex.net"
+var CertDNSRoot = "mobiledgex.net"
 
 // special operator types
 var OperatorGCP = "gcp"

@@ -10,6 +10,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
 )
 
 func TestNotifyBasic(t *testing.T) {
@@ -30,17 +31,17 @@ func TestNotifyBasic(t *testing.T) {
 	serverHandler := NewDummyHandler()
 	serverMgr := ServerMgr{}
 	serverHandler.RegisterServer(&serverMgr)
-	serverMgr.Start(addr, "")
+	serverMgr.Start(addr, nil)
 
 	// Set up client DME
 	dmeHandler := NewDummyHandler()
-	clientDME := NewClient(serverAddrs, "")
+	clientDME := NewClient(serverAddrs, grpc.WithInsecure())
 	dmeHandler.RegisterDMEClient(clientDME)
 	clientDME.Start()
 
 	// Set up client CRM
 	crmHandler := NewDummyHandler()
-	clientCRM := NewClient(serverAddrs, "")
+	clientCRM := NewClient(serverAddrs, grpc.WithInsecure())
 	crmHandler.RegisterCRMClient(clientCRM)
 	clientCRM.Start()
 
@@ -129,7 +130,7 @@ func TestNotifyBasic(t *testing.T) {
 	fmt.Println("ServerMgr done")
 	serverMgr.Stop()
 	serverHandler.AppInstCache.Delete(ctx, &testutil.AppInstData[1], 0)
-	serverMgr.Start(addr, "")
+	serverMgr.Start(addr, nil)
 	clientDME.WaitForConnect(4)
 	dmeHandler.WaitForAppInsts(2)
 	require.Equal(t, uint64(4), clientDME.sendrecv.stats.Connects, "connects")

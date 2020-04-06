@@ -1,0 +1,372 @@
+package node_test
+
+import (
+	"context"
+	"crypto/tls"
+	"fmt"
+	"net"
+	"path/filepath"
+	"runtime"
+	"testing"
+
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	"github.com/mobiledgex/edge-cloud/integration/process"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/vault"
+	"github.com/stretchr/testify/require"
+)
+
+// Note file package is not node, so avoids node package having
+// dependencies on process package.
+
+func TestInternalPki(t *testing.T) {
+	log.InitTracer("")
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+	// Set up local Vault process.
+	// Note that this test depends on the approles and
+	// pki configuration done by the vault setup scripts
+	// that are run as part of running this Vault process.
+	vp := process.Vault{
+		Common: process.Common{
+			Name: "vault",
+		},
+		Regions: "us,eu",
+	}
+	vroles, err := vp.StartLocalRoles()
+	require.Nil(t, err, "start local vault")
+	defer vp.StopLocal()
+
+	// Most positive testing is done by e2e tests.
+
+	// Negative testing for issuing certs.
+	// These primarily test Vault certificate role permissions,
+	// so work in conjunction with the vault setup in vault/setup-region.sh
+	// Apparently CA certs are always readable from Vault approles.
+	var cfgTests cfgTestList
+	// regional Controller cannot issue global cert
+	cfgTests.add(ConfigTest{
+		NodeType:    node.NodeTypeController,
+		Region:      "us",
+		LocalIssuer: node.CertIssuerGlobal,
+		ExpectErr:   "write failure pki-global/issue/us",
+	})
+	// regional Controller cannot issue cloudlet cert
+	cfgTests.add(ConfigTest{
+		NodeType:    node.NodeTypeController,
+		Region:      "us",
+		LocalIssuer: node.CertIssuerRegionalCloudlet,
+		ExpectErr:   "write failure pki-regional-cloudlet/issue/us",
+	})
+	// global node cannot issue regional cert
+	cfgTests.add(ConfigTest{
+		NodeType:    node.NodeTypeNotifyRoot,
+		LocalIssuer: node.CertIssuerRegional,
+		ExpectErr:   "write failure pki-regional/issue/default",
+	})
+	// global node cannot issue regional-cloudlet cert
+	cfgTests.add(ConfigTest{
+		NodeType:    node.NodeTypeNotifyRoot,
+		LocalIssuer: node.CertIssuerRegionalCloudlet,
+		ExpectErr:   "write failure pki-regional-cloudlet/issue/default",
+	})
+	// cloudlet node cannot issue global cert
+	cfgTests.add(ConfigTest{
+		NodeType:    node.NodeTypeCRM,
+		Region:      "us",
+		LocalIssuer: node.CertIssuerGlobal,
+		ExpectErr:   "write failure pki-global/issue/us",
+	})
+	// cloudlet node cannot issue global cert
+	cfgTests.add(ConfigTest{
+		NodeType:    node.NodeTypeCRM,
+		Region:      "us",
+		LocalIssuer: node.CertIssuerRegional,
+		ExpectErr:   "write failure pki-regional/issue/us",
+	})
+
+	for _, cfg := range cfgTests {
+		testGetTlsConfig(t, ctx, vroles, &cfg)
+	}
+
+	// define nodes for certificate exchange tests
+	notifyRootServer := &PkiConfig{
+		Type:        node.NodeTypeNotifyRoot,
+		LocalIssuer: node.CertIssuerGlobal,
+		RemoteCAs: []node.MatchCA{
+			node.AnyRegionalMatchCA(),
+			node.GlobalMatchCA(),
+		},
+	}
+	controllerClientUS := &PkiConfig{
+		Region:      "us",
+		Type:        node.NodeTypeController,
+		LocalIssuer: node.CertIssuerRegional,
+		RemoteCAs: []node.MatchCA{
+			node.GlobalMatchCA(),
+		},
+	}
+	controllerServerUS := &PkiConfig{
+		Region:      "us",
+		Type:        node.NodeTypeController,
+		LocalIssuer: node.CertIssuerRegional,
+		RemoteCAs: []node.MatchCA{
+			node.SameRegionalMatchCA(),
+			node.SameRegionalCloudletMatchCA(),
+		},
+	}
+	crmClientUS := &PkiConfig{
+		Region:      "us",
+		Type:        node.NodeTypeCRM,
+		LocalIssuer: node.CertIssuerRegionalCloudlet,
+		RemoteCAs: []node.MatchCA{
+			node.SameRegionalMatchCA(),
+		},
+	}
+	crmClientEU := &PkiConfig{
+		Region:      "eu",
+		Type:        node.NodeTypeCRM,
+		LocalIssuer: node.CertIssuerRegionalCloudlet,
+		RemoteCAs: []node.MatchCA{
+			node.SameRegionalMatchCA(),
+		},
+	}
+	// assume attacker stole crm EU certs, and vault login
+	// so has regional-cloudlet cert and can pull all CAs.
+	crmRogueEU := &PkiConfig{
+		Region:      "eu",
+		Type:        node.NodeTypeCRM,
+		LocalIssuer: node.CertIssuerRegionalCloudlet,
+		RemoteCAs: []node.MatchCA{
+			node.GlobalMatchCA(),
+			node.AnyRegionalMatchCA(),
+			node.SameRegionalMatchCA(),
+			node.SameRegionalCloudletMatchCA(),
+		},
+	}
+
+	// Testing for certificate exchange.
+	var csTests clientServerList
+	// controller can connect to notifyroot
+	csTests.add(ClientServer{
+		Server: notifyRootServer,
+		Client: controllerClientUS,
+	})
+	// crm can connect to controller
+	csTests.add(ClientServer{
+		Server: controllerServerUS,
+		Client: crmClientUS,
+	})
+	// crm from EU cannot connect to US controller
+	csTests.add(ClientServer{
+		Server:    controllerServerUS,
+		Client:    crmClientEU,
+		ExpectErr: "region mismatch",
+	})
+	// crm cannot connect to notifyroot
+	csTests.add(ClientServer{
+		Server:    notifyRootServer,
+		Client:    crmClientUS,
+		ExpectErr: "certificate signed by unknown authority",
+	})
+	// rogue crm cannot to notify root
+	csTests.add(ClientServer{
+		Server:    notifyRootServer,
+		Client:    crmRogueEU,
+		ExpectErr: "remote error: tls: bad certificate",
+	})
+	// rogue crm cannot connect to other region controller
+	csTests.add(ClientServer{
+		Server:    controllerServerUS,
+		Client:    crmRogueEU,
+		ExpectErr: "region mismatch",
+	})
+	// rogue crm cannot pretend to be controller
+	csTests.add(ClientServer{
+		Server:    crmRogueEU,
+		Client:    crmClientEU,
+		ExpectErr: "certificate signed by unknown authority",
+	})
+	// rogue crm cannot pretend to be notifyroot
+	csTests.add(ClientServer{
+		Server:    crmRogueEU,
+		Client:    controllerClientUS,
+		ExpectErr: "certificate signed by unknown authority",
+	})
+
+	for _, test := range csTests {
+		testExchange(t, ctx, vroles, &test)
+	}
+}
+
+type ConfigTest struct {
+	NodeType      string
+	Region        string
+	VaultNodeType string
+	VaultRegion   string
+	LocalIssuer   string
+	RemoteCAs     []node.MatchCA
+	ExpectErr     string
+	Line          string
+}
+
+func testGetTlsConfig(t *testing.T, ctx context.Context, vroles *process.VaultRoles, cfg *ConfigTest) {
+	if cfg.VaultNodeType == "" {
+		cfg.VaultNodeType = cfg.NodeType
+	}
+	if cfg.VaultRegion == "" {
+		cfg.VaultRegion = cfg.Region
+	}
+	vc := getVaultConfig(cfg.VaultNodeType, cfg.VaultRegion, vroles)
+	mgr := node.NodeMgr{}
+	mgr.Init(ctx, cfg.NodeType, node.WithRegion(cfg.Region), node.WithVaultConfig(vc))
+	_, err := mgr.InternalPki.GetServerTlsConfig(ctx,
+		mgr.CommonName(),
+		cfg.LocalIssuer,
+		cfg.RemoteCAs)
+	if cfg.ExpectErr == "" {
+		require.Nil(t, err, "get tls config %s", cfg.Line)
+	} else {
+		require.NotNil(t, err, "get tls config %s", cfg.Line)
+		require.Contains(t, err.Error(), cfg.ExpectErr, "get tls config %s", cfg.Line)
+	}
+}
+
+type PkiConfig struct {
+	Region      string
+	Type        string
+	LocalIssuer string
+	RemoteCAs   []node.MatchCA
+}
+
+type ClientServer struct {
+	Server    *PkiConfig
+	Client    *PkiConfig
+	ExpectErr string
+	Line      string
+}
+
+func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles, cs *ClientServer) {
+	fmt.Printf("******************* testExchange %s *********************\n", cs.Line)
+	serverVault := getVaultConfig(cs.Server.Type, cs.Server.Region, vroles)
+	serverNode := node.NodeMgr{}
+	serverNode.Init(ctx, cs.Server.Type,
+		node.WithRegion(cs.Server.Region),
+		node.WithVaultConfig(serverVault))
+	serverTls, err := serverNode.InternalPki.GetServerTlsConfig(ctx,
+		serverNode.CommonName(),
+		cs.Server.LocalIssuer,
+		cs.Server.RemoteCAs)
+	require.Nil(t, err, "get server tls config %s", cs.Line)
+
+	clientVault := getVaultConfig(cs.Client.Type, cs.Client.Region, vroles)
+	clientNode := node.NodeMgr{}
+	clientNode.Init(ctx, cs.Client.Type,
+		node.WithRegion(cs.Client.Region),
+		node.WithVaultConfig(clientVault))
+	clientTls, err := clientNode.InternalPki.GetClientTlsConfig(ctx,
+		clientNode.CommonName(),
+		cs.Client.LocalIssuer,
+		cs.Client.RemoteCAs)
+	require.Nil(t, err, "get client tls config %s", cs.Line)
+
+	// must set ServerName due to the way this test is set up
+	clientTls.ServerName = serverNode.CommonName()
+
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
+	require.Nil(t, err)
+	defer lis.Close()
+
+	go func() {
+		for i := 0; i < 2; i++ {
+			sconn, err := lis.Accept()
+			require.Nil(t, err, "accept")
+			defer sconn.Close()
+
+			srv := tls.Server(sconn, serverTls)
+			srv.Handshake()
+		}
+	}()
+
+	// loop twice so we can test cert refresh
+	for i := 0; i < 2; i++ {
+		log.SpanLog(ctx, log.DebugLevelInfo, "client dial")
+		conn, err := tls.Dial("tcp", lis.Addr().String(), clientTls)
+		if err == nil {
+			defer conn.Close()
+		}
+		if cs.ExpectErr == "" {
+			require.Nil(t, err, "client dial [%d] %s", i, cs.Line)
+			err = conn.Handshake()
+			require.Nil(t, err, "client handshake [%d] %s", i, cs.Line)
+		} else {
+			require.NotNil(t, err, "client dial [%d] %s", i, cs.Line)
+			require.Contains(t, err.Error(), cs.ExpectErr, "error check for [%d] %s", i, cs.Line)
+		}
+		if i == 1 {
+			// no need to refresh on last iteration
+			break
+		}
+		// refresh certs. same tls config should pick up new certs.
+		err = serverNode.InternalPki.RefreshNow(ctx)
+		require.Nil(t, err, "refresh server certs [%d] %s", i, cs.Line)
+		err = clientNode.InternalPki.RefreshNow(ctx)
+		require.Nil(t, err, "refresh client certs [%d] %s", i, cs.Line)
+	}
+}
+
+func getVaultConfig(nodetype, region string, vroles *process.VaultRoles) *vault.Config {
+	var roleid string
+	var secretid string
+
+	if nodetype == node.NodeTypeNotifyRoot {
+		roleid = vroles.NotifyRootRoleID
+		secretid = vroles.NotifyRootSecretID
+	} else {
+		if region == "" {
+			// for testing, map to us region"
+			region = "us"
+		}
+		rr := vroles.GetRegionRoles(region)
+		if rr == nil {
+			panic("no roles for region")
+		}
+		switch nodetype {
+		case node.NodeTypeDME:
+			roleid = rr.DmeRoleID
+			secretid = rr.DmeSecretID
+		case node.NodeTypeCRM:
+			roleid = rr.CRMRoleID
+			secretid = rr.CRMSecretID
+		case node.NodeTypeController:
+			roleid = rr.CtrlRoleID
+			secretid = rr.CtrlSecretID
+		case node.NodeTypeClusterSvc:
+			roleid = rr.ClusterSvcRoleID
+			secretid = rr.ClusterSvcSecretID
+		default:
+			panic("invalid node type")
+		}
+	}
+	auth := vault.NewAppRoleAuth(roleid, secretid)
+	return vault.NewConfig(process.VaultAddress, auth)
+}
+
+// Track line number of objects added to list to make it easier
+// to debug if one of them fails.
+
+type cfgTestList []ConfigTest
+
+func (list *cfgTestList) add(cfg ConfigTest) {
+	_, file, line, _ := runtime.Caller(1)
+	cfg.Line = fmt.Sprintf("%s:%d", filepath.Base(file), line)
+	*list = append(*list, cfg)
+}
+
+type clientServerList []ClientServer
+
+func (list *clientServerList) add(cs ClientServer) {
+	_, file, line, _ := runtime.Caller(1)
+	cs.Line = fmt.Sprintf("%s:%d", filepath.Base(file), line)
+	*list = append(*list, cs)
+}

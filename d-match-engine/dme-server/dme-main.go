@@ -45,12 +45,10 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
 var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to")
-var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
 var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"DMUUS\"},\"name\":\"tmocloud1\"}'")
 var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
-var vaultAddr = flag.String("vaultAddr", "", "Vault address")
 var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
@@ -72,7 +70,7 @@ type server struct{}
 // The key for myCloudlet is provided as a configuration - either command line or
 // from a file.
 var myCloudletKey edgeproto.CloudletKey
-var nodeMgr *node.NodeMgr
+var nodeMgr node.NodeMgr
 
 var sigChan chan os.Signal
 
@@ -303,21 +301,24 @@ func allowCORS(h http.Handler) http.Handler {
 }
 
 func main() {
+	nodeMgr.InitFlags()
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer(*tlsCertFile)
+	log.InitTracer(nodeMgr.TlsCertFile)
 	defer log.FinishTracer()
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &myCloudletKey)
-	nodeMgr = node.Init(ctx, node.NodeTypeDME, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey))
-	var err error
+	err := nodeMgr.Init(ctx, node.NodeTypeDME, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey), node.WithRegion(*region))
+	if err != nil {
+		log.FatalLog("Failed init node", "err", err)
+	}
 	operatorApiGw, err = initOperator(ctx, *carrier)
 	if err != nil {
 		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
 	}
-	var servers = operator.OperatorApiGwServers{VaultAddr: *vaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl}
+	var servers = operator.OperatorApiGwServers{VaultAddr: nodeMgr.VaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl}
 	err = operatorApiGw.Init(*carrier, &servers)
 	if err != nil {
 		log.FatalLog("Unable to init API GW", "err", err)
@@ -325,7 +326,7 @@ func main() {
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "plugin init done", "operatorApiGw", operatorApiGw)
 
-	err = dmecommon.InitVault(*vaultAddr, *region)
+	err = dmecommon.InitVault(nodeMgr.VaultAddr, *region)
 	if err != nil {
 		log.FatalLog("Failed to init vault", "err", err)
 	}
@@ -339,7 +340,15 @@ func main() {
 	dmecommon.SetupMatchEngine()
 	grpcOpts := make([]grpc.ServerOption, 0)
 
-	notifyClient := initNotifyClient(*notifyAddrs, *tlsCertFile)
+	notifyClientTls, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegionalCloudlet,
+		[]node.MatchCA{node.SameRegionalMatchCA()})
+	if err != nil {
+		log.FatalLog("Failed to get notify client tls config", "err", err)
+	}
+
+	notifyClient := initNotifyClient(*notifyAddrs, tls.GetGrpcDialOption(notifyClientTls))
 	sendMetric := notify.NewMetricSend()
 	notifyClient.RegisterSend(sendMetric)
 	sendAutoProvCounts := notify.NewAutoProvCountsSend()
