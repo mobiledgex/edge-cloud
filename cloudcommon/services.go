@@ -37,6 +37,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	cloudletVMImagePath := ""
 	region := ""
 	commercialCerts := false
+	useVaultCerts := false
 	if pfConfig != nil {
 		for k, v := range pfConfig.EnvVar {
 			envVars[k] = v
@@ -50,6 +51,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		cloudletVMImagePath = pfConfig.CloudletVmImagePath
 		region = pfConfig.Region
 		commercialCerts = pfConfig.CommercialCerts
+		useVaultCerts = pfConfig.UseVaultCerts
 	}
 	for envKey, envVal := range cloudlet.EnvVar {
 		envVars[envKey] = envVal
@@ -80,6 +82,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		CloudletVMImagePath: cloudletVMImagePath,
 		Region:              region,
 		CommercialCerts:     commercialCerts,
+		UseVaultCerts:       useVaultCerts,
 	}, opts, nil
 }
 

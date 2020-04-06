@@ -33,13 +33,13 @@ var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var ctrlAddr = flag.String("ctrlAddrs", "127.0.0.1:55001", "address to connect to")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
-var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var externalPorts = flag.String("prometheus-ports", "tcp:9090", "ports to expose in form \"tcp:123,udp:123\"")
 var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics collection interval")
 var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc applications")
 var upgradeInstances = flag.Bool("updateAll", false, "Upgrade all Instances of Prometheus operator")
 var pluginRequired = flag.Bool("pluginRequired", false, "Require plugin")
 var hostname = flag.String("hostname", "", "Unique hostname")
+var region = flag.String("region", "local", "region name")
 
 var prometheusT *template.Template
 var nfsT *template.Template
@@ -114,7 +114,7 @@ var sigChan chan os.Signal
 
 var AutoScalePolicyCache edgeproto.AutoScalePolicyCache
 var ClusterInstCache edgeproto.ClusterInstCache
-var nodeMgr *node.NodeMgr
+var nodeMgr node.NodeMgr
 
 type promCustomizations struct {
 	Interval           string
@@ -212,8 +212,8 @@ func init() {
 	nfsT = template.Must(template.New("nfsauthprov").Parse(NFSAutoProvisionAppTemplate))
 }
 
-func initNotifyClient(ctx context.Context, addrs string, tlsCertFile string) *notify.Client {
-	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
+func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.DialOption) *notify.Client {
+	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsDialOption)
 	edgeproto.InitAutoScalePolicyCache(&AutoScalePolicyCache)
 	edgeproto.InitClusterInstCache(&ClusterInstCache)
 	ClusterInstCache.SetUpdatedCb(clusterInstCb)
@@ -605,23 +605,33 @@ func validateAppRevision(ctx context.Context, appkey *edgeproto.AppKey) error {
 }
 
 func main() {
+	nodeMgr.InitFlags()
 	var err error
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer(*tlsCertFile)
+	log.InitTracer(nodeMgr.TlsCertFile)
 	defer log.FinishTracer()
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	ctx := log.ContextWithSpan(context.Background(), span)
+
+	err = nodeMgr.Init(ctx, node.NodeTypeClusterSvc, node.WithName(*hostname), node.WithRegion(*region))
+	if err != nil {
+		log.FatalLog("init node mgr failed", "err", err)
+	}
 
 	clusterSvcPlugin, err = pfutils.GetClusterSvc(ctx, *pluginRequired)
 	if err != nil {
 		log.FatalLog("get cluster service", "err", err)
 	}
 
-	dialOpts, err = tls.GetTLSClientDialOption(*ctrlAddr, *tlsCertFile, false)
+	clientTlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegional,
+		[]node.MatchCA{node.SameRegionalMatchCA()})
 	if err != nil {
-		log.FatalLog("get TLS Credentials", "error", err)
+		log.FatalLog(err.Error())
 	}
+	dialOpts = tls.GetGrpcDialOption(clientTlsConfig)
 
 	if err = validateAppRevision(ctx, &MEXPrometheusAppKey); err != nil {
 		log.FatalLog("Validate Prometheus version", "error", err)
@@ -630,7 +640,6 @@ func main() {
 	if err = validateAppRevision(ctx, &NFSAutoProvAppKey); err != nil {
 		log.FatalLog("Validate NFSAutoProvision version", "error", err)
 	}
-	nodeMgr = node.Init(ctx, node.NodeTypeClusterSvc, node.WithName(*hostname))
 
 	// Update prometheus instances in a separate go routine
 	go updateAppInsts(ctx, &MEXPrometheusAppKey)
@@ -638,7 +647,7 @@ func main() {
 	// update nfs auto prov app instances
 	go updateAppInsts(ctx, &NFSAutoProvAppKey)
 
-	notifyClient := initNotifyClient(ctx, *notifyAddrs, *tlsCertFile)
+	notifyClient := initNotifyClient(ctx, *notifyAddrs, dialOpts)
 	notifyClient.RegisterRecvClusterInstCache(&ClusterInstCache)
 	notifyClient.RegisterRecvAutoScalePolicyCache(&AutoScalePolicyCache)
 	nodeMgr.RegisterClient(notifyClient)
