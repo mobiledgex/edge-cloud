@@ -33,6 +33,8 @@ func TestAppInstApi(t *testing.T) {
 
 	reduceInfoTimeouts(t, ctx)
 
+	InfluxUsageUnitTestSetup(t)
+
 	// cannote create instances without apps and cloudlets
 	for _, obj := range testutil.AppInstData {
 		err := appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
@@ -261,6 +263,8 @@ func TestAutoClusterInst(t *testing.T) {
 		&appInstInfoApi, &clusterInstInfoApi)
 
 	reduceInfoTimeouts(t, ctx)
+	InfluxUsageUnitTestSetup(t)
+
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
