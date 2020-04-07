@@ -16,20 +16,23 @@ import (
 
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:53001", "Notify listener address")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
-var tlsCertFile = flag.String("tls", "", "server tls cert file")
 
-var nodeMgr *node.NodeMgr
+var nodeMgr node.NodeMgr
 var sigChan chan os.Signal
 
 func main() {
+	nodeMgr.InitFlags()
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer(*tlsCertFile)
+	log.InitTracer(nodeMgr.TlsCertFile)
 	defer log.FinishTracer()
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	nodeMgr = node.Init(ctx, "notifyroot")
+	err := nodeMgr.Init(ctx, node.NodeTypeNotifyRoot)
+	if err != nil {
+		log.FatalLog("Failed to init node", "err", err)
+	}
 
 	notifyServer := &notify.ServerMgr{}
 	nodeMgr.RegisterServer(notifyServer)
@@ -37,7 +40,14 @@ func main() {
 		edgeproto.RegisterNodeApiServer(s, &nodeApi)
 		edgeproto.RegisterDebugApiServer(s, &debugApi)
 	})
-	notifyServer.Start(*notifyAddr, *tlsCertFile)
+	tlsConfig, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerGlobal,
+		[]node.MatchCA{node.AnyRegionalMatchCA()})
+	if err != nil {
+		log.FatalLog("Failed to get tls config", "err", err)
+	}
+	notifyServer.Start(*notifyAddr, tlsConfig)
 	defer notifyServer.Stop()
 
 	sigChan = make(chan os.Signal, 1)

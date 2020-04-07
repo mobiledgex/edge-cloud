@@ -19,6 +19,7 @@ package notify
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"net"
 	"time"
@@ -26,7 +27,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -101,7 +101,7 @@ func (mgr *ServerMgr) RegisterServerCb(registerServer func(s *grpc.Server)) {
 	mgr.regServ = registerServer
 }
 
-func (mgr *ServerMgr) Start(addr string, tlsCertFile string) {
+func (mgr *ServerMgr) Start(addr string, tlsConfig *tls.Config) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 
@@ -117,11 +117,7 @@ func (mgr *ServerMgr) Start(addr string, tlsCertFile string) {
 		log.FatalLog("ServerMgr listen failed", "err", err)
 	}
 
-	creds, err := tls.GetTLSServerCreds(tlsCertFile, true)
-	if err != nil {
-		log.FatalLog("Failed to get TLS creds", "err", err)
-	}
-	mgr.serv = grpc.NewServer(grpc.Creds(creds),
+	mgr.serv = grpc.NewServer(cloudcommon.GrpcCreds(tlsConfig),
 		grpc.KeepaliveParams(serverParams),
 		grpc.KeepaliveEnforcementPolicy(serverEnforcement),
 		grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor),

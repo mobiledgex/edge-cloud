@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -101,7 +102,7 @@ func (s *ControllerApi) RunJobs(run func(arg interface{}, addr string) error, ar
 	return joberr
 }
 
-func ControllerConnect(addr string) (*grpc.ClientConn, error) {
+func ControllerConnect(ctx context.Context, addr string) (*grpc.ClientConn, error) {
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, err
@@ -113,11 +114,16 @@ func ControllerConnect(addr string) (*grpc.ClientConn, error) {
 		// So set the hostname(SNI) on the TLS query to a valid SAN.
 		host = "ctrl.mobiledgex.net"
 	}
-	dialOption, err := tls.GetTLSClientDialOption(host, *tlsCertFile, false)
+	tlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegional,
+		[]node.MatchCA{node.SameRegionalMatchCA()},
+		node.WithTlsServerName(host))
 	if err != nil {
 		return nil, err
 	}
-	conn, err := grpc.Dial(addr, dialOption,
+	conn, err := grpc.Dial(addr,
+		tls.GetGrpcDialOption(tlsConfig),
 		grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc),
 		grpc.WithStreamInterceptor(log.StreamClientTraceGrpc),
 	)
@@ -127,16 +133,21 @@ func ControllerConnect(addr string) (*grpc.ClientConn, error) {
 	return conn, nil
 }
 
-func notifyRootConnect(notifyAddrs string) (*grpc.ClientConn, error) {
+func notifyRootConnect(ctx context.Context, notifyAddrs string) (*grpc.ClientConn, error) {
 	if notifyAddrs == "" {
 		return nil, fmt.Errorf("No parent notify address specified, cannot connect to notify root")
 	}
 	addrs := strings.Split(notifyAddrs, ",")
-	dialOption, err := tls.GetTLSClientDialOption(addrs[0], *tlsCertFile, false)
+	tlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegional,
+		[]node.MatchCA{node.GlobalMatchCA()},
+		node.WithTlsServerName(addrs[0]))
 	if err != nil {
 		return nil, err
 	}
-	conn, err := grpc.Dial(addrs[0], dialOption,
+	conn, err := grpc.Dial(addrs[0],
+		tls.GetGrpcDialOption(tlsConfig),
 		grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc),
 		grpc.WithStreamInterceptor(log.StreamClientTraceGrpc),
 	)

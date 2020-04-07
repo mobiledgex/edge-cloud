@@ -10,6 +10,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
 )
 
 type nodeType int32
@@ -216,7 +217,7 @@ func newNode(name, listenAddr string, connectAddrs []string, typ nodeType) *node
 		n.serverMgr.name = fmt.Sprintf("server %s", name)
 	}
 	if connectAddrs != nil {
-		n.client = NewClient(connectAddrs, "")
+		n.client = NewClient(connectAddrs, grpc.WithInsecure())
 		if typ == crm {
 			n.handler.RegisterCRMClient(n.client)
 		} else {
@@ -228,7 +229,7 @@ func newNode(name, listenAddr string, connectAddrs []string, typ nodeType) *node
 }
 
 func (n *node) startServer() {
-	n.serverMgr.Start(n.listenAddr, "")
+	n.serverMgr.Start(n.listenAddr, nil)
 }
 
 func (n *node) startClient() {

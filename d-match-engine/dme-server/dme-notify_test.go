@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 )
 
 func TestNotify(t *testing.T) {
@@ -30,10 +31,10 @@ func TestNotify(t *testing.T) {
 	serverHandler := notify.NewDummyHandler()
 	serverMgr := notify.ServerMgr{}
 	serverHandler.RegisterServer(&serverMgr)
-	serverMgr.Start(addr, "")
+	serverMgr.Start(addr, nil)
 
 	// client (dme) side
-	client := initNotifyClient(ctx, addr, "")
+	client := initNotifyClient(ctx, addr, grpc.WithInsecure())
 	client.Start()
 
 	// create data on server side
