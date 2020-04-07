@@ -81,27 +81,27 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		return reply, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 	if req.CarrierName == "" {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing CarrierName")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing CarrierName")
 
 		return reply, grpc.Errorf(codes.InvalidArgument, "Missing carrierName")
 	}
 	if req.GpsLocation == nil || (req.GpsLocation.Latitude == 0 && req.GpsLocation.Longitude == 0) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing GpsLocation")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing GpsLocation")
 		return reply, grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
 	}
 
 	if !util.IsLatitudeValid(req.GpsLocation.Latitude) || !util.IsLongitudeValid(req.GpsLocation.Longitude) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
 	}
 
 	err := dmecommon.FindCloudlet(ctx, ckey, req, reply)
-	log.DebugLog(log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
 
 func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dme.FqdnListReply, error) {
-	log.DebugLog(log.DebugLevelDmereq, "GetFqdnList", "req", req)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetFqdnList", "req", req)
 	flist := new(dme.FqdnListReply)
 
 	ckey, ok := dmecommon.CookieFromContext(ctx)
@@ -114,7 +114,7 @@ func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dm
 	}
 
 	dmecommon.GetFqdnList(req, flist)
-	log.DebugLog(log.DebugLevelDmereq, "GetFqdnList returns", "status", flist.Status)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetFqdnList returns", "status", flist.Status)
 	return flist, nil
 }
 
@@ -124,15 +124,15 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 
-	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "ckey", ckey)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "ckey", ckey)
 
 	if req.GpsLocation == nil {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid GetAppInstList request", "Error", "Missing GpsLocation")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid GetAppInstList request", "Error", "Missing GpsLocation")
 		return nil, grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
 	alist := new(dme.AppInstListReply)
-	dmecommon.GetAppInstList(ckey, req, alist)
-	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList returns", "status", alist.Status)
+	dmecommon.GetAppInstList(ctx, ckey, req, alist)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppInstList returns", "status", alist.Status)
 	return alist, nil
 }
 
@@ -144,17 +144,17 @@ func (s *server) VerifyLocation(ctx context.Context,
 	reply.GpsLocationStatus = dme.VerifyLocationReply_LOC_UNKNOWN
 	reply.GpsLocationAccuracyKm = -1
 
-	log.DebugLog(log.DebugLevelDmereq, "Received Verify Location",
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Received Verify Location",
 		"VerifyLocToken", req.VerifyLocToken,
 		"GpsLocation", req.GpsLocation)
 
 	if req.GpsLocation == nil || (req.GpsLocation.Latitude == 0 && req.GpsLocation.Longitude == 0) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
 		return reply, grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
 
 	if !util.IsLatitudeValid(req.GpsLocation.Latitude) || !util.IsLongitudeValid(req.GpsLocation.Longitude) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid VerifyLocation GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
 	}
 	err := operatorApiGw.VerifyLocation(req, reply)
@@ -174,26 +174,26 @@ func (s *server) RegisterClient(ctx context.Context,
 
 	mstatus := new(dme.RegisterClientReply)
 
-	log.DebugLog(log.DebugLevelDmereq, "RegisterClient received", "request", req)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "RegisterClient received", "request", req)
 
 	if req.OrgName == "" {
-		log.DebugLog(log.DebugLevelDmereq, "OrgName cannot be empty")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "OrgName cannot be empty")
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
 		return mstatus, grpc.Errorf(codes.InvalidArgument, "OrgName cannot be empty")
 	}
 	if req.AppName == "" {
-		log.DebugLog(log.DebugLevelDmereq, "AppName cannot be empty")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "AppName cannot be empty")
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
 		return mstatus, grpc.Errorf(codes.InvalidArgument, "AppName cannot be empty")
 	}
 	if req.AppVers == "" {
-		log.DebugLog(log.DebugLevelDmereq, "AppVers cannot be empty")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "AppVers cannot be empty")
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
 		return mstatus, grpc.Errorf(codes.InvalidArgument, "AppVers cannot be empty")
 	}
 	authkey, err := dmecommon.GetAuthPublicKey(req.OrgName, req.AppName, req.AppVers)
 	if err != nil {
-		log.DebugLog(log.DebugLevelDmereq, "fail to get public key", "err", err)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "fail to get public key", "err", err)
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
 		return mstatus, err
 	}
@@ -203,22 +203,22 @@ func (s *server) RegisterClient(ctx context.Context,
 	if req.AuthToken == "" {
 		if authkey != "" {
 			// we provisioned a key, and one was not provided.
-			log.DebugLog(log.DebugLevelDmereq, "App has key, no token received")
+			log.SpanLog(ctx, log.DebugLevelDmereq, "App has key, no token received")
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
 			return mstatus, grpc.Errorf(codes.InvalidArgument, "No authtoken received")
 		}
 		// for now we will allow a tokenless register to pass if the app does not have one
-		log.DebugLog(log.DebugLevelDmereq, "Allowing register without token")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Allowing register without token")
 
 	} else {
 		if authkey == "" {
-			log.DebugLog(log.DebugLevelDmereq, "No authkey provisioned to validate token")
+			log.SpanLog(ctx, log.DebugLevelDmereq, "No authkey provisioned to validate token")
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
 			return mstatus, grpc.Errorf(codes.Unauthenticated, "No authkey found to validate token")
 		}
-		err := dmecommon.VerifyAuthToken(req.AuthToken, authkey, req.OrgName, req.AppName, req.AppVers)
+		err := dmecommon.VerifyAuthToken(ctx, req.AuthToken, authkey, req.OrgName, req.AppName, req.AppVers)
 		if err != nil {
-			log.DebugLog(log.DebugLevelDmereq, "Failed to verify token", "err", err)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Failed to verify token", "err", err)
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
 			return mstatus, grpc.Errorf(codes.Unauthenticated, "failed to verify token - %s", err.Error())
 		}
@@ -254,7 +254,7 @@ func (s *server) AddUserToGroup(ctx context.Context,
 }
 
 func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {
-	log.DebugLog(log.DebugLevelDmereq, "GetQosPositionKpi", "request", req)
+	log.SpanLog(getQosSvr.Context(), log.DebugLevelDmereq, "GetQosPositionKpi", "request", req)
 	return operatorApiGw.GetQOSPositionKPI(req, getQosSvr)
 }
 
@@ -265,7 +265,7 @@ func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, e
 	if *solib == "" {
 		*solib = os.Getenv("GOPATH") + "/plugins/platforms.so"
 	}
-	log.DebugLog(log.DebugLevelDmereq, "Loading plugin", "plugin", *solib)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Loading plugin", "plugin", *solib)
 	plug, err := plugin.Open(*solib)
 	if err != nil {
 		log.WarnLog("failed to load plugin", "plugin", *solib, "error", err)
@@ -316,11 +316,13 @@ func main() {
 	}
 	operatorApiGw, err = initOperator(ctx, *carrier)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
 	}
 	var servers = operator.OperatorApiGwServers{VaultAddr: nodeMgr.VaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl}
 	err = operatorApiGw.Init(*carrier, &servers)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Unable to init API GW", "err", err)
 
 	}
@@ -328,6 +330,7 @@ func main() {
 
 	err = dmecommon.InitVault(nodeMgr.VaultAddr, *region)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed to init vault", "err", err)
 	}
 	if *testMode {
@@ -348,7 +351,7 @@ func main() {
 		log.FatalLog("Failed to get notify client tls config", "err", err)
 	}
 
-	notifyClient := initNotifyClient(*notifyAddrs, tls.GetGrpcDialOption(notifyClientTls))
+	notifyClient := initNotifyClient(ctx, *notifyAddrs, tls.GetGrpcDialOption(notifyClientTls))
 	sendMetric := notify.NewMetricSend()
 	notifyClient.RegisterSend(sendMetric)
 	sendAutoProvCounts := notify.NewAutoProvCountsSend()
