@@ -491,6 +491,7 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 		}
 	}
 	for _, p := range util.Deployment.EdgeTurns {
+		opts = append(opts, process.WithRolesFile(rolesfile))
 		opts = append(opts, process.WithDebug("api,notify"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false

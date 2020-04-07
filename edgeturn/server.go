@@ -20,6 +20,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/log"
 	edgetls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/segmentio/ksuid"
@@ -28,8 +29,8 @@ import (
 
 var listenAddr = flag.String("listenAddr", "127.0.0.1:6080", "EdgeTurn listener address")
 var proxyAddr = flag.String("proxyAddr", "127.0.0.1:8443", "EdgeTurn Proxy Address")
+var region = flag.String("region", "local", "region name")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
-var tlsCertFile = flag.String("tls", "", "server tls cert file")
 var testMode = flag.Bool("testMode", false, "Run EdgeTurn in test mode")
 
 const (
@@ -81,12 +82,14 @@ func (cp *TurnProxyObj) Get(token string) *ProxyValue {
 var (
 	sigChan   chan os.Signal
 	TurnProxy = &TurnProxyObj{}
+	nodeMgr   node.NodeMgr
 )
 
 func main() {
+	nodeMgr.InitFlags()
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer(*tlsCertFile)
+	log.InitTracer(nodeMgr.TlsCertFile)
 	defer log.FinishTracer()
 
 	sigChan = make(chan os.Signal, 1)
@@ -94,6 +97,12 @@ func main() {
 
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	ctx := log.ContextWithSpan(context.Background(), span)
+
+	err := nodeMgr.Init(ctx, node.NodeTypeEdgeTurn, node.WithRegion(*region))
+	if err != nil {
+		span.Finish()
+		log.FatalLog("Failed to init node", "err", err)
+	}
 
 	started := make(chan bool)
 	go func() {
@@ -129,19 +138,14 @@ func setupTurnServer(started chan bool) error {
 	ctx := log.ContextWithSpan(context.Background(), span)
 	defer span.Finish()
 
-	mutualAuth := true
-	if *testMode {
-		mutualAuth = false
-	}
-	tlsConfig, err := edgetls.GetTLSServerConfig(*tlsCertFile, mutualAuth)
+	tlsConfig, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegional,
+		[]node.MatchCA{
+			node.SameRegionalCloudletMatchCA(),
+		})
 	if err != nil {
-		return err
-	}
-	if tlsConfig == nil {
-		tlsConfig, err = edgetls.GetLocalTLSConfig()
-		if err != nil {
-			return fmt.Errorf("unable to fetch tls local server config, %v", err)
-		}
+		return fmt.Errorf("failed to get tls config: %v", err)
 	}
 	turnConn, err := tls.Listen("tcp", *listenAddr, tlsConfig)
 	if err != nil {
@@ -156,24 +160,17 @@ func setupTurnServer(started chan bool) error {
 		if err != nil {
 			return fmt.Errorf("failed to accept connection, %v", err)
 		}
-		go handleConnection(ctx, tlsConfig, crmConn)
+		go handleConnection(ctx, crmConn)
 	}
 }
 
 // On every connection from CRM to EdgeTurn server, it returns a new Access Token.
 // This token is used to proxy client connections to actual CRM connection
-func handleConnection(ctx context.Context, tlsConfig *tls.Config, crmConn net.Conn) {
-	// Since this port is not exposed by external proxy, use local certs here
-	tlsConfig, err := edgetls.GetLocalTLSConfig()
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "unable to fetch tls local server config", "err", err)
-		return
-	}
-
+func handleConnection(ctx context.Context, crmConn net.Conn) {
 	// Fetch exec req info
 	var execReqInfo cloudcommon.ExecReqInfo
 	d := json.NewDecoder(crmConn)
-	err = d.Decode(&execReqInfo)
+	err := d.Decode(&execReqInfo)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "failed to decode execreq info", "err", err)
 		return

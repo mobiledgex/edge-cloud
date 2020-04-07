@@ -141,10 +141,13 @@ type NotifyRoot struct {
 	cmd           *exec.Cmd
 }
 type EdgeTurn struct {
-	Common     `yaml:",inline"`
-	TLS        TLSCerts
-	cmd        *exec.Cmd
-	ListenAddr string
-	ProxyAddr  string
-	TestMode   bool
+	Common        `yaml:",inline"`
+	TLS           TLSCerts
+	cmd           *exec.Cmd
+	UseVaultCerts bool
+	VaultAddr     string
+	ListenAddr    string
+	ProxyAddr     string
+	Region        string
+	TestMode      bool
 }

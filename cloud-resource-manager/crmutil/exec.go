@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	edgetls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util/proxyutil"
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -169,7 +169,13 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		if req.EdgeTurnAddr == "" {
 			return fmt.Errorf("no edgeturn server address specified")
 		}
-		tlsConfig, err := edgetls.GetTLSClientConfig(req.EdgeTurnAddr, cd.TlsCertFile, "", false)
+
+		tlsConfig, err := cd.NodeMgr.InternalPki.GetClientTlsConfig(ctx,
+			cd.NodeMgr.CommonName(),
+			node.CertIssuerRegionalCloudlet,
+			[]node.MatchCA{node.SameRegionalCloudletMatchCA()},
+			node.WithTlsServerName(req.EdgeTurnAddr),
+			node.WithTlsSkipVerify(true))
 		if err != nil {
 			return err
 		}

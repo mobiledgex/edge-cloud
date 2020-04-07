@@ -670,6 +670,8 @@ type VaultRegionRoles struct {
 	CtrlSecretID       string `json:"controllersecretid"`
 	ClusterSvcRoleID   string `json:"clustersvcroleid"`
 	ClusterSvcSecretID string `json:"clustersvcsecretid"`
+	EdgeTurnRoleID     string `json:"edgeturnroleid"`
+	EdgeTurnSecretID   string `json:"edgeturnsecretid"`
 }
 
 func (s *VaultRoles) GetRegionRoles(region string) *VaultRegionRoles {
@@ -736,6 +738,7 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 		p.GetAppRole(region, "rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
 		p.GetAppRole(region, "controller", &roles.CtrlRoleID, &roles.CtrlSecretID, &err)
 		p.GetAppRole(region, "cluster-svc", &roles.ClusterSvcRoleID, &roles.ClusterSvcSecretID, &err)
+		p.GetAppRole(region, "edgeturn", &roles.EdgeTurnRoleID, &roles.EdgeTurnSecretID, &err)
 		p.PutSecret(region, "dme", p.DmeSecret+"-old", &err)
 		p.PutSecret(region, "dme", p.DmeSecret, &err)
 		vroles.RegionRoles[region] = &roles
@@ -1096,8 +1099,18 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
 	}
+	if p.Region != "" {
+		args = append(args, "--region", p.Region)
+	}
 	if p.TestMode {
 		args = append(args, "--testMode")
+	}
+	if p.UseVaultCerts {
+		args = append(args, "--useVaultCerts")
+	}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -1105,8 +1118,26 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
+	var envs []string
+	if options.RolesFile != "" {
+		dat, err := ioutil.ReadFile(options.RolesFile)
+		if err != nil {
+			return err
+		}
+		roles := VaultRoles{}
+		err = yaml.Unmarshal(dat, &roles)
+		if err != nil {
+			return err
+		}
+		rr := roles.GetRegionRoles(p.Region)
+		envs = []string{
+			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.EdgeTurnRoleID),
+			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.EdgeTurnSecretID),
+		}
+		log.Printf("edgeturn envs: %v\n", envs)
+	}
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envs, logfile)
 	return err
 }
 

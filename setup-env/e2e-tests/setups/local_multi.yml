@@ -138,5 +138,7 @@ edgeturns:
 - name: edgeturn
   hostname: "127.0.0.1"
   testmode: true
+  usevaultcerts: true
+  vaultaddr: "http://127.0.0.1:8200"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
