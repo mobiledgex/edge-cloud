@@ -692,6 +692,7 @@ func GetAppFqdn(ckey *CookieKey, mreq *dme.AppFqdnRequest, repl *dme.AppFqdnRepl
 	if !ok {
 		log.DebugLog(log.DebugLevelDmereq, "GetAppFqdn cannot find app", "appkey", appkey)
 		repl.Status = dme.AppFqdnReply_AF_FAIL
+		return
 	}
 	repl.AppFqdn = tbl.Apps[appkey].OfficialFqdn
 	if repl.AppFqdn == "" {
