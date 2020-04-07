@@ -679,6 +679,29 @@ func GetFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 	clist.Status = dme.FqdnListReply_FL_SUCCESS
 }
 
+func GetAppFqdn(ckey *CookieKey, mreq *dme.AppFqdnRequest, repl *dme.AppFqdnReply) {
+	var tbl *DmeApps
+	tbl = DmeAppTbl
+	var appkey edgeproto.AppKey
+	appkey.Organization = ckey.OrgName
+	appkey.Name = ckey.AppName
+	appkey.Version = ckey.AppVers
+	tbl.RLock()
+	defer tbl.RUnlock()
+	_, ok := tbl.Apps[appkey]
+	if !ok {
+		log.DebugLog(log.DebugLevelDmereq, "GetAppFqdn cannot find app", "appkey", appkey)
+		repl.Status = dme.AppFqdnReply_AF_FAIL
+	}
+	repl.AppFqdn = tbl.Apps[appkey].OfficialFqdn
+	if repl.AppFqdn == "" {
+		log.DebugLog(log.DebugLevelDmereq, "GetAppFqdn FQDN is empty", "appkey", appkey)
+		repl.Status = dme.AppFqdnReply_AF_FAIL
+	} else {
+		repl.Status = dme.AppFqdnReply_AF_SUCCESS
+	}
+}
+
 func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
 	var tbl *DmeApps
 	tbl = DmeAppTbl

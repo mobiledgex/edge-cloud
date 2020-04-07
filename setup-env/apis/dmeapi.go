@@ -31,6 +31,7 @@ type dmeApiRequest struct {
 	Aireq            dmeproto.AppInstListRequest     `yaml:"appinstlistrequest"`
 	Fqreq            dmeproto.FqdnListRequest        `yaml:"fqdnlistrequest"`
 	Qosreq           dmeproto.QosPositionRequest     `yaml:"qospositionrequest"`
+	AppFqreq         dmeproto.AppFqdnRequest         `yaml:"appfqdnrequest"`
 	TokenServerPath  string                          `yaml:"token-server-path"`
 	ErrorExpected    string                          `yaml:"error-expected"`
 	Repeat           int                             `yaml:"repeat"`
@@ -135,6 +136,17 @@ func (c *dmeRestClient) GetAppInstList(ctx context.Context, in *dmeproto.AppInst
 		c.client, in, out)
 	if err != nil {
 		log.Printf("getappinstlist rest API failed\n")
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dmeRestClient) GetAppFqdn(ctx context.Context, in *dmeproto.AppFqdnRequest, opts ...grpc.CallOption) (*dmeproto.AppFqdnReply, error) {
+	out := new(dmeproto.AppFqdnReply)
+	err := util.CallRESTPost("https://"+c.addr+"/v1/getappfqdn",
+		c.client, in, out)
+	if err != nil {
+		log.Printf("getappfqdn rest API failed\n")
 		return nil, err
 	}
 	return out, nil
@@ -320,6 +332,13 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 				return (*resp).AppFqdns[i].Fqdns[0] < (*resp).AppFqdns[j].Fqdns[0]
 			})
 		}
+		dmereply = resp
+		dmeerror = err
+
+	case "getappfqdn":
+		apiRequest.AppFqreq.SessionCookie = sessionCookie
+		log.Printf("AppFqdnRequest: %+v\n", apiRequest.AppFqreq)
+		resp, err := client.GetAppFqdn(ctx, &apiRequest.AppFqreq)
 		dmereply = resp
 		dmeerror = err
 

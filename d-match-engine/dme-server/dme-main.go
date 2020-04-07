@@ -136,6 +136,18 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 	return alist, nil
 }
 
+func (s *server) GetAppFqdn(ctx context.Context, req *dme.AppFqdnRequest) (*dme.AppFqdnReply, error) {
+	ckey, ok := dmecommon.CookieFromContext(ctx)
+	if !ok {
+		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
+	}
+	log.DebugLog(log.DebugLevelDmereq, "GetAppFqdn", "ckey", ckey)
+	reply := new(dme.AppFqdnReply)
+	dmecommon.GetAppFqdn(ckey, req, reply)
+	log.DebugLog(log.DebugLevelDmereq, "GetAppFqdn returns", "status", reply.Status)
+	return reply, nil
+}
+
 func (s *server) VerifyLocation(ctx context.Context,
 	req *dme.VerifyLocationRequest) (*dme.VerifyLocationReply, error) {
 

@@ -27,6 +27,8 @@ It has these top-level messages:
 	FqdnListRequest
 	AppFqdn
 	FqdnListReply
+	AppFqdnRequest
+	AppFqdnReply
 	DynamicLocGroupRequest
 	DynamicLocGroupReply
 	QosPosition
@@ -461,6 +463,63 @@ func GetFqdnLists(c *cli.Command, data []distributed_match_engine.FqdnListReques
 	}
 }
 
+var GetAppFqdnCmd = &cli.Command{
+	Use:          "GetAppFqdn",
+	RequiredArgs: strings.Join(AppFqdnRequestRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppFqdnRequestOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppFqdnRequestAliasArgs, " "),
+	SpecialArgs:  &AppFqdnRequestSpecialArgs,
+	Comments:     AppFqdnRequestComments,
+	ReqData:      &distributed_match_engine.AppFqdnRequest{},
+	ReplyData:    &distributed_match_engine.AppFqdnReply{},
+	Run:          runGetAppFqdn,
+}
+
+func runGetAppFqdn(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*distributed_match_engine.AppFqdnRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetAppFqdn(c, obj)
+}
+
+func GetAppFqdn(c *cli.Command, in *distributed_match_engine.AppFqdnRequest) error {
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := MatchEngineApiCmd.GetAppFqdn(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetAppFqdn failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetAppFqdns(c *cli.Command, data []distributed_match_engine.AppFqdnRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetAppFqdn %v\n", data[ii])
+		myerr := GetAppFqdn(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var GetQosPositionKpiCmd = &cli.Command{
 	Use:          "GetQosPositionKpi",
 	RequiredArgs: strings.Join(QosPositionRequestRequiredArgs, " "),
@@ -546,6 +605,7 @@ var MatchEngineApiCmds = []*cobra.Command{
 	AddUserToGroupCmd.GenCmd(),
 	GetAppInstListCmd.GenCmd(),
 	GetFqdnListCmd.GenCmd(),
+	GetAppFqdnCmd.GenCmd(),
 	GetQosPositionKpiCmd.GenCmd(),
 }
 
@@ -1046,6 +1106,37 @@ var FqdnListReplyComments = map[string]string{
 var FqdnListReplySpecialArgs = map[string]string{
 	"appfqdns[#].fqdns": "StringArray",
 }
+var AppFqdnRequestRequiredArgs = []string{}
+var AppFqdnRequestOptionalArgs = []string{
+	"ver",
+	"sessioncookie",
+	"tags[#].type",
+	"tags[#].data",
+}
+var AppFqdnRequestAliasArgs = []string{}
+var AppFqdnRequestComments = map[string]string{
+	"ver":           "API version",
+	"sessioncookie": "Session Cookie from RegisterClientRequest",
+	"tags[#].type":  "type of data",
+	"tags[#].data":  "data value",
+}
+var AppFqdnRequestSpecialArgs = map[string]string{}
+var AppFqdnReplyRequiredArgs = []string{}
+var AppFqdnReplyOptionalArgs = []string{
+	"ver",
+	"appfqdn",
+	"status",
+	"tags[#].type",
+	"tags[#].data",
+}
+var AppFqdnReplyAliasArgs = []string{}
+var AppFqdnReplyComments = map[string]string{
+	"ver":          "API version",
+	"status":       ", one of AfUndefined, AfSuccess, AfFail",
+	"tags[#].type": "type of data",
+	"tags[#].data": "data value",
+}
+var AppFqdnReplySpecialArgs = map[string]string{}
 var DynamicLocGroupRequestRequiredArgs = []string{}
 var DynamicLocGroupRequestOptionalArgs = []string{
 	"ver",
