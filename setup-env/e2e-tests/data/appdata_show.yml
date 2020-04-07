@@ -156,6 +156,98 @@ cloudlets:
   physicalname: gcp-cloud-5
   containerversion: 2019-10-24
 
+cloudletinfos:
+- key:
+    organization: tmus
+    name: tmus-cloud-1
+  state: CloudletStateReady
+  notifyid: 7
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+- key:
+    organization: tmus
+    name: tmus-cloud-2
+  state: CloudletStateReady
+  notifyid: 8
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+- key:
+    organization: tmus
+    name: tmus-cloud-3
+  state: CloudletStateReady
+  notifyid: 9
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+- key:
+    organization: azure
+    name: azure-cloud-4
+  state: CloudletStateReady
+  notifyid: 10
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+- key:
+    organization: gcp
+    name: gcp-cloud-5
+  state: CloudletStateReady
+  notifyid: 11
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+
 apps:
 - key:
     organization: AcmeAppCo
