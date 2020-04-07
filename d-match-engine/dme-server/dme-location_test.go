@@ -17,6 +17,7 @@ func TestVerifyLoc(t *testing.T) {
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
+	span := log.SpanFromContext(ctx)
 
 	dmecommon.SetupMatchEngine()
 	InitAppInstClients()
@@ -25,15 +26,15 @@ func TestVerifyLoc(t *testing.T) {
 
 	// add all data
 	for _, app := range dmetest.GenerateApps() {
-		dmecommon.AddApp(app)
+		dmecommon.AddApp(ctx, app)
 	}
 	for _, inst := range dmetest.GenerateAppInsts() {
-		dmecommon.AddAppInst(inst)
+		dmecommon.AddAppInst(ctx, inst)
 	}
 	serv := server{}
 	// test verify location
 	for ii, rr := range dmetest.VerifyLocData {
-		ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123)
+		ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
 
 		regReply, err := serv.RegisterClient(ctx, &rr.Reg)
 		assert.Nil(t, err, "register client")
@@ -41,7 +42,7 @@ func TestVerifyLoc(t *testing.T) {
 		// Since we're directly calling functions, we end up
 		// bypassing the interceptor which sets up the cookie key.
 		// So set it on the context manually.
-		ckey, err := dmecommon.VerifyCookie(regReply.SessionCookie)
+		ckey, err := dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
 		require.Nil(t, err, "verify cookie")
 		ctx = dmecommon.NewCookieContext(ctx, ckey)
 
