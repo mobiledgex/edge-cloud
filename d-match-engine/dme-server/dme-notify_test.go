@@ -34,7 +34,7 @@ func TestNotify(t *testing.T) {
 	serverMgr.Start(addr, nil)
 
 	// client (dme) side
-	client := initNotifyClient(addr, grpc.WithInsecure())
+	client := initNotifyClient(ctx, addr, grpc.WithInsecure())
 	client.Start()
 
 	// create data on server side
@@ -83,6 +83,33 @@ func TestNotify(t *testing.T) {
 	client.Start()
 	waitForNoAppInst(appInsts[last])
 	checkAllData(t, remaining)
+
+	// add a new device - see that it makes it to the server
+	for _, reg := range dmetest.DeviceData {
+		recordDevice(ctx, &reg)
+	}
+	// verify the devices were added to the server
+	count := len(dmetest.DeviceData) - 1 // Since one is a duplicate
+	// verify that devices are in local cache
+	assert.Equal(t, count, len(platformClientsCache.Objs))
+	serverHandler.WaitForDevices(count)
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
+	// Delete all elements from local cache directly
+	for _, obj := range platformClientsCache.Objs {
+		delete(platformClientsCache.Objs, obj.GetKeyVal())
+		delete(platformClientsCache.List, obj.GetKeyVal())
+	}
+	assert.Equal(t, 0, len(platformClientsCache.Objs))
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
+	// Add a single device - make sure count in local cache is updated
+	recordDevice(ctx, &dmetest.DeviceData[0])
+	assert.Equal(t, 1, len(platformClientsCache.Objs))
+	// Make sure that count in the server cache is the same
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
+	// Add the same device, check that nothing is updated
+	recordDevice(ctx, &dmetest.DeviceData[0])
+	assert.Equal(t, 1, len(platformClientsCache.Objs))
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
 
 	serverMgr.Stop()
 	client.Stop()
