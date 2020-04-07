@@ -11,14 +11,14 @@ var NianticUniqueId = "NianticLabs"
 // Device - used to test devices that send registered
 var DeviceData = []dme.RegisterClientRequest{
 	dme.RegisterClientRequest{
-		OrgName:      cloudcommon.DeveloperSamsung,
+		OrgName:      cloudcommon.OrganizationSamsung,
 		AppName:      cloudcommon.SamsungEnablingLayer,
 		AppVers:      "1.1",
 		UniqueIdType: SamsungUniqueId,
 		UniqueId:     "device1",
 	},
 	dme.RegisterClientRequest{
-		OrgName:      cloudcommon.DeveloperSamsung,
+		OrgName:      cloudcommon.OrganizationSamsung,
 		AppName:      cloudcommon.SamsungEnablingLayer,
 		AppVers:      "2.1",
 		UniqueIdType: SamsungUniqueId,
@@ -33,7 +33,7 @@ var DeviceData = []dme.RegisterClientRequest{
 	},
 	// Duplicate Register
 	dme.RegisterClientRequest{
-		OrgName:      cloudcommon.DeveloperSamsung,
+		OrgName:      cloudcommon.OrganizationSamsung,
 		AppName:      cloudcommon.SamsungEnablingLayer,
 		AppVers:      "2.1",
 		UniqueIdType: SamsungUniqueId,

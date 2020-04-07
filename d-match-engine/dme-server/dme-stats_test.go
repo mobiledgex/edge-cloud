@@ -142,10 +142,10 @@ func TestDeviceRecord(t *testing.T) {
 	serverHandler := notify.NewDummyHandler()
 	serverMgr := notify.ServerMgr{}
 	serverHandler.RegisterServer(&serverMgr)
-	serverMgr.Start(addr, "")
+	serverMgr.Start(addr, nil)
 
 	// client (dme) side
-	client := initNotifyClient(addr, "")
+	client := initNotifyClient(addr, nil)
 	client.Start()
 
 	// add a new device - see that it makes it to the server

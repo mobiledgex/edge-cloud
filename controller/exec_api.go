@@ -144,7 +144,7 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 			reply, err = s.SendLocalRequest(ctx, req)
 		} else {
 			// connect to remote node
-			conn, err := ControllerConnect(addr)
+			conn, err := ControllerConnect(ctx, addr)
 			if err != nil {
 				return err
 			}

@@ -22,17 +22,13 @@ import (
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	opentracing "github.com/opentracing/opentracing-go"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
-var vaultAddr = flag.String("vaultAddr", "", "Address to vault")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var notifySrvAddr = flag.String("notifySrvAddr", "127.0.0.1:51001", "Address for the CRM notify listener to run on")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
 var physicalName = flag.String("physicalName", "", "Physical infrastructure cloudlet name, defaults to cloudlet name in cloudletKey")
 var debugLevels = flag.String("d", "", fmt.Sprintf("Comma separated list of %v", log.DebugLevelStrings))
-var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var hostname = flag.String("hostname", "", "Unique hostname within Cloudlet")
 var platformName = flag.String("platform", "", "Platform type of Cloudlet")
 var solib = flag.String("plugin", "", "plugin file")
@@ -50,7 +46,7 @@ var commercialCerts = flag.Bool("commercialCerts", false, "Get TLS certs from Le
 // The key for myCloudletInfo is provided as a configuration - either command line or
 // from a file. The rest of the data is extraced from Openstack.
 var myCloudletInfo edgeproto.CloudletInfo //XXX this effectively makes one CRM per cloudlet
-var nodeMgr *node.NodeMgr
+var nodeMgr node.NodeMgr
 
 var sigChan chan os.Signal
 var mainStarted chan struct{}
@@ -61,9 +57,10 @@ var platform pf.Platform
 const ControllerTimeout = 1 * time.Minute
 
 func main() {
+	nodeMgr.InitFlags()
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer(*tlsCertFile)
+	log.InitTracer(nodeMgr.TlsCertFile)
 	defer log.FinishTracer()
 
 	var span opentracing.Span
@@ -79,7 +76,12 @@ func main() {
 
 	standalone := false
 	cloudcommon.ParseMyCloudletKey(standalone, cloudletKeyStr, &myCloudletInfo.Key)
-	nodeMgr = node.Init(ctx, node.NodeTypeCRM, node.WithName(*hostname), node.WithCloudletKey(&myCloudletInfo.Key), node.WithNoUpdateMyNode())
+	err := nodeMgr.Init(ctx, node.NodeTypeCRM, node.WithName(*hostname), node.WithCloudletKey(&myCloudletInfo.Key), node.WithNoUpdateMyNode(), node.WithRegion(*region))
+	if err != nil {
+		span.Finish()
+		log.FatalLog(err.Error())
+	}
+
 	if *platformName == "" {
 		// see if env var was set
 		*platformName = os.Getenv("PLATFORM")
@@ -94,7 +96,6 @@ func main() {
 	log.SpanLog(ctx, log.DebugLevelInfo, "Using cloudletKey", "key", myCloudletInfo.Key, "platform", *platformName, "physicalName", physicalName)
 
 	// Load platform implementation.
-	var err error
 	platform, err = pfutils.GetPlatform(ctx, *platformName)
 	if err != nil {
 		span.Finish()
@@ -102,12 +103,6 @@ func main() {
 	}
 
 	controllerData = crmutil.NewControllerData(platform, *tlsCertFile)
-
-	creds, err := tls.GetTLSServerCreds(*tlsCertFile, true)
-	if err != nil {
-		span.Finish()
-		log.FatalLog("get TLS Credentials", "error", err)
-	}
 
 	updateCloudletStatus := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
@@ -121,14 +116,26 @@ func main() {
 
 	//ctl notify
 	addrs := strings.Split(*notifyAddrs, ",")
-	notifyClient = notify.NewClient(addrs, *tlsCertFile)
+	notifyClientTls, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegionalCloudlet,
+		[]node.MatchCA{node.SameRegionalMatchCA()})
+	if err != nil {
+		log.FatalLog(err.Error())
+	}
+	notifyServerTls, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegionalCloudlet,
+		[]node.MatchCA{node.SameRegionalCloudletMatchCA()})
+	if err != nil {
+		log.FatalLog(err.Error())
+	}
+	dialOption := tls.GetGrpcDialOption(notifyClientTls)
+	notifyClient = notify.NewClient(addrs, dialOption)
 	notifyClient.SetFilterByCloudletKey()
 	InitClientNotify(notifyClient, controllerData)
 	notifyClient.Start()
 	defer notifyClient.Stop()
-
-	grpcServer := grpc.NewServer(grpc.Creds(creds))
-	reflection.Register(grpcServer)
 
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
@@ -163,7 +170,7 @@ func main() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err := initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, *vaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
+		if err := initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
@@ -199,7 +206,7 @@ func main() {
 		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
 		rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
 		if err == nil {
-			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, *vaultAddr, rootlb, *commercialCerts)
+			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, nodeMgr.VaultAddr, rootlb, *commercialCerts)
 		}
 		tlsSpan.Finish()
 	}()
@@ -207,7 +214,7 @@ func main() {
 	// setup crm notify listener (for shepherd)
 	var notifyServer notify.ServerMgr
 	initSrvNotify(&notifyServer)
-	notifyServer.Start(*notifySrvAddr, *tlsCertFile)
+	notifyServer.Start(*notifySrvAddr, notifyServerTls)
 	defer notifyServer.Stop()
 
 	span.Finish()

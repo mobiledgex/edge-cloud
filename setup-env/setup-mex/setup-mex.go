@@ -510,6 +510,7 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 		}
 	}
 	for _, p := range util.Deployment.ClusterSvcs {
+		opts = append(opts, process.WithRolesFile(rolesfile))
 		opts = append(opts, process.WithDebug("notify,mexos,api"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false

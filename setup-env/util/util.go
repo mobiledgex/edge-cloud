@@ -580,8 +580,9 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 func ControllerCLI(ctrl *process.Controller, args ...string) ([]byte, error) {
 	cmdargs := []string{"--addr", ctrl.ApiAddr, "controller"}
-	if ctrl.TLS.ClientCert != "" {
-		cmdargs = append(cmdargs, "--tls", ctrl.TLS.ClientCert)
+	tlsFile := ctrl.GetTlsFile()
+	if tlsFile != "" {
+		cmdargs = append(cmdargs, "--tls", tlsFile)
 	}
 	cmdargs = append(cmdargs, args...)
 	log.Printf("Running: edgectl %v\n", cmdargs)

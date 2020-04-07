@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"os/exec"
 	"testing"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
@@ -31,6 +34,7 @@ func TestClusterInstApi(t *testing.T) {
 		&appInstInfoApi, &clusterInstInfoApi)
 
 	reduceInfoTimeouts(t, ctx)
+	InfluxUsageUnitTestSetup(t)
 
 	// cannot create insts without cluster/cloudlet
 	for _, obj := range testutil.ClusterInstData {
@@ -244,7 +248,7 @@ func checkReservedBy(t *testing.T, ctx context.Context, api *testutil.ClusterIns
 	require.True(t, found, "get ClusterInst")
 	require.True(t, cinst.Reservable)
 	require.Equal(t, expected, cinst.ReservedBy)
-	require.Equal(t, cloudcommon.DeveloperMobiledgeX, cinst.Key.Organization)
+	require.Equal(t, cloudcommon.OrganizationMobiledgeX, cinst.Key.Organization)
 }
 
 // Test that Crm Override for Delete ClusterInst overrides any failures
@@ -304,4 +308,28 @@ func testClusterInstOverrideTransientDelete(t *testing.T, ctx context.Context, a
 
 	_, err = appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err, "delete App")
+}
+
+func InfluxUsageUnitTestSetup(t *testing.T) {
+	addr := "http://127.0.0.1:8086"
+
+	// start influxd if not already running
+	_, err := exec.Command("sh", "-c", "pgrep -x influxd").Output()
+	if err != nil {
+		p := process.Influx{}
+		p.Common.Name = "influx-test"
+		p.HttpAddr = addr
+		p.DataDir = "/var/tmp/.influxdb"
+		// start influx
+		err = p.StartLocal("/var/tmp/influxdb.log",
+			process.WithCleanStartup())
+		require.Nil(t, err, "start InfluxDB server")
+		defer p.StopLocal()
+	}
+
+	q := influxq.NewInfluxQ(cloudcommon.EventsDbName, "", "")
+	err = q.Start(addr)
+	require.Nil(t, err, "new influx q")
+	defer q.Stop()
+	services.events = q
 }

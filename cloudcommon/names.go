@@ -14,14 +14,15 @@ import (
 )
 
 var AppDNSRoot = "mobiledgex.net"
+var CertDNSRoot = "mobiledgex.net"
 
 // special operator types
 var OperatorGCP = "gcp"
 var OperatorAzure = "azure"
 
-var DeveloperSamsung = "Samsung"
-var DeveloperMobiledgeX = "MobiledgeX"
-var DeveloperEdgeBox = "EdgeBox"
+var OrganizationSamsung = "Samsung"
+var OrganizationMobiledgeX = "MobiledgeX"
+var OrganizationEdgeBox = "EdgeBox"
 
 const DefaultVMCluster string = "DefaultVMCluster"
 
@@ -58,6 +59,7 @@ var MexAppVersionLabel = "mexAppVersion"
 var EventsDbName = "events"
 var CloudletEvent = "cloudlet"
 var ClusterInstEvent = "clusterinst"
+var ClusterInstUsage = "clusterinst-usage"
 var AppInstEvent = "appinst"
 
 var IPAddrAllInterfaces = "0.0.0.0"
@@ -76,10 +78,21 @@ const (
 	DELETE_ERROR      InstanceEvent = "DELETE_ERROR"
 	HEALTH_CHECK_FAIL InstanceEvent = "HEALTH_CHECK_FAIL"
 	HEALTH_CHECK_OK   InstanceEvent = "HEALTH_CHECK_OK"
+	RESERVED          InstanceEvent = "RESERVED"
+	UNRESERVED        InstanceEvent = "UNRESERVED"
 )
 
 var InstanceUp = "UP"
 var InstanceDown = "DOWN"
+
+type Usage_event string
+
+const (
+	// checkpoint
+	USAGE_EVENT_CHECKPOINT = "CHECKPOINT"
+	// end record, delete/unreserved
+	USAGE_EVENT_END = "END"
+)
 
 // DIND script to pull from kubeadm-dind-cluster
 var DindScriptName = "dind-cluster-v1.14.sh"
@@ -92,7 +105,7 @@ const MaxClusterNameLength = 40
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
 var platformApps = map[string]bool{
-	DeveloperSamsung + ":" + SamsungEnablingLayer: true,
+	OrganizationSamsung + ":" + SamsungEnablingLayer: true,
 }
 
 // Common regular expression for quoted strings parse
