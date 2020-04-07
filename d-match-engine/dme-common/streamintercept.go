@@ -17,6 +17,7 @@ import (
 // A wrapper for the real grpc.ServerStream
 type ServerStreamWrapper struct {
 	inner grpc.ServerStream
+	ctx   context.Context
 }
 
 func (s ServerStreamWrapper) SetHeader(m metadata.MD) error {
@@ -32,16 +33,16 @@ func (s ServerStreamWrapper) SetTrailer(m metadata.MD) {
 }
 
 func (s ServerStreamWrapper) Context() context.Context {
-	return s.inner.Context()
+	return s.ctx
 }
 
 func (s ServerStreamWrapper) SendMsg(m interface{}) error {
-	log.DebugLog(log.DebugLevelDmereq, "SendMsg Streamed message", "type", reflect.TypeOf(m).String())
+	log.SpanLog(s.Context(), log.DebugLevelDmereq, "SendMsg Streamed message", "type", reflect.TypeOf(m).String())
 	return s.inner.SendMsg(m)
 }
 
 func (a ServerStreamWrapper) RecvMsg(m interface{}) error {
-	log.DebugLog(log.DebugLevelDmereq, "RecvMsg Streamed message", "type", reflect.TypeOf(m).String())
+	log.SpanLog(a.Context(), log.DebugLevelDmereq, "RecvMsg Streamed message", "type", reflect.TypeOf(m).String())
 	var cookie string
 
 	err := a.inner.RecvMsg(m)
@@ -49,8 +50,8 @@ func (a ServerStreamWrapper) RecvMsg(m interface{}) error {
 	case *dme.QosPositionRequest:
 		cookie = typ.SessionCookie
 		// Verify session cookie
-		ckey, err := VerifyCookie(cookie)
-		log.DebugLog(log.DebugLevelDmereq, "VerifyCookie result", "ckey", ckey, "err", err)
+		ckey, err := VerifyCookie(a.Context(), cookie)
+		log.SpanLog(a.Context(), log.DebugLevelDmereq, "VerifyCookie result", "ckey", ckey, "err", err)
 		if err != nil {
 			return grpc.Errorf(codes.Unauthenticated, err.Error())
 		}
@@ -63,7 +64,12 @@ func (a ServerStreamWrapper) RecvMsg(m interface{}) error {
 
 func GetStreamInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-		wrapper := ServerStreamWrapper{inner: ss}
+		// Set up a child span for the stream interceptor
+		span := log.StartSpan(log.DebugLevelDmereq, "stream interceptor")
+		defer span.Finish()
+		cctx := log.ContextWithSpan(ss.Context(), span)
+
+		wrapper := ServerStreamWrapper{inner: ss, ctx: cctx}
 		return handler(srv, wrapper)
 	}
 }

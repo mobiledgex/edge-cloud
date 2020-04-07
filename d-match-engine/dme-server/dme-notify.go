@@ -22,44 +22,44 @@ type CloudletInfoHandler struct {
 }
 
 func (s *AppHandler) Update(ctx context.Context, in *edgeproto.App, rev int64) {
-	dmecommon.AddApp(in)
+	dmecommon.AddApp(ctx, in)
 }
 
 func (s *AppHandler) Delete(ctx context.Context, in *edgeproto.App, rev int64) {
-	dmecommon.RemoveApp(in)
+	dmecommon.RemoveApp(ctx, in)
 }
 
 func (s *AppHandler) Prune(ctx context.Context, keys map[edgeproto.AppKey]struct{}) {
-	dmecommon.PruneApps(keys)
+	dmecommon.PruneApps(ctx, keys)
 }
 
 func (s *AppHandler) Flush(ctx context.Context, notifyId int64) {}
 
 func (s *AppInstHandler) Update(ctx context.Context, in *edgeproto.AppInst, rev int64) {
-	dmecommon.AddAppInst(in)
+	dmecommon.AddAppInst(ctx, in)
 }
 
 func (s *AppInstHandler) Delete(ctx context.Context, in *edgeproto.AppInst, rev int64) {
-	dmecommon.RemoveAppInst(in)
+	dmecommon.RemoveAppInst(ctx, in)
 	PurgeAppInstClients(ctx, &in.Key)
 }
 
 func (s *AppInstHandler) Prune(ctx context.Context, keys map[edgeproto.AppInstKey]struct{}) {
-	dmecommon.PruneAppInsts(keys)
+	dmecommon.PruneAppInsts(ctx, keys)
 }
 
 func (s *AppInstHandler) Flush(ctx context.Context, notifyId int64) {}
 
 func (s *CloudletInfoHandler) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
-	dmecommon.SetInstStateForCloudlet(in)
+	dmecommon.SetInstStateForCloudlet(ctx, in)
 }
 
 func (s *CloudletInfoHandler) Delete(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
-	dmecommon.DeleteCloudletInfo(in)
+	dmecommon.DeleteCloudletInfo(ctx, in)
 }
 
 func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.CloudletKey]struct{}) {
-	dmecommon.PruneCloudlets(keys)
+	dmecommon.PruneCloudlets(ctx, keys)
 }
 
 func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
@@ -69,7 +69,7 @@ var ClientSender *notify.AppInstClientSend
 var appInstClientKeyCache edgeproto.AppInstClientKeyCache
 var platformClientsCache edgeproto.DeviceCache
 
-func initNotifyClient(addrs string, tlsDialOption grpc.DialOption) *notify.Client {
+func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.DialOption) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
 	edgeproto.InitAppInstClientKeyCache(&appInstClientKeyCache)
 	edgeproto.InitDeviceCache(&platformClientsCache)
@@ -90,6 +90,6 @@ func initNotifyClient(addrs string, tlsDialOption grpc.DialOption) *notify.Clien
 	ClientSender = notify.NewAppInstClientSend()
 	notifyClient.RegisterSend(ClientSender)
 
-	log.InfoLog("notify client to", "addrs", addrs)
+	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient
 }
