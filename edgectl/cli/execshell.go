@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bufio"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -394,20 +393,36 @@ func RunEdgeTurn(req *edgeproto.ExecRequest, exchangeFunc func(offer *webrtc.Ses
 		}
 		defer ws.Close()
 
-		reader := bufio.NewReader(os.Stdin)
+		if terminal.IsTerminal(int(os.Stdin.Fd())) {
+			// Set stdin and Stdout to raw
+			sinOldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				terminal.Restore(int(os.Stdin.Fd()), sinOldState)
+			}()
+			soutOldState, err := terminal.MakeRaw(int(os.Stdout.Fd()))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				terminal.Restore(int(os.Stdout.Fd()), soutOldState)
+			}()
+		}
+
 		errChan := make(chan error, 2)
 		go func() {
+			buf := make([]byte, 1500)
 			for {
-				text, err := reader.ReadString('\n')
+				n, err := os.Stdin.Read(buf)
 				if err != nil {
-					if err == io.EOF {
-						errChan <- nil
-					} else {
+					if err != io.EOF {
 						errChan <- err
 					}
 					break
 				}
-				err = ws.WriteMessage(websocket.TextMessage, []byte(text))
+				err = ws.WriteMessage(websocket.TextMessage, buf[:n])
 				if err != nil {
 					if _, ok := err.(*websocket.CloseError); ok {
 						errChan <- nil
