@@ -17,6 +17,7 @@ import (
 // A wrapper for the real grpc.ServerStream
 type ServerStreamWrapper struct {
 	inner grpc.ServerStream
+	ctx   context.Context
 }
 
 func (s ServerStreamWrapper) SetHeader(m metadata.MD) error {
@@ -32,7 +33,7 @@ func (s ServerStreamWrapper) SetTrailer(m metadata.MD) {
 }
 
 func (s ServerStreamWrapper) Context() context.Context {
-	return s.inner.Context()
+	return s.ctx
 }
 
 func (s ServerStreamWrapper) SendMsg(m interface{}) error {
@@ -63,7 +64,12 @@ func (a ServerStreamWrapper) RecvMsg(m interface{}) error {
 
 func GetStreamInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-		wrapper := ServerStreamWrapper{inner: ss}
+		// Set up a child span for the stream interceptor
+		span := log.StartSpan(log.DebugLevelDmereq, "stream interceptor")
+		defer span.Finish()
+		cctx := log.ContextWithSpan(ss.Context(), span)
+
+		wrapper := ServerStreamWrapper{inner: ss, ctx: cctx}
 		return handler(srv, wrapper)
 	}
 }
