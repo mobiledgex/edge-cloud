@@ -24,6 +24,7 @@ type Controller struct {
 	NotifyAddr            string
 	NotifyRootAddrs       string
 	NotifyParentAddrs     string
+	EdgeTurnAddr          string
 	VaultAddr             string
 	InfluxAddr            string
 	Region                string
@@ -138,4 +139,15 @@ type NotifyRoot struct {
 	TLS           TLSCerts
 	UseVaultCerts bool
 	cmd           *exec.Cmd
+}
+type EdgeTurn struct {
+	Common        `yaml:",inline"`
+	TLS           TLSCerts
+	cmd           *exec.Cmd
+	UseVaultCerts bool
+	VaultAddr     string
+	ListenAddr    string
+	ProxyAddr     string
+	Region        string
+	TestMode      bool
 }
