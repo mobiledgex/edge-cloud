@@ -47,6 +47,7 @@ var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener a
 var notifyRootAddrs = flag.String("notifyRootAddrs", "", "Comma separated list of notifyroots")
 var notifyParentAddrs = flag.String("notifyParentAddrs", "", "Comma separated list of notify parents")
 var publicAddr = flag.String("publicAddr", "127.0.0.1", "Public facing address/hostname of controller")
+var edgeTurnAddr = flag.String("edgeTurnAddr", "127.0.0.1:6080", "Address to EdgeTurn Server")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "http://127.0.0.1:8086", "InfluxDB listener address")

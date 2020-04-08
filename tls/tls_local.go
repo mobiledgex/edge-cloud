@@ -58,6 +58,7 @@ U5CcqvvOrDIFqFt/iZALVwjU
 		return nil, fmt.Errorf("could not load server key pair: %s", err)
 	}
 	return &tls.Config{
-		Certificates: []tls.Certificate{certificate},
+		Certificates:       []tls.Certificate{certificate},
+		InsecureSkipVerify: true,
 	}, nil
 }

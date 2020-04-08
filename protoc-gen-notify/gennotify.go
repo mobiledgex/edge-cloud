@@ -254,6 +254,9 @@ func (s *{{.Name}}Send) UpdateAll(ctx context.Context) {}
 
 func (s *{{.Name}}Send) Update(ctx context.Context, msg *{{.NameType}}) bool {
 {{- if .CustomUpdate}}
+	if !s.sendrecv.isRemoteWanted(s.MessageName) {
+		return false
+	}
 	if !s.UpdateOk(ctx, msg) { // to be implemented by hand
 		return false
 	}

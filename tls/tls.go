@@ -113,7 +113,33 @@ func GetGrpcDialOption(config *tls.Config) grpc.DialOption {
 // mutual authentication.
 // Returns nil credentials is the TLS cert file name is blank
 func GetTLSServerCreds(tlsCertFile string, mutualAuth bool) (credentials.TransportCredentials, error) {
+	tlsConfig, err := GetTLSServerConfig(tlsCertFile, mutualAuth)
+	if err != nil {
+		return nil, err
+	}
 
+	if tlsConfig == nil {
+		return nil, nil
+	}
+
+	// Create the TLS credentials
+	return credentials.NewTLS(tlsConfig), nil
+}
+
+// ServerAuthServerCreds gets grpc credentials for the server for
+// server-side authentication.
+func ServerAuthServerCreds(tlsCertFile, tlsKeyFile string) (credentials.TransportCredentials, error) {
+	if tlsCertFile == "" || tlsKeyFile == "" {
+		fmt.Printf("no server TLS credentials\n")
+		return nil, nil
+	}
+	return credentials.NewServerTLSFromFile(tlsCertFile, tlsKeyFile)
+}
+
+// GetTLSServerConfig gets TLS Config for the server for
+// mutual authentication.
+// Returns nil if the TLS cert file name is blank
+func GetTLSServerConfig(tlsCertFile string, mutualAuth bool) (*tls.Config, error) {
 	if tlsCertFile == "" {
 		fmt.Printf("no server TLS credentials\n")
 		return nil, nil
@@ -146,29 +172,14 @@ func GetTLSServerCreds(tlsCertFile string, mutualAuth bool) (credentials.Transpo
 		return nil, fmt.Errorf("could not load server key pair: %s", err)
 	}
 
-	// Create the TLS credentials
-	var creds credentials.TransportCredentials
-
 	if mutualAuth {
-		creds = credentials.NewTLS(&tls.Config{
+		return &tls.Config{
 			ClientAuth:   tls.RequireAndVerifyClientCert,
 			Certificates: []tls.Certificate{certificate},
-			ClientCAs:    certPool})
-	} else {
-		creds = credentials.NewTLS(&tls.Config{
-			ClientAuth:   tls.NoClientCert,
-			Certificates: []tls.Certificate{certificate},
-			ClientCAs:    certPool})
+			ClientCAs:    certPool}, nil
 	}
-	return creds, nil
-}
-
-// ServerAuthServerCreds gets grpc credentials for the server for
-// server-side authentication.
-func ServerAuthServerCreds(tlsCertFile, tlsKeyFile string) (credentials.TransportCredentials, error) {
-	if tlsCertFile == "" || tlsKeyFile == "" {
-		fmt.Printf("no server TLS credentials\n")
-		return nil, nil
-	}
-	return credentials.NewServerTLSFromFile(tlsCertFile, tlsKeyFile)
+	return &tls.Config{
+		ClientAuth:   tls.NoClientCert,
+		Certificates: []tls.Certificate{certificate},
+		ClientCAs:    certPool}, nil
 }

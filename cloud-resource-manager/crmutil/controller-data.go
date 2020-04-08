@@ -6,6 +6,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -30,10 +31,11 @@ type ControllerData struct {
 	ExecReqSend          *notify.ExecRequestSend
 	ControllerWait       chan bool
 	settings             edgeproto.Settings
+	NodeMgr              *node.NodeMgr
 }
 
 // NewControllerData creates a new instance to track data from the controller
-func NewControllerData(pf platform.Platform) *ControllerData {
+func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerData {
 	cd := &ControllerData{}
 	cd.platform = pf
 	edgeproto.InitAppCache(&cd.AppCache)
@@ -56,6 +58,7 @@ func NewControllerData(pf platform.Platform) *ControllerData {
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 	cd.ControllerWait = make(chan bool, 1)
+	cd.NodeMgr = nodeMgr
 	return cd
 }
 

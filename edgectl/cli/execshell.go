@@ -14,7 +14,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	mextls "github.com/mobiledgex/edge-cloud/tls"
+	edgetls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
 	webrtc "github.com/pion/webrtc/v2"
@@ -135,7 +135,7 @@ func SetupLocalConsoleTunnel(consoleUrl string, dataChan *webrtc.DataChannel, er
 		errchan <- fmt.Errorf("invalid console url: %s", consoleUrl)
 		return
 	}
-	tlsConfig, err := mextls.GetLocalTLSConfig()
+	tlsConfig, err := edgetls.GetLocalTLSConfig()
 	if err != nil {
 		errchan <- fmt.Errorf("unable to fetch tls local server config, %v", err)
 		return
@@ -288,7 +288,7 @@ func WebrtcShell(dataChan *webrtc.DataChannel, errchan chan error) error {
 	return nil
 }
 
-func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error), ws *websocket.Conn, setupConsoleTunnel func(consoleUrl string, dataChan *webrtc.DataChannel, errchan chan error, ws *websocket.Conn)) error {
+func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer *webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error), ws *websocket.Conn, setupConsoleTunnel func(consoleUrl string, dataChan *webrtc.DataChannel, errchan chan error, ws *websocket.Conn)) error {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 
@@ -327,7 +327,7 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 		return err
 	}
 
-	reply, answer, err := exchangeFunc(offer)
+	reply, answer, err := exchangeFunc(&offer)
 	if err != nil {
 		return err
 	}
@@ -368,4 +368,99 @@ func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.Sessio
 	case err := <-errchan:
 		return err
 	}
+}
+
+func RunEdgeTurn(req *edgeproto.ExecRequest, exchangeFunc func(offer *webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error), ws *websocket.Conn) error {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+
+	reply, _, err := exchangeFunc(nil)
+	if err != nil {
+		return err
+	}
+
+	if reply.AccessUrl == "" {
+		return fmt.Errorf("unable to fetch access URL")
+	}
+
+	if reply.Console != nil {
+		fmt.Println(reply.AccessUrl)
+	} else {
+		d := websocket.Dialer{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+		ws, _, err := d.Dial(reply.AccessUrl, nil)
+		if err != nil {
+			return err
+		}
+		defer ws.Close()
+
+		if terminal.IsTerminal(int(os.Stdin.Fd())) {
+			// Set stdin and Stdout to raw
+			sinOldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				terminal.Restore(int(os.Stdin.Fd()), sinOldState)
+			}()
+			soutOldState, err := terminal.MakeRaw(int(os.Stdout.Fd()))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				terminal.Restore(int(os.Stdout.Fd()), soutOldState)
+			}()
+		}
+
+		errChan := make(chan error, 2)
+		go func() {
+			buf := make([]byte, 1500)
+			for {
+				n, err := os.Stdin.Read(buf)
+				if err != nil {
+					if err != io.EOF {
+						errChan <- err
+					}
+					break
+				}
+				err = ws.WriteMessage(websocket.TextMessage, buf[:n])
+				if err != nil {
+					if _, ok := err.(*websocket.CloseError); ok {
+						errChan <- nil
+					} else {
+						errChan <- err
+					}
+					break
+				}
+			}
+		}()
+		go func() {
+			for {
+				_, msg, err := ws.ReadMessage()
+				if err != nil {
+					if _, ok := err.(*websocket.CloseError); ok {
+						errChan <- nil
+					} else {
+						errChan <- err
+					}
+					break
+				}
+				_, err = os.Stdout.Write(msg)
+				if err != nil {
+					if err == io.EOF {
+						errChan <- nil
+					} else {
+						errChan <- err
+					}
+					break
+				}
+			}
+		}()
+		select {
+		case <-signalChan:
+		case err = <-errChan:
+			return err
+		}
+	}
+
+	return nil
 }
