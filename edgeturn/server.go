@@ -147,6 +147,12 @@ func setupTurnServer(started chan bool) error {
 	if err != nil {
 		return fmt.Errorf("failed to get tls config: %v", err)
 	}
+	if *testMode && tlsConfig == nil {
+		tlsConfig, err = edgetls.GetLocalTLSConfig()
+		if err != nil {
+			return fmt.Errorf("failed to get tls config: %v", err)
+		}
+	}
 	turnConn, err := tls.Listen("tcp", *listenAddr, tlsConfig)
 	if err != nil {
 		return fmt.Errorf("failed to start server, %v", err)
