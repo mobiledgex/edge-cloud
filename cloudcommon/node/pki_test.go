@@ -77,7 +77,7 @@ func TestInternalPki(t *testing.T) {
 		LocalIssuer: node.CertIssuerGlobal,
 		ExpectErr:   "write failure pki-global/issue/us",
 	})
-	// cloudlet node cannot issue global cert
+	// cloudlet node cannot issue regional cert
 	cfgTests.add(ConfigTest{
 		NodeType:    node.NodeTypeCRM,
 		Region:      "us",
@@ -144,6 +144,22 @@ func TestInternalPki(t *testing.T) {
 			node.SameRegionalCloudletMatchCA(),
 		},
 	}
+	edgeTurnEU := &PkiConfig{
+		Region:      "eu",
+		Type:        node.NodeTypeEdgeTurn,
+		LocalIssuer: node.CertIssuerRegional,
+		RemoteCAs: []node.MatchCA{
+			node.SameRegionalCloudletMatchCA(),
+		},
+	}
+	edgeTurnUS := &PkiConfig{
+		Region:      "us",
+		Type:        node.NodeTypeEdgeTurn,
+		LocalIssuer: node.CertIssuerRegional,
+		RemoteCAs: []node.MatchCA{
+			node.SameRegionalCloudletMatchCA(),
+		},
+	}
 
 	// Testing for certificate exchange.
 	var csTests clientServerList
@@ -169,7 +185,24 @@ func TestInternalPki(t *testing.T) {
 		Client:    crmClientUS,
 		ExpectErr: "certificate signed by unknown authority",
 	})
-	// rogue crm cannot to notify root
+	// crm can connect to edgeturn
+	csTests.add(ClientServer{
+		Server: edgeTurnUS,
+		Client: crmClientUS,
+	})
+	// crm from US cannot connect to EU edgeturn
+	csTests.add(ClientServer{
+		Server:    edgeTurnEU,
+		Client:    crmClientUS,
+		ExpectErr: "region mismatch",
+	})
+	// crm from EU cannot connect to US edgeturn
+	csTests.add(ClientServer{
+		Server:    edgeTurnUS,
+		Client:    crmClientEU,
+		ExpectErr: "region mismatch",
+	})
+	// rogue crm cannot connect to notify root
 	csTests.add(ClientServer{
 		Server:    notifyRootServer,
 		Client:    crmRogueEU,
@@ -344,6 +377,9 @@ func getVaultConfig(nodetype, region string, vroles *process.VaultRoles) *vault.
 		case node.NodeTypeClusterSvc:
 			roleid = rr.ClusterSvcRoleID
 			secretid = rr.ClusterSvcSecretID
+		case node.NodeTypeEdgeTurn:
+			roleid = rr.EdgeTurnRoleID
+			secretid = rr.EdgeTurnSecretID
 		default:
 			panic("invalid node type")
 		}

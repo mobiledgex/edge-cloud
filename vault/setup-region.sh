@@ -187,3 +187,20 @@ vault write -format=json pki-regional/issue/$REGION \
 cat /tmp/edgectl.$REGION/issue | jq -r .data.certificate > /tmp/edgectl.$REGION/mex.crt
 cat /tmp/edgectl.$REGION/issue | jq -r .data.private_key > /tmp/edgectl.$REGION/mex.key
 cat /tmp/edgectl.$REGION/issue | jq -r .data.issuing_ca > /tmp/edgectl.$REGION/mex-ca.crt
+
+# set edgeturn approle
+cat > /tmp/edgeturn-pol.hcl <<EOF
+path "auth/approle/login" {
+  capabilities = [ "create", "read" ]
+}
+
+path "pki-regional/issue/*" {
+  capabilities = [ "read", "update" ]
+}
+EOF
+vault policy write $REGION.edgeturn /tmp/edgeturn-pol.hcl
+rm /tmp/edgeturn-pol.hcl
+vault write auth/approle/role/$REGION.edgeturn period="720h" policies="$REGION.edgeturn"
+# get edgeturn app roleID and generate secretID
+vault read auth/approle/role/$REGION.edgeturn/role-id
+vault write -f auth/approle/role/$REGION.edgeturn/secret-id

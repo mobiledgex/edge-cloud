@@ -133,6 +133,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	if p.UseVaultCerts {
 		args = append(args, "--useVaultCerts")
 	}
+	if p.EdgeTurnAddr != "" {
+		args = append(args, "--edgeTurnAddr")
+		args = append(args, p.EdgeTurnAddr)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -666,6 +670,8 @@ type VaultRegionRoles struct {
 	CtrlSecretID       string `json:"controllersecretid"`
 	ClusterSvcRoleID   string `json:"clustersvcroleid"`
 	ClusterSvcSecretID string `json:"clustersvcsecretid"`
+	EdgeTurnRoleID     string `json:"edgeturnroleid"`
+	EdgeTurnSecretID   string `json:"edgeturnsecretid"`
 }
 
 func (s *VaultRoles) GetRegionRoles(region string) *VaultRegionRoles {
@@ -732,6 +738,7 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 		p.GetAppRole(region, "rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
 		p.GetAppRole(region, "controller", &roles.CtrlRoleID, &roles.CtrlSecretID, &err)
 		p.GetAppRole(region, "cluster-svc", &roles.ClusterSvcRoleID, &roles.ClusterSvcSecretID, &err)
+		p.GetAppRole(region, "edgeturn", &roles.EdgeTurnRoleID, &roles.EdgeTurnSecretID, &err)
 		p.PutSecret(region, "dme", p.DmeSecret+"-old", &err)
 		p.PutSecret(region, "dme", p.DmeSecret, &err)
 		vroles.RegionRoles[region] = &roles
@@ -1077,6 +1084,70 @@ func (p *NotifyRoot) StopLocal() {
 func (p *NotifyRoot) GetExeName() string { return "notifyroot" }
 
 func (p *NotifyRoot) LookupArgs() string { return "" }
+
+func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
+	args := []string{}
+	if p.ListenAddr != "" {
+		args = append(args, "--listenAddr")
+		args = append(args, p.ListenAddr)
+	}
+	if p.ProxyAddr != "" {
+		args = append(args, "--proxyAddr")
+		args = append(args, p.ProxyAddr)
+	}
+	if p.TLS.ServerCert != "" {
+		args = append(args, "--tls")
+		args = append(args, p.TLS.ServerCert)
+	}
+	if p.Region != "" {
+		args = append(args, "--region", p.Region)
+	}
+	if p.TestMode {
+		args = append(args, "--testMode")
+	}
+	if p.UseVaultCerts {
+		args = append(args, "--useVaultCerts")
+	}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
+	}
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.Debug != "" {
+		args = append(args, "-d")
+		args = append(args, options.Debug)
+	}
+	var envs []string
+	if options.RolesFile != "" {
+		dat, err := ioutil.ReadFile(options.RolesFile)
+		if err != nil {
+			return err
+		}
+		roles := VaultRoles{}
+		err = yaml.Unmarshal(dat, &roles)
+		if err != nil {
+			return err
+		}
+		rr := roles.GetRegionRoles(p.Region)
+		envs = []string{
+			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.EdgeTurnRoleID),
+			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.EdgeTurnSecretID),
+		}
+		log.Printf("edgeturn envs: %v\n", envs)
+	}
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envs, logfile)
+	return err
+}
+
+func (p *EdgeTurn) StopLocal() {
+	StopLocal(p.cmd)
+}
+
+func (p *EdgeTurn) GetExeName() string { return "edgeturn" }
+
+func (p *EdgeTurn) LookupArgs() string { return "" }
 
 // Support funcs
 

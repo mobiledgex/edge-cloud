@@ -102,7 +102,7 @@ func main() {
 		log.FatalLog(err.Error())
 	}
 
-	controllerData = crmutil.NewControllerData(platform)
+	controllerData = crmutil.NewControllerData(platform, &nodeMgr)
 
 	updateCloudletStatus := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {

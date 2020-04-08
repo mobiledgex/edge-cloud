@@ -1,0 +1,14 @@
+request:
+  appinstkey:
+    appkey:
+      organization: AcmeAppCo1
+      name: vmapp1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: DefaultVMCluster 
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo1
+expectedoutput: "Console Content"

@@ -8,9 +8,13 @@ import (
 	"io"
 	"net"
 	"net/url"
+	"strings"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util/proxyutil"
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
 	ssh "github.com/mobiledgex/golang-ssh"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -63,12 +67,21 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			req.AppInstKey.AppKey.GetKeyString())
 	}
 
+	var execReqType cloudcommon.ExecReqType
+	var initURL *url.URL
 	if req.Console != nil {
 		req.Console.Url, err = cd.platform.GetConsoleUrl(ctx, &app)
 		if err != nil {
 			return err
 		}
+		urlObj, err := url.Parse(req.Console.Url)
+		if err != nil {
+			return fmt.Errorf("unable to parse console url, %s, %v", req.Console.Url, err)
+		}
+		execReqType = cloudcommon.ExecReqConsole
+		initURL = urlObj
 	} else {
+		execReqType = cloudcommon.ExecReqShell
 		clusterInst := edgeproto.ClusterInst{}
 		found = cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
 		if !found {
@@ -87,69 +100,132 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		}
 	}
 
-	offer := webrtc.SessionDescription{}
-	err = json.Unmarshal([]byte(req.Offer), &offer)
-	if err != nil {
-		return fmt.Errorf("unable to decode offer, %v", err)
-	}
+	if req.Webrtc {
+		offer := webrtc.SessionDescription{}
+		err = json.Unmarshal([]byte(req.Offer), &offer)
+		if err != nil {
+			return fmt.Errorf("unable to decode offer, %v", err)
+		}
 
-	// hard code config for now
-	config := webrtc.Configuration{
-		ICEServers: []webrtc.ICEServer{
-			{
-				URLs: []string{"stun:stun.mobiledgex.net:19302"},
+		// hard code config for now
+		config := webrtc.Configuration{
+			ICEServers: []webrtc.ICEServer{
+				{
+					URLs: []string{"stun:stun.mobiledgex.net:19302"},
+				},
 			},
-		},
-	}
+		}
 
-	// create a new peer connection
-	peerConn, err := webrtc.NewPeerConnection(config)
-	if err != nil {
-		log.DebugLog(log.DebugLevelApi,
-			"failed to establish peer connection",
-			"config", config, "err", err)
-		return fmt.Errorf("failed to establish peer connection, %v", err)
-	}
+		// create a new peer connection
+		peerConn, err := webrtc.NewPeerConnection(config)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi,
+				"failed to establish peer connection",
+				"config", config, "err", err)
+			return fmt.Errorf("failed to establish peer connection, %v", err)
+		}
 
-	// register handlers
-	if req.Console != nil {
-		peerConn.OnDataChannel(run.RTCTunnel)
+		// register handlers
+		if req.Console != nil {
+			peerConn.OnDataChannel(run.RTCTunnel)
+		} else {
+			peerConn.OnDataChannel(run.DataChannel)
+		}
+
+		// set remote description
+		err = peerConn.SetRemoteDescription(offer)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi,
+				"failed to set remote description",
+				"offer", offer, "peerConn", peerConn, "err", err)
+			return fmt.Errorf("failed to set remote description, %v", err)
+		}
+		// create answer
+		answer, err := peerConn.CreateAnswer(nil)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi,
+				"failed to create answer",
+				"peerConn", peerConn, "err", err)
+			return fmt.Errorf("failed to set answer, %v", err)
+		}
+		// set local description, and starts out UDP listeners
+		err = peerConn.SetLocalDescription(answer)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi,
+				"failed to set local description",
+				"peerConn", peerConn, "err", err)
+			return fmt.Errorf("failed to set local description, %v", err)
+		}
+
+		// send back answer
+		answerBytes, err := json.Marshal(answer)
+		if err != nil {
+			return fmt.Errorf("failed to encode answer, %v", err)
+		}
+		req.Answer = string(answerBytes)
+		log.SpanLog(ctx, log.DebugLevelApi, "returning answer")
 	} else {
-		peerConn.OnDataChannel(run.DataChannel)
+		// Connect to EdgeTurn server
+		if req.EdgeTurnAddr == "" {
+			return fmt.Errorf("no edgeturn server address specified")
+		}
+
+		tlsConfig, err := cd.NodeMgr.InternalPki.GetClientTlsConfig(ctx,
+			cd.NodeMgr.CommonName(),
+			node.CertIssuerRegionalCloudlet,
+			[]node.MatchCA{node.SameRegionalMatchCA()})
+		if err != nil {
+			return err
+		}
+		turnConn, err := tls.Dial("tcp", req.EdgeTurnAddr, tlsConfig)
+		if err != nil {
+			return fmt.Errorf("failed to connect to edgeturn server: %v", err)
+		}
+		defer turnConn.Close()
+
+		// Send ExecReqInfo to EdgeTurn server
+		execReqInfo := cloudcommon.ExecReqInfo{
+			Type:    execReqType,
+			InitURL: initURL,
+		}
+		out, err := json.Marshal(&execReqInfo)
+		if err != nil {
+			return fmt.Errorf("failed to marshal execReqInfo %v, %v", execReqInfo, err)
+		}
+		turnConn.Write(out)
+		log.SpanLog(ctx, log.DebugLevelApi, "sent execreq info", "info", string(out))
+
+		// Fetch session info from EdgeTurn server
+		var sessInfo cloudcommon.SessionInfo
+		d := json.NewDecoder(turnConn)
+		err = d.Decode(&sessInfo)
+		if err != nil {
+			return fmt.Errorf("failed to decode session info: %v", err)
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "received session info from edgeturn server", "info", sessInfo)
+
+		turnAddrParts := strings.Split(req.EdgeTurnAddr, ":")
+		if len(turnAddrParts) != 2 {
+			return fmt.Errorf("invalid edgeturn Addr: %s", req.EdgeTurnAddr)
+		}
+
+		if req.Console != nil {
+			proxyAddr := "https://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeconsole?edgetoken=" + sessInfo.Token
+			req.AccessUrl = proxyAddr
+			cd.ExecReqSend.Update(ctx, req)
+
+			err = proxyutil.ProxyMuxServer(turnConn, req.Console.Url)
+			if err != nil {
+				return err
+			}
+		} else {
+			proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?edgetoken=" + sessInfo.Token
+			req.AccessUrl = proxyAddr
+			cd.ExecReqSend.Update(ctx, req)
+			run.proxyRawConn(turnConn)
+		}
 	}
 
-	// set remote description
-	err = peerConn.SetRemoteDescription(offer)
-	if err != nil {
-		log.DebugLog(log.DebugLevelApi,
-			"failed to set remote description",
-			"offer", offer, "peerConn", peerConn, "err", err)
-		return fmt.Errorf("failed to set remote description, %v", err)
-	}
-	// create answer
-	answer, err := peerConn.CreateAnswer(nil)
-	if err != nil {
-		log.DebugLog(log.DebugLevelApi,
-			"failed to create answer",
-			"peerConn", peerConn, "err", err)
-		return fmt.Errorf("failed to set answer, %v", err)
-	}
-	// set local description, and starts out UDP listeners
-	err = peerConn.SetLocalDescription(answer)
-	if err != nil {
-		log.DebugLog(log.DebugLevelApi,
-			"failed to set local description",
-			"peerConn", peerConn, "err", err)
-		return fmt.Errorf("failed to set local description, %v", err)
-	}
-
-	// send back answer
-	answerBytes, err := json.Marshal(answer)
-	if err != nil {
-		return fmt.Errorf("failed to encode answer, %v", err)
-	}
-	req.Answer = string(answerBytes)
-	log.DebugLog(log.DebugLevelApi, "returning answer")
 	return nil
 }
 
@@ -182,81 +258,91 @@ func (s *WebrtcExec) DataChannel(d *webrtc.DataChannel) {
 }
 
 func (s *WebrtcExec) RTCTunnel(d *webrtc.DataChannel) {
-	var sess *smux.Session
 	d.OnOpen(func() {
-		urlObj, err := url.Parse(s.req.Console.Url)
-		if err != nil {
-			log.DebugLog(log.DebugLevelApi, "failed to parse console url", "url", s.req.Console.Url, "err", err)
-			return
-		}
 		dcconn, err := webrtcutil.WrapDataChannel(d)
 		if err != nil {
 			log.DebugLog(log.DebugLevelApi, "failed to wrap webrtc datachannel", "err", err)
 			return
 		}
-		sess, err = smux.Server(dcconn, nil)
+		s.proxyConsoleConn(s.req.Console.Url, dcconn)
+	})
+}
+
+func (s *WebrtcExec) proxyConsoleConn(fromUrl string, toConn net.Conn) {
+	urlObj, err := url.Parse(fromUrl)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "failed to parse console url", "url", fromUrl, "err", err)
+		return
+	}
+	sess, err := smux.Server(toConn, nil)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "failed to setup smux server", "err", err)
+		return
+	}
+	defer sess.Close()
+	log.DebugLog(log.DebugLevelApi, "Successfully started proxy", "fromUrl", fromUrl)
+	for {
+		stream, err := sess.AcceptStream()
 		if err != nil {
-			log.DebugLog(log.DebugLevelApi, "failed to setup smux server", "err", err)
+			if err.Error() != io.ErrClosedPipe.Error() {
+				log.DebugLog(log.DebugLevelApi, "failed to setup smux acceptstream", "err", err)
+			}
 			return
 		}
-		log.DebugLog(log.DebugLevelApi, "Successfully started console proxy")
-		for {
-			stream, err := sess.AcceptStream()
+		var server net.Conn
+		if urlObj.Scheme == "http" {
+			server, err = net.Dial("tcp", urlObj.Host)
 			if err != nil {
-				if err.Error() != io.ErrClosedPipe.Error() {
-					log.DebugLog(log.DebugLevelApi, "failed to setup smux acceptstream", "err", err)
-				}
+				log.DebugLog(log.DebugLevelApi, "failed to get console", "err", err)
 				return
 			}
-			var server net.Conn
-			if urlObj.Scheme == "http" {
-				server, err = net.Dial("tcp", urlObj.Host)
-				if err != nil {
-					log.DebugLog(log.DebugLevelApi, "failed to get console", "err", err)
-					return
-				}
-			} else if urlObj.Scheme == "https" {
-				server, err = tls.Dial("tcp", urlObj.Host, &tls.Config{
-					InsecureSkipVerify: true,
-				})
-				if err != nil {
-					log.DebugLog(log.DebugLevelApi, "failed to get console", "err", err)
-					return
-				}
-			} else {
-				log.DebugLog(log.DebugLevelApi, "unsupported scheme", "scheme", urlObj.Scheme)
+		} else if urlObj.Scheme == "https" {
+			server, err = tls.Dial("tcp", urlObj.Host, &tls.Config{
+				InsecureSkipVerify: true,
+			})
+			if err != nil {
+				log.DebugLog(log.DebugLevelApi, "failed to get console", "err", err)
 				return
 			}
-			go func(server net.Conn, stream *smux.Stream) {
-				buf := make([]byte, 1500)
-				for {
-					n, err := stream.Read(buf)
-					if err != nil {
-						break
-					}
-					server.Write(buf[:n])
+		} else {
+			log.DebugLog(log.DebugLevelApi, "unsupported scheme", "scheme", urlObj.Scheme)
+			return
+		}
+		go func(server net.Conn, stream *smux.Stream) {
+			buf := make([]byte, 1500)
+			for {
+				n, err := stream.Read(buf)
+				if err != nil {
+					break
 				}
-				stream.Close()
-				server.Close()
-			}(server, stream)
+				server.Write(buf[:n])
+			}
+			stream.Close()
+			server.Close()
+		}(server, stream)
 
-			go func(server net.Conn, stream *smux.Stream) {
-				buf := make([]byte, 1500)
-				for {
-					n, err := server.Read(buf)
-					if err != nil {
-						break
-					}
-					stream.Write(buf[:n])
+		go func(server net.Conn, stream *smux.Stream) {
+			buf := make([]byte, 1500)
+			for {
+				n, err := server.Read(buf)
+				if err != nil {
+					break
 				}
-				stream.Close()
-				server.Close()
-			}(server, stream)
-		}
-	})
-	d.OnClose(func() {
-		if sess != nil {
-			sess.Close()
-		}
-	})
+				stream.Write(buf[:n])
+			}
+			stream.Close()
+			server.Close()
+		}(server, stream)
+	}
+}
+
+func (s *WebrtcExec) proxyRawConn(turnConn net.Conn) {
+	prd, pwr := io.Pipe()
+	go io.Copy(pwr, turnConn)
+	err := s.client.Shell(prd, turnConn, turnConn, s.contcmd)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi,
+			"failed to exec",
+			"cmd", s.contcmd, "err", err)
+	}
 }
