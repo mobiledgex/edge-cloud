@@ -53,6 +53,7 @@ controllers:
   versiontag: "2019-10-24"
   notifyparentaddrs: "127.0.0.1:53001"
   usevaultcerts: true
+  edgeturnaddr: "127.0.0.1:6080"
 
 - name: ctrl2
   etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
@@ -68,6 +69,7 @@ controllers:
   testmode: true
   versiontag: "2019-10-24"
   notifyparentaddrs: "127.0.0.1:53001"
+  edgeturnaddr: "127.0.0.1:6080"
 
 clustersvcs:
 - name: cluster-svc1
@@ -128,6 +130,15 @@ jaegers:
 notifyroots:
 - name: notifyroot
   hostname: "127.0.0.1"
+  vaultaddr: "http://127.0.0.1:8200"
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+
+edgeturns:
+- name: edgeturn
+  hostname: "127.0.0.1"
+  testmode: true
+  usevaultcerts: true
   vaultaddr: "http://127.0.0.1:8200"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"

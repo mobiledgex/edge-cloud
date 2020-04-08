@@ -77,6 +77,10 @@ tests:
   apifile: "{{datadir}}/showlogs.yml"
   actions: [exec-showlogs]
 
+- name: test run console against app data
+  apifile: "{{datadir}}/runconsole.yml"
+  actions: [exec-runconsole]
+
 - includefile: debugtest.yml
 
 - name: delete provisioning, verify it is empty

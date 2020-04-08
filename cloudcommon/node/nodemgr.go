@@ -17,6 +17,7 @@ var NodeTypeDME = "dme"
 var NodeTypeController = "controller"
 var NodeTypeClusterSvc = "cluster-svc"
 var NodeTypeNotifyRoot = "notifyroot"
+var NodeTypeEdgeTurn = "edgeturn"
 
 // Node tracks all the nodes connected via notify, and handles common
 // requests over all nodes.
