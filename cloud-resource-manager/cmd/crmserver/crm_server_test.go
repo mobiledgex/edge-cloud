@@ -121,7 +121,7 @@ func startMain(t *testing.T) (chan struct{}, error) {
 
 func TestCRM(t *testing.T) {
 	var err error
-	log.SetDebugLevel(log.DebugLevelNotify | log.DebugLevelMexos)
+	log.SetDebugLevel(log.DebugLevelApi | log.DebugLevelNotify | log.DebugLevelMexos)
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())

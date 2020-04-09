@@ -930,7 +930,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}
 	cloudletPoolMemberApi.cloudletDeleted(ctx, &in.Key)
-	return err
+	cloudletInfoApi.cleanupCloudletInfo(ctx, &in.Key)
+	return nil
 }
 
 func (s *CloudletApi) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_ShowCloudletServer) error {

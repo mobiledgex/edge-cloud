@@ -319,6 +319,10 @@ func connectOnlineController(delay time.Duration) *grpc.ClientConn {
 	return nil
 }
 
+func SetLogFormat() {
+	log.SetFlags(log.Flags() | log.Ltime | log.Lmicroseconds)
+}
+
 func PrintStartBanner(label string) {
 	log.Printf("\n\n   *** %s\n", label)
 }
@@ -470,9 +474,7 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err2 = ReadYamlFile(secondYamlFile, &a2)
 		a1.Sort()
 		a2.Sort()
-		// "show" used to not include CloudletInfos, so remove them.
-		a1.CloudletInfos = nil
-		a2.CloudletInfos = nil
+
 		y1 = a1
 		y2 = a2
 
