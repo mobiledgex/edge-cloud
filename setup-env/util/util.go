@@ -475,13 +475,19 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		a1.Sort()
 		a2.Sort()
 
-		y1 = a1
-		y2 = a2
-
 		copts = append(copts, cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}))
 		if fileType == "appdata" {
 			copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
 		}
+		if fileType == "appdata-showcmp" {
+			// need to clear controller field of CloudletInfo
+			// because it depends on local hostname.
+			clearCloudletInfoNocmp(&a1)
+			clearCloudletInfoNocmp(&a2)
+		}
+
+		y1 = a1
+		y2 = a2
 	} else if fileType == "appdata-output" {
 		var a1 testutil.AllDataOut
 		var a2 testutil.AllDataOut
@@ -648,6 +654,13 @@ func clearInfluxTime(results []influxclient.Result) {
 				}
 			}
 		}
+	}
+}
+
+func clearCloudletInfoNocmp(data *edgeproto.AllData) {
+	for ii, _ := range data.CloudletInfos {
+		data.CloudletInfos[ii].Controller = ""
+		data.CloudletInfos[ii].NotifyId = 0
 	}
 }
 
