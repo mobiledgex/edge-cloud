@@ -802,6 +802,8 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorVgpuNvidiaMatch, *cl, cli)
 		require.Nil(t, vmerr, "GetVmSpec")
 		require.Equal(t, "flavor.large-nvidia", spec.FlavorName)
+		uses := resTagTableApi.UsesGpu(ctx, stm, *spec.FlavorInfo, *cl)
+		require.Equal(t, true, uses)
 
 		// Now try 2 optional resources requested by one flavor, first non-nominal, no res tag table for nas tags
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor2, *cl, cli)
