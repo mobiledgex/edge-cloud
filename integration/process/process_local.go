@@ -705,6 +705,9 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
+	if p.cmd.Process == nil {
+		return fmt.Errorf("failed to start vault process, see log %s", logfile)
+	}
 
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
