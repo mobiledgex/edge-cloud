@@ -121,7 +121,6 @@ cloudletinfos:
     name: tmus-cloud-1
   state: CloudletStateReady
   notifyid: 37
-  controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 500
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -139,7 +138,6 @@ cloudletinfos:
     name: tmus-cloud-2
   state: CloudletStateReady
   notifyid: 38
-  controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 500
   osmaxvcores: 50
   osmaxvolgb: 5000
