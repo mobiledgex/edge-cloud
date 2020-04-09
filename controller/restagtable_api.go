@@ -221,6 +221,16 @@ func (s *ResTagTableApi) osFlavorResources(ctx context.Context, stm concurrency.
 	return resources, rescnt
 }
 
+func (s *ResTagTableApi) UsesGpu(ctx context.Context, stm concurrency.STM, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet) bool {
+	resources, rescnt := s.osFlavorResources(ctx, stm, flavor, cl)
+	if rescnt > 0 {
+		if _, ok := resources["gpu"]; ok {
+			return true
+		}
+	}
+	return false
+}
+
 // Check the match for any given request 'req' for resource 'resname' in OS flavor 'flavor'.
 func (s *ResTagTableApi) match(ctx context.Context, stm concurrency.STM, resname string, req string, flavor edgeproto.FlavorInfo, cl edgeproto.Cloudlet) (bool, error) {
 
@@ -430,6 +440,7 @@ func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nod
 		vmspec.FlavorName = flavor.Name
 		vmspec.AvailabilityZone = az
 		vmspec.ImageName = img
+		vmspec.FlavorInfo = flavor
 		log.SpanLog(ctx, log.DebugLevelApi, "Found closest flavor", "flavor", flavor, "vmspec", vmspec)
 
 		return &vmspec, nil
