@@ -188,10 +188,11 @@ func (s *DebugNode) RecvDebugReply(ctx context.Context, reply *edgeproto.DebugRe
 		return
 	}
 
+	done := false
 	s.mux.Lock()
 	delete(call.sendNodes, reply.Node)
 	if len(call.sendNodes) == 0 {
-		close(call.done)
+		done = true
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "recv reply", "id", reply.Id, "numNodes", len(call.sendNodes), "node", reply.Node)
 	s.mux.Unlock()
@@ -201,6 +202,9 @@ func (s *DebugNode) RecvDebugReply(ctx context.Context, reply *edgeproto.DebugRe
 	}
 
 	call.callReply(ctx, reply)
+	if done {
+		close(call.done)
+	}
 }
 
 func (s *DebugNode) RunDebug(ctx context.Context, req *edgeproto.DebugRequest) string {
