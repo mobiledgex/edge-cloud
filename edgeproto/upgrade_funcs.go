@@ -378,13 +378,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		ocodeV1.Organization = ocodeV0.OperatorName
 		ocodeV1.Code = ocodeV0.Code
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded OperatorCode", "ocodeV1", ocodeV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("OperatorCode", ocodeV1.GetKey())
 		val, err2 = json.Marshal(ocodeV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", ocodeV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		operCodeUpgCount++
 		return nil
@@ -430,13 +430,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		cloudletV1.PackageVersion = cloudletV0.PackageVersion
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded cloudlet", "cloudletV1", cloudletV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("Cloudlet", &cloudletV1.Key)
 		val, err2 = json.Marshal(cloudletV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		cloudletUpgCount++
 		return nil
@@ -470,13 +470,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		cloudletInfoV1.OsImages = cloudletInfoV0.OsImages
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded cloudlet", "cloudletInfoV1", cloudletInfoV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("CloudletInfo", &cloudletInfoV1.Key)
 		val, err2 = json.Marshal(cloudletInfoV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletInfoV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		cloudletInfoUpgCount++
 		return nil
@@ -498,13 +498,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		cloudletPoolMemberV1.CloudletKey.Name = cloudletPoolMemberV0.CloudletKey.Name
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded cloudlet", "cloudletPoolMemberV1", cloudletPoolMemberV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("CloudletPoolMember", cloudletPoolMemberV1.GetKey())
 		val, err2 = json.Marshal(cloudletPoolMemberV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletPoolMemberV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		cloudletPoolMemberUpgCount++
 		return nil
@@ -533,13 +533,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		cloudletRefsV1.OptResUsedMap = cloudletRefsV0.OptResUsedMap
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded cloudlet refs", "cloudletRefsV1", cloudletRefsV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("CloudletRefs", &cloudletRefsV1.Key)
 		val, err2 = json.Marshal(cloudletRefsV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletRefsV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		cloudletRefsUpgCount++
 		return nil
@@ -585,13 +585,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		cinstV1.MasterNodeFlavor = cinstV0.MasterNodeFlavor
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded ClusterInstance", "cinstV1", cinstV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("ClusterInst", &cinstV1.Key)
 		val, err2 = json.Marshal(cinstV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cinstV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		clusterUpgCount++
 		return nil
@@ -643,13 +643,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		appV1.DeletePrepare = appV0.DeletePrepare
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded app", "appV1", appV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("App", &appV1.Key)
 		val, err2 = json.Marshal(appV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		appUpgCount++
 		return nil
@@ -702,13 +702,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		appInstV1.VmFlavor = appInstV0.VmFlavor
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded appinst", "appInstV1", appInstV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("AppInst", &appInstV1.Key)
 		val, err2 = json.Marshal(appInstV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appInstV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		appInstUpgCount++
 		return nil
@@ -734,13 +734,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		privPolV1.OutboundSecurityRules = privPolV0.OutboundSecurityRules
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded PrivacyPolicy", "ppv1", privPolV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("PrivacyPolicy", &privPolV1.Key)
 		val, err2 = json.Marshal(privPolV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", privPolV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		privacyPolicyUpgCount++
 		return nil
@@ -770,13 +770,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		autoScalPolV1.TriggerTimeSec = autoScalPolV0.TriggerTimeSec
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded AutoScalePolicy", "autoScalPolV1", autoScalPolV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("AutoScalePolicy", &autoScalPolV1.Key)
 		val, err2 = json.Marshal(autoScalPolV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", autoScalPolV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		autoScalePolicyUpgCount++
 		return nil
@@ -808,13 +808,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		}
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded AutoProvPolicy", "autoProvPolV1", autoProvPolV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("AutoProvPolicy", &autoProvPolV1.Key)
 		val, err2 = json.Marshal(autoProvPolV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", autoProvPolV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		autoProvPolicyUpgCount++
 		return nil
@@ -838,13 +838,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		resTagV1.Azone = resTagV0.Azone
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded AutoProvPolicy", "resTagV1", resTagV1)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("ResTagTable", &resTagV1.Key)
 		val, err2 = json.Marshal(resTagV1)
 		if err2 != nil {
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", resTagV1, "err", err2)
 			return err2
 		}
+		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, newkey, string(val))
 		autoProvPolicyUpgCount++
 		return nil
@@ -917,7 +917,6 @@ func AppRevision(ctx context.Context, objStore objstore.KVStore) error {
 		appV2.DeletePrepare = appV1.DeletePrepare
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded app", "appV2", appV2)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("App", &appV2.Key)
 		val, err2 = json.Marshal(appV2)
 		if err2 != nil {
@@ -972,7 +971,6 @@ func AppRevision(ctx context.Context, objStore objstore.KVStore) error {
 		appInstV2.OptRes = appInstV1.OptRes
 
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded appinst", "appInstV2", appInstV2)
-		objStore.Delete(ctx, string(key))
 		newkey := objstore.DbKeyString("AppInst", &appInstV2.Key)
 		val, err2 = json.Marshal(appInstV2)
 		if err2 != nil {

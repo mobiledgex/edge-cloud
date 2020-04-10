@@ -298,7 +298,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if in.Deployment == cloudcommon.AppDeploymentTypeVM && in.Command != "" {
 		return &edgeproto.Result{}, fmt.Errorf("Invalid argument, command is not supported for VM based deployments")
 	}
-	err = updateAppFields(ctx, in, "")
+	err = updateAppFields(ctx, in, in.Revision)
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
