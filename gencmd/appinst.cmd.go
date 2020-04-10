@@ -55,6 +55,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
 	if _, found := tags["nocmp"]; found {
+		in.Revision = ""
+	}
+	if _, found := tags["nocmp"]; found {
 		in.ForceUpdate = false
 	}
 	if _, found := tags["nocmp"]; found {
@@ -73,6 +76,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.VmFlavor = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.OptRes = ""
 	}
 }
 
@@ -733,6 +739,7 @@ var AppInstOptionalArgs = []string{
 	"privacypolicy",
 	"powerstate",
 	"vmflavor",
+	"optres",
 }
 var AppInstAliasArgs = []string{
 	"app-org=key.appkey.organization",
@@ -775,7 +782,7 @@ var AppInstComments = map[string]string{
 	"crmoverride":                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"runtimeinfo.containerids":       "List of container names",
 	"autoclusteripaccess":            "IpAccess for auto-clusters. Ignored otherwise., one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
-	"revision":                       "Revision increments each time the App is updated.  Updating the App Instance will sync the revision with that of the App",
+	"revision":                       "Revision changes each time the App is updated.  Refreshing the App Instance will sync the revision with that of the App",
 	"forceupdate":                    "Force Appinst refresh even if revision number matches App revision number.",
 	"updatemultiple":                 "Allow multiple instances to be updated at once",
 	"configs[#].kind":                "kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml",
@@ -787,6 +794,7 @@ var AppInstComments = map[string]string{
 	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"availabilityzone":               "Optional Availability Zone if any",
 	"vmflavor":                       "OS node flavor to use",
+	"optres":                         "Optional Resources required by OS flavor if any",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -883,6 +891,7 @@ var CreateAppInstOptionalArgs = []string{
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }
 var DeleteAppInstRequiredArgs = []string{
 	"app-org",
@@ -935,6 +944,7 @@ var DeleteAppInstOptionalArgs = []string{
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }
 var RefreshAppInstRequiredArgs = []string{
 	"app-org",
@@ -964,6 +974,7 @@ var RefreshAppInstOptionalArgs = []string{
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }
 var UpdateAppInstRequiredArgs = []string{
 	"app-org",
@@ -992,4 +1003,5 @@ var UpdateAppInstOptionalArgs = []string{
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }

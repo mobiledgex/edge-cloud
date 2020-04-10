@@ -243,6 +243,36 @@ type AppInstV0_OrgRestructure struct {
 	VmFlavor            string                              `protobuf:"bytes,34,opt,name=vm_flavor,json=vmFlavor,proto3" json:"vm_flavor,omitempty"`
 }
 
+// this is after org restructure but before revision
+type AppInstV1_OrgRestructure struct {
+	Fields              []string                            `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Key                 AppInstKey                          `protobuf:"bytes,2,opt,name=key" json:"key"`
+	CloudletLoc         distributed_match_engine.Loc        `protobuf:"bytes,3,opt,name=cloudlet_loc,json=cloudletLoc" json:"cloudlet_loc"`
+	Uri                 string                              `protobuf:"bytes,4,opt,name=uri,proto3" json:"uri,omitempty"`
+	Liveness            Liveness                            `protobuf:"varint,6,opt,name=liveness,proto3,enum=edgeproto.Liveness" json:"liveness,omitempty"`
+	MappedPorts         []distributed_match_engine1.AppPort `protobuf:"bytes,9,rep,name=mapped_ports,json=mappedPorts" json:"mapped_ports"`
+	Flavor              FlavorKey                           `protobuf:"bytes,12,opt,name=flavor" json:"flavor"`
+	State               TrackedState                        `protobuf:"varint,14,opt,name=state,proto3,enum=edgeproto.TrackedState" json:"state,omitempty"`
+	Errors              []string                            `protobuf:"bytes,15,rep,name=errors" json:"errors,omitempty"`
+	CrmOverride         CRMOverride                         `protobuf:"varint,16,opt,name=crm_override,json=crmOverride,proto3,enum=edgeproto.CRMOverride" json:"crm_override,omitempty"`
+	RuntimeInfo         AppInstRuntime                      `protobuf:"bytes,17,opt,name=runtime_info,json=runtimeInfo" json:"runtime_info"`
+	CreatedAt           distributed_match_engine.Timestamp  `protobuf:"bytes,21,opt,name=created_at,json=createdAt" json:"created_at"`
+	AutoClusterIpAccess IpAccess                            `protobuf:"varint,22,opt,name=auto_cluster_ip_access,json=autoClusterIpAccess,proto3,enum=edgeproto.IpAccess" json:"auto_cluster_ip_access,omitempty"`
+	Status              StatusInfo                          `protobuf:"bytes,23,opt,name=status" json:"status"`
+	Revision            int32                               `protobuf:"bytes,24,opt,name=revision,proto3" json:"revision,omitempty"`
+	ForceUpdate         bool                                `protobuf:"varint,25,opt,name=force_update,json=forceUpdate,proto3" json:"force_update,omitempty"`
+	UpdateMultiple      bool                                `protobuf:"varint,26,opt,name=update_multiple,json=updateMultiple,proto3" json:"update_multiple,omitempty"`
+	Configs             []*ConfigFile                       `protobuf:"bytes,27,rep,name=configs" json:"configs,omitempty"`
+	SharedVolumeSize    uint64                              `protobuf:"varint,28,opt,name=shared_volume_size,json=sharedVolumeSize,proto3" json:"shared_volume_size,omitempty"`
+	HealthCheck         HealthCheck                         `protobuf:"varint,29,opt,name=health_check,json=healthCheck,proto3,enum=edgeproto.HealthCheck" json:"health_check,omitempty"`
+	PrivacyPolicy       string                              `protobuf:"bytes,30,opt,name=privacy_policy,json=privacyPolicy,proto3" json:"privacy_policy,omitempty"`
+	PowerState          PowerState                          `protobuf:"varint,31,opt,name=power_state,json=powerState,proto3,enum=edgeproto.PowerState" json:"power_state,omitempty"`
+	ExternalVolumeSize  uint64                              `protobuf:"varint,32,opt,name=external_volume_size,json=externalVolumeSize,proto3" json:"external_volume_size,omitempty"`
+	AvailabilityZone    string                              `protobuf:"bytes,33,opt,name=availability_zone,json=availabilityZone,proto3" json:"availability_zone,omitempty"`
+	VmFlavor            string                              `protobuf:"bytes,34,opt,name=vm_flavor,json=vmFlavor,proto3" json:"vm_flavor,omitempty"`
+	OptRes              string                              `protobuf:"bytes,35,opt,name=opt_res,json=optRes,proto3" json:"opt_res,omitempty"`
+}
+
 type PolicyKeyV0_OrgRestructure struct {
 	Developer string `protobuf:"bytes,1,opt,name=developer,proto3" json:"developer,omitempty"`
 	Name      string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -252,6 +282,35 @@ type PrivacyPolicyV0_OrgRestructure struct {
 	Fields                []string                   `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	Key                   PolicyKeyV0_OrgRestructure `protobuf:"bytes,2,opt,name=key" json:"key"`
 	OutboundSecurityRules []OutboundSecurityRule     `protobuf:"bytes,3,rep,name=outbound_security_rules,json=outboundSecurityRules" json:"outbound_security_rules"`
+}
+
+// this is after org restructure but before revision change
+type AppV1_OrgRestructure struct {
+	Fields                  []string      `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Key                     AppKey        `protobuf:"bytes,2,opt,name=key" json:"key"`
+	ImagePath               string        `protobuf:"bytes,4,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`
+	ImageType               ImageType     `protobuf:"varint,5,opt,name=image_type,json=imageType,proto3,enum=edgeproto.ImageType" json:"image_type,omitempty"`
+	AccessPorts             string        `protobuf:"bytes,7,opt,name=access_ports,json=accessPorts,proto3" json:"access_ports,omitempty"`
+	DefaultFlavor           FlavorKey     `protobuf:"bytes,9,opt,name=default_flavor,json=defaultFlavor" json:"default_flavor"`
+	AuthPublicKey           string        `protobuf:"bytes,12,opt,name=auth_public_key,json=authPublicKey,proto3" json:"auth_public_key,omitempty"`
+	Command                 string        `protobuf:"bytes,13,opt,name=command,proto3" json:"command,omitempty"`
+	Annotations             string        `protobuf:"bytes,14,opt,name=annotations,proto3" json:"annotations,omitempty"`
+	Deployment              string        `protobuf:"bytes,15,opt,name=deployment,proto3" json:"deployment,omitempty"`
+	DeploymentManifest      string        `protobuf:"bytes,16,opt,name=deployment_manifest,json=deploymentManifest,proto3" json:"deployment_manifest,omitempty"`
+	DeploymentGenerator     string        `protobuf:"bytes,17,opt,name=deployment_generator,json=deploymentGenerator,proto3" json:"deployment_generator,omitempty"`
+	AndroidPackageName      string        `protobuf:"bytes,18,opt,name=android_package_name,json=androidPackageName,proto3" json:"android_package_name,omitempty"`
+	DelOpt                  DeleteType    `protobuf:"varint,20,opt,name=del_opt,json=delOpt,proto3,enum=edgeproto.DeleteType" json:"del_opt,omitempty"`
+	Configs                 []*ConfigFile `protobuf:"bytes,21,rep,name=configs" json:"configs,omitempty"`
+	ScaleWithCluster        bool          `protobuf:"varint,22,opt,name=scale_with_cluster,json=scaleWithCluster,proto3" json:"scale_with_cluster,omitempty"`
+	InternalPorts           bool          `protobuf:"varint,23,opt,name=internal_ports,json=internalPorts,proto3" json:"internal_ports,omitempty"`
+	Revision                int32         `protobuf:"bytes,24,opt,name=revision,proto3" json:"revision,omitempty"`
+	OfficialFqdn            string        `protobuf:"bytes,25,opt,name=official_fqdn,json=officialFqdn,proto3" json:"official_fqdn,omitempty"`
+	Md5Sum                  string        `protobuf:"bytes,26,opt,name=md5sum,proto3" json:"md5sum,omitempty"`
+	DefaultSharedVolumeSize uint64        `protobuf:"varint,27,opt,name=default_shared_volume_size,json=defaultSharedVolumeSize,proto3" json:"default_shared_volume_size,omitempty"`
+	AutoProvPolicy          string        `protobuf:"bytes,28,opt,name=auto_prov_policy,json=autoProvPolicy,proto3" json:"auto_prov_policy,omitempty"`
+	AccessType              AccessType    `protobuf:"varint,29,opt,name=access_type,json=accessType,proto3,enum=edgeproto.AccessType" json:"access_type,omitempty"`
+	DefaultPrivacyPolicy    string        `protobuf:"bytes,30,opt,name=default_privacy_policy,json=defaultPrivacyPolicy,proto3" json:"default_privacy_policy,omitempty"`
+	DeletePrepare           bool          `protobuf:"varint,31,opt,name=delete_prepare,json=deletePrepare,proto3" json:"delete_prepare,omitempty"`
 }
 
 type AutoScalePolicyV0_OrgRestructure struct {
@@ -551,7 +610,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 			return err2
 		}
 		log.DebugLog(log.DebugLevelUpgrade, "Upgrading App from V0 to current", "appV0", appV0)
-		appV1 := App{}
+		appV1 := AppV1_OrgRestructure{}
 		appV1.Fields = appV0.Fields
 		appV1.Key.Organization = appV0.Key.DeveloperKey.Name
 		appV1.Key.Name = appV0.Key.Name
@@ -609,7 +668,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 			return err2
 		}
 		log.DebugLog(log.DebugLevelUpgrade, "Upgrading AppInst from V0 to current", "appInstV0", appInstV0)
-		appInstV1 := AppInst{}
+		appInstV1 := AppInstV1_OrgRestructure{}
 		appInstV1.Fields = appInstV0.Fields
 		appInstV1.Key.AppKey.Organization = appInstV0.Key.AppKey.DeveloperKey.Name
 		appInstV1.Key.AppKey.Name = appInstV0.Key.AppKey.Name
@@ -810,4 +869,121 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		"resTagUpgCount", resTagUpgCount)
 
 	return err
+}
+
+func AppRevision(ctx context.Context, objStore objstore.KVStore) error {
+	log.DebugLog(log.DebugLevelUpgrade, "AppRevision")
+
+	// Apps
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
+	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
+		var appV1 AppV1_OrgRestructure
+		err2 := json.Unmarshal(val, &appV1)
+		if err2 != nil {
+			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appV1", appV1)
+			return err2
+		}
+		log.DebugLog(log.DebugLevelUpgrade, "Upgrading App from V1 to current", "appV1", appV1)
+		appV2 := App{}
+		appV2.Fields = appV1.Fields
+		appV2.Key = appV1.Key
+		appV2.ImagePath = appV1.ImagePath
+		appV2.ImageType = appV1.ImageType
+		appV2.AccessPorts = appV1.AccessPorts
+		appV2.DefaultFlavor = appV1.DefaultFlavor
+		appV2.AuthPublicKey = appV1.AuthPublicKey
+		appV2.Command = appV1.Command
+
+		appV2.Annotations = appV1.Annotations
+		appV2.Deployment = appV1.Deployment
+		appV2.DeploymentManifest = appV1.DeploymentManifest
+		appV2.DeploymentGenerator = appV1.DeploymentGenerator
+		appV2.AndroidPackageName = appV1.AndroidPackageName
+
+		appV2.DelOpt = appV1.DelOpt
+		appV2.Configs = appV1.Configs
+		appV2.InternalPorts = appV1.InternalPorts
+		if appV1.Revision != 0 {
+			appV2.Revision = fmt.Sprintf("%d", appV1.Revision)
+		}
+
+		appV2.OfficialFqdn = appV1.OfficialFqdn
+		appV2.Md5Sum = appV1.Md5Sum
+		appV2.DefaultSharedVolumeSize = appV1.DefaultSharedVolumeSize
+
+		appV2.AutoProvPolicy = appV1.AutoProvPolicy
+		appV2.AccessType = appV1.AccessType
+		appV2.DefaultPrivacyPolicy = appV1.DefaultPrivacyPolicy
+		appV2.DeletePrepare = appV1.DeletePrepare
+
+		log.DebugLog(log.DebugLevelUpgrade, "Upgraded app", "appV2", appV2)
+		objStore.Delete(ctx, string(key))
+		newkey := objstore.DbKeyString("App", &appV2.Key)
+		val, err2 = json.Marshal(appV2)
+		if err2 != nil {
+			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appV2, "err", err2)
+			return err2
+		}
+		objStore.Put(ctx, newkey, string(val))
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// AppInsts
+	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
+	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+		var appInstV1 AppInstV1_OrgRestructure
+		err2 := json.Unmarshal(val, &appInstV1)
+		if err2 != nil {
+			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appInstV1", appInstV1)
+			return err2
+		}
+		log.DebugLog(log.DebugLevelUpgrade, "Upgrading AppInst from V1 to current", "appInstV1", appInstV1)
+		appInstV2 := AppInst{}
+		appInstV2.Fields = appInstV1.Fields
+		appInstV2.Key = appInstV1.Key
+		appInstV2.CloudletLoc = appInstV1.CloudletLoc
+		appInstV2.Uri = appInstV1.Uri
+		appInstV2.Liveness = appInstV1.Liveness
+		appInstV2.MappedPorts = appInstV1.MappedPorts
+		appInstV2.Flavor = appInstV1.Flavor
+		appInstV2.State = appInstV1.State
+		appInstV2.Errors = appInstV1.Errors
+		appInstV2.CrmOverride = appInstV1.CrmOverride
+		appInstV2.RuntimeInfo = appInstV1.RuntimeInfo
+		appInstV2.CreatedAt = appInstV1.CreatedAt
+		appInstV2.AutoClusterIpAccess = appInstV1.AutoClusterIpAccess
+		appInstV2.Status = appInstV1.Status
+		if appInstV1.Revision != 0 {
+			appInstV2.Revision = fmt.Sprintf("%d", appInstV1.Revision)
+		}
+		appInstV2.ForceUpdate = appInstV1.ForceUpdate
+		appInstV2.UpdateMultiple = appInstV1.UpdateMultiple
+		appInstV2.Configs = appInstV1.Configs
+		appInstV2.SharedVolumeSize = appInstV1.SharedVolumeSize
+		appInstV2.HealthCheck = appInstV1.HealthCheck
+		appInstV2.PrivacyPolicy = appInstV1.PrivacyPolicy
+		appInstV2.PowerState = appInstV1.PowerState
+		appInstV2.ExternalVolumeSize = appInstV1.ExternalVolumeSize
+		appInstV2.AvailabilityZone = appInstV1.AvailabilityZone
+		appInstV2.VmFlavor = appInstV1.VmFlavor
+		appInstV2.OptRes = appInstV1.OptRes
+
+		log.DebugLog(log.DebugLevelUpgrade, "Upgraded appinst", "appInstV2", appInstV2)
+		objStore.Delete(ctx, string(key))
+		newkey := objstore.DbKeyString("AppInst", &appInstV2.Key)
+		val, err2 = json.Marshal(appInstV2)
+		if err2 != nil {
+			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appInstV2, "err", err2)
+			return err2
+		}
+		objStore.Put(ctx, newkey, string(val))
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

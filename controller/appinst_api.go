@@ -86,7 +86,7 @@ func (s *AppInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
 	return false
 }
 
-func (s *AppInstApi) updateAppInstRevision(ctx context.Context, key *edgeproto.AppInstKey, revision int32) error {
+func (s *AppInstApi) updateAppInstRevision(ctx context.Context, key *edgeproto.AppInstKey, revision string) error {
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, key, &inst) {

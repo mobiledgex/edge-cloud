@@ -125,6 +125,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i1 := 0; i1 < len(in.Apps[i0].Configs); i1++ {
 		}
 		if _, found := tags["nocmp"]; found {
+			in.Apps[i0].Revision = ""
+		}
+		if _, found := tags["nocmp"]; found {
 			in.Apps[i0].DeletePrepare = false
 		}
 	}
@@ -150,6 +153,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.AppInstances[i0].CreatedAt = distributed_match_engine.Timestamp{}
 		}
 		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].Revision = ""
+		}
+		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].ForceUpdate = false
 		}
 		if _, found := tags["nocmp"]; found {
@@ -168,6 +174,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].VmFlavor = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].OptRes = ""
 		}
 	}
 }
@@ -431,6 +440,7 @@ var AllDataOptionalArgs = []string{
 	"appinstances[#].externalvolumesize",
 	"appinstances[#].availabilityzone",
 	"appinstances[#].vmflavor",
+	"appinstances[#].optres",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -613,7 +623,7 @@ var AllDataComments = map[string]string{
 	"apps[#].configs[#].config":                                   "config file contents or URI reference",
 	"apps[#].scalewithcluster":                                    "Option to run App on all nodes of the cluster",
 	"apps[#].internalports":                                       "Should this app have access to outside world?",
-	"apps[#].revision":                                            "Revision increments each time the App is updated",
+	"apps[#].revision":                                            "Revision can be specified or defaults to current timestamp when app is updated",
 	"apps[#].officialfqdn":                                        "Official FQDN is the FQDN that the app uses to connect by default",
 	"apps[#].md5sum":                                              "MD5Sum of the VM-based app image",
 	"apps[#].defaultsharedvolumesize":                             "shared volume size when creating auto cluster",
@@ -651,7 +661,7 @@ var AllDataComments = map[string]string{
 	"appinstances[#].crmoverride":                                 "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"appinstances[#].runtimeinfo.containerids":                    "List of container names",
 	"appinstances[#].autoclusteripaccess":                         "IpAccess for auto-clusters. Ignored otherwise., one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
-	"appinstances[#].revision":                                    "Revision increments each time the App is updated.  Updating the App Instance will sync the revision with that of the App",
+	"appinstances[#].revision":                                    "Revision changes each time the App is updated.  Refreshing the App Instance will sync the revision with that of the App",
 	"appinstances[#].forceupdate":                                 "Force Appinst refresh even if revision number matches App revision number.",
 	"appinstances[#].updatemultiple":                              "Allow multiple instances to be updated at once",
 	"appinstances[#].configs[#].kind":                             "kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml",
@@ -663,6 +673,7 @@ var AllDataComments = map[string]string{
 	"appinstances[#].externalvolumesize":                          "Size of external volume to be attached to nodes.  This is for the root partition",
 	"appinstances[#].availabilityzone":                            "Optional Availability Zone if any",
 	"appinstances[#].vmflavor":                                    "OS node flavor to use",
+	"appinstances[#].optres":                                      "Optional Resources required by OS flavor if any",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances[#].errors":                   "StringArray",
