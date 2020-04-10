@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/stretchr/testify/assert"
 )
@@ -132,7 +133,7 @@ func compareString(funcName, key, expected, actual string) error {
 func TestAllUpgradeFuncs(t *testing.T) {
 	objStore := dummyEtcd{}
 	objstore.InitRegion(1)
-	ctx := context.Background()
+	ctx := log.StartTestSpan(context.Background())
 	for ii, fn := range edgeproto.VersionHash_UpgradeFuncs {
 		if fn == nil {
 			continue
