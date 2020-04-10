@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	ssh "github.com/mobiledgex/golang-ssh"
 )
@@ -18,6 +19,7 @@ type PlatformConfig struct {
 	VMImageVersion      string
 	PackageVersion      string
 	EnvVars             map[string]string
+	NodeMgr             *node.NodeMgr
 }
 
 // Platform abstracts the underlying cloudlet platform.

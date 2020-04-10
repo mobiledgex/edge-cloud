@@ -1,0 +1,8 @@
+requests:
+- node:
+    type: crm
+  cmd: crmcmd
+  args: echo "foo bar"
+- node:
+    type: crm
+  cmd: fakecmd
