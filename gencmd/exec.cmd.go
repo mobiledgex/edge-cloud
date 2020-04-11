@@ -229,6 +229,64 @@ func ShowLogss(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
 	}
 }
 
+var AccessCloudletCmd = &cli.Command{
+	Use:          "AccessCloudlet",
+	RequiredArgs: strings.Join(AccessCloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(AccessCloudletOptionalArgs, " "),
+	AliasArgs:    strings.Join(ExecRequestAliasArgs, " "),
+	SpecialArgs:  &ExecRequestSpecialArgs,
+	Comments:     ExecRequestComments,
+	ReqData:      &edgeproto.ExecRequest{},
+	ReplyData:    &edgeproto.ExecRequest{},
+	Run:          runAccessCloudlet,
+}
+
+func runAccessCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.ExecRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return AccessCloudlet(c, obj)
+}
+
+func AccessCloudlet(c *cli.Command, in *edgeproto.ExecRequest) error {
+	if ExecApiCmd == nil {
+		return fmt.Errorf("ExecApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := ExecApiCmd.AccessCloudlet(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AccessCloudlet failed: %s", errstr)
+	}
+	ExecRequestHideTags(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func AccessCloudlets(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AccessCloudlet %v\n", data[ii])
+		myerr := AccessCloudlet(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var SendLocalRequestCmd = &cli.Command{
 	Use:          "SendLocalRequest",
 	RequiredArgs: strings.Join(ExecRequestRequiredArgs, " "),
@@ -291,6 +349,7 @@ var ExecApiCmds = []*cobra.Command{
 	RunCommandCmd.GenCmd(),
 	RunConsoleCmd.GenCmd(),
 	ShowLogsCmd.GenCmd(),
+	AccessCloudletCmd.GenCmd(),
 	SendLocalRequestCmd.GenCmd(),
 }
 
@@ -344,6 +403,7 @@ var ExecRequestOptionalArgs = []string{
 	"timestamps",
 	"follow",
 	"webrtc",
+	"vmtype",
 }
 var ExecRequestAliasArgs = []string{
 	"app-org=appinstkey.appkey.organization",
@@ -381,6 +441,7 @@ var ExecRequestComments = map[string]string{
 	"webrtc":       "WebRTC",
 	"accessurl":    "Access URL",
 	"edgeturnaddr": "EdgeTurn Server Address",
+	"vmtype":       "VM Type, one of UnknownVm, PlatformVm, SharedRootlbVm, DedicatedRootlbVm",
 }
 var ExecRequestSpecialArgs = map[string]string{}
 var RunCommandRequiredArgs = []string{
@@ -426,4 +487,16 @@ var ShowLogsOptionalArgs = []string{
 	"timestamps",
 	"follow",
 	"webrtc",
+}
+var AccessCloudletRequiredArgs = []string{
+	"cloudlet-org",
+	"cloudlet",
+}
+var AccessCloudletOptionalArgs = []string{
+	"app-org",
+	"appname",
+	"appvers",
+	"cluster",
+	"cluster-org",
+	"vmtype",
 }

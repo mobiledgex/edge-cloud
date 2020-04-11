@@ -63,6 +63,7 @@
 		CloudletInfraProperties
 		PlatformConfig
 		CloudletResMap
+		AuthKeyPair
 		Cloudlet
 		FlavorMatch
 		FlavorInfo
@@ -1017,6 +1018,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(PowerState(0)):
 		if en, ok := PowerState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(VMType(0)):
+		if en, ok := VMType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(NoticeAction(0)):

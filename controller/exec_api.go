@@ -123,6 +123,25 @@ func (s *ExecApi) RunConsole(ctx context.Context, req *edgeproto.ExecRequest) (*
 	return s.doExchange(ctx, req)
 }
 
+func (s *ExecApi) AccessCloudlet(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+	if req.VmType == edgeproto.VMType_UNKNOWN_VM {
+		return nil, fmt.Errorf("vmtype argument is required")
+	}
+	// make sure cloudlet exists
+	if !cloudletApi.HasKey(&req.AppInstKey.ClusterInstKey.CloudletKey) {
+		return nil, req.AppInstKey.ClusterInstKey.CloudletKey.NotFoundError()
+	}
+	if req.VmType == edgeproto.VMType_DEDICATED_ROOTLB_VM {
+		// make sure cluster instance exists
+		if !clusterInstApi.HasKey(&req.AppInstKey.ClusterInstKey) {
+			return nil, req.AppInstKey.ClusterInstKey.NotFoundError()
+		}
+
+	}
+	req.Timeout = ShortTimeout
+	return s.doExchange(ctx, req)
+}
+
 func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
 	if !req.Webrtc {
 		// Make sure EdgeTurn Server Address is present

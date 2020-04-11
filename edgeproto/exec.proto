@@ -26,6 +26,18 @@ message ShowLog {
   bool follow = 4;
 }
 
+// VMType is the type of VM to access in the Cloudlet
+enum VMType {
+  // Unknown VM
+  UNKNOWN_VM = 0;
+  // Platform VM
+  PLATFORM_VM = 1;
+  // Shared RootLB VM
+  SHARED_ROOTLB_VM = 2;
+  // Dedicated RootLB VM
+  DEDICATED_ROOTLB_VM = 3;
+}
+
 // ExecRequest is a common struct for enabling a webrtc connection do execute some work on a container.
 message ExecRequest {
   // Target AppInst
@@ -52,6 +64,8 @@ message ExecRequest {
   string access_url = 14 [(protogen.backend) = true];
   // EdgeTurn Server Address
   string edge_turn_addr = 15 [(protogen.backend) = true];
+  // VM Type
+  VMType vm_type = 16;
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.noconfig) = "Offer,Answer,Err,Console.Url,Timeout,AccessUrl,EdgeTurnAddr";
@@ -63,22 +77,28 @@ service ExecApi {
   // Run a Command or Shell on a container
   rpc RunCommand(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
-    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,AccessUrl,EdgeTurnAddr";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,AccessUrl,EdgeTurnAddr,VmType";
     option (protogen.method_also_required) = "AppInstKey,Cmd.Command";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
   }
   // Run console on a VM
   rpc RunConsole(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
-    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console,AccessUrl,EdgeTurnAddr";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console,AccessUrl,EdgeTurnAddr,VmType";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
   }
   // View logs for AppInst
   rpc ShowLogs(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,AppInstKey.AppKey.Organization";
-    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console,AccessUrl,EdgeTurnAddr";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console,AccessUrl,EdgeTurnAddr,VmType";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
     option (protogen.non_standard_show) = true;
+  }
+  // Access internal VMs of Cloudlet
+  rpc AccessCloudlet(ExecRequest) returns (ExecRequest) {
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console,Log,AccessUrl,EdgeTurnAddr,Webrtc,ContainerId";
+    option (protogen.method_not_required) = "AppInstKey.AppKey.Name,AppInstKey.AppKey.Version,AppInstKey.AppKey.Organization,AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization";
   }
   // This is used internally to forward requests to other Controllers.
   rpc SendLocalRequest(ExecRequest) returns (ExecRequest) {}

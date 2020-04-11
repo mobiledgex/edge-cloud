@@ -39,7 +39,12 @@ func (s *ExecReqHandler) RecvExecRequest(ctx context.Context, msg *edgeproto.Exe
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelApi, "process exec req", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		defer cspan.Finish()
-		err := s.cd.ProcessExecReq(ctx, msg)
+		var err error
+		if msg.VmType == edgeproto.VMType_UNKNOWN_VM {
+			err = s.cd.ProcessExecReq(ctx, msg)
+		} else {
+			err = s.cd.ProcessAccessCloudlet(ctx, msg)
+		}
 		if err != nil {
 			msg.Err = err.Error()
 		}
@@ -55,20 +60,19 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 	}
 
 	appInst := edgeproto.AppInst{}
+	app := edgeproto.App{}
 	found := cd.AppInstCache.Get(&req.AppInstKey, &appInst)
 	if !found {
 		return fmt.Errorf("app inst %s not found",
 			req.AppInstKey.GetKeyString())
 	}
-	app := edgeproto.App{}
 	found = cd.AppCache.Get(&req.AppInstKey.AppKey, &app)
 	if !found {
 		return fmt.Errorf("app %s not found",
 			req.AppInstKey.AppKey.GetKeyString())
 	}
 
-	var execReqType cloudcommon.ExecReqType
-	var initURL *url.URL
+	execReqInfo := cloudcommon.ExecReqInfo{}
 	if req.Console != nil {
 		req.Console.Url, err = cd.platform.GetConsoleUrl(ctx, &app)
 		if err != nil {
@@ -78,152 +82,204 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		if err != nil {
 			return fmt.Errorf("unable to parse console url, %s, %v", req.Console.Url, err)
 		}
-		execReqType = cloudcommon.ExecReqConsole
-		initURL = urlObj
+		execReqInfo.Type = cloudcommon.ExecReqConsole
+		execReqInfo.InitURL = urlObj
 	} else {
-		execReqType = cloudcommon.ExecReqShell
 		clusterInst := edgeproto.ClusterInst{}
-		found = cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
+		found := cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
 		if !found {
 			return fmt.Errorf("cluster inst %s not found",
 				appInst.Key.ClusterInstKey.GetKeyString())
+		}
+		run.client, err = cd.platform.GetPlatformClientRootLB(ctx, &clusterInst)
+		if err != nil {
+			return err
 		}
 
 		run.contcmd, err = cd.platform.GetContainerCommand(ctx, &clusterInst, &app, &appInst, req)
 		if err != nil {
 			return err
 		}
-
-		run.client, err = cd.platform.GetPlatformClient(ctx, &clusterInst)
-		if err != nil {
-			return err
-		}
+		execReqInfo.Type = cloudcommon.ExecReqConsole
 	}
 
-	if req.Webrtc {
-		offer := webrtc.SessionDescription{}
-		err = json.Unmarshal([]byte(req.Offer), &offer)
-		if err != nil {
-			return fmt.Errorf("unable to decode offer, %v", err)
-		}
+	if !req.Webrtc {
+		return cd.SetupEdgeTurnConn(ctx, req, &execReqInfo, run)
+	}
 
-		// hard code config for now
-		config := webrtc.Configuration{
-			ICEServers: []webrtc.ICEServer{
-				{
-					URLs: []string{"stun:stun.mobiledgex.net:19302"},
-				},
+	offer := webrtc.SessionDescription{}
+	err = json.Unmarshal([]byte(req.Offer), &offer)
+	if err != nil {
+		return fmt.Errorf("unable to decode offer, %v", err)
+	}
+
+	// hard code config for now
+	config := webrtc.Configuration{
+		ICEServers: []webrtc.ICEServer{
+			{
+				URLs: []string{"stun:stun.mobiledgex.net:19302"},
 			},
-		}
+		},
+	}
 
-		// create a new peer connection
-		peerConn, err := webrtc.NewPeerConnection(config)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi,
-				"failed to establish peer connection",
-				"config", config, "err", err)
-			return fmt.Errorf("failed to establish peer connection, %v", err)
-		}
+	// create a new peer connection
+	peerConn, err := webrtc.NewPeerConnection(config)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi,
+			"failed to establish peer connection",
+			"config", config, "err", err)
+		return fmt.Errorf("failed to establish peer connection, %v", err)
+	}
 
-		// register handlers
-		if req.Console != nil {
-			peerConn.OnDataChannel(run.RTCTunnel)
-		} else {
-			peerConn.OnDataChannel(run.DataChannel)
-		}
-
-		// set remote description
-		err = peerConn.SetRemoteDescription(offer)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi,
-				"failed to set remote description",
-				"offer", offer, "peerConn", peerConn, "err", err)
-			return fmt.Errorf("failed to set remote description, %v", err)
-		}
-		// create answer
-		answer, err := peerConn.CreateAnswer(nil)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi,
-				"failed to create answer",
-				"peerConn", peerConn, "err", err)
-			return fmt.Errorf("failed to set answer, %v", err)
-		}
-		// set local description, and starts out UDP listeners
-		err = peerConn.SetLocalDescription(answer)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi,
-				"failed to set local description",
-				"peerConn", peerConn, "err", err)
-			return fmt.Errorf("failed to set local description, %v", err)
-		}
-
-		// send back answer
-		answerBytes, err := json.Marshal(answer)
-		if err != nil {
-			return fmt.Errorf("failed to encode answer, %v", err)
-		}
-		req.Answer = string(answerBytes)
-		log.SpanLog(ctx, log.DebugLevelApi, "returning answer")
+	// register handlers
+	if req.Console != nil {
+		peerConn.OnDataChannel(run.RTCTunnel)
 	} else {
-		// Connect to EdgeTurn server
-		if req.EdgeTurnAddr == "" {
-			return fmt.Errorf("no edgeturn server address specified")
-		}
+		peerConn.OnDataChannel(run.DataChannel)
+	}
 
-		tlsConfig, err := cd.NodeMgr.InternalPki.GetClientTlsConfig(ctx,
-			cd.NodeMgr.CommonName(),
-			node.CertIssuerRegionalCloudlet,
-			[]node.MatchCA{node.SameRegionalMatchCA()})
+	// set remote description
+	err = peerConn.SetRemoteDescription(offer)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi,
+			"failed to set remote description",
+			"offer", offer, "peerConn", peerConn, "err", err)
+		return fmt.Errorf("failed to set remote description, %v", err)
+	}
+	// create answer
+	answer, err := peerConn.CreateAnswer(nil)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi,
+			"failed to create answer",
+			"peerConn", peerConn, "err", err)
+		return fmt.Errorf("failed to set answer, %v", err)
+	}
+	// set local description, and starts out UDP listeners
+	err = peerConn.SetLocalDescription(answer)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi,
+			"failed to set local description",
+			"peerConn", peerConn, "err", err)
+		return fmt.Errorf("failed to set local description, %v", err)
+	}
+
+	// send back answer
+	answerBytes, err := json.Marshal(answer)
+	if err != nil {
+		return fmt.Errorf("failed to encode answer, %v", err)
+	}
+	req.Answer = string(answerBytes)
+	log.SpanLog(ctx, log.DebugLevelApi, "returning answer")
+
+	return nil
+}
+
+func (cd *ControllerData) ProcessAccessCloudlet(ctx context.Context, req *edgeproto.ExecRequest) error {
+	var err error
+
+	run := &WebrtcExec{
+		req: req,
+	}
+
+	execReqInfo := cloudcommon.ExecReqInfo{
+		Type: cloudcommon.ExecReqShell,
+	}
+
+	switch req.VmType {
+	case edgeproto.VMType_DEDICATED_ROOTLB_VM:
+		clusterInst := edgeproto.ClusterInst{}
+		clusterInstKey := &req.AppInstKey.ClusterInstKey
+		found := cd.ClusterInstCache.Get(clusterInstKey, &clusterInst)
+		if !found {
+			return fmt.Errorf("cluster inst %s not found",
+				clusterInstKey.GetKeyString())
+		}
+		if clusterInst.IpAccess != edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+			return fmt.Errorf("cluster inst %s does not have ipaccess set to dedicated", clusterInstKey.GetKeyString())
+		}
+		run.client, err = cd.platform.GetPlatformClientRootLB(ctx, &clusterInst)
 		if err != nil {
 			return err
 		}
-		turnConn, err := tls.Dial("tcp", req.EdgeTurnAddr, tlsConfig)
+	case edgeproto.VMType_SHARED_ROOTLB_VM:
+		rlbName := cloudcommon.GetRootLBName(&req.AppInstKey.ClusterInstKey.CloudletKey)
+		run.client, err = cd.platform.GetPlatformClient(ctx, rlbName)
 		if err != nil {
-			return fmt.Errorf("failed to connect to edgeturn server: %v", err)
+			return err
 		}
-		defer turnConn.Close()
-
-		// Send ExecReqInfo to EdgeTurn server
-		execReqInfo := cloudcommon.ExecReqInfo{
-			Type:    execReqType,
-			InitURL: initURL,
-		}
-		out, err := json.Marshal(&execReqInfo)
+	case edgeproto.VMType_PLATFORM_VM:
+		pfName := cloudcommon.GetPlatformVMName(&req.AppInstKey.ClusterInstKey.CloudletKey)
+		run.client, err = cd.platform.GetPlatformClient(ctx, pfName)
 		if err != nil {
-			return fmt.Errorf("failed to marshal execReqInfo %v, %v", execReqInfo, err)
+			return err
 		}
-		turnConn.Write(out)
-		log.SpanLog(ctx, log.DebugLevelApi, "sent execreq info", "info", string(out))
+	default:
+		return fmt.Errorf("invalid vmtype: %s", req.VmType)
+	}
 
-		// Fetch session info from EdgeTurn server
-		var sessInfo cloudcommon.SessionInfo
-		d := json.NewDecoder(turnConn)
-		err = d.Decode(&sessInfo)
+	return cd.SetupEdgeTurnConn(ctx, req, &execReqInfo, run)
+}
+
+func (cd *ControllerData) SetupEdgeTurnConn(ctx context.Context, req *edgeproto.ExecRequest, execReqInfo *cloudcommon.ExecReqInfo, run *WebrtcExec) error {
+	if execReqInfo == nil {
+		return fmt.Errorf("execreqinfo is nil")
+	}
+	// Connect to EdgeTurn server
+	if req.EdgeTurnAddr == "" {
+		return fmt.Errorf("no edgeturn server address specified")
+	}
+
+	tlsConfig, err := cd.NodeMgr.InternalPki.GetClientTlsConfig(ctx,
+		cd.NodeMgr.CommonName(),
+		node.CertIssuerRegionalCloudlet,
+		[]node.MatchCA{node.SameRegionalMatchCA()})
+	if err != nil {
+		return err
+	}
+	turnConn, err := tls.Dial("tcp", req.EdgeTurnAddr, tlsConfig)
+	if err != nil {
+		return fmt.Errorf("failed to connect to edgeturn server: %v", err)
+	}
+	defer turnConn.Close()
+
+	out, err := json.Marshal(execReqInfo)
+	if err != nil {
+		return fmt.Errorf("failed to marshal execReqInfo %v, %v", execReqInfo, err)
+	}
+	turnConn.Write(out)
+	log.SpanLog(ctx, log.DebugLevelApi, "sent execreq info", "info", string(out))
+
+	// Fetch session info from EdgeTurn server
+	var sessInfo cloudcommon.SessionInfo
+	d := json.NewDecoder(turnConn)
+	err = d.Decode(&sessInfo)
+	if err != nil {
+		return fmt.Errorf("failed to decode session info: %v", err)
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "received session info from edgeturn server", "info", sessInfo)
+
+	turnAddrParts := strings.Split(req.EdgeTurnAddr, ":")
+	if len(turnAddrParts) != 2 {
+		return fmt.Errorf("invalid edgeturn Addr: %s", req.EdgeTurnAddr)
+	}
+
+	switch execReqInfo.Type {
+	case cloudcommon.ExecReqConsole:
+		proxyAddr := "https://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeconsole?edgetoken=" + sessInfo.Token
+		req.AccessUrl = proxyAddr
+		cd.ExecReqSend.Update(ctx, req)
+
+		err = proxyutil.ProxyMuxServer(turnConn, req.Console.Url)
 		if err != nil {
-			return fmt.Errorf("failed to decode session info: %v", err)
+			return err
 		}
-		log.SpanLog(ctx, log.DebugLevelApi, "received session info from edgeturn server", "info", sessInfo)
-
-		turnAddrParts := strings.Split(req.EdgeTurnAddr, ":")
-		if len(turnAddrParts) != 2 {
-			return fmt.Errorf("invalid edgeturn Addr: %s", req.EdgeTurnAddr)
-		}
-
-		if req.Console != nil {
-			proxyAddr := "https://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeconsole?edgetoken=" + sessInfo.Token
-			req.AccessUrl = proxyAddr
-			cd.ExecReqSend.Update(ctx, req)
-
-			err = proxyutil.ProxyMuxServer(turnConn, req.Console.Url)
-			if err != nil {
-				return err
-			}
-		} else {
-			proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?edgetoken=" + sessInfo.Token
-			req.AccessUrl = proxyAddr
-			cd.ExecReqSend.Update(ctx, req)
-			run.proxyRawConn(turnConn)
-		}
+	case cloudcommon.ExecReqShell:
+		proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?edgetoken=" + sessInfo.Token
+		req.AccessUrl = proxyAddr
+		cd.ExecReqSend.Update(ctx, req)
+		run.proxyRawConn(turnConn)
+	default:
+		return fmt.Errorf("invalid execreqinfo type: %v", execReqInfo.Type)
 	}
 
 	return nil

@@ -18,6 +18,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vmspec"
+	ssh "github.com/mobiledgex/golang-ssh"
 	"google.golang.org/grpc"
 )
 
@@ -251,6 +252,16 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if in.AccessVars != nil {
 		accessVars = in.AccessVars
 		in.AccessVars = nil
+	}
+
+	cb.Send(&edgeproto.Result{Message: "Generating SSH key pair"})
+	pubKey, privKey, err := ssh.GenKeyPair()
+	if err != nil {
+		return fmt.Errorf("failed to generate cloudlet SSH key pair: %v", err)
+	}
+	in.AuthKey = &edgeproto.AuthKeyPair{
+		PublicKey:  pubKey,
+		PrivateKey: privKey,
 	}
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {

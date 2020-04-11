@@ -121,6 +121,17 @@ var AllocatedIpDynamic = "dynamic"
 
 var RootLBL7Port int32 = 443
 
+// GetPlatformVMName gets the name of the Platform VM of the Cloudlet
+func GetPlatformVMName(key *edgeproto.CloudletKey) string {
+	return util.HeatSanitize(key.Name + "." + key.Organization + ".pf")
+}
+
+// GetRootLBName gets the name of the global Load Balancer for apps
+func GetRootLBName(key *edgeproto.CloudletKey) string {
+	name := GetRootLBFQDN(key)
+	return util.HeatSanitize(name)
+}
+
 // GetRootLBFQDN gets the global Load Balancer's Fully Qualified Domain Name
 // for apps using "shared" IP access.
 func GetRootLBFQDN(key *edgeproto.CloudletKey) string {

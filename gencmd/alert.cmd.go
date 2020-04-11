@@ -63,6 +63,7 @@ It has these top-level messages:
 	CloudletInfraProperties
 	PlatformConfig
 	CloudletResMap
+	AuthKeyPair
 	Cloudlet
 	FlavorMatch
 	FlavorInfo

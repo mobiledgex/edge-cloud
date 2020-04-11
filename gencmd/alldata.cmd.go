@@ -55,6 +55,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].Config = edgeproto.PlatformConfig{}
 		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].AuthKey = nil
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -169,6 +172,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].VmFlavor = ""
 		}
+		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].OptRes = ""
+		}
 	}
 }
 
@@ -257,6 +263,8 @@ var AllDataOptionalArgs = []string{
 	"cloudlets[#].accessvars",
 	"cloudlets[#].vmimageversion",
 	"cloudlets[#].packageversion",
+	"cloudlets[#].authkey.publickey",
+	"cloudlets[#].authkey.privatekey",
 	"cloudletinfos[#].fields",
 	"cloudletinfos[#].key.organization",
 	"cloudletinfos[#].key.name",
@@ -431,6 +439,7 @@ var AllDataOptionalArgs = []string{
 	"appinstances[#].externalvolumesize",
 	"appinstances[#].availabilityzone",
 	"appinstances[#].vmflavor",
+	"appinstances[#].optres",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -509,6 +518,8 @@ var AllDataComments = map[string]string{
 	"cloudlets[#].accessvars":                                     "Variables required to access cloudlet",
 	"cloudlets[#].vmimageversion":                                 "MobiledgeX baseimage version where CRM services reside",
 	"cloudlets[#].packageversion":                                 "MobiledgeX OS package version on baseimage where CRM services reside",
+	"cloudlets[#].authkey.publickey":                              "Auth Public Key",
+	"cloudlets[#].authkey.privatekey":                             "Auth Private Key",
 	"cloudletinfos[#].fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos[#].key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos[#].key.name":                                   "Name of the cloudlet",
@@ -663,6 +674,7 @@ var AllDataComments = map[string]string{
 	"appinstances[#].externalvolumesize":                          "Size of external volume to be attached to nodes.  This is for the root partition",
 	"appinstances[#].availabilityzone":                            "Optional Availability Zone if any",
 	"appinstances[#].vmflavor":                                    "OS node flavor to use",
+	"appinstances[#].optres":                                      "Optional Resources required by OS flavor if any",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances[#].errors":                   "StringArray",

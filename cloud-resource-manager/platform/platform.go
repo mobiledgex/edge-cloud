@@ -9,7 +9,6 @@ import (
 )
 
 type PlatformConfig struct {
-	CloudletKey         *edgeproto.CloudletKey
 	PhysicalName        string
 	VaultAddr           string
 	Region              string
@@ -17,7 +16,6 @@ type PlatformConfig struct {
 	CloudletVMImagePath string
 	VMImageVersion      string
 	PackageVersion      string
-	EnvVars             map[string]string
 }
 
 // Platform abstracts the underlying cloudlet platform.
@@ -25,7 +23,7 @@ type Platform interface {
 	// GetType returns the cloudlet's stack type, i.e. Openstack, Azure, etc.
 	GetType() string
 	// Init is called once during CRM startup.
-	Init(ctx context.Context, platformConfig *PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
+	Init(ctx context.Context, cloudlet *edgeproto.Cloudlet, platformConfig *PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Gather information about the cloudlet platform.
 	// This includes available resources, flavors, etc.
 	GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error
@@ -44,7 +42,9 @@ type Platform interface {
 	// Get AppInst runtime information
 	GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error)
 	// Get the Platform Client to run commands against
-	GetPlatformClient(ctx context.Context, clusterInst *edgeproto.ClusterInst) (ssh.Client, error)
+	GetPlatformClient(ctx context.Context, serverName string) (ssh.Client, error)
+	// Get the Platform Client of RootLB to run commands against
+	GetPlatformClientRootLB(ctx context.Context, clusterInst *edgeproto.ClusterInst) (ssh.Client, error)
 	// Get the command to pass to PlatformClient for the container command
 	GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error)
 	// Get the console URL of the VM app

@@ -204,7 +204,7 @@ func main() {
 		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		commonName := cloudcommon.GetRootLBFQDN(&myCloudletInfo.Key)
 		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
-		rootlb, err := platform.GetPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
+		rootlb, err := platform.GetPlatformClientRootLB(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
 		if err == nil {
 			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, nodeMgr.VaultAddr, rootlb, *commercialCerts)
 		}
@@ -234,7 +234,6 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 	oper := util.DNSSanitize(cloudletInfo.Key.Organization)
 
 	pc := pf.PlatformConfig{
-		CloudletKey:         &cloudletInfo.Key,
 		PhysicalName:        physicalName,
 		VaultAddr:           vaultAddr,
 		Region:              *region,
@@ -242,9 +241,8 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		CloudletVMImagePath: *cloudletVMImagePath,
 		VMImageVersion:      *vmImageVersion,
 		PackageVersion:      *packageVersion,
-		EnvVars:             cloudlet.EnvVar,
 	}
 	log.SpanLog(ctx, log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
-	err := platform.Init(ctx, &pc, updateCallback)
+	err := platform.Init(ctx, cloudlet, &pc, updateCallback)
 	return err
 }

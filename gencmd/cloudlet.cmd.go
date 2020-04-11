@@ -53,6 +53,9 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	if _, found := tags["nocmp"]; found {
 		in.Config = edgeproto.PlatformConfig{}
 	}
+	if _, found := tags["nocmp"]; found {
+		in.AuthKey = nil
+	}
 }
 
 func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
@@ -1056,6 +1059,17 @@ var CloudletResMapComments = map[string]string{
 var CloudletResMapSpecialArgs = map[string]string{
 	"mapping": "StringToString",
 }
+var AuthKeyPairRequiredArgs = []string{}
+var AuthKeyPairOptionalArgs = []string{
+	"publickey",
+	"privatekey",
+}
+var AuthKeyPairAliasArgs = []string{}
+var AuthKeyPairComments = map[string]string{
+	"publickey":  "Auth Public Key",
+	"privatekey": "Auth Private Key",
+}
+var AuthKeyPairSpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
@@ -1143,6 +1157,8 @@ var CloudletComments = map[string]string{
 	"accessvars":                          "Variables required to access cloudlet",
 	"vmimageversion":                      "MobiledgeX baseimage version where CRM services reside",
 	"packageversion":                      "MobiledgeX OS package version on baseimage where CRM services reside",
+	"authkey.publickey":                   "Auth Public Key",
+	"authkey.privatekey":                  "Auth Private Key",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",

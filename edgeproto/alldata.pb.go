@@ -367,6 +367,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "Cloudlets.Config")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "Cloudlets.AuthKey")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "CloudletInfos.NotifyId")
 	}
 	if _, found := tags["nocmp"]; found {
@@ -443,6 +446,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.VmFlavor")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "AppInstances.OptRes")
 	}
 	return cmpopts.IgnoreFields(AllData{}, names...)
 }

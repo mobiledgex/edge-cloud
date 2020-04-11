@@ -17,9 +17,9 @@ func (s *Platform) GetType() string {
 	return "dind"
 }
 
-func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) Init(ctx context.Context, cloudlet *edgeproto.Cloudlet, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
 	// set up L7 load balancer
-	client, err := s.GetPlatformClient(ctx, nil)
+	client, err := s.GetPlatformClientRootLB(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -47,6 +47,10 @@ func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.Cloud
 	return nil
 }
 
-func (s *Platform) GetPlatformClient(ctx context.Context, clusterInst *edgeproto.ClusterInst) (ssh.Client, error) {
+func (s *Platform) GetPlatformClient(ctx context.Context, serverName string) (ssh.Client, error) {
+	return &pc.LocalClient{}, nil
+}
+
+func (s *Platform) GetPlatformClientRootLB(ctx context.Context, clusterInst *edgeproto.ClusterInst) (ssh.Client, error) {
 	return &pc.LocalClient{}, nil
 }
