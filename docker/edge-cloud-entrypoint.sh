@@ -19,16 +19,13 @@ case "$1" in
     mc|\
     mcctl|\
     notifyroot|\
+    shepherd|\
     tok-srv-sim)
 	"$@"
 	;;
     test-edgectl)
 	shift
 	test-edgectl.sh "$@"
-	;;
-    shepherd)
-	shift
-	shepherd "$@"
 	;;
     dump-docs)
 	shift
