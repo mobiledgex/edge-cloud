@@ -76,6 +76,7 @@ COPY --from=build /go/bin/controller \
 		  /go/bin/dme-server \
 		  /go/bin/cluster-svc \
 		  /go/bin/edgectl \
+		  /go/bin/edgeturn \
 		  /go/bin/tok-srv-sim \
 		  /go/bin/loc-api-sim \
 		  /go/bin/mc \
