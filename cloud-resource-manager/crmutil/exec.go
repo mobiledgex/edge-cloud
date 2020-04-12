@@ -100,7 +100,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		if err != nil {
 			return err
 		}
-		execReqInfo.Type = cloudcommon.ExecReqConsole
+		execReqInfo.Type = cloudcommon.ExecReqShell
 	}
 
 	if !req.Webrtc {
