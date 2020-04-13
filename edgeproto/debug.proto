@@ -40,7 +40,7 @@ service DebugApi {
       post: "/debug/enablelevels"
       body: "*"
     };
-    option (protogen.method_noconfig) = "Cmd";
+    option (protogen.method_noconfig) = "Cmd,Id";
     option (protogen.method_also_required) = "Levels";
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
     option (protogen.mc2_api_notifyroot) = true;
@@ -50,7 +50,7 @@ service DebugApi {
       post: "/debug/disablelevels"
       body: "*"
     };
-    option (protogen.method_noconfig) = "Cmd";
+    option (protogen.method_noconfig) = "Cmd,Id";
     option (protogen.method_also_required) = "Levels";
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
     option (protogen.mc2_api_notifyroot) = true;
@@ -60,7 +60,7 @@ service DebugApi {
       post: "/debug/showlevels"
       body: "*"
     };
-    option (protogen.method_noconfig) = "Levels,Cmd";
+    option (protogen.method_noconfig) = "Levels,Cmd,Id";
     option (protogen.mc2_api) = "ResourceConfig,ActionView,";
     option (protogen.mc2_api_notifyroot) = true;
     option (protogen.non_standard_show) = true;
@@ -70,7 +70,7 @@ service DebugApi {
       post: "/debug/run"
       body: "*"
     };
-    option (protogen.method_noconfig) = "Levels";
+    option (protogen.method_noconfig) = "Levels,Id";
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
     option (protogen.mc2_api_notifyroot) = true;
   }
