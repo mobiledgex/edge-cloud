@@ -444,6 +444,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.VmFlavor")
 	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "AppInstances.OptRes")
+	}
 	return cmpopts.IgnoreFields(AllData{}, names...)
 }
 
