@@ -81,6 +81,7 @@ func main() {
 		span.Finish()
 		log.FatalLog(err.Error())
 	}
+	crmutil.InitDebug(&nodeMgr)
 
 	if *platformName == "" {
 		// see if env var was set
@@ -243,6 +244,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		VMImageVersion:      *vmImageVersion,
 		PackageVersion:      *packageVersion,
 		EnvVars:             cloudlet.EnvVar,
+		NodeMgr:             &nodeMgr,
 	}
 	log.SpanLog(ctx, log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
 	err := platform.Init(ctx, &pc, updateCallback)
