@@ -74,6 +74,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.VmFlavor = ""
 	}
+	if _, found := tags["nocmp"]; found {
+		in.OptRes = ""
+	}
 }
 
 func AppInstRuntimeHideTags(in *edgeproto.AppInstRuntime) {
@@ -733,6 +736,7 @@ var AppInstOptionalArgs = []string{
 	"privacypolicy",
 	"powerstate",
 	"vmflavor",
+	"optres",
 }
 var AppInstAliasArgs = []string{
 	"app-org=key.appkey.organization",
@@ -787,6 +791,7 @@ var AppInstComments = map[string]string{
 	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"availabilityzone":               "Optional Availability Zone if any",
 	"vmflavor":                       "OS node flavor to use",
+	"optres":                         "Optional Resources required by OS flavor if any",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -883,6 +888,7 @@ var CreateAppInstOptionalArgs = []string{
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }
 var DeleteAppInstRequiredArgs = []string{
 	"app-org",
@@ -935,6 +941,7 @@ var DeleteAppInstOptionalArgs = []string{
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }
 var RefreshAppInstRequiredArgs = []string{
 	"app-org",
@@ -964,6 +971,7 @@ var RefreshAppInstOptionalArgs = []string{
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }
 var UpdateAppInstRequiredArgs = []string{
 	"app-org",
@@ -992,4 +1000,5 @@ var UpdateAppInstOptionalArgs = []string{
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }
