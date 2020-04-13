@@ -260,8 +260,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return fmt.Errorf("failed to generate cloudlet SSH key pair: %v", err)
 	}
 	in.AuthKey = &edgeproto.AuthKeyPair{
-		PublicKey:  pubKey,
-		PrivateKey: privKey,
+		PublicKey:  strings.TrimSpace(pubKey),
+		PrivateKey: strings.TrimSpace(privKey),
 	}
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {

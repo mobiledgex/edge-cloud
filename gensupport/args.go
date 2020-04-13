@@ -78,6 +78,9 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 		if argSpecified(arg.Name, notreqMap) {
 			// explicity not required
 			continue
+		} else if _, found := noconfigMap[arg.Name]; found {
+			// part of no config
+			continue
 		} else if argSpecified(arg.Name, alsoreqMap) {
 			// explicity required
 		} else if strings.HasPrefix(arg.Name, "Key.") || GetObjAndKey(message) {

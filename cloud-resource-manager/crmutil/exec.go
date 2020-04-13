@@ -178,7 +178,8 @@ func (cd *ControllerData) ProcessAccessCloudlet(ctx context.Context, req *edgepr
 	var err error
 
 	run := &WebrtcExec{
-		req: req,
+		req:     req,
+		contcmd: "bash",
 	}
 
 	execReqInfo := cloudcommon.ExecReqInfo{

@@ -70,7 +70,7 @@ message ExecRequest {
   option (protogen.notify_custom_update) = true;
   option (protogen.noconfig) = "Offer,Answer,Err,Console.Url,Timeout,AccessUrl,EdgeTurnAddr";
   option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,app-org=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=AppInstKey.ClusterInstKey.CloudletKey.Organization,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow";
-  option (protogen.also_required) = "AppInstKey";
+  option (protogen.also_required) = "AppInstKey,VmType";
 }
 
 service ExecApi {
@@ -97,8 +97,8 @@ service ExecApi {
   // Access internal VMs of Cloudlet
   rpc AccessCloudlet(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,";
-    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console,Log,AccessUrl,EdgeTurnAddr,Webrtc,ContainerId";
-    option (protogen.method_not_required) = "AppInstKey.AppKey.Name,AppInstKey.AppKey.Version,AppInstKey.AppKey.Organization,AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console,Log,AccessUrl,EdgeTurnAddr,Webrtc,ContainerId,AppInstKey.AppKey.Name,AppInstKey.AppKey.Version,AppInstKey.AppKey.Organization";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization";
   }
   // This is used internally to forward requests to other Controllers.
   rpc SendLocalRequest(ExecRequest) returns (ExecRequest) {}
