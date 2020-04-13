@@ -406,6 +406,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "Apps.DelOpt")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "Apps.Revision")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "Apps.DeletePrepare")
 	}
 	if _, found := tags["nocmp"]; found {
@@ -425,6 +428,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "AppInstances.CreatedAt")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "AppInstances.Revision")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.ForceUpdate")
