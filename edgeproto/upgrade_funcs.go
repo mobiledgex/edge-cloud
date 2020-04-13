@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	fmt "fmt"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
 	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	distributed_match_engine1 "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -13,21 +14,21 @@ import (
 )
 
 func SetDefaultLoadBalancerMaxPortRange(ctx context.Context, objStore objstore.KVStore) error {
-	log.DebugLog(log.DebugLevelUpgrade, "SetDefaultLoadBalancerMaxPortRange - default to 50")
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "SetDefaultLoadBalancerMaxPortRange - default to 50")
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("Settings"))
 	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
 		var settings Settings
 		err2 := json.Unmarshal(val, &settings)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2)
 			return err2
 		}
 		if settings.LoadBalancerMaxPortRange == 0 {
-			log.DebugLog(log.DebugLevelUpgrade, "Defaulting LoadBalancerMaxPortRange")
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Defaulting LoadBalancerMaxPortRange")
 			settings.LoadBalancerMaxPortRange = 50
 			val, err2 = json.Marshal(settings)
 			if err2 != nil {
-				log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", key, "obj", settings, "err", err2)
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", key, "obj", settings, "err", err2)
 				return err2
 			}
 			objStore.Put(ctx, string(key), string(val))
@@ -38,21 +39,21 @@ func SetDefaultLoadBalancerMaxPortRange(ctx context.Context, objStore objstore.K
 }
 
 func SetDefaultMaxTrackedDmeClients(ctx context.Context, objStore objstore.KVStore) error {
-	log.DebugLog(log.DebugLevelUpgrade, "SetDefaultMaxTrackedDmeClients - default to 100")
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "SetDefaultMaxTrackedDmeClients - default to 100")
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("Settings"))
 	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
 		var settings Settings
 		err2 := json.Unmarshal(val, &settings)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2)
 			return err2
 		}
 		if settings.MaxTrackedDmeClients == 0 {
-			log.DebugLog(log.DebugLevelUpgrade, "Defaulting MaxTrackedDmeClients")
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Defaulting MaxTrackedDmeClients")
 			settings.MaxTrackedDmeClients = 100
 			val, err2 = json.Marshal(settings)
 			if err2 != nil {
-				log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", key, "obj", settings, "err", err2)
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", key, "obj", settings, "err", err2)
 				return err2
 			}
 			objStore.Put(ctx, string(key), string(val))
@@ -243,6 +244,36 @@ type AppInstV0_OrgRestructure struct {
 	VmFlavor            string                              `protobuf:"bytes,34,opt,name=vm_flavor,json=vmFlavor,proto3" json:"vm_flavor,omitempty"`
 }
 
+// this is after org restructure but before revision
+type AppInstV1_OrgRestructure struct {
+	Fields              []string                            `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Key                 AppInstKey                          `protobuf:"bytes,2,opt,name=key" json:"key"`
+	CloudletLoc         distributed_match_engine.Loc        `protobuf:"bytes,3,opt,name=cloudlet_loc,json=cloudletLoc" json:"cloudlet_loc"`
+	Uri                 string                              `protobuf:"bytes,4,opt,name=uri,proto3" json:"uri,omitempty"`
+	Liveness            Liveness                            `protobuf:"varint,6,opt,name=liveness,proto3,enum=edgeproto.Liveness" json:"liveness,omitempty"`
+	MappedPorts         []distributed_match_engine1.AppPort `protobuf:"bytes,9,rep,name=mapped_ports,json=mappedPorts" json:"mapped_ports"`
+	Flavor              FlavorKey                           `protobuf:"bytes,12,opt,name=flavor" json:"flavor"`
+	State               TrackedState                        `protobuf:"varint,14,opt,name=state,proto3,enum=edgeproto.TrackedState" json:"state,omitempty"`
+	Errors              []string                            `protobuf:"bytes,15,rep,name=errors" json:"errors,omitempty"`
+	CrmOverride         CRMOverride                         `protobuf:"varint,16,opt,name=crm_override,json=crmOverride,proto3,enum=edgeproto.CRMOverride" json:"crm_override,omitempty"`
+	RuntimeInfo         AppInstRuntime                      `protobuf:"bytes,17,opt,name=runtime_info,json=runtimeInfo" json:"runtime_info"`
+	CreatedAt           distributed_match_engine.Timestamp  `protobuf:"bytes,21,opt,name=created_at,json=createdAt" json:"created_at"`
+	AutoClusterIpAccess IpAccess                            `protobuf:"varint,22,opt,name=auto_cluster_ip_access,json=autoClusterIpAccess,proto3,enum=edgeproto.IpAccess" json:"auto_cluster_ip_access,omitempty"`
+	Status              StatusInfo                          `protobuf:"bytes,23,opt,name=status" json:"status"`
+	Revision            int32                               `protobuf:"bytes,24,opt,name=revision,proto3" json:"revision,omitempty"`
+	ForceUpdate         bool                                `protobuf:"varint,25,opt,name=force_update,json=forceUpdate,proto3" json:"force_update,omitempty"`
+	UpdateMultiple      bool                                `protobuf:"varint,26,opt,name=update_multiple,json=updateMultiple,proto3" json:"update_multiple,omitempty"`
+	Configs             []*ConfigFile                       `protobuf:"bytes,27,rep,name=configs" json:"configs,omitempty"`
+	SharedVolumeSize    uint64                              `protobuf:"varint,28,opt,name=shared_volume_size,json=sharedVolumeSize,proto3" json:"shared_volume_size,omitempty"`
+	HealthCheck         HealthCheck                         `protobuf:"varint,29,opt,name=health_check,json=healthCheck,proto3,enum=edgeproto.HealthCheck" json:"health_check,omitempty"`
+	PrivacyPolicy       string                              `protobuf:"bytes,30,opt,name=privacy_policy,json=privacyPolicy,proto3" json:"privacy_policy,omitempty"`
+	PowerState          PowerState                          `protobuf:"varint,31,opt,name=power_state,json=powerState,proto3,enum=edgeproto.PowerState" json:"power_state,omitempty"`
+	ExternalVolumeSize  uint64                              `protobuf:"varint,32,opt,name=external_volume_size,json=externalVolumeSize,proto3" json:"external_volume_size,omitempty"`
+	AvailabilityZone    string                              `protobuf:"bytes,33,opt,name=availability_zone,json=availabilityZone,proto3" json:"availability_zone,omitempty"`
+	VmFlavor            string                              `protobuf:"bytes,34,opt,name=vm_flavor,json=vmFlavor,proto3" json:"vm_flavor,omitempty"`
+	OptRes              string                              `protobuf:"bytes,35,opt,name=opt_res,json=optRes,proto3" json:"opt_res,omitempty"`
+}
+
 type PolicyKeyV0_OrgRestructure struct {
 	Developer string `protobuf:"bytes,1,opt,name=developer,proto3" json:"developer,omitempty"`
 	Name      string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -252,6 +283,35 @@ type PrivacyPolicyV0_OrgRestructure struct {
 	Fields                []string                   `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	Key                   PolicyKeyV0_OrgRestructure `protobuf:"bytes,2,opt,name=key" json:"key"`
 	OutboundSecurityRules []OutboundSecurityRule     `protobuf:"bytes,3,rep,name=outbound_security_rules,json=outboundSecurityRules" json:"outbound_security_rules"`
+}
+
+// this is after org restructure but before revision change
+type AppV1_OrgRestructure struct {
+	Fields                  []string      `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Key                     AppKey        `protobuf:"bytes,2,opt,name=key" json:"key"`
+	ImagePath               string        `protobuf:"bytes,4,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`
+	ImageType               ImageType     `protobuf:"varint,5,opt,name=image_type,json=imageType,proto3,enum=edgeproto.ImageType" json:"image_type,omitempty"`
+	AccessPorts             string        `protobuf:"bytes,7,opt,name=access_ports,json=accessPorts,proto3" json:"access_ports,omitempty"`
+	DefaultFlavor           FlavorKey     `protobuf:"bytes,9,opt,name=default_flavor,json=defaultFlavor" json:"default_flavor"`
+	AuthPublicKey           string        `protobuf:"bytes,12,opt,name=auth_public_key,json=authPublicKey,proto3" json:"auth_public_key,omitempty"`
+	Command                 string        `protobuf:"bytes,13,opt,name=command,proto3" json:"command,omitempty"`
+	Annotations             string        `protobuf:"bytes,14,opt,name=annotations,proto3" json:"annotations,omitempty"`
+	Deployment              string        `protobuf:"bytes,15,opt,name=deployment,proto3" json:"deployment,omitempty"`
+	DeploymentManifest      string        `protobuf:"bytes,16,opt,name=deployment_manifest,json=deploymentManifest,proto3" json:"deployment_manifest,omitempty"`
+	DeploymentGenerator     string        `protobuf:"bytes,17,opt,name=deployment_generator,json=deploymentGenerator,proto3" json:"deployment_generator,omitempty"`
+	AndroidPackageName      string        `protobuf:"bytes,18,opt,name=android_package_name,json=androidPackageName,proto3" json:"android_package_name,omitempty"`
+	DelOpt                  DeleteType    `protobuf:"varint,20,opt,name=del_opt,json=delOpt,proto3,enum=edgeproto.DeleteType" json:"del_opt,omitempty"`
+	Configs                 []*ConfigFile `protobuf:"bytes,21,rep,name=configs" json:"configs,omitempty"`
+	ScaleWithCluster        bool          `protobuf:"varint,22,opt,name=scale_with_cluster,json=scaleWithCluster,proto3" json:"scale_with_cluster,omitempty"`
+	InternalPorts           bool          `protobuf:"varint,23,opt,name=internal_ports,json=internalPorts,proto3" json:"internal_ports,omitempty"`
+	Revision                int32         `protobuf:"bytes,24,opt,name=revision,proto3" json:"revision,omitempty"`
+	OfficialFqdn            string        `protobuf:"bytes,25,opt,name=official_fqdn,json=officialFqdn,proto3" json:"official_fqdn,omitempty"`
+	Md5Sum                  string        `protobuf:"bytes,26,opt,name=md5sum,proto3" json:"md5sum,omitempty"`
+	DefaultSharedVolumeSize uint64        `protobuf:"varint,27,opt,name=default_shared_volume_size,json=defaultSharedVolumeSize,proto3" json:"default_shared_volume_size,omitempty"`
+	AutoProvPolicy          string        `protobuf:"bytes,28,opt,name=auto_prov_policy,json=autoProvPolicy,proto3" json:"auto_prov_policy,omitempty"`
+	AccessType              AccessType    `protobuf:"varint,29,opt,name=access_type,json=accessType,proto3,enum=edgeproto.AccessType" json:"access_type,omitempty"`
+	DefaultPrivacyPolicy    string        `protobuf:"bytes,30,opt,name=default_privacy_policy,json=defaultPrivacyPolicy,proto3" json:"default_privacy_policy,omitempty"`
+	DeletePrepare           bool          `protobuf:"varint,31,opt,name=delete_prepare,json=deletePrepare,proto3" json:"delete_prepare,omitempty"`
 }
 
 type AutoScalePolicyV0_OrgRestructure struct {
@@ -291,7 +351,7 @@ type ResTagTableV0_OrgRestructure struct {
 }
 
 func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
-	log.DebugLog(log.DebugLevelUpgrade, "DevOrgRestructure")
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "DevOrgRestructure")
 	var operCodeUpgCount uint
 	var cloudletUpgCount uint
 	var cloudletPoolMemberUpgCount uint
@@ -311,22 +371,29 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var ocodeV0 OperatorCodeV0_OrgRestructure
 		err2 := json.Unmarshal(val, &ocodeV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "ocodeV0", ocodeV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "ocodeV0", ocodeV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading OperatorCode from V0 to current", "ocodeV0", ocodeV0)
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading OperatorCode from V0 to current", "ocodeV0", ocodeV0)
 		ocodeV1 := OperatorCode{}
 		ocodeV1.Organization = ocodeV0.OperatorName
 		ocodeV1.Code = ocodeV0.Code
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded OperatorCode", "ocodeV1", ocodeV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded OperatorCode", "ocodeV1", ocodeV1)
 		newkey := objstore.DbKeyString("OperatorCode", ocodeV1.GetKey())
 		val, err2 = json.Marshal(ocodeV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", ocodeV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", ocodeV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		operCodeUpgCount++
 		return nil
 	})
@@ -337,10 +404,10 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var cloudletV0 CloudletV0_OrgRestructure
 		err2 := json.Unmarshal(val, &cloudletV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletV0", cloudletV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletV0", cloudletV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading Cloudlet from V0 to current", "cloudletV0", cloudletV0)
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading Cloudlet from V0 to current", "cloudletV0", cloudletV0)
 		cloudletV1 := Cloudlet{}
 		cloudletV1.Fields = cloudletV0.Fields
 		cloudletV1.Key.Organization = cloudletV0.Key.OperatorKey.Name
@@ -370,15 +437,22 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		cloudletV1.VmImageVersion = cloudletV0.VmImageVersion
 		cloudletV1.PackageVersion = cloudletV0.PackageVersion
 
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded cloudlet", "cloudletV1", cloudletV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded cloudlet", "cloudletV1", cloudletV1)
 		newkey := objstore.DbKeyString("Cloudlet", &cloudletV1.Key)
 		val, err2 = json.Marshal(cloudletV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		cloudletUpgCount++
 		return nil
 	})
@@ -389,10 +463,10 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var cloudletInfoV0 CloudletInfoV0_OrgRestructure
 		err2 := json.Unmarshal(val, &cloudletInfoV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletV0", cloudletInfoV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletV0", cloudletInfoV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading Cloudlet from V0 to current", "cloudletInfoV0", cloudletInfoV0)
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading Cloudlet from V0 to current", "cloudletInfoV0", cloudletInfoV0)
 		cloudletInfoV1 := CloudletInfo{}
 		cloudletInfoV1.Fields = cloudletInfoV0.Fields
 		cloudletInfoV1.Key.Organization = cloudletInfoV0.Key.OperatorKey.Name
@@ -410,15 +484,22 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		cloudletInfoV1.AvailabilityZones = cloudletInfoV0.AvailabilityZones
 		cloudletInfoV1.OsImages = cloudletInfoV0.OsImages
 
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded cloudlet", "cloudletInfoV1", cloudletInfoV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded cloudlet", "cloudletInfoV1", cloudletInfoV1)
 		newkey := objstore.DbKeyString("CloudletInfo", &cloudletInfoV1.Key)
 		val, err2 = json.Marshal(cloudletInfoV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletInfoV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletInfoV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		cloudletInfoUpgCount++
 		return nil
 	})
@@ -429,24 +510,31 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var cloudletPoolMemberV0 CloudletPoolMemberV0_OrgRestructure
 		err2 := json.Unmarshal(val, &cloudletPoolMemberV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletPoolMemberV0", cloudletPoolMemberV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletPoolMemberV0", cloudletPoolMemberV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading Cloudlet Pool Member from V0 to current", "cloudletPoolMemberV0", cloudletPoolMemberV0)
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading Cloudlet Pool Member from V0 to current", "cloudletPoolMemberV0", cloudletPoolMemberV0)
 		cloudletPoolMemberV1 := CloudletPoolMember{}
 		cloudletPoolMemberV1.PoolKey = cloudletPoolMemberV0.PoolKey
 		cloudletPoolMemberV1.CloudletKey.Organization = cloudletPoolMemberV0.CloudletKey.OperatorKey.Name
 		cloudletPoolMemberV1.CloudletKey.Name = cloudletPoolMemberV0.CloudletKey.Name
 
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded cloudlet", "cloudletPoolMemberV1", cloudletPoolMemberV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded cloudlet", "cloudletPoolMemberV1", cloudletPoolMemberV1)
 		newkey := objstore.DbKeyString("CloudletPoolMember", cloudletPoolMemberV1.GetKey())
 		val, err2 = json.Marshal(cloudletPoolMemberV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletPoolMemberV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletPoolMemberV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		cloudletPoolMemberUpgCount++
 		return nil
 	})
@@ -457,10 +545,10 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var cloudletRefsV0 CloudletRefsV0_OrgRestructure
 		err2 := json.Unmarshal(val, &cloudletRefsV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletRefsV0", cloudletRefsV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletRefsV0", cloudletRefsV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading Cloudlet Pool Refs from V0 to current", "cloudletRefsV0", cloudletRefsV0)
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading Cloudlet Pool Refs from V0 to current", "cloudletRefsV0", cloudletRefsV0)
 		cloudletRefsV1 := CloudletRefs{}
 		cloudletRefsV1.Key.Organization = cloudletRefsV0.Key.OperatorKey.Name
 		cloudletRefsV1.Key.Name = cloudletRefsV0.Key.Name
@@ -473,15 +561,22 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		cloudletRefsV1.UsedStaticIps = cloudletRefsV0.UsedStaticIps
 		cloudletRefsV1.OptResUsedMap = cloudletRefsV0.OptResUsedMap
 
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded cloudlet refs", "cloudletRefsV1", cloudletRefsV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded cloudlet refs", "cloudletRefsV1", cloudletRefsV1)
 		newkey := objstore.DbKeyString("CloudletRefs", &cloudletRefsV1.Key)
 		val, err2 = json.Marshal(cloudletRefsV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletRefsV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletRefsV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		cloudletRefsUpgCount++
 		return nil
 	})
@@ -492,10 +587,10 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var cinstV0 ClusterInstV0_OrgRestructure
 		err2 := json.Unmarshal(val, &cinstV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cinstV0", cinstV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cinstV0", cinstV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading ClusterInst from V0 to current", "cinstV0", cinstV0)
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading ClusterInst from V0 to current", "cinstV0", cinstV0)
 		cinstV1 := ClusterInst{}
 		cinstV1.Fields = cinstV0.Fields
 		cinstV1.Key.ClusterKey = cinstV0.Key.ClusterKey
@@ -525,15 +620,22 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		cinstV1.PrivacyPolicy = cinstV0.PrivacyPolicy
 		cinstV1.MasterNodeFlavor = cinstV0.MasterNodeFlavor
 
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded ClusterInstance", "cinstV1", cinstV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded ClusterInstance", "cinstV1", cinstV1)
 		newkey := objstore.DbKeyString("ClusterInst", &cinstV1.Key)
 		val, err2 = json.Marshal(cinstV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cinstV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cinstV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		clusterUpgCount++
 		return nil
 	})
@@ -547,11 +649,11 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var appV0 AppV0_OrgRestructure
 		err2 := json.Unmarshal(val, &appV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appV0", appV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appV0", appV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading App from V0 to current", "appV0", appV0)
-		appV1 := App{}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading App from V0 to current", "appV0", appV0)
+		appV1 := AppV1_OrgRestructure{}
 		appV1.Fields = appV0.Fields
 		appV1.Key.Organization = appV0.Key.DeveloperKey.Name
 		appV1.Key.Name = appV0.Key.Name
@@ -583,15 +685,22 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		appV1.DefaultPrivacyPolicy = appV0.DefaultPrivacyPolicy
 		appV1.DeletePrepare = appV0.DeletePrepare
 
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded app", "appV1", appV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded app", "appV1", appV1)
 		newkey := objstore.DbKeyString("App", &appV1.Key)
 		val, err2 = json.Marshal(appV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		appUpgCount++
 		return nil
 	})
@@ -605,11 +714,11 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var appInstV0 AppInstV0_OrgRestructure
 		err2 := json.Unmarshal(val, &appInstV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appInstV0", appInstV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appInstV0", appInstV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading AppInst from V0 to current", "appInstV0", appInstV0)
-		appInstV1 := AppInst{}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading AppInst from V0 to current", "appInstV0", appInstV0)
+		appInstV1 := AppInstV1_OrgRestructure{}
 		appInstV1.Fields = appInstV0.Fields
 		appInstV1.Key.AppKey.Organization = appInstV0.Key.AppKey.DeveloperKey.Name
 		appInstV1.Key.AppKey.Name = appInstV0.Key.AppKey.Name
@@ -642,15 +751,22 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		appInstV1.AvailabilityZone = appInstV0.AvailabilityZone
 		appInstV1.VmFlavor = appInstV0.VmFlavor
 
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded appinst", "appInstV1", appInstV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded appinst", "appInstV1", appInstV1)
 		newkey := objstore.DbKeyString("AppInst", &appInstV1.Key)
 		val, err2 = json.Marshal(appInstV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appInstV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appInstV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		appInstUpgCount++
 		return nil
 	})
@@ -664,25 +780,32 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var privPolV0 PrivacyPolicyV0_OrgRestructure
 		err2 := json.Unmarshal(val, &privPolV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "privPolV0", privPolV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "privPolV0", privPolV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading PrivacyPolicy from V0 to current", "privPolV0", privPolV0)
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading PrivacyPolicy from V0 to current", "privPolV0", privPolV0)
 		privPolV1 := PrivacyPolicy{}
 		privPolV1.Fields = privPolV0.Fields
 		privPolV1.Key.Organization = privPolV0.Key.Developer
 		privPolV1.Key.Name = privPolV0.Key.Name
 		privPolV1.OutboundSecurityRules = privPolV0.OutboundSecurityRules
 
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded PrivacyPolicy", "ppv1", privPolV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded PrivacyPolicy", "ppv1", privPolV1)
 		newkey := objstore.DbKeyString("PrivacyPolicy", &privPolV1.Key)
 		val, err2 = json.Marshal(privPolV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", privPolV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", privPolV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		privacyPolicyUpgCount++
 		return nil
 	})
@@ -696,10 +819,10 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var autoScalPolV0 AutoScalePolicyV0_OrgRestructure
 		err2 := json.Unmarshal(val, &autoScalPolV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "autoScalPolV0", autoScalPolV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "autoScalPolV0", autoScalPolV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading AutoScalePolicy from V0 to current", "autoScalPolV0", autoScalPolV0)
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading AutoScalePolicy from V0 to current", "autoScalPolV0", autoScalPolV0)
 		autoScalPolV1 := AutoScalePolicy{}
 		autoScalPolV1.Fields = autoScalPolV0.Fields
 		autoScalPolV1.Key.Organization = autoScalPolV0.Key.Developer
@@ -710,15 +833,22 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		autoScalPolV1.ScaleDownCpuThresh = autoScalPolV0.ScaleDownCpuThresh
 		autoScalPolV1.TriggerTimeSec = autoScalPolV0.TriggerTimeSec
 
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded AutoScalePolicy", "autoScalPolV1", autoScalPolV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded AutoScalePolicy", "autoScalPolV1", autoScalPolV1)
 		newkey := objstore.DbKeyString("AutoScalePolicy", &autoScalPolV1.Key)
 		val, err2 = json.Marshal(autoScalPolV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", autoScalPolV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", autoScalPolV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		autoScalePolicyUpgCount++
 		return nil
 	})
@@ -732,10 +862,10 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var autoProvPolV0 AutoProvPolicyV0_OrgRestructure
 		err2 := json.Unmarshal(val, &autoProvPolV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "autoProvPolV0", autoProvPolV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "autoProvPolV0", autoProvPolV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading AutoProvPolicy from V0 to current", "autoProvPolV0", autoProvPolV0)
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading AutoProvPolicy from V0 to current", "autoProvPolV0", autoProvPolV0)
 		autoProvPolV1 := AutoProvPolicy{}
 		autoProvPolV1.Fields = autoProvPolV0.Fields
 		autoProvPolV1.Key.Organization = autoProvPolV0.Key.Developer
@@ -748,15 +878,22 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 			autoProvPolV1.Cloudlets = append(autoProvPolV1.Cloudlets, &AutoProvCloudlet{Key: ckey, Loc: v.Loc})
 		}
 
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded AutoProvPolicy", "autoProvPolV1", autoProvPolV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded AutoProvPolicy", "autoProvPolV1", autoProvPolV1)
 		newkey := objstore.DbKeyString("AutoProvPolicy", &autoProvPolV1.Key)
 		val, err2 = json.Marshal(autoProvPolV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", autoProvPolV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", autoProvPolV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		autoProvPolicyUpgCount++
 		return nil
 	})
@@ -767,10 +904,10 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		var resTagV0 ResTagTableV0_OrgRestructure
 		err2 := json.Unmarshal(val, &resTagV0)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "resTagV0", resTagV0)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "resTagV0", resTagV0)
 			return err2
 		}
-		log.DebugLog(log.DebugLevelUpgrade, "Upgrading ResTagTable from V0 to current", "resTagV0", resTagV0)
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading ResTagTable from V0 to current", "resTagV0", resTagV0)
 		resTagV1 := ResTagTable{}
 		resTagV1.Key.Organization = resTagV0.Key.OperatorKey.Name
 		resTagV1.Key.Name = resTagV0.Key.Name
@@ -778,15 +915,22 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		resTagV1.Tags = resTagV0.Tags
 		resTagV1.Azone = resTagV0.Azone
 
-		log.DebugLog(log.DebugLevelUpgrade, "Upgraded AutoProvPolicy", "resTagV1", resTagV1)
-		objStore.Delete(ctx, string(key))
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded AutoProvPolicy", "resTagV1", resTagV1)
 		newkey := objstore.DbKeyString("ResTagTable", &resTagV1.Key)
 		val, err2 = json.Marshal(resTagV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", resTagV1, "err", err2)
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", resTagV1, "err", err2)
 			return err2
 		}
-		objStore.Put(ctx, newkey, string(val))
+		_, err2 = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			stm.Del(string(key))
+			stm.Put(newkey, string(val))
+			return nil
+		})
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to write new data to etcd", "err", err2)
+			return err2
+		}
 		autoProvPolicyUpgCount++
 		return nil
 	})
@@ -795,7 +939,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		return err
 	}
 
-	log.DebugLog(log.DebugLevelUpgrade, "Upgrade object counts",
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrade object counts",
 		"operCodeUpgCount", operCodeUpgCount,
 		"cloudletUpgCount", cloudletUpgCount,
 		"cloudletInfoUpgCount", cloudletInfoUpgCount,
@@ -810,4 +954,119 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		"resTagUpgCount", resTagUpgCount)
 
 	return err
+}
+
+func AppRevision(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "AppRevision")
+
+	// Apps
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
+	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
+		var appV1 AppV1_OrgRestructure
+		err2 := json.Unmarshal(val, &appV1)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appV1", appV1)
+			return err2
+		}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading App from V1 to current", "appV1", appV1)
+		appV2 := App{}
+		appV2.Fields = appV1.Fields
+		appV2.Key = appV1.Key
+		appV2.ImagePath = appV1.ImagePath
+		appV2.ImageType = appV1.ImageType
+		appV2.AccessPorts = appV1.AccessPorts
+		appV2.DefaultFlavor = appV1.DefaultFlavor
+		appV2.AuthPublicKey = appV1.AuthPublicKey
+		appV2.Command = appV1.Command
+
+		appV2.Annotations = appV1.Annotations
+		appV2.Deployment = appV1.Deployment
+		appV2.DeploymentManifest = appV1.DeploymentManifest
+		appV2.DeploymentGenerator = appV1.DeploymentGenerator
+		appV2.AndroidPackageName = appV1.AndroidPackageName
+
+		appV2.DelOpt = appV1.DelOpt
+		appV2.Configs = appV1.Configs
+		appV2.InternalPorts = appV1.InternalPorts
+		if appV1.Revision != 0 {
+			appV2.Revision = fmt.Sprintf("%d", appV1.Revision)
+		}
+
+		appV2.OfficialFqdn = appV1.OfficialFqdn
+		appV2.Md5Sum = appV1.Md5Sum
+		appV2.DefaultSharedVolumeSize = appV1.DefaultSharedVolumeSize
+
+		appV2.AutoProvPolicy = appV1.AutoProvPolicy
+		appV2.AccessType = appV1.AccessType
+		appV2.DefaultPrivacyPolicy = appV1.DefaultPrivacyPolicy
+		appV2.DeletePrepare = appV1.DeletePrepare
+
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded app", "appV2", appV2)
+		newkey := objstore.DbKeyString("App", &appV2.Key)
+		val, err2 = json.Marshal(appV2)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appV2, "err", err2)
+			return err2
+		}
+		objStore.Put(ctx, newkey, string(val))
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// AppInsts
+	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
+	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+		var appInstV1 AppInstV1_OrgRestructure
+		err2 := json.Unmarshal(val, &appInstV1)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appInstV1", appInstV1)
+			return err2
+		}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading AppInst from V1 to current", "appInstV1", appInstV1)
+		appInstV2 := AppInst{}
+		appInstV2.Fields = appInstV1.Fields
+		appInstV2.Key = appInstV1.Key
+		appInstV2.CloudletLoc = appInstV1.CloudletLoc
+		appInstV2.Uri = appInstV1.Uri
+		appInstV2.Liveness = appInstV1.Liveness
+		appInstV2.MappedPorts = appInstV1.MappedPorts
+		appInstV2.Flavor = appInstV1.Flavor
+		appInstV2.State = appInstV1.State
+		appInstV2.Errors = appInstV1.Errors
+		appInstV2.CrmOverride = appInstV1.CrmOverride
+		appInstV2.RuntimeInfo = appInstV1.RuntimeInfo
+		appInstV2.CreatedAt = appInstV1.CreatedAt
+		appInstV2.AutoClusterIpAccess = appInstV1.AutoClusterIpAccess
+		appInstV2.Status = appInstV1.Status
+		if appInstV1.Revision != 0 {
+			appInstV2.Revision = fmt.Sprintf("%d", appInstV1.Revision)
+		}
+		appInstV2.ForceUpdate = appInstV1.ForceUpdate
+		appInstV2.UpdateMultiple = appInstV1.UpdateMultiple
+		appInstV2.Configs = appInstV1.Configs
+		appInstV2.SharedVolumeSize = appInstV1.SharedVolumeSize
+		appInstV2.HealthCheck = appInstV1.HealthCheck
+		appInstV2.PrivacyPolicy = appInstV1.PrivacyPolicy
+		appInstV2.PowerState = appInstV1.PowerState
+		appInstV2.ExternalVolumeSize = appInstV1.ExternalVolumeSize
+		appInstV2.AvailabilityZone = appInstV1.AvailabilityZone
+		appInstV2.VmFlavor = appInstV1.VmFlavor
+		appInstV2.OptRes = appInstV1.OptRes
+
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded appinst", "appInstV2", appInstV2)
+		newkey := objstore.DbKeyString("AppInst", &appInstV2.Key)
+		val, err2 = json.Marshal(appInstV2)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appInstV2, "err", err2)
+			return err2
+		}
+		objStore.Put(ctx, newkey, string(val))
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
