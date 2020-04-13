@@ -169,6 +169,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].VmFlavor = ""
 		}
+		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].OptRes = ""
+		}
 	}
 }
 
@@ -431,6 +434,7 @@ var AllDataOptionalArgs = []string{
 	"appinstances[#].externalvolumesize",
 	"appinstances[#].availabilityzone",
 	"appinstances[#].vmflavor",
+	"appinstances[#].optres",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -663,6 +667,7 @@ var AllDataComments = map[string]string{
 	"appinstances[#].externalvolumesize":                          "Size of external volume to be attached to nodes.  This is for the root partition",
 	"appinstances[#].availabilityzone":                            "Optional Availability Zone if any",
 	"appinstances[#].vmflavor":                                    "OS node flavor to use",
+	"appinstances[#].optres":                                      "Optional Resources required by OS flavor if any",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances[#].errors":                   "StringArray",
