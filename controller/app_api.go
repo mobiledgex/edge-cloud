@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -144,7 +145,7 @@ func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.Ac
 }
 
 // updates fields that need manipulation on setting, or fetched remotely
-func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) error {
+func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) error {
 
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
@@ -297,7 +298,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if in.Deployment == cloudcommon.AppDeploymentTypeVM && in.Command != "" {
 		return &edgeproto.Result{}, fmt.Errorf("Invalid argument, command is not supported for VM based deployments")
 	}
-	err = updateAppFields(ctx, in, 0)
+	err = updateAppFields(ctx, in, in.Revision)
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
@@ -368,6 +369,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 		}
 	}
+
 	if err := in.Validate(edgeproto.MakeFieldMap(in.Fields)); err != nil {
 		return &edgeproto.Result{}, err
 	}
@@ -393,9 +395,12 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				}
 			}
 		}
-
 		cur.CopyInFields(in)
-		newRevision := cur.Revision + 1
+		newRevision := in.Revision
+		if newRevision == "" {
+			newRevision = time.Now().Format("2006-01-02T150405")
+			log.SpanLog(ctx, log.DebugLevelApi, "Setting new revision to current timestamp", "Revision", in.Revision)
+		}
 		if err := updateAppFields(ctx, &cur, newRevision); err != nil {
 			return err
 		}
