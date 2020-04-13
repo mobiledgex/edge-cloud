@@ -26,6 +26,7 @@ func (s *Platform) GetType() string {
 
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "running in fake cloudlet mode")
+	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
 	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
 	s.consoleServer = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Console Content")
@@ -170,4 +171,8 @@ func (s *Platform) DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgep
 func (s *Platform) SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelMexos, "Setting power state", "state", appInst.PowerState)
 	return nil
+}
+
+func (s *Platform) runDebug(ctx context.Context, req *edgeproto.DebugRequest) string {
+	return "ran some debug"
 }
