@@ -938,6 +938,9 @@ func (p *Traefik) StartLocal(logfile string, opts ...StartOp) error {
 
 func (p *Traefik) StopLocal() {
 	StopLocal(p.cmd)
+	// if container is from previous aborted run
+	cmd := exec.Command("docker", "kill", p.Name)
+	cmd.Run()
 }
 
 func (p *Traefik) GetExeName() string { return "docker" }
@@ -1032,6 +1035,9 @@ func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
 
 func (p *Jaeger) StopLocal() {
 	StopLocal(p.cmd)
+	// if container is from previous aborted run
+	cmd := exec.Command("docker", "kill", p.Name)
+	cmd.Run()
 }
 
 func (p *Jaeger) GetExeName() string { return "docker" }
