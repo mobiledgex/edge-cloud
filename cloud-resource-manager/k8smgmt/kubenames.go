@@ -67,12 +67,8 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	// Helm app name has to conform to DNS naming standards
 	kubeNames.HelmAppName = util.DNSSanitize(app.Key.Name + "v" + app.Key.Version)
 	kubeNames.AppURI = appInst.Uri
-	if app.Revision > 0 {
-		kubeNames.AppRevision = fmt.Sprintf("%d", app.Revision)
-	}
-	if appInst.Revision > 0 {
-		kubeNames.AppInstRevision = fmt.Sprintf("%d", appInst.Revision)
-	}
+	kubeNames.AppRevision = app.Revision
+	kubeNames.AppInstRevision = appInst.Revision
 	kubeNames.AppImage = NormalizeName(app.ImagePath)
 	kubeNames.OperatorName = NormalizeName(clusterInst.Key.CloudletKey.Organization)
 	kubeNames.KconfName = GetKconfName(clusterInst)
