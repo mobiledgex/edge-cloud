@@ -1,0 +1,76 @@
+requests:
+- - node:
+      type: crm
+      cloudletkey:
+        organization: gcp
+        name: gcp-cloud-5
+      region: local
+    output: |
+      foo bar
+  - node:
+      type: crm
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-3
+      region: local
+    output: |
+      foo bar
+  - node:
+      type: crm
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+      region: local
+    output: |
+      foo bar
+  - node:
+      type: crm
+      cloudletkey:
+        organization: azure
+        name: azure-cloud-4
+      region: local
+    output: |
+      foo bar
+  - node:
+      type: crm
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      region: local
+    output: |
+      foo bar
+- - node:
+      type: crm
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      region: local
+    output: ran some debug
+  - node:
+      type: crm
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+      region: local
+    output: ran some debug
+  - node:
+      type: crm
+      cloudletkey:
+        organization: azure
+        name: azure-cloud-4
+      region: local
+    output: ran some debug
+  - node:
+      type: crm
+      cloudletkey:
+        organization: gcp
+        name: gcp-cloud-5
+      region: local
+    output: ran some debug
+  - node:
+      type: crm
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-3
+      region: local
+    output: ran some debug
