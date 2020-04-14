@@ -207,7 +207,7 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 		} else if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 			subDesc := GetDesc(g, field.GetTypeName())
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-				name = name + "[#]"
+				name = name + ":#"
 			}
 			subArgs, subSpecialArgs := GetArgs(g, support, append(parents, name), subDesc)
 			allargs = append(allargs, subArgs...)
