@@ -23,21 +23,21 @@ import (
 )
 
 type dmeApiRequest struct {
-	Rcreq            dmeproto.RegisterClientRequest        `yaml:"registerclientrequest"`
-	Fcreq            dmeproto.FindCloudletRequest          `yaml:"findcloudletrequest"`
-	Fctreq           dmeproto.FindCloudletWithTokenRequest `yaml:"findcloudletwithtokenrequest"`
-	Vlreq            dmeproto.VerifyLocationRequest        `yaml:"verifylocationrequest"`
-	Glreq            dmeproto.GetLocationRequest           `yaml:"getlocationrequest"`
-	Dlreq            dmeproto.DynamicLocGroupRequest       `yaml:"dynamiclocgrouprequest"`
-	Aireq            dmeproto.AppInstListRequest           `yaml:"appinstlistrequest"`
-	Fqreq            dmeproto.FqdnListRequest              `yaml:"fqdnlistrequest"`
-	Qosreq           dmeproto.QosPositionRequest           `yaml:"qospositionrequest"`
-	AppOFqreq        dmeproto.AppOfficialFqdnRequest       `yaml:"appofficialfqdnrequest"`
-	TokenServerPath  string                                `yaml:"token-server-path"`
-	ErrorExpected    string                                `yaml:"error-expected"`
-	Repeat           int                                   `yaml:"repeat"`
-	RunAtIntervalSec float64                               `yaml:"runatintervalsec"`
-	RunAtOffsetSec   float64                               `yaml:"runatoffsetsec"`
+	Rcreq            dmeproto.RegisterClientRequest       `yaml:"registerclientrequest"`
+	Fcreq            dmeproto.FindCloudletRequest         `yaml:"findcloudletrequest"`
+	Pfcreq           dmeproto.PlatformFindCloudletRequest `yaml:"platformfindcloudletrequest"`
+	Vlreq            dmeproto.VerifyLocationRequest       `yaml:"verifylocationrequest"`
+	Glreq            dmeproto.GetLocationRequest          `yaml:"getlocationrequest"`
+	Dlreq            dmeproto.DynamicLocGroupRequest      `yaml:"dynamiclocgrouprequest"`
+	Aireq            dmeproto.AppInstListRequest          `yaml:"appinstlistrequest"`
+	Fqreq            dmeproto.FqdnListRequest             `yaml:"fqdnlistrequest"`
+	Qosreq           dmeproto.QosPositionRequest          `yaml:"qospositionrequest"`
+	AppOFqreq        dmeproto.AppOfficialFqdnRequest      `yaml:"appofficialfqdnrequest"`
+	TokenServerPath  string                               `yaml:"token-server-path"`
+	ErrorExpected    string                               `yaml:"error-expected"`
+	Repeat           int                                  `yaml:"repeat"`
+	RunAtIntervalSec float64                              `yaml:"runatintervalsec"`
+	RunAtOffsetSec   float64                              `yaml:"runatoffsetsec"`
 }
 
 type registration struct {
@@ -83,9 +83,9 @@ func (c *dmeRestClient) FindCloudlet(ctx context.Context, in *dmeproto.FindCloud
 	return out, nil
 }
 
-func (c *dmeRestClient) FindCloudletWithToken(ctx context.Context, in *dmeproto.FindCloudletWithTokenRequest, opts ...grpc.CallOption) (*dmeproto.FindCloudletReply, error) {
+func (c *dmeRestClient) PlatformFindCloudlet(ctx context.Context, in *dmeproto.PlatformFindCloudletRequest, opts ...grpc.CallOption) (*dmeproto.FindCloudletReply, error) {
 	out := new(dmeproto.FindCloudletReply)
-	err := util.CallRESTPost("https://"+c.addr+"/v1/findcloudletwithtoken",
+	err := util.CallRESTPost("https://"+c.addr+"/v1/platformfindcloudlet",
 		c.client, in, out)
 	if err != nil {
 		log.Printf("findcloudlet rest API failed\n")
@@ -238,17 +238,17 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 	}
 
 	switch api {
-	case "findcloudletwithtoken":
-		log.Printf("reading AppOfficialFqdn response to get token for findcloudletwithtoken")
+	case "platformfindcloudlet":
+		log.Printf("reading AppOfficialFqdn response to get token for platformfindcloudlet")
 		var fqdnreply dmeproto.AppOfficialFqdnReply
 		err := util.ReadYamlFile(outputDir+"/getappofficialfqdn.yml", &fqdnreply)
 		if err != nil {
 			log.Printf("error reading AppOfficialFqdn response - %v", err)
 			return false
 		}
-		apiRequest.Fctreq.SessionCookie = sessionCookie
-		apiRequest.Fctreq.LocationToken = fqdnreply.LocationToken
-		log.Printf("findcloudletwithtoken using location token: %s\n", apiRequest.Fctreq.LocationToken)
+		apiRequest.Pfcreq.SessionCookie = sessionCookie
+		apiRequest.Pfcreq.ClientToken = fqdnreply.ClientToken
+		log.Printf("platformfindcloudlet using client token: %s\n", apiRequest.Pfcreq.ClientToken)
 		fallthrough
 	case "findcloudlet":
 		apiRequest.Fcreq.SessionCookie = sessionCookie
@@ -262,9 +262,9 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		for ii := 0; ii < apiRequest.Repeat; ii++ {
 			var reply *dmeproto.FindCloudletReply
 			var err error
-			if api == "findcloudletwithtoken" {
-				log.Printf("fctokenreq %v\n", apiRequest.Fctreq)
-				reply, err = client.FindCloudletWithToken(ctx, &apiRequest.Fctreq)
+			if api == "platformfindcloudlet" {
+				log.Printf("platformfindcloudlet %v\n", apiRequest.Pfcreq)
+				reply, err = client.PlatformFindCloudlet(ctx, &apiRequest.Pfcreq)
 			} else {
 				log.Printf("fcreq %v\n", apiRequest.Fcreq)
 				reply, err = client.FindCloudlet(ctx, &apiRequest.Fcreq)

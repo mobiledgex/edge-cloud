@@ -109,7 +109,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 	return reply, err
 }
 
-func (s *server) FindCloudletWithToken(ctx context.Context, req *dme.FindCloudletWithTokenRequest) (*dme.FindCloudletReply, error) {
+func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFindCloudletRequest) (*dme.FindCloudletReply, error) {
 	reply := new(dme.FindCloudletReply)
 	var appkey edgeproto.AppKey
 	ckey, ok := dmecommon.CookieFromContext(ctx)
@@ -118,16 +118,16 @@ func (s *server) FindCloudletWithToken(ctx context.Context, req *dme.FindCloudle
 	}
 
 	if !cloudcommon.IsPlatformApp(ckey.OrgName, ckey.AppName) {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudletWithToken API Not allowed for developer app", "org", ckey.OrgName, "name", ckey.AppName)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudlet API Not allowed for developer app", "org", ckey.OrgName, "name", ckey.AppName)
 		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.OrgName, ckey.AppName)
 	}
 	if req.CarrierName == "" {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing CarrierName")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudlet request", "Error", "Missing CarrierName")
 		return reply, grpc.Errorf(codes.InvalidArgument, "Missing carrierName")
 	}
-	if req.LocationToken == "" {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudletWithToken request", "Error", "Missing Location Token")
-		return reply, grpc.Errorf(codes.InvalidArgument, "Missing LocationToken")
+	if req.ClientToken == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudlet request", "Error", "Missing ClientToken")
+		return reply, grpc.Errorf(codes.InvalidArgument, "Missing ClientToken")
 	}
 	if req.OrgName == "" {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "OrgName cannot be empty")
@@ -149,16 +149,18 @@ func (s *server) FindCloudletWithToken(ctx context.Context, req *dme.FindCloudle
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Requested app does not exist", "requestedAppKey", appkey)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Requested app does not exist")
 	}
-	loc, err := dmecommon.GetLocationFromToken(req.LocationToken)
-	log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudletWithToken request, unable to get location from token", "token", req.LocationToken, "err", "err")
-
+	loc, err := dmecommon.GetLocationFromToken(req.ClientToken)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, unable to get location from token", "token", req.ClientToken, "err", err)
+		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
+	}
 	err = validateLocation(loc)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudletWithToken request, invalid location", "loc", loc, "err", err)
-		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid LocationToken")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, invalid location", "loc", loc, "err", err)
+		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
 	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, loc, reply)
-	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudletWithToken returns", "reply", reply, "error", err)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
 }
 

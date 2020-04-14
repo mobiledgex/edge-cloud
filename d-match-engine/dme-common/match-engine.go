@@ -73,6 +73,10 @@ type DmeApps struct {
 	OperatorCodes              edgeproto.OperatorCodeCache
 }
 
+type ClientToken struct {
+	Location dme.Loc
+}
+
 var DmeAppTbl *DmeApps
 var Settings edgeproto.Settings
 
@@ -645,16 +649,16 @@ func GetFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 }
 
 func GetLocationFromToken(token string) (*dme.Loc, error) {
-	var loc dme.Loc
-	locstr, err := base64.StdEncoding.DecodeString(token)
+	var clientToken ClientToken
+	tokstr, err := base64.StdEncoding.DecodeString(token)
 	if err != nil {
-		return &loc, fmt.Errorf("unable to decode token: %v", err)
+		return &clientToken.Location, fmt.Errorf("unable to decode token: %v", err)
 	}
-	err = json.Unmarshal([]byte(locstr), &loc)
+	err = json.Unmarshal([]byte(tokstr), &clientToken)
 	if err != nil {
-		return &loc, fmt.Errorf("unable to unmarshal token: %v", err)
+		return &clientToken.Location, fmt.Errorf("unable to unmarshal token: %s - %v", tokstr, err)
 	}
-	return &loc, nil
+	return &clientToken.Location, nil
 }
 
 func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOfficialFqdnRequest, repl *dme.AppOfficialFqdnReply) {
@@ -678,13 +682,20 @@ func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOffic
 		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 		return
 	}
-	byt, err := json.Marshal(mreq.GpsLocation)
+	if mreq.GpsLocation == nil {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "missing location in request")
+		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
+		return
+	}
+	var token ClientToken
+	token.Location = *mreq.GpsLocation
+	byt, err := json.Marshal(token)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Unable to marshal GPS location", "mreq.GpsLocation", mreq.GpsLocation, "err", err)
 		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 		return
 	}
-	repl.LocationToken = base64.StdEncoding.EncodeToString(byt)
+	repl.ClientToken = base64.StdEncoding.EncodeToString(byt)
 	repl.Status = dme.AppOfficialFqdnReply_AOF_SUCCESS
 }
 

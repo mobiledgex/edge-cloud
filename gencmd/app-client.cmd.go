@@ -15,7 +15,7 @@ It has these top-level messages:
 	RegisterClientRequest
 	RegisterClientReply
 	FindCloudletRequest
-	FindCloudletWithTokenRequest
+	PlatformFindCloudletRequest
 	FindCloudletReply
 	VerifyLocationRequest
 	VerifyLocationReply
@@ -179,56 +179,56 @@ func FindCloudlets(c *cli.Command, data []distributed_match_engine.FindCloudletR
 	}
 }
 
-var FindCloudletWithTokenCmd = &cli.Command{
-	Use:          "FindCloudletWithToken",
-	RequiredArgs: strings.Join(FindCloudletWithTokenRequestRequiredArgs, " "),
-	OptionalArgs: strings.Join(FindCloudletWithTokenRequestOptionalArgs, " "),
-	AliasArgs:    strings.Join(FindCloudletWithTokenRequestAliasArgs, " "),
-	SpecialArgs:  &FindCloudletWithTokenRequestSpecialArgs,
-	Comments:     FindCloudletWithTokenRequestComments,
-	ReqData:      &distributed_match_engine.FindCloudletWithTokenRequest{},
+var PlatformFindCloudletCmd = &cli.Command{
+	Use:          "PlatformFindCloudlet",
+	RequiredArgs: strings.Join(PlatformFindCloudletRequestRequiredArgs, " "),
+	OptionalArgs: strings.Join(PlatformFindCloudletRequestOptionalArgs, " "),
+	AliasArgs:    strings.Join(PlatformFindCloudletRequestAliasArgs, " "),
+	SpecialArgs:  &PlatformFindCloudletRequestSpecialArgs,
+	Comments:     PlatformFindCloudletRequestComments,
+	ReqData:      &distributed_match_engine.PlatformFindCloudletRequest{},
 	ReplyData:    &distributed_match_engine.FindCloudletReply{},
-	Run:          runFindCloudletWithToken,
+	Run:          runPlatformFindCloudlet,
 }
 
-func runFindCloudletWithToken(c *cli.Command, args []string) error {
+func runPlatformFindCloudlet(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*distributed_match_engine.FindCloudletWithTokenRequest)
+	obj := c.ReqData.(*distributed_match_engine.PlatformFindCloudletRequest)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return FindCloudletWithToken(c, obj)
+	return PlatformFindCloudlet(c, obj)
 }
 
-func FindCloudletWithToken(c *cli.Command, in *distributed_match_engine.FindCloudletWithTokenRequest) error {
+func PlatformFindCloudlet(c *cli.Command, in *distributed_match_engine.PlatformFindCloudletRequest) error {
 	if MatchEngineApiCmd == nil {
 		return fmt.Errorf("MatchEngineApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := MatchEngineApiCmd.FindCloudletWithToken(ctx, in)
+	obj, err := MatchEngineApiCmd.PlatformFindCloudlet(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("FindCloudletWithToken failed: %s", errstr)
+		return fmt.Errorf("PlatformFindCloudlet failed: %s", errstr)
 	}
 	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func FindCloudletWithTokens(c *cli.Command, data []distributed_match_engine.FindCloudletWithTokenRequest, err *error) {
+func PlatformFindCloudlets(c *cli.Command, data []distributed_match_engine.PlatformFindCloudletRequest, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("FindCloudletWithToken %v\n", data[ii])
-		myerr := FindCloudletWithToken(c, &data[ii])
+		fmt.Printf("PlatformFindCloudlet %v\n", data[ii])
+		myerr := PlatformFindCloudlet(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -658,7 +658,7 @@ func GetQosPositionKpis(c *cli.Command, data []distributed_match_engine.QosPosit
 var MatchEngineApiCmds = []*cobra.Command{
 	RegisterClientCmd.GenCmd(),
 	FindCloudletCmd.GenCmd(),
-	FindCloudletWithTokenCmd.GenCmd(),
+	PlatformFindCloudletCmd.GenCmd(),
 	VerifyLocationCmd.GenCmd(),
 	GetLocationCmd.GenCmd(),
 	AddUserToGroupCmd.GenCmd(),
@@ -766,31 +766,31 @@ var FindCloudletRequestComments = map[string]string{
 	"tags[#].data":                   "data value",
 }
 var FindCloudletRequestSpecialArgs = map[string]string{}
-var FindCloudletWithTokenRequestRequiredArgs = []string{}
-var FindCloudletWithTokenRequestOptionalArgs = []string{
+var PlatformFindCloudletRequestRequiredArgs = []string{}
+var PlatformFindCloudletRequestOptionalArgs = []string{
 	"ver",
 	"sessioncookie",
 	"carriername",
-	"locationtoken",
+	"clienttoken",
 	"orgname",
 	"appname",
 	"appvers",
 	"tags[#].type",
 	"tags[#].data",
 }
-var FindCloudletWithTokenRequestAliasArgs = []string{}
-var FindCloudletWithTokenRequestComments = map[string]string{
+var PlatformFindCloudletRequestAliasArgs = []string{}
+var PlatformFindCloudletRequestComments = map[string]string{
 	"ver":           "API version",
 	"sessioncookie": "Session Cookie Session Cookie from RegisterClientRequest",
 	"carriername":   "Carrier Name Unique carrier identification (typically MCC + MNC)",
-	"locationtoken": "Location Token Token with encoded GPS location",
+	"clienttoken":   "Client Token Token with encoded client data",
 	"orgname":       "Organization Name Application Organization Name",
 	"appname":       "App Name Application Name",
 	"appvers":       "App Version Application Version",
 	"tags[#].type":  "type of data",
 	"tags[#].data":  "data value",
 }
-var FindCloudletWithTokenRequestSpecialArgs = map[string]string{}
+var PlatformFindCloudletRequestSpecialArgs = map[string]string{}
 var FindCloudletReplyRequiredArgs = []string{}
 var FindCloudletReplyOptionalArgs = []string{
 	"ver",
@@ -1219,7 +1219,7 @@ var AppOfficialFqdnReplyRequiredArgs = []string{}
 var AppOfficialFqdnReplyOptionalArgs = []string{
 	"ver",
 	"appofficialfqdn",
-	"locationtoken",
+	"clienttoken",
 	"status",
 	"tags[#].type",
 	"tags[#].data",
@@ -1228,7 +1228,7 @@ var AppOfficialFqdnReplyAliasArgs = []string{}
 var AppOfficialFqdnReplyComments = map[string]string{
 	"ver":             "API version",
 	"appofficialfqdn": "The FQDN to which the app is reached independent of the edge",
-	"locationtoken":   "Tokenized GPS location of the user",
+	"clienttoken":     "Tokenized client data",
 	"status":          "Status of the reply, one of AofUndefined, AofSuccess, AofFail",
 	"tags[#].type":    "type of data",
 	"tags[#].data":    "data value",
