@@ -96,10 +96,10 @@ var OrganizationComments = map[string]string{
 var OrganizationSpecialArgs = map[string]string{}
 var OrganizationDataRequiredArgs = []string{}
 var OrganizationDataOptionalArgs = []string{
-	"orgs[#].name",
+	"orgs:#.name",
 }
 var OrganizationDataAliasArgs = []string{}
 var OrganizationDataComments = map[string]string{
-	"orgs[#].name": "Organization name",
+	"orgs:#.name": "Organization name",
 }
 var OrganizationDataSpecialArgs = map[string]string{}
