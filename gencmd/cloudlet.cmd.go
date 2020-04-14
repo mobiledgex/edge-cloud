@@ -892,117 +892,6 @@ var OperationTimeLimitsComments = map[string]string{
 	"deleteappinsttimeout":     "override default max time to delete an app instance (duration)",
 }
 var OperationTimeLimitsSpecialArgs = map[string]string{}
-var CloudletInfraCommonRequiredArgs = []string{}
-var CloudletInfraCommonOptionalArgs = []string{
-	"dockerregistry",
-	"dnszone",
-	"registryfileserver",
-	"cfkey",
-	"cfuser",
-	"dockerregpass",
-	"networkscheme",
-	"dockerregistrysecret",
-}
-var CloudletInfraCommonAliasArgs = []string{}
-var CloudletInfraCommonComments = map[string]string{
-	"dockerregistry":       "the mex docker registry, e.g.  registry.mobiledgex.net:5000.",
-	"dnszone":              "DNS Zone",
-	"registryfileserver":   "registry file server contains files which get pulled on instantiation such as certs and images",
-	"cfkey":                "Cloudflare key",
-	"cfuser":               "Cloudflare key",
-	"dockerregpass":        "Docker registry password",
-	"networkscheme":        "network scheme",
-	"dockerregistrysecret": "the name of the docker registry secret, e.g. mexgitlabsecret",
-}
-var CloudletInfraCommonSpecialArgs = map[string]string{}
-var AzurePropertiesRequiredArgs = []string{}
-var AzurePropertiesOptionalArgs = []string{
-	"location",
-	"resourcegroup",
-	"username",
-	"password",
-}
-var AzurePropertiesAliasArgs = []string{}
-var AzurePropertiesComments = map[string]string{
-	"location":      "azure region e.g. uswest2",
-	"resourcegroup": "azure resource group",
-	"username":      "azure username",
-	"password":      "azure password",
-}
-var AzurePropertiesSpecialArgs = map[string]string{}
-var GcpPropertiesRequiredArgs = []string{}
-var GcpPropertiesOptionalArgs = []string{
-	"project",
-	"zone",
-	"serviceaccount",
-	"gcpauthkeyurl",
-}
-var GcpPropertiesAliasArgs = []string{}
-var GcpPropertiesComments = map[string]string{
-	"project":        "gcp project for billing",
-	"zone":           "availability zone",
-	"serviceaccount": "service account to login with",
-	"gcpauthkeyurl":  "vault credentials link",
-}
-var GcpPropertiesSpecialArgs = map[string]string{}
-var OpenStackPropertiesRequiredArgs = []string{}
-var OpenStackPropertiesOptionalArgs = []string{
-	"osexternalnetworkname",
-	"osimagename",
-	"osexternalroutername",
-	"osmexnetwork",
-	"openrcvars",
-}
-var OpenStackPropertiesAliasArgs = []string{}
-var OpenStackPropertiesComments = map[string]string{
-	"osexternalnetworkname": "name of the external network, e.g. external-network-shared",
-	"osimagename":           "openstack image , e.g. mobiledgex",
-	"osexternalroutername":  "openstack router",
-	"osmexnetwork":          "openstack internal network",
-	"openrcvars":            "openrc env vars",
-}
-var OpenStackPropertiesSpecialArgs = map[string]string{
-	"openrcvars": "StringToString",
-}
-var CloudletInfraPropertiesRequiredArgs = []string{}
-var CloudletInfraPropertiesOptionalArgs = []string{
-	"cloudletkind",
-	"mexoscontainerimagename",
-	"openstackproperties.osexternalnetworkname",
-	"openstackproperties.osimagename",
-	"openstackproperties.osexternalroutername",
-	"openstackproperties.osmexnetwork",
-	"openstackproperties.openrcvars",
-	"azureproperties.location",
-	"azureproperties.resourcegroup",
-	"azureproperties.username",
-	"azureproperties.password",
-	"gcpproperties.project",
-	"gcpproperties.zone",
-	"gcpproperties.serviceaccount",
-	"gcpproperties.gcpauthkeyurl",
-}
-var CloudletInfraPropertiesAliasArgs = []string{}
-var CloudletInfraPropertiesComments = map[string]string{
-	"cloudletkind":                              "what kind of infrastructure: Azure, GCP, Openstack",
-	"mexoscontainerimagename":                   "name and version of the docker image container image that mexos runs in",
-	"openstackproperties.osexternalnetworkname": "name of the external network, e.g. external-network-shared",
-	"openstackproperties.osimagename":           "openstack image , e.g. mobiledgex",
-	"openstackproperties.osexternalroutername":  "openstack router",
-	"openstackproperties.osmexnetwork":          "openstack internal network",
-	"openstackproperties.openrcvars":            "openrc env vars",
-	"azureproperties.location":                  "azure region e.g. uswest2",
-	"azureproperties.resourcegroup":             "azure resource group",
-	"azureproperties.username":                  "azure username",
-	"azureproperties.password":                  "azure password",
-	"gcpproperties.project":                     "gcp project for billing",
-	"gcpproperties.zone":                        "availability zone",
-	"gcpproperties.serviceaccount":              "service account to login with",
-	"gcpproperties.gcpauthkeyurl":               "vault credentials link",
-}
-var CloudletInfraPropertiesSpecialArgs = map[string]string{
-	"openstackproperties.openrcvars": "StringToString",
-}
 var PlatformConfigRequiredArgs = []string{}
 var PlatformConfigOptionalArgs = []string{
 	"containerregistrypath",
@@ -1117,7 +1006,7 @@ var CloudletComments = map[string]string{
 	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"deploymentlocal":                     "Deploy cloudlet services locally",
-	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra",
+	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere",
 	"notifysrvaddr":                       "Address for the CRM notify listener to run on",
 	"flavor.name":                         "Flavor name",
 	"physicalname":                        "Physical infrastructure cloudlet name",
