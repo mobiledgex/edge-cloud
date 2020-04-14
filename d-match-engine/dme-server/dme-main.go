@@ -204,14 +204,14 @@ func (s *server) GetAppOfficialFqdn(ctx context.Context, req *dme.AppOfficialFqd
 	if !ok {
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
-	log.DebugLog(log.DebugLevelDmereq, "GetAppOfficialFqdn", "ckey", ckey, "loc", req.GpsLocation)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn", "ckey", ckey, "loc", req.GpsLocation)
 	err := validateLocation(req.GpsLocation)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid GetAppOfficialFqdn request, invalid location", "loc", req.GpsLocation, "err", err)
 		return reply, err
 	}
 	dmecommon.GetAppOfficialFqdn(ctx, ckey, req, reply)
-	log.DebugLog(log.DebugLevelDmereq, "GetAppOfficialFqdn returns", "status", reply.Status)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn returns", "status", reply.Status)
 	return reply, nil
 }
 

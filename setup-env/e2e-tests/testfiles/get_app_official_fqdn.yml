@@ -16,7 +16,7 @@ tests:
   apifile: "{{datadir}}/app_official_fqdn.yml"
   compareyaml:
      yaml1: "{{outputdir}}/getappofficialfqdn.yml"
-     yaml2: "{{datadir}}/getappofficialfqdn_result.yml"
+     yaml2: "{{datadir}}/getappofficialfqdn_app1_result.yml"
      filetype: getappofficialfqdn
 
  
