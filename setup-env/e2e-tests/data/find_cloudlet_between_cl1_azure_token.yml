@@ -1,0 +1,12 @@
+registerclientrequest:
+  orgname: AcmeAppCo
+  appname: someapplication1
+  appvers: "1.0"
+  authtoken: "GENTOKEN:authtoken_private.pem"
+appofficialfqdnrequest:
+  gpslocation:
+    latitude: 31.6
+    longitude: -91.00
+findcloudletwithtokenrequest:
+  carriername: tmus
+

@@ -31,11 +31,3 @@ tests:
     yaml1: "{{outputdir}}/api-output.yml"
     yaml2: "{{datadir}}/showdebug_output.yml"
     filetype: debugoutput
-
-- name: run debug commands
-  apifile: "{{datadir}}/rundebug.yml"
-  actions: [ctrlapi-debugrun]
-  compareyaml:
-    yaml1: "{{outputdir}}/api-output.yml"
-    yaml2: "{{datadir}}/rundebug_output.yml"
-    filetype: debugoutput

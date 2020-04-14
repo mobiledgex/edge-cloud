@@ -74,29 +74,92 @@ var nodeMgr node.NodeMgr
 
 var sigChan chan os.Signal
 
+func validateLocation(loc *dme.Loc) error {
+	if loc == nil || (loc.Latitude == 0 && loc.Longitude == 0) {
+		return grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
+	}
+
+	if !util.IsLatitudeValid(loc.Latitude) || !util.IsLongitudeValid(loc.Longitude) {
+		return grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
+	}
+	return nil
+}
+
 func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest) (*dme.FindCloudletReply, error) {
 	reply := new(dme.FindCloudletReply)
+	var appkey edgeproto.AppKey
 	ckey, ok := dmecommon.CookieFromContext(ctx)
 	if !ok {
 		return reply, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
+	appkey.Organization = ckey.OrgName
+	appkey.Name = ckey.AppName
+	appkey.Version = ckey.AppVers
+
 	if req.CarrierName == "" {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing CarrierName")
-
 		return reply, grpc.Errorf(codes.InvalidArgument, "Missing carrierName")
 	}
-	if req.GpsLocation == nil || (req.GpsLocation.Latitude == 0 && req.GpsLocation.Longitude == 0) {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing GpsLocation")
-		return reply, grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
+	err := validateLocation(req.GpsLocation)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request, invalid location", "loc", req.GpsLocation, "err", err)
+		return reply, err
 	}
-
-	if !util.IsLatitudeValid(req.GpsLocation.Latitude) || !util.IsLongitudeValid(req.GpsLocation.Longitude) {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
-		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
-	}
-
-	err := dmecommon.FindCloudlet(ctx, ckey, req, reply)
+	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
+	return reply, err
+}
+
+func (s *server) FindCloudletWithToken(ctx context.Context, req *dme.FindCloudletWithTokenRequest) (*dme.FindCloudletReply, error) {
+	reply := new(dme.FindCloudletReply)
+	var appkey edgeproto.AppKey
+	ckey, ok := dmecommon.CookieFromContext(ctx)
+	if !ok {
+		return reply, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
+	}
+
+	if !cloudcommon.IsPlatformApp(ckey.OrgName, ckey.AppName) {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudletWithToken not permitted for non platform app", "Name", ckey.AppName)
+		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.OrgName, ckey.AppName)
+	}
+	if req.CarrierName == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing CarrierName")
+		return reply, grpc.Errorf(codes.InvalidArgument, "Missing carrierName")
+	}
+	if req.LocationToken == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudletWithToken request", "Error", "Missing Location Token")
+		return reply, grpc.Errorf(codes.InvalidArgument, "Missing LocationToken")
+	}
+	if req.OrgName == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "OrgName cannot be empty")
+		return reply, grpc.Errorf(codes.InvalidArgument, "OrgName cannot be empty")
+	}
+	if req.AppName == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "AppName cannot be empty")
+		return reply, grpc.Errorf(codes.InvalidArgument, "AppName cannot be empty")
+	}
+	if req.AppVers == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "AppVers cannot be empty")
+		return reply, grpc.Errorf(codes.InvalidArgument, "AppVers cannot be empty")
+	}
+	appkey.Organization = req.OrgName
+	appkey.Name = req.AppName
+	appkey.Version = req.AppVers
+
+	if !dmecommon.AppExists(req.OrgName, req.AppName, req.AppVers) {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Requested app does not exist", "requestedAppKey", "requestedAppKey")
+		return reply, grpc.Errorf(codes.InvalidArgument, "Requested app does not exist")
+	}
+	loc, err := dmecommon.GetLocationFromToken(req.LocationToken)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudletWithToken request, unable to get location from token", "token", req.LocationToken, "err", "err")
+
+	err = validateLocation(loc)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudletWithToken request, invalid location", "loc", loc, "err", err)
+		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid LocationToken")
+	}
+	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, loc, reply)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudletWithToken returns", "reply", reply, "error", err)
 	return reply, err
 }
 
@@ -134,6 +197,27 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 	dmecommon.GetAppInstList(ctx, ckey, req, alist)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppInstList returns", "status", alist.Status)
 	return alist, nil
+}
+
+func (s *server) GetAppOfficialFqdn(ctx context.Context, req *dme.AppOfficialFqdnRequest) (*dme.AppOfficialFqdnReply, error) {
+	ckey, ok := dmecommon.CookieFromContext(ctx)
+	reply := new(dme.AppOfficialFqdnReply)
+	if !ok {
+		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
+	}
+	log.DebugLog(log.DebugLevelDmereq, "GetAppOfficialFqdn", "ckey", ckey, "loc", req.GpsLocation)
+	if req.GpsLocation == nil || (req.GpsLocation.Latitude == 0 && req.GpsLocation.Longitude == 0) {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid GetAppOfficialFqdn request", "Error", "Missing GpsLocation")
+		return reply, grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
+	}
+
+	if !util.IsLatitudeValid(req.GpsLocation.Latitude) || !util.IsLongitudeValid(req.GpsLocation.Longitude) {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid GetAppOfficialFqdn GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
+		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
+	}
+	dmecommon.GetAppOfficialFqdn(ctx, ckey, req, reply)
+	log.DebugLog(log.DebugLevelDmereq, "GetAppOfficialFqdn returns", "status", reply.Status)
+	return reply, nil
 }
 
 func (s *server) VerifyLocation(ctx context.Context,

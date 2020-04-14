@@ -2,6 +2,9 @@ package dmecommon
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"math"
 	"net"
 	"strings"
@@ -461,7 +464,7 @@ func translateCarrierName(carrierName string) string {
 
 // given the carrier, update the reply if we find a cloudlet closer
 // than the max distance.  Return the distance and whether or not response was updated
-func findClosestForCarrier(ctx context.Context, carrierName string, key edgeproto.AppKey, loc *dme.Loc, maxDistance float64, mreply *dme.FindCloudletReply) (float64, bool) {
+func findClosestForCarrier(ctx context.Context, carrierName string, key *edgeproto.AppKey, loc *dme.Loc, maxDistance float64, mreply *dme.FindCloudletReply) (float64, bool) {
 	tbl := DmeAppTbl
 	carrierName = translateCarrierName(carrierName)
 
@@ -471,7 +474,7 @@ func findClosestForCarrier(ctx context.Context, carrierName string, key edgeprot
 	var cloudlet string
 	tbl.RLock()
 	defer tbl.RUnlock()
-	app, ok := tbl.Apps[key]
+	app, ok := tbl.Apps[*key]
 	if !ok {
 		return maxDistance, updated
 	}
@@ -563,57 +566,20 @@ func updateContextWithCloudletDetails(ctx context.Context, cloudlet, carrier str
 	}
 }
 
-// returns true if if the requested app exists and the requesting app is a platform app
-func verifyRegisteredAppForAppRequestedApp(requestedApp edgeproto.AppKey, registeredApp edgeproto.AppKey) error {
-	var tbl *DmeApps
-	tbl = DmeAppTbl
-
-	if !cloudcommon.IsPlatformApp(registeredApp.Organization, registeredApp.Name) {
-		return grpc.Errorf(codes.PermissionDenied, "Specifying AppName, AppVers or OrgName is not permitted for a non-platform app after registration")
-	}
-	// just check that the app exists, there is no longer a permitsPlatformApp concept
-	tbl.Lock()
-	defer tbl.Unlock()
-	_, ok := tbl.Apps[requestedApp]
-	if !ok {
-		return grpc.Errorf(codes.NotFound, "Requested app: OrgName: %s Appname: %s AppVers: %s not found", requestedApp.Organization, requestedApp.Name, requestedApp.Version)
-	}
-	return nil
-}
-
-func FindCloudlet(ctx context.Context, ckey *CookieKey, mreq *dme.FindCloudletRequest, mreply *dme.FindCloudletReply) error {
-	var appkey edgeproto.AppKey
+func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply) error {
 	publicCloudPadding := 100.0 // public clouds have to be this much closer in km
-	appkey.Organization = ckey.OrgName
-	appkey.Name = ckey.AppName
-	appkey.Version = ckey.AppVers
 	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
-
-	// specifying an app in the request is allowed for platform apps only,
-	// and should require permission from the developer of the actual app
-	if mreq.AppName != "" || mreq.OrgName != "" || mreq.AppVers != "" {
-		var reqkey edgeproto.AppKey
-		reqkey.Organization = mreq.OrgName
-		reqkey.Name = mreq.AppName
-		reqkey.Version = mreq.AppVers
-		err := verifyRegisteredAppForAppRequestedApp(reqkey, appkey)
-		if err != nil {
-			return err
-		}
-		//update the appkey to use the requested key
-		appkey = reqkey
-	}
 
 	// if the app itself is a platform app, it is not returned here
 	if cloudcommon.IsPlatformApp(appkey.Organization, appkey.Name) {
 		return nil
 	}
 
-	log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet", "carrier", mreq.CarrierName, "app", appkey.Name, "developer", appkey.Organization, "version", appkey.Version)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet", "carrier", carrier, "app", appkey.Name, "developer", appkey.Organization, "version", appkey.Version)
 
 	// first find carrier cloudlet
-	bestDistance, updated := findClosestForCarrier(ctx, mreq.CarrierName, appkey, mreq.GpsLocation, InfiniteDistance, mreply)
+	bestDistance, updated := findClosestForCarrier(ctx, carrier, appkey, loc, InfiniteDistance, mreply)
 
 	if updated {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "found carrier cloudlet", "Fqdn", mreply.Fqdn, "distance", bestDistance)
@@ -623,7 +589,7 @@ func FindCloudlet(ctx context.Context, ckey *CookieKey, mreq *dme.FindCloudletRe
 		paddedCarrierDistance := bestDistance - publicCloudPadding
 
 		// look for an azure cloud closer than the carrier distance minus padding
-		azDistance, updated := findClosestForCarrier(ctx, cloudcommon.OperatorAzure, appkey, mreq.GpsLocation, paddedCarrierDistance, mreply)
+		azDistance, updated := findClosestForCarrier(ctx, cloudcommon.OperatorAzure, appkey, loc, paddedCarrierDistance, mreply)
 		if updated {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "found closer azure cloudlet", "Fqdn", mreply.Fqdn, "distance", azDistance)
 			bestDistance = azDistance
@@ -631,7 +597,7 @@ func FindCloudlet(ctx context.Context, ckey *CookieKey, mreq *dme.FindCloudletRe
 
 		// look for a gcp cloud closer than either the azure cloud or the carrier cloud
 		maxGCPDistance := math.Min(azDistance, paddedCarrierDistance)
-		gcpDistance, updated := findClosestForCarrier(ctx, cloudcommon.OperatorGCP, appkey, mreq.GpsLocation, maxGCPDistance, mreply)
+		gcpDistance, updated := findClosestForCarrier(ctx, cloudcommon.OperatorGCP, appkey, loc, maxGCPDistance, mreply)
 		if updated {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "found closer gcp cloudlet", "Fqdn", mreply.Fqdn, "distance", gcpDistance)
 			bestDistance = gcpDistance
@@ -642,7 +608,6 @@ func FindCloudlet(ctx context.Context, ckey *CookieKey, mreq *dme.FindCloudletRe
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", bestDistance)
 	} else {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_NOTFOUND")
-
 	}
 	return nil
 }
@@ -677,6 +642,50 @@ func GetFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 		}
 	}
 	clist.Status = dme.FqdnListReply_FL_SUCCESS
+}
+
+func GetLocationFromToken(token string) (*dme.Loc, error) {
+	var loc dme.Loc
+	locstr, err := base64.StdEncoding.DecodeString(token)
+	if err != nil {
+		return &loc, fmt.Errorf("unable to decode token: %v", err)
+	}
+	err = json.Unmarshal([]byte(locstr), &loc)
+	if err != nil {
+		return &loc, fmt.Errorf("unable to unmarshal token: %v", err)
+	}
+	return &loc, nil
+}
+
+func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOfficialFqdnRequest, repl *dme.AppOfficialFqdnReply) {
+	var tbl *DmeApps
+	tbl = DmeAppTbl
+	var appkey edgeproto.AppKey
+	appkey.Organization = ckey.OrgName
+	appkey.Name = ckey.AppName
+	appkey.Version = ckey.AppVers
+	tbl.RLock()
+	defer tbl.RUnlock()
+	_, ok := tbl.Apps[appkey]
+	if !ok {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn cannot find app", "appkey", appkey)
+		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
+		return
+	}
+	repl.AppOfficialFqdn = tbl.Apps[appkey].OfficialFqdn
+	if repl.AppOfficialFqdn == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn FQDN is empty", "appkey", appkey)
+		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
+		return
+	}
+	byt, err := json.Marshal(mreq.GpsLocation)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Unable to marshal GPS location", "mreq.GpsLocation", mreq.GpsLocation, "err", err)
+		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
+		return
+	}
+	repl.LocationToken = base64.StdEncoding.EncodeToString(byt)
+	repl.Status = dme.AppOfficialFqdnReply_AOF_SUCCESS
 }
 
 func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
