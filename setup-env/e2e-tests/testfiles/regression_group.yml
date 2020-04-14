@@ -18,8 +18,8 @@ tests:
   - includefile: get_fqdnlist.yml
   - includefile: get_fqdnlist.yml
     api: rest
-  - includefile: get_app_official_fqdn.yml
-  - includefile: get_app_official_fqdn.yml
+  - includefile: app_official_fqdn_app1.yml
+  - includefile: app_official_fqdn_app1.yml
     api: rest
   - includefile: find_cloudlet.yml
     loops: 3

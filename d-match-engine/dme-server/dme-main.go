@@ -78,7 +78,6 @@ func validateLocation(loc *dme.Loc) error {
 	if loc == nil || (loc.Latitude == 0 && loc.Longitude == 0) {
 		return grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
 	}
-
 	if !util.IsLatitudeValid(loc.Latitude) || !util.IsLongitudeValid(loc.Longitude) {
 		return grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
 	}
@@ -119,7 +118,7 @@ func (s *server) FindCloudletWithToken(ctx context.Context, req *dme.FindCloudle
 	}
 
 	if !cloudcommon.IsPlatformApp(ckey.OrgName, ckey.AppName) {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudletWithToken not permitted for non platform app", "Name", ckey.AppName)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudletWithToken API Not allowed for developer app", "org", ckey.OrgName, "name", ckey.AppName)
 		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.OrgName, ckey.AppName)
 	}
 	if req.CarrierName == "" {
@@ -147,7 +146,7 @@ func (s *server) FindCloudletWithToken(ctx context.Context, req *dme.FindCloudle
 	appkey.Version = req.AppVers
 
 	if !dmecommon.AppExists(req.OrgName, req.AppName, req.AppVers) {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Requested app does not exist", "requestedAppKey", "requestedAppKey")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Requested app does not exist", "requestedAppKey", appkey)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Requested app does not exist")
 	}
 	loc, err := dmecommon.GetLocationFromToken(req.LocationToken)
@@ -206,14 +205,10 @@ func (s *server) GetAppOfficialFqdn(ctx context.Context, req *dme.AppOfficialFqd
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 	log.DebugLog(log.DebugLevelDmereq, "GetAppOfficialFqdn", "ckey", ckey, "loc", req.GpsLocation)
-	if req.GpsLocation == nil || (req.GpsLocation.Latitude == 0 && req.GpsLocation.Longitude == 0) {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid GetAppOfficialFqdn request", "Error", "Missing GpsLocation")
-		return reply, grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
-	}
-
-	if !util.IsLatitudeValid(req.GpsLocation.Latitude) || !util.IsLongitudeValid(req.GpsLocation.Longitude) {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid GetAppOfficialFqdn GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
-		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
+	err := validateLocation(req.GpsLocation)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid GetAppOfficialFqdn request, invalid location", "loc", req.GpsLocation, "err", err)
+		return reply, err
 	}
 	dmecommon.GetAppOfficialFqdn(ctx, ckey, req, reply)
 	log.DebugLog(log.DebugLevelDmereq, "GetAppOfficialFqdn returns", "status", reply.Status)

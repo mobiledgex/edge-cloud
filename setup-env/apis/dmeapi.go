@@ -265,7 +265,6 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 			if api == "findcloudletwithtoken" {
 				log.Printf("fctokenreq %v\n", apiRequest.Fctreq)
 				reply, err = client.FindCloudletWithToken(ctx, &apiRequest.Fctreq)
-
 			} else {
 				log.Printf("fcreq %v\n", apiRequest.Fcreq)
 				reply, err = client.FindCloudlet(ctx, &apiRequest.Fcreq)

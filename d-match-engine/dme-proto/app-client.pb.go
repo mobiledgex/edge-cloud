@@ -301,7 +301,6 @@ func (FqdnListReply_FLStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAppClient, []int{16, 0}
 }
 
-// Status of the reply
 type AppOfficialFqdnReply_AOFStatus int32
 
 const (
@@ -984,7 +983,7 @@ type MatchEngineApiClient interface {
 	// FindCloudletWithToken
 	//
 	// Similar to FindCloudlet, except uses a token for the GPS location.
-	// FindCloudletWithToken is only application for Platform Applications
+	// This API is only application for Platform Applications.
 	FindCloudletWithToken(ctx context.Context, in *FindCloudletWithTokenRequest, opts ...grpc.CallOption) (*FindCloudletReply, error)
 	//
 	// VerifyLocation
@@ -1143,7 +1142,7 @@ type MatchEngineApiServer interface {
 	// FindCloudletWithToken
 	//
 	// Similar to FindCloudlet, except uses a token for the GPS location.
-	// FindCloudletWithToken is only application for Platform Applications
+	// This API is only application for Platform Applications.
 	FindCloudletWithToken(context.Context, *FindCloudletWithTokenRequest) (*FindCloudletReply, error)
 	//
 	// VerifyLocation
