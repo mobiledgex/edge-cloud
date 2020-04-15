@@ -22,14 +22,26 @@ tests:
   apifile: "{{datadir}}/appinst1.yml"
   actions: [ctrlapi-create]
 
-- name: find cloudlet, expect to see cloudlet1
+- name: find cloudlet app1, expect to see cloudlet1
   apifile: "{{datadir}}/find_cloudlet_app1.yml"
   actions: [dmeapi-findcloudlet]
   compareyaml:
     yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
     filetype: findcloudlet
- 
+
+- includefile: get_app_official_fqdn_app1.yml
+
+- includefile: register_samsung.yml
+
+- name: find cloudlet app1 with token, expect cloudlet1
+  apifile: "{{datadir}}/platform_find_cloudlet_app1.yml"
+  actions: [dmeapi-platformfindcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/platformfindcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
+    filetype: findcloudlet 
+
 - name: create appinst2
   apifile: "{{datadir}}/appinst2.yml"
   actions: [ctrlapi-create]
@@ -38,7 +50,7 @@ tests:
   apifile: "{{datadir}}/appinst_azure.yml"
   actions: [ctrlapi-create]
 
-- name: find cloudlet, expect to see cloudlet2
+- name: find cloudlet app1, expect to see cloudlet2
   apifile: "{{datadir}}/find_cloudlet_app1.yml"
   actions: [dmeapi-findcloudlet]
   compareyaml:
@@ -46,24 +58,24 @@ tests:
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
     filetype: findcloudlet
 
-- name: register with samsung enabling layer
-  apifile: "{{datadir}}/register_samsung.yml"
-  actions: [dmeapi-register]
+- includefile: get_app_official_fqdn_app1.yml
 
-- name: find cloudlet for app1, expect to see cloudlet2
-  apifile: "{{datadir}}/find_cloudlet_platform_app1.yml"
-  actions: [dmeapi-findcloudlet]
+- includefile: register_samsung.yml
+
+- name: find cloudlet app1 with token, expect cloudlet2
+  apifile: "{{datadir}}/platform_find_cloudlet_app1.yml"
+  actions: [dmeapi-platformfindcloudlet]
   compareyaml:
-    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml1: "{{outputdir}}/platformfindcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
-    filetype: findcloudlet
+    filetype: findcloudlet 
 
 - name: disable tmus-cloud-2 cloudlet
   apifile: "{{datadir}}/find_cloudlet_tmus-cloud-2.yml"
   actions: [stop-crm=tmus-cloud-2,sleep=1]
 
 - name: find cloudlet for app1, expect to see tmus-cloud-1
-  apifile: "{{datadir}}/find_cloudlet_platform_app1.yml"
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
   actions: [dmeapi-findcloudlet]
   compareyaml:
     yaml1: "{{outputdir}}/findcloudlet.yml"
@@ -75,7 +87,7 @@ tests:
   actions: [start-crm=tmus-cloud-2,sleep=2]
 
 - name: find cloudlet for app1, expect to see cloudlet2
-  apifile: "{{datadir}}/find_cloudlet_platform_app1.yml"
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
   actions: [dmeapi-findcloudlet]
   compareyaml:
     yaml1: "{{outputdir}}/findcloudlet.yml"
@@ -106,7 +118,7 @@ tests:
   actions: [ctrlapi-delete]
   apifile: "{{datadir}}/appinst_azure.yml"
 
-- name: delete appinst2 
+- name: delete appinst2
   actions: [ctrlapi-delete]
   apifile: "{{datadir}}/appinst2.yml"
 
