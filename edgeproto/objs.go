@@ -558,24 +558,17 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	var endport int64
 
 	for _, portSpec := range portSpecs {
-		switch portSpec.Proto {
-		case "http":
-			proto = dme.LProto_L_PROTO_HTTP
-		case "tcp":
-			proto = dme.LProto_L_PROTO_TCP
-		case "udp":
-			proto = dme.LProto_L_PROTO_UDP
-		default:
-			proto = dme.LProto_L_PROTO_UNKNOWN
+		proto, err = GetLProto(portSpec.Proto)
+		if err != nil {
+			return nil, err
 		}
-
 		baseport, err = strconv.ParseInt(portSpec.Port, 10, 32)
 		if err != nil {
 			return nil, fmt.Errorf("unable to convert port range base value")
 		}
 		endport, err = strconv.ParseInt(portSpec.EndPort, 10, 32)
 		if err != nil {
-			return nil, fmt.Errorf("unable to conver port range end value")
+			return nil, fmt.Errorf("unable to convert port range end value")
 		}
 
 		p := dme.AppPort{
