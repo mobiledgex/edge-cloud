@@ -200,7 +200,6 @@ func main() {
 		nodeMgr.UpdateMyNode(ctx)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 		cspan.Finish()
-
 		// setup rootlb certs
 		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		commonName := cloudcommon.GetRootLBFQDN(&myCloudletInfo.Key)
@@ -246,7 +245,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		EnvVars:             cloudlet.EnvVar,
 		NodeMgr:             &nodeMgr,
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
+	log.SpanLog(ctx, log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", platform.GetType())
 	err := platform.Init(ctx, &pc, updateCallback)
 	return err
 }
