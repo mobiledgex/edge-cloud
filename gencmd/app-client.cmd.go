@@ -15,6 +15,7 @@ It has these top-level messages:
 	RegisterClientRequest
 	RegisterClientReply
 	FindCloudletRequest
+	PlatformFindCloudletRequest
 	FindCloudletReply
 	VerifyLocationRequest
 	VerifyLocationReply
@@ -27,6 +28,8 @@ It has these top-level messages:
 	FqdnListRequest
 	AppFqdn
 	FqdnListReply
+	AppOfficialFqdnRequest
+	AppOfficialFqdnReply
 	DynamicLocGroupRequest
 	DynamicLocGroupReply
 	QosPosition
@@ -169,6 +172,63 @@ func FindCloudlets(c *cli.Command, data []distributed_match_engine.FindCloudletR
 	for ii, _ := range data {
 		fmt.Printf("FindCloudlet %v\n", data[ii])
 		myerr := FindCloudlet(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var PlatformFindCloudletCmd = &cli.Command{
+	Use:          "PlatformFindCloudlet",
+	RequiredArgs: strings.Join(PlatformFindCloudletRequestRequiredArgs, " "),
+	OptionalArgs: strings.Join(PlatformFindCloudletRequestOptionalArgs, " "),
+	AliasArgs:    strings.Join(PlatformFindCloudletRequestAliasArgs, " "),
+	SpecialArgs:  &PlatformFindCloudletRequestSpecialArgs,
+	Comments:     PlatformFindCloudletRequestComments,
+	ReqData:      &distributed_match_engine.PlatformFindCloudletRequest{},
+	ReplyData:    &distributed_match_engine.FindCloudletReply{},
+	Run:          runPlatformFindCloudlet,
+}
+
+func runPlatformFindCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*distributed_match_engine.PlatformFindCloudletRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return PlatformFindCloudlet(c, obj)
+}
+
+func PlatformFindCloudlet(c *cli.Command, in *distributed_match_engine.PlatformFindCloudletRequest) error {
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := MatchEngineApiCmd.PlatformFindCloudlet(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("PlatformFindCloudlet failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func PlatformFindCloudlets(c *cli.Command, data []distributed_match_engine.PlatformFindCloudletRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("PlatformFindCloudlet %v\n", data[ii])
+		myerr := PlatformFindCloudlet(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -461,6 +521,63 @@ func GetFqdnLists(c *cli.Command, data []distributed_match_engine.FqdnListReques
 	}
 }
 
+var GetAppOfficialFqdnCmd = &cli.Command{
+	Use:          "GetAppOfficialFqdn",
+	RequiredArgs: strings.Join(AppOfficialFqdnRequestRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppOfficialFqdnRequestOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppOfficialFqdnRequestAliasArgs, " "),
+	SpecialArgs:  &AppOfficialFqdnRequestSpecialArgs,
+	Comments:     AppOfficialFqdnRequestComments,
+	ReqData:      &distributed_match_engine.AppOfficialFqdnRequest{},
+	ReplyData:    &distributed_match_engine.AppOfficialFqdnReply{},
+	Run:          runGetAppOfficialFqdn,
+}
+
+func runGetAppOfficialFqdn(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*distributed_match_engine.AppOfficialFqdnRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetAppOfficialFqdn(c, obj)
+}
+
+func GetAppOfficialFqdn(c *cli.Command, in *distributed_match_engine.AppOfficialFqdnRequest) error {
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := MatchEngineApiCmd.GetAppOfficialFqdn(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetAppOfficialFqdn failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetAppOfficialFqdns(c *cli.Command, data []distributed_match_engine.AppOfficialFqdnRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetAppOfficialFqdn %v\n", data[ii])
+		myerr := GetAppOfficialFqdn(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var GetQosPositionKpiCmd = &cli.Command{
 	Use:          "GetQosPositionKpi",
 	RequiredArgs: strings.Join(QosPositionRequestRequiredArgs, " "),
@@ -541,11 +658,13 @@ func GetQosPositionKpis(c *cli.Command, data []distributed_match_engine.QosPosit
 var MatchEngineApiCmds = []*cobra.Command{
 	RegisterClientCmd.GenCmd(),
 	FindCloudletCmd.GenCmd(),
+	PlatformFindCloudletCmd.GenCmd(),
 	VerifyLocationCmd.GenCmd(),
 	GetLocationCmd.GenCmd(),
 	AddUserToGroupCmd.GenCmd(),
 	GetAppInstListCmd.GenCmd(),
 	GetFqdnListCmd.GenCmd(),
+	GetAppOfficialFqdnCmd.GenCmd(),
 	GetQosPositionKpiCmd.GenCmd(),
 }
 
@@ -626,9 +745,6 @@ var FindCloudletRequestOptionalArgs = []string{
 	"gpslocation.speed",
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
-	"orgname",
-	"appname",
-	"appvers",
 	"cellid",
 	"tags:#.type",
 	"tags:#.data",
@@ -645,14 +761,42 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+<<<<<<< HEAD
 	"orgname":                        "Organization Name _(optional)_ Applicable to Platform apps only",
 	"appname":                        "App Name _(optional)_ Applicable to Platform apps only",
 	"appvers":                        "App Version _(optional)_ Applicable to Platform apps only",
+=======
+>>>>>>> 55a7573a777e37118a43f5008230f399e0469edc
 	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
 	"tags:#.type":                    "type of data",
 	"tags:#.data":                    "data value",
 }
 var FindCloudletRequestSpecialArgs = map[string]string{}
+var PlatformFindCloudletRequestRequiredArgs = []string{}
+var PlatformFindCloudletRequestOptionalArgs = []string{
+	"ver",
+	"sessioncookie",
+	"carriername",
+	"clienttoken",
+	"orgname",
+	"appname",
+	"appvers",
+	"tags:#.type",
+	"tags:#.data",
+}
+var PlatformFindCloudletRequestAliasArgs = []string{}
+var PlatformFindCloudletRequestComments = map[string]string{
+	"ver":           "API version",
+	"sessioncookie": "Session Cookie Session Cookie from RegisterClientRequest",
+	"carriername":   "Carrier Name Unique carrier identification (typically MCC + MNC)",
+	"clienttoken":   "Client Token Token with encoded client data",
+	"orgname":       "Organization Name Application Organization Name",
+	"appname":       "App Name Application Name",
+	"appvers":       "App Version Application Version",
+	"tags:#.type":   "type of data",
+	"tags:#.data":   "data value",
+}
+var PlatformFindCloudletRequestSpecialArgs = map[string]string{}
 var FindCloudletReplyRequiredArgs = []string{}
 var FindCloudletReplyOptionalArgs = []string{
 	"ver",
@@ -1046,6 +1190,56 @@ var FqdnListReplyComments = map[string]string{
 var FqdnListReplySpecialArgs = map[string]string{
 	"appfqdns:#.fqdns": "StringArray",
 }
+var AppOfficialFqdnRequestRequiredArgs = []string{}
+var AppOfficialFqdnRequestOptionalArgs = []string{
+	"ver",
+	"sessioncookie",
+	"gpslocation.latitude",
+	"gpslocation.longitude",
+	"gpslocation.horizontalaccuracy",
+	"gpslocation.verticalaccuracy",
+	"gpslocation.altitude",
+	"gpslocation.course",
+	"gpslocation.speed",
+	"gpslocation.timestamp.seconds",
+	"gpslocation.timestamp.nanos",
+	"tags:#.type",
+	"tags:#.data",
+}
+var AppOfficialFqdnRequestAliasArgs = []string{}
+var AppOfficialFqdnRequestComments = map[string]string{
+	"ver":                            "API version",
+	"sessioncookie":                  "Session Cookie from RegisterClientRequest",
+	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
+	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
+	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
+	"gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
+	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+	"tags:#.type":                    "type of data",
+	"tags:#.data":                    "data value",
+}
+var AppOfficialFqdnRequestSpecialArgs = map[string]string{}
+var AppOfficialFqdnReplyRequiredArgs = []string{}
+var AppOfficialFqdnReplyOptionalArgs = []string{
+	"ver",
+	"appofficialfqdn",
+	"clienttoken",
+	"status",
+	"tags:#.type",
+	"tags:#.data",
+}
+var AppOfficialFqdnReplyAliasArgs = []string{}
+var AppOfficialFqdnReplyComments = map[string]string{
+	"ver":             "API version",
+	"appofficialfqdn": "The FQDN to which the app is reached independent of the edge",
+	"clienttoken":     "Tokenized client data",
+	"status":          "Status of the reply, one of AofUndefined, AofSuccess, AofFail",
+	"tags:#.type":     "type of data",
+	"tags:#.data":     "data value",
+}
+var AppOfficialFqdnReplySpecialArgs = map[string]string{}
 var DynamicLocGroupRequestRequiredArgs = []string{}
 var DynamicLocGroupRequestOptionalArgs = []string{
 	"ver",
