@@ -188,7 +188,6 @@ func getSelfSignedCerts(ctx context.Context, tlsCert *access.TLSCert, commonName
 		}
 		args = fmt.Sprintf(selfSignedCmdWithSAN, commonNames[0], strings.Join(altNames, "\n"))
 	}
-	fmt.Printf("args: %s\n", args)
 	cmd := exec.Command("bash", "-c", args)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
