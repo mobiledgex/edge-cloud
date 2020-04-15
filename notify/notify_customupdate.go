@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 // Customize functions are used to filter sending of data
@@ -23,6 +24,9 @@ func (s *AppSend) UpdateOk(ctx context.Context, key *edgeproto.AppKey) bool {
 
 func (s *AppInstSend) UpdateOk(ctx context.Context, key *edgeproto.AppInstKey) bool {
 	if s.sendrecv.filterCloudletKeys {
+		if !s.sendrecv.cloudletReady {
+			return false
+		}
 		if !s.sendrecv.hasCloudletKey(&key.ClusterInstKey.CloudletKey) {
 			return false
 		}
@@ -45,6 +49,9 @@ func (s *CloudletSend) UpdateOk(ctx context.Context, key *edgeproto.CloudletKey)
 
 func (s *ClusterInstSend) UpdateOk(ctx context.Context, key *edgeproto.ClusterInstKey) bool {
 	if s.sendrecv.filterCloudletKeys {
+		if !s.sendrecv.cloudletReady {
+			return false
+		}
 		if !s.sendrecv.hasCloudletKey(&key.CloudletKey) {
 			return false
 		}
@@ -54,6 +61,9 @@ func (s *ClusterInstSend) UpdateOk(ctx context.Context, key *edgeproto.ClusterIn
 
 func (s *ExecRequestSend) UpdateOk(ctx context.Context, msg *edgeproto.ExecRequest) bool {
 	if s.sendrecv.filterCloudletKeys {
+		if !s.sendrecv.cloudletReady {
+			return false
+		}
 		if !s.sendrecv.hasCloudletKey(&msg.AppInstKey.ClusterInstKey.CloudletKey) {
 			return false
 		}
@@ -82,6 +92,7 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 		return
 	}
 
+	// set filter to allow sending of cloudlet data
 	s.sendrecv.updateCloudletKey(notice.Action, &buf.Key)
 
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
@@ -90,14 +101,17 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
 			// trigger send of cloudlet details to cloudlet
 			if s.sendrecv.cloudletSend != nil {
+				log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo recv hook, send Cloudlet", "key", buf.Key, "state", buf.State)
 				s.sendrecv.cloudletSend.Update(ctx, &buf.Key, nil)
 			}
 		}
 		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo recv hook read, send all filtered data", "key", buf.Key)
+			// allow all filtered objects to be sent
+			s.sendrecv.cloudletReady = true
 			// trigger send of all objects related to cloudlet
-
-			// In case of cloudlet upgrade, Check if READY is recieved from
-			// appropriate cloudlet
+			// In case of cloudlet upgrade, Check if READY is
+			// recieved from the appropriate cloudlet
 			cloudlet := edgeproto.Cloudlet{}
 			if buf.ContainerVersion != "" && s.sendrecv.cloudletSend != nil {
 				if s.sendrecv.cloudletSend.handler.Get(&buf.Key, &cloudlet) &&
@@ -135,4 +149,5 @@ func (s *CloudletRecv) RecvHook(ctx context.Context, notice *edgeproto.Notice, b
 	// ExecRequest messages it tries to send back to the controller
 	// will get filtered by UpdateOk above.
 	s.sendrecv.updateCloudletKey(notice.Action, &buf.Key)
+	s.sendrecv.cloudletReady = true
 }
