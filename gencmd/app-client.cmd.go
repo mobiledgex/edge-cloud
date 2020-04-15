@@ -761,12 +761,6 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-<<<<<<< HEAD
-	"orgname":                        "Organization Name _(optional)_ Applicable to Platform apps only",
-	"appname":                        "App Name _(optional)_ Applicable to Platform apps only",
-	"appvers":                        "App Version _(optional)_ Applicable to Platform apps only",
-=======
->>>>>>> 55a7573a777e37118a43f5008230f399e0469edc
 	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
 	"tags:#.type":                    "type of data",
 	"tags:#.data":                    "data value",
