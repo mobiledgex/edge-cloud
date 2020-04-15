@@ -129,6 +129,8 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 		allow = true
 	case *dme.FindCloudletRequest:
 		cookie = typ.SessionCookie
+	case *dme.PlatformFindCloudletRequest:
+		cookie = typ.SessionCookie
 	case *dme.VerifyLocationRequest:
 		cookie = typ.SessionCookie
 	case *dme.GetLocationRequest:
@@ -138,6 +140,8 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 	case *dme.AppInstListRequest:
 		cookie = typ.SessionCookie
 	case *dme.FqdnListRequest:
+		cookie = typ.SessionCookie
+	case *dme.AppOfficialFqdnRequest:
 		cookie = typ.SessionCookie
 	}
 	if !allow {

@@ -196,30 +196,18 @@ func getCellIdFromDmeReq(req interface{}) uint32 {
 	return 0
 }
 
-func getClientFromFindCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest) *edgeproto.AppInstClient {
-	if ckey.OrgName == "" || ckey.AppName == "" || ckey.AppVers == "" {
-		return nil
-	}
-	developer := ckey.OrgName
-	appname := ckey.AppName
-	appver := ckey.AppVers
-	if cloudcommon.IsPlatformApp(developer, appname) &&
-		mreq.OrgName != "" && mreq.AppName != "" && mreq.AppVers != "" {
-		developer = mreq.OrgName
-		appname = mreq.AppName
-		appver = mreq.AppVers
-	}
+func getAppInstClient(appname, appver, apporg string, loc *dme.Loc) *edgeproto.AppInstClient {
 	return &edgeproto.AppInstClient{
 		ClientKey: edgeproto.AppInstClientKey{
 			Key: edgeproto.AppInstKey{
 				AppKey: edgeproto.AppKey{
-					Organization: developer,
+					Organization: apporg,
 					Name:         appname,
 					Version:      appver,
 				},
 			},
 		},
-		Location: *mreq.GpsLocation,
+		Location: *loc,
 	}
 }
 
@@ -259,6 +247,9 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 
 	_, call.key.Method = cloudcommon.ParseGrpcMethod(info.FullMethod)
 
+	updateClient := false
+	var loc *dme.Loc
+
 	switch typ := req.(type) {
 	case *dme.RegisterClientRequest:
 		call.key.AppKey.Organization = typ.OrgName
@@ -271,30 +262,27 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 			}
 		}
 
+	case *dme.PlatformFindCloudletRequest:
+		call.key.AppKey.Organization = req.(*dme.PlatformFindCloudletRequest).OrgName
+		call.key.AppKey.Name = req.(*dme.PlatformFindCloudletRequest).AppName
+		call.key.AppKey.Version = req.(*dme.PlatformFindCloudletRequest).AppVers
+		loc, err = dmecommon.GetLocationFromToken(req.(*dme.PlatformFindCloudletRequest).ClientToken)
+		if err != nil {
+			return resp, err
+		}
+		updateClient = true
+
 	case *dme.FindCloudletRequest:
+
 		ckey, ok := dmecommon.CookieFromContext(ctx)
 		if !ok {
 			return resp, err
 		}
-
-		// Update clients cache if we found the cloudlet
-		if getResultFromFindCloudletReply(resp.(*dme.FindCloudletReply)) == dme.FindCloudletReply_FIND_FOUND {
-			client := getClientFromFindCloudlet(ckey, req.(*dme.FindCloudletRequest))
-			if client != nil {
-				client.ClientKey.Key.ClusterInstKey.CloudletKey = call.key.CloudletFound
-				client.ClientKey.Uuid = ckey.UniqueId
-				// GpsLocation timestamp can carry an arbitrary system time instead of a timestamp
-				client.Location.Timestamp = &dme.Timestamp{}
-				ts := time.Now()
-				client.Location.Timestamp.Seconds = ts.Unix()
-				client.Location.Timestamp.Nanos = int32(ts.Nanosecond())
-				// Update list of clients on the side and if there is a listener, send it
-				go UpdateClientsBuffer(ctx, client)
-			}
-		}
 		call.key.AppKey.Organization = ckey.OrgName
 		call.key.AppKey.Name = ckey.AppName
 		call.key.AppKey.Version = ckey.AppVers
+		loc = req.(*dme.FindCloudletRequest).GpsLocation
+		updateClient = true
 
 	default:
 		// All other API calls besides RegisterClient
@@ -312,6 +300,29 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		call.fail = true
 	}
 	call.latency = time.Since(start)
+
+	if updateClient {
+		ckey, ok := dmecommon.CookieFromContext(ctx)
+		if !ok {
+			return resp, err
+		}
+		// Update clients cache if we found the cloudlet
+		if getResultFromFindCloudletReply(resp.(*dme.FindCloudletReply)) == dme.FindCloudletReply_FIND_FOUND {
+			client := getAppInstClient(call.key.AppKey.Name, call.key.AppKey.Version, call.key.AppKey.Organization, loc)
+			if client != nil {
+				client.ClientKey.Key.ClusterInstKey.CloudletKey = call.key.CloudletFound
+				client.ClientKey.Uuid = ckey.UniqueId
+				// GpsLocation timestamp can carry an arbitrary system time instead of a timestamp
+				client.Location.Timestamp = &dme.Timestamp{}
+				ts := time.Now()
+				client.Location.Timestamp.Seconds = ts.Unix()
+				client.Location.Timestamp.Nanos = int32(ts.Nanosecond())
+				// Update list of clients on the side and if there is a listener, send it
+				go UpdateClientsBuffer(ctx, client)
+			}
+		}
+	}
+
 	s.RecordApiStatCall(&call)
 
 	return resp, err
