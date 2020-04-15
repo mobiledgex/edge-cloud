@@ -9,53 +9,23 @@ if [ $# -le 0 ]; then
 fi
 
 case "$1" in
-    controller)
-	shift
-	controller "$@"
-	;;
-    cluster-svc)
-	shift
-	cluster-svc "$@"
-	;;
-    crmserver)
-	shift
-	crmserver "$@"
-	;;
-    dme-server)
-	shift
-	dme-server "$@"
-	;;
-    edgectl)
-	shift
-	edgectl "$@"
-	;;
-    loc-api-sim)
-	shift
-	loc-api-sim "$@"
-	;;
-    mc)
-	shift
-	mc "$@"
-	;;
-    mcctl)
-	shift
-	mcctl "$@"
-	;;
-    notifyroot)
-	shift
-	notifyroot "$@"
-	;;
+    controller|\
+    cluster-svc|\
+    crmserver|\
+    dme-server|\
+    edgectl|\
+    edgeturn|\
+    loc-api-sim|\
+    mc|\
+    mcctl|\
+    notifyroot|\
+    shepherd|\
     tok-srv-sim)
-	shift
-	tok-srv-sim "$@"
+	"$@"
 	;;
     test-edgectl)
 	shift
 	test-edgectl.sh "$@"
-	;;
-    shepherd)
-	shift
-	shepherd "$@"
 	;;
     dump-docs)
 	shift

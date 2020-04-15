@@ -115,8 +115,8 @@ message ConfigFile {
   bool scale_with_cluster = 22;
   // Should this app have access to outside world?
   bool internal_ports = 23;
-  // Revision increments each time the App is updated
-  int32 revision = 24;
+  // Revision can be specified or defaults to current timestamp when app is updated
+  string revision = 24 [(protogen.hidetag) = "nocmp"];
   // Official FQDN is the FQDN that the app uses to connect by default
   string official_fqdn = 25;
   // MD5Sum of the VM-based app image
@@ -138,7 +138,7 @@ message ConfigFile {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
-  option (protogen.noconfig) = "Revision,DeletePrepare";
+  option (protogen.noconfig) = "DeletePrepare";
   option (protogen.uses_org) = "key=Organization";
 }
 

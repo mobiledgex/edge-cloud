@@ -5,6 +5,7 @@ import "os/exec"
 type Vault struct {
 	Common    `yaml:",inline"`
 	DmeSecret string
+	Regions   string
 	cmd       *exec.Cmd
 }
 type Etcd struct {
@@ -23,9 +24,12 @@ type Controller struct {
 	NotifyAddr            string
 	NotifyRootAddrs       string
 	NotifyParentAddrs     string
+	EdgeTurnAddr          string
 	VaultAddr             string
 	InfluxAddr            string
+	Region                string
 	TLS                   TLSCerts
+	UseVaultCerts         bool
 	cmd                   *exec.Cmd
 	TestMode              bool
 	RegistryFQDN          string
@@ -36,19 +40,21 @@ type Controller struct {
 	CheckpointingInterval string
 }
 type Dme struct {
-	Common      `yaml:",inline"`
-	ApiAddr     string
-	HttpAddr    string
-	NotifyAddrs string
-	LocVerUrl   string
-	TokSrvUrl   string
-	QosPosUrl   string
-	Carrier     string
-	CloudletKey string
-	VaultAddr   string
-	CookieExpr  string
-	TLS         TLSCerts
-	cmd         *exec.Cmd
+	Common        `yaml:",inline"`
+	ApiAddr       string
+	HttpAddr      string
+	NotifyAddrs   string
+	LocVerUrl     string
+	TokSrvUrl     string
+	QosPosUrl     string
+	Carrier       string
+	CloudletKey   string
+	VaultAddr     string
+	CookieExpr    string
+	Region        string
+	TLS           TLSCerts
+	UseVaultCerts bool
+	cmd           *exec.Cmd
 }
 type Crm struct {
 	Common              `yaml:",inline"`
@@ -58,6 +64,7 @@ type Crm struct {
 	Platform            string
 	Plugin              string
 	TLS                 TLSCerts
+	UseVaultCerts       bool
 	cmd                 *exec.Cmd
 	VaultAddr           string
 	PhysicalName        string
@@ -109,7 +116,10 @@ type ClusterSvc struct {
 	PromPorts      string
 	InfluxDB       string
 	Interval       string
+	Region         string
+	VaultAddr      string
 	PluginRequired bool
+	UseVaultCerts  bool
 	TLS            TLSCerts
 	cmd            *exec.Cmd
 }
@@ -124,7 +134,20 @@ type Traefik struct {
 	cmd    *exec.Cmd
 }
 type NotifyRoot struct {
-	Common `yaml:",inline"`
-	TLS    TLSCerts
-	cmd    *exec.Cmd
+	Common        `yaml:",inline"`
+	VaultAddr     string
+	TLS           TLSCerts
+	UseVaultCerts bool
+	cmd           *exec.Cmd
+}
+type EdgeTurn struct {
+	Common        `yaml:",inline"`
+	TLS           TLSCerts
+	cmd           *exec.Cmd
+	UseVaultCerts bool
+	VaultAddr     string
+	ListenAddr    string
+	ProxyAddr     string
+	Region        string
+	TestMode      bool
 }

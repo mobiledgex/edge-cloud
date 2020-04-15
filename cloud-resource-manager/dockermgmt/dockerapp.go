@@ -211,9 +211,13 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 	name := util.DockerSanitize(app.Key.Name)
 	cloudlet := util.DockerSanitize(appInst.Key.ClusterInstKey.CloudletKey.Name)
 	cluster := util.DockerSanitize(appInst.Key.ClusterInstKey.Organization + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name)
+	base_cmd := "docker run "
+	if appInst.OptRes == "gpu" {
+		base_cmd += "--gpus all"
+	}
 
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d -l edge-cloud -l cloudlet=%s -l cluster=%s  -l %s=%s -l %s=%s --restart=unless-stopped --name=%s %s %s %s",
+		cmd := fmt.Sprintf("%s -d -l edge-cloud -l cloudlet=%s -l cluster=%s  -l %s=%s -l %s=%s --restart=unless-stopped --name=%s %s %s %s", base_cmd,
 			cloudlet, cluster, cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel, versionLabelVal, name,
 			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrAllInterfaces), " "), image, app.Command)
 		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
@@ -247,12 +251,18 @@ func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 	nameLabelVal := util.DNSSanitize(app.Key.Name)
 	versionLabelVal := util.DNSSanitize(app.Key.Version)
 	name := GetContainerName(&app.Key)
+	base_cmd := "docker run "
+	if appInst.OptRes == "gpu" {
+		base_cmd += "--gpus all"
+	}
+
 	if app.DeploymentManifest == "" {
-		cmd := fmt.Sprintf("docker run -d -l %s=%s -l %s=%s --restart=unless-stopped --network=host --name=%s %s %s",
+
+		cmd := fmt.Sprintf("%s -d -l %s=%s -l %s=%s --restart=unless-stopped --network=host --name=%s %s %s", base_cmd,
 			cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel,
 			versionLabelVal, GetContainerName(&app.Key), image, app.Command)
 		if networkMode == DockerBridgeMode {
-			cmd = fmt.Sprintf("docker run -d -l edge-cloud -l %s=%s -l %s=%s --restart=unless-stopped --name=%s %s %s %s",
+			cmd = fmt.Sprintf("%s -d -l edge-cloud -l %s=%s -l %s=%s --restart=unless-stopped --name=%s %s %s %s", base_cmd,
 				cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel, versionLabelVal, name,
 				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
 		}

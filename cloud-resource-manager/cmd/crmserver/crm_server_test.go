@@ -121,7 +121,7 @@ func startMain(t *testing.T) (chan struct{}, error) {
 
 func TestCRM(t *testing.T) {
 	var err error
-	log.SetDebugLevel(log.DebugLevelNotify | log.DebugLevelMexos)
+	log.SetDebugLevel(log.DebugLevelApi | log.DebugLevelNotify | log.DebugLevelMexos)
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
@@ -149,7 +149,7 @@ func TestCRM(t *testing.T) {
 	ctrlHandler := notify.NewDummyHandler()
 	ctrlMgr := notify.ServerMgr{}
 	ctrlHandler.RegisterServer(&ctrlMgr)
-	ctrlMgr.Start(notifyAddr, "")
+	ctrlMgr.Start(notifyAddr, nil)
 
 	notifyClient.WaitForConnect(1)
 	stats := notify.Stats{}

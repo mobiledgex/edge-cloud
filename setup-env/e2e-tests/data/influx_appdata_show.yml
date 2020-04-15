@@ -86,6 +86,26 @@ cloudlets:
   physicalname: tmus-cloud-1
   containerversion: 2019-10-24
 
+cloudletinfos:
+- key:
+    organization: tmus
+    name: tmus-cloud-1
+  state: CloudletStateReady
+  notifyid: 16
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+
 apps:
 - key:
     organization: AcmeAppCo

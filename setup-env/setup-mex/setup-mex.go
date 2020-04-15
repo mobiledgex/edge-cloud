@@ -490,6 +490,13 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 			return false
 		}
 	}
+	for _, p := range util.Deployment.EdgeTurns {
+		opts = append(opts, process.WithRolesFile(rolesfile))
+		opts = append(opts, process.WithDebug("api,notify"))
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
 	for _, p := range util.Deployment.Controllers {
 		opts = append(opts, process.WithDebug("etcd,api,notify,metrics"))
 		if !StartLocal(processName, outputDir, p, opts...) {
@@ -504,6 +511,7 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 		}
 	}
 	for _, p := range util.Deployment.ClusterSvcs {
+		opts = append(opts, process.WithRolesFile(rolesfile))
 		opts = append(opts, process.WithDebug("notify,mexos,api"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false

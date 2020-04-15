@@ -142,8 +142,9 @@ func getCrmEnv(vars map[string]string) {
 func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edgeproto.PlatformConfig, error) {
 	pfConfig := edgeproto.PlatformConfig{}
 	pfConfig.PlatformTag = cloudlet.ContainerVersion
-	pfConfig.TlsCertFile = *tlsCertFile
-	pfConfig.VaultAddr = *vaultAddr
+	pfConfig.TlsCertFile = nodeMgr.TlsCertFile
+	pfConfig.VaultAddr = nodeMgr.VaultAddr
+	pfConfig.UseVaultCerts = nodeMgr.InternalPki.UseVaultCerts
 	pfConfig.ContainerRegistryPath = *cloudletRegistryPath
 	pfConfig.CloudletVmImagePath = *cloudletVMImagePath
 	pfConfig.TestMode = *testMode
@@ -929,7 +930,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}
 	cloudletPoolMemberApi.cloudletDeleted(ctx, &in.Key)
-	return err
+	cloudletInfoApi.cleanupCloudletInfo(ctx, &in.Key)
+	return nil
 }
 
 func (s *CloudletApi) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_ShowCloudletServer) error {
@@ -1110,7 +1112,7 @@ func RecordCloudletEvent(ctx context.Context, cloudletKey *edgeproto.CloudletKey
 	metric.Name = cloudcommon.CloudletEvent
 	ts, _ := types.TimestampProto(time.Now())
 	metric.Timestamp = *ts
-	metric.AddTag("cloudletorg", cloudletKey.Organization)
+	metric.AddStringVal("cloudletorg", cloudletKey.Organization)
 	metric.AddTag("cloudlet", cloudletKey.Name)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)

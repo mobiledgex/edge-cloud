@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/segmentio/ksuid"
 )
 
 type ExecApi struct {
@@ -123,6 +124,15 @@ func (s *ExecApi) RunConsole(ctx context.Context, req *edgeproto.ExecRequest) (*
 }
 
 func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+	if !req.Webrtc {
+		// Make sure EdgeTurn Server Address is present
+		if *edgeTurnAddr == "" {
+			return nil, fmt.Errorf("EdgeTurn server address is required to run commands in Non Webrtc mode")
+		}
+		req.EdgeTurnAddr = *edgeTurnAddr
+		reqId := ksuid.New()
+		req.Offer = reqId.String()
+	}
 	// Forward the offer.
 	// Currently we don't know which controller has the CRM connected
 	// (or if it's even present), so just broadcast to all.
@@ -134,7 +144,7 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 			reply, err = s.SendLocalRequest(ctx, req)
 		} else {
 			// connect to remote node
-			conn, err := ControllerConnect(addr)
+			conn, err := ControllerConnect(ctx, addr)
 			if err != nil {
 				return err
 			}
@@ -151,6 +161,7 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 			if req.Console != nil && reply.Console != nil {
 				req.Console.Url = reply.Console.Url
 			}
+			req.AccessUrl = reply.AccessUrl
 		}
 		return nil
 	}, nil)
@@ -160,7 +171,7 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 	if req.Err != "" {
 		return nil, fmt.Errorf("%s", req.Err)
 	}
-	if req.Answer == "" {
+	if req.Webrtc && req.Answer == "" {
 		return nil, fmt.Errorf("no one answered the offer")
 	}
 	log.DebugLog(log.DebugLevelApi, "ExecRequest answered", "req", req)
@@ -214,7 +225,7 @@ func (s *ExecApi) RecvExecRequest(ctx context.Context, msg *edgeproto.ExecReques
 	defer s.mux.Unlock()
 	sr, ok := s.requests[msg.Offer]
 	if !ok {
-		log.DebugLog(log.DebugLevelApi, "unregistered ExecRequest recv", "msg", msg)
+		log.DebugLog(log.DebugLevelApi, "unregistered ExecRequest recv", "msg", msg, "requests", s.requests)
 		return
 	}
 	sr.req.Answer = msg.Answer
@@ -222,5 +233,6 @@ func (s *ExecApi) RecvExecRequest(ctx context.Context, msg *edgeproto.ExecReques
 	if sr.req.Console != nil && msg.Console != nil {
 		sr.req.Console.Url = msg.Console.Url
 	}
+	sr.req.AccessUrl = msg.AccessUrl
 	sr.done <- true
 }

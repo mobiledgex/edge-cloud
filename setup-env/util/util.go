@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/cookiejar"
 	"os"
 	"os/exec"
 	"regexp"
@@ -102,6 +104,7 @@ type DeploymentData struct {
 	Jaegers     []*process.Jaeger     `yaml:"jaegers"`
 	Traefiks    []*process.Traefik    `yaml:"traefiks"`
 	NotifyRoots []*process.NotifyRoot `yaml:"notifyroots"`
+	EdgeTurns   []*process.EdgeTurn   `yaml:"edgeturns"`
 }
 
 type errorReply struct {
@@ -146,6 +149,9 @@ func GetAllProcesses() []process.Process {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.NotifyRoots {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.EdgeTurns {
 		all = append(all, p)
 	}
 	return all
@@ -313,6 +319,10 @@ func connectOnlineController(delay time.Duration) *grpc.ClientConn {
 	return nil
 }
 
+func SetLogFormat() {
+	log.SetFlags(log.Flags() | log.Ltime | log.Lmicroseconds)
+}
+
 func PrintStartBanner(label string) {
 	log.Printf("\n\n   *** %s\n", label)
 }
@@ -464,16 +474,20 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err2 = ReadYamlFile(secondYamlFile, &a2)
 		a1.Sort()
 		a2.Sort()
-		// "show" used to not include CloudletInfos, so remove them.
-		a1.CloudletInfos = nil
-		a2.CloudletInfos = nil
-		y1 = a1
-		y2 = a2
 
 		copts = append(copts, cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}))
 		if fileType == "appdata" {
 			copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
 		}
+		if fileType == "appdata-showcmp" {
+			// need to clear controller field of CloudletInfo
+			// because it depends on local hostname.
+			clearCloudletInfoNocmp(&a1)
+			clearCloudletInfoNocmp(&a2)
+		}
+
+		y1 = a1
+		y2 = a2
 	} else if fileType == "appdata-output" {
 		var a1 testutil.AllDataOut
 		var a2 testutil.AllDataOut
@@ -574,8 +588,9 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 func ControllerCLI(ctrl *process.Controller, args ...string) ([]byte, error) {
 	cmdargs := []string{"--addr", ctrl.ApiAddr, "controller"}
-	if ctrl.TLS.ClientCert != "" {
-		cmdargs = append(cmdargs, "--tls", ctrl.TLS.ClientCert)
+	tlsFile := ctrl.GetTlsFile()
+	if tlsFile != "" {
+		cmdargs = append(cmdargs, "--tls", tlsFile)
 	}
 	cmdargs = append(cmdargs, args...)
 	log.Printf("Running: edgectl %v\n", cmdargs)
@@ -642,8 +657,63 @@ func clearInfluxTime(results []influxclient.Result) {
 	}
 }
 
+func clearCloudletInfoNocmp(data *edgeproto.AllData) {
+	for ii, _ := range data.CloudletInfos {
+		data.CloudletInfos[ii].Controller = ""
+		data.CloudletInfos[ii].NotifyId = 0
+	}
+}
+
 func ClearAppDataOutputStatus(output *testutil.AllDataOut) {
 	output.Cloudlets = testutil.FilterStreamResults(output.Cloudlets)
 	output.ClusterInsts = testutil.FilterStreamResults(output.ClusterInsts)
 	output.AppInstances = testutil.FilterStreamResults(output.AppInstances)
+}
+
+func ReadConsoleURL(consoleUrl string, cookies []*http.Cookie) (string, error) {
+	req, err := http.NewRequest("GET", consoleUrl, nil)
+	if err != nil {
+		return "", err
+	}
+
+	if cookies != nil {
+		for _, cookie := range cookies {
+			req.AddCookie(cookie)
+		}
+	}
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	options := cookiejar.Options{}
+
+	jar, err := cookiejar.New(&options)
+	if err != nil {
+		return "", err
+	}
+
+	client := &http.Client{
+		Transport: tr,
+		Jar:       jar,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	// For some reason this client is not getting 302,
+	// instead it gets 502. It works fine for curl & wget
+	if resp.StatusCode == http.StatusBadGateway {
+		if resp.Request.URL.String() != consoleUrl {
+			return ReadConsoleURL(resp.Request.URL.String(), resp.Cookies())
+		}
+	}
+	return string(contents), nil
 }

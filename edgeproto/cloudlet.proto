@@ -68,8 +68,10 @@ message PlatformConfig {
   bool cleanup_mode = 11;
   // Region
   string region = 12;
-  // Get certs from vault or generate your own
+  // Get certs from vault or generate your own for the root load balancer
   bool commercial_certs = 13;
+  // Use Vault certs for internal TLS communication
+  bool use_vault_certs = 14;
 }
 
 // Platform Type

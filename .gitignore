@@ -12,3 +12,13 @@ link-gogo-protobuf
 link-grpc-gateway
 version/version.go
 d-match-engine/dme-proto/*.proto
+cloudcommon/node/*.csr
+cloudcommon/node/*.pem
+cloudcommon/node/vault.log
+cloudcommon/node/roles.yaml
+vault/*.csr
+vault/*.pem
+vault/vault.log
+vault/roles.yaml
+*.csr
+*.pem

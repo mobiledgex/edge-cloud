@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -185,4 +186,47 @@ func (s *CloudletInfoApi) checkCloudletReady(key *edgeproto.CloudletKey) error {
 	}
 	return fmt.Errorf("Cloudlet %v not ready, state is %s", key,
 		edgeproto.CloudletState_name[int32(state)])
+}
+
+// Clean up CloudletInfo after Cloudlet delete.
+// Only delete if state is Offline.
+func (s *CloudletInfoApi) cleanupCloudletInfo(ctx context.Context, key *edgeproto.CloudletKey) {
+	done := make(chan bool, 1)
+	checkState := func() {
+		info := edgeproto.CloudletInfo{}
+		if !s.cache.Get(key, &info) {
+			done <- true
+			return
+		}
+		if info.State == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+			done <- true
+		}
+	}
+	cancel := s.cache.WatchKey(key, func(ctx context.Context) {
+		checkState()
+	})
+	defer cancel()
+	// after setting up watch, check current state,
+	// as it may have already changed to target state
+	checkState()
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		log.SpanLog(ctx, log.DebugLevelApi, "timed out waiting for CloudletInfo to go Offline", "key", key)
+	}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		info := edgeproto.CloudletInfo{}
+		if !s.store.STMGet(stm, key, &info) {
+			return nil
+		}
+		if info.State != edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+			return fmt.Errorf("could not delete CloudletInfo, state is %s instead of offline", info.State.String())
+		}
+		s.store.STMDel(stm, key)
+		return nil
+	})
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "cleanup CloudletInfo failed", "err", err)
+	}
 }

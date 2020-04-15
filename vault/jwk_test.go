@@ -15,10 +15,13 @@ func TestJwk(t *testing.T) {
 			Name: "vault",
 		},
 		DmeSecret: "123456",
+		Regions:   "local",
 	}
-	roles, err := vault.StartLocalRoles()
+	vroles, err := vault.StartLocalRoles()
 	require.Nil(t, err, "start local vault")
 	defer vault.StopLocal()
+
+	roles := vroles.RegionRoles["local"]
 
 	// this represents a dme process accessing vault
 	dmeAuth := NewAppRoleAuth(roles.DmeRoleID, roles.DmeSecretID)

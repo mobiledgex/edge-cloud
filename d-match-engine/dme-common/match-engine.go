@@ -112,7 +112,7 @@ func cloudletKeyEqual(key1 *edgeproto.CloudletKey, key2 *edgeproto.CloudletKey) 
 	return key1.GetKeyString() == key2.GetKeyString()
 }
 
-func AddApp(in *edgeproto.App) {
+func AddApp(ctx context.Context, in *edgeproto.App) {
 	tbl := DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
@@ -123,7 +123,7 @@ func AddApp(in *edgeproto.App) {
 		app.Carriers = make(map[string]*DmeAppInsts)
 		app.AppKey = in.Key
 		tbl.Apps[in.Key] = app
-		log.DebugLog(log.DebugLevelDmedb, "Adding app",
+		log.SpanLog(ctx, log.DebugLevelDmedb, "Adding app",
 			"key", in.Key,
 			"package", in.AndroidPackageName,
 			"OfficialFqdn", in.OfficialFqdn)
@@ -147,7 +147,7 @@ func AddApp(in *edgeproto.App) {
 		if pp, found := tbl.AutoProvPolicies[ppKey]; found {
 			app.AutoProvPolicy = pp
 		} else {
-			log.DebugLog(log.DebugLevelDmedb, "AutoProvPolicy on App not found", "app", in.Key, "policy", app.AutoProvPolicy)
+			log.SpanLog(ctx, log.DebugLevelDmedb, "AutoProvPolicy on App not found", "app", in.Key, "policy", app.AutoProvPolicy)
 		}
 	}
 	if clearAutoProvStats {
@@ -155,7 +155,7 @@ func AddApp(in *edgeproto.App) {
 	}
 }
 
-func AddAppInst(appInst *edgeproto.AppInst) {
+func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	var cNew *DmeAppInst
 
 	carrierName := appInst.Key.ClusterInstKey.CloudletKey.Organization
@@ -166,14 +166,14 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 	defer tbl.Unlock()
 	app, ok := tbl.Apps[appkey]
 	if !ok {
-		log.DebugLog(log.DebugLevelDmedb, "addAppInst: app not found", "key", appInst.Key)
+		log.SpanLog(ctx, log.DebugLevelDmedb, "addAppInst: app not found", "key", appInst.Key)
 		return
 	}
 	app.Lock()
 	if _, foundCarrier := app.Carriers[carrierName]; foundCarrier {
-		log.DebugLog(log.DebugLevelDmedb, "carrier already exists", "carrierName", carrierName)
+		log.SpanLog(ctx, log.DebugLevelDmedb, "carrier already exists", "carrierName", carrierName)
 	} else {
-		log.DebugLog(log.DebugLevelDmedb, "adding carrier for app", "carrierName", carrierName)
+		log.SpanLog(ctx, log.DebugLevelDmedb, "adding carrier for app", "carrierName", carrierName)
 		app.Carriers[carrierName] = new(DmeAppInsts)
 		app.Carriers[carrierName].Insts = make(map[edgeproto.ClusterInstKey]*DmeAppInst)
 	}
@@ -188,7 +188,7 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 		} else {
 			cl.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
 		}
-		log.DebugLog(log.DebugLevelDmedb, "Updating app inst",
+		log.SpanLog(ctx, log.DebugLevelDmedb, "Updating app inst",
 			"appName", app.AppKey.Name,
 			"appVersion", app.AppKey.Version,
 			"latitude", appInst.CloudletLoc.Latitude,
@@ -207,7 +207,7 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 			cNew.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
 		}
 		app.Carriers[carrierName].Insts[cNew.clusterInstKey] = cNew
-		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
+		log.SpanLog(ctx, log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.AppKey.Name,
 			"appVersion", app.AppKey.Version,
 			"cloudletKey", appInst.Key.ClusterInstKey.CloudletKey,
@@ -219,7 +219,7 @@ func AddAppInst(appInst *edgeproto.AppInst) {
 	app.Unlock()
 }
 
-func RemoveApp(in *edgeproto.App) {
+func RemoveApp(ctx context.Context, in *edgeproto.App) {
 	tbl := DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
@@ -235,7 +235,7 @@ func RemoveApp(in *edgeproto.App) {
 	}
 }
 
-func RemoveAppInst(appInst *edgeproto.AppInst) {
+func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	var app *DmeApp
 	var tbl *DmeApps
 
@@ -250,7 +250,7 @@ func RemoveAppInst(appInst *edgeproto.AppInst) {
 		if c, foundCarrier := app.Carriers[carrierName]; foundCarrier {
 			if cl, foundAppInst := c.Insts[appInst.Key.ClusterInstKey]; foundAppInst {
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
-				log.DebugLog(log.DebugLevelDmedb, "Removing app inst",
+				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
 					"appName", appkey.Name,
 					"appVersion", appkey.Version,
 					"latitude", cl.location.Latitude,
@@ -258,7 +258,7 @@ func RemoveAppInst(appInst *edgeproto.AppInst) {
 			}
 			if len(app.Carriers[carrierName].Insts) == 0 {
 				delete(tbl.Apps[appkey].Carriers, carrierName)
-				log.DebugLog(log.DebugLevelDmedb, "Removing carrier for app",
+				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing carrier for app",
 					"carrier", carrierName,
 					"appName", appkey.Name,
 					"appVersion", appkey.Version)
@@ -269,7 +269,7 @@ func RemoveAppInst(appInst *edgeproto.AppInst) {
 }
 
 // pruneApps removes any data that was not sent by the controller.
-func PruneApps(apps map[edgeproto.AppKey]struct{}) {
+func PruneApps(ctx context.Context, apps map[edgeproto.AppKey]struct{}) {
 	tbl := DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
@@ -287,10 +287,10 @@ func PruneApps(apps map[edgeproto.AppKey]struct{}) {
 }
 
 // pruneApps removes any data that was not sent by the controller.
-func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
+func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct{}) {
 	var key edgeproto.AppInstKey
 
-	log.DebugLog(log.DebugLevelDmereq, "pruneAppInsts called")
+	log.SpanLog(ctx, log.DebugLevelDmereq, "pruneAppInsts called")
 
 	tbl := DmeAppTbl
 	tbl.Lock()
@@ -302,12 +302,12 @@ func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 				key.AppKey = app.AppKey
 				key.ClusterInstKey = inst.clusterInstKey
 				if _, foundAppInst := appInsts[key]; !foundAppInst {
-					log.DebugLog(log.DebugLevelDmereq, "pruning app", "key", key)
+					log.SpanLog(ctx, log.DebugLevelDmereq, "pruning app", "key", key)
 					delete(carr.Insts, key.ClusterInstKey)
 				}
 			}
 			if len(carr.Insts) == 0 {
-				log.DebugLog(log.DebugLevelDmereq, "pruneAppInsts delete carriers")
+				log.SpanLog(ctx, log.DebugLevelDmereq, "pruneAppInsts delete carriers")
 				delete(app.Carriers, c)
 			}
 		}
@@ -315,8 +315,8 @@ func PruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 	}
 }
 
-func DeleteCloudletInfo(info *edgeproto.CloudletInfo) {
-	log.DebugLog(log.DebugLevelDmereq, "DeleteCloudletInfo called")
+func DeleteCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) {
+	log.SpanLog(ctx, log.DebugLevelDmereq, "DeleteCloudletInfo called")
 	tbl := DmeAppTbl
 	carrier := info.Key.Organization
 	tbl.Lock()
@@ -335,14 +335,14 @@ func DeleteCloudletInfo(info *edgeproto.CloudletInfo) {
 		app.Unlock()
 	}
 	if _, found := tbl.Cloudlets[info.Key]; found {
-		log.DebugLog(log.DebugLevelDmereq, "delete cloudletInfo", "key", info.Key)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "delete cloudletInfo", "key", info.Key)
 		delete(tbl.Cloudlets, info.Key)
 	}
 }
 
 // Remove any Cloudlets we track that no longer exist and reset the state for the AppInsts
-func PruneCloudlets(cloudlets map[edgeproto.CloudletKey]struct{}) {
-	log.DebugLog(log.DebugLevelDmereq, "PruneCloudlets called")
+func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]struct{}) {
+	log.SpanLog(ctx, log.DebugLevelDmereq, "PruneCloudlets called")
 	tbl := DmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
@@ -360,7 +360,7 @@ func PruneCloudlets(cloudlets map[edgeproto.CloudletKey]struct{}) {
 	}
 	for cloudlet, _ := range cloudlets {
 		if _, foundInfo := tbl.Cloudlets[cloudlet]; !foundInfo {
-			log.DebugLog(log.DebugLevelDmereq, "pruning cloudletInfo", "key", cloudlet)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "pruning cloudletInfo", "key", cloudlet)
 			delete(tbl.Cloudlets, cloudlet)
 		}
 	}
@@ -379,7 +379,7 @@ func (s *AutoProvPolicyHandler) Update(ctx context.Context, in *edgeproto.AutoPr
 	}
 	pp.DeployClientCount = in.DeployClientCount
 	pp.IntervalCount = in.DeployIntervalCount
-	log.DebugLog(log.DebugLevelDmereq, "update AutoProvPolicy", "policy", in)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "update AutoProvPolicy", "policy", in)
 	// Organize potentional cloudlets by carrier
 	pp.Cloudlets = make(map[string][]*edgeproto.AutoProvCloudlet)
 	if in.Cloudlets != nil {
@@ -416,8 +416,8 @@ func (s *AutoProvPolicyHandler) Flush(ctx context.Context, notifyId int64) {}
 
 // SetInstStateForCloudlet - Sets the current state of the appInstances for the cloudlet
 // This gets called when a cloudlet goes offline, or comes back online
-func SetInstStateForCloudlet(info *edgeproto.CloudletInfo) {
-	log.DebugLog(log.DebugLevelDmereq, "SetInstStateForCloudlet called", "cloudlet", info)
+func SetInstStateForCloudlet(ctx context.Context, info *edgeproto.CloudletInfo) {
+	log.SpanLog(ctx, log.DebugLevelDmereq, "SetInstStateForCloudlet called", "cloudlet", info)
 	carrier := info.Key.Organization
 	tbl := DmeAppTbl
 	tbl.Lock()
@@ -476,18 +476,18 @@ func findClosestForCarrier(ctx context.Context, carrierName string, key edgeprot
 		return maxDistance, updated
 	}
 
-	log.DebugLog(log.DebugLevelDmereq, "Find Closest", "appkey", key, "carrierName", carrierName)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Find Closest", "appkey", key, "carrierName", carrierName)
 
 	if c, carrierFound := app.Carriers[carrierName]; carrierFound {
 		for _, i := range c.Insts {
 			d = DistanceBetween(*loc, i.location)
-			log.DebugLog(log.DebugLevelDmereq, "found cloudlet at",
+			log.SpanLog(ctx, log.DebugLevelDmereq, "found cloudlet at",
 				"latitude", i.location.Latitude,
 				"longitude", i.location.Longitude,
 				"maxDistance", maxDistance,
 				"this-dist", d)
 			if d < maxDistance && IsAppInstUsable(i) {
-				log.DebugLog(log.DebugLevelDmereq, "closer cloudlet", "uri", i.uri)
+				log.SpanLog(ctx, log.DebugLevelDmereq, "closer cloudlet", "uri", i.uri)
 				updated = true
 				maxDistance = d
 				found = i
@@ -501,7 +501,7 @@ func findClosestForCarrier(ctx context.Context, carrierName string, key edgeprot
 		if found != nil {
 			var ipaddr net.IP
 			ipaddr = found.ip
-			log.DebugLog(log.DebugLevelDmereq, "best cloudlet",
+			log.SpanLog(ctx, log.DebugLevelDmereq, "best cloudlet",
 				"app", key.Name,
 				"carrier", carrierName,
 				"latitude", found.location.Latitude,
@@ -515,7 +515,7 @@ func findClosestForCarrier(ctx context.Context, carrierName string, key edgeprot
 	}
 	if app.AutoProvPolicy != nil {
 		list, found := app.AutoProvPolicy.Cloudlets[carrierName]
-		log.DebugLog(log.DebugLevelDmereq, "search AutoProvPolicy", "carrier", carrierName, "found", found, "list", list)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy", "carrier", carrierName, "found", found, "list", list)
 		if found {
 			potentialDist := maxDistance
 			var potentialCloudlet *edgeproto.AutoProvCloudlet
@@ -539,10 +539,10 @@ func findClosestForCarrier(ctx context.Context, carrierName string, key edgeprot
 					potentialCloudlet = cl
 				}
 			}
-			log.DebugLog(log.DebugLevelDmereq, "search AutoProvPolicy result", "potentialClusterInst", potentialClusterInstKey, "autoProvStats", autoProvStats)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy result", "potentialClusterInst", potentialClusterInstKey, "autoProvStats", autoProvStats)
 			if potentialClusterInstKey != nil && autoProvStats != nil {
 				autoProvStats.Increment(ctx, &app.AppKey, potentialClusterInstKey, app.AutoProvPolicy.DeployClientCount, app.AutoProvPolicy.IntervalCount)
-				log.DebugLog(log.DebugLevelDmereq, "potential best cloudlet",
+				log.SpanLog(ctx, log.DebugLevelDmereq, "potential best cloudlet",
 					"app", key.Name,
 					"carrier", carrierName,
 					"latitude", potentialCloudlet.Loc.Latitude,
@@ -610,13 +610,13 @@ func FindCloudlet(ctx context.Context, ckey *CookieKey, mreq *dme.FindCloudletRe
 		return nil
 	}
 
-	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", mreq.CarrierName, "app", appkey.Name, "developer", appkey.Organization, "version", appkey.Version)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet", "carrier", mreq.CarrierName, "app", appkey.Name, "developer", appkey.Organization, "version", appkey.Version)
 
 	// first find carrier cloudlet
 	bestDistance, updated := findClosestForCarrier(ctx, mreq.CarrierName, appkey, mreq.GpsLocation, InfiniteDistance, mreply)
 
 	if updated {
-		log.DebugLog(log.DebugLevelDmereq, "found carrier cloudlet", "Fqdn", mreply.Fqdn, "distance", bestDistance)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "found carrier cloudlet", "Fqdn", mreply.Fqdn, "distance", bestDistance)
 	}
 
 	if bestDistance > publicCloudPadding {
@@ -625,7 +625,7 @@ func FindCloudlet(ctx context.Context, ckey *CookieKey, mreq *dme.FindCloudletRe
 		// look for an azure cloud closer than the carrier distance minus padding
 		azDistance, updated := findClosestForCarrier(ctx, cloudcommon.OperatorAzure, appkey, mreq.GpsLocation, paddedCarrierDistance, mreply)
 		if updated {
-			log.DebugLog(log.DebugLevelDmereq, "found closer azure cloudlet", "Fqdn", mreply.Fqdn, "distance", azDistance)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "found closer azure cloudlet", "Fqdn", mreply.Fqdn, "distance", azDistance)
 			bestDistance = azDistance
 		}
 
@@ -633,15 +633,15 @@ func FindCloudlet(ctx context.Context, ckey *CookieKey, mreq *dme.FindCloudletRe
 		maxGCPDistance := math.Min(azDistance, paddedCarrierDistance)
 		gcpDistance, updated := findClosestForCarrier(ctx, cloudcommon.OperatorGCP, appkey, mreq.GpsLocation, maxGCPDistance, mreply)
 		if updated {
-			log.DebugLog(log.DebugLevelDmereq, "found closer gcp cloudlet", "Fqdn", mreply.Fqdn, "distance", gcpDistance)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "found closer gcp cloudlet", "Fqdn", mreply.Fqdn, "distance", gcpDistance)
 			bestDistance = gcpDistance
 		}
 	}
 
 	if mreply.Status == dme.FindCloudletReply_FIND_FOUND {
-		log.DebugLog(log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", bestDistance)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", bestDistance)
 	} else {
-		log.DebugLog(log.DebugLevelDmereq, "findCloudlet returning FIND_NOTFOUND")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_NOTFOUND")
 
 	}
 	return nil
@@ -679,7 +679,7 @@ func GetFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 	clist.Status = dme.FqdnListReply_FL_SUCCESS
 }
 
-func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
+func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
 	var tbl *DmeApps
 	tbl = DmeAppTbl
 	foundCloudlets := make(map[edgeproto.CloudletKey]*dme.CloudletLocation)
@@ -700,7 +700,7 @@ func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.Ap
 		for cname, c := range a.Carriers {
 			//if the carrier name was provided, only look for cloudlets for that carrier, or for public cloudlets
 			if carrierName != "" && !isPublicCarrier(cname) && carrierName != cname {
-				log.DebugLog(log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "carrierName", carrierName, "i.cloudletKey.Organization", cname)
+				log.SpanLog(ctx, log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "carrierName", carrierName, "i.cloudletKey.Organization", cname)
 				continue
 			}
 			for _, i := range c.Insts {
@@ -736,7 +736,7 @@ func GetAppInstList(ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.Ap
 	clist.Status = dme.AppInstListReply_AI_SUCCESS
 }
 
-func ListAppinstTbl() {
+func ListAppinstTbl(ctx context.Context) {
 	var app *DmeApp
 	var inst *DmeAppInst
 	var tbl *DmeApps
@@ -747,12 +747,12 @@ func ListAppinstTbl() {
 
 	for a := range tbl.Apps {
 		app = tbl.Apps[a]
-		log.DebugLog(log.DebugLevelDmedb, "app",
+		log.SpanLog(ctx, log.DebugLevelDmedb, "app",
 			"Name", app.AppKey.Name,
 			"Ver", app.AppKey.Version)
 		for cname, c := range app.Carriers {
 			for _, inst = range c.Insts {
-				log.DebugLog(log.DebugLevelDmedb, "app",
+				log.SpanLog(ctx, log.DebugLevelDmedb, "app",
 					"Name", app.AppKey.Name,
 					"carrier", cname,
 					"Ver", app.AppKey.Version,

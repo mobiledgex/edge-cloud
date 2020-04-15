@@ -77,6 +77,7 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 		}
 		var argVal interface{}
 		argKey, argVal := kv[0], kv[1]
+		argKey = resolveAlias(argKey, aliases)
 		specialArgType := ""
 		if s.SpecialArgs != nil {
 			if argType, found := (*s.SpecialArgs)[argKey]; found {
@@ -91,10 +92,9 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 				}
 			}
 		}
-		key := resolveAlias(argKey, aliases)
-		delete(required, key)
-		setKeyVal(dat, key, argVal, specialArgType)
-		if key == s.PasswordArg {
+		delete(required, argKey)
+		setKeyVal(dat, argKey, argVal, specialArgType)
+		if argKey == s.PasswordArg {
 			passwordFound = true
 		}
 	}
@@ -202,6 +202,13 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 		}
 		if subargs, ok := val.(map[string]interface{}); ok {
 			// sub struct
+			kind := sf.Type.Kind()
+			if kind == reflect.Ptr {
+				kind = sf.Type.Elem().Kind()
+			}
+			if kind != reflect.Struct {
+				return fmt.Errorf("key %s value %v is a map (struct) but expected %v", key, val, sf.Type)
+			}
 			var subjson map[string]interface{}
 			if hasTag("inline", tagvals) {
 				subjson = js
@@ -215,7 +222,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 		} else if list, ok := val.([]map[string]interface{}); ok {
 			// arrayed struct
 			if sf.Type.Kind() != reflect.Slice {
-				return fmt.Errorf("key %s value is an array but type %v is not", key, sf.Type)
+				return fmt.Errorf("key %s value %v is an array but expected %v", key, val, sf.Type)
 			}
 			elemt := sf.Type.Elem()
 			jslist := make([]map[string]interface{}, 0, len(list))
@@ -231,7 +238,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 		} else if reflect.TypeOf(val).Kind() == reflect.Slice {
 			// array of built-in types
 			if sf.Type.Kind() != reflect.Slice {
-				return fmt.Errorf("key %s value is an array but type %v is not", key, sf.Type)
+				return fmt.Errorf("key %s value %v is an array but expected type %v", key, val, sf.Type)
 			}
 			js[jsonName] = val
 		} else {
@@ -444,7 +451,8 @@ func replaceMapVals(src map[string]interface{}, dst map[string]interface{}) {
 // MarshalArgs generates a name=val arg list from the object.
 // Arg names that should be ignore can be specified. Names are the
 // same format as arg names, lowercase of field names, joined by '.'
-func MarshalArgs(obj interface{}, ignore []string) ([]string, error) {
+// Aliases are of the form alias=hiername.
+func MarshalArgs(obj interface{}, ignore []string, aliases []string) ([]string, error) {
 	args := []string{}
 	if obj == nil {
 		return args, nil
@@ -464,18 +472,28 @@ func MarshalArgs(obj interface{}, ignore []string) ([]string, error) {
 			ignoremap[str] = struct{}{}
 		}
 	}
+	spargs := GetSpecialArgs(obj)
 
-	return MapToArgs([]string{}, dat, ignoremap), nil
+	aliasm := make(map[string]string)
+	for _, alias := range aliases {
+		ar := strings.SplitN(alias, "=", 2)
+		if len(ar) != 2 {
+			continue
+		}
+		aliasm[ar[1]] = ar[0]
+	}
+
+	return MapToArgs([]string{}, dat, ignoremap, spargs, aliasm), nil
 }
 
-func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]struct{}) []string {
+func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]struct{}, specialArgs map[string]string, aliases map[string]string) []string {
 	args := []string{}
 	for k, v := range dat {
 		if v == nil {
 			continue
 		}
 		if sub, ok := v.(map[string]interface{}); ok {
-			subargs := MapToArgs(append(prefix, k), sub, ignore)
+			subargs := MapToArgs(append(prefix, k), sub, ignore, specialArgs, aliases)
 			args = append(args, subargs...)
 			continue
 		}
@@ -489,21 +507,69 @@ func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]st
 				submap := map[string]interface{}{
 					key: subv,
 				}
-				subargs := MapToArgs(prefix, submap, ignore)
+				subargs := MapToArgs(prefix, submap, ignore, specialArgs, aliases)
 				args = append(args, subargs...)
 			}
 			continue
 		}
 		keys := append(prefix, k)
-		if _, ok := ignore[strings.Join(keys, ".")]; ok {
+		name := strings.Join(keys, ".")
+		if _, ok := ignore[name]; ok {
 			continue
 		}
+		parentName := strings.Join(prefix, ".")
+		sparg, _ := specialArgs[parentName]
+		if sparg == "StringToString" {
+			name = parentName
+		}
+		if alias, ok := aliases[name]; ok {
+			name = alias
+		}
+
 		val := fmt.Sprintf("%v", v)
 		if strings.ContainsAny(val, " \t\r\n") {
 			val = strconv.Quote(val)
 		}
-		arg := fmt.Sprintf("%s=%s", strings.Join(keys, "."), val)
+		var arg string
+		if sparg == "StringToString" {
+			arg = fmt.Sprintf("%s=%s=%s", name, k, val)
+		} else {
+			arg = fmt.Sprintf("%s=%s", name, val)
+		}
 		args = append(args, arg)
 	}
 	return args
+}
+
+func GetSpecialArgs(obj interface{}) map[string]string {
+	m := make(map[string]string)
+	getSpecialArgs(m, []string{}, reflect.TypeOf(obj))
+	return m
+}
+
+func getSpecialArgs(special map[string]string, parents []string, t reflect.Type) {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	if t.Kind() == reflect.Struct {
+		for ii := 0; ii < t.NumField(); ii++ {
+			sf := t.Field(ii)
+			getSpecialArgs(special, append(parents, sf.Name), sf.Type)
+		}
+	}
+	if len(parents) == 0 {
+		// basic type but not in a struct
+		return
+	}
+	sptype := ""
+	if t.Kind() == reflect.Map && t == reflect.MapOf(reflect.TypeOf(""), reflect.TypeOf("")) {
+		sptype = "StringToString"
+	}
+	if t.Kind() == reflect.Slice && t == reflect.SliceOf(reflect.TypeOf("")) {
+		sptype = "StringArray"
+	}
+	if sptype != "" {
+		key := strings.Join(parents, ".")
+		special[strings.ToLower(key)] = sptype
+	}
 }

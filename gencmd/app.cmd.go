@@ -43,6 +43,9 @@ func AppHideTags(in *edgeproto.App) {
 	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
 	if _, found := tags["nocmp"]; found {
+		in.Revision = ""
+	}
+	if _, found := tags["nocmp"]; found {
 		in.DeletePrepare = false
 	}
 }
@@ -347,10 +350,11 @@ var AppOptionalArgs = []string{
 	"deploymentgenerator",
 	"androidpackagename",
 	"delopt",
-	"configs.kind",
-	"configs.config",
+	"configs:#.kind",
+	"configs:#.config",
 	"scalewithcluster",
 	"internalports",
+	"revision",
 	"officialfqdn",
 	"md5sum",
 	"defaultsharedvolumesize",
@@ -381,11 +385,11 @@ var AppComments = map[string]string{
 	"deploymentgenerator":     "Deployment generator target to generate a basic deployment manifest",
 	"androidpackagename":      "Android package name used to match the App name from the Android package",
 	"delopt":                  "Override actions to Controller, one of NoAutoDelete, AutoDelete",
-	"configs.kind":            "kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml",
-	"configs.config":          "config file contents or URI reference",
+	"configs:#.kind":          "kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml",
+	"configs:#.config":        "config file contents or URI reference",
 	"scalewithcluster":        "Option to run App on all nodes of the cluster",
 	"internalports":           "Should this app have access to outside world?",
-	"revision":                "Revision increments each time the App is updated",
+	"revision":                "Revision can be specified or defaults to current timestamp when app is updated",
 	"officialfqdn":            "Official FQDN is the FQDN that the app uses to connect by default",
 	"md5sum":                  "MD5Sum of the VM-based app image",
 	"defaultsharedvolumesize": "shared volume size when creating auto cluster",

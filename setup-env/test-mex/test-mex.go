@@ -113,6 +113,7 @@ func main() {
 	log.InitTracer("")
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
+	util.SetLogFormat()
 
 	config := e2eapi.TestConfig{}
 	spec := setupmex.TestSpec{}
@@ -166,14 +167,15 @@ func main() {
 	if spec.CompareYaml.Yaml1 != "" && spec.CompareYaml.Yaml2 != "" {
 		retryOk := true
 		pass := false
-		for ii := 0; ii < 5 && retryOk; ii++ {
+		maxTries := 5
+		for ii := 0; ii < maxTries && retryOk; ii++ {
 			pass = util.CompareYamlFiles(spec.CompareYaml.Yaml1,
 				spec.CompareYaml.Yaml2, spec.CompareYaml.FileType)
-			if pass || len(retryActions) == 0 {
+			if pass || len(retryActions) == 0 || ii == maxTries-1 {
 				break
 			}
 			// retry (typically retry show command)
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
 			msg := fmt.Sprintf("re-running actions %v count %d due to compare yaml failure", retryActions, ii)
 			util.PrintStepBanner(msg)
 			for _, a := range retryActions {

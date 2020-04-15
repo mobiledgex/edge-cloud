@@ -32,13 +32,11 @@ tests:
 
 - name: show provisioning from ctrl1
   actions: [ctrlapi-show=ctrl1]
-
-- name: compare results of ctrl1 show provisioning
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
-  
+
 - name: delete and show provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]
   apifile: "{{datadir}}/appdata.yml"

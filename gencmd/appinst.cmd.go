@@ -55,6 +55,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
 	if _, found := tags["nocmp"]; found {
+		in.Revision = ""
+	}
+	if _, found := tags["nocmp"]; found {
 		in.ForceUpdate = false
 	}
 	if _, found := tags["nocmp"]; found {
@@ -73,6 +76,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.VmFlavor = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.OptRes = ""
 	}
 }
 
@@ -713,19 +719,27 @@ var AppInstRequiredArgs = []string{
 var AppInstOptionalArgs = []string{
 	"cluster",
 	"cluster-org",
+	"mappedports:#.proto",
+	"mappedports:#.internalport",
+	"mappedports:#.publicport",
+	"mappedports:#.pathprefix",
+	"mappedports:#.fqdnprefix",
+	"mappedports:#.endport",
+	"mappedports:#.tls",
 	"flavor",
 	"state",
 	"crmoverride",
 	"autoclusteripaccess",
 	"forceupdate",
 	"updatemultiple",
-	"configs.kind",
-	"configs.config",
+	"configs:#.kind",
+	"configs:#.config",
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
 	"powerstate",
 	"vmflavor",
+	"optres",
 }
 var AppInstAliasArgs = []string{
 	"app-org=key.appkey.organization",
@@ -755,24 +769,24 @@ var AppInstComments = map[string]string{
 	"cloudletloc.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"uri":                            "Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.",
 	"liveness":                       "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
-	"mappedports.proto":              "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
-	"mappedports.internalport":       "Container port",
-	"mappedports.publicport":         "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
-	"mappedports.pathprefix":         "Public facing path for HTTP L7 access.",
-	"mappedports.fqdnprefix":         "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"mappedports.endport":            "A non-zero end port indicates a port range from internal port to end port, inclusive.",
-	"mappedports.tls":                "TLS termination for this port",
+	"mappedports:#.proto":            "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
+	"mappedports:#.internalport":     "Container port",
+	"mappedports:#.publicport":       "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
+	"mappedports:#.pathprefix":       "Public facing path for HTTP L7 access.",
+	"mappedports:#.fqdnprefix":       "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
+	"mappedports:#.endport":          "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"mappedports:#.tls":              "TLS termination for this port",
 	"flavor":                         "Flavor name",
 	"state":                          "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"crmoverride":                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"runtimeinfo.containerids":       "List of container names",
 	"autoclusteripaccess":            "IpAccess for auto-clusters. Ignored otherwise., one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
-	"revision":                       "Revision increments each time the App is updated.  Updating the App Instance will sync the revision with that of the App",
+	"revision":                       "Revision changes each time the App is updated.  Refreshing the App Instance will sync the revision with that of the App",
 	"forceupdate":                    "Force Appinst refresh even if revision number matches App revision number.",
 	"updatemultiple":                 "Allow multiple instances to be updated at once",
-	"configs.kind":                   "kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml",
-	"configs.config":                 "config file contents or URI reference",
+	"configs:#.kind":                 "kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml",
+	"configs:#.config":               "config file contents or URI reference",
 	"sharedvolumesize":               "shared volume size when creating auto cluster",
 	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"privacypolicy":                  "Optional privacy policy name",
@@ -780,6 +794,7 @@ var AppInstComments = map[string]string{
 	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"availabilityzone":               "Optional Availability Zone if any",
 	"vmflavor":                       "OS node flavor to use",
+	"optres":                         "Optional Resources required by OS flavor if any",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -857,18 +872,26 @@ var CreateAppInstRequiredArgs = []string{
 var CreateAppInstOptionalArgs = []string{
 	"cluster",
 	"cluster-org",
+	"mappedports:#.proto",
+	"mappedports:#.internalport",
+	"mappedports:#.publicport",
+	"mappedports:#.pathprefix",
+	"mappedports:#.fqdnprefix",
+	"mappedports:#.endport",
+	"mappedports:#.tls",
 	"flavor",
 	"state",
 	"crmoverride",
 	"autoclusteripaccess",
-	"configs.kind",
-	"configs.config",
+	"configs:#.kind",
+	"configs:#.config",
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }
 var DeleteAppInstRequiredArgs = []string{
 	"app-org",
@@ -891,13 +914,13 @@ var DeleteAppInstOptionalArgs = []string{
 	"cloudletloc.timestamp.nanos",
 	"uri",
 	"liveness",
-	"mappedports.proto",
-	"mappedports.internalport",
-	"mappedports.publicport",
-	"mappedports.pathprefix",
-	"mappedports.fqdnprefix",
-	"mappedports.endport",
-	"mappedports.tls",
+	"mappedports:#.proto",
+	"mappedports:#.internalport",
+	"mappedports:#.publicport",
+	"mappedports:#.pathprefix",
+	"mappedports:#.fqdnprefix",
+	"mappedports:#.endport",
+	"mappedports:#.tls",
 	"flavor",
 	"state",
 	"errors",
@@ -913,14 +936,15 @@ var DeleteAppInstOptionalArgs = []string{
 	"revision",
 	"forceupdate",
 	"updatemultiple",
-	"configs.kind",
-	"configs.config",
+	"configs:#.kind",
+	"configs:#.config",
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }
 var RefreshAppInstRequiredArgs = []string{
 	"app-org",
@@ -932,15 +956,25 @@ var RefreshAppInstOptionalArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
 	"cluster-org",
+	"mappedports:#.proto",
+	"mappedports:#.internalport",
+	"mappedports:#.publicport",
+	"mappedports:#.pathprefix",
+	"mappedports:#.fqdnprefix",
+	"mappedports:#.endport",
+	"mappedports:#.tls",
 	"crmoverride",
 	"forceupdate",
 	"updatemultiple",
+	"configs:#.kind",
+	"configs:#.config",
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }
 var UpdateAppInstRequiredArgs = []string{
 	"app-org",
@@ -952,9 +986,16 @@ var UpdateAppInstRequiredArgs = []string{
 var UpdateAppInstOptionalArgs = []string{
 	"cluster",
 	"cluster-org",
+	"mappedports:#.proto",
+	"mappedports:#.internalport",
+	"mappedports:#.publicport",
+	"mappedports:#.pathprefix",
+	"mappedports:#.fqdnprefix",
+	"mappedports:#.endport",
+	"mappedports:#.tls",
 	"crmoverride",
-	"configs.kind",
-	"configs.config",
+	"configs:#.kind",
+	"configs:#.config",
 	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
@@ -962,4 +1003,5 @@ var UpdateAppInstOptionalArgs = []string{
 	"externalvolumesize",
 	"availabilityzone",
 	"vmflavor",
+	"optres",
 }

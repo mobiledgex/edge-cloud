@@ -70,8 +70,9 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 	var client testutil.Client
 	if runCLI {
 		args := []string{"--output-stream=false", "--silence-usage"}
-		if ctrl.TLS.ClientCert != "" {
-			args = append(args, "--tls", ctrl.TLS.ClientCert)
+		tlsFile := ctrl.GetTlsFile()
+		if tlsFile != "" {
+			args = append(args, "--tls", tlsFile)
 		}
 		if ctrl.ApiAddr != "" {
 			args = append(args, "--addr", ctrl.ApiAddr)
@@ -184,6 +185,9 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 	if api == "showlogs" {
 		args = append(args, "ShowLogs")
 	}
+	if api == "runconsole" {
+		args = append(args, "RunConsole")
+	}
 	args = append(args, "app-org="+req.AppInstKey.AppKey.Organization)
 	args = append(args, "appname="+req.AppInstKey.AppKey.Name)
 	args = append(args, "appvers="+req.AppInstKey.AppKey.Version)
@@ -215,9 +219,22 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 	}
 	log.Printf("Exec %s output: %s\n", api, string(out))
 	actual := strings.TrimSpace(string(out))
-	if actual != data.ExpectedOutput {
-		log.Printf("Did not get expected output: %s\n", data.ExpectedOutput)
-		return false
+	if api != "runconsole" {
+		if actual != data.ExpectedOutput {
+			log.Printf("Did not get expected output: %s\n", data.ExpectedOutput)
+			return false
+		}
+	} else {
+		content, err := util.ReadConsoleURL(actual, nil)
+		if err != nil {
+			log.Printf("Error fetching contents from %s for %s API %v\n", actual, api, err)
+			return false
+		}
+		actualContent := strings.TrimSpace(content)
+		if actualContent != data.ExpectedOutput {
+			log.Printf("Did not get expected output from console URL %s: \"%s\" (expected) \"%s\" (actual)\n", actual, data.ExpectedOutput, actualContent)
+			return false
+		}
 	}
 
 	return true
@@ -248,11 +265,16 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		if err != nil {
 			return err
 		}
-		roles := process.VaultRoles{}
-		err = yaml.Unmarshal(dat, &roles)
+		vroles := process.VaultRoles{}
+		err = yaml.Unmarshal(dat, &vroles)
 		if err != nil {
 			return err
 		}
+		region := ctrl.Region
+		if region == "" {
+			region = "local"
+		}
+		roles := vroles.RegionRoles[region]
 		pfConfig.EnvVar = make(map[string]string)
 		pfConfig.EnvVar["VAULT_ROLE_ID"] = roles.CRMRoleID
 		pfConfig.EnvVar["VAULT_SECRET_ID"] = roles.CRMSecretID
@@ -260,6 +282,7 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		// Defaults
 		pfConfig.PlatformTag = ""
 		pfConfig.TlsCertFile = ctrl.TLS.ServerCert
+		pfConfig.UseVaultCerts = ctrl.UseVaultCerts
 		pfConfig.VaultAddr = "http://127.0.0.1:8200"
 		pfConfig.ContainerRegistryPath = "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
 		pfConfig.TestMode = true
