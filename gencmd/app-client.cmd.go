@@ -690,8 +690,8 @@ var RegisterClientRequestOptionalArgs = []string{
 	"cellid",
 	"uniqueidtype",
 	"uniqueid",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var RegisterClientRequestAliasArgs = []string{}
 var RegisterClientRequestComments = map[string]string{
@@ -704,8 +704,8 @@ var RegisterClientRequestComments = map[string]string{
 	"cellid":       "Cell ID _(optional)_ Cellular ID of where the client is connected.",
 	"uniqueidtype": "Unique ID Type Type of unique ID provided by the client",
 	"uniqueid":     "Unique ID _(optional)_ Unique identification of the client device or user. May be overridden by the server.",
-	"tags[#].type": "type of data",
-	"tags[#].data": "data value",
+	"tags:#.type":  "type of data",
+	"tags:#.data":  "data value",
 }
 var RegisterClientRequestSpecialArgs = map[string]string{}
 var RegisterClientReplyRequiredArgs = []string{}
@@ -716,8 +716,8 @@ var RegisterClientReplyOptionalArgs = []string{
 	"tokenserveruri",
 	"uniqueidtype",
 	"uniqueid",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var RegisterClientReplyAliasArgs = []string{}
 var RegisterClientReplyComments = map[string]string{
@@ -727,8 +727,8 @@ var RegisterClientReplyComments = map[string]string{
 	"tokenserveruri": "URI for the Token Server",
 	"uniqueidtype":   "Unique ID Type Type of unique ID provided by the server",
 	"uniqueid":       "Unique ID _(optional)_ Unique identification of the client device or user",
-	"tags[#].type":   "type of data",
-	"tags[#].data":   "data value",
+	"tags:#.type":    "type of data",
+	"tags:#.data":    "data value",
 }
 var RegisterClientReplySpecialArgs = map[string]string{}
 var FindCloudletRequestRequiredArgs = []string{}
@@ -746,8 +746,8 @@ var FindCloudletRequestOptionalArgs = []string{
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
 	"cellid",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var FindCloudletRequestAliasArgs = []string{}
 var FindCloudletRequestComments = map[string]string{
@@ -762,8 +762,8 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
-	"tags[#].type":                   "type of data",
-	"tags[#].data":                   "data value",
+	"tags:#.type":                    "type of data",
+	"tags:#.data":                    "data value",
 }
 var FindCloudletRequestSpecialArgs = map[string]string{}
 var PlatformFindCloudletRequestRequiredArgs = []string{}
@@ -775,8 +775,8 @@ var PlatformFindCloudletRequestOptionalArgs = []string{
 	"orgname",
 	"appname",
 	"appvers",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var PlatformFindCloudletRequestAliasArgs = []string{}
 var PlatformFindCloudletRequestComments = map[string]string{
@@ -787,8 +787,8 @@ var PlatformFindCloudletRequestComments = map[string]string{
 	"orgname":       "Organization Name Application Organization Name",
 	"appname":       "App Name Application Name",
 	"appvers":       "App Version Application Version",
-	"tags[#].type":  "type of data",
-	"tags[#].data":  "data value",
+	"tags:#.type":   "type of data",
+	"tags:#.data":   "data value",
 }
 var PlatformFindCloudletRequestSpecialArgs = map[string]string{}
 var FindCloudletReplyRequiredArgs = []string{}
@@ -796,13 +796,13 @@ var FindCloudletReplyOptionalArgs = []string{
 	"ver",
 	"status",
 	"fqdn",
-	"ports[#].proto",
-	"ports[#].internalport",
-	"ports[#].publicport",
-	"ports[#].pathprefix",
-	"ports[#].fqdnprefix",
-	"ports[#].endport",
-	"ports[#].tls",
+	"ports:#.proto",
+	"ports:#.internalport",
+	"ports:#.publicport",
+	"ports:#.pathprefix",
+	"ports:#.fqdnprefix",
+	"ports:#.endport",
+	"ports:#.tls",
 	"cloudletlocation.latitude",
 	"cloudletlocation.longitude",
 	"cloudletlocation.horizontalaccuracy",
@@ -812,21 +812,21 @@ var FindCloudletReplyOptionalArgs = []string{
 	"cloudletlocation.speed",
 	"cloudletlocation.timestamp.seconds",
 	"cloudletlocation.timestamp.nanos",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var FindCloudletReplyAliasArgs = []string{}
 var FindCloudletReplyComments = map[string]string{
 	"ver":                                 "API version",
 	"status":                              "Status return, one of FindUnknown, FindFound, FindNotfound",
 	"fqdn":                                "Fully Qualified Domain Name of the Closest App instance",
-	"ports[#].proto":                      "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
-	"ports[#].internalport":               "Container port",
-	"ports[#].publicport":                 "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
-	"ports[#].pathprefix":                 "Public facing path for HTTP L7 access.",
-	"ports[#].fqdnprefix":                 "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"ports[#].endport":                    "A non-zero end port indicates a port range from internal port to end port, inclusive.",
-	"ports[#].tls":                        "TLS termination for this port",
+	"ports:#.proto":                       "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
+	"ports:#.internalport":                "Container port",
+	"ports:#.publicport":                  "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
+	"ports:#.pathprefix":                  "Public facing path for HTTP L7 access.",
+	"ports:#.fqdnprefix":                  "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
+	"ports:#.endport":                     "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"ports:#.tls":                         "TLS termination for this port",
 	"cloudletlocation.latitude":           "latitude in WGS 84 coordinates",
 	"cloudletlocation.longitude":          "longitude in WGS 84 coordinates",
 	"cloudletlocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -834,8 +834,8 @@ var FindCloudletReplyComments = map[string]string{
 	"cloudletlocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"cloudletlocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudletlocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"tags[#].type":                        "type of data",
-	"tags[#].data":                        "data value",
+	"tags:#.type":                         "type of data",
+	"tags:#.data":                         "data value",
 }
 var FindCloudletReplySpecialArgs = map[string]string{}
 var VerifyLocationRequestRequiredArgs = []string{}
@@ -854,8 +854,8 @@ var VerifyLocationRequestOptionalArgs = []string{
 	"gpslocation.timestamp.nanos",
 	"verifyloctoken",
 	"cellid",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var VerifyLocationRequestAliasArgs = []string{}
 var VerifyLocationRequestComments = map[string]string{
@@ -871,8 +871,8 @@ var VerifyLocationRequestComments = map[string]string{
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"verifyloctoken":                 "Verify Location Token Must be retrieved from TokenServerURI",
 	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
-	"tags[#].type":                   "type of data",
-	"tags[#].data":                   "data value",
+	"tags:#.type":                    "type of data",
+	"tags:#.data":                    "data value",
 }
 var VerifyLocationRequestSpecialArgs = map[string]string{}
 var VerifyLocationReplyRequiredArgs = []string{}
@@ -881,8 +881,8 @@ var VerifyLocationReplyOptionalArgs = []string{
 	"towerstatus",
 	"gpslocationstatus",
 	"gpslocationaccuracykm",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var VerifyLocationReplyAliasArgs = []string{}
 var VerifyLocationReplyComments = map[string]string{
@@ -890,8 +890,8 @@ var VerifyLocationReplyComments = map[string]string{
 	"towerstatus":           ", one of TowerUnknown, ConnectedToSpecifiedTower, NotConnectedToSpecifiedTower",
 	"gpslocationstatus":     ", one of LocUnknown, LocVerified, LocMismatchSameCountry, LocMismatchOtherCountry, LocRoamingCountryMatch, LocRoamingCountryMismatch, LocErrorUnauthorized, LocErrorOther",
 	"gpslocationaccuracykm": "location accuracy, the location is verified to be within this number of kilometers.  Negative value means no verification was performed",
-	"tags[#].type":          "type of data",
-	"tags[#].data":          "data value",
+	"tags:#.type":           "type of data",
+	"tags:#.data":           "data value",
 }
 var VerifyLocationReplySpecialArgs = map[string]string{}
 var GetLocationRequestRequiredArgs = []string{}
@@ -900,8 +900,8 @@ var GetLocationRequestOptionalArgs = []string{
 	"sessioncookie",
 	"carriername",
 	"cellid",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var GetLocationRequestAliasArgs = []string{}
 var GetLocationRequestComments = map[string]string{
@@ -909,8 +909,8 @@ var GetLocationRequestComments = map[string]string{
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
 	"carriername":   "Unique carrier identification (typically MCC + MNC)",
 	"cellid":        "_(optional)_ Cell id where the client is",
-	"tags[#].type":  "type of data",
-	"tags[#].data":  "data value",
+	"tags:#.type":   "type of data",
+	"tags:#.data":   "data value",
 }
 var GetLocationRequestSpecialArgs = map[string]string{}
 var GetLocationReplyRequiredArgs = []string{}
@@ -928,8 +928,8 @@ var GetLocationReplyOptionalArgs = []string{
 	"networklocation.speed",
 	"networklocation.timestamp.seconds",
 	"networklocation.timestamp.nanos",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var GetLocationReplyAliasArgs = []string{}
 var GetLocationReplyComments = map[string]string{
@@ -943,8 +943,8 @@ var GetLocationReplyComments = map[string]string{
 	"networklocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"networklocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"networklocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"tags[#].type":                       "type of data",
-	"tags[#].data":                       "data value",
+	"tags:#.type":                        "type of data",
+	"tags:#.data":                        "data value",
 }
 var GetLocationReplySpecialArgs = map[string]string{}
 var AppInstListRequestRequiredArgs = []string{}
@@ -962,8 +962,8 @@ var AppInstListRequestOptionalArgs = []string{
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
 	"cellid",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var AppInstListRequestAliasArgs = []string{}
 var AppInstListRequestComments = map[string]string{
@@ -978,8 +978,8 @@ var AppInstListRequestComments = map[string]string{
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"cellid":                         "_(optional)_ Cell id where the client is",
-	"tags[#].type":                   "type of data",
-	"tags[#].data":                   "data value",
+	"tags:#.type":                    "type of data",
+	"tags:#.data":                    "data value",
 }
 var AppInstListRequestSpecialArgs = map[string]string{}
 var AppinstanceRequiredArgs = []string{}
@@ -987,28 +987,28 @@ var AppinstanceOptionalArgs = []string{
 	"appname",
 	"appvers",
 	"fqdn",
-	"ports[#].proto",
-	"ports[#].internalport",
-	"ports[#].publicport",
-	"ports[#].pathprefix",
-	"ports[#].fqdnprefix",
-	"ports[#].endport",
-	"ports[#].tls",
+	"ports:#.proto",
+	"ports:#.internalport",
+	"ports:#.publicport",
+	"ports:#.pathprefix",
+	"ports:#.fqdnprefix",
+	"ports:#.endport",
+	"ports:#.tls",
 	"orgname",
 }
 var AppinstanceAliasArgs = []string{}
 var AppinstanceComments = map[string]string{
-	"appname":               "App Instance Name",
-	"appvers":               "App Instance Version",
-	"fqdn":                  "App Instance FQDN",
-	"ports[#].proto":        "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
-	"ports[#].internalport": "Container port",
-	"ports[#].publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
-	"ports[#].pathprefix":   "Public facing path for HTTP L7 access.",
-	"ports[#].fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"ports[#].endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
-	"ports[#].tls":          "TLS termination for this port",
-	"orgname":               "App Organization Name",
+	"appname":              "App Instance Name",
+	"appvers":              "App Instance Version",
+	"fqdn":                 "App Instance FQDN",
+	"ports:#.proto":        "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
+	"ports:#.internalport": "Container port",
+	"ports:#.publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
+	"ports:#.pathprefix":   "Public facing path for HTTP L7 access.",
+	"ports:#.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
+	"ports:#.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"ports:#.tls":          "TLS termination for this port",
+	"orgname":              "App Organization Name",
 }
 var AppinstanceSpecialArgs = map[string]string{}
 var CloudletLocationRequiredArgs = []string{}
@@ -1025,100 +1025,100 @@ var CloudletLocationOptionalArgs = []string{
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
 	"distance",
-	"appinstances[#].appname",
-	"appinstances[#].appvers",
-	"appinstances[#].fqdn",
-	"appinstances[#].ports[#].proto",
-	"appinstances[#].ports[#].internalport",
-	"appinstances[#].ports[#].publicport",
-	"appinstances[#].ports[#].pathprefix",
-	"appinstances[#].ports[#].fqdnprefix",
-	"appinstances[#].ports[#].endport",
-	"appinstances[#].ports[#].tls",
-	"appinstances[#].orgname",
+	"appinstances:#.appname",
+	"appinstances:#.appvers",
+	"appinstances:#.fqdn",
+	"appinstances:#.ports:#.proto",
+	"appinstances:#.ports:#.internalport",
+	"appinstances:#.ports:#.publicport",
+	"appinstances:#.ports:#.pathprefix",
+	"appinstances:#.ports:#.fqdnprefix",
+	"appinstances:#.ports:#.endport",
+	"appinstances:#.ports:#.tls",
+	"appinstances:#.orgname",
 }
 var CloudletLocationAliasArgs = []string{}
 var CloudletLocationComments = map[string]string{
-	"carriername":                           "Unique carrier identification (typically MCC + MNC)",
-	"cloudletname":                          "Cloudlet Name",
-	"gpslocation.latitude":                  "latitude in WGS 84 coordinates",
-	"gpslocation.longitude":                 "longitude in WGS 84 coordinates",
-	"gpslocation.horizontalaccuracy":        "horizontal accuracy (radius in meters)",
-	"gpslocation.verticalaccuracy":          "vertical accuracy (meters)",
-	"gpslocation.altitude":                  "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"gpslocation.course":                    "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"gpslocation.speed":                     "speed (IOS) / velocity (Android) (meters/sec)",
-	"distance":                              "Distance of cloudlet vs loc in request",
-	"appinstances[#].appname":               "App Instance Name",
-	"appinstances[#].appvers":               "App Instance Version",
-	"appinstances[#].fqdn":                  "App Instance FQDN",
-	"appinstances[#].ports[#].proto":        "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
-	"appinstances[#].ports[#].internalport": "Container port",
-	"appinstances[#].ports[#].publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
-	"appinstances[#].ports[#].pathprefix":   "Public facing path for HTTP L7 access.",
-	"appinstances[#].ports[#].fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"appinstances[#].ports[#].endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
-	"appinstances[#].ports[#].tls":          "TLS termination for this port",
-	"appinstances[#].orgname":               "App Organization Name",
+	"carriername":                         "Unique carrier identification (typically MCC + MNC)",
+	"cloudletname":                        "Cloudlet Name",
+	"gpslocation.latitude":                "latitude in WGS 84 coordinates",
+	"gpslocation.longitude":               "longitude in WGS 84 coordinates",
+	"gpslocation.horizontalaccuracy":      "horizontal accuracy (radius in meters)",
+	"gpslocation.verticalaccuracy":        "vertical accuracy (meters)",
+	"gpslocation.altitude":                "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"gpslocation.course":                  "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"gpslocation.speed":                   "speed (IOS) / velocity (Android) (meters/sec)",
+	"distance":                            "Distance of cloudlet vs loc in request",
+	"appinstances:#.appname":              "App Instance Name",
+	"appinstances:#.appvers":              "App Instance Version",
+	"appinstances:#.fqdn":                 "App Instance FQDN",
+	"appinstances:#.ports:#.proto":        "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
+	"appinstances:#.ports:#.internalport": "Container port",
+	"appinstances:#.ports:#.publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
+	"appinstances:#.ports:#.pathprefix":   "Public facing path for HTTP L7 access.",
+	"appinstances:#.ports:#.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
+	"appinstances:#.ports:#.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"appinstances:#.ports:#.tls":          "TLS termination for this port",
+	"appinstances:#.orgname":              "App Organization Name",
 }
 var CloudletLocationSpecialArgs = map[string]string{}
 var AppInstListReplyRequiredArgs = []string{}
 var AppInstListReplyOptionalArgs = []string{
 	"ver",
 	"status",
-	"cloudlets[#].carriername",
-	"cloudlets[#].cloudletname",
-	"cloudlets[#].gpslocation.latitude",
-	"cloudlets[#].gpslocation.longitude",
-	"cloudlets[#].gpslocation.horizontalaccuracy",
-	"cloudlets[#].gpslocation.verticalaccuracy",
-	"cloudlets[#].gpslocation.altitude",
-	"cloudlets[#].gpslocation.course",
-	"cloudlets[#].gpslocation.speed",
-	"cloudlets[#].gpslocation.timestamp.seconds",
-	"cloudlets[#].gpslocation.timestamp.nanos",
-	"cloudlets[#].distance",
-	"cloudlets[#].appinstances[#].appname",
-	"cloudlets[#].appinstances[#].appvers",
-	"cloudlets[#].appinstances[#].fqdn",
-	"cloudlets[#].appinstances[#].ports[#].proto",
-	"cloudlets[#].appinstances[#].ports[#].internalport",
-	"cloudlets[#].appinstances[#].ports[#].publicport",
-	"cloudlets[#].appinstances[#].ports[#].pathprefix",
-	"cloudlets[#].appinstances[#].ports[#].fqdnprefix",
-	"cloudlets[#].appinstances[#].ports[#].endport",
-	"cloudlets[#].appinstances[#].ports[#].tls",
-	"cloudlets[#].appinstances[#].orgname",
-	"tags[#].type",
-	"tags[#].data",
+	"cloudlets:#.carriername",
+	"cloudlets:#.cloudletname",
+	"cloudlets:#.gpslocation.latitude",
+	"cloudlets:#.gpslocation.longitude",
+	"cloudlets:#.gpslocation.horizontalaccuracy",
+	"cloudlets:#.gpslocation.verticalaccuracy",
+	"cloudlets:#.gpslocation.altitude",
+	"cloudlets:#.gpslocation.course",
+	"cloudlets:#.gpslocation.speed",
+	"cloudlets:#.gpslocation.timestamp.seconds",
+	"cloudlets:#.gpslocation.timestamp.nanos",
+	"cloudlets:#.distance",
+	"cloudlets:#.appinstances:#.appname",
+	"cloudlets:#.appinstances:#.appvers",
+	"cloudlets:#.appinstances:#.fqdn",
+	"cloudlets:#.appinstances:#.ports:#.proto",
+	"cloudlets:#.appinstances:#.ports:#.internalport",
+	"cloudlets:#.appinstances:#.ports:#.publicport",
+	"cloudlets:#.appinstances:#.ports:#.pathprefix",
+	"cloudlets:#.appinstances:#.ports:#.fqdnprefix",
+	"cloudlets:#.appinstances:#.ports:#.endport",
+	"cloudlets:#.appinstances:#.ports:#.tls",
+	"cloudlets:#.appinstances:#.orgname",
+	"tags:#.type",
+	"tags:#.data",
 }
 var AppInstListReplyAliasArgs = []string{}
 var AppInstListReplyComments = map[string]string{
-	"ver":                                                "API version",
-	"status":                                             ", one of AiUndefined, AiSuccess, AiFail",
-	"cloudlets[#].carriername":                           "Unique carrier identification (typically MCC + MNC)",
-	"cloudlets[#].cloudletname":                          "Cloudlet Name",
-	"cloudlets[#].gpslocation.latitude":                  "latitude in WGS 84 coordinates",
-	"cloudlets[#].gpslocation.longitude":                 "longitude in WGS 84 coordinates",
-	"cloudlets[#].gpslocation.horizontalaccuracy":        "horizontal accuracy (radius in meters)",
-	"cloudlets[#].gpslocation.verticalaccuracy":          "vertical accuracy (meters)",
-	"cloudlets[#].gpslocation.altitude":                  "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"cloudlets[#].gpslocation.course":                    "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"cloudlets[#].gpslocation.speed":                     "speed (IOS) / velocity (Android) (meters/sec)",
-	"cloudlets[#].distance":                              "Distance of cloudlet vs loc in request",
-	"cloudlets[#].appinstances[#].appname":               "App Instance Name",
-	"cloudlets[#].appinstances[#].appvers":               "App Instance Version",
-	"cloudlets[#].appinstances[#].fqdn":                  "App Instance FQDN",
-	"cloudlets[#].appinstances[#].ports[#].proto":        "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
-	"cloudlets[#].appinstances[#].ports[#].internalport": "Container port",
-	"cloudlets[#].appinstances[#].ports[#].publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
-	"cloudlets[#].appinstances[#].ports[#].pathprefix":   "Public facing path for HTTP L7 access.",
-	"cloudlets[#].appinstances[#].ports[#].fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"cloudlets[#].appinstances[#].ports[#].endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
-	"cloudlets[#].appinstances[#].ports[#].tls":          "TLS termination for this port",
-	"cloudlets[#].appinstances[#].orgname":               "App Organization Name",
-	"tags[#].type":                                       "type of data",
-	"tags[#].data":                                       "data value",
+	"ver":                                             "API version",
+	"status":                                          ", one of AiUndefined, AiSuccess, AiFail",
+	"cloudlets:#.carriername":                         "Unique carrier identification (typically MCC + MNC)",
+	"cloudlets:#.cloudletname":                        "Cloudlet Name",
+	"cloudlets:#.gpslocation.latitude":                "latitude in WGS 84 coordinates",
+	"cloudlets:#.gpslocation.longitude":               "longitude in WGS 84 coordinates",
+	"cloudlets:#.gpslocation.horizontalaccuracy":      "horizontal accuracy (radius in meters)",
+	"cloudlets:#.gpslocation.verticalaccuracy":        "vertical accuracy (meters)",
+	"cloudlets:#.gpslocation.altitude":                "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"cloudlets:#.gpslocation.course":                  "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"cloudlets:#.gpslocation.speed":                   "speed (IOS) / velocity (Android) (meters/sec)",
+	"cloudlets:#.distance":                            "Distance of cloudlet vs loc in request",
+	"cloudlets:#.appinstances:#.appname":              "App Instance Name",
+	"cloudlets:#.appinstances:#.appvers":              "App Instance Version",
+	"cloudlets:#.appinstances:#.fqdn":                 "App Instance FQDN",
+	"cloudlets:#.appinstances:#.ports:#.proto":        "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
+	"cloudlets:#.appinstances:#.ports:#.internalport": "Container port",
+	"cloudlets:#.appinstances:#.ports:#.publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
+	"cloudlets:#.appinstances:#.ports:#.pathprefix":   "Public facing path for HTTP L7 access.",
+	"cloudlets:#.appinstances:#.ports:#.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
+	"cloudlets:#.appinstances:#.ports:#.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"cloudlets:#.appinstances:#.ports:#.tls":          "TLS termination for this port",
+	"cloudlets:#.appinstances:#.orgname":              "App Organization Name",
+	"tags:#.type":                                     "type of data",
+	"tags:#.data":                                     "data value",
 }
 var AppInstListReplySpecialArgs = map[string]string{}
 var FqdnListRequestRequiredArgs = []string{}
@@ -1126,16 +1126,16 @@ var FqdnListRequestOptionalArgs = []string{
 	"ver",
 	"sessioncookie",
 	"cellid",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var FqdnListRequestAliasArgs = []string{}
 var FqdnListRequestComments = map[string]string{
 	"ver":           "API version",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
 	"cellid":        "_(optional)_ Cell id where the client is",
-	"tags[#].type":  "type of data",
-	"tags[#].data":  "data value",
+	"tags:#.type":   "type of data",
+	"tags:#.data":   "data value",
 }
 var FqdnListRequestSpecialArgs = map[string]string{}
 var AppFqdnRequiredArgs = []string{}
@@ -1160,29 +1160,29 @@ var AppFqdnSpecialArgs = map[string]string{
 var FqdnListReplyRequiredArgs = []string{}
 var FqdnListReplyOptionalArgs = []string{
 	"ver",
-	"appfqdns[#].appname",
-	"appfqdns[#].appvers",
-	"appfqdns[#].orgname",
-	"appfqdns[#].fqdns",
-	"appfqdns[#].androidpackagename",
+	"appfqdns:#.appname",
+	"appfqdns:#.appvers",
+	"appfqdns:#.orgname",
+	"appfqdns:#.fqdns",
+	"appfqdns:#.androidpackagename",
 	"status",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var FqdnListReplyAliasArgs = []string{}
 var FqdnListReplyComments = map[string]string{
-	"ver":                            "API version",
-	"appfqdns[#].appname":            "App  Name",
-	"appfqdns[#].appvers":            "App Version",
-	"appfqdns[#].orgname":            "App organization name",
-	"appfqdns[#].fqdns":              "App FQDN",
-	"appfqdns[#].androidpackagename": "_(optional)_ Android package name",
-	"status":                         ", one of FlUndefined, FlSuccess, FlFail",
-	"tags[#].type":                   "type of data",
-	"tags[#].data":                   "data value",
+	"ver":                           "API version",
+	"appfqdns:#.appname":            "App  Name",
+	"appfqdns:#.appvers":            "App Version",
+	"appfqdns:#.orgname":            "App organization name",
+	"appfqdns:#.fqdns":              "App FQDN",
+	"appfqdns:#.androidpackagename": "_(optional)_ Android package name",
+	"status":                        ", one of FlUndefined, FlSuccess, FlFail",
+	"tags:#.type":                   "type of data",
+	"tags:#.data":                   "data value",
 }
 var FqdnListReplySpecialArgs = map[string]string{
-	"appfqdns[#].fqdns": "StringArray",
+	"appfqdns:#.fqdns": "StringArray",
 }
 var AppOfficialFqdnRequestRequiredArgs = []string{}
 var AppOfficialFqdnRequestOptionalArgs = []string{
@@ -1197,8 +1197,8 @@ var AppOfficialFqdnRequestOptionalArgs = []string{
 	"gpslocation.speed",
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var AppOfficialFqdnRequestAliasArgs = []string{}
 var AppOfficialFqdnRequestComments = map[string]string{
@@ -1211,8 +1211,8 @@ var AppOfficialFqdnRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"tags[#].type":                   "type of data",
-	"tags[#].data":                   "data value",
+	"tags:#.type":                    "type of data",
+	"tags:#.data":                    "data value",
 }
 var AppOfficialFqdnRequestSpecialArgs = map[string]string{}
 var AppOfficialFqdnReplyRequiredArgs = []string{}
@@ -1221,8 +1221,8 @@ var AppOfficialFqdnReplyOptionalArgs = []string{
 	"appofficialfqdn",
 	"clienttoken",
 	"status",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var AppOfficialFqdnReplyAliasArgs = []string{}
 var AppOfficialFqdnReplyComments = map[string]string{
@@ -1230,8 +1230,8 @@ var AppOfficialFqdnReplyComments = map[string]string{
 	"appofficialfqdn": "The FQDN to which the app is reached independent of the edge",
 	"clienttoken":     "Tokenized client data",
 	"status":          "Status of the reply, one of AofUndefined, AofSuccess, AofFail",
-	"tags[#].type":    "type of data",
-	"tags[#].data":    "data value",
+	"tags:#.type":     "type of data",
+	"tags:#.data":     "data value",
 }
 var AppOfficialFqdnReplySpecialArgs = map[string]string{}
 var DynamicLocGroupRequestRequiredArgs = []string{}
@@ -1242,8 +1242,8 @@ var DynamicLocGroupRequestOptionalArgs = []string{
 	"commtype",
 	"userdata",
 	"cellid",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var DynamicLocGroupRequestAliasArgs = []string{}
 var DynamicLocGroupRequestComments = map[string]string{
@@ -1252,8 +1252,8 @@ var DynamicLocGroupRequestComments = map[string]string{
 	"commtype":      ", one of DlgUndefined, DlgSecure, DlgOpen",
 	"userdata":      "Unused",
 	"cellid":        "_(optional)_ Cell id where the client is",
-	"tags[#].type":  "type of data",
-	"tags[#].data":  "data value",
+	"tags:#.type":   "type of data",
+	"tags:#.data":   "data value",
 }
 var DynamicLocGroupRequestSpecialArgs = map[string]string{}
 var DynamicLocGroupReplyRequiredArgs = []string{}
@@ -1262,16 +1262,16 @@ var DynamicLocGroupReplyOptionalArgs = []string{
 	"status",
 	"errorcode",
 	"groupcookie",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var DynamicLocGroupReplyAliasArgs = []string{}
 var DynamicLocGroupReplyComments = map[string]string{
-	"status":       "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
-	"errorcode":    "Error Code based on Failure",
-	"groupcookie":  "Group Cookie for Secure Group Communication",
-	"tags[#].type": "type of data",
-	"tags[#].data": "data value",
+	"status":      "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
+	"errorcode":   "Error Code based on Failure",
+	"groupcookie": "Group Cookie for Secure Group Communication",
+	"tags:#.type": "type of data",
+	"tags:#.data": "data value",
 }
 var DynamicLocGroupReplySpecialArgs = map[string]string{}
 var QosPositionRequiredArgs = []string{}
@@ -1320,42 +1320,42 @@ var QosPositionRequestRequiredArgs = []string{}
 var QosPositionRequestOptionalArgs = []string{
 	"ver",
 	"sessioncookie",
-	"positions[#].positionid",
-	"positions[#].gpslocation.latitude",
-	"positions[#].gpslocation.longitude",
-	"positions[#].gpslocation.horizontalaccuracy",
-	"positions[#].gpslocation.verticalaccuracy",
-	"positions[#].gpslocation.altitude",
-	"positions[#].gpslocation.course",
-	"positions[#].gpslocation.speed",
-	"positions[#].gpslocation.timestamp.seconds",
-	"positions[#].gpslocation.timestamp.nanos",
+	"positions:#.positionid",
+	"positions:#.gpslocation.latitude",
+	"positions:#.gpslocation.longitude",
+	"positions:#.gpslocation.horizontalaccuracy",
+	"positions:#.gpslocation.verticalaccuracy",
+	"positions:#.gpslocation.altitude",
+	"positions:#.gpslocation.course",
+	"positions:#.gpslocation.speed",
+	"positions:#.gpslocation.timestamp.seconds",
+	"positions:#.gpslocation.timestamp.nanos",
 	"ltecategory",
 	"bandselection.rat_2g",
 	"bandselection.rat_3g",
 	"bandselection.rat_4g",
 	"bandselection.rat_5g",
 	"cellid",
-	"tags[#].type",
-	"tags[#].data",
+	"tags:#.type",
+	"tags:#.data",
 }
 var QosPositionRequestAliasArgs = []string{}
 var QosPositionRequestComments = map[string]string{
-	"ver":                                         "API version",
-	"sessioncookie":                               "Session Cookie from RegisterClientRequest",
-	"positions[#].positionid":                     "as set by the client, must be unique within QosRequest",
-	"positions[#].gpslocation.latitude":           "latitude in WGS 84 coordinates",
-	"positions[#].gpslocation.longitude":          "longitude in WGS 84 coordinates",
-	"positions[#].gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"positions[#].gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
-	"positions[#].gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"positions[#].gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"positions[#].gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"ltecategory":                                 "_(optional)_ Clients device LTE category number.",
-	"bandselection.rat_2g":                        "Radio Access Technologies",
-	"cellid":                                      "_(optional)_ Cell id where the client is",
-	"tags[#].type":                                "type of data",
-	"tags[#].data":                                "data value",
+	"ver":                                        "API version",
+	"sessioncookie":                              "Session Cookie from RegisterClientRequest",
+	"positions:#.positionid":                     "as set by the client, must be unique within QosRequest",
+	"positions:#.gpslocation.latitude":           "latitude in WGS 84 coordinates",
+	"positions:#.gpslocation.longitude":          "longitude in WGS 84 coordinates",
+	"positions:#.gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
+	"positions:#.gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
+	"positions:#.gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"positions:#.gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"positions:#.gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+	"ltecategory":                                "_(optional)_ Clients device LTE category number.",
+	"bandselection.rat_2g":                       "Radio Access Technologies",
+	"cellid":                                     "_(optional)_ Cell id where the client is",
+	"tags:#.type":                                "type of data",
+	"tags:#.data":                                "data value",
 }
 var QosPositionRequestSpecialArgs = map[string]string{
 	"bandselection.rat_2g": "StringArray",
@@ -1402,41 +1402,41 @@ var QosPositionKpiReplyRequiredArgs = []string{}
 var QosPositionKpiReplyOptionalArgs = []string{
 	"ver",
 	"status",
-	"positionresults[#].positionid",
-	"positionresults[#].gpslocation.latitude",
-	"positionresults[#].gpslocation.longitude",
-	"positionresults[#].gpslocation.horizontalaccuracy",
-	"positionresults[#].gpslocation.verticalaccuracy",
-	"positionresults[#].gpslocation.altitude",
-	"positionresults[#].gpslocation.course",
-	"positionresults[#].gpslocation.speed",
-	"positionresults[#].gpslocation.timestamp.seconds",
-	"positionresults[#].gpslocation.timestamp.nanos",
-	"positionresults[#].dluserthroughputmin",
-	"positionresults[#].dluserthroughputavg",
-	"positionresults[#].dluserthroughputmax",
-	"positionresults[#].uluserthroughputmin",
-	"positionresults[#].uluserthroughputavg",
-	"positionresults[#].uluserthroughputmax",
-	"positionresults[#].latencymin",
-	"positionresults[#].latencyavg",
-	"positionresults[#].latencymax",
-	"tags[#].type",
-	"tags[#].data",
+	"positionresults:#.positionid",
+	"positionresults:#.gpslocation.latitude",
+	"positionresults:#.gpslocation.longitude",
+	"positionresults:#.gpslocation.horizontalaccuracy",
+	"positionresults:#.gpslocation.verticalaccuracy",
+	"positionresults:#.gpslocation.altitude",
+	"positionresults:#.gpslocation.course",
+	"positionresults:#.gpslocation.speed",
+	"positionresults:#.gpslocation.timestamp.seconds",
+	"positionresults:#.gpslocation.timestamp.nanos",
+	"positionresults:#.dluserthroughputmin",
+	"positionresults:#.dluserthroughputavg",
+	"positionresults:#.dluserthroughputmax",
+	"positionresults:#.uluserthroughputmin",
+	"positionresults:#.uluserthroughputavg",
+	"positionresults:#.uluserthroughputmax",
+	"positionresults:#.latencymin",
+	"positionresults:#.latencyavg",
+	"positionresults:#.latencymax",
+	"tags:#.type",
+	"tags:#.data",
 }
 var QosPositionKpiReplyAliasArgs = []string{}
 var QosPositionKpiReplyComments = map[string]string{
-	"status":                        "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
-	"positionresults[#].positionid": "as set by the client, must be unique within one QosPositionRequest",
-	"positionresults[#].gpslocation.latitude":           "latitude in WGS 84 coordinates",
-	"positionresults[#].gpslocation.longitude":          "longitude in WGS 84 coordinates",
-	"positionresults[#].gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"positionresults[#].gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
-	"positionresults[#].gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"positionresults[#].gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"positionresults[#].gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"positionresults[#].dluserthroughputmin":            "throughput",
-	"tags[#].type":                                      "type of data",
-	"tags[#].data":                                      "data value",
+	"status":                                           "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
+	"positionresults:#.positionid":                     "as set by the client, must be unique within one QosPositionRequest",
+	"positionresults:#.gpslocation.latitude":           "latitude in WGS 84 coordinates",
+	"positionresults:#.gpslocation.longitude":          "longitude in WGS 84 coordinates",
+	"positionresults:#.gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
+	"positionresults:#.gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
+	"positionresults:#.gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"positionresults:#.gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"positionresults:#.gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+	"positionresults:#.dluserthroughputmin":            "throughput",
+	"tags:#.type":                                      "type of data",
+	"tags:#.data":                                      "data value",
 }
 var QosPositionKpiReplySpecialArgs = map[string]string{}
