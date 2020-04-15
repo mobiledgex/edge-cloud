@@ -1,0 +1,13 @@
+##
+##
+
+tests:
+
+- name: get app1 official fqdn
+  actions: [dmeapi-getappofficialfqdn] 
+  apifile: "{{datadir}}/app_official_fqdn_app1.yml"
+  compareyaml:
+     yaml1: "{{outputdir}}/getappofficialfqdn.yml"
+     yaml2: "{{datadir}}/getappofficialfqdn_app1_result.yml"
+     filetype: getappofficialfqdn
+
