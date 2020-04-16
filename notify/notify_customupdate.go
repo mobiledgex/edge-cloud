@@ -111,7 +111,7 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 			s.sendrecv.cloudletReady = true
 			// trigger send of all objects related to cloudlet
 			// In case of cloudlet upgrade, Check if READY is
-			// recieved from the appropriate cloudlet
+			// received from the appropriate cloudlet
 			cloudlet := edgeproto.Cloudlet{}
 			if buf.ContainerVersion != "" && s.sendrecv.cloudletSend != nil {
 				if s.sendrecv.cloudletSend.handler.Get(&buf.Key, &cloudlet) &&
