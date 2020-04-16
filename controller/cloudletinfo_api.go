@@ -18,6 +18,7 @@ type CloudletInfoApi struct {
 }
 
 var cloudletInfoApi = CloudletInfoApi{}
+var cleanupCloudletInfoTimeout = 5 * time.Second
 
 func InitCloudletInfoApi(sync *Sync) {
 	cloudletInfoApi.sync = sync
@@ -212,7 +213,7 @@ func (s *CloudletInfoApi) cleanupCloudletInfo(ctx context.Context, key *edgeprot
 
 	select {
 	case <-done:
-	case <-time.After(5 * time.Second):
+	case <-time.After(cleanupCloudletInfoTimeout):
 		log.SpanLog(ctx, log.DebugLevelApi, "timed out waiting for CloudletInfo to go Offline", "key", key)
 	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {

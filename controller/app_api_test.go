@@ -60,5 +60,26 @@ func TestAppApi(t *testing.T) {
 	require.NotNil(t, err, "Create vmapp with http port")
 	require.Contains(t, err.Error(), "Deployment Type and HTTP access ports are incompatible")
 
+	// image path is optional for docker deployments if
+	// deployment manifest is specified.
+	app := edgeproto.App{
+		Key: edgeproto.AppKey{
+			Organization: "org",
+			Name:         "someapp",
+			Version:      "1.0.1",
+		},
+		ImageType:          edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessPorts:        "tcp:445,udp:1212",
+		Deployment:         "docker", // avoid trying to parse k8s manifest
+		DeploymentManifest: "some manifest",
+		DefaultFlavor:      testutil.FlavorData[2].Key,
+	}
+	_, err = appApi.CreateApp(ctx, &app)
+	require.Nil(t, err, "Create app with deployment manifest")
+	checkApp := edgeproto.App{}
+	found := appApi.Get(&app.Key, &checkApp)
+	require.True(t, found, "found app")
+	require.Equal(t, "", checkApp.ImagePath, "image path empty")
+
 	dummy.Stop()
 }

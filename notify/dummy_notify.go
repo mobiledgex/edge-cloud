@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 type DummyHandler struct {
@@ -102,11 +103,13 @@ const (
 
 type WaitForCache interface {
 	GetCount() int
+	GetTypeString() string
 }
 
-func (s *DummyHandler) WaitFor(typ CacheType, count int) {
+func (s *DummyHandler) WaitFor(typ CacheType, count int) error {
+	log.DebugLog(log.DebugLevelInfo, "WaitFor", "cache", typ.String(), "count", count)
 	cache := s.GetCache(typ)
-	WaitFor(cache, count)
+	return WaitFor(cache, count)
 }
 
 func (s *DummyHandler) GetCache(typ CacheType) WaitForCache {
@@ -162,52 +165,54 @@ func (c CacheType) String() string {
 	return "unknown cache type"
 }
 
-func WaitFor(cache WaitForCache, count int) {
+func WaitFor(cache WaitForCache, count int) error {
 	if cache == nil {
-		return
+		return nil
 	}
 	for i := 0; i < 50; i++ {
 		if cache.GetCount() == count {
-			break
+			return nil
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
+	log.DebugLog(log.DebugLevelInfo, "Timed out waiting for cache")
+	return fmt.Errorf("Timed out waiting for %s count %d", cache.GetTypeString(), count)
 }
 
-func (s *DummyHandler) WaitForAppInstInfo(count int) {
-	WaitFor(&s.AppInstInfoCache, count)
+func (s *DummyHandler) WaitForAppInstInfo(count int) error {
+	return WaitFor(&s.AppInstInfoCache, count)
 }
 
-func (s *DummyHandler) WaitForClusterInstInfo(count int) {
-	WaitFor(&s.ClusterInstInfoCache, count)
+func (s *DummyHandler) WaitForClusterInstInfo(count int) error {
+	return WaitFor(&s.ClusterInstInfoCache, count)
 }
 
-func (s *DummyHandler) WaitForCloudletInfo(count int) {
-	WaitFor(&s.CloudletInfoCache, count)
+func (s *DummyHandler) WaitForCloudletInfo(count int) error {
+	return WaitFor(&s.CloudletInfoCache, count)
 }
 
-func (s *DummyHandler) WaitForApps(count int) {
-	WaitFor(&s.AppCache, count)
+func (s *DummyHandler) WaitForApps(count int) error {
+	return WaitFor(&s.AppCache, count)
 }
 
-func (s *DummyHandler) WaitForAppInsts(count int) {
-	WaitFor(&s.AppInstCache, count)
+func (s *DummyHandler) WaitForAppInsts(count int) error {
+	return WaitFor(&s.AppInstCache, count)
 }
 
-func (s *DummyHandler) WaitForCloudlets(count int) {
-	WaitFor(&s.CloudletCache, count)
+func (s *DummyHandler) WaitForCloudlets(count int) error {
+	return WaitFor(&s.CloudletCache, count)
 }
 
-func (s *DummyHandler) WaitForFlavors(count int) {
-	WaitFor(&s.FlavorCache, count)
+func (s *DummyHandler) WaitForFlavors(count int) error {
+	return WaitFor(&s.FlavorCache, count)
 }
 
-func (s *DummyHandler) WaitForClusterInsts(count int) {
-	WaitFor(&s.ClusterInstCache, count)
+func (s *DummyHandler) WaitForClusterInsts(count int) error {
+	return WaitFor(&s.ClusterInstCache, count)
 }
 
-func (s *DummyHandler) WaitForAlerts(count int) {
-	s.WaitFor(AlertType, count)
+func (s *DummyHandler) WaitForAlerts(count int) error {
+	return s.WaitFor(AlertType, count)
 }
 
 func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state edgeproto.CloudletState, version string) error {

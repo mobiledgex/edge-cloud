@@ -134,6 +134,16 @@ func TestCRM(t *testing.T) {
 
 	bytes, _ := json.Marshal(&data.Cloudlets[0].Key)
 
+	// CRM is driven by controller
+	ctrlHandler := notify.NewDummyHandler()
+	ctrlMgr := notify.ServerMgr{}
+	ctrlHandler.RegisterServer(&ctrlMgr)
+	// set Cloudlet state to CRM_INIT to allow crm notify exchange to proceed
+	cdata := data.Cloudlets[0]
+	cdata.State = edgeproto.TrackedState_CRM_INITOK
+	ctrlHandler.CloudletCache.Update(ctx, &cdata, 0)
+	ctrlMgr.Start(notifyAddr, nil)
+
 	os.Args = append(os.Args, "-cloudletKey")
 	os.Args = append(os.Args, string(bytes))
 	os.Args = append(os.Args, "-notifyAddrs")
@@ -144,12 +154,6 @@ func TestCRM(t *testing.T) {
 		require.Nil(t, err, "start main")
 		return
 	}
-
-	// CRM is driven by controller
-	ctrlHandler := notify.NewDummyHandler()
-	ctrlMgr := notify.ServerMgr{}
-	ctrlHandler.RegisterServer(&ctrlMgr)
-	ctrlMgr.Start(notifyAddr, nil)
 
 	notifyClient.WaitForConnect(1)
 	stats := notify.Stats{}
@@ -169,11 +173,13 @@ func TestCRM(t *testing.T) {
 	notify.WaitFor(&controllerData.FlavorCache, 3)
 	// Note for ClusterInsts and AppInsts, only those that match
 	// myCloudlet Key will be sent.
+	log.SpanLog(ctx, log.DebugLevelApi, "wait for instances")
 	notify.WaitFor(&controllerData.ClusterInstCache, 2)
 	notify.WaitFor(&controllerData.AppInstCache, 2)
 
 	// TODO: check that the above changes triggered cloudlet cluster/app creates
 	// for now just check stats
+	log.SpanLog(ctx, log.DebugLevelApi, "check counts")
 	require.Equal(t, 3, len(controllerData.FlavorCache.Objs))
 	require.Equal(t, 2, len(controllerData.ClusterInstCache.Objs))
 	require.Equal(t, 2, len(controllerData.AppInstCache.Objs))
