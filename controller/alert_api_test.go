@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
 
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -44,4 +45,5 @@ func testinit() {
 	registryFQDN = &dockerRegistry
 	vaultConfig, _ = vault.BestConfig("")
 	services.events = influxq.NewInfluxQ("events", "user", "pass")
+	cleanupCloudletInfoTimeout = 100 * time.Millisecond
 }
