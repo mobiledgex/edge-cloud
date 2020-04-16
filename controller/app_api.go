@@ -146,9 +146,18 @@ func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.Ac
 
 // updates fields that need manipulation on setting, or fetched remotely
 func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) error {
+	// for update, trigger regenerating deployment manifest
+	if in.DeploymentGenerator != "" {
+		in.DeploymentManifest = ""
+	}
 
 	if in.ImagePath == "" {
-		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
+		// ImagePath is required unless the image path is contained
+		// within a DeploymentManifest specified by the user.
+		// For updates where the controller generated a deployment
+		// manifest, DeploymentManifest will be cleared because
+		// DeploymentGenerator will have been set during create.
+		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER && in.DeploymentManifest == "" {
 			if *registryFQDN == "" {
 				return fmt.Errorf("No image path specified and no default registryFQDN to fall back upon. Please specify the image path")
 			}
@@ -173,8 +182,6 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 			in.ImagePath = *registryFQDN + "/" +
 				util.DockerSanitize(in.Key.Organization) + "/images/" +
 				util.DockerSanitize(in.Key.Name)
-		} else {
-			in.ImagePath = "image path required"
 		}
 		log.DebugLog(log.DebugLevelApi, "derived imagepath", "imagepath", in.ImagePath)
 	}
@@ -192,7 +199,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 	}
 
 	if !cloudcommon.IsPlatformApp(in.Key.Organization, in.Key.Name) {
-		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
+		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER && in.ImagePath != "" {
 			parts := strings.Split(in.ImagePath, "/")
 			// Append default registry address for internal image paths
 			if len(parts) < 2 || !strings.Contains(parts[0], ".") {
@@ -218,7 +225,8 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 	}
 
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER &&
-		!cloudcommon.IsPlatformApp(in.Key.Organization, in.Key.Name) {
+		!cloudcommon.IsPlatformApp(in.Key.Organization, in.Key.Name) &&
+		in.ImagePath != "" {
 		err := cloudcommon.ValidateDockerRegistryPath(ctx, in.ImagePath, vaultConfig)
 		if err != nil {
 			if *testMode {
@@ -227,11 +235,6 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 				return fmt.Errorf("failed to validate docker registry image, path %s, %v", in.ImagePath, err)
 			}
 		}
-	}
-
-	// for update, trigger regenerating deployment manifest
-	if in.DeploymentGenerator != "" {
-		in.DeploymentManifest = ""
 	}
 
 	deploymf, err := cloudcommon.GetAppDeploymentManifest(ctx, vaultConfig, in)

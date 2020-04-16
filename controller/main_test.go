@@ -71,6 +71,10 @@ func TestController(t *testing.T) {
 
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
+	for ii, _ := range testutil.CloudletInfoData {
+		err := cloudletInfoApi.cache.WaitForState(ctx, &testutil.CloudletInfoData[ii].Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, time.Second)
+		require.Nil(t, err)
+	}
 
 	testutil.ClientFlavorTest(t, "cud", flavorClient, testutil.FlavorData)
 	testutil.ClientAutoProvPolicyTest(t, "cud", autoProvPolicyClient, testutil.AutoProvPolicyData)
@@ -80,11 +84,11 @@ func TestController(t *testing.T) {
 	testutil.ClientClusterInstTest(t, "cud", clusterInstClient, testutil.ClusterInstData)
 	testutil.ClientAppInstTest(t, "cud", appInstClient, testutil.AppInstData)
 
-	dmeNotify.WaitForAppInsts(6)
-	crmNotify.WaitForFlavors(3)
+	require.Nil(t, dmeNotify.WaitForAppInsts(len(testutil.AppInstData)))
+	require.Nil(t, crmNotify.WaitForFlavors(len(testutil.FlavorData)))
 
 	require.Equal(t, len(testutil.AppInstData), len(dmeNotify.AppInstCache.Objs), "num appinsts")
-	require.Equal(t, 4, len(crmNotify.FlavorCache.Objs), "num flavors")
+	require.Equal(t, len(testutil.FlavorData), len(crmNotify.FlavorCache.Objs), "num flavors")
 	require.Equal(t, len(testutil.ClusterInstData)+len(testutil.ClusterInstAutoData), len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
 	require.Equal(t, len(testutil.AppInstData), len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
 
@@ -131,6 +135,11 @@ func TestController(t *testing.T) {
 		_, err = autoScalePolicyClient.DeleteAutoScalePolicy(ctx, &obj)
 		require.Nil(t, err)
 	}
+	for ii, _ := range testutil.CloudletInfoData {
+		obj := testutil.CloudletInfoData[ii]
+		obj.State = edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE
+		crmNotify.CloudletInfoCache.Update(ctx, &obj, 0)
+	}
 	for _, obj := range testutil.CloudletData {
 		stream, err := cloudletClient.DeleteCloudlet(ctx, &obj)
 		err = testutil.CloudletReadResultStream(stream, err)
@@ -138,10 +147,10 @@ func TestController(t *testing.T) {
 	}
 
 	// make sure dynamic app insts were deleted along with Apps
-	dmeNotify.WaitForAppInsts(0)
+	require.Nil(t, dmeNotify.WaitForAppInsts(0))
 	require.Equal(t, 0, len(dmeNotify.AppInstCache.Objs), "num appinsts")
 	// deleting appinsts/cloudlets should also delete associated info
-	require.Equal(t, 4, len(cloudletInfoApi.cache.Objs))
+	require.Equal(t, 0, len(cloudletInfoApi.cache.Objs))
 	require.Equal(t, 0, len(clusterInstApi.cache.Objs))
 	require.Equal(t, 0, len(appInstApi.cache.Objs))
 }
