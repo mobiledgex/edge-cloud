@@ -7,11 +7,13 @@ import (
 	"sort"
 	"strconv"
 	strings "strings"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/util"
+	context "golang.org/x/net/context"
 )
 
 //TODO - need to move out Errors into a separate package
@@ -651,4 +653,37 @@ func (c *ClusterInstCache) UsesOrg(org string) bool {
 		}
 	}
 	return false
+}
+
+func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, targetState CloudletState, timeout time.Duration) error {
+	curState := CloudletState_CLOUDLET_STATE_UNKNOWN
+	done := make(chan bool, 1)
+
+	checkState := func(key *CloudletKey) {
+		info := CloudletInfo{}
+		if c.Get(key, &info) {
+			curState = info.State
+		}
+		if curState == targetState {
+			done <- true
+		}
+	}
+
+	cancel := c.WatchKey(key, func(ctx context.Context) {
+		checkState(key)
+	})
+	defer cancel()
+
+	// After setting up watch, check current state,
+	// as it may have already changed to target state.
+	checkState(key)
+
+	select {
+	case <-done:
+	case <-time.After(timeout):
+		return fmt.Errorf("Timed out; expected state %s buf is %s",
+			CloudletState_CamelName[int32(targetState)],
+			CloudletState_CamelName[int32(curState)])
+	}
+	return nil
 }

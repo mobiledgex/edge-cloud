@@ -108,6 +108,7 @@ type SendRecv struct {
 	remoteWanted       map[string]struct{}
 	filterCloudletKeys bool
 	cloudletKeys       map[edgeproto.CloudletKey]struct{}
+	cloudletReady      bool
 	appSend            *AppSend
 	cloudletSend       *CloudletSend
 	clusterInstSend    *ClusterInstSend
