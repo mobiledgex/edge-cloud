@@ -42,7 +42,7 @@ tests:
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
     filetype: findcloudlet 
 
-- name: create appinst2
+- name: create extra appinsts
   apifile: "{{datadir}}/appinst2.yml"
   actions: [ctrlapi-create]
 
@@ -57,6 +57,14 @@ tests:
     yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
     filetype: findcloudlet
+
+- name: find cloudlet app1 carrier any
+  apifile: "{{datadir}}/find_cloudlet_app1any.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-app1any.yml"
+    filetype: findcloudlets
 
 - includefile: get_app_official_fqdn_app1.yml
 
@@ -118,7 +126,7 @@ tests:
   actions: [ctrlapi-delete]
   apifile: "{{datadir}}/appinst_azure.yml"
 
-- name: delete appinst2
+- name: delete extra appinsts
   actions: [ctrlapi-delete]
   apifile: "{{datadir}}/appinst2.yml"
 
