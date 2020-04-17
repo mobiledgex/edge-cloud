@@ -263,13 +263,12 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		}
 
 	case *dme.PlatformFindCloudletRequest:
-		call.key.AppKey.Organization = req.(*dme.PlatformFindCloudletRequest).OrgName
-		call.key.AppKey.Name = req.(*dme.PlatformFindCloudletRequest).AppName
-		call.key.AppKey.Version = req.(*dme.PlatformFindCloudletRequest).AppVers
-		loc, err = dmecommon.GetLocationFromToken(req.(*dme.PlatformFindCloudletRequest).ClientToken)
+		tokdata, err := dmecommon.GetClientDataFromToken(req.(*dme.PlatformFindCloudletRequest).ClientToken)
 		if err != nil {
 			return resp, err
 		}
+		call.key.AppKey = tokdata.AppKey
+		loc = &tokdata.Location
 		updateClient = true
 
 	case *dme.FindCloudletRequest:
