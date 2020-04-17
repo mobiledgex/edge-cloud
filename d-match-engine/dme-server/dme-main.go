@@ -314,6 +314,7 @@ func (s *server) RegisterClient(ctx context.Context,
 	// Both UniqueId and UniqueIdType should be set, or none
 	if (req.UniqueId != "" && req.UniqueIdType == "") ||
 		(req.UniqueIdType != "" && req.UniqueId == "") {
+		mstatus.Status = dme.ReplyStatus_RS_FAIL
 		return mstatus, grpc.Errorf(codes.InvalidArgument,
 			"Both, or none of UniqueId and UniqueIdType should be set")
 	}
