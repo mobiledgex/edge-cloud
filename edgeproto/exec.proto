@@ -5,9 +5,18 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 import "appinst.proto";
 
+message CloudletMgmtNode {
+  // Type of Cloudlet Mgmt Node
+  string type = 1;
+  // Name of Cloudlet Mgmt Node
+  string name = 2;
+}
+
 message RunCmd {
   // Command or Shell
   string command = 1;
+  // Cloudlet Mgmt Node
+  CloudletMgmtNode cloudlet_mgmt_node= 2;
 }
 
 message RunVMConsole {
@@ -55,7 +64,7 @@ message ExecRequest {
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.noconfig) = "Offer,Answer,Err,Console.Url,Timeout,AccessUrl,EdgeTurnAddr";
-  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,app-org=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=AppInstKey.ClusterInstKey.CloudletKey.Organization,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow";
+  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,app-org=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=AppInstKey.ClusterInstKey.CloudletKey.Organization,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow,node-type=Cmd.CloudletMgmtNode.Type,node-name=Cmd.CloudletMgmtNode.Name";
   option (protogen.also_required) = "AppInstKey";
 }
 
@@ -63,14 +72,14 @@ service ExecApi {
   // Run a Command or Shell on a container
   rpc RunCommand(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
-    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,AccessUrl,EdgeTurnAddr";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,AccessUrl,EdgeTurnAddr,Cmd.CloudletMgmtNode";
     option (protogen.method_also_required) = "AppInstKey,Cmd.Command";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
   }
   // Run console on a VM
   rpc RunConsole(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
-    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console,AccessUrl,EdgeTurnAddr";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console,ContainerId,AccessUrl,EdgeTurnAddr";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
   }
   // View logs for AppInst
@@ -79,6 +88,12 @@ service ExecApi {
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console,AccessUrl,EdgeTurnAddr";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
     option (protogen.non_standard_show) = true;
+  }
+  // Access Cloudlet VM
+  rpc AccessCloudlet(ExecRequest) returns (ExecRequest) {
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,ContainerId,AccessUrl,EdgeTurnAddr,AppInstKey.AppKey.Name,AppInstKey.AppKey.Version,AppInstKey.AppKey.Organization,AppInstKey.ClusterInstKey.Name,AppInstKey.ClusterInstKey.Organization";
+    option (protogen.method_also_required) = "AppInstKey.ClusterInstKey.CloudletKey.Name,AppInstKey.ClusterInstKey.CloudletKey.Organization,Cmd.CloudletMgmtNode.Type";
   }
   // This is used internally to forward requests to other Controllers.
   rpc SendLocalRequest(ExecRequest) returns (ExecRequest) {}

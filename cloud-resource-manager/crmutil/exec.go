@@ -55,16 +55,18 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 	}
 
 	appInst := edgeproto.AppInst{}
-	found := cd.AppInstCache.Get(&req.AppInstKey, &appInst)
-	if !found {
-		return fmt.Errorf("app inst %s not found",
-			req.AppInstKey.GetKeyString())
-	}
 	app := edgeproto.App{}
-	found = cd.AppCache.Get(&req.AppInstKey.AppKey, &app)
-	if !found {
-		return fmt.Errorf("app %s not found",
-			req.AppInstKey.AppKey.GetKeyString())
+	if req.Cmd == nil || req.Cmd.CloudletMgmtNode == nil {
+		found := cd.AppInstCache.Get(&req.AppInstKey, &appInst)
+		if !found {
+			return fmt.Errorf("app inst %s not found",
+				req.AppInstKey.GetKeyString())
+		}
+		found = cd.AppCache.Get(&req.AppInstKey.AppKey, &app)
+		if !found {
+			return fmt.Errorf("app %s not found",
+				req.AppInstKey.AppKey.GetKeyString())
+		}
 	}
 
 	var execReqType cloudcommon.ExecReqType
@@ -80,10 +82,48 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		}
 		execReqType = cloudcommon.ExecReqConsole
 		initURL = urlObj
+	} else if req.Cmd != nil && req.Cmd.CloudletMgmtNode != nil {
+		insts := []edgeproto.ClusterInst{}
+		cd.ClusterInstCache.Mux.Lock()
+		for _, v := range cd.ClusterInstCache.Objs {
+			insts = append(insts, *v)
+		}
+		cd.ClusterInstCache.Mux.Unlock()
+		nodes, err := cd.platform.ListCloudletMgmtNodes(insts)
+		if err != nil {
+			return fmt.Errorf("unable to get list of cloudlet mgmt nodes, %v", err)
+		}
+		access_node := req.Cmd.CloudletMgmtNode
+		found := false
+		for _, node := range nodes {
+			if access_node.Type != node.Type {
+				continue
+			}
+			if access_node.Name == "" {
+				access_node.Name = node.Name
+				found = true
+				break
+			} else if access_node.Name == node.Name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("unable to find cloudlet mgmt node, list of valid nodes: %v", nodes)
+		}
+		run.contcmd = "bash"
+		if req.Cmd.Command != "" {
+			run.contcmd = req.Cmd.Command
+		}
+		run.client, err = cd.platform.GetPlatformClient(ctx, access_node)
+		if err != nil {
+			return err
+		}
+		execReqType = cloudcommon.ExecReqShell
 	} else {
 		execReqType = cloudcommon.ExecReqShell
 		clusterInst := edgeproto.ClusterInst{}
-		found = cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
+		found := cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
 		if !found {
 			return fmt.Errorf("cluster inst %s not found",
 				appInst.Key.ClusterInstKey.GetKeyString())
@@ -94,7 +134,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			return err
 		}
 
-		run.client, err = cd.platform.GetPlatformClient(ctx, &clusterInst)
+		run.client, err = cd.platform.GetClusterPlatformClient(ctx, &clusterInst)
 		if err != nil {
 			return err
 		}
