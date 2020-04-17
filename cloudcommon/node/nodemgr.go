@@ -40,7 +40,8 @@ func (s *NodeMgr) InitFlags() {
 	// removed once all CRMs transition over to Vault internal PKI.
 	flag.StringVar(&s.TlsCertFile, "tls", "", "server tls cert file. Keyfile and CA file must be in same directory, CA file should be \"mex-ca.crt\", and key file should be same name as cert file but extension \".key\"")
 	flag.StringVar(&s.VaultAddr, "vaultAddr", "", "Vault address; local vault runs at http://127.0.0.1:8200")
-	flag.BoolVar(&s.InternalPki.UseVaultCerts, "useVaultCerts", false, "Use Vault Certs for internal TLS")
+	flag.BoolVar(&s.InternalPki.UseVaultCAs, "useVaultCAs", false, "Include use of Vault CAs for internal TLS authentication")
+	flag.BoolVar(&s.InternalPki.UseVaultCerts, "useVaultCerts", false, "Use Vault Certs for internal TLS; implies useVaultCAs")
 }
 
 func (s *NodeMgr) Init(ctx context.Context, nodeType string, ops ...NodeOp) error {
