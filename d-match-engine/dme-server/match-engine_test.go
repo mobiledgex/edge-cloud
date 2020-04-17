@@ -66,6 +66,18 @@ func TestAddRemove(t *testing.T) {
 		// So set it on the context manually.
 		ckey, err := dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
 		assert.Nil(t, err, "verify cookie")
+		// verify that UUID in the response is a new value if it was empty in the request
+		if rr.Reg.UniqueId == "" {
+			assert.NotEqual(t, regReply.UniqueId, "")
+			assert.NotEqual(t, regReply.UniqueIdType, "")
+			// should match what's in the cookie
+			assert.Equal(t, regReply.UniqueId, ckey.UniqueId)
+			assert.Equal(t, regReply.UniqueIdType, ckey.UniqueIdType)
+		} else {
+			// If it was not empty cookie should have the uuid from the register
+			assert.Equal(t, rr.Reg.UniqueId, ckey.UniqueId)
+			assert.Equal(t, rr.Reg.UniqueIdType, ckey.UniqueIdType)
+		}
 		ctx = dmecommon.NewCookieContext(ctx, ckey)
 		// Make sure we get the statsKey value filled in
 		call := ApiStatCall{}
@@ -84,15 +96,31 @@ func TestAddRemove(t *testing.T) {
 				call.key.CloudletFound.Name, "findCloudletData[%d]", ii)
 		}
 	}
+	// Check Platform Devices register UUID
+	reg := dmetest.DeviceData[0]
+	// Reset UUID to empty strings
+	reg.UniqueId = ""
+	reg.UniqueIdType = ""
+	ctx = dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
+	regReply, err := serv.RegisterClient(ctx, &reg)
+	assert.Nil(t, err, "register client")
+	ckey, err := dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
+	assert.Nil(t, err, "verify cookie")
+	// verify that UUID type is the platform one
+	assert.Equal(t, reg.OrgName+":"+reg.AppName, regReply.UniqueIdType)
+	// should match what's in the cookie
+	assert.Equal(t, regReply.UniqueId, ckey.UniqueId)
+	assert.Equal(t, regReply.UniqueIdType, ckey.UniqueIdType)
+
 	// disable one cloudlet and check the newly found cloudlet
 	cloudletInfo := cloudlets[2]
 	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
 	dmecommon.SetInstStateForCloudlet(ctx, cloudletInfo)
 	ctx = dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
 
-	regReply, err := serv.RegisterClient(ctx, &dmetest.DisabledCloudletRR.Reg)
+	regReply, err = serv.RegisterClient(ctx, &dmetest.DisabledCloudletRR.Reg)
 	assert.Nil(t, err, "register client")
-	ckey, err := dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
+	ckey, err = dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
 	assert.Nil(t, err, "verify cookie")
 	ctx = dmecommon.NewCookieContext(ctx, ckey)
 
