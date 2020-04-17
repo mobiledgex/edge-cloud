@@ -98,11 +98,22 @@ func TestAddRemove(t *testing.T) {
 	}
 	// Check Platform Devices register UUID
 	reg := dmetest.DeviceData[0]
-	// Reset UUID to empty strings
-	reg.UniqueId = ""
+	// Both or none should be set
+	reg.UniqueId = "123"
 	reg.UniqueIdType = ""
 	ctx = dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
 	regReply, err := serv.RegisterClient(ctx, &reg)
+	assert.NotNil(t, err, "register client")
+	assert.Contains(t, err.Error(), "Both, or none of UniqueId and UniqueIdType should be set")
+	reg.UniqueId = ""
+	reg.UniqueIdType = "typeOnly"
+	regReply, err = serv.RegisterClient(ctx, &reg)
+	assert.NotNil(t, err, "register client")
+	assert.Contains(t, err.Error(), "Both, or none of UniqueId and UniqueIdType should be set")
+	// Reset UUID to empty strings
+	reg.UniqueId = ""
+	reg.UniqueIdType = ""
+	regReply, err = serv.RegisterClient(ctx, &reg)
 	assert.Nil(t, err, "register client")
 	ckey, err := dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
 	assert.Nil(t, err, "verify cookie")

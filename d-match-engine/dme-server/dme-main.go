@@ -311,6 +311,13 @@ func (s *server) RegisterClient(ctx context.Context,
 		AppVers: req.AppVers,
 	}
 
+	// Both UniqueId and UniqueIdType should be set, or none
+	if (req.UniqueId != "" && req.UniqueIdType == "") ||
+		(req.UniqueIdType != "" && req.UniqueId == "") {
+		return mstatus, grpc.Errorf(codes.InvalidArgument,
+			"Both, or none of UniqueId and UniqueIdType should be set")
+	}
+
 	// If we get UUID from the Request, use that, otherwise generate a new one
 	if req.UniqueIdType != "" && req.UniqueId != "" {
 		key.UniqueId = req.UniqueId
