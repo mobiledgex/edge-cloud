@@ -24,9 +24,9 @@ type internalPki struct {
 	// Internal PKI supports either cert files supplied on the
 	// command line or retrieved from Vault.
 	// Command line certs are supported if specified.
-	// Vault certs are supported if the VaultAddr is specified.
-	// The UseVaultCerts arg determines which sets of certs to use
-	// if available.
+	// Vault CAs are supported if UseVaultCAs is set.
+	// Vault certs are used (overrides file cert) if UseVaultCerts is set.
+	UseVaultCAs   bool
 	UseVaultCerts bool
 
 	// These are the certs loaded from disk specified on the command line.
@@ -60,6 +60,7 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 	pkiDesc := []string{}
 
 	if s.TlsCertFile != "" {
+		log.SpanLog(ctx, log.DebugLevelInfo, "enable TLS from files", "certfile", s.TlsCertFile)
 		// load certs from command line
 		err := s.InternalPki.loadCerts(s.TlsCertFile)
 		if err != nil {
@@ -69,26 +70,27 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 		pkiDesc = append(pkiDesc, "from-file")
 	}
 	s.InternalPki.vaultConfig = s.VaultConfig
-	if s.InternalPki.vaultConfig.Addr != "" {
-		if s.TlsCertFile == "" {
-			// no files specified, so use Vault certs
-			s.InternalPki.UseVaultCerts = true
+	if s.InternalPki.UseVaultCerts {
+		s.InternalPki.UseVaultCAs = true
+	}
+	if s.InternalPki.UseVaultCAs {
+		if s.InternalPki.vaultConfig.Addr == "" {
+			return fmt.Errorf("Vault address required for UseVaultCAs or UseVaultCerts")
 		}
 		// enable Vault certs
-		log.SpanLog(ctx, log.DebugLevelInfo, "enable internal Vault PKI")
+		log.SpanLog(ctx, log.DebugLevelInfo, "enable internal Vault PKI CAs")
 
 		s.InternalPki.certs = make(map[certId]*tls.Certificate)
 		s.InternalPki.cas = make(map[string][]*x509.Certificate)
 		s.InternalPki.localRegion = s.Region
-		s.InternalPki.enabled = true
 		s.InternalPki.refreshTrigger = make(chan bool, 1)
+		pkiDesc = append(pkiDesc, "useVaultCAs")
+	}
+	if s.InternalPki.UseVaultCerts {
+		s.InternalPki.enabled = true
 
 		go s.InternalPki.refreshCerts()
-
-		pkiDesc = append(pkiDesc, "from-Vault")
-		if s.InternalPki.UseVaultCerts {
-			pkiDesc = append(pkiDesc, "useVaultCerts")
-		}
+		pkiDesc = append(pkiDesc, "useVaultCerts")
 	}
 	if len(pkiDesc) == 0 {
 		s.MyNode.InternalPki = "none"
@@ -148,7 +150,7 @@ func (s *internalPki) refreshCerts() {
 }
 
 func (s *internalPki) RefreshNow(ctx context.Context) error {
-	if s.vaultConfig.Addr == "" {
+	if !s.UseVaultCerts {
 		return nil
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "refreshing certs")
@@ -222,12 +224,12 @@ func (s *internalPki) GetClientTlsConfig(ctx context.Context, commonName, client
 		Issuer:     clientIssuer,
 	}
 	err := s.ensureCertInCache(ctx, id)
-	if s.filterVaultPkiErr(ctx, err) != nil {
+	if err != nil {
 		return nil, err
 	}
 
 	caPool, err := s.getCAs(ctx, serverIssuers)
-	if s.filterVaultPkiErr(ctx, err) != nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -261,12 +263,12 @@ func (s *internalPki) GetServerTlsConfig(ctx context.Context, commonName, server
 		Issuer:     serverIssuer,
 	}
 	err := s.ensureCertInCache(ctx, id)
-	if s.filterVaultPkiErr(ctx, err) != nil {
+	if err != nil {
 		return nil, err
 	}
 
 	caPool, err := s.getCAs(ctx, clientIssuers)
-	if s.filterVaultPkiErr(ctx, err) != nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -282,18 +284,6 @@ func (s *internalPki) GetServerTlsConfig(ctx context.Context, commonName, server
 		config.ClientAuth = tls.NoClientCert
 	}
 	return config, nil
-}
-
-func (s *internalPki) filterVaultPkiErr(ctx context.Context, err error) error {
-	// If file certs are specified and UseVaultCerts is false,
-	// log VaultPki lookup failures instead of returning an error.
-	// This allows us to rollout the Vault Pki code even if
-	// Vault hasn't been configured for it yet.
-	if err != nil && s.fileCert != nil && !s.UseVaultCerts {
-		log.SpanLog(ctx, log.DebugLevelInfo, "Suppress Vault PKI error", "err", err)
-		return nil
-	}
-	return err
 }
 
 func (s *internalPki) getVerifyFunc(issuers []MatchCA) func([][]byte, [][]*x509.Certificate) error {
@@ -364,7 +354,7 @@ func (s *internalPki) getCertificateFunc(id certId) func(*tls.ClientHelloInfo) (
 }
 
 func (s *internalPki) lookupCertForHandshake(id certId) (*tls.Certificate, error) {
-	if s.vaultConfig.Addr != "" && s.UseVaultCerts {
+	if s.UseVaultCerts {
 		s.mux.Lock()
 		cert, found := s.certs[id]
 		s.mux.Unlock()
@@ -380,7 +370,7 @@ func (s *internalPki) lookupCertForHandshake(id certId) (*tls.Certificate, error
 }
 
 func (s *internalPki) ensureCertInCache(ctx context.Context, id certId) error {
-	if s.vaultConfig.Addr == "" {
+	if !s.UseVaultCerts {
 		return nil
 	}
 	s.mux.Lock()
@@ -470,15 +460,22 @@ func getVaultCertData(data map[string]interface{}, key string) ([]byte, error) {
 
 func (s *internalPki) getCAs(ctx context.Context, issuers []MatchCA) (*x509.CertPool, error) {
 	pool := x509.NewCertPool()
+	s.getFileCAs(ctx, pool)
+	err := s.getVaultCAs(ctx, pool, issuers)
+	return pool, err
+}
 
+func (s *internalPki) getFileCAs(ctx context.Context, pool *x509.CertPool) {
 	if s.fileCAs != nil {
 		for _, ca := range s.fileCAs {
 			pool.AddCert(ca)
 		}
 	}
+}
 
-	if s.vaultConfig.Addr == "" {
-		return pool, nil
+func (s *internalPki) getVaultCAs(ctx context.Context, pool *x509.CertPool, issuers []MatchCA) error {
+	if !s.UseVaultCAs {
+		return nil
 	}
 	var client *api.Client
 	var err error
@@ -492,20 +489,20 @@ func (s *internalPki) getCAs(ctx context.Context, issuers []MatchCA) (*x509.Cert
 			if client == nil {
 				client, err = s.vaultConfig.Login()
 				if err != nil {
-					return nil, err
+					return err
 				}
 			}
 			secret, err := client.Logical().Read(path)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			cab, err := getVaultCertData(secret.Data, "certificate")
 			if err != nil {
-				return nil, err
+				return err
 			}
 			cas, err = certsFromPem(cab)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			s.mux.Lock()
 			s.cas[caissuer.Issuer] = cas
@@ -515,7 +512,7 @@ func (s *internalPki) getCAs(ctx context.Context, issuers []MatchCA) (*x509.Cert
 			pool.AddCert(ca)
 		}
 	}
-	return pool, nil
+	return nil
 }
 
 func (s *NodeMgr) CommonName() string {
