@@ -129,7 +129,7 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 	}
 	tokdata, err := dmecommon.GetClientDataFromToken(req.ClientToken)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, unable to get location from token", "token", req.ClientToken, "err", err)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, unable to get data from token", "token", req.ClientToken, "err", err)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
 
