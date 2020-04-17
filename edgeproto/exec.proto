@@ -92,9 +92,9 @@ service ExecApi {
   // Access Cloudlet VM
   rpc AccessCloudlet(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,";
-    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,ContainerId,AccessUrl,EdgeTurnAddr,AppInstKey.AppKey.Name,AppInstKey.AppKey.Version,AppInstKey.AppKey.Organization,AppInstKey.ClusterInstKey.Name,AppInstKey.ClusterInstKey.Organization";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,ContainerId,AccessUrl,EdgeTurnAddr,AppInstKey.AppKey.Name,AppInstKey.AppKey.Version,AppInstKey.AppKey.Organization,AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization";
     option (protogen.method_also_required) = "AppInstKey.ClusterInstKey.CloudletKey.Name,AppInstKey.ClusterInstKey.CloudletKey.Organization,Cmd.CloudletMgmtNode.Type";
   }
-  // This is used internally to forward requests to other Controllers.
+  // This is used internally to forward requests to other Controllers.e
   rpc SendLocalRequest(ExecRequest) returns (ExecRequest) {}
 }
