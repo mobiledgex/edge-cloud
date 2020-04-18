@@ -772,9 +772,6 @@ var PlatformFindCloudletRequestOptionalArgs = []string{
 	"sessioncookie",
 	"carriername",
 	"clienttoken",
-	"orgname",
-	"appname",
-	"appvers",
 	"tags:#.type",
 	"tags:#.data",
 }
@@ -784,9 +781,6 @@ var PlatformFindCloudletRequestComments = map[string]string{
 	"sessioncookie": "Session Cookie Session Cookie from RegisterClientRequest",
 	"carriername":   "Carrier Name Unique carrier identification (typically MCC + MNC)",
 	"clienttoken":   "Client Token Token with encoded client data",
-	"orgname":       "Organization Name Application Organization Name",
-	"appname":       "App Name Application Name",
-	"appvers":       "App Version Application Version",
 	"tags:#.type":   "type of data",
 	"tags:#.data":   "data value",
 }

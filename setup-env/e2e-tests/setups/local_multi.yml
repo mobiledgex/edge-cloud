@@ -52,7 +52,7 @@ controllers:
   testmode: true
   versiontag: "2019-10-24"
   notifyparentaddrs: "127.0.0.1:53001"
-  usevaultcerts: true
+  usevaultcas: true
   edgeturnaddr: "127.0.0.1:6080"
 
 - name: ctrl2
@@ -138,7 +138,7 @@ edgeturns:
 - name: edgeturn
   hostname: "127.0.0.1"
   testmode: true
-  usevaultcerts: true
+  usevaultcas: true
   vaultaddr: "http://127.0.0.1:8200"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
