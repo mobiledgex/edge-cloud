@@ -393,12 +393,14 @@ type RegisterClientRequest struct {
 	//
 	// Unique ID Type
 	//
-	// Type of unique ID provided by the client
+	// _(optional)_ Type of unique ID provided by the client.
+	// If left blank, RegisterClientReply will contain generated Unique Id Type.
 	UniqueIdType string `protobuf:"bytes,8,opt,name=unique_id_type,json=uniqueIdType,proto3" json:"unique_id_type,omitempty"`
 	//
 	// Unique ID
 	//
 	// _(optional)_ Unique identification of the client device or user. May be overridden by the server.
+	// If left blank, RegisterClientReply will contain generated Unique Id.
 	UniqueId string `protobuf:"bytes,9,opt,name=unique_id,json=uniqueId,proto3" json:"unique_id,omitempty"`
 	//
 	// Tags
@@ -424,12 +426,14 @@ type RegisterClientReply struct {
 	//
 	// Unique ID Type
 	//
-	// Type of unique ID provided by the server
+	// _(optional)_ Type of unique ID provided by the server
+	// If type of unique ID was provided in RegisterClientRequest API call this will be blank.
 	UniqueIdType string `protobuf:"bytes,5,opt,name=unique_id_type,json=uniqueIdType,proto3" json:"unique_id_type,omitempty"`
 	//
 	// Unique ID
 	//
 	// _(optional)_ Unique identification of the client device or user
+	// If unique ID was provided in RegisterClientRequest API call this will be blank.
 	UniqueId string `protobuf:"bytes,6,opt,name=unique_id,json=uniqueId,proto3" json:"unique_id,omitempty"`
 	// Vendor specific data
 	//
