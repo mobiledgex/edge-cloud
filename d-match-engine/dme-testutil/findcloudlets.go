@@ -34,9 +34,11 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			OrgName: "1000realities",
-			AppName: "1000realities",
-			AppVers: "1.1",
+			OrgName:      "1000realities",
+			AppName:      "1000realities",
+			AppVers:      "1.1",
+			UniqueId:     "123",
+			UniqueIdType: "1000Realities",
 		},
 		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
@@ -52,9 +54,11 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			OrgName: "1000realities",
-			AppName: "1000realities",
-			AppVers: "1.1",
+			OrgName:      "1000realities",
+			AppName:      "1000realities",
+			AppVers:      "1.1",
+			UniqueId:     "1234",
+			UniqueIdType: "1000Realities",
 		}, // ATT does not exist and so should return default cloudlet
 		Req: dme.FindCloudletRequest{
 			CarrierName: "ATT",
