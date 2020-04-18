@@ -1,6 +1,7 @@
 package dmetest
 
 import (
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
@@ -51,6 +52,12 @@ var Apps = []App{
 		Name:         "EmptyMatchEngineApp",
 		Vers:         "1",
 		Organization: "EmptyMatchEngineApp",
+	},
+	App{
+		Id:           5012,
+		Name:         cloudcommon.PlatosEnablingLayer,
+		Vers:         "1.1",
+		Organization: cloudcommon.Organizationplatos,
 	},
 }
 
