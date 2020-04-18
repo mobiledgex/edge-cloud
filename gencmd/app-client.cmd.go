@@ -702,8 +702,8 @@ var RegisterClientRequestComments = map[string]string{
 	"carriername":  "Carrier Name _Not currently used_",
 	"authtoken":    "Authentication Token _(optional)_ An authentication token supplied by the application.",
 	"cellid":       "Cell ID _(optional)_ Cellular ID of where the client is connected.",
-	"uniqueidtype": "Unique ID Type _(optional)_ Type of unique ID provided by the client. If left blank, RegisterClientReply will contain generated Unique Id Type.",
-	"uniqueid":     "Unique ID _(optional)_ Unique identification of the client device or user. May be overridden by the server. If left blank, RegisterClientReply will contain generated Unique Id.",
+	"uniqueidtype": "Unique ID Type Type of unique ID provided by the client",
+	"uniqueid":     "Unique ID _(optional)_ Unique identification of the client device or user. May be overridden by the server.",
 	"tags:#.type":  "type of data",
 	"tags:#.data":  "data value",
 }
@@ -725,8 +725,8 @@ var RegisterClientReplyComments = map[string]string{
 	"status":         "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
 	"sessioncookie":  "Session Cookie to be used in later API calls",
 	"tokenserveruri": "URI for the Token Server",
-	"uniqueidtype":   "Unique ID Type _(optional)_ Type of unique ID provided by the server If type of unique ID was provided in RegisterClientRequest API call this will be blank.",
-	"uniqueid":       "Unique ID _(optional)_ Unique identification of the client device or user If unique ID was provided in RegisterClientRequest API call this will be blank.",
+	"uniqueidtype":   "Unique ID Type Type of unique ID provided by the server",
+	"uniqueid":       "Unique ID _(optional)_ Unique identification of the client device or user",
 	"tags:#.type":    "type of data",
 	"tags:#.data":    "data value",
 }
