@@ -89,13 +89,18 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			insts = append(insts, *v)
 		}
 		cd.ClusterInstCache.Mux.Unlock()
-		nodes, err := cd.platform.ListCloudletMgmtNodes(insts)
+		nodes, err := cd.platform.ListCloudletMgmtNodes(ctx, insts)
 		if err != nil {
 			return fmt.Errorf("unable to get list of cloudlet mgmt nodes, %v", err)
 		}
 		access_node := req.Cmd.CloudletMgmtNode
 		found := false
 		for _, node := range nodes {
+			if access_node.Type == "" && access_node.Name != "" {
+				// wildcard on node type, so allow node name
+				found = true
+				break
+			}
 			if access_node.Type != node.Type {
 				continue
 			}
@@ -115,7 +120,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		if req.Cmd.Command != "" {
 			run.contcmd = req.Cmd.Command
 		}
-		run.client, err = cd.platform.GetPlatformClient(ctx, access_node)
+		run.client, err = cd.platform.GetNodePlatformClient(ctx, access_node)
 		if err != nil {
 			return err
 		}
@@ -262,7 +267,10 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?edgetoken=" + sessInfo.Token
 			req.AccessUrl = proxyAddr
 			cd.ExecReqSend.Update(ctx, req)
-			run.proxyRawConn(turnConn)
+			err = run.proxyRawConn(turnConn)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -376,7 +384,7 @@ func (s *WebrtcExec) proxyConsoleConn(fromUrl string, toConn net.Conn) {
 	}
 }
 
-func (s *WebrtcExec) proxyRawConn(turnConn net.Conn) {
+func (s *WebrtcExec) proxyRawConn(turnConn net.Conn) error {
 	prd, pwr := io.Pipe()
 	go io.Copy(pwr, turnConn)
 	err := s.client.Shell(prd, turnConn, turnConn, s.contcmd)
@@ -385,4 +393,5 @@ func (s *WebrtcExec) proxyRawConn(turnConn net.Conn) {
 			"failed to exec",
 			"cmd", s.contcmd, "err", err)
 	}
+	return err
 }

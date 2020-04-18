@@ -89,11 +89,11 @@ func (s *Platform) GetClusterPlatformClient(ctx context.Context, clusterInst *ed
 	return &pc.LocalClient{}, nil
 }
 
-func (s *Platform) GetPlatformClient(ctx context.Context, node *edgeproto.CloudletMgmtNode) (ssh.Client, error) {
+func (s *Platform) GetNodePlatformClient(ctx context.Context, node *edgeproto.CloudletMgmtNode) (ssh.Client, error) {
 	return &pc.LocalClient{}, nil
 }
 
-func (s *Platform) ListCloudletMgmtNodes(clusterInsts []edgeproto.ClusterInst) ([]edgeproto.CloudletMgmtNode, error) {
+func (s *Platform) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst) ([]edgeproto.CloudletMgmtNode, error) {
 	return []edgeproto.CloudletMgmtNode{
 		edgeproto.CloudletMgmtNode{
 			Type: "platformvm",

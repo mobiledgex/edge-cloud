@@ -511,10 +511,10 @@ var ShowLogsOptionalArgs = []string{
 var AccessCloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"node-type",
 }
 var AccessCloudletOptionalArgs = []string{
 	"command",
+	"node-type",
 	"node-name",
 	"webrtc",
 }

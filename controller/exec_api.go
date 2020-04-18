@@ -144,6 +144,10 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 		req.EdgeTurnAddr = *edgeTurnAddr
 		reqId := ksuid.New()
 		req.Offer = reqId.String()
+		// Increase timeout, as for EdgeTurn based implemention,
+		// CRM connects to EdgeTurn server. Hence it can take some
+		// time to reply back
+		req.Timeout = LongTimeout
 	}
 	// Forward the offer.
 	// Currently we don't know which controller has the CRM connected

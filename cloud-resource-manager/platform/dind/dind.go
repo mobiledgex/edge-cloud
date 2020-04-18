@@ -19,7 +19,7 @@ func (s *Platform) GetType() string {
 
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
 	// set up L7 load balancer
-	client, err := s.GetPlatformClient(ctx, nil)
+	client, err := s.GetNodePlatformClient(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -51,10 +51,10 @@ func (s *Platform) GetClusterPlatformClient(ctx context.Context, clusterInst *ed
 	return &pc.LocalClient{}, nil
 }
 
-func (s *Platform) GetPlatformClient(ctx context.Context, node *edgeproto.CloudletMgmtNode) (ssh.Client, error) {
+func (s *Platform) GetNodePlatformClient(ctx context.Context, node *edgeproto.CloudletMgmtNode) (ssh.Client, error) {
 	return &pc.LocalClient{}, nil
 }
 
-func (s *Platform) ListCloudletMgmtNodes(clusterInsts []edgeproto.ClusterInst) ([]edgeproto.CloudletMgmtNode, error) {
+func (s *Platform) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst) ([]edgeproto.CloudletMgmtNode, error) {
 	return []edgeproto.CloudletMgmtNode{}, nil
 }
