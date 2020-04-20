@@ -1,0 +1,12 @@
+request:
+  appinstkey:
+    clusterinstkey:
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+  cmd:
+    command: echo foo
+    cloudletmgmtnode:
+      type: platformvm
+      name: platformvmname
+expectedoutput: foo

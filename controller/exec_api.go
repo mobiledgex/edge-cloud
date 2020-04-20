@@ -97,13 +97,25 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 	if err := s.getApp(req, &app); err != nil {
 		return nil, err
 	}
-	req.Timeout = ShortTimeout
 	if app.Deployment == cloudcommon.AppDeploymentTypeVM {
 		return nil, fmt.Errorf("RunCommand not available for VM deployments, use RunConsole instead")
 	}
+	req.Timeout = ShortTimeout
 	if cmd.Command == "" {
 		return nil, fmt.Errorf("command argument required")
 	}
+	return s.doExchange(ctx, req)
+}
+
+func (s *ExecApi) AccessCloudlet(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+	cmd := req.Cmd
+	if cmd == nil {
+		return nil, fmt.Errorf("No run command specified")
+	}
+	if cmd.CloudletMgmtNode == nil {
+		return nil, fmt.Errorf("No cloudlet mgmt node specified")
+	}
+	req.Timeout = ShortTimeout
 	return s.doExchange(ctx, req)
 }
 
@@ -132,6 +144,10 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 		req.EdgeTurnAddr = *edgeTurnAddr
 		reqId := ksuid.New()
 		req.Offer = reqId.String()
+		// Increase timeout, as for EdgeTurn based implemention,
+		// CRM connects to EdgeTurn server. Hence it can take some
+		// time to reply back
+		req.Timeout = LongTimeout
 	}
 	// Forward the offer.
 	// Currently we don't know which controller has the CRM connected
