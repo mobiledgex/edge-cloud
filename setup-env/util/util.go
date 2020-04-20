@@ -509,12 +509,26 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err2 = ReadYamlFile(secondYamlFile, &f2)
 
 		//publicport is variable so we nil it out for comparison purposes.
-		for _, p := range f1.Ports {
-			p.PublicPort = 0
+		clearFindCloudletPorts(&f1)
+		clearFindCloudletPorts(&f2)
+
+		y1 = f1
+		y2 = f2
+	} else if fileType == "findcloudlets" {
+		var f1 []*dmeproto.FindCloudletReply
+		var f2 []*dmeproto.FindCloudletReply
+
+		err1 = ReadYamlFile(firstYamlFile, &f1)
+		err2 = ReadYamlFile(secondYamlFile, &f2)
+
+		//publicport is variable so we nil it out for comparison purposes.
+		for _, reply := range f1 {
+			clearFindCloudletPorts(reply)
 		}
-		for _, p := range f2.Ports {
-			p.PublicPort = 0
+		for _, reply := range f2 {
+			clearFindCloudletPorts(reply)
 		}
+
 		y1 = f1
 		y2 = f2
 	} else if fileType == "getqospositionkpi" {
@@ -661,6 +675,12 @@ func clearCloudletInfoNocmp(data *edgeproto.AllData) {
 	for ii, _ := range data.CloudletInfos {
 		data.CloudletInfos[ii].Controller = ""
 		data.CloudletInfos[ii].NotifyId = 0
+	}
+}
+
+func clearFindCloudletPorts(reply *dmeproto.FindCloudletReply) {
+	for _, p := range reply.Ports {
+		p.PublicPort = 0
 	}
 }
 

@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net"
 	"strings"
 	"sync"
@@ -467,99 +466,159 @@ func translateCarrierName(carrierName string) string {
 	return cname
 }
 
+type closestAppInst struct {
+	loc                     *dme.Loc
+	reqCarrier              string
+	distance                float64
+	found                   *DmeAppInst
+	foundCarrier            string
+	appDeployment           string
+	potentialDist           float64
+	potentialCloudlet       *edgeproto.AutoProvCloudlet
+	potentialClusterInstKey *edgeproto.ClusterInstKey
+	potentialCarrier        string
+}
+
 // given the carrier, update the reply if we find a cloudlet closer
 // than the max distance.  Return the distance and whether or not response was updated
 func findClosestForCarrier(ctx context.Context, carrierName string, key *edgeproto.AppKey, loc *dme.Loc, maxDistance float64, mreply *dme.FindCloudletReply) (float64, bool) {
 	tbl := DmeAppTbl
 	carrierName = translateCarrierName(carrierName)
 
-	var d float64
-	var updated = false
-	var found *DmeAppInst
-	var cloudlet string
 	tbl.RLock()
 	defer tbl.RUnlock()
 	app, ok := tbl.Apps[*key]
 	if !ok {
-		return maxDistance, updated
+		return maxDistance, false
 	}
 
 	log.SpanLog(ctx, log.DebugLevelDmereq, "Find Closest", "appkey", key, "carrierName", carrierName)
 
-	if c, carrierFound := app.Carriers[carrierName]; carrierFound {
-		for _, i := range c.Insts {
-			d = DistanceBetween(*loc, i.location)
-			log.SpanLog(ctx, log.DebugLevelDmereq, "found cloudlet at",
-				"latitude", i.location.Latitude,
-				"longitude", i.location.Longitude,
-				"maxDistance", maxDistance,
-				"this-dist", d)
-			if d < maxDistance && IsAppInstUsable(i) {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "closer cloudlet", "uri", i.uri)
-				updated = true
-				maxDistance = d
-				found = i
-				mreply.Fqdn = i.uri
-				mreply.Status = dme.FindCloudletReply_FIND_FOUND
-				*mreply.CloudletLocation = i.location
-				mreply.Ports = copyPorts(i)
-				cloudlet = i.clusterInstKey.CloudletKey.Name
-			}
-		}
-		if found != nil {
-			var ipaddr net.IP
-			ipaddr = found.ip
-			log.SpanLog(ctx, log.DebugLevelDmereq, "best cloudlet",
-				"app", key.Name,
-				"carrier", carrierName,
-				"latitude", found.location.Latitude,
-				"longitude", found.location.Longitude,
-				"distance", maxDistance,
-				"uri", found.uri,
-				"IP", ipaddr.String())
-			// Update Context variable if passed
-			updateContextWithCloudletDetails(ctx, cloudlet, carrierName)
-		}
+	closest := closestAppInst{
+		loc:           loc,
+		reqCarrier:    carrierName,
+		distance:      maxDistance,
+		appDeployment: app.Deployment,
 	}
+
+	for cname, carrierData := range app.Carriers {
+		closest.searchAppInsts(ctx, cname, carrierData)
+	}
+	if closest.found != nil {
+		mreply.Fqdn = closest.found.uri
+		mreply.Status = dme.FindCloudletReply_FIND_FOUND
+		*mreply.CloudletLocation = closest.found.location
+		mreply.Ports = copyPorts(closest.found)
+		cloudlet := closest.found.clusterInstKey.CloudletKey.Name
+		var ipaddr net.IP
+		ipaddr = closest.found.ip
+		log.SpanLog(ctx, log.DebugLevelDmereq, "best cloudlet",
+			"app", key.Name,
+			"carrier", closest.foundCarrier,
+			"latitude", closest.found.location.Latitude,
+			"longitude", closest.found.location.Longitude,
+			"distance", closest.distance,
+			"uri", closest.found.uri,
+			"IP", ipaddr.String())
+		// Update Context variable if passed
+		updateContextWithCloudletDetails(ctx, cloudlet, closest.foundCarrier)
+	}
+
 	if app.AutoProvPolicy != nil {
-		list, found := app.AutoProvPolicy.Cloudlets[carrierName]
-		log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy", "carrier", carrierName, "found", found, "list", list)
-		if found {
-			potentialDist := maxDistance
-			var potentialCloudlet *edgeproto.AutoProvCloudlet
-			var potentialClusterInstKey *edgeproto.ClusterInstKey
-			for _, cl := range list {
-				// make sure there's a free reservable ClusterInst
-				// on the cloudlet. if cinsts exists there is at
-				// least one free.
-				cinstKey := tbl.FreeReservableClusterInsts.GetForCloudlet(&cl.Key, app.Deployment)
-				if cinstKey == nil {
-					continue
-				}
-				pd := DistanceBetween(*loc, cl.Loc)
-				// This will intentionally skip auto-deployed
-				// AppInsts, this should only find cloudlets
-				// that could, but do not have the AppInst
-				// auto-deployed.
-				if pd < potentialDist {
-					potentialDist = pd
-					potentialClusterInstKey = cinstKey
-					potentialCloudlet = cl
-				}
-			}
-			log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy result", "potentialClusterInst", potentialClusterInstKey, "autoProvStats", autoProvStats)
-			if potentialClusterInstKey != nil && autoProvStats != nil {
-				autoProvStats.Increment(ctx, &app.AppKey, potentialClusterInstKey, app.AutoProvPolicy.DeployClientCount, app.AutoProvPolicy.IntervalCount)
-				log.SpanLog(ctx, log.DebugLevelDmereq, "potential best cloudlet",
-					"app", key.Name,
-					"carrier", carrierName,
-					"latitude", potentialCloudlet.Loc.Latitude,
-					"longitude", potentialCloudlet.Loc.Longitude,
-					"distance", potentialDist)
-			}
+		log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy", "found", closest.found)
+		closest.potentialDist = closest.distance
+		for cname, list := range app.AutoProvPolicy.Cloudlets {
+			closest.searchPotential(ctx, cname, list)
+		}
+		log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy result", "potentialClusterInst", closest.potentialClusterInstKey, "autoProvStats", autoProvStats)
+		if closest.potentialClusterInstKey != nil && autoProvStats != nil {
+			autoProvStats.Increment(ctx, &app.AppKey, closest.potentialClusterInstKey, app.AutoProvPolicy.DeployClientCount, app.AutoProvPolicy.IntervalCount)
+			log.SpanLog(ctx, log.DebugLevelDmereq,
+				"potential best cloudlet",
+				"app", key.Name,
+				"carrier", closest.potentialCarrier,
+				"latitude", closest.potentialCloudlet.Loc.Latitude,
+				"longitude", closest.potentialCloudlet.Loc.Longitude,
+				"distance", closest.potentialDist)
 		}
 	}
-	return maxDistance, updated
+
+	return closest.distance, closest.found != nil
+}
+
+func (s *closestAppInst) searchCarrier(carrier string) bool {
+	if s.reqCarrier == "" {
+		// search all carriers
+		return true
+	}
+	// always allow public clouds
+	if carrier == cloudcommon.OperatorAzure || carrier == cloudcommon.OperatorGCP {
+		return true
+	}
+	// later on we may have carrier groups or other logic,
+	// but for now it's just 1-to-1.
+	return s.reqCarrier == carrier
+}
+
+func (s *closestAppInst) padDistance(carrier string) float64 {
+	if carrier == cloudcommon.OperatorAzure || carrier == cloudcommon.OperatorGCP {
+		if s.reqCarrier == "" || s.reqCarrier == carrier {
+			return 0
+		}
+		// Carrier specified and it's not a public cloud carrier.
+		// Assume it's cellular. Pad distance to favor cellular.
+		return 100
+	}
+	return 0
+}
+
+func (s *closestAppInst) searchAppInsts(ctx context.Context, carrier string, appInsts *DmeAppInsts) {
+	if !s.searchCarrier(carrier) {
+		return
+	}
+	for _, i := range appInsts.Insts {
+		d := DistanceBetween(*s.loc, i.location) + s.padDistance(carrier)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "found cloudlet at",
+			"carrier", carrier,
+			"latitude", i.location.Latitude,
+			"longitude", i.location.Longitude,
+			"current-distance", s.distance,
+			"this-dist", d)
+		if d < s.distance && IsAppInstUsable(i) {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "closer cloudlet", "uri", i.uri)
+			s.distance = d
+			s.found = i
+			s.foundCarrier = carrier
+		}
+	}
+}
+
+func (s *closestAppInst) searchPotential(ctx context.Context, carrier string, list []*edgeproto.AutoProvCloudlet) {
+	if !s.searchCarrier(carrier) {
+		return
+	}
+	log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy list", "carrier", carrier, "list", list)
+
+	for _, cl := range list {
+		// make sure there's a free reservable ClusterInst
+		// on the cloudlet. if cinsts exists there is at
+		// least one free.
+		cinstKey := DmeAppTbl.FreeReservableClusterInsts.GetForCloudlet(&cl.Key, s.appDeployment)
+		if cinstKey == nil {
+			continue
+		}
+		pd := DistanceBetween(*s.loc, cl.Loc) + s.padDistance(carrier)
+		// This will intentionally skip auto-deployed
+		// AppInsts, this should only find cloudlets
+		// that could, but do not have the AppInst
+		// auto-deployed.
+		if pd < s.potentialDist {
+			s.potentialDist = pd
+			s.potentialClusterInstKey = cinstKey
+			s.potentialCloudlet = cl
+			s.potentialCarrier = carrier
+		}
+	}
 }
 
 // Helper function to populate the Stats key with Cloudlet data if it's passed in the context
@@ -572,7 +631,6 @@ func updateContextWithCloudletDetails(ctx context.Context, cloudlet, carrier str
 }
 
 func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply) error {
-	publicCloudPadding := 100.0 // public clouds have to be this much closer in km
 	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
 
@@ -588,25 +646,6 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 
 	if updated {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "found carrier cloudlet", "Fqdn", mreply.Fqdn, "distance", bestDistance)
-	}
-
-	if bestDistance > publicCloudPadding {
-		paddedCarrierDistance := bestDistance - publicCloudPadding
-
-		// look for an azure cloud closer than the carrier distance minus padding
-		azDistance, updated := findClosestForCarrier(ctx, cloudcommon.OperatorAzure, appkey, loc, paddedCarrierDistance, mreply)
-		if updated {
-			log.SpanLog(ctx, log.DebugLevelDmereq, "found closer azure cloudlet", "Fqdn", mreply.Fqdn, "distance", azDistance)
-			bestDistance = azDistance
-		}
-
-		// look for a gcp cloud closer than either the azure cloud or the carrier cloud
-		maxGCPDistance := math.Min(azDistance, paddedCarrierDistance)
-		gcpDistance, updated := findClosestForCarrier(ctx, cloudcommon.OperatorGCP, appkey, loc, maxGCPDistance, mreply)
-		if updated {
-			log.SpanLog(ctx, log.DebugLevelDmereq, "found closer gcp cloudlet", "Fqdn", mreply.Fqdn, "distance", gcpDistance)
-			bestDistance = gcpDistance
-		}
 	}
 
 	if mreply.Status == dme.FindCloudletReply_FIND_FOUND {
