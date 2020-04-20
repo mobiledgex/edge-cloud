@@ -94,7 +94,8 @@ func (s *AppInstClientApi) AddAppInstClient(ctx context.Context, client *edgepro
 		// We need to either update, or add the client to the list
 		for ii, c := range s.appInstClients {
 			// Found the same client from before
-			if c.ClientKey.Uuid == client.ClientKey.Uuid {
+			if c.ClientKey.UniqueId == client.ClientKey.UniqueId &&
+				c.ClientKey.UniqueIdType == client.ClientKey.UniqueIdType {
 				if len(s.appInstClients) > ii+1 {
 					// remove this client the and append it at the end, since it's new
 					s.appInstClients = append(s.appInstClients[:ii], s.appInstClients[ii+1:]...)

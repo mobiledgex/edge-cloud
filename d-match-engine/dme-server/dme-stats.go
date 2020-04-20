@@ -310,7 +310,8 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 			client := getAppInstClient(call.key.AppKey.Name, call.key.AppKey.Version, call.key.AppKey.Organization, loc)
 			if client != nil {
 				client.ClientKey.Key.ClusterInstKey.CloudletKey = call.key.CloudletFound
-				client.ClientKey.Uuid = ckey.UniqueId
+				client.ClientKey.UniqueId = ckey.UniqueId
+				client.ClientKey.UniqueIdType = ckey.UniqueIdType
 				// GpsLocation timestamp can carry an arbitrary system time instead of a timestamp
 				client.Location.Timestamp = &dme.Timestamp{}
 				ts := time.Now()
