@@ -135,7 +135,8 @@ func main() {
 	gencmd.RunCommandCmd.Run = runRunCommand
 	gencmd.ShowLogsCmd.Run = runShowLogs
 	gencmd.RunConsoleCmd.Run = runRunConsole
-	controllerCmd.AddCommand(gencmd.RunCommandCmd.GenCmd(), gencmd.RunConsoleCmd.GenCmd(), gencmd.ShowLogsCmd.GenCmd())
+	gencmd.AccessCloudletCmd.Run = runAccessCloudlet
+	controllerCmd.AddCommand(gencmd.RunCommandCmd.GenCmd(), gencmd.RunConsoleCmd.GenCmd(), gencmd.ShowLogsCmd.GenCmd(), gencmd.AccessCloudletCmd.GenCmd())
 
 	dmeCmd.AddCommand(gencmd.MatchEngineApiCmds...)
 	dmeCmd.AddCommand(gencmd.DebugApiCmds...)

@@ -14,7 +14,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/util/proxyutil"
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
 	ssh "github.com/mobiledgex/golang-ssh"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -55,16 +54,18 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 	}
 
 	appInst := edgeproto.AppInst{}
-	found := cd.AppInstCache.Get(&req.AppInstKey, &appInst)
-	if !found {
-		return fmt.Errorf("app inst %s not found",
-			req.AppInstKey.GetKeyString())
-	}
 	app := edgeproto.App{}
-	found = cd.AppCache.Get(&req.AppInstKey.AppKey, &app)
-	if !found {
-		return fmt.Errorf("app %s not found",
-			req.AppInstKey.AppKey.GetKeyString())
+	if req.Cmd == nil || req.Cmd.CloudletMgmtNode == nil {
+		found := cd.AppInstCache.Get(&req.AppInstKey, &appInst)
+		if !found {
+			return fmt.Errorf("app inst %s not found",
+				req.AppInstKey.GetKeyString())
+		}
+		found = cd.AppCache.Get(&req.AppInstKey.AppKey, &app)
+		if !found {
+			return fmt.Errorf("app %s not found",
+				req.AppInstKey.AppKey.GetKeyString())
+		}
 	}
 
 	var execReqType cloudcommon.ExecReqType
@@ -80,10 +81,53 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		}
 		execReqType = cloudcommon.ExecReqConsole
 		initURL = urlObj
+	} else if req.Cmd != nil && req.Cmd.CloudletMgmtNode != nil {
+		insts := []edgeproto.ClusterInst{}
+		cd.ClusterInstCache.Mux.Lock()
+		for _, v := range cd.ClusterInstCache.Objs {
+			insts = append(insts, *v)
+		}
+		cd.ClusterInstCache.Mux.Unlock()
+		nodes, err := cd.platform.ListCloudletMgmtNodes(ctx, insts)
+		if err != nil {
+			return fmt.Errorf("unable to get list of cloudlet mgmt nodes, %v", err)
+		}
+		access_node := req.Cmd.CloudletMgmtNode
+		found := false
+		for _, node := range nodes {
+			if access_node.Type == "" && access_node.Name != "" {
+				// wildcard on node type, so allow node name
+				found = true
+				break
+			}
+			if access_node.Type != node.Type {
+				continue
+			}
+			if access_node.Name == "" {
+				access_node.Name = node.Name
+				found = true
+				break
+			} else if access_node.Name == node.Name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("unable to find cloudlet mgmt node, list of valid nodes: %v", nodes)
+		}
+		run.contcmd = "bash"
+		if req.Cmd.Command != "" {
+			run.contcmd = req.Cmd.Command
+		}
+		run.client, err = cd.platform.GetNodePlatformClient(ctx, access_node)
+		if err != nil {
+			return err
+		}
+		execReqType = cloudcommon.ExecReqShell
 	} else {
 		execReqType = cloudcommon.ExecReqShell
 		clusterInst := edgeproto.ClusterInst{}
-		found = cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
+		found := cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
 		if !found {
 			return fmt.Errorf("cluster inst %s not found",
 				appInst.Key.ClusterInstKey.GetKeyString())
@@ -94,7 +138,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			return err
 		}
 
-		run.client, err = cd.platform.GetPlatformClient(ctx, &clusterInst)
+		run.client, err = cd.platform.GetClusterPlatformClient(ctx, &clusterInst)
 		if err != nil {
 			return err
 		}
@@ -210,19 +254,97 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		}
 
 		if req.Console != nil {
+			urlObj, err := url.Parse(req.Console.Url)
+			if err != nil {
+				return fmt.Errorf("failed to parse console url %s, %v", req.Console.Url, err)
+			}
+			isTLS := false
+			if urlObj.Scheme == "http" {
+				isTLS = false
+			} else if urlObj.Scheme == "https" {
+				isTLS = true
+			} else {
+				return fmt.Errorf("unsupported scheme %s", urlObj.Scheme)
+			}
+			sess, err := smux.Server(turnConn, nil)
+			if err != nil {
+				return fmt.Errorf("failed to setup smux server, %v", err)
+			}
+			// Verify if connection to url is okay
+			var server net.Conn
+			if isTLS {
+				server, err = tls.Dial("tcp", urlObj.Host, &tls.Config{
+					InsecureSkipVerify: true,
+				})
+				if err != nil {
+					return fmt.Errorf("failed to get console, %v", err)
+				}
+			} else {
+				server, err = net.Dial("tcp", urlObj.Host)
+				if err != nil {
+					return fmt.Errorf("failed to get console, %v", err)
+				}
+			}
+			server.Close()
+			defer sess.Close()
+			// Notify controller that connection is setup
 			proxyAddr := "https://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeconsole?edgetoken=" + sessInfo.Token
 			req.AccessUrl = proxyAddr
 			cd.ExecReqSend.Update(ctx, req)
-
-			err = proxyutil.ProxyMuxServer(turnConn, req.Console.Url)
-			if err != nil {
-				return err
+			for {
+				stream, err := sess.AcceptStream()
+				if err != nil {
+					if err.Error() != io.ErrClosedPipe.Error() {
+						return fmt.Errorf("failed to setup smux acceptstream, %v", err)
+					}
+					return nil
+				}
+				if isTLS {
+					server, err = tls.Dial("tcp", urlObj.Host, &tls.Config{
+						InsecureSkipVerify: true,
+					})
+					if err != nil {
+						return fmt.Errorf("failed to get console, %v", err)
+					}
+				} else {
+					server, err = net.Dial("tcp", urlObj.Host)
+					if err != nil {
+						return fmt.Errorf("failed to get console, %v", err)
+					}
+				}
+				go func(server net.Conn, stream *smux.Stream) {
+					buf := make([]byte, 1500)
+					for {
+						n, err := stream.Read(buf)
+						if err != nil {
+							break
+						}
+						server.Write(buf[:n])
+					}
+					stream.Close()
+					server.Close()
+				}(server, stream)
+				go func(server net.Conn, stream *smux.Stream) {
+					buf := make([]byte, 1500)
+					for {
+						n, err := server.Read(buf)
+						if err != nil {
+							break
+						}
+						stream.Write(buf[:n])
+					}
+					stream.Close()
+					server.Close()
+				}(server, stream)
 			}
 		} else {
 			proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?edgetoken=" + sessInfo.Token
 			req.AccessUrl = proxyAddr
 			cd.ExecReqSend.Update(ctx, req)
-			run.proxyRawConn(turnConn)
+			err = run.proxyRawConn(turnConn)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -336,7 +458,7 @@ func (s *WebrtcExec) proxyConsoleConn(fromUrl string, toConn net.Conn) {
 	}
 }
 
-func (s *WebrtcExec) proxyRawConn(turnConn net.Conn) {
+func (s *WebrtcExec) proxyRawConn(turnConn net.Conn) error {
 	prd, pwr := io.Pipe()
 	go io.Copy(pwr, turnConn)
 	err := s.client.Shell(prd, turnConn, turnConn, s.contcmd)
@@ -345,4 +467,5 @@ func (s *WebrtcExec) proxyRawConn(turnConn net.Conn) {
 			"failed to exec",
 			"cmd", s.contcmd, "err", err)
 	}
+	return err
 }
