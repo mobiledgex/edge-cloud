@@ -140,6 +140,42 @@ var FindCloudletData = []FindCloudletRR{
 		ReplyCarrier:  Cloudlets[3].CarrierName,
 		ReplyCloudlet: Cloudlets[3].Name,
 	},
+	FindCloudletRR{
+		Reg: dme.RegisterClientRequest{
+			OrgName: "Ever.AI",
+			AppName: "Ever",
+			AppVers: "1.7",
+		},
+		Req: dme.FindCloudletRequest{
+			CarrierName: "",
+			GpsLocation: &dme.Loc{Latitude: 47.75, Longitude: 122.9050},
+		},
+		Reply: dme.FindCloudletReply{
+			Fqdn:             Cloudlets[3].Uri,
+			CloudletLocation: &Cloudlets[3].Location,
+			Status:           1,
+		},
+		ReplyCarrier:  Cloudlets[3].CarrierName,
+		ReplyCloudlet: Cloudlets[3].Name,
+	},
+	FindCloudletRR{
+		Reg: dme.RegisterClientRequest{
+			OrgName: "Ever.AI",
+			AppName: "Ever",
+			AppVers: "1.7",
+		},
+		Req: dme.FindCloudletRequest{
+			CarrierName: "",
+			GpsLocation: &dme.Loc{Latitude: 48.31, Longitude: 11.66},
+		},
+		Reply: dme.FindCloudletReply{
+			Fqdn:             Cloudlets[2].Uri,
+			CloudletLocation: &Cloudlets[2].Location,
+			Status:           1,
+		},
+		ReplyCarrier:  Cloudlets[2].CarrierName,
+		ReplyCloudlet: Cloudlets[2].Name,
+	},
 }
 
 // copy of FindCloudletData[3] with a changed reply to Sunnydale cloudlet

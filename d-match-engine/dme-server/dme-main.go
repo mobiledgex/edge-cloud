@@ -95,10 +95,6 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 	appkey.Name = ckey.AppName
 	appkey.Version = ckey.AppVers
 
-	if req.CarrierName == "" {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing CarrierName")
-		return reply, grpc.Errorf(codes.InvalidArgument, "Missing carrierName")
-	}
 	err := validateLocation(req.GpsLocation)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request, invalid location", "loc", req.GpsLocation, "err", err)
@@ -118,10 +114,6 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 	if !cloudcommon.IsPlatformApp(ckey.OrgName, ckey.AppName) {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudlet API Not allowed for developer app", "org", ckey.OrgName, "name", ckey.AppName)
 		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.OrgName, ckey.AppName)
-	}
-	if req.CarrierName == "" {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudlet request", "Error", "Missing CarrierName")
-		return reply, grpc.Errorf(codes.InvalidArgument, "Missing carrierName")
 	}
 	if req.ClientToken == "" {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudlet request", "Error", "Missing ClientToken")
