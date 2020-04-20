@@ -13,8 +13,10 @@ import "gogoproto/gogo.proto";
 message AppInstClientKey {
   // AppInst Key
   AppInstKey key = 1 [(gogoproto.nullable) = false];
-  // AppInstClient UUID
-  string uuid = 2;
+  // AppInstClient Unique Id
+  string unique_id = 2;
+  // AppInstClient Unique Id Type
+  string unique_id_type = 3;
 
   option (protogen.notify_message) = true;
   option (protogen.generate_matches) = true;
