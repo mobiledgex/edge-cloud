@@ -188,6 +188,9 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 	if api == "runconsole" {
 		args = append(args, "RunConsole")
 	}
+	if api == "accesscloudlet" {
+		args = append(args, "AccessCloudlet")
+	}
 	args = append(args, "app-org="+req.AppInstKey.AppKey.Organization)
 	args = append(args, "appname="+req.AppInstKey.AppKey.Name)
 	args = append(args, "appvers="+req.AppInstKey.AppKey.Version)
@@ -210,6 +213,13 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 		}
 		if req.Log.Follow {
 			args = append(args, "follow=true")
+		}
+	}
+	if api == "accesscloudlet" && req.Cmd != nil {
+		args = append(args, "command=\""+req.Cmd.Command+"\"")
+		if req.Cmd.CloudletMgmtNode != nil {
+			args = append(args, "node-type=\""+req.Cmd.CloudletMgmtNode.Type+"\"")
+			args = append(args, "node-name=\""+req.Cmd.CloudletMgmtNode.Name+"\"")
 		}
 	}
 	out, err := util.ControllerCLI(ctrl, args...)

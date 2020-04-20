@@ -85,8 +85,21 @@ func (s *Platform) GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto
 	return &edgeproto.AppInstRuntime{}, nil
 }
 
-func (s *Platform) GetPlatformClient(ctx context.Context, clusterInst *edgeproto.ClusterInst) (ssh.Client, error) {
+func (s *Platform) GetClusterPlatformClient(ctx context.Context, clusterInst *edgeproto.ClusterInst) (ssh.Client, error) {
 	return &pc.LocalClient{}, nil
+}
+
+func (s *Platform) GetNodePlatformClient(ctx context.Context, node *edgeproto.CloudletMgmtNode) (ssh.Client, error) {
+	return &pc.LocalClient{}, nil
+}
+
+func (s *Platform) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst) ([]edgeproto.CloudletMgmtNode, error) {
+	return []edgeproto.CloudletMgmtNode{
+		edgeproto.CloudletMgmtNode{
+			Type: "platformvm",
+			Name: "platformvmname",
+		},
+	}, nil
 }
 
 func (s *Platform) GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {

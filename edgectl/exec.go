@@ -28,6 +28,10 @@ func runShowLogs(c *cli.Command, args []string) error {
 	return runExecRequest(c, args, execApiCmd.ShowLogs)
 }
 
+func runAccessCloudlet(c *cli.Command, args []string) error {
+	return runExecRequest(c, args, execApiCmd.AccessCloudlet)
+}
+
 func runExecRequest(c *cli.Command, args []string, apiFunc execFunc) error {
 	if execApiCmd == nil {
 		return fmt.Errorf("ExecApi client not initialized")
