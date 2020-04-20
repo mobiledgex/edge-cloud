@@ -50,7 +50,8 @@ type RegisterReplyWithError struct {
 	dmeproto.RegisterClientReply
 }
 
-var apiRequest dmeApiRequest
+var apiRequests []*dmeApiRequest
+var singleRequest bool
 
 // REST client implementation of MatchEngineApiClient interface
 type dmeRestClient struct {
@@ -165,7 +166,14 @@ func (c *dmeRestClient) GetAppOfficialFqdn(ctx context.Context, in *dmeproto.App
 }
 
 func readDMEApiFile(apifile string) {
-	err := util.ReadYamlFile(apifile, &apiRequest, util.ValidateReplacedVars())
+	err := util.ReadYamlFile(apifile, &apiRequests, util.ValidateReplacedVars())
+	if err != nil && !util.IsYamlOk(err, "dmeapi") {
+		// old yaml files are not arrayed dmeApiRequests
+		apiRequest := dmeApiRequest{}
+		apiRequests = append(apiRequests, &apiRequest)
+		err = util.ReadYamlFile(apifile, &apiRequest, util.ValidateReplacedVars())
+		singleRequest = true
+	}
 	if err != nil {
 		if !util.IsYamlOk(err, "dmeapi") {
 			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apifile)
@@ -211,6 +219,38 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
+	rc := true
+	replies := make([]interface{}, 0)
+
+	for ii, apiRequest := range apiRequests {
+		log.Printf("RunDmeAPIiter[%d]\n", ii)
+		ok, reply := runDmeAPIiter(ctx, api, apiFile, outputDir, apiRequest, client)
+		if !ok {
+			rc = false
+			continue
+		}
+		replies = append(replies, reply)
+	}
+	if !rc {
+		return false
+	}
+
+	var out []byte
+	var ymlerror error
+	if singleRequest && len(replies) == 1 {
+		out, ymlerror = yaml.Marshal(replies[0])
+	} else {
+		out, ymlerror = yaml.Marshal(replies)
+	}
+	if ymlerror != nil {
+		fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)
+		return false
+	}
+	util.PrintToFile(api+".yml", outputDir, string(out), true)
+	return true
+}
+
+func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiRequest *dmeApiRequest, client dmeproto.MatchEngineApiClient) (bool, interface{}) {
 	//generic struct so we can do the marshal in one place even though return types are different
 	var dmereply interface{}
 	var dmeerror error
@@ -227,10 +267,16 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 				registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers ||
 				time.Since(registerStatus.At) > time.Hour) {
 			log.Printf("Re-registering for api %s - %+v\n", api, apiRequest.Rcreq)
-			ok := RunDmeAPI("register", procname, apiFile, apiType, outputDir)
+			ok, reply := runDmeAPIiter(ctx, "register", apiFile, outputDir, apiRequest, client)
 			if !ok {
-				return false
+				return false, nil
 			}
+			out, ymlerror := yaml.Marshal(reply)
+			if ymlerror != nil {
+				fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)
+				return false, nil
+			}
+			util.PrintToFile("register.yml", outputDir, string(out), true)
 			readMatchEngineStatus(outputDir+"/register.yml", &registerStatus)
 		}
 		sessionCookie = registerStatus.Reply.SessionCookie
@@ -244,7 +290,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		err := util.ReadYamlFile(outputDir+"/getappofficialfqdn.yml", &fqdnreply)
 		if err != nil {
 			log.Printf("error reading AppOfficialFqdn response - %v", err)
-			return false
+			return false, nil
 		}
 		apiRequest.Pfcreq.SessionCookie = sessionCookie
 		apiRequest.Pfcreq.ClientToken = fqdnreply.ClientToken
@@ -292,7 +338,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 				apiRequest.Rcreq.AuthToken = token
 			} else {
 				log.Printf("Error getting AuthToken: %v\n", err)
-				return false
+				return false, nil
 			}
 		}
 		reply := new(dmeproto.RegisterClientReply)
@@ -304,7 +350,6 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 				At:    time.Now(),
 			}
 		}
-
 	case "verifylocation":
 		tokSrvUrl := registerStatus.Reply.TokenServerUri
 		log.Printf("found token server url from register response %s\n", tokSrvUrl)
@@ -320,7 +365,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 				u, err := url.Parse(tokSrvUrl)
 				if err != nil {
 					log.Printf("unable to parse tokserv url %s -- %v\n", tokSrvUrl, err)
-					return false
+					return false, nil
 				}
 				u.Path = apiRequest.TokenServerPath
 				tokSrvUrl = u.String()
@@ -328,7 +373,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 			token = GetTokenFromTokSrv(tokSrvUrl)
 			if token == "" {
 				log.Printf("fail to get token from token server")
-				return false
+				return false, nil
 			}
 		}
 		apiRequest.Vlreq.SessionCookie = sessionCookie
@@ -383,13 +428,13 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		dmeerror = err
 	default:
 		log.Printf("Unsupported dme api %s\n", api)
-		return false
+		return false, nil
 	}
 	if dmeerror == nil {
 		// if the test is looking for an error, it needs to be there
 		if apiRequest.ErrorExpected != "" {
 			log.Printf("Missing error in DME API: %s", apiRequest.ErrorExpected)
-			return false
+			return false, nil
 		}
 	} else {
 		// see if the error was expected
@@ -398,21 +443,13 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 				log.Printf("found expected error string in api response: %s", apiRequest.ErrorExpected)
 			} else {
 				log.Printf("Mismatched error in DME API: %s Expected: %s", dmeerror.Error(), apiRequest.ErrorExpected)
-				return false
+				return false, nil
 			}
 		} else {
 			log.Printf("Unexpected error in DME API: %s -- %v\n", api, dmeerror)
-			return false
+			return false, nil
 		}
 	}
-
 	log.Printf("DME REPLY %v\n", dmereply)
-	out, ymlerror := yaml.Marshal(dmereply)
-	if ymlerror != nil {
-		fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)
-		return false
-	}
-
-	util.PrintToFile(api+".yml", outputDir, string(out), true)
-	return true
+	return true, dmereply
 }
