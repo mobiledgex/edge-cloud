@@ -11,3 +11,15 @@ appinstances:
         organization: dmuus
         name: dmuus-cloud-2
       organization: AcmeAppCo
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        organization: att
+        name: att-cloud-1
+      organization: AcmeAppCo
