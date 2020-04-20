@@ -14,7 +14,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/util/proxyutil"
 	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
 	ssh "github.com/mobiledgex/golang-ssh"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -255,13 +254,88 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		}
 
 		if req.Console != nil {
+			urlObj, err := url.Parse(req.Console.Url)
+			if err != nil {
+				return fmt.Errorf("failed to parse console url %s, %v", req.Console.Url, err)
+			}
+			isTLS := false
+			if urlObj.Scheme == "http" {
+				isTLS = false
+			} else if urlObj.Scheme == "https" {
+				isTLS = true
+			} else {
+				return fmt.Errorf("unsupported scheme %s", urlObj.Scheme)
+			}
+			sess, err := smux.Server(turnConn, nil)
+			if err != nil {
+				return fmt.Errorf("failed to setup smux server, %v", err)
+			}
+			// Verify if connection to url is okay
+			var server net.Conn
+			if isTLS {
+				server, err = tls.Dial("tcp", urlObj.Host, &tls.Config{
+					InsecureSkipVerify: true,
+				})
+				if err != nil {
+					return fmt.Errorf("failed to get console, %v", err)
+				}
+			} else {
+				server, err = net.Dial("tcp", urlObj.Host)
+				if err != nil {
+					return fmt.Errorf("failed to get console, %v", err)
+				}
+			}
+			server.Close()
+			defer sess.Close()
+			// Notify controller that connection is setup
 			proxyAddr := "https://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeconsole?edgetoken=" + sessInfo.Token
 			req.AccessUrl = proxyAddr
 			cd.ExecReqSend.Update(ctx, req)
-
-			err = proxyutil.ProxyMuxServer(turnConn, req.Console.Url)
-			if err != nil {
-				return err
+			for {
+				stream, err := sess.AcceptStream()
+				if err != nil {
+					if err.Error() != io.ErrClosedPipe.Error() {
+						return fmt.Errorf("failed to setup smux acceptstream, %v", err)
+					}
+					return nil
+				}
+				if isTLS {
+					server, err = tls.Dial("tcp", urlObj.Host, &tls.Config{
+						InsecureSkipVerify: true,
+					})
+					if err != nil {
+						return fmt.Errorf("failed to get console, %v", err)
+					}
+				} else {
+					server, err = net.Dial("tcp", urlObj.Host)
+					if err != nil {
+						return fmt.Errorf("failed to get console, %v", err)
+					}
+				}
+				go func(server net.Conn, stream *smux.Stream) {
+					buf := make([]byte, 1500)
+					for {
+						n, err := stream.Read(buf)
+						if err != nil {
+							break
+						}
+						server.Write(buf[:n])
+					}
+					stream.Close()
+					server.Close()
+				}(server, stream)
+				go func(server net.Conn, stream *smux.Stream) {
+					buf := make([]byte, 1500)
+					for {
+						n, err := server.Read(buf)
+						if err != nil {
+							break
+						}
+						stream.Write(buf[:n])
+					}
+					stream.Close()
+					server.Close()
+				}(server, stream)
 			}
 		} else {
 			proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?edgetoken=" + sessInfo.Token
