@@ -229,6 +229,64 @@ func ShowLogss(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
 	}
 }
 
+var AccessCloudletCmd = &cli.Command{
+	Use:          "AccessCloudlet",
+	RequiredArgs: strings.Join(AccessCloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(AccessCloudletOptionalArgs, " "),
+	AliasArgs:    strings.Join(ExecRequestAliasArgs, " "),
+	SpecialArgs:  &ExecRequestSpecialArgs,
+	Comments:     ExecRequestComments,
+	ReqData:      &edgeproto.ExecRequest{},
+	ReplyData:    &edgeproto.ExecRequest{},
+	Run:          runAccessCloudlet,
+}
+
+func runAccessCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.ExecRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return AccessCloudlet(c, obj)
+}
+
+func AccessCloudlet(c *cli.Command, in *edgeproto.ExecRequest) error {
+	if ExecApiCmd == nil {
+		return fmt.Errorf("ExecApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := ExecApiCmd.AccessCloudlet(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AccessCloudlet failed: %s", errstr)
+	}
+	ExecRequestHideTags(obj)
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func AccessCloudlets(c *cli.Command, data []edgeproto.ExecRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AccessCloudlet %v\n", data[ii])
+		myerr := AccessCloudlet(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var SendLocalRequestCmd = &cli.Command{
 	Use:          "SendLocalRequest",
 	RequiredArgs: strings.Join(ExecRequestRequiredArgs, " "),
@@ -291,16 +349,32 @@ var ExecApiCmds = []*cobra.Command{
 	RunCommandCmd.GenCmd(),
 	RunConsoleCmd.GenCmd(),
 	ShowLogsCmd.GenCmd(),
+	AccessCloudletCmd.GenCmd(),
 	SendLocalRequestCmd.GenCmd(),
 }
 
+var CloudletMgmtNodeRequiredArgs = []string{}
+var CloudletMgmtNodeOptionalArgs = []string{
+	"type",
+	"name",
+}
+var CloudletMgmtNodeAliasArgs = []string{}
+var CloudletMgmtNodeComments = map[string]string{
+	"type": "Type of Cloudlet Mgmt Node",
+	"name": "Name of Cloudlet Mgmt Node",
+}
+var CloudletMgmtNodeSpecialArgs = map[string]string{}
 var RunCmdRequiredArgs = []string{}
 var RunCmdOptionalArgs = []string{
 	"command",
+	"cloudletmgmtnode.type",
+	"cloudletmgmtnode.name",
 }
 var RunCmdAliasArgs = []string{}
 var RunCmdComments = map[string]string{
-	"command": "Command or Shell",
+	"command":               "Command or Shell",
+	"cloudletmgmtnode.type": "Type of Cloudlet Mgmt Node",
+	"cloudletmgmtnode.name": "Name of Cloudlet Mgmt Node",
 }
 var RunCmdSpecialArgs = map[string]string{}
 var RunVMConsoleRequiredArgs = []string{}
@@ -339,6 +413,8 @@ var ExecRequestRequiredArgs = []string{
 var ExecRequestOptionalArgs = []string{
 	"containerid",
 	"command",
+	"node-type",
+	"node-name",
 	"since",
 	"tail",
 	"timestamps",
@@ -354,6 +430,8 @@ var ExecRequestAliasArgs = []string{
 	"cloudlet=appinstkey.clusterinstkey.cloudletkey.name",
 	"cluster-org=appinstkey.clusterinstkey.organization",
 	"command=cmd.command",
+	"node-type=cmd.cloudletmgmtnode.type",
+	"node-name=cmd.cloudletmgmtnode.name",
 	"since=log.since",
 	"tail=log.tail",
 	"timestamps=log.timestamps",
@@ -372,6 +450,8 @@ var ExecRequestComments = map[string]string{
 	"answer":       "WebRTC Answer",
 	"err":          "Any error message",
 	"command":      "Command or Shell",
+	"node-type":    "Type of Cloudlet Mgmt Node",
+	"node-name":    "Name of Cloudlet Mgmt Node",
 	"since":        "Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)",
 	"tail":         "Show only a recent number of lines",
 	"timestamps":   "Show timestamps",
@@ -395,6 +475,8 @@ var RunCommandRequiredArgs = []string{
 var RunCommandOptionalArgs = []string{
 	"cluster-org",
 	"containerid",
+	"node-type",
+	"node-name",
 	"webrtc",
 }
 var RunConsoleRequiredArgs = []string{
@@ -407,7 +489,6 @@ var RunConsoleRequiredArgs = []string{
 }
 var RunConsoleOptionalArgs = []string{
 	"cluster-org",
-	"containerid",
 	"webrtc",
 }
 var ShowLogsRequiredArgs = []string{
@@ -425,5 +506,15 @@ var ShowLogsOptionalArgs = []string{
 	"tail",
 	"timestamps",
 	"follow",
+	"webrtc",
+}
+var AccessCloudletRequiredArgs = []string{
+	"cloudlet-org",
+	"cloudlet",
+}
+var AccessCloudletOptionalArgs = []string{
+	"command",
+	"node-type",
+	"node-name",
 	"webrtc",
 }

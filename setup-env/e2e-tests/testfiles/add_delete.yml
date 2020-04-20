@@ -81,6 +81,10 @@ tests:
   apifile: "{{datadir}}/runconsole.yml"
   actions: [exec-runconsole]
 
+- name: test access cloudlet
+  apifile: "{{datadir}}/accesscloudlet.yml"
+  actions: [exec-accesscloudlet]
+
 - includefile: debugtest.yml
 
 - name: delete provisioning, verify it is empty
