@@ -494,14 +494,14 @@ func findBestForCarrier(ctx context.Context, carrierName string, key *edgeproto.
 	defer tbl.RUnlock()
 	app, ok := tbl.Apps[*key]
 	if !ok {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "findClosestForCarrier app not found", "key", *key)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "findBestForCarrier app not found", "key", *key)
 		return nil
 	}
 
 	log.SpanLog(ctx, log.DebugLevelDmereq, "Find Closest", "appkey", key, "carrierName", carrierName)
 
 	// Eventually when we have FindCloudlet policies, we should look it
-	// up here and apply it to the bestAppInstSearch config.
+	// up here and apply it to the search config.
 	search := searchAppInst{
 		loc:           loc,
 		reqCarrier:    carrierName,
@@ -618,7 +618,7 @@ func (s *searchAppInst) insertResult(found *foundAppInst) bool {
 			// shift out later entries (duplicates ii)
 			s.results = append(s.results[:ii+1], s.results[ii:count]...)
 		}
-		// insert (replace)
+		// replace
 		s.results[ii] = found
 		inserted = true
 		break
