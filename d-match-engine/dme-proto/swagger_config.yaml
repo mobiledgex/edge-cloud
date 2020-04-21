@@ -33,12 +33,7 @@ info:
       import com.mobiledgex.matchingengine.MatchingEngine;
 
       MatchingEngine me = new MatchingEngine(this);
-      AppClient.Tag tag = AppClient.Tag.newBuilder()
-          .setType(key)
-          .setData(datavalue);
       AppClient.RegisterClientRequest registerClientRequest = me.createDefaultRegisterClientRequest(activityContext, organizationName)
-          .setAuthToken(authToken)
-          .setTags(0, tag)
           .build();
       AppClient.RegisterClientReply registerClientReply = me.registerClient(registerClientRequest, 10000);
       ```
@@ -100,7 +95,8 @@ info:
       import com.mobiledgex.matchingengine.MatchingEngine;
 
       MatchingEngine me = new MatchingEngine(this);
-      AppClient.VerifyLocationRequest verifyRequest = me.createVerifyLocationRequest(activityContext, carrierName, location, cellID, tags);
+      AppClient.VerifyLocationRequest verifyRequest = me.createDefaultVerifyLocationRequest(activityContext, location)
+         .build();
       AppClient.VerifyLocationReply verifiedLocation = me.verifyLocation(verifyRequest, 10000);
       ```
       Example Response
@@ -135,6 +131,8 @@ info:
       AppConnectionManager appConnect = me.getAppConnectionManager();
       try {
           AppClient.FindCloudletRequest findCloudletRequest = me.createDefaultFindCloudletRequest(activityContext, location)
+            .setCarrierName(carrierName)
+            .build();
           AppClient.FindCloudletReply findCloudletReply = me.findCloudlet(findCloudletRequest, 10000);
           HashMap<Integer, AppPort> portMap = appConnect.getTCPMap(findCloudletReply);
           AppPort appPort = portMap.get(internal_port); // This internal port depends entirely the AppInst configuration/Docker image.
@@ -254,7 +252,7 @@ info:
       using DistributedMatchEngine;
 
       MatchingEngine me = new MatchingEngine();
-      FindCloudletRequest findCloudletRequest = CreateFindCloudletRequest(loc);
+      FindCloudletRequest findCloudletRequest = CreateFindCloudletRequest(loc, carrierName);
       FindCloudletReply findCloudletReply = await FindCloudlet(findCloudletRequest);
       ```
       Example Response:
@@ -277,7 +275,7 @@ info:
       using DistributedMatchEngine;
 
       MatchingEngine me = new MatchingEngine();
-      VerifyLocationRequest verifyLocationRequest = me.CreateVerifyLocationRequest(loc, carrierName);
+      VerifyLocationRequest verifyLocationRequest = me.CreateVerifyLocationRequest(loc);
       VerifyLocationReply verifyLocationReply = await me.VerifyLocation(verifyLocationRequest);
       ```
       Example Response:
@@ -313,27 +311,27 @@ info:
       Example Code:
       ```csharp
       try {
-          reply = await me.RegisterAndFindCloudlet(orgName, appName, appVers);
+         reply = await me.RegisterAndFindCloudlet(orgName, appName, appVers);
       }
       catch (DmeDnsException dde) {
-              /* handle exception */
+         /* handle exception */
       }
       catch (RegisterClientException rce) {
-              /* handle exception */
+         /* handle exception */
       }
       Dictionary<int, AppPort> appPortsDict = me.GetTCPAppPorts(reply);
       int public_port = reply.ports[internal_port].public_port; // We happen to know it's the first one.
       AppPort appPort = appPortsDict[public_port];
       try {
-          Socket tcpConnection = await me.GetTCPConnection(reply, appPort, public_port, 5000);
-          /* use tcpConnection */
-              tcpConnection.Close();
+         Socket tcpConnection = await me.GetTCPConnection(reply, appPort, public_port, 5000);
+         /* use tcpConnection */
+         tcpConnection.Close();
       }
       catch (GetConnectionException e) {
-              /* handle exception */
+         /* handle exception */
       }
       catch (Exception e) {
-              /* handle exception */
+         /* handle exception */
       }
       ```
 
@@ -441,7 +439,7 @@ info:
       import MobiledgeXiOSLibrary
 
       let matchingEngine = MatchingEngine()
-      let findCloudletRequest = matchingEngine.createFindCloudletRequest(gpsLocation: loc)
+      let findCloudletRequest = matchingEngine.createFindCloudletRequest(gpsLocation: loc, carrierName: carrierName)
       let findCloudletReplyPromise = matchingEngine.findCloudlet(request: findCloudletRequest)
       .then { findCloudletReply in
           \* handle findCloudletReply*\
@@ -486,7 +484,7 @@ info:
       import MobiledgeXiOSLibrary
 
       let matchingEngine = MatchingEngine()
-      let verifyLocationRequest = matchingEngine.createVerifyLocationRequest(gpsLocation: loc, carrierName: carrierName)
+      let verifyLocationRequest = matchingEngine.createVerifyLocationRequest(gpsLocation: loc)
       let verifyLocationReplyPromise = matchingEngine.verifyLocation(request: verifyLocationRequest)
       .then { verifyLocationReply in
           /* handle verifyLocationReply */
