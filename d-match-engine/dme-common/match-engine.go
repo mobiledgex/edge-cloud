@@ -793,7 +793,10 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 	appkey.Version = ckey.AppVers
 
 	foundCloudlets := make(map[edgeproto.CloudletKey]*dme.CloudletLocation)
-	resultLimit := 3
+	resultLimit := int(mreq.Limit)
+	if resultLimit == 0 {
+		resultLimit = 3
+	}
 	list := findBestForCarrier(ctx, mreq.CarrierName, &appkey, mreq.GpsLocation, resultLimit)
 
 	for _, found := range list {
