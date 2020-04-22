@@ -266,7 +266,7 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		token := req.(*dme.PlatformFindCloudletRequest).ClientToken
 		// cannot collect any stats without a token
 		if token != "" {
-			tokdata, tokerr := dmecommon.GetClientDataFromToken(req.(*dme.PlatformFindCloudletRequest).ClientToken)
+			tokdata, tokerr := dmecommon.GetClientDataFromToken(token)
 			if tokerr != nil {
 				return resp, tokerr
 			}
