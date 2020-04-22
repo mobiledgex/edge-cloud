@@ -171,7 +171,7 @@ func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime
 	now := time.Now()
 	ts, _ := types.TimestampProto(now)
 	metric.Timestamp = *ts
-	utc, _ := time.LoadLocation("UTC") //utc or local??
+	utc, _ := time.LoadLocation("UTC")
 	//start and endtimes end up being put into different timezones somehow when going through calculations so force them both to the same here
 	startUTC := startTime.In(utc)
 	endUTC := endTime.In(utc)
