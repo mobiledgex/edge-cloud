@@ -957,6 +957,7 @@ var AppInstListRequestOptionalArgs = []string{
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
 	"cellid",
+	"limit",
 	"tags:#.type",
 	"tags:#.data",
 }
@@ -973,6 +974,7 @@ var AppInstListRequestComments = map[string]string{
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"cellid":                         "_(optional)_ Cell id where the client is",
+	"limit":                          "_(optional)_ Limit the number of results, defaults to 3",
 	"tags:#.type":                    "type of data",
 	"tags:#.data":                    "data value",
 }
