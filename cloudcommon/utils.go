@@ -29,7 +29,7 @@ const (
 )
 
 func GetFileNameWithExt(fileUrlPath string) (string, error) {
-	log.DebugLog(log.DebugLevelMexos, "get file name with extension from url", "file-url", fileUrlPath)
+	log.DebugLog(log.DebugLevelInfra, "get file name with extension from url", "file-url", fileUrlPath)
 	fileUrl, err := url.Parse(fileUrlPath)
 	if err != nil {
 		return "", fmt.Errorf("Error parsing file URL %s, %v", fileUrlPath, err)
@@ -40,7 +40,7 @@ func GetFileNameWithExt(fileUrlPath string) (string, error) {
 }
 
 func GetFileName(fileUrlPath string) (string, error) {
-	log.DebugLog(log.DebugLevelMexos, "get file name from url", "file-url", fileUrlPath)
+	log.DebugLog(log.DebugLevelInfra, "get file name from url", "file-url", fileUrlPath)
 	fileName, err := GetFileNameWithExt(fileUrlPath)
 	if err != nil {
 		return "", err

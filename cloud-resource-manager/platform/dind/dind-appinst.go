@@ -15,14 +15,14 @@ import (
 )
 
 func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "call runKubectlCreateApp for dind")
+	log.SpanLog(ctx, log.DebugLevelInfra, "call runKubectlCreateApp for dind")
 
 	var err error
 	client := &pc.LocalClient{}
 	appDeploymentType := app.Deployment
 	// Support for local docker appInst
 	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
-		log.SpanLog(ctx, log.DebugLevelMexos, "run docker create app for dind")
+		log.SpanLog(ctx, log.DebugLevelInfra, "run docker create app for dind")
 		err = dockermgmt.CreateAppInstLocal(client, app, appInst)
 		if err != nil {
 			return fmt.Errorf("CreateAppInstLocal error for docker %v", err)
@@ -30,7 +30,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 		return nil
 	}
 	// Now for helm and k8s apps
-	log.SpanLog(ctx, log.DebugLevelMexos, "run kubectl create app for dind")
+	log.SpanLog(ctx, log.DebugLevelInfra, "run kubectl create app for dind")
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	network := GetDockerNetworkName(cluster)
 	// NOTE: for DIND we don't check whether this is internal
 	if len(appInst.MappedPorts) > 0 {
-		log.SpanLog(ctx, log.DebugLevelMexos, "Add Proxy for dind", "ports", appInst.MappedPorts)
+		log.SpanLog(ctx, log.DebugLevelInfra, "Add Proxy for dind", "ports", appInst.MappedPorts)
 		err = proxy.CreateNginxProxy(ctx, client,
 			dockermgmt.GetContainerName(&app.Key),
 			cloudcommon.IPAddrAllInterfaces,
@@ -52,7 +52,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 			proxy.WithDockerNetwork(network),
 			proxy.WithDockerPublishPorts())
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "cannot add proxy", "appName", names.AppName, "ports", appInst.MappedPorts)
+			log.SpanLog(ctx, log.DebugLevelInfra, "cannot add proxy", "appName", names.AppName, "ports", appInst.MappedPorts)
 			return err
 		}
 	}
@@ -80,7 +80,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
 	}
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "error creating dind app")
+		log.SpanLog(ctx, log.DebugLevelInfra, "error creating dind app")
 		return err
 	}
 	return nil
@@ -92,7 +92,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	appDeploymentType := app.Deployment
 	// Support for local docker appInst
 	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
-		log.SpanLog(ctx, log.DebugLevelMexos, "run docker delete app for dind")
+		log.SpanLog(ctx, log.DebugLevelInfra, "run docker delete app for dind")
 		err = dockermgmt.DeleteAppInst(ctx, nil, client, app, appInst)
 		if err != nil {
 			return fmt.Errorf("DeleteAppInst error for docker %v", err)
@@ -100,7 +100,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 		return nil
 	}
 	// Now for helm and k8s apps
-	log.SpanLog(ctx, log.DebugLevelMexos, "run kubectl delete app for dind")
+	log.SpanLog(ctx, log.DebugLevelInfra, "run kubectl delete app for dind")
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
 		return err
@@ -118,9 +118,9 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	}
 
 	if len(appInst.MappedPorts) > 0 {
-		log.SpanLog(ctx, log.DebugLevelMexos, "DeleteNginxProxy for dind")
+		log.SpanLog(ctx, log.DebugLevelInfra, "DeleteNginxProxy for dind")
 		if err = proxy.DeleteNginxProxy(ctx, client, names.AppName); err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "cannot delete proxy", "name", names.AppName)
+			log.SpanLog(ctx, log.DebugLevelInfra, "cannot delete proxy", "name", names.AppName)
 			return err
 		}
 	}
@@ -129,7 +129,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 
 func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "UpdateAppInst for dind")
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateAppInst for dind")
 	client := &pc.LocalClient{}
 	appDeploymentType := app.Deployment
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)

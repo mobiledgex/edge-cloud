@@ -10,10 +10,9 @@ enum DebugLevel {
   dmedb = 3;
   dmereq = 4;
   locapi = 5;
-  mexos = 6;
+  infra = 6;
   metrics = 7;
   upgrade = 8;
   info = 9;
   sampled = 10;
-  infra = 11;
 }

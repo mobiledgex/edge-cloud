@@ -30,7 +30,7 @@ func init() {
 }
 
 func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, backendIP string, ports []dme.AppPort, ops ...Op) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "create envoy", "name", name, "listenIP", listenIP, "backendIP", backendIP, "ports", ports)
+	log.SpanLog(ctx, log.DebugLevelInfra, "create envoy", "name", name, "listenIP", listenIP, "backendIP", backendIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
 
@@ -41,7 +41,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	pwd := strings.TrimSpace(string(out))
 
 	dir := pwd + "/envoy/" + name
-	log.SpanLog(ctx, log.DebugLevelMexos, "envoy remote dir", "name", name, "dir", dir)
+	log.SpanLog(ctx, log.DebugLevelInfra, "envoy remote dir", "name", name, "dir", dir)
 
 	err = pc.Run(client, "mkdir -p "+dir)
 	if err != nil {
@@ -50,7 +50,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	accesslogFile := dir + "/access.log"
 	err = pc.Run(client, "touch "+accesslogFile)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos,
+		log.SpanLog(ctx, log.DebugLevelInfra,
 			"envoy %s can't create file %s", name, accesslogFile)
 		return err
 	}
@@ -75,13 +75,13 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
-	log.SpanLog(ctx, log.DebugLevelMexos, "envoy docker command", "name", "envoy"+name,
+	log.SpanLog(ctx, log.DebugLevelInfra, "envoy docker command", "name", "envoy"+name,
 		"cmd", cmd)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't create envoy container %s, %s, %v", "envoy"+name, out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "created envoy container", "name", name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "created envoy container", "name", name)
 	return nil
 }
 
@@ -126,7 +126,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 			internalPort++
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "create envoy yaml", "name", name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "create envoy yaml", "name", name)
 	buf := bytes.Buffer{}
 	err := envoyYamlT.Execute(&buf, &spec)
 	if err != nil {
@@ -134,7 +134,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 	}
 	err = pc.WriteFile(client, yamlname, buf.String(), "envoy.yaml", pc.NoSudo)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "write envoy.yaml failed",
+		log.SpanLog(ctx, log.DebugLevelInfra, "write envoy.yaml failed",
 			"name", name, "err", err)
 		return err
 	}
@@ -211,14 +211,14 @@ admin:
 `
 
 func DeleteEnvoyProxy(ctx context.Context, client ssh.Client, name string) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy", "name", "envoy"+name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "delete envoy", "name", "envoy"+name)
 	out, err := client.Output("docker kill " + "envoy" + name)
 	deleteContainer := false
 	if err == nil {
 		deleteContainer = true
 	} else {
 		if strings.Contains(string(out), "No such container") {
-			log.SpanLog(ctx, log.DebugLevelMexos,
+			log.SpanLog(ctx, log.DebugLevelInfra,
 				"envoy LB container already gone", "name", "envoy"+name)
 		} else {
 			return fmt.Errorf("can't delete envoy container %s, %s, %v", name, out, err)
@@ -227,7 +227,7 @@ func DeleteEnvoyProxy(ctx context.Context, client ssh.Client, name string) error
 	envoyDir := "envoy/" + name
 	out, err = client.Output("rm -rf " + envoyDir)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy dir", "name", name, "dir", envoyDir, "out", out, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "delete envoy dir", "name", name, "dir", envoyDir, "out", out, "err", err)
 	}
 	if deleteContainer {
 		out, err = client.Output("docker rm " + "envoy" + name)
@@ -236,7 +236,7 @@ func DeleteEnvoyProxy(ctx context.Context, client ssh.Client, name string) error
 		}
 	}
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "deleted envoy", "name", name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleted envoy", "name", name)
 	return nil
 }
 
