@@ -695,15 +695,15 @@ var RegisterClientRequestOptionalArgs = []string{
 }
 var RegisterClientRequestAliasArgs = []string{}
 var RegisterClientRequestComments = map[string]string{
-	"ver":          "API version",
+	"ver":          "API version _(hidden)_ Reserved for future use",
 	"orgname":      "App Developer Name",
 	"appname":      "App Name",
 	"appvers":      "App Version",
-	"carriername":  "Carrier Name _Not currently used_",
+	"carriername":  "Carrier Name _(hidden)_ Reserved for future use",
 	"authtoken":    "Authentication Token _(optional)_ An authentication token supplied by the application.",
 	"cellid":       "Cell ID _(optional)_ Cellular ID of where the client is connected.",
-	"uniqueidtype": "Unique ID Type Type of unique ID provided by the client",
-	"uniqueid":     "Unique ID _(optional)_ Unique identification of the client device or user. May be overridden by the server.",
+	"uniqueidtype": "Unique ID Type _(optional)_ Type of unique ID provided by the client. If left blank, a new Unique ID type will be assigned in the RegisterClient Reply.",
+	"uniqueid":     "Unique ID _(optional)_ Unique identification of the client device or user. May be overridden by the server. If left blank, a new Unique ID will be assigned in the RegisterClient Reply.",
 	"tags:#.type":  "type of data",
 	"tags:#.data":  "data value",
 }
@@ -721,12 +721,12 @@ var RegisterClientReplyOptionalArgs = []string{
 }
 var RegisterClientReplyAliasArgs = []string{}
 var RegisterClientReplyComments = map[string]string{
-	"ver":            "API version",
+	"ver":            "API version _(hidden)_ Reserved for future use",
 	"status":         "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
 	"sessioncookie":  "Session Cookie to be used in later API calls",
 	"tokenserveruri": "URI for the Token Server",
-	"uniqueidtype":   "Unique ID Type Type of unique ID provided by the server",
-	"uniqueid":       "Unique ID _(optional)_ Unique identification of the client device or user",
+	"uniqueidtype":   "Unique ID Type _(optional)_ Type of unique ID provided by the server A unique_id_type and unique_id may be provided by the client to be registered. During registering, if a unique_id_type and unique_id are provided by the client in their request, the unique_id_type and unique_id will be left blank in the response. But, if the client does not provide a unique_id_type and unique_id, then the server generates one and provides the unique_id in the response. If possible, the unique_id should be saved by the client locally and used for subsequent RegisterClient API calls. Otherwise, a new unique_id will be generated for further API calls.",
+	"uniqueid":       "Unique ID _(optional)_ Unique identification of the client device or user A unique_id_type and unique_id may be provided by the client to be registered. During registering, if a unique_id_type and unique_id are provided by the client in their request, the unique_id_type and unique_id will be left blank in the response. But, if the client does not provide a unique_id_type and unique_id, then the server generates one and provides the unique_id in the response. If possible, the unique_id should be saved by the client locally and used for subsequent RegisterClient API calls. Otherwise, a new unique_id will be generated for further API calls.",
 	"tags:#.type":    "type of data",
 	"tags:#.data":    "data value",
 }
@@ -751,9 +751,9 @@ var FindCloudletRequestOptionalArgs = []string{
 }
 var FindCloudletRequestAliasArgs = []string{}
 var FindCloudletRequestComments = map[string]string{
-	"ver":                            "API version",
+	"ver":                            "API version _(hidden)_ Reserved for future use",
 	"sessioncookie":                  "Session Cookie Session Cookie from RegisterClientRequest",
-	"carriername":                    "Carrier Name Unique carrier identification (typically MCC + MNC)",
+	"carriername":                    "Carrier Name _(optional)_ Unique carrier identification (typically MCC + MNC) If left blank, all carriers are searched",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -777,9 +777,9 @@ var PlatformFindCloudletRequestOptionalArgs = []string{
 }
 var PlatformFindCloudletRequestAliasArgs = []string{}
 var PlatformFindCloudletRequestComments = map[string]string{
-	"ver":           "API version",
+	"ver":           "API version _(hidden)_ Reserved for future use",
 	"sessioncookie": "Session Cookie Session Cookie from RegisterClientRequest",
-	"carriername":   "Carrier Name Unique carrier identification (typically MCC + MNC)",
+	"carriername":   "Carrier Name _(optional)_ Unique carrier identification (typically MCC + MNC) If left blank, all carriers are searched",
 	"clienttoken":   "Client Token Token with encoded client data",
 	"tags:#.type":   "type of data",
 	"tags:#.data":   "data value",
@@ -811,7 +811,7 @@ var FindCloudletReplyOptionalArgs = []string{
 }
 var FindCloudletReplyAliasArgs = []string{}
 var FindCloudletReplyComments = map[string]string{
-	"ver":                                 "API version",
+	"ver":                                 "API version _(hidden)_ Reserved for future use",
 	"status":                              "Status return, one of FindUnknown, FindFound, FindNotfound",
 	"fqdn":                                "Fully Qualified Domain Name of the Closest App instance",
 	"ports:#.proto":                       "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
@@ -853,7 +853,7 @@ var VerifyLocationRequestOptionalArgs = []string{
 }
 var VerifyLocationRequestAliasArgs = []string{}
 var VerifyLocationRequestComments = map[string]string{
-	"ver":                            "API version",
+	"ver":                            "API version _(hidden)_ Reserved for future use",
 	"sessioncookie":                  "Session Cookie Session Cookie from RegisterClientRequest",
 	"carriername":                    "Carrier Name Unique carrier identification (typically MCC + MNC)",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
@@ -880,7 +880,7 @@ var VerifyLocationReplyOptionalArgs = []string{
 }
 var VerifyLocationReplyAliasArgs = []string{}
 var VerifyLocationReplyComments = map[string]string{
-	"ver":                   "API version",
+	"ver":                   "API version _(hidden)_ Reserved for future use",
 	"towerstatus":           ", one of TowerUnknown, ConnectedToSpecifiedTower, NotConnectedToSpecifiedTower",
 	"gpslocationstatus":     ", one of LocUnknown, LocVerified, LocMismatchSameCountry, LocMismatchOtherCountry, LocRoamingCountryMatch, LocRoamingCountryMismatch, LocErrorUnauthorized, LocErrorOther",
 	"gpslocationaccuracykm": "location accuracy, the location is verified to be within this number of kilometers.  Negative value means no verification was performed",
@@ -899,7 +899,7 @@ var GetLocationRequestOptionalArgs = []string{
 }
 var GetLocationRequestAliasArgs = []string{}
 var GetLocationRequestComments = map[string]string{
-	"ver":           "API version",
+	"ver":           "API version _(hidden)_ Reserved for future use",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
 	"carriername":   "Unique carrier identification (typically MCC + MNC)",
 	"cellid":        "_(optional)_ Cell id where the client is",
@@ -927,6 +927,7 @@ var GetLocationReplyOptionalArgs = []string{
 }
 var GetLocationReplyAliasArgs = []string{}
 var GetLocationReplyComments = map[string]string{
+	"ver":                                "API version _(hidden)_ Reserved for future use",
 	"status":                             ", one of LocUnknown, LocFound, LocDenied",
 	"carriername":                        "Unique carrier identification (typically MCC + MNC)",
 	"tower":                              "The tower that the user is currently connected to",
@@ -956,14 +957,15 @@ var AppInstListRequestOptionalArgs = []string{
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
 	"cellid",
+	"limit",
 	"tags:#.type",
 	"tags:#.data",
 }
 var AppInstListRequestAliasArgs = []string{}
 var AppInstListRequestComments = map[string]string{
-	"ver":                            "API version",
+	"ver":                            "API version _(hidden)_ Reserved for future use",
 	"sessioncookie":                  "Session Cookie from RegisterClientRequest",
-	"carriername":                    "Unique carrier identification (typically MCC + MNC)",
+	"carriername":                    "Carrier Name _(optional)_ Unique carrier identification (typically MCC + MNC) If left blank, all carriers are searched",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -972,6 +974,7 @@ var AppInstListRequestComments = map[string]string{
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"cellid":                         "_(optional)_ Cell id where the client is",
+	"limit":                          "_(optional)_ Limit the number of results, defaults to 3",
 	"tags:#.type":                    "type of data",
 	"tags:#.data":                    "data value",
 }
@@ -1033,7 +1036,7 @@ var CloudletLocationOptionalArgs = []string{
 }
 var CloudletLocationAliasArgs = []string{}
 var CloudletLocationComments = map[string]string{
-	"carriername":                         "Unique carrier identification (typically MCC + MNC)",
+	"carriername":                         "Cloudlet Organization Name",
 	"cloudletname":                        "Cloudlet Name",
 	"gpslocation.latitude":                "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":               "longitude in WGS 84 coordinates",
@@ -1088,9 +1091,9 @@ var AppInstListReplyOptionalArgs = []string{
 }
 var AppInstListReplyAliasArgs = []string{}
 var AppInstListReplyComments = map[string]string{
-	"ver":                                             "API version",
+	"ver":                                             "API version _(hidden)_ Reserved for future use",
 	"status":                                          ", one of AiUndefined, AiSuccess, AiFail",
-	"cloudlets:#.carriername":                         "Unique carrier identification (typically MCC + MNC)",
+	"cloudlets:#.carriername":                         "Cloudlet Organization Name",
 	"cloudlets:#.cloudletname":                        "Cloudlet Name",
 	"cloudlets:#.gpslocation.latitude":                "latitude in WGS 84 coordinates",
 	"cloudlets:#.gpslocation.longitude":               "longitude in WGS 84 coordinates",
@@ -1125,7 +1128,7 @@ var FqdnListRequestOptionalArgs = []string{
 }
 var FqdnListRequestAliasArgs = []string{}
 var FqdnListRequestComments = map[string]string{
-	"ver":           "API version",
+	"ver":           "API version _(hidden)_ Reserved for future use",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
 	"cellid":        "_(optional)_ Cell id where the client is",
 	"tags:#.type":   "type of data",
@@ -1165,7 +1168,7 @@ var FqdnListReplyOptionalArgs = []string{
 }
 var FqdnListReplyAliasArgs = []string{}
 var FqdnListReplyComments = map[string]string{
-	"ver":                           "API version",
+	"ver":                           "API version _(hidden)_ Reserved for future use",
 	"appfqdns:#.appname":            "App  Name",
 	"appfqdns:#.appvers":            "App Version",
 	"appfqdns:#.orgname":            "App organization name",
@@ -1196,7 +1199,7 @@ var AppOfficialFqdnRequestOptionalArgs = []string{
 }
 var AppOfficialFqdnRequestAliasArgs = []string{}
 var AppOfficialFqdnRequestComments = map[string]string{
-	"ver":                            "API version",
+	"ver":                            "API version _(hidden)_ Reserved for future use",
 	"sessioncookie":                  "Session Cookie from RegisterClientRequest",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
@@ -1220,7 +1223,7 @@ var AppOfficialFqdnReplyOptionalArgs = []string{
 }
 var AppOfficialFqdnReplyAliasArgs = []string{}
 var AppOfficialFqdnReplyComments = map[string]string{
-	"ver":             "API version",
+	"ver":             "API version _(hidden)_ Reserved for future use",
 	"appofficialfqdn": "The FQDN to which the app is reached independent of the edge",
 	"clienttoken":     "Tokenized client data",
 	"status":          "Status of the reply, one of AofUndefined, AofSuccess, AofFail",
@@ -1241,6 +1244,7 @@ var DynamicLocGroupRequestOptionalArgs = []string{
 }
 var DynamicLocGroupRequestAliasArgs = []string{}
 var DynamicLocGroupRequestComments = map[string]string{
+	"ver":           "API version _(hidden)_ Reserved for future use",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
 	"lgid":          "Dynamic Location Group Id",
 	"commtype":      ", one of DlgUndefined, DlgSecure, DlgOpen",
@@ -1261,6 +1265,7 @@ var DynamicLocGroupReplyOptionalArgs = []string{
 }
 var DynamicLocGroupReplyAliasArgs = []string{}
 var DynamicLocGroupReplyComments = map[string]string{
+	"ver":         "API version _(hidden)_ Reserved for future use",
 	"status":      "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
 	"errorcode":   "Error Code based on Failure",
 	"groupcookie": "Group Cookie for Secure Group Communication",
@@ -1335,7 +1340,7 @@ var QosPositionRequestOptionalArgs = []string{
 }
 var QosPositionRequestAliasArgs = []string{}
 var QosPositionRequestComments = map[string]string{
-	"ver":                                        "API version",
+	"ver":                                        "API version _(hidden)_ Reserved for future use",
 	"sessioncookie":                              "Session Cookie from RegisterClientRequest",
 	"positions:#.positionid":                     "as set by the client, must be unique within QosRequest",
 	"positions:#.gpslocation.latitude":           "latitude in WGS 84 coordinates",
@@ -1420,9 +1425,10 @@ var QosPositionKpiReplyOptionalArgs = []string{
 }
 var QosPositionKpiReplyAliasArgs = []string{}
 var QosPositionKpiReplyComments = map[string]string{
-	"status":                                           "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
-	"positionresults:#.positionid":                     "as set by the client, must be unique within one QosPositionRequest",
-	"positionresults:#.gpslocation.latitude":           "latitude in WGS 84 coordinates",
+	"ver":                                    "API version _(hidden)_ Reserved for future use",
+	"status":                                 "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
+	"positionresults:#.positionid":           "as set by the client, must be unique within one QosPositionRequest",
+	"positionresults:#.gpslocation.latitude": "latitude in WGS 84 coordinates",
 	"positionresults:#.gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"positionresults:#.gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
 	"positionresults:#.gpslocation.verticalaccuracy":   "vertical accuracy (meters)",

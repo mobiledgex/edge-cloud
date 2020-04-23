@@ -373,7 +373,10 @@ func setupProxyServer(started chan bool) error {
 
 	})
 
-	var upgrader = websocket.Upgrader{} // use default options
+	upgrader := websocket.Upgrader{}
+	// Disable origin check restriction.
+	// Should be safe as we do token validation
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	http.HandleFunc("/edgeshell", func(w http.ResponseWriter, r *http.Request) {
 		queryArgs := r.URL.Query()
 		tokenVals, ok := queryArgs["edgetoken"]

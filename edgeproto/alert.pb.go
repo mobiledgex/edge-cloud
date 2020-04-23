@@ -81,6 +81,7 @@
 		DeviceReport
 		DeviceKey
 		Device
+		CloudletMgmtNode
 		RunCmd
 		RunVMConsole
 		ShowLog
