@@ -211,32 +211,18 @@ admin:
 `
 
 func DeleteEnvoyProxy(ctx context.Context, client ssh.Client, name string) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy", "name", "envoy"+name)
-	out, err := client.Output("docker kill " + "envoy" + name)
-	deleteContainer := false
-	if err == nil {
-		deleteContainer = true
-	} else {
-		if strings.Contains(string(out), "No such container") {
-			log.SpanLog(ctx, log.DebugLevelMexos,
-				"envoy LB container already gone", "name", "envoy"+name)
-		} else {
-			return fmt.Errorf("can't delete envoy container %s, %s, %v", name, out, err)
-		}
-	}
+	containerName := "envoy" + name
+
+	log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy", "name", containerName)
+	out, err := client.Output("docker kill " + containerName)
+	log.SpanLog(ctx, log.DebugLevelMexos, "kill envoy result", "out", out, "err", err)
+
 	envoyDir := "envoy/" + name
 	out, err = client.Output("rm -rf " + envoyDir)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy dir", "name", name, "dir", envoyDir, "out", out, "err", err)
-	}
-	if deleteContainer {
-		out, err = client.Output("docker rm " + "envoy" + name)
-		if err != nil && !strings.Contains(string(out), "No such container") {
-			return fmt.Errorf("can't remove envoy container %s, %s, %v", "envoy"+name, out, err)
-		}
-	}
+	log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy dir", "name", name, "dir", envoyDir, "out", out, "err", err)
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "deleted envoy", "name", name)
+	out, err = client.Output("docker rm " + "envoy" + name)
+	log.SpanLog(ctx, log.DebugLevelMexos, "rm envoy result", "out", out, "err", err)
 	return nil
 }
 

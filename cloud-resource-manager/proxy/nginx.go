@@ -433,37 +433,24 @@ func DeleteNginxProxy(ctx context.Context, client ssh.Client, name string) error
 	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx", "name", name)
 	containerName := getNginxContainerName(name)
 	out, err := client.Output("docker kill " + containerName)
-	deleteContainer := false
-	if err == nil {
-		deleteContainer = true
-	} else {
-		if strings.Contains(string(out), "No such container") {
-			log.SpanLog(ctx, log.DebugLevelMexos,
-				"nginx LB container already gone", "containerName", containerName)
-		} else {
-			return fmt.Errorf("can't delete nginx container %s, %s, %v", name, out, err)
-		}
-	}
+	log.SpanLog(ctx, log.DebugLevelMexos, "kill nginx result", "out", out, "err", err)
+
 	l7conf := NginxL7Dir + "/" + name + ".conf"
 	out, err = client.Output("rm " + l7conf)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx L7 conf",
-			"name", name, "l7conf", l7conf, "out", out, "err", err)
-	}
+
+	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx L7 conf result",
+		"name", name, "l7conf", l7conf, "out", out, "err", err)
+
 	nginxDir := "nginx/" + name
 	out, err = client.Output("rm -rf " + nginxDir)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx dir", "name", name, "dir", nginxDir, "out", out, "err", err)
-	}
-	if deleteContainer {
-		out, err = client.Output("docker rm " + containerName)
-		if err != nil && !strings.Contains(string(out), "No such container") {
-			return fmt.Errorf("can't remove nginx container %s, %s, %v", name, out, err)
-		}
-	}
-	reloadNginxL7(client)
+	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx dir result", "name", name, "dir", nginxDir, "out", out, "err", err)
 
+	out, err = client.Output("docker rm " + containerName)
+	log.SpanLog(ctx, log.DebugLevelMexos, "rm nginx result", "out", out, "err", err)
+
+	reloadNginxL7(client)
 	log.SpanLog(ctx, log.DebugLevelMexos, "deleted nginx", "containerName", containerName)
+
 	DeleteEnvoyProxy(ctx, client, name)
 	return nil
 }
