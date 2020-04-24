@@ -221,8 +221,12 @@ func DeleteEnvoyProxy(ctx context.Context, client ssh.Client, name string) error
 	out, err = client.Output("rm -rf " + envoyDir)
 	log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy dir", "name", name, "dir", envoyDir, "out", out, "err", err)
 
-	out, err = client.Output("docker rm " + "envoy" + name)
+	out, err = client.Output("docker rm -f " + "envoy" + name)
 	log.SpanLog(ctx, log.DebugLevelMexos, "rm envoy result", "out", out, "err", err)
+	if err != nil && !strings.Contains(string(out), "No such container") {
+		// delete the envoy proxy anyway
+		return fmt.Errorf("can't remove envoy container %s, %s, %v", name, out, err)
+	}
 	return nil
 }
 

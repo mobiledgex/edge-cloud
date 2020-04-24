@@ -437,7 +437,6 @@ func DeleteNginxProxy(ctx context.Context, client ssh.Client, name string) error
 
 	l7conf := NginxL7Dir + "/" + name + ".conf"
 	out, err = client.Output("rm " + l7conf)
-
 	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx L7 conf result",
 		"name", name, "l7conf", l7conf, "out", out, "err", err)
 
@@ -445,14 +444,17 @@ func DeleteNginxProxy(ctx context.Context, client ssh.Client, name string) error
 	out, err = client.Output("rm -rf " + nginxDir)
 	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx dir result", "name", name, "dir", nginxDir, "out", out, "err", err)
 
-	out, err = client.Output("docker rm " + containerName)
+	out, err = client.Output("docker rm -f " + containerName)
 	log.SpanLog(ctx, log.DebugLevelMexos, "rm nginx result", "out", out, "err", err)
+	if err != nil && !strings.Contains(string(out), "No such container") {
+		// delete the envoy proxy for best effort
+		DeleteEnvoyProxy(ctx, client, name)
+		return fmt.Errorf("can't remove nginx container %s, %s, %v", name, out, err)
+	}
 
 	reloadNginxL7(client)
 	log.SpanLog(ctx, log.DebugLevelMexos, "deleted nginx", "containerName", containerName)
-
-	DeleteEnvoyProxy(ctx, client, name)
-	return nil
+	return DeleteEnvoyProxy(ctx, client, name)
 }
 
 type Options struct {
