@@ -183,6 +183,10 @@ enum CloudletAction {
 	ACTION_DONE = 1;
 	// Action is in progress
 	ACTION_IN_PROGRESS = 2;
+	// Action cleanup
+	ACTION_CLEANUP = 3;
+	// Action restore
+	ACTION_RESTORE = 4;
 }
 
 // Cloudlet

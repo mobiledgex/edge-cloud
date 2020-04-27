@@ -77,7 +77,7 @@ func (cd *ControllerData) GatherCloudletInfo(ctx context.Context, info *edgeprot
 func (cd *ControllerData) CleanupOldCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) {
 	log.SpanLog(ctx, log.DebugLevelMexos, "attempting to cleanup outdated cloudlet services", "key", cloudlet.Key)
 
-	err := cd.platform.CleanupCloudlet(ctx, cloudlet, &cloudlet.Config, updateCallback)
+	err := cd.platform.CleanupCloudlet(ctx, cloudlet, &cloudlet.Config, edgeproto.CloudletAction_ACTION_CLEANUP, updateCallback)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMexos, "can't cleanup old cloudlet", "key", cloudlet.Key, "err", err)
 		updateCallback(edgeproto.UpdateTask, "Failed to cleanup old cloudlet, please cleanup manually")
@@ -605,6 +605,12 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 				"old cloudlet state invalid, failed to resolve UpdateError",
 				"key", new.Key, "state", cloudletInfo.State)
 			return
+		}
+		log.SpanLog(ctx, log.DebugLevelMexos, "restoring cloudlet", "key", new.Key)
+		err := cd.platform.CleanupCloudlet(ctx, new, &new.Config, edgeproto.CloudletAction_ACTION_RESTORE, updateCloudletCallback)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelMexos, "can't restore cloudlet", "key", new.Key, "err", err)
+			updateCloudletCallback(edgeproto.UpdateTask, "Failed to restore cloudlet, please restore manually")
 		}
 
 		// Restore the cloudlet's state as new CRM didn't start

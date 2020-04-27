@@ -613,6 +613,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	if !cloudletApi.cache.Get(&in.Key, cur) {
 		return in.Key.NotFoundError()
 	}
+	oldContainerVersion := cur.ContainerVersion
 	cur.CopyInFields(in)
 
 	upgrade := false
@@ -705,6 +706,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 		if cur.State == edgeproto.TrackedState_READY {
 			cur.Errors = nil
+		} else {
+			// restore old container version
+			cur.ContainerVersion = oldContainerVersion
 		}
 		s.store.STMPut(stm, cur)
 		return nil

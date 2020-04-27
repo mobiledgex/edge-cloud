@@ -159,7 +159,7 @@ func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	return edgeproto.CloudletAction_ACTION_IN_PROGRESS, nil
 }
 
-func (s *Platform) CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, action edgeproto.CloudletAction, updateCallback edgeproto.CacheUpdateCallback) error {
 	// Stops outdated cloudlet service running locally
 	// in this case, the caller is old crm
 	process, err := os.FindProcess(os.Getppid())
