@@ -935,6 +935,8 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 			numFailed++
 			if len(instances) == 1 {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed: %s", result.errString)})
+			} else {
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed for cluster (%s/%s), cloudlet (%s/%s): %s", k.ClusterInstKey.ClusterKey.Name, k.ClusterInstKey.Organization, k.ClusterInstKey.CloudletKey.Name, k.ClusterInstKey.CloudletKey.Organization, result.errString)})
 			}
 		}
 		// give some intermediate status
