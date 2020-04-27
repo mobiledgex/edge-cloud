@@ -895,7 +895,9 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		return in.Key.NotFoundError()
 	}
 
-	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d AppInsts", len(instances))})
+	if len(instances) > 1 {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d AppInsts", len(instances))})
+	}
 
 	for instkey, _ := range instances {
 		go func(k edgeproto.AppInstKey) {
@@ -920,18 +922,29 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		if result.errString == "" {
 			if result.revisionUpdated {
 				numUpdated++
+				if len(instances) == 1 {
+					cb.Send(&edgeproto.Result{Message: "Successfully updated AppInst"})
+				}
 			} else {
 				numSkipped++
+				if len(instances) == 1 {
+					cb.Send(&edgeproto.Result{Message: "Skipped updating AppInst"})
+				}
 			}
 		} else {
 			numFailed++
+			if len(instances) == 1 {
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed: %s", result.errString)})
+			}
 		}
 		// give some intermediate status
 		if (numTotal%10 == 0) && numTotal != len(instances) {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processing: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
 		}
 	}
-	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Completed: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
+	if len(instances) > 1 {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Completed: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
+	}
 	return nil
 }
 
