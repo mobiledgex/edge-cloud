@@ -101,3 +101,12 @@ func (s *LocalClient) AddHop(host string, port int) (ssh.Client, error) {
 func (s *LocalClient) OutputWithTimeout(command string, timeout time.Duration) (string, error) {
 	return s.Output(command)
 }
+
+// No-op for local client
+func (nc *LocalClient) StartPersistentConn(timeout time.Duration) error {
+	return nil
+}
+
+// No-op for local client
+func (nc *LocalClient) StopPersistentConn() {
+}
