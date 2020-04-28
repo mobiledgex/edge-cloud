@@ -867,10 +867,10 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		}
 	}
 
-	clusterInstSpecified := false
+	singleAppInst := false
 	if in.Key.ClusterInstKey.ValidateKey() == nil {
 		// cluster inst specified
-		clusterInstSpecified = true
+		singleAppInst = true
 	}
 
 	s.cache.Mux.Lock()
@@ -901,7 +901,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		return in.Key.NotFoundError()
 	}
 
-	if len(instances) > 1 {
+	if !singleAppInst {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d AppInsts", len(instances))})
 	}
 
@@ -928,18 +928,18 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		if result.errString == "" {
 			if result.revisionUpdated {
 				numUpdated++
-				if len(instances) == 1 {
+				if singleAppInst {
 					cb.Send(&edgeproto.Result{Message: "Successfully updated AppInst"})
 				}
 			} else {
 				numSkipped++
-				if len(instances) == 1 {
+				if singleAppInst {
 					cb.Send(&edgeproto.Result{Message: "Skipped updating AppInst"})
 				}
 			}
 		} else {
 			numFailed++
-			if clusterInstSpecified {
+			if singleAppInst {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed: %s", result.errString)})
 			} else {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed for cluster (%s/%s), cloudlet (%s/%s): %s", k.ClusterInstKey.ClusterKey.Name, k.ClusterInstKey.Organization, k.ClusterInstKey.CloudletKey.Name, k.ClusterInstKey.CloudletKey.Organization, result.errString)})
@@ -950,7 +950,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processing: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
 		}
 	}
-	if len(instances) > 1 {
+	if !singleAppInst {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Completed: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
 	}
 	return nil
