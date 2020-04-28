@@ -208,7 +208,7 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 	image := app.ImagePath
 	nameLabelVal := util.DNSSanitize(app.Key.Name)
 	versionLabelVal := util.DNSSanitize(app.Key.Version)
-	name := util.DockerSanitize(app.Key.Name)
+	name := GetContainerName(&app.Key)
 	cloudlet := util.DockerSanitize(appInst.Key.ClusterInstKey.CloudletKey.Name)
 	cluster := util.DockerSanitize(appInst.Key.ClusterInstKey.Organization + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name)
 	base_cmd := "docker run "

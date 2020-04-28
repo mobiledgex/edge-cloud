@@ -80,7 +80,13 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
 	}
 	if err != nil {
+		proxy.DeleteNginxProxy(ctx, client, dockermgmt.GetContainerName(&app.Key))
 		log.SpanLog(ctx, log.DebugLevelInfra, "error creating dind app")
+		return err
+	}
+	err = s.patchDindSevice(ctx, names, masterIP)
+	if err != nil {
+		proxy.DeleteNginxProxy(ctx, client, dockermgmt.GetContainerName(&app.Key))
 		return err
 	}
 	return nil
@@ -119,7 +125,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 
 	if len(appInst.MappedPorts) > 0 {
 		log.SpanLog(ctx, log.DebugLevelInfra, "DeleteNginxProxy for dind")
-		if err = proxy.DeleteNginxProxy(ctx, client, names.AppName); err != nil {
+		if err = proxy.DeleteNginxProxy(ctx, client, dockermgmt.GetContainerName(&app.Key)); err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "cannot delete proxy", "name", names.AppName)
 			return err
 		}
@@ -172,6 +178,25 @@ func (s *Platform) GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto
 	}
 
 	return k8smgmt.GetAppInstRuntime(ctx, client, names, app, appInst)
+}
+
+func (s *Platform) patchDindSevice(ctx context.Context, kubeNames *k8smgmt.KubeNames, ipaddr string) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "Patch DIND service", "kubeNames", kubeNames, "ipaddr", ipaddr)
+
+	client := &pc.LocalClient{}
+
+	for _, serviceName := range kubeNames.ServiceNames {
+
+		cmd := fmt.Sprintf(`%s kubectl patch svc %s -p '{"spec":{"externalIPs":["%s"]}}'`, kubeNames.KconfEnv, serviceName, ipaddr)
+		out, err := client.Output(cmd)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "patch svc failed",
+				"servicename", serviceName, "out", out, "err", err)
+			return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "patched externalIPs on service", "service", serviceName, "externalIPs", ipaddr)
+	}
+	return nil
 }
 
 func (s *Platform) GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
