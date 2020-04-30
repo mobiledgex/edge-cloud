@@ -113,7 +113,7 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 	}
 	if !cloudcommon.IsPlatformApp(ckey.OrgName, ckey.AppName) {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudlet API Not allowed for developer app", "org", ckey.OrgName, "name", ckey.AppName)
-		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.OrgName, ckey.AppName)
+		return reply, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.OrgName, ckey.AppName)
 	}
 	if req.ClientToken == "" {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudlet request", "Error", "Missing ClientToken")
