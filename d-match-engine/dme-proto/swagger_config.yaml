@@ -96,6 +96,7 @@ info:
 
       MatchingEngine me = new MatchingEngine(this);
       AppClient.VerifyLocationRequest verifyRequest = me.createDefaultVerifyLocationRequest(activityContext, location)
+         .setCarrierName(carrierName)
          .build();
       AppClient.VerifyLocationReply verifiedLocation = me.verifyLocation(verifyRequest, 10000);
       ```
@@ -275,7 +276,7 @@ info:
       using DistributedMatchEngine;
 
       MatchingEngine me = new MatchingEngine();
-      VerifyLocationRequest verifyLocationRequest = me.CreateVerifyLocationRequest(loc);
+      VerifyLocationRequest verifyLocationRequest = me.CreateVerifyLocationRequest(loc, carrierName);
       VerifyLocationReply verifyLocationReply = await me.VerifyLocation(verifyLocationRequest);
       ```
       Example Response:
@@ -484,7 +485,7 @@ info:
       import MobiledgeXiOSLibrary
 
       let matchingEngine = MatchingEngine()
-      let verifyLocationRequest = matchingEngine.createVerifyLocationRequest(gpsLocation: loc)
+      let verifyLocationRequest = matchingEngine.createVerifyLocationRequest(gpsLocation: loc, carrierName: carrierName)
       let verifyLocationReplyPromise = matchingEngine.verifyLocation(request: verifyLocationRequest)
       .then { verifyLocationReply in
           /* handle verifyLocationReply */
@@ -525,7 +526,7 @@ info:
 
       Example Code:
       ```swift
-      matchingEngine.registerAndFindCloudlet(orgName: orgName, appName: appName, appVers: appVers, carrierName: carrierName, gpsLocation: loc)
+      matchingEngine.registerAndFindCloudlet(orgName: orgName, appName: appName, appVers: appVers, gpsLocation: loc, carrierName: carrierName)
       .then { findCloudletReply -> Promise<Socket> in
       guard let appPortsDict = self.matchingEngine.getTCPAppPorts(findCloudletReply: findCloudletReply) else {
               /* handle error */
