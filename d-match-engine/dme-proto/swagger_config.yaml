@@ -311,7 +311,7 @@ info:
       Example Code:
       ```csharp
       try {
-         reply = await me.RegisterAndFindCloudlet(orgName, appName, appVers);
+         reply = await me.RegisterAndFindCloudlet(orgName, appName, appVers, loc, carrierName);
       }
       catch (DmeDnsException dde) {
          /* handle exception */
