@@ -696,7 +696,7 @@ var RegisterClientRequestOptionalArgs = []string{
 var RegisterClientRequestAliasArgs = []string{}
 var RegisterClientRequestComments = map[string]string{
 	"ver":          "API version _(hidden)_ Reserved for future use",
-	"orgname":      "App Developer Name",
+	"orgname":      "App Organization Name",
 	"appname":      "App Name",
 	"appvers":      "App Version",
 	"carriername":  "Carrier Name _(hidden)_ Reserved for future use",
