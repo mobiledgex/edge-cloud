@@ -31,7 +31,7 @@ func GetAppAccessConfig(ctx context.Context, configs []*edgeproto.ConfigFile) (*
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
 	var aac AppAccessConfig
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "getAppAccessConfig", "deploymentVars", deploymentVars, "varsFound", varsFound)
+	log.SpanLog(ctx, log.DebugLevelInfra, "getAppAccessConfig", "deploymentVars", deploymentVars, "varsFound", varsFound)
 	if !varsFound {
 		// If no deployment vars were populated, return an empty config
 		return &aac, nil
@@ -43,7 +43,7 @@ func GetAppAccessConfig(ctx context.Context, configs []*edgeproto.ConfigFile) (*
 			// Fill in the Deployment Vars passed as a variable through the context
 			cfg, err := crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelMexos, "getAppAccessConfig failed to replace CRM variables",
+				log.SpanLog(ctx, log.DebugLevelInfra, "getAppAccessConfig failed to replace CRM variables",
 					"config file", v.Config, "DeploymentVars", deploymentVars, "error", err)
 				return nil, err
 			}
@@ -51,7 +51,7 @@ func GetAppAccessConfig(ctx context.Context, configs []*edgeproto.ConfigFile) (*
 			if err != nil {
 				return nil, fmt.Errorf("unable to unmarshall app access config: %s err: %v", cfg, err)
 			}
-			log.SpanLog(ctx, log.DebugLevelMexos, "Got app access config", "aac", aac)
+			log.SpanLog(ctx, log.DebugLevelInfra, "Got app access config", "aac", aac)
 		}
 	}
 	return &aac, nil

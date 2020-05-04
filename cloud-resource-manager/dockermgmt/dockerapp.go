@@ -92,7 +92,7 @@ func parseDockerComposeManifest(client ssh.Client, dir string, dm *cloudcommon.D
 func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
 	dir := util.DockerSanitize(app.Key.Name + app.Key.Organization + app.Key.Version)
 	filename := dir + "/manifest.zip"
-	log.SpanLog(ctx, log.DebugLevelMexos, "docker zip", "filename", filename, "action", action)
+	log.SpanLog(ctx, log.DebugLevelInfra, "docker zip", "filename", filename, "action", action)
 	var dockerComposeCommand string
 
 	if action == createZip {
@@ -122,13 +122,13 @@ func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client 
 		// pull the zipfile
 		_, err = client.Output(fmt.Sprintf("wget %s -T 60 -P %s %s", passParams, dir, app.DeploymentManifest))
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "wget err", "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "wget err", "err", err)
 			return fmt.Errorf("wget of app zipfile failed: %v", err)
 		}
 		s := strings.Split(app.DeploymentManifest, "/")
 		zipfile := s[len(s)-1]
 		cmd := "unzip -o -d " + dir + " " + dir + "/" + zipfile
-		log.SpanLog(ctx, log.DebugLevelMexos, "running unzip", "cmd", cmd)
+		log.SpanLog(ctx, log.DebugLevelInfra, "running unzip", "cmd", cmd)
 		out, err := client.Output(cmd)
 		if err != nil {
 			return fmt.Errorf("error unzipping, %s, %v", out, err)
@@ -146,7 +146,7 @@ func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client 
 		for _, f := range files {
 
 			f = strings.TrimSpace(f)
-			log.SpanLog(ctx, log.DebugLevelMexos, "found file", "file", f)
+			log.SpanLog(ctx, log.DebugLevelInfra, "found file", "file", f)
 			if f == "manifest.yml" {
 				manifestFound = true
 			}
@@ -169,7 +169,7 @@ func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client 
 	}
 	for _, d := range dm.DockerComposeFiles {
 		cmd := fmt.Sprintf("docker-compose -f %s/%s %s", dir, d, dockerComposeCommand)
-		log.SpanLog(ctx, log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
+		log.SpanLog(ctx, log.DebugLevelInfra, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
 		if err != nil {
 			return fmt.Errorf("error running docker compose, %s, %v", out, err)
@@ -178,7 +178,7 @@ func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client 
 
 	//cleanup the directory on delete
 	if action == deleteZip {
-		log.SpanLog(ctx, log.DebugLevelMexos, "deleting app dir", "dir", dir)
+		log.SpanLog(ctx, log.DebugLevelInfra, "deleting app dir", "dir", dir)
 		err := pc.DeleteDir(ctx, client, dir)
 		if err != nil {
 			return fmt.Errorf("error deleting dir, %v", err)
@@ -191,7 +191,7 @@ func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client 
 //createDockerComposeFile creates a docker compose file and returns the file name
 func createDockerComposeFile(client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) (string, error) {
 	filename := getDockerComposeFileName(client, app, appInst)
-	log.DebugLog(log.DebugLevelMexos, "creating docker compose file", "filename", filename)
+	log.DebugLog(log.DebugLevelInfra, "creating docker compose file", "filename", filename)
 
 	err := pc.WriteFile(client, filename, app.DeploymentManifest, "Docker compose file", pc.NoSudo)
 	if err != nil {
@@ -220,13 +220,13 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 		cmd := fmt.Sprintf("%s -d -l edge-cloud -l cloudlet=%s -l cluster=%s  -l %s=%s -l %s=%s --restart=unless-stopped --name=%s %s %s %s", base_cmd,
 			cloudlet, cluster, cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel, versionLabelVal, name,
 			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrAllInterfaces), " "), image, app.Command)
-		log.DebugLog(log.DebugLevelMexos, "running docker run ", "cmd", cmd)
+		log.DebugLog(log.DebugLevelInfra, "running docker run ", "cmd", cmd)
 
 		out, err := client.Output(cmd)
 		if err != nil {
 			return fmt.Errorf("error running app, %s, %v", out, err)
 		}
-		log.DebugLog(log.DebugLevelMexos, "done docker run ")
+		log.DebugLog(log.DebugLevelInfra, "done docker run ")
 	} else {
 		filename, err := createDockerComposeFile(client, app, appInst)
 		if err != nil {
@@ -237,7 +237,7 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 		// Once that's merged we can add label here too
 		// cmd := fmt.Sprintf("docker-compose -f %s -l %s=%s up -d", filename, cloudcommon.MexAppInstanceLabel, labelVal)
 		cmd := fmt.Sprintf("docker-compose -f %s up -d", filename)
-		log.DebugLog(log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
+		log.DebugLog(log.DebugLevelInfra, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
 		if err != nil {
 			return fmt.Errorf("error running docker compose up, %s, %v", out, err)
@@ -266,13 +266,13 @@ func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 				cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel, versionLabelVal, name,
 				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
 		}
-		log.SpanLog(ctx, log.DebugLevelMexos, "running docker run ", "cmd", cmd)
+		log.SpanLog(ctx, log.DebugLevelInfra, "running docker run ", "cmd", cmd)
 		out, err := client.Output(cmd)
 		if err != nil {
 			return fmt.Errorf("error running docker run, %s, %v", out, err)
 		}
 
-		log.SpanLog(ctx, log.DebugLevelMexos, "done docker run ")
+		log.SpanLog(ctx, log.DebugLevelInfra, "done docker run ")
 	} else {
 		if strings.HasSuffix(app.DeploymentManifest, ".zip") {
 			return handleDockerZipfile(ctx, vaultConfig, client, app, appInst, createZip)
@@ -286,7 +286,7 @@ func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 		// Once that's merged we can add label here too
 		// cmd := fmt.Sprintf("docker-compose -f %s -l %s=%s up -d", filename, cloudcommon.MexAppInstanceLabel, labelVal)
 		cmd := fmt.Sprintf("docker-compose -f %s up -d", filename)
-		log.SpanLog(ctx, log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
+		log.SpanLog(ctx, log.DebugLevelInfra, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
 		if err != nil {
 			return fmt.Errorf("error running docker compose up, %s, %v", out, err)
@@ -301,23 +301,23 @@ func DeleteAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 		name := GetContainerName(&app.Key)
 		cmd := fmt.Sprintf("docker stop %s", name)
 
-		log.SpanLog(ctx, log.DebugLevelMexos, "running docker stop ", "cmd", cmd)
+		log.SpanLog(ctx, log.DebugLevelInfra, "running docker stop ", "cmd", cmd)
 		removeContainer := true
 		out, err := client.Output(cmd)
 
 		if err != nil {
 			if strings.Contains(out, "No such container") {
-				log.SpanLog(ctx, log.DebugLevelMexos, "container already removed", "cmd", cmd)
+				log.SpanLog(ctx, log.DebugLevelInfra, "container already removed", "cmd", cmd)
 				removeContainer = false
 			} else {
 				return fmt.Errorf("error stopping docker app, %s, %v", out, err)
 			}
 		}
-		log.SpanLog(ctx, log.DebugLevelMexos, "done docker stop", "out", out, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "done docker stop", "out", out, "err", err)
 
 		if removeContainer {
 			cmd = fmt.Sprintf("docker rm %s", name)
-			log.SpanLog(ctx, log.DebugLevelMexos, "running docker rm ", "cmd", cmd)
+			log.SpanLog(ctx, log.DebugLevelInfra, "running docker rm ", "cmd", cmd)
 			out, err := client.Output(cmd)
 			if err != nil {
 				return fmt.Errorf("error removing docker app, %s, %v", out, err)
@@ -329,7 +329,7 @@ func DeleteAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 		}
 		filename := getDockerComposeFileName(client, app, appInst)
 		cmd := fmt.Sprintf("docker-compose -f %s down", filename)
-		log.SpanLog(ctx, log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
+		log.SpanLog(ctx, log.DebugLevelInfra, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
 		if err != nil {
 			return fmt.Errorf("error running docker-compose down, %s, %v", out, err)
@@ -344,7 +344,7 @@ func DeleteAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 }
 
 func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, dockerMode DockerNetworkingMode) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "UpdateAppInst", "appkey", app.Key, "ImagePath", app.ImagePath)
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateAppInst", "appkey", app.Key, "ImagePath", app.ImagePath)
 
 	err := DeleteAppInst(ctx, vaultConfig, client, app, appInst)
 	if err != nil {
@@ -355,7 +355,7 @@ func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 
 func appendContainerIdsFromDockerComposeImages(client ssh.Client, dockerComposeFile string, rt *edgeproto.AppInstRuntime) error {
 	cmd := fmt.Sprintf("docker-compose -f %s images", dockerComposeFile)
-	log.DebugLog(log.DebugLevelMexos, "running docker-compose", "cmd", cmd)
+	log.DebugLog(log.DebugLevelInfra, "running docker-compose", "cmd", cmd)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error running docker compose images, %s, %v", out, err)

@@ -43,7 +43,7 @@ func getMacLimits(info *edgeproto.CloudletInfo) error {
 	// hardcoding disk size for now, TODO: consider changing this but we need to consider that the
 	// whole disk is not available for DIND.
 	info.OsMaxVolGb = 500
-	log.DebugLog(log.DebugLevelMexos, "getMacLimits results", "info", info)
+	log.DebugLog(log.DebugLevelInfra, "getMacLimits results", "info", info)
 	return nil
 }
 
@@ -90,14 +90,14 @@ func getLinuxLimits(info *edgeproto.CloudletInfo) error {
 		}
 		info.OsMaxVolGb = uint64(diskGb)
 	}
-	log.DebugLog(log.DebugLevelMexos, "getLinuxLimits results", "info", info)
+	log.DebugLog(log.DebugLevelInfra, "getLinuxLimits results", "info", info)
 	return nil
 
 }
 
 // DINDGetLimits gets CPU, Memory from the local machine
 func GetLimits(info *edgeproto.CloudletInfo) error {
-	log.DebugLog(log.DebugLevelMexos, "DINDGetLimits called", "os", runtime.GOOS)
+	log.DebugLog(log.DebugLevelInfra, "DINDGetLimits called", "os", runtime.GOOS)
 	switch runtime.GOOS {
 	case "darwin":
 		return getMacLimits(info)
