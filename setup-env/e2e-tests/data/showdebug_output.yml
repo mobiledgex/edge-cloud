@@ -30,40 +30,40 @@ replies:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-1
-    output: api,notify,mexos,info
+    output: api,notify,infra,info
   - node:
       type: crm
       region: local
       cloudletkey:
         organization: tmus
         name: tmus-cloud-2
-    output: api,notify,mexos,info
+    output: api,notify,infra,info
   - node:
       type: crm
       region: local
       cloudletkey:
         organization: tmus
         name: tmus-cloud-3
-    output: api,notify,mexos,info
+    output: api,notify,infra,info
   - node:
       type: crm
       region: local
       cloudletkey:
         organization: azure
         name: azure-cloud-4
-    output: api,notify,mexos,info
+    output: api,notify,infra,info
   - node:
       type: crm
       region: local
       cloudletkey:
         organization: gcp
         name: gcp-cloud-5
-    output: api,notify,mexos,info
+    output: api,notify,infra,info
   - node:
       type: cluster-svc
       region: local
-    output: api,notify,mexos
+    output: api,notify,infra
   - node:
       type: cluster-svc
       region: local
-    output: api,notify,mexos
+    output: api,notify,infra
