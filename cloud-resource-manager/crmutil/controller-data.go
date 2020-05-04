@@ -65,7 +65,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 // GatherCloudletInfo gathers all the information about the Cloudlet that
 // the controller needs to be able to manage it.
 func (cd *ControllerData) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "attempting to gather cloudlet info")
+	log.SpanLog(ctx, log.DebugLevelInfra, "attempting to gather cloudlet info")
 	err := cd.platform.GatherCloudletInfo(ctx, info)
 	if err != nil {
 		return fmt.Errorf("get limits failed: %s", err)
@@ -75,11 +75,11 @@ func (cd *ControllerData) GatherCloudletInfo(ctx context.Context, info *edgeprot
 
 // CleanupOldCloudlet cleans up old version of same cloudlet
 func (cd *ControllerData) CleanupOldCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) {
-	log.SpanLog(ctx, log.DebugLevelMexos, "attempting to cleanup outdated cloudlet services", "key", cloudlet.Key)
+	log.SpanLog(ctx, log.DebugLevelInfra, "attempting to cleanup outdated cloudlet services", "key", cloudlet.Key)
 
 	err := cd.platform.CleanupCloudlet(ctx, cloudlet, &cloudlet.Config, updateCallback)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "can't cleanup old cloudlet", "key", cloudlet.Key, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "can't cleanup old cloudlet", "key", cloudlet.Key, "err", err)
 		updateCallback(edgeproto.UpdateTask, "Failed to cleanup old cloudlet, please cleanup manually")
 	}
 }
@@ -131,7 +131,7 @@ func (cd *ControllerData) flavorChanged(ctx context.Context, old *edgeproto.Flav
 func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {
 	var err error
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
+	log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
 
 	updateClusterCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
@@ -145,7 +145,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 	// do request
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// create
-		log.SpanLog(ctx, log.DebugLevelMexos, "ClusterInst create", "ClusterInst", *new)
+		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst create", "ClusterInst", *new)
 		// create or update k8s cluster on this cloudlet
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING)
 		if err != nil {
@@ -153,7 +153,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		}
 		go func() {
 			var cloudlet edgeproto.Cloudlet
-			cspan := log.StartSpan(log.DebugLevelMexos, "crm create ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			cspan := log.StartSpan(log.DebugLevelInfra, "crm create ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			defer cspan.Finish()
 			if !cd.CloudletCache.Get(&new.Key.CloudletKey, &cloudlet) {
 				log.WarnLog("Could not find cloudlet in cache", "key", new.Key.CloudletKey)
@@ -164,43 +164,43 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			if cloudlet.TimeLimits.CreateClusterInstTimeout != 0 {
 				timeout = cloudlet.TimeLimits.CreateClusterInstTimeout.TimeDuration()
 			}
-			log.SpanLog(ctx, log.DebugLevelMexos, "create cluster inst", "ClusterInst", *new, "timeout", timeout)
+			log.SpanLog(ctx, log.DebugLevelInfra, "create cluster inst", "ClusterInst", *new, "timeout", timeout)
 
 			policy := edgeproto.PrivacyPolicy{}
 			if new.PrivacyPolicy != "" {
 				policy.Key.Organization = new.Key.Organization
 				policy.Key.Name = new.PrivacyPolicy
 				if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
-					log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
+					log.SpanLog(ctx, log.DebugLevelInfra, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
 					cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, "Privacy Policy not found")
 					return
 				}
 			}
 			err = cd.platform.CreateClusterInst(ctx, new, &policy, updateClusterCacheCallback, timeout)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelMexos, "error cluster create fail", "error", err)
+				log.SpanLog(ctx, log.DebugLevelInfra, "error cluster create fail", "error", err)
 				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create failed: %s", err))
 				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
 				return
 			}
 
-			log.SpanLog(ctx, log.DebugLevelMexos, "cluster state ready", "ClusterInst", *new)
+			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
 			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
-		log.SpanLog(ctx, log.DebugLevelMexos, "cluster inst update", "ClusterInst", *new)
+		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst update", "ClusterInst", *new)
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING)
 		if err != nil {
 			return
 		}
 
-		log.SpanLog(ctx, log.DebugLevelMexos, "update cluster inst", "ClusterInst", *new)
+		log.SpanLog(ctx, log.DebugLevelInfra, "update cluster inst", "ClusterInst", *new)
 		policy := edgeproto.PrivacyPolicy{}
 		if new.PrivacyPolicy != "" {
 			policy.Key.Organization = new.Key.Organization
 			policy.Key.Name = new.PrivacyPolicy
 			if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
-				log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
+				log.SpanLog(ctx, log.DebugLevelInfra, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
 				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, "Privacy Policy not found")
 				return
 			}
@@ -212,27 +212,27 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			return
 		}
 
-		log.SpanLog(ctx, log.DebugLevelMexos, "cluster state ready", "ClusterInst", *new)
+		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
 		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
 
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
-		log.SpanLog(ctx, log.DebugLevelMexos, "cluster inst delete", "ClusterInst", *new)
+		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst delete", "ClusterInst", *new)
 		// clusterInst was deleted
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING)
 		if err != nil {
 			return
 		}
 		go func() {
-			cspan := log.StartSpan(log.DebugLevelMexos, "crm delete ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			cspan := log.StartSpan(log.DebugLevelInfra, "crm delete ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			defer cspan.Finish()
-			log.SpanLog(ctx, log.DebugLevelMexos, "delete cluster inst", "ClusterInst", *new)
+			log.SpanLog(ctx, log.DebugLevelInfra, "delete cluster inst", "ClusterInst", *new)
 			err = cd.platform.DeleteClusterInst(ctx, new)
 			if err != nil {
 				str := fmt.Sprintf("Delete failed: %s", err)
 				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str)
 				return
 			}
-			log.SpanLog(ctx, log.DebugLevelMexos, "set cluster inst deleted", "ClusterInst", *new)
+			log.SpanLog(ctx, log.DebugLevelInfra, "set cluster inst deleted", "ClusterInst", *new)
 			// DELETING local info signals to controller that
 			// delete was successful.
 			info := edgeproto.ClusterInstInfo{Key: new.Key}
@@ -256,16 +256,16 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppInst) {
 	var err error
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "app inst changed", "key", new.Key)
+	log.SpanLog(ctx, log.DebugLevelInfra, "app inst changed", "key", new.Key)
 	app := edgeproto.App{}
 	found := cd.AppCache.Get(&new.Key.AppKey, &app)
 	if !found {
-		log.SpanLog(ctx, log.DebugLevelMexos, "App not found for AppInst", "key", new.Key)
+		log.SpanLog(ctx, log.DebugLevelInfra, "App not found for AppInst", "key", new.Key)
 		return
 	}
 
 	// do request
-	log.SpanLog(ctx, log.DebugLevelMexos, "appInstChanged", "AppInst", new)
+	log.SpanLog(ctx, log.DebugLevelInfra, "appInstChanged", "AppInst", new)
 	updateAppCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
@@ -301,8 +301,8 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			return
 		}
 		go func() {
-			log.SpanLog(ctx, log.DebugLevelMexos, "update kube config", "AppInst", new, "ClusterInst", clusterInst)
-			cspan := log.StartSpan(log.DebugLevelMexos, "crm create AppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			log.SpanLog(ctx, log.DebugLevelInfra, "update kube config", "AppInst", new, "ClusterInst", clusterInst)
+			cspan := log.StartSpan(log.DebugLevelInfra, "crm create AppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			defer cspan.Finish()
 
 			policy := edgeproto.PrivacyPolicy{}
@@ -310,7 +310,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				policy.Key.Organization = new.Key.AppKey.Organization
 				policy.Key.Name = new.PrivacyPolicy
 				if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
-					log.SpanLog(ctx, log.DebugLevelMexos, "Privacy Policy not found for AppInst", "policyName", policy.Key.Name)
+					log.SpanLog(ctx, log.DebugLevelInfra, "Privacy Policy not found for AppInst", "policyName", policy.Key.Name)
 					cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, "Privacy Policy not found")
 					return
 				}
@@ -319,20 +319,20 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, errstr)
-				log.SpanLog(ctx, log.DebugLevelMexos, "can't create app inst", "error", errstr, "key", new.Key)
-				log.SpanLog(ctx, log.DebugLevelMexos, "cleaning up failed appinst", "key", new.Key)
+				log.SpanLog(ctx, log.DebugLevelInfra, "can't create app inst", "error", errstr, "key", new.Key)
+				log.SpanLog(ctx, log.DebugLevelInfra, "cleaning up failed appinst", "key", new.Key)
 				derr := cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new)
 				if derr != nil {
-					log.SpanLog(ctx, log.DebugLevelMexos, "can't cleanup app inst", "error", errstr, "key", new.Key)
+					log.SpanLog(ctx, log.DebugLevelInfra, "can't cleanup app inst", "error", errstr, "key", new.Key)
 				}
 				return
 			}
-			log.SpanLog(ctx, log.DebugLevelMexos, "created app inst", "appisnt", new, "ClusterInst", clusterInst)
+			log.SpanLog(ctx, log.DebugLevelInfra, "created app inst", "appisnt", new, "ClusterInst", clusterInst)
 
 			cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.PowerState_POWER_ON)
 			rt, err := cd.platform.GetAppInstRuntime(ctx, &clusterInst, &app, new)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelMexos, "unable to get AppInstRuntime", "key", new.Key, "err", err)
+				log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", new.Key, "err", err)
 				cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
 			} else {
 				cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt)
@@ -347,13 +347,13 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		nextPowerState := edgeproto.GetNextPowerState(new.PowerState, edgeproto.TransientState)
 		if nextPowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
 			cd.appInstInfoPowerState(ctx, &new.Key, nextPowerState)
-			log.SpanLog(ctx, log.DebugLevelMexos, "set power state on AppInst", "key", new.Key, "powerState", new.PowerState, "nextPowerState", nextPowerState)
+			log.SpanLog(ctx, log.DebugLevelInfra, "set power state on AppInst", "key", new.Key, "powerState", new.PowerState, "nextPowerState", nextPowerState)
 			err = cd.platform.SetPowerState(ctx, &app, new, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Set AppInst PowerState failed: %s", err)
 				cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.PowerState_POWER_STATE_ERROR)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr)
-				log.SpanLog(ctx, log.DebugLevelMexos, "can't set power state on AppInst", "error", err, "key", new.Key)
+				log.SpanLog(ctx, log.DebugLevelInfra, "can't set power state on AppInst", "error", err, "key", new.Key)
 			} else {
 				cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.GetNextPowerState(nextPowerState, edgeproto.FinalState))
 				cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
@@ -374,13 +374,13 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		if err != nil {
 			errstr := fmt.Sprintf("Update App Inst failed: %s", err)
 			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr)
-			log.SpanLog(ctx, log.DebugLevelMexos, "can't update app inst", "error", errstr, "key", new.Key)
+			log.SpanLog(ctx, log.DebugLevelInfra, "can't update app inst", "error", errstr, "key", new.Key)
 			return
 		}
-		log.SpanLog(ctx, log.DebugLevelMexos, "updated app inst", "appisnt", new, "ClusterInst", clusterInst)
+		log.SpanLog(ctx, log.DebugLevelInfra, "updated app inst", "appisnt", new, "ClusterInst", clusterInst)
 		rt, err := cd.platform.GetAppInstRuntime(ctx, &clusterInst, &app, new)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "unable to get AppInstRuntime", "key", new.Key, "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", new.Key, "err", err)
 			cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
 		} else {
 			cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt)
@@ -402,18 +402,18 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			return
 		}
 		go func() {
-			log.SpanLog(ctx, log.DebugLevelMexos, "delete app inst", "AppInst", new, "ClusterInst", clusterInst)
-			cspan := log.StartSpan(log.DebugLevelMexos, "crm delete AppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			log.SpanLog(ctx, log.DebugLevelInfra, "delete app inst", "AppInst", new, "ClusterInst", clusterInst)
+			cspan := log.StartSpan(log.DebugLevelInfra, "crm delete AppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			defer cspan.Finish()
 
 			err = cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new)
 			if err != nil {
 				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, errstr)
-				log.SpanLog(ctx, log.DebugLevelMexos, "can't delete app inst", "error", errstr, "key", new.Key)
+				log.SpanLog(ctx, log.DebugLevelInfra, "can't delete app inst", "error", errstr, "key", new.Key)
 				return
 			}
-			log.SpanLog(ctx, log.DebugLevelMexos, "deleted app inst", "AppInst", new, "ClusterInst", clusterInst)
+			log.SpanLog(ctx, log.DebugLevelInfra, "deleted app inst", "AppInst", new, "ClusterInst", clusterInst)
 			// DELETING local info signals to controller that
 			// delete was successful.
 			info := edgeproto.AppInstInfo{Key: new.Key}
@@ -445,7 +445,7 @@ func (cd *ControllerData) clusterInstInfoError(ctx context.Context, key *edgepro
 
 func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgeproto.ClusterInstKey, state edgeproto.TrackedState) error {
 	if err := cd.ClusterInstInfoCache.SetState(ctx, key, state); err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "ClusterInst set state failed", "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst set state failed", "err", err)
 		return err
 	}
 	return nil
@@ -457,7 +457,7 @@ func (cd *ControllerData) appInstInfoError(ctx context.Context, key *edgeproto.A
 
 func (cd *ControllerData) appInstInfoState(ctx context.Context, key *edgeproto.AppInstKey, state edgeproto.TrackedState) error {
 	if err := cd.AppInstInfoCache.SetState(ctx, key, state); err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "AppInst set state failed", "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "AppInst set state failed", "err", err)
 		return err
 	}
 	return nil
@@ -465,7 +465,7 @@ func (cd *ControllerData) appInstInfoState(ctx context.Context, key *edgeproto.A
 
 func (cd *ControllerData) appInstInfoPowerState(ctx context.Context, key *edgeproto.AppInstKey, state edgeproto.PowerState) error {
 	if err := cd.AppInstInfoCache.SetPowerState(ctx, key, state); err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "AppInst set power state failed", "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "AppInst set power state failed", "err", err)
 		return err
 	}
 	return nil
@@ -531,7 +531,7 @@ func (cd *ControllerData) notifyControllerConnect() {
 
 func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
 	// do request
-	log.SpanLog(ctx, log.DebugLevelMexos, "cloudletChanged", "cloudlet", new)
+	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletChanged", "cloudlet", new)
 	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
@@ -544,7 +544,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	cloudletInfo := edgeproto.CloudletInfo{}
 	found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 	if !found {
-		log.SpanLog(ctx, log.DebugLevelMexos, "CloudletInfo not found for cloudlet", "key", new.Key)
+		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 		return
 	}
 
@@ -559,7 +559,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			(old.State != edgeproto.TrackedState_READY &&
 				old.State != edgeproto.TrackedState_UPDATE_ERROR) {
 			if old != nil {
-				log.SpanLog(ctx, log.DebugLevelMexos, "Cloudlet state conflict",
+				log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet state conflict",
 					"key", new.Key,
 					"old state", old.State,
 					"new state", new.State,
@@ -570,7 +570,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY &&
 			cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			// Cloudlet is not in a state to upgrade
-			log.SpanLog(ctx, log.DebugLevelMexos, "Cloudlet is not in a state to upgrade", "key", new.Key, "state", cloudletInfo.State)
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet is not in a state to upgrade", "key", new.Key, "state", cloudletInfo.State)
 			return
 		}
 
@@ -585,7 +585,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cloudletAction, err := cd.platform.UpdateCloudlet(ctx, new, &new.Config, updateCloudletCallback)
 		if err != nil {
 			errstr := fmt.Sprintf("Update Cloudlet failed: %v", err)
-			log.SpanLog(ctx, log.DebugLevelMexos, "can't update cloudlet", "error", errstr, "key", new.Key)
+			log.SpanLog(ctx, log.DebugLevelInfra, "can't update cloudlet", "error", errstr, "key", new.Key)
 
 			cloudletInfo.Errors = append(cloudletInfo.Errors, errstr)
 			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
@@ -596,12 +596,12 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 		}
-		log.SpanLog(ctx, log.DebugLevelMexos, "updated cloudlet", "cloudlet", new, "cloudletInfo state", cloudletInfo.State)
+		log.SpanLog(ctx, log.DebugLevelInfra, "updated cloudlet", "cloudlet", new, "cloudletInfo state", cloudletInfo.State)
 	} else if new.State == edgeproto.TrackedState_UPDATE_ERROR {
 		// On an UpdateError, old cloudlet's last state will either be UPGRADE or ERRORS
 		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE &&
 			cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
-			log.SpanLog(ctx, log.DebugLevelMexos,
+			log.SpanLog(ctx, log.DebugLevelInfra,
 				"old cloudlet state invalid, failed to resolve UpdateError",
 				"key", new.Key, "state", cloudletInfo.State)
 			return

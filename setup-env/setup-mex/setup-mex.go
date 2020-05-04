@@ -512,13 +512,13 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 	}
 	for _, p := range util.Deployment.ClusterSvcs {
 		opts = append(opts, process.WithRolesFile(rolesfile))
-		opts = append(opts, process.WithDebug("notify,mexos,api"))
+		opts = append(opts, process.WithDebug("notify,infra,api"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
 	}
 	for _, p := range util.Deployment.Crms {
-		opts = append(opts, process.WithDebug("notify,mexos,api"))
+		opts = append(opts, process.WithDebug("notify,infra,api"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
