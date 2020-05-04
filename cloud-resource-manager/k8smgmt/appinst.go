@@ -29,7 +29,7 @@ var createManifest = "create"
 // or if WaitDeleted is specified then wait for them to all disappear.
 func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, waitFor string) error {
 	// wait half as long as the total controller wait time, which includes all tasks
-	log.SpanLog(ctx, log.DebugLevelMexos, "waiting for appinst pods", "appName", app.Key.Name, "maxWait", maxWait, "waitFor", waitFor)
+	log.SpanLog(ctx, log.DebugLevelInfra, "waiting for appinst pods", "appName", app.Key.Name, "maxWait", maxWait, "waitFor", waitFor)
 	start := time.Now()
 
 	// it might be nicer to pull the state directly rather than parsing it, but the states displayed
@@ -53,7 +53,7 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 				} else {
 					name = daemonset.ObjectMeta.Name
 				}
-				log.SpanLog(ctx, log.DebugLevelMexos, "get pods", "name", name)
+				log.SpanLog(ctx, log.DebugLevelInfra, "get pods", "name", name)
 
 				cmd := fmt.Sprintf("%s kubectl get pods --no-headers --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
 				out, err := client.Output(cmd)
@@ -80,14 +80,14 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 						podState := matches[2]
 						switch podState {
 						case "Running":
-							log.SpanLog(ctx, log.DebugLevelMexos, "pod is running", "podName", podName)
+							log.SpanLog(ctx, log.DebugLevelInfra, "pod is running", "podName", podName)
 							runningCount++
 						case "Pending":
 							fallthrough
 						case "ContainerCreating":
-							log.SpanLog(ctx, log.DebugLevelMexos, "still waiting for pod", "podName", podName, "state", podState)
+							log.SpanLog(ctx, log.DebugLevelInfra, "still waiting for pod", "podName", podName, "state", podState)
 						case "Terminating":
-							log.SpanLog(ctx, log.DebugLevelMexos, "pod is terminating", "podName", podName, "state", podState)
+							log.SpanLog(ctx, log.DebugLevelInfra, "pod is terminating", "podName", podName, "state", podState)
 						default:
 							// try to find out what error was
 							// TODO: pull events and send
@@ -110,12 +110,12 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 				}
 				if waitFor == WaitDeleted {
 					if podCount == 0 {
-						log.SpanLog(ctx, log.DebugLevelMexos, "all pods gone", "name", name)
+						log.SpanLog(ctx, log.DebugLevelInfra, "all pods gone", "name", name)
 						break
 					}
 				} else {
 					if podCount == runningCount {
-						log.SpanLog(ctx, log.DebugLevelMexos, "all pods up", "name", name)
+						log.SpanLog(ctx, log.DebugLevelInfra, "all pods up", "name", name)
 						break
 					}
 				}
@@ -142,23 +142,23 @@ func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, clien
 	}
 	mf, err = MergeEnvVars(ctx, vaultConfig, app, mf, names.ImagePullSecret)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "failed to merge env vars", "error", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to merge env vars", "error", err)
 		return fmt.Errorf("error merging environment variables config file: %s", err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "writing config file", "kubeManifest", mf)
+	log.SpanLog(ctx, log.DebugLevelInfra, "writing config file", "kubeManifest", mf)
 	file := names.AppName + names.AppRevision + ".yaml"
 	err = pc.WriteFile(client, file, mf, "K8s Deployment", pc.NoSudo)
 	if err != nil {
 		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "running kubectl", "action", action, "file", file)
+	log.SpanLog(ctx, log.DebugLevelInfra, "running kubectl", "action", action, "file", file)
 	cmd := fmt.Sprintf("%s kubectl %s -f %s", names.KconfEnv, action, file)
 
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error running kubectl %s command %s, %v", action, out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "done kubectl", "action", action)
+	log.SpanLog(ctx, log.DebugLevelInfra, "done kubectl", "action", action)
 	return nil
 
 }
@@ -176,19 +176,19 @@ func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 }
 
 func DeleteAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "deleting app", "name", names.AppName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting app", "name", names.AppName)
 	// for delete, we use the appInst revision which may be behind the app revision
 	file := names.AppName + names.AppInstRevision + ".yaml"
 	cmd := fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, file)
 	out, err := client.Output(cmd)
 	if err != nil {
 		if strings.Contains(string(out), "not found") {
-			log.SpanLog(ctx, log.DebugLevelMexos, "app not found, cannot delete", "name", names.AppName)
+			log.SpanLog(ctx, log.DebugLevelInfra, "app not found, cannot delete", "name", names.AppName)
 		} else {
 			return fmt.Errorf("error deleting kuberknetes app, %s, %s, %s, %v", names.AppName, cmd, out, err)
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "deleted deployment", "name", names.AppName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleted deployment", "name", names.AppName)
 	//Note wait for deletion of appinst can be done here in a generic place, but wait for creation is split
 	// out in each platform specific task so that we can optimize the time taken for create by allowing the
 	// wait to be run in parallel with other tasks

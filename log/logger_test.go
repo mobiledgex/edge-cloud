@@ -67,8 +67,8 @@ func TestDebugStrs(t *testing.T) {
 	testDebugStrsAdd(t, "etcd,dmereq", "etcd,dmereq")
 	testDebugStrsAdd(t, "notify,locapi", "etcd,notify,dmereq,locapi")
 	testDebugStrsClear(t, "etcd,locapi", "notify,dmereq")
-	testDebugStrsAdd(t, "api,mexos,metrics", "api,notify,dmereq,mexos,metrics")
-	testDebugStrsClear(t, "mexos", "api,notify,dmereq,metrics")
+	testDebugStrsAdd(t, "api,infra,metrics", "api,notify,dmereq,infra,metrics")
+	testDebugStrsClear(t, "infra", "api,notify,dmereq,metrics")
 	testDebugStrsClear(t, "api,notify,dmereq,metrics", "")
 }
 

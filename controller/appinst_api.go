@@ -26,6 +26,8 @@ type AppInstApi struct {
 
 const RootLBSharedPortBegin int32 = 10000
 
+var RequireAppInstPortConsistency = false
+
 var appInstApi = AppInstApi{}
 
 // Transition states indicate states in which the CRM is still busy.
@@ -895,7 +897,9 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		return in.Key.NotFoundError()
 	}
 
-	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d AppInsts", len(instances))})
+	if len(instances) > 1 {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d AppInsts", len(instances))})
+	}
 
 	for instkey, _ := range instances {
 		go func(k edgeproto.AppInstKey) {
@@ -920,18 +924,31 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		if result.errString == "" {
 			if result.revisionUpdated {
 				numUpdated++
+				if len(instances) == 1 {
+					cb.Send(&edgeproto.Result{Message: "Successfully updated AppInst"})
+				}
 			} else {
 				numSkipped++
+				if len(instances) == 1 {
+					cb.Send(&edgeproto.Result{Message: "Skipped updating AppInst"})
+				}
 			}
 		} else {
 			numFailed++
+			if len(instances) == 1 {
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed: %s", result.errString)})
+			} else {
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed for cluster (%s/%s), cloudlet (%s/%s): %s", k.ClusterInstKey.ClusterKey.Name, k.ClusterInstKey.Organization, k.ClusterInstKey.CloudletKey.Name, k.ClusterInstKey.CloudletKey.Organization, result.errString)})
+			}
 		}
 		// give some intermediate status
 		if (numTotal%10 == 0) && numTotal != len(instances) {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processing: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
 		}
 	}
-	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Completed: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
+	if len(instances) > 1 {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Completed: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
+	}
 	return nil
 }
 
@@ -1086,13 +1103,24 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		var cloudlet edgeproto.Cloudlet
 
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
-			return errors.New("Specified Cloudlet not found")
+			return fmt.Errorf("For AppInst, %v", in.Key.ClusterInstKey.CloudletKey.NotFoundError())
+		}
+		app := edgeproto.App{}
+		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+			return fmt.Errorf("For AppInst, %v", in.Key.AppKey.NotFoundError())
+		}
+		clusterInstReqd := cloudcommon.IsClusterInstReqd(&app)
+		clusterInst := edgeproto.ClusterInst{}
+		if clusterInstReqd && !clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst) {
+			return fmt.Errorf("For AppInst, %v", in.Key.ClusterInstKey.NotFoundError())
 		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}
 		cloudletRefsChanged := false
-		if cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudletRefs) {
+		hasRefs := cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudletRefs)
+		if hasRefs && clusterInstReqd && clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED && !app.InternalPorts {
 			// shared root load balancer
+			log.SpanLog(ctx, log.DebugLevelApi, "refs", "AppInst", in)
 			for ii, _ := range in.MappedPorts {
 				if in.MappedPorts[ii].Proto == dme.LProto_L_PROTO_HTTP {
 					continue
@@ -1104,8 +1132,15 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				if err != nil {
 					return err
 				}
-				protos, _ := cloudletRefs.RootLbPorts[p]
+				protos, found := cloudletRefs.RootLbPorts[p]
+				if RequireAppInstPortConsistency && !found {
+					return fmt.Errorf("Port %d not found in cloudlet refs %v", p, cloudletRefs.RootLbPorts)
+				}
 				if cloudletRefs.RootLbPorts != nil {
+					if RequireAppInstPortConsistency && !protocolInUse(protos, protocol) {
+						return fmt.Errorf("Port %d proto %x not found in cloudlet refs %v", p, protocol, cloudletRefs.RootLbPorts)
+
+					}
 					cloudletRefs.RootLbPorts[p] = removeProtocol(protos, protocol)
 					if cloudletRefs.RootLbPorts[p] == 0 {
 						delete(cloudletRefs.RootLbPorts, p)
@@ -1118,12 +1153,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if cloudletRefsChanged {
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
-		clusterInst := edgeproto.ClusterInst{}
-		if clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst) {
-			if clusterInst.ReservedBy != "" && clusterInst.ReservedBy == in.Key.AppKey.Organization {
-				clusterInst.ReservedBy = ""
-				clusterInstApi.store.STMPut(stm, &clusterInst)
-			}
+		if clusterInstReqd && clusterInst.ReservedBy != "" && clusterInst.ReservedBy == in.Key.AppKey.Organization {
+			clusterInst.ReservedBy = ""
+			clusterInstApi.store.STMPut(stm, &clusterInst)
 		}
 
 		// delete app inst
