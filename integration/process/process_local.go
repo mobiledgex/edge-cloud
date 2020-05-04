@@ -130,6 +130,9 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
 	}
+	if p.UseVaultCAs {
+		args = append(args, "--useVaultCAs")
+	}
 	if p.UseVaultCerts {
 		args = append(args, "--useVaultCerts")
 	}
@@ -293,6 +296,9 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
 	}
+	if p.UseVaultCAs {
+		args = append(args, "--useVaultCAs")
+	}
 	if p.UseVaultCerts {
 		args = append(args, "--useVaultCerts")
 	}
@@ -434,6 +440,9 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.Region != "" {
 		args = append(args, "--region")
 		args = append(args, p.Region)
+	}
+	if p.UseVaultCAs {
+		args = append(args, "--useVaultCAs")
 	}
 	if p.UseVaultCerts {
 		args = append(args, "--useVaultCerts")
@@ -595,6 +604,9 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 	if p.VaultAddr != "" {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
+	}
+	if p.UseVaultCAs {
+		args = append(args, "--useVaultCAs")
 	}
 	if p.UseVaultCerts {
 		args = append(args, "--useVaultCerts")
@@ -1054,6 +1066,9 @@ func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
 	}
+	if p.UseVaultCAs {
+		args = append(args, "--useVaultCAs")
+	}
 	if p.UseVaultCerts {
 		args = append(args, "--useVaultCerts")
 	}
@@ -1113,6 +1128,9 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 	}
 	if p.TestMode {
 		args = append(args, "--testMode")
+	}
+	if p.UseVaultCAs {
+		args = append(args, "--useVaultCAs")
 	}
 	if p.UseVaultCerts {
 		args = append(args, "--useVaultCerts")

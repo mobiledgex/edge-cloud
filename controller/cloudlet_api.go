@@ -144,6 +144,7 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	pfConfig.PlatformTag = cloudlet.ContainerVersion
 	pfConfig.TlsCertFile = nodeMgr.TlsCertFile
 	pfConfig.VaultAddr = nodeMgr.VaultAddr
+	pfConfig.UseVaultCas = nodeMgr.InternalPki.UseVaultCAs
 	pfConfig.UseVaultCerts = nodeMgr.InternalPki.UseVaultCerts
 	pfConfig.ContainerRegistryPath = *cloudletRegistryPath
 	pfConfig.CloudletVmImagePath = *cloudletVMImagePath
