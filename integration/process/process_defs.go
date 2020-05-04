@@ -29,6 +29,7 @@ type Controller struct {
 	InfluxAddr            string
 	Region                string
 	TLS                   TLSCerts
+	UseVaultCAs           bool
 	UseVaultCerts         bool
 	cmd                   *exec.Cmd
 	TestMode              bool
@@ -53,6 +54,7 @@ type Dme struct {
 	CookieExpr    string
 	Region        string
 	TLS           TLSCerts
+	UseVaultCAs   bool
 	UseVaultCerts bool
 	cmd           *exec.Cmd
 }
@@ -64,6 +66,7 @@ type Crm struct {
 	Platform            string
 	Plugin              string
 	TLS                 TLSCerts
+	UseVaultCAs         bool
 	UseVaultCerts       bool
 	cmd                 *exec.Cmd
 	VaultAddr           string
@@ -119,6 +122,7 @@ type ClusterSvc struct {
 	Region         string
 	VaultAddr      string
 	PluginRequired bool
+	UseVaultCAs    bool
 	UseVaultCerts  bool
 	TLS            TLSCerts
 	cmd            *exec.Cmd
@@ -137,6 +141,7 @@ type NotifyRoot struct {
 	Common        `yaml:",inline"`
 	VaultAddr     string
 	TLS           TLSCerts
+	UseVaultCAs   bool
 	UseVaultCerts bool
 	cmd           *exec.Cmd
 }
@@ -144,6 +149,7 @@ type EdgeTurn struct {
 	Common        `yaml:",inline"`
 	TLS           TLSCerts
 	cmd           *exec.Cmd
+	UseVaultCAs   bool
 	UseVaultCerts bool
 	VaultAddr     string
 	ListenAddr    string
