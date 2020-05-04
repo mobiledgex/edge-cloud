@@ -46,4 +46,5 @@ func testinit() {
 	vaultConfig, _ = vault.BestConfig("")
 	services.events = influxq.NewInfluxQ("events", "user", "pass")
 	cleanupCloudletInfoTimeout = 100 * time.Millisecond
+	RequireAppInstPortConsistency = true
 }
