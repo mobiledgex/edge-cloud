@@ -28,7 +28,7 @@ var _ = math.Inf
 type DebugRequest struct {
 	// Service node identifier (see NodeShow)
 	Node NodeKey `protobuf:"bytes,1,opt,name=node" json:"node"`
-	// Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,mexos,metrics,upgrade,info,sampled
+	// Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,infra,metrics,upgrade,info,sampled
 	Levels string `protobuf:"bytes,2,opt,name=levels,proto3" json:"levels,omitempty"`
 	// Debug command
 	Cmd string `protobuf:"bytes,3,opt,name=cmd,proto3" json:"cmd,omitempty"`

@@ -130,7 +130,7 @@ func SetDebugLevelStrs(list string) {
 		val, ok := stringToDebugLevel(str)
 		if ok {
 			SetDebugLevelEnum(val)
-		}
+		} 
 	}
 }
 

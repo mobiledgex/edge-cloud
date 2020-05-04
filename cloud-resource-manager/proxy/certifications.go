@@ -119,15 +119,15 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 	// write it to rootlb
 	err := pc.Run(client, "mkdir -p "+CertsDir)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "can't create cert dir on rootlb", "certDir", CertsDir)
+		log.SpanLog(ctx, log.DebugLevelInfra, "can't create cert dir on rootlb", "certDir", CertsDir)
 	} else {
 		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", permission)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "unable to write tls cert file to rootlb", "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
 		}
 		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", permission)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "unable to write tls key file to rootlb", "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
 		}
 	}
 }
@@ -135,7 +135,7 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 // GetCertFromVault fills in the cert fields by calling the vault  plugin.  The vault plugin will
 // return a new cert if one is not already available, or a cached copy of an existing cert.
 func getCertFromVault(ctx context.Context, config *vault.Config, tlsCert *access.TLSCert, commonNames ...string) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "GetCertFromVault", "commonName", commonNames)
+	log.SpanLog(ctx, log.DebugLevelInfra, "GetCertFromVault", "commonName", commonNames)
 	client, err := config.Login()
 	if err != nil {
 		return err
@@ -175,7 +175,7 @@ func getCertFromVault(ctx context.Context, config *vault.Config, tlsCert *access
 
 // Generates a self signed cert for testing purposes or if crm does not have access to vault
 func getSelfSignedCerts(ctx context.Context, tlsCert *access.TLSCert, commonNames ...string) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "Generating self-signed cert", "commonNames", commonNames)
+	log.SpanLog(ctx, log.DebugLevelInfra, "Generating self-signed cert", "commonNames", commonNames)
 	var args string
 	if len(commonNames) < 1 {
 		return fmt.Errorf("Must have at least one domain name specified for cert generation")
