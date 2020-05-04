@@ -56,6 +56,8 @@ func TestAppInstApi(t *testing.T) {
 	// the fake crm returns a failure. If it doesn't, the next test to
 	// create all the app insts will fail.
 	responder.SetSimulateAppCreateFailure(true)
+	// clean up on failure may find ports inconsistent
+	RequireAppInstPortConsistency = false
 	for _, obj := range testutil.AppInstData {
 		if testutil.IsAutoClusterAutoDeleteApp(&obj.Key) {
 			continue
@@ -71,6 +73,7 @@ func TestAppInstApi(t *testing.T) {
 		}
 	}
 	responder.SetSimulateAppCreateFailure(false)
+	RequireAppInstPortConsistency = true
 	require.Equal(t, 0, len(appInstApi.cache.Objs))
 	require.Equal(t, clusterInstCnt, len(clusterInstApi.cache.Objs))
 
