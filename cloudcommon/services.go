@@ -57,7 +57,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		envVars[envKey] = envVal
 	}
 
-	opts = append(opts, process.WithDebug("api,mexos,notify,info"))
+	opts = append(opts, process.WithDebug("api,infra,notify,info"))
 
 	return &process.Crm{
 		NotifyAddrs:   notifyCtrlAddrs,
@@ -142,7 +142,7 @@ func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet) error {
 	c := make(chan string)
 	go process.KillProcessesByName("crmserver", maxwait, args, c)
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "stopped crmserver", "msg", <-c)
+	log.SpanLog(ctx, log.DebugLevelInfra, "stopped crmserver", "msg", <-c)
 
 	// After above, processes will be in Zombie state. Hence use wait to cleanup the processes
 	if cloudlet != nil {

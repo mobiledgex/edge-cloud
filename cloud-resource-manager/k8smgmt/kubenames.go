@@ -81,7 +81,7 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 			return nil, fmt.Errorf("invalid kubernetes deployment yaml, %s", err.Error())
 		}
 		for _, o := range objs {
-			log.DebugLog(log.DebugLevelMexos, "k8s obj", "obj", o)
+			log.DebugLog(log.DebugLevelInfra, "k8s obj", "obj", o)
 			ksvc, ok := o.(*v1.Service)
 			if !ok {
 				continue

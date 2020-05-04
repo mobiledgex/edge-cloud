@@ -40,7 +40,7 @@ func addImagePullSecret(ctx context.Context, template *v1.PodTemplateSpec, secre
 	if !found {
 		var newSecret v1.LocalObjectReference
 		newSecret.Name = secretName
-		log.SpanLog(ctx, log.DebugLevelMexos, "adding imagePullSecret", "secretName", secretName)
+		log.SpanLog(ctx, log.DebugLevelInfra, "adding imagePullSecret", "secretName", secretName)
 		template.Spec.ImagePullSecrets = append(template.Spec.ImagePullSecrets, newSecret)
 	}
 }
@@ -65,7 +65,7 @@ func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto
 	var err error
 
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
-	log.SpanLog(ctx, log.DebugLevelMexos, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecret", imagePullSecret)
+	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecret", imagePullSecret)
 
 	// Walk the Configs in the App and get all the environment variables together
 	for _, v := range app.Configs {
@@ -76,21 +76,21 @@ func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto
 			if varsFound {
 				cfg, err = crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
 				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelMexos, "failed to replace Crm variables",
+					log.SpanLog(ctx, log.DebugLevelInfra, "failed to replace Crm variables",
 						"EnvVars ", v.Config, "DeploymentVars", deploymentVars, "error", err)
 					return "", err
 				}
 			}
 
 			if err1 := yaml.Unmarshal([]byte(cfg), &curVars); err1 != nil {
-				log.SpanLog(ctx, log.DebugLevelMexos, "cannot unmarshal env vars", "kind", v.Kind,
+				log.SpanLog(ctx, log.DebugLevelInfra, "cannot unmarshal env vars", "kind", v.Kind,
 					"config", cfg, "error", err1)
 			} else {
 				envVars = append(envVars, curVars...)
 			}
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "Merging environment variables", "envVars", envVars)
+	log.SpanLog(ctx, log.DebugLevelInfra, "Merging environment variables", "envVars", envVars)
 	mf, err := cloudcommon.GetDeploymentManifest(ctx, vaultConfig, kubeManifest)
 	if err != nil {
 		return mf, err
@@ -99,7 +99,7 @@ func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto
 	if varsFound {
 		mf, err = crmutil.ReplaceDeploymentVars(mf, deploymentVars)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "failed to replace Crm variables",
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to replace Crm variables",
 				"manifest", mf, "DeploymentVars", deploymentVars, "error", err)
 			return "", err
 		}

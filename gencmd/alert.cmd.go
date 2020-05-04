@@ -56,11 +56,6 @@ It has these top-level messages:
 	AutoScalePolicy
 	CloudletKey
 	OperationTimeLimits
-	CloudletInfraCommon
-	AzureProperties
-	GcpProperties
-	OpenStackProperties
-	CloudletInfraProperties
 	PlatformConfig
 	CloudletResMap
 	Cloudlet

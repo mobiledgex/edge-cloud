@@ -59,6 +59,10 @@ const ControllerTimeout = 1 * time.Minute
 func main() {
 	nodeMgr.InitFlags()
 	flag.Parse()
+
+	if strings.Contains(*debugLevels, "mexos") {
+		log.FatalLog("mexos log level is obsolete, please use infra")
+	}
 	log.SetDebugLevelStrs(*debugLevels)
 	log.InitTracer(nodeMgr.TlsCertFile)
 	defer log.FinishTracer()
@@ -171,7 +175,7 @@ func main() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err := initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
+		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
@@ -188,7 +192,7 @@ func main() {
 					controllerData.CleanupOldCloudlet(ctx, &cloudlet, updateCloudletStatus)
 				}
 				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-				log.SpanLog(ctx, log.DebugLevelMexos, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 			}
 		}
 
@@ -200,6 +204,11 @@ func main() {
 		nodeMgr.UpdateMyNode(ctx)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 		cspan.Finish()
+
+		if err != nil {
+			// die so CRM can restart and try again
+			log.FatalLog("Platform init fail", "err", err)
+		}
 
 		// setup rootlb certs
 		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
@@ -246,7 +255,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		EnvVars:             cloudlet.EnvVar,
 		NodeMgr:             &nodeMgr,
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform", pc)
+	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", platform.GetType())
 	err := platform.Init(ctx, &pc, updateCallback)
 	return err
 }
