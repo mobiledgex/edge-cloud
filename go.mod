@@ -84,7 +84,7 @@ require (
 	github.com/lib/pq v1.0.0 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
-	github.com/mitchellh/mapstructure v1.1.2
+	github.com/mitchellh/mapstructure v1.2.4
 	github.com/mobiledgex/golang-ssh v0.0.8
 	github.com/mobiledgex/yaml/v2 v2.2.4
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -140,3 +140,5 @@ require (
 	k8s.io/client-go v0.0.0-20180517072830-4bb327ea2f8e
 	sigs.k8s.io/yaml v1.1.0 // indirect
 )
+
+replace github.com/mitchellh/mapstructure => github.com/mobiledgex/mapstructure v1.2.4-0.20200429201435-a2efef9031f5
