@@ -907,6 +907,7 @@ var PlatformConfigOptionalArgs = []string{
 	"region",
 	"commercialcerts",
 	"usevaultcerts",
+	"usevaultcas",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -923,6 +924,7 @@ var PlatformConfigComments = map[string]string{
 	"region":                "Region",
 	"commercialcerts":       "Get certs from vault or generate your own for the root load balancer",
 	"usevaultcerts":         "Use Vault certs for internal TLS communication",
+	"usevaultcas":           "Use Vault CAs to authenticate TLS communication",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -1027,6 +1029,7 @@ var CloudletComments = map[string]string{
 	"config.region":                       "Region",
 	"config.commercialcerts":              "Get certs from vault or generate your own for the root load balancer",
 	"config.usevaultcerts":                "Use Vault certs for internal TLS communication",
+	"config.usevaultcas":                  "Use Vault CAs to authenticate TLS communication",
 	"restagmap:#.value.name":              "Resource Table Name",
 	"restagmap:#.value.organization":      "Operator organization of the cloudlet site.",
 	"accessvars":                          "Variables required to access cloudlet",

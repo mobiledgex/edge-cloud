@@ -30,40 +30,40 @@ replies:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-1
-    output: api,notify,mexos,metrics,upgrade,info,sampled
+    output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
       type: crm
       region: local
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
-    output: api,notify,mexos,metrics,upgrade,info,sampled
+    output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
       type: crm
       region: local
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-3
-    output: api,notify,mexos,metrics,upgrade,info,sampled
+    output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
       type: crm
       region: local
       cloudletkey:
         organization: azure
         name: azure-cloud-4
-    output: api,notify,mexos,metrics,upgrade,info,sampled
+    output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
       type: crm
       region: local
       cloudletkey:
         organization: gcp
         name: gcp-cloud-5
-    output: api,notify,mexos,metrics,upgrade,info,sampled
+    output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
       type: cluster-svc
       region: local
-    output: etcd,api,notify,mexos,metrics
+    output: etcd,api,notify,infra,metrics
   - node:
       type: cluster-svc
       region: local
-    output: etcd,api,notify,mexos,metrics
+    output: etcd,api,notify,infra,metrics
