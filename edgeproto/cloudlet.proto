@@ -43,75 +43,6 @@ message OperationTimeLimits{
     int64 delete_app_inst_timeout = 6 [(gogoproto.casttype) = "Duration"];
 }
 
-// properites common to all cloudlets
-message CloudletInfraCommon{
-    // the mex docker registry, e.g.  registry.mobiledgex.net:5000. 
-    string docker_registry = 1;
-    // DNS Zone
-    string dns_zone = 2;
-    // registry file server contains files which get pulled on instantiation such as certs and images
-    string registry_file_server = 3;
-    // Cloudflare key
-    string cf_key = 4; //MEX_CF_KEY
-    // Cloudflare key
-    string cf_user = 5; //MEX_CF_KEY
-    // Docker registry password
-    string docker_reg_pass = 6; //MEX_DOCKER_REG_PASS
-    // network scheme
-    string network_scheme = 7;
-    // the name of the docker registry secret, e.g. mexgitlabsecret
-    string docker_registry_secret = 8;
-}
-
-message AzureProperties{
-  // azure region e.g. uswest2
-  string location = 1;
-  // azure resource group
-  string resource_group = 2;
-  // azure username
-  string user_name = 3;
-  // azure password
-  string password = 4;
-}
-
-message GcpProperties{
-  // gcp project for billing
-  string project = 1;
-  // availability zone
-  string zone = 2;
-  // service account to login with
-  string service_account = 3;
-  // vault credentials link
-  string gcp_auth_key_url = 4;
-}
-
-message OpenStackProperties{
-  // name of the external network, e.g. external-network-shared
-  string os_external_network_name = 1; 
-  //openstack image , e.g. mobiledgex
-  string os_image_name = 2;
-  // openstack router
-  string os_external_router_name = 3;
-  // openstack internal network
-  string os_mex_network = 4;
-  // openrc env vars 
-  map<string, string> open_rc_vars = 5;
-}
-
-message CloudletInfraProperties{
-    // what kind of infrastructure: Azure, GCP, Openstack
-    string cloudlet_kind = 1;
-    //name and version of the docker image container image that mexos runs in
-    string mexos_container_image_name = 2;
-    // openstack
-    OpenStackProperties openstack_properties = 3;
-    // azure
-    AzureProperties azure_properties = 4;
-    // gcp
-    GcpProperties gcp_properties = 5;
-}
-
-// Platform Configuration
 //
 // Platform specific configuration required for Cloudlet management
 message PlatformConfig {
@@ -161,6 +92,8 @@ enum PlatformType {
   PLATFORM_TYPE_EDGEBOX = 5;
   // Fake Infra Cloudlet
   PLATFORM_TYPE_FAKEINFRA = 6;
+   // VMWare VSphere (ESXi)
+  PLATFORM_TYPE_VSPHERE = 7;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name

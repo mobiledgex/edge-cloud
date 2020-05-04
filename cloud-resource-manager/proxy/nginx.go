@@ -68,7 +68,7 @@ func init() {
 }
 
 func InitL7Proxy(ctx context.Context, client ssh.Client, ops ...Op) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "InitL7Proxy")
+	log.SpanLog(ctx, log.DebugLevelInfra, "InitL7Proxy")
 	out, err := client.Output("docker ps --format '{{.Names}}'")
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func getNginxContainerName(name string) string {
 
 func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, destIP string, ports []dme.AppPort, ops ...Op) error {
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "CreateNginxProxy", "listenIP", listenIP, "destIP", destIP)
+	log.SpanLog(ctx, log.DebugLevelInfra, "CreateNginxProxy", "listenIP", listenIP, "destIP", destIP)
 	containerName := getNginxContainerName(name)
 
 	// check to see whether nginx or envoy is needed (or both)
@@ -120,14 +120,14 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 	if envoyNeeded {
 		err := CreateEnvoyProxy(ctx, client, name, listenIP, destIP, ports, ops...)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "CreateEnvoyProxy failed ", "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "CreateEnvoyProxy failed ", "err", err)
 			return fmt.Errorf("Create Envoy Proxy failed, %v", err)
 		}
 	}
 	if !nginxNeeded {
 		return nil
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "create nginx", "name", name, "listenIP", listenIP, "destIP", destIP, "ports", ports)
+	log.SpanLog(ctx, log.DebugLevelInfra, "create nginx", "name", name, "listenIP", listenIP, "destIP", destIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
 
@@ -138,7 +138,7 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 	pwd := strings.TrimSpace(string(out))
 
 	dir := pwd + "/nginx/" + name
-	log.SpanLog(ctx, log.DebugLevelMexos, "nginx remote dir", "name", name, "dir", dir)
+	log.SpanLog(ctx, log.DebugLevelInfra, "nginx remote dir", "name", name, "dir", dir)
 	l7dir := pwd + "/" + NginxL7Dir
 
 	err = pc.Run(client, "mkdir -p "+dir)
@@ -151,20 +151,20 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 	if err == nil {
 		usesTLS = true
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "nginx certs check",
+	log.SpanLog(ctx, log.DebugLevelInfra, "nginx certs check",
 		"name", name, "usesTLS", usesTLS)
 
 	errlogFile := dir + "/err.log"
 	err = pc.Run(client, "touch "+errlogFile)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos,
+		log.SpanLog(ctx, log.DebugLevelInfra,
 			"nginx %s can't create file %s", name, errlogFile)
 		return err
 	}
 	accesslogFile := dir + "/access.log"
 	err = pc.Run(client, "touch "+accesslogFile)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos,
+		log.SpanLog(ctx, log.DebugLevelInfra,
 			"nginx %s can't create file %s", name, accesslogFile)
 		return err
 	}
@@ -201,13 +201,13 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 		"-v", nconfName + ":/etc/nginx/nginx.conf",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/nginx-with-curl"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
-	log.SpanLog(ctx, log.DebugLevelMexos, "nginx docker command", "containerName", containerName,
+	log.SpanLog(ctx, log.DebugLevelInfra, "nginx docker command", "containerName", containerName,
 		"cmd", cmd)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't create nginx container %s, %s, %v", name, out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "created nginx container", "containerName", containerName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "created nginx container", "containerName", containerName)
 	return nil
 }
 
@@ -278,7 +278,7 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, l7d
 		}
 	}
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "create nginx conf", "name", name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "create nginx conf", "name", name)
 	buf := bytes.Buffer{}
 	err = nginxConfT.Execute(&buf, &spec)
 	if err != nil {
@@ -286,14 +286,14 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, l7d
 	}
 	err = pc.WriteFile(client, confname, buf.String(), "nginx.conf", pc.NoSudo)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "write nginx.conf failed",
+		log.SpanLog(ctx, log.DebugLevelInfra, "write nginx.conf failed",
 			"name", name, "err", err)
 		return err
 	}
 
 	if len(httpPorts) > 0 {
 		// add L7 config to L7 nginx instance
-		log.SpanLog(ctx, log.DebugLevelMexos, "create L7 nginx conf", "name", name)
+		log.SpanLog(ctx, log.DebugLevelInfra, "create L7 nginx conf", "name", name)
 		buf := bytes.Buffer{}
 		err = nginxL7ConfT.Execute(&buf, httpPorts)
 		if err != nil {
@@ -301,7 +301,7 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, l7d
 		}
 		err = pc.WriteFile(client, l7dir+"/"+name+".conf", buf.String(), "nginx L7 conf", pc.NoSudo)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos,
+			log.SpanLog(ctx, log.DebugLevelInfra,
 				"write nginx L7 conf failed",
 				"name", name, "err", err)
 			return err
@@ -317,7 +317,7 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, l7d
 func reloadNginxL7(client ssh.Client) error {
 	err := pc.Run(client, "docker exec "+NginxL7Name+" nginx -s reload")
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos,
+		log.DebugLog(log.DebugLevelInfra,
 			"reload L7 nginx config failed", "err", err)
 	}
 	return err
@@ -430,22 +430,22 @@ location /{{.PathPrefix}}/ {
 `
 
 func DeleteNginxProxy(ctx context.Context, client ssh.Client, name string) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx", "name", name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "delete nginx", "name", name)
 	containerName := getNginxContainerName(name)
 	out, err := client.Output("docker kill " + containerName)
-	log.SpanLog(ctx, log.DebugLevelMexos, "kill nginx result", "out", out, "err", err)
+	log.SpanLog(ctx, log.DebugLevelInfra, "kill nginx result", "out", out, "err", err)
 
 	l7conf := NginxL7Dir + "/" + name + ".conf"
 	out, err = client.Output("rm " + l7conf)
-	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx L7 conf result",
+	log.SpanLog(ctx, log.DebugLevelInfra, "delete nginx L7 conf result",
 		"name", name, "l7conf", l7conf, "out", out, "err", err)
 
 	nginxDir := "nginx/" + name
 	out, err = client.Output("rm -rf " + nginxDir)
-	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx dir result", "name", name, "dir", nginxDir, "out", out, "err", err)
+	log.SpanLog(ctx, log.DebugLevelInfra, "delete nginx dir result", "name", name, "dir", nginxDir, "out", out, "err", err)
 
 	out, err = client.Output("docker rm -f " + containerName)
-	log.SpanLog(ctx, log.DebugLevelMexos, "rm nginx result", "out", out, "err", err)
+	log.SpanLog(ctx, log.DebugLevelInfra, "rm nginx result", "out", out, "err", err)
 	if err != nil && !strings.Contains(string(out), "No such container") {
 		// delete the envoy proxy for best effort
 		DeleteEnvoyProxy(ctx, client, name)
@@ -453,7 +453,7 @@ func DeleteNginxProxy(ctx context.Context, client ssh.Client, name string) error
 	}
 
 	reloadNginxL7(client)
-	log.SpanLog(ctx, log.DebugLevelMexos, "deleted nginx", "containerName", containerName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleted nginx", "containerName", containerName)
 	return DeleteEnvoyProxy(ctx, client, name)
 }
 

@@ -30,7 +30,7 @@ var NoOverwrite OverwriteDir = false
 
 // WriteFile writes the file contents optionally in sudo mode
 func WriteFile(client ssh.Client, file string, contents string, kind string, sudo Sudo) error {
-	log.DebugLog(log.DebugLevelMexos, "write file", "kind", kind, "sudo", sudo)
+	log.DebugLog(log.DebugLevelInfra, "write file", "kind", kind, "sudo", sudo)
 
 	// encode to avoid issues with quotes, special characters, and shell
 	// evaluation of $vars.
@@ -52,7 +52,7 @@ func WriteFile(client ssh.Client, file string, contents string, kind string, sud
 	if err != nil {
 		return fmt.Errorf("error writing %s, %s, %s, %v", kind, cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "wrote file", "kind", kind)
+	log.DebugLog(log.DebugLevelInfra, "wrote file", "kind", kind)
 	return nil
 }
 
@@ -62,7 +62,7 @@ func CreateDir(ctx context.Context, client ssh.Client, dir string, ow OverwriteD
 		return nil
 	}
 	if !strings.Contains(output, "File exists") {
-		log.SpanLog(ctx, log.DebugLevelMexos, "mkdir err", "out", output, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "mkdir err", "out", output, "err", err)
 		return err
 	}
 
@@ -74,19 +74,19 @@ func CreateDir(ctx context.Context, client ssh.Client, dir string, ow OverwriteD
 	err = DeleteDir(ctx, client, dir)
 	if err != nil {
 		delerr := fmt.Errorf("unable to delete already existing directory: %v", err)
-		log.SpanLog(ctx, log.DebugLevelMexos, "mkdir err", "err", delerr)
+		log.SpanLog(ctx, log.DebugLevelInfra, "mkdir err", "err", delerr)
 		return err
 	}
 	output, err = client.Output("mkdir " + dir)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "mkdir err", "out", output, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "mkdir err", "out", output, "err", err)
 		return err
 	}
 	return nil
 }
 
 func DeleteDir(ctx context.Context, client ssh.Client, dir string) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "deleting directory", "dir", dir)
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting directory", "dir", dir)
 	cmd := fmt.Sprintf("rm -rf %s", dir)
 	out, err := client.Output(cmd)
 	if err != nil {
@@ -96,13 +96,13 @@ func DeleteDir(ctx context.Context, client ssh.Client, dir string) error {
 }
 
 func DeleteFile(client ssh.Client, file string) error {
-	log.DebugLog(log.DebugLevelMexos, "delete file")
+	log.DebugLog(log.DebugLevelInfra, "delete file")
 	cmd := fmt.Sprintf("rm -f %s", file)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deleting  %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "deleted file", "file", file)
+	log.DebugLog(log.DebugLevelInfra, "deleted file", "file", file)
 	return nil
 }
 
@@ -110,7 +110,7 @@ func CopyFile(client ssh.Client, src, dst string) error {
 	cmd := fmt.Sprintf("cp %s %s", src, dst)
 	out, err := client.Output(cmd)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "copy failed", "src", src, "dst", dst, "err", err, "out", out)
+		log.DebugLog(log.DebugLevelInfra, "copy failed", "src", src, "dst", dst, "err", err, "out", out)
 	}
 	return err
 }
@@ -118,7 +118,7 @@ func CopyFile(client ssh.Client, src, dst string) error {
 func Run(client ssh.Client, cmd string) error {
 	out, err := client.Output(cmd)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "cmd failed", "cmd", cmd, "err", err, "out", out)
+		log.DebugLog(log.DebugLevelInfra, "cmd failed", "cmd", cmd, "err", err, "out", out)
 		return fmt.Errorf("command \"%s\" failed, %v", cmd, err)
 	}
 	return nil
