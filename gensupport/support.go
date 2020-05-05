@@ -541,7 +541,7 @@ func ServerStreaming(method *descriptor.MethodDescriptorProto) bool {
 }
 
 func IsShow(method *descriptor.MethodDescriptorProto) bool {
-	if proto.GetBoolExtension(method.Options, protogen.E_NonStandardShow, false) {
+	if GetNonStandardShow(method) {
 		return false
 	}
 	return GetCamelCasePrefix(*method.Name) == "Show"
@@ -549,6 +549,10 @@ func IsShow(method *descriptor.MethodDescriptorProto) bool {
 
 func GetEnumBackend(enumVal *descriptor.EnumValueDescriptorProto) bool {
 	return proto.GetBoolExtension(enumVal.Options, protogen.E_EnumBackend, false)
+}
+
+func GetNonStandardShow(method *descriptor.MethodDescriptorProto) bool {
+	return proto.GetBoolExtension(method.Options, protogen.E_NonStandardShow, false)
 }
 
 type MethodInfo struct {

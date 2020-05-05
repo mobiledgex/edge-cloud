@@ -109,6 +109,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	if m.firstFile == *file.FileDescriptorProto.Name {
 		m.P(matchOptions)
 		m.generateEnumDecodeHook()
+		m.generateShowCheck()
 	}
 }
 
@@ -1786,6 +1787,35 @@ func (m *mex) generateEnumDecodeHook() {
 	m.P("}")
 	m.P()
 	m.importReflect = true
+}
+
+func (m *mex) generateShowCheck() {
+	m.P("var ShowMethodNames = map[string]struct{}{")
+	for _, file := range m.gen.Request.ProtoFile {
+		if !m.support.GenFile(*file.Name) {
+			continue
+		}
+		if len(file.Service) == 0 {
+			continue
+		}
+		for _, service := range file.Service {
+			if len(service.Method) == 0 {
+				continue
+			}
+			for _, method := range service.Method {
+				if gensupport.IsShow(method) {
+					m.P("\"", method.Name, "\": struct{}{},")
+				}
+			}
+		}
+	}
+	m.P("}")
+	m.P()
+	m.P("func IsShow(cmd string) bool {")
+	m.P("_, found := ShowMethodNames[cmd]")
+	m.P("return found")
+	m.P("}")
+	m.P()
 }
 
 func (m *mex) generateUsesOrg(message *descriptor.DescriptorProto) {
