@@ -257,6 +257,13 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 	return data, nil
 }
 
+var ShowMethodNames = map[string]struct{}{}
+
+func IsShow(cmd string) bool {
+	_, found := ShowMethodNames[cmd]
+	return found
+}
+
 func init() { proto.RegisterFile("debug.proto", fileDescriptorDebug) }
 
 var fileDescriptorDebug = []byte{
