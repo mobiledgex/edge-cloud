@@ -426,7 +426,16 @@ func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App,
 			len(appInst.RuntimeInfo.ContainerIds) == 0 {
 			return "", fmt.Errorf("no containers found for AppInst, please specify one")
 		}
-		req.ContainerId = appInst.RuntimeInfo.ContainerIds[0]
+		for _, name := range appInst.RuntimeInfo.ContainerIds {
+			// prefer non-nginx/envoy container
+			if !strings.HasPrefix(name, "nginx") && !strings.HasPrefix(name, "envoy") {
+				req.ContainerId = name
+				break
+			}
+		}
+		if req.ContainerId == "" {
+			req.ContainerId = appInst.RuntimeInfo.ContainerIds[0]
+		}
 	}
 	if req.Cmd != nil {
 		cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, req.Cmd.Command)
