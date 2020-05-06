@@ -176,13 +176,17 @@ func CreateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 
 func UpdateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "update kubernetes helm app", "app", app, "kubeNames", names)
+	helmArgs, err := getHelmInstallOptsString(app.Annotations)
+	if err != nil {
+		return err
+	}
 	configs := append(app.Configs, appInst.Configs...)
 	helmOpts, err := getHelmOpts(ctx, client, names.AppName, configs)
 	if err != nil {
 		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "Helm options", "helmOpts", helmOpts)
-	cmd := fmt.Sprintf("%s helm upgrade %s %s %s", names.KconfEnv, helmOpts, names.HelmAppName, names.AppImage)
+	log.SpanLog(ctx, log.DebugLevelInfra, "Helm options", "helmOpts", helmOpts, "helmArgs", helmArgs)
+	cmd := fmt.Sprintf("%s helm upgrade %s %s %s %s", names.KconfEnv, helmArgs, helmOpts, names.HelmAppName, names.AppImage)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error updating helm chart, %s, %s, %v", cmd, out, err)
