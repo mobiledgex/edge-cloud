@@ -91,15 +91,15 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if err = s.CreateAppInstInternal(ctx, clusterInst, app, appInst, names); err != nil {
 		return err
 	}
-	client := &pc.LocalClient{}
 	cluster, err := FindCluster(names.ClusterName)
 	if err != nil {
+		s.DeleteAppInst(ctx, clusterInst, app, appInst)
 		return err
 	}
 	masterIP := cluster.MasterAddr
 	err = s.patchDindSevice(ctx, names, masterIP)
 	if err != nil {
-		proxy.DeleteNginxProxy(ctx, client, dockermgmt.GetContainerName(&app.Key))
+		s.DeleteAppInst(ctx, clusterInst, app, appInst)
 		return err
 	}
 	return nil
