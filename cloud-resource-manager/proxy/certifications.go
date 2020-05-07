@@ -29,7 +29,7 @@ var DedicatedClients map[string]ssh.Client
 var DedicatedTls access.TLSCert
 var DedicatedMux sync.Mutex
 
-var selfSignedCmd = `openssl req -new -newkey rsa:512 -nodes -days 90 -nodes -x509 -config <(
+var selfSignedCmd = `openssl req -new -newkey rsa:128 -nodes -days 90 -nodes -x509 -config <(
 cat <<-EOF
 [req]
 prompt = no
