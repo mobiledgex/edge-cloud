@@ -1,4 +1,4 @@
-package crmutil
+package platform
 
 import (
 	"context"

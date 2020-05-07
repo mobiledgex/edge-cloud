@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
+	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/notify"
 )
@@ -12,7 +12,7 @@ var sendMetric *notify.MetricSend
 var sendAlert *notify.AlertSend
 
 // NewNotifyHandler instantiates new notify handler
-func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
+func InitClientNotify(client *notify.Client, cd *pf.ControllerData) {
 	client.RegisterRecvSettingsCache(&cd.SettingsCache)
 	client.RegisterRecvFlavorCache(&cd.FlavorCache)
 	client.RegisterRecvAppCache(&cd.AppCache)

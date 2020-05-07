@@ -27,7 +27,7 @@ type Platform interface {
 	// GetType returns the cloudlet's stack type, i.e. Openstack, Azure, etc.
 	GetType() string
 	// Init is called once during CRM startup.
-	Init(ctx context.Context, platformConfig *PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
+	Init(ctx context.Context, platformConfig *PlatformConfig, controllerData *ControllerData, updateCallback edgeproto.CacheUpdateCallback) error
 	// Gather information about the cloudlet platform.
 	// This includes available resources, flavors, etc.
 	GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error
@@ -69,6 +69,8 @@ type Platform interface {
 	SaveCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, accessVarsIn map[string]string, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet AccessVars
 	DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
+	// Sync data with controller
+	SyncControllerData(ctx context.Context, controllerData *ControllerData) error
 }
 
 type ClusterSvc interface {
