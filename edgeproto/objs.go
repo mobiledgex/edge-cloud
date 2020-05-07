@@ -154,6 +154,9 @@ func (key *AppKey) ValidateKey() error {
 	if !util.ValidName(key.Version) {
 		return errors.New("Invalid app version string")
 	}
+	if !util.ValidName(key.Organization) {
+		return errors.New("Invalid organization name")
+	}
 	return nil
 }
 
