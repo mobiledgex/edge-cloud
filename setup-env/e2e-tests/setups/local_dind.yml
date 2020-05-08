@@ -75,29 +75,13 @@ dmes:
   locverurl: "{{locverurl}}"
   toksrvurl: "{{toksrvurl}}"
   carrier: GDDT
-  cloudletkey: '{"operator_key":{"name":"mexdev"},"name":"mexdev-cloud-1"}'
+  cloudletkey: '{"organization":"mexdev","name":"mexdev-cloud-1"}'
   vaultaddr: "http://127.0.0.1:8200"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   cookieexpr: "24h"
   hostname: "127.0.0.1"
-
-crms:
-- name: crm1
-  apiaddr: "0.0.0.0:55091"
-  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-  cloudletkey: '{"operator_key":{"name":"mexdev"},"name":"localtest"}'
-  vaultaddr: "http://127.0.0.1:8200"
-  tls:
-    servercert: "{{tlsoutdir}}/mex-server.crt"
-    clientcert: "{{tlsoutdir}}/mex-client.crt"
-  hostname: "127.0.0.1"
-  vaultaddr: "vault.mobiledgex.net"
-  envvars:
-    PLATFORM: mexdind
-    VAULT_ROLE_ID: e017fc39-dff7-adc3-364f-bb8e04805454
-    VAULT_SECRET_ID: ***REMOVED***
 
 clustersvcs:
 - name: cluster-svc1
