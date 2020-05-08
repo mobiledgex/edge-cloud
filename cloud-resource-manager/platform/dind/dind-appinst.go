@@ -14,9 +14,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "call runKubectlCreateApp for dind")
-
+func (s *Platform) CreateAppInstInternal(ctx context.Context, clusterInst *edgeproto.ClusterInst,
+	app *edgeproto.App, appInst *edgeproto.AppInst, names *k8smgmt.KubeNames) error {
 	var err error
 	client := &pc.LocalClient{}
 	appDeploymentType := app.Deployment
@@ -31,10 +30,6 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	}
 	// Now for helm and k8s apps
 	log.SpanLog(ctx, log.DebugLevelInfra, "run kubectl create app for dind")
-	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
-	if err != nil {
-		return err
-	}
 	cluster, err := FindCluster(names.ClusterName)
 	if err != nil {
 		return err
@@ -84,9 +79,27 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 		log.SpanLog(ctx, log.DebugLevelInfra, "error creating dind app")
 		return err
 	}
+	return nil
+}
+
+func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "call runKubectlCreateApp for dind")
+	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
+	if err != nil {
+		return err
+	}
+	if err = s.CreateAppInstInternal(ctx, clusterInst, app, appInst, names); err != nil {
+		return err
+	}
+	cluster, err := FindCluster(names.ClusterName)
+	if err != nil {
+		s.DeleteAppInst(ctx, clusterInst, app, appInst)
+		return err
+	}
+	masterIP := cluster.MasterAddr
 	err = s.patchDindSevice(ctx, names, masterIP)
 	if err != nil {
-		proxy.DeleteNginxProxy(ctx, client, dockermgmt.GetContainerName(&app.Key))
+		s.DeleteAppInst(ctx, clusterInst, app, appInst)
 		return err
 	}
 	return nil
