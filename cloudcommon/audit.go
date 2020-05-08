@@ -2,9 +2,11 @@ package cloudcommon
 
 import (
 	"context"
+	"errors"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
@@ -26,6 +28,14 @@ func AuditUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.Unar
 	span.SetTag("request", req)
 
 	resp, err := handler(ctx, req)
+	// Make sure first letter is capitalized in error message
+	if err != nil {
+		switch err.(type) {
+		default:
+			moderr := util.CapitalizeMessage(err.Error())
+			err = errors.New(moderr)
+		}
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "finished", "err", err)
 
 	return resp, err
@@ -52,6 +62,14 @@ func AuditStreamInterceptor(srv interface{}, stream grpc.ServerStream, info *grp
 		stream = NewAuditRecvOne(stream, ctx)
 	}
 	err := handler(srv, stream)
+	// Make sure first letter is capitalized in error message
+	if err != nil {
+		switch err.(type) {
+		default:
+			moderr := util.CapitalizeMessage(err.Error())
+			err = errors.New(moderr)
+		}
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "finished", "err", err)
 
 	return err
