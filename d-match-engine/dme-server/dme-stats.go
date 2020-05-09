@@ -310,7 +310,7 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 			return resp, err
 		}
 		// Update clients cache if we found the cloudlet
-		if getResultFromFindCloudletReply(resp.(*dme.FindCloudletReply)) == dme.FindCloudletReply_FIND_FOUND {
+		if err == nil && getResultFromFindCloudletReply(resp.(*dme.FindCloudletReply)) == dme.FindCloudletReply_FIND_FOUND {
 			client := getAppInstClient(call.key.AppKey.Name, call.key.AppKey.Version, call.key.AppKey.Organization, loc)
 			if client != nil {
 				client.ClientKey.Key.ClusterInstKey.CloudletKey = call.key.CloudletFound
