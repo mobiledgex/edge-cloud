@@ -40,6 +40,7 @@ It has these top-level messages:
 	AppKey
 	ConfigFile
 	App
+	AppAutoProvPolicy
 	AppInstKey
 	AppInst
 	AppInstRuntime

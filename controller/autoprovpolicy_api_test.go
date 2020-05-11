@@ -75,5 +75,58 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	_, err = autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, &pc)
 	require.NotNil(t, err)
 
+	addRemoveAutoProvPolicy(t, ctx)
 	dummy.Stop()
+}
+
+func addRemoveAutoProvPolicy(t *testing.T, ctx context.Context) {
+	// add app with multiple policies
+	app := testutil.AppData[11]
+	require.True(t, len(app.AutoProvPolicies) > 1)
+	_, err := appApi.CreateApp(ctx, &app)
+	require.Nil(t, err)
+
+	// new policy (copy)
+	ap := testutil.AutoProvPolicyData[3]
+	ap.Key.Name = "test-policy"
+	_, err = autoProvPolicyApi.CreateAutoProvPolicy(ctx, &ap)
+	require.Nil(t, err)
+
+	// add new policy to app
+	appPolicy := edgeproto.AppAutoProvPolicy{
+		AppKey:         app.Key,
+		AutoProvPolicy: ap.Key.Name,
+	}
+	_, err = appApi.AddAppAutoProvPolicy(ctx, &appPolicy)
+	require.Nil(t, err)
+
+	appCheck := edgeproto.App{}
+	found := appApi.Get(&app.Key, &appCheck)
+	require.True(t, found)
+	require.Equal(t, 3, len(appCheck.AutoProvPolicies))
+	found = false
+	for _, str := range appCheck.AutoProvPolicies {
+		if str == ap.Key.Name {
+			found = true
+		}
+	}
+	require.True(t, found)
+
+	// remove policy from app
+	_, err = appApi.RemoveAppAutoProvPolicy(ctx, &appPolicy)
+	require.Nil(t, err)
+
+	found = appApi.Get(&app.Key, &appCheck)
+	require.True(t, found)
+	require.Equal(t, 2, len(appCheck.AutoProvPolicies))
+	found = false
+	for _, str := range appCheck.AutoProvPolicies {
+		if str == ap.Key.Name {
+			found = true
+		}
+	}
+	require.False(t, found)
+
+	_, err = appApi.DeleteApp(ctx, &app)
+	require.Nil(t, err)
 }

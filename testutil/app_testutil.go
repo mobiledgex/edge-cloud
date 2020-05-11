@@ -389,6 +389,37 @@ func (r *Run) AppApi(data *[]edgeproto.App, dataMap interface{}, dataOut interfa
 	}
 }
 
+func (r *Run) AppApi_AppAutoProvPolicy(data *[]edgeproto.AppAutoProvPolicy, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for AppAutoProvPolicy", "mode", r.Mode)
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "add":
+			out, err := r.client.AddAppAutoProvPolicy(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("AppApi_AppAutoProvPolicy[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi_AppAutoProvPolicy expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "remove":
+			out, err := r.client.RemoveAppAutoProvPolicy(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("AppApi_AppAutoProvPolicy[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi_AppAutoProvPolicy expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		}
+	}
+}
+
 func (s *DummyServer) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	if s.CudNoop {
 		return &edgeproto.Result{}, nil
@@ -499,9 +530,35 @@ func (s *CliClient) ShowApp(ctx context.Context, in *edgeproto.App) ([]edgeproto
 	return output, err
 }
 
+func (s *ApiClient) AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	return api.AddAppAutoProvPolicy(ctx, in)
+}
+
+func (s *CliClient) AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "AddAppAutoProvPolicy")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	return api.RemoveAppAutoProvPolicy(ctx, in)
+}
+
+func (s *CliClient) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "RemoveAppAutoProvPolicy")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
 type AppApiClient interface {
 	CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error)
 	DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error)
 	UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error)
 	ShowApp(ctx context.Context, in *edgeproto.App) ([]edgeproto.App, error)
+	AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
+	RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
 }
