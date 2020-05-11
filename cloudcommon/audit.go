@@ -30,11 +30,8 @@ func AuditUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.Unar
 	resp, err := handler(ctx, req)
 	// Make sure first letter is capitalized in error message
 	if err != nil {
-		switch err.(type) {
-		default:
-			moderr := util.CapitalizeMessage(err.Error())
-			err = errors.New(moderr)
-		}
+		modmsg := util.CapitalizeMessage(err.Error())
+		err = errors.New(modmsg)
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "finished", "err", err)
 
@@ -64,11 +61,8 @@ func AuditStreamInterceptor(srv interface{}, stream grpc.ServerStream, info *grp
 	err := handler(srv, stream)
 	// Make sure first letter is capitalized in error message
 	if err != nil {
-		switch err.(type) {
-		default:
-			moderr := util.CapitalizeMessage(err.Error())
-			err = errors.New(moderr)
-		}
+		modmsg := util.CapitalizeMessage(err.Error())
+		err = errors.New(modmsg)
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "finished", "err", err)
 
