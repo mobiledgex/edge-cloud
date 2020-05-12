@@ -123,7 +123,7 @@ message ConfigFile {
   string md5sum = 26;
   // shared volume size when creating auto cluster
   uint64 default_shared_volume_size = 27;
-  // Auto provisioning policy name
+  // (_deprecated_) Auto provisioning policy name
   string auto_prov_policy = 28;
   // Access type
   AccessType access_type = 29; 
@@ -131,6 +131,8 @@ message ConfigFile {
   string default_privacy_policy = 30;
   // Preparing to be deleted
   bool delete_prepare = 31 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Auto provisioning policy names
+  repeated string auto_prov_policies = 32;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -140,6 +142,13 @@ message ConfigFile {
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
   option (protogen.noconfig) = "DeletePrepare";
   option (protogen.uses_org) = "key=Organization";
+}
+
+message AppAutoProvPolicy {
+  // App Key
+  AppKey app_key = 1 [(gogoproto.nullable) = false];
+  // Auto Provisioning Policy name
+  string auto_prov_policy = 2;
 }
 
 service AppApi {
@@ -178,5 +187,21 @@ service AppApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceApps,ActionView,Key.Organization";
+  }
+  rpc AddAppAutoProvPolicy(AppAutoProvPolicy) returns (Result) {
+    option (google.api.http) = {
+      post: "/add/appautoprovpolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
+    option (protogen.input_required) = true;
+  }
+  rpc RemoveAppAutoProvPolicy(AppAutoProvPolicy) returns (Result) {
+    option (google.api.http) = {
+      post: "/remove/appautoprovpolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
+    option (protogen.input_required) = true;
   }
 }
