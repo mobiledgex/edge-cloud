@@ -40,6 +40,7 @@
 		AppKey
 		ConfigFile
 		App
+		AppAutoProvPolicy
 		AppInstKey
 		AppInst
 		AppInstRuntime

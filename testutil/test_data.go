@@ -200,11 +200,14 @@ var AppData = []edgeproto.App{
 			Name:         "Pillimo Go!",
 			Version:      "1.0.2",
 		},
-		ImageType:      edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessPorts:    "tcp:10003",
-		AccessType:     edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
-		DefaultFlavor:  FlavorData[0].Key,
-		AutoProvPolicy: AutoProvPolicyData[0].Key.Name,
+		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessPorts:   "tcp:10003",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		DefaultFlavor: FlavorData[0].Key,
+		AutoProvPolicies: []string{
+			AutoProvPolicyData[0].Key.Name,
+			AutoProvPolicyData[3].Key.Name,
+		},
 	},
 }
 var OperatorData = []string{
@@ -1052,6 +1055,14 @@ var AutoProvPolicyData = []edgeproto.AutoProvPolicy{
 		},
 		DeployClientCount:   20,
 		DeployIntervalCount: 4,
+	},
+	edgeproto.AutoProvPolicy{
+		Key: edgeproto.PolicyKey{
+			Name:         "auto-prov-policy2",
+			Organization: DevData[0],
+		},
+		DeployClientCount:   10,
+		DeployIntervalCount: 10,
 	},
 }
 
