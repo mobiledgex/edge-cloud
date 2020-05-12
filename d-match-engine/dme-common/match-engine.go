@@ -47,7 +47,7 @@ type DmeApp struct {
 	AuthPublicKey      string
 	AndroidPackageName string
 	OfficialFqdn       string
-	AutoProvPolicy     *AutoProvPolicy
+	AutoProvPolicies   map[string]*AutoProvPolicy
 	Deployment         string
 }
 
@@ -58,6 +58,7 @@ type DmeCloudlet struct {
 }
 
 type AutoProvPolicy struct {
+	Name              string
 	DeployClientCount uint32
 	IntervalCount     uint32
 	Cloudlets         map[string][]*edgeproto.AutoProvCloudlet // index is carrier
@@ -128,6 +129,7 @@ func AddApp(ctx context.Context, in *edgeproto.App) {
 		// Key doesn't exists
 		app = new(DmeApp)
 		app.Carriers = make(map[string]*DmeAppInsts)
+		app.AutoProvPolicies = make(map[string]*AutoProvPolicy)
 		app.AppKey = in.Key
 		tbl.Apps[in.Key] = app
 		log.SpanLog(ctx, log.DebugLevelDmedb, "Adding app",
@@ -141,24 +143,38 @@ func AddApp(ctx context.Context, in *edgeproto.App) {
 	app.AndroidPackageName = in.AndroidPackageName
 	app.OfficialFqdn = in.OfficialFqdn
 	app.Deployment = in.Deployment
-	clearAutoProvStats := false
-	if app.AutoProvPolicy != nil && in.AutoProvPolicy == "" {
-		clearAutoProvStats = true
-	}
-	app.AutoProvPolicy = nil
+	clearAutoProvStats := []string{}
+	inAP := make(map[string]struct{})
 	if in.AutoProvPolicy != "" {
-		ppKey := edgeproto.PolicyKey{
-			Organization: in.Key.Organization,
-			Name:         in.AutoProvPolicy,
-		}
-		if pp, found := tbl.AutoProvPolicies[ppKey]; found {
-			app.AutoProvPolicy = pp
-		} else {
-			log.SpanLog(ctx, log.DebugLevelDmedb, "AutoProvPolicy on App not found", "app", in.Key, "policy", app.AutoProvPolicy)
+		inAP[in.AutoProvPolicy] = struct{}{}
+	}
+	for _, name := range in.AutoProvPolicies {
+		inAP[name] = struct{}{}
+	}
+	// remove policies
+	for name, _ := range app.AutoProvPolicies {
+		if _, found := inAP[name]; !found {
+			delete(app.AutoProvPolicies, name)
+			clearAutoProvStats = append(clearAutoProvStats, name)
 		}
 	}
-	if clearAutoProvStats {
-		autoProvStats.Clear(&in.Key)
+	// add policies
+	for name, _ := range inAP {
+		_, found := app.AutoProvPolicies[name]
+		if !found {
+			ppKey := edgeproto.PolicyKey{
+				Organization: in.Key.Organization,
+				Name:         name,
+			}
+			if pp, found := tbl.AutoProvPolicies[ppKey]; found {
+				app.AutoProvPolicies[name] = pp
+			} else {
+				log.SpanLog(ctx, log.DebugLevelDmedb, "AutoProvPolicy on App not found", "app", in.Key, "policy", name)
+			}
+		}
+	}
+	for _, name := range clearAutoProvStats {
+		autoProvStats.Clear(&in.Key, name)
 	}
 }
 
@@ -238,7 +254,9 @@ func RemoveApp(ctx context.Context, in *edgeproto.App) {
 	}
 	// Clear auto-prov stats for App
 	if autoProvStats != nil {
-		autoProvStats.Clear(&in.Key)
+		for name, _ := range app.AutoProvPolicies {
+			autoProvStats.Clear(&in.Key, name)
+		}
 	}
 }
 
@@ -384,6 +402,7 @@ func (s *AutoProvPolicyHandler) Update(ctx context.Context, in *edgeproto.AutoPr
 		pp = &AutoProvPolicy{}
 		tbl.AutoProvPolicies[in.Key] = pp
 	}
+	pp.Name = in.Key.Name
 	pp.DeployClientCount = in.DeployClientCount
 	pp.IntervalCount = in.DeployIntervalCount
 	log.SpanLog(ctx, log.DebugLevelDmereq, "update AutoProvPolicy", "policy", in)
@@ -471,7 +490,9 @@ type searchAppInst struct {
 	reqCarrier              string
 	results                 []*foundAppInst
 	appDeployment           string
+	resultDist              float64
 	potentialDist           float64
+	potentialPolicy         *AutoProvPolicy
 	potentialCloudlet       *edgeproto.AutoProvCloudlet
 	potentialClusterInstKey *edgeproto.ClusterInstKey
 	potentialCarrier        string
@@ -498,7 +519,7 @@ func findBestForCarrier(ctx context.Context, carrierName string, key *edgeproto.
 		return nil
 	}
 
-	log.SpanLog(ctx, log.DebugLevelDmereq, "Find Closest", "appkey", key, "carrierName", carrierName)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Find Closest", "appkey", key, "carrierName", carrierName, "loc", *loc)
 
 	// Eventually when we have FindCloudlet policies, we should look it
 	// up here and apply it to the search config.
@@ -526,21 +547,25 @@ func findBestForCarrier(ctx context.Context, carrierName string, key *edgeproto.
 			"IP", ipaddr.String())
 	}
 
-	if app.AutoProvPolicy != nil {
+	if len(app.AutoProvPolicies) > 0 {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy", "found", len(search.results))
-		search.potentialDist = InfiniteDistance
+		search.resultDist = InfiniteDistance
 		if len(search.results) > 0 {
-			search.potentialDist = search.results[0].distance
+			search.resultDist = search.results[0].distance
 		}
-		for cname, list := range app.AutoProvPolicy.Cloudlets {
-			search.searchPotential(ctx, cname, list)
+		search.potentialDist = search.resultDist
+		for _, policy := range app.AutoProvPolicies {
+			for cname, list := range policy.Cloudlets {
+				search.searchPotential(ctx, policy, cname, list)
+			}
 		}
-		log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy result", "potentialClusterInst", search.potentialClusterInstKey, "autoProvStats", autoProvStats)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy result", "potentialPolicy", search.potentialPolicy, "potentialClusterInst", search.potentialClusterInstKey, "autoProvStats", autoProvStats)
 		if search.potentialClusterInstKey != nil && autoProvStats != nil {
-			autoProvStats.Increment(ctx, &app.AppKey, search.potentialClusterInstKey, app.AutoProvPolicy.DeployClientCount, app.AutoProvPolicy.IntervalCount)
+			autoProvStats.Increment(ctx, &app.AppKey, search.potentialClusterInstKey, search.potentialPolicy)
 			log.SpanLog(ctx, log.DebugLevelDmereq,
 				"potential best cloudlet",
 				"app", key.Name,
+				"policy", search.potentialPolicy,
 				"carrier", search.potentialCarrier,
 				"latitude", search.potentialCloudlet.Loc.Latitude,
 				"longitude", search.potentialCloudlet.Loc.Longitude,
@@ -636,11 +661,11 @@ func (s *searchAppInst) less(f1, f2 *foundAppInst) bool {
 	return f1.distance < f2.distance
 }
 
-func (s *searchAppInst) searchPotential(ctx context.Context, carrier string, list []*edgeproto.AutoProvCloudlet) {
+func (s *searchAppInst) searchPotential(ctx context.Context, policy *AutoProvPolicy, carrier string, list []*edgeproto.AutoProvCloudlet) {
 	if !s.searchCarrier(carrier) {
 		return
 	}
-	log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy list", "carrier", carrier, "list", list)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy list", "policy", policy.Name, "carrier", carrier, "list", list)
 
 	for _, cl := range list {
 		// make sure there's a free reservable ClusterInst
@@ -655,13 +680,37 @@ func (s *searchAppInst) searchPotential(ctx context.Context, carrier string, lis
 		// AppInsts, this should only find cloudlets
 		// that could, but do not have the AppInst
 		// auto-deployed.
-		if pd < s.potentialDist {
-			s.potentialDist = pd
-			s.potentialClusterInstKey = cinstKey
-			s.potentialCloudlet = cl
-			s.potentialCarrier = carrier
+		if pd >= s.resultDist || pd > s.potentialDist {
+			continue
 		}
+		if pd == s.potentialDist && s.potentialPolicy != nil {
+			// Multiple policies for the same Cloudlet.
+			// Always prefer immediate provisioning policy.
+			// We don't actually care which policy it is
+			// for a non-immediate policy.
+			if intervalCount(policy) > intervalCount(s.potentialPolicy) {
+				continue
+			}
+			if policy.DeployClientCount > s.potentialPolicy.DeployClientCount {
+				continue
+			}
+		}
+		// new best
+		s.potentialPolicy = policy
+		s.potentialDist = pd
+		s.potentialClusterInstKey = cinstKey
+		s.potentialCloudlet = cl
+		s.potentialCarrier = carrier
 	}
+}
+
+func intervalCount(policy *AutoProvPolicy) uint32 {
+	// normalize interval count because both 0 and 1
+	// currently mean the same thing
+	if policy.IntervalCount == 0 {
+		return 1
+	}
+	return policy.IntervalCount
 }
 
 // Helper function to populate the Stats key with Cloudlet data if it's passed in the context

@@ -301,11 +301,127 @@ func ShowApps(c *cli.Command, data []edgeproto.App, err *error) {
 	}
 }
 
+var AddAppAutoProvPolicyCmd = &cli.Command{
+	Use:          "AddAppAutoProvPolicy",
+	RequiredArgs: strings.Join(AppAutoProvPolicyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppAutoProvPolicyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppAutoProvPolicyAliasArgs, " "),
+	SpecialArgs:  &AppAutoProvPolicySpecialArgs,
+	Comments:     AppAutoProvPolicyComments,
+	ReqData:      &edgeproto.AppAutoProvPolicy{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runAddAppAutoProvPolicy,
+}
+
+func runAddAppAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.AppAutoProvPolicy)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return AddAppAutoProvPolicy(c, obj)
+}
+
+func AddAppAutoProvPolicy(c *cli.Command, in *edgeproto.AppAutoProvPolicy) error {
+	if AppApiCmd == nil {
+		return fmt.Errorf("AppApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := AppApiCmd.AddAppAutoProvPolicy(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AddAppAutoProvPolicy failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func AddAppAutoProvPolicys(c *cli.Command, data []edgeproto.AppAutoProvPolicy, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AddAppAutoProvPolicy %v\n", data[ii])
+		myerr := AddAppAutoProvPolicy(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var RemoveAppAutoProvPolicyCmd = &cli.Command{
+	Use:          "RemoveAppAutoProvPolicy",
+	RequiredArgs: strings.Join(AppAutoProvPolicyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppAutoProvPolicyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppAutoProvPolicyAliasArgs, " "),
+	SpecialArgs:  &AppAutoProvPolicySpecialArgs,
+	Comments:     AppAutoProvPolicyComments,
+	ReqData:      &edgeproto.AppAutoProvPolicy{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRemoveAppAutoProvPolicy,
+}
+
+func runRemoveAppAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.AppAutoProvPolicy)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RemoveAppAutoProvPolicy(c, obj)
+}
+
+func RemoveAppAutoProvPolicy(c *cli.Command, in *edgeproto.AppAutoProvPolicy) error {
+	if AppApiCmd == nil {
+		return fmt.Errorf("AppApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := AppApiCmd.RemoveAppAutoProvPolicy(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RemoveAppAutoProvPolicy failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RemoveAppAutoProvPolicys(c *cli.Command, data []edgeproto.AppAutoProvPolicy, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RemoveAppAutoProvPolicy %v\n", data[ii])
+		myerr := RemoveAppAutoProvPolicy(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var AppApiCmds = []*cobra.Command{
 	CreateAppCmd.GenCmd(),
 	DeleteAppCmd.GenCmd(),
 	UpdateAppCmd.GenCmd(),
 	ShowAppCmd.GenCmd(),
+	AddAppAutoProvPolicyCmd.GenCmd(),
+	RemoveAppAutoProvPolicyCmd.GenCmd(),
 }
 
 var AppKeyRequiredArgs = []string{}
@@ -361,6 +477,7 @@ var AppOptionalArgs = []string{
 	"autoprovpolicy",
 	"accesstype",
 	"defaultprivacypolicy",
+	"autoprovpolicies",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -393,11 +510,28 @@ var AppComments = map[string]string{
 	"officialfqdn":            "Official FQDN is the FQDN that the app uses to connect by default",
 	"md5sum":                  "MD5Sum of the VM-based app image",
 	"defaultsharedvolumesize": "shared volume size when creating auto cluster",
-	"autoprovpolicy":          "Auto provisioning policy name",
+	"autoprovpolicy":          "(_deprecated_) Auto provisioning policy name",
 	"accesstype":              "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"defaultprivacypolicy":    "Privacy policy when creating auto cluster",
 	"deleteprepare":           "Preparing to be deleted",
+	"autoprovpolicies":        "Auto provisioning policy names",
 }
 var AppSpecialArgs = map[string]string{
-	"fields": "StringArray",
+	"autoprovpolicies": "StringArray",
+	"fields":           "StringArray",
 }
+var AppAutoProvPolicyRequiredArgs = []string{}
+var AppAutoProvPolicyOptionalArgs = []string{
+	"appkey.organization",
+	"appkey.name",
+	"appkey.version",
+	"autoprovpolicy",
+}
+var AppAutoProvPolicyAliasArgs = []string{}
+var AppAutoProvPolicyComments = map[string]string{
+	"appkey.organization": "App developer organization",
+	"appkey.name":         "App name",
+	"appkey.version":      "App version",
+	"autoprovpolicy":      "Auto Provisioning Policy name",
+}
+var AppAutoProvPolicySpecialArgs = map[string]string{}
