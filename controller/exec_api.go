@@ -74,7 +74,7 @@ func (s *ExecApi) ShowLogs(ctx context.Context, req *edgeproto.ExecRequest) (*ed
 			return nil, fmt.Errorf("Invalid kubernetes container name")
 		}
 	} else {
-		return nil, fmt.Errorf("Unsupported deployment type")
+		return nil, fmt.Errorf("ShowLogs not available for %s deployments", app.Deployment)
 	}
 	if req.Log.Since != "" {
 		_, err := time.ParseDuration(req.Log.Since)
