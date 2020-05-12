@@ -159,6 +159,7 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	}
 	pfConfig.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
 	pfConfig.Span = log.SpanToString(ctx)
+	pfConfig.ChefServerPath = *chefServerPath
 
 	return &pfConfig, nil
 }
@@ -1119,4 +1120,28 @@ func RecordCloudletEvent(ctx context.Context, cloudletKey *edgeproto.CloudletKey
 	metric.AddStringVal("status", serverStatus)
 
 	services.events.AddMetric(&metric)
+}
+
+func (s *CloudletApi) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+	cloudlet := &edgeproto.Cloudlet{}
+	if !cloudletApi.cache.Get(&in.Key, cloudlet) {
+		return nil, in.Key.NotFoundError()
+	}
+
+	pfConfig, err := getPlatformConfig(ctx, cloudlet)
+	if err != nil {
+		return nil, err
+	}
+
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	if err != nil {
+		return nil, err
+	}
+
+	manifest, err := cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &edgeproto.Result{Message: string(manifest)}, nil
 }

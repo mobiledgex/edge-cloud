@@ -400,6 +400,63 @@ func ShowCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
 	}
 }
 
+var ShowCloudletManifestCmd = &cli.Command{
+	Use:          "ShowCloudletManifest",
+	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
+	SpecialArgs:  &CloudletSpecialArgs,
+	Comments:     CloudletComments,
+	ReqData:      &edgeproto.Cloudlet{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runShowCloudletManifest,
+}
+
+func runShowCloudletManifest(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.Cloudlet)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowCloudletManifest(c, obj)
+}
+
+func ShowCloudletManifest(c *cli.Command, in *edgeproto.Cloudlet) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.ShowCloudletManifest(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowCloudletManifest failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowCloudletManifests(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowCloudletManifest %v\n", data[ii])
+		myerr := ShowCloudletManifest(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var AddCloudletResMappingCmd = &cli.Command{
 	Use:          "AddCloudletResMapping",
 	RequiredArgs: strings.Join(CloudletResMapRequiredArgs, " "),
@@ -576,6 +633,7 @@ var CloudletApiCmds = []*cobra.Command{
 	DeleteCloudletCmd.GenCmd(),
 	UpdateCloudletCmd.GenCmd(),
 	ShowCloudletCmd.GenCmd(),
+	ShowCloudletManifestCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
@@ -908,6 +966,7 @@ var PlatformConfigOptionalArgs = []string{
 	"commercialcerts",
 	"usevaultcerts",
 	"usevaultcas",
+	"chefserverpath",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -925,6 +984,7 @@ var PlatformConfigComments = map[string]string{
 	"commercialcerts":       "Get certs from vault or generate your own for the root load balancer",
 	"usevaultcerts":         "Use Vault certs for internal TLS communication",
 	"usevaultcas":           "Use Vault CAs to authenticate TLS communication",
+	"chefserverpath":        "Path to Chef Server",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -981,6 +1041,12 @@ var CloudletOptionalArgs = []string{
 	"accessvars",
 	"vmimageversion",
 	"packageversion",
+	"infraaccesstype",
+	"deploymenttype",
+	"nummasters",
+	"numnodes",
+	"infraexternalnetwork",
+	"infraflavorname",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1030,11 +1096,18 @@ var CloudletComments = map[string]string{
 	"config.commercialcerts":              "Get certs from vault or generate your own for the root load balancer",
 	"config.usevaultcerts":                "Use Vault certs for internal TLS communication",
 	"config.usevaultcas":                  "Use Vault CAs to authenticate TLS communication",
+	"config.chefserverpath":               "Path to Chef Server",
 	"restagmap:#.value.name":              "Resource Table Name",
 	"restagmap:#.value.organization":      "Operator organization of the cloudlet site.",
 	"accessvars":                          "Variables required to access cloudlet",
 	"vmimageversion":                      "MobiledgeX baseimage version where CRM services reside",
 	"packageversion":                      "MobiledgeX OS package version on baseimage where CRM services reside",
+	"infraaccesstype":                     "Infra Access Type is the type of access available to Infra API Endpoint, one of AccessTypePublic, AccessTypePrivate",
+	"deploymenttype":                      "Type of deployment to bring up CRM services, one of DeploymentTypeDocker, DeploymentTypeK8S",
+	"nummasters":                          "Number of k8s masters (Only valid for k8s deployment)",
+	"numnodes":                            "Number of k8s nodes (Only valid for k8s deployment)",
+	"infraexternalnetwork":                "External network name on infra",
+	"infraflavorname":                     "Flavor name on infra",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1206,4 +1279,10 @@ var CreateCloudletOptionalArgs = []string{
 	"accessvars",
 	"vmimageversion",
 	"packageversion",
+	"infraaccesstype",
+	"deploymenttype",
+	"nummasters",
+	"numnodes",
+	"infraexternalnetwork",
+	"infraflavorname",
 }
