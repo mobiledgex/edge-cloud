@@ -452,6 +452,12 @@ func main() {
 	notifyClient.RegisterSend(sendAutoProvCounts)
 	nodeMgr.RegisterClient(notifyClient)
 
+	// Start autProvStats before we recieve Settings Update
+	dmecommon.Settings = *edgeproto.GetDefaultSettings()
+	autoProvStats := dmecommon.InitAutoProvStats(dmecommon.Settings.AutoDeployIntervalSec, 0, *statsShards, &nodeMgr.MyNode.Key, sendAutoProvCounts.Update)
+	autoProvStats.Start()
+	defer autoProvStats.Stop()
+
 	notifyClient.Start()
 	defer notifyClient.Stop()
 
@@ -459,11 +465,6 @@ func main() {
 	stats := NewDmeStats(interval, *statsShards, sendMetric.Update)
 	stats.Start()
 	defer stats.Stop()
-
-	dmecommon.Settings = *edgeproto.GetDefaultSettings()
-	autoProvStats := dmecommon.InitAutoProvStats(dmecommon.Settings.AutoDeployIntervalSec, 0, *statsShards, &nodeMgr.MyNode.Key, sendAutoProvCounts.Update)
-	autoProvStats.Start()
-	defer autoProvStats.Stop()
 
 	InitAppInstClients()
 
