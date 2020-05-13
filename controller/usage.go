@@ -171,14 +171,19 @@ func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime
 	now := time.Now()
 	ts, _ := types.TimestampProto(now)
 	metric.Timestamp = *ts
+	utc, _ := time.LoadLocation("UTC")
+	//start and endtimes end up being put into different timezones somehow when going through calculations so force them both to the same here
+	startUTC := startTime.In(utc)
+	endUTC := endTime.In(utc)
+
 	// influx requires that at least one field must be specified when querying so these cant be all tags
 	metric.AddStringVal("cloudletorg", cluster.Key.CloudletKey.Organization)
 	metric.AddTag("cloudlet", cluster.Key.CloudletKey.Name)
 	metric.AddTag("cluster", cluster.Key.ClusterKey.Name)
 	metric.AddTag("clusterorg", cluster.Key.Organization)
 	metric.AddTag("flavor", cluster.Flavor.Name)
-	metric.AddStringVal("start", startTime.Format(time.RFC3339))
-	metric.AddStringVal("end", endTime.Format(time.RFC3339))
+	metric.AddStringVal("start", startUTC.Format(time.RFC3339))
+	metric.AddStringVal("end", endUTC.Format(time.RFC3339))
 	metric.AddDoubleVal("uptime", runTime.Seconds())
 	if cluster.ReservedBy != "" && cluster.Key.Organization == cloudcommon.OrganizationMobiledgeX {
 		metric.AddTag("org", cluster.ReservedBy)
@@ -198,8 +203,9 @@ func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime
 
 // This is checkpointing for BILLING PERIODS ONLY, custom checkpointing, coming later, will not create(or at least store) usage records upon checkpointing
 func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
-	if timestamp.After(time.Now()) { // we dont know if there will be more creates and deletes before the timestamp occurs
-		return fmt.Errorf("Cannot create a checkpoint for the future")
+	now := time.Now()
+	if timestamp.After(now) { // we dont know if there will be more creates and deletes before the timestamp occurs
+		return fmt.Errorf("Cannot create a checkpoint for the future, checkpointTimestamp: %s, now:%s", timestamp.Format(time.RFC3339), now.Format(time.RFC3339))
 	}
 	defer services.events.DoPush() // flush these right away for subsequent calls to GetClusterCheckpoint
 	// get all running clusterinsts and create a usage record of them
@@ -388,7 +394,9 @@ func runClusterCheckpoints(ctx context.Context) {
 	}
 	for {
 		select {
-		case <-time.After(NextCheckpoint.Sub(time.Now())):
+		// add 2 seconds to the checkpoint bc this was actually going into the case 1 second before NextCheckpoint,
+		// resulting in creating a checkpoint for the future, which is not allowed
+		case <-time.After(NextCheckpoint.Add(time.Second * 2).Sub(time.Now())):
 			checkpointTime := NextCheckpoint
 			err = CreateClusterCheckpoint(ctx, checkpointTime)
 			if err != nil {

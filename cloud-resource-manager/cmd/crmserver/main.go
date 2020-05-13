@@ -61,7 +61,8 @@ func main() {
 	flag.Parse()
 
 	if strings.Contains(*debugLevels, "mexos") {
-		log.FatalLog("mexos log level is obsolete, please use infra")
+		log.WarnLog("mexos log level is obsolete, please use infra")
+		*debugLevels = strings.ReplaceAll(*debugLevels, "mexos", "infra")
 	}
 	log.SetDebugLevelStrs(*debugLevels)
 	log.InitTracer(nodeMgr.TlsCertFile)

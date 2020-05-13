@@ -40,6 +40,7 @@
 		AppKey
 		ConfigFile
 		App
+		AppAutoProvPolicy
 		AppInstKey
 		AppInst
 		AppInstRuntime
@@ -1025,6 +1026,41 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	}
 	return data, nil
+}
+
+var ShowMethodNames = map[string]struct{}{
+	"ShowAlert":              struct{}{},
+	"ShowSettings":           struct{}{},
+	"ShowFlavor":             struct{}{},
+	"ShowOperatorCode":       struct{}{},
+	"ShowResTagTable":        struct{}{},
+	"ShowCloudlet":           struct{}{},
+	"ShowCloudletInfo":       struct{}{},
+	"ShowCloudletMetrics":    struct{}{},
+	"ShowCloudletPool":       struct{}{},
+	"ShowCloudletPoolMember": struct{}{},
+	"ShowPoolsForCloudlet":   struct{}{},
+	"ShowCloudletsForPool":   struct{}{},
+	"ShowAutoScalePolicy":    struct{}{},
+	"ShowApp":                struct{}{},
+	"ShowClusterInst":        struct{}{},
+	"ShowClusterInstInfo":    struct{}{},
+	"ShowAutoProvPolicy":     struct{}{},
+	"ShowPrivacyPolicy":      struct{}{},
+	"ShowAppInst":            struct{}{},
+	"ShowAppInstInfo":        struct{}{},
+	"ShowAppInstMetrics":     struct{}{},
+	"ShowController":         struct{}{},
+	"ShowNode":               struct{}{},
+	"ShowDevice":             struct{}{},
+	"ShowDeviceReport":       struct{}{},
+	"ShowCloudletRefs":       struct{}{},
+	"ShowClusterRefs":        struct{}{},
+}
+
+func IsShow(cmd string) bool {
+	_, found := ShowMethodNames[cmd]
+	return found
 }
 
 func (m *Alert) Size() (n int) {

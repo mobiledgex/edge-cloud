@@ -56,8 +56,15 @@ func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, app := range s.cache.Objs {
-		if app.Key.Organization == key.Organization && app.AutoProvPolicy == key.Name {
-			return true
+		if app.Key.Organization == key.Organization {
+			if app.AutoProvPolicy == key.Name {
+				return true
+			}
+			for _, name := range app.AutoProvPolicies {
+				if name == key.Name {
+					return true
+				}
+			}
 		}
 	}
 	return false
@@ -476,4 +483,52 @@ func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) e
 		return err
 	})
 	return err
+}
+
+func (s *AppApi) AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	cur := edgeproto.App{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.AppKey, &cur) {
+			return in.AppKey.NotFoundError()
+		}
+		apKey := edgeproto.PolicyKey{}
+		apKey.Organization = in.AppKey.Organization
+		apKey.Name = in.AutoProvPolicy
+		if !autoProvPolicyApi.store.STMGet(stm, &apKey, nil) {
+			return apKey.NotFoundError()
+		}
+		for _, name := range cur.AutoProvPolicies {
+			if name == in.AutoProvPolicy {
+				return fmt.Errorf("AutoProvPolicy %s already on App", name)
+			}
+		}
+		cur.AutoProvPolicies = append(cur.AutoProvPolicies, in.AutoProvPolicy)
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	return &edgeproto.Result{}, err
+}
+
+func (s *AppApi) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	cur := edgeproto.App{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.AppKey, &cur) {
+			return in.AppKey.NotFoundError()
+		}
+		changed := false
+		for ii, name := range cur.AutoProvPolicies {
+			if name == in.AutoProvPolicy {
+				last := len(cur.AutoProvPolicies) - 1
+				cur.AutoProvPolicies[ii] = cur.AutoProvPolicies[last]
+				cur.AutoProvPolicies = cur.AutoProvPolicies[:last]
+				changed = true
+			}
+		}
+		if !changed {
+			return nil
+		}
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	return &edgeproto.Result{}, err
 }

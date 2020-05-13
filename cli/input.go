@@ -123,7 +123,7 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 	if obj != nil {
 		unused, err := WeakDecode(dat, obj, s.DecodeHook)
 		if err != nil {
-			return dat, err
+			return dat, ConvertDecodeErr(err, reals)
 		}
 		if !s.AllowUnused && len(unused) > 0 {
 			return dat, fmt.Errorf("invalid args: %s",
@@ -151,6 +151,47 @@ func WeakDecode(input, output interface{}, hook mapstructure.DecodeHookFunc) ([]
 	}
 	err = decoder.Decode(input)
 	return config.Metadata.Unused, err
+}
+
+func ConvertDecodeErr(err error, reals map[string]string) error {
+	// converts mapstructure errors into nicer errors for cli output
+	wrapped, ok := err.(*mapstructure.Error)
+	if !ok {
+		return err
+	}
+	for ii, err := range wrapped.Errors {
+		switch e := err.(type) {
+		case *mapstructure.ParseError:
+			name := getDecodeArg(e.Name, reals)
+			suberr := e.Err
+			help := ""
+			if ne, ok := suberr.(*strconv.NumError); ok {
+				suberr = ne.Err
+			}
+			if e.To == reflect.Bool {
+				help = ", valid values are true, false, 1, 0"
+			}
+			err = fmt.Errorf(`Unable to parse "%s" value "%v" as %v: %v%s`, name, e.Val, e.To, suberr, help)
+		case *mapstructure.OverflowError:
+			name := getDecodeArg(e.Name, reals)
+			err = fmt.Errorf(`Unable to parse "%s" value "%v" as %v: overflow error`, name, e.Val, e.To)
+		}
+		wrapped.Errors[ii] = err
+	}
+	return wrapped
+}
+
+func getDecodeArg(name string, reals map[string]string) string {
+	arg := strings.ToLower(name)
+	if alias, found := reals[arg]; found {
+		return alias
+	}
+	// cli arg does not include parent struct name
+	parts := strings.Split(arg, ".")
+	if len(parts) > 1 {
+		arg = strings.Join(parts[1:], ".")
+	}
+	return arg
 }
 
 // FieldNamespace describes the format of field names used in generic

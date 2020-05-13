@@ -167,7 +167,8 @@ func TestConversion(t *testing.T) {
 	input := &cli.Input{
 		DecodeHook: edgeproto.DecodeHook,
 		SpecialArgs: &map[string]string{
-			"fields": "StringArray",
+			"fields":           "StringArray",
+			"autoprovpolicies": "StringArray",
 		},
 	}
 	for _, flavor := range testutil.FlavorData {
