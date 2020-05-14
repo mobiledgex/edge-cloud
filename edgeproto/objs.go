@@ -650,7 +650,8 @@ func GetOrg(obj interface{}) string {
 func (c *ClusterInstCache) UsesOrg(org string) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, val := range c.Objs {
+	for _, cd := range c.Objs {
+		val := cd.Obj
 		if val.Key.Organization == org || val.Key.CloudletKey.Organization == org || (val.Reservable && val.ReservedBy == org) {
 			return true
 		}

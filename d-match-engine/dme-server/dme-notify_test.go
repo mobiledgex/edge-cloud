@@ -95,7 +95,8 @@ func TestNotify(t *testing.T) {
 	serverHandler.WaitForDevices(count)
 	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
 	// Delete all elements from local cache directly
-	for _, obj := range platformClientsCache.Objs {
+	for _, data := range platformClientsCache.Objs {
+		obj := data.Obj
 		delete(platformClientsCache.Objs, obj.GetKeyVal())
 		delete(platformClientsCache.List, obj.GetKeyVal())
 	}

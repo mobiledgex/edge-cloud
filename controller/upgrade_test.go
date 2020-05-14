@@ -84,7 +84,7 @@ func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
 		fileObjCount++
 	}
 	// count objects in etcd
-	err = objStore.List("", func(key, val []byte, rev int64) error {
+	err = objStore.List("", func(key, val []byte, rev, modRev int64) error {
 		dbObjCount++
 		return nil
 	})

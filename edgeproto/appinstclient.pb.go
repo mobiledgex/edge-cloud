@@ -535,14 +535,19 @@ type AppInstClientKeyKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type AppInstClientKeyCacheData struct {
+	Obj    *AppInstClientKey
+	ModRev int64
+}
+
 // AppInstClientKeyCache caches AppInstClientKey objects in memory in a hash table
 // and keeps them in sync with the database.
 type AppInstClientKeyCache struct {
-	Objs        map[AppInstKey]*AppInstClientKey
+	Objs        map[AppInstKey]*AppInstClientKeyCacheData
 	Mux         util.Mutex
 	List        map[AppInstKey]struct{}
 	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *AppInstKey, old *AppInstClientKey)
+	NotifyCb    func(ctx context.Context, obj *AppInstKey, old *AppInstClientKey, modRev int64)
 	UpdatedCb   func(ctx context.Context, old *AppInstClientKey, new *AppInstClientKey)
 	KeyWatchers map[AppInstKey][]*AppInstClientKeyKeyWatcher
 }
@@ -554,7 +559,7 @@ func NewAppInstClientKeyCache() *AppInstClientKeyCache {
 }
 
 func InitAppInstClientKeyCache(cache *AppInstClientKeyCache) {
-	cache.Objs = make(map[AppInstKey]*AppInstClientKey)
+	cache.Objs = make(map[AppInstKey]*AppInstClientKeyCacheData)
 	cache.KeyWatchers = make(map[AppInstKey][]*AppInstClientKeyKeyWatcher)
 }
 
@@ -563,11 +568,17 @@ func (c *AppInstClientKeyCache) GetTypeString() string {
 }
 
 func (c *AppInstClientKeyCache) Get(key *AppInstKey, valbuf *AppInstClientKey) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *AppInstClientKeyCache) GetWithRev(key *AppInstKey, valbuf *AppInstClientKey, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -579,23 +590,26 @@ func (c *AppInstClientKeyCache) HasKey(key *AppInstKey) bool {
 	return found
 }
 
-func (c *AppInstClientKeyCache) GetAllKeys(ctx context.Context, keys map[AppInstKey]context.Context) {
+func (c *AppInstClientKeyCache) GetAllKeys(ctx context.Context, cb func(key *AppInstKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *AppInstClientKeyCache) Update(ctx context.Context, in *AppInstClientKey, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *AppInstClientKey) (*AppInstClientKey, bool) {
+func (c *AppInstClientKeyCache) Update(ctx context.Context, in *AppInstClientKey, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *AppInstClientKey) (*AppInstClientKey, bool) {
 		return in, true
 	})
 }
 
-func (c *AppInstClientKeyCache) UpdateModFunc(ctx context.Context, key *AppInstKey, rev int64, modFunc func(old *AppInstClientKey) (new *AppInstClientKey, changed bool)) {
+func (c *AppInstClientKeyCache) UpdateModFunc(ctx context.Context, key *AppInstKey, modRev int64, modFunc func(old *AppInstClientKey) (new *AppInstClientKey, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *AppInstClientKey
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
@@ -608,31 +622,38 @@ func (c *AppInstClientKeyCache) UpdateModFunc(ctx context.Context, key *AppInstK
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = &AppInstClientKeyCacheData{
+		Obj:    new,
+		ModRev: modRev,
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInstClientKey", "obj", new, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInstClientKey", "obj", new, "modRev", modRev)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *AppInstClientKeyCache) Delete(ctx context.Context, in *AppInstClientKey, rev int64) {
+func (c *AppInstClientKeyCache) Delete(ctx context.Context, in *AppInstClientKey, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *AppInstClientKey
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInstClientKey", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInstClientKey", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *AppInstClientKeyCache) Prune(ctx context.Context, validKeys map[AppInstKey]struct{}) {
-	notify := make(map[AppInstKey]*AppInstClientKey)
+	notify := make(map[AppInstKey]*AppInstClientKeyCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -645,7 +666,7 @@ func (c *AppInstClientKeyCache) Prune(ctx context.Context, validKeys map[AppInst
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -664,13 +685,13 @@ func (c *AppInstClientKeyCache) Show(filter *AppInstClientKey, cb func(ret *AppI
 	log.DebugLog(log.DebugLevelApi, "Show AppInstClientKey", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AppInstClientKey", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare AppInstClientKey", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AppInstClientKey", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show AppInstClientKey", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -684,7 +705,7 @@ func AppInstClientKeyGenericNotifyCb(fn func(key *AppInstKey, old *AppInstClient
 	}
 }
 
-func (c *AppInstClientKeyCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInstKey, old *AppInstClientKey)) {
+func (c *AppInstClientKeyCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInstKey, old *AppInstClientKey, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -740,14 +761,21 @@ func (c *AppInstClientKeyCache) TriggerKeyWatchers(ctx context.Context, key *App
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *AppInstClientKeyCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *AppInstClientKeyCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := AppInstClientKey{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse AppInstClientKey data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -755,11 +783,11 @@ func (c *AppInstClientKeyCache) SyncUpdate(ctx context.Context, key, val []byte,
 	c.Mux.Unlock()
 }
 
-func (c *AppInstClientKeyCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *AppInstClientKeyCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := AppInstClientKey{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	AppInstKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *AppInstClientKeyCache) SyncListStart(ctx context.Context) {
@@ -767,7 +795,7 @@ func (c *AppInstClientKeyCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *AppInstClientKeyCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[AppInstKey]*AppInstClientKey)
+	deleted := make(map[AppInstKey]*AppInstClientKeyCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -779,7 +807,7 @@ func (c *AppInstClientKeyCache) SyncListEnd(ctx context.Context) {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}

@@ -68,7 +68,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	assert.Equal(t, objstore.NotFoundError("No such key"), err, "Get non-existent key")
 
 	count = 0
-	err = objStore.List("", func(key, val []byte, rev int64) error {
+	err = objStore.List("", func(key, val []byte, rev, modRev int64) error {
 		count++
 		return nil
 	})
@@ -105,7 +105,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	val, _, _, err = objStore.Get(key1)
 	assert.Equal(t, objstore.NotFoundError(key1), err, "Get deleted key")
 	count = 0
-	err = objStore.List("", func(key, val []byte, rev int64) error {
+	err = objStore.List("", func(key, val []byte, rev, modRev int64) error {
 		count++
 		return nil
 	})
