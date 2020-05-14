@@ -22,7 +22,7 @@ var minPort uint32 = 1
 var maxPort uint32 = 65535
 
 const (
-	AppConfigHelmYaml      = "hemlCustomizationYaml"
+	AppConfigHelmYaml      = "helmCustomizationYaml"
 	AppAccessCustomization = "appAccessCustomization"
 	AppConfigEnvYaml       = "envVarsYaml"
 )

@@ -286,6 +286,9 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
 		return &edgeproto.Result{}, fmt.Errorf("Deployment is not valid for image type")
 	}
+	if err := validateAppConfigsForDeployment(in.Configs, in.Deployment); err != nil {
+		return &edgeproto.Result{}, err
+	}
 	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment, in.DeploymentManifest)
 	if err != nil {
 		return &edgeproto.Result{}, err
@@ -383,8 +386,8 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 		}
 	}
-
-	if err := in.Validate(edgeproto.MakeFieldMap(in.Fields)); err != nil {
+	fields := edgeproto.MakeFieldMap(in.Fields)
+	if err := in.Validate(fields); err != nil {
 		return &edgeproto.Result{}, err
 	}
 
@@ -407,6 +410,12 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				if curType != newType {
 					return fmt.Errorf("Cannot change App manifest from : %s to: %s when AppInsts exist", curType, newType)
 				}
+			}
+		}
+		// If config is being updated, make sure that it's valid for the DeploymentType
+		if _, found := fields[edgeproto.AppFieldConfigs]; found {
+			if err := validateAppConfigsForDeployment(in.Configs, cur.Deployment); err != nil {
+				return err
 			}
 		}
 		cur.CopyInFields(in)
@@ -531,4 +540,13 @@ func (s *AppApi) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppA
 		return nil
 	})
 	return &edgeproto.Result{}, err
+}
+
+func validateAppConfigsForDeployment(configs []*edgeproto.ConfigFile, deployment string) error {
+	for _, cfg := range configs {
+		if cfg.Kind == edgeproto.AppConfigHelmYaml && deployment != cloudcommon.AppDeploymentTypeHelm {
+			return fmt.Errorf("Invalid Config Kind(%s) for deployment type(%s)", cfg.Kind, deployment)
+		}
+	}
+	return nil
 }
