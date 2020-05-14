@@ -13,7 +13,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -396,7 +395,7 @@ func fillAppConfigs(app *edgeproto.App, interval time.Duration) error {
 		}
 		// Now add this yaml to the prometheus AppYamls
 		config := edgeproto.ConfigFile{
-			Kind:   k8smgmt.AppConfigHelmYaml,
+			Kind:   edgeproto.AppConfigHelmYaml,
 			Config: buf.String(),
 		}
 		app.Configs = []*edgeproto.ConfigFile{&config}
@@ -409,7 +408,7 @@ func fillAppConfigs(app *edgeproto.App, interval time.Duration) error {
 			return err
 		}
 		config := edgeproto.ConfigFile{
-			Kind:   k8smgmt.AppConfigHelmYaml,
+			Kind:   edgeproto.AppConfigHelmYaml,
 			Config: buf.String(),
 		}
 		app.Configs = []*edgeproto.ConfigFile{&config}
