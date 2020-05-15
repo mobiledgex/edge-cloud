@@ -951,14 +951,19 @@ type {{.Name}}KeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type {{.Name}}CacheData struct {
+	Obj *{{.Name}}
+	ModRev int64
+}
+
 // {{.Name}}Cache caches {{.Name}} objects in memory in a hash table
 // and keeps them in sync with the database.
 type {{.Name}}Cache struct {
-	Objs map[{{.KeyType}}]*{{.Name}}
+	Objs map[{{.KeyType}}]*{{.Name}}CacheData
 	Mux util.Mutex
 	List map[{{.KeyType}}]struct{}
 	FlushAll bool
-	NotifyCb func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}})
+	NotifyCb func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}}, modRev int64)
 	UpdatedCb func(ctx context.Context, old *{{.Name}}, new *{{.Name}})
 	KeyWatchers map[{{.KeyType}}][]*{{.Name}}KeyWatcher
 }
@@ -970,7 +975,7 @@ func New{{.Name}}Cache() *{{.Name}}Cache {
 }
 
 func Init{{.Name}}Cache(cache *{{.Name}}Cache) {
-	cache.Objs = make(map[{{.KeyType}}]*{{.Name}})
+	cache.Objs = make(map[{{.KeyType}}]*{{.Name}}CacheData)
 	cache.KeyWatchers = make(map[{{.KeyType}}][]*{{.Name}}KeyWatcher)
 }
 
@@ -979,11 +984,17 @@ func (c *{{.Name}}Cache) GetTypeString() string {
 }
 
 func (c *{{.Name}}Cache) Get(key *{{.KeyType}}, valbuf *{{.Name}}) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *{{.Name}}Cache) GetWithRev(key *{{.KeyType}}, valbuf *{{.Name}}, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -995,23 +1006,26 @@ func (c *{{.Name}}Cache) HasKey(key *{{.KeyType}}) bool {
 	return found
 }
 
-func (c *{{.Name}}Cache) GetAllKeys(ctx context.Context, keys map[{{.KeyType}}]context.Context) {
+func (c *{{.Name}}Cache) GetAllKeys(ctx context.Context, cb func(key *{{.KeyType}}, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *{{.Name}}Cache) Update(ctx context.Context, in *{{.Name}}, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *{{.Name}}) (*{{.Name}}, bool) {
+func (c *{{.Name}}Cache) Update(ctx context.Context, in *{{.Name}}, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *{{.Name}}) (*{{.Name}}, bool) {
 		return in, true
 	})
 }
 
-func (c *{{.Name}}Cache) UpdateModFunc(ctx context.Context, key *{{.KeyType}}, rev int64, modFunc func(old *{{.Name}}) (new *{{.Name}}, changed bool)) {
+func (c *{{.Name}}Cache) UpdateModFunc(ctx context.Context, key *{{.KeyType}}, modRev int64, modFunc func(old *{{.Name}}) (new *{{.Name}}, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *{{.Name}}
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
@@ -1024,31 +1038,38 @@ func (c *{{.Name}}Cache) UpdateModFunc(ctx context.Context, key *{{.KeyType}}, r
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = &{{.Name}}CacheData{
+		Obj: new,
+		ModRev: modRev,
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate {{.Name}}", "obj", new, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate {{.Name}}", "obj", new, "modRev", modRev)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *{{.Name}}Cache) Delete(ctx context.Context, in *{{.Name}}, rev int64) {
+func (c *{{.Name}}Cache) Delete(ctx context.Context, in *{{.Name}}, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *{{.Name}}
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete {{.Name}}", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete {{.Name}}", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *{{.Name}}Cache) Prune(ctx context.Context, validKeys map[{{.KeyType}}]struct{}) {
-	notify := make(map[{{.KeyType}}]*{{.Name}})
+	notify := make(map[{{.KeyType}}]*{{.Name}}CacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -1061,7 +1082,7 @@ func (c *{{.Name}}Cache) Prune(ctx context.Context, validKeys map[{{.KeyType}}]s
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1076,10 +1097,10 @@ func (c *{{.Name}}Cache) GetCount() int {
 func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
 {{- if .NotifyFlush}}
 	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush {{.Name}}", "notifyId", notifyId, "FlushAll", c.FlushAll)
-	flushed := make(map[{{.KeyType}}]*{{.Name}})
+	flushed := make(map[{{.KeyType}}]*{{.Name}}CacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if !c.FlushAll && val.NotifyId != notifyId {
+		if !c.FlushAll && val.Obj.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]
@@ -1090,7 +1111,7 @@ func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
 	if len(flushed) > 0 {
 		for key, old := range flushed {
 			if c.NotifyCb != nil {
-				c.NotifyCb(ctx, &key, old)
+				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -1102,15 +1123,15 @@ func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) 
 	log.DebugLog(log.DebugLevelApi, "Show {{.Name}}", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
+	for _, data := range c.Objs {
 {{- if .CudCache}}
-		log.DebugLog(log.DebugLevelApi, "Compare {{.Name}}", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+		log.DebugLog(log.DebugLevelApi, "Compare {{.Name}}", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
 {{- end}}
-		log.DebugLog(log.DebugLevelApi, "Show {{.Name}}", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show {{.Name}}", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -1125,7 +1146,7 @@ func {{.Name}}GenericNotifyCb(fn func(key *{{.KeyType}}, old *{{.Name}})) func(o
 }
 
 
-func (c *{{.Name}}Cache) SetNotifyCb(fn func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}})) {
+func (c *{{.Name}}Cache) SetNotifyCb(fn func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}}, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -1182,14 +1203,20 @@ func (c *{{.Name}}Cache) TriggerKeyWatchers(ctx context.Context, key *{{.KeyType
 
 
 {{- if .CudCache}}
-func (c *{{.Name}}Cache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *{{.Name}}Cache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := {{.Name}}{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse {{.Name}} data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1197,7 +1224,7 @@ func (c *{{.Name}}Cache) SyncUpdate(ctx context.Context, key, val []byte, rev in
 	c.Mux.Unlock()
 }
 
-func (c *{{.Name}}Cache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *{{.Name}}Cache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := {{.Name}}{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 {{- if .CustomKeyType}}
@@ -1205,7 +1232,7 @@ func (c *{{.Name}}Cache) SyncDelete(ctx context.Context, key []byte, rev int64) 
 {{- else}}
 	{{.KeyType}}StringParse(keystr, obj.GetKey())
 {{- end}}
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *{{.Name}}Cache) SyncListStart(ctx context.Context) {
@@ -1213,7 +1240,7 @@ func (c *{{.Name}}Cache) SyncListStart(ctx context.Context) {
 }
 
 func (c *{{.Name}}Cache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[{{.KeyType}}]*{{.Name}})
+	deleted := make(map[{{.KeyType}}]*{{.Name}}CacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1225,7 +1252,7 @@ func (c *{{.Name}}Cache) SyncListEnd(ctx context.Context) {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
@@ -1835,6 +1862,7 @@ func (m *mex) generateUsesOrg(message *descriptor.DescriptorProto) {
 	}
 	keyIter := "_"
 	valIter := "_"
+	valObj := ""
 	usesChecks := strings.Split(usesOrg, ",")
 	kvChecks := [][]string{}
 	for _, check := range usesChecks {
@@ -1847,6 +1875,7 @@ func (m *mex) generateUsesOrg(message *descriptor.DescriptorProto) {
 			keyIter = "key"
 		} else if kv[0] == "val" {
 			valIter = "val"
+			valObj = ".Obj"
 		} else {
 			m.gen.Fail(*message.Name, "invalid key in uses_org check spec, expected \"key\" or \"val\", but was ", kv[0])
 		}
@@ -1856,7 +1885,7 @@ func (m *mex) generateUsesOrg(message *descriptor.DescriptorProto) {
 	m.P("defer c.Mux.Unlock()")
 	m.P("for ", keyIter, ", ", valIter, " := range c.Objs {")
 	for _, kv := range kvChecks {
-		m.P("if ", kv[0], ".", kv[1], " == org { return true }")
+		m.P("if ", kv[0], valObj, ".", kv[1], " == org { return true }")
 	}
 	m.P("}")
 	m.P("return false")

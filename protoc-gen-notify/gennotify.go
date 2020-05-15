@@ -130,10 +130,10 @@ type tmplArgs struct {
 var tmpl = `
 {{- if .Cache}}
 type Send{{.Name}}Handler interface {
-	GetAllKeys(ctx context.Context, keys map[{{.KeyType}}]context.Context)
-	Get(key *{{.KeyType}}, buf *{{.NameType}}) bool
+	GetAllKeys(ctx context.Context, cb func(key *{{.KeyType}}, modRev int64))
+	GetWithRev(key *{{.KeyType}}, buf *{{.NameType}}, modRev *int64) bool
 {{- if .FilterCloudletKey}}
-	GetForCloudlet(key *edgeproto.CloudletKey, keys map[{{.KeyType}}]struct{})
+	GetForCloudlet(key *edgeproto.CloudletKey, cb func(key *{{.KeyType}}, modRev int64))
 {{- end}}
 }
 
@@ -147,7 +147,7 @@ type Recv{{.Name}}Handler interface {
 type {{.Name}}CacheHandler interface {
 	Send{{.Name}}Handler
 	Recv{{.Name}}Handler
-	SetNotifyCb(fn func(ctx context.Context, obj *{{.KeyType}}, old *{{.NameType}}))
+	SetNotifyCb(fn func(ctx context.Context, obj *{{.KeyType}}, old *{{.NameType}}, modRev int64))
 }
 
 {{- else}}
@@ -161,8 +161,8 @@ type {{.Name}}Send struct {
 	MessageName string
 {{- if .Cache}}
 	handler Send{{.Name}}Handler
-	Keys map[{{.KeyType}}]context.Context
-	keysToSend map[{{.KeyType}}]context.Context
+	Keys map[{{.KeyType}}]{{.Name}}SendContext
+	keysToSend map[{{.KeyType}}]{{.Name}}SendContext
 {{- else}}
 	Data []*{{.NameType}}
 	dataToSend []*{{.NameType}}
@@ -176,6 +176,11 @@ type {{.Name}}Send struct {
 	sendrecv *SendRecv
 }
 
+type {{.Name}}SendContext struct {
+	ctx context.Context
+	modRev int64
+}
+
 {{- if .Cache}}
 func New{{.Name}}Send(handler Send{{.Name}}Handler) *{{.Name}}Send {
 {{- else}}
@@ -186,7 +191,7 @@ func New{{.Name}}Send() *{{.Name}}Send {
 	send.MessageName = proto.MessageName((*{{.NameType}})(nil))
 {{- if .Cache}}
 	send.handler = handler
-	send.Keys = make(map[{{.KeyType}}]context.Context)
+	send.Keys = make(map[{{.KeyType}}]{{.Name}}SendContext)
 {{- else}}
 	send.Data = make([]*{{.NameType}}, 0)
 {{- end}}
@@ -224,11 +229,16 @@ func (s *{{.Name}}Send) UpdateAll(ctx context.Context) {
 	}
 {{- end}}
 	s.Mux.Lock()
-	s.handler.GetAllKeys(ctx, s.Keys)
+	s.handler.GetAllKeys(ctx, func(key *{{.KeyType}}, modRev int64) {
+		s.Keys[*key] = {{.Name}}SendContext{
+			ctx: ctx,
+			modRev: modRev,
+		}
+	})
 	s.Mux.Unlock()
 }
 
-func (s *{{.Name}}Send) Update(ctx context.Context, key *{{.KeyType}}, old *{{.NameType}}) {
+func (s *{{.Name}}Send) Update(ctx context.Context, key *{{.KeyType}}, old *{{.NameType}}, modRev int64) {
 	if !s.sendrecv.isRemoteWanted(s.MessageName) {
 		return
 	}
@@ -237,18 +247,22 @@ func (s *{{.Name}}Send) Update(ctx context.Context, key *{{.KeyType}}, old *{{.N
 		return
 	}
 {{- end}}
-	s.updateInternal(ctx, key)
+	s.updateInternal(ctx, key, modRev)
 }
 
-func (s *{{.Name}}Send) updateInternal(ctx context.Context, key *{{.KeyType}}) {
+func (s *{{.Name}}Send) updateInternal(ctx context.Context, key *{{.KeyType}}, modRev int64) {
 	s.Mux.Lock()
 {{- if .PrintSendRecv}}
-	log.SpanLog(ctx, log.DebugLevelNotify, "updateInternal {{.Name}}", "key", key)
+	log.SpanLog(ctx, log.DebugLevelNotify, "updateInternal {{.Name}}", "key", key, "modRev", modRev)
 {{- end}}
-	s.Keys[*key] = ctx
+	s.Keys[*key] = {{.Name}}SendContext{
+		ctx: ctx,
+		modRev: modRev,
+	}
 	s.Mux.Unlock()
 	s.sendrecv.wakeup()
 }
+
 {{- else}}
 func (s *{{.Name}}Send) UpdateAll(ctx context.Context) {}
 
@@ -284,12 +298,14 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 	s.Mux.Unlock()
 
 {{- if .Cache}}
-	for key, ctx := range keys {
-		found := s.handler.Get(&key, &s.buf)
+	for key, sendContext := range keys {
+		ctx := sendContext.ctx
+		found := s.handler.GetWithRev(&key, &s.buf, &notice.ModRev)
 		if found {
 			notice.Action = edgeproto.NoticeAction_UPDATE
 		} else {
 			notice.Action = edgeproto.NoticeAction_DELETE
+			notice.ModRev = sendContext.modRev
 			s.buf.SetKey(&key)
 		}
 		any, err := types.MarshalAny(&s.buf)
@@ -311,7 +327,8 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 			"peer", peer,
 {{- if .Cache}}
 			"action", notice.Action,
-			"key", key)
+			"key", key,
+			"modRev", notice.ModRev)
 {{- else}}
 			"msg", msg)
 {{- end}}
@@ -334,7 +351,7 @@ func (s *{{.Name}}Send) PrepData() bool {
 {{- if .Cache}}
 	if len(s.Keys) > 0 {
 		s.keysToSend = s.Keys
-		s.Keys = make(map[{{.KeyType}}]context.Context)
+		s.Keys = make(map[{{.KeyType}}]{{.Name}}SendContext)
 		return true
 	}
 {{- else}}
@@ -400,11 +417,11 @@ func (s *{{.Name}}SendMany) DoneSend(peerAddr string, send NotifySend) {
 }
 
 {{- if .Cache}}
-func (s *{{.Name}}SendMany) Update(ctx context.Context, key *{{.KeyType}}, old *{{.NameType}}) {
+func (s *{{.Name}}SendMany) Update(ctx context.Context, key *{{.KeyType}}, old *{{.NameType}}, modRev int64) {
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 	for _, send := range s.sends {
-		send.Update(ctx, key, old)
+		send.Update(ctx, key, old, modRev)
 	}
 }
 {{- else}}
@@ -504,14 +521,14 @@ func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, noti
 {{- end}}
 {{- if .Cache}}
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
-		s.handler.Update(ctx, buf, 0)
+		s.handler.Update(ctx, buf, notice.ModRev)
 		s.Mux.Lock()
 		if s.sendAllKeys != nil {
 			s.sendAllKeys[buf.GetKeyVal()] = struct{}{}
 		}
 		s.Mux.Unlock()
 	} else if notice.Action == edgeproto.NoticeAction_DELETE {
-		s.handler.Delete(ctx, buf, 0)
+		s.handler.Delete(ctx, buf, notice.ModRev)
 	}
 {{- else}}
 	s.handler.Recv{{.Name}}(ctx, buf)

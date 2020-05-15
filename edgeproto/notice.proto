@@ -33,6 +33,8 @@ message Notice {
   bool filter_cloudlet_key = 5;
   // Opentracing span
   string span = 6;
+  // Database revision for which object was last modified
+  int64 mod_rev = 7;
 }
 
 service NotifyApi {

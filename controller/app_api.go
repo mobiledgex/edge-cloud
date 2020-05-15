@@ -44,7 +44,8 @@ func (s *AppApi) Get(key *edgeproto.AppKey, buf *edgeproto.App) bool {
 func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, app := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		app := data.Obj
 		if app.DefaultFlavor.Matches(key) && app.DelOpt != edgeproto.DeleteType_AUTO_DELETE {
 			return true
 		}
@@ -55,7 +56,8 @@ func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, app := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		app := data.Obj
 		if app.Key.Organization == key.Organization {
 			if app.AutoProvPolicy == key.Name {
 				return true
@@ -73,7 +75,8 @@ func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
 func (s *AppApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, app := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		app := data.Obj
 		if app.Key.Organization == key.Organization && app.DefaultPrivacyPolicy == key.Name {
 			return true
 		}
@@ -85,7 +88,8 @@ func (s *AppApi) AutoDeleteAppsForOrganization(ctx context.Context, org string) 
 	apps := make(map[edgeproto.AppKey]*edgeproto.App)
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting Apps ", "org", org)
 	s.cache.Mux.Lock()
-	for k, app := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
+		app := data.Obj
 		if app.Key.Organization == org && app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
 			apps[k] = app
 		}
@@ -103,7 +107,8 @@ func (s *AppApi) AutoDeleteApps(ctx context.Context, key *edgeproto.FlavorKey) {
 	apps := make(map[edgeproto.AppKey]*edgeproto.App)
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting Apps ", "flavor", key)
 	s.cache.Mux.Lock()
-	for k, app := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
+		app := data.Obj
 		if app.DefaultFlavor.Matches(key) && app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
 			apps[k] = app
 		}
@@ -126,7 +131,8 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	}
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, app := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		app := data.Obj
 		if app.AndroidPackageName == a.AndroidPackageName {
 			if (a.Key.Organization != app.Key.Organization) || (a.Key.Name != app.Key.Name) {
 				return true

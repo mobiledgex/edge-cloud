@@ -24,8 +24,8 @@ type Sync struct {
 }
 
 type ObjCache interface {
-	SyncUpdate(ctx context.Context, key, val []byte, rev int64)
-	SyncDelete(ctx context.Context, key []byte, rev int64)
+	SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64)
+	SyncDelete(ctx context.Context, key []byte, rev, modRev int64)
 	SyncListStart(ctx context.Context)
 	SyncListEnd(ctx context.Context)
 	GetTypeString() string
@@ -103,7 +103,7 @@ func (s *Sync) GetCache(ctx context.Context, key []byte) (ObjCache, bool) {
 // data, otherwise there could be race conditions against the sync data
 // coming from etcd.
 func (s *Sync) syncCb(ctx context.Context, data *objstore.SyncCbData) {
-	log.SpanLog(ctx, log.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[data.Action], "key", string(data.Key), "value", string(data.Value), "rev", data.Rev)
+	log.SpanLog(ctx, log.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[data.Action], "key", string(data.Key), "value", string(data.Value), "rev", data.Rev, "modRev", data.ModRev)
 
 	s.mux.Lock()
 	defer s.mux.Unlock()
@@ -120,14 +120,14 @@ func (s *Sync) syncCb(ctx context.Context, data *objstore.SyncCbData) {
 		fallthrough
 	case objstore.SyncUpdate:
 		if cache, found := s.GetCache(ctx, data.Key); found {
-			cache.SyncUpdate(ctx, data.Key, data.Value, data.Rev)
+			cache.SyncUpdate(ctx, data.Key, data.Value, data.Rev, data.ModRev)
 		}
 		if !data.MoreEvents {
 			s.rev = data.Rev
 		}
 	case objstore.SyncDelete:
 		if cache, found := s.GetCache(ctx, data.Key); found {
-			cache.SyncDelete(ctx, data.Key, data.Rev)
+			cache.SyncDelete(ctx, data.Key, data.Rev, data.ModRev)
 		}
 		if !data.MoreEvents {
 			s.rev = data.Rev

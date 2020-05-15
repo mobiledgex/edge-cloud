@@ -883,14 +883,19 @@ type NodeKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type NodeCacheData struct {
+	Obj    *Node
+	ModRev int64
+}
+
 // NodeCache caches Node objects in memory in a hash table
 // and keeps them in sync with the database.
 type NodeCache struct {
-	Objs        map[NodeKey]*Node
+	Objs        map[NodeKey]*NodeCacheData
 	Mux         util.Mutex
 	List        map[NodeKey]struct{}
 	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *NodeKey, old *Node)
+	NotifyCb    func(ctx context.Context, obj *NodeKey, old *Node, modRev int64)
 	UpdatedCb   func(ctx context.Context, old *Node, new *Node)
 	KeyWatchers map[NodeKey][]*NodeKeyWatcher
 }
@@ -902,7 +907,7 @@ func NewNodeCache() *NodeCache {
 }
 
 func InitNodeCache(cache *NodeCache) {
-	cache.Objs = make(map[NodeKey]*Node)
+	cache.Objs = make(map[NodeKey]*NodeCacheData)
 	cache.KeyWatchers = make(map[NodeKey][]*NodeKeyWatcher)
 }
 
@@ -911,11 +916,17 @@ func (c *NodeCache) GetTypeString() string {
 }
 
 func (c *NodeCache) Get(key *NodeKey, valbuf *Node) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *NodeCache) GetWithRev(key *NodeKey, valbuf *Node, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -927,23 +938,26 @@ func (c *NodeCache) HasKey(key *NodeKey) bool {
 	return found
 }
 
-func (c *NodeCache) GetAllKeys(ctx context.Context, keys map[NodeKey]context.Context) {
+func (c *NodeCache) GetAllKeys(ctx context.Context, cb func(key *NodeKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *NodeCache) Update(ctx context.Context, in *Node, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Node) (*Node, bool) {
+func (c *NodeCache) Update(ctx context.Context, in *Node, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *Node) (*Node, bool) {
 		return in, true
 	})
 }
 
-func (c *NodeCache) UpdateModFunc(ctx context.Context, key *NodeKey, rev int64, modFunc func(old *Node) (new *Node, changed bool)) {
+func (c *NodeCache) UpdateModFunc(ctx context.Context, key *NodeKey, modRev int64, modFunc func(old *Node) (new *Node, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *Node
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
@@ -956,31 +970,38 @@ func (c *NodeCache) UpdateModFunc(ctx context.Context, key *NodeKey, rev int64, 
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = &NodeCacheData{
+		Obj:    new,
+		ModRev: modRev,
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Node", "obj", new, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Node", "obj", new, "modRev", modRev)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *NodeCache) Delete(ctx context.Context, in *Node, rev int64) {
+func (c *NodeCache) Delete(ctx context.Context, in *Node, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *Node
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Node", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Node", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *NodeCache) Prune(ctx context.Context, validKeys map[NodeKey]struct{}) {
-	notify := make(map[NodeKey]*Node)
+	notify := make(map[NodeKey]*NodeCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -993,7 +1014,7 @@ func (c *NodeCache) Prune(ctx context.Context, validKeys map[NodeKey]struct{}) {
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1007,10 +1028,10 @@ func (c *NodeCache) GetCount() int {
 
 func (c *NodeCache) Flush(ctx context.Context, notifyId int64) {
 	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Node", "notifyId", notifyId, "FlushAll", c.FlushAll)
-	flushed := make(map[NodeKey]*Node)
+	flushed := make(map[NodeKey]*NodeCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if !c.FlushAll && val.NotifyId != notifyId {
+		if !c.FlushAll && val.Obj.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]
@@ -1021,7 +1042,7 @@ func (c *NodeCache) Flush(ctx context.Context, notifyId int64) {
 	if len(flushed) > 0 {
 		for key, old := range flushed {
 			if c.NotifyCb != nil {
-				c.NotifyCb(ctx, &key, old)
+				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -1032,13 +1053,13 @@ func (c *NodeCache) Show(filter *Node, cb func(ret *Node) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show Node", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Node", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Node", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Node", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show Node", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -1052,7 +1073,7 @@ func NodeGenericNotifyCb(fn func(key *NodeKey, old *Node)) func(objstore.ObjKey,
 	}
 }
 
-func (c *NodeCache) SetNotifyCb(fn func(ctx context.Context, obj *NodeKey, old *Node)) {
+func (c *NodeCache) SetNotifyCb(fn func(ctx context.Context, obj *NodeKey, old *Node, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -1108,14 +1129,21 @@ func (c *NodeCache) TriggerKeyWatchers(ctx context.Context, key *NodeKey) {
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *NodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *NodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := Node{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Node data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1123,11 +1151,11 @@ func (c *NodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) 
 	c.Mux.Unlock()
 }
 
-func (c *NodeCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *NodeCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := Node{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	NodeKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *NodeCache) SyncListStart(ctx context.Context) {
@@ -1135,7 +1163,7 @@ func (c *NodeCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *NodeCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[NodeKey]*Node)
+	deleted := make(map[NodeKey]*NodeCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1147,7 +1175,7 @@ func (c *NodeCache) SyncListEnd(ctx context.Context) {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
