@@ -136,7 +136,8 @@ func (s *DebugNode) handleRequest(ctx context.Context, req *edgeproto.DebugReque
 	sendNotifyIds := make(map[int64]struct{})
 	cache := &s.mgr.NodeCache
 	cache.Mux.Lock()
-	for key, node := range cache.Objs {
+	for key, data := range cache.Objs {
+		node := data.Obj
 		if nodeMatches(&key, &req.Node) {
 			if node.NotifyId == 0 {
 				// this is me, already handled above

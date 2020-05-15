@@ -426,14 +426,19 @@ type OperatorCodeKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type OperatorCodeCacheData struct {
+	Obj    *OperatorCode
+	ModRev int64
+}
+
 // OperatorCodeCache caches OperatorCode objects in memory in a hash table
 // and keeps them in sync with the database.
 type OperatorCodeCache struct {
-	Objs        map[OperatorCodeKey]*OperatorCode
+	Objs        map[OperatorCodeKey]*OperatorCodeCacheData
 	Mux         util.Mutex
 	List        map[OperatorCodeKey]struct{}
 	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *OperatorCodeKey, old *OperatorCode)
+	NotifyCb    func(ctx context.Context, obj *OperatorCodeKey, old *OperatorCode, modRev int64)
 	UpdatedCb   func(ctx context.Context, old *OperatorCode, new *OperatorCode)
 	KeyWatchers map[OperatorCodeKey][]*OperatorCodeKeyWatcher
 }
@@ -445,7 +450,7 @@ func NewOperatorCodeCache() *OperatorCodeCache {
 }
 
 func InitOperatorCodeCache(cache *OperatorCodeCache) {
-	cache.Objs = make(map[OperatorCodeKey]*OperatorCode)
+	cache.Objs = make(map[OperatorCodeKey]*OperatorCodeCacheData)
 	cache.KeyWatchers = make(map[OperatorCodeKey][]*OperatorCodeKeyWatcher)
 }
 
@@ -454,11 +459,17 @@ func (c *OperatorCodeCache) GetTypeString() string {
 }
 
 func (c *OperatorCodeCache) Get(key *OperatorCodeKey, valbuf *OperatorCode) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *OperatorCodeCache) GetWithRev(key *OperatorCodeKey, valbuf *OperatorCode, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -470,23 +481,26 @@ func (c *OperatorCodeCache) HasKey(key *OperatorCodeKey) bool {
 	return found
 }
 
-func (c *OperatorCodeCache) GetAllKeys(ctx context.Context, keys map[OperatorCodeKey]context.Context) {
+func (c *OperatorCodeCache) GetAllKeys(ctx context.Context, cb func(key *OperatorCodeKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *OperatorCodeCache) Update(ctx context.Context, in *OperatorCode, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *OperatorCode) (*OperatorCode, bool) {
+func (c *OperatorCodeCache) Update(ctx context.Context, in *OperatorCode, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *OperatorCode) (*OperatorCode, bool) {
 		return in, true
 	})
 }
 
-func (c *OperatorCodeCache) UpdateModFunc(ctx context.Context, key *OperatorCodeKey, rev int64, modFunc func(old *OperatorCode) (new *OperatorCode, changed bool)) {
+func (c *OperatorCodeCache) UpdateModFunc(ctx context.Context, key *OperatorCodeKey, modRev int64, modFunc func(old *OperatorCode) (new *OperatorCode, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *OperatorCode
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
@@ -499,31 +513,38 @@ func (c *OperatorCodeCache) UpdateModFunc(ctx context.Context, key *OperatorCode
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = &OperatorCodeCacheData{
+		Obj:    new,
+		ModRev: modRev,
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate OperatorCode", "obj", new, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate OperatorCode", "obj", new, "modRev", modRev)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *OperatorCodeCache) Delete(ctx context.Context, in *OperatorCode, rev int64) {
+func (c *OperatorCodeCache) Delete(ctx context.Context, in *OperatorCode, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *OperatorCode
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete OperatorCode", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete OperatorCode", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *OperatorCodeCache) Prune(ctx context.Context, validKeys map[OperatorCodeKey]struct{}) {
-	notify := make(map[OperatorCodeKey]*OperatorCode)
+	notify := make(map[OperatorCodeKey]*OperatorCodeCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -536,7 +557,7 @@ func (c *OperatorCodeCache) Prune(ctx context.Context, validKeys map[OperatorCod
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -555,13 +576,13 @@ func (c *OperatorCodeCache) Show(filter *OperatorCode, cb func(ret *OperatorCode
 	log.DebugLog(log.DebugLevelApi, "Show OperatorCode", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare OperatorCode", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare OperatorCode", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show OperatorCode", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show OperatorCode", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -575,7 +596,7 @@ func OperatorCodeGenericNotifyCb(fn func(key *OperatorCodeKey, old *OperatorCode
 	}
 }
 
-func (c *OperatorCodeCache) SetNotifyCb(fn func(ctx context.Context, obj *OperatorCodeKey, old *OperatorCode)) {
+func (c *OperatorCodeCache) SetNotifyCb(fn func(ctx context.Context, obj *OperatorCodeKey, old *OperatorCode, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -631,14 +652,21 @@ func (c *OperatorCodeCache) TriggerKeyWatchers(ctx context.Context, key *Operato
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *OperatorCodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *OperatorCodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := OperatorCode{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse OperatorCode data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -646,11 +674,11 @@ func (c *OperatorCodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev
 	c.Mux.Unlock()
 }
 
-func (c *OperatorCodeCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *OperatorCodeCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := OperatorCode{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	OperatorCodeKeyStringParse(keystr, &obj)
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *OperatorCodeCache) SyncListStart(ctx context.Context) {
@@ -658,7 +686,7 @@ func (c *OperatorCodeCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *OperatorCodeCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[OperatorCodeKey]*OperatorCode)
+	deleted := make(map[OperatorCodeKey]*OperatorCodeCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -670,7 +698,7 @@ func (c *OperatorCodeCache) SyncListEnd(ctx context.Context) {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
@@ -680,7 +708,7 @@ func (c *OperatorCodeCache) UsesOrg(org string) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, val := range c.Objs {
-		if val.Organization == org {
+		if val.Obj.Organization == org {
 			return true
 		}
 	}

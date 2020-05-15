@@ -63,11 +63,11 @@ func (s *CloudletPoolApi) showPoolsByKeys(keys map[edgeproto.CloudletPoolKey]str
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 
-	for key, obj := range s.cache.Objs {
+	for key, data := range s.cache.Objs {
 		if _, found := keys[key]; !found {
 			continue
 		}
-		err := cb(obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
