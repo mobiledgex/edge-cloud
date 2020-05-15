@@ -30,6 +30,7 @@ type Platform interface {
 	Init(ctx context.Context, platformConfig *PlatformConfig, controllerData *ControllerData, updateCallback edgeproto.CacheUpdateCallback) error
 	// Gather information about the cloudlet platform.
 	// This includes available resources, flavors, etc.
+	// Returns true if sync with controller is required
 	GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error
 	// Create a Kubernetes Cluster on the cloudlet.
 	CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error
@@ -70,7 +71,7 @@ type Platform interface {
 	// Delete Cloudlet AccessVars
 	DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Sync data with controller
-	SyncControllerData(ctx context.Context, controllerData *ControllerData) error
+	SyncControllerData(ctx context.Context, controllerData *ControllerData, cloudletState edgeproto.CloudletState) error
 }
 
 type ClusterSvc interface {

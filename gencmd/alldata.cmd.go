@@ -525,7 +525,7 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                   "Name of the cloudlet",
-	"cloudletinfos:#.state":                                      "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
+	"cloudletinfos:#.state":                                      "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
 	"cloudletinfos:#.notifyid":                                   "Id of client assigned by server (internal use only)",
 	"cloudletinfos:#.controller":                                 "Connected controller unique id",
 	"cloudletinfos:#.osmaxram":                                   "Maximum Ram in MB on the Cloudlet",

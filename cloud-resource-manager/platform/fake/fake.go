@@ -190,7 +190,7 @@ func (s *Platform) runDebug(ctx context.Context, req *edgeproto.DebugRequest) st
 	return "ran some debug"
 }
 
-func (s *Platform) SyncControllerData(ctx context.Context, controllerData *platform.ControllerData) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "SyncControllerData")
+func (s *Platform) SyncControllerData(ctx context.Context, controllerData *platform.ControllerData, cloudletState edgeproto.CloudletState) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "SyncControllerData", "state", cloudletState)
 	return nil
 }

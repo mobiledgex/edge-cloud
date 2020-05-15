@@ -282,6 +282,8 @@ enum CloudletState {
   CLOUDLET_STATE_INIT = 5;
   // Cloudlet is upgrading
   CLOUDLET_STATE_UPGRADE = 6;
+  // Cloudlet needs data to synchronize
+  CLOUDLET_STATE_NEED_SYNC = 7;  
 }
 
 // Flavor details from the Cloudlet

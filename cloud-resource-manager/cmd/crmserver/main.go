@@ -183,11 +183,27 @@ func main() {
 			log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
 			updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
 			err = controllerData.GatherCloudletInfo(ctx, &myCloudletInfo)
+			log.SpanLog(ctx, log.DebugLevelInfra, "GatherCloudletInfo done", "state", myCloudletInfo.State)
 
 			if err != nil {
 				myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
 				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 			} else {
+				// see what the current state set by CRM is
+				if myCloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC {
+					log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+
+					controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+					// resync after controller data is updated with clusters, etc
+
+					log.SpanLog(ctx, log.DebugLevelInfra, "sleeping 10 seconds for sync", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+					time.Sleep(time.Second * 10)
+
+					err := platform.SyncControllerData(ctx, controllerData, myCloudletInfo.State)
+					if err != nil {
+						log.FatalLog("Platform sync fail", "err", err)
+					}
+				}
 				myCloudletInfo.Errors = nil
 				if *cleanupMode {
 					controllerData.CleanupOldCloudlet(ctx, &cloudlet, updateCloudletStatus)
@@ -229,7 +245,6 @@ func main() {
 	defer notifyServer.Stop()
 
 	span.Finish()
-
 	if mainStarted != nil {
 		// for unit testing to detect when main is ready
 		close(mainStarted)

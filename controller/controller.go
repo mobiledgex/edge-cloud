@@ -494,7 +494,6 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
-	notify.ServerMgrOne.RegisterSendPrivacyPolicyCache(&privacyPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
 
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)

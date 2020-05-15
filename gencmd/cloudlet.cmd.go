@@ -1140,7 +1140,7 @@ var CloudletInfoComments = map[string]string{
 	"fields":                "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":          "Organization of the cloudlet site",
 	"cloudlet":              "Name of the cloudlet",
-	"state":                 "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
+	"state":                 "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
 	"notifyid":              "Id of client assigned by server (internal use only)",
 	"controller":            "Connected controller unique id",
 	"osmaxram":              "Maximum Ram in MB on the Cloudlet",
