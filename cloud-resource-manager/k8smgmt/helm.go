@@ -23,8 +23,6 @@ var validHelmInstallOpts = map[string]struct{}{
 	"username": struct{}{},
 }
 
-const AppConfigHelmYaml = "hemlCustomizationYaml"
-
 func getHelmOpts(ctx context.Context, client ssh.Client, appName string, configs []*edgeproto.ConfigFile) (string, error) {
 	var ymls []string
 	var err error
@@ -32,7 +30,7 @@ func getHelmOpts(ctx context.Context, client ssh.Client, appName string, configs
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
 	// Walk the Configs in the App and generate the yaml files from the helm customization ones
 	for ii, v := range configs {
-		if v.Kind == AppConfigHelmYaml {
+		if v.Kind == edgeproto.AppConfigHelmYaml {
 			cfg := v.Config
 			// Fill in the Deployment Vars passed as a variable through the context
 			if varsFound {
