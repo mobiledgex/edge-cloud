@@ -193,12 +193,19 @@ func main() {
 				if myCloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC {
 					log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 
+					controllerData.ControllerSyncInProgress = true
 					controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 					// resync after controller data is updated with clusters, etc
 
-					log.SpanLog(ctx, log.DebugLevelInfra, "sleeping 10 seconds for sync", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-					time.Sleep(time.Second * 10)
-
+					select {
+					case <-controllerData.ControllerSyncDone:
+						if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, &cloudlet) {
+							log.FatalLog("failed to get sync data from controller")
+						}
+					case <-time.After(ControllerTimeout):
+						log.FatalLog("Timed out waiting for sync data from controller")
+					}
+					log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
 					err := platform.SyncControllerData(ctx, controllerData, myCloudletInfo.State)
 					if err != nil {
 						log.FatalLog("Platform sync fail", "err", err)

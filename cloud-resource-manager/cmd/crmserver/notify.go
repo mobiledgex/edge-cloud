@@ -28,6 +28,7 @@ func InitClientNotify(client *notify.Client, cd *pf.ControllerData) {
 	client.RegisterSend(sendMetric)
 	client.RegisterSendAlertCache(&cd.AlertCache)
 	client.RegisterRecvPrivacyPolicyCache(&cd.PrivacyPolicyCache)
+	client.RegisterSendAllRecv(cd)
 	nodeMgr.RegisterClient(client)
 }
 

@@ -135,7 +135,6 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 				s.sendrecv.clusterInstSend.handler.GetForCloudlet(&buf.Key, clusterInsts)
 				for k, _ := range clusterInsts {
 					log.SpanLog(ctx, log.DebugLevelNotify, "ZZZZ SEND CLUSTERINST", "key", k)
-
 					s.sendrecv.clusterInstSend.Update(ctx, &k, nil)
 				}
 			}
@@ -146,6 +145,7 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 					s.sendrecv.appInstSend.Update(ctx, &k, nil)
 				}
 			}
+			s.sendrecv.triggerSendAllEnd()
 		}
 	}
 }
