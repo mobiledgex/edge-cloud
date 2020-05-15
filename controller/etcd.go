@@ -185,7 +185,7 @@ func (e *EtcdClient) List(key string, cb objstore.ListCb) error {
 	}
 	for _, obj := range resp.Kvs {
 		log.DebugLog(log.DebugLevelEtcd, "list data", "key", string(obj.Key), "val", string(obj.Value), "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)
-		err = cb(obj.Key, obj.Value, resp.Header.Revision)
+		err = cb(obj.Key, obj.Value, resp.Header.Revision, obj.ModRevision)
 		if err != nil {
 			break
 		}
@@ -240,14 +240,16 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 			data.Key = nil
 			data.Value = nil
 			data.Rev = 0
+			data.ModRev = 0
 			cb(spctx, &data)
 
 			data.Action = objstore.SyncList
-			err = e.List(key, func(key, val []byte, rev int64) error {
+			err = e.List(key, func(key, val []byte, rev, modRev int64) error {
 				data.Key = key
 				data.Value = val
 				data.Rev = rev
-				log.SpanLog(spctx, log.DebugLevelEtcd, "sync list data", "key", string(key), "val", string(val), "rev", rev)
+				data.ModRev = modRev
+				log.SpanLog(spctx, log.DebugLevelEtcd, "sync list data", "key", string(key), "val", string(val), "rev", rev, "modRev", modRev)
 				cb(spctx, &data)
 				watchRev = rev
 				return nil
@@ -284,6 +286,7 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				data.Key = event.Kv.Key
 				data.Value = event.Kv.Value
 				data.Rev = resp.Header.Revision
+				data.ModRev = event.Kv.ModRevision
 				watchRev = resp.Header.Revision
 				if ii == len(resp.Events)-1 {
 					data.MoreEvents = false

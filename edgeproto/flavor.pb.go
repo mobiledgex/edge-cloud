@@ -844,14 +844,19 @@ type FlavorKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type FlavorCacheData struct {
+	Obj    *Flavor
+	ModRev int64
+}
+
 // FlavorCache caches Flavor objects in memory in a hash table
 // and keeps them in sync with the database.
 type FlavorCache struct {
-	Objs        map[FlavorKey]*Flavor
+	Objs        map[FlavorKey]*FlavorCacheData
 	Mux         util.Mutex
 	List        map[FlavorKey]struct{}
 	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *FlavorKey, old *Flavor)
+	NotifyCb    func(ctx context.Context, obj *FlavorKey, old *Flavor, modRev int64)
 	UpdatedCb   func(ctx context.Context, old *Flavor, new *Flavor)
 	KeyWatchers map[FlavorKey][]*FlavorKeyWatcher
 }
@@ -863,7 +868,7 @@ func NewFlavorCache() *FlavorCache {
 }
 
 func InitFlavorCache(cache *FlavorCache) {
-	cache.Objs = make(map[FlavorKey]*Flavor)
+	cache.Objs = make(map[FlavorKey]*FlavorCacheData)
 	cache.KeyWatchers = make(map[FlavorKey][]*FlavorKeyWatcher)
 }
 
@@ -872,11 +877,17 @@ func (c *FlavorCache) GetTypeString() string {
 }
 
 func (c *FlavorCache) Get(key *FlavorKey, valbuf *Flavor) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *FlavorCache) GetWithRev(key *FlavorKey, valbuf *Flavor, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -888,23 +899,26 @@ func (c *FlavorCache) HasKey(key *FlavorKey) bool {
 	return found
 }
 
-func (c *FlavorCache) GetAllKeys(ctx context.Context, keys map[FlavorKey]context.Context) {
+func (c *FlavorCache) GetAllKeys(ctx context.Context, cb func(key *FlavorKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *FlavorCache) Update(ctx context.Context, in *Flavor, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Flavor) (*Flavor, bool) {
+func (c *FlavorCache) Update(ctx context.Context, in *Flavor, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *Flavor) (*Flavor, bool) {
 		return in, true
 	})
 }
 
-func (c *FlavorCache) UpdateModFunc(ctx context.Context, key *FlavorKey, rev int64, modFunc func(old *Flavor) (new *Flavor, changed bool)) {
+func (c *FlavorCache) UpdateModFunc(ctx context.Context, key *FlavorKey, modRev int64, modFunc func(old *Flavor) (new *Flavor, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *Flavor
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
@@ -917,31 +931,38 @@ func (c *FlavorCache) UpdateModFunc(ctx context.Context, key *FlavorKey, rev int
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = &FlavorCacheData{
+		Obj:    new,
+		ModRev: modRev,
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Flavor", "obj", new, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Flavor", "obj", new, "modRev", modRev)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *FlavorCache) Delete(ctx context.Context, in *Flavor, rev int64) {
+func (c *FlavorCache) Delete(ctx context.Context, in *Flavor, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *Flavor
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Flavor", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Flavor", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *FlavorCache) Prune(ctx context.Context, validKeys map[FlavorKey]struct{}) {
-	notify := make(map[FlavorKey]*Flavor)
+	notify := make(map[FlavorKey]*FlavorCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -954,7 +975,7 @@ func (c *FlavorCache) Prune(ctx context.Context, validKeys map[FlavorKey]struct{
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -973,13 +994,13 @@ func (c *FlavorCache) Show(filter *Flavor, cb func(ret *Flavor) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show Flavor", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Flavor", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Flavor", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Flavor", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show Flavor", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -993,7 +1014,7 @@ func FlavorGenericNotifyCb(fn func(key *FlavorKey, old *Flavor)) func(objstore.O
 	}
 }
 
-func (c *FlavorCache) SetNotifyCb(fn func(ctx context.Context, obj *FlavorKey, old *Flavor)) {
+func (c *FlavorCache) SetNotifyCb(fn func(ctx context.Context, obj *FlavorKey, old *Flavor, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -1049,14 +1070,21 @@ func (c *FlavorCache) TriggerKeyWatchers(ctx context.Context, key *FlavorKey) {
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *FlavorCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *FlavorCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := Flavor{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Flavor data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1064,11 +1092,11 @@ func (c *FlavorCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64
 	c.Mux.Unlock()
 }
 
-func (c *FlavorCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *FlavorCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := Flavor{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	FlavorKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *FlavorCache) SyncListStart(ctx context.Context) {
@@ -1076,7 +1104,7 @@ func (c *FlavorCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *FlavorCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[FlavorKey]*Flavor)
+	deleted := make(map[FlavorKey]*FlavorCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1088,7 +1116,7 @@ func (c *FlavorCache) SyncListEnd(ctx context.Context) {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}

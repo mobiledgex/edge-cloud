@@ -82,7 +82,8 @@ func (s *ControllerApi) RunJobs(run func(arg interface{}, addr string) error, ar
 
 	wg := sync.WaitGroup{}
 	s.cache.Mux.Lock()
-	for _, ctrl := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		ctrl := data.Obj
 		wg.Add(1)
 		go func(ctrlAddr string) {
 			err := run(arg, ctrlAddr)
