@@ -88,7 +88,8 @@ func (s *CloudletPoolMemberApi) getCloudletKeysForPools(names ...string) map[edg
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 
-	for _, obj := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		obj := data.Obj
 		for _, name := range names {
 			if name == obj.PoolKey.Name {
 				keys[obj.CloudletKey] = struct{}{}

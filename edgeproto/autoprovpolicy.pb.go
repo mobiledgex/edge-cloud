@@ -1117,14 +1117,19 @@ type AutoProvPolicyKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type AutoProvPolicyCacheData struct {
+	Obj    *AutoProvPolicy
+	ModRev int64
+}
+
 // AutoProvPolicyCache caches AutoProvPolicy objects in memory in a hash table
 // and keeps them in sync with the database.
 type AutoProvPolicyCache struct {
-	Objs        map[PolicyKey]*AutoProvPolicy
+	Objs        map[PolicyKey]*AutoProvPolicyCacheData
 	Mux         util.Mutex
 	List        map[PolicyKey]struct{}
 	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy)
+	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy, modRev int64)
 	UpdatedCb   func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy)
 	KeyWatchers map[PolicyKey][]*AutoProvPolicyKeyWatcher
 }
@@ -1136,7 +1141,7 @@ func NewAutoProvPolicyCache() *AutoProvPolicyCache {
 }
 
 func InitAutoProvPolicyCache(cache *AutoProvPolicyCache) {
-	cache.Objs = make(map[PolicyKey]*AutoProvPolicy)
+	cache.Objs = make(map[PolicyKey]*AutoProvPolicyCacheData)
 	cache.KeyWatchers = make(map[PolicyKey][]*AutoProvPolicyKeyWatcher)
 }
 
@@ -1145,11 +1150,17 @@ func (c *AutoProvPolicyCache) GetTypeString() string {
 }
 
 func (c *AutoProvPolicyCache) Get(key *PolicyKey, valbuf *AutoProvPolicy) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *AutoProvPolicyCache) GetWithRev(key *PolicyKey, valbuf *AutoProvPolicy, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -1161,23 +1172,26 @@ func (c *AutoProvPolicyCache) HasKey(key *PolicyKey) bool {
 	return found
 }
 
-func (c *AutoProvPolicyCache) GetAllKeys(ctx context.Context, keys map[PolicyKey]context.Context) {
+func (c *AutoProvPolicyCache) GetAllKeys(ctx context.Context, cb func(key *PolicyKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *AutoProvPolicyCache) Update(ctx context.Context, in *AutoProvPolicy, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *AutoProvPolicy) (*AutoProvPolicy, bool) {
+func (c *AutoProvPolicyCache) Update(ctx context.Context, in *AutoProvPolicy, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *AutoProvPolicy) (*AutoProvPolicy, bool) {
 		return in, true
 	})
 }
 
-func (c *AutoProvPolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey, rev int64, modFunc func(old *AutoProvPolicy) (new *AutoProvPolicy, changed bool)) {
+func (c *AutoProvPolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey, modRev int64, modFunc func(old *AutoProvPolicy) (new *AutoProvPolicy, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *AutoProvPolicy
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
@@ -1190,31 +1204,38 @@ func (c *AutoProvPolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey,
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = &AutoProvPolicyCacheData{
+		Obj:    new,
+		ModRev: modRev,
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate AutoProvPolicy", "obj", new, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate AutoProvPolicy", "obj", new, "modRev", modRev)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *AutoProvPolicyCache) Delete(ctx context.Context, in *AutoProvPolicy, rev int64) {
+func (c *AutoProvPolicyCache) Delete(ctx context.Context, in *AutoProvPolicy, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *AutoProvPolicy
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete AutoProvPolicy", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete AutoProvPolicy", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *AutoProvPolicyCache) Prune(ctx context.Context, validKeys map[PolicyKey]struct{}) {
-	notify := make(map[PolicyKey]*AutoProvPolicy)
+	notify := make(map[PolicyKey]*AutoProvPolicyCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -1227,7 +1248,7 @@ func (c *AutoProvPolicyCache) Prune(ctx context.Context, validKeys map[PolicyKey
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1246,13 +1267,13 @@ func (c *AutoProvPolicyCache) Show(filter *AutoProvPolicy, cb func(ret *AutoProv
 	log.DebugLog(log.DebugLevelApi, "Show AutoProvPolicy", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AutoProvPolicy", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare AutoProvPolicy", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AutoProvPolicy", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show AutoProvPolicy", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -1266,7 +1287,7 @@ func AutoProvPolicyGenericNotifyCb(fn func(key *PolicyKey, old *AutoProvPolicy))
 	}
 }
 
-func (c *AutoProvPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy)) {
+func (c *AutoProvPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -1322,14 +1343,21 @@ func (c *AutoProvPolicyCache) TriggerKeyWatchers(ctx context.Context, key *Polic
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *AutoProvPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *AutoProvPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := AutoProvPolicy{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse AutoProvPolicy data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1337,11 +1365,11 @@ func (c *AutoProvPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, r
 	c.Mux.Unlock()
 }
 
-func (c *AutoProvPolicyCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *AutoProvPolicyCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := AutoProvPolicy{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	PolicyKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *AutoProvPolicyCache) SyncListStart(ctx context.Context) {
@@ -1349,7 +1377,7 @@ func (c *AutoProvPolicyCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *AutoProvPolicyCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[PolicyKey]*AutoProvPolicy)
+	deleted := make(map[PolicyKey]*AutoProvPolicyCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1361,7 +1389,7 @@ func (c *AutoProvPolicyCache) SyncListEnd(ctx context.Context) {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}

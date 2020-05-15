@@ -58,11 +58,11 @@ func TestNotifyBasic(t *testing.T) {
 	checkServerConnections(t, &serverMgr, 2)
 
 	// Create some app insts which will trigger updates
-	serverHandler.AppCache.Update(ctx, &testutil.AppData[0], 0)
-	serverHandler.AppCache.Update(ctx, &testutil.AppData[1], 0)
-	serverHandler.AppCache.Update(ctx, &testutil.AppData[2], 0)
-	serverHandler.AppCache.Update(ctx, &testutil.AppData[3], 0)
-	serverHandler.AppCache.Update(ctx, &testutil.AppData[4], 0)
+	serverHandler.AppCache.Update(ctx, &testutil.AppData[0], 1)
+	serverHandler.AppCache.Update(ctx, &testutil.AppData[1], 2)
+	serverHandler.AppCache.Update(ctx, &testutil.AppData[2], 3)
+	serverHandler.AppCache.Update(ctx, &testutil.AppData[3], 4)
+	serverHandler.AppCache.Update(ctx, &testutil.AppData[4], 5)
 	dmeHandler.WaitForAppInsts(5)
 	require.Equal(t, 5, len(dmeHandler.AppCache.Objs), "num Apps")
 	stats := serverMgr.GetStats(clientDME.GetLocalAddr())
@@ -158,19 +158,19 @@ func TestNotifyBasic(t *testing.T) {
 	require.Equal(t, 0, len(crmHandler.AppCache.Objs), "num apps")
 	require.Equal(t, 0, len(crmHandler.AppInstCache.Objs), "num appInsts")
 	// crm must send cloudletinfo to receive clusterInsts and appInsts
-	serverHandler.CloudletCache.Update(ctx, &testutil.CloudletData[0], 0)
-	serverHandler.CloudletCache.Update(ctx, &testutil.CloudletData[1], 0)
-	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[0], 0)
-	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[1], 0)
-	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[2], 0)
-	serverHandler.ClusterInstCache.Update(ctx, &testutil.ClusterInstData[0], 0)
-	serverHandler.ClusterInstCache.Update(ctx, &testutil.ClusterInstData[1], 0)
-	serverHandler.ClusterInstCache.Update(ctx, &testutil.ClusterInstData[2], 0)
-	serverHandler.ClusterInstCache.Update(ctx, &testutil.ClusterInstData[3], 0)
-	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[0], 0)
-	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[1], 0)
-	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[2], 0)
-	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[3], 0)
+	serverHandler.CloudletCache.Update(ctx, &testutil.CloudletData[0], 6)
+	serverHandler.CloudletCache.Update(ctx, &testutil.CloudletData[1], 7)
+	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[0], 8)
+	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[1], 9)
+	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[2], 10)
+	serverHandler.ClusterInstCache.Update(ctx, &testutil.ClusterInstData[0], 11)
+	serverHandler.ClusterInstCache.Update(ctx, &testutil.ClusterInstData[1], 12)
+	serverHandler.ClusterInstCache.Update(ctx, &testutil.ClusterInstData[2], 13)
+	serverHandler.ClusterInstCache.Update(ctx, &testutil.ClusterInstData[3], 14)
+	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[0], 15)
+	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[1], 16)
+	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[2], 17)
+	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[3], 18)
 	// trigger updates with CloudletInfo update after updating other
 	// data, otherwise the updates here plus the updates triggered by
 	// updating CloudletInfo can cause updates to get sent twice,
@@ -189,6 +189,29 @@ func TestNotifyBasic(t *testing.T) {
 	require.Equal(t, 2, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
 	require.Equal(t, 1, len(crmHandler.AppCache.Objs), "num apps")
 	require.Equal(t, 2, len(crmHandler.AppInstCache.Objs), "num appInsts")
+	// verify modRef values
+	appBuf := edgeproto.App{}
+	flavorBuf := edgeproto.Flavor{}
+	clusterInstBuf := edgeproto.ClusterInst{}
+	appInstBuf := edgeproto.AppInst{}
+	var modRev int64
+	require.True(t, crmHandler.AppCache.GetWithRev(&testutil.AppData[0].Key, &appBuf, &modRev))
+	require.Equal(t, int64(1), modRev)
+	require.True(t, crmHandler.FlavorCache.GetWithRev(&testutil.FlavorData[0].Key, &flavorBuf, &modRev))
+	require.Equal(t, int64(8), modRev)
+	require.True(t, crmHandler.FlavorCache.GetWithRev(&testutil.FlavorData[1].Key, &flavorBuf, &modRev))
+	require.Equal(t, int64(9), modRev)
+	require.True(t, crmHandler.FlavorCache.GetWithRev(&testutil.FlavorData[2].Key, &flavorBuf, &modRev))
+	require.Equal(t, int64(10), modRev)
+	require.True(t, crmHandler.ClusterInstCache.GetWithRev(&testutil.ClusterInstData[0].Key, &clusterInstBuf, &modRev))
+	require.Equal(t, int64(11), modRev)
+	require.True(t, crmHandler.ClusterInstCache.GetWithRev(&testutil.ClusterInstData[3].Key, &clusterInstBuf, &modRev))
+	require.Equal(t, int64(14), modRev)
+	require.True(t, crmHandler.AppInstCache.GetWithRev(&testutil.AppInstData[0].Key, &appInstBuf, &modRev))
+	require.Equal(t, int64(15), modRev)
+	require.True(t, crmHandler.AppInstCache.GetWithRev(&testutil.AppInstData[1].Key, &appInstBuf, &modRev))
+	require.Equal(t, int64(16), modRev)
+
 	serverHandler.FlavorCache.Delete(ctx, &testutil.FlavorData[1], 0)
 	serverHandler.ClusterInstCache.Delete(ctx, &testutil.ClusterInstData[0], 0)
 	serverHandler.AppInstCache.Delete(ctx, &testutil.AppInstData[0], 0)

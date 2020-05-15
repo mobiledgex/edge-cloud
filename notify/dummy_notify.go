@@ -237,7 +237,8 @@ func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state ed
 }
 
 func (s *DummyHandler) GetCloudletDetails(key *edgeproto.CloudletKey) (string, int64, error) {
-	for _, obj := range s.NodeCache.Objs {
+	for _, data := range s.NodeCache.Objs {
+		obj := data.Obj
 		if obj.Key.Type != "crm" {
 			continue
 		}

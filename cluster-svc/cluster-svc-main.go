@@ -195,8 +195,8 @@ func autoScalePolicyCb(ctx context.Context, old *edgeproto.AutoScalePolicy, new 
 	insts := []edgeproto.ClusterInst{}
 	ClusterInstCache.Mux.Lock()
 	for k, v := range ClusterInstCache.Objs {
-		if new.Key.Organization == k.Organization && new.Key.Name == v.AutoScalePolicy {
-			insts = append(insts, *v)
+		if new.Key.Organization == k.Organization && new.Key.Name == v.Obj.AutoScalePolicy {
+			insts = append(insts, *v.Obj)
 		}
 	}
 	ClusterInstCache.Mux.Unlock()

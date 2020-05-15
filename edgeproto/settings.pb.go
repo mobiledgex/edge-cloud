@@ -797,14 +797,19 @@ type SettingsKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type SettingsCacheData struct {
+	Obj    *Settings
+	ModRev int64
+}
+
 // SettingsCache caches Settings objects in memory in a hash table
 // and keeps them in sync with the database.
 type SettingsCache struct {
-	Objs        map[SettingsKey]*Settings
+	Objs        map[SettingsKey]*SettingsCacheData
 	Mux         util.Mutex
 	List        map[SettingsKey]struct{}
 	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *SettingsKey, old *Settings)
+	NotifyCb    func(ctx context.Context, obj *SettingsKey, old *Settings, modRev int64)
 	UpdatedCb   func(ctx context.Context, old *Settings, new *Settings)
 	KeyWatchers map[SettingsKey][]*SettingsKeyWatcher
 }
@@ -816,7 +821,7 @@ func NewSettingsCache() *SettingsCache {
 }
 
 func InitSettingsCache(cache *SettingsCache) {
-	cache.Objs = make(map[SettingsKey]*Settings)
+	cache.Objs = make(map[SettingsKey]*SettingsCacheData)
 	cache.KeyWatchers = make(map[SettingsKey][]*SettingsKeyWatcher)
 }
 
@@ -825,11 +830,17 @@ func (c *SettingsCache) GetTypeString() string {
 }
 
 func (c *SettingsCache) Get(key *SettingsKey, valbuf *Settings) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *SettingsCache) GetWithRev(key *SettingsKey, valbuf *Settings, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -841,23 +852,26 @@ func (c *SettingsCache) HasKey(key *SettingsKey) bool {
 	return found
 }
 
-func (c *SettingsCache) GetAllKeys(ctx context.Context, keys map[SettingsKey]context.Context) {
+func (c *SettingsCache) GetAllKeys(ctx context.Context, cb func(key *SettingsKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *SettingsCache) Update(ctx context.Context, in *Settings, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Settings) (*Settings, bool) {
+func (c *SettingsCache) Update(ctx context.Context, in *Settings, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *Settings) (*Settings, bool) {
 		return in, true
 	})
 }
 
-func (c *SettingsCache) UpdateModFunc(ctx context.Context, key *SettingsKey, rev int64, modFunc func(old *Settings) (new *Settings, changed bool)) {
+func (c *SettingsCache) UpdateModFunc(ctx context.Context, key *SettingsKey, modRev int64, modFunc func(old *Settings) (new *Settings, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *Settings
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
@@ -870,31 +884,38 @@ func (c *SettingsCache) UpdateModFunc(ctx context.Context, key *SettingsKey, rev
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = &SettingsCacheData{
+		Obj:    new,
+		ModRev: modRev,
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Settings", "obj", new, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Settings", "obj", new, "modRev", modRev)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *SettingsCache) Delete(ctx context.Context, in *Settings, rev int64) {
+func (c *SettingsCache) Delete(ctx context.Context, in *Settings, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *Settings
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Settings", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Settings", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *SettingsCache) Prune(ctx context.Context, validKeys map[SettingsKey]struct{}) {
-	notify := make(map[SettingsKey]*Settings)
+	notify := make(map[SettingsKey]*SettingsCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -907,7 +928,7 @@ func (c *SettingsCache) Prune(ctx context.Context, validKeys map[SettingsKey]str
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -926,13 +947,13 @@ func (c *SettingsCache) Show(filter *Settings, cb func(ret *Settings) error) err
 	log.DebugLog(log.DebugLevelApi, "Show Settings", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Settings", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Settings", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Settings", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show Settings", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -946,7 +967,7 @@ func SettingsGenericNotifyCb(fn func(key *SettingsKey, old *Settings)) func(objs
 	}
 }
 
-func (c *SettingsCache) SetNotifyCb(fn func(ctx context.Context, obj *SettingsKey, old *Settings)) {
+func (c *SettingsCache) SetNotifyCb(fn func(ctx context.Context, obj *SettingsKey, old *Settings, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -1002,14 +1023,21 @@ func (c *SettingsCache) TriggerKeyWatchers(ctx context.Context, key *SettingsKey
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *SettingsCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *SettingsCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := Settings{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Settings data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1017,11 +1045,11 @@ func (c *SettingsCache) SyncUpdate(ctx context.Context, key, val []byte, rev int
 	c.Mux.Unlock()
 }
 
-func (c *SettingsCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *SettingsCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := Settings{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	SettingsKeyStringParse(keystr, &obj)
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *SettingsCache) SyncListStart(ctx context.Context) {
@@ -1029,7 +1057,7 @@ func (c *SettingsCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *SettingsCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[SettingsKey]*Settings)
+	deleted := make(map[SettingsKey]*SettingsCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1041,7 +1069,7 @@ func (c *SettingsCache) SyncListEnd(ctx context.Context) {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
