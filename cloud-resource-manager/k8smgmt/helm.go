@@ -9,6 +9,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -25,13 +26,16 @@ var validHelmInstallOpts = map[string]struct{}{
 
 func getHelmOpts(ctx context.Context, client ssh.Client, appName string, configs []*edgeproto.ConfigFile) (string, error) {
 	var ymls []string
-	var err error
 
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
 	// Walk the Configs in the App and generate the yaml files from the helm customization ones
 	for ii, v := range configs {
 		if v.Kind == edgeproto.AppConfigHelmYaml {
-			cfg := v.Config
+			// config can either be remote, or local
+			cfg, err := cloudcommon.GetDeploymentManifest(ctx, nil, v.Config)
+			if err != nil {
+				return "", err
+			}
 			// Fill in the Deployment Vars passed as a variable through the context
 			if varsFound {
 				cfg, err = crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
