@@ -13,8 +13,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 )
 
-const AppAccessCustomization = "appAccessCustomization"
-
 type AppAccessConfig struct {
 	DnsOverride         string `yaml:"dnsOverride"`
 	LbTlsCertCommonName string `yaml:"lbTlsCertCommonName"`
@@ -39,7 +37,7 @@ func GetAppAccessConfig(ctx context.Context, configs []*edgeproto.ConfigFile) (*
 	}
 	// Walk the Configs in the App and generate the yaml files from the helm customization ones
 	for _, v := range configs {
-		if v.Kind == AppAccessCustomization {
+		if v.Kind == edgeproto.AppAccessCustomization {
 			cfg, err := cloudcommon.GetDeploymentManifest(ctx, nil, v.Config)
 			if err != nil {
 				return nil, err

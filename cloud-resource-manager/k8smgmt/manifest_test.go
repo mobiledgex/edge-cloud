@@ -34,7 +34,7 @@ func TestEnvVars(t *testing.T) {
 	app.Deployment = cloudcommon.AppDeploymentTypeKubernetes
 	app.DeploymentGenerator = ""
 	config := &edgeproto.ConfigFile{
-		Kind:   AppConfigEnvYaml,
+		Kind:   edgeproto.AppConfigEnvYaml,
 		Config: envVars,
 	}
 	app.Configs = append(app.Configs, config)

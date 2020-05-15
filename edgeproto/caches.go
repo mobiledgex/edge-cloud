@@ -29,24 +29,24 @@ type CacheUpdateCallback func(updateType CacheUpdateType, value string)
 func DummyUpdateCallback(updateType CacheUpdateType, value string) {}
 
 // GetAppInstsForCloudlets finds all AppInsts associated with the given cloudlets
-func (s *AppInstCache) GetForCloudlet(key *CloudletKey, appInsts map[AppInstKey]struct{}) {
+func (s *AppInstCache) GetForCloudlet(key *CloudletKey, cb func(appInstKey *AppInstKey, modRev int64)) {
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 	for k, v := range s.Objs {
-		if v.Key.ClusterInstKey.CloudletKey == *key {
-			appInsts[k] = struct{}{}
+		if v.Obj.Key.ClusterInstKey.CloudletKey == *key {
+			cb(&k, v.ModRev)
 		}
 	}
 }
 
 // GetForCloudlet finds all ClusterInsts associated with the
 // given cloudlets
-func (s *ClusterInstCache) GetForCloudlet(key *CloudletKey, clusterInsts map[ClusterInstKey]struct{}) {
+func (s *ClusterInstCache) GetForCloudlet(key *CloudletKey, cb func(clusterInstKey *ClusterInstKey, modRev int64)) {
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 	for k, v := range s.Objs {
-		if v.Key.CloudletKey == *key {
-			clusterInsts[k] = struct{}{}
+		if v.Obj.Key.CloudletKey == *key {
+			cb(&k, v.ModRev)
 		}
 	}
 }

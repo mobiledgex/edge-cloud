@@ -1092,14 +1092,19 @@ type DeviceKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type DeviceCacheData struct {
+	Obj    *Device
+	ModRev int64
+}
+
 // DeviceCache caches Device objects in memory in a hash table
 // and keeps them in sync with the database.
 type DeviceCache struct {
-	Objs        map[DeviceKey]*Device
+	Objs        map[DeviceKey]*DeviceCacheData
 	Mux         util.Mutex
 	List        map[DeviceKey]struct{}
 	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *DeviceKey, old *Device)
+	NotifyCb    func(ctx context.Context, obj *DeviceKey, old *Device, modRev int64)
 	UpdatedCb   func(ctx context.Context, old *Device, new *Device)
 	KeyWatchers map[DeviceKey][]*DeviceKeyWatcher
 }
@@ -1111,7 +1116,7 @@ func NewDeviceCache() *DeviceCache {
 }
 
 func InitDeviceCache(cache *DeviceCache) {
-	cache.Objs = make(map[DeviceKey]*Device)
+	cache.Objs = make(map[DeviceKey]*DeviceCacheData)
 	cache.KeyWatchers = make(map[DeviceKey][]*DeviceKeyWatcher)
 }
 
@@ -1120,11 +1125,17 @@ func (c *DeviceCache) GetTypeString() string {
 }
 
 func (c *DeviceCache) Get(key *DeviceKey, valbuf *Device) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *DeviceCache) GetWithRev(key *DeviceKey, valbuf *Device, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -1136,23 +1147,26 @@ func (c *DeviceCache) HasKey(key *DeviceKey) bool {
 	return found
 }
 
-func (c *DeviceCache) GetAllKeys(ctx context.Context, keys map[DeviceKey]context.Context) {
+func (c *DeviceCache) GetAllKeys(ctx context.Context, cb func(key *DeviceKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *DeviceCache) Update(ctx context.Context, in *Device, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Device) (*Device, bool) {
+func (c *DeviceCache) Update(ctx context.Context, in *Device, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *Device) (*Device, bool) {
 		return in, true
 	})
 }
 
-func (c *DeviceCache) UpdateModFunc(ctx context.Context, key *DeviceKey, rev int64, modFunc func(old *Device) (new *Device, changed bool)) {
+func (c *DeviceCache) UpdateModFunc(ctx context.Context, key *DeviceKey, modRev int64, modFunc func(old *Device) (new *Device, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *Device
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
@@ -1165,31 +1179,38 @@ func (c *DeviceCache) UpdateModFunc(ctx context.Context, key *DeviceKey, rev int
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = &DeviceCacheData{
+		Obj:    new,
+		ModRev: modRev,
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Device", "obj", new, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Device", "obj", new, "modRev", modRev)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *DeviceCache) Delete(ctx context.Context, in *Device, rev int64) {
+func (c *DeviceCache) Delete(ctx context.Context, in *Device, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *Device
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Device", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Device", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *DeviceCache) Prune(ctx context.Context, validKeys map[DeviceKey]struct{}) {
-	notify := make(map[DeviceKey]*Device)
+	notify := make(map[DeviceKey]*DeviceCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -1202,7 +1223,7 @@ func (c *DeviceCache) Prune(ctx context.Context, validKeys map[DeviceKey]struct{
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1216,10 +1237,10 @@ func (c *DeviceCache) GetCount() int {
 
 func (c *DeviceCache) Flush(ctx context.Context, notifyId int64) {
 	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Device", "notifyId", notifyId, "FlushAll", c.FlushAll)
-	flushed := make(map[DeviceKey]*Device)
+	flushed := make(map[DeviceKey]*DeviceCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if !c.FlushAll && val.NotifyId != notifyId {
+		if !c.FlushAll && val.Obj.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]
@@ -1230,7 +1251,7 @@ func (c *DeviceCache) Flush(ctx context.Context, notifyId int64) {
 	if len(flushed) > 0 {
 		for key, old := range flushed {
 			if c.NotifyCb != nil {
-				c.NotifyCb(ctx, &key, old)
+				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -1241,13 +1262,13 @@ func (c *DeviceCache) Show(filter *Device, cb func(ret *Device) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show Device", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Device", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Device", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Device", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show Device", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -1261,7 +1282,7 @@ func DeviceGenericNotifyCb(fn func(key *DeviceKey, old *Device)) func(objstore.O
 	}
 }
 
-func (c *DeviceCache) SetNotifyCb(fn func(ctx context.Context, obj *DeviceKey, old *Device)) {
+func (c *DeviceCache) SetNotifyCb(fn func(ctx context.Context, obj *DeviceKey, old *Device, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -1317,14 +1338,21 @@ func (c *DeviceCache) TriggerKeyWatchers(ctx context.Context, key *DeviceKey) {
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *DeviceCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *DeviceCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := Device{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Device data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1332,11 +1360,11 @@ func (c *DeviceCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64
 	c.Mux.Unlock()
 }
 
-func (c *DeviceCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *DeviceCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := Device{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	DeviceKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *DeviceCache) SyncListStart(ctx context.Context) {
@@ -1344,7 +1372,7 @@ func (c *DeviceCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *DeviceCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[DeviceKey]*Device)
+	deleted := make(map[DeviceKey]*DeviceCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1356,7 +1384,7 @@ func (c *DeviceCache) SyncListEnd(ctx context.Context) {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}

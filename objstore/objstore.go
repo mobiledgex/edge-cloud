@@ -13,7 +13,7 @@ import (
 const ObjStoreUpdateVersionAny int64 = 0
 
 // Callback function for List function
-type ListCb func(key, val []byte, rev int64) error
+type ListCb func(key, val []byte, rev, modRev int64) error
 
 type KVStore interface {
 	// Create creates an object with the given string key and value.
@@ -155,6 +155,8 @@ type SyncCbData struct {
 	Value []byte
 	// global revision of the data
 	Rev int64
+	// last modified revision of the data
+	ModRev int64
 	// MoreEvents indicates there are more changes in the revision.
 	// With transactions, multiple changes can be done in the same
 	// revision, but each change is called back separately.
