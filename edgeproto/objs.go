@@ -16,12 +16,22 @@ import (
 	context "golang.org/x/net/context"
 )
 
-//TODO - need to move out Errors into a separate package
-
 var AutoScaleMaxNodes uint32 = 10
 
 var minPort uint32 = 1
 var maxPort uint32 = 65535
+
+const (
+	AppConfigHelmYaml      = "helmCustomizationYaml"
+	AppAccessCustomization = "appAccessCustomization"
+	AppConfigEnvYaml       = "envVarsYaml"
+)
+
+var ValidConfigKinds = map[string]struct{}{
+	AppConfigHelmYaml:      struct{}{},
+	AppAccessCustomization: struct{}{},
+	AppConfigEnvYaml:       struct{}{},
+}
 
 // sort each slice by key
 func (a *AllData) Sort() {
@@ -160,6 +170,15 @@ func (key *AppKey) ValidateKey() error {
 	return nil
 }
 
+func validateCustomizationConfigs(configs []*ConfigFile) error {
+	for _, cfg := range configs {
+		if _, found := ValidConfigKinds[cfg.Kind]; !found {
+			return fmt.Errorf("Invalid Config Kind - %s", cfg.Kind)
+		}
+	}
+	return nil
+}
+
 func (s *App) Validate(fields map[string]struct{}) error {
 	var err error
 	if err = s.GetKey().ValidateKey(); err != nil {
@@ -170,17 +189,20 @@ func (s *App) Validate(fields map[string]struct{}) error {
 	}
 	if _, found := fields[AppFieldAccessPorts]; found {
 		if s.AccessPorts != "" {
-			_, err := ParseAppPorts(s.AccessPorts)
+			_, err = ParseAppPorts(s.AccessPorts)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	if s.AuthPublicKey != "" {
-		_, err := util.ValidatePublicKey(s.AuthPublicKey)
+		_, err = util.ValidatePublicKey(s.AuthPublicKey)
 		if err != nil {
 			return err
 		}
+	}
+	if err = validateCustomizationConfigs(s.Configs); err != nil {
+		return err
 	}
 	return nil
 }
@@ -284,6 +306,9 @@ func (key *AppInstKey) ValidateKey() error {
 
 func (s *AppInst) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if err := validateCustomizationConfigs(s.Configs); err != nil {
 		return err
 	}
 	return nil

@@ -144,7 +144,7 @@ apps:
   annotations: version=1.2.8
   deployment: helm
   configs:
-  - kind: hemlCustomizationYaml
+  - kind: helmCustomizationYaml
     config: |
       nfs:
         path: /share
@@ -169,7 +169,7 @@ apps:
   deployment: helm
   accesstype: AccessTypeLoadBalancer
   configs:
-  - kind: hemlCustomizationYaml
+  - kind: helmCustomizationYaml
     config: |
       prometheus:
         prometheusSpec:

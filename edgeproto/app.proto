@@ -65,7 +65,7 @@ enum AccessType {
 
 // ConfigFile
 message ConfigFile {
-  // kind (type) of config, i.e. envVarsYaml, hemlCustomizationYaml
+  // kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml
   string kind = 1;
   // config file contents or URI reference
   string config = 2;

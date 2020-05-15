@@ -372,7 +372,7 @@ type RegisterClientRequest struct {
 	//
 	// _(hidden)_ Reserved for future use
 	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	// App Developer Name
+	// App Organization Name
 	OrgName string `protobuf:"bytes,2,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
 	// App Name
 	AppName string `protobuf:"bytes,3,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
