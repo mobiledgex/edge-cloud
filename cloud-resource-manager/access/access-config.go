@@ -6,6 +6,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 
@@ -37,9 +38,12 @@ func GetAppAccessConfig(ctx context.Context, configs []*edgeproto.ConfigFile) (*
 	// Walk the Configs in the App and generate the yaml files from the helm customization ones
 	for _, v := range configs {
 		if v.Kind == edgeproto.AppAccessCustomization {
-			cfg := v.Config
+			cfg, err := cloudcommon.GetDeploymentManifest(ctx, nil, v.Config)
+			if err != nil {
+				return nil, err
+			}
 			// Fill in the Deployment Vars passed as a variable through the context
-			cfg, err := crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
+			cfg, err = crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "getAppAccessConfig failed to replace CRM variables",
 					"config file", v.Config, "DeploymentVars", deploymentVars, "error", err)

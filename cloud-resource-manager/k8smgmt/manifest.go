@@ -69,7 +69,11 @@ func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto
 	for _, v := range app.Configs {
 		if v.Kind == edgeproto.AppConfigEnvYaml {
 			var curVars []v1.EnvVar
-			cfg := v.Config
+			// config can either be remote, or local
+			cfg, err := cloudcommon.GetDeploymentManifest(ctx, vaultConfig, v.Config)
+			if err != nil {
+				return "", err
+			}
 			// Fill in the Deployment Vars passed as a variable through the context
 			if varsFound {
 				cfg, err = crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
