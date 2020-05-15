@@ -313,7 +313,7 @@ apps:
   deployment: helm
   delopt: AutoDelete
   configs:
-  - kind: hemlCustomizationYaml
+  - kind: helmCustomizationYaml
     config: |
       prometheus:
         prometheusSpec:

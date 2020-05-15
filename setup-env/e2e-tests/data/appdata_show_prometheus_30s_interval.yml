@@ -322,7 +322,7 @@ apps:
   annotations: version=7.1.1
   deployment: helm
   configs:
-  - kind: hemlCustomizationYaml
+  - kind: helmCustomizationYaml
     config: |
       prometheus:
         prometheusSpec:
@@ -376,7 +376,7 @@ apps:
   annotations: version=1.2.8
   deployment: helm
   configs:
-  - kind: hemlCustomizationYaml
+  - kind: helmCustomizationYaml
     config: |
       nfs:
         path: /share
