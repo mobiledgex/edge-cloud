@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -216,6 +217,12 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if in.PackageVersion != "" {
 			return errors.New("Package version is not supported for local deployment")
 		}
+		if in.DeploymentType == edgeproto.DeploymentType_DEPLOYMENT_TYPE_K8S {
+			return errors.New("Deployment type k8s is not supported for local deployment")
+		}
+		if in.InfraAccessType == edgeproto.InfraAccessType_ACCESS_TYPE_PRIVATE {
+			return errors.New("Infra access type private is not supported for local deployment")
+		}
 	}
 
 	if in.VmImageVersion != "" {
@@ -276,7 +283,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return err
 		}
 
-		if ignoreCRMState(cctx) {
+		if ignoreCRMState(cctx) || in.InfraAccessType == edgeproto.InfraAccessType_ACCESS_TYPE_PRIVATE {
 			in.State = edgeproto.TrackedState_READY
 		} else {
 			in.State = edgeproto.TrackedState_CREATING
@@ -287,6 +294,13 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	})
 	if err != nil {
 		return err
+	}
+
+	if in.InfraAccessType == edgeproto.InfraAccessType_ACCESS_TYPE_PRIVATE {
+		cb.Send(&edgeproto.Result{
+			Message: "Cloudlet configured successfully. Please run `ShowCloudletManifest` to bringup Platform VM(s) for cloudlet services",
+		})
+		return nil
 	}
 
 	if ignoreCRMState(cctx) {
@@ -1122,10 +1136,20 @@ func RecordCloudletEvent(ctx context.Context, cloudletKey *edgeproto.CloudletKey
 	services.events.AddMetric(&metric)
 }
 
-func (s *CloudletApi) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+func (s *CloudletApi) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error) {
 	cloudlet := &edgeproto.Cloudlet{}
 	if !cloudletApi.cache.Get(&in.Key, cloudlet) {
 		return nil, in.Key.NotFoundError()
+	}
+
+	pfFlavor := edgeproto.Flavor{}
+	if in.Flavor.Name == "" || in.Flavor.Name == DefaultPlatformFlavor.Key.Name {
+		in.Flavor = DefaultPlatformFlavor.Key
+		pfFlavor = DefaultPlatformFlavor
+	} else {
+		if !flavorApi.cache.Get(&in.Flavor, &pfFlavor) {
+			return nil, in.Flavor.NotFoundError()
+		}
 	}
 
 	pfConfig, err := getPlatformConfig(ctx, cloudlet)
@@ -1138,10 +1162,14 @@ func (s *CloudletApi) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cl
 		return nil, err
 	}
 
-	manifest, err := cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig)
+	manifest, err := cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig, &pfFlavor)
+	if err != nil {
+		return nil, err
+	}
+	err = ioutil.WriteFile("/tmp/test_stack.yml", []byte(manifest.Manifest), 0644)
 	if err != nil {
 		return nil, err
 	}
 
-	return &edgeproto.Result{Message: string(manifest)}, nil
+	return manifest, nil
 }

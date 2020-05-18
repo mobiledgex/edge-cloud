@@ -60,6 +60,7 @@ It has these top-level messages:
 	CloudletResMap
 	Cloudlet
 	FlavorMatch
+	CloudletManifest
 	FlavorInfo
 	OSAZone
 	OSImage

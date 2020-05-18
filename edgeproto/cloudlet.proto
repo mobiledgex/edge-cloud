@@ -197,14 +197,10 @@ message Cloudlet {
   InfraAccessType infra_access_type = 26;
   // Type of deployment to bring up CRM services
   DeploymentType deployment_type = 27;
-  // Number of k8s masters (Only valid for k8s deployment)
-  uint32 num_masters = 28;
-  // Number of k8s nodes (Only valid for k8s deployment)
-  uint32 num_nodes = 29;
   // External network name on infra
-  string infra_external_network = 30;
+  string infra_external_network = 28;
   // Flavor name on infra
-  string infra_flavor_name = 31;
+  string infra_flavor_name = 29;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -224,6 +220,13 @@ message FlavorMatch {
   string flavor_name = 3;
   string availability_zone = 4;
  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,flavor=FlavorName";
+}
+
+message CloudletManifest {
+  // Image path of cloudlet VM base image
+  string image_path = 1;
+  // Manifest to bringup cloudlet VM and services
+  string manifest = 2;
 }
 
 service CloudletApi {
@@ -272,7 +275,7 @@ service CloudletApi {
     option (protogen.mc2_custom_authz) = true;
   }
   // Get Cloudlet Manifest. Shows deployment manifest required to setup cloudlet
-  rpc ShowCloudletManifest(Cloudlet) returns (Result) {
+  rpc ShowCloudletManifest(Cloudlet) returns (CloudletManifest) {
     option (google.api.http) = {
       post: "/show/cloudlet/manifest"
       body: "*"

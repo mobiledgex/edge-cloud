@@ -408,7 +408,7 @@ var ShowCloudletManifestCmd = &cli.Command{
 	SpecialArgs:  &CloudletSpecialArgs,
 	Comments:     CloudletComments,
 	ReqData:      &edgeproto.Cloudlet{},
-	ReplyData:    &edgeproto.Result{},
+	ReplyData:    &edgeproto.CloudletManifest{},
 	Run:          runShowCloudletManifest,
 }
 
@@ -1043,8 +1043,6 @@ var CloudletOptionalArgs = []string{
 	"packageversion",
 	"infraaccesstype",
 	"deploymenttype",
-	"nummasters",
-	"numnodes",
 	"infraexternalnetwork",
 	"infraflavorname",
 }
@@ -1104,8 +1102,6 @@ var CloudletComments = map[string]string{
 	"packageversion":                      "MobiledgeX OS package version on baseimage where CRM services reside",
 	"infraaccesstype":                     "Infra Access Type is the type of access available to Infra API Endpoint, one of AccessTypePublic, AccessTypePrivate",
 	"deploymenttype":                      "Type of deployment to bring up CRM services, one of DeploymentTypeDocker, DeploymentTypeK8S",
-	"nummasters":                          "Number of k8s masters (Only valid for k8s deployment)",
-	"numnodes":                            "Number of k8s nodes (Only valid for k8s deployment)",
 	"infraexternalnetwork":                "External network name on infra",
 	"infraflavorname":                     "Flavor name on infra",
 }
@@ -1134,6 +1130,17 @@ var FlavorMatchComments = map[string]string{
 	"cloudlet":     "Name of the cloudlet",
 }
 var FlavorMatchSpecialArgs = map[string]string{}
+var CloudletManifestRequiredArgs = []string{}
+var CloudletManifestOptionalArgs = []string{
+	"imagepath",
+	"manifest",
+}
+var CloudletManifestAliasArgs = []string{}
+var CloudletManifestComments = map[string]string{
+	"imagepath": "Image path of cloudlet VM base image",
+	"manifest":  "Manifest to bringup cloudlet VM and services",
+}
+var CloudletManifestSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",
@@ -1281,8 +1288,6 @@ var CreateCloudletOptionalArgs = []string{
 	"packageversion",
 	"infraaccesstype",
 	"deploymenttype",
-	"nummasters",
-	"numnodes",
 	"infraexternalnetwork",
 	"infraflavorname",
 }

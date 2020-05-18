@@ -619,9 +619,9 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
 				r.logErr(fmt.Sprintf("CloudletApi[%d]", ii), err)
 			} else {
-				outp, ok := dataOut.(*[]edgeproto.Result)
+				outp, ok := dataOut.(*[]edgeproto.CloudletManifest)
 				if !ok {
-					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[]edgeproto.CloudletManifest, but was %T", dataOut))
 				}
 				*outp = append(*outp, *out)
 			}
@@ -731,11 +731,11 @@ func (s *DummyServer) ShowCloudlet(in *edgeproto.Cloudlet, server edgeproto.Clou
 	return err
 }
 
-func (s *DummyServer) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+func (s *DummyServer) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error) {
 	if s.CudNoop {
-		return &edgeproto.Result{}, nil
+		return &edgeproto.CloudletManifest{}, nil
 	}
-	return &edgeproto.Result{}, nil
+	return &edgeproto.CloudletManifest{}, nil
 }
 
 func (r *Run) CloudletInfoApi(data *[]edgeproto.CloudletInfo, dataMap interface{}, dataOut interface{}) {
@@ -961,13 +961,13 @@ func (s *CliClient) ShowCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([
 	return output, err
 }
 
-func (s *ApiClient) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+func (s *ApiClient) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
 	return api.ShowCloudletManifest(ctx, in)
 }
 
-func (s *CliClient) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
-	out := edgeproto.Result{}
+func (s *CliClient) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error) {
+	out := edgeproto.CloudletManifest{}
 	args := append(s.BaseArgs, "controller", "ShowCloudletManifest")
 	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
 	return &out, err
@@ -1014,7 +1014,7 @@ type CloudletApiClient interface {
 	DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
 	UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
 	ShowCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Cloudlet, error)
-	ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error)
+	ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error)
 	AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error)

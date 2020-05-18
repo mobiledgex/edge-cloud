@@ -60,6 +60,7 @@
 		CloudletResMap
 		Cloudlet
 		FlavorMatch
+		CloudletManifest
 		FlavorInfo
 		OSAZone
 		OSImage
