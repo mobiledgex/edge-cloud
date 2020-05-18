@@ -189,14 +189,12 @@ func main() {
 				myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
 				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 			} else {
-				// see what the current state set by CRM is
 				if myCloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC {
 					log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 
 					controllerData.ControllerSyncInProgress = true
 					controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
-					// resync after controller data is updated with clusters, etc
-
+					// Wait for CRM to receive cluster and appinst data from notify
 					select {
 					case <-controllerData.ControllerSyncDone:
 						if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, &cloudlet) {
