@@ -54,6 +54,7 @@ controllers:
   notifyparentaddrs: "127.0.0.1:53001"
   usevaultcas: true
   edgeturnaddr: "127.0.0.1:6080"
+  appdnsroot: localtest.net
 
 - name: ctrl2
   etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
@@ -70,6 +71,7 @@ controllers:
   versiontag: "2019-10-24"
   notifyparentaddrs: "127.0.0.1:53001"
   edgeturnaddr: "127.0.0.1:6080"
+  appdnsroot: localtest.net
 
 clustersvcs:
 - name: cluster-svc1

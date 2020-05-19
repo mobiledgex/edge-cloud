@@ -20,6 +20,7 @@ type PlatformConfig struct {
 	PackageVersion      string
 	EnvVars             map[string]string
 	NodeMgr             *node.NodeMgr
+	AppDNSRoot          string
 }
 
 // Platform abstracts the underlying cloudlet platform.
