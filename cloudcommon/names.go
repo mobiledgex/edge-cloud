@@ -13,8 +13,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-//var AppDNSRoot = "mobiledgex.net"
-
 // special operator types
 var OperatorGCP = "gcp"
 var OperatorAzure = "azure"
