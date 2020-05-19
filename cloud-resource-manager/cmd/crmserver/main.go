@@ -50,7 +50,7 @@ var nodeMgr node.NodeMgr
 
 var sigChan chan os.Signal
 var mainStarted chan struct{}
-var controllerData *pf.ControllerData
+var controllerData *crmutil.ControllerData
 var notifyClient *notify.Client
 var platform pf.Platform
 
@@ -108,7 +108,7 @@ func main() {
 		log.FatalLog(err.Error())
 	}
 
-	controllerData = pf.NewControllerData(platform, &nodeMgr)
+	controllerData = crmutil.NewControllerData(platform, &nodeMgr)
 
 	updateCloudletStatus := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
@@ -191,9 +191,15 @@ func main() {
 			} else {
 				if myCloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC {
 					log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-
+					caches := pf.Caches{
+						FlavorCache:        &controllerData.FlavorCache,
+						PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
+						ClusterInstCache:   &controllerData.ClusterInstCache,
+						AppInstCache:       &controllerData.AppInstCache,
+					}
 					controllerData.ControllerSyncInProgress = true
 					controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+
 					// Wait for CRM to receive cluster and appinst data from notify
 					select {
 					case <-controllerData.ControllerSyncDone:
@@ -204,7 +210,9 @@ func main() {
 						log.FatalLog("Timed out waiting for sync data from controller")
 					}
 					log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
-					err := platform.SyncControllerData(ctx, controllerData, myCloudletInfo.State)
+					myCloudletInfo.ControllerCacheReceived = true
+					controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+					err := platform.SyncControllerCache(ctx, &caches, myCloudletInfo.State)
 					if err != nil {
 						log.FatalLog("Platform sync fail", "err", err)
 					}
@@ -276,7 +284,13 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		EnvVars:             cloudlet.EnvVar,
 		NodeMgr:             &nodeMgr,
 	}
+	caches := pf.Caches{
+		FlavorCache:        &controllerData.FlavorCache,
+		PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
+		ClusterInstCache:   &controllerData.ClusterInstCache,
+		AppInstCache:       &controllerData.AppInstCache,
+	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", platform.GetType())
-	err := platform.Init(ctx, &pc, controllerData, updateCallback)
+	err := platform.Init(ctx, &pc, &caches, updateCallback)
 	return err
 }

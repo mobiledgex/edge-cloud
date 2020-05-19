@@ -1,9 +1,10 @@
-package platform
+package crmutil
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -14,7 +15,7 @@ import (
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
-	platform                 Platform
+	platform                 platform.Platform
 	AppCache                 edgeproto.AppCache
 	AppInstCache             edgeproto.AppInstCache
 	CloudletCache            edgeproto.CloudletCache
@@ -46,7 +47,7 @@ func (cd *ControllerData) RecvAllStart() {
 }
 
 // NewControllerData creates a new instance to track data from the controller
-func NewControllerData(pf Platform, nodeMgr *node.NodeMgr) *ControllerData {
+func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerData {
 	cd := &ControllerData{}
 	cd.platform = pf
 	edgeproto.InitAppCache(&cd.AppCache)

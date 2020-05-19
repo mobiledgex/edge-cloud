@@ -108,7 +108,7 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 				s.sendrecv.cloudletSend.Update(ctx, &buf.Key, nil)
 			}
 		}
-		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY || buf.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC {
+		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY || buf.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC && !buf.ControllerCacheReceived {
 			log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo recv hook read, send all filtered data", "key", buf.Key)
 			// allow all filtered objects to be sent
 			s.sendrecv.cloudletReady = true
@@ -134,7 +134,6 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 				clusterInsts := make(map[edgeproto.ClusterInstKey]struct{})
 				s.sendrecv.clusterInstSend.handler.GetForCloudlet(&buf.Key, clusterInsts)
 				for k, _ := range clusterInsts {
-					log.SpanLog(ctx, log.DebugLevelNotify, "ZZZZ SEND CLUSTERINST", "key", k)
 					s.sendrecv.clusterInstSend.Update(ctx, &k, nil)
 				}
 			}
@@ -146,6 +145,7 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 				}
 			}
 			s.sendrecv.triggerSendAllEnd()
+
 		}
 	}
 }

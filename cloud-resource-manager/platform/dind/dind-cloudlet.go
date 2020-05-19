@@ -3,7 +3,7 @@ package dind
 import (
 	"context"
 
-	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -55,7 +55,7 @@ func (s *Platform) DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgep
 	return nil
 }
 
-func (s *Platform) SyncControllerData(ctx context.Context, controllerData *pf.ControllerData, cloudletState edgeproto.CloudletState) error {
+func (s *Platform) SyncControllerCache(ctx context.Context, caches *platform.Caches, cloudletState edgeproto.CloudletState) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "SyncControllerData", "state", cloudletState)
 	return nil
 }

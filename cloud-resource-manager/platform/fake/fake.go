@@ -24,7 +24,7 @@ func (s *Platform) GetType() string {
 	return "fake"
 }
 
-func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, controllerData *platform.ControllerData, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
 	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
@@ -190,7 +190,7 @@ func (s *Platform) runDebug(ctx context.Context, req *edgeproto.DebugRequest) st
 	return "ran some debug"
 }
 
-func (s *Platform) SyncControllerData(ctx context.Context, controllerData *platform.ControllerData, cloudletState edgeproto.CloudletState) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "SyncControllerData", "state", cloudletState)
+func (s *Platform) SyncControllerCache(ctx context.Context, caches *platform.Caches, cloudletState edgeproto.CloudletState) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "SyncControllerCache", "state", cloudletState)
 	return nil
 }
