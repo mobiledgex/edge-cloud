@@ -15,23 +15,35 @@ import (
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
-	platform             platform.Platform
-	AppCache             edgeproto.AppCache
-	AppInstCache         edgeproto.AppInstCache
-	CloudletCache        edgeproto.CloudletCache
-	FlavorCache          edgeproto.FlavorCache
-	ClusterInstCache     edgeproto.ClusterInstCache
-	AppInstInfoCache     edgeproto.AppInstInfoCache
-	CloudletInfoCache    edgeproto.CloudletInfoCache
-	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
-	PrivacyPolicyCache   edgeproto.PrivacyPolicyCache
-	AlertCache           edgeproto.AlertCache
-	SettingsCache        edgeproto.SettingsCache
-	ExecReqHandler       *ExecReqHandler
-	ExecReqSend          *notify.ExecRequestSend
-	ControllerWait       chan bool
-	settings             edgeproto.Settings
-	NodeMgr              *node.NodeMgr
+	platform                 platform.Platform
+	AppCache                 edgeproto.AppCache
+	AppInstCache             edgeproto.AppInstCache
+	CloudletCache            edgeproto.CloudletCache
+	FlavorCache              edgeproto.FlavorCache
+	ClusterInstCache         edgeproto.ClusterInstCache
+	AppInstInfoCache         edgeproto.AppInstInfoCache
+	CloudletInfoCache        edgeproto.CloudletInfoCache
+	ClusterInstInfoCache     edgeproto.ClusterInstInfoCache
+	PrivacyPolicyCache       edgeproto.PrivacyPolicyCache
+	AlertCache               edgeproto.AlertCache
+	SettingsCache            edgeproto.SettingsCache
+	ExecReqHandler           *ExecReqHandler
+	ExecReqSend              *notify.ExecRequestSend
+	ControllerWait           chan bool
+	ControllerSyncInProgress bool
+	ControllerSyncDone       chan bool
+	settings                 edgeproto.Settings
+	NodeMgr                  *node.NodeMgr
+}
+
+func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
+	if cd.ControllerSyncInProgress {
+		cd.ControllerSyncDone <- true
+	}
+	cd.ControllerSyncInProgress = false
+}
+
+func (cd *ControllerData) RecvAllStart() {
 }
 
 // NewControllerData creates a new instance to track data from the controller
@@ -58,6 +70,8 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 	cd.ControllerWait = make(chan bool, 1)
+	cd.ControllerSyncDone = make(chan bool, 1)
+
 	cd.NodeMgr = nodeMgr
 	return cd
 }
