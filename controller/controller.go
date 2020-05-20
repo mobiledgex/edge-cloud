@@ -310,6 +310,7 @@ func startServices() error {
 	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
 	edgeproto.RegisterCloudletInfoApiServer(server, &cloudletInfoApi)
 	edgeproto.RegisterCloudletRefsApiServer(server, &cloudletRefsApi)
+	edgeproto.RegisterAppInstRefsApiServer(server, &appInstRefsApi)
 	edgeproto.RegisterControllerApiServer(server, &controllerApi)
 	edgeproto.RegisterNodeApiServer(server, &nodeApi)
 	edgeproto.RegisterExecApiServer(server, &execApi)
@@ -466,6 +467,7 @@ func InitApis(sync *Sync) {
 	InitAppInstInfoApi(sync)
 	InitClusterInstInfoApi(sync)
 	InitCloudletRefsApi(sync)
+	InitAppInstRefsApi(sync)
 	InitControllerApi(sync)
 	InitCloudletPoolApi(sync)
 	InitCloudletPoolMemberApi(sync)
@@ -494,6 +496,7 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
+	notify.ServerMgrOne.RegisterSendAppInstRefsCache(&appInstRefsApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
 
