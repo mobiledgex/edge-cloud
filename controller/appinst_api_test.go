@@ -116,8 +116,8 @@ func TestAppInstApi(t *testing.T) {
 	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "delete overrides create error")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
+	// create copy of refs without the deleted AppInst
 	appInstRefsDeleted := append([]edgeproto.AppInstRefs{}, testutil.AppInstRefsData...)
-	// copy map without obj
 	appInstRefsDeleted[0].Insts = make(map[string]uint32)
 	for k, v := range testutil.AppInstRefsData[0].Insts {
 		if k == obj.Key.GetKeyString() {
@@ -206,6 +206,7 @@ func TestAppInstApi(t *testing.T) {
 	}
 	testAppFlavorRequest(t, ctx, commonApi, responder)
 
+	// delete all AppInsts and check that refs are empty
 	for _, obj := range testutil.AppInstData {
 		if testutil.IsAutoClusterAutoDeleteApp(&obj.Key) {
 			continue
