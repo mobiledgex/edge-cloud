@@ -39,7 +39,10 @@ func (s *DebugApi) RunDebug(req *edgeproto.DebugRequest, cb edgeproto.DebugApi_R
 		return err
 	}
 	client := edgeproto.NewDebugApiClient(conn)
-	ctx, cancel := context.WithTimeout(cb.Context(), node.DebugTimeout)
+	if req.Timeout == 0 {
+		req.Timeout = edgeproto.Duration(node.DefaultDebugTimeout)
+	}
+	ctx, cancel := context.WithTimeout(cb.Context(), req.Timeout.TimeDuration())
 	defer cancel()
 
 	stream, err := client.RunDebug(ctx, req)
