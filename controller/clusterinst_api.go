@@ -139,7 +139,7 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 
 	platName := edgeproto.PlatformType_name[int32(platformType)]
 
-	// Operators such as GCP and Azure must be dedicated as they allocate a new IP per service
+	// Operators such as GCP, AWS and Azure must be dedicated as they allocate a new IP per service
 	if isIPAllocatedPerService(clusterInst.Key.CloudletKey.Organization) {
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for operator: " + clusterInst.Key.CloudletKey.Organization})
@@ -312,15 +312,15 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				return fmt.Errorf("Privacy Policy not supported on %s", platName)
 			}
 		}
-		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
+		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AWS{
 			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
-				return errors.New("Only kubernetes clusters can be deployed in Azure or GCP")
+				return errors.New("Only kubernetes clusters can be deployed in Azure or GCP or AWS")
 			}
 			if in.NumNodes == 0 {
-				return errors.New("NumNodes cannot be 0 for Azure or GCP")
+				return errors.New("NumNodes cannot be 0 for Azure or GCP or AWS")
 			}
 			if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
-				return fmt.Errorf("Cluster name limited to %d characters for GCP and Azure", cloudcommon.MaxClusterNameLength)
+				return fmt.Errorf("Cluster name limited to %d characters for GCP, AWS and Azure", cloudcommon.MaxClusterNameLength)
 			}
 		}
 		if in.AutoScalePolicy != "" {
