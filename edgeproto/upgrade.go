@@ -84,7 +84,7 @@ func TestUpgradeExample(ctx context.Context, objStore objstore.KVStore) error {
 	log.DebugLog(log.DebugLevelUpgrade, "TestUpgradeExample - reverse keys and values")
 	// Define a prefix for a walk
 	keystr := fmt.Sprintf("%s/", testDataKeyPrefix)
-	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		objStore.Delete(ctx, string(key))
 		objStore.Put(ctx, string(val), string(key))
 		return nil

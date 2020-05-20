@@ -19,8 +19,6 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
-const AppConfigEnvYaml = "envVarsYaml"
-
 const MexAppLabel = "mex-app"
 
 func addEnvVars(ctx context.Context, template *v1.PodTemplateSpec, envVars []v1.EnvVar) {
@@ -69,9 +67,13 @@ func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto
 
 	// Walk the Configs in the App and get all the environment variables together
 	for _, v := range app.Configs {
-		if v.Kind == AppConfigEnvYaml {
+		if v.Kind == edgeproto.AppConfigEnvYaml {
 			var curVars []v1.EnvVar
-			cfg := v.Config
+			// config can either be remote, or local
+			cfg, err := cloudcommon.GetDeploymentManifest(ctx, vaultConfig, v.Config)
+			if err != nil {
+				return "", err
+			}
 			// Fill in the Deployment Vars passed as a variable through the context
 			if varsFound {
 				cfg, err = crmutil.ReplaceDeploymentVars(cfg, deploymentVars)

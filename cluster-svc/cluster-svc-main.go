@@ -13,7 +13,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -195,8 +194,8 @@ func autoScalePolicyCb(ctx context.Context, old *edgeproto.AutoScalePolicy, new 
 	insts := []edgeproto.ClusterInst{}
 	ClusterInstCache.Mux.Lock()
 	for k, v := range ClusterInstCache.Objs {
-		if new.Key.Organization == k.Organization && new.Key.Name == v.AutoScalePolicy {
-			insts = append(insts, *v)
+		if new.Key.Organization == k.Organization && new.Key.Name == v.Obj.AutoScalePolicy {
+			insts = append(insts, *v.Obj)
 		}
 	}
 	ClusterInstCache.Mux.Unlock()
@@ -396,7 +395,7 @@ func fillAppConfigs(app *edgeproto.App, interval time.Duration) error {
 		}
 		// Now add this yaml to the prometheus AppYamls
 		config := edgeproto.ConfigFile{
-			Kind:   k8smgmt.AppConfigHelmYaml,
+			Kind:   edgeproto.AppConfigHelmYaml,
 			Config: buf.String(),
 		}
 		app.Configs = []*edgeproto.ConfigFile{&config}
@@ -409,7 +408,7 @@ func fillAppConfigs(app *edgeproto.App, interval time.Duration) error {
 			return err
 		}
 		config := edgeproto.ConfigFile{
-			Kind:   k8smgmt.AppConfigHelmYaml,
+			Kind:   edgeproto.AppConfigHelmYaml,
 			Config: buf.String(),
 		}
 		app.Configs = []*edgeproto.ConfigFile{&config}

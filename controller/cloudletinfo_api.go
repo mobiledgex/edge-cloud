@@ -123,7 +123,8 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 	// mark all cloudlets from the client as offline
 	matches := make([]edgeproto.CloudletKey, 0)
 	s.cache.Mux.Lock()
-	for _, val := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		val := data.Obj
 		if val.NotifyId != notifyId || val.Controller != ControllerId {
 			continue
 		}
@@ -157,7 +158,8 @@ func (s *CloudletInfoApi) Prune(ctx context.Context, keys map[edgeproto.Cloudlet
 func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) edgeproto.CloudletState {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, obj := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		obj := data.Obj
 		if key.Matches(&obj.Key) {
 			return obj.State
 		}

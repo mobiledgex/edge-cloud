@@ -3394,14 +3394,19 @@ type CloudletKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type CloudletCacheData struct {
+	Obj    *Cloudlet
+	ModRev int64
+}
+
 // CloudletCache caches Cloudlet objects in memory in a hash table
 // and keeps them in sync with the database.
 type CloudletCache struct {
-	Objs        map[CloudletKey]*Cloudlet
+	Objs        map[CloudletKey]*CloudletCacheData
 	Mux         util.Mutex
 	List        map[CloudletKey]struct{}
 	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *Cloudlet)
+	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *Cloudlet, modRev int64)
 	UpdatedCb   func(ctx context.Context, old *Cloudlet, new *Cloudlet)
 	KeyWatchers map[CloudletKey][]*CloudletKeyWatcher
 }
@@ -3413,7 +3418,7 @@ func NewCloudletCache() *CloudletCache {
 }
 
 func InitCloudletCache(cache *CloudletCache) {
-	cache.Objs = make(map[CloudletKey]*Cloudlet)
+	cache.Objs = make(map[CloudletKey]*CloudletCacheData)
 	cache.KeyWatchers = make(map[CloudletKey][]*CloudletKeyWatcher)
 }
 
@@ -3422,11 +3427,17 @@ func (c *CloudletCache) GetTypeString() string {
 }
 
 func (c *CloudletCache) Get(key *CloudletKey, valbuf *Cloudlet) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *CloudletCache) GetWithRev(key *CloudletKey, valbuf *Cloudlet, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -3438,23 +3449,26 @@ func (c *CloudletCache) HasKey(key *CloudletKey) bool {
 	return found
 }
 
-func (c *CloudletCache) GetAllKeys(ctx context.Context, keys map[CloudletKey]context.Context) {
+func (c *CloudletCache) GetAllKeys(ctx context.Context, cb func(key *CloudletKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *CloudletCache) Update(ctx context.Context, in *Cloudlet, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Cloudlet) (*Cloudlet, bool) {
+func (c *CloudletCache) Update(ctx context.Context, in *Cloudlet, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *Cloudlet) (*Cloudlet, bool) {
 		return in, true
 	})
 }
 
-func (c *CloudletCache) UpdateModFunc(ctx context.Context, key *CloudletKey, rev int64, modFunc func(old *Cloudlet) (new *Cloudlet, changed bool)) {
+func (c *CloudletCache) UpdateModFunc(ctx context.Context, key *CloudletKey, modRev int64, modFunc func(old *Cloudlet) (new *Cloudlet, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *Cloudlet
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
@@ -3467,31 +3481,38 @@ func (c *CloudletCache) UpdateModFunc(ctx context.Context, key *CloudletKey, rev
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = &CloudletCacheData{
+		Obj:    new,
+		ModRev: modRev,
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cloudlet", "obj", new, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cloudlet", "obj", new, "modRev", modRev)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *CloudletCache) Delete(ctx context.Context, in *Cloudlet, rev int64) {
+func (c *CloudletCache) Delete(ctx context.Context, in *Cloudlet, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *Cloudlet
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Cloudlet", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Cloudlet", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *CloudletCache) Prune(ctx context.Context, validKeys map[CloudletKey]struct{}) {
-	notify := make(map[CloudletKey]*Cloudlet)
+	notify := make(map[CloudletKey]*CloudletCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -3504,7 +3525,7 @@ func (c *CloudletCache) Prune(ctx context.Context, validKeys map[CloudletKey]str
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -3523,13 +3544,13 @@ func (c *CloudletCache) Show(filter *Cloudlet, cb func(ret *Cloudlet) error) err
 	log.DebugLog(log.DebugLevelApi, "Show Cloudlet", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Cloudlet", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Cloudlet", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Cloudlet", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show Cloudlet", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -3543,7 +3564,7 @@ func CloudletGenericNotifyCb(fn func(key *CloudletKey, old *Cloudlet)) func(objs
 	}
 }
 
-func (c *CloudletCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *Cloudlet)) {
+func (c *CloudletCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *Cloudlet, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -3599,14 +3620,21 @@ func (c *CloudletCache) TriggerKeyWatchers(ctx context.Context, key *CloudletKey
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *CloudletCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *CloudletCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := Cloudlet{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Cloudlet data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -3614,11 +3642,11 @@ func (c *CloudletCache) SyncUpdate(ctx context.Context, key, val []byte, rev int
 	c.Mux.Unlock()
 }
 
-func (c *CloudletCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *CloudletCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := Cloudlet{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	CloudletKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *CloudletCache) SyncListStart(ctx context.Context) {
@@ -3626,7 +3654,7 @@ func (c *CloudletCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *CloudletCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[CloudletKey]*Cloudlet)
+	deleted := make(map[CloudletKey]*CloudletCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -3638,7 +3666,7 @@ func (c *CloudletCache) SyncListEnd(ctx context.Context) {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}
@@ -4617,14 +4645,19 @@ type CloudletInfoKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type CloudletInfoCacheData struct {
+	Obj    *CloudletInfo
+	ModRev int64
+}
+
 // CloudletInfoCache caches CloudletInfo objects in memory in a hash table
 // and keeps them in sync with the database.
 type CloudletInfoCache struct {
-	Objs        map[CloudletKey]*CloudletInfo
+	Objs        map[CloudletKey]*CloudletInfoCacheData
 	Mux         util.Mutex
 	List        map[CloudletKey]struct{}
 	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *CloudletInfo)
+	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *CloudletInfo, modRev int64)
 	UpdatedCb   func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)
 	KeyWatchers map[CloudletKey][]*CloudletInfoKeyWatcher
 }
@@ -4636,7 +4669,7 @@ func NewCloudletInfoCache() *CloudletInfoCache {
 }
 
 func InitCloudletInfoCache(cache *CloudletInfoCache) {
-	cache.Objs = make(map[CloudletKey]*CloudletInfo)
+	cache.Objs = make(map[CloudletKey]*CloudletInfoCacheData)
 	cache.KeyWatchers = make(map[CloudletKey][]*CloudletInfoKeyWatcher)
 }
 
@@ -4645,11 +4678,17 @@ func (c *CloudletInfoCache) GetTypeString() string {
 }
 
 func (c *CloudletInfoCache) Get(key *CloudletKey, valbuf *CloudletInfo) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *CloudletInfoCache) GetWithRev(key *CloudletKey, valbuf *CloudletInfo, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -4661,23 +4700,26 @@ func (c *CloudletInfoCache) HasKey(key *CloudletKey) bool {
 	return found
 }
 
-func (c *CloudletInfoCache) GetAllKeys(ctx context.Context, keys map[CloudletKey]context.Context) {
+func (c *CloudletInfoCache) GetAllKeys(ctx context.Context, cb func(key *CloudletKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *CloudletInfoCache) Update(ctx context.Context, in *CloudletInfo, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *CloudletInfo) (*CloudletInfo, bool) {
+func (c *CloudletInfoCache) Update(ctx context.Context, in *CloudletInfo, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *CloudletInfo) (*CloudletInfo, bool) {
 		return in, true
 	})
 }
 
-func (c *CloudletInfoCache) UpdateModFunc(ctx context.Context, key *CloudletKey, rev int64, modFunc func(old *CloudletInfo) (new *CloudletInfo, changed bool)) {
+func (c *CloudletInfoCache) UpdateModFunc(ctx context.Context, key *CloudletKey, modRev int64, modFunc func(old *CloudletInfo) (new *CloudletInfo, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *CloudletInfo
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
@@ -4690,31 +4732,38 @@ func (c *CloudletInfoCache) UpdateModFunc(ctx context.Context, key *CloudletKey,
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = &CloudletInfoCacheData{
+		Obj:    new,
+		ModRev: modRev,
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletInfo", "obj", new, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletInfo", "obj", new, "modRev", modRev)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *CloudletInfoCache) Delete(ctx context.Context, in *CloudletInfo, rev int64) {
+func (c *CloudletInfoCache) Delete(ctx context.Context, in *CloudletInfo, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *CloudletInfo
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete CloudletInfo", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete CloudletInfo", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *CloudletInfoCache) Prune(ctx context.Context, validKeys map[CloudletKey]struct{}) {
-	notify := make(map[CloudletKey]*CloudletInfo)
+	notify := make(map[CloudletKey]*CloudletInfoCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -4727,7 +4776,7 @@ func (c *CloudletInfoCache) Prune(ctx context.Context, validKeys map[CloudletKey
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -4741,10 +4790,10 @@ func (c *CloudletInfoCache) GetCount() int {
 
 func (c *CloudletInfoCache) Flush(ctx context.Context, notifyId int64) {
 	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush CloudletInfo", "notifyId", notifyId, "FlushAll", c.FlushAll)
-	flushed := make(map[CloudletKey]*CloudletInfo)
+	flushed := make(map[CloudletKey]*CloudletInfoCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if !c.FlushAll && val.NotifyId != notifyId {
+		if !c.FlushAll && val.Obj.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]
@@ -4755,7 +4804,7 @@ func (c *CloudletInfoCache) Flush(ctx context.Context, notifyId int64) {
 	if len(flushed) > 0 {
 		for key, old := range flushed {
 			if c.NotifyCb != nil {
-				c.NotifyCb(ctx, &key, old)
+				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -4766,13 +4815,13 @@ func (c *CloudletInfoCache) Show(filter *CloudletInfo, cb func(ret *CloudletInfo
 	log.DebugLog(log.DebugLevelApi, "Show CloudletInfo", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare CloudletInfo", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare CloudletInfo", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show CloudletInfo", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show CloudletInfo", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -4786,7 +4835,7 @@ func CloudletInfoGenericNotifyCb(fn func(key *CloudletKey, old *CloudletInfo)) f
 	}
 }
 
-func (c *CloudletInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *CloudletInfo)) {
+func (c *CloudletInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *CloudletInfo, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -4842,14 +4891,21 @@ func (c *CloudletInfoCache) TriggerKeyWatchers(ctx context.Context, key *Cloudle
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *CloudletInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *CloudletInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := CloudletInfo{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse CloudletInfo data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -4857,11 +4913,11 @@ func (c *CloudletInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev
 	c.Mux.Unlock()
 }
 
-func (c *CloudletInfoCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *CloudletInfoCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := CloudletInfo{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	CloudletKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *CloudletInfoCache) SyncListStart(ctx context.Context) {
@@ -4869,7 +4925,7 @@ func (c *CloudletInfoCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *CloudletInfoCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[CloudletKey]*CloudletInfo)
+	deleted := make(map[CloudletKey]*CloudletInfoCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -4881,7 +4937,7 @@ func (c *CloudletInfoCache) SyncListEnd(ctx context.Context) {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}

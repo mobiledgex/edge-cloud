@@ -171,7 +171,8 @@ func TestAppInstApi(t *testing.T) {
 	testAppInstOverrideTransientDelete(t, ctx, commonApi, responder)
 
 	// Test Fqdn prefix
-	for _, obj := range appInstApi.cache.Objs {
+	for _, data := range appInstApi.cache.Objs {
+		obj := data.Obj
 		app_name := util.K8SSanitize(obj.Key.AppKey.Name)
 		if app_name == "helmapp" {
 			continue

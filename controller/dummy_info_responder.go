@@ -64,15 +64,15 @@ func (d *DummyInfoResponder) SetSimulateClusterDeleteFailure(state bool) {
 	d.simulateClusterDeleteFailure = state
 }
 
-func (d *DummyInfoResponder) runClusterInstChanged(ctx context.Context, key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInst) {
-	go d.clusterInstChanged(ctx, key)
+func (d *DummyInfoResponder) runClusterInstChanged(ctx context.Context, key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInst, modRev int64) {
+	go d.clusterInstChanged(ctx, key, modRev)
 }
 
-func (d *DummyInfoResponder) runAppInstChanged(ctx context.Context, key *edgeproto.AppInstKey, old *edgeproto.AppInst) {
-	go d.appInstChanged(ctx, key)
+func (d *DummyInfoResponder) runAppInstChanged(ctx context.Context, key *edgeproto.AppInstKey, old *edgeproto.AppInst, modRev int64) {
+	go d.appInstChanged(ctx, key, modRev)
 }
 
-func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, key *edgeproto.ClusterInstKey) {
+func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, key *edgeproto.ClusterInstKey, modRev int64) {
 	inst := edgeproto.ClusterInst{}
 	found := d.ClusterInstCache.Get(key, &inst)
 	if !found {
@@ -117,7 +117,7 @@ func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, key *edgepr
 	}
 }
 
-func (d *DummyInfoResponder) appInstChanged(ctx context.Context, key *edgeproto.AppInstKey) {
+func (d *DummyInfoResponder) appInstChanged(ctx context.Context, key *edgeproto.AppInstKey, modRev int64) {
 	inst := edgeproto.AppInst{}
 	found := d.AppInstCache.Get(key, &inst)
 	if !found {
@@ -162,22 +162,22 @@ func (d *DummyInfoResponder) appInstChanged(ctx context.Context, key *edgeproto.
 	}
 }
 
-func (d *DummyInfoResponder) clusterInstInfoCb(ctx context.Context, key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInstInfo) {
+func (d *DummyInfoResponder) clusterInstInfoCb(ctx context.Context, key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInstInfo, modRev int64) {
 	inst := edgeproto.ClusterInstInfo{}
 	if d.ClusterInstInfoCache.Get(key, &inst) {
-		d.RecvClusterInstInfo.Update(ctx, &inst, 0)
+		d.RecvClusterInstInfo.Update(ctx, &inst, modRev)
 	} else {
 		inst.Key = *key
-		d.RecvClusterInstInfo.Delete(ctx, &inst, 0)
+		d.RecvClusterInstInfo.Delete(ctx, &inst, modRev)
 	}
 }
 
-func (d *DummyInfoResponder) appInstInfoCb(ctx context.Context, key *edgeproto.AppInstKey, old *edgeproto.AppInstInfo) {
+func (d *DummyInfoResponder) appInstInfoCb(ctx context.Context, key *edgeproto.AppInstKey, old *edgeproto.AppInstInfo, modRev int64) {
 	inst := edgeproto.AppInstInfo{}
 	if d.AppInstInfoCache.Get(key, &inst) {
-		d.RecvAppInstInfo.Update(ctx, &inst, 0)
+		d.RecvAppInstInfo.Update(ctx, &inst, modRev)
 	} else {
 		inst.Key = *key
-		d.RecvAppInstInfo.Delete(ctx, &inst, 0)
+		d.RecvAppInstInfo.Delete(ctx, &inst, modRev)
 	}
 }

@@ -144,7 +144,8 @@ func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 func (s *AlertApi) Flush(ctx context.Context, notifyId int64) {
 	matches := make([]edgeproto.AlertKey, 0)
 	s.cache.Mux.Lock()
-	for _, val := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		val := data.Obj
 		if val.NotifyId != notifyId || val.Controller != ControllerId {
 			continue
 		}
