@@ -41,6 +41,7 @@ var packageVersion = flag.String("packageVersion", "", "CRM VM baseimage debian 
 var cloudletVMImagePath = flag.String("cloudletVMImagePath", "", "Image path where CRM VM baseimages are present")
 var cleanupMode = flag.Bool("cleanupMode", false, "cleanup previous versions of CRM if present")
 var commercialCerts = flag.Bool("commercialCerts", false, "Get TLS certs from LetsEncrypt. If false CRM will generate its own self-signed certs")
+var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
 
 // myCloudletInfo is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudletInfo is provided as a configuration - either command line or
@@ -242,7 +243,7 @@ func main() {
 
 		// setup rootlb certs
 		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-		commonName := cloudcommon.GetRootLBFQDN(&myCloudletInfo.Key)
+		commonName := cloudcommon.GetRootLBFQDN(&myCloudletInfo.Key, *appDNSRoot)
 		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
 		rootlb, err := platform.GetClusterPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
 		if err == nil {
@@ -283,6 +284,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		PackageVersion:      *packageVersion,
 		EnvVars:             cloudlet.EnvVar,
 		NodeMgr:             &nodeMgr,
+		AppDNSRoot:          *appDNSRoot,
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", platform.GetType())
 	err := platform.Init(ctx, &pc, caches, updateCallback)

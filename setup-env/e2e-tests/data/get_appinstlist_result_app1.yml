@@ -9,7 +9,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: dmuus-cloud-1.dmuus.mobiledgex.net
+    fqdn: dmuus-cloud-1.dmuus.localtest.net
     ports:
     - proto: LProtoTcp
       internalport: 80
@@ -33,7 +33,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: dmuus-cloud-2.dmuus.mobiledgex.net
+    fqdn: dmuus-cloud-2.dmuus.localtest.net
     ports:
     - proto: LProtoTcp
       internalport: 80
@@ -57,7 +57,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: dmuus-cloud-3.dmuus.mobiledgex.net
+    fqdn: dmuus-cloud-3.dmuus.localtest.net
     ports:
     - proto: LProtoTcp
       internalport: 80

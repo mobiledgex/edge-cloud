@@ -25,12 +25,13 @@ type NodeMgr struct {
 	TlsCertFile string
 	VaultAddr   string
 
-	MyNode      edgeproto.Node
-	NodeCache   RegionNodeCache
-	Debug       DebugNode
-	VaultConfig *vault.Config
-	Region      string
-	InternalPki internalPki
+	MyNode         edgeproto.Node
+	NodeCache      RegionNodeCache
+	Debug          DebugNode
+	VaultConfig    *vault.Config
+	Region         string
+	InternalPki    internalPki
+	InternalDomain string
 }
 
 // Most of the time there will only be one NodeMgr per process, and these
@@ -42,6 +43,7 @@ func (s *NodeMgr) InitFlags() {
 	flag.StringVar(&s.VaultAddr, "vaultAddr", "", "Vault address; local vault runs at http://127.0.0.1:8200")
 	flag.BoolVar(&s.InternalPki.UseVaultCAs, "useVaultCAs", false, "Include use of Vault CAs for internal TLS authentication")
 	flag.BoolVar(&s.InternalPki.UseVaultCerts, "useVaultCerts", false, "Use Vault Certs for internal TLS; implies useVaultCAs")
+	flag.StringVar(&s.InternalDomain, "internalDomain", "mobiledgex.net", "domain name for internal PKI")
 }
 
 func (s *NodeMgr) Init(ctx context.Context, nodeType string, ops ...NodeOp) error {
