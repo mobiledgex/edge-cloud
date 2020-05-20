@@ -282,6 +282,8 @@ enum CloudletState {
   CLOUDLET_STATE_INIT = 5;
   // Cloudlet is upgrading
   CLOUDLET_STATE_UPGRADE = 6;
+  // Cloudlet needs data to synchronize
+  CLOUDLET_STATE_NEED_SYNC = 7;  
 }
 
 // Flavor details from the Cloudlet
@@ -343,6 +345,8 @@ message CloudletInfo {
   repeated OSAZone availability_zones = 13;
   // Local Images availble to cloudlet
   repeated OSImage os_images = 14;
+  // Indicates all controller data has been sent to CRM
+  bool controller_cache_received = 15;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
