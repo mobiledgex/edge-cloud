@@ -80,6 +80,10 @@ func (s *Client) RegisterRecv(recv NotifyRecv) {
 	s.sendrecv.registerRecv(recv)
 }
 
+func (s *Client) RegisterSendAllRecv(handler SendAllRecv) {
+	s.sendrecv.registerSendAllRecv(handler)
+}
+
 func (s *Client) run() {
 	for !s.sendrecv.done {
 		// connect to server
