@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/vault/api"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
@@ -520,7 +519,7 @@ func (s *NodeMgr) CommonName() string {
 	if cn == NodeTypeController {
 		cn = "ctrl"
 	}
-	return cn + "." + cloudcommon.CertDNSRoot
+	return cn + "." + s.InternalDomain
 }
 
 type TlsOptions struct {

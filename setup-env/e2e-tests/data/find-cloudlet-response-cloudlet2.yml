@@ -1,5 +1,5 @@
 status: FindFound
-fqdn: tmus-cloud-2.tmus.mobiledgex.net
+fqdn: tmus-cloud-2.tmus.localtest.net
 ports:
 - proto: LProtoTcp
   internalport: 80
