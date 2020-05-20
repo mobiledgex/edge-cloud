@@ -176,7 +176,13 @@ func main() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, updateCloudletStatus); err != nil {
+		caches := pf.Caches{
+			FlavorCache:        &controllerData.FlavorCache,
+			PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
+			ClusterInstCache:   &controllerData.ClusterInstCache,
+			AppInstCache:       &controllerData.AppInstCache,
+		}
+		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &caches, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
@@ -191,12 +197,6 @@ func main() {
 			} else {
 				if myCloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC {
 					log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-					caches := pf.Caches{
-						FlavorCache:        &controllerData.FlavorCache,
-						PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
-						ClusterInstCache:   &controllerData.ClusterInstCache,
-						AppInstCache:       &controllerData.AppInstCache,
-					}
 					controllerData.ControllerSyncInProgress = true
 					controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 
@@ -268,7 +268,7 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName, vaultAddr string, updateCallback edgeproto.CacheUpdateCallback) error {
+func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName, vaultAddr string, caches *pf.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	loc := util.DNSSanitize(cloudletInfo.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudletInfo.Key.Organization)
 
@@ -284,13 +284,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		EnvVars:             cloudlet.EnvVar,
 		NodeMgr:             &nodeMgr,
 	}
-	caches := pf.Caches{
-		FlavorCache:        &controllerData.FlavorCache,
-		PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
-		ClusterInstCache:   &controllerData.ClusterInstCache,
-		AppInstCache:       &controllerData.AppInstCache,
-	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", platform.GetType())
-	err := platform.Init(ctx, &pc, &caches, updateCallback)
+	err := platform.Init(ctx, &pc, caches, updateCallback)
 	return err
 }
