@@ -152,6 +152,7 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	pfConfig.EnvVar = make(map[string]string)
 	pfConfig.Region = *region
 	pfConfig.CommercialCerts = *commercialCerts
+	pfConfig.AppDnsRoot = *appDNSRoot
 	getCrmEnv(pfConfig.EnvVar)
 	addrObjs := strings.Split(*notifyAddr, ":")
 	if len(addrObjs) != 2 {

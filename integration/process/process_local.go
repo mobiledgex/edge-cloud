@@ -140,6 +140,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--edgeTurnAddr")
 		args = append(args, p.EdgeTurnAddr)
 	}
+	if p.AppDNSRoot != "" {
+		args = append(args, "--appDNSRoot")
+		args = append(args, p.AppDNSRoot)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -446,6 +450,10 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	}
 	if p.UseVaultCerts {
 		args = append(args, "--useVaultCerts")
+	}
+	if p.AppDNSRoot != "" {
+		args = append(args, "--appDNSRoot")
+		args = append(args, p.AppDNSRoot)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
