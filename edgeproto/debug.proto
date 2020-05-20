@@ -20,6 +20,8 @@ message DebugRequest {
   uint64 id = 5 [(protogen.backend) = true];
   // Additional arguments for cmd
   string args = 6;
+  // custom timeout (duration, defaults to 10s)
+  int64 timeout = 7 [(gogoproto.casttype) = "Duration"];
   option (protogen.alias) = "name=Node.Name,type=Node.Type,cloudlet=Node.CloudletKey.Name,organization=Node.CloudletKey.Organization,region=Node.Region";
   option (protogen.notify_message) = true;
 }
