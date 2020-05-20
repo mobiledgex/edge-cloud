@@ -373,7 +373,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: dmuus-cloud-2.dmuus.mobiledgex.net
+  uri: dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -408,7 +408,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: autoclustersomeapplication1.dmuus-cloud-2.dmuus.mobiledgex.net
+  uri: autoclustersomeapplication1.dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -434,7 +434,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: autoclustersomeapplication2.dmuus-cloud-2.dmuus.mobiledgex.net
+  uri: autoclustersomeapplication2.dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -460,7 +460,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: dmuus-cloud-2.dmuus.mobiledgex.net
+  uri: dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -491,7 +491,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: dmuus-cloud-1.dmuus.mobiledgex.net
+  uri: dmuus-cloud-1.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -526,7 +526,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: autoclustersomeapplication1.dmuus-cloud-1.dmuus.mobiledgex.net
+  uri: autoclustersomeapplication1.dmuus-cloud-1.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp

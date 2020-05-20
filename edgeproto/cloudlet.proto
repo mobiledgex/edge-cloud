@@ -74,6 +74,8 @@ message PlatformConfig {
   bool use_vault_certs = 14;
   // Use Vault CAs to authenticate TLS communication
   bool use_vault_cas = 15;
+  // App domain name root
+  string app_dns_root = 16;
 }
 
 // Platform Type

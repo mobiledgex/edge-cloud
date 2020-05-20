@@ -632,12 +632,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
 		if !cloudcommon.IsClusterInstReqd(&app) {
-			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey)
+			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
 			for ii, _ := range ports {
 				ports[ii].PublicPort = ports[ii].InternalPort
 			}
 		} else if ipaccess == edgeproto.IpAccess_IP_ACCESS_SHARED && !app.InternalPorts {
-			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.ClusterInstKey.CloudletKey)
+			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
 			if cloudletRefs.RootLbPorts == nil {
 				cloudletRefs.RootLbPorts = make(map[int32]int32)
 			}
@@ -692,7 +692,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		} else {
 			if isIPAllocatedPerService(in.Key.ClusterInstKey.CloudletKey.Organization) {
 				//dedicated access in which each service gets a different ip
-				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey)
+				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
 				for ii, _ := range ports {
 					// No rootLB to do L7 muxing, and each
 					// service has it's own IP anyway so
@@ -704,7 +704,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				}
 			} else {
 				//dedicated access in which IP is that of the LB
-				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.ClusterInstKey.CloudletKey, clusterKey)
+				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
 				// Docker deployments do not need an L7 reverse
 				// proxy (because they all bind to ports on the
 				// same VM, so multiple containers trying to bind
