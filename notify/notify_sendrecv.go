@@ -58,6 +58,13 @@ type NotifyRecv interface {
 	RecvAllEnd(ctx context.Context, cleanup Cleanup)
 }
 
+type SendAllRecv interface {
+	// Called when SendAllStart is received
+	RecvAllStart()
+	// Called when SendAllEnd is received
+	RecvAllEnd(ctx context.Context)
+}
+
 type StreamNotify interface {
 	Send(*edgeproto.Notice) error
 	Recv() (*edgeproto.Notice, error)
@@ -118,6 +125,9 @@ type SendRecv struct {
 	signal             chan bool
 	stats              Stats
 	mux                sync.Mutex
+	sendAllEnd         bool
+	manualSendAllEnd   bool
+	sendAllRecvHandler SendAllRecv
 }
 
 func (s *SendRecv) init(cliserv string) {
@@ -162,11 +172,26 @@ func (s *SendRecv) registerRecv(recv NotifyRecv) {
 	recv.SetSendRecv(s)
 }
 
+func (s *SendRecv) registerSendAllRecv(handler SendAllRecv) {
+	s.sendAllRecvHandler = handler
+}
+
 func (s *SendRecv) setRemoteWanted(names []string) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	for _, name := range names {
 		s.remoteWanted[name] = struct{}{}
+	}
+}
+
+func (s *SendRecv) triggerSendAllEnd() {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	// we only allow sendAllEnd to be triggered once
+	if s.manualSendAllEnd {
+		s.sendAllEnd = true
+		s.manualSendAllEnd = false
+		s.wakeup()
 	}
 }
 
@@ -219,7 +244,7 @@ func (s *SendRecv) send(stream StreamNotify) {
 				hasData = true
 			}
 		}
-		if !hasData && !s.done && !sendAll {
+		if !hasData && !s.done && !sendAll && !s.sendAllEnd {
 			continue
 		}
 		if s.done {
@@ -242,7 +267,9 @@ func (s *SendRecv) send(stream StreamNotify) {
 		if err != nil {
 			break
 		}
-		if sendAll {
+		if s.sendAllEnd {
+			s.sendAllEnd = false
+			log.SpanLog(sendAllCtx, log.DebugLevelNotify, "send all end")
 			notice.Action = edgeproto.NoticeAction_SENDALL_END
 			notice.Any = types.Any{}
 			err = stream.Send(&notice)
@@ -251,9 +278,11 @@ func (s *SendRecv) send(stream StreamNotify) {
 					"send all end", "err", err)
 				break
 			}
-			sendAll = false
 			sendAllSpan.Finish()
 			sendAllSpan = nil
+		}
+		if sendAll {
+			sendAll = false
 		}
 		if err != nil {
 			break
@@ -267,6 +296,13 @@ func (s *SendRecv) send(stream StreamNotify) {
 
 func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 	recvAll := true
+	// Note we never actually receive a SendAll_Start message,
+	// it's implicit on the rx side when the connection is established.
+	sendAllRecv := s.sendAllRecvHandler
+	if sendAllRecv != nil {
+		sendAllRecv.RecvAllStart()
+	}
+
 	for _, recv := range s.recvmap {
 		recv.RecvAllStart()
 	}
@@ -300,6 +336,10 @@ func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 			if recvAll && notice.Action == edgeproto.NoticeAction_SENDALL_END {
 				for _, recv := range s.recvmap {
 					recv.RecvAllEnd(ctx, cleanup)
+				}
+				sendAllRecv := s.sendAllRecvHandler
+				if sendAllRecv != nil {
+					sendAllRecv.RecvAllEnd(ctx)
 				}
 				recvAll = false
 				return
