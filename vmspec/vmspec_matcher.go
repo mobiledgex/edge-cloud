@@ -3,6 +3,7 @@ package vmspec
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -40,6 +41,10 @@ func GetVMSpec(flavorList []*edgeproto.FlavorInfo, nodeflavor edgeproto.Flavor) 
 		return flavorList[i].Disk < flavorList[j].Disk
 	})
 	for _, flavor := range flavorList {
+
+		if strings.Contains(flavor.Name, "gpu") {
+			continue
+		}
 
 		if flavor.Vcpus < nodeflavor.Vcpus {
 			continue
