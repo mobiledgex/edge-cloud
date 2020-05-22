@@ -232,6 +232,15 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.PackageVersion = in.VmImageVersion
 	}
 
+	if in.InfraAccessType == edgeproto.InfraAccessType_ACCESS_TYPE_PRIVATE {
+		if in.InfraFlavorName == "" {
+			return errors.New("Infra flavor name is required for private deployments")
+		}
+		if in.InfraExternalNetwork == "" {
+			return errors.New("Infra external network is required for private deployments")
+		}
+	}
+
 	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 
