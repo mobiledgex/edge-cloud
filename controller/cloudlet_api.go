@@ -161,6 +161,7 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	pfConfig.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
 	pfConfig.Span = log.SpanToString(ctx)
 	pfConfig.ChefServerPath = *chefServerPath
+	pfConfig.ChefClientInterval = settingsApi.Get().ChefClientInterval
 
 	return &pfConfig, nil
 }

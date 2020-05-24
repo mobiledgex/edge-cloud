@@ -967,6 +967,7 @@ var PlatformConfigOptionalArgs = []string{
 	"usevaultcerts",
 	"usevaultcas",
 	"chefserverpath",
+	"chefclientinterval",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -985,6 +986,7 @@ var PlatformConfigComments = map[string]string{
 	"usevaultcerts":         "Use Vault certs for internal TLS communication",
 	"usevaultcas":           "Use Vault CAs to authenticate TLS communication",
 	"chefserverpath":        "Path to Chef Server",
+	"chefclientinterval":    "Chef client interval",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -1095,6 +1097,7 @@ var CloudletComments = map[string]string{
 	"config.usevaultcerts":                "Use Vault certs for internal TLS communication",
 	"config.usevaultcas":                  "Use Vault CAs to authenticate TLS communication",
 	"config.chefserverpath":               "Path to Chef Server",
+	"config.chefclientinterval":           "Chef client interval",
 	"restagmap:#.value.name":              "Resource Table Name",
 	"restagmap:#.value.organization":      "Operator organization of the cloudlet site.",
 	"accessvars":                          "Variables required to access cloudlet",

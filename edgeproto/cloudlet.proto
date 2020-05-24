@@ -76,6 +76,8 @@ message PlatformConfig {
   bool use_vault_cas = 15;
   // Path to Chef Server
   string chef_server_path = 16;
+  // Chef client interval
+  int32 chef_client_interval = 17;
 }
 
 // Platform Type
