@@ -40,7 +40,7 @@ message Settings {
   int32 load_balancer_max_port_range = 15;
   // Max DME clients to be tracked at the same time.
   int32 max_tracked_dme_clients = 16;
-  // Default chef client interval
+  // Default chef client interval (seconds)
   int32 chef_client_interval = 17;
 
   option (protogen.generate_matches) = true;

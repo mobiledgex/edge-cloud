@@ -63,7 +63,7 @@ type Settings struct {
 	LoadBalancerMaxPortRange int32 `protobuf:"varint,15,opt,name=load_balancer_max_port_range,json=loadBalancerMaxPortRange,proto3" json:"load_balancer_max_port_range,omitempty"`
 	// Max DME clients to be tracked at the same time.
 	MaxTrackedDmeClients int32 `protobuf:"varint,16,opt,name=max_tracked_dme_clients,json=maxTrackedDmeClients,proto3" json:"max_tracked_dme_clients,omitempty"`
-	// Default chef client interval
+	// Default chef client interval (seconds)
 	ChefClientInterval int32 `protobuf:"varint,17,opt,name=chef_client_interval,json=chefClientInterval,proto3" json:"chef_client_interval,omitempty"`
 }
 

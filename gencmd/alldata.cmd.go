@@ -474,7 +474,7 @@ var AllDataComments = map[string]string{
 	"settings.masternodeflavor":                                  "Default flavor for k8s master VM and > 0  workers",
 	"settings.loadbalancermaxportrange":                          "Max IP Port range when using a load balancer",
 	"settings.maxtrackeddmeclients":                              "Max DME clients to be tracked at the same time.",
-	"settings.chefclientinterval":                                "Default chef client interval",
+	"settings.chefclientinterval":                                "Default chef client interval (seconds)",
 	"operatorcodes:#.code":                                       "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                               "Operator Organization name",
 	"restagtables:#.key.name":                                    "Resource Table Name",
