@@ -98,6 +98,15 @@ func GetCRMCmd(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig)
 	return crmProc.String(opts...), &crmProc.Common.EnvVars, nil
 }
 
+func GetCRMCmdArgs(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) ([]string, *map[string]string, error) {
+	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return crmProc.GetArgs(opts...), &crmProc.Common.EnvVars, nil
+}
+
 var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
 
 func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) error {

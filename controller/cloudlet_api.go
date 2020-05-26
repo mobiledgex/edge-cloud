@@ -292,25 +292,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err != nil {
 			return err
 		}
-
-		if ignoreCRMState(cctx) || in.InfraAccessType == edgeproto.InfraAccessType_ACCESS_TYPE_PRIVATE {
-			in.State = edgeproto.TrackedState_READY
-		} else {
-			in.State = edgeproto.TrackedState_CREATING
-		}
-
+		in.State = edgeproto.TrackedState_CREATING
 		s.store.STMPut(stm, in)
 		return nil
 	})
 	if err != nil {
 		return err
-	}
-
-	if in.InfraAccessType == edgeproto.InfraAccessType_ACCESS_TYPE_PRIVATE {
-		cb.Send(&edgeproto.Result{
-			Message: "Cloudlet configured successfully. Please run `ShowCloudletManifest` to bringup Platform VM(s) for cloudlet services",
-		})
-		return nil
 	}
 
 	if ignoreCRMState(cctx) {
@@ -347,13 +334,23 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	}
 
 	if err == nil {
-		// Wait for CRM to connect to controller
-		err = s.WaitForCloudlet(
-			ctx, &in.Key,
-			edgeproto.TrackedState_CREATE_ERROR, // Set error state
-			"Created Cloudlet successfully",     // Set success message
-			PlatformInitTimeout, updatecb.cb,
-		)
+		if in.InfraAccessType == edgeproto.InfraAccessType_ACCESS_TYPE_PRIVATE {
+			err = s.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_READY)
+			if err != nil {
+				return err
+			}
+			cb.Send(&edgeproto.Result{
+				Message: "Cloudlet configured successfully. Please run `ShowCloudletManifest` to bringup Platform VM(s) for cloudlet services",
+			})
+		} else {
+			// Wait for CRM to connect to controller
+			err = s.WaitForCloudlet(
+				ctx, &in.Key,
+				edgeproto.TrackedState_CREATE_ERROR, // Set error state
+				"Created Cloudlet successfully",     // Set success message
+				PlatformInitTimeout, updatecb.cb,
+			)
+		}
 	} else {
 		cb.Send(&edgeproto.Result{Message: err.Error()})
 	}
