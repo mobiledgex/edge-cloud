@@ -88,6 +88,8 @@ func (s *ClusterInstSend) UpdateAllOk() bool {
 }
 
 func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notice, buf *edgeproto.CloudletInfo, peerAddr string) {
+	log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo RecvHook", "key", buf.Key, "state", buf.State)
+
 	if !s.sendrecv.filterCloudletKeys {
 		return
 	}
@@ -98,6 +100,7 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
 		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
 			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE ||
+			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC ||
 			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
 			// trigger send of cloudlet details to cloudlet
 			if s.sendrecv.cloudletSend != nil {
@@ -105,10 +108,11 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 				s.sendrecv.cloudletSend.Update(ctx, &buf.Key, nil, 0)
 			}
 		}
-		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY || buf.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC && !buf.ControllerCacheReceived {
 			log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo recv hook read, send all filtered data", "key", buf.Key)
 			// allow all filtered objects to be sent
 			s.sendrecv.cloudletReady = true
+
 			// trigger send of all objects related to cloudlet
 			// In case of cloudlet upgrade, Check if READY is
 			// received from the appropriate cloudlet
@@ -145,6 +149,8 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 					s.sendrecv.appInstSend.Update(ctx, &k, nil, modRev)
 				}
 			}
+			s.sendrecv.triggerSendAllEnd()
+
 		}
 	}
 }

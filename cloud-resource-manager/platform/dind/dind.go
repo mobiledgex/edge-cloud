@@ -17,7 +17,7 @@ func (s *Platform) GetType() string {
 	return "dind"
 }
 
-func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, controllerData *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	// set up L7 load balancer
 	client, err := s.GetNodePlatformClient(ctx, nil)
 	if err != nil {

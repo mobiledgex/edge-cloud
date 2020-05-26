@@ -61,6 +61,7 @@ var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd da
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs from LetsEncrypt. If false then CRM will generate its onwn self-signed cert")
 var checkpointInterval = flag.Duration("checkpointInterval", time.Hour*24*30, "Interval at which to checkpoint cluster usage")
+var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
 
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName
@@ -494,7 +495,6 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
-	notify.ServerMgrOne.RegisterSendPrivacyPolicyCache(&privacyPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
 
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
