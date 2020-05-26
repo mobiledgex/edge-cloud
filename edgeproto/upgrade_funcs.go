@@ -1070,3 +1070,47 @@ func AppRevision(ctx context.Context, objStore objstore.KVStore) error {
 	}
 	return nil
 }
+
+func AppInstRefsUpgrade(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "AppInstRefs")
+
+	// AppInsts
+	allrefs := make(map[AppKey]*AppInstRefs)
+
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		inst := AppInst{}
+		err2 := json.Unmarshal(val, &inst)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2)
+			return err2
+		}
+		refs, found := allrefs[inst.Key.AppKey]
+		if !found {
+			refs = &AppInstRefs{}
+			refs.Key = inst.Key.AppKey
+			refs.Insts = make(map[string]uint32)
+			allrefs[inst.Key.AppKey] = refs
+		}
+		refs.Insts[inst.Key.GetKeyString()] = 1
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, refs := range allrefs {
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "New AppInstRefs", "app", refs.Key)
+		keystr := objstore.DbKeyString("AppInstRefs", &refs.Key)
+		val, err2 := json.Marshal(refs)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", keystr, "obj", refs, "err", err2)
+			return err2
+		}
+		objStore.Put(ctx, keystr, string(val))
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}

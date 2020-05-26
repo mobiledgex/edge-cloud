@@ -105,5 +105,3 @@ service AppInstRefsApi {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.Organization";
   }
 }
-
-  
