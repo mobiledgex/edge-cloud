@@ -181,6 +181,7 @@ func main() {
 			FlavorCache:        &controllerData.FlavorCache,
 			PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
 			ClusterInstCache:   &controllerData.ClusterInstCache,
+			AppCache:           &controllerData.AppCache,
 			AppInstCache:       &controllerData.AppInstCache,
 		}
 		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &caches, updateCloudletStatus); err != nil {
