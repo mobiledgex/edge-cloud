@@ -28,6 +28,7 @@ type Caches struct {
 	PrivacyPolicyCache *edgeproto.PrivacyPolicyCache
 	ClusterInstCache   *edgeproto.ClusterInstCache
 	AppInstCache       *edgeproto.AppInstCache
+	AppCache           *edgeproto.AppCache
 }
 
 // Platform abstracts the underlying cloudlet platform.
