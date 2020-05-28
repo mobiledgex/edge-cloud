@@ -20,6 +20,7 @@ type Span struct {
 
 var IgnoreLvl uint64 = 99999
 var SuppressLvl uint64 = 99998
+var SamplingEnabled = false
 
 func StartSpan(lvl uint64, operationName string, opts ...opentracing.StartSpanOption) opentracing.Span {
 	if tracer == nil {
@@ -31,7 +32,7 @@ func StartSpan(lvl uint64, operationName string, opts ...opentracing.StartSpanOp
 		// right before Finish whether or not to log the whole thing.
 		ext.SamplingPriority.Set(ospan, 1)
 	} else if lvl != IgnoreLvl {
-		if DebugLevelSampled&lvl != 0 {
+		if DebugLevelSampled&lvl != 0 && SamplingEnabled {
 			// sampled
 		} else if DebugLevelInfo&lvl != 0 || debugLevel&lvl != 0 {
 			// always log (note DebugLevelInfo is always logged)
