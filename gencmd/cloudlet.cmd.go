@@ -1107,6 +1107,7 @@ var CloudletComments = map[string]string{
 	"deploymenttype":                      "Type of deployment to bring up CRM services, one of DeploymentTypeDocker, DeploymentTypeK8S",
 	"infraexternalnetwork":                "External network name on infra",
 	"infraflavorname":                     "Flavor name on infra",
+	"chefclientkey":                       "Chef client key",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
