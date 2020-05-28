@@ -69,14 +69,28 @@ func init() {
 
 func InitL7Proxy(ctx context.Context, client ssh.Client, ops ...Op) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "InitL7Proxy")
-	out, err := client.Output("docker ps --format '{{.Names}}'")
+	out, err := client.Output("docker ps -a --format '{{.Names}},{{.Status}}'")
 	if err != nil {
 		return err
 	}
 	for _, line := range strings.Split(string(out), "\n") {
-		if strings.TrimSpace(line) == NginxL7Name {
-			// already running
-			return nil
+		fields := strings.Split(line, ",")
+		if len(fields) == 2 {
+			containername := fields[0]
+			status := fields[1]
+			if containername == NginxL7Name {
+				if strings.HasPrefix(status, "Up") {
+					log.SpanLog(ctx, log.DebugLevelInfra, "L7Proxy already running")
+					return nil
+				}
+				log.SpanLog(ctx, log.DebugLevelInfra, "L7Proxy present but not running, remove it", "status", status)
+				out, err := client.Output("docker rm -f " + containername)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelInfra, "unable to remove old L7Proxy", "out", out, "err", err)
+					return fmt.Errorf("Unable to remove old L7Proxy")
+				}
+				break
+			}
 		}
 	}
 	listenIP := ""
