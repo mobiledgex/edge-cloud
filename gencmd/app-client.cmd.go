@@ -696,9 +696,9 @@ var RegisterClientRequestOptionalArgs = []string{
 var RegisterClientRequestAliasArgs = []string{}
 var RegisterClientRequestComments = map[string]string{
 	"ver":          "API version _(hidden)_ Reserved for future use",
-	"orgname":      "App Organization Name",
-	"appname":      "App Name",
-	"appvers":      "App Version",
+	"orgname":      "App Organization Name App developer organization name.",
+	"appname":      "App Name Name of your application.",
+	"appvers":      "App Version Application version.",
 	"carriername":  "Carrier Name _(hidden)_ Reserved for future use",
 	"authtoken":    "Authentication Token _(optional)_ An authentication token supplied by the application.",
 	"cellid":       "Cell ID _(optional)_ Cellular ID of where the client is connected.",
