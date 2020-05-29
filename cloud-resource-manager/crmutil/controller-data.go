@@ -334,7 +334,6 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, errstr)
 				log.SpanLog(ctx, log.DebugLevelInfra, "can't create app inst", "error", errstr, "key", new.Key)
-				log.SpanLog(ctx, log.DebugLevelInfra, "cleaning up failed appinst", "key", new.Key)
 				derr := cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new)
 				if derr != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "can't cleanup app inst", "error", errstr, "key", new.Key)
