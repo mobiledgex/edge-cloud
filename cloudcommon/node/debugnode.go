@@ -26,6 +26,8 @@ const (
 	StartCpuProfileCmd   = "start-cpu-profile"
 	StopCpuProfileCmd    = "stop-cpu-profile"
 	GetMemProfileCmd     = "get-mem-profile"
+	DisableSampleLog     = "disable-sample-logging"
+	EnableSampleLog      = "enable-sample-logging"
 )
 
 type DebugNode struct {
@@ -68,6 +70,8 @@ func (s *DebugNode) Init(mgr *NodeMgr) {
 		func(ctx context.Context, req *edgeproto.DebugRequest) string {
 			return GetMemProfile()
 		})
+	s.AddDebugFunc(DisableSampleLog, disableSampledLogging)
+	s.AddDebugFunc(EnableSampleLog, enableSampledLogging)
 }
 
 func (s *DebugNode) AddDebugFunc(cmd string, f DebugFunc) {
@@ -245,4 +249,14 @@ func disableDebugLevels(ctx context.Context, req *edgeproto.DebugRequest) string
 
 func showDebugLevels(ctx context.Context, req *edgeproto.DebugRequest) string {
 	return log.GetDebugLevelStrs()
+}
+
+func disableSampledLogging(ctx context.Context, req *edgeproto.DebugRequest) string {
+	log.SamplingEnabled = false
+	return "disabled log sampling"
+}
+
+func enableSampledLogging(ctx context.Context, req *edgeproto.DebugRequest) string {
+	log.SamplingEnabled = true
+	return "enabled log sampling"
 }
