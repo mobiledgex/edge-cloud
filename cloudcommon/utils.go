@@ -14,7 +14,6 @@ import (
 
 type SessionInfo struct {
 	Token      string
-	Cookie     string
 	AccessPort string
 }
 
