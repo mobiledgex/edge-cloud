@@ -394,7 +394,7 @@ func startServices() error {
 	services.httpServer = httpServer
 
 	// start the checkpointer
-	go runClusterCheckpoints(ctx)
+	go runCheckpoints(ctx)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	return nil

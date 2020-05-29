@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	client "github.com/influxdata/influxdb/client/v2"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/opentracing/opentracing-go"
 )
 
 // influx timestamp ranges can handle (64-bit int min in time form)
@@ -42,6 +45,30 @@ func InitUsage() error {
 		return fmt.Errorf("Error creating parsing checkpoint time: %v", err)
 	}
 	return nil
+}
+
+func runCheckpoints(ctx context.Context) {
+	checkpointSpan := log.StartSpan(log.DebugLevelInfo, "Cluster Checkpointing thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+	defer checkpointSpan.Finish()
+	err := InitUsage()
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Error setting up checkpoints", "err", err)
+	}
+	for {
+		select {
+		// add 2 seconds to the checkpoint bc this was actually going into the case 1 second before NextCheckpoint,
+		// resulting in creating a checkpoint for the future, which is not allowed
+		case <-time.After(NextCheckpoint.Add(time.Second * 2).Sub(time.Now())):
+			checkpointTime := NextCheckpoint
+			err = CreateClusterCheckpoint(ctx, checkpointTime)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create checkpoint", "time", checkpointTime, "err", err)
+			}
+			// this must be AFTER the checkpoint is created, see the comments about race conditions above GetClusterCheckpoint
+			PrevCheckpoint = NextCheckpoint
+			NextCheckpoint = NextCheckpoint.Add(*checkpointInterval)
+		}
+	}
 }
 
 // checks the output of the influx log query and checks to see if it is empty(first return value) and if it is not empty then the format is what we expect(second return value)

@@ -10,7 +10,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/opentracing/opentracing-go"
 )
 
 type ClusterCheckpoint struct {
@@ -25,30 +24,6 @@ var GetCheckpointInfluxQueryTemplate = `SELECT %s from "%s" WHERE "org"='%s' AND
 
 var CreateClusterCheckpointInfluxQueryTemplate = `SELECT %s from "%s" WHERE time >= '%s' AND time < '%s' order by time desc`
 var CreateClusterCheckpointInfluxUsageQueryTemplate = `SELECT %s from "%s" WHERE checkpoint='CHECKPOINT' AND time >= '%s' AND time < '%s' order by time desc`
-
-func runClusterCheckpoints(ctx context.Context) {
-	checkpointSpan := log.StartSpan(log.DebugLevelInfo, "Cluster Checkpointing thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-	defer checkpointSpan.Finish()
-	err := InitUsage()
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "Error setting up checkpoints", "err", err)
-	}
-	for {
-		select {
-		// add 2 seconds to the checkpoint bc this was actually going into the case 1 second before NextCheckpoint,
-		// resulting in creating a checkpoint for the future, which is not allowed
-		case <-time.After(NextCheckpoint.Add(time.Second * 2).Sub(time.Now())):
-			checkpointTime := NextCheckpoint
-			err = CreateClusterCheckpoint(ctx, checkpointTime)
-			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create checkpoint", "time", checkpointTime, "err", err)
-			}
-			// this must be AFTER the checkpoint is created, see the comments about race conditions above GetClusterCheckpoint
-			PrevCheckpoint = NextCheckpoint
-			NextCheckpoint = NextCheckpoint.Add(*checkpointInterval)
-		}
-	}
-}
 
 func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterInst, endTime time.Time, usageEvent cloudcommon.Usage_event) error {
 	var metric *edgeproto.Metric
@@ -119,7 +94,7 @@ func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterIns
 		if latestStatus == "" { // keep track of the latest seen status in the logs for checkpointing purposes
 			latestStatus = status
 		}
-		// go until we hit the creation/reservation of this appinst, OR until we hit the checkpoint
+		// go until we hit the creation/reservation of this clusterinst, OR until we hit the checkpoint
 		if timestamp.Before(checkpoint.Timestamp) {
 			// Check to see if it was up or down at the checkpoint and set the downTime accordingly and then calculate the runTime
 			if checkpointStatus == cloudcommon.InstanceDown {
@@ -315,7 +290,7 @@ func GetClusterCheckpoint(ctx context.Context, org string, timestamp time.Time) 
 		time.Sleep(time.Second)
 	}
 	// query from the checkpoint up to the delete
-	selectors := []string{"\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\"", "\"status\""}
+	selectors := []string{"\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\"", "\"status\"", "\"end\""}
 	influxCheckpointQuery := fmt.Sprintf(GetCheckpointInfluxQueryTemplate,
 		strings.Join(selectors, ","),
 		cloudcommon.ClusterInstUsage,
@@ -340,13 +315,9 @@ func GetClusterCheckpoint(ctx context.Context, org string, timestamp time.Time) 
 	}
 
 	for i, values := range checkpoints[0].Series[0].Values {
-		// value should be of the format [measurementTime cluster clusterorg cloudlet cloudletorg status]
+		// value should be of the format [measurementTime cluster clusterorg cloudlet cloudletorg status end]
 		if len(values) != len(selectors)+1 {
 			return nil, fmt.Errorf("Error parsing influx response")
-		}
-		measurementTime, err := time.Parse(time.RFC3339, fmt.Sprintf("%v", values[0]))
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse timestamp of checkpoint")
 		}
 		cluster := fmt.Sprintf("%v", values[1])
 		clusterorg := fmt.Sprintf("%v", values[2])
@@ -360,6 +331,11 @@ func GetClusterCheckpoint(ctx context.Context, org string, timestamp time.Time) 
 		}
 		result.Keys = append(result.Keys, &key)
 		result.Status = append(result.Status, status)
+
+		measurementTime, err := time.Parse(time.RFC3339, fmt.Sprintf("%v", values[6]))
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse timestamp of checkpoint")
+		}
 
 		if i == 0 {
 			result.Timestamp = measurementTime
