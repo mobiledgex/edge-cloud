@@ -330,9 +330,9 @@ func GetTimeout(cLen int) time.Duration {
 	fileSizeInGB := float64(cLen) / (1024.0 * 1024.0 * 1024.0)
 	timeoutUnit := int(math.Ceil(fileSizeInGB / 5.0))
 	if fileSizeInGB > 5 {
-		return time.Duration(timeoutUnit) * 10 * time.Minute
+		return time.Duration(timeoutUnit) * 20 * time.Minute
 	}
-	return 10 * time.Minute
+	return 20 * time.Minute
 }
 
 func DownloadFile(ctx context.Context, vaultConfig *vault.Config, fileUrlPath string, filePath string, content *string) error {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -13,12 +14,14 @@ import (
 
 type SessionInfo struct {
 	Token      string
+	Cookie     string
 	AccessPort string
 }
 
 type ExecReqInfo struct {
 	Type    ExecReqType
 	InitURL *url.URL
+	Cookies []*http.Cookie
 }
 
 type ExecReqType int

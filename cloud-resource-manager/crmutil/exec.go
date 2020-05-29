@@ -339,6 +339,9 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			}
 		} else {
 			proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?edgetoken=" + sessInfo.Token
+			if sessInfo.Cookie != "" {
+				proxyAddr += "&edgecookie=" + sessInfo.Cookie
+			}
 			req.AccessUrl = proxyAddr
 			cd.ExecReqSend.Update(ctx, req)
 			err = run.proxyRawConn(turnConn)
