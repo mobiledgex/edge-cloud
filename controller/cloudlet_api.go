@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -292,7 +291,11 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err != nil {
 			return err
 		}
-		in.State = edgeproto.TrackedState_CREATING
+		if ignoreCRMState(cctx) {
+			in.State = edgeproto.TrackedState_READY
+		} else {
+			in.State = edgeproto.TrackedState_CREATING
+		}
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -1182,14 +1185,5 @@ func (s *CloudletApi) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cl
 		return nil, err
 	}
 
-	manifest, err := cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig, &pfFlavor)
-	if err != nil {
-		return nil, err
-	}
-	err = ioutil.WriteFile("/tmp/test_stack.yml", []byte(manifest.Manifest), 0644)
-	if err != nil {
-		return nil, err
-	}
-
-	return manifest, nil
+	return cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig, &pfFlavor)
 }

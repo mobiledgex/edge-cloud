@@ -42,7 +42,7 @@ type RequestConfig struct {
 	Timeout time.Duration
 }
 
-func GetVaultRegistryPath(registry string) string {
+func getVaultRegistryPath(registry string) string {
 	return fmt.Sprintf("/secret/data/registry/%s", registry)
 }
 
@@ -59,7 +59,7 @@ func GetRegistryAuth(ctx context.Context, imgUrl string, vaultConfig *vault.Conf
 	if len(hostname) < 1 {
 		return nil, fmt.Errorf("empty hostname")
 	}
-	vaultPath := GetVaultRegistryPath(hostname[0])
+	vaultPath := getVaultRegistryPath(hostname[0])
 	log.SpanLog(ctx, log.DebugLevelApi, "get registry auth", "vault-path", vaultPath)
 	auth := &RegistryAuth{}
 	err = vault.GetData(vaultConfig, vaultPath, 0, auth)
