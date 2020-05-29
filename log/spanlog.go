@@ -20,7 +20,7 @@ type Span struct {
 
 var IgnoreLvl uint64 = 99999
 var SuppressLvl uint64 = 99998
-var SamplingEnabled = false
+var SamplingEnabled = true
 
 func StartSpan(lvl uint64, operationName string, opts ...opentracing.StartSpanOption) opentracing.Span {
 	if tracer == nil {
