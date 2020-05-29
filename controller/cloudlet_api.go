@@ -220,7 +220,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if in.DeploymentType == edgeproto.DeploymentType_DEPLOYMENT_TYPE_K8S {
 			return errors.New("Deployment type k8s is not supported for local deployment")
 		}
-		if in.InfraAccessType == edgeproto.InfraAccessType_ACCESS_TYPE_PRIVATE {
+		if in.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS {
 			return errors.New("Infra access type private is not supported for local deployment")
 		}
 	}
@@ -232,11 +232,11 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.PackageVersion = in.VmImageVersion
 	}
 
-	if in.InfraAccessType == edgeproto.InfraAccessType_ACCESS_TYPE_PRIVATE {
-		if in.InfraFlavorName == "" {
+	if in.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS {
+		if in.InfraConfig.FlavorName == "" {
 			return errors.New("Infra flavor name is required for private deployments")
 		}
-		if in.InfraExternalNetwork == "" {
+		if in.InfraConfig.ExternalNetworkName == "" {
 			return errors.New("Infra external network is required for private deployments")
 		}
 	}
@@ -291,11 +291,13 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err != nil {
 			return err
 		}
+
 		if ignoreCRMState(cctx) {
 			in.State = edgeproto.TrackedState_READY
 		} else {
 			in.State = edgeproto.TrackedState_CREATING
 		}
+
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -338,7 +340,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if err == nil {
 		newState := in.State
-		if in.InfraAccessType == edgeproto.InfraAccessType_ACCESS_TYPE_PRIVATE {
+		if in.InfraApiAccess == edgeproto.InfraApiAccess_DIRECT_ACCESS {
 			newState = edgeproto.TrackedState_READY
 		}
 		cloudlet := edgeproto.Cloudlet{}
@@ -354,7 +356,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err != nil {
 			return err
 		}
-		if in.InfraAccessType == edgeproto.InfraAccessType_ACCESS_TYPE_PRIVATE {
+		if in.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS {
 			cb.Send(&edgeproto.Result{
 				Message: "Cloudlet configured successfully. Please run `ShowCloudletManifest` to bringup Platform VM(s) for cloudlet services",
 			})

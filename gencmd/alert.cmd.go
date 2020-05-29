@@ -58,6 +58,7 @@ It has these top-level messages:
 	OperationTimeLimits
 	PlatformConfig
 	CloudletResMap
+	InfraConfig
 	Cloudlet
 	FlavorMatch
 	CloudletManifest

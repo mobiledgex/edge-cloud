@@ -58,6 +58,7 @@
 		OperationTimeLimits
 		PlatformConfig
 		CloudletResMap
+		InfraConfig
 		Cloudlet
 		FlavorMatch
 		CloudletManifest
@@ -992,8 +993,8 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := CloudletAction_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
-	case reflect.TypeOf(InfraAccessType(0)):
-		if en, ok := InfraAccessType_CamelValue[util.CamelCase(data.(string))]; ok {
+	case reflect.TypeOf(InfraApiAccess(0)):
+		if en, ok := InfraApiAccess_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(DeploymentType(0)):

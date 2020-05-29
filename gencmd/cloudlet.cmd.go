@@ -1009,6 +1009,17 @@ var CloudletResMapComments = map[string]string{
 var CloudletResMapSpecialArgs = map[string]string{
 	"mapping": "StringToString",
 }
+var InfraConfigRequiredArgs = []string{}
+var InfraConfigOptionalArgs = []string{
+	"externalnetworkname",
+	"flavorname",
+}
+var InfraConfigAliasArgs = []string{}
+var InfraConfigComments = map[string]string{
+	"externalnetworkname": "Infra specific external network name",
+	"flavorname":          "Infra specific flavor name",
+}
+var InfraConfigSpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
@@ -1043,10 +1054,10 @@ var CloudletOptionalArgs = []string{
 	"accessvars",
 	"vmimageversion",
 	"packageversion",
-	"infraaccesstype",
 	"deploymenttype",
-	"infraexternalnetwork",
-	"infraflavorname",
+	"infraapiaccess",
+	"infraconfig.externalnetworkname",
+	"infraconfig.flavorname",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1103,10 +1114,10 @@ var CloudletComments = map[string]string{
 	"accessvars":                          "Variables required to access cloudlet",
 	"vmimageversion":                      "MobiledgeX baseimage version where CRM services reside",
 	"packageversion":                      "MobiledgeX OS package version on baseimage where CRM services reside",
-	"infraaccesstype":                     "Infra Access Type is the type of access available to Infra API Endpoint, one of AccessTypePublic, AccessTypePrivate",
 	"deploymenttype":                      "Type of deployment to bring up CRM services, one of DeploymentTypeDocker, DeploymentTypeK8S",
-	"infraexternalnetwork":                "External network name on infra",
-	"infraflavorname":                     "Flavor name on infra",
+	"infraapiaccess":                      "Infra Access Type is the type of access available to Infra API Endpoint, one of DirectAccess, RestrictedAccess",
+	"infraconfig.externalnetworkname":     "Infra specific external network name",
+	"infraconfig.flavorname":              "Infra specific flavor name",
 	"chefclientkey":                       "Chef client key",
 }
 var CloudletSpecialArgs = map[string]string{
@@ -1290,8 +1301,8 @@ var CreateCloudletOptionalArgs = []string{
 	"accessvars",
 	"vmimageversion",
 	"packageversion",
-	"infraaccesstype",
 	"deploymenttype",
-	"infraexternalnetwork",
-	"infraflavorname",
+	"infraapiaccess",
+	"infraconfig.externalnetworkname",
+	"infraconfig.flavorname",
 }
