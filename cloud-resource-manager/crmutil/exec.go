@@ -85,7 +85,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		insts := []edgeproto.ClusterInst{}
 		cd.ClusterInstCache.Mux.Lock()
 		for _, v := range cd.ClusterInstCache.Objs {
-			insts = append(insts, *v)
+			insts = append(insts, *v.Obj)
 		}
 		cd.ClusterInstCache.Mux.Unlock()
 		nodes, err := cd.platform.ListCloudletMgmtNodes(ctx, insts)

@@ -314,7 +314,7 @@ apps:
   deployment: helm
   delopt: AutoDelete
   configs:
-  - kind: hemlCustomizationYaml
+  - kind: helmCustomizationYaml
     config: |
       prometheus:
         prometheusSpec:
@@ -374,7 +374,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: tmus-cloud-2.tmus.mobiledgex.net
+  uri: tmus-cloud-2.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -409,7 +409,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: autoclustersomeapplication1.tmus-cloud-2.tmus.mobiledgex.net
+  uri: autoclustersomeapplication1.tmus-cloud-2.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -435,7 +435,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: autoclustersomeapplication2.tmus-cloud-2.tmus.mobiledgex.net
+  uri: autoclustersomeapplication2.tmus-cloud-2.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -461,7 +461,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: tmus-cloud-2.tmus.mobiledgex.net
+  uri: tmus-cloud-2.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -492,7 +492,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: tmus-cloud-1.tmus.mobiledgex.net
+  uri: tmus-cloud-1.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -527,7 +527,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: autoclustersomeapplication1.tmus-cloud-1.tmus.mobiledgex.net
+  uri: autoclustersomeapplication1.tmus-cloud-1.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp

@@ -90,7 +90,7 @@ func (s *AutoProvStats) UpdateSettings(intervalSec float64) {
 	}
 }
 
-func (s *AutoProvStats) Increment(ctx context.Context, appKey *edgeproto.AppKey, cinstKey *edgeproto.ClusterInstKey, deployClientCount, intervalCount uint32) {
+func (s *AutoProvStats) Increment(ctx context.Context, appKey *edgeproto.AppKey, cinstKey *edgeproto.ClusterInstKey, policy *AutoProvPolicy) {
 	key := edgeproto.AppCloudletKey{
 		AppKey:      *appKey,
 		CloudletKey: cinstKey.CloudletKey,
@@ -105,8 +105,8 @@ func (s *AutoProvStats) Increment(ctx context.Context, appKey *edgeproto.AppKey,
 		shard.appCloudletCounts[key] = stats
 	}
 	stats.count++
-	log.SpanLog(ctx, log.DebugLevelMetrics, "autoprovstats increment", "key", key, "idx", idx, "deployClientCount", deployClientCount, "intervalCount", intervalCount, "stats count", stats.count, "stats last count", stats.lastCount)
-	if uint32(stats.count-stats.lastCount) >= deployClientCount && intervalCount <= 1 {
+	log.SpanLog(ctx, log.DebugLevelMetrics, "autoprovstats increment", "key", key, "idx", idx, "policy", policy, "stats count", stats.count, "stats last count", stats.lastCount)
+	if uint32(stats.count-stats.lastCount) >= policy.DeployClientCount && policy.IntervalCount <= 1 {
 		// special case, duration is the same as the interval,
 		// and deploy count met, so stats upstream to handle
 		// this immediately.
@@ -171,7 +171,7 @@ func (s *AutoProvStats) RunNotify() {
 	s.waitGroup.Done()
 }
 
-func (s *AutoProvStats) Clear(appKey *edgeproto.AppKey) {
+func (s *AutoProvStats) Clear(appKey *edgeproto.AppKey, policy string) {
 	for ii, _ := range s.shards {
 		shard := &s.shards[ii]
 		shard.mux.Lock()

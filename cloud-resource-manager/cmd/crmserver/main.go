@@ -41,6 +41,7 @@ var packageVersion = flag.String("packageVersion", "", "CRM VM baseimage debian 
 var cloudletVMImagePath = flag.String("cloudletVMImagePath", "", "Image path where CRM VM baseimages are present")
 var cleanupMode = flag.Bool("cleanupMode", false, "cleanup previous versions of CRM if present")
 var commercialCerts = flag.Bool("commercialCerts", false, "Get TLS certs from LetsEncrypt. If false CRM will generate its own self-signed certs")
+var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
 
 // myCloudletInfo is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudletInfo is provided as a configuration - either command line or
@@ -61,7 +62,8 @@ func main() {
 	flag.Parse()
 
 	if strings.Contains(*debugLevels, "mexos") {
-		log.FatalLog("mexos log level is obsolete, please use infra")
+		log.WarnLog("mexos log level is obsolete, please use infra")
+		*debugLevels = strings.ReplaceAll(*debugLevels, "mexos", "infra")
 	}
 	log.SetDebugLevelStrs(*debugLevels)
 	log.InitTracer(nodeMgr.TlsCertFile)
@@ -175,18 +177,48 @@ func main() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &controllerData.ClusterInstInfoCache, updateCloudletStatus); err != nil {
+		caches := pf.Caches{
+			FlavorCache:        &controllerData.FlavorCache,
+			PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
+			ClusterInstCache:   &controllerData.ClusterInstCache,
+			AppCache:           &controllerData.AppCache,
+			AppInstCache:       &controllerData.AppInstCache,
+		}
+		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &caches, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
 			log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
 			updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
 			err = controllerData.GatherCloudletInfo(ctx, &myCloudletInfo)
+			log.SpanLog(ctx, log.DebugLevelInfra, "GatherCloudletInfo done", "state", myCloudletInfo.State)
 
 			if err != nil {
 				myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
 				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 			} else {
+				if myCloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC {
+					log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+					controllerData.ControllerSyncInProgress = true
+					controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+
+					// Wait for CRM to receive cluster and appinst data from notify
+					select {
+					case <-controllerData.ControllerSyncDone:
+						if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, &cloudlet) {
+							log.FatalLog("failed to get sync data from controller")
+						}
+					case <-time.After(ControllerTimeout):
+						log.FatalLog("Timed out waiting for sync data from controller")
+					}
+					log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
+					myCloudletInfo.ControllerCacheReceived = true
+					controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+					err := platform.SyncControllerCache(ctx, &caches, myCloudletInfo.State)
+					if err != nil {
+						log.FatalLog("Platform sync fail", "err", err)
+					}
+				}
 				myCloudletInfo.Errors = nil
 				if *cleanupMode {
 					controllerData.CleanupOldCloudlet(ctx, &cloudlet, updateCloudletStatus)
@@ -212,7 +244,7 @@ func main() {
 
 		// setup rootlb certs
 		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-		commonName := cloudcommon.GetRootLBFQDN(&myCloudletInfo.Key)
+		commonName := cloudcommon.GetRootLBFQDN(&myCloudletInfo.Key, *appDNSRoot)
 		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
 		rootlb, err := platform.GetClusterPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
 		if err == nil {
@@ -228,7 +260,6 @@ func main() {
 	defer notifyServer.Stop()
 
 	span.Finish()
-
 	if mainStarted != nil {
 		// for unit testing to detect when main is ready
 		close(mainStarted)
@@ -239,7 +270,7 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName, vaultAddr string, clusterInstCache *edgeproto.ClusterInstInfoCache, updateCallback edgeproto.CacheUpdateCallback) error {
+func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName, vaultAddr string, caches *pf.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	loc := util.DNSSanitize(cloudletInfo.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudletInfo.Key.Organization)
 
@@ -254,8 +285,9 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		PackageVersion:      *packageVersion,
 		EnvVars:             cloudlet.EnvVar,
 		NodeMgr:             &nodeMgr,
+		AppDNSRoot:          *appDNSRoot,
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", platform.GetType())
-	err := platform.Init(ctx, &pc, updateCallback)
+	err := platform.Init(ctx, &pc, caches, updateCallback)
 	return err
 }

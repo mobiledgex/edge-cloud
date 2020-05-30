@@ -16,7 +16,7 @@ import (
 func SetDefaultLoadBalancerMaxPortRange(ctx context.Context, objStore objstore.KVStore) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "SetDefaultLoadBalancerMaxPortRange - default to 50")
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("Settings"))
-	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var settings Settings
 		err2 := json.Unmarshal(val, &settings)
 		if err2 != nil {
@@ -41,7 +41,7 @@ func SetDefaultLoadBalancerMaxPortRange(ctx context.Context, objStore objstore.K
 func SetDefaultMaxTrackedDmeClients(ctx context.Context, objStore objstore.KVStore) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "SetDefaultMaxTrackedDmeClients - default to 100")
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("Settings"))
-	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var settings Settings
 		err2 := json.Unmarshal(val, &settings)
 		if err2 != nil {
@@ -367,7 +367,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// Operator Codes
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("OperatorCode"))
-	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var ocodeV0 OperatorCodeV0_OrgRestructure
 		err2 := json.Unmarshal(val, &ocodeV0)
 		if err2 != nil {
@@ -400,7 +400,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// Cloudlets
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("Cloudlet"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var cloudletV0 CloudletV0_OrgRestructure
 		err2 := json.Unmarshal(val, &cloudletV0)
 		if err2 != nil {
@@ -459,7 +459,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// Cloudlet Infos
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("CloudletInfo"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var cloudletInfoV0 CloudletInfoV0_OrgRestructure
 		err2 := json.Unmarshal(val, &cloudletInfoV0)
 		if err2 != nil {
@@ -506,7 +506,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// Cloudlet Pool Members
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("CloudletPoolMember"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var cloudletPoolMemberV0 CloudletPoolMemberV0_OrgRestructure
 		err2 := json.Unmarshal(val, &cloudletPoolMemberV0)
 		if err2 != nil {
@@ -541,7 +541,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// Cloudlet Refs
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("CloudletRefs"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var cloudletRefsV0 CloudletRefsV0_OrgRestructure
 		err2 := json.Unmarshal(val, &cloudletRefsV0)
 		if err2 != nil {
@@ -583,7 +583,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// ClusterInsts
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("ClusterInst"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var cinstV0 ClusterInstV0_OrgRestructure
 		err2 := json.Unmarshal(val, &cinstV0)
 		if err2 != nil {
@@ -645,7 +645,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// Apps
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var appV0 AppV0_OrgRestructure
 		err2 := json.Unmarshal(val, &appV0)
 		if err2 != nil {
@@ -710,7 +710,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// AppInsts
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var appInstV0 AppInstV0_OrgRestructure
 		err2 := json.Unmarshal(val, &appInstV0)
 		if err2 != nil {
@@ -776,7 +776,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// PrivacyPolicies
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("PrivacyPolicy"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var privPolV0 PrivacyPolicyV0_OrgRestructure
 		err2 := json.Unmarshal(val, &privPolV0)
 		if err2 != nil {
@@ -815,7 +815,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// AutoScalePolicies
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AutoScalePolicy"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var autoScalPolV0 AutoScalePolicyV0_OrgRestructure
 		err2 := json.Unmarshal(val, &autoScalPolV0)
 		if err2 != nil {
@@ -858,7 +858,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// AutoProvPolicies
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AutoProvPolicy"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var autoProvPolV0 AutoProvPolicyV0_OrgRestructure
 		err2 := json.Unmarshal(val, &autoProvPolV0)
 		if err2 != nil {
@@ -900,7 +900,7 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 
 	// ResTagTAbles
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("ResTagTable"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var resTagV0 ResTagTableV0_OrgRestructure
 		err2 := json.Unmarshal(val, &resTagV0)
 		if err2 != nil {
@@ -961,7 +961,7 @@ func AppRevision(ctx context.Context, objStore objstore.KVStore) error {
 
 	// Apps
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
-	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var appV1 AppV1_OrgRestructure
 		err2 := json.Unmarshal(val, &appV1)
 		if err2 != nil {
@@ -1017,7 +1017,7 @@ func AppRevision(ctx context.Context, objStore objstore.KVStore) error {
 
 	// AppInsts
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
-	err = objStore.List(keystr, func(key, val []byte, rev int64) error {
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var appInstV1 AppInstV1_OrgRestructure
 		err2 := json.Unmarshal(val, &appInstV1)
 		if err2 != nil {

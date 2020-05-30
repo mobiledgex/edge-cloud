@@ -56,7 +56,8 @@ func (s *ClusterInstApi) Get(key *edgeproto.ClusterInstKey, buf *edgeproto.Clust
 func (s *ClusterInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, cluster := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		cluster := data.Obj
 		if cluster.Flavor.Matches(key) {
 			return true
 		}
@@ -67,7 +68,8 @@ func (s *ClusterInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, cluster := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		cluster := data.Obj
 		if cluster.AutoScalePolicy == key.Name {
 			return true
 		}
@@ -78,7 +80,8 @@ func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) bool {
 func (s *ClusterInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, cluster := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		cluster := data.Obj
 		if cluster.PrivacyPolicy == key.Name && cluster.Key.Organization == key.Organization {
 			return true
 		}
@@ -90,7 +93,8 @@ func (s *ClusterInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[ed
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	static := false
-	for key, val := range s.cache.Objs {
+	for key, data := range s.cache.Objs {
+		val := data.Obj
 		if key.CloudletKey.Matches(in) {
 			if val.Liveness == edgeproto.Liveness_LIVENESS_STATIC {
 				static = true
@@ -106,7 +110,8 @@ func (s *ClusterInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[ed
 func (s *ClusterInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for key, val := range s.cache.Objs {
+	for key, data := range s.cache.Objs {
+		val := data.Obj
 		if key.CloudletKey.Matches(in) {
 			if edgeproto.IsTransientState(val.State) {
 				return true
@@ -119,7 +124,8 @@ func (s *ClusterInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
 func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, val := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		val := data.Obj
 		if val.Key.ClusterKey.Matches(key) {
 			return true
 		}

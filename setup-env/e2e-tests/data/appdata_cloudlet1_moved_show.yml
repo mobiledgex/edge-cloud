@@ -329,7 +329,7 @@ apps:
   deployment: helm
   accesstype: AccessTypeLoadBalancer
   configs:
-  - kind: hemlCustomizationYaml
+  - kind: helmCustomizationYaml
     config: |
       prometheus:
         prometheusSpec:
@@ -382,7 +382,7 @@ apps:
   deployment: helm
   accesstype: AccessTypeLoadBalancer
   configs:
-  - kind: hemlCustomizationYaml
+  - kind: helmCustomizationYaml
     config: |
       nfs:
         path: /share

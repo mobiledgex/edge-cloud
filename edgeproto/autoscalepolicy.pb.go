@@ -775,14 +775,19 @@ type AutoScalePolicyKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type AutoScalePolicyCacheData struct {
+	Obj    *AutoScalePolicy
+	ModRev int64
+}
+
 // AutoScalePolicyCache caches AutoScalePolicy objects in memory in a hash table
 // and keeps them in sync with the database.
 type AutoScalePolicyCache struct {
-	Objs        map[PolicyKey]*AutoScalePolicy
+	Objs        map[PolicyKey]*AutoScalePolicyCacheData
 	Mux         util.Mutex
 	List        map[PolicyKey]struct{}
 	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *AutoScalePolicy)
+	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *AutoScalePolicy, modRev int64)
 	UpdatedCb   func(ctx context.Context, old *AutoScalePolicy, new *AutoScalePolicy)
 	KeyWatchers map[PolicyKey][]*AutoScalePolicyKeyWatcher
 }
@@ -794,7 +799,7 @@ func NewAutoScalePolicyCache() *AutoScalePolicyCache {
 }
 
 func InitAutoScalePolicyCache(cache *AutoScalePolicyCache) {
-	cache.Objs = make(map[PolicyKey]*AutoScalePolicy)
+	cache.Objs = make(map[PolicyKey]*AutoScalePolicyCacheData)
 	cache.KeyWatchers = make(map[PolicyKey][]*AutoScalePolicyKeyWatcher)
 }
 
@@ -803,11 +808,17 @@ func (c *AutoScalePolicyCache) GetTypeString() string {
 }
 
 func (c *AutoScalePolicyCache) Get(key *PolicyKey, valbuf *AutoScalePolicy) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *AutoScalePolicyCache) GetWithRev(key *PolicyKey, valbuf *AutoScalePolicy, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -819,23 +830,26 @@ func (c *AutoScalePolicyCache) HasKey(key *PolicyKey) bool {
 	return found
 }
 
-func (c *AutoScalePolicyCache) GetAllKeys(ctx context.Context, keys map[PolicyKey]context.Context) {
+func (c *AutoScalePolicyCache) GetAllKeys(ctx context.Context, cb func(key *PolicyKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *AutoScalePolicyCache) Update(ctx context.Context, in *AutoScalePolicy, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *AutoScalePolicy) (*AutoScalePolicy, bool) {
+func (c *AutoScalePolicyCache) Update(ctx context.Context, in *AutoScalePolicy, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *AutoScalePolicy) (*AutoScalePolicy, bool) {
 		return in, true
 	})
 }
 
-func (c *AutoScalePolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey, rev int64, modFunc func(old *AutoScalePolicy) (new *AutoScalePolicy, changed bool)) {
+func (c *AutoScalePolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey, modRev int64, modFunc func(old *AutoScalePolicy) (new *AutoScalePolicy, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *AutoScalePolicy
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
@@ -848,31 +862,38 @@ func (c *AutoScalePolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey
 			defer c.UpdatedCb(ctx, old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
+	c.Objs[new.GetKeyVal()] = &AutoScalePolicyCacheData{
+		Obj:    new,
+		ModRev: modRev,
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate AutoScalePolicy", "obj", new, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate AutoScalePolicy", "obj", new, "modRev", modRev)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *AutoScalePolicyCache) Delete(ctx context.Context, in *AutoScalePolicy, rev int64) {
+func (c *AutoScalePolicyCache) Delete(ctx context.Context, in *AutoScalePolicy, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *AutoScalePolicy
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete AutoScalePolicy", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete AutoScalePolicy", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *AutoScalePolicyCache) Prune(ctx context.Context, validKeys map[PolicyKey]struct{}) {
-	notify := make(map[PolicyKey]*AutoScalePolicy)
+	notify := make(map[PolicyKey]*AutoScalePolicyCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -885,7 +906,7 @@ func (c *AutoScalePolicyCache) Prune(ctx context.Context, validKeys map[PolicyKe
 	c.Mux.Unlock()
 	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -904,13 +925,13 @@ func (c *AutoScalePolicyCache) Show(filter *AutoScalePolicy, cb func(ret *AutoSc
 	log.DebugLog(log.DebugLevelApi, "Show AutoScalePolicy", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AutoScalePolicy", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare AutoScalePolicy", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AutoScalePolicy", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show AutoScalePolicy", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -924,7 +945,7 @@ func AutoScalePolicyGenericNotifyCb(fn func(key *PolicyKey, old *AutoScalePolicy
 	}
 }
 
-func (c *AutoScalePolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *AutoScalePolicy)) {
+func (c *AutoScalePolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *AutoScalePolicy, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -980,14 +1001,21 @@ func (c *AutoScalePolicyCache) TriggerKeyWatchers(ctx context.Context, key *Poli
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *AutoScalePolicyCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *AutoScalePolicyCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := AutoScalePolicy{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse AutoScalePolicy data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -995,11 +1023,11 @@ func (c *AutoScalePolicyCache) SyncUpdate(ctx context.Context, key, val []byte, 
 	c.Mux.Unlock()
 }
 
-func (c *AutoScalePolicyCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *AutoScalePolicyCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := AutoScalePolicy{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	PolicyKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *AutoScalePolicyCache) SyncListStart(ctx context.Context) {
@@ -1007,7 +1035,7 @@ func (c *AutoScalePolicyCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *AutoScalePolicyCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[PolicyKey]*AutoScalePolicy)
+	deleted := make(map[PolicyKey]*AutoScalePolicyCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1019,7 +1047,7 @@ func (c *AutoScalePolicyCache) SyncListEnd(ctx context.Context) {
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 			c.TriggerKeyWatchers(ctx, &key)
 		}
 	}

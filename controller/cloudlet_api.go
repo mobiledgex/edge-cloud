@@ -152,6 +152,7 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	pfConfig.EnvVar = make(map[string]string)
 	pfConfig.Region = *region
 	pfConfig.CommercialCerts = *commercialCerts
+	pfConfig.AppDnsRoot = *appDNSRoot
 	getCrmEnv(pfConfig.EnvVar)
 	addrObjs := strings.Split(*notifyAddr, ":")
 	if len(addrObjs) != 2 {
@@ -1068,7 +1069,8 @@ func (s *CloudletApi) UpdateAppInstLocations(ctx context.Context, in *edgeproto.
 	// find all appinsts associated with the cloudlet
 	keys := make([]edgeproto.AppInstKey, 0)
 	appInstApi.cache.Mux.Lock()
-	for _, inst := range appInstApi.cache.Objs {
+	for _, data := range appInstApi.cache.Objs {
+		inst := data.Obj
 		if inst.Key.ClusterInstKey.CloudletKey.Matches(&in.Key) {
 			keys = append(keys, inst.Key)
 		}
@@ -1077,7 +1079,7 @@ func (s *CloudletApi) UpdateAppInstLocations(ctx context.Context, in *edgeproto.
 
 	inst := edgeproto.AppInst{}
 	for ii, _ := range keys {
-		inst = *appInstApi.cache.Objs[keys[ii]]
+		inst = *appInstApi.cache.Objs[keys[ii]].Obj
 		inst.Fields = make([]string, 0)
 		if _, found := fmap[edgeproto.CloudletFieldLocationLatitude]; found {
 			inst.CloudletLoc.Latitude = in.Location.Latitude
@@ -1103,7 +1105,8 @@ func (s *CloudletApi) showCloudletsByKeys(keys map[edgeproto.CloudletKey]struct{
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 
-	for key, obj := range s.cache.Objs {
+	for key, data := range s.cache.Objs {
+		obj := data.Obj
 		if _, found := keys[key]; !found {
 			continue
 		}

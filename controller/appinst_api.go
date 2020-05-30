@@ -61,7 +61,8 @@ func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgepr
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	static := false
-	for key, val := range s.cache.Objs {
+	for key, data := range s.cache.Objs {
+		val := data.Obj
 		if key.ClusterInstKey.CloudletKey.Matches(in) && appApi.Get(&val.Key.AppKey, &app) {
 			if (val.Liveness == edgeproto.Liveness_LIVENESS_STATIC) && (app.DelOpt == edgeproto.DeleteType_NO_AUTO_DELETE) {
 				static = true
@@ -78,7 +79,8 @@ func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgepr
 func (s *AppInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for key, val := range s.cache.Objs {
+	for key, data := range s.cache.Objs {
+		val := data.Obj
 		if key.ClusterInstKey.CloudletKey.Matches(in) {
 			if edgeproto.IsTransientState(val.State) {
 				return true
@@ -109,7 +111,8 @@ func (s *AppInstApi) UsesApp(in *edgeproto.AppKey, dynInsts map[edgeproto.AppIns
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	static := false
-	for key, val := range s.cache.Objs {
+	for key, data := range s.cache.Objs {
+		val := data.Obj
 		if key.AppKey.Matches(in) {
 			if val.Liveness == edgeproto.Liveness_LIVENESS_STATIC {
 				static = true
@@ -125,7 +128,8 @@ func (s *AppInstApi) UsesClusterInst(in *edgeproto.ClusterInstKey) bool {
 	var app edgeproto.App
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for key, val := range s.cache.Objs {
+	for key, data := range s.cache.Objs {
+		val := data.Obj
 		if key.ClusterInstKey.Matches(in) && appApi.Get(&val.Key.AppKey, &app) {
 			if val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
 				continue
@@ -145,7 +149,8 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverri
 	apps := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting AppInsts ", "cluster", key.ClusterKey.Name)
 	s.cache.Mux.Lock()
-	for k, val := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
+		val := data.Obj
 		if k.ClusterInstKey.Matches(key) && appApi.Get(&val.Key.AppKey, &app) {
 			if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE || val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
 				apps[k] = val
@@ -198,7 +203,8 @@ func (s *AppInstApi) AutoDelete(ctx context.Context, in *edgeproto.AppKey) error
 	log.SpanLog(ctx, log.DebugLevelApi, "Auto-deleting AppInsts for App", "app", in)
 	appinsts := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
 	s.cache.Mux.Lock()
-	for key, val := range s.cache.Objs {
+	for key, data := range s.cache.Objs {
+		val := data.Obj
 		if key.AppKey.Matches(in) {
 			appinsts[key] = val
 		}
@@ -228,7 +234,8 @@ func (s *AppInstApi) AutoDelete(ctx context.Context, in *edgeproto.AppKey) error
 func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, app := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		app := data.Obj
 		if app.Flavor.Matches(key) {
 			return true
 		}
@@ -239,7 +246,8 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 func (s *AppInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, appinst := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		appinst := data.Obj
 		if edgeproto.GetOrg(appinst) == key.Organization && appinst.PrivacyPolicy == key.Name {
 			return true
 		}
@@ -624,12 +632,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
 		if !cloudcommon.IsClusterInstReqd(&app) {
-			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey)
+			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
 			for ii, _ := range ports {
 				ports[ii].PublicPort = ports[ii].InternalPort
 			}
 		} else if ipaccess == edgeproto.IpAccess_IP_ACCESS_SHARED && !app.InternalPorts {
-			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.ClusterInstKey.CloudletKey)
+			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
 			if cloudletRefs.RootLbPorts == nil {
 				cloudletRefs.RootLbPorts = make(map[int32]int32)
 			}
@@ -684,7 +692,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		} else {
 			if isIPAllocatedPerService(in.Key.ClusterInstKey.CloudletKey.Organization) {
 				//dedicated access in which each service gets a different ip
-				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey)
+				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
 				for ii, _ := range ports {
 					// No rootLB to do L7 muxing, and each
 					// service has it's own IP anyway so
@@ -696,7 +704,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				}
 			} else {
 				//dedicated access in which IP is that of the LB
-				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.ClusterInstKey.CloudletKey, clusterKey)
+				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
 				// Docker deployments do not need an L7 reverse
 				// proxy (because they all bind to ports on the
 				// same VM, so multiple containers trying to bind
@@ -869,6 +877,12 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		}
 	}
 
+	singleAppInst := false
+	if in.Key.ClusterInstKey.ValidateKey() == nil {
+		// cluster inst specified
+		singleAppInst = true
+	}
+
 	s.cache.Mux.Lock()
 
 	type updateResult struct {
@@ -878,7 +892,8 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 	instanceUpdateResults := make(map[edgeproto.AppInstKey]chan updateResult)
 	instances := make(map[edgeproto.AppInstKey]struct{})
 
-	for k, val := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
+		val := data.Obj
 		// ignore forceupdate, Crmoverride updatemultiple for match
 		val.ForceUpdate = in.ForceUpdate
 		val.UpdateMultiple = in.UpdateMultiple
@@ -897,7 +912,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		return in.Key.NotFoundError()
 	}
 
-	if len(instances) > 1 {
+	if !singleAppInst {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Updating: %d AppInsts", len(instances))})
 	}
 
@@ -924,18 +939,18 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		if result.errString == "" {
 			if result.revisionUpdated {
 				numUpdated++
-				if len(instances) == 1 {
+				if singleAppInst {
 					cb.Send(&edgeproto.Result{Message: "Successfully updated AppInst"})
 				}
 			} else {
 				numSkipped++
-				if len(instances) == 1 {
+				if singleAppInst {
 					cb.Send(&edgeproto.Result{Message: "Skipped updating AppInst"})
 				}
 			}
 		} else {
 			numFailed++
-			if len(instances) == 1 {
+			if singleAppInst {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed: %s", result.errString)})
 			} else {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed for cluster (%s/%s), cloudlet (%s/%s): %s", k.ClusterInstKey.ClusterKey.Name, k.ClusterInstKey.Organization, k.ClusterInstKey.CloudletKey.Name, k.ClusterInstKey.CloudletKey.Organization, result.errString)})
@@ -946,7 +961,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processing: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
 		}
 	}
-	if len(instances) > 1 {
+	if !singleAppInst {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Completed: %d of %d AppInsts.  Updated: %d Skipped: %d Failed: %d", numTotal, len(instances), numUpdated, numSkipped, numFailed)})
 	}
 	return nil
