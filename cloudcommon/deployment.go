@@ -23,25 +23,30 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-var AppDeploymentTypeKubernetes = "kubernetes"
-var AppDeploymentTypeVM = "vm"
-var AppDeploymentTypeHelm = "helm"
-var AppDeploymentTypeDocker = "docker"
+var DeploymentTypeKubernetes = "kubernetes"
+var DeploymentTypeVM = "vm"
+var DeploymentTypeHelm = "helm"
+var DeploymentTypeDocker = "docker"
 
-var ValidDeployments = []string{
-	AppDeploymentTypeKubernetes,
-	AppDeploymentTypeVM,
-	AppDeploymentTypeHelm,
-	AppDeploymentTypeDocker,
+var ValidAppDeployments = []string{
+	DeploymentTypeKubernetes,
+	DeploymentTypeVM,
+	DeploymentTypeHelm,
+	DeploymentTypeDocker,
+}
+
+var ValidCloudletDeployments = []string{
+	DeploymentTypeDocker,
+	DeploymentTypeKubernetes,
 }
 
 type DockerManifest struct {
 	DockerComposeFiles []string
 }
 
-func IsValidDeploymentType(appDeploymentType string) bool {
-	for _, d := range ValidDeployments {
-		if appDeploymentType == d {
+func IsValidDeploymentType(DeploymentType string, validDeployments []string) bool {
+	for _, d := range validDeployments {
+		if DeploymentType == d {
 			return true
 		}
 	}
@@ -51,15 +56,15 @@ func IsValidDeploymentType(appDeploymentType string) bool {
 func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string) bool {
 	switch imageType {
 	case edgeproto.ImageType_IMAGE_TYPE_DOCKER:
-		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeDocker {
+		if deployment == DeploymentTypeKubernetes || deployment == DeploymentTypeDocker {
 			return true
 		}
 	case edgeproto.ImageType_IMAGE_TYPE_QCOW:
-		if deployment == AppDeploymentTypeVM {
+		if deployment == DeploymentTypeVM {
 			return true
 		}
 	case edgeproto.ImageType_IMAGE_TYPE_HELM:
-		if deployment == AppDeploymentTypeHelm {
+		if deployment == DeploymentTypeHelm {
 			return true
 		}
 	}
@@ -82,18 +87,18 @@ func GetMappedAccessType(accessType edgeproto.AccessType, deployment, deployment
 	switch accessType {
 
 	case edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER:
-		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeHelm || deployment == AppDeploymentTypeDocker || deployment == AppDeploymentTypeVM {
+		if deployment == DeploymentTypeKubernetes || deployment == DeploymentTypeHelm || deployment == DeploymentTypeDocker || deployment == DeploymentTypeVM {
 			return accessType, nil
 		}
 	case edgeproto.AccessType_ACCESS_TYPE_DIRECT:
-		if deployment == AppDeploymentTypeVM || deployment == AppDeploymentTypeDocker {
+		if deployment == DeploymentTypeVM || deployment == DeploymentTypeDocker {
 			return accessType, nil
 		}
 	case edgeproto.AccessType_ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT:
-		if deployment == AppDeploymentTypeVM {
+		if deployment == DeploymentTypeVM {
 			return edgeproto.AccessType_ACCESS_TYPE_DIRECT, nil
 		}
-		if deployment == AppDeploymentTypeDocker {
+		if deployment == DeploymentTypeDocker {
 			dtype := GetDockerDeployType(deploymentManifest)
 			if dtype != "docker" {
 				// Because of the complexity with managing port mappings with
@@ -107,8 +112,8 @@ func GetMappedAccessType(accessType edgeproto.AccessType, deployment, deployment
 	return accessType, fmt.Errorf("Invalid access type for deployment")
 }
 
-func IsValidDeploymentManifest(appDeploymentType, command, manifest string, ports []dme.AppPort) error {
-	if appDeploymentType == AppDeploymentTypeVM {
+func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports []dme.AppPort) error {
+	if DeploymentType == DeploymentTypeVM {
 		if command != "" {
 			return fmt.Errorf("both deploymentmanifest and command cannot be used together for VM based deployment")
 		}
@@ -116,7 +121,7 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 			return nil
 		}
 		return fmt.Errorf("only cloud-init script support, must start with '#cloud-config'")
-	} else if appDeploymentType == AppDeploymentTypeKubernetes {
+	} else if DeploymentType == DeploymentTypeKubernetes {
 		objs, _, err := DecodeK8SYaml(manifest)
 		if err != nil {
 			return fmt.Errorf("parse kubernetes deployment yaml failed, %v", err)
@@ -192,24 +197,24 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 func GetDefaultDeploymentType(imageType edgeproto.ImageType) (string, error) {
 	switch imageType {
 	case edgeproto.ImageType_IMAGE_TYPE_DOCKER:
-		return AppDeploymentTypeKubernetes, nil
+		return DeploymentTypeKubernetes, nil
 	case edgeproto.ImageType_IMAGE_TYPE_QCOW:
-		return AppDeploymentTypeVM, nil
+		return DeploymentTypeVM, nil
 	case edgeproto.ImageType_IMAGE_TYPE_HELM:
-		return AppDeploymentTypeHelm, nil
+		return DeploymentTypeHelm, nil
 	}
 	return "", fmt.Errorf("unknown image type %s", imageType)
 }
 
 func GetImageTypeForDeployment(deployment string) (edgeproto.ImageType, error) {
 	switch deployment {
-	case AppDeploymentTypeDocker:
+	case DeploymentTypeDocker:
 		fallthrough
-	case AppDeploymentTypeKubernetes:
+	case DeploymentTypeKubernetes:
 		return edgeproto.ImageType_IMAGE_TYPE_DOCKER, nil
-	case AppDeploymentTypeHelm:
+	case DeploymentTypeHelm:
 		return edgeproto.ImageType_IMAGE_TYPE_HELM, nil
-	case AppDeploymentTypeVM:
+	case DeploymentTypeVM:
 		// could be different formats
 		fallthrough
 	default:
@@ -223,7 +228,7 @@ func GetAppDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, ap
 		return GetDeploymentManifest(ctx, vaultConfig, app.DeploymentManifest)
 	} else if app.DeploymentGenerator != "" {
 		return GenerateManifest(app)
-	} else if app.Deployment == AppDeploymentTypeKubernetes {
+	} else if app.Deployment == DeploymentTypeKubernetes {
 		// kubernetes requires a deployment yaml. Use default generator.
 		app.DeploymentGenerator = deploygen.KubernetesBasic
 		str, err := GenerateManifest(app)

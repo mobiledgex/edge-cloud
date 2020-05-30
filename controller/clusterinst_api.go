@@ -171,15 +171,15 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 		return clusterInst.IpAccess, nil
 	}
 	switch clusterInst.Deployment {
-	case cloudcommon.AppDeploymentTypeKubernetes:
+	case cloudcommon.DeploymentTypeKubernetes:
 		fallthrough
-	case cloudcommon.AppDeploymentTypeHelm:
+	case cloudcommon.DeploymentTypeHelm:
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessShared for deployment " + clusterInst.Deployment})
 			return edgeproto.IpAccess_IP_ACCESS_SHARED, nil
 		}
 		return clusterInst.IpAccess, nil
-	case cloudcommon.AppDeploymentTypeDocker:
+	case cloudcommon.DeploymentTypeDocker:
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for deployment " + clusterInst.Deployment})
 			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
@@ -233,19 +233,19 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	// validate deployment
 	if in.Deployment == "" {
 		// assume kubernetes, because that's what we've been doing
-		in.Deployment = cloudcommon.AppDeploymentTypeKubernetes
+		in.Deployment = cloudcommon.DeploymentTypeKubernetes
 	}
-	if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
+	if in.Deployment == cloudcommon.DeploymentTypeHelm {
 		// helm runs on kubernetes
-		in.Deployment = cloudcommon.AppDeploymentTypeKubernetes
+		in.Deployment = cloudcommon.DeploymentTypeKubernetes
 	}
-	if in.Deployment == cloudcommon.AppDeploymentTypeVM {
+	if in.Deployment == cloudcommon.DeploymentTypeVM {
 		// friendly error message if they try to specify VM
-		return fmt.Errorf("ClusterInst is not needed for deployment type %s, just create an AppInst directly", cloudcommon.AppDeploymentTypeVM)
+		return fmt.Errorf("ClusterInst is not needed for deployment type %s, just create an AppInst directly", cloudcommon.DeploymentTypeVM)
 	}
 
 	// validate other parameters based on deployment type
-	if in.Deployment == cloudcommon.AppDeploymentTypeKubernetes {
+	if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
 		// must have at least one master, but currently don't support
 		// more than one.
 		if in.NumMasters == 0 {
@@ -255,12 +255,12 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if in.NumMasters > 1 {
 			return fmt.Errorf("NumMasters cannot be greater than 1")
 		}
-	} else if in.Deployment == cloudcommon.AppDeploymentTypeDocker {
+	} else if in.Deployment == cloudcommon.DeploymentTypeDocker {
 		if in.NumMasters != 0 || in.NumNodes != 0 {
-			return fmt.Errorf("NumMasters and NumNodes not applicable for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
+			return fmt.Errorf("NumMasters and NumNodes not applicable for deployment type %s", cloudcommon.DeploymentTypeDocker)
 		}
 		if in.SharedVolumeSize != 0 {
-			return fmt.Errorf("SharedVolumeSize not supported for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
+			return fmt.Errorf("SharedVolumeSize not supported for deployment type %s", cloudcommon.DeploymentTypeDocker)
 
 		}
 	} else {
@@ -313,7 +313,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
-			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+			if in.Deployment != cloudcommon.DeploymentTypeKubernetes {
 				return errors.New("Only kubernetes clusters can be deployed in Azure or GCP")
 			}
 			if in.NumNodes == 0 {
@@ -368,7 +368,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Node Flavor", "vmspec", vmspec, "master flavor", in.MasterNodeFlavor)
 
 		// check if MasterNodeFlavor required
-		if in.Deployment == cloudcommon.AppDeploymentTypeKubernetes && in.NumNodes > 0 {
+		if in.Deployment == cloudcommon.DeploymentTypeKubernetes && in.NumNodes > 0 {
 			masterFlavor := edgeproto.Flavor{}
 			masterFlavorKey := edgeproto.FlavorKey{}
 			settings := settingsApi.Get()

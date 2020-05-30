@@ -55,6 +55,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].Config = edgeproto.PlatformConfig{}
 		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].Deployment = ""
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -271,7 +274,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.accessvars",
 	"cloudlets:#.vmimageversion",
 	"cloudlets:#.packageversion",
-	"cloudlets:#.deploymenttype",
+	"cloudlets:#.deployment",
 	"cloudlets:#.infraapiaccess",
 	"cloudlets:#.infraconfig.externalnetworkname",
 	"cloudlets:#.infraconfig.flavorname",
@@ -478,7 +481,7 @@ var AllDataComments = map[string]string{
 	"settings.masternodeflavor":                                  "Default flavor for k8s master VM and > 0  workers",
 	"settings.loadbalancermaxportrange":                          "Max IP Port range when using a load balancer",
 	"settings.maxtrackeddmeclients":                              "Max DME clients to be tracked at the same time.",
-	"settings.chefclientinterval":                                "Default chef client interval (seconds)",
+	"settings.chefclientinterval":                                "Default chef client interval (duration)",
 	"operatorcodes:#.code":                                       "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                               "Operator Organization name",
 	"restagtables:#.key.name":                                    "Resource Table Name",
@@ -536,7 +539,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.accessvars":                                     "Variables required to access cloudlet",
 	"cloudlets:#.vmimageversion":                                 "MobiledgeX baseimage version where CRM services reside",
 	"cloudlets:#.packageversion":                                 "MobiledgeX OS package version on baseimage where CRM services reside",
-	"cloudlets:#.deploymenttype":                                 "Type of deployment to bring up CRM services, one of DeploymentTypeDocker, DeploymentTypeK8S",
+	"cloudlets:#.deployment":                                     "Deployment type to bring up CRM services (docker, kubernetes)",
 	"cloudlets:#.infraapiaccess":                                 "Infra Access Type is the type of access available to Infra API Endpoint, one of DirectAccess, RestrictedAccess",
 	"cloudlets:#.infraconfig.externalnetworkname":                "Infra specific external network name",
 	"cloudlets:#.infraconfig.flavorname":                         "Infra specific flavor name",

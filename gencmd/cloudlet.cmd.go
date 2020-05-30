@@ -53,6 +53,9 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	if _, found := tags["nocmp"]; found {
 		in.Config = edgeproto.PlatformConfig{}
 	}
+	if _, found := tags["nocmp"]; found {
+		in.Deployment = ""
+	}
 }
 
 func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
@@ -400,8 +403,8 @@ func ShowCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
 	}
 }
 
-var ShowCloudletManifestCmd = &cli.Command{
-	Use:          "ShowCloudletManifest",
+var GetCloudletManifestCmd = &cli.Command{
+	Use:          "GetCloudletManifest",
 	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
 	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
@@ -409,10 +412,10 @@ var ShowCloudletManifestCmd = &cli.Command{
 	Comments:     CloudletComments,
 	ReqData:      &edgeproto.Cloudlet{},
 	ReplyData:    &edgeproto.CloudletManifest{},
-	Run:          runShowCloudletManifest,
+	Run:          runGetCloudletManifest,
 }
 
-func runShowCloudletManifest(c *cli.Command, args []string) error {
+func runGetCloudletManifest(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
@@ -421,35 +424,35 @@ func runShowCloudletManifest(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return ShowCloudletManifest(c, obj)
+	return GetCloudletManifest(c, obj)
 }
 
-func ShowCloudletManifest(c *cli.Command, in *edgeproto.Cloudlet) error {
+func GetCloudletManifest(c *cli.Command, in *edgeproto.Cloudlet) error {
 	if CloudletApiCmd == nil {
 		return fmt.Errorf("CloudletApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := CloudletApiCmd.ShowCloudletManifest(ctx, in)
+	obj, err := CloudletApiCmd.GetCloudletManifest(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("ShowCloudletManifest failed: %s", errstr)
+		return fmt.Errorf("GetCloudletManifest failed: %s", errstr)
 	}
 	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func ShowCloudletManifests(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
+func GetCloudletManifests(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("ShowCloudletManifest %v\n", data[ii])
-		myerr := ShowCloudletManifest(c, &data[ii])
+		fmt.Printf("GetCloudletManifest %v\n", data[ii])
+		myerr := GetCloudletManifest(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -633,7 +636,7 @@ var CloudletApiCmds = []*cobra.Command{
 	DeleteCloudletCmd.GenCmd(),
 	UpdateCloudletCmd.GenCmd(),
 	ShowCloudletCmd.GenCmd(),
-	ShowCloudletManifestCmd.GenCmd(),
+	GetCloudletManifestCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
@@ -1056,7 +1059,7 @@ var CloudletOptionalArgs = []string{
 	"accessvars",
 	"vmimageversion",
 	"packageversion",
-	"deploymenttype",
+	"deployment",
 	"infraapiaccess",
 	"infraconfig.externalnetworkname",
 	"infraconfig.flavorname",
@@ -1117,7 +1120,7 @@ var CloudletComments = map[string]string{
 	"accessvars":                          "Variables required to access cloudlet",
 	"vmimageversion":                      "MobiledgeX baseimage version where CRM services reside",
 	"packageversion":                      "MobiledgeX OS package version on baseimage where CRM services reside",
-	"deploymenttype":                      "Type of deployment to bring up CRM services, one of DeploymentTypeDocker, DeploymentTypeK8S",
+	"deployment":                          "Deployment type to bring up CRM services (docker, kubernetes)",
 	"infraapiaccess":                      "Infra Access Type is the type of access available to Infra API Endpoint, one of DirectAccess, RestrictedAccess",
 	"infraconfig.externalnetworkname":     "Infra specific external network name",
 	"infraconfig.flavorname":              "Infra specific flavor name",
@@ -1306,7 +1309,7 @@ var CreateCloudletOptionalArgs = []string{
 	"accessvars",
 	"vmimageversion",
 	"packageversion",
-	"deploymenttype",
+	"deployment",
 	"infraapiaccess",
 	"infraconfig.externalnetworkname",
 	"infraconfig.flavorname",

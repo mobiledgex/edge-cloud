@@ -218,11 +218,18 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if in.PackageVersion != "" {
 			return errors.New("Package version is not supported for local deployment")
 		}
-		if in.DeploymentType == edgeproto.DeploymentType_DEPLOYMENT_TYPE_K8S {
-			return errors.New("Deployment type k8s is not supported for local deployment")
+		if in.Deployment != "" {
+			return errors.New("Deployment type is not supported for local deployment")
 		}
 		if in.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS {
 			return errors.New("Infra access type private is not supported for local deployment")
+		}
+	} else {
+		if in.Deployment == "" {
+			in.Deployment = cloudcommon.DeploymentTypeDocker
+		}
+		if !cloudcommon.IsValidDeploymentType(in.Deployment, cloudcommon.ValidCloudletDeployments) {
+			return fmt.Errorf("Invalid deployment, must be one of %v", cloudcommon.ValidCloudletDeployments)
 		}
 	}
 
@@ -341,13 +348,16 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if err == nil {
 		newState := in.State
-		if in.InfraApiAccess == edgeproto.InfraApiAccess_DIRECT_ACCESS {
+		if in.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS {
 			newState = edgeproto.TrackedState_READY
 		}
 		cloudlet := edgeproto.Cloudlet{}
 		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if !s.store.STMGet(stm, &in.Key, &cloudlet) {
 				return in.Key.NotFoundError()
+			}
+			if cloudlet.ChefClientKey == in.ChefClientKey && cloudlet.State == newState {
+				return nil
 			}
 			cloudlet.ChefClientKey = in.ChefClientKey
 			cloudlet.State = newState
@@ -359,7 +369,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 		if in.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS {
 			cb.Send(&edgeproto.Result{
-				Message: "Cloudlet configured successfully. Please run `ShowCloudletManifest` to bringup Platform VM(s) for cloudlet services",
+				Message: "Cloudlet configured successfully. Please run `GetCloudletManifest` to bringup Platform VM(s) for cloudlet services",
 			})
 			return nil
 		}
@@ -1164,7 +1174,7 @@ func RecordCloudletEvent(ctx context.Context, cloudletKey *edgeproto.CloudletKey
 	services.events.AddMetric(&metric)
 }
 
-func (s *CloudletApi) ShowCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error) {
+func (s *CloudletApi) GetCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error) {
 	cloudlet := &edgeproto.Cloudlet{}
 	if !cloudletApi.cache.Get(&in.Key, cloudlet) {
 		return nil, in.Key.NotFoundError()
