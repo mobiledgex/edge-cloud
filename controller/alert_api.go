@@ -96,10 +96,10 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	in.Controller = ControllerId
 	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
 	if name == cloudcommon.AlertAppInstDown {
-		state, ok := in.Annotations[cloudcommon.AlertHealthCheckStatus]
+		state, ok := in.Labels[cloudcommon.AlertHealthCheckStatus]
 		if !ok {
 			log.SpanLog(ctx, log.DebugLevelNotify, "HealthCheck satus not found",
-				"annotations", in.Annotations)
+				"labels", in.Labels)
 			return
 		}
 		hcState, err := strconv.Atoi(state)
@@ -109,7 +109,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		}
 		if !ok {
 			log.SpanLog(ctx, log.DebugLevelNotify, "HealthCheck satus unknown",
-				"annotations", in.Annotations, "status", state)
+				"labels", in.Labels, "status", state)
 			return
 		}
 		appInstSetStateFromHealthCheckAlert(ctx, in, edgeproto.HealthCheck(hcState))
