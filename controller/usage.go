@@ -18,6 +18,10 @@ var InfluxMaximumTimestamp, _ = time.Parse(time.RFC3339, "2262-04-11T23:47:15Z")
 var PrevCheckpoint = InfluxMinimumTimestamp
 var NextCheckpoint = InfluxMaximumTimestamp //for unit tests, so getClusterCheckpoint will never sleep
 
+var GetCheckpointInfluxQueryTemplate = `SELECT %s from "%s" WHERE "org"='%s' AND "checkpoint"='CHECKPOINT' AND time <= '%s' order by time desc`
+var CreateCheckpointInfluxQueryTemplate = `SELECT %s from "%s" WHERE time >= '%s' AND time < '%s' order by time desc`
+var CreateCheckpointInfluxUsageQueryTemplate = `SELECT %s from "%s" WHERE checkpoint='CHECKPOINT' AND time >= '%s' AND time < '%s' order by time desc`
+
 func InitUsage() error {
 	// set the first NextCheckpoint,
 	NextCheckpoint = time.Now().Truncate(time.Minute).Add(*checkpointInterval)
@@ -48,7 +52,7 @@ func InitUsage() error {
 }
 
 func runCheckpoints(ctx context.Context) {
-	checkpointSpan := log.StartSpan(log.DebugLevelInfo, "Cluster Checkpointing thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+	checkpointSpan := log.StartSpan(log.DebugLevelInfo, "Checkpointing thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 	defer checkpointSpan.Finish()
 	err := InitUsage()
 	if err != nil {
@@ -62,7 +66,11 @@ func runCheckpoints(ctx context.Context) {
 			checkpointTime := NextCheckpoint
 			err = CreateClusterCheckpoint(ctx, checkpointTime)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create checkpoint", "time", checkpointTime, "err", err)
+				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create cluster checkpoint", "time", checkpointTime, "err", err)
+			}
+			err = CreateAppCheckpoint(ctx, checkpointTime)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create app checkpoint", "time", checkpointTime, "err", err)
 			}
 			// this must be AFTER the checkpoint is created, see the comments about race conditions above GetClusterCheckpoint
 			PrevCheckpoint = NextCheckpoint

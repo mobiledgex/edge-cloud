@@ -1440,7 +1440,8 @@ func setL7Port(port *dme.AppPort, key *edgeproto.AppInstKey) bool {
 func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, event cloudcommon.InstanceEvent, serverStatus string) {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.AppInstEvent
-	ts, _ := types.TimestampProto(time.Now())
+	now := time.Now()
+	ts, _ := types.TimestampProto(now)
 	metric.Timestamp = *ts
 	metric.AddStringVal("cloudletorg", appInstKey.ClusterInstKey.CloudletKey.Organization)
 	metric.AddTag("cloudlet", appInstKey.ClusterInstKey.CloudletKey.Name)
@@ -1462,6 +1463,23 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 		}
 		RecordClusterInstEvent(ctx, &appInstKey.ClusterInstKey, clusterEvent, serverStatus)
 	}
+
+	// if it's a delete and a VM based app, create a usage record of it
+	// get all the logs for this clusterinst since the last checkpoint
+	go func() {
+		if event == cloudcommon.DELETED {
+			//TODO: check to see if its a vm app
+			info := edgeproto.AppInst{}
+			if !appInstApi.cache.Get(appInstKey, &info) {
+				log.SpanLog(ctx, log.DebugLevelMetrics, "Cannot log event for invalid clusterinst")
+				return
+			}
+			err := CreateAppUsageRecord(ctx, &info, now, cloudcommon.USAGE_EVENT_END)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelMetrics, "unable to create cluster usage record", "app", appInstKey, "err", err)
+			}
+		}
+	}()
 }
 
 func isTenantAppInst(appInstKey *edgeproto.AppInstKey) bool {
