@@ -88,7 +88,7 @@ func CreateVmAppUsageRecord(ctx context.Context, app *edgeproto.AppInst, endTime
 		if latestStatus == "" { // keep track of the latest seen status in the logs for checkpointing purposes
 			latestStatus = status
 		}
-		// go until we hit the creation/reservation of this clusterinst, OR until we hit the checkpoint
+		// go until we hit the creation/reservation of this appinst, OR until we hit the checkpoint
 		if timestamp.Before(checkpoint.Timestamp) {
 			// Check to see if it was up or down at the checkpoint and set the downTime accordingly and then calculate the runTime
 			if checkpointStatus == cloudcommon.InstanceDown {
@@ -161,8 +161,8 @@ func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 	if timestamp.After(now) { // we dont know if there will be more creates and deletes before the timestamp occurs
 		return fmt.Errorf("Cannot create a checkpoint for the future, checkpointTimestamp: %s, now:%s", timestamp.Format(time.RFC3339), now.Format(time.RFC3339))
 	}
-	defer services.events.DoPush() // flush these right away for subsequent calls to GetClusterCheckpoint
-	// get all running clusterinsts and create a usage record of them
+	defer services.events.DoPush() // flush these right away for subsequent calls to GetAppCheckpoint
+	// get all running appinsts and create a usage record of them
 
 	selectors := []string{"\"app\"", "\"apporg\"", "\"ver\"", "\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\"", "\"event\""}
 	influxLogQuery := fmt.Sprintf(CreateCheckpointInfluxQueryTemplate,
@@ -211,7 +211,7 @@ func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 					CloudletKey:  edgeproto.CloudletKey{Name: cloudlet, Organization: cloudletorg},
 				},
 			}
-			// only care about each clusterinsts most recent log
+			// only care about each appinsts most recent log
 			if _, exists := seenApps[key]; exists {
 				continue
 			}
@@ -279,7 +279,6 @@ func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 				CloudletKey:  edgeproto.CloudletKey{Name: cloudlet, Organization: cloudletorg},
 			},
 		}
-		// only care about each clusterinsts most recent log
 		if _, exists := seenApps[key]; exists {
 			continue
 		}
@@ -302,7 +301,7 @@ func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 	return nil
 }
 
-// returns all the checkpointed clusterinsts of the most recent checkpoint with regards to timestamp
+// returns all the checkpointed appinsts of the most recent checkpoint with regards to timestamp
 func GetVmAppCheckpoint(ctx context.Context, org string, timestamp time.Time) (*AppCheckpoint, error) {
 	// wait until the current checkpoint is done if we want to access it, to prevent race conditions with CreateCheckpoint
 	for timestamp.After(NextCheckpoint) {
