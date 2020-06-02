@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+
 	"strings"
 	"sync"
 	"time"
@@ -367,10 +369,53 @@ func setupProxyServer(started chan bool) error {
 		if len(targetURL.RawQuery) > 0 {
 			target += "?" + targetURL.RawQuery
 		}
+
+		// targetURL may contain a cookie embedded in query params encoded in base64  Retrieve any such cookie
+		targetQueryParms := targetURL.Query()
+		cookieVals, ok := targetQueryParms["sessioncookie"]
+		if ok && len(cookieVals) == 1 {
+			log.SpanLog(ctx, log.DebugLevelInfo, "found sessioncookie", "queryArgs", queryArgs)
+			cookie64 := cookieVals[0]
+			sesscookieparm := "&sessioncookie=" + cookie64
+			cookiebytes, err := base64.StdEncoding.DecodeString(cookie64)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfo, "cannot decode cookie", "cookie", cookie64)
+				return
+			}
+			cookie := string(cookiebytes)
+			cs := strings.Split(cookie, ";")
+			cookieName := ""
+			cookieVal := ""
+			cookiePath := ""
+			for i, c := range cs {
+				cvals := strings.Split(c, "=")
+				if i == 0 {
+					if len(cvals) != 2 {
+						log.SpanLog(ctx, log.DebugLevelInfo, "unexpected sessioncookie cookie", "cookie", cookie)
+						return
+					}
+					cookieName = cvals[0]
+					cookieVal = cvals[1]
+				} else {
+					if len(cvals) == 2 && cvals[0] == "Path" {
+						cookiePath = cvals[1]
+					}
+				}
+			}
+			sessionCookie := http.Cookie{
+				Name:  cookieName,
+				Value: cookieVal,
+				Path:  cookiePath,
+			}
+			http.SetCookie(w, &sessionCookie)
+			log.SpanLog(ctx, log.DebugLevelInfo, "added session cookie", "sessionCookie", sessionCookie)
+
+			//remove from the query parms
+			target = strings.ReplaceAll(target, sesscookieparm, "")
+		}
 		log.SpanLog(ctx, log.DebugLevelInfo, "redirect initial edgeconsole request", "target", target)
 		http.Redirect(w, r, target,
 			http.StatusPermanentRedirect)
-
 	})
 
 	upgrader := websocket.Upgrader{}
