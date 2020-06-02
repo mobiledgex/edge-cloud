@@ -366,6 +366,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				return apKey.NotFoundError()
 			}
 		}
+		appInstRefsApi.createRef(stm, &in.Key)
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -487,6 +488,8 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		// delete app
 		s.store.STMDel(stm, &in.Key)
+		// delete refs
+		appInstRefsApi.deleteRef(stm, &in.Key)
 		return nil
 	})
 	return &edgeproto.Result{}, err

@@ -80,6 +80,9 @@ func (a *AllData) Sort() {
 	sort.Slice(a.ResTagTables[:], func(i, j int) bool {
 		return a.ResTagTables[i].Key.GetKeyString() < a.ResTagTables[j].Key.GetKeyString()
 	})
+	sort.Slice(a.AppInstRefs[:], func(i, j int) bool {
+		return a.AppInstRefs[i].Key.GetKeyString() < a.AppInstRefs[j].Key.GetKeyString()
+	})
 }
 
 func (a *NodeData) Sort() {

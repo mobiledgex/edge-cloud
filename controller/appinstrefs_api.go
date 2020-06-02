@@ -28,6 +28,17 @@ func (s *AppInstRefsApi) ShowAppInstRefs(in *edgeproto.AppInstRefs, cb edgeproto
 	return err
 }
 
+func (s *AppInstRefsApi) createRef(stm concurrency.STM, key *edgeproto.AppKey) {
+	refs := edgeproto.AppInstRefs{}
+	refs.Key = *key
+	refs.Insts = make(map[string]uint32)
+	s.store.STMPut(stm, &refs)
+}
+
+func (s *AppInstRefsApi) deleteRef(stm concurrency.STM, key *edgeproto.AppKey) {
+	s.store.STMDel(stm, key)
+}
+
 func (s *AppInstRefsApi) addRef(stm concurrency.STM, key *edgeproto.AppInstKey) {
 	refs := edgeproto.AppInstRefs{}
 	if !s.store.STMGet(stm, &key.AppKey, &refs) {
@@ -44,9 +55,5 @@ func (s *AppInstRefsApi) removeRef(stm concurrency.STM, key *edgeproto.AppInstKe
 		return
 	}
 	delete(refs.Insts, key.GetKeyString())
-	if len(refs.Insts) == 0 {
-		s.store.STMDel(stm, &key.AppKey)
-	} else {
-		s.store.STMPut(stm, &refs)
-	}
+	s.store.STMPut(stm, &refs)
 }

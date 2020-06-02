@@ -1079,13 +1079,13 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowAppInst":            struct{}{},
 	"ShowAppInstInfo":        struct{}{},
 	"ShowAppInstMetrics":     struct{}{},
+	"ShowCloudletRefs":       struct{}{},
+	"ShowClusterRefs":        struct{}{},
+	"ShowAppInstRefs":        struct{}{},
 	"ShowController":         struct{}{},
 	"ShowNode":               struct{}{},
 	"ShowDevice":             struct{}{},
 	"ShowDeviceReport":       struct{}{},
-	"ShowCloudletRefs":       struct{}{},
-	"ShowClusterRefs":        struct{}{},
-	"ShowAppInstRefs":        struct{}{},
 }
 
 func IsShow(cmd string) bool {

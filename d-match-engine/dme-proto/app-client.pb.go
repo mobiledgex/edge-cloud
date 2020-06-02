@@ -372,11 +372,20 @@ type RegisterClientRequest struct {
 	//
 	// _(hidden)_ Reserved for future use
 	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	//
 	// App Organization Name
+	//
+	// App developer organization name.
 	OrgName string `protobuf:"bytes,2,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
+	//
 	// App Name
+	//
+	// Name of your application.
 	AppName string `protobuf:"bytes,3,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
+	//
 	// App Version
+	//
+	// Application version.
 	AppVers string `protobuf:"bytes,4,opt,name=app_vers,json=appVers,proto3" json:"app_vers,omitempty"`
 	//
 	// Carrier Name

@@ -206,7 +206,7 @@ func TestAppInstApi(t *testing.T) {
 	}
 	testAppFlavorRequest(t, ctx, commonApi, responder)
 
-	// delete all AppInsts and check that refs are empty
+	// delete all AppInsts and Apps and check that refs are empty
 	for _, obj := range testutil.AppInstData {
 		if testutil.IsAutoClusterAutoDeleteApp(&obj.Key) {
 			continue
@@ -215,7 +215,14 @@ func TestAppInstApi(t *testing.T) {
 		if err != nil && err.Error() == obj.Key.NotFoundError().Error() {
 			continue
 		}
-		require.Nil(t, err, "Delete app inst responder failures")
+		require.Nil(t, err, "Delete app inst failed")
+	}
+	for _, obj := range testutil.AppData {
+		_, err := appApi.DeleteApp(ctx, &obj)
+		if err != nil && err.Error() == obj.Key.NotFoundError().Error() {
+			continue
+		}
+		require.Nil(t, err, "Delete app failed")
 	}
 	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, []edgeproto.AppInstRefs{})
 

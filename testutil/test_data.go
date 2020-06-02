@@ -581,6 +581,14 @@ var AppInstRefsData = []edgeproto.AppInstRefs{
 		},
 	},
 	edgeproto.AppInstRefs{
+		Key:   AppData[3].Key,
+		Insts: map[string]uint32{},
+	},
+	edgeproto.AppInstRefs{
+		Key:   AppData[4].Key,
+		Insts: map[string]uint32{},
+	},
+	edgeproto.AppInstRefs{
 		Key: AppData[5].Key,
 		Insts: map[string]uint32{
 			AppInstData[5].Key.GetKeyString(): 1,
@@ -600,11 +608,23 @@ var AppInstRefsData = []edgeproto.AppInstRefs{
 		},
 	},
 	edgeproto.AppInstRefs{
+		Key:   AppData[8].Key,
+		Insts: map[string]uint32{},
+	},
+	edgeproto.AppInstRefs{
 		Key: AppData[9].Key,
 		Insts: map[string]uint32{
 			AppInstData[9].Key.GetKeyString():  1,
 			AppInstData[10].Key.GetKeyString(): 1,
 		},
+	},
+	edgeproto.AppInstRefs{
+		Key:   AppData[10].Key,
+		Insts: map[string]uint32{},
+	},
+	edgeproto.AppInstRefs{
+		Key:   AppData[11].Key,
+		Insts: map[string]uint32{},
 	},
 }
 
