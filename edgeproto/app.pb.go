@@ -212,7 +212,7 @@ type App struct {
 	DeletePrepare bool `protobuf:"varint,31,opt,name=delete_prepare,json=deletePrepare,proto3" json:"delete_prepare,omitempty"`
 	// Auto provisioning policy names
 	AutoProvPolicies []string `protobuf:"bytes,32,rep,name=auto_prov_policies,json=autoProvPolicies" json:"auto_prov_policies,omitempty"`
-	// Delimitter to be used for template parsing, defaults to "[[ ]]"
+	// Delimiter to be used for template parsing, defaults to "[[ ]]"
 	TemplateDelimiter string `protobuf:"bytes,33,opt,name=template_delimiter,json=templateDelimiter,proto3" json:"template_delimiter,omitempty"`
 }
 

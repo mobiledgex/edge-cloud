@@ -640,7 +640,7 @@ var AllDataComments = map[string]string{
 	"apps:#.defaultprivacypolicy":                                "Privacy policy when creating auto cluster",
 	"apps:#.deleteprepare":                                       "Preparing to be deleted",
 	"apps:#.autoprovpolicies":                                    "Auto provisioning policy names",
-	"apps:#.templatedelimiter":                                   "Delimitter to be used for template parsing, defaults to [[ ]]",
+	"apps:#.templatedelimiter":                                   "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"appinstances:#.fields":                                      "Fields are used for the Update API to specify which fields to apply",
 	"appinstances:#.key.appkey.organization":                     "App developer organization",
 	"appinstances:#.key.appkey.name":                             "App name",

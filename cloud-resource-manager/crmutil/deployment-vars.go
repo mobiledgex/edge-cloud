@@ -37,9 +37,9 @@ func ReplaceDeploymentVars(manifest string, delims string, replaceVars *Deployme
 	if delims == "" {
 		delims = "[[ ]]"
 	}
-	delimitter := strings.Split(delims, " ")
-	if len(delimitter) != 2 {
-		return "", fmt.Errorf("invalid app template delimitter %s, valid format '<START-DELIM> <END-DELIM>'", delims)
+	delimiter := strings.Split(delims, " ")
+	if len(delimiter) != 2 {
+		return "", fmt.Errorf("invalid app template delimiter %s, valid format '<START-DELIM> <END-DELIM>'", delims)
 	}
 	defer func() {
 		// template.Parse panics on error, handling it using recover
@@ -47,7 +47,7 @@ func ReplaceDeploymentVars(manifest string, delims string, replaceVars *Deployme
 			err = fmt.Errorf("Error with parsing %v, try changing templatedelimiter in app definition", r)
 		}
 	}()
-	tmpl := template.Must(template.New("varsReplaceTemplate").Delims(delimitter[0], delimitter[1]).Parse(manifest))
+	tmpl := template.Must(template.New("varsReplaceTemplate").Delims(delimiter[0], delimiter[1]).Parse(manifest))
 	buf := bytes.Buffer{}
 	if err := tmpl.Execute(&buf, replaceVars); err != nil {
 		return "", err

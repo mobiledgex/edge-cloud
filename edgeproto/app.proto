@@ -133,7 +133,7 @@ message ConfigFile {
   bool delete_prepare = 31 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Auto provisioning policy names
   repeated string auto_prov_policies = 32;
-  // Delimitter to be used for template parsing, defaults to "[[ ]]"
+  // Delimiter to be used for template parsing, defaults to "[[ ]]"
   string template_delimiter = 33;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
