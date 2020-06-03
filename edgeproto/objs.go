@@ -204,7 +204,7 @@ func (s *App) Validate(fields map[string]struct{}) error {
 	if s.TemplateDelimiter != "" {
 		out := strings.Split(s.TemplateDelimiter, " ")
 		if len(out) != 2 {
-			return fmt.Errorf("invalid app template delimiter %s, '<START-DELIM> <END-DELIM>'", s.TemplateDelimiter)
+			return fmt.Errorf("invalid app template delimiter %s, valid format '<START-DELIM> <END-DELIM>'", s.TemplateDelimiter)
 		}
 	}
 	if err = validateCustomizationConfigs(s.Configs); err != nil {
