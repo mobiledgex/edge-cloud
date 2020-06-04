@@ -76,7 +76,7 @@ func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto
 			}
 			// Fill in the Deployment Vars passed as a variable through the context
 			if varsFound {
-				cfg, err = crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
+				cfg, err = crmutil.ReplaceDeploymentVars(cfg, app.TemplateDelimiter, deploymentVars)
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "failed to replace Crm variables",
 						"EnvVars ", v.Config, "DeploymentVars", deploymentVars, "error", err)
@@ -99,7 +99,7 @@ func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto
 	}
 	// Fill in the Deployment Vars passed as a variable through the context
 	if varsFound {
-		mf, err = crmutil.ReplaceDeploymentVars(mf, deploymentVars)
+		mf, err = crmutil.ReplaceDeploymentVars(mf, app.TemplateDelimiter, deploymentVars)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "failed to replace Crm variables",
 				"manifest", mf, "DeploymentVars", deploymentVars, "error", err)
