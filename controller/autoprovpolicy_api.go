@@ -40,7 +40,7 @@ func (s *AutoProvPolicyApi) CreateAutoProvPolicy(ctx context.Context, in *edgepr
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
 		}
-		if err := s.validateCloudlets(stm, in); err != nil {
+		if err := s.configureCloudlets(stm, in); err != nil {
 			return err
 		}
 		s.store.STMPut(stm, in)
@@ -63,7 +63,7 @@ func (s *AutoProvPolicyApi) UpdateAutoProvPolicy(ctx context.Context, in *edgepr
 		if changed == 0 {
 			return nil
 		}
-		if err := s.validateCloudlets(stm, &cur); err != nil {
+		if err := s.configureCloudlets(stm, &cur); err != nil {
 			return err
 		}
 		s.store.STMPut(stm, &cur)
@@ -96,7 +96,7 @@ func (s *AutoProvPolicyApi) AddAutoProvPolicyCloudlet(ctx context.Context, in *e
 		provCloudlet := edgeproto.AutoProvCloudlet{}
 		provCloudlet.Key = in.CloudletKey
 		cur.Cloudlets = append(cur.Cloudlets, &provCloudlet)
-		if err := s.validateCloudlets(stm, &cur); err != nil {
+		if err := s.configureCloudlets(stm, &cur); err != nil {
 			return err
 		}
 		s.store.STMPut(stm, &cur)
@@ -182,7 +182,7 @@ func (s *streamoutAppInst) Context() context.Context {
 	return s.ctx
 }
 
-func (s *AutoProvPolicyApi) validateCloudlets(stm concurrency.STM, policy *edgeproto.AutoProvPolicy) error {
+func (s *AutoProvPolicyApi) configureCloudlets(stm concurrency.STM, policy *edgeproto.AutoProvPolicy) error {
 	// make sure cloudlets exist and location is copied
 	for ii, _ := range policy.Cloudlets {
 		cloudlet := edgeproto.Cloudlet{}
