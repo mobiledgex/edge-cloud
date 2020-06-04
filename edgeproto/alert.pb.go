@@ -103,6 +103,7 @@
 		PrivacyPolicy
 		CloudletRefs
 		ClusterRefs
+		AppInstRefs
 		ResTagTableKey
 		ResTagTable
 		Result
@@ -1078,12 +1079,13 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowAppInst":            struct{}{},
 	"ShowAppInstInfo":        struct{}{},
 	"ShowAppInstMetrics":     struct{}{},
+	"ShowCloudletRefs":       struct{}{},
+	"ShowClusterRefs":        struct{}{},
+	"ShowAppInstRefs":        struct{}{},
 	"ShowController":         struct{}{},
 	"ShowNode":               struct{}{},
 	"ShowDevice":             struct{}{},
 	"ShowDeviceReport":       struct{}{},
-	"ShowCloudletRefs":       struct{}{},
-	"ShowClusterRefs":        struct{}{},
 }
 
 func IsShow(cmd string) bool {

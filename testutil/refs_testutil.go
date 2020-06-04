@@ -389,6 +389,188 @@ func FindClusterRefsData(key *edgeproto.ClusterInstKey, testData []edgeproto.Clu
 	return nil, false
 }
 
+type ShowAppInstRefs struct {
+	Data map[string]edgeproto.AppInstRefs
+	grpc.ServerStream
+	Ctx context.Context
+}
+
+func (x *ShowAppInstRefs) Init() {
+	x.Data = make(map[string]edgeproto.AppInstRefs)
+}
+
+func (x *ShowAppInstRefs) Send(m *edgeproto.AppInstRefs) error {
+	x.Data[m.GetKey().GetKeyString()] = *m
+	return nil
+}
+
+func (x *ShowAppInstRefs) Context() context.Context {
+	return x.Ctx
+}
+
+var AppInstRefsShowExtraCount = 0
+
+func (x *ShowAppInstRefs) ReadStream(stream edgeproto.AppInstRefsApi_ShowAppInstRefsClient, err error) {
+	x.Data = make(map[string]edgeproto.AppInstRefs)
+	if err != nil {
+		return
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			break
+		}
+		x.Data[obj.GetKey().GetKeyString()] = *obj
+	}
+}
+
+func (x *ShowAppInstRefs) CheckFound(obj *edgeproto.AppInstRefs) bool {
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	return found
+}
+
+func (x *ShowAppInstRefs) AssertFound(t *testing.T, obj *edgeproto.AppInstRefs) {
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find AppInstRefs %s", obj.GetKey().GetKeyString())
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
+		require.Equal(t, *obj, check, "AppInstRefs are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.GetKey().GetKeyString())
+	}
+}
+
+func (x *ShowAppInstRefs) AssertNotFound(t *testing.T, obj *edgeproto.AppInstRefs) {
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find AppInstRefs %s", obj.GetKey().GetKeyString())
+}
+
+func WaitAssertFoundAppInstRefs(t *testing.T, api edgeproto.AppInstRefsApiClient, obj *edgeproto.AppInstRefs, count int, retry time.Duration) {
+	show := ShowAppInstRefs{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowAppInstRefs(ctx, obj)
+		show.ReadStream(stream, err)
+		cancel()
+		if show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertFound(t, obj)
+}
+
+func WaitAssertNotFoundAppInstRefs(t *testing.T, api edgeproto.AppInstRefsApiClient, obj *edgeproto.AppInstRefs, count int, retry time.Duration) {
+	show := ShowAppInstRefs{}
+	filterNone := edgeproto.AppInstRefs{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowAppInstRefs(ctx, &filterNone)
+		show.ReadStream(stream, err)
+		cancel()
+		if !show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertNotFound(t, obj)
+}
+
+// Wrap the api with a common interface
+type AppInstRefsCommonApi struct {
+	internal_api edgeproto.AppInstRefsApiServer
+	client_api   edgeproto.AppInstRefsApiClient
+}
+
+func (x *AppInstRefsCommonApi) ShowAppInstRefs(ctx context.Context, filter *edgeproto.AppInstRefs, showData *ShowAppInstRefs) error {
+	if x.internal_api != nil {
+		showData.Ctx = ctx
+		return x.internal_api.ShowAppInstRefs(filter, showData)
+	} else {
+		stream, err := x.client_api.ShowAppInstRefs(ctx, filter)
+		showData.ReadStream(stream, err)
+		return err
+	}
+}
+
+func NewInternalAppInstRefsApi(api edgeproto.AppInstRefsApiServer) *AppInstRefsCommonApi {
+	apiWrap := AppInstRefsCommonApi{}
+	apiWrap.internal_api = api
+	return &apiWrap
+}
+
+func NewClientAppInstRefsApi(api edgeproto.AppInstRefsApiClient) *AppInstRefsCommonApi {
+	apiWrap := AppInstRefsCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}
+
+func InternalAppInstRefsTest(t *testing.T, test string, api edgeproto.AppInstRefsApiServer, testData []edgeproto.AppInstRefs) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalAppInstRefsTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	switch test {
+	case "show":
+		basicAppInstRefsShowTest(t, ctx, NewInternalAppInstRefsApi(api), testData)
+	}
+}
+
+func ClientAppInstRefsTest(t *testing.T, test string, api edgeproto.AppInstRefsApiClient, testData []edgeproto.AppInstRefs) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientAppInstRefsTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	switch test {
+	case "show":
+		basicAppInstRefsShowTest(t, ctx, NewClientAppInstRefsApi(api), testData)
+	}
+}
+
+func basicAppInstRefsShowTest(t *testing.T, ctx context.Context, api *AppInstRefsCommonApi, testData []edgeproto.AppInstRefs) {
+	var err error
+
+	show := ShowAppInstRefs{}
+	show.Init()
+	filterNone := edgeproto.AppInstRefs{}
+	err = api.ShowAppInstRefs(ctx, &filterNone, &show)
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData)+AppInstRefsShowExtraCount, len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
+
+func GetAppInstRefs(t *testing.T, ctx context.Context, api *AppInstRefsCommonApi, key *edgeproto.AppKey, out *edgeproto.AppInstRefs) bool {
+	var err error
+
+	show := ShowAppInstRefs{}
+	show.Init()
+	filter := edgeproto.AppInstRefs{}
+	filter.SetKey(key)
+	err = api.ShowAppInstRefs(ctx, &filter, &show)
+	require.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
+func FindAppInstRefsData(key *edgeproto.AppKey, testData []edgeproto.AppInstRefs) (*edgeproto.AppInstRefs, bool) {
+	for ii, _ := range testData {
+		if testData[ii].GetKey().Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
+}
+
 func (r *Run) CloudletRefsApi(data *[]edgeproto.CloudletRefs, dataMap interface{}, dataOut interface{}) {
 	log.DebugLog(log.DebugLevelApi, "API for CloudletRefs", "mode", r.Mode)
 	if r.Mode == "show" {
@@ -487,6 +669,55 @@ func (s *DummyServer) ShowClusterRefs(in *edgeproto.ClusterRefs, server edgeprot
 	return err
 }
 
+func (r *Run) AppInstRefsApi(data *[]edgeproto.AppInstRefs, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for AppInstRefs", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.AppInstRefs{}
+		out, err := r.client.ShowAppInstRefs(r.ctx, obj)
+		if err != nil {
+			r.logErr("AppInstRefsApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.AppInstRefs)
+			if !ok {
+				panic(fmt.Sprintf("RunAppInstRefsApi expected dataOut type *[]edgeproto.AppInstRefs, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "showfiltered":
+			out, err := r.client.ShowAppInstRefs(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("AppInstRefsApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.AppInstRefs)
+				if !ok {
+					panic(fmt.Sprintf("RunAppInstRefsApi expected dataOut type *[]edgeproto.AppInstRefs, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		}
+	}
+}
+
+func (s *DummyServer) ShowAppInstRefs(in *edgeproto.AppInstRefs, server edgeproto.AppInstRefsApi_ShowAppInstRefsServer) error {
+	var err error
+	obj := &edgeproto.AppInstRefs{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.AppInstRefs{})
+		}
+	}
+	err = s.AppInstRefsCache.Show(in, func(obj *edgeproto.AppInstRefs) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
+}
+
 type CloudletRefsStream interface {
 	Recv() (*edgeproto.CloudletRefs, error)
 }
@@ -563,4 +794,43 @@ func (s *CliClient) ShowClusterRefs(ctx context.Context, in *edgeproto.ClusterRe
 
 type ClusterRefsApiClient interface {
 	ShowClusterRefs(ctx context.Context, in *edgeproto.ClusterRefs) ([]edgeproto.ClusterRefs, error)
+}
+
+type AppInstRefsStream interface {
+	Recv() (*edgeproto.AppInstRefs, error)
+}
+
+func AppInstRefsReadStream(stream AppInstRefsStream) ([]edgeproto.AppInstRefs, error) {
+	output := []edgeproto.AppInstRefs{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read AppInstRefs stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowAppInstRefs(ctx context.Context, in *edgeproto.AppInstRefs) ([]edgeproto.AppInstRefs, error) {
+	api := edgeproto.NewAppInstRefsApiClient(s.Conn)
+	stream, err := api.ShowAppInstRefs(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return AppInstRefsReadStream(stream)
+}
+
+func (s *CliClient) ShowAppInstRefs(ctx context.Context, in *edgeproto.AppInstRefs) ([]edgeproto.AppInstRefs, error) {
+	output := []edgeproto.AppInstRefs{}
+	args := append(s.BaseArgs, "controller", "ShowAppInstRefs")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type AppInstRefsApiClient interface {
+	ShowAppInstRefs(ctx context.Context, in *edgeproto.AppInstRefs) ([]edgeproto.AppInstRefs, error)
 }

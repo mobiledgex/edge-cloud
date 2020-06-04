@@ -86,6 +86,7 @@ func TestAppInstApi(t *testing.T) {
 	// after app insts create, check that cloudlet refs data is correct.
 	// Note this refs data is a second set after app insts were created.
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsWithAppInstsData)
+	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.AppInstRefsData)
 
 	commonApi := testutil.NewInternalAppInstApi(&appInstApi)
 
@@ -96,6 +97,7 @@ func TestAppInstApi(t *testing.T) {
 	require.NotNil(t, err, "Delete AppInst responder failure")
 	responder.SetSimulateAppDeleteFailure(false)
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
+	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.AppInstRefsData)
 
 	obj = testutil.AppInstData[0]
 	// check override of error DELETE_ERROR
@@ -105,6 +107,7 @@ func TestAppInstApi(t *testing.T) {
 	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "create overrides delete error")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
+	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.AppInstRefsData)
 
 	// check override of error CREATE_ERROR
 	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR)
@@ -113,6 +116,17 @@ func TestAppInstApi(t *testing.T) {
 	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "delete overrides create error")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
+	// create copy of refs without the deleted AppInst
+	appInstRefsDeleted := append([]edgeproto.AppInstRefs{}, testutil.AppInstRefsData...)
+	appInstRefsDeleted[0].Insts = make(map[string]uint32)
+	for k, v := range testutil.AppInstRefsData[0].Insts {
+		if k == obj.Key.GetKeyString() {
+			continue
+		}
+		appInstRefsDeleted[0].Insts[k] = v
+	}
+	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, appInstRefsDeleted)
+
 	// check override of error UPDATE_ERROR
 	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "create appinst")
@@ -123,6 +137,7 @@ func TestAppInstApi(t *testing.T) {
 	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "delete overrides create error")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
+	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, appInstRefsDeleted)
 
 	// override CRM error
 	responder.SetSimulateAppCreateFailure(true)
@@ -190,6 +205,27 @@ func TestAppInstApi(t *testing.T) {
 		}
 	}
 	testAppFlavorRequest(t, ctx, commonApi, responder)
+
+	// delete all AppInsts and Apps and check that refs are empty
+	for _, obj := range testutil.AppInstData {
+		if testutil.IsAutoClusterAutoDeleteApp(&obj.Key) {
+			continue
+		}
+		err := appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		if err != nil && err.Error() == obj.Key.NotFoundError().Error() {
+			continue
+		}
+		require.Nil(t, err, "Delete app inst failed")
+	}
+	for _, obj := range testutil.AppData {
+		_, err := appApi.DeleteApp(ctx, &obj)
+		if err != nil && err.Error() == obj.Key.NotFoundError().Error() {
+			continue
+		}
+		require.Nil(t, err, "Delete app failed")
+	}
+	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, []edgeproto.AppInstRefs{})
+
 	dummy.Stop()
 }
 
