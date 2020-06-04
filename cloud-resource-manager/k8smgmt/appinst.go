@@ -35,7 +35,7 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 	// it might be nicer to pull the state directly rather than parsing it, but the states displayed
 	// are a combination of states and reasons, e.g. ErrImagePull is not actually a state, so it's
 	// just easier to parse the summarized output from kubectl which combines states and reasons
-	r, _ := regexp.Compile("(\\S+)\\s+\\d+\\/\\d+\\s+(\\w+)\\s+\\d+\\s+\\S+")
+	r := regexp.MustCompile("(\\S+)\\s+\\d+\\/\\d+\\s+(\\S+)\\s+\\d+\\s+\\S+")
 	objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
 	if err != nil {
 		log.InfoLog("unable to decode k8s yaml", "err", err)
