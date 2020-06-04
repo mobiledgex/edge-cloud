@@ -350,13 +350,8 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
 		}
-		if in.AutoProvPolicy != "" {
-			apKey := edgeproto.PolicyKey{}
-			apKey.Organization = in.Key.Organization
-			apKey.Name = in.AutoProvPolicy
-			if !autoProvPolicyApi.store.STMGet(stm, &apKey, nil) {
-				return apKey.NotFoundError()
-			}
+		if err := s.validatePolicies(stm, in); err != nil {
+			return err
 		}
 		if in.DefaultPrivacyPolicy != "" {
 			apKey := edgeproto.PolicyKey{}
@@ -426,6 +421,9 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 		}
 		cur.CopyInFields(in)
+		if err := s.validatePolicies(stm, &cur); err != nil {
+			return err
+		}
 		newRevision := in.Revision
 		if newRevision == "" {
 			newRevision = time.Now().Format("2006-01-02T150405")
@@ -509,18 +507,15 @@ func (s *AppApi) AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAuto
 		if !s.store.STMGet(stm, &in.AppKey, &cur) {
 			return in.AppKey.NotFoundError()
 		}
-		apKey := edgeproto.PolicyKey{}
-		apKey.Organization = in.AppKey.Organization
-		apKey.Name = in.AutoProvPolicy
-		if !autoProvPolicyApi.store.STMGet(stm, &apKey, nil) {
-			return apKey.NotFoundError()
-		}
 		for _, name := range cur.AutoProvPolicies {
 			if name == in.AutoProvPolicy {
 				return fmt.Errorf("AutoProvPolicy %s already on App", name)
 			}
 		}
 		cur.AutoProvPolicies = append(cur.AutoProvPolicies, in.AutoProvPolicy)
+		if err := s.validatePolicies(stm, &cur); err != nil {
+			return err
+		}
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
@@ -535,12 +530,16 @@ func (s *AppApi) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppA
 		}
 		changed := false
 		for ii, name := range cur.AutoProvPolicies {
-			if name == in.AutoProvPolicy {
-				last := len(cur.AutoProvPolicies) - 1
-				cur.AutoProvPolicies[ii] = cur.AutoProvPolicies[last]
-				cur.AutoProvPolicies = cur.AutoProvPolicies[:last]
-				changed = true
+			if name != in.AutoProvPolicy {
+				continue
 			}
+			cur.AutoProvPolicies = append(cur.AutoProvPolicies[:ii], cur.AutoProvPolicies[ii+1:]...)
+			changed = true
+			break
+		}
+		if cur.AutoProvPolicy == in.AutoProvPolicy {
+			cur.AutoProvPolicy = ""
+			changed = true
 		}
 		if !changed {
 			return nil
@@ -555,6 +554,20 @@ func validateAppConfigsForDeployment(configs []*edgeproto.ConfigFile, deployment
 	for _, cfg := range configs {
 		if cfg.Kind == edgeproto.AppConfigHelmYaml && deployment != cloudcommon.AppDeploymentTypeHelm {
 			return fmt.Errorf("Invalid Config Kind(%s) for deployment type(%s)", cfg.Kind, deployment)
+		}
+	}
+	return nil
+}
+
+func (s *AppApi) validatePolicies(stm concurrency.STM, app *edgeproto.App) error {
+	// make sure policies exist
+	for name, _ := range app.GetAutoProvPolicies() {
+		policyKey := edgeproto.PolicyKey{}
+		policyKey.Organization = app.Key.Organization
+		policyKey.Name = name
+		policy := edgeproto.AutoProvPolicy{}
+		if !autoProvPolicyApi.store.STMGet(stm, &policyKey, &policy) {
+			return policyKey.NotFoundError()
 		}
 	}
 	return nil
