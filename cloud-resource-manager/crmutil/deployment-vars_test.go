@@ -94,6 +94,12 @@ var testAppAccessConfigResult = `
 dnsOverride: "*.AcmeAppCo-TestCluster-TestCloudlet.mobiledgex-test.net"
 lbTlsCertCommonName: ""*.AcmeAppCo-TestCluster-TestCloudlet.mobiledgex-test.net"`
 
+var testInvalidTemplate = `if [[ ! -s \"$OSM_FILE\" ]];`
+
+var testAppAccessConfigDelims = `
+dnsOverride: "*.{{.Deployment.AppOrg}}-{{.Deployment.ClusterName}}-{{.Deployment.CloudletName}}.{{.Deployment.DnsZone}}"
+lbTlsCertCommonName: ""*.{{.Deployment.AppOrg}}-{{.Deployment.ClusterName}}-{{.Deployment.CloudletName}}.{{.Deployment.DnsZone}}"`
+
 func TestCrmDeploymentVars(t *testing.T) {
 	deploymentVars := DeploymentReplaceVars{
 		Deployment: CrmReplaceVars{
@@ -104,28 +110,44 @@ func TestCrmDeploymentVars(t *testing.T) {
 			DnsZone:      testDnsZone,
 		},
 	}
+	delims := ""
 	// positive tests
-	val, err := ReplaceDeploymentVars(testConfigFile, &deploymentVars)
+	val, err := ReplaceDeploymentVars(testConfigFile, delims, &deploymentVars)
 	assert.Nil(t, err)
 	assert.Equal(t, testConfigFileResult, val)
-	val, err = ReplaceDeploymentVars(testManifest, &deploymentVars)
+	val, err = ReplaceDeploymentVars(testManifest, delims, &deploymentVars)
 	assert.Nil(t, err)
 	assert.Equal(t, testManifestResult, val)
 	// Test manifest decode
 	_, _, err = cloudcommon.DecodeK8SYaml(val)
 	assert.Nil(t, err)
 	// App Access Config test
-	val, err = ReplaceDeploymentVars(testAppAccessConfig, &deploymentVars)
+	val, err = ReplaceDeploymentVars(testAppAccessConfig, delims, &deploymentVars)
 	assert.Nil(t, err)
 	assert.Equal(t, testAppAccessConfigResult, val)
 
 	// configFile with no vars
-	val, err = ReplaceDeploymentVars(testConfigFileResult, &deploymentVars)
+	val, err = ReplaceDeploymentVars(testConfigFileResult, delims, &deploymentVars)
 	assert.Nil(t, err)
 	assert.Equal(t, testConfigFileResult, val)
 
 	// error cases
-	val, err = ReplaceDeploymentVars(testConfigFileWrongVar, &deploymentVars)
+	val, err = ReplaceDeploymentVars(testConfigFileWrongVar, delims, &deploymentVars)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Deployment.OperatorName")
+
+	// Invalid template
+	_, err = ReplaceDeploymentVars(testInvalidTemplate, delims, &deploymentVars)
+	assert.NotNil(t, err)
+
+	// App Access Config test with different delimiter
+	delims = "{{ }}"
+	val, err = ReplaceDeploymentVars(testAppAccessConfigDelims, delims, &deploymentVars)
+	assert.Nil(t, err)
+	assert.Equal(t, testAppAccessConfigResult, val)
+
+	// Invalid delimiter
+	delims = "{{ }} {{"
+	_, err = ReplaceDeploymentVars(testAppAccessConfigDelims, delims, &deploymentVars)
+	assert.NotNil(t, err)
 }
