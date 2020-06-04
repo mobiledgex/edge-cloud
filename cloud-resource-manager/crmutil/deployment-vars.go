@@ -2,6 +2,8 @@ package crmutil
 
 import (
 	"bytes"
+	"fmt"
+	"strings"
 	"text/template"
 )
 
@@ -31,8 +33,21 @@ type DeploymentReplaceVars struct {
 	Deployment CrmReplaceVars
 }
 
-func ReplaceDeploymentVars(manifest string, replaceVars *DeploymentReplaceVars) (string, error) {
-	tmpl := template.Must(template.New("varsReplaceTemplate").Delims("[[", "]]").Parse(manifest))
+func ReplaceDeploymentVars(manifest string, delims string, replaceVars *DeploymentReplaceVars) (s string, err error) {
+	if delims == "" {
+		delims = "[[ ]]"
+	}
+	delimiter := strings.Split(delims, " ")
+	if len(delimiter) != 2 {
+		return "", fmt.Errorf("invalid app template delimiter %s, valid format '<START-DELIM> <END-DELIM>'", delims)
+	}
+	defer func() {
+		// template.Parse panics on error, handling it using recover
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Error with parsing %v, try changing templatedelimiter in app definition", r)
+		}
+	}()
+	tmpl := template.Must(template.New("varsReplaceTemplate").Delims(delimiter[0], delimiter[1]).Parse(manifest))
 	buf := bytes.Buffer{}
 	if err := tmpl.Execute(&buf, replaceVars); err != nil {
 		return "", err

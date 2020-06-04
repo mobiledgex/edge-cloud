@@ -26,7 +26,7 @@ type TLSCert struct {
 	TTL        int64
 }
 
-func GetAppAccessConfig(ctx context.Context, configs []*edgeproto.ConfigFile) (*AppAccessConfig, error) {
+func GetAppAccessConfig(ctx context.Context, configs []*edgeproto.ConfigFile, delims string) (*AppAccessConfig, error) {
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
 	var aac AppAccessConfig
 
@@ -43,7 +43,7 @@ func GetAppAccessConfig(ctx context.Context, configs []*edgeproto.ConfigFile) (*
 				return nil, err
 			}
 			// Fill in the Deployment Vars passed as a variable through the context
-			cfg, err = crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
+			cfg, err = crmutil.ReplaceDeploymentVars(cfg, delims, deploymentVars)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "getAppAccessConfig failed to replace CRM variables",
 					"config file", v.Config, "DeploymentVars", deploymentVars, "error", err)
