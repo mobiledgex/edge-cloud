@@ -4,6 +4,7 @@ package cloudcommon
 var AlertAutoScaleUp = "AutoScaleUp"
 var AlertAutoScaleDown = "AutoScaleDown"
 var AlertAppInstDown = "AppInstDown"
+var AlertAutoProvDown = "AutoProvDown"
 
 // Alert label keys
 var AlertLabelClusterOrg = "clusterorg"
@@ -12,6 +13,7 @@ var AlertLabelCloudlet = "cloudlet"
 var AlertLabelCluster = "cluster"
 var AlertLabelApp = "app"
 var AlertLabelAppVer = "appver"
+var AlertLabelAppOrg = "apporg"
 
 // Alert annotation keys
 // for autoscale:

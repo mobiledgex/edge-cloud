@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -386,7 +387,11 @@ func RunEdgeTurn(req *edgeproto.ExecRequest, exchangeFunc func(offer *webrtc.Ses
 	if reply.Console != nil {
 		fmt.Println(reply.AccessUrl)
 	} else {
-		d := websocket.Dialer{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+		d := websocket.Dialer{
+			Proxy:            http.ProxyFromEnvironment,
+			HandshakeTimeout: 45 * time.Second,
+			TLSClientConfig:  &tls.Config{InsecureSkipVerify: true},
+		}
 		ws, _, err := d.Dial(reply.AccessUrl, nil)
 		if err != nil {
 			return err
