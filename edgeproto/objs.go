@@ -80,6 +80,9 @@ func (a *AllData) Sort() {
 	sort.Slice(a.ResTagTables[:], func(i, j int) bool {
 		return a.ResTagTables[i].Key.GetKeyString() < a.ResTagTables[j].Key.GetKeyString()
 	})
+	sort.Slice(a.AppInstRefs[:], func(i, j int) bool {
+		return a.AppInstRefs[i].Key.GetKeyString() < a.AppInstRefs[j].Key.GetKeyString()
+	})
 }
 
 func (a *NodeData) Sort() {
@@ -360,6 +363,10 @@ func (s *CloudletRefs) Validate(fields map[string]struct{}) error {
 }
 
 func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
+func (s *AppInstRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
@@ -652,6 +659,7 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPoolMember))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAutoScalePolicy))
 	opts = append(opts, cmpopts.SortSlices(CmpSortResTagTable))
+	opts = append(opts, cmpopts.SortSlices(CmpSortAppInstRefs))
 	return opts
 }
 

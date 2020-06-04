@@ -179,6 +179,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.AppInstances[i0].OptRes = ""
 		}
 	}
+	for i0 := 0; i0 < len(in.AppInstRefs); i0++ {
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -445,6 +447,11 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.availabilityzone",
 	"appinstances:#.vmflavor",
 	"appinstances:#.optres",
+	"appinstrefs:#.key.organization",
+	"appinstrefs:#.key.name",
+	"appinstrefs:#.key.version",
+	"appinstrefs:#.insts:#.key",
+	"appinstrefs:#.insts:#.value",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -682,6 +689,9 @@ var AllDataComments = map[string]string{
 	"appinstances:#.availabilityzone":                            "Optional Availability Zone if any",
 	"appinstances:#.vmflavor":                                    "OS node flavor to use",
 	"appinstances:#.optres":                                      "Optional Resources required by OS flavor if any",
+	"appinstrefs:#.key.organization":                             "App developer organization",
+	"appinstrefs:#.key.name":                                     "App name",
+	"appinstrefs:#.key.version":                                  "App version",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",

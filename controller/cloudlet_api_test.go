@@ -338,6 +338,11 @@ func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
 
 	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig)
 	require.Nil(t, err, "start cloudlet")
+	defer func() {
+		// Delete CRM
+		err = cloudcommon.StopCRMService(ctx, &cloudlet)
+		require.Nil(t, err, "stop cloudlet")
+	}()
 
 	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, crm_v1)
 	require.Nil(t, err, "cloudlet state transition")
@@ -450,10 +455,6 @@ func testCloudletStates(t *testing.T, ctx context.Context, scenario string) {
 
 		testNotifyId(t, ctrlHandler, &cloudlet.Key, 1, 1, crm_v1)
 	}
-
-	// Delete CRM
-	err = cloudcommon.StopCRMService(ctx, &cloudlet)
-	require.Nil(t, err, "stop cloudlet")
 }
 
 func testUpgradeFailure(t *testing.T, ctx context.Context) {
