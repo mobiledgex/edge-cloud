@@ -730,3 +730,14 @@ func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, 
 	}
 	return nil
 }
+
+func (s *App) GetAutoProvPolicies() map[string]struct{} {
+	policies := make(map[string]struct{})
+	if s.AutoProvPolicy != "" {
+		policies[s.AutoProvPolicy] = struct{}{}
+	}
+	for _, name := range s.AutoProvPolicies {
+		policies[name] = struct{}{}
+	}
+	return policies
+}
