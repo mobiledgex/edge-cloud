@@ -88,4 +88,5 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.ClusterInstApi(&in.ClusterInsts, nil, &out.ClusterInsts)
 	run.AppApi(&in.Apps, nil, &out.Apps)
 	run.AppInstApi(&in.AppInstances, nil, &out.AppInstances)
+	run.AppInstRefsApi(&in.AppInstRefs, nil, &out.AppInstRefs)
 }

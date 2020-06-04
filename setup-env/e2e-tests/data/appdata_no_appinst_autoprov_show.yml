@@ -518,3 +518,37 @@ autoprovpolicies:
     loc:
       latitude: 31
       longitude: -91
+
+appinstrefs:
+- key:
+    organization: AcmeAppCo
+    name: autoprovapp
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"autoprovapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"ReservableCluster2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"MobiledgeX"}}'
+    : 1
+- key:
+    organization: AcmeAppCo
+    name: autoprovapp2
+    version: "1.0"
+- key:
+    organization: platos
+    name: PlatosEnablingLayer
+    version: "1.0"
+- key:
+    organization: MobiledgeX
+    name: MEXPrometheusAppName
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"ReservableCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"MobiledgeX"}}'
+    : 1
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"ReservableCluster2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"MobiledgeX"}}'
+    : 1
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo"}}'
+    : 1
+- key:
+    organization: AcmeAppCo
+    name: someapplication1
+    version: "1.0"

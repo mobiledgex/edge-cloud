@@ -14,6 +14,7 @@ import "privacypolicy.proto";
 import "clusterinst.proto";
 import "app.proto";
 import "appinst.proto";
+import "refs.proto";
 import "gogoproto/gogo.proto";
 
 // AllData contains all data that may be used for declarative
@@ -37,6 +38,7 @@ message AllData {
   repeated ClusterInst cluster_insts = 15 [(gogoproto.nullable) = false];
   repeated App apps = 16 [(gogoproto.nullable) = false];
   repeated AppInst app_instances = 17 [(gogoproto.nullable) = false];
+  repeated AppInstRefs app_inst_refs = 18 [(gogoproto.nullable) = false];
   option (protogen.e2edata) = true;
   option (protogen.generate_copy_in_fields) = false;
 }
