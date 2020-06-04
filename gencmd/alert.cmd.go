@@ -103,6 +103,7 @@ It has these top-level messages:
 	PrivacyPolicy
 	CloudletRefs
 	ClusterRefs
+	AppInstRefs
 	ResTagTableKey
 	ResTagTable
 	Result

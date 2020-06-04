@@ -73,9 +73,22 @@ func (m *ClusterRefs) String() string            { return proto.CompactTextStrin
 func (*ClusterRefs) ProtoMessage()               {}
 func (*ClusterRefs) Descriptor() ([]byte, []int) { return fileDescriptorRefs, []int{1} }
 
+type AppInstRefs struct {
+	// App key
+	Key AppKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	// AppInsts for App (key is JSON of AppInst Key)
+	Insts map[string]uint32 `protobuf:"bytes,2,rep,name=insts" json:"insts" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+}
+
+func (m *AppInstRefs) Reset()                    { *m = AppInstRefs{} }
+func (m *AppInstRefs) String() string            { return proto.CompactTextString(m) }
+func (*AppInstRefs) ProtoMessage()               {}
+func (*AppInstRefs) Descriptor() ([]byte, []int) { return fileDescriptorRefs, []int{2} }
+
 func init() {
 	proto.RegisterType((*CloudletRefs)(nil), "edgeproto.CloudletRefs")
 	proto.RegisterType((*ClusterRefs)(nil), "edgeproto.ClusterRefs")
+	proto.RegisterType((*AppInstRefs)(nil), "edgeproto.AppInstRefs")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -272,6 +285,99 @@ var _ClusterRefsApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "refs.proto",
 }
 
+// Client API for AppInstRefsApi service
+
+type AppInstRefsApiClient interface {
+	// Show AppInstRefs (debug only)
+	ShowAppInstRefs(ctx context.Context, in *AppInstRefs, opts ...grpc.CallOption) (AppInstRefsApi_ShowAppInstRefsClient, error)
+}
+
+type appInstRefsApiClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewAppInstRefsApiClient(cc *grpc.ClientConn) AppInstRefsApiClient {
+	return &appInstRefsApiClient{cc}
+}
+
+func (c *appInstRefsApiClient) ShowAppInstRefs(ctx context.Context, in *AppInstRefs, opts ...grpc.CallOption) (AppInstRefsApi_ShowAppInstRefsClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_AppInstRefsApi_serviceDesc.Streams[0], c.cc, "/edgeproto.AppInstRefsApi/ShowAppInstRefs", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &appInstRefsApiShowAppInstRefsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type AppInstRefsApi_ShowAppInstRefsClient interface {
+	Recv() (*AppInstRefs, error)
+	grpc.ClientStream
+}
+
+type appInstRefsApiShowAppInstRefsClient struct {
+	grpc.ClientStream
+}
+
+func (x *appInstRefsApiShowAppInstRefsClient) Recv() (*AppInstRefs, error) {
+	m := new(AppInstRefs)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// Server API for AppInstRefsApi service
+
+type AppInstRefsApiServer interface {
+	// Show AppInstRefs (debug only)
+	ShowAppInstRefs(*AppInstRefs, AppInstRefsApi_ShowAppInstRefsServer) error
+}
+
+func RegisterAppInstRefsApiServer(s *grpc.Server, srv AppInstRefsApiServer) {
+	s.RegisterService(&_AppInstRefsApi_serviceDesc, srv)
+}
+
+func _AppInstRefsApi_ShowAppInstRefs_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AppInstRefs)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(AppInstRefsApiServer).ShowAppInstRefs(m, &appInstRefsApiShowAppInstRefsServer{stream})
+}
+
+type AppInstRefsApi_ShowAppInstRefsServer interface {
+	Send(*AppInstRefs) error
+	grpc.ServerStream
+}
+
+type appInstRefsApiShowAppInstRefsServer struct {
+	grpc.ServerStream
+}
+
+func (x *appInstRefsApiShowAppInstRefsServer) Send(m *AppInstRefs) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _AppInstRefsApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.AppInstRefsApi",
+	HandlerType: (*AppInstRefsApiServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ShowAppInstRefs",
+			Handler:       _AppInstRefsApi_ShowAppInstRefs_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "refs.proto",
+}
+
 func (m *CloudletRefs) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -416,6 +522,48 @@ func (m *ClusterRefs) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x30
 		i++
 		i = encodeVarintRefs(dAtA, i, uint64(m.UsedDisk))
+	}
+	return i, nil
+}
+
+func (m *AppInstRefs) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AppInstRefs) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintRefs(dAtA, i, uint64(m.Key.Size()))
+	n3, err := m.Key.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n3
+	if len(m.Insts) > 0 {
+		for k, _ := range m.Insts {
+			dAtA[i] = 0x12
+			i++
+			v := m.Insts[k]
+			mapSize := 1 + len(k) + sovRefs(uint64(len(k))) + 1 + sovRefs(uint64(v))
+			i = encodeVarintRefs(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintRefs(dAtA, i, uint64(len(k)))
+			i += copy(dAtA[i:], k)
+			dAtA[i] = 0x10
+			i++
+			i = encodeVarintRefs(dAtA, i, uint64(v))
+		}
 	}
 	return i, nil
 }
@@ -1597,6 +1745,508 @@ func (m *ClusterRefs) ValidateEnums() error {
 	return nil
 }
 
+func (m *AppInstRefs) Matches(o *AppInstRefs, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !m.Key.Matches(&o.Key, fopts...) {
+		return false
+	}
+	if !opts.Filter || o.Insts != nil {
+		if m.Insts == nil && o.Insts != nil || m.Insts != nil && o.Insts == nil {
+			return false
+		} else if m.Insts != nil && o.Insts != nil {
+			if len(m.Insts) != len(o.Insts) {
+				return false
+			}
+			for k, _ := range m.Insts {
+				_, ok := o.Insts[k]
+				if !ok {
+					return false
+				}
+				if o.Insts[k] != m.Insts[k] {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+func (m *AppInstRefs) CopyInFields(src *AppInstRefs) int {
+	changed := 0
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
+		changed++
+	}
+	if m.Key.Name != src.Key.Name {
+		m.Key.Name = src.Key.Name
+		changed++
+	}
+	if m.Key.Version != src.Key.Version {
+		m.Key.Version = src.Key.Version
+		changed++
+	}
+	m.Insts = make(map[string]uint32)
+	for k0, _ := range src.Insts {
+		m.Insts[k0] = src.Insts[k0]
+	}
+	return changed
+}
+
+func (s *AppInstRefs) HasFields() bool {
+	return false
+}
+
+type AppInstRefsStore struct {
+	kvstore objstore.KVStore
+}
+
+func NewAppInstRefsStore(kvstore objstore.KVStore) AppInstRefsStore {
+	return AppInstRefsStore{kvstore: kvstore}
+}
+
+func (s *AppInstRefsStore) Create(ctx context.Context, m *AppInstRefs, wait func(int64)) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstRefs", m.GetKey())
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Create(ctx, key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstRefsStore) Update(ctx context.Context, m *AppInstRefs, wait func(int64)) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstRefs", m.GetKey())
+	var vers int64 = 0
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstRefsStore) Put(ctx context.Context, m *AppInstRefs, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstRefs", m.GetKey())
+	var val []byte
+	val, err = json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstRefsStore) Delete(ctx context.Context, m *AppInstRefs, wait func(int64)) (*Result, error) {
+	err := m.GetKey().ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstRefs", m.GetKey())
+	rev, err := s.kvstore.Delete(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstRefsStore) LoadOne(key string) (*AppInstRefs, int64, error) {
+	val, rev, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	var obj AppInstRefs
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Failed to parse AppInstRefs data", "val", string(val), "err", err)
+		return nil, 0, err
+	}
+	return &obj, rev, nil
+}
+
+func (s *AppInstRefsStore) STMGet(stm concurrency.STM, key *AppKey, buf *AppInstRefs) bool {
+	keystr := objstore.DbKeyString("AppInstRefs", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *AppInstRefsStore) STMPut(stm concurrency.STM, obj *AppInstRefs, ops ...objstore.KVOp) {
+	keystr := objstore.DbKeyString("AppInstRefs", obj.GetKey())
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("AppInstRefs json marsahal failed", "obj", obj, "err", err)
+	}
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
+}
+
+func (s *AppInstRefsStore) STMDel(stm concurrency.STM, key *AppKey) {
+	keystr := objstore.DbKeyString("AppInstRefs", key)
+	stm.Del(keystr)
+}
+
+type AppInstRefsKeyWatcher struct {
+	cb func(ctx context.Context)
+}
+
+type AppInstRefsCacheData struct {
+	Obj    *AppInstRefs
+	ModRev int64
+}
+
+// AppInstRefsCache caches AppInstRefs objects in memory in a hash table
+// and keeps them in sync with the database.
+type AppInstRefsCache struct {
+	Objs        map[AppKey]*AppInstRefsCacheData
+	Mux         util.Mutex
+	List        map[AppKey]struct{}
+	FlushAll    bool
+	NotifyCb    func(ctx context.Context, obj *AppKey, old *AppInstRefs, modRev int64)
+	UpdatedCb   func(ctx context.Context, old *AppInstRefs, new *AppInstRefs)
+	KeyWatchers map[AppKey][]*AppInstRefsKeyWatcher
+}
+
+func NewAppInstRefsCache() *AppInstRefsCache {
+	cache := AppInstRefsCache{}
+	InitAppInstRefsCache(&cache)
+	return &cache
+}
+
+func InitAppInstRefsCache(cache *AppInstRefsCache) {
+	cache.Objs = make(map[AppKey]*AppInstRefsCacheData)
+	cache.KeyWatchers = make(map[AppKey][]*AppInstRefsKeyWatcher)
+}
+
+func (c *AppInstRefsCache) GetTypeString() string {
+	return "AppInstRefs"
+}
+
+func (c *AppInstRefsCache) Get(key *AppKey, valbuf *AppInstRefs) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *AppInstRefsCache) GetWithRev(key *AppKey, valbuf *AppInstRefs, modRev *int64) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	inst, found := c.Objs[*key]
+	if found {
+		*valbuf = *inst.Obj
+		*modRev = inst.ModRev
+	}
+	return found
+}
+
+func (c *AppInstRefsCache) HasKey(key *AppKey) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	_, found := c.Objs[*key]
+	return found
+}
+
+func (c *AppInstRefsCache) GetAllKeys(ctx context.Context, cb func(key *AppKey, modRev int64)) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
+	}
+}
+
+func (c *AppInstRefsCache) Update(ctx context.Context, in *AppInstRefs, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *AppInstRefs) (*AppInstRefs, bool) {
+		return in, true
+	})
+}
+
+func (c *AppInstRefsCache) UpdateModFunc(ctx context.Context, key *AppKey, modRev int64, modFunc func(old *AppInstRefs) (new *AppInstRefs, changed bool)) {
+	c.Mux.Lock()
+	var old *AppInstRefs
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
+		if c.UpdatedCb != nil {
+			newCopy := &AppInstRefs{}
+			*newCopy = *new
+			defer c.UpdatedCb(ctx, old, newCopy)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+		}
+	}
+	c.Objs[new.GetKeyVal()] = &AppInstRefsCacheData{
+		Obj:    new,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInstRefs", "obj", new, "modRev", modRev)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(ctx, new.GetKey())
+}
+
+func (c *AppInstRefsCache) Delete(ctx context.Context, in *AppInstRefs, modRev int64) {
+	c.Mux.Lock()
+	var old *AppInstRefs
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
+	delete(c.Objs, in.GetKeyVal())
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
+	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInstRefs", "key", in.GetKey(), "modRev", modRev)
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	}
+	c.TriggerKeyWatchers(ctx, in.GetKey())
+}
+
+func (c *AppInstRefsCache) Prune(ctx context.Context, validKeys map[AppKey]struct{}) {
+	notify := make(map[AppKey]*AppInstRefsCacheData)
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			if c.NotifyCb != nil {
+				notify[key] = c.Objs[key]
+			}
+			delete(c.Objs, key)
+		}
+	}
+	c.Mux.Unlock()
+	for key, old := range notify {
+		if c.NotifyCb != nil {
+			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *AppInstRefsCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+
+func (c *AppInstRefsCache) Flush(ctx context.Context, notifyId int64) {
+}
+
+func (c *AppInstRefsCache) Show(filter *AppInstRefs, cb func(ret *AppInstRefs) error) error {
+	log.DebugLog(log.DebugLevelApi, "Show AppInstRefs", "count", len(c.Objs))
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare AppInstRefs", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
+			continue
+		}
+		log.DebugLog(log.DebugLevelApi, "Show AppInstRefs", "obj", data.Obj)
+		err := cb(data.Obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func AppInstRefsGenericNotifyCb(fn func(key *AppKey, old *AppInstRefs)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*AppKey), obj.(*AppInstRefs))
+	}
+}
+
+func (c *AppInstRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *AppKey, old *AppInstRefs, modRev int64)) {
+	c.NotifyCb = fn
+}
+
+func (c *AppInstRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInstRefs, new *AppInstRefs)) {
+	c.UpdatedCb = fn
+}
+
+func (c *AppInstRefsCache) SetFlushAll() {
+	c.FlushAll = true
+}
+
+func (c *AppInstRefsCache) WatchKey(key *AppKey, cb func(ctx context.Context)) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*AppInstRefsKeyWatcher, 0)
+	}
+	watcher := AppInstRefsKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching AppInstRefs", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *AppInstRefsCache) TriggerKeyWatchers(ctx context.Context, key *AppKey) {
+	watchers := make([]*AppInstRefsKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb(ctx)
+	}
+}
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *AppInstRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
+	obj := AppInstRefs{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse AppInstRefs data", "val", string(val), "err", err)
+		return
+	}
+	c.Update(ctx, &obj, modRev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.GetKeyVal()] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *AppInstRefsCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
+	obj := AppInstRefs{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	AppKeyStringParse(keystr, obj.GetKey())
+	c.Delete(ctx, &obj, modRev)
+}
+
+func (c *AppInstRefsCache) SyncListStart(ctx context.Context) {
+	c.List = make(map[AppKey]struct{})
+}
+
+func (c *AppInstRefsCache) SyncListEnd(ctx context.Context) {
+	deleted := make(map[AppKey]*AppInstRefsCacheData)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, val := range deleted {
+			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+			c.TriggerKeyWatchers(ctx, &key)
+		}
+	}
+}
+
+func (c *AppInstRefsCache) UsesOrg(org string) bool {
+	return false
+}
+
+func (m *AppInstRefs) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *AppInstRefs) GetKey() *AppKey {
+	return &m.Key
+}
+
+func (m *AppInstRefs) GetKeyVal() AppKey {
+	return m.Key
+}
+
+func (m *AppInstRefs) SetKey(key *AppKey) {
+	m.Key = *key
+}
+
+func CmpSortAppInstRefs(a AppInstRefs, b AppInstRefs) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+// Helper method to check that enums have valid values
+func (m *AppInstRefs) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *CloudletRefs) Size() (n int) {
 	var l int
 	_ = l
@@ -1662,6 +2312,22 @@ func (m *ClusterRefs) Size() (n int) {
 	}
 	if m.UsedDisk != 0 {
 		n += 1 + sovRefs(uint64(m.UsedDisk))
+	}
+	return n
+}
+
+func (m *AppInstRefs) Size() (n int) {
+	var l int
+	_ = l
+	l = m.Key.Size()
+	n += 1 + l + sovRefs(uint64(l))
+	if len(m.Insts) > 0 {
+		for k, v := range m.Insts {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovRefs(uint64(len(k))) + 1 + sovRefs(uint64(v))
+			n += mapEntrySize + 1 + sovRefs(uint64(mapEntrySize))
+		}
 	}
 	return n
 }
@@ -2266,6 +2932,193 @@ func (m *ClusterRefs) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *AppInstRefs) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRefs
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AppInstRefs: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AppInstRefs: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRefs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRefs
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Insts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRefs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRefs
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Insts == nil {
+				m.Insts = make(map[string]uint32)
+			}
+			var mapkey string
+			var mapvalue uint32
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowRefs
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRefs
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthRefs
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRefs
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapvalue |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipRefs(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthRefs
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Insts[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRefs(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipRefs(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2374,45 +3227,50 @@ var (
 func init() { proto.RegisterFile("refs.proto", fileDescriptorRefs) }
 
 var fileDescriptorRefs = []byte{
-	// 630 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x53, 0xc1, 0x4e, 0xdb, 0x4c,
-	0x10, 0x66, 0x21, 0xe1, 0x27, 0x9b, 0x3f, 0x10, 0x56, 0x94, 0x2e, 0xa9, 0x14, 0xa2, 0xa8, 0xaa,
-	0xac, 0x16, 0x1c, 0x48, 0x0f, 0x45, 0x1c, 0xaa, 0x42, 0xdb, 0x03, 0x82, 0x8a, 0xca, 0xa8, 0x5c,
-	0x23, 0xc7, 0x59, 0xc2, 0x8a, 0xd8, 0xbb, 0xda, 0x5d, 0x43, 0xdd, 0x5e, 0xfa, 0x00, 0x7d, 0x88,
-	0x3e, 0x43, 0x9f, 0x82, 0x63, 0x9f, 0xa0, 0x02, 0x4e, 0x15, 0xa7, 0x4a, 0x44, 0x3d, 0x57, 0xbb,
-	0x76, 0x62, 0x43, 0xc8, 0xb1, 0x97, 0x68, 0xe6, 0xfb, 0xbe, 0x9d, 0xf9, 0xc6, 0x33, 0x81, 0x50,
-	0x90, 0x23, 0x69, 0x73, 0xc1, 0x14, 0x43, 0x05, 0xd2, 0xe9, 0x12, 0x13, 0x56, 0x36, 0xba, 0x54,
-	0x1d, 0x87, 0x6d, 0xdb, 0x63, 0x7e, 0xc3, 0x67, 0x6d, 0xda, 0xd3, 0xd4, 0xc7, 0x86, 0xfe, 0x5d,
-	0xf5, 0x7a, 0x2c, 0xec, 0x34, 0x8c, 0xae, 0x4b, 0x82, 0x61, 0x10, 0x17, 0xa9, 0xcc, 0x1a, 0xba,
-	0x47, 0x54, 0x92, 0x97, 0xbc, 0x5e, 0x28, 0x15, 0x11, 0x49, 0x3a, 0x9f, 0xa4, 0x34, 0x90, 0x03,
-	0x45, 0xc1, 0xe5, 0x3c, 0x09, 0x17, 0xba, 0xac, 0xcb, 0x4c, 0xd8, 0xd0, 0x51, 0x8c, 0xd6, 0x2f,
-	0x73, 0xf0, 0xff, 0xd7, 0x49, 0x55, 0x87, 0x1c, 0x49, 0x64, 0xc3, 0xa9, 0x13, 0x12, 0x61, 0x50,
-	0x03, 0x56, 0xb1, 0xb9, 0x68, 0x0f, 0x6d, 0xdb, 0x03, 0xd5, 0x2e, 0x89, 0xb6, 0x73, 0xe7, 0x3f,
-	0x97, 0x27, 0x1c, 0x2d, 0x44, 0x2f, 0xe0, 0x4c, 0xd2, 0x56, 0xe2, 0xc9, 0xda, 0x94, 0x55, 0x6c,
-	0x3e, 0xb8, 0xf5, 0xc8, 0x50, 0xe9, 0x9b, 0xa1, 0x18, 0x2d, 0xc1, 0x99, 0x50, 0x92, 0x4e, 0x4b,
-	0xb8, 0x3e, 0xce, 0xd5, 0x80, 0x95, 0x73, 0xfe, 0xd3, 0xb9, 0xe3, 0xfa, 0x68, 0x19, 0x16, 0x0d,
-	0x75, 0xea, 0x31, 0x41, 0x24, 0xce, 0x1b, 0x16, 0x6a, 0xe8, 0xd0, 0x20, 0xe8, 0x11, 0x2c, 0x18,
-	0x41, 0x87, 0xca, 0x13, 0x3c, 0x6d, 0x68, 0x53, 0xec, 0x0d, 0x95, 0x27, 0x68, 0x0f, 0x96, 0x04,
-	0x63, 0xaa, 0xd5, 0x6b, 0xb7, 0x38, 0x13, 0x4a, 0xe2, 0x19, 0x63, 0xcb, 0xba, 0x67, 0x16, 0x3d,
-	0xb1, 0xed, 0x30, 0xa6, 0xf6, 0xda, 0xef, 0xb5, 0xf4, 0x6d, 0xa0, 0x44, 0xe4, 0x14, 0x45, 0x8a,
-	0x20, 0x0b, 0x96, 0xe3, 0x56, 0x51, 0xe0, 0xfa, 0xd4, 0x6b, 0x51, 0x2e, 0x71, 0xa1, 0x06, 0xac,
-	0xbc, 0x33, 0x6b, 0x3a, 0xc6, 0xf0, 0x0e, 0x97, 0xe8, 0x09, 0x9c, 0x33, 0x4a, 0xa9, 0x5c, 0x95,
-	0x08, 0x61, 0x0d, 0x58, 0x05, 0xa7, 0xa4, 0xe1, 0x03, 0x83, 0x6a, 0xdd, 0x01, 0x2c, 0x33, 0xae,
-	0x5a, 0x82, 0xc8, 0x96, 0xd1, 0xfb, 0x2e, 0xc7, 0x45, 0x63, 0xf1, 0xe9, 0x38, 0x8b, 0xfb, 0x5c,
-	0x39, 0x44, 0x7e, 0x90, 0xa4, 0xf3, 0xce, 0xe5, 0xb1, 0xc9, 0x12, 0xcb, 0x62, 0x95, 0x97, 0xb0,
-	0x7c, 0x77, 0x0e, 0x54, 0x4e, 0x57, 0x99, 0x8f, 0x97, 0xb5, 0x00, 0xf3, 0xa7, 0x6e, 0x2f, 0x24,
-	0x78, 0xd2, 0x60, 0x71, 0xb2, 0x39, 0xb9, 0x01, 0x2a, 0xaf, 0x20, 0x1a, 0x6d, 0x92, 0xad, 0x50,
-	0xb8, 0xa7, 0x42, 0x29, 0x53, 0x61, 0x13, 0xff, 0xba, 0xc1, 0xe0, 0xf7, 0x0d, 0x06, 0x5f, 0xfa,
-	0x18, 0x7c, 0xeb, 0x63, 0xf0, 0xfd, 0x0f, 0xce, 0x05, 0x2c, 0x20, 0xf5, 0x0b, 0x00, 0x8b, 0xc9,
-	0x21, 0x98, 0x13, 0x5b, 0xcf, 0x9e, 0xd8, 0xd2, 0xe8, 0xb5, 0xec, 0x04, 0xf2, 0xee, 0x95, 0x3d,
-	0x83, 0x39, 0x97, 0xf3, 0xc1, 0x85, 0xcd, 0x67, 0xde, 0x6c, 0x71, 0x9e, 0x6a, 0x8d, 0xe8, 0x9f,
-	0x5d, 0xd6, 0xf8, 0x11, 0x9b, 0x5f, 0x01, 0x9c, 0xcb, 0x6e, 0x6c, 0x8b, 0x53, 0x14, 0xc1, 0xf2,
-	0xc1, 0x31, 0x3b, 0xbb, 0xf5, 0xef, 0x7a, 0x38, 0x66, 0xc3, 0x95, 0x71, 0x44, 0x7d, 0xfd, 0xba,
-	0x8f, 0x57, 0x1d, 0x22, 0x59, 0x28, 0x3c, 0x32, 0x60, 0xe4, 0xca, 0x96, 0xa7, 0x28, 0x0b, 0x0e,
-	0x29, 0x39, 0x5b, 0xd9, 0x25, 0x91, 0xbd, 0x2f, 0xba, 0x6e, 0x40, 0x3f, 0xb9, 0x1a, 0x5c, 0x03,
-	0xcd, 0xcf, 0x70, 0x36, 0xf3, 0xc1, 0xb5, 0x19, 0x0a, 0xe7, 0x62, 0x33, 0xe9, 0x1a, 0x16, 0x47,
-	0xbf, 0xbc, 0xb1, 0x32, 0x06, 0xaf, 0x3f, 0xbe, 0xee, 0xe3, 0x5a, 0xea, 0x64, 0xb8, 0xaa, 0x5b,
-	0x66, 0xd6, 0xc0, 0x76, 0xf9, 0xfc, 0xb2, 0x3a, 0x71, 0x7e, 0x55, 0x05, 0x3f, 0xae, 0xaa, 0xe0,
-	0xe2, 0xaa, 0x0a, 0xda, 0xd3, 0xa6, 0xd8, 0xf3, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xd1, 0xdb,
-	0xaf, 0x5d, 0x11, 0x05, 0x00, 0x00,
+	// 719 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x54, 0x41, 0x4f, 0x13, 0x5b,
+	0x14, 0xe6, 0x42, 0xcb, 0xa3, 0x67, 0x5e, 0x4b, 0x99, 0xf0, 0x78, 0x97, 0x79, 0x2f, 0xa5, 0x36,
+	0xc6, 0x8c, 0x0a, 0x53, 0xa8, 0x0b, 0x09, 0x89, 0xc6, 0xa2, 0x2e, 0x08, 0x18, 0xcc, 0x10, 0xd9,
+	0x36, 0xd3, 0xe9, 0xa5, 0x4c, 0x68, 0xe7, 0xde, 0xcc, 0x9d, 0x01, 0xab, 0x1b, 0x77, 0x6e, 0x5c,
+	0xf8, 0x13, 0xfc, 0x0d, 0xfe, 0x0a, 0x76, 0xfa, 0x0b, 0x0c, 0xb0, 0x32, 0xac, 0x4c, 0x68, 0x5c,
+	0x9b, 0x7b, 0x67, 0xa6, 0x33, 0x05, 0xaa, 0x71, 0xe1, 0xa6, 0x39, 0xf7, 0x3b, 0xdf, 0x39, 0xe7,
+	0x3b, 0x3d, 0x5f, 0x0b, 0xe0, 0x91, 0x3d, 0x6e, 0x30, 0x8f, 0xfa, 0x54, 0xcd, 0x91, 0x56, 0x9b,
+	0xc8, 0x50, 0x5b, 0x6d, 0x3b, 0xfe, 0x7e, 0xd0, 0x34, 0x6c, 0xda, 0xad, 0x76, 0x69, 0xd3, 0xe9,
+	0x88, 0xd4, 0xcb, 0xaa, 0xf8, 0x5c, 0xb2, 0x3b, 0x34, 0x68, 0x55, 0x25, 0xaf, 0x4d, 0xdc, 0x41,
+	0x10, 0x36, 0xd1, 0x0a, 0x32, 0xdd, 0x21, 0x7e, 0xf4, 0xce, 0xdb, 0x9d, 0x80, 0xfb, 0xc4, 0x8b,
+	0x9e, 0x33, 0xd1, 0xd3, 0x71, 0x79, 0xcc, 0xc8, 0x59, 0x8c, 0x45, 0xe1, 0x6c, 0x9b, 0xb6, 0xa9,
+	0x0c, 0xab, 0x22, 0x0a, 0xd1, 0xca, 0x69, 0x06, 0xfe, 0x7e, 0x1c, 0x75, 0x35, 0xc9, 0x1e, 0x57,
+	0x0d, 0x98, 0x38, 0x20, 0x3d, 0x8c, 0xca, 0x48, 0x57, 0x6a, 0x73, 0xc6, 0x40, 0xb6, 0x11, 0xb3,
+	0x36, 0x49, 0x6f, 0x3d, 0x73, 0xfc, 0x65, 0x61, 0xcc, 0x14, 0x44, 0xf5, 0x3e, 0x4c, 0x45, 0x63,
+	0x39, 0x1e, 0x2f, 0x4f, 0xe8, 0x4a, 0xed, 0x9f, 0xa1, 0x22, 0x99, 0x4a, 0x6a, 0x06, 0x64, 0x75,
+	0x1e, 0xa6, 0x02, 0x4e, 0x5a, 0x0d, 0xcf, 0xea, 0xe2, 0x4c, 0x19, 0xe9, 0x19, 0xf3, 0x2f, 0xf1,
+	0x36, 0xad, 0xae, 0xba, 0x00, 0x8a, 0x4c, 0x1d, 0xda, 0xd4, 0x23, 0x1c, 0x67, 0x65, 0x16, 0x04,
+	0xb4, 0x2b, 0x11, 0xf5, 0x3f, 0xc8, 0x49, 0x42, 0xcb, 0xe1, 0x07, 0x78, 0x52, 0xa6, 0x65, 0xb3,
+	0x27, 0x0e, 0x3f, 0x50, 0xb7, 0x20, 0xef, 0x51, 0xea, 0x37, 0x3a, 0xcd, 0x06, 0xa3, 0x9e, 0xcf,
+	0xf1, 0x94, 0x94, 0xa5, 0x5f, 0xb3, 0x8b, 0xd8, 0xd8, 0x30, 0x29, 0xf5, 0xb7, 0x9a, 0xcf, 0x05,
+	0xf5, 0xa9, 0xeb, 0x7b, 0x3d, 0x53, 0xf1, 0x12, 0x44, 0xd5, 0xa1, 0x18, 0x8e, 0xea, 0xb9, 0x56,
+	0xd7, 0xb1, 0x1b, 0x0e, 0xe3, 0x38, 0x57, 0x46, 0x7a, 0xd6, 0x2c, 0xc8, 0x89, 0x21, 0xbc, 0xc1,
+	0xb8, 0x7a, 0x0b, 0xa6, 0x25, 0x93, 0xfb, 0x96, 0x1f, 0x11, 0xa1, 0x8c, 0xf4, 0x9c, 0x99, 0x17,
+	0xf0, 0x8e, 0x44, 0x05, 0x6f, 0x07, 0x8a, 0x94, 0xf9, 0x0d, 0x8f, 0xf0, 0x86, 0xe4, 0x77, 0x2d,
+	0x86, 0x15, 0x29, 0xf1, 0xce, 0x28, 0x89, 0xdb, 0xcc, 0x37, 0x09, 0x7f, 0xc1, 0x49, 0xeb, 0x99,
+	0xc5, 0x42, 0x91, 0x79, 0x9a, 0xc6, 0xb4, 0x87, 0x50, 0xbc, 0xbc, 0x87, 0x5a, 0x4c, 0x4e, 0x99,
+	0x0d, 0x8f, 0x35, 0x0b, 0xd9, 0x43, 0xab, 0x13, 0x10, 0x3c, 0x2e, 0xb1, 0xf0, 0xb1, 0x36, 0xbe,
+	0x8a, 0xb4, 0x47, 0xa0, 0x5e, 0x1d, 0x92, 0xee, 0x90, 0xbb, 0xa6, 0x43, 0x3e, 0xd5, 0x61, 0x0d,
+	0x7f, 0xbd, 0xc0, 0xe8, 0xdb, 0x05, 0x46, 0x6f, 0xfa, 0x18, 0x7d, 0xe8, 0x63, 0xf4, 0xf1, 0x3b,
+	0xce, 0xb8, 0xd4, 0x25, 0x95, 0x13, 0x04, 0x4a, 0x64, 0x04, 0x69, 0xb1, 0x95, 0xb4, 0xc5, 0xe6,
+	0xaf, 0xba, 0x65, 0xc3, 0xe5, 0x97, 0x5d, 0x76, 0x17, 0x32, 0x16, 0x63, 0xb1, 0xc3, 0x66, 0x52,
+	0x35, 0x75, 0xc6, 0x12, 0xae, 0x24, 0xfd, 0x31, 0x67, 0xfd, 0x64, 0xc5, 0x4f, 0x08, 0x94, 0x3a,
+	0x63, 0x42, 0xb9, 0x5c, 0xf1, 0x76, 0x7a, 0xc5, 0x91, 0x72, 0xe5, 0x6a, 0x0f, 0x20, 0x2b, 0x7e,
+	0xb0, 0xf1, 0x6e, 0x37, 0x86, 0xc9, 0x71, 0x47, 0x43, 0x04, 0xe1, 0x5d, 0xa3, 0xe2, 0xb0, 0x4a,
+	0x5b, 0x05, 0x48, 0x52, 0xbf, 0x75, 0xb0, 0xff, 0xd3, 0xdb, 0xbc, 0xbf, 0xb4, 0x51, 0xed, 0x1d,
+	0x82, 0xe9, 0xb4, 0x07, 0xeb, 0xcc, 0x51, 0x7b, 0x50, 0xdc, 0xd9, 0xa7, 0x47, 0x43, 0xff, 0x17,
+	0xff, 0x8e, 0xf0, 0xac, 0x36, 0x2a, 0x51, 0x59, 0x39, 0xef, 0xe3, 0x25, 0x93, 0x70, 0x1a, 0x78,
+	0x36, 0x89, 0x33, 0x7c, 0xb1, 0x6e, 0xfb, 0x0e, 0x75, 0x77, 0x1d, 0x72, 0xb4, 0xb8, 0x49, 0x7a,
+	0xc6, 0xb6, 0xd7, 0xb6, 0x5c, 0xe7, 0x95, 0x25, 0xc0, 0x65, 0x54, 0x7b, 0x0d, 0x85, 0x94, 0x85,
+	0x84, 0x18, 0x07, 0xa6, 0x43, 0x31, 0x89, 0xb1, 0xe6, 0xae, 0x7a, 0x49, 0x4a, 0x19, 0x81, 0x57,
+	0x6e, 0x9e, 0xf7, 0x71, 0x39, 0x51, 0x32, 0x30, 0xdf, 0x90, 0x98, 0x65, 0x54, 0x7b, 0x8b, 0xa0,
+	0x90, 0xba, 0x85, 0x98, 0x1e, 0x84, 0xd3, 0xd3, 0x37, 0x9f, 0xbb, 0xfe, 0x72, 0xda, 0x08, 0xbc,
+	0xb2, 0x7c, 0xde, 0xc7, 0x8b, 0xf1, 0xf4, 0x28, 0xf1, 0x8b, 0xaf, 0x61, 0xbd, 0x78, 0x7c, 0x5a,
+	0x1a, 0x3b, 0x3e, 0x2b, 0xa1, 0xcf, 0x67, 0x25, 0x74, 0x72, 0x56, 0x42, 0xcd, 0x49, 0xd9, 0xf8,
+	0xde, 0x8f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x2e, 0x38, 0x25, 0x34, 0x6d, 0x06, 0x00, 0x00,
 }

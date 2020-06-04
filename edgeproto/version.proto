@@ -16,7 +16,8 @@ enum VersionHash {
   HASH_7d32a983fafc3da768e045b1dc4d5f50 = 13;
   HASH_747c14bdfe2043f09d251568e4a722c6 = 14 [(protogen.upgrade_func) = "OrgRestructure"];
   HASH_c7fb20f545a5bc9869b00bb770753c31 = 15;
-  HASH_83cd5c44b5c7387ebf7d055e7345ab42 = 16 [(protogen.upgrade_func) = "AppRevision"]; 
+  HASH_83cd5c44b5c7387ebf7d055e7345ab42 = 16 [(protogen.upgrade_func) = "AppRevision"];
+  HASH_d8a4e697d0d693479cfd9c1c523d7e06 = 17 [(protogen.upgrade_func) = "AppInstRefsUpgrade"];
   option (protogen.version_hash) = true;
-  option (protogen.version_hash_salt) = "1";
+  option (protogen.version_hash_salt) = "2";
 }
