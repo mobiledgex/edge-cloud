@@ -27,4 +27,8 @@ func TestPodStateRegex(t *testing.T) {
 	match2 := r.FindStringSubmatch(podStates[2])
 	require.NotNil(t, match2)
 	require.Equal(t, "ContainerCreating", match2[2])
+
+	match3 := r.FindStringSubmatch(podStates[3])
+	require.NotNil(t, match3)
+	require.Equal(t, "Terminating", match3[2])
 }
