@@ -659,6 +659,7 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPoolMember))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAutoScalePolicy))
 	opts = append(opts, cmpopts.SortSlices(CmpSortResTagTable))
+	opts = append(opts, cmpopts.SortSlices(CmpSortAppInstRefs))
 	return opts
 }
 
