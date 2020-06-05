@@ -25,6 +25,8 @@ var maxWait = 15 * time.Minute
 var applyManifest = "apply"
 var createManifest = "create"
 
+var podStateRegString = "(\\S+)\\s+\\d+\\/\\d+\\s+(\\S+)\\s+\\d+\\s+\\S+"
+
 // WaitForAppInst waits for pods to either start or result in an error if WaitRunning specified,
 // or if WaitDeleted is specified then wait for them to all disappear.
 func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, waitFor string) error {
@@ -35,7 +37,7 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 	// it might be nicer to pull the state directly rather than parsing it, but the states displayed
 	// are a combination of states and reasons, e.g. ErrImagePull is not actually a state, so it's
 	// just easier to parse the summarized output from kubectl which combines states and reasons
-	r, _ := regexp.Compile("(\\S+)\\s+\\d+\\/\\d+\\s+(\\w+)\\s+\\d+\\s+\\S+")
+	r := regexp.MustCompile(podStateRegString)
 	objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
 	if err != nil {
 		log.InfoLog("unable to decode k8s yaml", "err", err)
