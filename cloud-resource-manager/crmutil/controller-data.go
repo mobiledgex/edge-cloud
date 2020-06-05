@@ -27,6 +27,7 @@ type ControllerData struct {
 	PrivacyPolicyCache       edgeproto.PrivacyPolicyCache
 	AlertCache               edgeproto.AlertCache
 	SettingsCache            edgeproto.SettingsCache
+	ResTagTableCache         edgeproto.ResTagTableCache
 	ExecReqHandler           *ExecReqHandler
 	ExecReqSend              *notify.ExecRequestSend
 	ControllerWait           chan bool
@@ -61,6 +62,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	edgeproto.InitAlertCache(&cd.AlertCache)
 	edgeproto.InitPrivacyPolicyCache(&cd.PrivacyPolicyCache)
 	edgeproto.InitSettingsCache(&cd.SettingsCache)
+	edgeproto.InitResTagTableCache(&cd.ResTagTableCache)
 	cd.ExecReqHandler = NewExecReqHandler(cd)
 	cd.ExecReqSend = notify.NewExecRequestSend()
 	// set callbacks to trigger changes
@@ -69,6 +71,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.FlavorCache.SetUpdatedCb(cd.flavorChanged)
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
+	cd.ResTagTableCache.SetUpdatedCb(cd.restagtableChanged)
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
 
@@ -140,6 +143,11 @@ func (cd *ControllerData) flavorChanged(ctx context.Context, old *edgeproto.Flav
 	// } else {
 	// 	// CRM TODO: delete flavor?
 	// }
+}
+
+func (cd *ControllerData) restagtableChanged(ctx context.Context, old *edgeproto.ResTagTable, new *edgeproto.ResTagTable) {
+	cd.ResTagTableCache.Objs[new.Key].Obj = new
+	return
 }
 
 func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {

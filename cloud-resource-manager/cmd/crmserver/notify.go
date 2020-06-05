@@ -23,11 +23,13 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	client.RegisterSendCloudletInfoCache(&cd.CloudletInfoCache)
 	client.RegisterSendAppInstInfoCache(&cd.AppInstInfoCache)
 	client.RegisterSendClusterInstInfoCache(&cd.ClusterInstInfoCache)
+	client.RegisterSendResTagTableCache(&cd.ResTagTableCache)
 	client.RegisterSend(cd.ExecReqSend)
 	sendMetric = notify.NewMetricSend()
 	client.RegisterSend(sendMetric)
 	client.RegisterSendAlertCache(&cd.AlertCache)
 	client.RegisterRecvPrivacyPolicyCache(&cd.PrivacyPolicyCache)
+	client.RegisterRecvResTagTableCache(&cd.ResTagTableCache)
 	client.RegisterSendAllRecv(cd)
 	nodeMgr.RegisterClient(client)
 }
@@ -38,6 +40,7 @@ func initSrvNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
 	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
 	notifyServer.RegisterSendCloudletCache(&controllerData.CloudletCache)
+	notifyServer.RegisterSendResTagTableCache(&controllerData.ResTagTableCache)
 	notifyServer.RegisterRecv(notify.NewMetricRecvMany(&CrmMetricsReceiver{}))
 	notifyServer.RegisterRecvAlertCache(&controllerData.AlertCache)
 	// Dummy CloudletInfoCache receiver to avoid sending

@@ -415,7 +415,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
 		log.SpanLog(ctx, log.DebugLevelApi, "Selected AppInst Node Flavor", "vmspec", vmspec.FlavorName)
 
-		if resTagTableApi.UsesGpu(ctx, stm, *vmspec.FlavorInfo, cloudlet) {
+		if resTagTableApi.UsesGpu(ctx, stm, *vmspec.FlavorInfo, &cloudlet) {
 			in.OptRes = "gpu"
 		}
 

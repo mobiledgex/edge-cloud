@@ -29,6 +29,7 @@ type Caches struct {
 	ClusterInstCache   *edgeproto.ClusterInstCache
 	AppInstCache       *edgeproto.AppInstCache
 	AppCache           *edgeproto.AppCache
+	ResTagTableCache   *edgeproto.ResTagTableCache
 }
 
 // Platform abstracts the underlying cloudlet platform.

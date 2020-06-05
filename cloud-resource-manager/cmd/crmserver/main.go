@@ -183,6 +183,7 @@ func main() {
 			ClusterInstCache:   &controllerData.ClusterInstCache,
 			AppCache:           &controllerData.AppCache,
 			AppInstCache:       &controllerData.AppInstCache,
+			ResTagTableCache:   &controllerData.ResTagTableCache,
 		}
 		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &caches, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
