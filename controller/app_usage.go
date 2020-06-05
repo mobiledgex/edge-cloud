@@ -47,75 +47,18 @@ func CreateVmAppUsageRecord(ctx context.Context, app *edgeproto.AppInst, endTime
 	if err != nil {
 		return fmt.Errorf("Unable to query influx: %v", err)
 	}
-	var runTime, downTime time.Duration
-	var downTimeUpper = endTime
-	startTime := checkpoint.Timestamp
-	checkpointStatus := cloudcommon.InstanceDown
-	for i, key := range checkpoint.Keys {
-		if key.Matches(&app.Key) {
-			checkpointStatus = checkpoint.Status[i]
-		}
-	}
 
-	empty, err := checkInfluxQueryOutput(logs, cloudcommon.AppInstEvent)
+	stats := RunTimeStats{
+		end:   endTime,
+		event: usageEvent,
+	}
+	err = GetRunTimeStats(usageTypeVmApp, *checkpoint, app.Key, logs, &stats)
 	if err != nil {
 		return err
-	} else if empty {
-		//there are no logs between endTime and the checkpoint
-		var totalRunTime time.Duration
-		if checkpointStatus == cloudcommon.InstanceDown {
-			totalRunTime = time.Duration(0)
-		} else {
-			totalRunTime = endTime.Sub(checkpoint.Timestamp)
-		}
-		metric = createAppUsageMetric(app, checkpoint.Timestamp, endTime, totalRunTime, usageEvent, checkpointStatus)
-		services.events.AddMetric(metric)
-		return nil
-	}
-
-	var latestStatus = ""
-	for _, values := range logs[0].Series[0].Values {
-		// value should be of the format [timestamp event status]
-		if len(values) != len(selectors)+1 {
-			return fmt.Errorf("Error parsing influx response")
-		}
-		timestamp, err := time.Parse(time.RFC3339, fmt.Sprintf("%v", values[0]))
-		if err != nil {
-			return fmt.Errorf("Unable to parse timestamp: %v", err)
-		}
-		event := cloudcommon.InstanceEvent(fmt.Sprintf("%v", values[1]))
-		status := fmt.Sprintf("%v", values[2])
-		if latestStatus == "" { // keep track of the latest seen status in the logs for checkpointing purposes
-			latestStatus = status
-		}
-		// go until we hit the creation/reservation of this appinst, OR until we hit the checkpoint
-		if timestamp.Before(checkpoint.Timestamp) {
-			// Check to see if it was up or down at the checkpoint and set the downTime accordingly and then calculate the runTime
-			if checkpointStatus == cloudcommon.InstanceDown {
-				downTime = downTime + downTimeUpper.Sub(checkpoint.Timestamp)
-			}
-			runTime = endTime.Sub(checkpoint.Timestamp) - downTime
-			latestStatus = checkpointStatus
-			break
-		}
-		// if we reached the creation event calculate the runTime
-		if event == cloudcommon.CREATED || event == cloudcommon.RESERVED {
-			if status == cloudcommon.InstanceDown { // don't think this scenario would ever happen but just in case
-				downTime = downTime + downTimeUpper.Sub(timestamp)
-			}
-			runTime = endTime.Sub(timestamp) - downTime
-			startTime = timestamp
-			break
-		}
-		// add to the downtime
-		if status == cloudcommon.InstanceDown {
-			downTime = downTime + downTimeUpper.Sub(timestamp)
-		}
-		downTimeUpper = timestamp
 	}
 
 	// write the usage record to influx
-	metric = createAppUsageMetric(app, startTime, endTime, runTime, usageEvent, latestStatus)
+	metric = createAppUsageMetric(app, stats.start, stats.end, stats.upTime, stats.event, stats.status)
 
 	services.events.AddMetric(metric)
 	return nil
@@ -157,9 +100,8 @@ func createAppUsageMetric(app *edgeproto.AppInst, startTime, endTime time.Time, 
 
 // This is checkpointing for VM based app BILLING PERIODS ONLY, custom checkpointing, coming later, will not create(or at least store) usage records upon checkpointing
 func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
-	now := time.Now()
-	if timestamp.After(now) { // we dont know if there will be more creates and deletes before the timestamp occurs
-		return fmt.Errorf("Cannot create a checkpoint for the future, checkpointTimestamp: %s, now:%s", timestamp.Format(time.RFC3339), now.Format(time.RFC3339))
+	if err := checkpointTimeValid(timestamp); err != nil { // we dont know if there will be more creates and deletes before the timestamp occurs
+		return err
 	}
 	defer services.events.DoPush() // flush these right away for subsequent calls to GetAppCheckpoint
 	// get all running appinsts and create a usage record of them
