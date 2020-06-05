@@ -179,6 +179,12 @@ func (s *App) Validate(fields map[string]struct{}) error {
 			return err
 		}
 	}
+	if s.TemplateDelimiter != "" {
+		out := strings.Split(s.TemplateDelimiter, " ")
+		if len(out) != 2 {
+			return fmt.Errorf("invalid app template delimiter %s, valid format '<START-DELIM> <END-DELIM>'", s.TemplateDelimiter)
+		}
+	}
 	return nil
 }
 

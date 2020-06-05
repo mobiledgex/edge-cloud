@@ -361,6 +361,7 @@ var AppOptionalArgs = []string{
 	"autoprovpolicy",
 	"accesstype",
 	"defaultprivacypolicy",
+	"templatedelimiter",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -397,6 +398,7 @@ var AppComments = map[string]string{
 	"accesstype":              "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"defaultprivacypolicy":    "Privacy policy when creating auto cluster",
 	"deleteprepare":           "Preparing to be deleted",
+	"templatedelimiter":       "Delimiter to be used for template parsing, defaults to [[ ]]",
 }
 var AppSpecialArgs = map[string]string{
 	"fields": "StringArray",
