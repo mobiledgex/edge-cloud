@@ -147,7 +147,7 @@ func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.Ac
 	for ii, _ := range ports {
 		ports[ii].PublicPort = ports[ii].InternalPort
 		if ports[ii].EndPort != 0 {
-			numPortsInRange := ports[ii].EndPort - ports[ii].PublicPort
+			numPortsInRange := ports[ii].EndPort - ports[ii].PublicPort + 1
 			// this is checked in app_api also, but this in case there are pre-existing apps which violate this new restriction
 			if accessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER && numPortsInRange > maxPorts {
 				return fmt.Errorf("Port range greater than max of %d for load balanced application", maxPorts)
