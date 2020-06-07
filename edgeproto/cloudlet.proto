@@ -202,7 +202,7 @@ message Cloudlet {
   // Infra specific config
   InfraConfig infra_config = 28;
   // Chef client key
-  string chef_client_key = 29 [(protogen.backend) = true];
+  map<string, string> chef_client_key = 29 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

@@ -82,6 +82,7 @@ type Crm struct {
 	Region              string
 	CommercialCerts     bool
 	AppDNSRoot          string
+	ChefServerPath      string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`

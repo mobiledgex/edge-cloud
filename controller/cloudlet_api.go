@@ -356,7 +356,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if !s.store.STMGet(stm, &in.Key, &cloudlet) {
 				return in.Key.NotFoundError()
 			}
-			if cloudlet.ChefClientKey == in.ChefClientKey && cloudlet.State == newState {
+			if cloudlet.State == newState {
 				return nil
 			}
 			cloudlet.ChefClientKey = in.ChefClientKey
@@ -469,7 +469,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY &&
-				(cloudlet.State != edgeproto.TrackedState_UPDATE_REQUESTED && cloudlet.State != edgeproto.TrackedState_CREATING) {
+				(cloudlet.State != edgeproto.TrackedState_UPDATE_REQUESTED) {
 				done <- true
 			}
 		}

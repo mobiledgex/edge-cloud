@@ -21,6 +21,7 @@ type PlatformConfig struct {
 	EnvVars             map[string]string
 	NodeMgr             *node.NodeMgr
 	AppDNSRoot          string
+	ChefServerPath      string
 }
 
 type Caches struct {

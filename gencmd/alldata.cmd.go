@@ -715,6 +715,7 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudletinfos:#.flavors:#.propmap":       "StringToString",
 	"cloudletpools:#.fields":                  "StringArray",
 	"cloudlets:#.accessvars":                  "StringToString",
+	"cloudlets:#.chefclientkey":               "StringToString",
 	"cloudlets:#.config.envvar":               "StringToString",
 	"cloudlets:#.envvar":                      "StringToString",
 	"cloudlets:#.errors":                      "StringArray",

@@ -455,6 +455,10 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--appDNSRoot")
 		args = append(args, p.AppDNSRoot)
 	}
+	if p.ChefServerPath != "" {
+		args = append(args, "--chefServerPath")
+		args = append(args, p.ChefServerPath)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {

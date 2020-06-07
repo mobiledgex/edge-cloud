@@ -42,6 +42,7 @@ var cloudletVMImagePath = flag.String("cloudletVMImagePath", "", "Image path whe
 var cleanupMode = flag.Bool("cleanupMode", false, "cleanup previous versions of CRM if present")
 var commercialCerts = flag.Bool("commercialCerts", false, "Get TLS certs from LetsEncrypt. If false CRM will generate its own self-signed certs")
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
+var chefServerPath = flag.String("chefServerPath", "", "Chef server path")
 
 // myCloudletInfo is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudletInfo is provided as a configuration - either command line or
@@ -286,6 +287,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		EnvVars:             cloudlet.EnvVar,
 		NodeMgr:             &nodeMgr,
 		AppDNSRoot:          *appDNSRoot,
+		ChefServerPath:      *chefServerPath,
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", platform.GetType())
 	err := platform.Init(ctx, &pc, caches, updateCallback)
