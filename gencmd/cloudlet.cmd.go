@@ -972,6 +972,7 @@ var PlatformConfigOptionalArgs = []string{
 	"appdnsroot",
 	"chefserverpath",
 	"chefclientinterval",
+	"deploymenttag",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -992,6 +993,7 @@ var PlatformConfigComments = map[string]string{
 	"appdnsroot":            "App domain name root",
 	"chefserverpath":        "Path to Chef Server",
 	"chefclientinterval":    "Chef client interval",
+	"deploymenttag":         "Deployment Tag",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -1115,6 +1117,7 @@ var CloudletComments = map[string]string{
 	"config.appdnsroot":                   "App domain name root",
 	"config.chefserverpath":               "Path to Chef Server",
 	"config.chefclientinterval":           "Chef client interval",
+	"config.deploymenttag":                "Deployment Tag",
 	"restagmap:#.value.name":              "Resource Table Name",
 	"restagmap:#.value.organization":      "Operator organization of the cloudlet site.",
 	"accessvars":                          "Variables required to access cloudlet",

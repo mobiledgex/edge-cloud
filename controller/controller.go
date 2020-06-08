@@ -63,6 +63,7 @@ var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs from LetsEncrypt. If false then CRM will generate its onwn self-signed cert")
 var checkpointInterval = flag.Duration("checkpointInterval", time.Hour*24*30, "Interval at which to checkpoint cluster usage")
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
+var deploymentTag = flag.String("deploymentTag", "", "Tag to indicate type of deployment setup. Ex: production, staging, etc")
 
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName

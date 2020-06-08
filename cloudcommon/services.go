@@ -41,6 +41,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	useVaultCerts := false
 	appDNSRoot := ""
 	chefServerPath := ""
+	deploymentTag := ""
 	if pfConfig != nil {
 		for k, v := range pfConfig.EnvVar {
 			envVars[k] = v
@@ -58,6 +59,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		useVaultCerts = pfConfig.UseVaultCerts
 		appDNSRoot = pfConfig.AppDnsRoot
 		chefServerPath = pfConfig.ChefServerPath
+		deploymentTag = pfConfig.DeploymentTag
 	}
 	for envKey, envVal := range cloudlet.EnvVar {
 		envVars[envKey] = envVal
@@ -92,6 +94,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		UseVaultCerts:       useVaultCerts,
 		AppDNSRoot:          appDNSRoot,
 		ChefServerPath:      chefServerPath,
+		DeploymentTag:       deploymentTag,
 	}, opts, nil
 }
 

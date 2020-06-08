@@ -40,6 +40,7 @@ type Controller struct {
 	CloudletVMImagePath   string
 	CheckpointingInterval string
 	AppDNSRoot            string
+	DeploymentTag         string
 }
 type Dme struct {
 	Common        `yaml:",inline"`
@@ -83,6 +84,7 @@ type Crm struct {
 	CommercialCerts     bool
 	AppDNSRoot          string
 	ChefServerPath      string
+	DeploymentTag       string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`

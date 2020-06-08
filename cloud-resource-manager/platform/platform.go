@@ -22,6 +22,7 @@ type PlatformConfig struct {
 	NodeMgr             *node.NodeMgr
 	AppDNSRoot          string
 	ChefServerPath      string
+	DeploymentTag       string
 }
 
 type Caches struct {

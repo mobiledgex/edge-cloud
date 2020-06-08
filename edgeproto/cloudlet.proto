@@ -80,6 +80,8 @@ message PlatformConfig {
   string chef_server_path = 17;
   // Chef client interval
   int32 chef_client_interval = 18  [(gogoproto.casttype) = "Duration"];
+  // Deployment Tag
+  string deployment_tag = 19;
 }
 
 // Platform Type

@@ -161,6 +161,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--checkpointInterval")
 		args = append(args, p.CheckpointingInterval)
 	}
+	if p.DeploymentTag != "" {
+		args = append(args, "--deploymentTag")
+		args = append(args, p.DeploymentTag)
+	}
 
 	var envs []string
 	if options.RolesFile != "" {
@@ -458,6 +462,10 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.ChefServerPath != "" {
 		args = append(args, "--chefServerPath")
 		args = append(args, p.ChefServerPath)
+	}
+	if p.DeploymentTag != "" {
+		args = append(args, "--deploymentTag")
+		args = append(args, p.DeploymentTag)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
