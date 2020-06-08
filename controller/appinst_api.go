@@ -532,7 +532,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// auto-create cluster inst
 		clusterInst.Key = in.Key.ClusterInstKey
 		clusterInst.Auto = true
-		log.DebugLog(log.DebugLevelApi,
+		log.SpanLog(ctx, log.DebugLevelApi,
 			"Create auto-ClusterInst",
 			"key", clusterInst.Key,
 			"AppInst", in)
@@ -557,7 +557,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cb.Send(&edgeproto.Result{Message: "Deleting auto-ClusterInst due to failure"})
 				undoErr := clusterInstApi.deleteClusterInstInternal(cctx.WithUndo(), &clusterInst, cb)
 				if undoErr != nil {
-					log.DebugLog(log.DebugLevelApi,
+					log.SpanLog(ctx, log.DebugLevelApi,
 						"Undo create auto-ClusterInst failed",
 						"key", clusterInst.Key,
 						"undoErr", undoErr)
@@ -633,6 +633,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
+		ports, err1 := edgeproto.SetPortsHealthCheck(ports, app.SkipHcPorts)
+		if err1 != nil {
+			log.SpanLog(ctx, log.DebugLevelApi,
+				"Unable to disable healthChecks on ports", "ports", ports, "skipHcPorts", app.SkipHcPorts)
+			return fmt.Errorf("Failed to Set health checks on ports %s. Skip Health check ports - %s", app.AccessPorts, app.SkipHcPorts)
+		}
 		if !cloudcommon.IsClusterInstReqd(&app) {
 			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
 			for ii, _ := range ports {
@@ -649,7 +655,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					return fmt.Errorf("Shared IP access with port range not allowed")
 				}
 				if setL7Port(&ports[ii], &in.Key) {
-					log.DebugLog(log.DebugLevelApi,
+					log.SpanLog(ctx, log.DebugLevelApi,
 						"skip L7 port", "port", ports[ii])
 					continue
 				}

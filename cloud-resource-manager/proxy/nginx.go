@@ -355,6 +355,7 @@ type TCPSpecDetail struct {
 	BackendPort     int32
 	ConcurrentConns uint64
 	UseTLS          bool // for port specific TLS termination
+	HealthCheck     bool
 }
 
 type UDPSpecDetail struct {

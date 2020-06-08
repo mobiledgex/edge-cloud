@@ -114,6 +114,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 					BackendIP:   backendIP,
 					BackendPort: internalPort,
 					UseTLS:      p.Tls,
+					HealthCheck: !p.SkipHealthCheck,
 				}
 				tcpconns, err := getTCPConcurrentConnections()
 				if err != nil {
@@ -192,6 +193,7 @@ static_resources:
     - socket_address:
         address: {{.BackendIP}}
         port_value: {{.BackendPort}}
+    {{if .HealthCheck -}}
     health_checks:
       - timeout: 1s
         interval: 5s
@@ -200,6 +202,7 @@ static_resources:
         healthy_threshold: 3
         tcp_health_check: {}
         no_traffic_interval: 5s
+    {{- end}}
 {{- end}}
 admin:
   access_log_path: "/var/log/admin.log"
