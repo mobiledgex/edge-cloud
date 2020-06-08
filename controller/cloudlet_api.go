@@ -357,7 +357,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if !s.store.STMGet(stm, &in.Key, &cloudlet) {
 				return in.Key.NotFoundError()
 			}
-			if cloudlet.State == newState {
+			if in.ChefClientKey == nil && cloudlet.State == newState {
 				return nil
 			}
 			cloudlet.ChefClientKey = in.ChefClientKey
