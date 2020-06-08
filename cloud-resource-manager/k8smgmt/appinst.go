@@ -91,17 +91,21 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 						case "Terminating":
 							log.SpanLog(ctx, log.DebugLevelMexos, "pod is terminating", "podName", podName, "state", podState)
 						default:
-							// try to find out what error was
-							// TODO: pull events and send
-							// them back as status updates
-							// rather than sending back
-							// full "describe" dump
-							cmd := fmt.Sprintf("%s kubectl describe pod --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
-							out, derr := client.Output(cmd)
-							if derr == nil {
-								return fmt.Errorf("Run container failed: %s", out)
+							if strings.Contains(podState, "Init") {
+								log.SpanLog(ctx, log.DebugLevelMexos, "pod in init state", "podName", podName, "state", podState)
+							} else {
+								// try to find out what error was
+								// TODO: pull events and send
+								// them back as status updates
+								// rather than sending back
+								// full "describe" dump
+								cmd := fmt.Sprintf("%s kubectl describe pod --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
+								out, derr := client.Output(cmd)
+								if derr == nil {
+									return fmt.Errorf("Run container failed: %s", out)
+								}
+								return fmt.Errorf("Pod is unexpected state: %s", podState)
 							}
-							return fmt.Errorf("Pod is unexpected state: %s", podState)
 						}
 					} else {
 						if waitFor == WaitDeleted && strings.Contains(line, "No resources found") {
