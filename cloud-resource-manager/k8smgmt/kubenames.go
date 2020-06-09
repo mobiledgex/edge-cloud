@@ -75,7 +75,7 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	kubeNames.KconfEnv = "KUBECONFIG=" + kubeNames.KconfName
 	kubeNames.DeploymentType = app.Deployment
 	//get service names from the yaml
-	if app.Deployment == cloudcommon.AppDeploymentTypeKubernetes {
+	if app.Deployment == cloudcommon.DeploymentTypeKubernetes {
 		objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
 		if err != nil {
 			return nil, fmt.Errorf("invalid kubernetes deployment yaml, %s", err.Error())
@@ -89,10 +89,10 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 			svcName := ksvc.ObjectMeta.Name
 			kubeNames.ServiceNames = append(kubeNames.ServiceNames, svcName)
 		}
-	} else if app.Deployment == cloudcommon.AppDeploymentTypeHelm {
+	} else if app.Deployment == cloudcommon.DeploymentTypeHelm {
 		// for helm chart just make sure it's the same prefix
 		kubeNames.ServiceNames = append(kubeNames.ServiceNames, kubeNames.AppName)
-	} else if app.Deployment == cloudcommon.AppDeploymentTypeDocker {
+	} else if app.Deployment == cloudcommon.DeploymentTypeDocker {
 		// for docker use the app name
 		kubeNames.ServiceNames = append(kubeNames.ServiceNames, kubeNames.AppName)
 	}

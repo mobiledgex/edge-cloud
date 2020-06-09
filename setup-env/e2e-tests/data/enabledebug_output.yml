@@ -5,11 +5,11 @@ replies:
   - node:
       type: controller
       region: local
-    output: etcd,api,notify,metrics,upgrade
+    output: etcd,api,notify,metrics,infra,upgrade
   - node:
       type: controller
       region: local
-    output: etcd,api,notify,metrics,upgrade
+    output: etcd,api,notify,metrics,infra,upgrade
   - node:
       type: dme
       region: local

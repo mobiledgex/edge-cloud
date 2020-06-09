@@ -33,13 +33,14 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	vaultAddr := ""
 	testMode := false
 	span := ""
-	cleanupMode := false
 	cloudletVMImagePath := ""
 	region := ""
 	commercialCerts := false
 	useVaultCAs := false
 	useVaultCerts := false
 	appDNSRoot := ""
+	chefServerPath := ""
+	deploymentTag := ""
 	if pfConfig != nil {
 		for k, v := range pfConfig.EnvVar {
 			envVars[k] = v
@@ -49,13 +50,14 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		vaultAddr = pfConfig.VaultAddr
 		testMode = pfConfig.TestMode
 		span = pfConfig.Span
-		cleanupMode = pfConfig.CleanupMode
 		cloudletVMImagePath = pfConfig.CloudletVmImagePath
 		region = pfConfig.Region
 		commercialCerts = pfConfig.CommercialCerts
 		useVaultCAs = pfConfig.UseVaultCas
 		useVaultCerts = pfConfig.UseVaultCerts
 		appDNSRoot = pfConfig.AppDnsRoot
+		chefServerPath = pfConfig.ChefServerPath
+		deploymentTag = pfConfig.DeploymentTag
 	}
 	for envKey, envVal := range cloudlet.EnvVar {
 		envVars[envKey] = envVal
@@ -79,16 +81,16 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		PhysicalName:        cloudlet.PhysicalName,
 		TestMode:            testMode,
 		Span:                span,
-		CleanupMode:         cleanupMode,
 		ContainerVersion:    cloudlet.ContainerVersion,
 		VMImageVersion:      cloudlet.VmImageVersion,
-		PackageVersion:      cloudlet.PackageVersion,
 		CloudletVMImagePath: cloudletVMImagePath,
 		Region:              region,
 		CommercialCerts:     commercialCerts,
 		UseVaultCAs:         useVaultCAs,
 		UseVaultCerts:       useVaultCerts,
 		AppDNSRoot:          appDNSRoot,
+		ChefServerPath:      chefServerPath,
+		DeploymentTag:       deploymentTag,
 	}, opts, nil
 }
 
@@ -99,6 +101,15 @@ func GetCRMCmd(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig)
 	}
 
 	return crmProc.String(opts...), &crmProc.Common.EnvVars, nil
+}
+
+func GetCRMCmdArgs(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) ([]string, *map[string]string, error) {
+	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return crmProc.GetArgs(opts...), &crmProc.Common.EnvVars, nil
 }
 
 var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}

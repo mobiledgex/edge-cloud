@@ -83,6 +83,10 @@ path "secret/data/registry/*" {
   capabilities = [ "read" ]
 }
 
+path "secret/data/accounts/chef" {
+  capabilities = [ "read" ]
+}
+
 path "secret/data/$REGION/cloudlet/openstack/*" {
   capabilities = [ "create", "update", "delete", "read" ]
 }

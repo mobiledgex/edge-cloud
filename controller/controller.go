@@ -55,6 +55,7 @@ var registryFQDN = flag.String("registryFQDN", "", "default docker image registr
 var artifactoryFQDN = flag.String("artifactoryFQDN", "", "default VM image registry (artifactory) FQDN")
 var cloudletRegistryPath = flag.String("cloudletRegistryPath", "", "edge-cloud image registry path for deploying cloudlet services")
 var cloudletVMImagePath = flag.String("cloudletVMImagePath", "", "VM image for deploying cloudlet services")
+var chefServerPath = flag.String("chefServerPath", "", "Path to chef server organization")
 var versionTag = flag.String("versionTag", "", "edge-cloud image tag indicating controller version")
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
@@ -62,6 +63,7 @@ var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs from LetsEncrypt. If false then CRM will generate its onwn self-signed cert")
 var checkpointInterval = flag.Duration("checkpointInterval", time.Hour*24*30, "Interval at which to checkpoint cluster usage")
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
+var deploymentTag = flag.String("deploymentTag", "", "Tag to indicate type of deployment setup. Ex: production, staging, etc")
 
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName

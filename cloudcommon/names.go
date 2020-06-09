@@ -207,7 +207,7 @@ func ParseMyCloudletKey(standalone bool, keystr *string, mykey *edgeproto.Cloudl
 }
 
 func IsClusterInstReqd(app *edgeproto.App) bool {
-	if app.Deployment == AppDeploymentTypeVM {
+	if app.Deployment == DeploymentTypeVM {
 		return false
 	}
 	return true

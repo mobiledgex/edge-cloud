@@ -245,11 +245,6 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 			return err
 		}
 	}
-	if s.PackageVersion != "" {
-		if err := util.ValidateImageVersion(s.PackageVersion); err != nil {
-			return err
-		}
-	}
 	if err := s.ValidateEnums(); err != nil {
 		return err
 	}

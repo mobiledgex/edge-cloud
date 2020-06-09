@@ -188,7 +188,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 			in.ImagePath = *artifactoryFQDN + "repo-" +
 				in.Key.Organization + "/" +
 				in.Key.Name + ".qcow2#md5:" + in.Md5Sum
-		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
+		} else if in.Deployment == cloudcommon.DeploymentTypeHelm {
 			if *registryFQDN == "" {
 				return fmt.Errorf("No image path specified and no default registryFQDN to fall back upon. Please specify the image path")
 			}
@@ -207,7 +207,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 		}
 	}
 
-	if in.ScaleWithCluster && in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+	if in.ScaleWithCluster && in.Deployment != cloudcommon.DeploymentTypeKubernetes {
 		return fmt.Errorf("app scaling is only supported for Kubernetes deployments")
 	}
 
@@ -286,8 +286,8 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			return &edgeproto.Result{}, err
 		}
 	}
-	if !cloudcommon.IsValidDeploymentType(in.Deployment) {
-		return &edgeproto.Result{}, fmt.Errorf("Invalid deployment, must be one of %v", cloudcommon.ValidDeployments)
+	if !cloudcommon.IsValidDeploymentType(in.Deployment, cloudcommon.ValidAppDeployments) {
+		return &edgeproto.Result{}, fmt.Errorf("Invalid deployment, must be one of %v", cloudcommon.ValidAppDeployments)
 	}
 	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
 		return &edgeproto.Result{}, fmt.Errorf("Deployment is not valid for image type")
@@ -304,7 +304,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		in.AccessType = newAccessType
 	}
 
-	if in.Deployment == cloudcommon.AppDeploymentTypeDocker && in.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
+	if in.Deployment == cloudcommon.DeploymentTypeDocker && in.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
 		dtype := cloudcommon.GetDockerDeployType(in.DeploymentManifest)
 		if dtype != "docker" {
 			// docker-compose manifests introduce a lot of complexity for LB solution because the port mappings will have
@@ -313,12 +313,12 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 	}
 
-	if in.Deployment == cloudcommon.AppDeploymentTypeDocker || in.Deployment == cloudcommon.AppDeploymentTypeVM {
+	if in.Deployment == cloudcommon.DeploymentTypeDocker || in.Deployment == cloudcommon.DeploymentTypeVM {
 		if strings.Contains(strings.ToLower(in.AccessPorts), "http") {
 			return &edgeproto.Result{}, fmt.Errorf("Deployment Type and HTTP access ports are incompatible")
 		}
 	}
-	if in.Deployment == cloudcommon.AppDeploymentTypeVM && in.Command != "" {
+	if in.Deployment == cloudcommon.DeploymentTypeVM && in.Command != "" {
 		return &edgeproto.Result{}, fmt.Errorf("Invalid argument, command is not supported for VM based deployments")
 	}
 	err = updateAppFields(ctx, in, in.Revision)
@@ -400,13 +400,13 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			return in.Key.NotFoundError()
 		}
 		if appInstExists {
-			if cur.Deployment != cloudcommon.AppDeploymentTypeKubernetes &&
-				cur.Deployment != cloudcommon.AppDeploymentTypeDocker &&
-				cur.Deployment != cloudcommon.AppDeploymentTypeHelm {
+			if cur.Deployment != cloudcommon.DeploymentTypeKubernetes &&
+				cur.Deployment != cloudcommon.DeploymentTypeDocker &&
+				cur.Deployment != cloudcommon.DeploymentTypeHelm {
 				return fmt.Errorf("Update App not supported for deployment: %s when AppInsts exist", cur.Deployment)
 			}
 			// don't allow change from regular docker to docker-compose or docker-compose zip if instances exist
-			if cur.Deployment == cloudcommon.AppDeploymentTypeDocker {
+			if cur.Deployment == cloudcommon.DeploymentTypeDocker {
 				curType := cloudcommon.GetDockerDeployType(cur.DeploymentManifest)
 				newType := cloudcommon.GetDockerDeployType(in.DeploymentManifest)
 				if curType != newType {
@@ -552,7 +552,7 @@ func (s *AppApi) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppA
 
 func validateAppConfigsForDeployment(configs []*edgeproto.ConfigFile, deployment string) error {
 	for _, cfg := range configs {
-		if cfg.Kind == edgeproto.AppConfigHelmYaml && deployment != cloudcommon.AppDeploymentTypeHelm {
+		if cfg.Kind == edgeproto.AppConfigHelmYaml && deployment != cloudcommon.DeploymentTypeHelm {
 			return fmt.Errorf("Invalid Config Kind(%s) for deployment type(%s)", cfg.Kind, deployment)
 		}
 	}

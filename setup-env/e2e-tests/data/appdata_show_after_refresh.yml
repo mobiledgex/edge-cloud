@@ -14,6 +14,7 @@ settings:
   masternodeflavor: x1.tiny
   loadbalancermaxportrange: 100
   maxtrackeddmeclients: 100
+  chefclientinterval: 10m
 flavors:
 - key:
     name: x1.tiny
@@ -100,7 +101,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-1
-  containerversion: 2020-10-10
+  containerversion: 2019-10-24
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -113,7 +114,7 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-2
-  containerversion: 2020-10-10
+  containerversion: 2019-10-24
 - key:
     organization: dmuus
     name: dmuus-cloud-3
@@ -188,9 +189,9 @@ cloudletinfos:
     ram: 101024
     disk: 500
   status:
-    tasknumber: 4
-    taskname: Deleting old CRMServer
-  containerversion: "2020-10-10"
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -206,9 +207,9 @@ cloudletinfos:
     ram: 101024
     disk: 500
   status:
-    tasknumber: 4
-    taskname: Deleting old CRMServer
-  containerversion: "2020-10-10"
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
 - key:
     organization: dmuus
     name: dmuus-cloud-3
