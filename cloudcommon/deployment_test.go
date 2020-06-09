@@ -118,9 +118,9 @@ func TestTimeout(t *testing.T) {
 
 	oneG := 1073741824
 	val = GetTimeout(0)
-	require.Equal(t, val, 10*time.Minute)
+	require.Equal(t, val, 15*time.Minute)
 	val = GetTimeout(5 * oneG)
-	require.Equal(t, val, 10*time.Minute)
+	require.Equal(t, val, 15*time.Minute)
 	val = GetTimeout(10 * oneG)
 	require.Equal(t, val, 20*time.Minute)
 }

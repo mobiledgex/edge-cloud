@@ -503,6 +503,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// appinst progress
 		in.State = edgeproto.TrackedState_CREATING_DEPENDENCIES
 		s.store.STMPut(stm, in)
+		appInstRefsApi.addRef(stm, &in.Key)
 		return nil
 	})
 	if err != nil {
@@ -519,6 +520,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					// no change done on CRM side
 					if curr.State == edgeproto.TrackedState_CREATING_DEPENDENCIES {
 						s.store.STMDel(stm, &in.Key)
+						appInstRefsApi.removeRef(stm, &in.Key)
 					}
 				}
 				return nil
@@ -1179,6 +1181,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// operation failed, so just need to clean up
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
+			appInstRefsApi.removeRef(stm, &in.Key)
 		} else {
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
 			s.store.STMPut(stm, in)
@@ -1310,6 +1313,7 @@ func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 			return nil
 		}
 		s.store.STMDel(stm, &in.Key)
+		appInstRefsApi.removeRef(stm, &in.Key)
 		return nil
 	})
 }
@@ -1328,6 +1332,7 @@ func (s *AppInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.AppIns
 		}
 		if newState == edgeproto.TrackedState_NOT_PRESENT {
 			s.store.STMDel(stm, &in.Key)
+			appInstRefsApi.removeRef(stm, &in.Key)
 		} else {
 			inst.State = newState
 			inst.Errors = nil

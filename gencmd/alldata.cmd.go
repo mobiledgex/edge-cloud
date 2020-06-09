@@ -182,6 +182,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.AppInstances[i0].OptRes = ""
 		}
 	}
+	for i0 := 0; i0 < len(in.AppInstRefs); i0++ {
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -406,6 +408,7 @@ var AllDataOptionalArgs = []string{
 	"apps:#.defaultprivacypolicy",
 	"apps:#.deleteprepare",
 	"apps:#.autoprovpolicies",
+	"apps:#.templatedelimiter",
 	"appinstances:#.fields",
 	"appinstances:#.key.appkey.organization",
 	"appinstances:#.key.appkey.name",
@@ -457,6 +460,11 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.availabilityzone",
 	"appinstances:#.vmflavor",
 	"appinstances:#.optres",
+	"appinstrefs:#.key.organization",
+	"appinstrefs:#.key.name",
+	"appinstrefs:#.key.version",
+	"appinstrefs:#.insts:#.key",
+	"appinstrefs:#.insts:#.value",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -660,6 +668,7 @@ var AllDataComments = map[string]string{
 	"apps:#.defaultprivacypolicy":                                "Privacy policy when creating auto cluster",
 	"apps:#.deleteprepare":                                       "Preparing to be deleted",
 	"apps:#.autoprovpolicies":                                    "Auto provisioning policy names",
+	"apps:#.templatedelimiter":                                   "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"appinstances:#.fields":                                      "Fields are used for the Update API to specify which fields to apply",
 	"appinstances:#.key.appkey.organization":                     "App developer organization",
 	"appinstances:#.key.appkey.name":                             "App name",
@@ -703,6 +712,9 @@ var AllDataComments = map[string]string{
 	"appinstances:#.availabilityzone":                            "Optional Availability Zone if any",
 	"appinstances:#.vmflavor":                                    "OS node flavor to use",
 	"appinstances:#.optres":                                      "Optional Resources required by OS flavor if any",
+	"appinstrefs:#.key.organization":                             "App developer organization",
+	"appinstrefs:#.key.name":                                     "App name",
+	"appinstrefs:#.key.version":                                  "App version",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",

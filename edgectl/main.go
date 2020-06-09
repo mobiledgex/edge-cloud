@@ -86,6 +86,9 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.AppInstClientApiCmd = edgeproto.NewAppInstClientApiClient(conn)
 	gencmd.DeviceApiCmd = edgeproto.NewDeviceApiClient(conn)
 	gencmd.OrganizationApiCmd = edgeproto.NewOrganizationApiClient(conn)
+	gencmd.CloudletRefsApiCmd = edgeproto.NewCloudletRefsApiClient(conn)
+	gencmd.ClusterRefsApiCmd = edgeproto.NewClusterRefsApiClient(conn)
+	gencmd.AppInstRefsApiCmd = edgeproto.NewAppInstRefsApiClient(conn)
 	return nil
 }
 
@@ -129,6 +132,9 @@ func main() {
 	controllerCmd.AddCommand(gencmd.AppInstClientApiCmds...)
 	controllerCmd.AddCommand(gencmd.DeviceApiCmds...)
 	controllerCmd.AddCommand(gencmd.OrganizationApiCmds...)
+	controllerCmd.AddCommand(gencmd.CloudletRefsApiCmds...)
+	controllerCmd.AddCommand(gencmd.ClusterRefsApiCmds...)
+	controllerCmd.AddCommand(gencmd.AppInstRefsApiCmds...)
 
 	controllerCmd.AddCommand(createCmd.GenCmd())
 	controllerCmd.AddCommand(deleteCmd.GenCmd())

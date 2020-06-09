@@ -80,6 +80,9 @@ func (a *AllData) Sort() {
 	sort.Slice(a.ResTagTables[:], func(i, j int) bool {
 		return a.ResTagTables[i].Key.GetKeyString() < a.ResTagTables[j].Key.GetKeyString()
 	})
+	sort.Slice(a.AppInstRefs[:], func(i, j int) bool {
+		return a.AppInstRefs[i].Key.GetKeyString() < a.AppInstRefs[j].Key.GetKeyString()
+	})
 }
 
 func (a *NodeData) Sort() {
@@ -199,6 +202,12 @@ func (s *App) Validate(fields map[string]struct{}) error {
 		_, err = util.ValidatePublicKey(s.AuthPublicKey)
 		if err != nil {
 			return err
+		}
+	}
+	if s.TemplateDelimiter != "" {
+		out := strings.Split(s.TemplateDelimiter, " ")
+		if len(out) != 2 {
+			return fmt.Errorf("invalid app template delimiter %s, valid format '<START-DELIM> <END-DELIM>'", s.TemplateDelimiter)
 		}
 	}
 	if err = validateCustomizationConfigs(s.Configs); err != nil {
@@ -360,6 +369,10 @@ func (s *CloudletRefs) Validate(fields map[string]struct{}) error {
 }
 
 func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
+func (s *AppInstRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
@@ -652,6 +665,7 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPoolMember))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAutoScalePolicy))
 	opts = append(opts, cmpopts.SortSlices(CmpSortResTagTable))
+	opts = append(opts, cmpopts.SortSlices(CmpSortAppInstRefs))
 	return opts
 }
 
@@ -715,4 +729,15 @@ func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, 
 			CloudletState_CamelName[int32(curState)])
 	}
 	return nil
+}
+
+func (s *App) GetAutoProvPolicies() map[string]struct{} {
+	policies := make(map[string]struct{})
+	if s.AutoProvPolicy != "" {
+		policies[s.AutoProvPolicy] = struct{}{}
+	}
+	for _, name := range s.AutoProvPolicies {
+		policies[name] = struct{}{}
+	}
+	return policies
 }

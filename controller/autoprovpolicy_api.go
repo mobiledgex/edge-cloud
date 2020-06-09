@@ -40,12 +40,8 @@ func (s *AutoProvPolicyApi) CreateAutoProvPolicy(ctx context.Context, in *edgepr
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
 		}
-		for _, apCloudlet := range in.Cloudlets {
-			cloudlet := edgeproto.Cloudlet{}
-			if !cloudletApi.store.STMGet(stm, &apCloudlet.Key, &cloudlet) {
-				return apCloudlet.Key.NotFoundError()
-			}
-			apCloudlet.Loc = cloudlet.Location
+		if err := s.configureCloudlets(stm, in); err != nil {
+			return err
 		}
 		s.store.STMPut(stm, in)
 		return nil
@@ -66,6 +62,9 @@ func (s *AutoProvPolicyApi) UpdateAutoProvPolicy(ctx context.Context, in *edgepr
 		}
 		if changed == 0 {
 			return nil
+		}
+		if err := s.configureCloudlets(stm, &cur); err != nil {
+			return err
 		}
 		s.store.STMPut(stm, &cur)
 		return nil
@@ -94,22 +93,12 @@ func (s *AutoProvPolicyApi) AddAutoProvPolicyCloudlet(ctx context.Context, in *e
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		if cur.Cloudlets == nil {
-			cur.Cloudlets = make([]*edgeproto.AutoProvCloudlet, 0)
-		}
-		for _, cloudlet := range cur.Cloudlets {
-			if cloudlet.Key.Matches(&in.CloudletKey) {
-				return fmt.Errorf("Cloudlet already on policy")
-			}
-		}
-		cloudlet := edgeproto.Cloudlet{}
-		if !cloudletApi.store.STMGet(stm, &in.CloudletKey, &cloudlet) {
-			return in.CloudletKey.NotFoundError()
-		}
 		provCloudlet := edgeproto.AutoProvCloudlet{}
 		provCloudlet.Key = in.CloudletKey
-		provCloudlet.Loc = cloudlet.Location
 		cur.Cloudlets = append(cur.Cloudlets, &provCloudlet)
+		if err := s.configureCloudlets(stm, &cur); err != nil {
+			return err
+		}
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
@@ -125,10 +114,9 @@ func (s *AutoProvPolicyApi) RemoveAutoProvPolicyCloudlet(ctx context.Context, in
 		changed := false
 		for ii, cloudlet := range cur.Cloudlets {
 			if cloudlet.Key.Matches(&in.CloudletKey) {
-				last := len(cur.Cloudlets) - 1
-				cur.Cloudlets[ii] = cur.Cloudlets[last]
-				cur.Cloudlets = cur.Cloudlets[:last]
+				cur.Cloudlets = append(cur.Cloudlets[:ii], cur.Cloudlets[ii+1:]...)
 				changed = true
+				break
 			}
 		}
 		if !changed {
@@ -192,4 +180,16 @@ func (s *streamoutAppInst) Send(res *edgeproto.Result) error {
 
 func (s *streamoutAppInst) Context() context.Context {
 	return s.ctx
+}
+
+func (s *AutoProvPolicyApi) configureCloudlets(stm concurrency.STM, policy *edgeproto.AutoProvPolicy) error {
+	// make sure cloudlets exist and location is copied
+	for ii, _ := range policy.Cloudlets {
+		cloudlet := edgeproto.Cloudlet{}
+		if !cloudletApi.store.STMGet(stm, &policy.Cloudlets[ii].Key, &cloudlet) {
+			return policy.Cloudlets[ii].Key.NotFoundError()
+		}
+		policy.Cloudlets[ii].Loc = cloudlet.Location
+	}
+	return nil
 }
