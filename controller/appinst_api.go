@@ -633,12 +633,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
-		ports, err1 := edgeproto.SetPortsHealthCheck(ports, app.SkipHcPorts)
-		if err1 != nil {
-			log.SpanLog(ctx, log.DebugLevelApi,
-				"Unable to disable healthChecks on ports", "ports", ports, "skipHcPorts", app.SkipHcPorts)
-			return fmt.Errorf("Failed to Set health checks on ports %s. Skip Health check ports - %s", app.AccessPorts, app.SkipHcPorts)
-		}
 		if !cloudcommon.IsClusterInstReqd(&app) {
 			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
 			for ii, _ := range ports {

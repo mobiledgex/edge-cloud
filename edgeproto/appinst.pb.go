@@ -1552,7 +1552,6 @@ const AppInstFieldMappedPortsPathPrefix = "9.4"
 const AppInstFieldMappedPortsFqdnPrefix = "9.5"
 const AppInstFieldMappedPortsEndPort = "9.6"
 const AppInstFieldMappedPortsTls = "9.7"
-const AppInstFieldMappedPortsSkipHealthCheck = "9.8"
 const AppInstFieldFlavor = "12"
 const AppInstFieldFlavorName = "12.1"
 const AppInstFieldState = "14"
@@ -1610,7 +1609,6 @@ var AppInstAllFields = []string{
 	AppInstFieldMappedPortsFqdnPrefix,
 	AppInstFieldMappedPortsEndPort,
 	AppInstFieldMappedPortsTls,
-	AppInstFieldMappedPortsSkipHealthCheck,
 	AppInstFieldFlavorName,
 	AppInstFieldState,
 	AppInstFieldErrors,
@@ -1664,7 +1662,6 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldMappedPortsFqdnPrefix:                    struct{}{},
 	AppInstFieldMappedPortsEndPort:                       struct{}{},
 	AppInstFieldMappedPortsTls:                           struct{}{},
-	AppInstFieldMappedPortsSkipHealthCheck:               struct{}{},
 	AppInstFieldFlavorName:                               struct{}{},
 	AppInstFieldState:                                    struct{}{},
 	AppInstFieldErrors:                                   struct{}{},
@@ -1718,7 +1715,6 @@ var AppInstAllFieldsStringMap = map[string]string{
 	AppInstFieldMappedPortsFqdnPrefix:                    "Mapped Ports Fqdn Prefix",
 	AppInstFieldMappedPortsEndPort:                       "Mapped Ports End Port",
 	AppInstFieldMappedPortsTls:                           "Mapped Ports Tls",
-	AppInstFieldMappedPortsSkipHealthCheck:               "Mapped Ports Skip Health Check",
 	AppInstFieldFlavorName:                               "Flavor Name",
 	AppInstFieldState:                                    "State",
 	AppInstFieldErrors:                                   "Errors",
@@ -1868,10 +1864,6 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 			}
 			if m.MappedPorts[i0].Tls != o.MappedPorts[i0].Tls {
 				fields[AppInstFieldMappedPortsTls] = struct{}{}
-				fields[AppInstFieldMappedPorts] = struct{}{}
-			}
-			if m.MappedPorts[i0].SkipHealthCheck != o.MappedPorts[i0].SkipHealthCheck {
-				fields[AppInstFieldMappedPortsSkipHealthCheck] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
 		}
@@ -2164,12 +2156,6 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 			if _, set := fmap["9.7"]; set {
 				if m.MappedPorts[i0].Tls != src.MappedPorts[i0].Tls {
 					m.MappedPorts[i0].Tls = src.MappedPorts[i0].Tls
-					changed++
-				}
-			}
-			if _, set := fmap["9.8"]; set {
-				if m.MappedPorts[i0].SkipHealthCheck != src.MappedPorts[i0].SkipHealthCheck {
-					m.MappedPorts[i0].SkipHealthCheck = src.MappedPorts[i0].SkipHealthCheck
 					changed++
 				}
 			}

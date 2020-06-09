@@ -3390,10 +3390,6 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 				m.Ports[i0].Tls = src.Ports[i0].Tls
 				changed++
 			}
-			if m.Ports[i0].SkipHealthCheck != src.Ports[i0].SkipHealthCheck {
-				m.Ports[i0].SkipHealthCheck = src.Ports[i0].SkipHealthCheck
-				changed++
-			}
 		}
 	} else if m.Ports != nil {
 		m.Ports = nil
@@ -3965,10 +3961,6 @@ func (m *Appinstance) CopyInFields(src *Appinstance) int {
 				m.Ports[i0].Tls = src.Ports[i0].Tls
 				changed++
 			}
-			if m.Ports[i0].SkipHealthCheck != src.Ports[i0].SkipHealthCheck {
-				m.Ports[i0].SkipHealthCheck = src.Ports[i0].SkipHealthCheck
-				changed++
-			}
 		}
 	} else if m.Ports != nil {
 		m.Ports = nil
@@ -4105,10 +4097,6 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 					}
 					if m.Appinstances[i0].Ports[i1].Tls != src.Appinstances[i0].Ports[i1].Tls {
 						m.Appinstances[i0].Ports[i1].Tls = src.Appinstances[i0].Ports[i1].Tls
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].SkipHealthCheck != src.Appinstances[i0].Ports[i1].SkipHealthCheck {
-						m.Appinstances[i0].Ports[i1].SkipHealthCheck = src.Appinstances[i0].Ports[i1].SkipHealthCheck
 						changed++
 					}
 				}
@@ -4270,10 +4258,6 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 							}
 							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls != src.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls {
 								m.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].SkipHealthCheck != src.Cloudlets[i0].Appinstances[i1].Ports[i2].SkipHealthCheck {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].SkipHealthCheck = src.Cloudlets[i0].Appinstances[i1].Ports[i2].SkipHealthCheck
 								changed++
 							}
 						}

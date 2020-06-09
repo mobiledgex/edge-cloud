@@ -22,17 +22,15 @@ var AppPortOptionalArgs = []string{
 	"fqdnprefix",
 	"endport",
 	"tls",
-	"skiphealthcheck",
 }
 var AppPortAliasArgs = []string{}
 var AppPortComments = map[string]string{
-	"proto":           "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
-	"internalport":    "Container port",
-	"publicport":      "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
-	"pathprefix":      "Public facing path for HTTP L7 access.",
-	"fqdnprefix":      "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"endport":         "A non-zero end port indicates a port range from internal port to end port, inclusive.",
-	"tls":             "TLS termination for this port",
-	"skiphealthcheck": "Proxy health check for this port",
+	"proto":        "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
+	"internalport": "Container port",
+	"publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
+	"pathprefix":   "Public facing path for HTTP L7 access.",
+	"fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
+	"endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"tls":          "TLS termination for this port",
 }
 var AppPortSpecialArgs = map[string]string{}

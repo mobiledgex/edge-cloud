@@ -330,9 +330,11 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, err
 	}
 	// check that health check skip ports are parsable
-	_, err = edgeproto.ParseAppPorts(in.SkipHcPorts)
-	if err != nil {
-		return &edgeproto.Result{}, err
+	if in.SkipHcPorts != "all" {
+		_, err = edgeproto.ParseAppPorts(in.SkipHcPorts)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
 	}
 	if in.DeploymentManifest != "" {
 		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.Command, in.DeploymentManifest, ports)

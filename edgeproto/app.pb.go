@@ -216,6 +216,7 @@ type App struct {
 	TemplateDelimiter string `protobuf:"bytes,33,opt,name=template_delimiter,json=templateDelimiter,proto3" json:"template_delimiter,omitempty"`
 	// Comma separated list of protocol:port pairs that we should not run health check on
 	// Should be configured in case app does not always listen on these ports
+	// "all" can be specified if no health check to be run for this app
 	// Numerical values must be decimal format.
 	// i.e. tcp:80,udp:10002,http:443
 	SkipHcPorts string `protobuf:"bytes,34,opt,name=skip_hc_ports,json=skipHcPorts,proto3" json:"skip_hc_ports,omitempty"`
