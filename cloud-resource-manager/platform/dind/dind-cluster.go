@@ -28,10 +28,10 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 	var err error
 
 	switch clusterInst.Deployment {
-	case cloudcommon.AppDeploymentTypeDocker:
+	case cloudcommon.DeploymentTypeDocker:
 		updateCallback(edgeproto.UpdateTask, "Create done for Docker Cluster on DIND")
 		return nil
-	case cloudcommon.AppDeploymentTypeKubernetes:
+	case cloudcommon.DeploymentTypeKubernetes:
 		updateCallback(edgeproto.UpdateTask, "Create DIND Cluster")
 	default:
 		return fmt.Errorf("Only K8s and Docker clusters are supported on DIND")
@@ -132,7 +132,7 @@ func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto
 	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
 	log.SpanLog(ctx, log.DebugLevelInfra, "DeleteDINDCluster", "clusterName", clusterName)
 
-	if clusterInst.Deployment == cloudcommon.AppDeploymentTypeDocker {
+	if clusterInst.Deployment == cloudcommon.DeploymentTypeDocker {
 		log.SpanLog(ctx, log.DebugLevelInfra, "No delete required for DIND docker cluster", "clusterName", clusterName)
 		return nil
 	}
