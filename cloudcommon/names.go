@@ -58,6 +58,7 @@ var CloudletEvent = "cloudlet"
 var ClusterInstEvent = "clusterinst"
 var ClusterInstUsage = "clusterinst-usage"
 var AppInstEvent = "appinst"
+var VMAppInstUsage = "VMappinst-usage"
 
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"
