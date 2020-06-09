@@ -1066,9 +1066,12 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := cb.Context()
 
+	var app edgeproto.App
 	defer func() {
 		if reterr == nil {
-			RecordAppInstEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
+			newContext := context.WithValue(ctx, app.Key, app)
+			newContext = context.WithValue(newContext, in.Key, *in)
+			RecordAppInstEvent(newContext, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
 	}()
 
@@ -1122,7 +1125,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
 			return fmt.Errorf("For AppInst, %v", in.Key.ClusterInstKey.CloudletKey.NotFoundError())
 		}
-		app := edgeproto.App{}
+		app = edgeproto.App{}
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return fmt.Errorf("For AppInst, %v", in.Key.AppKey.NotFoundError())
 		}
@@ -1445,7 +1448,8 @@ func setL7Port(port *dme.AppPort, key *edgeproto.AppInstKey) bool {
 func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, event cloudcommon.InstanceEvent, serverStatus string) {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.AppInstEvent
-	ts, _ := types.TimestampProto(time.Now())
+	now := time.Now()
+	ts, _ := types.TimestampProto(now)
 	metric.Timestamp = *ts
 	metric.AddStringVal("cloudletorg", appInstKey.ClusterInstKey.CloudletKey.Organization)
 	metric.AddTag("cloudlet", appInstKey.ClusterInstKey.CloudletKey.Name)
@@ -1467,6 +1471,33 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 		}
 		RecordClusterInstEvent(ctx, &appInstKey.ClusterInstKey, clusterEvent, serverStatus)
 	}
+
+	// if it's a delete and a VM based app, create a usage record of it
+	// get all the logs for this clusterinst since the last checkpoint
+	go func() {
+		app, ok := ctx.Value(appInstKey.AppKey).(edgeproto.App)
+		if !ok { // if not provided try to get the appinfo ourself
+			app = edgeproto.App{}
+			if !appApi.cache.Get(&appInstKey.AppKey, &app) {
+				log.SpanLog(ctx, log.DebugLevelMetrics, "Cannot find appdata for app", "app", appInstKey.AppKey)
+				return
+			}
+		}
+		appInst, ok := ctx.Value(*appInstKey).(edgeproto.AppInst)
+		if !ok {
+			appInst = edgeproto.AppInst{}
+			if !appInstApi.cache.Get(appInstKey, &appInst) {
+				log.SpanLog(ctx, log.DebugLevelMetrics, "Cannot log event for invalid appinst")
+				return
+			}
+		}
+		if event == cloudcommon.DELETED && app.Deployment == cloudcommon.AppDeploymentTypeVM {
+			err := CreateVmAppUsageRecord(ctx, &appInst, now, cloudcommon.USAGE_EVENT_END)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelMetrics, "unable to create cluster usage record", "app", appInstKey, "err", err)
+			}
+		}
+	}()
 }
 
 func isTenantAppInst(appInstKey *edgeproto.AppInstKey) bool {
