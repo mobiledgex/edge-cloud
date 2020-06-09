@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"strings"
+	"time"
 
 	v3 "github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -237,6 +239,7 @@ func (e *dummyEtcd) ApplySTM(ctx context.Context, apply func(concurrency.STM) er
 	var err error
 	var rev int64 = 0
 	ii := 0
+	backoff := time.Millisecond
 	for {
 		stm.reset()
 		err = apply(&stm)
@@ -252,6 +255,8 @@ func (e *dummyEtcd) ApplySTM(ctx context.Context, apply func(concurrency.STM) er
 			err = errors.New("too many iterations")
 			break
 		}
+		backoff *= time.Duration(rand.Intn(20))
+		time.Sleep(backoff)
 	}
 	return rev, err
 }
