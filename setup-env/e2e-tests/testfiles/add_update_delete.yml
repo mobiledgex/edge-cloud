@@ -19,21 +19,6 @@ tests:
     yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
 
-- name: upgrade Cloudlet
-  apifile: "{{datadir}}/cloudlet_update.yml"
-  actions: [ctrlapi-update,ctrlapi-show]
-  compareyaml:
-    yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata_upgrade_show.yml"
-    filetype: appdata
-
-- name: check DME/CRM node-show
-  actions: [ctrlapi-nodeshow]
-  compareyaml:
-    yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/cloudlet_upgrade_nodes.yml"
-    filetype: appdata
-
 - name: Update provisioning to App
   apifile: "{{datadir}}/app_update.yml"
   actions: [ctrlapi-update]

@@ -25,13 +25,20 @@ func InitSettingsApi(sync *Sync) {
 }
 
 func (s *SettingsApi) initDefaults(ctx context.Context) error {
-	cur := &edgeproto.Settings{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if s.store.STMGet(stm, &edgeproto.SettingsKeySingular, cur) {
-			return nil
+		cur := &edgeproto.Settings{}
+		modified := false
+		if !s.store.STMGet(stm, &edgeproto.SettingsKeySingular, cur) {
+			cur = edgeproto.GetDefaultSettings()
+			modified = true
 		}
-		cur := edgeproto.GetDefaultSettings()
-		s.store.STMPut(stm, cur)
+		if cur.ChefClientInterval == 0 {
+			cur.ChefClientInterval = edgeproto.GetDefaultSettings().ChefClientInterval
+			modified = true
+		}
+		if modified {
+			s.store.STMPut(stm, cur)
+		}
 		return nil
 	})
 	return err

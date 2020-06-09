@@ -18,9 +18,9 @@ func (s *Platform) CreateAppInstInternal(ctx context.Context, clusterInst *edgep
 	app *edgeproto.App, appInst *edgeproto.AppInst, names *k8smgmt.KubeNames) error {
 	var err error
 	client := &pc.LocalClient{}
-	appDeploymentType := app.Deployment
+	DeploymentType := app.Deployment
 	// Support for local docker appInst
-	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
+	if DeploymentType == cloudcommon.DeploymentTypeDocker {
 		log.SpanLog(ctx, log.DebugLevelInfra, "run docker create app for dind")
 		err = dockermgmt.CreateAppInstLocal(client, app, appInst)
 		if err != nil {
@@ -64,15 +64,15 @@ func (s *Platform) CreateAppInstInternal(ctx context.Context, clusterInst *edgep
 	}
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
 
-	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
+	if DeploymentType == cloudcommon.DeploymentTypeKubernetes {
 		err = k8smgmt.CreateAppInst(ctx, nil, client, names, app, appInst)
 		if err == nil {
 			err = k8smgmt.WaitForAppInst(ctx, client, names, app, k8smgmt.WaitRunning)
 		}
-	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
+	} else if DeploymentType == cloudcommon.DeploymentTypeHelm {
 		err = k8smgmt.CreateHelmAppInst(ctx, client, names, clusterInst, app, appInst)
 	} else {
-		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
+		err = fmt.Errorf("invalid deployment type %s for dind", DeploymentType)
 	}
 	if err != nil {
 		proxy.DeleteNginxProxy(ctx, client, dockermgmt.GetContainerName(&app.Key))
@@ -108,9 +108,9 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	var err error
 	client := &pc.LocalClient{}
-	appDeploymentType := app.Deployment
+	DeploymentType := app.Deployment
 	// Support for local docker appInst
-	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
+	if DeploymentType == cloudcommon.DeploymentTypeDocker {
 		log.SpanLog(ctx, log.DebugLevelInfra, "run docker delete app for dind")
 		err = dockermgmt.DeleteAppInst(ctx, nil, client, app, appInst)
 		if err != nil {
@@ -125,12 +125,12 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 		return err
 	}
 
-	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
+	if DeploymentType == cloudcommon.DeploymentTypeKubernetes {
 		err = k8smgmt.DeleteAppInst(ctx, client, names, app, appInst)
-	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
+	} else if DeploymentType == cloudcommon.DeploymentTypeHelm {
 		err = k8smgmt.DeleteHelmAppInst(ctx, client, names, clusterInst)
 	} else {
-		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
+		err = fmt.Errorf("invalid deployment type %s for dind", DeploymentType)
 	}
 	if err != nil {
 		return err
@@ -150,7 +150,7 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateAppInst for dind")
 	client := &pc.LocalClient{}
-	appDeploymentType := app.Deployment
+	DeploymentType := app.Deployment
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
 		return err
@@ -172,12 +172,12 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	}
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
 
-	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
+	if DeploymentType == cloudcommon.DeploymentTypeKubernetes {
 		return k8smgmt.UpdateAppInst(ctx, nil, client, names, app, appInst)
-	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
+	} else if DeploymentType == cloudcommon.DeploymentTypeHelm {
 		return k8smgmt.UpdateHelmAppInst(ctx, client, names, app, appInst)
 	}
-	return fmt.Errorf("UpdateAppInst not supported for deployment: %s", appDeploymentType)
+	return fmt.Errorf("UpdateAppInst not supported for deployment: %s", DeploymentType)
 }
 
 func (s *Platform) GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {

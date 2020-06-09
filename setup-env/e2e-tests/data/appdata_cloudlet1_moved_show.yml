@@ -14,6 +14,7 @@ settings:
   masternodeflavor: x1.tiny
   loadbalancermaxportrange: 100
   maxtrackeddmeclients: 100
+  chefclientinterval: 10m
 
 flavors:
 - key:

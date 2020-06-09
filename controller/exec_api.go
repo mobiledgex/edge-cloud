@@ -65,11 +65,11 @@ func (s *ExecApi) ShowLogs(ctx context.Context, req *edgeproto.ExecRequest) (*ed
 	// Be very careful about validating string input. These arguments
 	// will be passed to the command line in the VM, which user should
 	// not have access to.
-	if app.Deployment == cloudcommon.AppDeploymentTypeDocker {
+	if app.Deployment == cloudcommon.DeploymentTypeDocker {
 		if req.ContainerId != "" && !util.ValidDockerName(req.ContainerId) {
 			return nil, fmt.Errorf("Invalid docker container name")
 		}
-	} else if app.Deployment == cloudcommon.AppDeploymentTypeKubernetes {
+	} else if app.Deployment == cloudcommon.DeploymentTypeKubernetes {
 		if req.ContainerId != "" && !util.ValidKubernetesName(req.ContainerId) {
 			return nil, fmt.Errorf("Invalid kubernetes container name")
 		}
@@ -97,7 +97,7 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 	if err := s.getApp(req, &app); err != nil {
 		return nil, err
 	}
-	if app.Deployment == cloudcommon.AppDeploymentTypeVM {
+	if app.Deployment == cloudcommon.DeploymentTypeVM {
 		return nil, fmt.Errorf("RunCommand not available for VM deployments, use RunConsole instead")
 	}
 	req.Timeout = ShortTimeout
@@ -129,7 +129,7 @@ func (s *ExecApi) RunConsole(ctx context.Context, req *edgeproto.ExecRequest) (*
 		return nil, err
 	}
 	req.Timeout = LongTimeout
-	if app.Deployment != cloudcommon.AppDeploymentTypeVM {
+	if app.Deployment != cloudcommon.DeploymentTypeVM {
 		return nil, fmt.Errorf("RunConsole only available for VM deployments, use RunCommand instead")
 	}
 	return s.doExchange(ctx, req)
