@@ -39,7 +39,6 @@ var containerVersion = flag.String("containerVersion", "", "edge-cloud container
 var vmImageVersion = flag.String("vmImageVersion", "", "CRM VM baseimage version")
 var packageVersion = flag.String("packageVersion", "", "CRM VM baseimage debian package version")
 var cloudletVMImagePath = flag.String("cloudletVMImagePath", "", "Image path where CRM VM baseimages are present")
-var cleanupMode = flag.Bool("cleanupMode", false, "cleanup previous versions of CRM if present")
 var commercialCerts = flag.Bool("commercialCerts", false, "Get TLS certs from LetsEncrypt. If false CRM will generate its own self-signed certs")
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
 var chefServerPath = flag.String("chefServerPath", "", "Chef server path")
@@ -222,9 +221,6 @@ func main() {
 					}
 				}
 				myCloudletInfo.Errors = nil
-				if *cleanupMode {
-					controllerData.CleanupOldCloudlet(ctx, &cloudlet, updateCloudletStatus)
-				}
 				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 			}

@@ -116,18 +116,6 @@ message CloudletResMap {
   option (protogen.also_required) = "Mapping";
 }
 
-// Cloudlet Action
-//
-// CloudletAction specifies state cloudlet action taken
-enum CloudletAction {
-	// No action taken
-	ACTION_NONE = 0;
-	// Action done
-	ACTION_DONE = 1;
-	// Action is in progress
-	ACTION_IN_PROGRESS = 2;
-}
-
 // Infra API Access
 //
 // InfraApiAccess is the type of access available to Infra API endpoint
@@ -195,8 +183,6 @@ message Cloudlet {
   map<string, string> access_vars = 23;
   // MobiledgeX baseimage version where CRM services reside
   string vm_image_version = 24;
-  // MobiledgeX OS package version on baseimage where CRM services reside
-  string package_version = 25;
   // Deployment type to bring up CRM services (docker, kubernetes)
   string deployment = 26 [(protogen.hidetag) = "nocmp"];
   // Infra Access Type is the type of access available to Infra API Endpoint
@@ -267,6 +253,7 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.method_noconfig) = "PlatformType,Errors,Status,State,DeploymentLocal,Config,NotifySrvAddr,Flavor,PhysicalName,EnvVar,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,ChefClientKey";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.

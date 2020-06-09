@@ -426,9 +426,6 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.TestMode {
 		args = append(args, "-testMode")
 	}
-	if p.CleanupMode {
-		args = append(args, "-cleanupMode")
-	}
 	if p.ContainerVersion != "" {
 		args = append(args, "--containerVersion")
 		args = append(args, p.ContainerVersion)
@@ -440,10 +437,6 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.VMImageVersion != "" {
 		args = append(args, "--vmImageVersion")
 		args = append(args, p.VMImageVersion)
-	}
-	if p.PackageVersion != "" {
-		args = append(args, "--packageVersion")
-		args = append(args, p.PackageVersion)
 	}
 	if p.Region != "" {
 		args = append(args, "--region")

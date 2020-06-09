@@ -33,7 +33,6 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	vaultAddr := ""
 	testMode := false
 	span := ""
-	cleanupMode := false
 	cloudletVMImagePath := ""
 	region := ""
 	commercialCerts := false
@@ -51,7 +50,6 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		vaultAddr = pfConfig.VaultAddr
 		testMode = pfConfig.TestMode
 		span = pfConfig.Span
-		cleanupMode = pfConfig.CleanupMode
 		cloudletVMImagePath = pfConfig.CloudletVmImagePath
 		region = pfConfig.Region
 		commercialCerts = pfConfig.CommercialCerts
@@ -83,10 +81,8 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		PhysicalName:        cloudlet.PhysicalName,
 		TestMode:            testMode,
 		Span:                span,
-		CleanupMode:         cleanupMode,
 		ContainerVersion:    cloudlet.ContainerVersion,
 		VMImageVersion:      cloudlet.VmImageVersion,
-		PackageVersion:      cloudlet.PackageVersion,
 		CloudletVMImagePath: cloudletVMImagePath,
 		Region:              region,
 		CommercialCerts:     commercialCerts,

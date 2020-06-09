@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
@@ -142,32 +141,6 @@ func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 		return err
 	}
 
-	return nil
-}
-
-func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) (edgeproto.CloudletAction, error) {
-	// Doesn't do actual upgrade, but good enough
-	// for testing controller side code
-	log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet upgrade")
-
-	updateCallback(edgeproto.UpdateTask, "Starting new CRMServer")
-	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "err", err)
-		return edgeproto.CloudletAction_ACTION_NONE, err
-	}
-	return edgeproto.CloudletAction_ACTION_IN_PROGRESS, nil
-}
-
-func (s *Platform) CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
-	// Stops outdated cloudlet service running locally
-	// in this case, the caller is old crm
-	process, err := os.FindProcess(os.Getppid())
-	if err == nil {
-		updateCallback(edgeproto.UpdateTask, "Deleting old CRMServer")
-		process.Signal(os.Interrupt)
-		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet cleaned up successfully")
-	}
 	return nil
 }
 

@@ -75,10 +75,8 @@ type Crm struct {
 	PhysicalName        string
 	TestMode            bool
 	Span                string
-	CleanupMode         bool
 	ContainerVersion    string
 	VMImageVersion      string
-	PackageVersion      string
 	CloudletVMImagePath string
 	Region              string
 	CommercialCerts     bool
