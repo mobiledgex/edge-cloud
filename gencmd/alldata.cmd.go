@@ -55,6 +55,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].Config = edgeproto.PlatformConfig{}
 		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].Deployment = ""
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -207,6 +210,7 @@ var AllDataOptionalArgs = []string{
 	"settings.masternodeflavor",
 	"settings.loadbalancermaxportrange",
 	"settings.maxtrackeddmeclients",
+	"settings.chefclientinterval",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -264,12 +268,19 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.config.usevaultcerts",
 	"cloudlets:#.config.usevaultcas",
 	"cloudlets:#.config.appdnsroot",
+	"cloudlets:#.config.chefserverpath",
+	"cloudlets:#.config.chefclientinterval",
+	"cloudlets:#.config.deploymenttag",
 	"cloudlets:#.restagmap:#.key",
 	"cloudlets:#.restagmap:#.value.name",
 	"cloudlets:#.restagmap:#.value.organization",
 	"cloudlets:#.accessvars",
 	"cloudlets:#.vmimageversion",
-	"cloudlets:#.packageversion",
+	"cloudlets:#.deployment",
+	"cloudlets:#.infraapiaccess",
+	"cloudlets:#.infraconfig.externalnetworkname",
+	"cloudlets:#.infraconfig.flavorname",
+	"cloudlets:#.chefclientkey",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -478,6 +489,7 @@ var AllDataComments = map[string]string{
 	"settings.masternodeflavor":                                  "Default flavor for k8s master VM and > 0  workers",
 	"settings.loadbalancermaxportrange":                          "Max IP Port range when using a load balancer",
 	"settings.maxtrackeddmeclients":                              "Max DME clients to be tracked at the same time.",
+	"settings.chefclientinterval":                                "Default chef client interval (duration)",
 	"operatorcodes:#.code":                                       "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                               "Operator Organization name",
 	"restagtables:#.key.name":                                    "Resource Table Name",
@@ -528,11 +540,18 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.config.usevaultcerts":                           "Use Vault certs for internal TLS communication",
 	"cloudlets:#.config.usevaultcas":                             "Use Vault CAs to authenticate TLS communication",
 	"cloudlets:#.config.appdnsroot":                              "App domain name root",
+	"cloudlets:#.config.chefserverpath":                          "Path to Chef Server",
+	"cloudlets:#.config.chefclientinterval":                      "Chef client interval",
+	"cloudlets:#.config.deploymenttag":                           "Deployment Tag",
 	"cloudlets:#.restagmap:#.value.name":                         "Resource Table Name",
 	"cloudlets:#.restagmap:#.value.organization":                 "Operator organization of the cloudlet site.",
 	"cloudlets:#.accessvars":                                     "Variables required to access cloudlet",
 	"cloudlets:#.vmimageversion":                                 "MobiledgeX baseimage version where CRM services reside",
-	"cloudlets:#.packageversion":                                 "MobiledgeX OS package version on baseimage where CRM services reside",
+	"cloudlets:#.deployment":                                     "Deployment type to bring up CRM services (docker, kubernetes)",
+	"cloudlets:#.infraapiaccess":                                 "Infra Access Type is the type of access available to Infra API Endpoint, one of DirectAccess, RestrictedAccess",
+	"cloudlets:#.infraconfig.externalnetworkname":                "Infra specific external network name",
+	"cloudlets:#.infraconfig.flavorname":                         "Infra specific flavor name",
+	"cloudlets:#.chefclientkey":                                  "Chef client key",
 	"cloudletinfos:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                   "Name of the cloudlet",
@@ -708,6 +727,7 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudletinfos:#.flavors:#.propmap":       "StringToString",
 	"cloudletpools:#.fields":                  "StringArray",
 	"cloudlets:#.accessvars":                  "StringToString",
+	"cloudlets:#.chefclientkey":               "StringToString",
 	"cloudlets:#.config.envvar":               "StringToString",
 	"cloudlets:#.envvar":                      "StringToString",
 	"cloudlets:#.errors":                      "StringArray",

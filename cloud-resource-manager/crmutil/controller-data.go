@@ -87,17 +87,6 @@ func (cd *ControllerData) GatherCloudletInfo(ctx context.Context, info *edgeprot
 	return nil
 }
 
-// CleanupOldCloudlet cleans up old version of same cloudlet
-func (cd *ControllerData) CleanupOldCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "attempting to cleanup outdated cloudlet services", "key", cloudlet.Key)
-
-	err := cd.platform.CleanupCloudlet(ctx, cloudlet, &cloudlet.Config, updateCallback)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "can't cleanup old cloudlet", "key", cloudlet.Key, "err", err)
-		updateCallback(edgeproto.UpdateTask, "Failed to cleanup old cloudlet, please cleanup manually")
-	}
-}
-
 // GetInsts queries Openstack/Kubernetes to get all the cluster insts
 // and app insts that have been created on the Cloudlet.
 // It is called once at startup, and is used to repopulate the cache
@@ -545,15 +534,6 @@ func (cd *ControllerData) notifyControllerConnect() {
 func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
 	// do request
 	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletChanged", "cloudlet", new)
-	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
-		switch updateType {
-		case edgeproto.UpdateTask:
-			cd.CloudletInfoCache.SetStatusTask(ctx, &new.Key, value)
-		case edgeproto.UpdateStep:
-			cd.CloudletInfoCache.SetStatusStep(ctx, &new.Key, value)
-		}
-	}
-
 	cloudletInfo := edgeproto.CloudletInfo{}
 	found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 	if !found {
@@ -565,63 +545,5 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
 			cd.notifyControllerConnect()
 		}
-	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
-		// Make sure previous state was either READY or UPDATE_ERROR
-		// This ensures that UPDATE_REQUESTED is handled by right CRM
-		if old == nil ||
-			(old.State != edgeproto.TrackedState_READY &&
-				old.State != edgeproto.TrackedState_UPDATE_ERROR) {
-			if old != nil {
-				log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet state conflict",
-					"key", new.Key,
-					"old state", old.State,
-					"new state", new.State,
-				)
-			}
-			return
-		}
-		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY &&
-			cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
-			// Cloudlet is not in a state to upgrade
-			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet is not in a state to upgrade", "key", new.Key, "state", cloudletInfo.State)
-			return
-		}
-
-		// Reset old Status, as we will start upgrading cloudlet now
-		cd.CloudletInfoCache.StatusReset(ctx, &new.Key)
-
-		// Ack start of upgrade
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE
-		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-
-		// start the upgrade
-		cloudletAction, err := cd.platform.UpdateCloudlet(ctx, new, &new.Config, updateCloudletCallback)
-		if err != nil {
-			errstr := fmt.Sprintf("Update Cloudlet failed: %v", err)
-			log.SpanLog(ctx, log.DebugLevelInfra, "can't update cloudlet", "error", errstr, "key", new.Key)
-
-			cloudletInfo.Errors = append(cloudletInfo.Errors, errstr)
-			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
-			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-			return
-		}
-		if cloudletAction == edgeproto.CloudletAction_ACTION_DONE {
-			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-		}
-		log.SpanLog(ctx, log.DebugLevelInfra, "updated cloudlet", "cloudlet", new, "cloudletInfo state", cloudletInfo.State)
-	} else if new.State == edgeproto.TrackedState_UPDATE_ERROR {
-		// On an UpdateError, old cloudlet's last state will either be UPGRADE or ERRORS
-		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE &&
-			cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
-			log.SpanLog(ctx, log.DebugLevelInfra,
-				"old cloudlet state invalid, failed to resolve UpdateError",
-				"key", new.Key, "state", cloudletInfo.State)
-			return
-		}
-
-		// Restore the cloudlet's state as new CRM didn't start
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	}
 }

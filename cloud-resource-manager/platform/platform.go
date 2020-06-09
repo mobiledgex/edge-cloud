@@ -21,6 +21,8 @@ type PlatformConfig struct {
 	EnvVars             map[string]string
 	NodeMgr             *node.NodeMgr
 	AppDNSRoot          string
+	ChefServerPath      string
+	DeploymentTag       string
 }
 
 type Caches struct {
@@ -71,16 +73,14 @@ type Platform interface {
 	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet
 	DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
-	// Update Cloudlet
-	UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) (edgeproto.CloudletAction, error)
-	// Cleanup Cloudlet
-	CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Save Cloudlet AccessVars
 	SaveCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, accessVarsIn map[string]string, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet AccessVars
 	DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Sync data with controller
 	SyncControllerCache(ctx context.Context, caches *Caches, cloudletState edgeproto.CloudletState) error
+	// Get Cloudlet Manifest Config
+	GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor) (*edgeproto.CloudletManifest, error)
 }
 
 type ClusterSvc interface {

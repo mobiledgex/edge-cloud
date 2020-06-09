@@ -100,7 +100,7 @@ var MEXPrometheusAppKey = edgeproto.AppKey{
 var MEXPrometheusApp = edgeproto.App{
 	Key:           MEXPrometheusAppKey,
 	ImagePath:     "stable/prometheus-operator",
-	Deployment:    cloudcommon.AppDeploymentTypeHelm,
+	Deployment:    cloudcommon.DeploymentTypeHelm,
 	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
@@ -139,7 +139,7 @@ var NFSAutoProvAppKey = edgeproto.AppKey{
 var NFSAutoProvisionApp = edgeproto.App{
 	Key:           NFSAutoProvAppKey,
 	ImagePath:     "stable/nfs-client-provisioner",
-	Deployment:    cloudcommon.AppDeploymentTypeHelm,
+	Deployment:    cloudcommon.DeploymentTypeHelm,
 	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
@@ -159,7 +159,7 @@ storageClass:
 func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {
 	var err error
 	// cluster-svc only manages k8s clusters for now
-	if new.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+	if new.Deployment != cloudcommon.DeploymentTypeKubernetes {
 		return
 	}
 	log.SpanLog(ctx, log.DebugLevelNotify, "cluster update", "cluster", new.Key.ClusterKey.Name,

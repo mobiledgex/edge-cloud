@@ -13,6 +13,7 @@ settings:
   deleteclusterinsttimeout: 20m
   loadbalancermaxportrange: 50
   maxtrackeddmeclients: 100
+  chefclientinterval: 10m
 flavors:
 - key:
     name: x1.tiny

@@ -161,6 +161,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--checkpointInterval")
 		args = append(args, p.CheckpointingInterval)
 	}
+	if p.DeploymentTag != "" {
+		args = append(args, "--deploymentTag")
+		args = append(args, p.DeploymentTag)
+	}
 
 	var envs []string
 	if options.RolesFile != "" {
@@ -422,9 +426,6 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.TestMode {
 		args = append(args, "-testMode")
 	}
-	if p.CleanupMode {
-		args = append(args, "-cleanupMode")
-	}
 	if p.ContainerVersion != "" {
 		args = append(args, "--containerVersion")
 		args = append(args, p.ContainerVersion)
@@ -436,10 +437,6 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.VMImageVersion != "" {
 		args = append(args, "--vmImageVersion")
 		args = append(args, p.VMImageVersion)
-	}
-	if p.PackageVersion != "" {
-		args = append(args, "--packageVersion")
-		args = append(args, p.PackageVersion)
 	}
 	if p.Region != "" {
 		args = append(args, "--region")
@@ -454,6 +451,14 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.AppDNSRoot != "" {
 		args = append(args, "--appDNSRoot")
 		args = append(args, p.AppDNSRoot)
+	}
+	if p.ChefServerPath != "" {
+		args = append(args, "--chefServerPath")
+		args = append(args, p.ChefServerPath)
+	}
+	if p.DeploymentTag != "" {
+		args = append(args, "--deploymentTag")
+		args = append(args, p.DeploymentTag)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)

@@ -31,7 +31,7 @@ func TestEnvVars(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 
 	app := &testutil.AppData[0]
-	app.Deployment = cloudcommon.AppDeploymentTypeKubernetes
+	app.Deployment = cloudcommon.DeploymentTypeKubernetes
 	app.DeploymentGenerator = ""
 	config := &edgeproto.ConfigFile{
 		Kind:   edgeproto.AppConfigEnvYaml,

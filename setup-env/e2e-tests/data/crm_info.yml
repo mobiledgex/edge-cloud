@@ -13,6 +13,7 @@ settings:
   deleteclusterinsttimeout: 20m
   loadbalancermaxportrange: 50
   maxtrackeddmeclients: 100
+  chefclientinterval: 10m
 flavors:
 - key:
     name: x1.tiny
@@ -100,6 +101,7 @@ cloudlets:
     name: x1.medium
   physicalname: dmuus-cloud-1
   containerversion: 2019-10-24
+  deployment: docker
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -114,6 +116,7 @@ cloudlets:
     name: x1.medium
   physicalname: dmuus-cloud-2
   containerversion: 2019-10-24
+  deployment: docker
 
 cloudletinfos:
 - key:
