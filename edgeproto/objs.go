@@ -642,6 +642,10 @@ func SetPortsHealthCheck(ports []dme.AppPort, skipHcPorts string) ([]dme.AppPort
 			if noHcPort.Proto != port.Proto {
 				continue
 			}
+			// If this port range doesn't have hc, skip it
+			if port.SkipHealthCheck == true {
+				continue
+			}
 			// checking ranges, so set the endPort for now:
 			if port.EndPort == 0 {
 				port.EndPort = port.InternalPort

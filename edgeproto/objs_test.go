@@ -192,4 +192,42 @@ func TestHealthCheckSkipPorts(t *testing.T) {
 			require.False(t, port.SkipHealthCheck)
 		}
 	}
+	// overlapping health-check skip ranges
+	testAppPorts = "tcp:1-20"
+	testSkipHaPorts = "tcp:7-10,tcp:5-15"
+	appPorts, err = ParseAppPorts(testAppPorts)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(appPorts))
+	appPorts, err = SetPortsHealthCheck(appPorts, testSkipHaPorts)
+	require.Nil(t, err)
+	require.Equal(t, 5, len(appPorts))
+	for _, port := range appPorts {
+		// tcp:10-19,tcp:20-20,udp:1-10,tcp:25-25,tcp:26-30
+		if port.Proto == dme.LProto_L_PROTO_UDP {
+			require.False(t, port.SkipHealthCheck)
+		} else if port.InternalPort == 1 {
+			require.False(t, port.SkipHealthCheck)
+			require.Equal(t, int32(1), port.InternalPort)
+			require.Equal(t, int32(4), port.EndPort)
+		} else if port.InternalPort == 5 {
+			require.Equal(t, int32(5), port.InternalPort)
+			require.Equal(t, int32(6), port.EndPort)
+			require.True(t, port.SkipHealthCheck)
+		} else if port.InternalPort == 7 {
+			require.Equal(t, int32(7), port.InternalPort)
+			require.Equal(t, int32(10), port.EndPort)
+			require.True(t, port.SkipHealthCheck)
+		} else if port.InternalPort == 11 {
+			require.Equal(t, int32(11), port.InternalPort)
+			require.Equal(t, int32(15), port.EndPort)
+			require.True(t, port.SkipHealthCheck)
+		} else if port.InternalPort == 16 {
+			require.Equal(t, int32(16), port.InternalPort)
+			require.Equal(t, int32(20), port.EndPort)
+			require.False(t, port.SkipHealthCheck)
+		} else {
+			require.Fail(t, "Unexpected range")
+		}
+	}
+
 }
