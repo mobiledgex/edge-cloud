@@ -532,7 +532,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// auto-create cluster inst
 		clusterInst.Key = in.Key.ClusterInstKey
 		clusterInst.Auto = true
-		log.DebugLog(log.DebugLevelApi,
+		log.SpanLog(ctx, log.DebugLevelApi,
 			"Create auto-ClusterInst",
 			"key", clusterInst.Key,
 			"AppInst", in)
@@ -557,7 +557,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cb.Send(&edgeproto.Result{Message: "Deleting auto-ClusterInst due to failure"})
 				undoErr := clusterInstApi.deleteClusterInstInternal(cctx.WithUndo(), &clusterInst, cb)
 				if undoErr != nil {
-					log.DebugLog(log.DebugLevelApi,
+					log.SpanLog(ctx, log.DebugLevelApi,
 						"Undo create auto-ClusterInst failed",
 						"key", clusterInst.Key,
 						"undoErr", undoErr)
@@ -649,7 +649,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					return fmt.Errorf("Shared IP access with port range not allowed")
 				}
 				if setL7Port(&ports[ii], &in.Key) {
-					log.DebugLog(log.DebugLevelApi,
+					log.SpanLog(ctx, log.DebugLevelApi,
 						"skip L7 port", "port", ports[ii])
 					continue
 				}
