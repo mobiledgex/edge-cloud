@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/crossdock/crossdock-go/require"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPortMap(t *testing.T) {
