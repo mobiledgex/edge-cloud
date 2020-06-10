@@ -1491,7 +1491,7 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 				return
 			}
 		}
-		if event == cloudcommon.DELETED && app.Deployment == cloudcommon.AppDeploymentTypeVM {
+		if event == cloudcommon.DELETED && app.Deployment == cloudcommon.DeploymentTypeVM {
 			err := CreateVmAppUsageRecord(ctx, &appInst, now, cloudcommon.USAGE_EVENT_END)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelMetrics, "unable to create cluster usage record", "app", appInstKey, "err", err)
