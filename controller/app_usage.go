@@ -323,5 +323,5 @@ func isVmApp(key *edgeproto.AppKey) (bool, error) {
 	if !appApi.cache.Get(key, &appInfo) {
 		return false, fmt.Errorf("Cannot locate app: %v", key)
 	}
-	return appInfo.Deployment == cloudcommon.AppDeploymentTypeVM, nil
+	return appInfo.Deployment == cloudcommon.DeploymentTypeVM, nil
 }
