@@ -48,11 +48,11 @@ func TestEnvVars(t *testing.T) {
 	// Test Deploymeent manifest with inline EnvVars
 	baseMf, err := cloudcommon.GetAppDeploymentManifest(ctx, nil, app)
 	require.Nil(t, err)
-	envVarsMf, err := MergeEnvVars(ctx, nil, app, baseMf, "")
+	envVarsMf, err := MergeEnvVars(ctx, nil, app, baseMf, nil)
 	require.Nil(t, err)
 	// make envVars remote
 	app.Configs[0].Config = tsEnvVars.URL
-	remoteEnvVars, err := MergeEnvVars(ctx, nil, app, baseMf, "")
+	remoteEnvVars, err := MergeEnvVars(ctx, nil, app, baseMf, nil)
 	require.Nil(t, err)
 	require.Equal(t, envVarsMf, remoteEnvVars)
 }
