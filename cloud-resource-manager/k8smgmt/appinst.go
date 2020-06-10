@@ -266,6 +266,7 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 			cmdStr += "-f "
 		}
 		cmdStr += req.ContainerId
+		cmdStr += " --all-containers"
 		return cmdStr, nil
 	}
 	return "", fmt.Errorf("no command or log specified with the exec request")
