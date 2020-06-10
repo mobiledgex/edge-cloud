@@ -135,6 +135,12 @@ message ConfigFile {
   repeated string auto_prov_policies = 32;
   // Delimiter to be used for template parsing, defaults to "[[ ]]"
   string template_delimiter = 33;
+  // Comma separated list of protocol:port pairs that we should not run health check on
+  // Should be configured in case app does not always listen on these ports
+  // "all" can be specified if no health check to be run for this app
+  // Numerical values must be decimal format.
+  // i.e. tcp:80,udp:10002,http:443
+  string skip_hc_ports = 34;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
