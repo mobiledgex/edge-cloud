@@ -422,7 +422,7 @@ func (s *AutoProvPolicy) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
-	if s.MinActiveInstances > s.MaxInstances {
+	if s.MinActiveInstances > s.MaxInstances && s.MaxInstances != 0 {
 		return fmt.Errorf("Minimum active instances cannot be larger than Maximum Instances")
 	}
 	if s.MinActiveInstances == 0 && s.DeployClientCount == 0 {
