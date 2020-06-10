@@ -44,6 +44,7 @@ func (s *Platform) CreateAppInstInternal(ctx context.Context, clusterInst *edgep
 			cloudcommon.IPAddrAllInterfaces,
 			masterIP,
 			appInst.MappedPorts,
+			app.SkipHcPorts,
 			proxy.WithDockerNetwork(network),
 			proxy.WithDockerPublishPorts())
 		if err != nil {

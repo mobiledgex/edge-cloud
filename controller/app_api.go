@@ -329,6 +329,13 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
+	// check that health check skip ports are parsable
+	if in.SkipHcPorts != "all" {
+		_, err = edgeproto.ParseAppPorts(in.SkipHcPorts)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
+	}
 	if in.DeploymentManifest != "" {
 		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.Command, in.DeploymentManifest, ports)
 		if err != nil {
@@ -383,7 +390,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		if appInstApi.UsesApp(&in.Key, dynInsts) {
 			appInstExists = true
-			if field == edgeproto.AppFieldAccessPorts {
+			if field == edgeproto.AppFieldAccessPorts || field == edgeproto.AppFieldSkipHcPorts {
 				return &edgeproto.Result{}, fmt.Errorf("Field cannot be modified when AppInsts exist")
 			}
 		}
