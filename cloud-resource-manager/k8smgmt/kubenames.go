@@ -93,7 +93,10 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 				kubeNames.ServiceNames = append(kubeNames.ServiceNames, svcName)
 			case *appsv1.Deployment:
 				templateSpec := obj.Spec.Template.Spec
-				for _, cont := range templateSpec.Containers {
+				containers := []v1.Container{}
+				containers = append(containers, templateSpec.InitContainers...)
+				containers = append(containers, templateSpec.Containers...)
+				for _, cont := range containers {
 					if cont.Image == "" {
 						continue
 					}
@@ -101,7 +104,10 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 				}
 			case *appsv1.DaemonSet:
 				templateSpec := obj.Spec.Template.Spec
-				for _, cont := range templateSpec.Containers {
+				containers := []v1.Container{}
+				containers = append(containers, templateSpec.InitContainers...)
+				containers = append(containers, templateSpec.Containers...)
+				for _, cont := range containers {
 					if cont.Image == "" {
 						continue
 					}
