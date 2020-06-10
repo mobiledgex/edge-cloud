@@ -253,6 +253,7 @@ var CloudletData = []edgeproto.Cloudlet{
 		NotifySrvAddr: "127.0.0.1:51001",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
 		PhysicalName:  "SanJoseSite",
+		Deployment:    "docker",
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -270,6 +271,7 @@ var CloudletData = []edgeproto.Cloudlet{
 		NotifySrvAddr: "127.0.0.1:51002",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
 		PhysicalName:  "NewYorkSite",
+		Deployment:    "docker",
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -287,6 +289,7 @@ var CloudletData = []edgeproto.Cloudlet{
 		NotifySrvAddr: "127.0.0.1:51003",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
 		PhysicalName:  "SanFranciscoSite",
+		Deployment:    "docker",
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -304,6 +307,7 @@ var CloudletData = []edgeproto.Cloudlet{
 		NotifySrvAddr: "127.0.0.1:51004",
 		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
 		PhysicalName:  "HawaiiSite",
+		Deployment:    "docker",
 	},
 }
 var ClusterInstData = []edgeproto.ClusterInst{

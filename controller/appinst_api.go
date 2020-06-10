@@ -307,7 +307,7 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 	if err != nil {
 		return
 	}
-	if app.Deployment == cloudcommon.AppDeploymentTypeVM {
+	if app.Deployment == cloudcommon.DeploymentTypeVM {
 		key.ClusterInstKey.ClusterKey.Name = cloudcommon.DefaultVMCluster
 	}
 }
@@ -542,9 +542,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		clusterInst.Deployment = appDeploymentType
 		clusterInst.SharedVolumeSize = in.SharedVolumeSize
 		clusterInst.PrivacyPolicy = in.PrivacyPolicy
-		if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes ||
-			appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
-			clusterInst.Deployment = cloudcommon.AppDeploymentTypeKubernetes
+		if appDeploymentType == cloudcommon.DeploymentTypeKubernetes ||
+			appDeploymentType == cloudcommon.DeploymentTypeHelm {
+			clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
 			clusterInst.NumMasters = 1
 			clusterInst.NumNodes = 1 // TODO support 1 master, zero nodes
 		}
@@ -612,8 +612,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				}
 			}
 			needDeployment := app.Deployment
-			if app.Deployment == cloudcommon.AppDeploymentTypeHelm {
-				needDeployment = cloudcommon.AppDeploymentTypeKubernetes
+			if app.Deployment == cloudcommon.DeploymentTypeHelm {
+				needDeployment = cloudcommon.DeploymentTypeKubernetes
 			}
 			if clusterInst.Deployment != needDeployment {
 				return fmt.Errorf("Cannot deploy %s App into %s ClusterInst", app.Deployment, clusterInst.Deployment)
@@ -1036,7 +1036,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 			if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 				return in.Key.AppKey.NotFoundError()
 			}
-			if app.Deployment != cloudcommon.AppDeploymentTypeVM {
+			if app.Deployment != cloudcommon.DeploymentTypeVM {
 				return fmt.Errorf("Updating powerstate is only supported for VM deployment")
 			}
 			cur.PowerState = powerState
@@ -1066,9 +1066,12 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := cb.Context()
 
+	var app edgeproto.App
 	defer func() {
 		if reterr == nil {
-			RecordAppInstEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
+			newContext := context.WithValue(ctx, app.Key, app)
+			newContext = context.WithValue(newContext, in.Key, *in)
+			RecordAppInstEvent(newContext, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
 	}()
 
@@ -1122,7 +1125,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
 			return fmt.Errorf("For AppInst, %v", in.Key.ClusterInstKey.CloudletKey.NotFoundError())
 		}
-		app := edgeproto.App{}
+		app = edgeproto.App{}
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return fmt.Errorf("For AppInst, %v", in.Key.AppKey.NotFoundError())
 		}
@@ -1399,7 +1402,7 @@ func setPortFQDNPrefixes(in *edgeproto.AppInst, app *edgeproto.App) error {
 	// The Controller needs to set a matching
 	// FqdnPrefix on the ports so the DME can tell the
 	// App Client the correct Fqdn for a given port.
-	if app.Deployment == cloudcommon.AppDeploymentTypeKubernetes {
+	if app.Deployment == cloudcommon.DeploymentTypeKubernetes {
 		objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
 		if err != nil {
 			return fmt.Errorf("invalid kubernetes deployment yaml, %s", err.Error())
@@ -1445,7 +1448,8 @@ func setL7Port(port *dme.AppPort, key *edgeproto.AppInstKey) bool {
 func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, event cloudcommon.InstanceEvent, serverStatus string) {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.AppInstEvent
-	ts, _ := types.TimestampProto(time.Now())
+	now := time.Now()
+	ts, _ := types.TimestampProto(now)
 	metric.Timestamp = *ts
 	metric.AddStringVal("cloudletorg", appInstKey.ClusterInstKey.CloudletKey.Organization)
 	metric.AddTag("cloudlet", appInstKey.ClusterInstKey.CloudletKey.Name)
@@ -1467,6 +1471,33 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 		}
 		RecordClusterInstEvent(ctx, &appInstKey.ClusterInstKey, clusterEvent, serverStatus)
 	}
+
+	// if it's a delete and a VM based app, create a usage record of it
+	// get all the logs for this clusterinst since the last checkpoint
+	go func() {
+		app, ok := ctx.Value(appInstKey.AppKey).(edgeproto.App)
+		if !ok { // if not provided try to get the appinfo ourself
+			app = edgeproto.App{}
+			if !appApi.cache.Get(&appInstKey.AppKey, &app) {
+				log.SpanLog(ctx, log.DebugLevelMetrics, "Cannot find appdata for app", "app", appInstKey.AppKey)
+				return
+			}
+		}
+		appInst, ok := ctx.Value(*appInstKey).(edgeproto.AppInst)
+		if !ok {
+			appInst = edgeproto.AppInst{}
+			if !appInstApi.cache.Get(appInstKey, &appInst) {
+				log.SpanLog(ctx, log.DebugLevelMetrics, "Cannot log event for invalid appinst")
+				return
+			}
+		}
+		if event == cloudcommon.DELETED && app.Deployment == cloudcommon.DeploymentTypeVM {
+			err := CreateVmAppUsageRecord(ctx, &appInst, now, cloudcommon.USAGE_EVENT_END)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelMetrics, "unable to create cluster usage record", "app", appInstKey, "err", err)
+			}
+		}
+	}()
 }
 
 func isTenantAppInst(appInstKey *edgeproto.AppInstKey) bool {

@@ -56,10 +56,10 @@ func GetDockerBaseImageVersion() (string, error) {
 		return "", err
 	}
 	out := strings.Fields(string(dat))
-	if len(out) != 2 {
+	if len(out) != 3 {
 		return "", fmt.Errorf("invalid version details: %s", out)
 	}
-	return out[1], nil
+	return out[2], nil
 }
 
 func GetAvailablePort(ipaddr string) (string, error) {

@@ -498,7 +498,7 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 		}
 	}
 	for _, p := range util.Deployment.Controllers {
-		opts = append(opts, process.WithDebug("etcd,api,notify,metrics"))
+		opts = append(opts, process.WithDebug("etcd,api,notify,metrics,infra"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}

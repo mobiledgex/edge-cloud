@@ -58,6 +58,7 @@ var CloudletEvent = "cloudlet"
 var ClusterInstEvent = "clusterinst"
 var ClusterInstUsage = "clusterinst-usage"
 var AppInstEvent = "appinst"
+var VMAppInstUsage = "VMappinst-usage"
 
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"
@@ -207,7 +208,7 @@ func ParseMyCloudletKey(standalone bool, keystr *string, mykey *edgeproto.Cloudl
 }
 
 func IsClusterInstReqd(app *edgeproto.App) bool {
-	if app.Deployment == AppDeploymentTypeVM {
+	if app.Deployment == DeploymentTypeVM {
 		return false
 	}
 	return true

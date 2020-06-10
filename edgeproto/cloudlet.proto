@@ -76,6 +76,12 @@ message PlatformConfig {
   bool use_vault_cas = 15;
   // App domain name root
   string app_dns_root = 16;
+  // Path to Chef Server
+  string chef_server_path = 17;
+  // Chef client interval
+  int32 chef_client_interval = 18  [(gogoproto.casttype) = "Duration"];
+  // Deployment Tag
+  string deployment_tag = 19;
 }
 
 // Platform Type
@@ -110,16 +116,22 @@ message CloudletResMap {
   option (protogen.also_required) = "Mapping";
 }
 
-// Cloudlet Action
+// Infra API Access
 //
-// CloudletAction specifies state cloudlet action taken
-enum CloudletAction {
-	// No action taken
-	ACTION_NONE = 0;
-	// Action done
-	ACTION_DONE = 1;
-	// Action is in progress
-	ACTION_IN_PROGRESS = 2;
+// InfraApiAccess is the type of access available to Infra API endpoint
+enum InfraApiAccess {
+	// Infra API endpoint is accessible from public network
+	DIRECT_ACCESS = 0;
+	// Infra API endpoint is not accessible from public network
+	RESTRICTED_ACCESS = 1;
+}
+
+// Infra specific configuration used for Cloudlet deployments
+message InfraConfig {
+  // Infra specific external network name
+  string external_network_name = 1;
+  // Infra specific flavor name
+  string flavor_name = 2;
 }
 
 // Cloudlet
@@ -171,9 +183,14 @@ message Cloudlet {
   map<string, string> access_vars = 23;
   // MobiledgeX baseimage version where CRM services reside
   string vm_image_version = 24;
-  // MobiledgeX OS package version on baseimage where CRM services reside
-  string package_version = 25;
-
+  // Deployment type to bring up CRM services (docker, kubernetes)
+  string deployment = 26 [(protogen.hidetag) = "nocmp"];
+  // Infra Access Type is the type of access available to Infra API Endpoint
+  InfraApiAccess infra_api_access = 27;
+  // Infra specific config
+  InfraConfig infra_config = 28;
+  // Chef client key
+  map<string, string> chef_client_key = 29 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -182,7 +199,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
@@ -193,6 +210,13 @@ message FlavorMatch {
   string flavor_name = 3;
   string availability_zone = 4;
  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,flavor=FlavorName";
+}
+
+message CloudletManifest {
+  // Image path of cloudlet VM base image
+  string image_path = 1;
+  // Manifest to bringup cloudlet VM and services
+  string manifest = 2;
 }
 
 service CloudletApi {
@@ -229,6 +253,7 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.method_noconfig) = "PlatformType,Errors,Status,State,DeploymentLocal,Config,NotifySrvAddr,Flavor,PhysicalName,EnvVar,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,ChefClientKey";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
@@ -239,6 +264,14 @@ service CloudletApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
     option (protogen.mc2_custom_authz) = true;
+  }
+  // Get Cloudlet Manifest. Shows deployment manifest required to setup cloudlet
+  rpc GetCloudletManifest(Cloudlet) returns (CloudletManifest) {
+    option (google.api.http) = {
+      post: "/get/cloudlet/manifest"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
 
   // Add Optional Resource tag table

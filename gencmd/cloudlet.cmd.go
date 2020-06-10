@@ -53,6 +53,9 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	if _, found := tags["nocmp"]; found {
 		in.Config = edgeproto.PlatformConfig{}
 	}
+	if _, found := tags["nocmp"]; found {
+		in.Deployment = ""
+	}
 }
 
 func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
@@ -243,8 +246,8 @@ func DeleteCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
 
 var UpdateCloudletCmd = &cli.Command{
 	Use:          "UpdateCloudlet",
-	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
+	RequiredArgs: strings.Join(UpdateCloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(UpdateCloudletOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
 	SpecialArgs:  &CloudletSpecialArgs,
 	Comments:     CloudletComments,
@@ -393,6 +396,63 @@ func ShowCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
 	for ii, _ := range data {
 		fmt.Printf("ShowCloudlet %v\n", data[ii])
 		myerr := ShowCloudlet(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var GetCloudletManifestCmd = &cli.Command{
+	Use:          "GetCloudletManifest",
+	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
+	SpecialArgs:  &CloudletSpecialArgs,
+	Comments:     CloudletComments,
+	ReqData:      &edgeproto.Cloudlet{},
+	ReplyData:    &edgeproto.CloudletManifest{},
+	Run:          runGetCloudletManifest,
+}
+
+func runGetCloudletManifest(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.Cloudlet)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetCloudletManifest(c, obj)
+}
+
+func GetCloudletManifest(c *cli.Command, in *edgeproto.Cloudlet) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.GetCloudletManifest(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetCloudletManifest failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetCloudletManifests(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetCloudletManifest %v\n", data[ii])
+		myerr := GetCloudletManifest(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -576,6 +636,7 @@ var CloudletApiCmds = []*cobra.Command{
 	DeleteCloudletCmd.GenCmd(),
 	UpdateCloudletCmd.GenCmd(),
 	ShowCloudletCmd.GenCmd(),
+	GetCloudletManifestCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
@@ -909,6 +970,9 @@ var PlatformConfigOptionalArgs = []string{
 	"usevaultcerts",
 	"usevaultcas",
 	"appdnsroot",
+	"chefserverpath",
+	"chefclientinterval",
+	"deploymenttag",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -927,6 +991,9 @@ var PlatformConfigComments = map[string]string{
 	"usevaultcerts":         "Use Vault certs for internal TLS communication",
 	"usevaultcas":           "Use Vault CAs to authenticate TLS communication",
 	"appdnsroot":            "App domain name root",
+	"chefserverpath":        "Path to Chef Server",
+	"chefclientinterval":    "Chef client interval",
+	"deploymenttag":         "Deployment Tag",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -949,6 +1016,17 @@ var CloudletResMapComments = map[string]string{
 var CloudletResMapSpecialArgs = map[string]string{
 	"mapping": "StringToString",
 }
+var InfraConfigRequiredArgs = []string{}
+var InfraConfigOptionalArgs = []string{
+	"externalnetworkname",
+	"flavorname",
+}
+var InfraConfigAliasArgs = []string{}
+var InfraConfigComments = map[string]string{
+	"externalnetworkname": "Infra specific external network name",
+	"flavorname":          "Infra specific flavor name",
+}
+var InfraConfigSpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
@@ -982,7 +1060,10 @@ var CloudletOptionalArgs = []string{
 	"restagmap:#.value.organization",
 	"accessvars",
 	"vmimageversion",
-	"packageversion",
+	"deployment",
+	"infraapiaccess",
+	"infraconfig.externalnetworkname",
+	"infraconfig.flavorname",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1033,14 +1114,22 @@ var CloudletComments = map[string]string{
 	"config.usevaultcerts":                "Use Vault certs for internal TLS communication",
 	"config.usevaultcas":                  "Use Vault CAs to authenticate TLS communication",
 	"config.appdnsroot":                   "App domain name root",
+	"config.chefserverpath":               "Path to Chef Server",
+	"config.chefclientinterval":           "Chef client interval",
+	"config.deploymenttag":                "Deployment Tag",
 	"restagmap:#.value.name":              "Resource Table Name",
 	"restagmap:#.value.organization":      "Operator organization of the cloudlet site.",
 	"accessvars":                          "Variables required to access cloudlet",
 	"vmimageversion":                      "MobiledgeX baseimage version where CRM services reside",
-	"packageversion":                      "MobiledgeX OS package version on baseimage where CRM services reside",
+	"deployment":                          "Deployment type to bring up CRM services (docker, kubernetes)",
+	"infraapiaccess":                      "Infra Access Type is the type of access available to Infra API Endpoint, one of DirectAccess, RestrictedAccess",
+	"infraconfig.externalnetworkname":     "Infra specific external network name",
+	"infraconfig.flavorname":              "Infra specific flavor name",
+	"chefclientkey":                       "Chef client key",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
+	"chefclientkey": "StringToString",
 	"config.envvar": "StringToString",
 	"envvar":        "StringToString",
 	"errors":        "StringArray",
@@ -1064,6 +1153,17 @@ var FlavorMatchComments = map[string]string{
 	"cloudlet":     "Name of the cloudlet",
 }
 var FlavorMatchSpecialArgs = map[string]string{}
+var CloudletManifestRequiredArgs = []string{}
+var CloudletManifestOptionalArgs = []string{
+	"imagepath",
+	"manifest",
+}
+var CloudletManifestAliasArgs = []string{}
+var CloudletManifestComments = map[string]string{
+	"imagepath": "Image path of cloudlet VM base image",
+	"manifest":  "Manifest to bringup cloudlet VM and services",
+}
+var CloudletManifestSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",
@@ -1210,5 +1310,37 @@ var CreateCloudletOptionalArgs = []string{
 	"restagmap:#.value.organization",
 	"accessvars",
 	"vmimageversion",
-	"packageversion",
+	"deployment",
+	"infraapiaccess",
+	"infraconfig.externalnetworkname",
+	"infraconfig.flavorname",
+}
+var UpdateCloudletRequiredArgs = []string{
+	"cloudlet-org",
+	"cloudlet",
+}
+var UpdateCloudletOptionalArgs = []string{
+	"location.latitude",
+	"location.longitude",
+	"location.horizontalaccuracy",
+	"location.verticalaccuracy",
+	"location.altitude",
+	"location.course",
+	"location.speed",
+	"location.timestamp.seconds",
+	"location.timestamp.nanos",
+	"ipsupport",
+	"staticips",
+	"numdynamicips",
+	"timelimits.createclusterinsttimeout",
+	"timelimits.updateclusterinsttimeout",
+	"timelimits.deleteclusterinsttimeout",
+	"timelimits.createappinsttimeout",
+	"timelimits.updateappinsttimeout",
+	"timelimits.deleteappinsttimeout",
+	"crmoverride",
+	"restagmap:#.key",
+	"restagmap:#.value.name",
+	"restagmap:#.value.organization",
+	"accessvars",
 }
