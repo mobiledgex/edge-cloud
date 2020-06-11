@@ -28,18 +28,21 @@ func addEnvVars(ctx context.Context, template *v1.PodTemplateSpec, envVars []v1.
 	}
 }
 
-func addImagePullSecret(ctx context.Context, template *v1.PodTemplateSpec, secretName string) {
-	found := false
-	for _, s := range template.Spec.ImagePullSecrets {
-		if s.Name == secretName {
-			found = true
+func addImagePullSecret(ctx context.Context, template *v1.PodTemplateSpec, secretNames []string) {
+	for _, secretName := range secretNames {
+		found := false
+		for _, s := range template.Spec.ImagePullSecrets {
+			if s.Name == secretName {
+				found = true
+				break
+			}
 		}
-	}
-	if !found {
-		var newSecret v1.LocalObjectReference
-		newSecret.Name = secretName
-		log.SpanLog(ctx, log.DebugLevelInfra, "adding imagePullSecret", "secretName", secretName)
-		template.Spec.ImagePullSecrets = append(template.Spec.ImagePullSecrets, newSecret)
+		if !found {
+			var newSecret v1.LocalObjectReference
+			newSecret.Name = secretName
+			log.SpanLog(ctx, log.DebugLevelInfra, "adding imagePullSecret", "secretName", secretName)
+			template.Spec.ImagePullSecrets = append(template.Spec.ImagePullSecrets, newSecret)
+		}
 	}
 }
 
@@ -57,13 +60,13 @@ func addAppInstLabels(meta *metav1.ObjectMeta, app *edgeproto.App) {
 }
 
 // Merge in all the environment variables into
-func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto.App, kubeManifest string, imagePullSecret string) (string, error) {
+func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto.App, kubeManifest string, imagePullSecrets []string) (string, error) {
 	var envVars []v1.EnvVar
 	var files []string
 	var err error
 
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
-	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecret", imagePullSecret)
+	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecrets", imagePullSecrets)
 
 	// Walk the Configs in the App and get all the environment variables together
 	for _, v := range app.Configs {
@@ -121,15 +124,15 @@ func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto
 			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
 			// Add labels for all the appKey data
 			addAppInstLabels(&obj.Spec.Template.ObjectMeta, app)
-			if imagePullSecret != "" {
-				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecret)
+			if imagePullSecrets != nil {
+				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecrets)
 			}
 		case *appsv1.DaemonSet:
 			addEnvVars(ctx, &obj.Spec.Template, envVars)
 			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
 			addAppInstLabels(&obj.Spec.Template.ObjectMeta, app)
-			if imagePullSecret != "" {
-				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecret)
+			if imagePullSecrets != nil {
+				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecrets)
 			}
 		}
 	}
