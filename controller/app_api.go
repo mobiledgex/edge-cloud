@@ -450,16 +450,32 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// key doesn't exist
 		return &edgeproto.Result{}, in.Key.NotFoundError()
 	}
-	dynInsts := make(map[edgeproto.AppInstKey]struct{})
-	if appInstApi.UsesApp(&in.Key, dynInsts) {
-		// disallow delete if static instances are present
-		return &edgeproto.Result{}, errors.New("Application in use by static AppInst")
-	}
+
 	// set state to prevent new AppInsts from being created from this App
+	var dynInsts map[edgeproto.AppInstKey]*edgeproto.AppInst
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
 		}
+		// use refs to check existing AppInsts to avoid race conditions
+		dynInsts = make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
+		refs := edgeproto.AppInstRefs{}
+		appInstRefsApi.store.STMGet(stm, &in.Key, &refs)
+		for k, _ := range refs.Insts {
+			// disallow delete if static instances are present
+			inst := edgeproto.AppInst{}
+			edgeproto.AppInstKeyStringParse(k, &inst.Key)
+			if !appInstApi.store.STMGet(stm, &inst.Key, &inst) {
+				// no inst?
+				log.SpanLog(ctx, log.DebugLevelApi, "AppInst not found by refs, skipping for delete", "AppInst", inst.Key)
+				continue
+			}
+			if inst.Liveness == edgeproto.Liveness_LIVENESS_STATIC {
+				return errors.New("Application in use by static AppInst")
+			}
+			dynInsts[inst.Key] = &inst
+		}
+
 		in.DeletePrepare = true
 		s.store.STMPut(stm, in)
 		return nil
@@ -469,7 +485,8 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	}
 
 	// delete auto-appinsts
-	if err = appInstApi.AutoDelete(ctx, &in.Key); err != nil {
+	log.SpanLog(ctx, log.DebugLevelApi, "Auto-deleting AppInsts for App", "app", in.Key)
+	if err = appInstApi.AutoDelete(ctx, dynInsts); err != nil {
 		// failed, so remove delete prepare and don't delete
 		unseterr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if !s.store.STMGet(stm, &in.Key, in) {

@@ -712,13 +712,15 @@ type PrivacyPolicyCacheData struct {
 // PrivacyPolicyCache caches PrivacyPolicy objects in memory in a hash table
 // and keeps them in sync with the database.
 type PrivacyPolicyCache struct {
-	Objs        map[PolicyKey]*PrivacyPolicyCacheData
-	Mux         util.Mutex
-	List        map[PolicyKey]struct{}
-	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *PrivacyPolicy, modRev int64)
-	UpdatedCb   func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy)
-	KeyWatchers map[PolicyKey][]*PrivacyPolicyKeyWatcher
+	Objs         map[PolicyKey]*PrivacyPolicyCacheData
+	Mux          util.Mutex
+	List         map[PolicyKey]struct{}
+	FlushAll     bool
+	NotifyCb     func(ctx context.Context, obj *PolicyKey, old *PrivacyPolicy, modRev int64)
+	UpdatedCb    func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy)
+	KeyWatchers  map[PolicyKey][]*PrivacyPolicyKeyWatcher
+	UpdatedKeyCb func(ctx context.Context, key *PolicyKey)
+	DeletedKeyCb func(ctx context.Context, key *PolicyKey)
 }
 
 func NewPrivacyPolicyCache() *PrivacyPolicyCache {
@@ -784,15 +786,16 @@ func (c *PrivacyPolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey, 
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &PrivacyPolicy{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
-		}
+	if c.UpdatedCb != nil {
+		newCopy := &PrivacyPolicy{}
+		*newCopy = *new
+		defer c.UpdatedCb(ctx, old, newCopy)
+	}
+	if c.NotifyCb != nil {
+		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	}
+	if c.UpdatedKeyCb != nil {
+		defer c.UpdatedKeyCb(ctx, key)
 	}
 	c.Objs[new.GetKeyVal()] = &PrivacyPolicyCacheData{
 		Obj:    new,
@@ -818,6 +821,9 @@ func (c *PrivacyPolicyCache) Delete(ctx context.Context, in *PrivacyPolicy, modR
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
+	if c.DeletedKeyCb != nil {
+		c.DeletedKeyCb(ctx, in.GetKey())
+	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
@@ -826,7 +832,7 @@ func (c *PrivacyPolicyCache) Prune(ctx context.Context, validKeys map[PolicyKey]
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -836,6 +842,9 @@ func (c *PrivacyPolicyCache) Prune(ctx context.Context, validKeys map[PolicyKey]
 	for key, old := range notify {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -880,6 +889,14 @@ func (c *PrivacyPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *Polic
 
 func (c *PrivacyPolicyCache) SetUpdatedCb(fn func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy)) {
 	c.UpdatedCb = fn
+}
+
+func (c *PrivacyPolicyCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.UpdatedKeyCb = fn
+}
+
+func (c *PrivacyPolicyCache) SetDeletedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.DeletedKeyCb = fn
 }
 
 func (c *PrivacyPolicyCache) SetFlushAll() {
@@ -974,11 +991,14 @@ func (c *PrivacyPolicyCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
+	for key, val := range deleted {
+		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
-			c.TriggerKeyWatchers(ctx, &key)
 		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
