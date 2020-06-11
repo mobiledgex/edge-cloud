@@ -3817,13 +3817,15 @@ type CloudletCacheData struct {
 // CloudletCache caches Cloudlet objects in memory in a hash table
 // and keeps them in sync with the database.
 type CloudletCache struct {
-	Objs        map[CloudletKey]*CloudletCacheData
-	Mux         util.Mutex
-	List        map[CloudletKey]struct{}
-	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *Cloudlet, modRev int64)
-	UpdatedCb   func(ctx context.Context, old *Cloudlet, new *Cloudlet)
-	KeyWatchers map[CloudletKey][]*CloudletKeyWatcher
+	Objs         map[CloudletKey]*CloudletCacheData
+	Mux          util.Mutex
+	List         map[CloudletKey]struct{}
+	FlushAll     bool
+	NotifyCb     func(ctx context.Context, obj *CloudletKey, old *Cloudlet, modRev int64)
+	UpdatedCb    func(ctx context.Context, old *Cloudlet, new *Cloudlet)
+	KeyWatchers  map[CloudletKey][]*CloudletKeyWatcher
+	UpdatedKeyCb func(ctx context.Context, key *CloudletKey)
+	DeletedKeyCb func(ctx context.Context, key *CloudletKey)
 }
 
 func NewCloudletCache() *CloudletCache {
@@ -3889,15 +3891,16 @@ func (c *CloudletCache) UpdateModFunc(ctx context.Context, key *CloudletKey, mod
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &Cloudlet{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
-		}
+	if c.UpdatedCb != nil {
+		newCopy := &Cloudlet{}
+		*newCopy = *new
+		defer c.UpdatedCb(ctx, old, newCopy)
+	}
+	if c.NotifyCb != nil {
+		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	}
+	if c.UpdatedKeyCb != nil {
+		defer c.UpdatedKeyCb(ctx, key)
 	}
 	c.Objs[new.GetKeyVal()] = &CloudletCacheData{
 		Obj:    new,
@@ -3923,6 +3926,9 @@ func (c *CloudletCache) Delete(ctx context.Context, in *Cloudlet, modRev int64) 
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
+	if c.DeletedKeyCb != nil {
+		c.DeletedKeyCb(ctx, in.GetKey())
+	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
@@ -3931,7 +3937,7 @@ func (c *CloudletCache) Prune(ctx context.Context, validKeys map[CloudletKey]str
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -3941,6 +3947,9 @@ func (c *CloudletCache) Prune(ctx context.Context, validKeys map[CloudletKey]str
 	for key, old := range notify {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -3985,6 +3994,14 @@ func (c *CloudletCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKe
 
 func (c *CloudletCache) SetUpdatedCb(fn func(ctx context.Context, old *Cloudlet, new *Cloudlet)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.UpdatedKeyCb = fn
+}
+
+func (c *CloudletCache) SetDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.DeletedKeyCb = fn
 }
 
 func (c *CloudletCache) SetFlushAll() {
@@ -4079,11 +4096,14 @@ func (c *CloudletCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
+	for key, val := range deleted {
+		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
-			c.TriggerKeyWatchers(ctx, &key)
 		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
@@ -5095,13 +5115,15 @@ type CloudletInfoCacheData struct {
 // CloudletInfoCache caches CloudletInfo objects in memory in a hash table
 // and keeps them in sync with the database.
 type CloudletInfoCache struct {
-	Objs        map[CloudletKey]*CloudletInfoCacheData
-	Mux         util.Mutex
-	List        map[CloudletKey]struct{}
-	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *CloudletInfo, modRev int64)
-	UpdatedCb   func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)
-	KeyWatchers map[CloudletKey][]*CloudletInfoKeyWatcher
+	Objs         map[CloudletKey]*CloudletInfoCacheData
+	Mux          util.Mutex
+	List         map[CloudletKey]struct{}
+	FlushAll     bool
+	NotifyCb     func(ctx context.Context, obj *CloudletKey, old *CloudletInfo, modRev int64)
+	UpdatedCb    func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)
+	KeyWatchers  map[CloudletKey][]*CloudletInfoKeyWatcher
+	UpdatedKeyCb func(ctx context.Context, key *CloudletKey)
+	DeletedKeyCb func(ctx context.Context, key *CloudletKey)
 }
 
 func NewCloudletInfoCache() *CloudletInfoCache {
@@ -5167,15 +5189,16 @@ func (c *CloudletInfoCache) UpdateModFunc(ctx context.Context, key *CloudletKey,
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &CloudletInfo{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
-		}
+	if c.UpdatedCb != nil {
+		newCopy := &CloudletInfo{}
+		*newCopy = *new
+		defer c.UpdatedCb(ctx, old, newCopy)
+	}
+	if c.NotifyCb != nil {
+		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	}
+	if c.UpdatedKeyCb != nil {
+		defer c.UpdatedKeyCb(ctx, key)
 	}
 	c.Objs[new.GetKeyVal()] = &CloudletInfoCacheData{
 		Obj:    new,
@@ -5201,6 +5224,9 @@ func (c *CloudletInfoCache) Delete(ctx context.Context, in *CloudletInfo, modRev
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
+	if c.DeletedKeyCb != nil {
+		c.DeletedKeyCb(ctx, in.GetKey())
+	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
@@ -5209,7 +5235,7 @@ func (c *CloudletInfoCache) Prune(ctx context.Context, validKeys map[CloudletKey
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -5219,6 +5245,9 @@ func (c *CloudletInfoCache) Prune(ctx context.Context, validKeys map[CloudletKey
 	for key, old := range notify {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -5247,6 +5276,9 @@ func (c *CloudletInfoCache) Flush(ctx context.Context, notifyId int64) {
 		for key, old := range flushed {
 			if c.NotifyCb != nil {
 				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+			}
+			if c.DeletedKeyCb != nil {
+				c.DeletedKeyCb(ctx, &key)
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -5283,6 +5315,14 @@ func (c *CloudletInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *Cloudl
 
 func (c *CloudletInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletInfoCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.UpdatedKeyCb = fn
+}
+
+func (c *CloudletInfoCache) SetDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.DeletedKeyCb = fn
 }
 
 func (c *CloudletInfoCache) SetFlushAll() {
@@ -5377,11 +5417,14 @@ func (c *CloudletInfoCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
+	for key, val := range deleted {
+		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
-			c.TriggerKeyWatchers(ctx, &key)
 		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 

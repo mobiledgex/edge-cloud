@@ -665,6 +665,9 @@ func (s *searchAppInst) searchPotential(ctx context.Context, policy *AutoProvPol
 	if !s.searchCarrier(carrier) {
 		return
 	}
+	if policy.DeployClientCount == 0 {
+		return
+	}
 	log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy list", "policy", policy.Name, "carrier", carrier, "list", list)
 
 	for _, cl := range list {

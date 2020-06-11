@@ -199,17 +199,7 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverri
 	return nil
 }
 
-func (s *AppInstApi) AutoDelete(ctx context.Context, in *edgeproto.AppKey) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "Auto-deleting AppInsts for App", "app", in)
-	appinsts := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
-	s.cache.Mux.Lock()
-	for key, data := range s.cache.Objs {
-		val := data.Obj
-		if key.AppKey.Matches(in) {
-			appinsts[key] = val
-		}
-	}
-	s.cache.Mux.Unlock()
+func (s *AppInstApi) AutoDelete(ctx context.Context, appinsts map[edgeproto.AppInstKey]*edgeproto.AppInst) error {
 	failed := 0
 	deleted := 0
 	for key, val := range appinsts {
@@ -445,23 +435,21 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return fmt.Errorf("Direct Access App cannot be deployed on IP_ACCESS_SHARED ClusterInst")
 			}
 			// cluster inst exists so we're good.
-			return nil
-		}
-		if cloudcommon.IsClusterInstReqd(&app) {
+		} else if cloudcommon.IsClusterInstReqd(&app) {
 			// Auto-cluster
 			if clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil) {
 				// if it already exists, this means we just want to spawn more apps into it
-				return nil
+			} else {
+				// If this is an autodelete app, we should only allow those in existing cluster instances
+				if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
+					return fmt.Errorf("Autodelete App %s requires an existing ClusterInst", app.Key.Name)
+				}
+				cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
+				if cikey.Organization == "" {
+					cikey.Organization = in.Key.AppKey.Organization
+				}
+				autocluster = true
 			}
-			// If this is an autodelete app, we should only allow those in existing cluster instances
-			if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
-				return fmt.Errorf("Autodelete App %s requires an existing ClusterInst", app.Key.Name)
-			}
-			cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
-			if cikey.Organization == "" {
-				cikey.Organization = in.Key.AppKey.Organization
-			}
-			autocluster = true
 		}
 
 		if in.SharedVolumeSize == 0 {
@@ -477,28 +465,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return err
 			}
 		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
 
-	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if s.store.STMGet(stm, &in.Key, in) {
-			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
-				if in.State == edgeproto.TrackedState_CREATE_ERROR {
-					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
-					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
-				}
-				return in.Key.ExistsError()
-			}
-			in.Errors = nil
-		} else {
-			err := in.Validate(edgeproto.AppInstAllFieldsMap)
-			if err != nil {
-				return err
-			}
+		if err := autoProvPolicyApi.appInstCheck(ctx, stm, cloudcommon.Create, &app, in); err != nil {
+			return err
 		}
+
 		// Set new state to show autocluster clusterinst progress as part of
 		// appinst progress
 		in.State = edgeproto.TrackedState_CREATING_DEPENDENCIES
@@ -1133,6 +1104,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		clusterInst := edgeproto.ClusterInst{}
 		if clusterInstReqd && !clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, &clusterInst) {
 			return fmt.Errorf("For AppInst, %v", in.Key.ClusterInstKey.NotFoundError())
+		}
+		if err := autoProvPolicyApi.appInstCheck(ctx, stm, cloudcommon.Delete, &app, in); err != nil {
+			return err
 		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}

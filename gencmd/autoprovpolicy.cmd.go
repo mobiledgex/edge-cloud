@@ -416,6 +416,8 @@ var AutoProvPolicyOptionalArgs = []string{
 	"cloudlets:#.loc.speed",
 	"cloudlets:#.loc.timestamp.seconds",
 	"cloudlets:#.loc.timestamp.nanos",
+	"minactiveinstances",
+	"maxinstances",
 }
 var AutoProvPolicyAliasArgs = []string{
 	"app-org=key.organization",
@@ -436,6 +438,8 @@ var AutoProvPolicyComments = map[string]string{
 	"cloudlets:#.loc.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"cloudlets:#.loc.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudlets:#.loc.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+	"minactiveinstances":                 "Minimum number of active instances for High-Availability",
+	"maxinstances":                       "Maximum number of instances (active or not)",
 }
 var AutoProvPolicySpecialArgs = map[string]string{
 	"fields": "StringArray",
@@ -571,4 +575,6 @@ var CreateAutoProvPolicyOptionalArgs = []string{
 	"cloudlets:#.loc.speed",
 	"cloudlets:#.loc.timestamp.seconds",
 	"cloudlets:#.loc.timestamp.nanos",
+	"minactiveinstances",
+	"maxinstances",
 }

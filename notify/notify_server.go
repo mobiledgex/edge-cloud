@@ -22,6 +22,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"net"
+	"reflect"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -250,6 +251,15 @@ func (mgr *ServerMgr) GetStats(peerAddr string) *Stats {
 		}
 	}
 	return stats
+}
+
+// Get order of sends based on SendAll type
+func (s *ServerMgr) GetSendOrder() map[reflect.Type]int {
+	order := make(map[reflect.Type]int)
+	for ii, send := range s.sends {
+		order[reflect.TypeOf(send)] = ii
+	}
+	return order
 }
 
 func (s *Server) negotiate(ctx context.Context, stream edgeproto.NotifyApi_StreamNoticeServer) error {
