@@ -966,6 +966,8 @@ type {{.Name}}Cache struct {
 	NotifyCb func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}}, modRev int64)
 	UpdatedCb func(ctx context.Context, old *{{.Name}}, new *{{.Name}})
 	KeyWatchers map[{{.KeyType}}][]*{{.Name}}KeyWatcher
+	UpdatedKeyCb func(ctx context.Context, key *{{.KeyType}})
+	DeletedKeyCb func(ctx context.Context, key *{{.KeyType}})
 }
 
 func New{{.Name}}Cache() *{{.Name}}Cache {
@@ -1031,15 +1033,16 @@ func (c *{{.Name}}Cache) UpdateModFunc(ctx context.Context, key *{{.KeyType}}, m
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &{{.Name}}{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
-		}
+	if c.UpdatedCb != nil {
+		newCopy := &{{.Name}}{}
+		*newCopy = *new
+		defer c.UpdatedCb(ctx, old, newCopy)
+	}
+	if c.NotifyCb != nil {
+		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	}
+	if c.UpdatedKeyCb != nil {
+		defer c.UpdatedKeyCb(ctx, key)
 	}
 	c.Objs[new.GetKeyVal()] = &{{.Name}}CacheData{
 		Obj: new,
@@ -1065,6 +1068,9 @@ func (c *{{.Name}}Cache) Delete(ctx context.Context, in *{{.Name}}, modRev int64
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
+	if c.DeletedKeyCb != nil {
+		c.DeletedKeyCb(ctx, in.GetKey())
+	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
@@ -1073,7 +1079,7 @@ func (c *{{.Name}}Cache) Prune(ctx context.Context, validKeys map[{{.KeyType}}]s
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1083,6 +1089,9 @@ func (c *{{.Name}}Cache) Prune(ctx context.Context, validKeys map[{{.KeyType}}]s
 	for key, old := range notify {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1112,6 +1121,9 @@ func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
 		for key, old := range flushed {
 			if c.NotifyCb != nil {
 				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+			}
+			if c.DeletedKeyCb != nil {
+				c.DeletedKeyCb(ctx, &key)
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -1152,6 +1164,14 @@ func (c *{{.Name}}Cache) SetNotifyCb(fn func(ctx context.Context, obj *{{.KeyTyp
 
 func (c *{{.Name}}Cache) SetUpdatedCb(fn func(ctx context.Context, old *{{.Name}}, new *{{.Name}})) {
 	c.UpdatedCb = fn
+}
+
+func (c *{{.Name}}Cache) SetUpdatedKeyCb(fn func(ctx context.Context, key *{{.KeyType}})) {
+	c.UpdatedKeyCb = fn
+}
+
+func (c *{{.Name}}Cache) SetDeletedKeyCb(fn func(ctx context.Context, key *{{.KeyType}})) {
+	c.DeletedKeyCb = fn
 }
 
 func (c *{{.Name}}Cache) SetFlushAll() {
@@ -1250,11 +1270,14 @@ func (c *{{.Name}}Cache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
+	for key, val := range deleted {
+		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
-			c.TriggerKeyWatchers(ctx, &key)
 		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 {{- end}}
