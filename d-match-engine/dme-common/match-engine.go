@@ -851,6 +851,8 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 	}
 	list := findBestForCarrier(ctx, mreq.CarrierName, &appkey, mreq.GpsLocation, resultLimit)
 
+	// group by cloudlet but preserve order.
+	// assumes all AppInsts on a Cloudlet are at the same distance.
 	for _, found := range list {
 		cloc, exists := foundCloudlets[found.appInst.clusterInstKey.CloudletKey]
 		if !exists {
@@ -860,6 +862,8 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 			cloc.CarrierName = found.appInst.clusterInstKey.CloudletKey.Organization
 			cloc.CloudletName = found.appInst.clusterInstKey.CloudletKey.Name
 			cloc.Distance = found.distance
+			foundCloudlets[found.appInst.clusterInstKey.CloudletKey] = cloc
+			clist.Cloudlets = append(clist.Cloudlets, cloc)
 		}
 		ai := dme.Appinstance{}
 		ai.AppName = appkey.Name
@@ -868,10 +872,6 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 		ai.Fqdn = found.appInst.uri
 		ai.Ports = copyPorts(found.appInst)
 		cloc.Appinstances = append(cloc.Appinstances, &ai)
-		foundCloudlets[found.appInst.clusterInstKey.CloudletKey] = cloc
-	}
-	for _, c := range foundCloudlets {
-		clist.Cloudlets = append(clist.Cloudlets, c)
 	}
 	clist.Status = dme.AppInstListReply_AI_SUCCESS
 }
