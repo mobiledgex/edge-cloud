@@ -434,13 +434,15 @@ type OperatorCodeCacheData struct {
 // OperatorCodeCache caches OperatorCode objects in memory in a hash table
 // and keeps them in sync with the database.
 type OperatorCodeCache struct {
-	Objs        map[OperatorCodeKey]*OperatorCodeCacheData
-	Mux         util.Mutex
-	List        map[OperatorCodeKey]struct{}
-	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *OperatorCodeKey, old *OperatorCode, modRev int64)
-	UpdatedCb   func(ctx context.Context, old *OperatorCode, new *OperatorCode)
-	KeyWatchers map[OperatorCodeKey][]*OperatorCodeKeyWatcher
+	Objs         map[OperatorCodeKey]*OperatorCodeCacheData
+	Mux          util.Mutex
+	List         map[OperatorCodeKey]struct{}
+	FlushAll     bool
+	NotifyCb     func(ctx context.Context, obj *OperatorCodeKey, old *OperatorCode, modRev int64)
+	UpdatedCb    func(ctx context.Context, old *OperatorCode, new *OperatorCode)
+	KeyWatchers  map[OperatorCodeKey][]*OperatorCodeKeyWatcher
+	UpdatedKeyCb func(ctx context.Context, key *OperatorCodeKey)
+	DeletedKeyCb func(ctx context.Context, key *OperatorCodeKey)
 }
 
 func NewOperatorCodeCache() *OperatorCodeCache {
@@ -506,15 +508,16 @@ func (c *OperatorCodeCache) UpdateModFunc(ctx context.Context, key *OperatorCode
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &OperatorCode{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
-		}
+	if c.UpdatedCb != nil {
+		newCopy := &OperatorCode{}
+		*newCopy = *new
+		defer c.UpdatedCb(ctx, old, newCopy)
+	}
+	if c.NotifyCb != nil {
+		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	}
+	if c.UpdatedKeyCb != nil {
+		defer c.UpdatedKeyCb(ctx, key)
 	}
 	c.Objs[new.GetKeyVal()] = &OperatorCodeCacheData{
 		Obj:    new,
@@ -540,6 +543,9 @@ func (c *OperatorCodeCache) Delete(ctx context.Context, in *OperatorCode, modRev
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
+	if c.DeletedKeyCb != nil {
+		c.DeletedKeyCb(ctx, in.GetKey())
+	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
@@ -548,7 +554,7 @@ func (c *OperatorCodeCache) Prune(ctx context.Context, validKeys map[OperatorCod
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -558,6 +564,9 @@ func (c *OperatorCodeCache) Prune(ctx context.Context, validKeys map[OperatorCod
 	for key, old := range notify {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -602,6 +611,14 @@ func (c *OperatorCodeCache) SetNotifyCb(fn func(ctx context.Context, obj *Operat
 
 func (c *OperatorCodeCache) SetUpdatedCb(fn func(ctx context.Context, old *OperatorCode, new *OperatorCode)) {
 	c.UpdatedCb = fn
+}
+
+func (c *OperatorCodeCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *OperatorCodeKey)) {
+	c.UpdatedKeyCb = fn
+}
+
+func (c *OperatorCodeCache) SetDeletedKeyCb(fn func(ctx context.Context, key *OperatorCodeKey)) {
+	c.DeletedKeyCb = fn
 }
 
 func (c *OperatorCodeCache) SetFlushAll() {
@@ -696,11 +713,14 @@ func (c *OperatorCodeCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
+	for key, val := range deleted {
+		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
-			c.TriggerKeyWatchers(ctx, &key)
 		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 

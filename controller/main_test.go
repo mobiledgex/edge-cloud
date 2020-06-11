@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
+	"github.com/mobiledgex/edge-cloud/testutil/testservices"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	yaml "gopkg.in/yaml.v2"
@@ -37,6 +38,8 @@ func TestController(t *testing.T) {
 	defer stopServices()
 
 	reduceInfoTimeouts(t, ctx)
+
+	testservices.CheckNotifySendOrder(t, notify.ServerMgrOne.GetSendOrder())
 
 	conn, err := getGrpcClient(t)
 	require.Nil(t, err, "grpc client")
