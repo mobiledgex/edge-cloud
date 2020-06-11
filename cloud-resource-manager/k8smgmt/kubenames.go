@@ -8,6 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -25,7 +26,8 @@ type KubeNames struct {
 	KconfName         string
 	KconfEnv          string
 	DeploymentType    string
-	ImagePullSecret   string
+	ImagePullSecrets  []string
+	ImagePaths        []string
 }
 
 func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
@@ -74,6 +76,9 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	kubeNames.KconfName = GetKconfName(clusterInst)
 	kubeNames.KconfEnv = "KUBECONFIG=" + kubeNames.KconfName
 	kubeNames.DeploymentType = app.Deployment
+	if app.ImagePath != "" {
+		kubeNames.ImagePaths = append(kubeNames.ImagePaths, app.ImagePath)
+	}
 	//get service names from the yaml
 	if app.Deployment == cloudcommon.DeploymentTypeKubernetes {
 		objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
@@ -82,12 +87,35 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 		}
 		for _, o := range objs {
 			log.DebugLog(log.DebugLevelInfra, "k8s obj", "obj", o)
-			ksvc, ok := o.(*v1.Service)
-			if !ok {
+			switch obj := o.(type) {
+			case *v1.Service:
+				svcName := obj.ObjectMeta.Name
+				kubeNames.ServiceNames = append(kubeNames.ServiceNames, svcName)
+			case *appsv1.Deployment:
+				templateSpec := obj.Spec.Template.Spec
+				containers := []v1.Container{}
+				containers = append(containers, templateSpec.InitContainers...)
+				containers = append(containers, templateSpec.Containers...)
+				for _, cont := range containers {
+					if cont.Image == "" {
+						continue
+					}
+					kubeNames.ImagePaths = append(kubeNames.ImagePaths, cont.Image)
+				}
+			case *appsv1.DaemonSet:
+				templateSpec := obj.Spec.Template.Spec
+				containers := []v1.Container{}
+				containers = append(containers, templateSpec.InitContainers...)
+				containers = append(containers, templateSpec.Containers...)
+				for _, cont := range containers {
+					if cont.Image == "" {
+						continue
+					}
+					kubeNames.ImagePaths = append(kubeNames.ImagePaths, cont.Image)
+				}
+			default:
 				continue
 			}
-			svcName := ksvc.ObjectMeta.Name
-			kubeNames.ServiceNames = append(kubeNames.ServiceNames, svcName)
 		}
 	} else if app.Deployment == cloudcommon.DeploymentTypeHelm {
 		// for helm chart just make sure it's the same prefix
