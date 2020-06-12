@@ -188,7 +188,7 @@ message Cloudlet {
   // Infra Access Type is the type of access available to Infra API Endpoint
   InfraApiAccess infra_api_access = 27;
   // Infra specific config
-  InfraConfig infra_config = 28;
+  InfraConfig infra_config = 28 [(gogoproto.nullable) = false];
   // Chef client key
   map<string, string> chef_client_key = 29 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
