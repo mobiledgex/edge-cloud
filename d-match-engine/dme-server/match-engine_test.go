@@ -9,6 +9,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 )
 
@@ -161,6 +162,35 @@ func TestAddRemove(t *testing.T) {
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")
 	assert.Equal(t, appInst.Uri, reply.Fqdn)
+
+	// Check GetAppInstList API - check sorted by distance
+	ctx = dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
+	reg = dme.RegisterClientRequest{
+		OrgName: dmetest.Apps[1].Organization,
+		AppName: dmetest.Apps[1].Name,
+		AppVers: dmetest.Apps[1].Vers,
+	}
+	regReply, err = serv.RegisterClient(ctx, &reg)
+	require.Nil(t, err)
+	ckey, err = dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
+	require.Nil(t, err, "verify cookie")
+	ctx = dmecommon.NewCookieContext(ctx, ckey)
+
+	listReq := dme.AppInstListRequest{}
+	listReq.GpsLocation = &dme.Loc{
+		Latitude:  51,
+		Longitude: 11,
+	}
+	listReq.SessionCookie = regReply.SessionCookie
+	listReq.Limit = 4
+	listReply, err := serv.GetAppInstList(ctx, &listReq)
+	require.Nil(t, err)
+	require.Equal(t, 4, len(listReply.Cloudlets))
+	lastDist := float64(0)
+	for _, cloc := range listReply.Cloudlets {
+		require.Greater(t, cloc.Distance, lastDist)
+		lastDist = cloc.Distance
+	}
 
 	// delete all data
 	for _, app := range apps {
