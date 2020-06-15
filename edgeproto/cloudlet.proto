@@ -403,9 +403,13 @@ service CloudletInfoApi {
     option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Key.Organization";
   }
   // Inject (create) a CloudletInfo for regression testing
-  rpc InjectCloudletInfo(CloudletInfo) returns (Result) {}
+  rpc InjectCloudletInfo(CloudletInfo) returns (Result) {
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
   // Evict (delete) a CloudletInfo for regression testing
-  rpc EvictCloudletInfo(CloudletInfo) returns (Result) {}
+  rpc EvictCloudletInfo(CloudletInfo) returns (Result) {
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
 }
 
 // (TODO) CloudletMetrics provide metrics collected about the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.
