@@ -147,6 +147,9 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	pfConfig.CloudletVmImagePath = *cloudletVMImagePath
 	pfConfig.TestMode = *testMode
 	pfConfig.EnvVar = make(map[string]string)
+	for k, v := range cloudlet.EnvVar {
+		pfConfig.EnvVar[k] = v
+	}
 	pfConfig.Region = *region
 	pfConfig.CommercialCerts = *commercialCerts
 	pfConfig.AppDnsRoot = *appDNSRoot
@@ -319,7 +322,11 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
 			}
 			if err == nil {
-				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, updatecb.cb)
+				// Some platform types require a flavor cache
+				caches := pf.Caches{
+					FlavorCache: &flavorApi.cache,
+				}
+				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, &caches, updatecb.cb)
 				if err != nil && len(accessVars) > 0 {
 					deleteAccessVars = true
 				}
