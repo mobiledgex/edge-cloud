@@ -78,6 +78,8 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 				if !flavorApi.store.STMGet(stm, &(flav.Key), &flav) {
 					return fmt.Errorf("Flavor must preexist")
 				}
+			} else if field == edgeproto.SettingsFieldInfluxDbMetricsRetention {
+				services.influxQ.UpdateDefaultRetentionPolicy(in.InfluxDbMetricsRetention.TimeDuration())
 			}
 		}
 		s.store.STMPut(stm, &cur)
