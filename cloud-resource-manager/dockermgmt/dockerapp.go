@@ -162,24 +162,33 @@ func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client 
 	var dm cloudcommon.DockerManifest
 	err := parseDockerComposeManifest(client, dir, &dm)
 	if err != nil {
-		return err
+		log.SpanLog(ctx, log.DebugLevelInfra, "error in parsing docker manifest", "dir", dir, "err", err)
+		// for create this is fatal, for delete keep going and cleanup what we can
+		if action == createZip {
+			return err
+		}
 	}
-	if len(dm.DockerComposeFiles) == 0 {
+	if len(dm.DockerComposeFiles) == 0 && action == createZip {
 		return fmt.Errorf("no docker compose files in manifest: %v", err)
 	}
 	for _, d := range dm.DockerComposeFiles {
 		cmd := fmt.Sprintf("docker-compose -f %s/%s %s", dir, d, dockerComposeCommand)
 		log.SpanLog(ctx, log.DebugLevelInfra, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
+
 		if err != nil {
-			return fmt.Errorf("error running docker compose, %s, %v", out, err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "error running docker compose", "out", out, "err", err)
+			// for create this is fatal, for delete keep going and cleanup what we can
+			if action == createZip {
+				return fmt.Errorf("error running docker compose, %s, %v", out, err)
+			}
 		}
 	}
 
 	//cleanup the directory on delete
 	if action == deleteZip {
 		log.SpanLog(ctx, log.DebugLevelInfra, "deleting app dir", "dir", dir)
-		err := pc.DeleteDir(ctx, client, dir)
+		err := pc.DeleteDir(ctx, client, dir, pc.SudoOn)
 		if err != nil {
 			return fmt.Errorf("error deleting dir, %v", err)
 		}
