@@ -96,6 +96,33 @@ enum CRMOverride {
   IGNORE_CRM_AND_TRANSIENT_STATE = 4;
 }
 
+// Maintenance allows for planned downtimes of Cloudlets.
+// These states involve message exchanges between the Controller,
+// the AutoProv service, and the CRM. Certain states are only set
+// by certain actors.
+enum MaintenanceState {
+  // Normal operational state
+  NORMAL_OPERATION = 0;
+  // Request start of maintenance
+  MAINTENANCE_START = 1;
+  // Trigger failover for any HA AppInsts
+  FAILOVER_REQUESTED = 2;
+  // Failover done
+  FAILOVER_DONE = 3;
+  // Some errors encountered during maintenance failover
+  FAILOVER_ERROR = 4;
+  // Request start of maintenance without AutoProv failover
+  MAINTENANCE_START_NO_FAILOVER = 5;
+  // Request CRM to transition to maintenance
+  CRM_REQUESTED = 6;
+  // CRM request done and under maintenance
+  CRM_UNDER_MAINTENANCE = 7;
+  // CRM failed to go into maintenance
+  CRM_ERROR = 8;
+  // Under maintenance
+  UNDER_MAINTENANCE = 31;
+}
+
 // Status Information
 //
 // Used to track status of create/delete/update for resources that are being modified 

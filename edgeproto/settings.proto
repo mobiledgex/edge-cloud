@@ -42,7 +42,8 @@ message Settings {
   int32 max_tracked_dme_clients = 16;
   // Default chef client interval (duration)
   int32 chef_client_interval = 17 [(gogoproto.casttype) = "Duration"];
-
+  // Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)
+  int32 cloudlet_maintenance_timeout = 18 [(gogoproto.casttype) = "Duration"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

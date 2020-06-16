@@ -53,6 +53,7 @@
 		AutoProvCount
 		AutoProvCounts
 		AutoProvPolicyCloudlet
+		AutoProvInfo
 		PolicyKey
 		AutoScalePolicy
 		CloudletKey
@@ -1036,6 +1037,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(CRMOverride(0)):
 		if en, ok := CRMOverride_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(MaintenanceState(0)):
+		if en, ok := MaintenanceState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(PlatformType(0)):
