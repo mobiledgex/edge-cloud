@@ -98,14 +98,6 @@ func GetMappedAccessType(accessType edgeproto.AccessType, deployment, deployment
 		if deployment == DeploymentTypeVM {
 			return edgeproto.AccessType_ACCESS_TYPE_DIRECT, nil
 		}
-		if deployment == DeploymentTypeDocker {
-			dtype := GetDockerDeployType(deploymentManifest)
-			if dtype != "docker" {
-				// Because of the complexity with managing port mappings with
-				// docker-compose manifests do not default to LB
-				return accessType, nil
-			}
-		}
 		// all others default to LB
 		return edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER, nil
 	}
