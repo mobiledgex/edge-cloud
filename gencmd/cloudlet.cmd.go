@@ -1064,6 +1064,7 @@ var CloudletOptionalArgs = []string{
 	"infraapiaccess",
 	"infraconfig.externalnetworkname",
 	"infraconfig.flavorname",
+	"maintenancestate",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1126,6 +1127,7 @@ var CloudletComments = map[string]string{
 	"infraconfig.externalnetworkname":     "Infra specific external network name",
 	"infraconfig.flavorname":              "Infra specific flavor name",
 	"chefclientkey":                       "Chef client key",
+	"maintenancestate":                    "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1235,6 +1237,7 @@ var CloudletInfoOptionalArgs = []string{
 	"osimages:#.properties",
 	"osimages:#.diskformat",
 	"controllercachereceived",
+	"maintenancestate",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1262,6 +1265,7 @@ var CloudletInfoComments = map[string]string{
 	"osimages:#.properties":   "image properties/metadata",
 	"osimages:#.diskformat":   "format qcow2, img, etc",
 	"controllercachereceived": "Indicates all controller data has been sent to CRM",
+	"maintenancestate":        "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
@@ -1314,6 +1318,7 @@ var CreateCloudletOptionalArgs = []string{
 	"infraapiaccess",
 	"infraconfig.externalnetworkname",
 	"infraconfig.flavorname",
+	"maintenancestate",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1343,4 +1348,5 @@ var UpdateCloudletOptionalArgs = []string{
 	"restagmap:#.value.name",
 	"restagmap:#.value.organization",
 	"accessvars",
+	"maintenancestate",
 }

@@ -31,7 +31,8 @@ type DmeAppInst struct {
 	// Ports and L7 Paths
 	ports []dme.AppPort
 	// State of the cloudlet - copy of the DmeCloudlet
-	cloudletState edgeproto.CloudletState
+	cloudletState    edgeproto.CloudletState
+	maintenanceState edgeproto.MaintenanceState
 	// Health state of the appInst
 	appInstHealth edgeproto.HealthCheck
 }
@@ -53,8 +54,9 @@ type DmeApp struct {
 
 type DmeCloudlet struct {
 	// No need for a mutex - protected under DmeApps mutex
-	CloudletKey edgeproto.CloudletKey
-	State       edgeproto.CloudletState
+	CloudletKey      edgeproto.CloudletKey
+	State            edgeproto.CloudletState
+	MaintenanceState edgeproto.MaintenanceState
 }
 
 type AutoProvPolicy struct {
@@ -107,6 +109,9 @@ func SetupMatchEngine() {
 // Returns if this AppInstance is usable or not
 func IsAppInstUsable(appInst *DmeAppInst) bool {
 	if appInst == nil {
+		return false
+	}
+	if appInst.maintenanceState == edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE {
 		return false
 	}
 	if appInst.cloudletState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
@@ -179,8 +184,6 @@ func AddApp(ctx context.Context, in *edgeproto.App) {
 }
 
 func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
-	var cNew *DmeAppInst
-
 	carrierName := appInst.Key.ClusterInstKey.CloudletKey.Organization
 
 	tbl := DmeAppTbl
@@ -200,45 +203,34 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		app.Carriers[carrierName] = new(DmeAppInsts)
 		app.Carriers[carrierName].Insts = make(map[edgeproto.ClusterInstKey]*DmeAppInst)
 	}
-	if cl, foundAppInst := app.Carriers[carrierName].Insts[appInst.Key.ClusterInstKey]; foundAppInst {
-		// update existing app inst
-		cl.uri = appInst.Uri
-		cl.location = appInst.CloudletLoc
-		cl.ports = appInst.MappedPorts
-		cl.appInstHealth = appInst.HealthCheck
-		if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
-			cl.cloudletState = cloudlet.State
-		} else {
-			cl.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
-		}
-		log.SpanLog(ctx, log.DebugLevelDmedb, "Updating app inst",
-			"appName", app.AppKey.Name,
-			"appVersion", app.AppKey.Version,
-			"latitude", appInst.CloudletLoc.Latitude,
-			"longitude", appInst.CloudletLoc.Longitude,
-			"state", appInst.State)
-	} else {
-		cNew = new(DmeAppInst)
-		cNew.clusterInstKey = appInst.Key.ClusterInstKey
-		cNew.uri = appInst.Uri
-		cNew.location = appInst.CloudletLoc
-		cNew.ports = appInst.MappedPorts
-		cNew.appInstHealth = appInst.HealthCheck
-		if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
-			cNew.cloudletState = cloudlet.State
-		} else {
-			cNew.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
-		}
-		app.Carriers[carrierName].Insts[cNew.clusterInstKey] = cNew
-		log.SpanLog(ctx, log.DebugLevelDmedb, "Adding app inst",
-			"appName", app.AppKey.Name,
-			"appVersion", app.AppKey.Version,
-			"cloudletKey", appInst.Key.ClusterInstKey.CloudletKey,
-			"uri", appInst.Uri,
-			"latitude", cNew.location.Latitude,
-			"longitude", cNew.location.Longitude,
-			"HealthState", cNew.appInstHealth)
+	logMsg := "Updating app inst"
+	cl, foundAppInst := app.Carriers[carrierName].Insts[appInst.Key.ClusterInstKey]
+	if !foundAppInst {
+		cl = new(DmeAppInst)
+		cl.clusterInstKey = appInst.Key.ClusterInstKey
+		app.Carriers[carrierName].Insts[cl.clusterInstKey] = cl
+		logMsg = "Adding app inst"
 	}
+	// update existing app inst
+	cl.uri = appInst.Uri
+	cl.location = appInst.CloudletLoc
+	cl.ports = appInst.MappedPorts
+	cl.appInstHealth = appInst.HealthCheck
+	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
+		cl.cloudletState = cloudlet.State
+		cl.maintenanceState = cloudlet.MaintenanceState
+	} else {
+		cl.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+		cl.maintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+	}
+	log.SpanLog(ctx, log.DebugLevelDmedb, logMsg,
+		"appName", app.AppKey.Name,
+		"appVersion", app.AppKey.Version,
+		"cloudletKey", appInst.Key.ClusterInstKey.CloudletKey,
+		"uri", appInst.Uri,
+		"latitude", appInst.CloudletLoc.Latitude,
+		"longitude", appInst.CloudletLoc.Longitude,
+		"healthState", appInst.HealthCheck)
 	app.Unlock()
 }
 
@@ -354,6 +346,7 @@ func DeleteCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) {
 			for clusterInstKey, _ := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
 					c.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+					c.Insts[clusterInstKey].maintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
 				}
 			}
 		}
@@ -378,6 +371,7 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 			for clusterInstKey, _ := range carr.Insts {
 				if _, found := cloudlets[clusterInstKey.CloudletKey]; !found {
 					carr.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+					carr.Insts[clusterInstKey].maintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
 				}
 			}
 		}
@@ -449,20 +443,22 @@ func SetInstStateForCloudlet(ctx context.Context, info *edgeproto.CloudletInfo) 
 	tbl.Lock()
 	defer tbl.Unlock()
 	// Update the state in the cloudlet table
-	if cloudlet, foundCloudlet := tbl.Cloudlets[info.Key]; foundCloudlet {
-		cloudlet.State = info.State
-	} else {
-		cNew := new(DmeCloudlet)
-		cNew.CloudletKey = info.Key
-		cNew.State = info.State
-		tbl.Cloudlets[info.Key] = cNew
+	cloudlet, foundCloudlet := tbl.Cloudlets[info.Key]
+	if !foundCloudlet {
+		cloudlet = new(DmeCloudlet)
+		cloudlet.CloudletKey = info.Key
+		tbl.Cloudlets[info.Key] = cloudlet
 	}
+	cloudlet.State = info.State
+	cloudlet.MaintenanceState = info.MaintenanceState
+
 	for _, app := range tbl.Apps {
 		app.Lock()
 		if c, found := app.Carriers[carrier]; found {
 			for clusterInstKey, _ := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
 					c.Insts[clusterInstKey].cloudletState = info.State
+					c.Insts[clusterInstKey].maintenanceState = info.MaintenanceState
 
 				}
 			}

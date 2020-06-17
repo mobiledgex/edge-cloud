@@ -59,6 +59,7 @@ func InitTracer(tlsCertFile string) {
 	// Note that we create the Reporter manually to be able to do mTLS
 	rc := &config.ReporterConfig{
 		CollectorEndpoint: jaegerEndpoint,
+		QueueSize:         500,
 	}
 	logger := zap.NewLogger(slogger.Desugar())
 	reporter := NewReporter(SpanServiceName, tlsConfig, rc, logger)

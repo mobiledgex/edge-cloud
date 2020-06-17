@@ -211,6 +211,7 @@ var SettingsOptionalArgs = []string{
 	"maxtrackeddmeclients",
 	"chefclientinterval",
 	"influxdbmetricsretention",
+	"cloudletmaintenancetimeout",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -232,6 +233,7 @@ var SettingsComments = map[string]string{
 	"maxtrackeddmeclients":              "Max DME clients to be tracked at the same time.",
 	"chefclientinterval":                "Default chef client interval (duration)",
 	"influxdbmetricsretention":          "Default influxDB metrics retention policy (duration)",
+	"cloudletmaintenancetimeout":        "Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",
