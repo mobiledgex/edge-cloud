@@ -304,15 +304,6 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		in.AccessType = newAccessType
 	}
 
-	if in.Deployment == cloudcommon.DeploymentTypeDocker && in.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
-		dtype := cloudcommon.GetDockerDeployType(in.DeploymentManifest)
-		if dtype != "docker" {
-			// docker-compose manifests introduce a lot of complexity for LB solution because the port mappings will have
-			// to change, and there may be multiple containers which communicate together over the host network.
-			return &edgeproto.Result{}, fmt.Errorf("ACCESS_TYPE_LOAD_BALANCER not supported for docker deployment type: %s", dtype)
-		}
-	}
-
 	if in.Deployment == cloudcommon.DeploymentTypeDocker || in.Deployment == cloudcommon.DeploymentTypeVM {
 		if strings.Contains(strings.ToLower(in.AccessPorts), "http") {
 			return &edgeproto.Result{}, fmt.Errorf("Deployment Type and HTTP access ports are incompatible")

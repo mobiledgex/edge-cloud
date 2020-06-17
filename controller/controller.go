@@ -252,6 +252,7 @@ func startServices() error {
 			*influxAddr, err)
 	}
 	services.influxQ = influxQ
+	services.influxQ.UpdateDefaultRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration())
 	// events influx
 	events := influxq.NewInfluxQ(cloudcommon.EventsDbName, influxAuth.User, influxAuth.Pass)
 	err = events.Start(*influxAddr)
