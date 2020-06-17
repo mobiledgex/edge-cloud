@@ -62,7 +62,6 @@ var VMAppInstUsage = "VMappinst-usage"
 
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"
-var IPAddrDockerHost = "172.17.0.1"
 var RemoteServerNone = ""
 
 type InstanceEvent string
