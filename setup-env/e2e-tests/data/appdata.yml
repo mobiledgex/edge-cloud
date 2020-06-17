@@ -12,6 +12,7 @@ settings:
   loadbalancermaxportrange: 100
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
+  influxdbmetricsretention: 2h
 flavors:
 - key:
     name: x1.tiny
