@@ -1715,6 +1715,7 @@ func (m *mex) generateEnumCheck(field *descriptor.FieldDescriptorProto, elem str
 	m.P("return errors.New(\"invalid ", generator.CamelCase(*field.Name),
 		"\")")
 	m.P("}")
+	m.importErrors = true
 }
 
 func (m *mex) generateMessageEnumCheck(elem string) {

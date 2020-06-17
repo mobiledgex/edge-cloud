@@ -53,6 +53,7 @@ It has these top-level messages:
 	AutoProvCount
 	AutoProvCounts
 	AutoProvPolicyCloudlet
+	AutoProvInfo
 	PolicyKey
 	AutoScalePolicy
 	CloudletKey

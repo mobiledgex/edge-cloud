@@ -14,6 +14,7 @@ settings:
   loadbalancermaxportrange: 50
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
+  cloudletmaintenancetimeout: 5m
 cloudlets:
 - key:
     organization: dmuus
