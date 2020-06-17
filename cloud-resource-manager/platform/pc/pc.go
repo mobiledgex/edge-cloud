@@ -71,7 +71,7 @@ func CreateDir(ctx context.Context, client ssh.Client, dir string, ow OverwriteD
 	}
 
 	// If overwrite, then try deleting the directory and recreate it
-	err = DeleteDir(ctx, client, dir)
+	err = DeleteDir(ctx, client, dir, NoSudo)
 	if err != nil {
 		delerr := fmt.Errorf("unable to delete already existing directory: %v", err)
 		log.SpanLog(ctx, log.DebugLevelInfra, "mkdir err", "err", delerr)
@@ -85,9 +85,12 @@ func CreateDir(ctx context.Context, client ssh.Client, dir string, ow OverwriteD
 	return nil
 }
 
-func DeleteDir(ctx context.Context, client ssh.Client, dir string) error {
+func DeleteDir(ctx context.Context, client ssh.Client, dir string, sudo Sudo) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "deleting directory", "dir", dir)
 	cmd := fmt.Sprintf("rm -rf %s", dir)
+	if sudo == SudoOn {
+		cmd = fmt.Sprintf("sudo rm -rf %s", dir)
+	}
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deleting dir %s, %s, %v", cmd, out, err)

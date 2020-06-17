@@ -162,24 +162,33 @@ func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client 
 	var dm cloudcommon.DockerManifest
 	err := parseDockerComposeManifest(client, dir, &dm)
 	if err != nil {
-		return err
+		log.SpanLog(ctx, log.DebugLevelInfra, "error in parsing docker manifest", "dir", dir, "err", err)
+		// for create this is fatal, for delete keep going and cleanup what we can
+		if action == createZip {
+			return err
+		}
 	}
-	if len(dm.DockerComposeFiles) == 0 {
+	if len(dm.DockerComposeFiles) == 0 && action == createZip {
 		return fmt.Errorf("no docker compose files in manifest: %v", err)
 	}
 	for _, d := range dm.DockerComposeFiles {
 		cmd := fmt.Sprintf("docker-compose -f %s/%s %s", dir, d, dockerComposeCommand)
 		log.SpanLog(ctx, log.DebugLevelInfra, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
+
 		if err != nil {
-			return fmt.Errorf("error running docker compose, %s, %v", out, err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "error running docker compose", "out", out, "err", err)
+			// for create this is fatal, for delete keep going and cleanup what we can
+			if action == createZip {
+				return fmt.Errorf("error running docker compose, %s, %v", out, err)
+			}
 		}
 	}
 
 	//cleanup the directory on delete
 	if action == deleteZip {
 		log.SpanLog(ctx, log.DebugLevelInfra, "deleting app dir", "dir", dir)
-		err := pc.DeleteDir(ctx, client, dir)
+		err := pc.DeleteDir(ctx, client, dir, pc.SudoOn)
 		if err != nil {
 			return fmt.Errorf("error deleting dir, %v", err)
 		}
@@ -246,32 +255,24 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 	return nil
 }
 
-func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, networkMode DockerNetworkingMode) error {
+func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	image := app.ImagePath
 	nameLabelVal := util.DNSSanitize(app.Key.Name)
 	versionLabelVal := util.DNSSanitize(app.Key.Version)
-	name := GetContainerName(&app.Key)
 	base_cmd := "docker run "
 	if appInst.OptRes == "gpu" {
 		base_cmd += "--gpus all"
 	}
 
 	if app.DeploymentManifest == "" {
-
 		cmd := fmt.Sprintf("%s -d -l %s=%s -l %s=%s --restart=unless-stopped --network=host --name=%s %s %s", base_cmd,
 			cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel,
 			versionLabelVal, GetContainerName(&app.Key), image, app.Command)
-		if networkMode == DockerBridgeMode {
-			cmd = fmt.Sprintf("%s -d -l edge-cloud -l %s=%s -l %s=%s --restart=unless-stopped --name=%s %s %s %s", base_cmd,
-				cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel, versionLabelVal, name,
-				strings.Join(GetDockerPortString(appInst.MappedPorts, UsePublicPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrDockerHost), " "), image, app.Command)
-		}
 		log.SpanLog(ctx, log.DebugLevelInfra, "running docker run ", "cmd", cmd)
 		out, err := client.Output(cmd)
 		if err != nil {
 			return fmt.Errorf("error running docker run, %s, %v", out, err)
 		}
-
 		log.SpanLog(ctx, log.DebugLevelInfra, "done docker run ")
 	} else {
 		if strings.HasSuffix(app.DeploymentManifest, ".zip") {
@@ -343,14 +344,14 @@ func DeleteAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 	return nil
 }
 
-func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, dockerMode DockerNetworkingMode) error {
+func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateAppInst", "appkey", app.Key, "ImagePath", app.ImagePath)
 
 	err := DeleteAppInst(ctx, vaultConfig, client, app, appInst)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "DeleteAppInst failed, proceeding with create", "appkey", app.Key, "err", err)
 	}
-	return CreateAppInst(ctx, vaultConfig, client, app, appInst, dockerMode)
+	return CreateAppInst(ctx, vaultConfig, client, app, appInst)
 }
 
 func appendContainerIdsFromDockerComposeImages(client ssh.Client, dockerComposeFile string, rt *edgeproto.AppInstRuntime) error {
