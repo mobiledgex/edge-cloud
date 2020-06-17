@@ -141,6 +141,7 @@ func reduceInfoTimeouts(t *testing.T, ctx context.Context) {
 	settings.CreateAppInstTimeout = edgeproto.Duration(1 * time.Second)
 	settings.UpdateAppInstTimeout = edgeproto.Duration(1 * time.Second)
 	settings.DeleteAppInstTimeout = edgeproto.Duration(1 * time.Second)
+	settings.CloudletMaintenanceTimeout = edgeproto.Duration(2 * time.Second)
 
 	settings.Fields = []string{
 		edgeproto.SettingsFieldCreateAppInstTimeout,
@@ -149,6 +150,7 @@ func reduceInfoTimeouts(t *testing.T, ctx context.Context) {
 		edgeproto.SettingsFieldCreateClusterInstTimeout,
 		edgeproto.SettingsFieldUpdateClusterInstTimeout,
 		edgeproto.SettingsFieldDeleteClusterInstTimeout,
+		edgeproto.SettingsFieldCloudletMaintenanceTimeout,
 	}
 	_, err = settingsApi.UpdateSettings(ctx, settings)
 	require.Nil(t, err)

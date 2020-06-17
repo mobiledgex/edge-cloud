@@ -233,3 +233,34 @@ func (s *CloudletInfoApi) cleanupCloudletInfo(ctx context.Context, key *edgeprot
 		log.SpanLog(ctx, log.DebugLevelApi, "cleanup CloudletInfo failed", "err", err)
 	}
 }
+
+func (s *CloudletInfoApi) waitForMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, targetState, errorState edgeproto.MaintenanceState, timeout time.Duration, result *edgeproto.CloudletInfo) error {
+	done := make(chan bool, 1)
+	check := func(ctx context.Context) {
+		if !s.cache.Get(key, result) {
+			log.SpanLog(ctx, log.DebugLevelApi, "wait for CloudletInfo state info not found", "key", key)
+			return
+		}
+		if result.MaintenanceState == targetState || result.MaintenanceState == errorState {
+			done <- true
+		}
+	}
+
+	log.SpanLog(ctx, log.DebugLevelApi, "wait for CloudletInfo state", "target", targetState)
+
+	cancel := s.cache.WatchKey(key, check)
+
+	// after setting up watch, check current state,
+	// as it may have already changed to the target state
+	check(ctx)
+
+	var err error
+	select {
+	case <-done:
+	case <-time.After(timeout):
+		err = fmt.Errorf("timed out waiting for CloudletInfo maintenance state")
+	}
+	cancel()
+
+	return err
+}

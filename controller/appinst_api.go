@@ -368,6 +368,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
+		if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
+			return errors.New("Cloudlet under maintenance, please try again later")
+		}
 
 		cikey := &in.Key.ClusterInstKey
 		// Explicit auto-cluster requirement

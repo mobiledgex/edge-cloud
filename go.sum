@@ -285,6 +285,8 @@ github.com/mobiledgex/mapstructure v1.2.4-0.20200429201435-a2efef9031f5 h1:HVqsq
 github.com/mobiledgex/mapstructure v1.2.4-0.20200429201435-a2efef9031f5/go.mod h1:BmvP2AmuxmsVnZalBdNcImukJxRGn8wIA2QiunDSUT8=
 github.com/mobiledgex/yaml/v2 v2.2.4 h1:9biPviMHWPA+THM6GVuR8Rp10JmP7rFfizgDFpSXNpA=
 github.com/mobiledgex/yaml/v2 v2.2.4/go.mod h1:9xwjeLnIOTcA1fPBSAYKGRjeRy/bP/LnodFNfuZ9kqE=
+github.com/mobiledgex/yaml/v2 v2.2.5 h1:fR4Xh7ytR5/cHizuo51PkFa5Qn6qhoKoK+PrndFZd0k=
+github.com/mobiledgex/yaml/v2 v2.2.5/go.mod h1:9xwjeLnIOTcA1fPBSAYKGRjeRy/bP/LnodFNfuZ9kqE=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v0.0.0-20180228065516-1df9eeb2bb81 h1:ImOHKpmdLPXWX5KSYquUWXKaopEPuY7TPPUo18u9aOI=

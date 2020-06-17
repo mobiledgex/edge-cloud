@@ -191,6 +191,8 @@ message Cloudlet {
   InfraConfig infra_config = 28 [(gogoproto.nullable) = false];
   // Chef client key
   map<string, string> chef_client_key = 29 [(protogen.backend) = true];
+  // State for maintenance
+  MaintenanceState maintenance_state = 30;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -382,6 +384,8 @@ message CloudletInfo {
   repeated OSImage os_images = 14;
   // Indicates all controller data has been sent to CRM
   bool controller_cache_received = 15;
+  // State for maintenance
+  MaintenanceState maintenance_state = 16;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

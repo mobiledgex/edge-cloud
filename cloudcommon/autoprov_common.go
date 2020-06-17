@@ -15,7 +15,7 @@ const (
 	AutoProvPolicyName     = "auto-prov-policy-name"
 )
 
-func AutoProvCloudletOnline(cloudletInfo *edgeproto.CloudletInfo) bool {
+func AutoProvCloudletInfoOnline(cloudletInfo *edgeproto.CloudletInfo) bool {
 	// Transitional states are considered "online".
 	if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
 		return false
@@ -23,7 +23,15 @@ func AutoProvCloudletOnline(cloudletInfo *edgeproto.CloudletInfo) bool {
 	return true
 }
 
-func AutoProvAppInstOnline(appInst *edgeproto.AppInst, cloudletInfo *edgeproto.CloudletInfo) bool {
+func AutoProvCloudletOnline(cloudlet *edgeproto.Cloudlet) bool {
+	// any maintenance state is considered offline
+	if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
+		return false
+	}
+	return true
+}
+
+func AutoProvAppInstOnline(appInst *edgeproto.AppInst, cloudletInfo *edgeproto.CloudletInfo, cloudlet *edgeproto.Cloudlet) bool {
 	// Transitional states are considered "online"...but health check
 	// doesn't actually have transitional states, except perhaps unknown.
 	appInstOnline := false
@@ -31,7 +39,7 @@ func AutoProvAppInstOnline(appInst *edgeproto.AppInst, cloudletInfo *edgeproto.C
 		appInst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_OK {
 		appInstOnline = true
 	}
-	return appInstOnline && AutoProvCloudletOnline(cloudletInfo)
+	return appInstOnline && AutoProvCloudletInfoOnline(cloudletInfo) && AutoProvCloudletOnline(cloudlet)
 }
 
 func AppInstBeingDeleted(inst *edgeproto.AppInst) bool {

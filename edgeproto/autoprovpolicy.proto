@@ -11,6 +11,7 @@ import "autoscalepolicy.proto";
 import "cloudlet.proto";
 import "app.proto";
 import "clusterinst.proto";
+import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -136,4 +137,25 @@ service AutoProvPolicyApi {
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
     option (protogen.input_required) = true;
   }
+}
+
+message AutoProvInfo {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Cloudlet Key
+  CloudletKey key = 2 [(gogoproto.nullable) = false];
+  // Id of client assigned by server (internal use only)
+  int64 notify_id = 3 [(protogen.hidetag) = "nocmp"];
+  // failover result state
+  MaintenanceState maintenance_state = 4;
+  // Failover actions done if any
+  repeated string completed = 5;
+  // Errors if any
+  repeated string errors = 6;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.notify_flush) = true;
+  option (protogen.uses_org) = "none";
 }
