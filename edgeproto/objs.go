@@ -240,6 +240,11 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 			return errors.New("Invalid longitude value")
 		}
 	}
+	if _, found := fields[CloudletFieldMaintenanceState]; found {
+		if s.MaintenanceState != MaintenanceState_NORMAL_OPERATION && s.MaintenanceState != MaintenanceState_MAINTENANCE_START && s.MaintenanceState != MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
+			return errors.New("Invalid maintenance state, only normal operation and maintenance start states are allowed")
+		}
+	}
 	if s.VmImageVersion != "" {
 		if err := util.ValidateImageVersion(s.VmImageVersion); err != nil {
 			return err
@@ -428,6 +433,10 @@ func (s *AutoProvPolicy) Validate(fields map[string]struct{}) error {
 	if s.MinActiveInstances == 0 && s.DeployClientCount == 0 {
 		return fmt.Errorf("One of deploy client count and minimum active instances must be specified")
 	}
+	return nil
+}
+
+func (s *AutoProvInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 

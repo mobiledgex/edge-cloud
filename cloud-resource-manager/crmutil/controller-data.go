@@ -546,4 +546,29 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			cd.notifyControllerConnect()
 		}
 	}
+
+	updateInfo := false
+	if old != nil && old.MaintenanceState != new.MaintenanceState {
+		switch new.MaintenanceState {
+		case edgeproto.MaintenanceState_CRM_REQUESTED:
+			// TODO: perhaps trigger LBs to reset tcp connections
+			// to gracefully force clients to move to another
+			// cloudlets - but we may need to add another phase
+			// in here to allow DMEs to register that Cloudlet
+			// is unavailable before doing so, otherwise clients
+			// will just redirected back here.
+
+			// Acknowledge controller that CRM is in maintenance
+			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE
+			updateInfo = true
+		case edgeproto.MaintenanceState_NORMAL_OPERATION:
+			// Set state back to normal so DME will allow clients
+			// for this Cloudlet.
+			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+			updateInfo = true
+		}
+	}
+	if updateInfo {
+		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
 }
