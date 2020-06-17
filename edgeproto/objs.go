@@ -242,7 +242,7 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 	}
 	if _, found := fields[CloudletFieldMaintenanceState]; found {
 		if s.MaintenanceState != MaintenanceState_NORMAL_OPERATION && s.MaintenanceState != MaintenanceState_MAINTENANCE_START && s.MaintenanceState != MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
-			return errors.New("Invalid maintenance state, only normal operation and maintenance starts states are allowed")
+			return errors.New("Invalid maintenance state, only normal operation and maintenance start states are allowed")
 		}
 	}
 	if s.VmImageVersion != "" {

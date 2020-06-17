@@ -238,6 +238,7 @@ func (s *CloudletInfoApi) waitForMaintenanceState(ctx context.Context, key *edge
 	done := make(chan bool, 1)
 	check := func(ctx context.Context) {
 		if !s.cache.Get(key, result) {
+			log.SpanLog(ctx, log.DebugLevelApi, "wait for CloudletInfo state info not found", "key", key)
 			return
 		}
 		if result.MaintenanceState == targetState || result.MaintenanceState == errorState {

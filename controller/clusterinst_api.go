@@ -298,6 +298,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
+		if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
+			return errors.New("Cloudlet under maintenance, please try again later")
+		}
+
 		var err error
 		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
 		if err != nil {

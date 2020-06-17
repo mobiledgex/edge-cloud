@@ -641,11 +641,17 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if err != nil {
 			return err
 		}
+		// first reset any old AutoProvInfo
+		autoProvInfo := edgeproto.AutoProvInfo{
+			Key:              in.Key,
+			MaintenanceState: edgeproto.MaintenanceState_NORMAL_OPERATION,
+		}
+		autoProvInfoApi.Update(ctx, &autoProvInfo, 0)
+
 		err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_FAILOVER_REQUESTED)
 		if err != nil {
 			return err
 		}
-		autoProvInfo := edgeproto.AutoProvInfo{}
 		err = autoProvInfoApi.waitForMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_FAILOVER_DONE, edgeproto.MaintenanceState_FAILOVER_ERROR, timeout, &autoProvInfo)
 		if err != nil {
 			return err
@@ -723,6 +729,9 @@ func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.Cl
 		cur := &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, key, cur) {
 			return key.NotFoundError()
+		}
+		if cur.MaintenanceState == state {
+			return nil
 		}
 		cur.MaintenanceState = state
 		s.store.STMPut(stm, cur)
