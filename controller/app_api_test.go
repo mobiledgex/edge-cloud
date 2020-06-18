@@ -80,6 +80,140 @@ func TestAppApi(t *testing.T) {
 	found := appApi.Get(&app.Key, &checkApp)
 	require.True(t, found, "found app")
 	require.Equal(t, "", checkApp.ImagePath, "image path empty")
+	_, err = appApi.DeleteApp(ctx, &app)
+	require.Nil(t, err)
+
+	// user-specified manifest parsing/consistency/checking
+	app.Deployment = "kubernetes"
+	app.DeploymentManifest = testK8SManifest1
+	app.AccessPorts = "tcp:80"
+	_, err = appApi.CreateApp(ctx, &app)
+	require.Nil(t, err)
+	_, err = appApi.DeleteApp(ctx, &app)
+	require.Nil(t, err)
 
 	dummy.Stop()
 }
+
+var testK8SManifest1 = `---
+# Source: cornav/templates/gh-configmap.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cornav-graphhopper-cm
+data:
+  config.yml: "..."
+---
+# Source: cornav/templates/gh-init-configmap.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cornav-graphhopper-init-cm
+data:
+  osm.sh: "..."
+---
+# Source: cornav/templates/gh-pvc.yml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gh-data-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Mi
+  storageClassName: nfs-client
+  volumeMode: Filesystem
+---
+# Source: cornav/templates/gh-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cornav-graphhopper
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8989
+    protocol: TCP
+    name: http
+  selector:
+    app: cornav-graphhopper
+---
+# Source: cornav/templates/gh-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cornav-graphhopper
+  labels:
+    app: cornav-graphhopper
+spec:
+  selector:
+    matchLabels:
+      app: cornav-graphhopper
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: cornav-graphhopper
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 2000
+        fsGroup: 2000
+      containers:
+      - name: cornav-graphhopper
+        image: "graphhopper/graphhopper:latest"
+        ports:
+        - name: http
+          containerPort: 8989
+          protocol: TCP
+        volumeMounts:
+        - name: gh-data
+          mountPath: /data
+        - name: config
+          mountPath: /config
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 2048Mi
+          requests:
+            cpu: 1000m
+            memory: 1024Mi
+      initContainers:
+      - name: cornav-init-graphhopper
+        image: thomseddon/utils
+        env:
+        - name: HTTP_PROXY
+          value: http://gif-ccs-001.iavgroup.local:3128
+        - name: HTTPS_PROXY
+          value: http://gif-ccs-001.iavgroup.local:3128
+        volumeMounts:
+        - mountPath: /data
+          name: gh-data
+        - mountPath: /init
+          name: init-script
+        command: ["/init/osm.sh", "-i", "/data/europe_germany_brandenburg.pbf"]
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      volumes:
+        - name: gh-data
+          persistentVolumeClaim:
+            claimName: gh-data-pvc
+        - name: config
+          configMap:
+            name: cornav-graphhopper-cm
+        - name: init-script
+          configMap:
+            name: cornav-graphhopper-init-cm
+            defaultMode: 0777
+`

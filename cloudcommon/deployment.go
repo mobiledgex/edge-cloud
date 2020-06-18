@@ -132,7 +132,7 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 					log.DebugLog(log.DebugLevelApi, "unrecognized port protocol in kubernetes manifest", "proto", string(kp.Protocol))
 					continue
 				}
-				appPort.InternalPort = int32(kp.TargetPort.IntValue())
+				appPort.InternalPort = kp.Port
 				if strings.HasSuffix(kp.Name, "tls") {
 					appPort.Tls = true
 				}
