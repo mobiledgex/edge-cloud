@@ -159,6 +159,12 @@ func (s *AutoProvPolicyApi) RecvAutoProvCounts(ctx context.Context, msg *edgepro
 				ctx:      ctx,
 				debugLvl: log.DebugLevelMetrics,
 			}
+			md := metadata.Pairs(
+				cloudcommon.CallerAutoProv, "",
+				cloudcommon.AutoProvReason,
+				cloudcommon.AutoProvReasonDemand,
+				cloudcommon.AutoProvPolicyName, "")
+			ctx = metadata.NewIncomingContext(ctx, md)
 			appInst := edgeproto.AppInst{}
 			appInst.Key.AppKey = target.AppKey
 			appInst.Key.ClusterInstKey = target.DeployNowKey
@@ -264,12 +270,34 @@ func (s *AutoProvPolicyApi) appInstCheck(ctx context.Context, stm concurrency.ST
 		inst.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 	}
 
+	refs := edgeproto.AppInstRefs{}
+	appInstRefsApi.store.STMGet(stm, &app.Key, &refs)
+
+	if action == cloudcommon.Create {
+		// Make sure that no AppInst already exists on the Cloudlet.
+		// The goal of AutoProv is to provide Cloudlet redundancy and
+		// best service by distributing instances across Cloudlets, so we
+		// avoid auto-provisioning AppInsts when one already exists on the
+		// Cloudlet. Additionally this avoids a race condition for the
+		// immediate deployment from DME where multiple clients may trigger
+		// multiple calls from the DME to deploy to the same cloudlet.
+		// It does not matter if the existing AppInst was manually or
+		// automatically created.
+		for k, _ := range refs.Insts {
+			instKey := edgeproto.AppInstKey{}
+			edgeproto.AppInstKeyStringParse(k, &instKey)
+			if inst.Key.ClusterInstKey.CloudletKey.Matches(&instKey.ClusterInstKey.CloudletKey) {
+				return fmt.Errorf("already an AppInst on ClusterInst %v on the Cloudlet", inst.Key.ClusterInstKey.GetKeyString())
+			}
+		}
+	}
+
 	var err error
 	switch reason {
 	case cloudcommon.AutoProvReasonDemand:
-		err = s.checkDemand(ctx, stm, action, app, inst)
+		err = s.checkDemand(ctx, stm, action, app, inst, &refs)
 	case cloudcommon.AutoProvReasonMinMax:
-		err = s.checkMinMax(ctx, stm, action, app, inst, policyName)
+		err = s.checkMinMax(ctx, stm, action, app, inst, &refs, policyName)
 	case cloudcommon.AutoProvReasonOrphaned:
 		err = s.checkOrphaned(ctx, stm, action, app, inst)
 	default:
@@ -283,7 +311,7 @@ func (s *AutoProvPolicyApi) appInstCheck(ctx context.Context, stm concurrency.ST
 // The intent is to satisfy client demand, so the only limitations
 // are to not exceed the min or max constraints on any of the
 // policies governing the target AppInst's Cloudlet.
-func (s *AutoProvPolicyApi) checkDemand(ctx context.Context, stm concurrency.STM, action cloudcommon.Action, app *edgeproto.App, inst *edgeproto.AppInst) error {
+func (s *AutoProvPolicyApi) checkDemand(ctx context.Context, stm concurrency.STM, action cloudcommon.Action, app *edgeproto.App, inst *edgeproto.AppInst, refs *edgeproto.AppInstRefs) error {
 	onlineOnly := false
 	if action == cloudcommon.Delete {
 		// If the AppInst we are deleting is not online, then it will
@@ -302,7 +330,7 @@ func (s *AutoProvPolicyApi) checkDemand(ctx context.Context, stm concurrency.STM
 	// which is for any AppInst (regardless of online state).
 	// For delete, we are bounded by the MinActiveInstances value,
 	// which is for online AppInsts only.
-	countsByCloudlet, err := getAppInstCountsForAutoProv(ctx, stm, app, onlineOnly)
+	countsByCloudlet, err := getAppInstCountsForAutoProv(ctx, stm, refs, onlineOnly)
 	if err != nil {
 		return err
 	}
@@ -345,7 +373,7 @@ func (s *AutoProvPolicyApi) checkDemand(ctx context.Context, stm concurrency.STM
 
 // Intent is to satisfy min/max constraints. Reject any calls that would
 // overshoot the min/max constraints.
-func (s *AutoProvPolicyApi) checkMinMax(ctx context.Context, stm concurrency.STM, action cloudcommon.Action, app *edgeproto.App, inst *edgeproto.AppInst, policyName string) error {
+func (s *AutoProvPolicyApi) checkMinMax(ctx context.Context, stm concurrency.STM, action cloudcommon.Action, app *edgeproto.App, inst *edgeproto.AppInst, refs *edgeproto.AppInstRefs, policyName string) error {
 	// For create, we are trying to satisfy the min constraint,
 	// which counts online AppInsts only.
 	// For delete, we are trying to satisfy the max constraint,
@@ -354,7 +382,7 @@ func (s *AutoProvPolicyApi) checkMinMax(ctx context.Context, stm concurrency.STM
 	if action == cloudcommon.Create {
 		onlineOnly = true
 	}
-	countsByCloudlet, err := getAppInstCountsForAutoProv(ctx, stm, app, onlineOnly)
+	countsByCloudlet, err := getAppInstCountsForAutoProv(ctx, stm, refs, onlineOnly)
 	if err != nil {
 		return err
 	}
@@ -410,11 +438,9 @@ func (s *AutoProvPolicyApi) checkOrphaned(ctx context.Context, stm concurrency.S
 	return nil
 }
 
-func getAppInstCountsForAutoProv(ctx context.Context, stm concurrency.STM, app *edgeproto.App, onlineOnly bool) (map[edgeproto.CloudletKey]int, error) {
+func getAppInstCountsForAutoProv(ctx context.Context, stm concurrency.STM, refs *edgeproto.AppInstRefs, onlineOnly bool) (map[edgeproto.CloudletKey]int, error) {
 	countsByCloudlet := make(map[edgeproto.CloudletKey]int)
 
-	refs := edgeproto.AppInstRefs{}
-	appInstRefsApi.store.STMGet(stm, &app.Key, &refs)
 	for k, _ := range refs.Insts {
 		instKey := edgeproto.AppInstKey{}
 		edgeproto.AppInstKeyStringParse(k, &instKey)
