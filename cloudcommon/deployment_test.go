@@ -1,10 +1,13 @@
 package cloudcommon
 
 import (
+	"archive/zip"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -12,6 +15,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
+	yaml "github.com/mobiledgex/yaml/v2"
 	"github.com/stretchr/testify/require"
 )
 
@@ -123,4 +127,64 @@ func TestTimeout(t *testing.T) {
 	require.Equal(t, val, 15*time.Minute)
 	val = GetTimeout(10 * oneG)
 	require.Equal(t, val, 20*time.Minute)
+}
+
+func zipManifests() error {
+	// Get a Buffer to Write To
+	zipfile := "/tmp/test.zip"
+	outFile, err := os.Create(zipfile)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	// Create a new zip archive.
+	w := zip.NewWriter(outFile)
+
+	content, err := ioutil.ReadFile("manifest.yml")
+	if err != nil {
+		return fmt.Errorf("unable to open %s manifest file: %v", "manifest.yml", err)
+	}
+	var dm DockerManifest
+	err = yaml.Unmarshal([]byte(content), &dm)
+	if err != nil {
+		return fmt.Errorf("unmarshalling manifest.yml: %v", err)
+	}
+	zipFiles := []string{"manifest.yml"}
+	zipFiles = append(zipFiles, dm.DockerComposeFiles...)
+	for _, fileName := range zipFiles {
+		f, err := w.Create(fileName)
+		if err != nil {
+			return err
+		}
+		content, err = ioutil.ReadFile(fileName)
+		if err != nil {
+			return fmt.Errorf("unable to open %s file: %v", fileName, err)
+		}
+		_, err = f.Write([]byte(content))
+		if err != nil {
+			return err
+		}
+	}
+
+	// Make sure to check the error on Close.
+	err = w.Close()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func TestRemoteZipManifests(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify)
+	log.InitTracer("")
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
+	err := zipManifests()
+	require.Nil(t, err)
+
+	zipContainers, err := GetRemoteZipDockerManifests(ctx, nil, "", "", NoDownload)
+	fmt.Println(zipContainers)
+	require.Nil(t, err)
 }

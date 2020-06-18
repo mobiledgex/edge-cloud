@@ -28,6 +28,9 @@ var DeploymentTypeVM = "vm"
 var DeploymentTypeHelm = "helm"
 var DeploymentTypeDocker = "docker"
 
+var Download = "download"
+var NoDownload = "nodownload"
+
 var ValidAppDeployments = []string{
 	DeploymentTypeKubernetes,
 	DeploymentTypeVM,
@@ -233,16 +236,20 @@ func GetAppDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, ap
 	return "", nil
 }
 
-func validateRemoteZipManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) error {
-	zipfile := "/tmp/temp.zip"
-	err := GetRemoteManifestToFile(ctx, vaultConfig, manifest, zipfile)
-	if err != nil {
-		return fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
+func GetRemoteZipDockerManifests(ctx context.Context, vaultConfig *vault.Config, manifest, zipfile, downloadAction string) ([]map[string]DockerContainer, error) {
+	if zipfile == "" {
+		zipfile = "/tmp/temp.zip"
+	}
+	if downloadAction == Download {
+		err := GetRemoteManifestToFile(ctx, vaultConfig, manifest, zipfile)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
+		}
 	}
 	defer os.Remove(zipfile)
 	r, err := zip.OpenReader(zipfile)
 	if err != nil {
-		return fmt.Errorf("cannot read zipfile from manifest %s, %v", manifest, err)
+		return nil, fmt.Errorf("cannot read zipfile from manifest %s, %v", manifest, err)
 	}
 	defer r.Close()
 	foundManifest := false
@@ -254,27 +261,43 @@ func validateRemoteZipManifest(ctx context.Context, vaultConfig *vault.Config, m
 			foundManifest = true
 			rc, err := f.Open()
 			if err != nil {
-				return fmt.Errorf("cannot open manifest.yml in zipfile: %v", err)
+				return nil, fmt.Errorf("cannot open manifest.yml in zipfile: %v", err)
 			}
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(rc)
 			rc.Close()
 			err = yaml.Unmarshal(buf.Bytes(), &dm)
 			if err != nil {
-				return fmt.Errorf("unmarshalling manifest.yml: %v", err)
+				return nil, fmt.Errorf("unmarshalling manifest.yml: %v", err)
 			}
 		}
 	}
 	if !foundManifest {
-		return fmt.Errorf("no manifest.yml in zipfile %s", manifest)
+		return nil, fmt.Errorf("no manifest.yml in zipfile %s", manifest)
 	}
+	var zipContainers []map[string]DockerContainer
 	for _, dc := range dm.DockerComposeFiles {
 		_, ok := filesInManifest[dc]
 		if !ok {
-			return fmt.Errorf("docker-compose file specified in manifest but not in zip: %s", dc)
+			return nil, fmt.Errorf("docker-compose file specified in manifest but not in zip: %s", dc)
 		}
+		content, err := ioutil.ReadFile(dc)
+		if err != nil {
+			return nil, fmt.Errorf("unable to open %s manifest file: %v", dc, err)
+		}
+
+		containers, err := DecodeDockerComposeYaml(string(content))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse %s manifest file with contents %s: %v", dc, content, err)
+		}
+		zipContainers = append(zipContainers, containers)
 	}
-	return nil
+	return zipContainers, nil
+}
+
+func validateRemoteZipManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) error {
+	_, err := GetRemoteZipDockerManifests(ctx, vaultConfig, manifest, "", Download)
+	return err
 }
 
 func GetDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) (string, error) {
