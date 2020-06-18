@@ -15,6 +15,10 @@ func DecodeK8SYaml(manifest string) ([]runtime.Object, []*schema.GroupVersionKin
 	kinds := []*schema.GroupVersionKind{}
 
 	for _, file := range files {
+		file = strings.TrimSpace(file)
+		if len(file) == 0 {
+			continue
+		}
 		obj, kind, err := decode([]byte(file), nil, nil)
 		if err != nil {
 			return nil, nil, err
