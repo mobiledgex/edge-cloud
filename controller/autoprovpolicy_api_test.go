@@ -168,13 +168,28 @@ func testApiChecks(t *testing.T, ctx context.Context) {
 	pt2.policy.MinActiveInstances = 5
 	pt2.policy.MaxInstances = 8
 
+	// pt3 is used to test limit of one AppInst per cloudlet
+	pt3 := newAutoProvPolicyTest("policy3", app.Key.Organization, 1, &flavor)
+	pt3.policy.MinActiveInstances = 0
+	pt3.policy.DeployClientCount = 1
+	pt3.policy.MaxInstances = 20
+	// Add extra reservable ClusterInsts on the Cloudlet
+	for ii := 0; ii < 3; ii++ {
+		// copy ClusterInst
+		cl := pt3.clusterInsts[0]
+		cl.Key.ClusterKey.Name = fmt.Sprintf("extra-%d", ii)
+		pt3.clusterInsts = append(pt3.clusterInsts, cl)
+	}
+
 	app.AutoProvPolicies = append(app.AutoProvPolicies,
 		pt1.policy.Key.Name,
-		pt2.policy.Key.Name)
+		pt2.policy.Key.Name,
+		pt3.policy.Key.Name)
 
 	// create all supporting data
 	pt1.create(t, ctx)
 	pt2.create(t, ctx)
+	pt3.create(t, ctx)
 	_, err = appApi.CreateApp(ctx, &app)
 	require.Nil(t, err)
 
@@ -276,6 +291,25 @@ func testApiChecks(t *testing.T, ctx context.Context) {
 
 	pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
 	pt2.expectAppInsts(t, ctx, &app, 0)
+
+	// Check limit only 1 App instance can be auto-provisioned per cloudlet,
+	// regardless of the number of reservable ClusterInsts available.
+	pt3.expectAppInsts(t, ctx, &app, 0)
+	// Reason Demand
+	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonDemand)
+	pt3.expectAppInsts(t, ctx, &app, len(pt3.cloudlets))
+	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+	pt3.expectAppInsts(t, ctx, &app, 0)
+	// Reason MinMax
+	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonMinMax)
+	pt3.expectAppInsts(t, ctx, &app, len(pt3.cloudlets))
+	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+	pt3.expectAppInsts(t, ctx, &app, 0)
+	// Manual create should not limit them.
+	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
+	pt3.expectAppInsts(t, ctx, &app, len(pt3.clusterInsts))
+	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+	pt3.expectAppInsts(t, ctx, &app, 0)
 
 	// cleanup all data
 	_, err = appApi.DeleteApp(ctx, &app)
