@@ -499,13 +499,20 @@ func MarshalArgs(obj interface{}, ignore []string, aliases []string) ([]string, 
 		return args, nil
 	}
 
-	// use mobiledgex yaml here since it always omits empty
-	byt, err := yaml.Marshal(obj)
-	if err != nil {
-		return args, err
+	// for updates, passed in data may already by mapped
+	dat, ok := obj.(map[string]interface{})
+	if !ok {
+		// use mobiledgex yaml here since it always omits empty
+		byt, err := yaml.Marshal(obj)
+		if err != nil {
+			return args, err
+		}
+		dat = make(map[string]interface{})
+		err = yaml.Unmarshal(byt, &dat)
+		if err != nil {
+			return args, err
+		}
 	}
-	dat := make(map[string]interface{})
-	err = yaml.Unmarshal(byt, &dat)
 
 	ignoremap := make(map[string]struct{})
 	if ignore != nil {
@@ -568,7 +575,7 @@ func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]st
 		}
 
 		val := fmt.Sprintf("%v", v)
-		if strings.ContainsAny(val, " \t\r\n") {
+		if strings.ContainsAny(val, " \t\r\n") || len(val) == 0 {
 			val = strconv.Quote(val)
 		}
 		var arg string

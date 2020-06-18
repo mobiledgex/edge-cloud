@@ -478,6 +478,7 @@ func InitApis(sync *Sync) {
 	InitAlertApi(sync)
 	InitAutoScalePolicyApi(sync)
 	InitAutoProvPolicyApi(sync)
+	InitAutoProvInfoApi(sync)
 	InitResTagTableApi(sync)
 	InitPrivacyPolicyApi(sync)
 	InitSettingsApi(sync)
@@ -516,4 +517,5 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvInfoRecvMany(&autoProvInfoApi))
 }

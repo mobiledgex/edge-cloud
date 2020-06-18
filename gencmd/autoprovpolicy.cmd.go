@@ -25,6 +25,19 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func AutoProvInfoHideTags(in *edgeproto.AutoProvInfo) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.NotifyId = 0
+	}
+}
+
 var AutoProvPolicyApiCmd edgeproto.AutoProvPolicyApiClient
 
 var CreateAutoProvPolicyCmd = &cli.Command{
@@ -557,6 +570,31 @@ var AutoProvPolicyCloudletComments = map[string]string{
 	"cloudlet":     "Name of the cloudlet",
 }
 var AutoProvPolicyCloudletSpecialArgs = map[string]string{}
+var AutoProvInfoRequiredArgs = []string{
+	"key.organization",
+	"key.name",
+}
+var AutoProvInfoOptionalArgs = []string{
+	"notifyid",
+	"maintenancestate",
+	"completed",
+	"errors",
+}
+var AutoProvInfoAliasArgs = []string{}
+var AutoProvInfoComments = map[string]string{
+	"fields":           "Fields are used for the Update API to specify which fields to apply",
+	"key.organization": "Organization of the cloudlet site",
+	"key.name":         "Name of the cloudlet",
+	"notifyid":         "Id of client assigned by server (internal use only)",
+	"maintenancestate": "failover result state, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
+	"completed":        "Failover actions done if any",
+	"errors":           "Errors if any",
+}
+var AutoProvInfoSpecialArgs = map[string]string{
+	"completed": "StringArray",
+	"errors":    "StringArray",
+	"fields":    "StringArray",
+}
 var CreateAutoProvPolicyRequiredArgs = []string{
 	"app-org",
 	"name",

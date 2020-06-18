@@ -450,5 +450,9 @@ func autoProvAppInstOnline(ctx context.Context, stm concurrency.STM, key *edgepr
 	if !cloudletInfoApi.store.STMGet(stm, &key.ClusterInstKey.CloudletKey, &cloudletInfo) {
 		return false, key.ClusterInstKey.CloudletKey.NotFoundError()
 	}
-	return cloudcommon.AutoProvAppInstOnline(&appInst, &cloudletInfo), nil
+	cloudlet := edgeproto.Cloudlet{}
+	if !cloudletApi.store.STMGet(stm, &key.ClusterInstKey.CloudletKey, &cloudlet) {
+		return false, key.ClusterInstKey.CloudletKey.NotFoundError()
+	}
+	return cloudcommon.AutoProvAppInstOnline(&appInst, &cloudletInfo, &cloudlet), nil
 }

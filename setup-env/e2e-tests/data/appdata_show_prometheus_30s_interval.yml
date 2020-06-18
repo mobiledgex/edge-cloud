@@ -16,6 +16,7 @@ settings:
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
   influxdbmetricsretention: 2h
+  cloudletmaintenancetimeout: 2s
 flavors:
 - key:
     name: x1.tiny

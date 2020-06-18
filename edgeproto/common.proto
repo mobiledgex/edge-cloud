@@ -3,6 +3,8 @@
 syntax = "proto3";
 package edgeproto;
 
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+
 // Liveness Options
 //
 // Liveness indicates if an object was created statically via an external API call, or dynamically via an internal algorithm.
@@ -94,6 +96,35 @@ enum CRMOverride {
   IGNORE_TRANSIENT_STATE = 3;
   // Ignore CRM and Transient State
   IGNORE_CRM_AND_TRANSIENT_STATE = 4;
+}
+
+// Cloudlet Maintenance States
+//
+// Maintenance allows for planned downtimes of Cloudlets.
+// These states involve message exchanges between the Controller,
+// the AutoProv service, and the CRM. Certain states are only set
+// by certain actors.
+enum MaintenanceState {
+  // Normal operational state
+  NORMAL_OPERATION = 0;
+  // Request start of maintenance
+  MAINTENANCE_START = 1;
+  // Trigger failover for any HA AppInsts
+  FAILOVER_REQUESTED = 2 [(protogen.enum_backend) = true];
+  // Failover done
+  FAILOVER_DONE = 3 [(protogen.enum_backend) = true];
+  // Some errors encountered during maintenance failover
+  FAILOVER_ERROR = 4 [(protogen.enum_backend) = true];
+  // Request start of maintenance without AutoProv failover
+  MAINTENANCE_START_NO_FAILOVER = 5;
+  // Request CRM to transition to maintenance
+  CRM_REQUESTED = 6 [(protogen.enum_backend) = true];
+  // CRM request done and under maintenance
+  CRM_UNDER_MAINTENANCE = 7 [(protogen.enum_backend) = true];
+  // CRM failed to go into maintenance
+  CRM_ERROR = 8 [(protogen.enum_backend) = true];
+  // Under maintenance
+  UNDER_MAINTENANCE = 31 [(protogen.enum_backend) = true];
 }
 
 // Status Information
