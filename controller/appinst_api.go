@@ -460,6 +460,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		if in.PrivacyPolicy == "" {
 			in.PrivacyPolicy = app.DefaultPrivacyPolicy
+		} else {
+			if !autocluster {
+				return fmt.Errorf("Cannot specify Privacy Policy for an AppInst on an existing cluster")
+			}
 		}
 		if in.PrivacyPolicy != "" {
 			policy := edgeproto.PrivacyPolicy{}
