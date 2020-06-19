@@ -52,6 +52,11 @@ func (s *DummyServer) AddDummyOrgObjs(ctx context.Context, org string, num int) 
 		cloudlet.Key.Organization = org
 		cloudlet.Key.Name = name
 		s.CloudletCache.Update(ctx, &cloudlet, int64(ii))
+
+		cloudletInfo := edgeproto.CloudletInfo{}
+		cloudletInfo.Key.Organization = org
+		cloudletInfo.Key.Name = name
+		s.CloudletInfoCache.Update(ctx, &cloudletInfo, int64(ii))
 	}
 }
 
