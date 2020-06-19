@@ -253,10 +253,10 @@ func GetRemoteZipDockerManifests(ctx context.Context, vaultConfig *vault.Config,
 	}
 	defer r.Close()
 	foundManifest := false
-	var filesInManifest = make(map[string]bool)
+	var filesInManifest = make(map[string]*zip.File)
 	var dm DockerManifest
 	for _, f := range r.File {
-		filesInManifest[f.Name] = true
+		filesInManifest[f.Name] = f
 		if f.Name == "manifest.yml" {
 			foundManifest = true
 			rc, err := f.Open()
@@ -277,16 +277,20 @@ func GetRemoteZipDockerManifests(ctx context.Context, vaultConfig *vault.Config,
 	}
 	var zipContainers []map[string]DockerContainer
 	for _, dc := range dm.DockerComposeFiles {
-		_, ok := filesInManifest[dc]
+		f, ok := filesInManifest[dc]
 		if !ok {
 			return nil, fmt.Errorf("docker-compose file specified in manifest but not in zip: %s", dc)
 		}
-		content, err := ioutil.ReadFile(dc)
+		rc, err := f.Open()
 		if err != nil {
-			return nil, fmt.Errorf("unable to open %s manifest file: %v", dc, err)
+			return nil, fmt.Errorf("cannot open docker compose file %s in zipfile: %v", dc, err)
 		}
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(rc)
+		rc.Close()
 
-		containers, err := DecodeDockerComposeYaml(string(content))
+		content := buf.String()
+		containers, err := DecodeDockerComposeYaml(content)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse %s manifest file with contents %s: %v", dc, content, err)
 		}

@@ -65,6 +65,7 @@ var imagePaths = map[string]struct{}{
 	"docker.mobiledgex.net/test/images/mysql:5.7":                 struct{}{},
 	"docker-internal.mobiledgex.net/test/images/wordpress:latest": struct{}{},
 	"docker-int.mobiledgex.net/test/images/mysql:5.7":             struct{}{},
+	"docker-ext.mobiledgex.net/test/images/pgdb:1.1":              struct{}{},
 }
 
 func TestRemoteZipManifests(t *testing.T) {
