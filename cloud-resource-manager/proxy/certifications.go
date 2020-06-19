@@ -106,6 +106,7 @@ func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, 
 	if err == nil {
 		writeCertToRootLb(ctx, &tls, SharedRootLbClient)
 		DedicatedMux.Lock()
+		DedicatedTls = tls
 		for _, client := range DedicatedClients {
 			writeCertToRootLb(ctx, &tls, client)
 		}
