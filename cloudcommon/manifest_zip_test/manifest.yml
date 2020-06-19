@@ -1,0 +1,4 @@
+dockercomposefiles:
+- docker-compose1.yml
+- docker-compose2.yml
+- test/docker-compose3.yml

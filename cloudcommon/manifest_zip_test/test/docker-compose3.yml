@@ -1,0 +1,11 @@
+version: '3.3'
+
+services:
+   pgdb:
+     image: docker-ext.mobiledgex.net/test/images/pgdb:1.1
+     restart: always
+     environment:
+       PGCTL_ROOT_PASSWORD: somedbtest
+       PGCTL_DATABASE: dbtest
+       PGCTL_USER: dbtest
+       PGCTL_PASSWORD: dbtest
