@@ -94,6 +94,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		return
 	}
 	in.Controller = ControllerId
+	in.Region = *region
 	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
 	if name == cloudcommon.AlertAppInstDown {
 		state, ok := in.Labels[cloudcommon.AlertHealthCheckStatus]

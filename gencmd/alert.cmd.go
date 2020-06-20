@@ -149,6 +149,9 @@ func AlertHideTags(in *edgeproto.Alert) {
 	if _, found := tags["nocmp"]; found {
 		in.Controller = ""
 	}
+	if _, found := tags["nocmp"]; found {
+		in.Region = ""
+	}
 }
 
 var AlertApiCmd edgeproto.AlertApiClient
@@ -244,6 +247,7 @@ var AlertOptionalArgs = []string{
 	"value",
 	"notifyid",
 	"controller",
+	"region",
 }
 var AlertAliasArgs = []string{}
 var AlertComments = map[string]string{
@@ -253,6 +257,7 @@ var AlertComments = map[string]string{
 	"value":       "Any value associated with alert",
 	"notifyid":    "Id of client assigned by server (internal use only)",
 	"controller":  "Connected controller unique id",
+	"region":      "Reegion where this alert got raised in",
 }
 var AlertSpecialArgs = map[string]string{
 	"annotations": "StringToString",
