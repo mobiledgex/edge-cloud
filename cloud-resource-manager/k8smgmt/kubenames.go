@@ -123,6 +123,15 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	} else if app.Deployment == cloudcommon.DeploymentTypeDocker {
 		// for docker use the app name
 		kubeNames.ServiceNames = append(kubeNames.ServiceNames, kubeNames.AppName)
+		if app.DeploymentManifest != "" && !strings.HasSuffix(app.DeploymentManifest, ".zip") {
+			containers, err := cloudcommon.DecodeDockerComposeYaml(app.DeploymentManifest)
+			if err != nil {
+				return nil, fmt.Errorf("invalid docker compose yaml, %s", err.Error())
+			}
+			for _, cont := range containers {
+				kubeNames.ImagePaths = append(kubeNames.ImagePaths, cont.Image)
+			}
+		}
 	}
 	return &kubeNames, nil
 }

@@ -301,12 +301,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
 			return errors.New("Cloudlet under maintenance, please try again later")
 		}
-
 		var err error
-		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
-		if err != nil {
-			return err
-		}
 		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
 		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
@@ -417,7 +412,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				return errors.New("Not enough Disk available")
 			}
 		}
-		// allocateIP also sets in.IpAccess to either Dedicated or Shared
+		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
+		if err != nil {
+			return err
+		}
 		err = allocateIP(in, &cloudlet, &refs)
 		if err != nil {
 			return err

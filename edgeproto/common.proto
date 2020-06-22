@@ -15,6 +15,8 @@ enum Liveness {
   LIVENESS_STATIC = 1;
   // Object managed internally
   LIVENESS_DYNAMIC = 2;
+  // Object created by Auto Provisioning, treated like Static except when deleting App
+  LIVENESS_AUTOPROV = 3;
 }
 
 // Type of public IP support
