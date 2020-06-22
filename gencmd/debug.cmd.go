@@ -405,6 +405,7 @@ var DebugRequestAliasArgs = []string{
 	"organization=node.cloudletkey.organization",
 	"cloudlet=node.cloudletkey.name",
 	"region=node.region",
+	"cmd=cmd",
 }
 var DebugRequestComments = map[string]string{
 	"name":         "Name or hostname of node",
@@ -507,14 +508,15 @@ var ShowDebugLevelsOptionalArgs = []string{
 	"args",
 	"timeout",
 }
-var RunDebugRequiredArgs = []string{}
+var RunDebugRequiredArgs = []string{
+	"cmd",
+}
 var RunDebugOptionalArgs = []string{
 	"name",
 	"type",
 	"organization",
 	"cloudlet",
 	"region",
-	"cmd",
 	"pretty",
 	"args",
 	"timeout",
