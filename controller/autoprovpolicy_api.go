@@ -168,7 +168,6 @@ func (s *AutoProvPolicyApi) RecvAutoProvCounts(ctx context.Context, msg *edgepro
 			appInst := edgeproto.AppInst{}
 			appInst.Key.AppKey = target.AppKey
 			appInst.Key.ClusterInstKey = target.DeployNowKey
-			appInst.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 			err := appInstApi.createAppInstInternal(DefCallContext(), &appInst, &stream)
 			log.SpanLog(ctx, log.DebugLevelMetrics, "auto prov now", "appInst", appInst.Key, "err", err)
 			span.Finish()
@@ -265,9 +264,8 @@ func (s *AutoProvPolicyApi) appInstCheck(ctx context.Context, stm concurrency.ST
 	policyName := policyNames[0]
 
 	if action == cloudcommon.Create {
-		// set auto-provisioned AppInsts to dynamic so they can be
-		//deleted automatically with the App.
-		inst.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
+		// mark auto-provisioned AppInsts so we can know which ones they are.
+		inst.Liveness = edgeproto.Liveness_LIVENESS_AUTOPROV
 	}
 
 	refs := edgeproto.AppInstRefs{}
