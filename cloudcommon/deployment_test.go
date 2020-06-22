@@ -32,7 +32,7 @@ func TestDeployment(t *testing.T) {
 	defer tsManifest.Close()
 
 	// base case - unspecified - default to kubernetes
-	app.Deployment = AppDeploymentTypeKubernetes
+	app.Deployment = DeploymentTypeKubernetes
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = ""
 	testAppDeployment(ctx, t, app, true)
@@ -55,7 +55,7 @@ func TestDeployment(t *testing.T) {
 	testValidImageDeployment(t, app, true)
 
 	// vm with no deployment is ok
-	app.Deployment = AppDeploymentTypeVM
+	app.Deployment = DeploymentTypeVM
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = ""
 	testAppDeployment(ctx, t, app, true)
@@ -67,7 +67,7 @@ func TestDeployment(t *testing.T) {
 	testValidImageDeployment(t, app, true)
 
 	// helm with no manifest
-	app.Deployment = AppDeploymentTypeHelm
+	app.Deployment = DeploymentTypeHelm
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = ""
 	testAppDeployment(ctx, t, app, true)
@@ -81,7 +81,7 @@ func TestDeployment(t *testing.T) {
 	testValidImageDeployment(t, app, false)
 
 	// negative test - invalid generator
-	app.Deployment = AppDeploymentTypeKubernetes
+	app.Deployment = DeploymentTypeKubernetes
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = "invalid"
 	testAppDeployment(ctx, t, app, false)
@@ -118,9 +118,9 @@ func TestTimeout(t *testing.T) {
 
 	oneG := 1073741824
 	val = GetTimeout(0)
-	require.Equal(t, val, 10*time.Minute)
+	require.Equal(t, val, 15*time.Minute)
 	val = GetTimeout(5 * oneG)
-	require.Equal(t, val, 10*time.Minute)
+	require.Equal(t, val, 15*time.Minute)
 	val = GetTimeout(10 * oneG)
 	require.Equal(t, val, 20*time.Minute)
 }

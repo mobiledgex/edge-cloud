@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -217,4 +218,28 @@ func (q *InfluxQ) WaitConnected() bool {
 		time.Sleep(25 * time.Millisecond)
 	}
 	return false
+}
+
+// Updates the default retention policy for the database
+func (q *InfluxQ) UpdateDefaultRetentionPolicy(retentionTime time.Duration) error {
+	if !q.done {
+		if q.dbcreated {
+			_, err := q.QueryDB(fmt.Sprintf("create retention policy %s_default ON %s duration %s replication 1 default", q.dbName, q.dbName, retentionTime.String()))
+			if err != nil {
+				if !strings.Contains(err.Error(), "already exists") {
+					log.DebugLog(log.DebugLevelMetrics,
+						"unable to create default policy", "err", err)
+					return err
+				}
+				// if already exists alter policy instead
+				_, err := q.QueryDB(fmt.Sprintf("alter retention policy %s_default ON %s duration %s replication 1 default", q.dbName, q.dbName, retentionTime.String()))
+				if err != nil {
+					log.DebugLog(log.DebugLevelMetrics,
+						"unable to alter policy", "db", q.dbName, "err", err)
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }

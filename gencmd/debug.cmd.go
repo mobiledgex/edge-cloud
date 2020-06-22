@@ -397,6 +397,7 @@ var DebugRequestOptionalArgs = []string{
 	"pretty",
 	"id",
 	"args",
+	"timeout",
 }
 var DebugRequestAliasArgs = []string{
 	"name=node.name",
@@ -404,6 +405,7 @@ var DebugRequestAliasArgs = []string{
 	"organization=node.cloudletkey.organization",
 	"cloudlet=node.cloudletkey.name",
 	"region=node.region",
+	"cmd=cmd",
 }
 var DebugRequestComments = map[string]string{
 	"name":         "Name or hostname of node",
@@ -416,6 +418,7 @@ var DebugRequestComments = map[string]string{
 	"pretty":       "if possible, make output pretty",
 	"id":           "Id used internally",
 	"args":         "Additional arguments for cmd",
+	"timeout":      "custom timeout (duration, defaults to 10s)",
 }
 var DebugRequestSpecialArgs = map[string]string{}
 var DebugReplyRequiredArgs = []string{}
@@ -451,6 +454,7 @@ var DebugDataOptionalArgs = []string{
 	"requests:#.pretty",
 	"requests:#.id",
 	"requests:#.args",
+	"requests:#.timeout",
 }
 var DebugDataAliasArgs = []string{}
 var DebugDataComments = map[string]string{
@@ -464,6 +468,7 @@ var DebugDataComments = map[string]string{
 	"requests:#.pretty":                        "if possible, make output pretty",
 	"requests:#.id":                            "Id used internally",
 	"requests:#.args":                          "Additional arguments for cmd",
+	"requests:#.timeout":                       "custom timeout (duration, defaults to 10s)",
 }
 var DebugDataSpecialArgs = map[string]string{}
 var EnableDebugLevelsRequiredArgs = []string{
@@ -477,6 +482,7 @@ var EnableDebugLevelsOptionalArgs = []string{
 	"region",
 	"pretty",
 	"args",
+	"timeout",
 }
 var DisableDebugLevelsRequiredArgs = []string{
 	"levels",
@@ -489,6 +495,7 @@ var DisableDebugLevelsOptionalArgs = []string{
 	"region",
 	"pretty",
 	"args",
+	"timeout",
 }
 var ShowDebugLevelsRequiredArgs = []string{}
 var ShowDebugLevelsOptionalArgs = []string{
@@ -499,15 +506,18 @@ var ShowDebugLevelsOptionalArgs = []string{
 	"region",
 	"pretty",
 	"args",
+	"timeout",
 }
-var RunDebugRequiredArgs = []string{}
+var RunDebugRequiredArgs = []string{
+	"cmd",
+}
 var RunDebugOptionalArgs = []string{
 	"name",
 	"type",
 	"organization",
 	"cloudlet",
 	"region",
-	"cmd",
 	"pretty",
 	"args",
+	"timeout",
 }

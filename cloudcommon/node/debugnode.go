@@ -14,7 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 )
 
-var DebugTimeout = 10 * time.Second
+var DefaultDebugTimeout = 10 * time.Second
 
 type DebugFunc func(ctx context.Context, req *edgeproto.DebugRequest) string
 
@@ -26,6 +26,8 @@ const (
 	StartCpuProfileCmd   = "start-cpu-profile"
 	StopCpuProfileCmd    = "stop-cpu-profile"
 	GetMemProfileCmd     = "get-mem-profile"
+	DisableSampleLog     = "disable-sample-logging"
+	EnableSampleLog      = "enable-sample-logging"
 )
 
 type DebugNode struct {
@@ -68,6 +70,8 @@ func (s *DebugNode) Init(mgr *NodeMgr) {
 		func(ctx context.Context, req *edgeproto.DebugRequest) string {
 			return GetMemProfile()
 		})
+	s.AddDebugFunc(DisableSampleLog, disableSampledLogging)
+	s.AddDebugFunc(EnableSampleLog, enableSampledLogging)
 }
 
 func (s *DebugNode) AddDebugFunc(cmd string, f DebugFunc) {
@@ -100,6 +104,9 @@ func (s *DebugNode) RecvDebugRequest(ctx context.Context, req *edgeproto.DebugRe
 // Replies are sent back to the grpc client.
 func (s *DebugNode) DebugRequest(req *edgeproto.DebugRequest, cb edgeproto.DebugApi_RunDebugServer) error {
 	req.Id = rand.Uint64()
+	if req.Timeout == 0 {
+		req.Timeout = edgeproto.Duration(DefaultDebugTimeout)
+	}
 	return s.handleRequest(cb.Context(), req, func(ctx context.Context, reply *edgeproto.DebugReply) {
 		reply.Id = 0
 		cb.Send(reply)
@@ -163,7 +170,7 @@ func (s *DebugNode) handleRequest(ctx context.Context, req *edgeproto.DebugReque
 	if count > 0 {
 		select {
 		case <-call.done:
-		case <-time.After(DebugTimeout):
+		case <-time.After(req.Timeout.TimeDuration()):
 			timedout = true
 		}
 	}
@@ -173,8 +180,14 @@ func (s *DebugNode) handleRequest(ctx context.Context, req *edgeproto.DebugReque
 	s.mux.Unlock()
 
 	if timedout {
+		for nodeKey, _ := range call.sendNodes {
+			reply := edgeproto.DebugReply{}
+			reply.Node = nodeKey
+			reply.Id = req.Id
+			reply.Output = "request timed out"
+			callReply(ctx, &reply)
+		}
 		log.SpanLog(ctx, log.DebugLevelApi, "handleRequest timed out", "remaining", count, "remaining-nodes", call.sendNodes)
-		return fmt.Errorf("timed out waiting for replies from %v\n", call.sendNodes)
 	}
 	return nil
 }
@@ -236,4 +249,14 @@ func disableDebugLevels(ctx context.Context, req *edgeproto.DebugRequest) string
 
 func showDebugLevels(ctx context.Context, req *edgeproto.DebugRequest) string {
 	return log.GetDebugLevelStrs()
+}
+
+func disableSampledLogging(ctx context.Context, req *edgeproto.DebugRequest) string {
+	log.SamplingEnabled = false
+	return "disabled log sampling"
+}
+
+func enableSampledLogging(ctx context.Context, req *edgeproto.DebugRequest) string {
+	log.SamplingEnabled = true
+	return "enabled log sampling"
 }

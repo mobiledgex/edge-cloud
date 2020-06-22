@@ -69,19 +69,33 @@ func init() {
 
 func InitL7Proxy(ctx context.Context, client ssh.Client, ops ...Op) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "InitL7Proxy")
-	out, err := client.Output("docker ps --format '{{.Names}}'")
+	out, err := client.Output("docker ps -a --format '{{.Names}},{{.Status}}'")
 	if err != nil {
 		return err
 	}
 	for _, line := range strings.Split(string(out), "\n") {
-		if strings.TrimSpace(line) == NginxL7Name {
-			// already running
-			return nil
+		fields := strings.Split(line, ",")
+		if len(fields) == 2 {
+			containername := fields[0]
+			status := fields[1]
+			if containername == NginxL7Name {
+				if strings.HasPrefix(status, "Up") {
+					log.SpanLog(ctx, log.DebugLevelInfra, "L7Proxy already running")
+					return nil
+				}
+				log.SpanLog(ctx, log.DebugLevelInfra, "L7Proxy present but not running, remove it", "status", status)
+				out, err := client.Output("docker rm -f " + containername)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelInfra, "unable to remove old L7Proxy", "out", out, "err", err)
+					return fmt.Errorf("Unable to remove old L7Proxy")
+				}
+				break
+			}
 		}
 	}
 	listenIP := ""
 	backendIP := ""
-	return CreateNginxProxy(ctx, client, NginxL7Name, listenIP, backendIP, []dme.AppPort{}, ops...)
+	return CreateNginxProxy(ctx, client, NginxL7Name, listenIP, backendIP, []dme.AppPort{}, "", ops...)
 }
 
 func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {
@@ -110,7 +124,7 @@ func getNginxContainerName(name string) string {
 	return "nginx" + name
 }
 
-func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, destIP string, ports []dme.AppPort, ops ...Op) error {
+func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, destIP string, ports []dme.AppPort, skipHcPorts string, ops ...Op) error {
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "CreateNginxProxy", "listenIP", listenIP, "destIP", destIP)
 	containerName := getNginxContainerName(name)
@@ -118,7 +132,7 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 	// check to see whether nginx or envoy is needed (or both)
 	envoyNeeded, nginxNeeded := CheckProtocols(name, ports)
 	if envoyNeeded {
-		err := CreateEnvoyProxy(ctx, client, name, listenIP, destIP, ports, ops...)
+		err := CreateEnvoyProxy(ctx, client, name, listenIP, destIP, ports, skipHcPorts, ops...)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "CreateEnvoyProxy failed ", "err", err)
 			return fmt.Errorf("Create Envoy Proxy failed, %v", err)
@@ -341,6 +355,7 @@ type TCPSpecDetail struct {
 	BackendPort     int32
 	ConcurrentConns uint64
 	UseTLS          bool // for port specific TLS termination
+	HealthCheck     bool
 }
 
 type UDPSpecDetail struct {

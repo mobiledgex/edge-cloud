@@ -634,13 +634,15 @@ type ControllerCacheData struct {
 // ControllerCache caches Controller objects in memory in a hash table
 // and keeps them in sync with the database.
 type ControllerCache struct {
-	Objs        map[ControllerKey]*ControllerCacheData
-	Mux         util.Mutex
-	List        map[ControllerKey]struct{}
-	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *ControllerKey, old *Controller, modRev int64)
-	UpdatedCb   func(ctx context.Context, old *Controller, new *Controller)
-	KeyWatchers map[ControllerKey][]*ControllerKeyWatcher
+	Objs         map[ControllerKey]*ControllerCacheData
+	Mux          util.Mutex
+	List         map[ControllerKey]struct{}
+	FlushAll     bool
+	NotifyCb     func(ctx context.Context, obj *ControllerKey, old *Controller, modRev int64)
+	UpdatedCb    func(ctx context.Context, old *Controller, new *Controller)
+	KeyWatchers  map[ControllerKey][]*ControllerKeyWatcher
+	UpdatedKeyCb func(ctx context.Context, key *ControllerKey)
+	DeletedKeyCb func(ctx context.Context, key *ControllerKey)
 }
 
 func NewControllerCache() *ControllerCache {
@@ -706,15 +708,16 @@ func (c *ControllerCache) UpdateModFunc(ctx context.Context, key *ControllerKey,
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &Controller{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
-		}
+	if c.UpdatedCb != nil {
+		newCopy := &Controller{}
+		*newCopy = *new
+		defer c.UpdatedCb(ctx, old, newCopy)
+	}
+	if c.NotifyCb != nil {
+		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	}
+	if c.UpdatedKeyCb != nil {
+		defer c.UpdatedKeyCb(ctx, key)
 	}
 	c.Objs[new.GetKeyVal()] = &ControllerCacheData{
 		Obj:    new,
@@ -740,6 +743,9 @@ func (c *ControllerCache) Delete(ctx context.Context, in *Controller, modRev int
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
+	if c.DeletedKeyCb != nil {
+		c.DeletedKeyCb(ctx, in.GetKey())
+	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
@@ -748,7 +754,7 @@ func (c *ControllerCache) Prune(ctx context.Context, validKeys map[ControllerKey
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -758,6 +764,9 @@ func (c *ControllerCache) Prune(ctx context.Context, validKeys map[ControllerKey
 	for key, old := range notify {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -802,6 +811,14 @@ func (c *ControllerCache) SetNotifyCb(fn func(ctx context.Context, obj *Controll
 
 func (c *ControllerCache) SetUpdatedCb(fn func(ctx context.Context, old *Controller, new *Controller)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ControllerCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *ControllerKey)) {
+	c.UpdatedKeyCb = fn
+}
+
+func (c *ControllerCache) SetDeletedKeyCb(fn func(ctx context.Context, key *ControllerKey)) {
+	c.DeletedKeyCb = fn
 }
 
 func (c *ControllerCache) SetFlushAll() {
@@ -896,11 +913,14 @@ func (c *ControllerCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
+	for key, val := range deleted {
+		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
-			c.TriggerKeyWatchers(ctx, &key)
 		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 

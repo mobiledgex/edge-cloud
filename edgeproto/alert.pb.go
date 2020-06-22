@@ -53,14 +53,17 @@
 		AutoProvCount
 		AutoProvCounts
 		AutoProvPolicyCloudlet
+		AutoProvInfo
 		PolicyKey
 		AutoScalePolicy
 		CloudletKey
 		OperationTimeLimits
 		PlatformConfig
 		CloudletResMap
+		InfraConfig
 		Cloudlet
 		FlavorMatch
+		CloudletManifest
 		FlavorInfo
 		OSAZone
 		OSImage
@@ -103,6 +106,7 @@
 		PrivacyPolicy
 		CloudletRefs
 		ClusterRefs
+		AppInstRefs
 		ResTagTableKey
 		ResTagTable
 		Result
@@ -630,13 +634,15 @@ type AlertCacheData struct {
 // AlertCache caches Alert objects in memory in a hash table
 // and keeps them in sync with the database.
 type AlertCache struct {
-	Objs        map[AlertKey]*AlertCacheData
-	Mux         util.Mutex
-	List        map[AlertKey]struct{}
-	FlushAll    bool
-	NotifyCb    func(ctx context.Context, obj *AlertKey, old *Alert, modRev int64)
-	UpdatedCb   func(ctx context.Context, old *Alert, new *Alert)
-	KeyWatchers map[AlertKey][]*AlertKeyWatcher
+	Objs         map[AlertKey]*AlertCacheData
+	Mux          util.Mutex
+	List         map[AlertKey]struct{}
+	FlushAll     bool
+	NotifyCb     func(ctx context.Context, obj *AlertKey, old *Alert, modRev int64)
+	UpdatedCb    func(ctx context.Context, old *Alert, new *Alert)
+	KeyWatchers  map[AlertKey][]*AlertKeyWatcher
+	UpdatedKeyCb func(ctx context.Context, key *AlertKey)
+	DeletedKeyCb func(ctx context.Context, key *AlertKey)
 }
 
 func NewAlertCache() *AlertCache {
@@ -702,15 +708,16 @@ func (c *AlertCache) UpdateModFunc(ctx context.Context, key *AlertKey, modRev in
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &Alert{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
-		}
+	if c.UpdatedCb != nil {
+		newCopy := &Alert{}
+		*newCopy = *new
+		defer c.UpdatedCb(ctx, old, newCopy)
+	}
+	if c.NotifyCb != nil {
+		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	}
+	if c.UpdatedKeyCb != nil {
+		defer c.UpdatedKeyCb(ctx, key)
 	}
 	c.Objs[new.GetKeyVal()] = &AlertCacheData{
 		Obj:    new,
@@ -736,6 +743,9 @@ func (c *AlertCache) Delete(ctx context.Context, in *Alert, modRev int64) {
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
+	if c.DeletedKeyCb != nil {
+		c.DeletedKeyCb(ctx, in.GetKey())
+	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
@@ -744,7 +754,7 @@ func (c *AlertCache) Prune(ctx context.Context, validKeys map[AlertKey]struct{})
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -754,6 +764,9 @@ func (c *AlertCache) Prune(ctx context.Context, validKeys map[AlertKey]struct{})
 	for key, old := range notify {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -782,6 +795,9 @@ func (c *AlertCache) Flush(ctx context.Context, notifyId int64) {
 		for key, old := range flushed {
 			if c.NotifyCb != nil {
 				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+			}
+			if c.DeletedKeyCb != nil {
+				c.DeletedKeyCb(ctx, &key)
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -818,6 +834,14 @@ func (c *AlertCache) SetNotifyCb(fn func(ctx context.Context, obj *AlertKey, old
 
 func (c *AlertCache) SetUpdatedCb(fn func(ctx context.Context, old *Alert, new *Alert)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AlertCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *AlertKey)) {
+	c.UpdatedKeyCb = fn
+}
+
+func (c *AlertCache) SetDeletedKeyCb(fn func(ctx context.Context, key *AlertKey)) {
+	c.DeletedKeyCb = fn
 }
 
 func (c *AlertCache) SetFlushAll() {
@@ -912,11 +936,14 @@ func (c *AlertCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
+	for key, val := range deleted {
+		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
-			c.TriggerKeyWatchers(ctx, &key)
 		}
+		if c.DeletedKeyCb != nil {
+			c.DeletedKeyCb(ctx, &key)
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
 }
 
@@ -1012,12 +1039,16 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := CRMOverride_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(MaintenanceState(0)):
+		if en, ok := MaintenanceState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(PlatformType(0)):
 		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
-	case reflect.TypeOf(CloudletAction(0)):
-		if en, ok := CloudletAction_CamelValue[util.CamelCase(data.(string))]; ok {
+	case reflect.TypeOf(InfraApiAccess(0)):
+		if en, ok := InfraApiAccess_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(CloudletState(0)):
@@ -1078,12 +1109,13 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowAppInst":            struct{}{},
 	"ShowAppInstInfo":        struct{}{},
 	"ShowAppInstMetrics":     struct{}{},
+	"ShowCloudletRefs":       struct{}{},
+	"ShowClusterRefs":        struct{}{},
+	"ShowAppInstRefs":        struct{}{},
 	"ShowController":         struct{}{},
 	"ShowNode":               struct{}{},
 	"ShowDevice":             struct{}{},
 	"ShowDeviceReport":       struct{}{},
-	"ShowCloudletRefs":       struct{}{},
-	"ShowClusterRefs":        struct{}{},
 }
 
 func IsShow(cmd string) bool {

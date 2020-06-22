@@ -13,6 +13,8 @@ settings:
   deleteclusterinsttimeout: 20m
   loadbalancermaxportrange: 50
   maxtrackeddmeclients: 100
+  chefclientinterval: 10m
+  cloudletmaintenancetimeout: 5m
 flavors:
 - key:
     name: x1.tiny
@@ -100,6 +102,7 @@ cloudlets:
     name: x1.medium
   physicalname: tmus-cloud-1
   containerversion: 2019-10-24
+  deployment: docker
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -114,6 +117,7 @@ cloudlets:
     name: x1.medium
   physicalname: tmus-cloud-2
   containerversion: 2019-10-24
+  deployment: docker
 
 cloudletinfos:
 - key:
@@ -373,7 +377,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: tmus-cloud-2.tmus.mobiledgex.net
+  uri: tmus-cloud-2.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -408,7 +412,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: autoclustersomeapplication1.tmus-cloud-2.tmus.mobiledgex.net
+  uri: autoclustersomeapplication1.tmus-cloud-2.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -434,7 +438,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: autoclustersomeapplication2.tmus-cloud-2.tmus.mobiledgex.net
+  uri: autoclustersomeapplication2.tmus-cloud-2.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -460,7 +464,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: tmus-cloud-2.tmus.mobiledgex.net
+  uri: tmus-cloud-2.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -491,7 +495,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: tmus-cloud-1.tmus.mobiledgex.net
+  uri: tmus-cloud-1.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -526,7 +530,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: autoclustersomeapplication1.tmus-cloud-1.tmus.mobiledgex.net
+  uri: autoclustersomeapplication1.tmus-cloud-1.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -537,3 +541,32 @@ appinstances:
   state: Ready
   powerstate: PowerOn
   vmflavor: x1.small
+
+appinstrefs:
+- key:
+    organization: AcmeAppCo
+    name: someapplication1
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    : 1
+- key:
+    organization: AcmeAppCo
+    name: someapplication2
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    : 1
+- key:
+    organization: MobiledgeX
+    name: MEXPrometheusAppName
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    : 1

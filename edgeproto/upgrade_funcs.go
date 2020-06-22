@@ -101,7 +101,6 @@ type CloudletV0_OrgRestructure struct {
 	ResTagMap        map[string]*ResTagTableKeyV0_OrgRestructure `protobuf:"bytes,22,rep,name=res_tag_map,json=resTagMap" json:"res_tag_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 	AccessVars       map[string]string                           `protobuf:"bytes,23,rep,name=access_vars,json=accessVars" json:"access_vars,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	VmImageVersion   string                                      `protobuf:"bytes,24,opt,name=vm_image_version,json=vmImageVersion,proto3" json:"vm_image_version,omitempty"`
-	PackageVersion   string                                      `protobuf:"bytes,25,opt,name=package_version,json=packageVersion,proto3" json:"package_version,omitempty"`
 }
 
 type CloudletPoolKeyV0_OrgRestructure struct {
@@ -435,7 +434,6 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 		}
 		cloudletV1.AccessVars = cloudletV0.AccessVars
 		cloudletV1.VmImageVersion = cloudletV0.VmImageVersion
-		cloudletV1.PackageVersion = cloudletV0.PackageVersion
 
 		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded cloudlet", "cloudletV1", cloudletV1)
 		newkey := objstore.DbKeyString("Cloudlet", &cloudletV1.Key)
@@ -1065,6 +1063,69 @@ func AppRevision(ctx context.Context, objStore objstore.KVStore) error {
 		objStore.Put(ctx, newkey, string(val))
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func AppInstRefsUpgrade(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "AppInstRefs")
+
+	// all refs
+	allrefs := make(map[AppKey]*AppInstRefs)
+
+	// read Apps
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		app := App{}
+		err2 := json.Unmarshal(val, &app)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
+			return err2
+		}
+		refs := &AppInstRefs{}
+		refs.Key = app.Key
+		refs.Insts = make(map[string]uint32)
+		allrefs[app.Key] = refs
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// read AppInsts
+	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		inst := AppInst{}
+		err2 := json.Unmarshal(val, &inst)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2)
+			return err2
+		}
+		refs, found := allrefs[inst.Key.AppKey]
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "App not found for AppInst", "appinst", inst.Key)
+			return inst.Key.AppKey.NotFoundError()
+		}
+		refs.Insts[inst.Key.GetKeyString()] = 1
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Write refs
+	for _, refs := range allrefs {
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "New AppInstRefs", "app", refs.Key)
+		keystr := objstore.DbKeyString("AppInstRefs", &refs.Key)
+		val, err2 := json.Marshal(refs)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", keystr, "obj", refs, "err", err2)
+			return err2
+		}
+		objStore.Put(ctx, keystr, string(val))
+	}
 	if err != nil {
 		return err
 	}

@@ -535,7 +535,7 @@ var ClusterInstComments = map[string]string{
 	"cloudlet":           "Name of the cloudlet",
 	"cluster-org":        "Name of Developer organization that this cluster belongs to",
 	"flavor":             "Flavor name",
-	"liveness":           "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
+	"liveness":           "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic, LivenessAutoprov",
 	"auto":               "Auto is set to true when automatically created by back-end (internal use only)",
 	"state":              "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"errors":             "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",

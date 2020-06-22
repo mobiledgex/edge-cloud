@@ -22,6 +22,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"net"
+	"reflect"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -252,6 +253,15 @@ func (mgr *ServerMgr) GetStats(peerAddr string) *Stats {
 	return stats
 }
 
+// Get order of sends based on SendAll type
+func (s *ServerMgr) GetSendOrder() map[reflect.Type]int {
+	order := make(map[reflect.Type]int)
+	for ii, send := range s.sends {
+		order[reflect.TypeOf(send)] = ii
+	}
+	return order
+}
+
 func (s *Server) negotiate(ctx context.Context, stream edgeproto.NotifyApi_StreamNoticeServer) error {
 	var notice edgeproto.Notice
 	// initial connection is version exchange
@@ -269,6 +279,12 @@ func (s *Server) negotiate(ctx context.Context, stream edgeproto.NotifyApi_Strea
 	}
 	s.sendrecv.setRemoteWanted(req.WantObjs)
 	s.sendrecv.filterCloudletKeys = req.FilterCloudletKey
+	if s.sendrecv.filterCloudletKeys {
+		s.sendrecv.sendAllEnd = false
+		s.sendrecv.manualSendAllEnd = true
+	} else {
+		s.sendrecv.sendAllEnd = true
+	}
 	// use lowest common version
 	if req.Version > NotifyVersion {
 		s.version = req.Version

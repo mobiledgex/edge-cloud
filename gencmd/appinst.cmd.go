@@ -768,7 +768,7 @@ var AppInstComments = map[string]string{
 	"cloudletloc.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudletloc.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"uri":                            "Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.",
-	"liveness":                       "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
+	"liveness":                       "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic, LivenessAutoprov",
 	"mappedports:#.proto":            "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
 	"mappedports:#.internalport":     "Container port",
 	"mappedports:#.publicport":       "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",

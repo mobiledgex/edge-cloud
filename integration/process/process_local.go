@@ -140,6 +140,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--edgeTurnAddr")
 		args = append(args, p.EdgeTurnAddr)
 	}
+	if p.AppDNSRoot != "" {
+		args = append(args, "--appDNSRoot")
+		args = append(args, p.AppDNSRoot)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -156,6 +160,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	if p.CheckpointingInterval != "" {
 		args = append(args, "--checkpointInterval")
 		args = append(args, p.CheckpointingInterval)
+	}
+	if p.DeploymentTag != "" {
+		args = append(args, "--deploymentTag")
+		args = append(args, p.DeploymentTag)
 	}
 
 	var envs []string
@@ -418,9 +426,6 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.TestMode {
 		args = append(args, "-testMode")
 	}
-	if p.CleanupMode {
-		args = append(args, "-cleanupMode")
-	}
 	if p.ContainerVersion != "" {
 		args = append(args, "--containerVersion")
 		args = append(args, p.ContainerVersion)
@@ -433,10 +438,6 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--vmImageVersion")
 		args = append(args, p.VMImageVersion)
 	}
-	if p.PackageVersion != "" {
-		args = append(args, "--packageVersion")
-		args = append(args, p.PackageVersion)
-	}
 	if p.Region != "" {
 		args = append(args, "--region")
 		args = append(args, p.Region)
@@ -446,6 +447,18 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	}
 	if p.UseVaultCerts {
 		args = append(args, "--useVaultCerts")
+	}
+	if p.AppDNSRoot != "" {
+		args = append(args, "--appDNSRoot")
+		args = append(args, p.AppDNSRoot)
+	}
+	if p.ChefServerPath != "" {
+		args = append(args, "--chefServerPath")
+		args = append(args, p.ChefServerPath)
+	}
+	if p.DeploymentTag != "" {
+		args = append(args, "--deploymentTag")
+		args = append(args, p.DeploymentTag)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)

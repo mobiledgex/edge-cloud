@@ -55,6 +55,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].Config = edgeproto.PlatformConfig{}
 		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].Deployment = ""
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -179,6 +182,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.AppInstances[i0].OptRes = ""
 		}
 	}
+	for i0 := 0; i0 < len(in.AppInstRefs); i0++ {
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -205,6 +210,9 @@ var AllDataOptionalArgs = []string{
 	"settings.masternodeflavor",
 	"settings.loadbalancermaxportrange",
 	"settings.maxtrackeddmeclients",
+	"settings.chefclientinterval",
+	"settings.influxdbmetricsretention",
+	"settings.cloudletmaintenancetimeout",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -261,12 +269,21 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.config.commercialcerts",
 	"cloudlets:#.config.usevaultcerts",
 	"cloudlets:#.config.usevaultcas",
+	"cloudlets:#.config.appdnsroot",
+	"cloudlets:#.config.chefserverpath",
+	"cloudlets:#.config.chefclientinterval",
+	"cloudlets:#.config.deploymenttag",
 	"cloudlets:#.restagmap:#.key",
 	"cloudlets:#.restagmap:#.value.name",
 	"cloudlets:#.restagmap:#.value.organization",
 	"cloudlets:#.accessvars",
 	"cloudlets:#.vmimageversion",
-	"cloudlets:#.packageversion",
+	"cloudlets:#.deployment",
+	"cloudlets:#.infraapiaccess",
+	"cloudlets:#.infraconfig.externalnetworkname",
+	"cloudlets:#.infraconfig.flavorname",
+	"cloudlets:#.chefclientkey",
+	"cloudlets:#.maintenancestate",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -293,6 +310,8 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.osimages:#.tags",
 	"cloudletinfos:#.osimages:#.properties",
 	"cloudletinfos:#.osimages:#.diskformat",
+	"cloudletinfos:#.controllercachereceived",
+	"cloudletinfos:#.maintenancestate",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.name",
 	"cloudletpoolmembers:#.poolkey.name",
@@ -314,6 +333,8 @@ var AllDataOptionalArgs = []string{
 	"autoprovpolicies:#.cloudlets:#.loc.speed",
 	"autoprovpolicies:#.cloudlets:#.loc.timestamp.seconds",
 	"autoprovpolicies:#.cloudlets:#.loc.timestamp.nanos",
+	"autoprovpolicies:#.minactiveinstances",
+	"autoprovpolicies:#.maxinstances",
 	"autoprovpolicycloudlets:#.key.organization",
 	"autoprovpolicycloudlets:#.key.name",
 	"autoprovpolicycloudlets:#.cloudletkey.organization",
@@ -392,6 +413,8 @@ var AllDataOptionalArgs = []string{
 	"apps:#.defaultprivacypolicy",
 	"apps:#.deleteprepare",
 	"apps:#.autoprovpolicies",
+	"apps:#.templatedelimiter",
+	"apps:#.skiphcports",
 	"appinstances:#.fields",
 	"appinstances:#.key.appkey.organization",
 	"appinstances:#.key.appkey.name",
@@ -443,6 +466,11 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.availabilityzone",
 	"appinstances:#.vmflavor",
 	"appinstances:#.optres",
+	"appinstrefs:#.key.organization",
+	"appinstrefs:#.key.name",
+	"appinstrefs:#.key.version",
+	"appinstrefs:#.insts:#.key",
+	"appinstrefs:#.insts:#.value",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -468,6 +496,9 @@ var AllDataComments = map[string]string{
 	"settings.masternodeflavor":                                  "Default flavor for k8s master VM and > 0  workers",
 	"settings.loadbalancermaxportrange":                          "Max IP Port range when using a load balancer",
 	"settings.maxtrackeddmeclients":                              "Max DME clients to be tracked at the same time.",
+	"settings.chefclientinterval":                                "Default chef client interval (duration)",
+	"settings.influxdbmetricsretention":                          "Default influxDB metrics retention policy (duration)",
+	"settings.cloudletmaintenancetimeout":                        "Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)",
 	"operatorcodes:#.code":                                       "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                               "Operator Organization name",
 	"restagtables:#.key.name":                                    "Resource Table Name",
@@ -517,15 +548,24 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.config.commercialcerts":                         "Get certs from vault or generate your own for the root load balancer",
 	"cloudlets:#.config.usevaultcerts":                           "Use Vault certs for internal TLS communication",
 	"cloudlets:#.config.usevaultcas":                             "Use Vault CAs to authenticate TLS communication",
+	"cloudlets:#.config.appdnsroot":                              "App domain name root",
+	"cloudlets:#.config.chefserverpath":                          "Path to Chef Server",
+	"cloudlets:#.config.chefclientinterval":                      "Chef client interval",
+	"cloudlets:#.config.deploymenttag":                           "Deployment Tag",
 	"cloudlets:#.restagmap:#.value.name":                         "Resource Table Name",
 	"cloudlets:#.restagmap:#.value.organization":                 "Operator organization of the cloudlet site.",
 	"cloudlets:#.accessvars":                                     "Variables required to access cloudlet",
 	"cloudlets:#.vmimageversion":                                 "MobiledgeX baseimage version where CRM services reside",
-	"cloudlets:#.packageversion":                                 "MobiledgeX OS package version on baseimage where CRM services reside",
+	"cloudlets:#.deployment":                                     "Deployment type to bring up CRM services (docker, kubernetes)",
+	"cloudlets:#.infraapiaccess":                                 "Infra Access Type is the type of access available to Infra API Endpoint, one of DirectAccess, RestrictedAccess",
+	"cloudlets:#.infraconfig.externalnetworkname":                "Infra specific external network name",
+	"cloudlets:#.infraconfig.flavorname":                         "Infra specific flavor name",
+	"cloudlets:#.chefclientkey":                                  "Chef client key",
+	"cloudlets:#.maintenancestate":                               "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"cloudletinfos:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                   "Name of the cloudlet",
-	"cloudletinfos:#.state":                                      "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
+	"cloudletinfos:#.state":                                      "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
 	"cloudletinfos:#.notifyid":                                   "Id of client assigned by server (internal use only)",
 	"cloudletinfos:#.controller":                                 "Connected controller unique id",
 	"cloudletinfos:#.osmaxram":                                   "Maximum Ram in MB on the Cloudlet",
@@ -542,6 +582,8 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.osimages:#.tags":                            "optional tags present on image",
 	"cloudletinfos:#.osimages:#.properties":                      "image properties/metadata",
 	"cloudletinfos:#.osimages:#.diskformat":                      "format qcow2, img, etc",
+	"cloudletinfos:#.controllercachereceived":                    "Indicates all controller data has been sent to CRM",
+	"cloudletinfos:#.maintenancestate":                           "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"cloudletpools:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.name":                                   "CloudletPool Name",
 	"cloudletpoolmembers:#.poolkey.name":                         "CloudletPool Name",
@@ -561,6 +603,8 @@ var AllDataComments = map[string]string{
 	"autoprovpolicies:#.cloudlets:#.loc.altitude":                "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"autoprovpolicies:#.cloudlets:#.loc.course":                  "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"autoprovpolicies:#.cloudlets:#.loc.speed":                   "speed (IOS) / velocity (Android) (meters/sec)",
+	"autoprovpolicies:#.minactiveinstances":                      "Minimum number of active instances for High-Availability",
+	"autoprovpolicies:#.maxinstances":                            "Maximum number of instances (active or not)",
 	"autoprovpolicycloudlets:#.key.organization":                 "Name of the organization for the cluster that this policy will apply to",
 	"autoprovpolicycloudlets:#.key.name":                         "Policy name",
 	"autoprovpolicycloudlets:#.cloudletkey.organization":         "Organization of the cloudlet site",
@@ -586,7 +630,7 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.key.cloudletkey.name":                        "Name of the cloudlet",
 	"clusterinsts:#.key.organization":                            "Name of Developer organization that this cluster belongs to",
 	"clusterinsts:#.flavor.name":                                 "Flavor name",
-	"clusterinsts:#.liveness":                                    "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
+	"clusterinsts:#.liveness":                                    "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic, LivenessAutoprov",
 	"clusterinsts:#.auto":                                        "Auto is set to true when automatically created by back-end (internal use only)",
 	"clusterinsts:#.state":                                       "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"clusterinsts:#.errors":                                      "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
@@ -635,6 +679,8 @@ var AllDataComments = map[string]string{
 	"apps:#.defaultprivacypolicy":                                "Privacy policy when creating auto cluster",
 	"apps:#.deleteprepare":                                       "Preparing to be deleted",
 	"apps:#.autoprovpolicies":                                    "Auto provisioning policy names",
+	"apps:#.templatedelimiter":                                   "Delimiter to be used for template parsing, defaults to [[ ]]",
+	"apps:#.skiphcports":                                         "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
 	"appinstances:#.fields":                                      "Fields are used for the Update API to specify which fields to apply",
 	"appinstances:#.key.appkey.organization":                     "App developer organization",
 	"appinstances:#.key.appkey.name":                             "App name",
@@ -651,7 +697,7 @@ var AllDataComments = map[string]string{
 	"appinstances:#.cloudletloc.course":                          "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"appinstances:#.cloudletloc.speed":                           "speed (IOS) / velocity (Android) (meters/sec)",
 	"appinstances:#.uri":                                         "Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.",
-	"appinstances:#.liveness":                                    "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic",
+	"appinstances:#.liveness":                                    "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic, LivenessAutoprov",
 	"appinstances:#.mappedports:#.proto":                         "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
 	"appinstances:#.mappedports:#.internalport":                  "Container port",
 	"appinstances:#.mappedports:#.publicport":                    "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
@@ -678,6 +724,9 @@ var AllDataComments = map[string]string{
 	"appinstances:#.availabilityzone":                            "Optional Availability Zone if any",
 	"appinstances:#.vmflavor":                                    "OS node flavor to use",
 	"appinstances:#.optres":                                      "Optional Resources required by OS flavor if any",
+	"appinstrefs:#.key.organization":                             "App developer organization",
+	"appinstrefs:#.key.name":                                     "App name",
+	"appinstrefs:#.key.version":                                  "App version",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",
@@ -692,6 +741,7 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudletinfos:#.flavors:#.propmap":       "StringToString",
 	"cloudletpools:#.fields":                  "StringArray",
 	"cloudlets:#.accessvars":                  "StringToString",
+	"cloudlets:#.chefclientkey":               "StringToString",
 	"cloudlets:#.config.envvar":               "StringToString",
 	"cloudlets:#.envvar":                      "StringToString",
 	"cloudlets:#.errors":                      "StringArray",

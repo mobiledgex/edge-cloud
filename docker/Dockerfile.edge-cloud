@@ -51,7 +51,7 @@ RUN make doc
 RUN make external-doc
 RUN make -C d-match-engine/dme-proto external-swagger
 
-FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v0.0.14-339-g20a71c7
+FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v1.2-42-g214c2177
 
 # Will be overridden during build from the command line
 ARG BUILD_TAG=latest

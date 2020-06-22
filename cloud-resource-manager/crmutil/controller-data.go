@@ -15,23 +15,35 @@ import (
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
-	platform             platform.Platform
-	AppCache             edgeproto.AppCache
-	AppInstCache         edgeproto.AppInstCache
-	CloudletCache        edgeproto.CloudletCache
-	FlavorCache          edgeproto.FlavorCache
-	ClusterInstCache     edgeproto.ClusterInstCache
-	AppInstInfoCache     edgeproto.AppInstInfoCache
-	CloudletInfoCache    edgeproto.CloudletInfoCache
-	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
-	PrivacyPolicyCache   edgeproto.PrivacyPolicyCache
-	AlertCache           edgeproto.AlertCache
-	SettingsCache        edgeproto.SettingsCache
-	ExecReqHandler       *ExecReqHandler
-	ExecReqSend          *notify.ExecRequestSend
-	ControllerWait       chan bool
-	settings             edgeproto.Settings
-	NodeMgr              *node.NodeMgr
+	platform                 platform.Platform
+	AppCache                 edgeproto.AppCache
+	AppInstCache             edgeproto.AppInstCache
+	CloudletCache            edgeproto.CloudletCache
+	FlavorCache              edgeproto.FlavorCache
+	ClusterInstCache         edgeproto.ClusterInstCache
+	AppInstInfoCache         edgeproto.AppInstInfoCache
+	CloudletInfoCache        edgeproto.CloudletInfoCache
+	ClusterInstInfoCache     edgeproto.ClusterInstInfoCache
+	PrivacyPolicyCache       edgeproto.PrivacyPolicyCache
+	AlertCache               edgeproto.AlertCache
+	SettingsCache            edgeproto.SettingsCache
+	ExecReqHandler           *ExecReqHandler
+	ExecReqSend              *notify.ExecRequestSend
+	ControllerWait           chan bool
+	ControllerSyncInProgress bool
+	ControllerSyncDone       chan bool
+	settings                 edgeproto.Settings
+	NodeMgr                  *node.NodeMgr
+}
+
+func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
+	if cd.ControllerSyncInProgress {
+		cd.ControllerSyncDone <- true
+	}
+	cd.ControllerSyncInProgress = false
+}
+
+func (cd *ControllerData) RecvAllStart() {
 }
 
 // NewControllerData creates a new instance to track data from the controller
@@ -58,6 +70,8 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 	cd.ControllerWait = make(chan bool, 1)
+	cd.ControllerSyncDone = make(chan bool, 1)
+
 	cd.NodeMgr = nodeMgr
 	return cd
 }
@@ -71,17 +85,6 @@ func (cd *ControllerData) GatherCloudletInfo(ctx context.Context, info *edgeprot
 		return fmt.Errorf("get limits failed: %s", err)
 	}
 	return nil
-}
-
-// CleanupOldCloudlet cleans up old version of same cloudlet
-func (cd *ControllerData) CleanupOldCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "attempting to cleanup outdated cloudlet services", "key", cloudlet.Key)
-
-	err := cd.platform.CleanupCloudlet(ctx, cloudlet, &cloudlet.Config, updateCallback)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "can't cleanup old cloudlet", "key", cloudlet.Key, "err", err)
-		updateCallback(edgeproto.UpdateTask, "Failed to cleanup old cloudlet, please cleanup manually")
-	}
 }
 
 // GetInsts queries Openstack/Kubernetes to get all the cluster insts
@@ -320,7 +323,6 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, errstr)
 				log.SpanLog(ctx, log.DebugLevelInfra, "can't create app inst", "error", errstr, "key", new.Key)
-				log.SpanLog(ctx, log.DebugLevelInfra, "cleaning up failed appinst", "key", new.Key)
 				derr := cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new)
 				if derr != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "can't cleanup app inst", "error", errstr, "key", new.Key)
@@ -532,15 +534,6 @@ func (cd *ControllerData) notifyControllerConnect() {
 func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
 	// do request
 	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletChanged", "cloudlet", new)
-	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
-		switch updateType {
-		case edgeproto.UpdateTask:
-			cd.CloudletInfoCache.SetStatusTask(ctx, &new.Key, value)
-		case edgeproto.UpdateStep:
-			cd.CloudletInfoCache.SetStatusStep(ctx, &new.Key, value)
-		}
-	}
-
 	cloudletInfo := edgeproto.CloudletInfo{}
 	found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 	if !found {
@@ -552,63 +545,30 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
 			cd.notifyControllerConnect()
 		}
-	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
-		// Make sure previous state was either READY or UPDATE_ERROR
-		// This ensures that UPDATE_REQUESTED is handled by right CRM
-		if old == nil ||
-			(old.State != edgeproto.TrackedState_READY &&
-				old.State != edgeproto.TrackedState_UPDATE_ERROR) {
-			if old != nil {
-				log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet state conflict",
-					"key", new.Key,
-					"old state", old.State,
-					"new state", new.State,
-				)
-			}
-			return
-		}
-		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY &&
-			cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
-			// Cloudlet is not in a state to upgrade
-			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet is not in a state to upgrade", "key", new.Key, "state", cloudletInfo.State)
-			return
-		}
+	}
 
-		// Reset old Status, as we will start upgrading cloudlet now
-		cd.CloudletInfoCache.StatusReset(ctx, &new.Key)
+	updateInfo := false
+	if old != nil && old.MaintenanceState != new.MaintenanceState {
+		switch new.MaintenanceState {
+		case edgeproto.MaintenanceState_CRM_REQUESTED:
+			// TODO: perhaps trigger LBs to reset tcp connections
+			// to gracefully force clients to move to another
+			// cloudlets - but we may need to add another phase
+			// in here to allow DMEs to register that Cloudlet
+			// is unavailable before doing so, otherwise clients
+			// will just redirected back here.
 
-		// Ack start of upgrade
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE
-		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-
-		// start the upgrade
-		cloudletAction, err := cd.platform.UpdateCloudlet(ctx, new, &new.Config, updateCloudletCallback)
-		if err != nil {
-			errstr := fmt.Sprintf("Update Cloudlet failed: %v", err)
-			log.SpanLog(ctx, log.DebugLevelInfra, "can't update cloudlet", "error", errstr, "key", new.Key)
-
-			cloudletInfo.Errors = append(cloudletInfo.Errors, errstr)
-			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
-			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-			return
+			// Acknowledge controller that CRM is in maintenance
+			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE
+			updateInfo = true
+		case edgeproto.MaintenanceState_NORMAL_OPERATION:
+			// Set state back to normal so DME will allow clients
+			// for this Cloudlet.
+			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+			updateInfo = true
 		}
-		if cloudletAction == edgeproto.CloudletAction_ACTION_DONE {
-			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-		}
-		log.SpanLog(ctx, log.DebugLevelInfra, "updated cloudlet", "cloudlet", new, "cloudletInfo state", cloudletInfo.State)
-	} else if new.State == edgeproto.TrackedState_UPDATE_ERROR {
-		// On an UpdateError, old cloudlet's last state will either be UPGRADE or ERRORS
-		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE &&
-			cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
-			log.SpanLog(ctx, log.DebugLevelInfra,
-				"old cloudlet state invalid, failed to resolve UpdateError",
-				"key", new.Key, "state", cloudletInfo.State)
-			return
-		}
-
-		// Restore the cloudlet's state as new CRM didn't start
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+	}
+	if updateInfo {
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	}
 }

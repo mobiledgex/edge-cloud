@@ -85,3 +85,23 @@ service ClusterRefsApi {
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,";
   }
 }
+
+message AppInstRefs {
+  // App key
+  AppKey key = 1 [(gogoproto.nullable) = false];
+  // AppInsts for App (key is JSON of AppInst Key)
+  map<string, uint32> insts = 2 [(gogoproto.nullable) = false];
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
+  option (protogen.uses_org) = "none";
+  option (protogen.notify_cache) = true;
+}
+
+service AppInstRefsApi {
+  // Show AppInstRefs (debug only)
+  rpc ShowAppInstRefs(AppInstRefs) returns (stream AppInstRefs) {
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.Organization";
+  }
+}

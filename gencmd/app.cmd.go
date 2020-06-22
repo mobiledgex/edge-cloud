@@ -478,6 +478,8 @@ var AppOptionalArgs = []string{
 	"accesstype",
 	"defaultprivacypolicy",
 	"autoprovpolicies",
+	"templatedelimiter",
+	"skiphcports",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -515,6 +517,8 @@ var AppComments = map[string]string{
 	"defaultprivacypolicy":    "Privacy policy when creating auto cluster",
 	"deleteprepare":           "Preparing to be deleted",
 	"autoprovpolicies":        "Auto provisioning policy names",
+	"templatedelimiter":       "Delimiter to be used for template parsing, defaults to [[ ]]",
+	"skiphcports":             "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
 }
 var AppSpecialArgs = map[string]string{
 	"autoprovpolicies": "StringArray",

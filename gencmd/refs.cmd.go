@@ -186,6 +186,88 @@ var ClusterRefsApiCmds = []*cobra.Command{
 	ShowClusterRefsCmd.GenCmd(),
 }
 
+var AppInstRefsApiCmd edgeproto.AppInstRefsApiClient
+
+var ShowAppInstRefsCmd = &cli.Command{
+	Use:          "ShowAppInstRefs",
+	OptionalArgs: strings.Join(append(AppInstRefsRequiredArgs, AppInstRefsOptionalArgs...), " "),
+	AliasArgs:    strings.Join(AppInstRefsAliasArgs, " "),
+	SpecialArgs:  &AppInstRefsSpecialArgs,
+	Comments:     AppInstRefsComments,
+	ReqData:      &edgeproto.AppInstRefs{},
+	ReplyData:    &edgeproto.AppInstRefs{},
+	Run:          runShowAppInstRefs,
+}
+
+func runShowAppInstRefs(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.AppInstRefs)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowAppInstRefs(c, obj)
+}
+
+func ShowAppInstRefs(c *cli.Command, in *edgeproto.AppInstRefs) error {
+	if AppInstRefsApiCmd == nil {
+		return fmt.Errorf("AppInstRefsApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := AppInstRefsApiCmd.ShowAppInstRefs(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowAppInstRefs failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.AppInstRefs, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAppInstRefs recv failed: %s", errstr)
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowAppInstRefss(c *cli.Command, data []edgeproto.AppInstRefs, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowAppInstRefs %v\n", data[ii])
+		myerr := ShowAppInstRefs(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var AppInstRefsApiCmds = []*cobra.Command{
+	ShowAppInstRefsCmd.GenCmd(),
+}
+
 var CloudletRefsRequiredArgs = []string{
 	"key.organization",
 	"key.name",
@@ -242,3 +324,19 @@ var ClusterRefsComments = map[string]string{
 	"useddisk":                     "Used disk in GB",
 }
 var ClusterRefsSpecialArgs = map[string]string{}
+var AppInstRefsRequiredArgs = []string{
+	"key.organization",
+	"key.name",
+	"key.version",
+}
+var AppInstRefsOptionalArgs = []string{
+	"insts:#.key",
+	"insts:#.value",
+}
+var AppInstRefsAliasArgs = []string{}
+var AppInstRefsComments = map[string]string{
+	"key.organization": "App developer organization",
+	"key.name":         "App name",
+	"key.version":      "App version",
+}
+var AppInstRefsSpecialArgs = map[string]string{}

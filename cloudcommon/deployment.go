@@ -23,25 +23,33 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-var AppDeploymentTypeKubernetes = "kubernetes"
-var AppDeploymentTypeVM = "vm"
-var AppDeploymentTypeHelm = "helm"
-var AppDeploymentTypeDocker = "docker"
+var DeploymentTypeKubernetes = "kubernetes"
+var DeploymentTypeVM = "vm"
+var DeploymentTypeHelm = "helm"
+var DeploymentTypeDocker = "docker"
 
-var ValidDeployments = []string{
-	AppDeploymentTypeKubernetes,
-	AppDeploymentTypeVM,
-	AppDeploymentTypeHelm,
-	AppDeploymentTypeDocker,
+var Download = "download"
+var NoDownload = "nodownload"
+
+var ValidAppDeployments = []string{
+	DeploymentTypeKubernetes,
+	DeploymentTypeVM,
+	DeploymentTypeHelm,
+	DeploymentTypeDocker,
+}
+
+var ValidCloudletDeployments = []string{
+	DeploymentTypeDocker,
+	DeploymentTypeKubernetes,
 }
 
 type DockerManifest struct {
 	DockerComposeFiles []string
 }
 
-func IsValidDeploymentType(appDeploymentType string) bool {
-	for _, d := range ValidDeployments {
-		if appDeploymentType == d {
+func IsValidDeploymentType(DeploymentType string, validDeployments []string) bool {
+	for _, d := range validDeployments {
+		if DeploymentType == d {
 			return true
 		}
 	}
@@ -51,15 +59,15 @@ func IsValidDeploymentType(appDeploymentType string) bool {
 func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string) bool {
 	switch imageType {
 	case edgeproto.ImageType_IMAGE_TYPE_DOCKER:
-		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeDocker {
+		if deployment == DeploymentTypeKubernetes || deployment == DeploymentTypeDocker {
 			return true
 		}
 	case edgeproto.ImageType_IMAGE_TYPE_QCOW:
-		if deployment == AppDeploymentTypeVM {
+		if deployment == DeploymentTypeVM {
 			return true
 		}
 	case edgeproto.ImageType_IMAGE_TYPE_HELM:
-		if deployment == AppDeploymentTypeHelm {
+		if deployment == DeploymentTypeHelm {
 			return true
 		}
 	}
@@ -82,24 +90,16 @@ func GetMappedAccessType(accessType edgeproto.AccessType, deployment, deployment
 	switch accessType {
 
 	case edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER:
-		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeHelm || deployment == AppDeploymentTypeDocker || deployment == AppDeploymentTypeVM {
+		if deployment == DeploymentTypeKubernetes || deployment == DeploymentTypeHelm || deployment == DeploymentTypeDocker || deployment == DeploymentTypeVM {
 			return accessType, nil
 		}
 	case edgeproto.AccessType_ACCESS_TYPE_DIRECT:
-		if deployment == AppDeploymentTypeVM || deployment == AppDeploymentTypeDocker {
+		if deployment == DeploymentTypeVM || deployment == DeploymentTypeDocker {
 			return accessType, nil
 		}
 	case edgeproto.AccessType_ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT:
-		if deployment == AppDeploymentTypeVM {
+		if deployment == DeploymentTypeVM {
 			return edgeproto.AccessType_ACCESS_TYPE_DIRECT, nil
-		}
-		if deployment == AppDeploymentTypeDocker {
-			dtype := GetDockerDeployType(deploymentManifest)
-			if dtype != "docker" {
-				// Because of the complexity with managing port mappings with
-				// docker-compose manifests do not default to LB
-				return accessType, nil
-			}
 		}
 		// all others default to LB
 		return edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER, nil
@@ -107,8 +107,8 @@ func GetMappedAccessType(accessType edgeproto.AccessType, deployment, deployment
 	return accessType, fmt.Errorf("Invalid access type for deployment")
 }
 
-func IsValidDeploymentManifest(appDeploymentType, command, manifest string, ports []dme.AppPort) error {
-	if appDeploymentType == AppDeploymentTypeVM {
+func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports []dme.AppPort) error {
+	if DeploymentType == DeploymentTypeVM {
 		if command != "" {
 			return fmt.Errorf("both deploymentmanifest and command cannot be used together for VM based deployment")
 		}
@@ -116,7 +116,7 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 			return nil
 		}
 		return fmt.Errorf("only cloud-init script support, must start with '#cloud-config'")
-	} else if appDeploymentType == AppDeploymentTypeKubernetes {
+	} else if DeploymentType == DeploymentTypeKubernetes {
 		objs, _, err := DecodeK8SYaml(manifest)
 		if err != nil {
 			return fmt.Errorf("parse kubernetes deployment yaml failed, %v", err)
@@ -135,7 +135,7 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 					log.DebugLog(log.DebugLevelApi, "unrecognized port protocol in kubernetes manifest", "proto", string(kp.Protocol))
 					continue
 				}
-				appPort.InternalPort = int32(kp.TargetPort.IntValue())
+				appPort.InternalPort = kp.Port
 				if strings.HasSuffix(kp.Name, "tls") {
 					appPort.Tls = true
 				}
@@ -192,24 +192,24 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 func GetDefaultDeploymentType(imageType edgeproto.ImageType) (string, error) {
 	switch imageType {
 	case edgeproto.ImageType_IMAGE_TYPE_DOCKER:
-		return AppDeploymentTypeKubernetes, nil
+		return DeploymentTypeKubernetes, nil
 	case edgeproto.ImageType_IMAGE_TYPE_QCOW:
-		return AppDeploymentTypeVM, nil
+		return DeploymentTypeVM, nil
 	case edgeproto.ImageType_IMAGE_TYPE_HELM:
-		return AppDeploymentTypeHelm, nil
+		return DeploymentTypeHelm, nil
 	}
 	return "", fmt.Errorf("unknown image type %s", imageType)
 }
 
 func GetImageTypeForDeployment(deployment string) (edgeproto.ImageType, error) {
 	switch deployment {
-	case AppDeploymentTypeDocker:
+	case DeploymentTypeDocker:
 		fallthrough
-	case AppDeploymentTypeKubernetes:
+	case DeploymentTypeKubernetes:
 		return edgeproto.ImageType_IMAGE_TYPE_DOCKER, nil
-	case AppDeploymentTypeHelm:
+	case DeploymentTypeHelm:
 		return edgeproto.ImageType_IMAGE_TYPE_HELM, nil
-	case AppDeploymentTypeVM:
+	case DeploymentTypeVM:
 		// could be different formats
 		fallthrough
 	default:
@@ -223,7 +223,7 @@ func GetAppDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, ap
 		return GetDeploymentManifest(ctx, vaultConfig, app.DeploymentManifest)
 	} else if app.DeploymentGenerator != "" {
 		return GenerateManifest(app)
-	} else if app.Deployment == AppDeploymentTypeKubernetes {
+	} else if app.Deployment == DeploymentTypeKubernetes {
 		// kubernetes requires a deployment yaml. Use default generator.
 		app.DeploymentGenerator = deploygen.KubernetesBasic
 		str, err := GenerateManifest(app)
@@ -236,48 +236,72 @@ func GetAppDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, ap
 	return "", nil
 }
 
-func validateRemoteZipManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) error {
-	zipfile := "/tmp/temp.zip"
-	err := GetRemoteManifestToFile(ctx, vaultConfig, manifest, zipfile)
-	if err != nil {
-		return fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
+func GetRemoteZipDockerManifests(ctx context.Context, vaultConfig *vault.Config, manifest, zipfile, downloadAction string) ([]map[string]DockerContainer, error) {
+	if zipfile == "" {
+		zipfile = "/tmp/temp.zip"
+	}
+	if downloadAction == Download {
+		err := GetRemoteManifestToFile(ctx, vaultConfig, manifest, zipfile)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
+		}
 	}
 	defer os.Remove(zipfile)
 	r, err := zip.OpenReader(zipfile)
 	if err != nil {
-		return fmt.Errorf("cannot read zipfile from manifest %s, %v", manifest, err)
+		return nil, fmt.Errorf("cannot read zipfile from manifest %s, %v", manifest, err)
 	}
 	defer r.Close()
 	foundManifest := false
-	var filesInManifest = make(map[string]bool)
+	var filesInManifest = make(map[string]*zip.File)
 	var dm DockerManifest
 	for _, f := range r.File {
-		filesInManifest[f.Name] = true
+		filesInManifest[f.Name] = f
 		if f.Name == "manifest.yml" {
 			foundManifest = true
 			rc, err := f.Open()
 			if err != nil {
-				return fmt.Errorf("cannot open manifest.yml in zipfile: %v", err)
+				return nil, fmt.Errorf("cannot open manifest.yml in zipfile: %v", err)
 			}
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(rc)
 			rc.Close()
 			err = yaml.Unmarshal(buf.Bytes(), &dm)
 			if err != nil {
-				return fmt.Errorf("unmarshalling manifest.yml: %v", err)
+				return nil, fmt.Errorf("unmarshalling manifest.yml: %v", err)
 			}
 		}
 	}
 	if !foundManifest {
-		return fmt.Errorf("no manifest.yml in zipfile %s", manifest)
+		return nil, fmt.Errorf("no manifest.yml in zipfile %s", manifest)
 	}
+	var zipContainers []map[string]DockerContainer
 	for _, dc := range dm.DockerComposeFiles {
-		_, ok := filesInManifest[dc]
+		f, ok := filesInManifest[dc]
 		if !ok {
-			return fmt.Errorf("docker-compose file specified in manifest but not in zip: %s", dc)
+			return nil, fmt.Errorf("docker-compose file specified in manifest but not in zip: %s", dc)
 		}
+		rc, err := f.Open()
+		if err != nil {
+			return nil, fmt.Errorf("cannot open docker compose file %s in zipfile: %v", dc, err)
+		}
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(rc)
+		rc.Close()
+
+		content := buf.String()
+		containers, err := DecodeDockerComposeYaml(content)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse %s manifest file with contents %s: %v", dc, content, err)
+		}
+		zipContainers = append(zipContainers, containers)
 	}
-	return nil
+	return zipContainers, nil
+}
+
+func validateRemoteZipManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) error {
+	_, err := GetRemoteZipDockerManifests(ctx, vaultConfig, manifest, "", Download)
+	return err
 }
 
 func GetDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) (string, error) {
@@ -332,7 +356,7 @@ func GetTimeout(cLen int) time.Duration {
 	if fileSizeInGB > 5 {
 		return time.Duration(timeoutUnit) * 10 * time.Minute
 	}
-	return 10 * time.Minute
+	return 15 * time.Minute
 }
 
 func DownloadFile(ctx context.Context, vaultConfig *vault.Config, fileUrlPath string, filePath string, content *string) error {

@@ -13,9 +13,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-var AppDNSRoot = "mobiledgex.net"
-var CertDNSRoot = "mobiledgex.net"
-
 // special operator types
 var OperatorGCP = "gcp"
 var OperatorAzure = "azure"
@@ -63,10 +60,10 @@ var CloudletEvent = "cloudlet"
 var ClusterInstEvent = "clusterinst"
 var ClusterInstUsage = "clusterinst-usage"
 var AppInstEvent = "appinst"
+var VMAppInstUsage = "VMappinst-usage"
 
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"
-var IPAddrDockerHost = "172.17.0.1"
 var RemoteServerNone = ""
 
 type InstanceEvent string
@@ -125,19 +122,19 @@ var RootLBL7Port int32 = 443
 
 // GetRootLBFQDN gets the global Load Balancer's Fully Qualified Domain Name
 // for apps using "shared" IP access.
-func GetRootLBFQDN(key *edgeproto.CloudletKey) string {
+func GetRootLBFQDN(key *edgeproto.CloudletKey, domain string) string {
 	loc := util.DNSSanitize(key.Name)
 	oper := util.DNSSanitize(key.Organization)
-	return fmt.Sprintf("%s.%s.%s", loc, oper, AppDNSRoot)
+	return fmt.Sprintf("%s.%s.%s", loc, oper, domain)
 }
 
 // GetDedicatedLBFQDN gets the cluster-specific Load Balancer's Fully Qualified Domain Name
 // for clusters using "dedicated" IP access.
-func GetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey) string {
+func GetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey, domain string) string {
 	clust := util.DNSSanitize(clusterKey.Name)
 	loc := util.DNSSanitize(cloudletKey.Name)
 	oper := util.DNSSanitize(cloudletKey.Organization)
-	return fmt.Sprintf("%s.%s.%s.%s", clust, loc, oper, AppDNSRoot)
+	return fmt.Sprintf("%s.%s.%s.%s", clust, loc, oper, domain)
 }
 
 // Get Fully Qualified Name for the App i.e. with developer & version info
@@ -150,16 +147,16 @@ func GetAppFQN(key *edgeproto.AppKey) string {
 
 // GetAppFQDN gets the app-specific Load Balancer's Fully Qualified Domain Name
 // for apps using "dedicated" IP access.
-func GetAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey) string {
-	lb := GetDedicatedLBFQDN(cloudletKey, clusterKey)
+func GetAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey, domain string) string {
+	lb := GetDedicatedLBFQDN(cloudletKey, clusterKey, domain)
 	appFQN := GetAppFQN(&key.AppKey)
 	return fmt.Sprintf("%s.%s", appFQN, lb)
 }
 
 // GetVMAppFQDN gets the app-specific Fully Qualified Domain Name
 // for VM based apps
-func GetVMAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey) string {
-	lb := GetRootLBFQDN(cloudletKey)
+func GetVMAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, domain string) string {
+	lb := GetRootLBFQDN(cloudletKey, domain)
 	appFQN := GetAppFQN(&key.AppKey)
 	return fmt.Sprintf("%s.%s", appFQN, lb)
 }
@@ -212,7 +209,7 @@ func ParseMyCloudletKey(standalone bool, keystr *string, mykey *edgeproto.Cloudl
 }
 
 func IsClusterInstReqd(app *edgeproto.App) bool {
-	if app.Deployment == AppDeploymentTypeVM {
+	if app.Deployment == DeploymentTypeVM {
 		return false
 	}
 	return true

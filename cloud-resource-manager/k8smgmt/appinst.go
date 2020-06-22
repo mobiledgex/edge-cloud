@@ -25,6 +25,8 @@ var maxWait = 15 * time.Minute
 var applyManifest = "apply"
 var createManifest = "create"
 
+var podStateRegString = "(\\S+)\\s+\\d+\\/\\d+\\s+(\\S+)\\s+\\d+\\s+\\S+"
+
 // WaitForAppInst waits for pods to either start or result in an error if WaitRunning specified,
 // or if WaitDeleted is specified then wait for them to all disappear.
 func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, waitFor string) error {
@@ -35,7 +37,7 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 	// it might be nicer to pull the state directly rather than parsing it, but the states displayed
 	// are a combination of states and reasons, e.g. ErrImagePull is not actually a state, so it's
 	// just easier to parse the summarized output from kubectl which combines states and reasons
-	r, _ := regexp.Compile("(\\S+)\\s+\\d+\\/\\d+\\s+(\\w+)\\s+\\d+\\s+\\S+")
+	r := regexp.MustCompile(podStateRegString)
 	objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
 	if err != nil {
 		log.InfoLog("unable to decode k8s yaml", "err", err)
@@ -89,17 +91,22 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 						case "Terminating":
 							log.SpanLog(ctx, log.DebugLevelInfra, "pod is terminating", "podName", podName, "state", podState)
 						default:
-							// try to find out what error was
-							// TODO: pull events and send
-							// them back as status updates
-							// rather than sending back
-							// full "describe" dump
-							cmd := fmt.Sprintf("%s kubectl describe pod --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
-							out, derr := client.Output(cmd)
-							if derr == nil {
-								return fmt.Errorf("Run container failed: %s", out)
+							if strings.Contains(podState, "Init") {
+								// Init state cannot be matched exactly, e.g. Init:0/2
+								log.SpanLog(ctx, log.DebugLevelInfra, "pod in init state", "podName", podName, "state", podState)
+							} else {
+								// try to find out what error was
+								// TODO: pull events and send
+								// them back as status updates
+								// rather than sending back
+								// full "describe" dump
+								cmd := fmt.Sprintf("%s kubectl describe pod --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
+								out, derr := client.Output(cmd)
+								if derr == nil {
+									return fmt.Errorf("Run container failed: %s", out)
+								}
+								return fmt.Errorf("Pod is unexpected state: %s", podState)
 							}
-							return fmt.Errorf("Pod is unexpected state: %s", podState)
 						}
 					} else {
 						if waitFor == WaitDeleted && strings.Contains(line, "No resources found") {
@@ -140,7 +147,7 @@ func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, clien
 	if err != nil {
 		return err
 	}
-	mf, err = MergeEnvVars(ctx, vaultConfig, app, mf, names.ImagePullSecret)
+	mf, err = MergeEnvVars(ctx, vaultConfig, app, mf, names.ImagePullSecrets)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to merge env vars", "error", err)
 		return fmt.Errorf("error merging environment variables config file: %s", err)
@@ -264,6 +271,7 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 			cmdStr += "-f "
 		}
 		cmdStr += req.ContainerId
+		cmdStr += " --all-containers"
 		return cmdStr, nil
 	}
 	return "", fmt.Errorf("no command or log specified with the exec request")

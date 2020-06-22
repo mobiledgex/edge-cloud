@@ -24,7 +24,7 @@ var validHelmInstallOpts = map[string]struct{}{
 	"username": struct{}{},
 }
 
-func getHelmOpts(ctx context.Context, client ssh.Client, appName string, configs []*edgeproto.ConfigFile) (string, error) {
+func getHelmOpts(ctx context.Context, client ssh.Client, appName, delims string, configs []*edgeproto.ConfigFile) (string, error) {
 	var ymls []string
 
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
@@ -38,7 +38,7 @@ func getHelmOpts(ctx context.Context, client ssh.Client, appName string, configs
 			}
 			// Fill in the Deployment Vars passed as a variable through the context
 			if varsFound {
-				cfg, err = crmutil.ReplaceDeploymentVars(cfg, deploymentVars)
+				cfg, err = crmutil.ReplaceDeploymentVars(cfg, delims, deploymentVars)
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "failed to replace Crm variables",
 						"config file", v.Config, "DeploymentVars", deploymentVars, "error", err)
@@ -161,7 +161,7 @@ func CreateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 		return err
 	}
 	configs := append(app.Configs, appInst.Configs...)
-	helmOpts, err := getHelmOpts(ctx, client, names.AppName, configs)
+	helmOpts, err := getHelmOpts(ctx, client, names.AppName, app.TemplateDelimiter, configs)
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func UpdateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 		return err
 	}
 	configs := append(app.Configs, appInst.Configs...)
-	helmOpts, err := getHelmOpts(ctx, client, names.AppName, configs)
+	helmOpts, err := getHelmOpts(ctx, client, names.AppName, app.TemplateDelimiter, configs)
 	if err != nil {
 		return err
 	}

@@ -39,6 +39,8 @@ type Controller struct {
 	VersionTag            string
 	CloudletVMImagePath   string
 	CheckpointingInterval string
+	AppDNSRoot            string
+	DeploymentTag         string
 }
 type Dme struct {
 	Common        `yaml:",inline"`
@@ -73,13 +75,14 @@ type Crm struct {
 	PhysicalName        string
 	TestMode            bool
 	Span                string
-	CleanupMode         bool
 	ContainerVersion    string
 	VMImageVersion      string
-	PackageVersion      string
 	CloudletVMImagePath string
 	Region              string
 	CommercialCerts     bool
+	AppDNSRoot          string
+	ChefServerPath      string
+	DeploymentTag       string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
@@ -24,7 +23,7 @@ func (s *Platform) GetType() string {
 	return "fake"
 }
 
-func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
 	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
@@ -119,7 +118,7 @@ func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (strin
 	return "", fmt.Errorf("no console server to fetch URL from")
 }
 
-func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "create fake cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 
@@ -145,32 +144,6 @@ func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	return nil
 }
 
-func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) (edgeproto.CloudletAction, error) {
-	// Doesn't do actual upgrade, but good enough
-	// for testing controller side code
-	log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet upgrade")
-
-	updateCallback(edgeproto.UpdateTask, "Starting new CRMServer")
-	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "err", err)
-		return edgeproto.CloudletAction_ACTION_NONE, err
-	}
-	return edgeproto.CloudletAction_ACTION_IN_PROGRESS, nil
-}
-
-func (s *Platform) CleanupCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
-	// Stops outdated cloudlet service running locally
-	// in this case, the caller is old crm
-	process, err := os.FindProcess(os.Getppid())
-	if err == nil {
-		updateCallback(edgeproto.UpdateTask, "Deleting old CRMServer")
-		process.Signal(os.Interrupt)
-		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet cleaned up successfully")
-	}
-	return nil
-}
-
 func (s *Platform) SaveCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, accessVarsIn map[string]string, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "Saving cloudlet access vars", "cloudletName", cloudlet.Key.Name)
 	return nil
@@ -188,4 +161,14 @@ func (s *Platform) SetPowerState(ctx context.Context, app *edgeproto.App, appIns
 
 func (s *Platform) runDebug(ctx context.Context, req *edgeproto.DebugRequest) string {
 	return "ran some debug"
+}
+
+func (s *Platform) SyncControllerCache(ctx context.Context, caches *platform.Caches, cloudletState edgeproto.CloudletState) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "SyncControllerCache", "state", cloudletState)
+	return nil
+}
+
+func (s *Platform) GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor) (*edgeproto.CloudletManifest, error) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "Get cloudlet manifest", "cloudletName", cloudlet.Key.Name)
+	return &edgeproto.CloudletManifest{Manifest: "fake manifest", ImagePath: "http://fake.path"}, nil
 }

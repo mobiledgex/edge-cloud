@@ -80,6 +80,9 @@ func (a *AllData) Sort() {
 	sort.Slice(a.ResTagTables[:], func(i, j int) bool {
 		return a.ResTagTables[i].Key.GetKeyString() < a.ResTagTables[j].Key.GetKeyString()
 	})
+	sort.Slice(a.AppInstRefs[:], func(i, j int) bool {
+		return a.AppInstRefs[i].Key.GetKeyString() < a.AppInstRefs[j].Key.GetKeyString()
+	})
 }
 
 func (a *NodeData) Sort() {
@@ -201,6 +204,12 @@ func (s *App) Validate(fields map[string]struct{}) error {
 			return err
 		}
 	}
+	if s.TemplateDelimiter != "" {
+		out := strings.Split(s.TemplateDelimiter, " ")
+		if len(out) != 2 {
+			return fmt.Errorf("invalid app template delimiter %s, valid format '<START-DELIM> <END-DELIM>'", s.TemplateDelimiter)
+		}
+	}
 	if err = validateCustomizationConfigs(s.Configs); err != nil {
 		return err
 	}
@@ -231,13 +240,13 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 			return errors.New("Invalid longitude value")
 		}
 	}
-	if s.VmImageVersion != "" {
-		if err := util.ValidateImageVersion(s.VmImageVersion); err != nil {
-			return err
+	if _, found := fields[CloudletFieldMaintenanceState]; found {
+		if s.MaintenanceState != MaintenanceState_NORMAL_OPERATION && s.MaintenanceState != MaintenanceState_MAINTENANCE_START && s.MaintenanceState != MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
+			return errors.New("Invalid maintenance state, only normal operation and maintenance start states are allowed")
 		}
 	}
-	if s.PackageVersion != "" {
-		if err := util.ValidateImageVersion(s.PackageVersion); err != nil {
+	if s.VmImageVersion != "" {
+		if err := util.ValidateImageVersion(s.VmImageVersion); err != nil {
 			return err
 		}
 	}
@@ -363,6 +372,10 @@ func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+func (s *AppInstRefs) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
 func (key *PolicyKey) ValidateKey() error {
 	if err := util.ValidObjName(key.Organization); err != nil {
 		errstring := err.Error()
@@ -414,14 +427,16 @@ func (s *AutoProvPolicy) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
-	if s.DeployClientCount <= 0 {
-		return errors.New("Deploy client count must be greater than 0")
+	if s.MinActiveInstances > s.MaxInstances && s.MaxInstances != 0 {
+		return fmt.Errorf("Minimum active instances cannot be larger than Maximum Instances")
 	}
-	/*
-		if s.AutoDeployIntervalCount <= 0 {
-			return errors.New("Auto deploy interval count must be greater than 0")
-		}
-	*/
+	if s.MinActiveInstances == 0 && s.DeployClientCount == 0 {
+		return fmt.Errorf("One of deploy client count and minimum active instances must be specified")
+	}
+	return nil
+}
+
+func (s *AutoProvInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
@@ -440,6 +455,9 @@ func (s *PrivacyPolicy) Validate(fields map[string]struct{}) error {
 		} else {
 			if o.PortRangeMin < minPort || o.PortRangeMin > maxPort {
 				return fmt.Errorf("Invalid min port range: %d", o.PortRangeMin)
+			}
+			if o.PortRangeMax > maxPort {
+				return fmt.Errorf("Invalid max port range: %d", o.PortRangeMax)
 			}
 			if o.PortRangeMin > o.PortRangeMax {
 				return fmt.Errorf("Min port range: %d cannot be higher than max: %d", o.PortRangeMin, o.PortRangeMax)
@@ -652,6 +670,7 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPoolMember))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAutoScalePolicy))
 	opts = append(opts, cmpopts.SortSlices(CmpSortResTagTable))
+	opts = append(opts, cmpopts.SortSlices(CmpSortAppInstRefs))
 	return opts
 }
 
@@ -715,4 +734,15 @@ func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, 
 			CloudletState_CamelName[int32(curState)])
 	}
 	return nil
+}
+
+func (s *App) GetAutoProvPolicies() map[string]struct{} {
+	policies := make(map[string]struct{})
+	if s.AutoProvPolicy != "" {
+		policies[s.AutoProvPolicy] = struct{}{}
+	}
+	for _, name := range s.AutoProvPolicies {
+		policies[name] = struct{}{}
+	}
+	return policies
 }

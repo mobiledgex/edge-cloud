@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	ssh "github.com/mobiledgex/golang-ssh"
 )
@@ -29,7 +30,7 @@ func init() {
 	envoyYamlT = template.Must(template.New("yaml").Parse(envoyYaml))
 }
 
-func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, backendIP string, ports []dme.AppPort, ops ...Op) error {
+func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, backendIP string, ports []dme.AppPort, skipHcPorts string, ops ...Op) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "create envoy", "name", name, "listenIP", listenIP, "backendIP", backendIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
@@ -55,7 +56,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		return err
 	}
 	eyamlName := dir + "/envoy.yaml"
-	err = createEnvoyYaml(ctx, client, eyamlName, name, listenIP, backendIP, ports)
+	err = createEnvoyYaml(ctx, client, eyamlName, name, listenIP, backendIP, ports, skipHcPorts)
 	if err != nil {
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
 	}
@@ -85,12 +86,53 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	return nil
 }
 
-func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, listenIP, backendIP string, ports []dme.AppPort) error {
+// Build a map of individual ports with key struct:
+// <proto>:<portnum>
+func buildPortsMapFromString(portsString string) (map[string]struct{}, error) {
+	portMap := make(map[string]struct{})
+	if portsString == "all" {
+		return portMap, nil
+	}
+	ports, err := edgeproto.ParseAppPorts(portsString)
+	if err != nil {
+		return nil, err
+	}
+	for _, port := range ports {
+		if port.EndPort == 0 {
+			port.EndPort = port.InternalPort
+		}
+		for p := port.InternalPort; p <= port.EndPort; p++ {
+			proto, err := edgeproto.LProtoStr(port.Proto)
+			if err != nil {
+				return nil, err
+			}
+			key := fmt.Sprintf("%s:%d", proto, p)
+			portMap[key] = struct{}{}
+		}
+	}
+	return portMap, nil
+}
+
+func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, listenIP, backendIP string, ports []dme.AppPort, skipHcPorts string) error {
+	var skipHcAll = false
+	var skipHcPortsMap map[string]struct{}
+	var err error
+
 	spec := ProxySpec{
 		Name:       name,
 		MetricPort: cloudcommon.ProxyMetricsPort,
 		CertName:   CertName,
 	}
+	// check skip health check ports
+	if skipHcPorts == "all" {
+		skipHcAll = true
+	} else {
+		skipHcPortsMap, err = buildPortsMapFromString(skipHcPorts)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, p := range ports {
 		endPort := p.EndPort
 		if endPort == 0 {
@@ -108,12 +150,15 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 			switch p.Proto {
 			// only support tcp for now
 			case dme.LProto_L_PROTO_TCP:
+				key := fmt.Sprintf("%s:%d", "tcp", internalPort)
+				_, skipHealthCheck := skipHcPortsMap[key]
 				tcpPort := TCPSpecDetail{
 					ListenPort:  pubPort,
 					ListenIP:    listenIP,
 					BackendIP:   backendIP,
 					BackendPort: internalPort,
 					UseTLS:      p.Tls,
+					HealthCheck: !skipHcAll && !skipHealthCheck,
 				}
 				tcpconns, err := getTCPConcurrentConnections()
 				if err != nil {
@@ -128,7 +173,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "create envoy yaml", "name", name)
 	buf := bytes.Buffer{}
-	err := envoyYamlT.Execute(&buf, &spec)
+	err = envoyYamlT.Execute(&buf, &spec)
 	if err != nil {
 		return err
 	}
@@ -192,6 +237,7 @@ static_resources:
     - socket_address:
         address: {{.BackendIP}}
         port_value: {{.BackendPort}}
+    {{if .HealthCheck -}}
     health_checks:
       - timeout: 1s
         interval: 5s
@@ -200,6 +246,7 @@ static_resources:
         healthy_threshold: 3
         tcp_health_check: {}
         no_traffic_interval: 5s
+    {{- end}}
 {{- end}}
 admin:
   access_log_path: "/var/log/admin.log"

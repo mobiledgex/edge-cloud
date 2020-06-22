@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -19,6 +20,7 @@ type SessionInfo struct {
 type ExecReqInfo struct {
 	Type    ExecReqType
 	InitURL *url.URL
+	Cookies []*http.Cookie
 }
 
 type ExecReqType int
@@ -54,10 +56,10 @@ func GetDockerBaseImageVersion() (string, error) {
 		return "", err
 	}
 	out := strings.Fields(string(dat))
-	if len(out) != 2 {
+	if len(out) != 3 {
 		return "", fmt.Errorf("invalid version details: %s", out)
 	}
-	return out[1], nil
+	return out[2], nil
 }
 
 func GetAvailablePort(ipaddr string) (string, error) {

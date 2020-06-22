@@ -55,12 +55,15 @@ var registryFQDN = flag.String("registryFQDN", "", "default docker image registr
 var artifactoryFQDN = flag.String("artifactoryFQDN", "", "default VM image registry (artifactory) FQDN")
 var cloudletRegistryPath = flag.String("cloudletRegistryPath", "", "edge-cloud image registry path for deploying cloudlet services")
 var cloudletVMImagePath = flag.String("cloudletVMImagePath", "", "VM image for deploying cloudlet services")
+var chefServerPath = flag.String("chefServerPath", "", "Path to chef server organization")
 var versionTag = flag.String("versionTag", "", "edge-cloud image tag indicating controller version")
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs from LetsEncrypt. If false then CRM will generate its onwn self-signed cert")
 var checkpointInterval = flag.Duration("checkpointInterval", time.Hour*24*30, "Interval at which to checkpoint cluster usage")
+var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
+var deploymentTag = flag.String("deploymentTag", "", "Tag to indicate type of deployment setup. Ex: production, staging, etc")
 
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName
@@ -249,6 +252,7 @@ func startServices() error {
 			*influxAddr, err)
 	}
 	services.influxQ = influxQ
+	services.influxQ.UpdateDefaultRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration())
 	// events influx
 	events := influxq.NewInfluxQ(cloudcommon.EventsDbName, influxAuth.User, influxAuth.Pass)
 	err = events.Start(*influxAddr)
@@ -309,6 +313,7 @@ func startServices() error {
 	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
 	edgeproto.RegisterCloudletInfoApiServer(server, &cloudletInfoApi)
 	edgeproto.RegisterCloudletRefsApiServer(server, &cloudletRefsApi)
+	edgeproto.RegisterAppInstRefsApiServer(server, &appInstRefsApi)
 	edgeproto.RegisterControllerApiServer(server, &controllerApi)
 	edgeproto.RegisterNodeApiServer(server, &nodeApi)
 	edgeproto.RegisterExecApiServer(server, &execApi)
@@ -393,7 +398,7 @@ func startServices() error {
 	services.httpServer = httpServer
 
 	// start the checkpointer
-	go runClusterCheckpoints(ctx)
+	go runCheckpoints(ctx)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	return nil
@@ -465,6 +470,7 @@ func InitApis(sync *Sync) {
 	InitAppInstInfoApi(sync)
 	InitClusterInstInfoApi(sync)
 	InitCloudletRefsApi(sync)
+	InitAppInstRefsApi(sync)
 	InitControllerApi(sync)
 	InitCloudletPoolApi(sync)
 	InitCloudletPoolMemberApi(sync)
@@ -472,6 +478,7 @@ func InitApis(sync *Sync) {
 	InitAlertApi(sync)
 	InitAutoScalePolicyApi(sync)
 	InitAutoProvPolicyApi(sync)
+	InitAutoProvInfoApi(sync)
 	InitResTagTableApi(sync)
 	InitPrivacyPolicyApi(sync)
 	InitSettingsApi(sync)
@@ -493,8 +500,8 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
+	notify.ServerMgrOne.RegisterSendAppInstRefsCache(&appInstRefsApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
-	notify.ServerMgrOne.RegisterSendPrivacyPolicyCache(&privacyPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
 
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
@@ -510,4 +517,5 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvInfoRecvMany(&autoProvInfoApi))
 }
