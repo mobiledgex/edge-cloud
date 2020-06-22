@@ -22,7 +22,7 @@ message DebugRequest {
   string args = 6;
   // custom timeout (duration, defaults to 10s)
   int64 timeout = 7 [(gogoproto.casttype) = "Duration"];
-  option (protogen.alias) = "name=Node.Name,type=Node.Type,cloudlet=Node.CloudletKey.Name,organization=Node.CloudletKey.Organization,region=Node.Region";
+  option (protogen.alias) = "name=Node.Name,type=Node.Type,cloudlet=Node.CloudletKey.Name,organization=Node.CloudletKey.Organization,region=Node.Region,cmd=Cmd";
   option (protogen.notify_message) = true;
 }
 
@@ -73,6 +73,7 @@ service DebugApi {
       body: "*"
     };
     option (protogen.method_noconfig) = "Levels,Id";
+    option (protogen.method_also_required) = "Cmd";
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
     option (protogen.mc2_api_notifyroot) = true;
   }
