@@ -385,9 +385,7 @@ var DebugApiCmds = []*cobra.Command{
 	RunDebugCmd.GenCmd(),
 }
 
-var DebugRequestRequiredArgs = []string{
-	"cmd",
-}
+var DebugRequestRequiredArgs = []string{}
 var DebugRequestOptionalArgs = []string{
 	"name",
 	"type",
@@ -395,6 +393,7 @@ var DebugRequestOptionalArgs = []string{
 	"cloudlet",
 	"region",
 	"levels",
+	"cmd",
 	"pretty",
 	"id",
 	"args",
