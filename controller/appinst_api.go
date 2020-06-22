@@ -461,7 +461,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if in.PrivacyPolicy == "" {
 			in.PrivacyPolicy = app.DefaultPrivacyPolicy
 		} else {
-			if !autocluster {
+			if !autocluster && cloudcommon.IsClusterInstReqd(&app) {
 				return fmt.Errorf("Cannot specify Privacy Policy for an AppInst on an existing cluster")
 			}
 		}
