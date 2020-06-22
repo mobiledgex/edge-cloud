@@ -984,6 +984,30 @@ func (m *AutoProvPolicy) DiffFields(o *AutoProvPolicy, fields map[string]struct{
 	}
 }
 
+var UpdateAutoProvPolicyFieldsMap = map[string]struct{}{
+	AutoProvPolicyFieldDeployClientCount:   struct{}{},
+	AutoProvPolicyFieldDeployIntervalCount: struct{}{},
+	AutoProvPolicyFieldMinActiveInstances:  struct{}{},
+	AutoProvPolicyFieldMaxInstances:        struct{}{},
+}
+
+func (m *AutoProvPolicy) ValidateUpdateFields() error {
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateAutoProvPolicyFieldsMap[field]; !ok {
+			badFieldStrs = append(badFieldStrs, AutoProvPolicyAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
+}
+
 func (m *AutoProvPolicy) CopyInFields(src *AutoProvPolicy) int {
 	changed := 0
 	fmap := MakeFieldMap(src.Fields)

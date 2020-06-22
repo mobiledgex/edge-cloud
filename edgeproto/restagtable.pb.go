@@ -715,6 +715,29 @@ func (m *ResTagTable) DiffFields(o *ResTagTable, fields map[string]struct{}) {
 	}
 }
 
+var UpdateResTagTableFieldsMap = map[string]struct{}{
+	ResTagTableFieldTags:      struct{}{},
+	ResTagTableFieldTagsValue: struct{}{},
+	ResTagTableFieldAzone:     struct{}{},
+}
+
+func (m *ResTagTable) ValidateUpdateFields() error {
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateResTagTableFieldsMap[field]; !ok {
+			badFieldStrs = append(badFieldStrs, ResTagTableAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
+}
+
 func (m *ResTagTable) CopyInFields(src *ResTagTable) int {
 	changed := 0
 	fmap := MakeFieldMap(src.Fields)

@@ -30,25 +30,26 @@ func init() {
 }
 
 type mex struct {
-	gen           *generator.Generator
-	msgs          map[string]*descriptor.DescriptorProto
-	cudTemplate   *template.Template
-	enumTemplate  *template.Template
-	cacheTemplate *template.Template
-	keysTemplate  *template.Template
-	importUtil    bool
-	importLog     bool
-	importStrings bool
-	importErrors  bool
-	importStrconv bool
-	importSort    bool
-	importTime    bool
-	importCmp     bool
-	importReflect bool
-	importJson    bool
-	firstFile     string
-	support       gensupport.PluginSupport
-	keyMessages   []descriptor.DescriptorProto
+	gen               *generator.Generator
+	msgs              map[string]*descriptor.DescriptorProto
+	cudTemplate       *template.Template
+	fieldsValTemplate *template.Template
+	enumTemplate      *template.Template
+	cacheTemplate     *template.Template
+	keysTemplate      *template.Template
+	importUtil        bool
+	importLog         bool
+	importStrings     bool
+	importErrors      bool
+	importStrconv     bool
+	importSort        bool
+	importTime        bool
+	importCmp         bool
+	importReflect     bool
+	importJson        bool
+	firstFile         string
+	support           gensupport.PluginSupport
+	keyMessages       []descriptor.DescriptorProto
 }
 
 func (m *mex) Name() string {
@@ -59,6 +60,7 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.gen = gen
 	m.msgs = make(map[string]*descriptor.DescriptorProto)
 	m.cudTemplate = template.Must(template.New("cud").Parse(cudTemplateIn))
+	m.fieldsValTemplate = template.Must(template.New("fieldsVal").Parse(fieldsValTemplate))
 	m.enumTemplate = template.Must(template.New("enum").Parse(enumTemplateIn))
 	m.cacheTemplate = template.Must(template.New("cache").Parse(cacheTemplateIn))
 	m.keysTemplate = template.Must(template.New("keys").Parse(keysTemplateIn))
@@ -631,6 +633,40 @@ func (m *mex) generateAllFields(afg AllFieldsGen, names, nums []string, desc *ge
 	}
 }
 
+func (m *mex) generateMethodFields(fieldPrefix string, names []string, noconfigMap map[string]struct{}, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto) {
+	message := desc.DescriptorProto
+	noconfig := gensupport.GetNoConfig(message, method)
+	for _, nc := range strings.Split(noconfig, ",") {
+		name := strings.Replace(fieldPrefix+nc, ".", "", -1)
+		noconfigMap[name] = struct{}{}
+	}
+	for ii, field := range message.Field {
+		if ii == 0 && *field.Name == "fields" {
+			continue
+		}
+		if keyField := gensupport.GetMessageKey(message); keyField != nil {
+			if *keyField.Name == *field.Name {
+				continue
+			}
+		}
+		name := generator.CamelCase(*field.Name)
+		fieldName := strings.Join(append(names, name), "")
+		switch *field.Type {
+		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+			if _, ok := noconfigMap[fieldName]; ok {
+				continue
+			}
+			m.P(fieldName, ": struct{}{},")
+			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+			m.generateMethodFields(fieldPrefix, append(names, name), noconfigMap, subDesc, method)
+		default:
+			if _, ok := noconfigMap[fieldName]; !ok {
+				m.P(fieldName, ": struct{}{},")
+			}
+		}
+	}
+}
+
 // Generate a simple string map to use in user-friendly error messages EC-608
 func (m *mex) generateAllStringFieldsMap(afg AllFieldsGen, names, nums []string, fprefix string, desc *generator.Descriptor) {
 
@@ -783,6 +819,26 @@ type cudTemplateArgs struct {
 	NotifyCache bool
 	ObjAndKey   bool
 }
+
+var fieldsValTemplate = `
+func (m *{{.Name}}) ValidateUpdateFields() error {
+	fmap := MakeFieldMap(m.Fields)
+        badFieldStrs := []string{}
+        for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+                if _, ok := Update{{.Name}}FieldsMap[field]; !ok {
+                        badFieldStrs = append(badFieldStrs, {{.Name}}AllFieldsStringMap[field])
+                }
+        }
+        if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+        }
+	return nil
+}
+
+`
 
 var cudTemplateIn = `
 func (s *{{.Name}}) HasFields() bool {
@@ -1489,6 +1545,30 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.generateDiffFields([]string{}, []string{*message.Name + "Field"}, desc)
 		m.P("}")
 		m.P("")
+		for _, service := range file.Service {
+			if *service.Name != *message.Name+"Api" {
+				continue
+			}
+			if len(service.Method) == 0 {
+				continue
+			}
+			for _, method := range service.Method {
+				if gensupport.GetCamelCasePrefix(*method.Name) != "Update" {
+					continue
+				}
+				noconfigMap := make(map[string]struct{})
+				m.P("var ", *method.Name, "FieldsMap = map[string]struct{}{")
+				fieldPrefix := *message.Name + "Field"
+				m.generateMethodFields(fieldPrefix, []string{fieldPrefix}, noconfigMap, desc, method)
+				m.P("}")
+				m.P("")
+				args := cudTemplateArgs{
+					Name: *message.Name,
+				}
+				m.fieldsValTemplate.Execute(m.gen.Buffer, args)
+				break
+			}
+		}
 	}
 	if desc.GetOptions().GetMapEntry() {
 		return

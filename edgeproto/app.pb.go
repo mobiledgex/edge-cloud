@@ -1422,6 +1422,54 @@ func (m *App) DiffFields(o *App, fields map[string]struct{}) {
 	}
 }
 
+var UpdateAppFieldsMap = map[string]struct{}{
+	AppFieldImagePath:               struct{}{},
+	AppFieldImageType:               struct{}{},
+	AppFieldAccessPorts:             struct{}{},
+	AppFieldDefaultFlavor:           struct{}{},
+	AppFieldDefaultFlavorName:       struct{}{},
+	AppFieldAuthPublicKey:           struct{}{},
+	AppFieldCommand:                 struct{}{},
+	AppFieldAnnotations:             struct{}{},
+	AppFieldDeployment:              struct{}{},
+	AppFieldDeploymentManifest:      struct{}{},
+	AppFieldDeploymentGenerator:     struct{}{},
+	AppFieldAndroidPackageName:      struct{}{},
+	AppFieldDelOpt:                  struct{}{},
+	AppFieldConfigs:                 struct{}{},
+	AppFieldConfigsKind:             struct{}{},
+	AppFieldConfigsConfig:           struct{}{},
+	AppFieldScaleWithCluster:        struct{}{},
+	AppFieldInternalPorts:           struct{}{},
+	AppFieldRevision:                struct{}{},
+	AppFieldOfficialFqdn:            struct{}{},
+	AppFieldMd5Sum:                  struct{}{},
+	AppFieldDefaultSharedVolumeSize: struct{}{},
+	AppFieldAutoProvPolicy:          struct{}{},
+	AppFieldAccessType:              struct{}{},
+	AppFieldDefaultPrivacyPolicy:    struct{}{},
+	AppFieldAutoProvPolicies:        struct{}{},
+	AppFieldTemplateDelimiter:       struct{}{},
+	AppFieldSkipHcPorts:             struct{}{},
+}
+
+func (m *App) ValidateUpdateFields() error {
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateAppFieldsMap[field]; !ok {
+			badFieldStrs = append(badFieldStrs, AppAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
+}
+
 func (m *App) CopyInFields(src *App) int {
 	changed := 0
 	fmap := MakeFieldMap(src.Fields)

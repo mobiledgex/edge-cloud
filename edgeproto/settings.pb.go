@@ -612,6 +612,44 @@ func (m *Settings) DiffFields(o *Settings, fields map[string]struct{}) {
 	}
 }
 
+var UpdateSettingsFieldsMap = map[string]struct{}{
+	SettingsFieldShepherdMetricsCollectionInterval: struct{}{},
+	SettingsFieldShepherdHealthCheckRetries:        struct{}{},
+	SettingsFieldShepherdHealthCheckInterval:       struct{}{},
+	SettingsFieldAutoDeployIntervalSec:             struct{}{},
+	SettingsFieldAutoDeployOffsetSec:               struct{}{},
+	SettingsFieldAutoDeployMaxIntervals:            struct{}{},
+	SettingsFieldCreateAppInstTimeout:              struct{}{},
+	SettingsFieldUpdateAppInstTimeout:              struct{}{},
+	SettingsFieldDeleteAppInstTimeout:              struct{}{},
+	SettingsFieldCreateClusterInstTimeout:          struct{}{},
+	SettingsFieldUpdateClusterInstTimeout:          struct{}{},
+	SettingsFieldDeleteClusterInstTimeout:          struct{}{},
+	SettingsFieldMasterNodeFlavor:                  struct{}{},
+	SettingsFieldLoadBalancerMaxPortRange:          struct{}{},
+	SettingsFieldMaxTrackedDmeClients:              struct{}{},
+	SettingsFieldChefClientInterval:                struct{}{},
+	SettingsFieldInfluxDbMetricsRetention:          struct{}{},
+	SettingsFieldCloudletMaintenanceTimeout:        struct{}{},
+}
+
+func (m *Settings) ValidateUpdateFields() error {
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateSettingsFieldsMap[field]; !ok {
+			badFieldStrs = append(badFieldStrs, SettingsAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
+}
+
 func (m *Settings) CopyInFields(src *Settings) int {
 	changed := 0
 	fmap := MakeFieldMap(src.Fields)
