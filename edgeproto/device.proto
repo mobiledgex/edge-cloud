@@ -27,9 +27,9 @@ message DeviceReport {
 // And example of such a device is a MEL device that hosts several applications
 message DeviceKey {
   // Type of unique ID provided by the client
-  string unique_id_type = 1;
+  string unique_id_type = 1 [(protogen.keytag) = "deviceidtype"];
   // Unique identification of the client device or user. May be overridden by the server.
-  string unique_id = 2;
+  string unique_id = 2 [(protogen.keytag) = "deviceid"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;

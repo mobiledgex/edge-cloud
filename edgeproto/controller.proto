@@ -10,7 +10,7 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 // ControllerKey uniquely defines a Controller
 message ControllerKey {
   // external API address
-  string addr = 1;
+  string addr = 1 [(protogen.keytag) = "controlleraddr"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
