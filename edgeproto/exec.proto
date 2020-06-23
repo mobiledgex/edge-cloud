@@ -80,7 +80,7 @@ service ExecApi {
   rpc RunConsole(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console,ContainerId,AccessUrl,EdgeTurnAddr";
-    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization";
   }
   // View logs for AppInst
   rpc ShowLogs(ExecRequest) returns (ExecRequest) {
