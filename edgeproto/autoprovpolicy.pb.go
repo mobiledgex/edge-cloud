@@ -885,7 +885,7 @@ var AutoProvPolicyAllFieldsStringMap = map[string]string{
 }
 
 func (m *AutoProvPolicy) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, AutoProvPolicyFieldKey+".")
+	return strings.HasPrefix(s, AutoProvPolicyFieldKey+".") || s == AutoProvPolicyFieldKey
 }
 
 func (m *AutoProvPolicy) DiffFields(o *AutoProvPolicy, fields map[string]struct{}) {
@@ -992,6 +992,9 @@ var UpdateAutoProvPolicyFieldsMap = map[string]struct{}{
 }
 
 func (m *AutoProvPolicy) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
 	fmap := MakeFieldMap(m.Fields)
 	badFieldStrs := []string{}
 	for field, _ := range fmap {
@@ -999,6 +1002,9 @@ func (m *AutoProvPolicy) ValidateUpdateFields() error {
 			continue
 		}
 		if _, ok := UpdateAutoProvPolicyFieldsMap[field]; !ok {
+			if _, ok := AutoProvPolicyAllFieldsStringMap[field]; !ok {
+				continue
+			}
 			badFieldStrs = append(badFieldStrs, AutoProvPolicyAllFieldsStringMap[field])
 		}
 	}
@@ -2009,7 +2015,7 @@ var AutoProvInfoAllFieldsStringMap = map[string]string{
 }
 
 func (m *AutoProvInfo) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, AutoProvInfoFieldKey+".")
+	return strings.HasPrefix(s, AutoProvInfoFieldKey+".") || s == AutoProvInfoFieldKey
 }
 
 func (m *AutoProvInfo) DiffFields(o *AutoProvInfo, fields map[string]struct{}) {

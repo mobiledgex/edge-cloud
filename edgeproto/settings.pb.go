@@ -552,7 +552,7 @@ var SettingsAllFieldsStringMap = map[string]string{
 }
 
 func (m *Settings) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, SettingsFieldShepherdMetricsCollectionInterval+".")
+	return strings.HasPrefix(s, SettingsFieldShepherdMetricsCollectionInterval+".") || s == SettingsFieldShepherdMetricsCollectionInterval
 }
 
 func (m *Settings) DiffFields(o *Settings, fields map[string]struct{}) {
@@ -634,6 +634,9 @@ var UpdateSettingsFieldsMap = map[string]struct{}{
 }
 
 func (m *Settings) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
 	fmap := MakeFieldMap(m.Fields)
 	badFieldStrs := []string{}
 	for field, _ := range fmap {
@@ -641,6 +644,9 @@ func (m *Settings) ValidateUpdateFields() error {
 			continue
 		}
 		if _, ok := UpdateSettingsFieldsMap[field]; !ok {
+			if _, ok := SettingsAllFieldsStringMap[field]; !ok {
+				continue
+			}
 			badFieldStrs = append(badFieldStrs, SettingsAllFieldsStringMap[field])
 		}
 	}

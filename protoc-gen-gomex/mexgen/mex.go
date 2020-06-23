@@ -518,7 +518,8 @@ func (m *mex) generateIsKeyField(parents, names []string, desc *generator.Descri
 			continue
 		}
 		name := generator.CamelCase(*field.Name)
-		m.P("return strings.HasPrefix(s, ", strings.Join(append(names, name), ""), "+\".\")")
+		fieldKey := strings.Join(append(names, name), "")
+		m.P("return strings.HasPrefix(s, ", fieldKey, "+\".\") || s == ", fieldKey)
 		m.importStrings = true
 		return
 	}
@@ -648,6 +649,9 @@ func (m *mex) generateMethodFields(fieldPrefix string, names []string, noconfigM
 			if *keyField.Name == *field.Name {
 				continue
 			}
+		}
+		if GetBackend(field) {
+			continue
 		}
 		name := generator.CamelCase(*field.Name)
 		fieldName := strings.Join(append(names, name), "")
@@ -822,6 +826,9 @@ type cudTemplateArgs struct {
 
 var fieldsValTemplate = `
 func (m *{{.Name}}) ValidateUpdateFields() error {
+        if m.Fields == nil {
+                return fmt.Errorf("nothing specified to update")
+        }
 	fmap := MakeFieldMap(m.Fields)
         badFieldStrs := []string{}
         for field, _ := range fmap {
@@ -829,7 +836,10 @@ func (m *{{.Name}}) ValidateUpdateFields() error {
 			continue
 		}
                 if _, ok := Update{{.Name}}FieldsMap[field]; !ok {
-                        badFieldStrs = append(badFieldStrs, {{.Name}}AllFieldsStringMap[field])
+			if _, ok := {{.Name}}AllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, {{.Name}}AllFieldsStringMap[field])
                 }
         }
         if len(badFieldStrs) > 0 {

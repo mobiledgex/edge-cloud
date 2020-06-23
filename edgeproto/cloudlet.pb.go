@@ -2908,7 +2908,7 @@ var CloudletAllFieldsStringMap = map[string]string{
 }
 
 func (m *Cloudlet) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, CloudletFieldKey+".")
+	return strings.HasPrefix(s, CloudletFieldKey+".") || s == CloudletFieldKey
 }
 
 func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
@@ -3246,14 +3246,7 @@ var UpdateCloudletFieldsMap = map[string]struct{}{
 	CloudletFieldLocation:                           struct{}{},
 	CloudletFieldLocationLatitude:                   struct{}{},
 	CloudletFieldLocationLongitude:                  struct{}{},
-	CloudletFieldLocationHorizontalAccuracy:         struct{}{},
-	CloudletFieldLocationVerticalAccuracy:           struct{}{},
 	CloudletFieldLocationAltitude:                   struct{}{},
-	CloudletFieldLocationCourse:                     struct{}{},
-	CloudletFieldLocationSpeed:                      struct{}{},
-	CloudletFieldLocationTimestamp:                  struct{}{},
-	CloudletFieldLocationTimestampSeconds:           struct{}{},
-	CloudletFieldLocationTimestampNanos:             struct{}{},
 	CloudletFieldIpSupport:                          struct{}{},
 	CloudletFieldStaticIps:                          struct{}{},
 	CloudletFieldNumDynamicIps:                      struct{}{},
@@ -3264,13 +3257,15 @@ var UpdateCloudletFieldsMap = map[string]struct{}{
 	CloudletFieldTimeLimitsCreateAppInstTimeout:     struct{}{},
 	CloudletFieldTimeLimitsUpdateAppInstTimeout:     struct{}{},
 	CloudletFieldTimeLimitsDeleteAppInstTimeout:     struct{}{},
-	CloudletFieldCrmOverride:                        struct{}{},
 	CloudletFieldAccessVars:                         struct{}{},
 	CloudletFieldAccessVarsValue:                    struct{}{},
 	CloudletFieldMaintenanceState:                   struct{}{},
 }
 
 func (m *Cloudlet) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
 	fmap := MakeFieldMap(m.Fields)
 	badFieldStrs := []string{}
 	for field, _ := range fmap {
@@ -3278,6 +3273,9 @@ func (m *Cloudlet) ValidateUpdateFields() error {
 			continue
 		}
 		if _, ok := UpdateCloudletFieldsMap[field]; !ok {
+			if _, ok := CloudletAllFieldsStringMap[field]; !ok {
+				continue
+			}
 			badFieldStrs = append(badFieldStrs, CloudletAllFieldsStringMap[field])
 		}
 	}
@@ -4658,7 +4656,7 @@ var CloudletInfoAllFieldsStringMap = map[string]string{
 }
 
 func (m *CloudletInfo) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, CloudletInfoFieldKey+".")
+	return strings.HasPrefix(s, CloudletInfoFieldKey+".") || s == CloudletInfoFieldKey
 }
 
 func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {

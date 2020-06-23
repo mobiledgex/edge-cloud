@@ -679,7 +679,7 @@ var ResTagTableAllFieldsStringMap = map[string]string{
 }
 
 func (m *ResTagTable) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, ResTagTableFieldKey+".")
+	return strings.HasPrefix(s, ResTagTableFieldKey+".") || s == ResTagTableFieldKey
 }
 
 func (m *ResTagTable) DiffFields(o *ResTagTable, fields map[string]struct{}) {
@@ -722,6 +722,9 @@ var UpdateResTagTableFieldsMap = map[string]struct{}{
 }
 
 func (m *ResTagTable) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
 	fmap := MakeFieldMap(m.Fields)
 	badFieldStrs := []string{}
 	for field, _ := range fmap {
@@ -729,6 +732,9 @@ func (m *ResTagTable) ValidateUpdateFields() error {
 			continue
 		}
 		if _, ok := UpdateResTagTableFieldsMap[field]; !ok {
+			if _, ok := ResTagTableAllFieldsStringMap[field]; !ok {
+				continue
+			}
 			badFieldStrs = append(badFieldStrs, ResTagTableAllFieldsStringMap[field])
 		}
 	}

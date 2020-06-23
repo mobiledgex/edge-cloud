@@ -464,7 +464,7 @@ var PrivacyPolicyAllFieldsStringMap = map[string]string{
 }
 
 func (m *PrivacyPolicy) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, PrivacyPolicyFieldKey+".")
+	return strings.HasPrefix(s, PrivacyPolicyFieldKey+".") || s == PrivacyPolicyFieldKey
 }
 
 func (m *PrivacyPolicy) DiffFields(o *PrivacyPolicy, fields map[string]struct{}) {
@@ -509,6 +509,9 @@ var UpdatePrivacyPolicyFieldsMap = map[string]struct{}{
 }
 
 func (m *PrivacyPolicy) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
 	fmap := MakeFieldMap(m.Fields)
 	badFieldStrs := []string{}
 	for field, _ := range fmap {
@@ -516,6 +519,9 @@ func (m *PrivacyPolicy) ValidateUpdateFields() error {
 			continue
 		}
 		if _, ok := UpdatePrivacyPolicyFieldsMap[field]; !ok {
+			if _, ok := PrivacyPolicyAllFieldsStringMap[field]; !ok {
+				continue
+			}
 			badFieldStrs = append(badFieldStrs, PrivacyPolicyAllFieldsStringMap[field])
 		}
 	}
