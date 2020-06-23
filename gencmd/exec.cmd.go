@@ -483,11 +483,11 @@ var RunConsoleRequiredArgs = []string{
 	"app-org",
 	"appname",
 	"appvers",
-	"cluster",
 	"cloudlet-org",
 	"cloudlet",
 }
 var RunConsoleOptionalArgs = []string{
+	"cluster",
 	"cluster-org",
 	"webrtc",
 }
