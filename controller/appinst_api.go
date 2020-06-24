@@ -64,7 +64,7 @@ func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgepr
 	for key, data := range s.cache.Objs {
 		val := data.Obj
 		if key.ClusterInstKey.CloudletKey.Matches(in) && appApi.Get(&val.Key.AppKey, &app) {
-			if (val.Liveness == edgeproto.Liveness_LIVENESS_STATIC) && (app.DelOpt == edgeproto.DeleteType_NO_AUTO_DELETE) {
+			if (val.Liveness == edgeproto.Liveness_LIVENESS_STATIC || val.Liveness == edgeproto.Liveness_LIVENESS_AUTOPROV) && (app.DelOpt == edgeproto.DeleteType_NO_AUTO_DELETE) {
 				static = true
 				//if can autodelete it then also add it to the dynInsts to be deleted later
 			} else if (val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC) || (app.DelOpt == edgeproto.DeleteType_AUTO_DELETE) {
@@ -114,7 +114,7 @@ func (s *AppInstApi) UsesApp(in *edgeproto.AppKey, dynInsts map[edgeproto.AppIns
 	for key, data := range s.cache.Objs {
 		val := data.Obj
 		if key.AppKey.Matches(in) {
-			if val.Liveness == edgeproto.Liveness_LIVENESS_STATIC {
+			if val.Liveness == edgeproto.Liveness_LIVENESS_STATIC || val.Liveness == edgeproto.Liveness_LIVENESS_AUTOPROV {
 				static = true
 			} else if val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
 				dynInsts[key] = struct{}{}
@@ -461,7 +461,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if in.PrivacyPolicy == "" {
 			in.PrivacyPolicy = app.DefaultPrivacyPolicy
 		} else {
-			if !autocluster {
+			if !autocluster && cloudcommon.IsClusterInstReqd(&app) {
 				return fmt.Errorf("Cannot specify Privacy Policy for an AppInst on an existing cluster")
 			}
 		}
