@@ -619,7 +619,7 @@ var FlavorAllFieldsStringMap = map[string]string{
 }
 
 func (m *Flavor) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, FlavorFieldKey+".")
+	return strings.HasPrefix(s, FlavorFieldKey+".") || s == FlavorFieldKey
 }
 
 func (m *Flavor) DiffFields(o *Flavor, fields map[string]struct{}) {
@@ -655,6 +655,37 @@ func (m *Flavor) DiffFields(o *Flavor, fields map[string]struct{}) {
 	} else if (m.OptResMap != nil && o.OptResMap == nil) || (m.OptResMap == nil && o.OptResMap != nil) {
 		fields[FlavorFieldOptResMap] = struct{}{}
 	}
+}
+
+var UpdateFlavorFieldsMap = map[string]struct{}{
+	FlavorFieldRam:            struct{}{},
+	FlavorFieldVcpus:          struct{}{},
+	FlavorFieldDisk:           struct{}{},
+	FlavorFieldOptResMap:      struct{}{},
+	FlavorFieldOptResMapValue: struct{}{},
+}
+
+func (m *Flavor) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateFlavorFieldsMap[field]; !ok {
+			if _, ok := FlavorAllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, FlavorAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
 }
 
 func (m *Flavor) CopyInFields(src *Flavor) int {

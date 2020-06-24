@@ -102,7 +102,7 @@ message ConfigFile {
   // Deployment manifest is the deployment specific manifest file/config
   // For docker deployment, this can be a docker-compose or docker run file
   // For kubernetes deployment, this can be a kubernetes yaml or helm chart file
-  string deployment_manifest = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string deployment_manifest = 16 [(protogen.hidetag) = "nocmp"];
   // Deployment generator target to generate a basic deployment manifest
   string deployment_generator = 17 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Android package name used to match the App name from the Android package
@@ -185,6 +185,7 @@ service AppApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.Organization";
+    option (protogen.method_noconfig) = "Deployment,DeploymentGenerator";
     option (protogen.mc2_custom_authz) = true;
   }
   // Show Applications. Lists all Application definitions managed from the Edge Controller.

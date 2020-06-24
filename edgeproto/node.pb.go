@@ -614,7 +614,7 @@ var NodeAllFieldsStringMap = map[string]string{
 }
 
 func (m *Node) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, NodeFieldKey+".")
+	return strings.HasPrefix(s, NodeFieldKey+".") || s == NodeFieldKey
 }
 
 func (m *Node) DiffFields(o *Node, fields map[string]struct{}) {

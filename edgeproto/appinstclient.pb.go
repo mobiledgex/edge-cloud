@@ -960,7 +960,7 @@ var AppInstClientAllFieldsStringMap = map[string]string{
 }
 
 func (m *AppInstClient) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, AppInstClientFieldClientKey+".")
+	return strings.HasPrefix(s, AppInstClientFieldClientKey+".") || s == AppInstClientFieldClientKey
 }
 
 func (m *AppInstClient) DiffFields(o *AppInstClient, fields map[string]struct{}) {

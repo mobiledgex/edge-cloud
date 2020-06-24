@@ -138,7 +138,7 @@ message AppInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,NodeFlavor,ExternalVolumeSize,AvailabilityZone";
+  option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,NodeFlavor,ExternalVolumeSize,AvailabilityZone,State";
   option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
   option (protogen.not_required) = "Key.ClusterInstKey.Organization,Key.ClusterInstKey.ClusterKey.Name";
   option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
@@ -166,7 +166,7 @@ service AppInstApi {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
     option (protogen.mc2_custom_authz) = true;
     // add in UpdateMultiple for noconfig
-    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,UpdateMultiple,ForceUpdate,PowerState";
+    option (protogen.method_noconfig) = "UpdateMultiple,ForceUpdate,PowerState";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Delete Application Instance. Deletes an instance of the App from the Cloudlet.
@@ -189,7 +189,7 @@ service AppInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
     option (protogen.method_not_required) = "Key.ClusterInstKey";
-    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,Configs,PowerState";
+    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,Configs,PowerState,PrivacyPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Update Application Instance. Updates an Application instance and then refreshes it.
@@ -200,7 +200,7 @@ service AppInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
-    option (protogen.method_noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,Flavor,State,RuntimeInfo,AutoClusterIpAccess,Errors,CreatedAt,Status,Revision,UpdateMultiple,ForceUpdate";
+    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,UpdateMultiple,ForceUpdate,PrivacyPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Show Application Instances. Lists all the Application instances managed by the Edge Controller.

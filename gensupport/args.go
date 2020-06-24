@@ -117,6 +117,10 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 		if _, found := noconfigMap[parts[0]]; found {
 			continue
 		}
+		parts = strings.Split(arg.Name, ":")
+		if _, found := noconfigMap[parts[0]]; found {
+			continue
+		}
 		str, ok := aliasMap[arg.Name]
 		if !ok {
 			str = arg.Name
@@ -278,13 +282,17 @@ func GetStreamOutIncremental(method *descriptor.MethodDescriptorProto) bool {
 }
 
 func GetNoConfig(message *descriptor.DescriptorProto, method *descriptor.MethodDescriptorProto) string {
+	noConfigStr := GetStringExtension(message.Options, protogen.E_Noconfig, "")
 	if method != nil {
 		str, found := FindStringExtension(method.Options, protogen.E_MethodNoconfig)
 		if found {
-			return str
+			if noConfigStr != "" && str != "" {
+				noConfigStr += ","
+			}
+			noConfigStr += str
 		}
 	}
-	return GetStringExtension(message.Options, protogen.E_Noconfig, "")
+	return noConfigStr
 }
 
 func GetNotreq(message *descriptor.DescriptorProto, method *descriptor.MethodDescriptorProto) string {

@@ -790,7 +790,7 @@ var CloudletPoolAllFieldsStringMap = map[string]string{
 }
 
 func (m *CloudletPool) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, CloudletPoolFieldKey+".")
+	return strings.HasPrefix(s, CloudletPoolFieldKey+".") || s == CloudletPoolFieldKey
 }
 
 func (m *CloudletPool) DiffFields(o *CloudletPool, fields map[string]struct{}) {
