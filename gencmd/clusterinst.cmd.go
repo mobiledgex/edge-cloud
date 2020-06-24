@@ -506,8 +506,6 @@ var ClusterInstRequiredArgs = []string{
 }
 var ClusterInstOptionalArgs = []string{
 	"flavor",
-	"state",
-	"errors",
 	"crmoverride",
 	"ipaccess",
 	"deployment",
@@ -596,12 +594,7 @@ var UpdateClusterInstRequiredArgs = []string{
 	"cluster-org",
 }
 var UpdateClusterInstOptionalArgs = []string{
-	"state",
-	"errors",
 	"crmoverride",
-	"ipaccess",
-	"deployment",
 	"numnodes",
 	"autoscalepolicy",
-	"imagename",
 }

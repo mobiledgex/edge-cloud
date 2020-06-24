@@ -117,6 +117,10 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 		if _, found := noconfigMap[parts[0]]; found {
 			continue
 		}
+		parts = strings.Split(arg.Name, ":")
+		if _, found := noconfigMap[parts[0]]; found {
+			continue
+		}
 		str, ok := aliasMap[arg.Name]
 		if !ok {
 			str = arg.Name

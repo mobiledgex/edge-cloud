@@ -650,9 +650,6 @@ func (m *mex) generateMethodFields(fieldPrefix string, names []string, noconfigM
 				continue
 			}
 		}
-		if GetBackend(field) {
-			continue
-		}
 		name := generator.CamelCase(*field.Name)
 		fieldName := strings.Join(append(names, name), "")
 		switch *field.Type {
