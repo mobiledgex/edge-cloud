@@ -6,6 +6,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
+var OperatorCodeKeyTag = "operatorcode"
+
 type OperatorCodeKey string
 
 func (m OperatorCodeKey) GetKeyString() string {
@@ -22,6 +24,12 @@ func (m OperatorCodeKey) NotFoundError() error {
 
 func (m OperatorCodeKey) ExistsError() error {
 	return fmt.Errorf("OperatorCode key %s already exists", m.GetKeyString())
+}
+
+func (m OperatorCodeKey) GetTags() map[string]string {
+	return map[string]string{
+		OperatorCodeKeyTag: string(m),
+	}
 }
 
 func (m *OperatorCode) GetObjKey() objstore.ObjKey {

@@ -30,25 +30,27 @@ func init() {
 }
 
 type mex struct {
-	gen           *generator.Generator
-	msgs          map[string]*descriptor.DescriptorProto
-	cudTemplate   *template.Template
-	enumTemplate  *template.Template
-	cacheTemplate *template.Template
-	keysTemplate  *template.Template
-	importUtil    bool
-	importLog     bool
-	importStrings bool
-	importErrors  bool
-	importStrconv bool
-	importSort    bool
-	importTime    bool
-	importCmp     bool
-	importReflect bool
-	importJson    bool
-	firstFile     string
-	support       gensupport.PluginSupport
-	keyMessages   []descriptor.DescriptorProto
+	gen             *generator.Generator
+	msgs            map[string]*descriptor.DescriptorProto
+	cudTemplate     *template.Template
+	enumTemplate    *template.Template
+	cacheTemplate   *template.Template
+	keysTemplate    *template.Template
+	importUtil      bool
+	importLog       bool
+	importStrings   bool
+	importErrors    bool
+	importStrconv   bool
+	importSort      bool
+	importTime      bool
+	importCmp       bool
+	importReflect   bool
+	importJson      bool
+	firstFile       string
+	lastFile        string
+	support         gensupport.PluginSupport
+	keyMessages     []descriptor.DescriptorProto
+	keyTagConflicts map[string][]string
 }
 
 func (m *mex) Name() string {
@@ -64,6 +66,8 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.keysTemplate = template.Must(template.New("keys").Parse(keysTemplateIn))
 	m.support.Init(gen.Request)
 	m.firstFile = gensupport.GetFirstFile(gen)
+	m.lastFile = gensupport.GetLastFile(gen)
+	m.keyTagConflicts = make(map[string][]string)
 }
 
 // P forwards to g.gen.P
@@ -110,6 +114,14 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 		m.P(matchOptions)
 		m.generateEnumDecodeHook()
 		m.generateShowCheck()
+	}
+	if m.lastFile == *file.FileDescriptorProto.Name {
+		for tag, list := range m.keyTagConflicts {
+			if len(list) <= 1 {
+				continue
+			}
+			m.gen.Fail("KeyTag conflict for", tag, "between", fmt.Sprintf("%v", list))
+		}
 	}
 }
 
@@ -1576,6 +1588,34 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("")
 
+		hasKeyTags := false
+		for _, field := range message.Field {
+			tag := GetKeyTag(field)
+			if field.Type == nil || field.OneofIndex != nil {
+				continue
+			}
+			if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+				continue
+			}
+			if tag == "" {
+				m.gen.Fail(*message.Name, "field", *field.Name, "missing protogen.keytag")
+			}
+			fname := generator.CamelCase(*field.Name)
+
+			m.P("var ", message.Name, "Tag", fname, " = \"", tag, "\"")
+			hasKeyTags = true
+			m.keyTagConflicts[tag] = append(m.keyTagConflicts[tag], *message.Name+"."+fname)
+		}
+		if hasKeyTags {
+			m.P()
+		}
+		m.P("func (m *", message.Name, ") GetTags() map[string]string {")
+		m.P("tags := make(map[string]string)")
+		m.setKeyTags([]string{}, desc, []*generator.Descriptor{})
+		m.P("return tags")
+		m.P("}")
+		m.P()
+
 		m.importJson = true
 		m.importLog = true
 	}
@@ -1815,6 +1855,24 @@ func (m *mex) generateHideTagFields(parents []string, desc *generator.Descriptor
 	}
 }
 
+func (m *mex) setKeyTags(parents []string, desc *generator.Descriptor, visited []*generator.Descriptor) {
+	for _, field := range desc.DescriptorProto.Field {
+		if field.Type == nil || field.OneofIndex != nil {
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+			m.setKeyTags(append(parents, name),
+				subDesc, append(visited, desc))
+			continue
+		}
+		tag := GetKeyTag(field)
+		hierField := strings.Join(append(parents, name), ".")
+		m.P("tags[\"", tag, "\"] = m.", hierField)
+	}
+}
+
 func (m *mex) generateEnumDecodeHook() {
 	m.P("// DecodeHook for use with the mapstructure package.")
 	m.P("// Allows decoding to handle protobuf enums that are")
@@ -1970,6 +2028,10 @@ func GetBackend(field *descriptor.FieldDescriptorProto) bool {
 
 func GetHideTag(field *descriptor.FieldDescriptorProto) string {
 	return gensupport.GetStringExtension(field.Options, protogen.E_Hidetag, "")
+}
+
+func GetKeyTag(field *descriptor.FieldDescriptorProto) string {
+	return gensupport.GetStringExtension(field.Options, protogen.E_Keytag, "")
 }
 
 func GetVersionHashOpt(enum *descriptor.EnumDescriptorProto) bool {

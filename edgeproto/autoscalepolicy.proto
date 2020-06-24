@@ -10,9 +10,9 @@ import "gogoproto/gogo.proto";
 
 message PolicyKey {
   // Name of the organization for the cluster that this policy will apply to
-  string organization = 1;
+  string organization = 1 [(protogen.keytag) = "policyorg"];
   // Policy name
-  string name = 2;
+  string name = 2 [(protogen.keytag) = "policy"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;

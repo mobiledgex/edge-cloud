@@ -10,7 +10,7 @@ import "gogoproto/gogo.proto";
 // ClusterKey uniquely identifies a Cluster.
 message ClusterKey {
   // Cluster name
-  string name = 1;
+  string name = 1 [(protogen.keytag) = "cluster"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
