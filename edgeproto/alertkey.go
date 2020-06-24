@@ -27,6 +27,12 @@ func (m AlertKey) ExistsError() error {
 	return fmt.Errorf("Alert key %s already exists", m.GetKeyString())
 }
 
+func (m AlertKey) GetTags() map[string]string {
+	alert := Alert{}
+	AlertKeyStringParse(string(m), &alert)
+	return alert.Labels
+}
+
 func (m *Alert) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }

@@ -97,6 +97,8 @@ type ObjKey interface {
 	NotFoundError() error
 	// ExistsError returns an already exists error describing the key.
 	ExistsError() error
+	// Get key tags for logging and tagging
+	GetTags() map[string]string
 }
 
 type KVOptions struct {

@@ -25,6 +25,7 @@ func AuditUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.Unar
 	ctx = log.ContextWithSpan(ctx, span)
 	span.SetTag("organization", edgeproto.GetOrg(req))
 	span.SetTag("client", client)
+	log.SetTags(span, edgeproto.GetTags(req))
 	span.SetTag("request", req)
 
 	resp, err := handler(ctx, req)
@@ -92,6 +93,7 @@ func (s *AuditRecvOne) RecvMsg(m interface{}) error {
 	span := opentracing.SpanFromContext(s.ctx)
 	if span != nil {
 		span.SetTag("organization", edgeproto.GetOrg(m))
+		log.SetTags(span, edgeproto.GetTags(m))
 		span.SetTag("request", m)
 	}
 	return err
