@@ -18,11 +18,11 @@ import "gogoproto/gogo.proto";
 // AppKey uniquely identifies an App
 message AppKey {
   // App developer organization
-  string organization = 1;
+  string organization = 1 [(protogen.keytag) = "apporg"];
   // App name
-  string name = 2;
+  string name = 2 [(protogen.keytag) = "app"];
   // App version
-  string version = 3;
+  string version = 3 [(protogen.keytag) = "appver"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;

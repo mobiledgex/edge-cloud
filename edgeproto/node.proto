@@ -11,13 +11,13 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 // NodeKey uniquely identifies a DME or CRM node
 message NodeKey {
   // Name or hostname of node
-  string name = 1 [(protogen.hidetag) = "nocmp"];
+  string name = 1 [(protogen.hidetag) = "nocmp", (protogen.keytag) = "node"];
   // Node type
-  string type = 4;
+  string type = 4 [(protogen.keytag) = "nodetype"];
   // Cloudlet on which node is running, or is associated with
   CloudletKey cloudlet_key = 3 [(gogoproto.nullable) = false];
   // Region the node is in
-  string region = 5;
+  string region = 5 [(protogen.keytag) = "noderegion"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
