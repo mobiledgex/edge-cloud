@@ -835,25 +835,25 @@ type cudTemplateArgs struct {
 
 var fieldsValTemplate = `
 func (m *{{.Name}}) ValidateUpdateFields() error {
-        if m.Fields == nil {
-                return fmt.Errorf("nothing specified to update")
-        }
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
 	fmap := MakeFieldMap(m.Fields)
-        badFieldStrs := []string{}
-        for field, _ := range fmap {
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
 		if m.IsKeyField(field) {
 			continue
 		}
-                if _, ok := Update{{.Name}}FieldsMap[field]; !ok {
+		if _, ok := Update{{.Name}}FieldsMap[field]; !ok {
 			if _, ok := {{.Name}}AllFieldsStringMap[field]; !ok {
 				continue
 			}
 			badFieldStrs = append(badFieldStrs, {{.Name}}AllFieldsStringMap[field])
-                }
-        }
-        if len(badFieldStrs) > 0 {
+		}
+	}
+	if len(badFieldStrs) > 0 {
 		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
-        }
+	}
 	return nil
 }
 
