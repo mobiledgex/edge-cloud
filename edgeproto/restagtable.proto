@@ -37,7 +37,6 @@ message ResTagTable {
   option (protogen.generate_cud_test_update) = false;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.notify_message) = true;
   option (protogen.alias) = "res=Key.Name,organization=Key.Organization";
   option (protogen.also_required) = "Tags";
   option (protogen.uses_org) = "key=Organization";
