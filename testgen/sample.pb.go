@@ -1551,7 +1551,7 @@ var TestGenAllFieldsStringMap = map[string]string{
 }
 
 func (m *TestGen) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, TestGenFieldName+".")
+	return strings.HasPrefix(s, TestGenFieldName+".") || s == TestGenFieldName
 }
 
 func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {

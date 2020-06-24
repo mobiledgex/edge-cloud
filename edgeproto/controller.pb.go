@@ -422,7 +422,7 @@ var ControllerAllFieldsStringMap = map[string]string{
 }
 
 func (m *Controller) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, ControllerFieldKey+".")
+	return strings.HasPrefix(s, ControllerFieldKey+".") || s == ControllerFieldKey
 }
 
 func (m *Controller) DiffFields(o *Controller, fields map[string]struct{}) {

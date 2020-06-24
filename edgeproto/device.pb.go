@@ -843,7 +843,7 @@ var DeviceAllFieldsStringMap = map[string]string{
 }
 
 func (m *Device) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, DeviceFieldKey+".")
+	return strings.HasPrefix(s, DeviceFieldKey+".") || s == DeviceFieldKey
 }
 
 func (m *Device) DiffFields(o *Device, fields map[string]struct{}) {
