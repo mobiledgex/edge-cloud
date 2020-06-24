@@ -1348,6 +1348,18 @@ func (m *AppInstKey) ExistsError() error {
 	return fmt.Errorf("AppInst key %s already exists", m.GetKeyString())
 }
 
+func (m *AppInstKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["apporg"] = m.AppKey.Organization
+	tags["app"] = m.AppKey.Name
+	tags["appver"] = m.AppKey.Version
+	tags["cluster"] = m.ClusterInstKey.ClusterKey.Name
+	tags["cloudletorg"] = m.ClusterInstKey.CloudletKey.Organization
+	tags["cloudlet"] = m.ClusterInstKey.CloudletKey.Name
+	tags["clusterorg"] = m.ClusterInstKey.Organization
+	return tags
+}
+
 // Helper method to check that enums have valid values
 func (m *AppInstKey) ValidateEnums() error {
 	if err := m.AppKey.ValidateEnums(); err != nil {

@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 	context "golang.org/x/net/context"
 )
@@ -688,6 +689,17 @@ func GetOrg(obj interface{}) string {
 		return v.Key.AppKey.Organization
 	default:
 		return "mobiledgex"
+	}
+}
+
+func GetTags(obj interface{}) map[string]string {
+	switch v := obj.(type) {
+	case objstore.Obj:
+		return v.GetObjKey().GetTags()
+	case objstore.ObjKey:
+		return v.GetTags()
+	default:
+		return map[string]string{}
 	}
 }
 

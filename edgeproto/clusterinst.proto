@@ -21,7 +21,7 @@ message ClusterInstKey {
   // Name of Cloudlet on which the Cluster is instantiated
   CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
   // Name of Developer organization that this cluster belongs to
-  string organization = 3;
+  string organization = 3 [(protogen.keytag) = "clusterorg"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;

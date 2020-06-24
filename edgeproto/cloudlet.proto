@@ -17,9 +17,9 @@ import "gogoproto/gogo.proto";
 // CloudletKey uniquely identifies a Cloudlet.
 message CloudletKey {
   // Organization of the cloudlet site
-  string organization = 1;
+  string organization = 1 [(protogen.keytag) = "cloudletorg"];
   // Name of the cloudlet
-  string name = 2;
+  string name = 2 [(protogen.keytag) = "cloudlet"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;

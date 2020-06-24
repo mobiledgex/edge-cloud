@@ -34,6 +34,10 @@ func (m SettingsKey) ExistsError() error {
 	return nil
 }
 
+func (m SettingsKey) GetTags() map[string]string {
+	return map[string]string{}
+}
+
 func (m *Settings) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
