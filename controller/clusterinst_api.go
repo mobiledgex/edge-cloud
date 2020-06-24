@@ -469,37 +469,13 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "updateClusterInstInternal")
-	if err := in.Key.ValidateKey(); err != nil {
+
+	err := in.ValidateUpdateFields()
+	if err != nil {
 		return err
 	}
-
-	if in.Fields == nil {
-		return fmt.Errorf("nothing specified to update")
-	}
-	allowedFields := []string{}
-	badFields := []string{}
-	for _, field := range in.Fields {
-		if field == edgeproto.ClusterInstFieldCrmOverride ||
-			field == edgeproto.ClusterInstFieldKey ||
-			in.IsKeyField(field) {
-			continue
-		} else if field == edgeproto.ClusterInstFieldNumNodes || field == edgeproto.ClusterInstFieldAutoScalePolicy {
-			allowedFields = append(allowedFields, field)
-		} else {
-			badFields = append(badFields, field)
-		}
-	}
-	if len(badFields) > 0 {
-		// cat all the bad field names and return error
-		badstrs := []string{}
-		for _, bad := range badFields {
-			badstrs = append(badstrs, edgeproto.ClusterInstAllFieldsStringMap[bad])
-		}
-		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badstrs, ","))
-	}
-	in.Fields = allowedFields
-	if len(allowedFields) == 0 {
-		return fmt.Errorf("Nothing specified to modify")
+	if err := in.Key.ValidateKey(); err != nil {
+		return err
 	}
 
 	cctx.SetOverride(&in.CrmOverride)
@@ -511,7 +487,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 
 	var inbuf edgeproto.ClusterInst
 	var changeCount int
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		changeCount = 0
 		if !s.store.STMGet(stm, &in.Key, &inbuf) {
 			return in.Key.NotFoundError()

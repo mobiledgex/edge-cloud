@@ -89,7 +89,7 @@ message ClusterInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "Liveness,Auto,MasterFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy";
+  option (protogen.noconfig) = "Liveness,Auto,MasterNodeFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy,State,Errors";
   option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,cloudlet-org=Key.CloudletKey.Organization,cluster-org=Key.Organization,flavor=Flavor.Name";
   option (protogen.mc2_target_cloudlet) = "Key.CloudletKey";
@@ -128,6 +128,7 @@ service ClusterInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Organization";
+    option (protogen.method_noconfig) = "Flavor,NumMasters,AvailabilityZone,Reservable,SharedVolumeSize,PrivacyPolicy,IpAccess,Deployment,ImageName";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Show Cluster Instances. Lists all the cluster instances managed by Edge Controller.

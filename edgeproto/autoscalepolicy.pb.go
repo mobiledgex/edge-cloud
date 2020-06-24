@@ -554,7 +554,7 @@ var AutoScalePolicyAllFieldsStringMap = map[string]string{
 }
 
 func (m *AutoScalePolicy) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, AutoScalePolicyFieldKey+".")
+	return strings.HasPrefix(s, AutoScalePolicyFieldKey+".") || s == AutoScalePolicyFieldKey
 }
 
 func (m *AutoScalePolicy) DiffFields(o *AutoScalePolicy, fields map[string]struct{}) {
@@ -581,6 +581,37 @@ func (m *AutoScalePolicy) DiffFields(o *AutoScalePolicy, fields map[string]struc
 	if m.TriggerTimeSec != o.TriggerTimeSec {
 		fields[AutoScalePolicyFieldTriggerTimeSec] = struct{}{}
 	}
+}
+
+var UpdateAutoScalePolicyFieldsMap = map[string]struct{}{
+	AutoScalePolicyFieldMinNodes:           struct{}{},
+	AutoScalePolicyFieldMaxNodes:           struct{}{},
+	AutoScalePolicyFieldScaleUpCpuThresh:   struct{}{},
+	AutoScalePolicyFieldScaleDownCpuThresh: struct{}{},
+	AutoScalePolicyFieldTriggerTimeSec:     struct{}{},
+}
+
+func (m *AutoScalePolicy) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateAutoScalePolicyFieldsMap[field]; !ok {
+			if _, ok := AutoScalePolicyAllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, AutoScalePolicyAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
 }
 
 func (m *AutoScalePolicy) CopyInFields(src *AutoScalePolicy) int {
