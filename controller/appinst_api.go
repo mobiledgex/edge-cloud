@@ -949,50 +949,32 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 
 func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
 	ctx := cb.Context()
-	fmap := edgeproto.MakeFieldMap(in.Fields)
-	err := in.Validate(fmap)
+	err := in.ValidateUpdateFields()
 	if err != nil {
 		return err
 	}
-
-	allowedFields := []string{}
-	badFields := []string{}
-	for _, field := range in.Fields {
-		if field == edgeproto.AppInstFieldCrmOverride ||
-			field == edgeproto.AppInstFieldKey ||
-			field == edgeproto.AppInstFieldPowerState ||
-			in.IsKeyField(field) {
-			continue
-		} else if field == edgeproto.AppInstFieldConfigs || field == edgeproto.AppInstFieldConfigsKind || field == edgeproto.AppInstFieldConfigsConfig {
-			// only thing modifiable right now is the "configs".
-			allowedFields = append(allowedFields, field)
-		} else {
-			badFields = append(badFields, field)
-		}
-	}
-	if len(badFields) > 0 {
-		// cat all the bad field names and return error
-		badstrs := []string{}
-		for _, bad := range badFields {
-			badstrs = append(badstrs, edgeproto.AppInstAllFieldsStringMap[bad])
-		}
-		return fmt.Errorf("specified fields %s cannot be modified", strings.Join(badstrs, ","))
+	fmap := edgeproto.MakeFieldMap(in.Fields)
+	err = in.Validate(fmap)
+	if err != nil {
+		return err
 	}
 	powerState := edgeproto.PowerState_POWER_STATE_UNKNOWN
 	if _, found := fmap[edgeproto.AppInstFieldPowerState]; found {
-		if len(allowedFields) > 0 {
-			return fmt.Errorf("If powerstate is to be updated, then no other fields can be modified")
+		for _, field := range in.Fields {
+			if field == edgeproto.AppInstFieldCrmOverride ||
+				field == edgeproto.AppInstFieldKey ||
+				field == edgeproto.AppInstFieldPowerState ||
+				in.IsKeyField(field) {
+				continue
+			} else if _, ok := edgeproto.UpdateAppInstFieldsMap[field]; ok {
+				return fmt.Errorf("If powerstate is to be updated, then no other fields can be modified")
+			}
 		}
-		allowedFields = append(allowedFields, edgeproto.AppInstFieldPowerState)
 		// Get the request state as user has specified action and not state
 		powerState = edgeproto.GetNextPowerState(in.PowerState, edgeproto.RequestState)
 		if powerState == edgeproto.PowerState_POWER_STATE_UNKNOWN {
 			return fmt.Errorf("Invalid power state specified")
 		}
-	}
-	in.Fields = allowedFields
-	if len(allowedFields) == 0 {
-		return fmt.Errorf("Nothing specified to modify")
 	}
 
 	cctx := DefCallContext()

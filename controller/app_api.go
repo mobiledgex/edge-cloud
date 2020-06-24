@@ -367,6 +367,10 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 }
 
 func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	err := in.ValidateUpdateFields()
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
 	if s.AndroidPackageConflicts(in) {
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another App", in.AndroidPackageName)
 	}
@@ -376,9 +380,6 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 
 	appInstExists := false
 	for _, field := range in.Fields {
-		if field == edgeproto.AppFieldDeployment {
-			return &edgeproto.Result{}, fmt.Errorf("Field cannot be modified")
-		}
 		if appInstApi.UsesApp(&in.Key, dynInsts) {
 			appInstExists = true
 			if field == edgeproto.AppFieldAccessPorts || field == edgeproto.AppFieldSkipHcPorts {
@@ -391,7 +392,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, err
 	}
 
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.App{}
 
 		if !s.store.STMGet(stm, &in.Key, &cur) {

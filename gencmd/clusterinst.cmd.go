@@ -236,8 +236,8 @@ func DeleteClusterInsts(c *cli.Command, data []edgeproto.ClusterInst, err *error
 
 var UpdateClusterInstCmd = &cli.Command{
 	Use:          "UpdateClusterInst",
-	RequiredArgs: strings.Join(ClusterInstRequiredArgs, " "),
-	OptionalArgs: strings.Join(ClusterInstOptionalArgs, " "),
+	RequiredArgs: strings.Join(UpdateClusterInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(UpdateClusterInstOptionalArgs, " "),
 	AliasArgs:    strings.Join(ClusterInstAliasArgs, " "),
 	SpecialArgs:  &ClusterInstSpecialArgs,
 	Comments:     ClusterInstComments,
@@ -506,8 +506,6 @@ var ClusterInstRequiredArgs = []string{
 }
 var ClusterInstOptionalArgs = []string{
 	"flavor",
-	"state",
-	"errors",
 	"crmoverride",
 	"ipaccess",
 	"deployment",
@@ -519,7 +517,6 @@ var ClusterInstOptionalArgs = []string{
 	"reservable",
 	"sharedvolumesize",
 	"privacypolicy",
-	"masternodeflavor",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -589,4 +586,15 @@ var ClusterInstInfoComments = map[string]string{
 var ClusterInstInfoSpecialArgs = map[string]string{
 	"errors": "StringArray",
 	"fields": "StringArray",
+}
+var UpdateClusterInstRequiredArgs = []string{
+	"cluster",
+	"cloudlet-org",
+	"cloudlet",
+	"cluster-org",
+}
+var UpdateClusterInstOptionalArgs = []string{
+	"crmoverride",
+	"numnodes",
+	"autoscalepolicy",
 }

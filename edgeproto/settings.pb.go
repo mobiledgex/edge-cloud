@@ -552,7 +552,7 @@ var SettingsAllFieldsStringMap = map[string]string{
 }
 
 func (m *Settings) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, SettingsFieldShepherdMetricsCollectionInterval+".")
+	return strings.HasPrefix(s, SettingsFieldShepherdMetricsCollectionInterval+".") || s == SettingsFieldShepherdMetricsCollectionInterval
 }
 
 func (m *Settings) DiffFields(o *Settings, fields map[string]struct{}) {
@@ -610,6 +610,50 @@ func (m *Settings) DiffFields(o *Settings, fields map[string]struct{}) {
 	if m.CloudletMaintenanceTimeout != o.CloudletMaintenanceTimeout {
 		fields[SettingsFieldCloudletMaintenanceTimeout] = struct{}{}
 	}
+}
+
+var UpdateSettingsFieldsMap = map[string]struct{}{
+	SettingsFieldShepherdMetricsCollectionInterval: struct{}{},
+	SettingsFieldShepherdHealthCheckRetries:        struct{}{},
+	SettingsFieldShepherdHealthCheckInterval:       struct{}{},
+	SettingsFieldAutoDeployIntervalSec:             struct{}{},
+	SettingsFieldAutoDeployOffsetSec:               struct{}{},
+	SettingsFieldAutoDeployMaxIntervals:            struct{}{},
+	SettingsFieldCreateAppInstTimeout:              struct{}{},
+	SettingsFieldUpdateAppInstTimeout:              struct{}{},
+	SettingsFieldDeleteAppInstTimeout:              struct{}{},
+	SettingsFieldCreateClusterInstTimeout:          struct{}{},
+	SettingsFieldUpdateClusterInstTimeout:          struct{}{},
+	SettingsFieldDeleteClusterInstTimeout:          struct{}{},
+	SettingsFieldMasterNodeFlavor:                  struct{}{},
+	SettingsFieldLoadBalancerMaxPortRange:          struct{}{},
+	SettingsFieldMaxTrackedDmeClients:              struct{}{},
+	SettingsFieldChefClientInterval:                struct{}{},
+	SettingsFieldInfluxDbMetricsRetention:          struct{}{},
+	SettingsFieldCloudletMaintenanceTimeout:        struct{}{},
+}
+
+func (m *Settings) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateSettingsFieldsMap[field]; !ok {
+			if _, ok := SettingsAllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, SettingsAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
 }
 
 func (m *Settings) CopyInFields(src *Settings) int {

@@ -201,7 +201,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey,State,Errors";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
@@ -255,7 +255,7 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.method_noconfig) = "PlatformType,Errors,Status,State,DeploymentLocal,Config,NotifySrvAddr,Flavor,PhysicalName,EnvVar,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,ChefClientKey";
+    option (protogen.method_noconfig) = "PlatformType,DeploymentLocal,Flavor,PhysicalName,EnvVar,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
