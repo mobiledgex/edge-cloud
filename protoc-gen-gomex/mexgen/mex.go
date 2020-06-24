@@ -30,25 +30,27 @@ func init() {
 }
 
 type mex struct {
-	gen           *generator.Generator
-	msgs          map[string]*descriptor.DescriptorProto
-	cudTemplate   *template.Template
-	enumTemplate  *template.Template
-	cacheTemplate *template.Template
-	keysTemplate  *template.Template
-	importUtil    bool
-	importLog     bool
-	importStrings bool
-	importErrors  bool
-	importStrconv bool
-	importSort    bool
-	importTime    bool
-	importCmp     bool
-	importReflect bool
-	importJson    bool
-	firstFile     string
-	support       gensupport.PluginSupport
-	keyMessages   []descriptor.DescriptorProto
+	gen             *generator.Generator
+	msgs            map[string]*descriptor.DescriptorProto
+	cudTemplate     *template.Template
+	enumTemplate    *template.Template
+	cacheTemplate   *template.Template
+	keysTemplate    *template.Template
+	importUtil      bool
+	importLog       bool
+	importStrings   bool
+	importErrors    bool
+	importStrconv   bool
+	importSort      bool
+	importTime      bool
+	importCmp       bool
+	importReflect   bool
+	importJson      bool
+	firstFile       string
+	lastFile        string
+	support         gensupport.PluginSupport
+	keyMessages     []descriptor.DescriptorProto
+	keyTagConflicts map[string][]string
 }
 
 func (m *mex) Name() string {
@@ -64,6 +66,8 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.keysTemplate = template.Must(template.New("keys").Parse(keysTemplateIn))
 	m.support.Init(gen.Request)
 	m.firstFile = gensupport.GetFirstFile(gen)
+	m.lastFile = gensupport.GetLastFile(gen)
+	m.keyTagConflicts = make(map[string][]string)
 }
 
 // P forwards to g.gen.P
@@ -110,6 +114,14 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 		m.P(matchOptions)
 		m.generateEnumDecodeHook()
 		m.generateShowCheck()
+	}
+	if m.lastFile == *file.FileDescriptorProto.Name {
+		for tag, list := range m.keyTagConflicts {
+			if len(list) <= 1 {
+				continue
+			}
+			m.gen.Fail("KeyTag conflict for", tag, "between", fmt.Sprintf("%v", list))
+		}
 	}
 }
 
@@ -1588,8 +1600,11 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			if tag == "" {
 				m.gen.Fail(*message.Name, "field", *field.Name, "missing protogen.keytag")
 			}
-			m.P("var ", message.Name, "Tag", generator.CamelCase(*field.Name), " = \"", tag, "\"")
+			fname := generator.CamelCase(*field.Name)
+
+			m.P("var ", message.Name, "Tag", fname, " = \"", tag, "\"")
 			hasKeyTags = true
+			m.keyTagConflicts[tag] = append(m.keyTagConflicts[tag], *message.Name+"."+fname)
 		}
 		if hasKeyTags {
 			m.P()
