@@ -69,13 +69,19 @@ func (e Duration) TimeDuration() time.Duration {
 
 // DecodeHook for use with mapstructure package.
 func DecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
-	if from.Kind() == reflect.String && to == reflect.TypeOf(Duration(0)) {
-		dur, err := time.ParseDuration(data.(string))
-		if err != nil {
-			return data, err
+	if from.Kind() == reflect.String {
+		switch to {
+		case reflect.TypeOf(Duration(0)):
+			dur, err := time.ParseDuration(data.(string))
+			if err != nil {
+				return data, err
+			}
+			return Duration(dur), nil
+		case reflect.TypeOf(time.Time{}):
+			return time.Parse(time.RFC3339, data.(string))
 		}
-		return Duration(dur), nil
 	}
+
 	// decode enums
 	return EnumDecodeHook(from, to, data)
 }
