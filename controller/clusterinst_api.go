@@ -301,12 +301,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
 			return errors.New("Cloudlet under maintenance, please try again later")
 		}
-
 		var err error
-		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
-		if err != nil {
-			return err
-		}
 		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
 		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
@@ -417,7 +412,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				return errors.New("Not enough Disk available")
 			}
 		}
-		// allocateIP also sets in.IpAccess to either Dedicated or Shared
+		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
+		if err != nil {
+			return err
+		}
 		err = allocateIP(in, &cloudlet, &refs)
 		if err != nil {
 			return err
@@ -471,37 +469,13 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "updateClusterInstInternal")
-	if err := in.Key.ValidateKey(); err != nil {
+
+	err := in.ValidateUpdateFields()
+	if err != nil {
 		return err
 	}
-
-	if in.Fields == nil {
-		return fmt.Errorf("nothing specified to update")
-	}
-	allowedFields := []string{}
-	badFields := []string{}
-	for _, field := range in.Fields {
-		if field == edgeproto.ClusterInstFieldCrmOverride ||
-			field == edgeproto.ClusterInstFieldKey ||
-			in.IsKeyField(field) {
-			continue
-		} else if field == edgeproto.ClusterInstFieldNumNodes || field == edgeproto.ClusterInstFieldAutoScalePolicy {
-			allowedFields = append(allowedFields, field)
-		} else {
-			badFields = append(badFields, field)
-		}
-	}
-	if len(badFields) > 0 {
-		// cat all the bad field names and return error
-		badstrs := []string{}
-		for _, bad := range badFields {
-			badstrs = append(badstrs, edgeproto.ClusterInstAllFieldsStringMap[bad])
-		}
-		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badstrs, ","))
-	}
-	in.Fields = allowedFields
-	if len(allowedFields) == 0 {
-		return fmt.Errorf("Nothing specified to modify")
+	if err := in.Key.ValidateKey(); err != nil {
+		return err
 	}
 
 	cctx.SetOverride(&in.CrmOverride)
@@ -513,7 +487,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 
 	var inbuf edgeproto.ClusterInst
 	var changeCount int
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		changeCount = 0
 		if !s.store.STMGet(stm, &in.Key, &inbuf) {
 			return in.Key.NotFoundError()

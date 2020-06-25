@@ -494,6 +494,7 @@ func setAppDiffFields(src *edgeproto.App, dst *edgeproto.App) {
 
 func updateAppInsts(ctx context.Context, appkey *edgeproto.AppKey) {
 	span := log.StartSpan(log.DebugLevelApi, "updateAppInsts", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+	log.SetTags(span, appkey.GetTags())
 	defer span.Finish()
 	ctx = log.ContextWithSpan(context.Background(), span)
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake(), grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc), grpc.WithStreamInterceptor(log.StreamClientTraceGrpc))

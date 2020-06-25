@@ -117,23 +117,31 @@ func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto
 	}
 
 	//walk the objects
+	var template *v1.PodTemplateSpec
+	var name string
 	for i, _ := range objs {
+		template = nil
+		name = ""
 		switch obj := objs[i].(type) {
 		case *appsv1.Deployment:
-			addEnvVars(ctx, &obj.Spec.Template, envVars)
-			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
-			// Add labels for all the appKey data
-			addAppInstLabels(&obj.Spec.Template.ObjectMeta, app)
-			if imagePullSecrets != nil {
-				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecrets)
-			}
+			template = &obj.Spec.Template
+			name = obj.ObjectMeta.Name
 		case *appsv1.DaemonSet:
-			addEnvVars(ctx, &obj.Spec.Template, envVars)
-			addMexLabel(&obj.Spec.Template.ObjectMeta, obj.ObjectMeta.Name)
-			addAppInstLabels(&obj.Spec.Template.ObjectMeta, app)
-			if imagePullSecrets != nil {
-				addImagePullSecret(ctx, &obj.Spec.Template, imagePullSecrets)
-			}
+			template = &obj.Spec.Template
+			name = obj.ObjectMeta.Name
+		case *appsv1.StatefulSet:
+			template = &obj.Spec.Template
+			name = obj.ObjectMeta.Name
+		}
+		if template == nil {
+			continue
+		}
+		addEnvVars(ctx, template, envVars)
+		addMexLabel(&template.ObjectMeta, name)
+		// Add labels for all the appKey data
+		addAppInstLabels(&template.ObjectMeta, app)
+		if imagePullSecrets != nil {
+			addImagePullSecret(ctx, template, imagePullSecrets)
 		}
 	}
 	//marshal the objects back together and return as one string

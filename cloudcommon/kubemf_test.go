@@ -98,3 +98,41 @@ spec:
         - containerPort: 27276
           protocol: UDP
 `
+
+var testDockerComposeManifest = `version: '3.3'
+
+services:
+   db:
+     image: mysql:5.7
+     restart: always
+     environment:
+       MYSQL_ROOT_PASSWORD: somewordpress
+       MYSQL_DATABASE: wordpress
+       MYSQL_USER: wordpress
+       MYSQL_PASSWORD: wordpress
+
+   wordpress:
+     depends_on:
+       - db
+     image: wordpress:latest
+     ports:
+       - "8000:80"
+     restart: always
+     environment:
+       WORDPRESS_DB_HOST: db:3306
+       WORDPRESS_DB_USER: wordpress
+       WORDPRESS_DB_PASSWORD: wordpress
+       WORDPRESS_DB_NAME: wordpress
+`
+
+func TestDecodeDockerCompose(t *testing.T) {
+	containers, err := DecodeDockerComposeYaml(testDockerComposeManifest)
+	require.Nil(t, err)
+	require.Equal(t, 2, len(containers))
+	dbContainer, ok := containers["db"]
+	require.True(t, ok, "Container 'db' exists")
+	require.Equal(t, dbContainer.Image, "mysql:5.7", "DB container image exists")
+	wpContainer, ok := containers["wordpress"]
+	require.True(t, ok, "Container 'wordpress' exists")
+	require.Equal(t, wpContainer.Image, "wordpress:latest", "Wordpress container image exists")
+}

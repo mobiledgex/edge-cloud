@@ -15,9 +15,9 @@ enum OptResNames {
 }
 message ResTagTableKey {
   // Resource Table Name
-  string name = 1;
+  string name = 1 [(protogen.keytag) = "restagtable"];
   // Operator organization of the cloudlet site.
-  string organization = 2;
+  string organization = 2 [(protogen.keytag) = "restagtableorg"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;

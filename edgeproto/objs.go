@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 	context "golang.org/x/net/context"
 )
@@ -456,6 +457,9 @@ func (s *PrivacyPolicy) Validate(fields map[string]struct{}) error {
 			if o.PortRangeMin < minPort || o.PortRangeMin > maxPort {
 				return fmt.Errorf("Invalid min port range: %d", o.PortRangeMin)
 			}
+			if o.PortRangeMax > maxPort {
+				return fmt.Errorf("Invalid max port range: %d", o.PortRangeMax)
+			}
 			if o.PortRangeMin > o.PortRangeMax {
 				return fmt.Errorf("Min port range: %d cannot be higher than max: %d", o.PortRangeMin, o.PortRangeMax)
 			}
@@ -685,6 +689,17 @@ func GetOrg(obj interface{}) string {
 		return v.Key.AppKey.Organization
 	default:
 		return "mobiledgex"
+	}
+}
+
+func GetTags(obj interface{}) map[string]string {
+	switch v := obj.(type) {
+	case objstore.Obj:
+		return v.GetObjKey().GetTags()
+	case objstore.ObjKey:
+		return v.GetTags()
+	default:
+		return map[string]string{}
 	}
 }
 

@@ -88,6 +88,7 @@ func main() {
 		span.Finish()
 		log.FatalLog(err.Error())
 	}
+	log.SetTags(span, myCloudletInfo.Key.GetTags())
 	crmutil.InitDebug(&nodeMgr)
 
 	if *platformName == "" {

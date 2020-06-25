@@ -159,6 +159,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		go func() {
 			var cloudlet edgeproto.Cloudlet
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm create ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 			if !cd.CloudletCache.Get(&new.Key.CloudletKey, &cloudlet) {
 				log.WarnLog("Could not find cloudlet in cache", "key", new.Key.CloudletKey)
@@ -229,6 +230,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		}
 		go func() {
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm delete ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 			log.SpanLog(ctx, log.DebugLevelInfra, "delete cluster inst", "ClusterInst", *new)
 			err = cd.platform.DeleteClusterInst(ctx, new)
@@ -308,6 +310,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		go func() {
 			log.SpanLog(ctx, log.DebugLevelInfra, "update kube config", "AppInst", new, "ClusterInst", clusterInst)
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm create AppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 
 			policy := edgeproto.PrivacyPolicy{}
@@ -408,6 +411,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		go func() {
 			log.SpanLog(ctx, log.DebugLevelInfra, "delete app inst", "AppInst", new, "ClusterInst", clusterInst)
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm delete AppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 
 			err = cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new)
