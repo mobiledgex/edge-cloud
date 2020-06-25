@@ -131,7 +131,30 @@ spec:
         - containerPort: 10003
           protocol: UDP
       imagePullSecrets:
-      - name: registry.mobiledgex.net`
+      - name: registry.mobiledgex.net
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: influxdb
+  labels:
+    app.kubernetes.io/name: influxdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: influxdb
+  serviceName: "influxdb"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: influxdb
+    spec:
+      serviceAccountName: influxdb
+      containers:
+      - name: influxdb:1.8.0-alpine
+        image: "registry-int.mobiledgex.net/atlanticinc/influxdb:1.8.0-alpine"
+        imagePullPolicy: "IfNotPresent"`
 
 var expectedDeploymentManifest = `apiVersion: v1
 kind: Service
@@ -192,6 +215,7 @@ spec:
       - name: docker-int.mobiledgex.net
       - name: docker.mobiledgex.net
       - name: registry.mobiledgex.net
+      - name: registry-int.mobiledgex.net
       initContainers:
       - image: docker-int.mobiledgex.net/atlanticinc/images/pillimogoutils10:1.0.1
         name: pillimogo-init1
@@ -235,12 +259,51 @@ spec:
       - name: docker-test.mobiledgex.net
       - name: docker-int.mobiledgex.net
       - name: docker.mobiledgex.net
+      - name: registry-int.mobiledgex.net
   updateStrategy: {}
 status:
   currentNumberScheduled: 0
   desiredNumberScheduled: 0
   numberMisscheduled: 0
   numberReady: 0
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/name: influxdb
+  name: influxdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: influxdb
+  serviceName: influxdb
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/name: influxdb
+        mex-app: influxdb
+        mexAppName: pillimogo
+        mexAppVersion: "101"
+    spec:
+      containers:
+      - image: registry-int.mobiledgex.net/atlanticinc/influxdb:1.8.0-alpine
+        imagePullPolicy: IfNotPresent
+        name: influxdb:1.8.0-alpine
+        resources: {}
+      imagePullSecrets:
+      - name: docker-test.mobiledgex.net
+      - name: docker-int.mobiledgex.net
+      - name: docker.mobiledgex.net
+      - name: registry.mobiledgex.net
+      - name: registry-int.mobiledgex.net
+      serviceAccountName: influxdb
+  updateStrategy: {}
+status:
+  replicas: 0
 `
 
 var imagePaths = map[string]string{
@@ -250,6 +313,7 @@ var imagePaths = map[string]string{
 	"docker-int.mobiledgex.net/atlanticinc/images/pillimogoutils10:1.0.1": "docker-int.mobiledgex.net",
 	"docker-int.mobiledgex.net/atlanticinc/images/pillimogoutils11:1.0.1": "docker-int.mobiledgex.net",
 	"registry.mobiledgex.net/atlanticinc/pillimogo2:1.0":                  "registry.mobiledgex.net",
+	"registry-int.mobiledgex.net/atlanticinc/influxdb:1.8.0-alpine":       "registry-int.mobiledgex.net",
 }
 
 func TestImagePullSecrets(t *testing.T) {
@@ -273,7 +337,7 @@ func TestImagePullSecrets(t *testing.T) {
 
 	for _, imgPath := range names.ImagePaths {
 		secret, ok := imagePaths[imgPath]
-		require.True(t, ok, "valid image path")
+		require.True(t, ok, fmt.Sprintf("valid image path: %s", imgPath))
 		names.ImagePullSecrets = append(names.ImagePullSecrets, secret)
 	}
 

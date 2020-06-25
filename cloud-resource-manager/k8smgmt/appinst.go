@@ -43,100 +43,100 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 		log.InfoLog("unable to decode k8s yaml", "err", err)
 		return err
 	}
+	var name string
 	for ii, _ := range objs {
 		for {
-			deployment, isDeployment := objs[ii].(*appsv1.Deployment)
-			daemonset, isDaemonset := objs[ii].(*appsv1.DaemonSet)
-
-			if isDeployment || isDaemonset {
-				var name string
-				if isDeployment {
-					name = deployment.ObjectMeta.Name
-				} else {
-					name = daemonset.ObjectMeta.Name
-				}
-				log.SpanLog(ctx, log.DebugLevelInfra, "get pods", "name", name)
-
-				cmd := fmt.Sprintf("%s kubectl get pods --no-headers --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
-				out, err := client.Output(cmd)
-				if err != nil {
-					log.InfoLog("error getting pods", "err", err, "out", out)
-					return fmt.Errorf("error getting pods: %v", err)
-				}
-				lines := strings.Split(out, "\n")
-				// there are potentially multiple pods in the lines loop, we will quit processing this obj
-				// only when they are all up, i.e. no non-
-				podCount := 0
-				runningCount := 0
-
-				for _, line := range lines {
-					if line == "" {
-						continue
-					}
-					// there can be multiple pods, one per line. If all
-					// of them are running we can quit the loop
-					if r.MatchString(line) {
-						podCount++
-						matches := r.FindStringSubmatch(line)
-						podName := matches[1]
-						podState := matches[2]
-						switch podState {
-						case "Running":
-							log.SpanLog(ctx, log.DebugLevelInfra, "pod is running", "podName", podName)
-							runningCount++
-						case "Pending":
-							fallthrough
-						case "ContainerCreating":
-							log.SpanLog(ctx, log.DebugLevelInfra, "still waiting for pod", "podName", podName, "state", podState)
-						case "Terminating":
-							log.SpanLog(ctx, log.DebugLevelInfra, "pod is terminating", "podName", podName, "state", podState)
-						default:
-							if strings.Contains(podState, "Init") {
-								// Init state cannot be matched exactly, e.g. Init:0/2
-								log.SpanLog(ctx, log.DebugLevelInfra, "pod in init state", "podName", podName, "state", podState)
-							} else {
-								// try to find out what error was
-								// TODO: pull events and send
-								// them back as status updates
-								// rather than sending back
-								// full "describe" dump
-								cmd := fmt.Sprintf("%s kubectl describe pod --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
-								out, derr := client.Output(cmd)
-								if derr == nil {
-									return fmt.Errorf("Run container failed: %s", out)
-								}
-								return fmt.Errorf("Pod is unexpected state: %s", podState)
-							}
-						}
-					} else {
-						if waitFor == WaitDeleted && strings.Contains(line, "No resources found") {
-							break
-						}
-						return fmt.Errorf("unable to parse kubectl output: [%s]", line)
-					}
-				}
-				if waitFor == WaitDeleted {
-					if podCount == 0 {
-						log.SpanLog(ctx, log.DebugLevelInfra, "all pods gone", "name", name)
-						break
-					}
-				} else {
-					if podCount == runningCount {
-						log.SpanLog(ctx, log.DebugLevelInfra, "all pods up", "name", name)
-						break
-					}
-				}
-				elapsed := time.Since(start)
-				if elapsed >= (maxWait) {
-					// for now we will return no errors when we time out.  In future we will use some other state or status
-					// field to reflect this and employ health checks to track these appinsts
-					log.InfoLog("AppInst wait timed out", "appName", app.Key.Name)
-					break
-				}
-				time.Sleep(1 * time.Second)
-			} else {
+			name = ""
+			switch obj := objs[ii].(type) {
+			case *appsv1.Deployment:
+				name = obj.ObjectMeta.Name
+			case *appsv1.DaemonSet:
+				name = obj.ObjectMeta.Name
+			case *appsv1.StatefulSet:
+				name = obj.ObjectMeta.Name
+			}
+			if name == "" {
 				break
 			}
+			log.SpanLog(ctx, log.DebugLevelInfra, "get pods", "name", name)
+
+			cmd := fmt.Sprintf("%s kubectl get pods --no-headers --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
+			out, err := client.Output(cmd)
+			if err != nil {
+				log.InfoLog("error getting pods", "err", err, "out", out)
+				return fmt.Errorf("error getting pods: %v", err)
+			}
+			lines := strings.Split(out, "\n")
+			// there are potentially multiple pods in the lines loop, we will quit processing this obj
+			// only when they are all up, i.e. no non-
+			podCount := 0
+			runningCount := 0
+
+			for _, line := range lines {
+				if line == "" {
+					continue
+				}
+				// there can be multiple pods, one per line. If all
+				// of them are running we can quit the loop
+				if r.MatchString(line) {
+					podCount++
+					matches := r.FindStringSubmatch(line)
+					podName := matches[1]
+					podState := matches[2]
+					switch podState {
+					case "Running":
+						log.SpanLog(ctx, log.DebugLevelInfra, "pod is running", "podName", podName)
+						runningCount++
+					case "Pending":
+						fallthrough
+					case "ContainerCreating":
+						log.SpanLog(ctx, log.DebugLevelInfra, "still waiting for pod", "podName", podName, "state", podState)
+					case "Terminating":
+						log.SpanLog(ctx, log.DebugLevelInfra, "pod is terminating", "podName", podName, "state", podState)
+					default:
+						if strings.Contains(podState, "Init") {
+							// Init state cannot be matched exactly, e.g. Init:0/2
+							log.SpanLog(ctx, log.DebugLevelInfra, "pod in init state", "podName", podName, "state", podState)
+						} else {
+							// try to find out what error was
+							// TODO: pull events and send
+							// them back as status updates
+							// rather than sending back
+							// full "describe" dump
+							cmd := fmt.Sprintf("%s kubectl describe pod --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
+							out, derr := client.Output(cmd)
+							if derr == nil {
+								return fmt.Errorf("Run container failed: %s", out)
+							}
+							return fmt.Errorf("Pod is unexpected state: %s", podState)
+						}
+					}
+				} else {
+					if waitFor == WaitDeleted && strings.Contains(line, "No resources found") {
+						break
+					}
+					return fmt.Errorf("unable to parse kubectl output: [%s]", line)
+				}
+			}
+			if waitFor == WaitDeleted {
+				if podCount == 0 {
+					log.SpanLog(ctx, log.DebugLevelInfra, "all pods gone", "name", name)
+					break
+				}
+			} else {
+				if podCount == runningCount {
+					log.SpanLog(ctx, log.DebugLevelInfra, "all pods up", "name", name)
+					break
+				}
+			}
+			elapsed := time.Since(start)
+			if elapsed >= (maxWait) {
+				// for now we will return no errors when we time out.  In future we will use some other state or status
+				// field to reflect this and employ health checks to track these appinsts
+				log.InfoLog("AppInst wait timed out", "appName", app.Key.Name)
+				break
+			}
+			time.Sleep(1 * time.Second)
 		}
 	}
 	return nil
@@ -210,22 +210,31 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 	if err != nil {
 		return nil, err
 	}
+	var name string
 	for ii, _ := range objs {
-		deployment, ok := objs[ii].(*appsv1.Deployment)
-		if ok {
-			name := deployment.ObjectMeta.Name
-			cmd := fmt.Sprintf("%s kubectl get pods -o custom-columns=NAME:.metadata.name --sort-by=.metadata.name --no-headers --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
-			out, err := client.Output(cmd)
-			if err != nil {
-				return nil, fmt.Errorf("error getting kubernetes pods, %s, %s, %s", cmd, out, err.Error())
+		name = ""
+		switch obj := objs[ii].(type) {
+		case *appsv1.Deployment:
+			name = obj.ObjectMeta.Name
+		case *appsv1.DaemonSet:
+			name = obj.ObjectMeta.Name
+		case *appsv1.StatefulSet:
+			name = obj.ObjectMeta.Name
+		}
+		if name == "" {
+			continue
+		}
+		cmd := fmt.Sprintf("%s kubectl get pods -o custom-columns=NAME:.metadata.name --sort-by=.metadata.name --no-headers --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
+		out, err := client.Output(cmd)
+		if err != nil {
+			return nil, fmt.Errorf("error getting kubernetes pods, %s, %s, %s", cmd, out, err.Error())
+		}
+		lines := strings.Split(out, "\n")
+		for _, line := range lines {
+			if strings.TrimSpace(line) == "" {
+				continue
 			}
-			lines := strings.Split(out, "\n")
-			for _, line := range lines {
-				if strings.TrimSpace(line) == "" {
-					continue
-				}
-				rt.ContainerIds = append(rt.ContainerIds, strings.TrimSpace(line))
-			}
+			rt.ContainerIds = append(rt.ContainerIds, strings.TrimSpace(line))
 		}
 	}
 
