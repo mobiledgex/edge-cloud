@@ -70,8 +70,12 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		// For dind, we use the network which the dind cluster is on.
 		cmdArgs = append(cmdArgs, "--network", opts.DockerNetwork)
 	}
+	certsDir, _, _, err := GetCertsDirAndFiles(ctx, client)
+	if err != nil {
+		return fmt.Errorf("Unable to get certsDir - %v", "err")
+	}
 	cmdArgs = append(cmdArgs, []string{
-		"-v", CertsDir + ":/etc/envoy/certs",
+		"-v", certsDir + ":/etc/envoy/certs",
 		"-v", accesslogFile + ":/var/log/access.log",
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl"}...)

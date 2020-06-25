@@ -16,11 +16,7 @@ import (
 	ssh "github.com/mobiledgex/golang-ssh"
 )
 
-var CertsDir = "/etc/ssl/certs"
 var CertName = "envoyTlsCerts" // cannot use common name as filename since envoy doesn't know if the app is dedicated or not
-var certFile = CertsDir + "/" + CertName + ".crt"
-var keyFile = CertsDir + "/" + CertName + ".key"
-var permission = pc.SudoOn
 
 const LETS_ENCRYPT_MAX_DOMAINS_PER_CERT = 100
 
@@ -71,27 +67,38 @@ func init() {
 	DedicatedClients = make(map[string]ssh.Client)
 }
 
+// GetCertsDirAndFiles returns certsDir, certFile, keyFile
+func GetCertsDirAndFiles(ctx context.Context, client ssh.Client) (string, string, string, error) {
+	out, err := client.Output("pwd")
+	if err != nil {
+		return "", "", "", err
+	}
+	pwd := strings.TrimSpace(string(out))
+	certsDir := pwd + "/envoy/certs"
+	certFile := certsDir + "/" + CertName + ".crt"
+	keyFile := certsDir + "/" + CertName + ".key"
+	return certsDir, certFile, keyFile, nil
+}
+
 // get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
 func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultAddr string, client ssh.Client, commercialCerts bool) {
-	if !commercialCerts {
-		// write to somewhere not /etc if not in production bc of permision issues
-		CertsDir = "/tmp/ssl/certs"
-		certFile = CertsDir + "/" + CertName + ".crt"
-		keyFile = CertsDir + "/" + CertName + ".key"
-		permission = pc.NoSudo
+	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Error: Unable to get cert info", "dedicatedCommonName", dedicatedCommonName, "err", err)
+		return
 	}
 	SharedRootLbClient = client
-	getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr, commercialCerts)
+	getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr, certsDir, certFile, keyFile, commercialCerts)
 	// refresh every 30 days
 	for {
 		select {
 		case <-time.After(30 * 24 * time.Hour):
-			getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr, commercialCerts)
+			getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr, certsDir, certFile, keyFile, commercialCerts)
 		}
 	}
 }
 
-func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, vaultAddr string, commercialCerts bool) {
+func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, vaultAddr string, certsDir, certFile, keyFile string, commercialCerts bool) {
 	var err error
 	var config *vault.Config
 	tls := access.TLSCert{}
@@ -104,11 +111,11 @@ func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, 
 		err = getSelfSignedCerts(ctx, &tls, commonName, dedicatedCommonName)
 	}
 	if err == nil {
-		writeCertToRootLb(ctx, &tls, SharedRootLbClient)
+		writeCertToRootLb(ctx, &tls, SharedRootLbClient, certsDir, certFile, keyFile)
 		DedicatedMux.Lock()
 		DedicatedTls = tls
 		for _, client := range DedicatedClients {
-			writeCertToRootLb(ctx, &tls, client)
+			writeCertToRootLb(ctx, &tls, client, certsDir, certFile, keyFile)
 		}
 		DedicatedMux.Unlock()
 	} else {
@@ -116,17 +123,18 @@ func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, 
 	}
 }
 
-func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Client) {
+func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Client, certsDir, certFile, keyFile string) {
 	// write it to rootlb
-	err := pc.Run(client, "mkdir -p "+CertsDir)
+
+	err := pc.Run(client, "mkdir -p "+certsDir)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "can't create cert dir on rootlb", "certDir", CertsDir)
+		log.SpanLog(ctx, log.DebugLevelInfra, "can't create cert dir on rootlb", "certDir", certsDir)
 	} else {
-		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", permission)
+		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", pc.NoSudo)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
 		}
-		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", permission)
+		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", pc.NoSudo)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
 		}
@@ -217,10 +225,15 @@ func getSelfSignedCerts(ctx context.Context, tlsCert *access.TLSCert, commonName
 }
 
 func NewDedicatedCluster(ctx context.Context, clustername string, client ssh.Client) {
+	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Error: failed to get cert dir and files", "clustername", clustername, "err", err)
+		return
+	}
 	DedicatedMux.Lock()
 	defer DedicatedMux.Unlock()
 	DedicatedClients[clustername] = client
-	writeCertToRootLb(ctx, &DedicatedTls, client)
+	writeCertToRootLb(ctx, &DedicatedTls, client, certsDir, certFile, keyFile)
 }
 
 func RemoveDedicatedCluster(ctx context.Context, clustername string) {
