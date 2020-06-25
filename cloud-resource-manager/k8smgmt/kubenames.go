@@ -85,36 +85,32 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 		if err != nil {
 			return nil, fmt.Errorf("invalid kubernetes deployment yaml, %s", err.Error())
 		}
+		var template *v1.PodTemplateSpec
 		for _, o := range objs {
 			log.DebugLog(log.DebugLevelInfra, "k8s obj", "obj", o)
+			template = nil
 			switch obj := o.(type) {
 			case *v1.Service:
 				svcName := obj.ObjectMeta.Name
 				kubeNames.ServiceNames = append(kubeNames.ServiceNames, svcName)
 			case *appsv1.Deployment:
-				templateSpec := obj.Spec.Template.Spec
-				containers := []v1.Container{}
-				containers = append(containers, templateSpec.InitContainers...)
-				containers = append(containers, templateSpec.Containers...)
-				for _, cont := range containers {
-					if cont.Image == "" {
-						continue
-					}
-					kubeNames.ImagePaths = append(kubeNames.ImagePaths, cont.Image)
-				}
+				template = &obj.Spec.Template
 			case *appsv1.DaemonSet:
-				templateSpec := obj.Spec.Template.Spec
-				containers := []v1.Container{}
-				containers = append(containers, templateSpec.InitContainers...)
-				containers = append(containers, templateSpec.Containers...)
-				for _, cont := range containers {
-					if cont.Image == "" {
-						continue
-					}
-					kubeNames.ImagePaths = append(kubeNames.ImagePaths, cont.Image)
-				}
-			default:
+				template = &obj.Spec.Template
+			case *appsv1.StatefulSet:
+				template = &obj.Spec.Template
+			}
+			if template == nil {
 				continue
+			}
+			containers := []v1.Container{}
+			containers = append(containers, template.Spec.InitContainers...)
+			containers = append(containers, template.Spec.Containers...)
+			for _, cont := range containers {
+				if cont.Image == "" {
+					continue
+				}
+				kubeNames.ImagePaths = append(kubeNames.ImagePaths, cont.Image)
 			}
 		}
 	} else if app.Deployment == cloudcommon.DeploymentTypeHelm {
