@@ -186,6 +186,7 @@ func main() {
 			AppCache:           &controllerData.AppCache,
 			AppInstCache:       &controllerData.AppInstCache,
 			ResTagTableCache:   &controllerData.ResTagTableCache,
+			CloudletCache:      &controllerData.CloudletCache,
 		}
 		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &caches, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
@@ -286,7 +287,6 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		EnvVars:             cloudlet.EnvVar,
 		NodeMgr:             &nodeMgr,
 		AppDNSRoot:          *appDNSRoot,
-		Cloudlet:            cloudlet,
 		ChefServerPath:      *chefServerPath,
 		DeploymentTag:       *deploymentTag,
 	}

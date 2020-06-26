@@ -20,7 +20,6 @@ type PlatformConfig struct {
 	PackageVersion      string
 	EnvVars             map[string]string
 	NodeMgr             *node.NodeMgr
-	Cloudlet            *edgeproto.Cloudlet
 	AppDNSRoot          string
 	ChefServerPath      string
 	DeploymentTag       string
@@ -33,6 +32,7 @@ type Caches struct {
 	AppInstCache       *edgeproto.AppInstCache
 	AppCache           *edgeproto.AppCache
 	ResTagTableCache   *edgeproto.ResTagTableCache
+	CloudletCache      *edgeproto.CloudletCache
 }
 
 // Platform abstracts the underlying cloudlet platform.
