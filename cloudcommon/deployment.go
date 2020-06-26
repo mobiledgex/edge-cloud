@@ -136,9 +136,6 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 					continue
 				}
 				appPort.InternalPort = kp.Port
-				if strings.HasSuffix(kp.Name, "tls") {
-					appPort.Tls = true
-				}
 				objPorts[appPort.String()] = struct{}{}
 			}
 		}
@@ -159,7 +156,6 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 						Proto:        appPort.Proto,
 						InternalPort: int32(i),
 						EndPort:      int32(0),
-						Tls:          appPort.Tls,
 					}
 					if appPort.Proto == dme.LProto_L_PROTO_HTTP {
 						appPort.Proto = dme.LProto_L_PROTO_TCP
@@ -176,11 +172,14 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 			if appPort.Proto == dme.LProto_L_PROTO_HTTP {
 				appPort.Proto = dme.LProto_L_PROTO_TCP
 			}
-			if _, found := objPorts[appPort.String()]; found {
+			tp := appPort
+			// No need to test TLS as part of manifest
+			tp.Tls = false
+			if _, found := objPorts[tp.String()]; found {
 				continue
 			}
-			protoStr, _ := edgeproto.LProtoStr(appPort.Proto)
-			missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, appPort.InternalPort))
+			protoStr, _ := edgeproto.LProtoStr(tp.Proto)
+			missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, tp.InternalPort))
 		}
 		if len(missingPorts) > 0 {
 			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest (note http is mapped to tcp)", strings.Join(missingPorts, ","))
