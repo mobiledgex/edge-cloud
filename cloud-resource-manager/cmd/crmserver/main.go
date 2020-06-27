@@ -245,7 +245,13 @@ func main() {
 		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		commonName := cloudcommon.GetRootLBFQDN(&myCloudletInfo.Key, *appDNSRoot)
 		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
-		rootlb, err := platform.GetClusterPlatformClient(ctx, &edgeproto.ClusterInst{IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED})
+		rootlb, err := platform.GetClusterPlatformClient(
+			ctx,
+			&edgeproto.ClusterInst{
+				IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED,
+			},
+			cloudcommon.ClientTypeRootLB,
+		)
 		if err == nil {
 			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, nodeMgr.VaultAddr, rootlb, *commercialCerts)
 		}
