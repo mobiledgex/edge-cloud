@@ -297,7 +297,7 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
 - key:
     appkey:
       organization: MobiledgeX
@@ -319,7 +319,7 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
 
 appinstrefs:
 - key:

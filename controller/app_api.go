@@ -342,7 +342,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	}
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
+		if in.DefaultFlavor.Name != "" && !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
 			return in.DefaultFlavor.NotFoundError()
 		}
 		if s.store.STMGet(stm, &in.Key, nil) {

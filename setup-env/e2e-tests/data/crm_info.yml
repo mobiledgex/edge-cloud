@@ -419,7 +419,7 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
   state: Ready
   powerstate: PowerOn
   vmflavor: x1.small
@@ -445,7 +445,7 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
   state: Ready
   powerstate: PowerOn
   vmflavor: x1.small
@@ -537,7 +537,7 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
   state: Ready
   powerstate: PowerOn
   vmflavor: x1.small
