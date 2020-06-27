@@ -459,7 +459,7 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
 - key:
     appkey:
       organization: MobiledgeX
@@ -477,7 +477,7 @@ appinstances:
     longitude: -91
   liveness: LivenessStatic
   flavor:
-    name: x1.medium
+    name: x1.small
 - key:
     appkey:
       organization: AcmeAppCo
@@ -541,7 +541,7 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
 - key:
     appkey:
       organization: AcmeAppCo
