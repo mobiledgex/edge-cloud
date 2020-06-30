@@ -28,32 +28,32 @@ func InitAlertApi(sync *Sync) {
 
 // AppInstDown alert needs to set the HealthCheck in AppInst
 func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.Alert, state edgeproto.HealthCheck) {
-	dev, ok := alert.Labels[cloudcommon.AlertLabelClusterOrg]
+	dev, ok := alert.Labels[edgeproto.ClusterInstKeyTagOrganization]
 	if !ok {
-		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Dev label in Alert", "alert", alert)
+		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Cluster Org label in Alert", "alert", alert)
 		return
 	}
-	clorg, ok := alert.Labels[cloudcommon.AlertLabelCloudletOrg]
+	clorg, ok := alert.Labels[edgeproto.CloudletKeyTagOrganization]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Cloudlet Org label in Alert", "alert", alert)
 		return
 	}
-	cloudlet, ok := alert.Labels[cloudcommon.AlertLabelCloudlet]
+	cloudlet, ok := alert.Labels[edgeproto.CloudletKeyTagName]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Cloudlet label in Alert", "alert", alert)
 		return
 	}
-	cluster, ok := alert.Labels[cloudcommon.AlertLabelCluster]
+	cluster, ok := alert.Labels[edgeproto.ClusterKeyTagName]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Cluster label in Alert", "alert", alert)
 		return
 	}
-	appName, ok := alert.Labels[cloudcommon.AlertLabelApp]
+	appName, ok := alert.Labels[edgeproto.AppKeyTagName]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find App Name label in Alert", "alert", alert)
 		return
 	}
-	appVer, ok := alert.Labels[cloudcommon.AlertLabelAppVer]
+	appVer, ok := alert.Labels[edgeproto.AppKeyTagVersion]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find App Version label in Alert", "alert", alert)
 		return

@@ -101,7 +101,6 @@ var MEXPrometheusApp = edgeproto.App{
 	Key:           MEXPrometheusAppKey,
 	ImagePath:     "stable/prometheus-operator",
 	Deployment:    cloudcommon.DeploymentTypeHelm,
-	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
 	Annotations:   "version=7.1.1",
@@ -140,7 +139,6 @@ var NFSAutoProvisionApp = edgeproto.App{
 	Key:           NFSAutoProvAppKey,
 	ImagePath:     "stable/nfs-client-provisioner",
 	Deployment:    cloudcommon.DeploymentTypeHelm,
-	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
 	Annotations:   "version=1.2.8",
@@ -314,6 +312,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 			AppKey:         app.Key,
 			ClusterInstKey: clusterInst.Key,
 		},
+		Flavor: clusterInst.Flavor,
 	}
 	if clusterSvcPlugin != nil && clusterInst.AutoScalePolicy != "" {
 		policy := edgeproto.AutoScalePolicy{}
@@ -494,6 +493,7 @@ func setAppDiffFields(src *edgeproto.App, dst *edgeproto.App) {
 
 func updateAppInsts(ctx context.Context, appkey *edgeproto.AppKey) {
 	span := log.StartSpan(log.DebugLevelApi, "updateAppInsts", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+	log.SetTags(span, appkey.GetTags())
 	defer span.Finish()
 	ctx = log.ContextWithSpan(context.Background(), span)
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake(), grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc), grpc.WithStreamInterceptor(log.StreamClientTraceGrpc))

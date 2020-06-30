@@ -72,6 +72,12 @@ func SpanFromContext(ctx context.Context) opentracing.Span {
 	return opentracing.SpanFromContext(ctx)
 }
 
+func SetTags(span opentracing.Span, tags map[string]string) {
+	for k, v := range tags {
+		span.SetTag(k, v)
+	}
+}
+
 func SpanLog(ctx context.Context, lvl uint64, msg string, keysAndValues ...interface{}) {
 	if debugLevel&lvl == 0 && lvl != DebugLevelInfo {
 		return
