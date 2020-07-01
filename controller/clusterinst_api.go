@@ -487,6 +487,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 
 	var inbuf edgeproto.ClusterInst
 	var changeCount int
+	retry := false
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		changeCount = 0
 		if !s.store.STMGet(stm, &in.Key, &inbuf) {
@@ -499,12 +500,13 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cctx.Undo && inbuf.State != edgeproto.TrackedState_READY && !ignoreTransient(cctx, inbuf.State) {
 			if inbuf.State == edgeproto.TrackedState_UPDATE_ERROR {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("previous update failed, %v, trying again", inbuf.Errors)})
+				retry = true
 			} else {
 				return errors.New("ClusterInst busy, cannot update")
 			}
 		}
 		changeCount = inbuf.CopyInFields(in)
-		if changeCount == 0 {
+		if changeCount == 0 && !retry {
 			// nothing changed
 			return nil
 		}
@@ -517,7 +519,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil {
 		return err
 	}
-	if changeCount == 0 {
+	if changeCount == 0 && !retry {
 		return nil
 	}
 
