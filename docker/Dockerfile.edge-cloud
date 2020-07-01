@@ -18,7 +18,7 @@ ENV GO111MODULE=on
 ENV DOCKER_BUILD=yes
 
 # Install support tools for docs
-RUN go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@v1.3.0
+RUN go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@v1.3.2
 COPY --from=registry.mobiledgex.net:5000/mobiledgex/protoc-gen-swagger:2020-01-19 /build/bin/protoc-gen-swagger /go/bin
 
 WORKDIR /go/src/github.com/mobiledgex

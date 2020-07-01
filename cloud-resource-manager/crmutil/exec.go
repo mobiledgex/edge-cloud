@@ -138,7 +138,8 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 			return err
 		}
 
-		run.client, err = cd.platform.GetClusterPlatformClient(ctx, &clusterInst)
+		clientType := cloudcommon.GetAppClientType(&app)
+		run.client, err = cd.platform.GetClusterPlatformClient(ctx, &clusterInst, clientType)
 		if err != nil {
 			return err
 		}

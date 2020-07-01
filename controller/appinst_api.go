@@ -388,6 +388,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
+			if in.Flavor.Name == "" {
+				return fmt.Errorf("No AppInst or App flavor specified")
+			}
 		}
 		vmFlavor := edgeproto.Flavor{}
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &vmFlavor) {
