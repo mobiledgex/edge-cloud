@@ -1213,6 +1213,10 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 			// got deleted in the meantime
 			return nil
 		}
+		if inst.HealthCheck == state {
+			// nothign to do
+			return nil
+		}
 		// healthy -> not healthy
 		if inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_OK && state != edgeproto.HealthCheck_HEALTH_CHECK_OK {
 			RecordAppInstEvent(ctx, &inst.Key, cloudcommon.HEALTH_CHECK_FAIL, cloudcommon.InstanceDown)
