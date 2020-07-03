@@ -1237,16 +1237,17 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
 			inst.PowerState = in.PowerState
 		}
+		// update health check to ok, if it was not set before
+		if in.State == edgeproto.TrackedState_READY &&
+			inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN {
+			inst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK
+		}
 		if inst.State == in.State {
 			// already in that state
 			if in.State == edgeproto.TrackedState_READY {
 				// update runtime info
 				inst.RuntimeInfo = in.RuntimeInfo
 				inst.Status = in.Status
-				// update health check to ok, if it was not set before
-				if inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN {
-					inst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK
-				}
 				s.store.STMPut(stm, &inst)
 			} else if inst.Status != in.Status {
 				// update status
