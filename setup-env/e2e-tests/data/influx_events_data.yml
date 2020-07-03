@@ -19,23 +19,7 @@
     - vcpu
     - ver
     values:
-    - - "2020-07-01T23:16:24.027062Z"
-      - someapplication1
-      - AcmeAppCo
-      - tmus-cloud-1
-      - tmus
-      - SmallCluster
-      - AcmeAppCo
-      - null
-      - HEALTH_CHECK_OK
-      - null
-      - null
-      - null
-      - null
-      - UP
-      - null
-      - "1.0"
-    - - "2020-07-01T23:16:24.06592Z"
+    - - "2020-01-28T21:44:17.757749Z"
       - someapplication1
       - AcmeAppCo
       - tmus-cloud-1
@@ -51,7 +35,7 @@
       - UP
       - null
       - "1.0"
-    - - "2020-07-01T23:16:24.361147Z"
+    - - "2020-01-28T21:44:19.842019Z"
       - someapplication1
       - AcmeAppCo
       - tmus-cloud-1
@@ -67,23 +51,7 @@
       - DOWN
       - null
       - "1.0"
-    - - "2020-07-01T23:16:24.621155Z"
-      - someapplication1
-      - AcmeAppCo
-      - tmus-cloud-1
-      - tmus
-      - SmallCluster
-      - AcmeAppCo
-      - null
-      - HEALTH_CHECK_OK
-      - null
-      - null
-      - null
-      - null
-      - UP
-      - null
-      - "1.0"
-    - - "2020-07-01T23:16:24.661914Z"
+    - - "2020-01-28T21:44:20.073059Z"
       - someapplication1
       - AcmeAppCo
       - tmus-cloud-1
@@ -99,7 +67,7 @@
       - UP
       - null
       - "1.0"
-    - - "2020-07-01T23:16:24.953635Z"
+    - - "2020-01-28T21:44:20.270832Z"
       - someapplication1
       - AcmeAppCo
       - tmus-cloud-1
@@ -136,7 +104,7 @@
     - vcpu
     - ver
     values:
-    - - "2020-07-01T23:16:23.374028Z"
+    - - "2020-01-28T21:44:17.248106Z"
       - null
       - null
       - tmus-cloud-1
@@ -152,7 +120,7 @@
       - UP
       - null
       - null
-    - - "2020-07-01T23:16:25.365347Z"
+    - - "2020-01-28T21:44:20.605077Z"
       - null
       - null
       - tmus-cloud-1
@@ -189,7 +157,7 @@
     - vcpu
     - ver
     values:
-    - - "2020-07-01T23:16:23.46977Z"
+    - - "2020-01-28T21:44:17.53257Z"
       - null
       - null
       - tmus-cloud-1
@@ -205,7 +173,7 @@
       - UP
       - 2
       - null
-    - - "2020-07-01T23:16:25.153231Z"
+    - - "2020-01-31T19:35:26.643773Z"
       - null
       - null
       - tmus-cloud-1

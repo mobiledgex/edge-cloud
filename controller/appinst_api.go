@@ -744,12 +744,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create AppInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_READY)
-		s.HealthCheckUpdate(ctx, in, edgeproto.HealthCheck_HEALTH_CHECK_OK)
 		cb.Send(&edgeproto.Result{Message: "Created AppInst successfully"})
 		err = nil
-	} else if err == nil {
-		// Set the initial health check to healthy
-		s.HealthCheckUpdate(ctx, in, edgeproto.HealthCheck_HEALTH_CHECK_OK)
 	}
 	if err != nil {
 		// XXX should probably track mod revision ID and only undo
@@ -1247,6 +1243,10 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 				// update runtime info
 				inst.RuntimeInfo = in.RuntimeInfo
 				inst.Status = in.Status
+				// update health check to ok, if it was not set before
+				if inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN {
+					inst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK
+				}
 				s.store.STMPut(stm, &inst)
 			} else if inst.Status != in.Status {
 				// update status
