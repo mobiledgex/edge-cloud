@@ -186,6 +186,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: MobiledgeX
@@ -208,6 +209,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 
 appinstrefs:
 - key:

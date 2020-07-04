@@ -19,6 +19,22 @@
     - vcpu
     - ver
     values:
+    - - "2020-07-04T15:32:27.7601Z"
+      - someapplication1
+      - AcmeAppCo
+      - tmus-cloud-1
+      - tmus
+      - SmallCluster
+      - AcmeAppCo
+      - null
+      - HEALTH_CHECK_OK
+      - null
+      - null
+      - null
+      - null
+      - UP
+      - null
+      - "1.0"
     - - "2020-01-28T21:44:17.757749Z"
       - someapplication1
       - AcmeAppCo
@@ -49,6 +65,22 @@
       - null
       - null
       - DOWN
+      - null
+      - "1.0"
+    - - "2020-07-04T15:32:28.464917Z"
+      - someapplication1
+      - AcmeAppCo
+      - tmus-cloud-1
+      - tmus
+      - SmallCluster
+      - AcmeAppCo
+      - null
+      - HEALTH_CHECK_OK
+      - null
+      - null
+      - null
+      - null
+      - UP
       - null
       - "1.0"
     - - "2020-01-28T21:44:20.073059Z"

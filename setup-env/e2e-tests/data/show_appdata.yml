@@ -78,3 +78,4 @@ appinstances:
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
+  healthcheck: HealthCheckOk

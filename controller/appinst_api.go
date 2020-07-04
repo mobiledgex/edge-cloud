@@ -757,6 +757,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			log.InfoLog("Undo create AppInst", "undoErr", undoErr)
 		}
 	}
+	s.HealthCheckUpdate(ctx, in, edgeproto.HealthCheck_HEALTH_CHECK_OK)
 	return err
 }
 

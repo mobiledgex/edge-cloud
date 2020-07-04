@@ -749,6 +749,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -780,6 +781,7 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -811,6 +813,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -842,6 +845,7 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -873,6 +877,7 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -904,6 +909,7 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -935,6 +941,7 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -966,6 +973,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -997,6 +1005,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1028,6 +1037,7 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1059,6 +1069,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1090,6 +1101,7 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1121,6 +1133,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1152,6 +1165,7 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1183,6 +1197,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1214,6 +1229,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1245,6 +1261,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1276,6 +1293,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1307,6 +1325,7 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1338,6 +1357,7 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 
 appinstrefs:
 - key:

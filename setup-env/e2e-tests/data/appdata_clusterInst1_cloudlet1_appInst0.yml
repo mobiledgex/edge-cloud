@@ -183,6 +183,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  healthcheck: HealthCheckOk
 
 appinstrefs:
 - key:
