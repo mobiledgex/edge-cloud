@@ -1313,7 +1313,7 @@ func (s *AppInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.AppIns
 
 // public cloud k8s cluster allocates a separate IP per service.  This is a type of dedicated access
 func isIPAllocatedPerService(operator string) bool {
-	return operator == cloudcommon.OperatorGCP || operator == cloudcommon.OperatorAzure
+	return operator == cloudcommon.OperatorGCP || operator == cloudcommon.OperatorAzure || operator == cloudcommon.OperatorAWS
 }
 
 func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs) error {
