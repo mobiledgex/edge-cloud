@@ -578,7 +578,7 @@ func (s *searchAppInst) searchCarrier(carrier string) bool {
 		return true
 	}
 	// always allow public clouds
-	if carrier == cloudcommon.OperatorAzure || carrier == cloudcommon.OperatorGCP {
+	if carrier == cloudcommon.OperatorAzure || carrier == cloudcommon.OperatorGCP || carrier == cloudcommon.OperatorAWS {
 		return true
 	}
 	// later on we may have carrier groups or other logic,
@@ -587,7 +587,7 @@ func (s *searchAppInst) searchCarrier(carrier string) bool {
 }
 
 func (s *searchAppInst) padDistance(carrier string) float64 {
-	if carrier == cloudcommon.OperatorAzure || carrier == cloudcommon.OperatorGCP {
+	if carrier == cloudcommon.OperatorAzure || carrier == cloudcommon.OperatorGCP || carrier == cloudcommon.OperatorAWS {
 		if s.reqCarrier == "" || s.reqCarrier == carrier {
 			return 0
 		}
@@ -752,7 +752,8 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 
 func isPublicCarrier(carriername string) bool {
 	if carriername == cloudcommon.OperatorAzure ||
-		carriername == cloudcommon.OperatorGCP {
+		carriername == cloudcommon.OperatorGCP || 
+		carriername == cloudcommon.OperatorAWS {
 		return true
 	}
 	return false
