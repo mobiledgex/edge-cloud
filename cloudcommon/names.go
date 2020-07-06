@@ -16,6 +16,7 @@ import (
 // special operator types
 var OperatorGCP = "gcp"
 var OperatorAzure = "azure"
+var OperatorAWS = "aws"
 
 var Organizationplatos = "platos"
 var OrganizationMobiledgeX = "MobiledgeX"
@@ -29,6 +30,7 @@ var PlatosEnablingLayer = "PlatosEnablingLayer"
 // cloudlet types
 var CloudletKindOpenStack = "openstack"
 var CloudletKindAzure = "azure"
+var CloudletKindAws = "aws"
 var CloudletKindGCP = "gcp"
 var CloudletKindDIND = "dind"
 var CloudletKindFake = "fake"
