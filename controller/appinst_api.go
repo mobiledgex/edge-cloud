@@ -1210,7 +1210,7 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 			return nil
 		}
 		if inst.HealthCheck == state {
-			// nothign to do
+			// nothing to do
 			return nil
 		}
 		// healthy -> not healthy
@@ -1237,7 +1237,7 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
 			inst.PowerState = in.PowerState
 		}
-		// update health check to ok, if it was not set before
+		// If AppInst is ready and state has not been set yet by HealthCheckUpdate, default to Ok.
 		if in.State == edgeproto.TrackedState_READY &&
 			inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN {
 			inst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK
