@@ -66,6 +66,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
 	if _, found := tags["nocmp"]; found {
+		in.HealthCheck = 0
+	}
+	if _, found := tags["nocmp"]; found {
 		in.PowerState = 0
 	}
 	if _, found := tags["nocmp"]; found {
