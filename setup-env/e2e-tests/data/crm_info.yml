@@ -396,6 +396,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 - key:
     appkey:
@@ -422,6 +423,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 - key:
     appkey:
@@ -448,6 +450,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 - key:
     appkey:
@@ -479,6 +482,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 - key:
     appkey:
@@ -514,6 +518,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 - key:
     appkey:
@@ -540,6 +545,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 
 appinstrefs:
