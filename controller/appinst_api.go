@@ -1209,6 +1209,10 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 			// got deleted in the meantime
 			return nil
 		}
+		if inst.HealthCheck == state {
+			// nothing to do
+			return nil
+		}
 		// healthy -> not healthy
 		if inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_OK && state != edgeproto.HealthCheck_HEALTH_CHECK_OK {
 			RecordAppInstEvent(ctx, &inst.Key, cloudcommon.HEALTH_CHECK_FAIL, cloudcommon.InstanceDown)
@@ -1232,6 +1236,11 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		}
 		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
 			inst.PowerState = in.PowerState
+		}
+		// If AppInst is ready and state has not been set yet by HealthCheckUpdate, default to Ok.
+		if in.State == edgeproto.TrackedState_READY &&
+			inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN {
+			inst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK
 		}
 		if inst.State == in.State {
 			// already in that state

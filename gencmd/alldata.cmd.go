@@ -167,6 +167,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i1 := 0; i1 < len(in.AppInstances[i0].Configs); i1++ {
 		}
 		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].HealthCheck = 0
+		}
+		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].PowerState = 0
 		}
 		if _, found := tags["nocmp"]; found {
