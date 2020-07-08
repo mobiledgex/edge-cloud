@@ -167,6 +167,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i1 := 0; i1 < len(in.AppInstances[i0].Configs); i1++ {
 		}
 		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].HealthCheck = 0
+		}
+		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].PowerState = 0
 		}
 		if _, found := tags["nocmp"]; found {
@@ -529,7 +532,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.state":                                          "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"cloudlets:#.crmoverride":                                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"cloudlets:#.deploymentlocal":                                "Deploy cloudlet services locally",
-	"cloudlets:#.platformtype":                                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere",
+	"cloudlets:#.platformtype":                                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAws",
 	"cloudlets:#.notifysrvaddr":                                  "Address for the CRM notify listener to run on",
 	"cloudlets:#.flavor.name":                                    "Flavor name",
 	"cloudlets:#.physicalname":                                   "Physical infrastructure cloudlet name",

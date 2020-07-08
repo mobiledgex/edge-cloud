@@ -104,6 +104,8 @@ enum PlatformType {
   PLATFORM_TYPE_FAKEINFRA = 6;
    // VMWare VSphere (ESXi)
   PLATFORM_TYPE_VSPHERE = 7;
+  // AWS Cloudlet
+  PLATFORM_TYPE_AWS = 8;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name

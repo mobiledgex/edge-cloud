@@ -462,6 +462,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "AppInstances.UpdateMultiple")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "AppInstances.HealthCheck")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.PowerState")
 	}
 	if _, found := tags["nocmp"]; found {
