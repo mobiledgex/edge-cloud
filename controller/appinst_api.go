@@ -1206,7 +1206,7 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
-			log.SpanLog(ctx, log.DebugLevelApi, "AppInst Not found updatting health check", "appinst", in)
+			log.SpanLog(ctx, log.DebugLevelApi, "AppInst not found updating health check", "appinst", in)
 			// got deleted in the meantime
 			return nil
 		}

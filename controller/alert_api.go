@@ -111,6 +111,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelNotify, "failed to parse Health Check state",
 				"state", state, "error", err)
+			return
 		}
 		appInstSetStateFromHealthCheckAlert(ctx, in, edgeproto.HealthCheck(hcState))
 	}
