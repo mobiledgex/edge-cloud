@@ -28,9 +28,9 @@ func InitAlertApi(sync *Sync) {
 
 // AppInstDown alert needs to set the HealthCheck in AppInst
 func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.Alert, state edgeproto.HealthCheck) {
-	dev, ok := alert.Labels[edgeproto.ClusterInstKeyTagOrganization]
+	appOrg, ok := alert.Labels[edgeproto.AppKeyTagOrganization]
 	if !ok {
-		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Cluster Org label in Alert", "alert", alert)
+		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find AppInst Org label in Alert", "alert", alert)
 		return
 	}
 	clorg, ok := alert.Labels[edgeproto.CloudletKeyTagOrganization]
@@ -48,6 +48,11 @@ func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.A
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Cluster label in Alert", "alert", alert)
 		return
 	}
+	clusterOrg, ok := alert.Labels[edgeproto.ClusterInstKeyTagOrganization]
+	if !ok {
+		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find Cluster Org label in Alert", "alert", alert)
+		return
+	}
 	appName, ok := alert.Labels[edgeproto.AppKeyTagName]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find App Name label in Alert", "alert", alert)
@@ -61,7 +66,7 @@ func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.A
 	appInst := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: edgeproto.AppKey{
-				Organization: dev,
+				Organization: appOrg,
 				Name:         appName,
 				Version:      appVer,
 			},
@@ -73,7 +78,7 @@ func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.A
 					Organization: clorg,
 					Name:         cloudlet,
 				},
-				Organization: dev,
+				Organization: clusterOrg,
 			},
 		},
 	}
@@ -106,10 +111,6 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelNotify, "failed to parse Health Check state",
 				"state", state, "error", err)
-		}
-		if !ok {
-			log.SpanLog(ctx, log.DebugLevelNotify, "HealthCheck satus unknown",
-				"labels", in.Labels, "status", state)
 			return
 		}
 		appInstSetStateFromHealthCheckAlert(ctx, in, edgeproto.HealthCheck(hcState))
