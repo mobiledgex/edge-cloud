@@ -1068,6 +1068,42 @@ var AlertData = []edgeproto.Alert{
 		},
 		Value: 1,
 	},
+	edgeproto.Alert{
+		Labels: map[string]string{
+			"alertname":   "AppInstDown",
+			"app":         AppInstData[0].Key.AppKey.Name,
+			"appver":      AppInstData[0].Key.AppKey.Version,
+			"apporg":      AppInstData[0].Key.AppKey.Organization,
+			"cloudletorg": ClusterInstData[7].Key.CloudletKey.Organization,
+			"cloudlet":    ClusterInstData[7].Key.CloudletKey.Name,
+			"cluster":     ClusterInstData[7].Key.ClusterKey.Name,
+			"clusterorg":  ClusterInstData[7].Key.Organization,
+			"status":      "1",
+		},
+		State: "firing",
+		ActiveAt: dme.Timestamp{
+			Seconds: 1257894002,
+			Nanos:   42398457,
+		},
+	},
+	edgeproto.Alert{
+		Labels: map[string]string{
+			"alertname":   "AppInstDown",
+			"app":         AppInstData[0].Key.AppKey.Name,
+			"appver":      AppInstData[0].Key.AppKey.Version,
+			"apporg":      AppInstData[0].Key.AppKey.Organization,
+			"cloudletorg": AppInstData[0].Key.ClusterInstKey.CloudletKey.Organization,
+			"cloudlet":    AppInstData[0].Key.ClusterInstKey.CloudletKey.Name,
+			"cluster":     AppInstData[0].Key.ClusterInstKey.ClusterKey.Name,
+			"clusterorg":  AppInstData[0].Key.ClusterInstKey.Organization,
+			"status":      "2",
+		},
+		State: "firing",
+		ActiveAt: dme.Timestamp{
+			Seconds: 1257894002,
+			Nanos:   42398457,
+		},
+	},
 }
 
 var AutoScalePolicyData = []edgeproto.AutoScalePolicy{
