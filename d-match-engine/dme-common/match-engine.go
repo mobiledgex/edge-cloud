@@ -752,7 +752,7 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 
 func isPublicCarrier(carriername string) bool {
 	if carriername == cloudcommon.OperatorAzure ||
-		carriername == cloudcommon.OperatorGCP || 
+		carriername == cloudcommon.OperatorGCP ||
 		carriername == cloudcommon.OperatorAWS {
 		return true
 	}
@@ -797,6 +797,7 @@ func GetClientDataFromToken(token string) (*ClientToken, error) {
 }
 
 func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOfficialFqdnRequest, repl *dme.AppOfficialFqdnReply) {
+	repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 	var tbl *DmeApps
 	tbl = DmeAppTbl
 	var appkey edgeproto.AppKey
@@ -808,18 +809,15 @@ func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOffic
 	_, ok := tbl.Apps[appkey]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn cannot find app", "appkey", appkey)
-		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 		return
 	}
 	repl.AppOfficialFqdn = tbl.Apps[appkey].OfficialFqdn
 	if repl.AppOfficialFqdn == "" {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn FQDN is empty", "appkey", appkey)
-		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 		return
 	}
 	if mreq.GpsLocation == nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "missing location in request")
-		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 		return
 	}
 	var token ClientToken
@@ -828,11 +826,19 @@ func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOffic
 	byt, err := json.Marshal(token)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Unable to marshal GPS location", "mreq.GpsLocation", mreq.GpsLocation, "err", err)
-		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 		return
 	}
 	repl.ClientToken = base64.StdEncoding.EncodeToString(byt)
-	repl.Status = dme.AppOfficialFqdnReply_AOF_SUCCESS
+
+	list := findBestForCarrier(ctx, "", &appkey, mreq.GpsLocation, 1)
+	if len(list) > 0 {
+		best := list[0]
+		repl.Status = dme.AppOfficialFqdnReply_AOF_SUCCESS
+		repl.Ports = copyPorts(best.appInst)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn returning AOF_SUCCESS, overall best cloudlet", "Fqdn", repl.AppOfficialFqdn, "distance", best.distance)
+	} else {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "no app instances for app", "appkey", appkey)
+	}
 }
 
 func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
