@@ -544,6 +544,16 @@ func (m *DebugRequest) CopyInFields(src *DebugRequest) int {
 	return changed
 }
 
+func (m *DebugRequest) DeepCopyIn(src *DebugRequest) {
+	m.Node.DeepCopyIn(&src.Node)
+	m.Levels = src.Levels
+	m.Cmd = src.Cmd
+	m.Pretty = src.Pretty
+	m.Id = src.Id
+	m.Args = src.Args
+	m.Timeout = src.Timeout
+}
+
 // Helper method to check that enums have valid values
 func (m *DebugRequest) ValidateEnums() error {
 	if err := m.Node.ValidateEnums(); err != nil {
@@ -597,6 +607,12 @@ func (m *DebugReply) CopyInFields(src *DebugReply) int {
 	return changed
 }
 
+func (m *DebugReply) DeepCopyIn(src *DebugReply) {
+	m.Node.DeepCopyIn(&src.Node)
+	m.Output = src.Output
+	m.Id = src.Id
+}
+
 // Helper method to check that enums have valid values
 func (m *DebugReply) ValidateEnums() error {
 	if err := m.Node.ValidateEnums(); err != nil {
@@ -615,6 +631,17 @@ func IgnoreDebugReplyFields(taglist string) cmp.Option {
 		names = append(names, "Node.Name")
 	}
 	return cmpopts.IgnoreFields(DebugReply{}, names...)
+}
+
+func (m *DebugData) DeepCopyIn(src *DebugData) {
+	if src.Requests != nil {
+		m.Requests = make([]DebugRequest, len(src.Requests), len(src.Requests))
+		for ii, s := range src.Requests {
+			m.Requests[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Requests = nil
+	}
 }
 
 // Helper method to check that enums have valid values

@@ -275,6 +275,135 @@ func encodeVarintAlldata(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
+func (m *AllData) DeepCopyIn(src *AllData) {
+	if src.Settings != nil {
+		var tmp_Settings Settings
+		tmp_Settings.DeepCopyIn(src.Settings)
+		m.Settings = &tmp_Settings
+	} else {
+		m.Settings = nil
+	}
+	if src.Flavors != nil {
+		m.Flavors = make([]Flavor, len(src.Flavors), len(src.Flavors))
+		for ii, s := range src.Flavors {
+			m.Flavors[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Flavors = nil
+	}
+	if src.OperatorCodes != nil {
+		m.OperatorCodes = make([]OperatorCode, len(src.OperatorCodes), len(src.OperatorCodes))
+		for ii, s := range src.OperatorCodes {
+			m.OperatorCodes[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.OperatorCodes = nil
+	}
+	if src.ResTagTables != nil {
+		m.ResTagTables = make([]ResTagTable, len(src.ResTagTables), len(src.ResTagTables))
+		for ii, s := range src.ResTagTables {
+			m.ResTagTables[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.ResTagTables = nil
+	}
+	if src.Cloudlets != nil {
+		m.Cloudlets = make([]Cloudlet, len(src.Cloudlets), len(src.Cloudlets))
+		for ii, s := range src.Cloudlets {
+			m.Cloudlets[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Cloudlets = nil
+	}
+	if src.CloudletInfos != nil {
+		m.CloudletInfos = make([]CloudletInfo, len(src.CloudletInfos), len(src.CloudletInfos))
+		for ii, s := range src.CloudletInfos {
+			m.CloudletInfos[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.CloudletInfos = nil
+	}
+	if src.CloudletPools != nil {
+		m.CloudletPools = make([]CloudletPool, len(src.CloudletPools), len(src.CloudletPools))
+		for ii, s := range src.CloudletPools {
+			m.CloudletPools[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.CloudletPools = nil
+	}
+	if src.CloudletPoolMembers != nil {
+		m.CloudletPoolMembers = make([]CloudletPoolMember, len(src.CloudletPoolMembers), len(src.CloudletPoolMembers))
+		for ii, s := range src.CloudletPoolMembers {
+			m.CloudletPoolMembers[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.CloudletPoolMembers = nil
+	}
+	if src.AutoProvPolicies != nil {
+		m.AutoProvPolicies = make([]AutoProvPolicy, len(src.AutoProvPolicies), len(src.AutoProvPolicies))
+		for ii, s := range src.AutoProvPolicies {
+			m.AutoProvPolicies[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.AutoProvPolicies = nil
+	}
+	if src.AutoProvPolicyCloudlets != nil {
+		m.AutoProvPolicyCloudlets = make([]AutoProvPolicyCloudlet, len(src.AutoProvPolicyCloudlets), len(src.AutoProvPolicyCloudlets))
+		for ii, s := range src.AutoProvPolicyCloudlets {
+			m.AutoProvPolicyCloudlets[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.AutoProvPolicyCloudlets = nil
+	}
+	if src.AutoScalePolicies != nil {
+		m.AutoScalePolicies = make([]AutoScalePolicy, len(src.AutoScalePolicies), len(src.AutoScalePolicies))
+		for ii, s := range src.AutoScalePolicies {
+			m.AutoScalePolicies[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.AutoScalePolicies = nil
+	}
+	if src.PrivacyPolicies != nil {
+		m.PrivacyPolicies = make([]PrivacyPolicy, len(src.PrivacyPolicies), len(src.PrivacyPolicies))
+		for ii, s := range src.PrivacyPolicies {
+			m.PrivacyPolicies[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.PrivacyPolicies = nil
+	}
+	if src.ClusterInsts != nil {
+		m.ClusterInsts = make([]ClusterInst, len(src.ClusterInsts), len(src.ClusterInsts))
+		for ii, s := range src.ClusterInsts {
+			m.ClusterInsts[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.ClusterInsts = nil
+	}
+	if src.Apps != nil {
+		m.Apps = make([]App, len(src.Apps), len(src.Apps))
+		for ii, s := range src.Apps {
+			m.Apps[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Apps = nil
+	}
+	if src.AppInstances != nil {
+		m.AppInstances = make([]AppInst, len(src.AppInstances), len(src.AppInstances))
+		for ii, s := range src.AppInstances {
+			m.AppInstances[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.AppInstances = nil
+	}
+	if src.AppInstRefs != nil {
+		m.AppInstRefs = make([]AppInstRefs, len(src.AppInstRefs), len(src.AppInstRefs))
+		for ii, s := range src.AppInstRefs {
+			m.AppInstRefs[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.AppInstRefs = nil
+	}
+}
 
 // Helper method to check that enums have valid values
 func (m *AllData) ValidateEnums() error {

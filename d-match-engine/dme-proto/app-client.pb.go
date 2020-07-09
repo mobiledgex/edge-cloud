@@ -3050,6 +3050,11 @@ func (m *Tag) CopyInFields(src *Tag) int {
 	return changed
 }
 
+func (m *Tag) DeepCopyIn(src *Tag) {
+	m.Type = src.Type
+	m.Data = src.Data
+}
+
 // Helper method to check that enums have valid values
 func (m *Tag) ValidateEnums() error {
 	return nil
@@ -3116,6 +3121,28 @@ func (m *RegisterClientRequest) CopyInFields(src *RegisterClientRequest) int {
 	return changed
 }
 
+func (m *RegisterClientRequest) DeepCopyIn(src *RegisterClientRequest) {
+	m.Ver = src.Ver
+	m.OrgName = src.OrgName
+	m.AppName = src.AppName
+	m.AppVers = src.AppVers
+	m.CarrierName = src.CarrierName
+	m.AuthToken = src.AuthToken
+	m.CellId = src.CellId
+	m.UniqueIdType = src.UniqueIdType
+	m.UniqueId = src.UniqueId
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *RegisterClientRequest) ValidateEnums() error {
 	for _, e := range m.Tags {
@@ -3173,6 +3200,25 @@ func (m *RegisterClientReply) CopyInFields(src *RegisterClientReply) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *RegisterClientReply) DeepCopyIn(src *RegisterClientReply) {
+	m.Ver = src.Ver
+	m.Status = src.Status
+	m.SessionCookie = src.SessionCookie
+	m.TokenServerUri = src.TokenServerUri
+	m.UniqueIdType = src.UniqueIdType
+	m.UniqueId = src.UniqueId
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -3277,6 +3323,30 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) int {
 	return changed
 }
 
+func (m *FindCloudletRequest) DeepCopyIn(src *FindCloudletRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	m.CarrierName = src.CarrierName
+	if src.GpsLocation != nil {
+		var tmp_GpsLocation Loc
+		tmp_GpsLocation.DeepCopyIn(src.GpsLocation)
+		m.GpsLocation = &tmp_GpsLocation
+	} else {
+		m.GpsLocation = nil
+	}
+	m.CellId = src.CellId
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *FindCloudletRequest) ValidateEnums() error {
 	if err := m.GpsLocation.ValidateEnums(); err != nil {
@@ -3329,6 +3399,23 @@ func (m *PlatformFindCloudletRequest) CopyInFields(src *PlatformFindCloudletRequ
 		changed++
 	}
 	return changed
+}
+
+func (m *PlatformFindCloudletRequest) DeepCopyIn(src *PlatformFindCloudletRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	m.CarrierName = src.CarrierName
+	m.ClientToken = src.ClientToken
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -3466,6 +3553,39 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 	return changed
 }
 
+func (m *FindCloudletReply) DeepCopyIn(src *FindCloudletReply) {
+	m.Ver = src.Ver
+	m.Status = src.Status
+	m.Fqdn = src.Fqdn
+	if src.Ports != nil {
+		m.Ports = make([]*AppPort, len(src.Ports), len(src.Ports))
+		for ii, s := range src.Ports {
+			var tmp_s AppPort
+			tmp_s.DeepCopyIn(s)
+			m.Ports[ii] = &tmp_s
+		}
+	} else {
+		m.Ports = nil
+	}
+	if src.CloudletLocation != nil {
+		var tmp_CloudletLocation Loc
+		tmp_CloudletLocation.DeepCopyIn(src.CloudletLocation)
+		m.CloudletLocation = &tmp_CloudletLocation
+	} else {
+		m.CloudletLocation = nil
+	}
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *FindCloudletReply) ValidateEnums() error {
 	if _, ok := FindCloudletReply_FindStatus_name[int32(m.Status)]; !ok {
@@ -3580,6 +3700,31 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) int {
 	return changed
 }
 
+func (m *VerifyLocationRequest) DeepCopyIn(src *VerifyLocationRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	m.CarrierName = src.CarrierName
+	if src.GpsLocation != nil {
+		var tmp_GpsLocation Loc
+		tmp_GpsLocation.DeepCopyIn(src.GpsLocation)
+		m.GpsLocation = &tmp_GpsLocation
+	} else {
+		m.GpsLocation = nil
+	}
+	m.VerifyLocToken = src.VerifyLocToken
+	m.CellId = src.CellId
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *VerifyLocationRequest) ValidateEnums() error {
 	if err := m.GpsLocation.ValidateEnums(); err != nil {
@@ -3632,6 +3777,23 @@ func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *VerifyLocationReply) DeepCopyIn(src *VerifyLocationReply) {
+	m.Ver = src.Ver
+	m.TowerStatus = src.TowerStatus
+	m.GpsLocationStatus = src.GpsLocationStatus
+	m.GpsLocationAccuracyKm = src.GpsLocationAccuracyKm
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -3689,6 +3851,23 @@ func (m *GetLocationRequest) CopyInFields(src *GetLocationRequest) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *GetLocationRequest) DeepCopyIn(src *GetLocationRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	m.CarrierName = src.CarrierName
+	m.CellId = src.CellId
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -3788,6 +3967,30 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *GetLocationReply) DeepCopyIn(src *GetLocationReply) {
+	m.Ver = src.Ver
+	m.Status = src.Status
+	m.CarrierName = src.CarrierName
+	m.Tower = src.Tower
+	if src.NetworkLocation != nil {
+		var tmp_NetworkLocation Loc
+		tmp_NetworkLocation.DeepCopyIn(src.NetworkLocation)
+		m.NetworkLocation = &tmp_NetworkLocation
+	} else {
+		m.NetworkLocation = nil
+	}
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -3899,6 +4102,31 @@ func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) int {
 	return changed
 }
 
+func (m *AppInstListRequest) DeepCopyIn(src *AppInstListRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	m.CarrierName = src.CarrierName
+	if src.GpsLocation != nil {
+		var tmp_GpsLocation Loc
+		tmp_GpsLocation.DeepCopyIn(src.GpsLocation)
+		m.GpsLocation = &tmp_GpsLocation
+	} else {
+		m.GpsLocation = nil
+	}
+	m.CellId = src.CellId
+	m.Limit = src.Limit
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *AppInstListRequest) ValidateEnums() error {
 	if err := m.GpsLocation.ValidateEnums(); err != nil {
@@ -3971,6 +4199,23 @@ func (m *Appinstance) CopyInFields(src *Appinstance) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *Appinstance) DeepCopyIn(src *Appinstance) {
+	m.AppName = src.AppName
+	m.AppVers = src.AppVers
+	m.Fqdn = src.Fqdn
+	if src.Ports != nil {
+		m.Ports = make([]*AppPort, len(src.Ports), len(src.Ports))
+		for ii, s := range src.Ports {
+			var tmp_s AppPort
+			tmp_s.DeepCopyIn(s)
+			m.Ports[ii] = &tmp_s
+		}
+	} else {
+		m.Ports = nil
+	}
+	m.OrgName = src.OrgName
 }
 
 // Helper method to check that enums have valid values
@@ -4114,6 +4359,29 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *CloudletLocation) DeepCopyIn(src *CloudletLocation) {
+	m.CarrierName = src.CarrierName
+	m.CloudletName = src.CloudletName
+	if src.GpsLocation != nil {
+		var tmp_GpsLocation Loc
+		tmp_GpsLocation.DeepCopyIn(src.GpsLocation)
+		m.GpsLocation = &tmp_GpsLocation
+	} else {
+		m.GpsLocation = nil
+	}
+	m.Distance = src.Distance
+	if src.Appinstances != nil {
+		m.Appinstances = make([]*Appinstance, len(src.Appinstances), len(src.Appinstances))
+		for ii, s := range src.Appinstances {
+			var tmp_s Appinstance
+			tmp_s.DeepCopyIn(s)
+			m.Appinstances[ii] = &tmp_s
+		}
+	} else {
+		m.Appinstances = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -4302,6 +4570,31 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 	return changed
 }
 
+func (m *AppInstListReply) DeepCopyIn(src *AppInstListReply) {
+	m.Ver = src.Ver
+	m.Status = src.Status
+	if src.Cloudlets != nil {
+		m.Cloudlets = make([]*CloudletLocation, len(src.Cloudlets), len(src.Cloudlets))
+		for ii, s := range src.Cloudlets {
+			var tmp_s CloudletLocation
+			tmp_s.DeepCopyIn(s)
+			m.Cloudlets[ii] = &tmp_s
+		}
+	} else {
+		m.Cloudlets = nil
+	}
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *AppInstListReply) ValidateEnums() error {
 	if _, ok := AppInstListReply_AIStatus_name[int32(m.Status)]; !ok {
@@ -4357,6 +4650,22 @@ func (m *FqdnListRequest) CopyInFields(src *FqdnListRequest) int {
 	return changed
 }
 
+func (m *FqdnListRequest) DeepCopyIn(src *FqdnListRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	m.CellId = src.CellId
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *FqdnListRequest) ValidateEnums() error {
 	for _, e := range m.Tags {
@@ -4392,6 +4701,21 @@ func (m *AppFqdn) CopyInFields(src *AppFqdn) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *AppFqdn) DeepCopyIn(src *AppFqdn) {
+	m.AppName = src.AppName
+	m.AppVers = src.AppVers
+	m.OrgName = src.OrgName
+	if src.Fqdns != nil {
+		m.Fqdns = make([]string, len(src.Fqdns), len(src.Fqdns))
+		for ii, s := range src.Fqdns {
+			m.Fqdns[ii] = s
+		}
+	} else {
+		m.Fqdns = nil
+	}
+	m.AndroidPackageName = src.AndroidPackageName
 }
 
 // Helper method to check that enums have valid values
@@ -4464,6 +4788,31 @@ func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *FqdnListReply) DeepCopyIn(src *FqdnListReply) {
+	m.Ver = src.Ver
+	if src.AppFqdns != nil {
+		m.AppFqdns = make([]*AppFqdn, len(src.AppFqdns), len(src.AppFqdns))
+		for ii, s := range src.AppFqdns {
+			var tmp_s AppFqdn
+			tmp_s.DeepCopyIn(s)
+			m.AppFqdns[ii] = &tmp_s
+		}
+	} else {
+		m.AppFqdns = nil
+	}
+	m.Status = src.Status
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -4565,6 +4914,28 @@ func (m *AppOfficialFqdnRequest) CopyInFields(src *AppOfficialFqdnRequest) int {
 	return changed
 }
 
+func (m *AppOfficialFqdnRequest) DeepCopyIn(src *AppOfficialFqdnRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	if src.GpsLocation != nil {
+		var tmp_GpsLocation Loc
+		tmp_GpsLocation.DeepCopyIn(src.GpsLocation)
+		m.GpsLocation = &tmp_GpsLocation
+	} else {
+		m.GpsLocation = nil
+	}
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *AppOfficialFqdnRequest) ValidateEnums() error {
 	if err := m.GpsLocation.ValidateEnums(); err != nil {
@@ -4617,6 +4988,23 @@ func (m *AppOfficialFqdnReply) CopyInFields(src *AppOfficialFqdnReply) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *AppOfficialFqdnReply) DeepCopyIn(src *AppOfficialFqdnReply) {
+	m.Ver = src.Ver
+	m.AppOfficialFqdn = src.AppOfficialFqdn
+	m.ClientToken = src.ClientToken
+	m.Status = src.Status
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -4681,6 +5069,25 @@ func (m *DynamicLocGroupRequest) CopyInFields(src *DynamicLocGroupRequest) int {
 	return changed
 }
 
+func (m *DynamicLocGroupRequest) DeepCopyIn(src *DynamicLocGroupRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	m.LgId = src.LgId
+	m.CommType = src.CommType
+	m.UserData = src.UserData
+	m.CellId = src.CellId
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *DynamicLocGroupRequest) ValidateEnums() error {
 	if _, ok := DynamicLocGroupRequest_DlgCommType_name[int32(m.CommType)]; !ok {
@@ -4733,6 +5140,23 @@ func (m *DynamicLocGroupReply) CopyInFields(src *DynamicLocGroupReply) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *DynamicLocGroupReply) DeepCopyIn(src *DynamicLocGroupReply) {
+	m.Ver = src.Ver
+	m.Status = src.Status
+	m.ErrorCode = src.ErrorCode
+	m.GroupCookie = src.GroupCookie
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -4805,6 +5229,17 @@ func (m *QosPosition) CopyInFields(src *QosPosition) int {
 	return changed
 }
 
+func (m *QosPosition) DeepCopyIn(src *QosPosition) {
+	m.Positionid = src.Positionid
+	if src.GpsLocation != nil {
+		var tmp_GpsLocation Loc
+		tmp_GpsLocation.DeepCopyIn(src.GpsLocation)
+		m.GpsLocation = &tmp_GpsLocation
+	} else {
+		m.GpsLocation = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *QosPosition) ValidateEnums() error {
 	if err := m.GpsLocation.ValidateEnums(); err != nil {
@@ -4840,6 +5275,41 @@ func (m *BandSelection) CopyInFields(src *BandSelection) int {
 	copy(m.Rat_5G, src.Rat_5G)
 	changed++
 	return changed
+}
+
+func (m *BandSelection) DeepCopyIn(src *BandSelection) {
+	if src.Rat_2G != nil {
+		m.Rat_2G = make([]string, len(src.Rat_2G), len(src.Rat_2G))
+		for ii, s := range src.Rat_2G {
+			m.Rat_2G[ii] = s
+		}
+	} else {
+		m.Rat_2G = nil
+	}
+	if src.Rat_3G != nil {
+		m.Rat_3G = make([]string, len(src.Rat_3G), len(src.Rat_3G))
+		for ii, s := range src.Rat_3G {
+			m.Rat_3G[ii] = s
+		}
+	} else {
+		m.Rat_3G = nil
+	}
+	if src.Rat_4G != nil {
+		m.Rat_4G = make([]string, len(src.Rat_4G), len(src.Rat_4G))
+		for ii, s := range src.Rat_4G {
+			m.Rat_4G[ii] = s
+		}
+	} else {
+		m.Rat_4G = nil
+	}
+	if src.Rat_5G != nil {
+		m.Rat_5G = make([]string, len(src.Rat_5G), len(src.Rat_5G))
+		for ii, s := range src.Rat_5G {
+			m.Rat_5G[ii] = s
+		}
+	} else {
+		m.Rat_5G = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -4982,6 +5452,40 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 	return changed
 }
 
+func (m *QosPositionRequest) DeepCopyIn(src *QosPositionRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	if src.Positions != nil {
+		m.Positions = make([]*QosPosition, len(src.Positions), len(src.Positions))
+		for ii, s := range src.Positions {
+			var tmp_s QosPosition
+			tmp_s.DeepCopyIn(s)
+			m.Positions[ii] = &tmp_s
+		}
+	} else {
+		m.Positions = nil
+	}
+	m.LteCategory = src.LteCategory
+	if src.BandSelection != nil {
+		var tmp_BandSelection BandSelection
+		tmp_BandSelection.DeepCopyIn(src.BandSelection)
+		m.BandSelection = &tmp_BandSelection
+	} else {
+		m.BandSelection = nil
+	}
+	m.CellId = src.CellId
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *QosPositionRequest) ValidateEnums() error {
 	for _, e := range m.Positions {
@@ -5091,6 +5595,26 @@ func (m *QosPositionKpiResult) CopyInFields(src *QosPositionKpiResult) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *QosPositionKpiResult) DeepCopyIn(src *QosPositionKpiResult) {
+	m.Positionid = src.Positionid
+	if src.GpsLocation != nil {
+		var tmp_GpsLocation Loc
+		tmp_GpsLocation.DeepCopyIn(src.GpsLocation)
+		m.GpsLocation = &tmp_GpsLocation
+	} else {
+		m.GpsLocation = nil
+	}
+	m.DluserthroughputMin = src.DluserthroughputMin
+	m.DluserthroughputAvg = src.DluserthroughputAvg
+	m.DluserthroughputMax = src.DluserthroughputMax
+	m.UluserthroughputMin = src.UluserthroughputMin
+	m.UluserthroughputAvg = src.UluserthroughputAvg
+	m.UluserthroughputMax = src.UluserthroughputMax
+	m.LatencyMin = src.LatencyMin
+	m.LatencyAvg = src.LatencyAvg
+	m.LatencyMax = src.LatencyMax
 }
 
 // Helper method to check that enums have valid values
@@ -5232,6 +5756,31 @@ func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *QosPositionKpiReply) DeepCopyIn(src *QosPositionKpiReply) {
+	m.Ver = src.Ver
+	m.Status = src.Status
+	if src.PositionResults != nil {
+		m.PositionResults = make([]*QosPositionKpiResult, len(src.PositionResults), len(src.PositionResults))
+		for ii, s := range src.PositionResults {
+			var tmp_s QosPositionKpiResult
+			tmp_s.DeepCopyIn(s)
+			m.PositionResults[ii] = &tmp_s
+		}
+	} else {
+		m.PositionResults = nil
+	}
+	if src.Tags != nil {
+		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s Tag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
 }
 
 // Helper method to check that enums have valid values

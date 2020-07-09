@@ -393,6 +393,13 @@ func (m *StatusInfo) CopyInFields(src *StatusInfo) int {
 	return changed
 }
 
+func (m *StatusInfo) DeepCopyIn(src *StatusInfo) {
+	m.TaskNumber = src.TaskNumber
+	m.MaxTasks = src.MaxTasks
+	m.TaskName = src.TaskName
+	m.StepName = src.StepName
+}
+
 // Helper method to check that enums have valid values
 func (m *StatusInfo) ValidateEnums() error {
 	return nil
