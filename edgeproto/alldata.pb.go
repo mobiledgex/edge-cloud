@@ -420,6 +420,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "ClusterInsts.MasterNodeFlavor")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "ClusterInsts.SkipCrmCleanupOnFailure")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "Apps.DeploymentManifest")
 	}
 	if _, found := tags["nocmp"]; found {
