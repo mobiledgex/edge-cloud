@@ -55,6 +55,9 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["nocmp"]; found {
 		in.MasterNodeFlavor = ""
 	}
+	if _, found := tags["nocmp"]; found {
+		in.SkipCrmCleanupOnFailure = false
+	}
 }
 
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
@@ -517,6 +520,7 @@ var ClusterInstOptionalArgs = []string{
 	"reservable",
 	"sharedvolumesize",
 	"privacypolicy",
+	"skipcrmcleanuponfailure",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -526,32 +530,33 @@ var ClusterInstAliasArgs = []string{
 	"flavor=flavor.name",
 }
 var ClusterInstComments = map[string]string{
-	"fields":             "Fields are used for the Update API to specify which fields to apply",
-	"cluster":            "Cluster name",
-	"cloudlet-org":       "Organization of the cloudlet site",
-	"cloudlet":           "Name of the cloudlet",
-	"cluster-org":        "Name of Developer organization that this cluster belongs to",
-	"flavor":             "Flavor name",
-	"liveness":           "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic, LivenessAutoprov",
-	"auto":               "Auto is set to true when automatically created by back-end (internal use only)",
-	"state":              "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
-	"errors":             "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
-	"crmoverride":        "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
-	"ipaccess":           "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
-	"allocatedip":        "Allocated IP for dedicated access",
-	"nodeflavor":         "Cloudlet specific node flavor",
-	"deployment":         "Deployment type (kubernetes or docker)",
-	"nummasters":         "Number of k8s masters (In case of docker deployment, this field is not required)",
-	"numnodes":           "Number of k8s nodes (In case of docker deployment, this field is not required)",
-	"externalvolumesize": "Size of external volume to be attached to nodes.  This is for the root partition",
-	"autoscalepolicy":    "Auto scale policy name",
-	"availabilityzone":   "Optional Resource AZ if any",
-	"imagename":          "Optional resource specific image to launch",
-	"reservable":         "If ClusterInst is reservable",
-	"reservedby":         "For reservable MobiledgeX ClusterInsts, the current developer tenant",
-	"sharedvolumesize":   "Size of an optional shared volume to be mounted on the master",
-	"privacypolicy":      "Optional privacy policy name",
-	"masternodeflavor":   "Generic flavor for k8s master VM when worker nodes > 0",
+	"fields":                  "Fields are used for the Update API to specify which fields to apply",
+	"cluster":                 "Cluster name",
+	"cloudlet-org":            "Organization of the cloudlet site",
+	"cloudlet":                "Name of the cloudlet",
+	"cluster-org":             "Name of Developer organization that this cluster belongs to",
+	"flavor":                  "Flavor name",
+	"liveness":                "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic, LivenessAutoprov",
+	"auto":                    "Auto is set to true when automatically created by back-end (internal use only)",
+	"state":                   "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"errors":                  "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
+	"crmoverride":             "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+	"ipaccess":                "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
+	"allocatedip":             "Allocated IP for dedicated access",
+	"nodeflavor":              "Cloudlet specific node flavor",
+	"deployment":              "Deployment type (kubernetes or docker)",
+	"nummasters":              "Number of k8s masters (In case of docker deployment, this field is not required)",
+	"numnodes":                "Number of k8s nodes (In case of docker deployment, this field is not required)",
+	"externalvolumesize":      "Size of external volume to be attached to nodes.  This is for the root partition",
+	"autoscalepolicy":         "Auto scale policy name",
+	"availabilityzone":        "Optional Resource AZ if any",
+	"imagename":               "Optional resource specific image to launch",
+	"reservable":              "If ClusterInst is reservable",
+	"reservedby":              "For reservable MobiledgeX ClusterInsts, the current developer tenant",
+	"sharedvolumesize":        "Size of an optional shared volume to be mounted on the master",
+	"privacypolicy":           "Optional privacy policy name",
+	"masternodeflavor":        "Generic flavor for k8s master VM when worker nodes > 0",
+	"skipcrmcleanuponfailure": "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors": "StringArray",
@@ -597,4 +602,5 @@ var UpdateClusterInstOptionalArgs = []string{
 	"crmoverride",
 	"numnodes",
 	"autoscalepolicy",
+	"skipcrmcleanuponfailure",
 }
