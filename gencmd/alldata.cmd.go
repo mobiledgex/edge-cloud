@@ -115,7 +115,7 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.ClusterInsts[i0].MasterNodeFlavor = ""
 		}
 		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].SkipCleanupOnFailure = false
+			in.ClusterInsts[i0].SkipCrmCleanupOnFailure = false
 		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
@@ -390,7 +390,7 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.sharedvolumesize",
 	"clusterinsts:#.privacypolicy",
 	"clusterinsts:#.masternodeflavor",
-	"clusterinsts:#.skipcleanuponfailure",
+	"clusterinsts:#.skipcrmcleanuponfailure",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -657,7 +657,7 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.sharedvolumesize":                            "Size of an optional shared volume to be mounted on the master",
 	"clusterinsts:#.privacypolicy":                               "Optional privacy policy name",
 	"clusterinsts:#.masternodeflavor":                            "Generic flavor for k8s master VM when worker nodes > 0",
-	"clusterinsts:#.skipcleanuponfailure":                        "Prevents cleanup of resources on failure, used for diagnosis purposes",
+	"clusterinsts:#.skipcrmcleanuponfailure":                     "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
 	"apps:#.fields":                                              "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                    "App developer organization",
 	"apps:#.key.name":                                            "App name",
