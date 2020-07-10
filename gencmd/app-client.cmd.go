@@ -753,7 +753,7 @@ var FindCloudletRequestAliasArgs = []string{}
 var FindCloudletRequestComments = map[string]string{
 	"ver":                            "API version _(hidden)_ Reserved for future use",
 	"sessioncookie":                  "Session Cookie Session Cookie from RegisterClientRequest",
-	"carriername":                    "Carrier Name _(optional)_ Unique carrier identification (typically MCC + MNC) If left blank, all carriers are searched",
+	"carriername":                    "Carrier Name _(optional)_ By default, all SDKs will automatically fill in this parameter with the MCC+MNC of your current provider. Only override this parameter if you need to filter for a specific carrier on the DME. The DME will filter for App instances that are associated with the specified carrier. If you wish to search for any App Instance on the DME regardless of carrier name, you can input “” to consider all carriers as “Any”.",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -779,7 +779,7 @@ var PlatformFindCloudletRequestAliasArgs = []string{}
 var PlatformFindCloudletRequestComments = map[string]string{
 	"ver":           "API version _(hidden)_ Reserved for future use",
 	"sessioncookie": "Session Cookie Session Cookie from RegisterClientRequest",
-	"carriername":   "Carrier Name _(optional)_ Unique carrier identification (typically MCC + MNC) If left blank, all carriers are searched",
+	"carriername":   "Carrier Name _(optional)_ By default, all SDKs will automatically fill in this parameter with the MCC+MNC of your current provider. Only override this parameter if you need to filter for a specific carrier on the DME. The DME will filter for App instances that are associated with the specified carrier. If you wish to search for any app instance on the DME regardless of carrier name, you can input “” to consider all carriers as “Any”.",
 	"clienttoken":   "Client Token Token with encoded client data",
 	"tags:#.type":   "type of data",
 	"tags:#.data":   "data value",
@@ -965,7 +965,7 @@ var AppInstListRequestAliasArgs = []string{}
 var AppInstListRequestComments = map[string]string{
 	"ver":                            "API version _(hidden)_ Reserved for future use",
 	"sessioncookie":                  "Session Cookie from RegisterClientRequest",
-	"carriername":                    "Carrier Name _(optional)_ Unique carrier identification (typically MCC + MNC) If left blank, all carriers are searched",
+	"carriername":                    "Carrier Name _(optional)_ By default, all SDKs will automatically fill in this parameter with the MCC+MNC of your current provider. Only override this parameter if you need to filter for a specific carrier on the DME. The DME will filter for App instances that are associated with the specified carrier. If you wish to search for any App Instance on the DME regardless of carrier name, you can input “” to consider all carriers as “Any”.",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -1218,17 +1218,31 @@ var AppOfficialFqdnReplyOptionalArgs = []string{
 	"appofficialfqdn",
 	"clienttoken",
 	"status",
+	"ports:#.proto",
+	"ports:#.internalport",
+	"ports:#.publicport",
+	"ports:#.pathprefix",
+	"ports:#.fqdnprefix",
+	"ports:#.endport",
+	"ports:#.tls",
 	"tags:#.type",
 	"tags:#.data",
 }
 var AppOfficialFqdnReplyAliasArgs = []string{}
 var AppOfficialFqdnReplyComments = map[string]string{
-	"ver":             "API version _(hidden)_ Reserved for future use",
-	"appofficialfqdn": "The FQDN to which the app is reached independent of the edge",
-	"clienttoken":     "Tokenized client data",
-	"status":          "Status of the reply, one of AofUndefined, AofSuccess, AofFail",
-	"tags:#.type":     "type of data",
-	"tags:#.data":     "data value",
+	"ver":                  "API version _(hidden)_ Reserved for future use",
+	"appofficialfqdn":      "The FQDN to which the app is reached independent of the edge",
+	"clienttoken":          "Tokenized client data",
+	"status":               "Status of the reply, one of AofUndefined, AofSuccess, AofFail",
+	"ports:#.proto":        "TCP (L4), UDP (L4), or HTTP (L7) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp, LProtoHttp",
+	"ports:#.internalport": "Container port",
+	"ports:#.publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
+	"ports:#.pathprefix":   "Public facing path for HTTP L7 access.",
+	"ports:#.fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
+	"ports:#.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"ports:#.tls":          "TLS termination for this port",
+	"tags:#.type":          "type of data",
+	"tags:#.data":          "data value",
 }
 var AppOfficialFqdnReplySpecialArgs = map[string]string{}
 var DynamicLocGroupRequestRequiredArgs = []string{}
