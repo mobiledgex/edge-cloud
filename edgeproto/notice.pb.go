@@ -315,6 +315,23 @@ func (m *Notice) CopyInFields(src *Notice) int {
 	return changed
 }
 
+func (m *Notice) DeepCopyIn(src *Notice) {
+	m.Action = src.Action
+	m.Version = src.Version
+	m.Any = src.Any
+	if src.WantObjs != nil {
+		m.WantObjs = make([]string, len(src.WantObjs), len(src.WantObjs))
+		for ii, s := range src.WantObjs {
+			m.WantObjs[ii] = s
+		}
+	} else {
+		m.WantObjs = nil
+	}
+	m.FilterCloudletKey = src.FilterCloudletKey
+	m.Span = src.Span
+	m.ModRev = src.ModRev
+}
+
 // Helper method to check that enums have valid values
 func (m *Notice) ValidateEnums() error {
 	if _, ok := NoticeAction_name[int32(m.Action)]; !ok {

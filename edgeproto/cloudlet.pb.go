@@ -2212,6 +2212,11 @@ func (m *CloudletKey) CopyInFields(src *CloudletKey) int {
 	return changed
 }
 
+func (m *CloudletKey) DeepCopyIn(src *CloudletKey) {
+	m.Organization = src.Organization
+	m.Name = src.Name
+}
+
 func (m *CloudletKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
@@ -2277,6 +2282,15 @@ func (m *OperationTimeLimits) CopyInFields(src *OperationTimeLimits) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *OperationTimeLimits) DeepCopyIn(src *OperationTimeLimits) {
+	m.CreateClusterInstTimeout = src.CreateClusterInstTimeout
+	m.UpdateClusterInstTimeout = src.UpdateClusterInstTimeout
+	m.DeleteClusterInstTimeout = src.DeleteClusterInstTimeout
+	m.CreateAppInstTimeout = src.CreateAppInstTimeout
+	m.UpdateAppInstTimeout = src.UpdateAppInstTimeout
+	m.DeleteAppInstTimeout = src.DeleteAppInstTimeout
 }
 
 // Helper method to check that enums have valid values
@@ -2366,6 +2380,34 @@ func (m *PlatformConfig) CopyInFields(src *PlatformConfig) int {
 	return changed
 }
 
+func (m *PlatformConfig) DeepCopyIn(src *PlatformConfig) {
+	m.ContainerRegistryPath = src.ContainerRegistryPath
+	m.CloudletVmImagePath = src.CloudletVmImagePath
+	m.NotifyCtrlAddrs = src.NotifyCtrlAddrs
+	m.VaultAddr = src.VaultAddr
+	m.TlsCertFile = src.TlsCertFile
+	if src.EnvVar != nil {
+		m.EnvVar = make(map[string]string)
+		for k, v := range src.EnvVar {
+			m.EnvVar[k] = v
+		}
+	} else {
+		m.EnvVar = nil
+	}
+	m.PlatformTag = src.PlatformTag
+	m.TestMode = src.TestMode
+	m.Span = src.Span
+	m.CleanupMode = src.CleanupMode
+	m.Region = src.Region
+	m.CommercialCerts = src.CommercialCerts
+	m.UseVaultCerts = src.UseVaultCerts
+	m.UseVaultCas = src.UseVaultCas
+	m.AppDnsRoot = src.AppDnsRoot
+	m.ChefServerPath = src.ChefServerPath
+	m.ChefClientInterval = src.ChefClientInterval
+	m.DeploymentTag = src.DeploymentTag
+}
+
 // Helper method to check that enums have valid values
 func (m *PlatformConfig) ValidateEnums() error {
 	return nil
@@ -2391,6 +2433,18 @@ func (m *CloudletResMap) CopyInFields(src *CloudletResMap) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *CloudletResMap) DeepCopyIn(src *CloudletResMap) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.Mapping != nil {
+		m.Mapping = make(map[string]string)
+		for k, v := range src.Mapping {
+			m.Mapping[k] = v
+		}
+	} else {
+		m.Mapping = nil
+	}
 }
 
 func (m *CloudletResMap) GetObjKey() objstore.ObjKey {
@@ -2432,6 +2486,11 @@ func (m *InfraConfig) CopyInFields(src *InfraConfig) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *InfraConfig) DeepCopyIn(src *InfraConfig) {
+	m.ExternalNetworkName = src.ExternalNetworkName
+	m.FlavorName = src.FlavorName
 }
 
 // Helper method to check that enums have valid values
@@ -3733,6 +3792,72 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 	return changed
 }
 
+func (m *Cloudlet) DeepCopyIn(src *Cloudlet) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.Location = src.Location
+	m.IpSupport = src.IpSupport
+	m.StaticIps = src.StaticIps
+	m.NumDynamicIps = src.NumDynamicIps
+	m.TimeLimits.DeepCopyIn(&src.TimeLimits)
+	if src.Errors != nil {
+		m.Errors = make([]string, len(src.Errors), len(src.Errors))
+		for ii, s := range src.Errors {
+			m.Errors[ii] = s
+		}
+	} else {
+		m.Errors = nil
+	}
+	m.Status.DeepCopyIn(&src.Status)
+	m.State = src.State
+	m.CrmOverride = src.CrmOverride
+	m.DeploymentLocal = src.DeploymentLocal
+	m.PlatformType = src.PlatformType
+	m.NotifySrvAddr = src.NotifySrvAddr
+	m.Flavor.DeepCopyIn(&src.Flavor)
+	m.PhysicalName = src.PhysicalName
+	if src.EnvVar != nil {
+		m.EnvVar = make(map[string]string)
+		for k, v := range src.EnvVar {
+			m.EnvVar[k] = v
+		}
+	} else {
+		m.EnvVar = nil
+	}
+	m.ContainerVersion = src.ContainerVersion
+	m.Config.DeepCopyIn(&src.Config)
+	if src.ResTagMap != nil {
+		m.ResTagMap = make(map[string]*ResTagTableKey)
+		for k, v := range src.ResTagMap {
+			var tmp_v ResTagTableKey
+			tmp_v.DeepCopyIn(v)
+			m.ResTagMap[k] = &tmp_v
+		}
+	} else {
+		m.ResTagMap = nil
+	}
+	if src.AccessVars != nil {
+		m.AccessVars = make(map[string]string)
+		for k, v := range src.AccessVars {
+			m.AccessVars[k] = v
+		}
+	} else {
+		m.AccessVars = nil
+	}
+	m.VmImageVersion = src.VmImageVersion
+	m.Deployment = src.Deployment
+	m.InfraApiAccess = src.InfraApiAccess
+	m.InfraConfig.DeepCopyIn(&src.InfraConfig)
+	if src.ChefClientKey != nil {
+		m.ChefClientKey = make(map[string]string)
+		for k, v := range src.ChefClientKey {
+			m.ChefClientKey[k] = v
+		}
+	} else {
+		m.ChefClientKey = nil
+	}
+	m.MaintenanceState = src.MaintenanceState
+}
+
 func (s *Cloudlet) HasFields() bool {
 	return true
 }
@@ -3893,15 +4018,16 @@ type CloudletCacheData struct {
 // CloudletCache caches Cloudlet objects in memory in a hash table
 // and keeps them in sync with the database.
 type CloudletCache struct {
-	Objs         map[CloudletKey]*CloudletCacheData
-	Mux          util.Mutex
-	List         map[CloudletKey]struct{}
-	FlushAll     bool
-	NotifyCb     func(ctx context.Context, obj *CloudletKey, old *Cloudlet, modRev int64)
-	UpdatedCb    func(ctx context.Context, old *Cloudlet, new *Cloudlet)
-	KeyWatchers  map[CloudletKey][]*CloudletKeyWatcher
-	UpdatedKeyCb func(ctx context.Context, key *CloudletKey)
-	DeletedKeyCb func(ctx context.Context, key *CloudletKey)
+	Objs          map[CloudletKey]*CloudletCacheData
+	Mux           util.Mutex
+	List          map[CloudletKey]struct{}
+	FlushAll      bool
+	NotifyCb      func(ctx context.Context, obj *CloudletKey, old *Cloudlet, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *Cloudlet, new *Cloudlet)
+	DeletedCbs    []func(ctx context.Context, old *Cloudlet)
+	KeyWatchers   map[CloudletKey][]*CloudletKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *CloudletKey)
+	DeletedKeyCbs []func(ctx context.Context, key *CloudletKey)
 }
 
 func NewCloudletCache() *CloudletCache {
@@ -3913,6 +4039,11 @@ func NewCloudletCache() *CloudletCache {
 func InitCloudletCache(cache *CloudletCache) {
 	cache.Objs = make(map[CloudletKey]*CloudletCacheData)
 	cache.KeyWatchers = make(map[CloudletKey][]*CloudletKeyWatcher)
+	cache.NotifyCb = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *CloudletCache) GetTypeString() string {
@@ -3929,7 +4060,7 @@ func (c *CloudletCache) GetWithRev(key *CloudletKey, valbuf *Cloudlet, modRev *i
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst.Obj
+		valbuf.DeepCopyIn(inst.Obj)
 		*modRev = inst.ModRev
 	}
 	return found
@@ -3967,23 +4098,24 @@ func (c *CloudletCache) UpdateModFunc(ctx context.Context, key *CloudletKey, mod
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil {
+	for _, cb := range c.UpdatedCbs {
 		newCopy := &Cloudlet{}
-		*newCopy = *new
-		defer c.UpdatedCb(ctx, old, newCopy)
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
 	}
 	if c.NotifyCb != nil {
 		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 	}
-	if c.UpdatedKeyCb != nil {
-		defer c.UpdatedKeyCb(ctx, key)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
 	}
+	store := &Cloudlet{}
+	store.DeepCopyIn(new)
 	c.Objs[new.GetKeyVal()] = &CloudletCacheData{
-		Obj:    new,
+		Obj:    store,
 		ModRev: modRev,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cloudlet", "obj", new, "modRev", modRev)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
@@ -3997,13 +4129,17 @@ func (c *CloudletCache) Delete(ctx context.Context, in *Cloudlet, modRev int64) 
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Cloudlet", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
-	if c.DeletedKeyCb != nil {
-		c.DeletedKeyCb(ctx, in.GetKey())
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
@@ -4013,7 +4149,7 @@ func (c *CloudletCache) Prune(ctx context.Context, validKeys map[CloudletKey]str
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
+			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -4024,8 +4160,13 @@ func (c *CloudletCache) Prune(ctx context.Context, validKeys map[CloudletKey]str
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -4069,15 +4210,35 @@ func (c *CloudletCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKe
 }
 
 func (c *CloudletCache) SetUpdatedCb(fn func(ctx context.Context, old *Cloudlet, new *Cloudlet)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *Cloudlet, new *Cloudlet){fn}
+}
+
+func (c *CloudletCache) SetDeletedCb(fn func(ctx context.Context, old *Cloudlet)) {
+	c.DeletedCbs = []func(ctx context.Context, old *Cloudlet){fn}
 }
 
 func (c *CloudletCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
-	c.UpdatedKeyCb = fn
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
 }
 
 func (c *CloudletCache) SetDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
-	c.DeletedKeyCb = fn
+	c.DeletedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
+}
+
+func (c *CloudletCache) AddUpdatedCb(fn func(ctx context.Context, old *Cloudlet, new *Cloudlet)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *CloudletCache) AddDeletedCb(fn func(ctx context.Context, old *Cloudlet)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *CloudletCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *CloudletCache) AddDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
 func (c *CloudletCache) SetFlushAll() {
@@ -4176,8 +4337,13 @@ func (c *CloudletCache) SyncListEnd(ctx context.Context) {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -4310,6 +4476,12 @@ func (m *FlavorMatch) CopyInFields(src *FlavorMatch) int {
 	return changed
 }
 
+func (m *FlavorMatch) DeepCopyIn(src *FlavorMatch) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.FlavorName = src.FlavorName
+	m.AvailabilityZone = src.AvailabilityZone
+}
+
 func (m *FlavorMatch) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
@@ -4351,6 +4523,11 @@ func (m *CloudletManifest) CopyInFields(src *CloudletManifest) int {
 	return changed
 }
 
+func (m *CloudletManifest) DeepCopyIn(src *CloudletManifest) {
+	m.ImagePath = src.ImagePath
+	m.Manifest = src.Manifest
+}
+
 // Helper method to check that enums have valid values
 func (m *CloudletManifest) ValidateEnums() error {
 	return nil
@@ -4386,6 +4563,21 @@ func (m *FlavorInfo) CopyInFields(src *FlavorInfo) int {
 	return changed
 }
 
+func (m *FlavorInfo) DeepCopyIn(src *FlavorInfo) {
+	m.Name = src.Name
+	m.Vcpus = src.Vcpus
+	m.Ram = src.Ram
+	m.Disk = src.Disk
+	if src.PropMap != nil {
+		m.PropMap = make(map[string]string)
+		for k, v := range src.PropMap {
+			m.PropMap[k] = v
+		}
+	} else {
+		m.PropMap = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *FlavorInfo) ValidateEnums() error {
 	return nil
@@ -4402,6 +4594,11 @@ func (m *OSAZone) CopyInFields(src *OSAZone) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *OSAZone) DeepCopyIn(src *OSAZone) {
+	m.Name = src.Name
+	m.Status = src.Status
 }
 
 // Helper method to check that enums have valid values
@@ -4428,6 +4625,13 @@ func (m *OSImage) CopyInFields(src *OSImage) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *OSImage) DeepCopyIn(src *OSImage) {
+	m.Name = src.Name
+	m.Tags = src.Tags
+	m.Properties = src.Properties
+	m.DiskFormat = src.DiskFormat
 }
 
 // Helper method to check that enums have valid values
@@ -5052,6 +5256,58 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 	return changed
 }
 
+func (m *CloudletInfo) DeepCopyIn(src *CloudletInfo) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.State = src.State
+	m.NotifyId = src.NotifyId
+	m.Controller = src.Controller
+	m.OsMaxRam = src.OsMaxRam
+	m.OsMaxVcores = src.OsMaxVcores
+	m.OsMaxVolGb = src.OsMaxVolGb
+	if src.Errors != nil {
+		m.Errors = make([]string, len(src.Errors), len(src.Errors))
+		for ii, s := range src.Errors {
+			m.Errors[ii] = s
+		}
+	} else {
+		m.Errors = nil
+	}
+	if src.Flavors != nil {
+		m.Flavors = make([]*FlavorInfo, len(src.Flavors), len(src.Flavors))
+		for ii, s := range src.Flavors {
+			var tmp_s FlavorInfo
+			tmp_s.DeepCopyIn(s)
+			m.Flavors[ii] = &tmp_s
+		}
+	} else {
+		m.Flavors = nil
+	}
+	m.Status.DeepCopyIn(&src.Status)
+	m.ContainerVersion = src.ContainerVersion
+	if src.AvailabilityZones != nil {
+		m.AvailabilityZones = make([]*OSAZone, len(src.AvailabilityZones), len(src.AvailabilityZones))
+		for ii, s := range src.AvailabilityZones {
+			var tmp_s OSAZone
+			tmp_s.DeepCopyIn(s)
+			m.AvailabilityZones[ii] = &tmp_s
+		}
+	} else {
+		m.AvailabilityZones = nil
+	}
+	if src.OsImages != nil {
+		m.OsImages = make([]*OSImage, len(src.OsImages), len(src.OsImages))
+		for ii, s := range src.OsImages {
+			var tmp_s OSImage
+			tmp_s.DeepCopyIn(s)
+			m.OsImages[ii] = &tmp_s
+		}
+	} else {
+		m.OsImages = nil
+	}
+	m.ControllerCacheReceived = src.ControllerCacheReceived
+	m.MaintenanceState = src.MaintenanceState
+}
+
 func (s *CloudletInfo) HasFields() bool {
 	return true
 }
@@ -5212,15 +5468,16 @@ type CloudletInfoCacheData struct {
 // CloudletInfoCache caches CloudletInfo objects in memory in a hash table
 // and keeps them in sync with the database.
 type CloudletInfoCache struct {
-	Objs         map[CloudletKey]*CloudletInfoCacheData
-	Mux          util.Mutex
-	List         map[CloudletKey]struct{}
-	FlushAll     bool
-	NotifyCb     func(ctx context.Context, obj *CloudletKey, old *CloudletInfo, modRev int64)
-	UpdatedCb    func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)
-	KeyWatchers  map[CloudletKey][]*CloudletInfoKeyWatcher
-	UpdatedKeyCb func(ctx context.Context, key *CloudletKey)
-	DeletedKeyCb func(ctx context.Context, key *CloudletKey)
+	Objs          map[CloudletKey]*CloudletInfoCacheData
+	Mux           util.Mutex
+	List          map[CloudletKey]struct{}
+	FlushAll      bool
+	NotifyCb      func(ctx context.Context, obj *CloudletKey, old *CloudletInfo, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)
+	DeletedCbs    []func(ctx context.Context, old *CloudletInfo)
+	KeyWatchers   map[CloudletKey][]*CloudletInfoKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *CloudletKey)
+	DeletedKeyCbs []func(ctx context.Context, key *CloudletKey)
 }
 
 func NewCloudletInfoCache() *CloudletInfoCache {
@@ -5232,6 +5489,11 @@ func NewCloudletInfoCache() *CloudletInfoCache {
 func InitCloudletInfoCache(cache *CloudletInfoCache) {
 	cache.Objs = make(map[CloudletKey]*CloudletInfoCacheData)
 	cache.KeyWatchers = make(map[CloudletKey][]*CloudletInfoKeyWatcher)
+	cache.NotifyCb = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *CloudletInfoCache) GetTypeString() string {
@@ -5248,7 +5510,7 @@ func (c *CloudletInfoCache) GetWithRev(key *CloudletKey, valbuf *CloudletInfo, m
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst.Obj
+		valbuf.DeepCopyIn(inst.Obj)
 		*modRev = inst.ModRev
 	}
 	return found
@@ -5286,23 +5548,24 @@ func (c *CloudletInfoCache) UpdateModFunc(ctx context.Context, key *CloudletKey,
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil {
+	for _, cb := range c.UpdatedCbs {
 		newCopy := &CloudletInfo{}
-		*newCopy = *new
-		defer c.UpdatedCb(ctx, old, newCopy)
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
 	}
 	if c.NotifyCb != nil {
 		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 	}
-	if c.UpdatedKeyCb != nil {
-		defer c.UpdatedKeyCb(ctx, key)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
 	}
+	store := &CloudletInfo{}
+	store.DeepCopyIn(new)
 	c.Objs[new.GetKeyVal()] = &CloudletInfoCacheData{
-		Obj:    new,
+		Obj:    store,
 		ModRev: modRev,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletInfo", "obj", new, "modRev", modRev)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
@@ -5316,13 +5579,17 @@ func (c *CloudletInfoCache) Delete(ctx context.Context, in *CloudletInfo, modRev
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete CloudletInfo", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
-	if c.DeletedKeyCb != nil {
-		c.DeletedKeyCb(ctx, in.GetKey())
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
@@ -5332,7 +5599,7 @@ func (c *CloudletInfoCache) Prune(ctx context.Context, validKeys map[CloudletKey
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
+			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -5343,8 +5610,13 @@ func (c *CloudletInfoCache) Prune(ctx context.Context, validKeys map[CloudletKey
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -5374,8 +5646,13 @@ func (c *CloudletInfoCache) Flush(ctx context.Context, notifyId int64) {
 			if c.NotifyCb != nil {
 				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 			}
-			if c.DeletedKeyCb != nil {
-				c.DeletedKeyCb(ctx, &key)
+			for _, cb := range c.DeletedKeyCbs {
+				cb(ctx, &key)
+			}
+			if old.Obj != nil {
+				for _, cb := range c.DeletedCbs {
+					cb(ctx, old.Obj)
+				}
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -5411,15 +5688,35 @@ func (c *CloudletInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *Cloudl
 }
 
 func (c *CloudletInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *CloudletInfo, new *CloudletInfo){fn}
+}
+
+func (c *CloudletInfoCache) SetDeletedCb(fn func(ctx context.Context, old *CloudletInfo)) {
+	c.DeletedCbs = []func(ctx context.Context, old *CloudletInfo){fn}
 }
 
 func (c *CloudletInfoCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
-	c.UpdatedKeyCb = fn
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
 }
 
 func (c *CloudletInfoCache) SetDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
-	c.DeletedKeyCb = fn
+	c.DeletedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
+}
+
+func (c *CloudletInfoCache) AddUpdatedCb(fn func(ctx context.Context, old *CloudletInfo, new *CloudletInfo)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *CloudletInfoCache) AddDeletedCb(fn func(ctx context.Context, old *CloudletInfo)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *CloudletInfoCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *CloudletInfoCache) AddDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
 func (c *CloudletInfoCache) SetFlushAll() {
@@ -5518,8 +5815,13 @@ func (c *CloudletInfoCache) SyncListEnd(ctx context.Context) {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -5604,6 +5906,10 @@ func (m *CloudletMetrics) CopyInFields(src *CloudletMetrics) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *CloudletMetrics) DeepCopyIn(src *CloudletMetrics) {
+	m.Foo = src.Foo
 }
 
 // Helper method to check that enums have valid values

@@ -182,6 +182,16 @@ func (m *AppPort) CopyInFields(src *AppPort) int {
 	return changed
 }
 
+func (m *AppPort) DeepCopyIn(src *AppPort) {
+	m.Proto = src.Proto
+	m.InternalPort = src.InternalPort
+	m.PublicPort = src.PublicPort
+	m.PathPrefix = src.PathPrefix
+	m.FqdnPrefix = src.FqdnPrefix
+	m.EndPort = src.EndPort
+	m.Tls = src.Tls
+}
+
 // Helper method to check that enums have valid values
 func (m *AppPort) ValidateEnums() error {
 	if _, ok := LProto_name[int32(m.Proto)]; !ok {

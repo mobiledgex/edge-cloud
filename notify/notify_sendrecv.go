@@ -330,7 +330,7 @@ func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 				ctx = opentracing.ContextWithSpan(ctx, span)
 			}
 			if err != nil && notice.Action != edgeproto.NoticeAction_SENDALL_END {
-				log.SpanLog(ctx, log.DebugLevelNotify, "err", err)
+				log.SpanLog(ctx, log.DebugLevelNotify, "hit error", "err", err)
 				return
 			}
 			if recvAll && notice.Action == edgeproto.NoticeAction_SENDALL_END {

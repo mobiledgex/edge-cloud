@@ -25,6 +25,7 @@ type DummyHandler struct {
 	NodeCache            edgeproto.NodeCache
 	AutoScalePolicyCache edgeproto.AutoScalePolicyCache
 	AutoProvPolicyCache  edgeproto.AutoProvPolicyCache
+	PrivacyPolicyCache   edgeproto.PrivacyPolicyCache
 	DeviceCache          edgeproto.DeviceCache
 }
 
@@ -42,20 +43,22 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitNodeCache(&h.NodeCache)
 	edgeproto.InitAutoScalePolicyCache(&h.AutoScalePolicyCache)
 	edgeproto.InitAutoProvPolicyCache(&h.AutoProvPolicyCache)
+	edgeproto.InitPrivacyPolicyCache(&h.PrivacyPolicyCache)
 	edgeproto.InitDeviceCache(&h.DeviceCache)
 	return h
 }
 
 func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
-	mgr.RegisterSendAppCache(&s.AppCache)
-	mgr.RegisterSendAppInstCache(&s.AppInstCache)
+	mgr.RegisterSendFlavorCache(&s.FlavorCache)
 	mgr.RegisterSendCloudletCache(&s.CloudletCache)
 	mgr.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
-	mgr.RegisterSendFlavorCache(&s.FlavorCache)
-	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
-	mgr.RegisterSendAlertCache(&s.AlertCache)
 	mgr.RegisterSendAutoScalePolicyCache(&s.AutoScalePolicyCache)
 	mgr.RegisterSendAutoProvPolicyCache(&s.AutoProvPolicyCache)
+	mgr.RegisterSendPrivacyPolicyCache(&s.PrivacyPolicyCache)
+	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
+	mgr.RegisterSendAppCache(&s.AppCache)
+	mgr.RegisterSendAppInstCache(&s.AppInstCache)
+	mgr.RegisterSendAlertCache(&s.AlertCache)
 
 	mgr.RegisterRecvAppInstInfoCache(&s.AppInstInfoCache)
 	mgr.RegisterRecvClusterInstInfoCache(&s.ClusterInstInfoCache)

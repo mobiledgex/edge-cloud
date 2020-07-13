@@ -536,7 +536,7 @@ var AppAutoProvPolicyComments = map[string]string{
 	"appkey.organization": "App developer organization",
 	"appkey.name":         "App name",
 	"appkey.version":      "App version",
-	"autoprovpolicy":      "Auto Provisioning Policy name",
+	"autoprovpolicy":      "Auto provisioning policy name",
 }
 var AppAutoProvPolicySpecialArgs = map[string]string{}
 var UpdateAppRequiredArgs = []string{

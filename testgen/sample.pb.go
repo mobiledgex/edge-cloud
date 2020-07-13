@@ -841,6 +841,10 @@ func (m *NestedMessage) CopyInFields(src *NestedMessage) int {
 	return changed
 }
 
+func (m *NestedMessage) DeepCopyIn(src *NestedMessage) {
+	m.Name = src.Name
+}
+
 // Helper method to check that enums have valid values
 func (m *NestedMessage) ValidateEnums() error {
 	return nil
@@ -869,6 +873,18 @@ func (m *IncludeMessage) CopyInFields(src *IncludeMessage) int {
 	return changed
 }
 
+func (m *IncludeMessage) DeepCopyIn(src *IncludeMessage) {
+	m.Name = src.Name
+	m.Id = src.Id
+	if src.NestedMsg != nil {
+		var tmp_NestedMsg NestedMessage
+		tmp_NestedMsg.DeepCopyIn(src.NestedMsg)
+		m.NestedMsg = &tmp_NestedMsg
+	} else {
+		m.NestedMsg = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *IncludeMessage) ValidateEnums() error {
 	if err := m.NestedMsg.ValidateEnums(); err != nil {
@@ -884,6 +900,10 @@ func (m *IncludeFields) CopyInFields(src *IncludeFields) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *IncludeFields) DeepCopyIn(src *IncludeFields) {
+	m.Name = src.Name
 }
 
 // Helper method to check that enums have valid values
@@ -2761,6 +2781,165 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	return changed
 }
 
+func (m *TestGen) DeepCopyIn(src *TestGen) {
+	m.Name = src.Name
+	m.Db = src.Db
+	m.Fl = src.Fl
+	m.I32 = src.I32
+	m.I64 = src.I64
+	m.U32 = src.U32
+	m.U64 = src.U64
+	m.S32 = src.S32
+	m.S64 = src.S64
+	m.F32 = src.F32
+	m.F64 = src.F64
+	m.Sf32 = src.Sf32
+	m.Sf64 = src.Sf64
+	m.Bb = src.Bb
+	m.OuterEn = src.OuterEn
+	m.InnerEn = src.InnerEn
+	if src.InnerMsg != nil {
+		var tmp_InnerMsg TestGen_InnerMessage
+		tmp_InnerMsg.DeepCopyIn(src.InnerMsg)
+		m.InnerMsg = &tmp_InnerMsg
+	} else {
+		m.InnerMsg = nil
+	}
+	m.InnerMsgNonnull.DeepCopyIn(&src.InnerMsgNonnull)
+	if src.IncludeMsg != nil {
+		var tmp_IncludeMsg IncludeMessage
+		tmp_IncludeMsg.DeepCopyIn(src.IncludeMsg)
+		m.IncludeMsg = &tmp_IncludeMsg
+	} else {
+		m.IncludeMsg = nil
+	}
+	m.IncludeMsgNonnull.DeepCopyIn(&src.IncludeMsgNonnull)
+	if src.IncludeFields != nil {
+		var tmp_IncludeFields IncludeFields
+		tmp_IncludeFields.DeepCopyIn(src.IncludeFields)
+		m.IncludeFields = &tmp_IncludeFields
+	} else {
+		m.IncludeFields = nil
+	}
+	m.IncludeFieldsNonnull.DeepCopyIn(&src.IncludeFieldsNonnull)
+	if src.Loc != nil {
+		var tmp_Loc distributed_match_engine.Loc
+		tmp_Loc = *src.Loc
+		m.Loc = &tmp_Loc
+	} else {
+		m.Loc = nil
+	}
+	m.LocNonnull = src.LocNonnull
+	if src.RepeatedInt != nil {
+		m.RepeatedInt = make([]int64, len(src.RepeatedInt), len(src.RepeatedInt))
+		for ii, s := range src.RepeatedInt {
+			m.RepeatedInt[ii] = s
+		}
+	} else {
+		m.RepeatedInt = nil
+	}
+	m.Ip = src.Ip
+	if src.Names != nil {
+		m.Names = make([]string, len(src.Names), len(src.Names))
+		for ii, s := range src.Names {
+			m.Names[ii] = s
+		}
+	} else {
+		m.Names = nil
+	}
+	if src.RepeatedMsg != nil {
+		m.RepeatedMsg = make([]*IncludeMessage, len(src.RepeatedMsg), len(src.RepeatedMsg))
+		for ii, s := range src.RepeatedMsg {
+			var tmp_s IncludeMessage
+			tmp_s.DeepCopyIn(s)
+			m.RepeatedMsg[ii] = &tmp_s
+		}
+	} else {
+		m.RepeatedMsg = nil
+	}
+	if src.RepeatedMsgNonnull != nil {
+		m.RepeatedMsgNonnull = make([]IncludeMessage, len(src.RepeatedMsgNonnull), len(src.RepeatedMsgNonnull))
+		for ii, s := range src.RepeatedMsgNonnull {
+			m.RepeatedMsgNonnull[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.RepeatedMsgNonnull = nil
+	}
+	if src.RepeatedFields != nil {
+		m.RepeatedFields = make([]*IncludeFields, len(src.RepeatedFields), len(src.RepeatedFields))
+		for ii, s := range src.RepeatedFields {
+			var tmp_s IncludeFields
+			tmp_s.DeepCopyIn(s)
+			m.RepeatedFields[ii] = &tmp_s
+		}
+	} else {
+		m.RepeatedFields = nil
+	}
+	if src.RepeatedFieldsNonnull != nil {
+		m.RepeatedFieldsNonnull = make([]IncludeFields, len(src.RepeatedFieldsNonnull), len(src.RepeatedFieldsNonnull))
+		for ii, s := range src.RepeatedFieldsNonnull {
+			m.RepeatedFieldsNonnull[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.RepeatedFieldsNonnull = nil
+	}
+	if src.RepeatedInnerMsg != nil {
+		m.RepeatedInnerMsg = make([]*TestGen_InnerMessage, len(src.RepeatedInnerMsg), len(src.RepeatedInnerMsg))
+		for ii, s := range src.RepeatedInnerMsg {
+			var tmp_s TestGen_InnerMessage
+			tmp_s.DeepCopyIn(s)
+			m.RepeatedInnerMsg[ii] = &tmp_s
+		}
+	} else {
+		m.RepeatedInnerMsg = nil
+	}
+	if src.RepeatedInnerMsgNonnull != nil {
+		m.RepeatedInnerMsgNonnull = make([]TestGen_InnerMessage, len(src.RepeatedInnerMsgNonnull), len(src.RepeatedInnerMsgNonnull))
+		for ii, s := range src.RepeatedInnerMsgNonnull {
+			m.RepeatedInnerMsgNonnull[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.RepeatedInnerMsgNonnull = nil
+	}
+	if src.RepeatedLoc != nil {
+		m.RepeatedLoc = make([]*distributed_match_engine.Loc, len(src.RepeatedLoc), len(src.RepeatedLoc))
+		for ii, s := range src.RepeatedLoc {
+			var tmp_s distributed_match_engine.Loc
+			tmp_s = *s
+			m.RepeatedLoc[ii] = &tmp_s
+		}
+	} else {
+		m.RepeatedLoc = nil
+	}
+	if src.RepeatedLocNonnull != nil {
+		m.RepeatedLocNonnull = make([]distributed_match_engine.Loc, len(src.RepeatedLocNonnull), len(src.RepeatedLocNonnull))
+		for ii, s := range src.RepeatedLocNonnull {
+			m.RepeatedLocNonnull[ii] = s
+		}
+	} else {
+		m.RepeatedLocNonnull = nil
+	}
+	if src.IntMap != nil {
+		m.IntMap = make(map[int32]int32)
+		for k, v := range src.IntMap {
+			m.IntMap[k] = v
+		}
+	} else {
+		m.IntMap = nil
+	}
+	if src.MsgMap != nil {
+		m.MsgMap = make(map[int32]*NestedMessage)
+		for k, v := range src.MsgMap {
+			var tmp_v NestedMessage
+			tmp_v.DeepCopyIn(v)
+			m.MsgMap[k] = &tmp_v
+		}
+	} else {
+		m.MsgMap = nil
+	}
+	m.Unused = src.Unused
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *TestGen) ValidateEnums() error {
@@ -2828,6 +3007,11 @@ func (m *TestGen_InnerMessage) CopyInFields(src *TestGen_InnerMessage) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *TestGen_InnerMessage) DeepCopyIn(src *TestGen_InnerMessage) {
+	m.Url = src.Url
+	m.Id = src.Id
 }
 
 // Helper method to check that enums have valid values

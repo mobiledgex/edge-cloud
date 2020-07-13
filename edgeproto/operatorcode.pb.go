@@ -288,6 +288,11 @@ func (m *OperatorCode) CopyInFields(src *OperatorCode) int {
 	return changed
 }
 
+func (m *OperatorCode) DeepCopyIn(src *OperatorCode) {
+	m.Code = src.Code
+	m.Organization = src.Organization
+}
+
 func (s *OperatorCode) HasFields() bool {
 	return false
 }
@@ -434,15 +439,16 @@ type OperatorCodeCacheData struct {
 // OperatorCodeCache caches OperatorCode objects in memory in a hash table
 // and keeps them in sync with the database.
 type OperatorCodeCache struct {
-	Objs         map[OperatorCodeKey]*OperatorCodeCacheData
-	Mux          util.Mutex
-	List         map[OperatorCodeKey]struct{}
-	FlushAll     bool
-	NotifyCb     func(ctx context.Context, obj *OperatorCodeKey, old *OperatorCode, modRev int64)
-	UpdatedCb    func(ctx context.Context, old *OperatorCode, new *OperatorCode)
-	KeyWatchers  map[OperatorCodeKey][]*OperatorCodeKeyWatcher
-	UpdatedKeyCb func(ctx context.Context, key *OperatorCodeKey)
-	DeletedKeyCb func(ctx context.Context, key *OperatorCodeKey)
+	Objs          map[OperatorCodeKey]*OperatorCodeCacheData
+	Mux           util.Mutex
+	List          map[OperatorCodeKey]struct{}
+	FlushAll      bool
+	NotifyCb      func(ctx context.Context, obj *OperatorCodeKey, old *OperatorCode, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *OperatorCode, new *OperatorCode)
+	DeletedCbs    []func(ctx context.Context, old *OperatorCode)
+	KeyWatchers   map[OperatorCodeKey][]*OperatorCodeKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *OperatorCodeKey)
+	DeletedKeyCbs []func(ctx context.Context, key *OperatorCodeKey)
 }
 
 func NewOperatorCodeCache() *OperatorCodeCache {
@@ -454,6 +460,11 @@ func NewOperatorCodeCache() *OperatorCodeCache {
 func InitOperatorCodeCache(cache *OperatorCodeCache) {
 	cache.Objs = make(map[OperatorCodeKey]*OperatorCodeCacheData)
 	cache.KeyWatchers = make(map[OperatorCodeKey][]*OperatorCodeKeyWatcher)
+	cache.NotifyCb = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *OperatorCodeCache) GetTypeString() string {
@@ -470,7 +481,7 @@ func (c *OperatorCodeCache) GetWithRev(key *OperatorCodeKey, valbuf *OperatorCod
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst.Obj
+		valbuf.DeepCopyIn(inst.Obj)
 		*modRev = inst.ModRev
 	}
 	return found
@@ -508,23 +519,24 @@ func (c *OperatorCodeCache) UpdateModFunc(ctx context.Context, key *OperatorCode
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil {
+	for _, cb := range c.UpdatedCbs {
 		newCopy := &OperatorCode{}
-		*newCopy = *new
-		defer c.UpdatedCb(ctx, old, newCopy)
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
 	}
 	if c.NotifyCb != nil {
 		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 	}
-	if c.UpdatedKeyCb != nil {
-		defer c.UpdatedKeyCb(ctx, key)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
 	}
+	store := &OperatorCode{}
+	store.DeepCopyIn(new)
 	c.Objs[new.GetKeyVal()] = &OperatorCodeCacheData{
-		Obj:    new,
+		Obj:    store,
 		ModRev: modRev,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate OperatorCode", "obj", new, "modRev", modRev)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
@@ -538,13 +550,17 @@ func (c *OperatorCodeCache) Delete(ctx context.Context, in *OperatorCode, modRev
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete OperatorCode", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
-	if c.DeletedKeyCb != nil {
-		c.DeletedKeyCb(ctx, in.GetKey())
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
@@ -554,7 +570,7 @@ func (c *OperatorCodeCache) Prune(ctx context.Context, validKeys map[OperatorCod
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
+			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -565,8 +581,13 @@ func (c *OperatorCodeCache) Prune(ctx context.Context, validKeys map[OperatorCod
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -610,15 +631,35 @@ func (c *OperatorCodeCache) SetNotifyCb(fn func(ctx context.Context, obj *Operat
 }
 
 func (c *OperatorCodeCache) SetUpdatedCb(fn func(ctx context.Context, old *OperatorCode, new *OperatorCode)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *OperatorCode, new *OperatorCode){fn}
+}
+
+func (c *OperatorCodeCache) SetDeletedCb(fn func(ctx context.Context, old *OperatorCode)) {
+	c.DeletedCbs = []func(ctx context.Context, old *OperatorCode){fn}
 }
 
 func (c *OperatorCodeCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *OperatorCodeKey)) {
-	c.UpdatedKeyCb = fn
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *OperatorCodeKey){fn}
 }
 
 func (c *OperatorCodeCache) SetDeletedKeyCb(fn func(ctx context.Context, key *OperatorCodeKey)) {
-	c.DeletedKeyCb = fn
+	c.DeletedKeyCbs = []func(ctx context.Context, key *OperatorCodeKey){fn}
+}
+
+func (c *OperatorCodeCache) AddUpdatedCb(fn func(ctx context.Context, old *OperatorCode, new *OperatorCode)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *OperatorCodeCache) AddDeletedCb(fn func(ctx context.Context, old *OperatorCode)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *OperatorCodeCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *OperatorCodeKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *OperatorCodeCache) AddDeletedKeyCb(fn func(ctx context.Context, key *OperatorCodeKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
 func (c *OperatorCodeCache) SetFlushAll() {
@@ -717,8 +758,13 @@ func (c *OperatorCodeCache) SyncListEnd(ctx context.Context) {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}

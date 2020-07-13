@@ -432,6 +432,13 @@ func (m *NodeKey) CopyInFields(src *NodeKey) int {
 	return changed
 }
 
+func (m *NodeKey) DeepCopyIn(src *NodeKey) {
+	m.Name = src.Name
+	m.CloudletKey.DeepCopyIn(&src.CloudletKey)
+	m.Type = src.Type
+	m.Region = src.Region
+}
+
 func (m *NodeKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
@@ -745,6 +752,17 @@ func (m *Node) CopyInFields(src *Node) int {
 	return changed
 }
 
+func (m *Node) DeepCopyIn(src *Node) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.NotifyId = src.NotifyId
+	m.BuildMaster = src.BuildMaster
+	m.BuildHead = src.BuildHead
+	m.BuildAuthor = src.BuildAuthor
+	m.Hostname = src.Hostname
+	m.ContainerVersion = src.ContainerVersion
+	m.InternalPki = src.InternalPki
+}
+
 func (s *Node) HasFields() bool {
 	return true
 }
@@ -905,15 +923,16 @@ type NodeCacheData struct {
 // NodeCache caches Node objects in memory in a hash table
 // and keeps them in sync with the database.
 type NodeCache struct {
-	Objs         map[NodeKey]*NodeCacheData
-	Mux          util.Mutex
-	List         map[NodeKey]struct{}
-	FlushAll     bool
-	NotifyCb     func(ctx context.Context, obj *NodeKey, old *Node, modRev int64)
-	UpdatedCb    func(ctx context.Context, old *Node, new *Node)
-	KeyWatchers  map[NodeKey][]*NodeKeyWatcher
-	UpdatedKeyCb func(ctx context.Context, key *NodeKey)
-	DeletedKeyCb func(ctx context.Context, key *NodeKey)
+	Objs          map[NodeKey]*NodeCacheData
+	Mux           util.Mutex
+	List          map[NodeKey]struct{}
+	FlushAll      bool
+	NotifyCb      func(ctx context.Context, obj *NodeKey, old *Node, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *Node, new *Node)
+	DeletedCbs    []func(ctx context.Context, old *Node)
+	KeyWatchers   map[NodeKey][]*NodeKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *NodeKey)
+	DeletedKeyCbs []func(ctx context.Context, key *NodeKey)
 }
 
 func NewNodeCache() *NodeCache {
@@ -925,6 +944,11 @@ func NewNodeCache() *NodeCache {
 func InitNodeCache(cache *NodeCache) {
 	cache.Objs = make(map[NodeKey]*NodeCacheData)
 	cache.KeyWatchers = make(map[NodeKey][]*NodeKeyWatcher)
+	cache.NotifyCb = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *NodeCache) GetTypeString() string {
@@ -941,7 +965,7 @@ func (c *NodeCache) GetWithRev(key *NodeKey, valbuf *Node, modRev *int64) bool {
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst.Obj
+		valbuf.DeepCopyIn(inst.Obj)
 		*modRev = inst.ModRev
 	}
 	return found
@@ -979,23 +1003,24 @@ func (c *NodeCache) UpdateModFunc(ctx context.Context, key *NodeKey, modRev int6
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil {
+	for _, cb := range c.UpdatedCbs {
 		newCopy := &Node{}
-		*newCopy = *new
-		defer c.UpdatedCb(ctx, old, newCopy)
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
 	}
 	if c.NotifyCb != nil {
 		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 	}
-	if c.UpdatedKeyCb != nil {
-		defer c.UpdatedKeyCb(ctx, key)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
 	}
+	store := &Node{}
+	store.DeepCopyIn(new)
 	c.Objs[new.GetKeyVal()] = &NodeCacheData{
-		Obj:    new,
+		Obj:    store,
 		ModRev: modRev,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Node", "obj", new, "modRev", modRev)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
@@ -1009,13 +1034,17 @@ func (c *NodeCache) Delete(ctx context.Context, in *Node, modRev int64) {
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Node", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
-	if c.DeletedKeyCb != nil {
-		c.DeletedKeyCb(ctx, in.GetKey())
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
@@ -1025,7 +1054,7 @@ func (c *NodeCache) Prune(ctx context.Context, validKeys map[NodeKey]struct{}) {
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
+			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1036,8 +1065,13 @@ func (c *NodeCache) Prune(ctx context.Context, validKeys map[NodeKey]struct{}) {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1067,8 +1101,13 @@ func (c *NodeCache) Flush(ctx context.Context, notifyId int64) {
 			if c.NotifyCb != nil {
 				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 			}
-			if c.DeletedKeyCb != nil {
-				c.DeletedKeyCb(ctx, &key)
+			for _, cb := range c.DeletedKeyCbs {
+				cb(ctx, &key)
+			}
+			if old.Obj != nil {
+				for _, cb := range c.DeletedCbs {
+					cb(ctx, old.Obj)
+				}
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -1104,15 +1143,35 @@ func (c *NodeCache) SetNotifyCb(fn func(ctx context.Context, obj *NodeKey, old *
 }
 
 func (c *NodeCache) SetUpdatedCb(fn func(ctx context.Context, old *Node, new *Node)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *Node, new *Node){fn}
+}
+
+func (c *NodeCache) SetDeletedCb(fn func(ctx context.Context, old *Node)) {
+	c.DeletedCbs = []func(ctx context.Context, old *Node){fn}
 }
 
 func (c *NodeCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *NodeKey)) {
-	c.UpdatedKeyCb = fn
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *NodeKey){fn}
 }
 
 func (c *NodeCache) SetDeletedKeyCb(fn func(ctx context.Context, key *NodeKey)) {
-	c.DeletedKeyCb = fn
+	c.DeletedKeyCbs = []func(ctx context.Context, key *NodeKey){fn}
+}
+
+func (c *NodeCache) AddUpdatedCb(fn func(ctx context.Context, old *Node, new *Node)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *NodeCache) AddDeletedCb(fn func(ctx context.Context, old *Node)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *NodeCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *NodeKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *NodeCache) AddDeletedKeyCb(fn func(ctx context.Context, key *NodeKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
 func (c *NodeCache) SetFlushAll() {
@@ -1211,8 +1270,13 @@ func (c *NodeCache) SyncListEnd(ctx context.Context) {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1276,6 +1340,17 @@ func IgnoreNodeFields(taglist string) cmp.Option {
 		names = append(names, "Hostname")
 	}
 	return cmpopts.IgnoreFields(Node{}, names...)
+}
+
+func (m *NodeData) DeepCopyIn(src *NodeData) {
+	if src.Nodes != nil {
+		m.Nodes = make([]Node, len(src.Nodes), len(src.Nodes))
+		for ii, s := range src.Nodes {
+			m.Nodes[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Nodes = nil
+	}
 }
 
 // Helper method to check that enums have valid values

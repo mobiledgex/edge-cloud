@@ -528,6 +528,24 @@ func (m *DeviceReport) CopyInFields(src *DeviceReport) int {
 	return changed
 }
 
+func (m *DeviceReport) DeepCopyIn(src *DeviceReport) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.Begin != nil {
+		var tmp_Begin google_protobuf.Timestamp
+		tmp_Begin = *src.Begin
+		m.Begin = &tmp_Begin
+	} else {
+		m.Begin = nil
+	}
+	if src.End != nil {
+		var tmp_End google_protobuf.Timestamp
+		tmp_End = *src.End
+		m.End = &tmp_End
+	} else {
+		m.End = nil
+	}
+}
+
 func (s *DeviceReport) HasFields() bool {
 	return false
 }
@@ -723,6 +741,11 @@ func (m *DeviceKey) CopyInFields(src *DeviceKey) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *DeviceKey) DeepCopyIn(src *DeviceKey) {
+	m.UniqueIdType = src.UniqueIdType
+	m.UniqueId = src.UniqueId
 }
 
 func (m *DeviceKey) GetKeyString() string {
@@ -950,6 +973,25 @@ func (m *Device) CopyInFields(src *Device) int {
 	return changed
 }
 
+func (m *Device) DeepCopyIn(src *Device) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.FirstSeen != nil {
+		var tmp_FirstSeen google_protobuf.Timestamp
+		tmp_FirstSeen = *src.FirstSeen
+		m.FirstSeen = &tmp_FirstSeen
+	} else {
+		m.FirstSeen = nil
+	}
+	if src.LastSeen != nil {
+		var tmp_LastSeen google_protobuf.Timestamp
+		tmp_LastSeen = *src.LastSeen
+		m.LastSeen = &tmp_LastSeen
+	} else {
+		m.LastSeen = nil
+	}
+	m.NotifyId = src.NotifyId
+}
+
 func (s *Device) HasFields() bool {
 	return true
 }
@@ -1110,15 +1152,16 @@ type DeviceCacheData struct {
 // DeviceCache caches Device objects in memory in a hash table
 // and keeps them in sync with the database.
 type DeviceCache struct {
-	Objs         map[DeviceKey]*DeviceCacheData
-	Mux          util.Mutex
-	List         map[DeviceKey]struct{}
-	FlushAll     bool
-	NotifyCb     func(ctx context.Context, obj *DeviceKey, old *Device, modRev int64)
-	UpdatedCb    func(ctx context.Context, old *Device, new *Device)
-	KeyWatchers  map[DeviceKey][]*DeviceKeyWatcher
-	UpdatedKeyCb func(ctx context.Context, key *DeviceKey)
-	DeletedKeyCb func(ctx context.Context, key *DeviceKey)
+	Objs          map[DeviceKey]*DeviceCacheData
+	Mux           util.Mutex
+	List          map[DeviceKey]struct{}
+	FlushAll      bool
+	NotifyCb      func(ctx context.Context, obj *DeviceKey, old *Device, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *Device, new *Device)
+	DeletedCbs    []func(ctx context.Context, old *Device)
+	KeyWatchers   map[DeviceKey][]*DeviceKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *DeviceKey)
+	DeletedKeyCbs []func(ctx context.Context, key *DeviceKey)
 }
 
 func NewDeviceCache() *DeviceCache {
@@ -1130,6 +1173,11 @@ func NewDeviceCache() *DeviceCache {
 func InitDeviceCache(cache *DeviceCache) {
 	cache.Objs = make(map[DeviceKey]*DeviceCacheData)
 	cache.KeyWatchers = make(map[DeviceKey][]*DeviceKeyWatcher)
+	cache.NotifyCb = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *DeviceCache) GetTypeString() string {
@@ -1146,7 +1194,7 @@ func (c *DeviceCache) GetWithRev(key *DeviceKey, valbuf *Device, modRev *int64) 
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst.Obj
+		valbuf.DeepCopyIn(inst.Obj)
 		*modRev = inst.ModRev
 	}
 	return found
@@ -1184,23 +1232,24 @@ func (c *DeviceCache) UpdateModFunc(ctx context.Context, key *DeviceKey, modRev 
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil {
+	for _, cb := range c.UpdatedCbs {
 		newCopy := &Device{}
-		*newCopy = *new
-		defer c.UpdatedCb(ctx, old, newCopy)
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
 	}
 	if c.NotifyCb != nil {
 		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 	}
-	if c.UpdatedKeyCb != nil {
-		defer c.UpdatedKeyCb(ctx, key)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
 	}
+	store := &Device{}
+	store.DeepCopyIn(new)
 	c.Objs[new.GetKeyVal()] = &DeviceCacheData{
-		Obj:    new,
+		Obj:    store,
 		ModRev: modRev,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Device", "obj", new, "modRev", modRev)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
@@ -1214,13 +1263,17 @@ func (c *DeviceCache) Delete(ctx context.Context, in *Device, modRev int64) {
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Device", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
-	if c.DeletedKeyCb != nil {
-		c.DeletedKeyCb(ctx, in.GetKey())
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
@@ -1230,7 +1283,7 @@ func (c *DeviceCache) Prune(ctx context.Context, validKeys map[DeviceKey]struct{
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
+			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1241,8 +1294,13 @@ func (c *DeviceCache) Prune(ctx context.Context, validKeys map[DeviceKey]struct{
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1272,8 +1330,13 @@ func (c *DeviceCache) Flush(ctx context.Context, notifyId int64) {
 			if c.NotifyCb != nil {
 				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 			}
-			if c.DeletedKeyCb != nil {
-				c.DeletedKeyCb(ctx, &key)
+			for _, cb := range c.DeletedKeyCbs {
+				cb(ctx, &key)
+			}
+			if old.Obj != nil {
+				for _, cb := range c.DeletedCbs {
+					cb(ctx, old.Obj)
+				}
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -1309,15 +1372,35 @@ func (c *DeviceCache) SetNotifyCb(fn func(ctx context.Context, obj *DeviceKey, o
 }
 
 func (c *DeviceCache) SetUpdatedCb(fn func(ctx context.Context, old *Device, new *Device)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *Device, new *Device){fn}
+}
+
+func (c *DeviceCache) SetDeletedCb(fn func(ctx context.Context, old *Device)) {
+	c.DeletedCbs = []func(ctx context.Context, old *Device){fn}
 }
 
 func (c *DeviceCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *DeviceKey)) {
-	c.UpdatedKeyCb = fn
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *DeviceKey){fn}
 }
 
 func (c *DeviceCache) SetDeletedKeyCb(fn func(ctx context.Context, key *DeviceKey)) {
-	c.DeletedKeyCb = fn
+	c.DeletedKeyCbs = []func(ctx context.Context, key *DeviceKey){fn}
+}
+
+func (c *DeviceCache) AddUpdatedCb(fn func(ctx context.Context, old *Device, new *Device)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *DeviceCache) AddDeletedCb(fn func(ctx context.Context, old *Device)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *DeviceCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *DeviceKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *DeviceCache) AddDeletedKeyCb(fn func(ctx context.Context, key *DeviceKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
 func (c *DeviceCache) SetFlushAll() {
@@ -1416,8 +1499,13 @@ func (c *DeviceCache) SyncListEnd(ctx context.Context) {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
