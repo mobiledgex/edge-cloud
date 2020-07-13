@@ -81,6 +81,11 @@ func (m *Result) CopyInFields(src *Result) int {
 	return changed
 }
 
+func (m *Result) DeepCopyIn(src *Result) {
+	m.Message = src.Message
+	m.Code = src.Code
+}
+
 // Helper method to check that enums have valid values
 func (m *Result) ValidateEnums() error {
 	return nil
