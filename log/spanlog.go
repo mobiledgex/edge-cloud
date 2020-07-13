@@ -64,6 +64,11 @@ func StartSpan(lvl uint64, operationName string, opts ...opentracing.StartSpanOp
 	return span
 }
 
+func ChildSpan(ctx context.Context, lvl uint64, operationName string) (opentracing.Span, context.Context) {
+	span := StartSpan(lvl, operationName, opentracing.ChildOf(SpanFromContext(ctx).Context()))
+	return span, ContextWithSpan(context.Background(), span)
+}
+
 func ContextWithSpan(ctx context.Context, span opentracing.Span) context.Context {
 	return opentracing.ContextWithSpan(ctx, span)
 }
@@ -76,6 +81,10 @@ func SetTags(span opentracing.Span, tags map[string]string) {
 	for k, v := range tags {
 		span.SetTag(k, v)
 	}
+}
+
+func SetContextTags(ctx context.Context, tags map[string]string) {
+	SetTags(SpanFromContext(ctx), tags)
 }
 
 func SpanLog(ctx context.Context, lvl uint64, msg string, keysAndValues ...interface{}) {

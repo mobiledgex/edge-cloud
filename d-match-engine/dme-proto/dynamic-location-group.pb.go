@@ -280,6 +280,15 @@ func (m *DlgMessage) CopyInFields(src *DlgMessage) int {
 	return changed
 }
 
+func (m *DlgMessage) DeepCopyIn(src *DlgMessage) {
+	m.Ver = src.Ver
+	m.LgId = src.LgId
+	m.GroupCookie = src.GroupCookie
+	m.MessageId = src.MessageId
+	m.AckType = src.AckType
+	m.Message = src.Message
+}
+
 // Helper method to check that enums have valid values
 func (m *DlgMessage) ValidateEnums() error {
 	if _, ok := DlgMessage_DlgAck_name[int32(m.AckType)]; !ok {
@@ -303,6 +312,12 @@ func (m *DlgReply) CopyInFields(src *DlgReply) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *DlgReply) DeepCopyIn(src *DlgReply) {
+	m.Ver = src.Ver
+	m.AckId = src.AckId
+	m.GroupCookie = src.GroupCookie
 }
 
 // Helper method to check that enums have valid values

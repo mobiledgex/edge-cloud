@@ -436,6 +436,11 @@ func (m *PolicyKey) CopyInFields(src *PolicyKey) int {
 	return changed
 }
 
+func (m *PolicyKey) DeepCopyIn(src *PolicyKey) {
+	m.Organization = src.Organization
+	m.Name = src.Name
+}
+
 func (m *PolicyKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
@@ -664,6 +669,15 @@ func (m *AutoScalePolicy) CopyInFields(src *AutoScalePolicy) int {
 	return changed
 }
 
+func (m *AutoScalePolicy) DeepCopyIn(src *AutoScalePolicy) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.MinNodes = src.MinNodes
+	m.MaxNodes = src.MaxNodes
+	m.ScaleUpCpuThresh = src.ScaleUpCpuThresh
+	m.ScaleDownCpuThresh = src.ScaleDownCpuThresh
+	m.TriggerTimeSec = src.TriggerTimeSec
+}
+
 func (s *AutoScalePolicy) HasFields() bool {
 	return true
 }
@@ -824,15 +838,16 @@ type AutoScalePolicyCacheData struct {
 // AutoScalePolicyCache caches AutoScalePolicy objects in memory in a hash table
 // and keeps them in sync with the database.
 type AutoScalePolicyCache struct {
-	Objs         map[PolicyKey]*AutoScalePolicyCacheData
-	Mux          util.Mutex
-	List         map[PolicyKey]struct{}
-	FlushAll     bool
-	NotifyCb     func(ctx context.Context, obj *PolicyKey, old *AutoScalePolicy, modRev int64)
-	UpdatedCb    func(ctx context.Context, old *AutoScalePolicy, new *AutoScalePolicy)
-	KeyWatchers  map[PolicyKey][]*AutoScalePolicyKeyWatcher
-	UpdatedKeyCb func(ctx context.Context, key *PolicyKey)
-	DeletedKeyCb func(ctx context.Context, key *PolicyKey)
+	Objs          map[PolicyKey]*AutoScalePolicyCacheData
+	Mux           util.Mutex
+	List          map[PolicyKey]struct{}
+	FlushAll      bool
+	NotifyCb      func(ctx context.Context, obj *PolicyKey, old *AutoScalePolicy, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *AutoScalePolicy, new *AutoScalePolicy)
+	DeletedCbs    []func(ctx context.Context, old *AutoScalePolicy)
+	KeyWatchers   map[PolicyKey][]*AutoScalePolicyKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *PolicyKey)
+	DeletedKeyCbs []func(ctx context.Context, key *PolicyKey)
 }
 
 func NewAutoScalePolicyCache() *AutoScalePolicyCache {
@@ -844,6 +859,11 @@ func NewAutoScalePolicyCache() *AutoScalePolicyCache {
 func InitAutoScalePolicyCache(cache *AutoScalePolicyCache) {
 	cache.Objs = make(map[PolicyKey]*AutoScalePolicyCacheData)
 	cache.KeyWatchers = make(map[PolicyKey][]*AutoScalePolicyKeyWatcher)
+	cache.NotifyCb = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *AutoScalePolicyCache) GetTypeString() string {
@@ -860,7 +880,7 @@ func (c *AutoScalePolicyCache) GetWithRev(key *PolicyKey, valbuf *AutoScalePolic
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst.Obj
+		valbuf.DeepCopyIn(inst.Obj)
 		*modRev = inst.ModRev
 	}
 	return found
@@ -898,23 +918,24 @@ func (c *AutoScalePolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil {
+	for _, cb := range c.UpdatedCbs {
 		newCopy := &AutoScalePolicy{}
-		*newCopy = *new
-		defer c.UpdatedCb(ctx, old, newCopy)
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
 	}
 	if c.NotifyCb != nil {
 		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 	}
-	if c.UpdatedKeyCb != nil {
-		defer c.UpdatedKeyCb(ctx, key)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
 	}
+	store := &AutoScalePolicy{}
+	store.DeepCopyIn(new)
 	c.Objs[new.GetKeyVal()] = &AutoScalePolicyCacheData{
-		Obj:    new,
+		Obj:    store,
 		ModRev: modRev,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate AutoScalePolicy", "obj", new, "modRev", modRev)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
@@ -928,13 +949,17 @@ func (c *AutoScalePolicyCache) Delete(ctx context.Context, in *AutoScalePolicy, 
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete AutoScalePolicy", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
-	if c.DeletedKeyCb != nil {
-		c.DeletedKeyCb(ctx, in.GetKey())
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
@@ -944,7 +969,7 @@ func (c *AutoScalePolicyCache) Prune(ctx context.Context, validKeys map[PolicyKe
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
+			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -955,8 +980,13 @@ func (c *AutoScalePolicyCache) Prune(ctx context.Context, validKeys map[PolicyKe
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1000,15 +1030,35 @@ func (c *AutoScalePolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *Pol
 }
 
 func (c *AutoScalePolicyCache) SetUpdatedCb(fn func(ctx context.Context, old *AutoScalePolicy, new *AutoScalePolicy)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *AutoScalePolicy, new *AutoScalePolicy){fn}
+}
+
+func (c *AutoScalePolicyCache) SetDeletedCb(fn func(ctx context.Context, old *AutoScalePolicy)) {
+	c.DeletedCbs = []func(ctx context.Context, old *AutoScalePolicy){fn}
 }
 
 func (c *AutoScalePolicyCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
-	c.UpdatedKeyCb = fn
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *PolicyKey){fn}
 }
 
 func (c *AutoScalePolicyCache) SetDeletedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
-	c.DeletedKeyCb = fn
+	c.DeletedKeyCbs = []func(ctx context.Context, key *PolicyKey){fn}
+}
+
+func (c *AutoScalePolicyCache) AddUpdatedCb(fn func(ctx context.Context, old *AutoScalePolicy, new *AutoScalePolicy)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *AutoScalePolicyCache) AddDeletedCb(fn func(ctx context.Context, old *AutoScalePolicy)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AutoScalePolicyCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *AutoScalePolicyCache) AddDeletedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
 func (c *AutoScalePolicyCache) SetFlushAll() {
@@ -1107,8 +1157,13 @@ func (c *AutoScalePolicyCache) SyncListEnd(ctx context.Context) {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}

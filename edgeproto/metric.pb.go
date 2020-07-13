@@ -403,6 +403,11 @@ func (m *MetricTag) CopyInFields(src *MetricTag) int {
 	return changed
 }
 
+func (m *MetricTag) DeepCopyIn(src *MetricTag) {
+	m.Name = src.Name
+	m.Val = src.Val
+}
+
 // Helper method to check that enums have valid values
 func (m *MetricTag) ValidateEnums() error {
 	return nil
@@ -415,6 +420,10 @@ func (m *MetricVal) CopyInFields(src *MetricVal) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *MetricVal) DeepCopyIn(src *MetricVal) {
+	m.Name = src.Name
 }
 
 // Helper method to check that enums have valid values
@@ -473,6 +482,31 @@ func (m *Metric) CopyInFields(src *Metric) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *Metric) DeepCopyIn(src *Metric) {
+	m.Name = src.Name
+	m.Timestamp = src.Timestamp
+	if src.Tags != nil {
+		m.Tags = make([]*MetricTag, len(src.Tags), len(src.Tags))
+		for ii, s := range src.Tags {
+			var tmp_s MetricTag
+			tmp_s.DeepCopyIn(s)
+			m.Tags[ii] = &tmp_s
+		}
+	} else {
+		m.Tags = nil
+	}
+	if src.Vals != nil {
+		m.Vals = make([]*MetricVal, len(src.Vals), len(src.Vals))
+		for ii, s := range src.Vals {
+			var tmp_s MetricVal
+			tmp_s.DeepCopyIn(s)
+			m.Vals[ii] = &tmp_s
+		}
+	} else {
+		m.Vals = nil
+	}
 }
 
 // Helper method to check that enums have valid values
