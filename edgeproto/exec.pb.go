@@ -594,6 +594,11 @@ func (m *CloudletMgmtNode) CopyInFields(src *CloudletMgmtNode) int {
 	return changed
 }
 
+func (m *CloudletMgmtNode) DeepCopyIn(src *CloudletMgmtNode) {
+	m.Type = src.Type
+	m.Name = src.Name
+}
+
 // Helper method to check that enums have valid values
 func (m *CloudletMgmtNode) ValidateEnums() error {
 	return nil
@@ -622,6 +627,17 @@ func (m *RunCmd) CopyInFields(src *RunCmd) int {
 	return changed
 }
 
+func (m *RunCmd) DeepCopyIn(src *RunCmd) {
+	m.Command = src.Command
+	if src.CloudletMgmtNode != nil {
+		var tmp_CloudletMgmtNode CloudletMgmtNode
+		tmp_CloudletMgmtNode.DeepCopyIn(src.CloudletMgmtNode)
+		m.CloudletMgmtNode = &tmp_CloudletMgmtNode
+	} else {
+		m.CloudletMgmtNode = nil
+	}
+}
+
 // Helper method to check that enums have valid values
 func (m *RunCmd) ValidateEnums() error {
 	if err := m.CloudletMgmtNode.ValidateEnums(); err != nil {
@@ -637,6 +653,10 @@ func (m *RunVMConsole) CopyInFields(src *RunVMConsole) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *RunVMConsole) DeepCopyIn(src *RunVMConsole) {
+	m.Url = src.Url
 }
 
 // Helper method to check that enums have valid values
@@ -675,6 +695,13 @@ func (m *ShowLog) CopyInFields(src *ShowLog) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *ShowLog) DeepCopyIn(src *ShowLog) {
+	m.Since = src.Since
+	m.Tail = src.Tail
+	m.Timestamps = src.Timestamps
+	m.Follow = src.Follow
 }
 
 // Helper method to check that enums have valid values
@@ -801,6 +828,39 @@ func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *ExecRequest) DeepCopyIn(src *ExecRequest) {
+	m.AppInstKey.DeepCopyIn(&src.AppInstKey)
+	m.ContainerId = src.ContainerId
+	m.Offer = src.Offer
+	m.Answer = src.Answer
+	m.Err = src.Err
+	if src.Cmd != nil {
+		var tmp_Cmd RunCmd
+		tmp_Cmd.DeepCopyIn(src.Cmd)
+		m.Cmd = &tmp_Cmd
+	} else {
+		m.Cmd = nil
+	}
+	if src.Log != nil {
+		var tmp_Log ShowLog
+		tmp_Log.DeepCopyIn(src.Log)
+		m.Log = &tmp_Log
+	} else {
+		m.Log = nil
+	}
+	if src.Console != nil {
+		var tmp_Console RunVMConsole
+		tmp_Console.DeepCopyIn(src.Console)
+		m.Console = &tmp_Console
+	} else {
+		m.Console = nil
+	}
+	m.Timeout = src.Timeout
+	m.Webrtc = src.Webrtc
+	m.AccessUrl = src.AccessUrl
+	m.EdgeTurnAddr = src.EdgeTurnAddr
 }
 
 // Helper method to check that enums have valid values

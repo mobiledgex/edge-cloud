@@ -190,9 +190,24 @@ func (m *Organization) CopyInFields(src *Organization) int {
 	return changed
 }
 
+func (m *Organization) DeepCopyIn(src *Organization) {
+	m.Name = src.Name
+}
+
 // Helper method to check that enums have valid values
 func (m *Organization) ValidateEnums() error {
 	return nil
+}
+
+func (m *OrganizationData) DeepCopyIn(src *OrganizationData) {
+	if src.Orgs != nil {
+		m.Orgs = make([]Organization, len(src.Orgs), len(src.Orgs))
+		for ii, s := range src.Orgs {
+			m.Orgs[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Orgs = nil
+	}
 }
 
 // Helper method to check that enums have valid values

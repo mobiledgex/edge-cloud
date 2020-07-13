@@ -1325,6 +1325,11 @@ func (m *AppInstKey) CopyInFields(src *AppInstKey) int {
 	return changed
 }
 
+func (m *AppInstKey) DeepCopyIn(src *AppInstKey) {
+	m.AppKey.DeepCopyIn(&src.AppKey)
+	m.ClusterInstKey.DeepCopyIn(&src.ClusterInstKey)
+}
+
 func (m *AppInstKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
@@ -2385,6 +2390,57 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 	return changed
 }
 
+func (m *AppInst) DeepCopyIn(src *AppInst) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.CloudletLoc = src.CloudletLoc
+	m.Uri = src.Uri
+	m.Liveness = src.Liveness
+	if src.MappedPorts != nil {
+		m.MappedPorts = make([]distributed_match_engine.AppPort, len(src.MappedPorts), len(src.MappedPorts))
+		for ii, s := range src.MappedPorts {
+			m.MappedPorts[ii] = s
+		}
+	} else {
+		m.MappedPorts = nil
+	}
+	m.Flavor.DeepCopyIn(&src.Flavor)
+	m.State = src.State
+	if src.Errors != nil {
+		m.Errors = make([]string, len(src.Errors), len(src.Errors))
+		for ii, s := range src.Errors {
+			m.Errors[ii] = s
+		}
+	} else {
+		m.Errors = nil
+	}
+	m.CrmOverride = src.CrmOverride
+	m.RuntimeInfo.DeepCopyIn(&src.RuntimeInfo)
+	m.CreatedAt = src.CreatedAt
+	m.AutoClusterIpAccess = src.AutoClusterIpAccess
+	m.Status.DeepCopyIn(&src.Status)
+	m.Revision = src.Revision
+	m.ForceUpdate = src.ForceUpdate
+	m.UpdateMultiple = src.UpdateMultiple
+	if src.Configs != nil {
+		m.Configs = make([]*ConfigFile, len(src.Configs), len(src.Configs))
+		for ii, s := range src.Configs {
+			var tmp_s ConfigFile
+			tmp_s.DeepCopyIn(s)
+			m.Configs[ii] = &tmp_s
+		}
+	} else {
+		m.Configs = nil
+	}
+	m.SharedVolumeSize = src.SharedVolumeSize
+	m.HealthCheck = src.HealthCheck
+	m.PrivacyPolicy = src.PrivacyPolicy
+	m.PowerState = src.PowerState
+	m.ExternalVolumeSize = src.ExternalVolumeSize
+	m.AvailabilityZone = src.AvailabilityZone
+	m.VmFlavor = src.VmFlavor
+	m.OptRes = src.OptRes
+}
+
 func (s *AppInst) HasFields() bool {
 	return true
 }
@@ -2545,15 +2601,16 @@ type AppInstCacheData struct {
 // AppInstCache caches AppInst objects in memory in a hash table
 // and keeps them in sync with the database.
 type AppInstCache struct {
-	Objs         map[AppInstKey]*AppInstCacheData
-	Mux          util.Mutex
-	List         map[AppInstKey]struct{}
-	FlushAll     bool
-	NotifyCb     func(ctx context.Context, obj *AppInstKey, old *AppInst, modRev int64)
-	UpdatedCb    func(ctx context.Context, old *AppInst, new *AppInst)
-	KeyWatchers  map[AppInstKey][]*AppInstKeyWatcher
-	UpdatedKeyCb func(ctx context.Context, key *AppInstKey)
-	DeletedKeyCb func(ctx context.Context, key *AppInstKey)
+	Objs          map[AppInstKey]*AppInstCacheData
+	Mux           util.Mutex
+	List          map[AppInstKey]struct{}
+	FlushAll      bool
+	NotifyCb      func(ctx context.Context, obj *AppInstKey, old *AppInst, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *AppInst, new *AppInst)
+	DeletedCbs    []func(ctx context.Context, old *AppInst)
+	KeyWatchers   map[AppInstKey][]*AppInstKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *AppInstKey)
+	DeletedKeyCbs []func(ctx context.Context, key *AppInstKey)
 }
 
 func NewAppInstCache() *AppInstCache {
@@ -2565,6 +2622,11 @@ func NewAppInstCache() *AppInstCache {
 func InitAppInstCache(cache *AppInstCache) {
 	cache.Objs = make(map[AppInstKey]*AppInstCacheData)
 	cache.KeyWatchers = make(map[AppInstKey][]*AppInstKeyWatcher)
+	cache.NotifyCb = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *AppInstCache) GetTypeString() string {
@@ -2581,7 +2643,7 @@ func (c *AppInstCache) GetWithRev(key *AppInstKey, valbuf *AppInst, modRev *int6
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst.Obj
+		valbuf.DeepCopyIn(inst.Obj)
 		*modRev = inst.ModRev
 	}
 	return found
@@ -2619,23 +2681,24 @@ func (c *AppInstCache) UpdateModFunc(ctx context.Context, key *AppInstKey, modRe
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil {
+	for _, cb := range c.UpdatedCbs {
 		newCopy := &AppInst{}
-		*newCopy = *new
-		defer c.UpdatedCb(ctx, old, newCopy)
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
 	}
 	if c.NotifyCb != nil {
 		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 	}
-	if c.UpdatedKeyCb != nil {
-		defer c.UpdatedKeyCb(ctx, key)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
 	}
+	store := &AppInst{}
+	store.DeepCopyIn(new)
 	c.Objs[new.GetKeyVal()] = &AppInstCacheData{
-		Obj:    new,
+		Obj:    store,
 		ModRev: modRev,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInst", "obj", new, "modRev", modRev)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
@@ -2649,13 +2712,17 @@ func (c *AppInstCache) Delete(ctx context.Context, in *AppInst, modRev int64) {
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInst", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
-	if c.DeletedKeyCb != nil {
-		c.DeletedKeyCb(ctx, in.GetKey())
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
@@ -2665,7 +2732,7 @@ func (c *AppInstCache) Prune(ctx context.Context, validKeys map[AppInstKey]struc
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
+			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -2676,8 +2743,13 @@ func (c *AppInstCache) Prune(ctx context.Context, validKeys map[AppInstKey]struc
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -2721,15 +2793,35 @@ func (c *AppInstCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInstKey,
 }
 
 func (c *AppInstCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInst, new *AppInst)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *AppInst, new *AppInst){fn}
+}
+
+func (c *AppInstCache) SetDeletedCb(fn func(ctx context.Context, old *AppInst)) {
+	c.DeletedCbs = []func(ctx context.Context, old *AppInst){fn}
 }
 
 func (c *AppInstCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
-	c.UpdatedKeyCb = fn
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *AppInstKey){fn}
 }
 
 func (c *AppInstCache) SetDeletedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
-	c.DeletedKeyCb = fn
+	c.DeletedKeyCbs = []func(ctx context.Context, key *AppInstKey){fn}
+}
+
+func (c *AppInstCache) AddUpdatedCb(fn func(ctx context.Context, old *AppInst, new *AppInst)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *AppInstCache) AddDeletedCb(fn func(ctx context.Context, old *AppInst)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AppInstCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *AppInstCache) AddDeletedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
 func (c *AppInstCache) SetFlushAll() {
@@ -2828,8 +2920,13 @@ func (c *AppInstCache) SyncListEnd(ctx context.Context) {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -3059,6 +3156,17 @@ func (m *AppInstRuntime) CopyInFields(src *AppInstRuntime) int {
 	copy(m.ContainerIds, src.ContainerIds)
 	changed++
 	return changed
+}
+
+func (m *AppInstRuntime) DeepCopyIn(src *AppInstRuntime) {
+	if src.ContainerIds != nil {
+		m.ContainerIds = make([]string, len(src.ContainerIds), len(src.ContainerIds))
+		for ii, s := range src.ContainerIds {
+			m.ContainerIds[ii] = s
+		}
+	} else {
+		m.ContainerIds = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -3417,6 +3525,23 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) int {
 	return changed
 }
 
+func (m *AppInstInfo) DeepCopyIn(src *AppInstInfo) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.NotifyId = src.NotifyId
+	m.State = src.State
+	if src.Errors != nil {
+		m.Errors = make([]string, len(src.Errors), len(src.Errors))
+		for ii, s := range src.Errors {
+			m.Errors[ii] = s
+		}
+	} else {
+		m.Errors = nil
+	}
+	m.RuntimeInfo.DeepCopyIn(&src.RuntimeInfo)
+	m.Status.DeepCopyIn(&src.Status)
+	m.PowerState = src.PowerState
+}
+
 func (s *AppInstInfo) HasFields() bool {
 	return true
 }
@@ -3577,15 +3702,16 @@ type AppInstInfoCacheData struct {
 // AppInstInfoCache caches AppInstInfo objects in memory in a hash table
 // and keeps them in sync with the database.
 type AppInstInfoCache struct {
-	Objs         map[AppInstKey]*AppInstInfoCacheData
-	Mux          util.Mutex
-	List         map[AppInstKey]struct{}
-	FlushAll     bool
-	NotifyCb     func(ctx context.Context, obj *AppInstKey, old *AppInstInfo, modRev int64)
-	UpdatedCb    func(ctx context.Context, old *AppInstInfo, new *AppInstInfo)
-	KeyWatchers  map[AppInstKey][]*AppInstInfoKeyWatcher
-	UpdatedKeyCb func(ctx context.Context, key *AppInstKey)
-	DeletedKeyCb func(ctx context.Context, key *AppInstKey)
+	Objs          map[AppInstKey]*AppInstInfoCacheData
+	Mux           util.Mutex
+	List          map[AppInstKey]struct{}
+	FlushAll      bool
+	NotifyCb      func(ctx context.Context, obj *AppInstKey, old *AppInstInfo, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *AppInstInfo, new *AppInstInfo)
+	DeletedCbs    []func(ctx context.Context, old *AppInstInfo)
+	KeyWatchers   map[AppInstKey][]*AppInstInfoKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *AppInstKey)
+	DeletedKeyCbs []func(ctx context.Context, key *AppInstKey)
 }
 
 func NewAppInstInfoCache() *AppInstInfoCache {
@@ -3597,6 +3723,11 @@ func NewAppInstInfoCache() *AppInstInfoCache {
 func InitAppInstInfoCache(cache *AppInstInfoCache) {
 	cache.Objs = make(map[AppInstKey]*AppInstInfoCacheData)
 	cache.KeyWatchers = make(map[AppInstKey][]*AppInstInfoKeyWatcher)
+	cache.NotifyCb = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *AppInstInfoCache) GetTypeString() string {
@@ -3613,7 +3744,7 @@ func (c *AppInstInfoCache) GetWithRev(key *AppInstKey, valbuf *AppInstInfo, modR
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst.Obj
+		valbuf.DeepCopyIn(inst.Obj)
 		*modRev = inst.ModRev
 	}
 	return found
@@ -3651,23 +3782,24 @@ func (c *AppInstInfoCache) UpdateModFunc(ctx context.Context, key *AppInstKey, m
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil {
+	for _, cb := range c.UpdatedCbs {
 		newCopy := &AppInstInfo{}
-		*newCopy = *new
-		defer c.UpdatedCb(ctx, old, newCopy)
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
 	}
 	if c.NotifyCb != nil {
 		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 	}
-	if c.UpdatedKeyCb != nil {
-		defer c.UpdatedKeyCb(ctx, key)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
 	}
+	store := &AppInstInfo{}
+	store.DeepCopyIn(new)
 	c.Objs[new.GetKeyVal()] = &AppInstInfoCacheData{
-		Obj:    new,
+		Obj:    store,
 		ModRev: modRev,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInstInfo", "obj", new, "modRev", modRev)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
@@ -3681,13 +3813,17 @@ func (c *AppInstInfoCache) Delete(ctx context.Context, in *AppInstInfo, modRev i
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInstInfo", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
-	if c.DeletedKeyCb != nil {
-		c.DeletedKeyCb(ctx, in.GetKey())
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
@@ -3697,7 +3833,7 @@ func (c *AppInstInfoCache) Prune(ctx context.Context, validKeys map[AppInstKey]s
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
+			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -3708,8 +3844,13 @@ func (c *AppInstInfoCache) Prune(ctx context.Context, validKeys map[AppInstKey]s
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -3739,8 +3880,13 @@ func (c *AppInstInfoCache) Flush(ctx context.Context, notifyId int64) {
 			if c.NotifyCb != nil {
 				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 			}
-			if c.DeletedKeyCb != nil {
-				c.DeletedKeyCb(ctx, &key)
+			for _, cb := range c.DeletedKeyCbs {
+				cb(ctx, &key)
+			}
+			if old.Obj != nil {
+				for _, cb := range c.DeletedCbs {
+					cb(ctx, old.Obj)
+				}
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -3776,15 +3922,35 @@ func (c *AppInstInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInst
 }
 
 func (c *AppInstInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInstInfo, new *AppInstInfo)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *AppInstInfo, new *AppInstInfo){fn}
+}
+
+func (c *AppInstInfoCache) SetDeletedCb(fn func(ctx context.Context, old *AppInstInfo)) {
+	c.DeletedCbs = []func(ctx context.Context, old *AppInstInfo){fn}
 }
 
 func (c *AppInstInfoCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
-	c.UpdatedKeyCb = fn
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *AppInstKey){fn}
 }
 
 func (c *AppInstInfoCache) SetDeletedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
-	c.DeletedKeyCb = fn
+	c.DeletedKeyCbs = []func(ctx context.Context, key *AppInstKey){fn}
+}
+
+func (c *AppInstInfoCache) AddUpdatedCb(fn func(ctx context.Context, old *AppInstInfo, new *AppInstInfo)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *AppInstInfoCache) AddDeletedCb(fn func(ctx context.Context, old *AppInstInfo)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AppInstInfoCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *AppInstInfoCache) AddDeletedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
 func (c *AppInstInfoCache) SetFlushAll() {
@@ -3883,8 +4049,13 @@ func (c *AppInstInfoCache) SyncListEnd(ctx context.Context) {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -3957,6 +4128,10 @@ func (m *AppInstMetrics) CopyInFields(src *AppInstMetrics) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *AppInstMetrics) DeepCopyIn(src *AppInstMetrics) {
+	m.Something = src.Something
 }
 
 // Helper method to check that enums have valid values

@@ -216,13 +216,13 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		client = dmeproto.NewMatchEngineApiClient(conn)
 
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
 
 	rc := true
 	replies := make([]interface{}, 0)
 
 	for ii, apiRequest := range apiRequests {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
 		log.Printf("RunDmeAPIiter[%d]\n", ii)
 		ok, reply := runDmeAPIiter(ctx, api, apiFile, outputDir, apiRequest, client)
 		if !ok {
