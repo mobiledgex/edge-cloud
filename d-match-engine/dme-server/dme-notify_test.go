@@ -31,7 +31,7 @@ func TestNotify(t *testing.T) {
 	serverHandler := notify.NewDummyHandler()
 	serverMgr := notify.ServerMgr{}
 	serverHandler.RegisterServer(&serverMgr)
-	serverMgr.Start(addr, nil)
+	serverMgr.Start("ctrl", addr, nil)
 
 	// client (dme) side
 	client := initNotifyClient(ctx, addr, grpc.WithInsecure())

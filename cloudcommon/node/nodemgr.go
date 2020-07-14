@@ -93,6 +93,10 @@ func (s *NodeMgr) Init(ctx context.Context, nodeType string, ops ...NodeOp) erro
 	return nil
 }
 
+func (s *NodeMgr) Name() string {
+	return s.MyNode.Key.Name
+}
+
 type NodeOptions struct {
 	name             string
 	cloudletKey      edgeproto.CloudletKey
