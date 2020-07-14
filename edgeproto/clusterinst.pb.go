@@ -1650,6 +1650,7 @@ func (m *ClusterInst) DeepCopyIn(src *ClusterInst) {
 	m.SharedVolumeSize = src.SharedVolumeSize
 	m.PrivacyPolicy = src.PrivacyPolicy
 	m.MasterNodeFlavor = src.MasterNodeFlavor
+	m.SkipCrmCleanupOnFailure = src.SkipCrmCleanupOnFailure
 }
 
 func (s *ClusterInst) HasFields() bool {

@@ -107,6 +107,7 @@ const (
 type SendRecv struct {
 	cliserv            string // client or server
 	peerAddr           string
+	peer               string
 	sendlist           []NotifySend
 	recvmap            map[string]NotifyRecv
 	started            bool
@@ -208,7 +209,8 @@ func (s *SendRecv) send(stream StreamNotify) {
 
 	sendAll := true
 	sendAllSpan := log.StartSpan(log.DebugLevelNotify, "notify-send-all")
-	sendAllSpan.SetTag("peer", s.peerAddr)
+	sendAllSpan.SetTag("peerAddr", s.peerAddr)
+	sendAllSpan.SetTag("peer", s.peer)
 	sendAllSpan.SetTag("cliserv", s.cliserv)
 	sendAllCtx := opentracing.ContextWithSpan(context.Background(), sendAllSpan)
 
@@ -251,7 +253,7 @@ func (s *SendRecv) send(stream StreamNotify) {
 			break
 		}
 		if sendAll {
-			log.SpanLog(sendAllCtx, log.DebugLevelNotify, "send all")
+			log.SpanLog(sendAllCtx, log.DebugLevelNotify, "send all", "peer", s.peer)
 			s.stats.SendAll++
 		}
 		// Note that order is important here, as some objects
@@ -269,13 +271,13 @@ func (s *SendRecv) send(stream StreamNotify) {
 		}
 		if s.sendAllEnd {
 			s.sendAllEnd = false
-			log.SpanLog(sendAllCtx, log.DebugLevelNotify, "send all end")
+			log.SpanLog(sendAllCtx, log.DebugLevelNotify, "send all end", "peer", s.peer)
 			notice.Action = edgeproto.NoticeAction_SENDALL_END
 			notice.Any = types.Any{}
 			err = stream.Send(&notice)
 			if err != nil {
 				log.SpanLog(sendAllCtx, log.DebugLevelNotify,
-					"send all end", "err", err)
+					"send all end", "peer", s.peer, "err", err)
 				break
 			}
 			sendAllSpan.Finish()
@@ -330,7 +332,7 @@ func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 				ctx = opentracing.ContextWithSpan(ctx, span)
 			}
 			if err != nil && notice.Action != edgeproto.NoticeAction_SENDALL_END {
-				log.SpanLog(ctx, log.DebugLevelNotify, "hit error", "err", err)
+				log.SpanLog(ctx, log.DebugLevelNotify, "hit error", "peer", s.peer, "err", err)
 				return
 			}
 			if recvAll && notice.Action == edgeproto.NoticeAction_SENDALL_END {
@@ -350,7 +352,8 @@ func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 			} else {
 				log.DebugLog(log.DebugLevelNotify,
 					fmt.Sprintf("%s recv unhandled", s.cliserv),
-					"peer", s.peerAddr,
+					"peerAddr", s.peerAddr,
+					"peer", s.peer,
 					"action", notice.Action,
 					"name", name)
 			}

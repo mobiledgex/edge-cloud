@@ -272,7 +272,7 @@ func startServices() error {
 			return err
 		}
 		dialOption := tls.GetGrpcDialOption(tlsConfig)
-		notifyClient := notify.NewClient(addrs, dialOption)
+		notifyClient := notify.NewClient(nodeMgr.Name(), addrs, dialOption)
 		notifyClient.Start()
 		services.notifyClient = notifyClient
 		nodeMgr.RegisterClient(notifyClient)
@@ -288,7 +288,7 @@ func startServices() error {
 		return err
 	}
 	InitNotify(influxQ, &appInstClientApi)
-	notify.ServerMgrOne.Start(*notifyAddr, notifyServerTls)
+	notify.ServerMgrOne.Start(nodeMgr.Name(), *notifyAddr, notifyServerTls)
 	services.notifyServerMgr = true
 
 	apiTlsConfig, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,

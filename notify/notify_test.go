@@ -31,17 +31,17 @@ func TestNotifyBasic(t *testing.T) {
 	serverHandler := NewDummyHandler()
 	serverMgr := ServerMgr{}
 	serverHandler.RegisterServer(&serverMgr)
-	serverMgr.Start(addr, nil)
+	serverMgr.Start("ctrl", addr, nil)
 
 	// Set up client DME
 	dmeHandler := NewDummyHandler()
-	clientDME := NewClient(serverAddrs, grpc.WithInsecure())
+	clientDME := NewClient("dme", serverAddrs, grpc.WithInsecure())
 	dmeHandler.RegisterDMEClient(clientDME)
 	clientDME.Start()
 
 	// Set up client CRM
 	crmHandler := NewDummyHandler()
-	clientCRM := NewClient(serverAddrs, grpc.WithInsecure())
+	clientCRM := NewClient("crm", serverAddrs, grpc.WithInsecure())
 	crmHandler.RegisterCRMClient(clientCRM)
 	clientCRM.Start()
 
@@ -130,7 +130,7 @@ func TestNotifyBasic(t *testing.T) {
 	fmt.Println("ServerMgr done")
 	serverMgr.Stop()
 	serverHandler.AppInstCache.Delete(ctx, &testutil.AppInstData[1], 0)
-	serverMgr.Start(addr, nil)
+	serverMgr.Start("ctrl", addr, nil)
 	clientDME.WaitForConnect(4)
 	dmeHandler.WaitForAppInsts(2)
 	require.Equal(t, uint64(4), clientDME.sendrecv.stats.Connects, "connects")

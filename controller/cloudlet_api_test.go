@@ -148,7 +148,7 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	ctrlHandler := notify.NewDummyHandler()
 	ctrlMgr := notify.ServerMgr{}
 	ctrlHandler.RegisterServer(&ctrlMgr)
-	ctrlMgr.Start("127.0.0.1:50001", nil)
+	ctrlMgr.Start("ctrl", "127.0.0.1:50001", nil)
 	defer ctrlMgr.Stop()
 
 	crm_notifyaddr := "127.0.0.1:0"

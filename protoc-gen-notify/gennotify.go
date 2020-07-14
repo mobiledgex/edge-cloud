@@ -306,6 +306,7 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 		} else {
 			notice.Action = edgeproto.NoticeAction_DELETE
 			notice.ModRev = sendContext.modRev
+			s.buf.Reset()
 			s.buf.SetKey(&key)
 		}
 		any, err := types.MarshalAny(&s.buf)
@@ -324,7 +325,8 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 {{- if .PrintSendRecv}}
 		log.SpanLog(ctx, log.DebugLevelNotify,
 			fmt.Sprintf("%s send {{.Name}}", s.sendrecv.cliserv),
-			"peer", peer,
+			"peerAddr", peer,
+			"peer", s.sendrecv.peer,
 {{- if .Cache}}
 			"action", notice.Action,
 			"key", key,
@@ -490,7 +492,7 @@ func (s *{{.Name}}Recv) GetRecvCount() uint64 {
 	return s.RecvCount
 }
 
-func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, notifyId int64, peer string) {
+func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, notifyId int64, peerAddr string) {
 {{- if .PrintSendRecv}}
 	span := opentracing.SpanFromContext(ctx)
 	if span != nil {
@@ -518,6 +520,17 @@ func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, noti
 		span.SetTag("msg", buf)
 {{- end}}
 	}
+	log.SpanLog(ctx, log.DebugLevelNotify,
+		fmt.Sprintf("%s recv {{.Name}}", s.sendrecv.cliserv),
+		"peerAddr", peerAddr,
+		"peer", s.sendrecv.peer,
+{{- if .Cache}}
+		"action", notice.Action,
+		"key", buf.GetKeyVal(),
+		"modRev", notice.ModRev)
+{{- else}}
+		"msg", buf)
+{{- end}}
 {{- end}}
 {{- if .Cache}}
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
@@ -537,7 +550,7 @@ func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, noti
 	// object specific counter
 	s.RecvCount++
 {{- if .RecvHook}}
-	s.RecvHook(ctx, notice, buf, peer) // to be implemented by hand
+	s.RecvHook(ctx, notice, buf, peerAddr) // to be implemented by hand
 {{- end}}
 }
 
