@@ -730,7 +730,7 @@ type CloudletLocation struct {
 	CarrierName string `protobuf:"bytes,1,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// Cloudlet Name
 	CloudletName string `protobuf:"bytes,2,opt,name=cloudlet_name,json=cloudletName,proto3" json:"cloudlet_name,omitempty"`
-	// The GPS Location of the user
+	// The GPS Location of the cloudlet
 	GpsLocation *Loc `protobuf:"bytes,3,opt,name=gps_location,json=gpsLocation" json:"gps_location,omitempty"`
 	// Distance of cloudlet vs loc in request
 	Distance float64 `protobuf:"fixed64,4,opt,name=distance,proto3" json:"distance,omitempty"`
@@ -5049,6 +5049,16 @@ func (m *AppOfficialFqdnReply) DeepCopyIn(src *AppOfficialFqdnReply) {
 	m.AppOfficialFqdn = src.AppOfficialFqdn
 	m.ClientToken = src.ClientToken
 	m.Status = src.Status
+	if src.Ports != nil {
+		m.Ports = make([]*AppPort, len(src.Ports), len(src.Ports))
+		for ii, s := range src.Ports {
+			var tmp_s AppPort
+			tmp_s.DeepCopyIn(s)
+			m.Ports[ii] = &tmp_s
+		}
+	} else {
+		m.Ports = nil
+	}
 	if src.Tags != nil {
 		m.Tags = make([]*Tag, len(src.Tags), len(src.Tags))
 		for ii, s := range src.Tags {

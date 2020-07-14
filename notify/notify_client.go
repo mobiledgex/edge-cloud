@@ -32,6 +32,7 @@ type Client struct {
 	// grpc interceptor context
 	localAddr    string
 	localAddrMux util.Mutex
+	name         string
 }
 
 type ClientStats struct {
@@ -39,8 +40,9 @@ type ClientStats struct {
 
 func cancelNoop() {}
 
-func NewClient(addrs []string, tlsDialOption grpc.DialOption) *Client {
+func NewClient(name string, addrs []string, tlsDialOption grpc.DialOption) *Client {
 	s := Client{}
+	s.name = name
 	s.addrs = addrs
 	if tlsDialOption == nil {
 		tlsDialOption = grpc.WithInsecure()
@@ -187,6 +189,9 @@ func (s *Client) negotiate(stream StreamNotify) error {
 	request.Action = edgeproto.NoticeAction_VERSION
 	request.WantObjs = s.sendrecv.localWanted
 	request.FilterCloudletKey = s.sendrecv.filterCloudletKeys
+	request.Tags = map[string]string{
+		"name": s.name,
+	}
 	err := stream.Send(&request)
 	if err != nil {
 		s.sendrecv.stats.NegotiateErrors++
@@ -203,12 +208,17 @@ func (s *Client) negotiate(stream StreamNotify) error {
 		s.version = request.Version
 	}
 	s.sendrecv.setRemoteWanted(reply.WantObjs)
+	if reply.Tags != nil {
+		if peer, found := reply.Tags["name"]; found {
+			s.sendrecv.peer = peer
+		}
+	}
 
 	s.mux.Lock()
 	addr := s.addrs[s.addrIdx]
 	s.mux.Unlock()
 	log.DebugLog(log.DebugLevelNotify, "Notify client connected",
-		"server", addr, "local", s.GetLocalAddr(),
+		"server", addr, "peer", s.sendrecv.peer, "local", s.GetLocalAddr(),
 		"version", s.version, "supported-version", NotifyVersion,
 		"remoteWanted", s.sendrecv.remoteWanted,
 		"filterCloudletKey", s.sendrecv.filterCloudletKeys,
