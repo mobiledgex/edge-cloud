@@ -47,7 +47,7 @@ func main() {
 	if err != nil {
 		log.FatalLog("Failed to get tls config", "err", err)
 	}
-	notifyServer.Start(*notifyAddr, tlsConfig)
+	notifyServer.Start(nodeMgr.Name(), *notifyAddr, tlsConfig)
 	defer notifyServer.Stop()
 
 	sigChan = make(chan os.Signal, 1)
