@@ -98,6 +98,7 @@ func TestNotifyTree(t *testing.T) {
 	checkClientCache(t, low21, 3, 3, 5, 1)
 	checkClientCache(t, low22, 3, 2, 3, 1)
 	checkClientCache(t, mid2, 3, 5, 8, 2)
+	checkCache(t, mid1, FreeReservableClusterInstType, 1)
 
 	// Add info objs to low nodes
 	low11.handler.AppInstInfoCache.Update(ctx, &testutil.AppInstInfoData[0], 0)
@@ -166,6 +167,33 @@ func TestNotifyTree(t *testing.T) {
 	checkCache(t, mid1, AlertType, 0)
 	checkCache(t, mid2, AlertType, 1)
 
+	low21.startClient()
+	checkClientCache(t, low21, 3, 3, 5, 1)
+	checkClientCache(t, low22, 3, 2, 3, 1)
+	checkClientCache(t, mid2, 3, 5, 8, 2)
+	checkCache(t, mid1, FreeReservableClusterInstType, 1)
+	mid2.handler.WaitForCloudletInfo(2)
+
+	fmt.Println("========== cleanup")
+
+	// Delete objects to make sure deletes propagate and are applied
+	for ii, _ := range testutil.AppInstData {
+		top.handler.AppInstCache.Delete(ctx, &testutil.AppInstData[ii], 0)
+	}
+	for ii, _ := range testutil.ClusterInstData {
+		log.SpanLog(ctx, log.DebugLevelNotify, "deleting ClusterInst", "key", testutil.ClusterInstData[ii].Key)
+		top.handler.ClusterInstCache.Delete(ctx, &testutil.ClusterInstData[ii], 0)
+	}
+	top.handler.FlavorCache.Delete(ctx, &testutil.FlavorData[0], 0)
+	top.handler.FlavorCache.Delete(ctx, &testutil.FlavorData[1], 0)
+	top.handler.FlavorCache.Delete(ctx, &testutil.FlavorData[2], 0)
+	top.handler.CloudletCache.Delete(ctx, &testutil.CloudletData[0], 0)
+	top.handler.CloudletCache.Delete(ctx, &testutil.CloudletData[1], 0)
+	checkClientCache(t, mid2, 0, 0, 0, 0)
+	checkClientCache(t, low21, 0, 0, 0, 0)
+	checkClientCache(t, low22, 0, 0, 0, 0)
+	checkCache(t, mid1, FreeReservableClusterInstType, 0)
+
 	fmt.Println("========== done")
 
 	for _, n := range clients {
@@ -197,7 +225,7 @@ func checkClientCache(t *testing.T, n *node, flavors int, clusterInsts int, appI
 
 func checkCache(t *testing.T, n *node, typ CacheType, count int) {
 	n.handler.WaitFor(typ, count)
-	require.Equal(t, count, n.handler.GetCache(typ).GetCount(), "count mismatch for %s", typ.String())
+	require.Equal(t, count, n.handler.GetCache(typ).GetCount(), "node %s count mismatch for %s", n.name, typ.String())
 }
 
 type node struct {
@@ -205,31 +233,31 @@ type node struct {
 	serverMgr  *ServerMgr
 	client     *Client
 	listenAddr string
+	name       string
 }
 
 func newNode(name, listenAddr string, connectAddrs []string, typ nodeType) *node {
 	n := &node{}
 	n.handler = NewDummyHandler()
 	n.listenAddr = listenAddr
+	n.name = name
 	if listenAddr != "" {
 		n.serverMgr = &ServerMgr{}
 		n.handler.RegisterServer(n.serverMgr)
-		n.serverMgr.name = fmt.Sprintf("server %s", name)
 	}
 	if connectAddrs != nil {
-		n.client = NewClient(connectAddrs, grpc.WithInsecure())
+		n.client = NewClient(name, connectAddrs, grpc.WithInsecure())
 		if typ == crm {
 			n.handler.RegisterCRMClient(n.client)
 		} else {
 			n.handler.RegisterDMEClient(n.client)
 		}
-		n.client.sendrecv.cliserv = fmt.Sprintf("client %s", name)
 	}
 	return n
 }
 
 func (n *node) startServer() {
-	n.serverMgr.Start(n.listenAddr, nil)
+	n.serverMgr.Start(n.name, n.listenAddr, nil)
 }
 
 func (n *node) startClient() {

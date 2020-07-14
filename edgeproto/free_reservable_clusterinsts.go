@@ -40,9 +40,6 @@ func (s *FreeReservableClusterInstCache) Update(ctx context.Context, in *Cluster
 }
 
 func (s *FreeReservableClusterInstCache) Delete(ctx context.Context, in *ClusterInst, rev int64) {
-	if !in.Reservable {
-		return
-	}
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 	cinsts, found := s.InstsByCloudlet[in.Key.CloudletKey]
@@ -85,4 +82,18 @@ func (s *FreeReservableClusterInstCache) GetForCloudlet(key *CloudletKey, deploy
 		}
 	}
 	return nil
+}
+
+func (s *FreeReservableClusterInstCache) GetCount() int {
+	count := 0
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+	for _, m := range s.InstsByCloudlet {
+		count += len(m)
+	}
+	return count
+}
+
+func (s *FreeReservableClusterInstCache) GetTypeString() string {
+	return "FreeReservableClusterInstCache"
 }

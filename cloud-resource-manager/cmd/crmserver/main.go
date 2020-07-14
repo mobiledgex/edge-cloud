@@ -140,7 +140,7 @@ func main() {
 		log.FatalLog(err.Error())
 	}
 	dialOption := tls.GetGrpcDialOption(notifyClientTls)
-	notifyClient = notify.NewClient(addrs, dialOption)
+	notifyClient = notify.NewClient(nodeMgr.Name(), addrs, dialOption)
 	notifyClient.SetFilterByCloudletKey()
 	InitClientNotify(notifyClient, controllerData)
 	notifyClient.Start()
@@ -261,7 +261,7 @@ func main() {
 	// setup crm notify listener (for shepherd)
 	var notifyServer notify.ServerMgr
 	initSrvNotify(&notifyServer)
-	notifyServer.Start(*notifySrvAddr, notifyServerTls)
+	notifyServer.Start(nodeMgr.Name(), *notifySrvAddr, notifyServerTls)
 	defer notifyServer.Stop()
 
 	span.Finish()
