@@ -314,6 +314,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				return fmt.Errorf("Privacy Policy not supported on %s", platName)
 			}
 		}
+		if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
+			return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
+		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
 			if in.Deployment != cloudcommon.DeploymentTypeKubernetes {
 				return errors.New("Only kubernetes clusters can be deployed in Azure or GCP")
@@ -321,9 +324,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			if in.NumNodes == 0 {
 				return errors.New("NumNodes cannot be 0 for Azure or GCP")
 			}
-			if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
-				return fmt.Errorf("Cluster name limited to %d characters for GCP and Azure", cloudcommon.MaxClusterNameLength)
-			}
+
 		}
 		if in.AutoScalePolicy != "" {
 			policy := edgeproto.AutoScalePolicy{}
