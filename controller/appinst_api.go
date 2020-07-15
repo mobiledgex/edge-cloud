@@ -388,6 +388,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
+			if in.Flavor.Name == "" {
+				return fmt.Errorf("No AppInst or App flavor specified")
+			}
 		}
 		vmFlavor := edgeproto.Flavor{}
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &vmFlavor) {
@@ -949,50 +952,32 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 
 func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
 	ctx := cb.Context()
-	fmap := edgeproto.MakeFieldMap(in.Fields)
-	err := in.Validate(fmap)
+	err := in.ValidateUpdateFields()
 	if err != nil {
 		return err
 	}
-
-	allowedFields := []string{}
-	badFields := []string{}
-	for _, field := range in.Fields {
-		if field == edgeproto.AppInstFieldCrmOverride ||
-			field == edgeproto.AppInstFieldKey ||
-			field == edgeproto.AppInstFieldPowerState ||
-			in.IsKeyField(field) {
-			continue
-		} else if field == edgeproto.AppInstFieldConfigs || field == edgeproto.AppInstFieldConfigsKind || field == edgeproto.AppInstFieldConfigsConfig {
-			// only thing modifiable right now is the "configs".
-			allowedFields = append(allowedFields, field)
-		} else {
-			badFields = append(badFields, field)
-		}
-	}
-	if len(badFields) > 0 {
-		// cat all the bad field names and return error
-		badstrs := []string{}
-		for _, bad := range badFields {
-			badstrs = append(badstrs, edgeproto.AppInstAllFieldsStringMap[bad])
-		}
-		return fmt.Errorf("specified fields %s cannot be modified", strings.Join(badstrs, ","))
+	fmap := edgeproto.MakeFieldMap(in.Fields)
+	err = in.Validate(fmap)
+	if err != nil {
+		return err
 	}
 	powerState := edgeproto.PowerState_POWER_STATE_UNKNOWN
 	if _, found := fmap[edgeproto.AppInstFieldPowerState]; found {
-		if len(allowedFields) > 0 {
-			return fmt.Errorf("If powerstate is to be updated, then no other fields can be modified")
+		for _, field := range in.Fields {
+			if field == edgeproto.AppInstFieldCrmOverride ||
+				field == edgeproto.AppInstFieldKey ||
+				field == edgeproto.AppInstFieldPowerState ||
+				in.IsKeyField(field) {
+				continue
+			} else if _, ok := edgeproto.UpdateAppInstFieldsMap[field]; ok {
+				return fmt.Errorf("If powerstate is to be updated, then no other fields can be modified")
+			}
 		}
-		allowedFields = append(allowedFields, edgeproto.AppInstFieldPowerState)
 		// Get the request state as user has specified action and not state
 		powerState = edgeproto.GetNextPowerState(in.PowerState, edgeproto.RequestState)
 		if powerState == edgeproto.PowerState_POWER_STATE_UNKNOWN {
 			return fmt.Errorf("Invalid power state specified")
 		}
-	}
-	in.Fields = allowedFields
-	if len(allowedFields) == 0 {
-		return fmt.Errorf("Nothing specified to modify")
 	}
 
 	cctx := DefCallContext()
@@ -1221,7 +1206,13 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
+			log.SpanLog(ctx, log.DebugLevelApi, "AppInst not found updating health check", "appinst", in)
 			// got deleted in the meantime
+			return nil
+		}
+		if inst.HealthCheck == state {
+			log.SpanLog(ctx, log.DebugLevelApi, "AppInst state is already set", "appinst", inst, "state", state)
+			// nothing to do
 			return nil
 		}
 		// healthy -> not healthy
@@ -1247,6 +1238,11 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		}
 		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
 			inst.PowerState = in.PowerState
+		}
+		// If AppInst is ready and state has not been set yet by HealthCheckUpdate, default to Ok.
+		if in.State == edgeproto.TrackedState_READY &&
+			inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN {
+			inst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK
 		}
 		if inst.State == in.State {
 			// already in that state
@@ -1328,7 +1324,7 @@ func (s *AppInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.AppIns
 
 // public cloud k8s cluster allocates a separate IP per service.  This is a type of dedicated access
 func isIPAllocatedPerService(operator string) bool {
-	return operator == cloudcommon.OperatorGCP || operator == cloudcommon.OperatorAzure
+	return operator == cloudcommon.OperatorGCP || operator == cloudcommon.OperatorAzure || operator == cloudcommon.OperatorAWS
 }
 
 func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs) error {

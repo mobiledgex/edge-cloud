@@ -11,7 +11,7 @@ import "gogoproto/gogo.proto";
 
 message CloudletPoolKey {
   // CloudletPool Name
-  string name = 1;
+  string name = 1 [(protogen.keytag) = "cloudletpool"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;

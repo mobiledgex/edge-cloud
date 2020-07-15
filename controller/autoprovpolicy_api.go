@@ -154,6 +154,8 @@ func (s *AutoProvPolicyApi) RecvAutoProvCounts(ctx context.Context, msg *edgepro
 		log.SpanLog(ctx, log.DebugLevelMetrics, "auto-prov count recv immedate", "target", target)
 		go func() {
 			span := log.StartSpan(log.DebugLevelMetrics, "AutoProvCreateAppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			log.SetTags(span, target.AppKey.GetTags())
+			log.SetTags(span, target.DeployNowKey.GetTags())
 			ctx := log.ContextWithSpan(context.Background(), span)
 			stream := streamoutAppInst{
 				ctx:      ctx,

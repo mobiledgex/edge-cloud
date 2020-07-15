@@ -90,6 +90,10 @@ extend google.protobuf.MessageOptions {
   // - val=<path.to.org> (hierarchical struct path to org in val)
   // 3. "custom" (custom hand-written org check func)
   string uses_org = 51046;
+  // generate a reverse lookup cache (val is comma separated list of sublist types)
+  string generate_lookup_by_sublist = 51048;
+  // generate a reverse lookup cache (val is comma separated list of subfield paths)
+  string generate_lookup_by_subfield = 51049;
 }
 
 extend google.protobuf.EnumOptions {
@@ -119,6 +123,9 @@ extend google.protobuf.FieldOptions {
   // it will zero-out the field before generating output, which typically
   // hides it (for json and our custom yaml)
   string hidetag = 52002;
+  // KeyTag is a string use to identify key fields and their name for
+  // logging or metrics
+  string keytag = 51047;
 }
 
 extend google.protobuf.MethodOptions {

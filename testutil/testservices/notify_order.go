@@ -1,3 +1,5 @@
+// This file is not in the same package as notify to avoid including
+// the testing packages in the notify package.
 package testservices
 
 import (

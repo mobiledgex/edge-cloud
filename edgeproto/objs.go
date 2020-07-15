@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 	context "golang.org/x/net/context"
 )
@@ -691,6 +692,17 @@ func GetOrg(obj interface{}) string {
 	}
 }
 
+func GetTags(obj interface{}) map[string]string {
+	switch v := obj.(type) {
+	case objstore.Obj:
+		return v.GetObjKey().GetTags()
+	case objstore.ObjKey:
+		return v.GetTags()
+	default:
+		return map[string]string{}
+	}
+}
+
 func (c *ClusterInstCache) UsesOrg(org string) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
@@ -745,4 +757,31 @@ func (s *App) GetAutoProvPolicies() map[string]struct{} {
 		policies[name] = struct{}{}
 	}
 	return policies
+}
+
+func (s *App) GetAutoProvPolicys() map[PolicyKey]struct{} {
+	policies := make(map[PolicyKey]struct{})
+	if s.AutoProvPolicy != "" {
+		key := PolicyKey{
+			Name:         s.AutoProvPolicy,
+			Organization: s.Key.Organization,
+		}
+		policies[key] = struct{}{}
+	}
+	for _, name := range s.AutoProvPolicies {
+		key := PolicyKey{
+			Name:         name,
+			Organization: s.Key.Organization,
+		}
+		policies[key] = struct{}{}
+	}
+	return policies
+}
+
+func (s *AutoProvPolicy) GetCloudletKeys() map[CloudletKey]struct{} {
+	keys := make(map[CloudletKey]struct{})
+	for _, cl := range s.Cloudlets {
+		keys[cl.Key] = struct{}{}
+	}
+	return keys
 }

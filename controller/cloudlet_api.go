@@ -554,6 +554,12 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
 	ctx := cb.Context()
+
+	err := in.ValidateUpdateFields()
+	if err != nil {
+		return err
+	}
+
 	fmap := edgeproto.MakeFieldMap(in.Fields)
 	if _, found := fmap[edgeproto.CloudletFieldNumDynamicIps]; found {
 		staticSet := false
@@ -567,7 +573,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 	}
 
-	err := in.Validate(fmap)
+	err = in.Validate(fmap)
 	if err != nil {
 		return err
 	}
@@ -721,6 +727,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			Message: "Cloudlet is in maintenance",
 		})
 	}
+	cb.Send(&edgeproto.Result{
+		Message: "Cloudlet updated successfully",
+	})
 	return nil
 }
 

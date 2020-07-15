@@ -114,6 +114,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].MasterNodeFlavor = ""
 		}
+		if _, found := tags["nocmp"]; found {
+			in.ClusterInsts[i0].SkipCrmCleanupOnFailure = false
+		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -165,6 +168,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.AppInstances[i0].UpdateMultiple = false
 		}
 		for i1 := 0; i1 < len(in.AppInstances[i0].Configs); i1++ {
+		}
+		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].HealthCheck = 0
 		}
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].PowerState = 0
@@ -384,6 +390,7 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.sharedvolumesize",
 	"clusterinsts:#.privacypolicy",
 	"clusterinsts:#.masternodeflavor",
+	"clusterinsts:#.skipcrmcleanuponfailure",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -528,7 +535,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.state":                                          "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"cloudlets:#.crmoverride":                                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"cloudlets:#.deploymentlocal":                                "Deploy cloudlet services locally",
-	"cloudlets:#.platformtype":                                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere",
+	"cloudlets:#.platformtype":                                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAws",
 	"cloudlets:#.notifysrvaddr":                                  "Address for the CRM notify listener to run on",
 	"cloudlets:#.flavor.name":                                    "Flavor name",
 	"cloudlets:#.physicalname":                                   "Physical infrastructure cloudlet name",
@@ -650,6 +657,7 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.sharedvolumesize":                            "Size of an optional shared volume to be mounted on the master",
 	"clusterinsts:#.privacypolicy":                               "Optional privacy policy name",
 	"clusterinsts:#.masternodeflavor":                            "Generic flavor for k8s master VM when worker nodes > 0",
+	"clusterinsts:#.skipcrmcleanuponfailure":                     "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
 	"apps:#.fields":                                              "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                    "App developer organization",
 	"apps:#.key.name":                                            "App name",

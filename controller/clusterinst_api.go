@@ -303,13 +303,19 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		var err error
 		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
-		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {
+		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK &&
+			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE &&
+			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE &&
+			in.SharedVolumeSize != 0 {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
 		if in.PrivacyPolicy != "" {
 			if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
 				return fmt.Errorf("Privacy Policy not supported on %s", platName)
 			}
+		}
+		if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
+			return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
 			if in.Deployment != cloudcommon.DeploymentTypeKubernetes {
@@ -318,9 +324,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			if in.NumNodes == 0 {
 				return errors.New("NumNodes cannot be 0 for Azure or GCP")
 			}
-			if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
-				return fmt.Errorf("Cluster name limited to %d characters for GCP and Azure", cloudcommon.MaxClusterNameLength)
-			}
+
 		}
 		if in.AutoScalePolicy != "" {
 			policy := edgeproto.AutoScalePolicy{}
@@ -469,37 +473,13 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "updateClusterInstInternal")
-	if err := in.Key.ValidateKey(); err != nil {
+
+	err := in.ValidateUpdateFields()
+	if err != nil {
 		return err
 	}
-
-	if in.Fields == nil {
-		return fmt.Errorf("nothing specified to update")
-	}
-	allowedFields := []string{}
-	badFields := []string{}
-	for _, field := range in.Fields {
-		if field == edgeproto.ClusterInstFieldCrmOverride ||
-			field == edgeproto.ClusterInstFieldKey ||
-			in.IsKeyField(field) {
-			continue
-		} else if field == edgeproto.ClusterInstFieldNumNodes || field == edgeproto.ClusterInstFieldAutoScalePolicy {
-			allowedFields = append(allowedFields, field)
-		} else {
-			badFields = append(badFields, field)
-		}
-	}
-	if len(badFields) > 0 {
-		// cat all the bad field names and return error
-		badstrs := []string{}
-		for _, bad := range badFields {
-			badstrs = append(badstrs, edgeproto.ClusterInstAllFieldsStringMap[bad])
-		}
-		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badstrs, ","))
-	}
-	in.Fields = allowedFields
-	if len(allowedFields) == 0 {
-		return fmt.Errorf("Nothing specified to modify")
+	if err := in.Key.ValidateKey(); err != nil {
+		return err
 	}
 
 	cctx.SetOverride(&in.CrmOverride)
@@ -511,7 +491,8 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 
 	var inbuf edgeproto.ClusterInst
 	var changeCount int
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	retry := false
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		changeCount = 0
 		if !s.store.STMGet(stm, &in.Key, &inbuf) {
 			return in.Key.NotFoundError()
@@ -523,12 +504,13 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cctx.Undo && inbuf.State != edgeproto.TrackedState_READY && !ignoreTransient(cctx, inbuf.State) {
 			if inbuf.State == edgeproto.TrackedState_UPDATE_ERROR {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("previous update failed, %v, trying again", inbuf.Errors)})
+				retry = true
 			} else {
 				return errors.New("ClusterInst busy, cannot update")
 			}
 		}
 		changeCount = inbuf.CopyInFields(in)
-		if changeCount == 0 {
+		if changeCount == 0 && !retry {
 			// nothing changed
 			return nil
 		}
@@ -541,7 +523,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil {
 		return err
 	}
-	if changeCount == 0 {
+	if changeCount == 0 && !retry {
 		return nil
 	}
 

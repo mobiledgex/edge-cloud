@@ -396,6 +396,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 - key:
     appkey:
@@ -419,9 +420,10 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 - key:
     appkey:
@@ -445,9 +447,10 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 - key:
     appkey:
@@ -479,6 +482,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 - key:
     appkey:
@@ -514,6 +518,7 @@ appinstances:
     name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 - key:
     appkey:
@@ -537,9 +542,10 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
   state: Ready
   powerstate: PowerOn
+  healthcheck: HealthCheckOk
   vmflavor: x1.small
 
 appinstrefs:

@@ -36,9 +36,9 @@ message AutoProvPolicy {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.noconfig) = "Cloudlets";
   option (protogen.alias) = "name=Key.Name,app-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
+  option (protogen.generate_lookup_by_sublist) = "CloudletKey";
 }
 
 // AutoProvCloudlet stores the potential cloudlet and location for DME lookup

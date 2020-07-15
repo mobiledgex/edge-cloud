@@ -30,25 +30,30 @@ func init() {
 }
 
 type mex struct {
-	gen           *generator.Generator
-	msgs          map[string]*descriptor.DescriptorProto
-	cudTemplate   *template.Template
-	enumTemplate  *template.Template
-	cacheTemplate *template.Template
-	keysTemplate  *template.Template
-	importUtil    bool
-	importLog     bool
-	importStrings bool
-	importErrors  bool
-	importStrconv bool
-	importSort    bool
-	importTime    bool
-	importCmp     bool
-	importReflect bool
-	importJson    bool
-	firstFile     string
-	support       gensupport.PluginSupport
-	keyMessages   []descriptor.DescriptorProto
+	gen                    *generator.Generator
+	msgs                   map[string]*descriptor.DescriptorProto
+	cudTemplate            *template.Template
+	fieldsValTemplate      *template.Template
+	enumTemplate           *template.Template
+	cacheTemplate          *template.Template
+	keysTemplate           *template.Template
+	sublistLookupTemplate  *template.Template
+	subfieldLookupTemplate *template.Template
+	importUtil             bool
+	importLog              bool
+	importStrings          bool
+	importErrors           bool
+	importStrconv          bool
+	importSort             bool
+	importTime             bool
+	importCmp              bool
+	importReflect          bool
+	importJson             bool
+	firstFile              string
+	lastFile               string
+	support                gensupport.PluginSupport
+	keyMessages            []descriptor.DescriptorProto
+	keyTagConflicts        map[string][]string
 }
 
 func (m *mex) Name() string {
@@ -59,11 +64,16 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.gen = gen
 	m.msgs = make(map[string]*descriptor.DescriptorProto)
 	m.cudTemplate = template.Must(template.New("cud").Parse(cudTemplateIn))
+	m.fieldsValTemplate = template.Must(template.New("fieldsVal").Parse(fieldsValTemplate))
 	m.enumTemplate = template.Must(template.New("enum").Parse(enumTemplateIn))
 	m.cacheTemplate = template.Must(template.New("cache").Parse(cacheTemplateIn))
 	m.keysTemplate = template.Must(template.New("keys").Parse(keysTemplateIn))
+	m.sublistLookupTemplate = template.Must(template.New("sublist").Parse(sublistLookupTemplateIn))
+	m.subfieldLookupTemplate = template.Must(template.New("subfield").Parse(subfieldLookupTemplateIn))
 	m.support.Init(gen.Request)
 	m.firstFile = gensupport.GetFirstFile(gen)
+	m.lastFile = gensupport.GetLastFile(gen)
+	m.keyTagConflicts = make(map[string][]string)
 }
 
 // P forwards to g.gen.P
@@ -110,6 +120,14 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 		m.P(matchOptions)
 		m.generateEnumDecodeHook()
 		m.generateShowCheck()
+	}
+	if m.lastFile == *file.FileDescriptorProto.Name {
+		for tag, list := range m.keyTagConflicts {
+			if len(list) <= 1 {
+				continue
+			}
+			m.gen.Fail("KeyTag conflict for", tag, "between", fmt.Sprintf("%v", list))
+		}
 	}
 }
 
@@ -516,7 +534,8 @@ func (m *mex) generateIsKeyField(parents, names []string, desc *generator.Descri
 			continue
 		}
 		name := generator.CamelCase(*field.Name)
-		m.P("return strings.HasPrefix(s, ", strings.Join(append(names, name), ""), "+\".\")")
+		fieldKey := strings.Join(append(names, name), "")
+		m.P("return strings.HasPrefix(s, ", fieldKey, "+\".\") || s == ", fieldKey)
 		m.importStrings = true
 		return
 	}
@@ -626,6 +645,40 @@ func (m *mex) generateAllFields(afg AllFieldsGen, names, nums []string, desc *ge
 				m.P(strings.Join(append(names, name), ""), ",")
 			case AllFieldsGenMap:
 				m.P(strings.Join(append(names, name), ""), ": struct{}{},")
+			}
+		}
+	}
+}
+
+func (m *mex) generateMethodFields(fieldPrefix string, names []string, noconfigMap map[string]struct{}, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto) {
+	message := desc.DescriptorProto
+	noconfig := gensupport.GetNoConfig(message, method)
+	for _, nc := range strings.Split(noconfig, ",") {
+		name := strings.Replace(fieldPrefix+nc, ".", "", -1)
+		noconfigMap[name] = struct{}{}
+	}
+	for ii, field := range message.Field {
+		if ii == 0 && *field.Name == "fields" {
+			continue
+		}
+		if keyField := gensupport.GetMessageKey(message); keyField != nil {
+			if *keyField.Name == *field.Name {
+				continue
+			}
+		}
+		name := generator.CamelCase(*field.Name)
+		fieldName := strings.Join(append(names, name), "")
+		switch *field.Type {
+		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+			if _, ok := noconfigMap[fieldName]; ok {
+				continue
+			}
+			m.P(fieldName, ": struct{}{},")
+			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+			m.generateMethodFields(fieldPrefix, append(names, name), noconfigMap, subDesc, method)
+		default:
+			if _, ok := noconfigMap[fieldName]; !ok {
+				m.P(fieldName, ": struct{}{},")
 			}
 		}
 	}
@@ -774,6 +827,95 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 	}
 }
 
+func (m *mex) generateDeepCopyIn(desc *generator.Descriptor) {
+	msgtyp := m.gen.TypeName(desc)
+	m.P("func (m *", msgtyp, ") DeepCopyIn(src *", msgtyp, ") {")
+	for ii, field := range desc.DescriptorProto.Field {
+		if ii == 0 && *field.Name == "fields" {
+			continue
+		}
+		if field.OneofIndex != nil {
+			// no support
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		nullable := false
+		checkField := field
+		mapType := m.support.GetMapType(m.gen, field)
+		if mapType != nil {
+			checkField = mapType.ValField
+		}
+		if *checkField.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			nullable = gogoproto.IsNullable(field)
+		}
+		ptr := ""
+		if nullable {
+			ptr = "*"
+		}
+		nilCheck := false
+		if nullable || *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			m.P("if src.", name, " != nil {")
+			nilCheck = true
+		}
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			ftype := m.support.GoType(m.gen, field)
+			if mapType == nil {
+				m.P("m.", name, " = make([]", ptr, ftype, ", len(src.", name, "), len(src.", name, "))")
+				m.P("for ii, s := range src.", name, " {")
+				to := "m." + name + "[ii]"
+				m.printCopyVar(field, to, "s", nullable, mapType)
+			} else {
+				m.P("m.", name, " = make(map[", mapType.KeyType, "]", ptr, mapType.ValType, ")")
+				m.P("for k, v := range src.", name, " {")
+				to := "m." + name + "[k]"
+				m.printCopyVar(mapType.ValField, to, "v", nullable, mapType)
+			}
+			m.P("}")
+		} else {
+			m.printCopyVar(field, "m."+name, "src."+name, nullable, mapType)
+		}
+		if nilCheck {
+			m.P("} else {")
+			m.P("m.", name, " = nil")
+			m.P("}")
+		}
+	}
+	m.P("}")
+	m.P()
+}
+
+func (m *mex) printCopyVar(field *descriptor.FieldDescriptorProto, to, from string, nullable bool, mapType *gensupport.MapType) {
+	deepCopy := false
+	if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+		desc := gensupport.GetDesc(m.gen, field.GetTypeName())
+		// check if this object is from our proto files
+		// (as opposed to something like google_protobuf.Timestamp)
+		if m.support.GenFile(*desc.File().Name) {
+			deepCopy = true
+		}
+	}
+	tmp := to
+	deepCopyRef := "&"
+	copyDeref := ""
+	if nullable {
+		// use temp var
+		tmp = strings.TrimPrefix(from, "src.")
+		tmp = "tmp_" + tmp
+		ftype := m.support.GoType(m.gen, field)
+		m.P("var ", tmp, " ", ftype)
+		deepCopyRef = ""
+		copyDeref = "*"
+	}
+	if deepCopy {
+		m.P(tmp, ".DeepCopyIn(", deepCopyRef, from, ")")
+	} else {
+		m.P(tmp, " = ", copyDeref, from)
+	}
+	if nullable {
+		m.P(to, " = &", tmp)
+	}
+}
+
 type cudTemplateArgs struct {
 	Name        string
 	KeyType     string
@@ -783,6 +925,32 @@ type cudTemplateArgs struct {
 	NotifyCache bool
 	ObjAndKey   bool
 }
+
+var fieldsValTemplate = `
+func (m *{{.Name}}) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := Update{{.Name}}FieldsMap[field]; !ok {
+			if _, ok := {{.Name}}AllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, {{.Name}}AllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
+}
+
+`
 
 var cudTemplateIn = `
 func (s *{{.Name}}) HasFields() bool {
@@ -964,10 +1132,11 @@ type {{.Name}}Cache struct {
 	List map[{{.KeyType}}]struct{}
 	FlushAll bool
 	NotifyCb func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}}, modRev int64)
-	UpdatedCb func(ctx context.Context, old *{{.Name}}, new *{{.Name}})
+	UpdatedCbs []func(ctx context.Context, old *{{.Name}}, new *{{.Name}})
+	DeletedCbs []func(ctx context.Context, old *{{.Name}})
 	KeyWatchers map[{{.KeyType}}][]*{{.Name}}KeyWatcher
-	UpdatedKeyCb func(ctx context.Context, key *{{.KeyType}})
-	DeletedKeyCb func(ctx context.Context, key *{{.KeyType}})
+	UpdatedKeyCbs []func(ctx context.Context, key *{{.KeyType}})
+	DeletedKeyCbs []func(ctx context.Context, key *{{.KeyType}})
 }
 
 func New{{.Name}}Cache() *{{.Name}}Cache {
@@ -979,6 +1148,11 @@ func New{{.Name}}Cache() *{{.Name}}Cache {
 func Init{{.Name}}Cache(cache *{{.Name}}Cache) {
 	cache.Objs = make(map[{{.KeyType}}]*{{.Name}}CacheData)
 	cache.KeyWatchers = make(map[{{.KeyType}}][]*{{.Name}}KeyWatcher)
+	cache.NotifyCb = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *{{.Name}}Cache) GetTypeString() string {
@@ -995,7 +1169,7 @@ func (c *{{.Name}}Cache) GetWithRev(key *{{.KeyType}}, valbuf *{{.Name}}, modRev
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst.Obj
+		valbuf.DeepCopyIn(inst.Obj)
 		*modRev = inst.ModRev
 	}
 	return found
@@ -1033,23 +1207,24 @@ func (c *{{.Name}}Cache) UpdateModFunc(ctx context.Context, key *{{.KeyType}}, m
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil {
+	for _, cb := range c.UpdatedCbs {
 		newCopy := &{{.Name}}{}
-		*newCopy = *new
-		defer c.UpdatedCb(ctx, old, newCopy)
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
 	}
 	if c.NotifyCb != nil {
 		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 	}
-	if c.UpdatedKeyCb != nil {
-		defer c.UpdatedKeyCb(ctx, key)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
 	}
+	store := &{{.Name}}{}
+	store.DeepCopyIn(new)
 	c.Objs[new.GetKeyVal()] = &{{.Name}}CacheData{
-		Obj: new,
+		Obj: store,
 		ModRev: modRev,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate {{.Name}}", "obj", new, "modRev", modRev)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
@@ -1063,13 +1238,17 @@ func (c *{{.Name}}Cache) Delete(ctx context.Context, in *{{.Name}}, modRev int64
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete {{.Name}}", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
-	if c.DeletedKeyCb != nil {
-		c.DeletedKeyCb(ctx, in.GetKey())
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
@@ -1079,7 +1258,7 @@ func (c *{{.Name}}Cache) Prune(ctx context.Context, validKeys map[{{.KeyType}}]s
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
+			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1090,8 +1269,13 @@ func (c *{{.Name}}Cache) Prune(ctx context.Context, validKeys map[{{.KeyType}}]s
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1122,8 +1306,13 @@ func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
 			if c.NotifyCb != nil {
 				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 			}
-			if c.DeletedKeyCb != nil {
-				c.DeletedKeyCb(ctx, &key)
+			for _, cb := range c.DeletedKeyCbs {
+				cb(ctx, &key)
+			}
+			if old.Obj != nil {
+				for _, cb := range c.DeletedCbs {
+					cb(ctx, old.Obj)
+				}
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -1163,15 +1352,35 @@ func (c *{{.Name}}Cache) SetNotifyCb(fn func(ctx context.Context, obj *{{.KeyTyp
 }
 
 func (c *{{.Name}}Cache) SetUpdatedCb(fn func(ctx context.Context, old *{{.Name}}, new *{{.Name}})) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *{{.Name}}, new *{{.Name}}){fn}
+}
+
+func (c *{{.Name}}Cache) SetDeletedCb(fn func(ctx context.Context, old *{{.Name}})) {
+	c.DeletedCbs = []func(ctx context.Context, old *{{.Name}}){fn}
 }
 
 func (c *{{.Name}}Cache) SetUpdatedKeyCb(fn func(ctx context.Context, key *{{.KeyType}})) {
-	c.UpdatedKeyCb = fn
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *{{.KeyType}}){fn}
 }
 
 func (c *{{.Name}}Cache) SetDeletedKeyCb(fn func(ctx context.Context, key *{{.KeyType}})) {
-	c.DeletedKeyCb = fn
+	c.DeletedKeyCbs = []func(ctx context.Context, key *{{.KeyType}}){fn}
+}
+
+func (c *{{.Name}}Cache) AddUpdatedCb(fn func(ctx context.Context, old *{{.Name}}, new *{{.Name}})) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *{{.Name}}Cache) AddDeletedCb(fn func(ctx context.Context, old *{{.Name}})) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *{{.Name}}Cache) AddUpdatedKeyCb(fn func(ctx context.Context, key *{{.KeyType}})) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *{{.Name}}Cache) AddDeletedKeyCb(fn func(ctx context.Context, key *{{.KeyType}})) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
 func (c *{{.Name}}Cache) SetFlushAll() {
@@ -1274,8 +1483,13 @@ func (c *{{.Name}}Cache) SyncListEnd(ctx context.Context) {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1366,6 +1580,159 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 	return err
 }
 {{- end}}
+
+`
+
+type sublistLookupTemplateArgs struct {
+	Name       string
+	KeyType    string
+	LookupType string
+	LookupName string
+}
+
+var sublistLookupTemplateIn = `
+type {{.Name}}By{{.LookupName}} struct {
+	{{.LookupName}}s map[{{.LookupType}}]map[{{.KeyType}}]struct{}
+	Mux util.Mutex
+}
+
+func (s *{{.Name}}By{{.LookupName}}) Init() {
+	s.{{.LookupName}}s = make(map[{{.LookupType}}]map[{{.KeyType}}]struct{})
+}
+
+func (s *{{.Name}}By{{.LookupName}}) Updated(old *{{.Name}}, new *{{.Name}}) map[{{.LookupType}}]struct{} {
+	// the below func must be implemented by the user:
+	// {{.Name}}.Get{{.LookupName}}s() map[{{.LookupType}}]struct{}
+	old{{.LookupName}}s := make(map[{{.LookupType}}]struct{})
+	if old != nil {
+		old{{.LookupName}}s = old.Get{{.LookupName}}s()
+	}
+	new{{.LookupName}}s := new.Get{{.LookupName}}s()
+
+	for lookup, _ := range old{{.LookupName}}s {
+		if _, found := new{{.LookupName}}s[lookup]; found {
+			delete(old{{.LookupName}}s, lookup)
+			delete(new{{.LookupName}}s, lookup)
+		}
+	}
+
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	changed := make(map[{{.LookupType}}]struct{})
+	for lookup, _ := range old{{.LookupName}}s {
+		// remove
+		s.removeRef(lookup, old.GetKeyVal())
+		changed[lookup] = struct{}{}
+	}
+	for lookup, _ := range new{{.LookupName}}s {
+		// add
+		s.addRef(lookup, new.GetKeyVal())
+		changed[lookup] = struct{}{}
+	}
+	return changed
+}
+
+func (s *{{.Name}}By{{.LookupName}}) Deleted(old *{{.Name}}) {
+	old{{.LookupName}}s := old.Get{{.LookupName}}s()
+
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	for lookup, _ := range old{{.LookupName}}s {
+		s.removeRef(lookup, old.GetKeyVal())
+	}
+}
+
+func (s *{{.Name}}By{{.LookupName}}) addRef(lookup {{.LookupType}}, key {{.KeyType}}) {
+	{{.KeyType}}s, found := s.{{.LookupName}}s[lookup]
+	if !found {
+		{{.KeyType}}s = make(map[{{.KeyType}}]struct{})
+		s.{{.LookupName}}s[lookup] = {{.KeyType}}s
+	}
+	{{.KeyType}}s[key] = struct{}{}
+}
+
+func (s *{{.Name}}By{{.LookupName}}) removeRef(lookup {{.LookupType}}, key {{.KeyType}}) {
+	{{.KeyType}}s, found := s.{{.LookupName}}s[lookup]
+	if found {
+		delete({{.KeyType}}s, key)
+		if len({{.KeyType}}s) == 0 {
+			delete(s.{{.LookupName}}s, lookup)
+		}
+	}
+}
+
+func (s *{{.Name}}By{{.LookupName}}) Find(lookup {{.LookupType}}) []{{.KeyType}} {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	list := []{{.KeyType}}{}
+	for k, _ := range s.{{.LookupName}}s[lookup] {
+		list = append(list, k)
+	}
+	return list
+}
+
+`
+
+type subfieldLookupTemplateArgs struct {
+	Name        string
+	KeyType     string
+	LookupType  string
+	LookupName  string
+	LookupField string
+}
+
+var subfieldLookupTemplateIn = `
+type {{.Name}}By{{.LookupName}} struct {
+	{{.LookupName}}s map[{{.LookupType}}]map[{{.KeyType}}]struct{}
+	Mux util.Mutex
+}
+
+func (s *{{.Name}}By{{.LookupName}}) Init() {
+	s.{{.LookupName}}s = make(map[{{.LookupType}}]map[{{.KeyType}}]struct{})
+}
+
+func (s *{{.Name}}By{{.LookupName}}) Updated(obj *{{.Name}}) {
+	lookup := obj.{{.LookupField}}
+
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	{{.KeyType}}s, found := s.{{.LookupName}}s[lookup]
+	if !found {
+		{{.KeyType}}s = make(map[{{.KeyType}}]struct{})
+		s.{{.LookupName}}s[lookup] = {{.KeyType}}s
+	}
+	{{.KeyType}}s[obj.GetKeyVal()] = struct{}{}
+}
+
+func (s *{{.Name}}By{{.LookupName}}) Deleted(obj *{{.Name}}) {
+	lookup := obj.{{.LookupField}}
+
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	{{.KeyType}}s, found := s.{{.LookupName}}s[lookup]
+	if found {
+		delete({{.KeyType}}s, obj.GetKeyVal())
+		if len({{.KeyType}}s) == 0 {
+			delete(s.{{.LookupName}}s, lookup)
+		}
+	}
+}
+
+func (s *{{.Name}}By{{.LookupName}}) Find(lookup {{.LookupType}}) []{{.KeyType}} {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	list := []{{.KeyType}}{}
+	for k, _ := range s.{{.LookupName}}s[lookup] {
+		list = append(list, k)
+	}
+	return list
+}
 
 `
 
@@ -1489,7 +1856,32 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.generateDiffFields([]string{}, []string{*message.Name + "Field"}, desc)
 		m.P("}")
 		m.P("")
+		for _, service := range file.Service {
+			if *service.Name != *message.Name+"Api" {
+				continue
+			}
+			if len(service.Method) == 0 {
+				continue
+			}
+			for _, method := range service.Method {
+				if gensupport.GetCamelCasePrefix(*method.Name) != "Update" {
+					continue
+				}
+				noconfigMap := make(map[string]struct{})
+				m.P("var ", *method.Name, "FieldsMap = map[string]struct{}{")
+				fieldPrefix := *message.Name + "Field"
+				m.generateMethodFields(fieldPrefix, []string{fieldPrefix}, noconfigMap, desc, method)
+				m.P("}")
+				m.P("")
+				args := cudTemplateArgs{
+					Name: *message.Name,
+				}
+				m.fieldsValTemplate.Execute(m.gen.Buffer, args)
+				break
+			}
+		}
 	}
+
 	if desc.GetOptions().GetMapEntry() {
 		return
 	}
@@ -1506,6 +1898,8 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("")
 	}
+
+	m.generateDeepCopyIn(desc)
 
 	if GetGenerateCud(message) {
 		keyType, err := m.support.GetMessageKeyType(m.gen, desc)
@@ -1547,6 +1941,52 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		}
 		m.generateUsesOrg(message)
 	}
+	if lookups := GetGenerateLookupBySublist(message); lookups != "" {
+		keyType, err := m.support.GetMessageKeyType(m.gen, desc)
+		if err != nil {
+			m.gen.Fail(err.Error())
+		}
+		list := strings.Split(lookups, ",")
+		for _, lookup := range list {
+			lookup = strings.TrimSpace(lookup)
+			nameType := strings.Split(lookup, ":")
+			args := sublistLookupTemplateArgs{
+				Name:       *message.Name,
+				KeyType:    keyType,
+				LookupType: nameType[0],
+				LookupName: nameType[0],
+			}
+			if len(nameType) > 1 {
+				args.LookupName = nameType[1]
+			}
+			m.sublistLookupTemplate.Execute(m.gen.Buffer, args)
+			m.importUtil = true
+		}
+	}
+	if lookups := GetGenerateLookupBySubfield(message); lookups != "" {
+		keyType, err := m.support.GetMessageKeyType(m.gen, desc)
+		if err != nil {
+			m.gen.Fail(err.Error())
+		}
+		list := strings.Split(lookups, ",")
+		for _, lookup := range list {
+			lookup = strings.TrimSpace(lookup)
+			_, field, err := gensupport.FindHierField(m.gen, message, lookup)
+			if err != nil {
+				m.gen.Fail(err.Error())
+				continue
+			}
+			args := subfieldLookupTemplateArgs{
+				Name:        *message.Name,
+				KeyType:     keyType,
+				LookupType:  m.support.GoType(m.gen, field),
+				LookupName:  m.support.GoType(m.gen, field),
+				LookupField: lookup,
+			}
+			m.subfieldLookupTemplate.Execute(m.gen.Buffer, args)
+			m.importUtil = true
+		}
+	}
 	if GetObjKey(message) || gensupport.GetObjAndKey(message) {
 		// this is a key object
 		m.P("func (m *", message.Name, ") GetKeyString() string {")
@@ -1575,6 +2015,34 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("return fmt.Errorf(\"", strings.TrimSuffix(*message.Name, "Key"), " key %s already exists\", m.GetKeyString())")
 		m.P("}")
 		m.P("")
+
+		hasKeyTags := false
+		for _, field := range message.Field {
+			tag := GetKeyTag(field)
+			if field.Type == nil || field.OneofIndex != nil {
+				continue
+			}
+			if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+				continue
+			}
+			if tag == "" {
+				m.gen.Fail(*message.Name, "field", *field.Name, "missing protogen.keytag")
+			}
+			fname := generator.CamelCase(*field.Name)
+
+			m.P("var ", message.Name, "Tag", fname, " = \"", tag, "\"")
+			hasKeyTags = true
+			m.keyTagConflicts[tag] = append(m.keyTagConflicts[tag], *message.Name+"."+fname)
+		}
+		if hasKeyTags {
+			m.P()
+		}
+		m.P("func (m *", message.Name, ") GetTags() map[string]string {")
+		m.P("tags := make(map[string]string)")
+		m.setKeyTags([]string{}, desc, []*generator.Descriptor{})
+		m.P("return tags")
+		m.P("}")
+		m.P()
 
 		m.importJson = true
 		m.importLog = true
@@ -1815,6 +2283,28 @@ func (m *mex) generateHideTagFields(parents []string, desc *generator.Descriptor
 	}
 }
 
+func (m *mex) setKeyTags(parents []string, desc *generator.Descriptor, visited []*generator.Descriptor) {
+	for _, field := range desc.DescriptorProto.Field {
+		if field.Type == nil || field.OneofIndex != nil {
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+			m.setKeyTags(append(parents, name),
+				subDesc, append(visited, desc))
+			continue
+		}
+		tag := GetKeyTag(field)
+		hierField := strings.Join(append(parents, name), ".")
+		val := "m." + hierField
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_ENUM {
+			val = m.support.GoType(m.gen, field) + "_name[int32(" + val + ")]"
+		}
+		m.P("tags[\"", tag, "\"] = ", val)
+	}
+}
+
 func (m *mex) generateEnumDecodeHook() {
 	m.P("// DecodeHook for use with the mapstructure package.")
 	m.P("// Allows decoding to handle protobuf enums that are")
@@ -1948,6 +2438,14 @@ func GetGenerateWaitForState(message *descriptor.DescriptorProto) string {
 	return gensupport.GetStringExtension(message.Options, protogen.E_GenerateWaitForState, "")
 }
 
+func GetGenerateLookupBySublist(message *descriptor.DescriptorProto) string {
+	return gensupport.GetStringExtension(message.Options, protogen.E_GenerateLookupBySublist, "")
+}
+
+func GetGenerateLookupBySubfield(message *descriptor.DescriptorProto) string {
+	return gensupport.GetStringExtension(message.Options, protogen.E_GenerateLookupBySubfield, "")
+}
+
 func GetNotifyCache(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_NotifyCache, false)
 }
@@ -1970,6 +2468,10 @@ func GetBackend(field *descriptor.FieldDescriptorProto) bool {
 
 func GetHideTag(field *descriptor.FieldDescriptorProto) string {
 	return gensupport.GetStringExtension(field.Options, protogen.E_Hidetag, "")
+}
+
+func GetKeyTag(field *descriptor.FieldDescriptorProto) string {
+	return gensupport.GetStringExtension(field.Options, protogen.E_Keytag, "")
 }
 
 func GetVersionHashOpt(enum *descriptor.EnumDescriptorProto) bool {
