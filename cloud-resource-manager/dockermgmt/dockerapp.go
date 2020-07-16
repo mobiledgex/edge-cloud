@@ -37,10 +37,6 @@ func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMat
 	var cmdArgs []string
 
 	for _, p := range ports {
-		if p.Proto == dme.LProto_L_PROTO_HTTP {
-			// L7 not allowed for docker
-			continue
-		}
 		// quick fix to deal with the fact that nginx and envoy both try to listen to a superset of ports.
 		// remove this when we go to 100% envoy
 		if protoMatch != dme.LProto_L_PROTO_UNKNOWN && protoMatch != p.Proto {

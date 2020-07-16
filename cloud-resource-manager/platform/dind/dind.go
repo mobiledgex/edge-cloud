@@ -5,7 +5,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	ssh "github.com/mobiledgex/golang-ssh"
 )
@@ -18,16 +17,6 @@ func (s *Platform) GetType() string {
 }
 
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, controllerData *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
-	// set up L7 load balancer
-	client, err := s.GetNodePlatformClient(ctx, nil)
-	if err != nil {
-		return err
-	}
-	updateCallback(edgeproto.UpdateTask, "Setting up Nginx L7 Proxy")
-	err = proxy.InitL7Proxy(ctx, client, proxy.WithDockerPublishPorts())
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

@@ -145,9 +145,6 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 			if appPort.EndPort != 0 {
 				// We have a range-port notation on the dme.AppPort
 				// while our manifest exhaustively enumerates each as a kubePort
-				if appPort.Proto == dme.LProto_L_PROTO_HTTP {
-					return fmt.Errorf("Port range not allowed for HTTP")
-				}
 				start := appPort.InternalPort
 				end := appPort.EndPort
 				for i := start; i <= end; i++ {
@@ -157,9 +154,6 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 						InternalPort: int32(i),
 						EndPort:      int32(0),
 					}
-					if appPort.Proto == dme.LProto_L_PROTO_HTTP {
-						appPort.Proto = dme.LProto_L_PROTO_TCP
-					}
 
 					if _, found := objPorts[tp.String()]; found {
 						continue
@@ -168,9 +162,6 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 					missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, tp.InternalPort))
 				}
 				continue
-			}
-			if appPort.Proto == dme.LProto_L_PROTO_HTTP {
-				appPort.Proto = dme.LProto_L_PROTO_TCP
 			}
 			tp := appPort
 			// No need to test TLS as part of manifest

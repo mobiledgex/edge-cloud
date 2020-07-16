@@ -172,7 +172,6 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 				}
 				tcpPort.ConcurrentConns = tcpconns
 				spec.TCPSpec = append(spec.TCPSpec, &tcpPort)
-				spec.L4 = true
 			}
 			internalPort++
 		}
@@ -194,7 +193,6 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 
 // TODO: Probably should eventually find a better way to uniquely name clusters other than just by the port theyre getting proxied from
 var envoyYaml = `
-{{if .L4 -}}
 static_resources:
   listeners:
   {{- range .TCPSpec}}
@@ -260,7 +258,6 @@ admin:
     socket_address:
       address: 0.0.0.0
       port_value: {{.MetricPort}}
-{{- end}}
 `
 
 func DeleteEnvoyProxy(ctx context.Context, client ssh.Client, name string) error {
