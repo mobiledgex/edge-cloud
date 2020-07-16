@@ -1341,5 +1341,4 @@ var UpdateCloudletOptionalArgs = []string{
 	"crmoverride",
 	"accessvars",
 	"maintenancestate",
-	"overridepolicycontainerversion",
 }
