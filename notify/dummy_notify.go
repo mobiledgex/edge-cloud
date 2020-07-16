@@ -25,7 +25,9 @@ type DummyHandler struct {
 	NodeCache            edgeproto.NodeCache
 	AutoScalePolicyCache edgeproto.AutoScalePolicyCache
 	AutoProvPolicyCache  edgeproto.AutoProvPolicyCache
+	PrivacyPolicyCache   edgeproto.PrivacyPolicyCache
 	DeviceCache          edgeproto.DeviceCache
+	frClusterInsts       edgeproto.FreeReservableClusterInstCache
 }
 
 func NewDummyHandler() *DummyHandler {
@@ -42,20 +44,23 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitNodeCache(&h.NodeCache)
 	edgeproto.InitAutoScalePolicyCache(&h.AutoScalePolicyCache)
 	edgeproto.InitAutoProvPolicyCache(&h.AutoProvPolicyCache)
+	edgeproto.InitPrivacyPolicyCache(&h.PrivacyPolicyCache)
 	edgeproto.InitDeviceCache(&h.DeviceCache)
+	h.frClusterInsts.Init()
 	return h
 }
 
 func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
-	mgr.RegisterSendAppCache(&s.AppCache)
-	mgr.RegisterSendAppInstCache(&s.AppInstCache)
+	mgr.RegisterSendFlavorCache(&s.FlavorCache)
 	mgr.RegisterSendCloudletCache(&s.CloudletCache)
 	mgr.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
-	mgr.RegisterSendFlavorCache(&s.FlavorCache)
-	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
-	mgr.RegisterSendAlertCache(&s.AlertCache)
 	mgr.RegisterSendAutoScalePolicyCache(&s.AutoScalePolicyCache)
 	mgr.RegisterSendAutoProvPolicyCache(&s.AutoProvPolicyCache)
+	mgr.RegisterSendPrivacyPolicyCache(&s.PrivacyPolicyCache)
+	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
+	mgr.RegisterSendAppCache(&s.AppCache)
+	mgr.RegisterSendAppInstCache(&s.AppInstCache)
+	mgr.RegisterSendAlertCache(&s.AlertCache)
 
 	mgr.RegisterRecvAppInstInfoCache(&s.AppInstInfoCache)
 	mgr.RegisterRecvClusterInstInfoCache(&s.ClusterInstInfoCache)
@@ -84,6 +89,7 @@ func (s *DummyHandler) RegisterDMEClient(cl *Client) {
 	cl.RegisterRecvAppCache(&s.AppCache)
 	cl.RegisterRecvAppInstCache(&s.AppInstCache)
 	cl.RegisterSendDeviceCache(&s.DeviceCache)
+	cl.RegisterRecv(NewClusterInstRecv(&s.frClusterInsts))
 }
 
 type CacheType int
@@ -99,6 +105,7 @@ const (
 	CloudletInfoType
 	AlertType
 	NodeType
+	FreeReservableClusterInstType
 )
 
 type WaitForCache interface {
@@ -135,6 +142,8 @@ func (s *DummyHandler) GetCache(typ CacheType) WaitForCache {
 		cache = &s.AlertCache
 	case NodeType:
 		cache = &s.NodeCache
+	case FreeReservableClusterInstType:
+		cache = &s.frClusterInsts
 	}
 	return cache
 }
@@ -161,6 +170,8 @@ func (c CacheType) String() string {
 		return "AlertCache"
 	case NodeType:
 		return "NodeCache"
+	case FreeReservableClusterInstType:
+		return "FreeReservableClusterInstCache"
 	}
 	return "unknown cache type"
 }

@@ -338,6 +338,37 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 	return false
 }
 
+func FindField(message *descriptor.DescriptorProto, camelCaseName string) *descriptor.FieldDescriptorProto {
+	for _, field := range message.Field {
+		name := generator.CamelCase(*field.Name)
+		if name == camelCaseName {
+			return field
+		}
+	}
+	return nil
+}
+
+func FindHierField(g *generator.Generator, message *descriptor.DescriptorProto, camelCaseHierName string) (*descriptor.DescriptorProto, *descriptor.FieldDescriptorProto, error) {
+	names := strings.Split(camelCaseHierName, ".")
+	for {
+		name := names[0]
+		field := FindField(message, name)
+		if field == nil {
+			return message, field, fmt.Errorf("No field %s on %s", *field.Name, *message.Name)
+		}
+		if len(names) == 1 {
+			return message, field, nil
+		}
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := GetDesc(g, field.GetTypeName())
+			message = subDesc.DescriptorProto
+			names = names[1:]
+		} else {
+			return message, field, fmt.Errorf("Field %s on %s is not a message and has no children", strings.Join(names, "."), *message.Name)
+		}
+	}
+}
+
 func GetObjAndKey(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_ObjAndKey, false)
 }

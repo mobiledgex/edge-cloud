@@ -74,7 +74,7 @@ message ConfigFile {
 // Application
 //
 // App belongs to developer organizations and is used to provide information about their application.
- message App {
+message App {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // required: true
@@ -150,12 +150,13 @@ message ConfigFile {
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
   option (protogen.noconfig) = "DeletePrepare";
   option (protogen.uses_org) = "key=Organization";
+  option (protogen.generate_lookup_by_sublist) = "PolicyKey:AutoProvPolicy";
 }
 
 message AppAutoProvPolicy {
-  // App Key
+  // App key
   AppKey app_key = 1 [(gogoproto.nullable) = false];
-  // Auto Provisioning Policy name
+  // Auto provisioning policy name
   string auto_prov_policy = 2;
 }
 

@@ -758,3 +758,30 @@ func (s *App) GetAutoProvPolicies() map[string]struct{} {
 	}
 	return policies
 }
+
+func (s *App) GetAutoProvPolicys() map[PolicyKey]struct{} {
+	policies := make(map[PolicyKey]struct{})
+	if s.AutoProvPolicy != "" {
+		key := PolicyKey{
+			Name:         s.AutoProvPolicy,
+			Organization: s.Key.Organization,
+		}
+		policies[key] = struct{}{}
+	}
+	for _, name := range s.AutoProvPolicies {
+		key := PolicyKey{
+			Name:         name,
+			Organization: s.Key.Organization,
+		}
+		policies[key] = struct{}{}
+	}
+	return policies
+}
+
+func (s *AutoProvPolicy) GetCloudletKeys() map[CloudletKey]struct{} {
+	keys := make(map[CloudletKey]struct{})
+	for _, cl := range s.Cloudlets {
+		keys[cl.Key] = struct{}{}
+	}
+	return keys
+}

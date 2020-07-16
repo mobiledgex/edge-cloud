@@ -488,6 +488,30 @@ func (m *Alert) CopyInFields(src *Alert) int {
 	return changed
 }
 
+func (m *Alert) DeepCopyIn(src *Alert) {
+	if src.Labels != nil {
+		m.Labels = make(map[string]string)
+		for k, v := range src.Labels {
+			m.Labels[k] = v
+		}
+	} else {
+		m.Labels = nil
+	}
+	if src.Annotations != nil {
+		m.Annotations = make(map[string]string)
+		for k, v := range src.Annotations {
+			m.Annotations[k] = v
+		}
+	} else {
+		m.Annotations = nil
+	}
+	m.State = src.State
+	m.ActiveAt = src.ActiveAt
+	m.Value = src.Value
+	m.NotifyId = src.NotifyId
+	m.Controller = src.Controller
+}
+
 func (s *Alert) HasFields() bool {
 	return false
 }
@@ -634,15 +658,16 @@ type AlertCacheData struct {
 // AlertCache caches Alert objects in memory in a hash table
 // and keeps them in sync with the database.
 type AlertCache struct {
-	Objs         map[AlertKey]*AlertCacheData
-	Mux          util.Mutex
-	List         map[AlertKey]struct{}
-	FlushAll     bool
-	NotifyCb     func(ctx context.Context, obj *AlertKey, old *Alert, modRev int64)
-	UpdatedCb    func(ctx context.Context, old *Alert, new *Alert)
-	KeyWatchers  map[AlertKey][]*AlertKeyWatcher
-	UpdatedKeyCb func(ctx context.Context, key *AlertKey)
-	DeletedKeyCb func(ctx context.Context, key *AlertKey)
+	Objs          map[AlertKey]*AlertCacheData
+	Mux           util.Mutex
+	List          map[AlertKey]struct{}
+	FlushAll      bool
+	NotifyCb      func(ctx context.Context, obj *AlertKey, old *Alert, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *Alert, new *Alert)
+	DeletedCbs    []func(ctx context.Context, old *Alert)
+	KeyWatchers   map[AlertKey][]*AlertKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *AlertKey)
+	DeletedKeyCbs []func(ctx context.Context, key *AlertKey)
 }
 
 func NewAlertCache() *AlertCache {
@@ -654,6 +679,11 @@ func NewAlertCache() *AlertCache {
 func InitAlertCache(cache *AlertCache) {
 	cache.Objs = make(map[AlertKey]*AlertCacheData)
 	cache.KeyWatchers = make(map[AlertKey][]*AlertKeyWatcher)
+	cache.NotifyCb = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *AlertCache) GetTypeString() string {
@@ -670,7 +700,7 @@ func (c *AlertCache) GetWithRev(key *AlertKey, valbuf *Alert, modRev *int64) boo
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst.Obj
+		valbuf.DeepCopyIn(inst.Obj)
 		*modRev = inst.ModRev
 	}
 	return found
@@ -708,23 +738,24 @@ func (c *AlertCache) UpdateModFunc(ctx context.Context, key *AlertKey, modRev in
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil {
+	for _, cb := range c.UpdatedCbs {
 		newCopy := &Alert{}
-		*newCopy = *new
-		defer c.UpdatedCb(ctx, old, newCopy)
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
 	}
 	if c.NotifyCb != nil {
 		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
 	}
-	if c.UpdatedKeyCb != nil {
-		defer c.UpdatedKeyCb(ctx, key)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
 	}
+	store := &Alert{}
+	store.DeepCopyIn(new)
 	c.Objs[new.GetKeyVal()] = &AlertCacheData{
-		Obj:    new,
+		Obj:    store,
 		ModRev: modRev,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Alert", "obj", new, "modRev", modRev)
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
@@ -738,13 +769,17 @@ func (c *AlertCache) Delete(ctx context.Context, in *Alert, modRev int64) {
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Alert", "key", in.GetKey(), "modRev", modRev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(ctx, in.GetKey(), old, modRev)
 	}
-	if c.DeletedKeyCb != nil {
-		c.DeletedKeyCb(ctx, in.GetKey())
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
@@ -754,7 +789,7 @@ func (c *AlertCache) Prune(ctx context.Context, validKeys map[AlertKey]struct{})
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || c.DeletedKeyCb != nil {
+			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -765,8 +800,13 @@ func (c *AlertCache) Prune(ctx context.Context, validKeys map[AlertKey]struct{})
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -796,8 +836,13 @@ func (c *AlertCache) Flush(ctx context.Context, notifyId int64) {
 			if c.NotifyCb != nil {
 				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
 			}
-			if c.DeletedKeyCb != nil {
-				c.DeletedKeyCb(ctx, &key)
+			for _, cb := range c.DeletedKeyCbs {
+				cb(ctx, &key)
+			}
+			if old.Obj != nil {
+				for _, cb := range c.DeletedCbs {
+					cb(ctx, old.Obj)
+				}
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -833,15 +878,35 @@ func (c *AlertCache) SetNotifyCb(fn func(ctx context.Context, obj *AlertKey, old
 }
 
 func (c *AlertCache) SetUpdatedCb(fn func(ctx context.Context, old *Alert, new *Alert)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *Alert, new *Alert){fn}
+}
+
+func (c *AlertCache) SetDeletedCb(fn func(ctx context.Context, old *Alert)) {
+	c.DeletedCbs = []func(ctx context.Context, old *Alert){fn}
 }
 
 func (c *AlertCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *AlertKey)) {
-	c.UpdatedKeyCb = fn
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *AlertKey){fn}
 }
 
 func (c *AlertCache) SetDeletedKeyCb(fn func(ctx context.Context, key *AlertKey)) {
-	c.DeletedKeyCb = fn
+	c.DeletedKeyCbs = []func(ctx context.Context, key *AlertKey){fn}
+}
+
+func (c *AlertCache) AddUpdatedCb(fn func(ctx context.Context, old *Alert, new *Alert)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *AlertCache) AddDeletedCb(fn func(ctx context.Context, old *Alert)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AlertCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AlertKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *AlertCache) AddDeletedKeyCb(fn func(ctx context.Context, key *AlertKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
 func (c *AlertCache) SetFlushAll() {
@@ -940,8 +1005,13 @@ func (c *AlertCache) SyncListEnd(ctx context.Context) {
 		if c.NotifyCb != nil {
 			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
 		}
-		if c.DeletedKeyCb != nil {
-			c.DeletedKeyCb(ctx, &key)
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}

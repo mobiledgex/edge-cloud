@@ -27,6 +27,7 @@ var NoticeOptionalArgs = []string{
 	"filtercloudletkey",
 	"span",
 	"modrev",
+	"tags",
 }
 var NoticeAliasArgs = []string{}
 var NoticeComments = map[string]string{
@@ -38,7 +39,9 @@ var NoticeComments = map[string]string{
 	"filtercloudletkey": "Filter by cloudlet key",
 	"span":              "Opentracing span",
 	"modrev":            "Database revision for which object was last modified",
+	"tags":              "Extra tags",
 }
 var NoticeSpecialArgs = map[string]string{
+	"tags":     "StringToString",
 	"wantobjs": "StringArray",
 }

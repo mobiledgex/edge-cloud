@@ -113,6 +113,10 @@ func (m *ClusterKey) CopyInFields(src *ClusterKey) int {
 	return changed
 }
 
+func (m *ClusterKey) DeepCopyIn(src *ClusterKey) {
+	m.Name = src.Name
+}
+
 func (m *ClusterKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {

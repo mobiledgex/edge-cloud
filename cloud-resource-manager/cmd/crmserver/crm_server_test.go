@@ -142,7 +142,7 @@ func TestCRM(t *testing.T) {
 	cdata := data.Cloudlets[0]
 	cdata.State = edgeproto.TrackedState_CRM_INITOK
 	ctrlHandler.CloudletCache.Update(ctx, &cdata, 0)
-	ctrlMgr.Start(notifyAddr, nil)
+	ctrlMgr.Start("ctrl", notifyAddr, nil)
 
 	os.Args = append(os.Args, "-cloudletKey")
 	os.Args = append(os.Args, string(bytes))

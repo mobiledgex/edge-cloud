@@ -35,6 +35,8 @@ message Notice {
   string span = 6;
   // Database revision for which object was last modified
   int64 mod_rev = 7;
+  // Extra tags
+  map<string, string> tags = 8;
 }
 
 service NotifyApi {
