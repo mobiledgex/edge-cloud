@@ -165,6 +165,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--deploymentTag")
 		args = append(args, p.DeploymentTag)
 	}
+	if p.ChefServerPath != "" {
+		args = append(args, "--chefServerPath")
+		args = append(args, p.ChefServerPath)
+	}
 
 	var envs []string
 	if options.RolesFile != "" {

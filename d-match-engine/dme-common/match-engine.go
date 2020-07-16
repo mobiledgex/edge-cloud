@@ -50,6 +50,8 @@ type DmeApp struct {
 	OfficialFqdn       string
 	AutoProvPolicies   map[string]*AutoProvPolicy
 	Deployment         string
+	// Non mapped AppPorts from App definition (used for AppOfficialFqdnReply)
+	Ports []dme.AppPort
 }
 
 type DmeCloudlet struct {
@@ -148,6 +150,8 @@ func AddApp(ctx context.Context, in *edgeproto.App) {
 	app.AndroidPackageName = in.AndroidPackageName
 	app.OfficialFqdn = in.OfficialFqdn
 	app.Deployment = in.Deployment
+	ports, _ := edgeproto.ParseAppPorts(in.AccessPorts)
+	app.Ports = ports
 	clearAutoProvStats := []string{}
 	inAP := make(map[string]struct{})
 	if in.AutoProvPolicy != "" {
@@ -739,7 +743,7 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 		mreply.Fqdn = best.appInst.uri
 		mreply.Status = dme.FindCloudletReply_FIND_FOUND
 		*mreply.CloudletLocation = best.appInst.location
-		mreply.Ports = copyPorts(best.appInst)
+		mreply.Ports = copyPorts(best.appInst.ports)
 		cloudlet := best.appInst.clusterInstKey.CloudletKey.Name
 		// Update Context variable if passed
 		updateContextWithCloudletDetails(ctx, cloudlet, best.appInstCarrier)
@@ -806,7 +810,7 @@ func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOffic
 	appkey.Version = ckey.AppVers
 	tbl.RLock()
 	defer tbl.RUnlock()
-	_, ok := tbl.Apps[appkey]
+	app, ok := tbl.Apps[appkey]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn cannot find app", "appkey", appkey)
 		return
@@ -830,15 +834,8 @@ func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOffic
 	}
 	repl.ClientToken = base64.StdEncoding.EncodeToString(byt)
 
-	list := findBestForCarrier(ctx, "", &appkey, mreq.GpsLocation, 1)
-	if len(list) > 0 {
-		best := list[0]
-		repl.Status = dme.AppOfficialFqdnReply_AOF_SUCCESS
-		repl.Ports = copyPorts(best.appInst)
-		log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn returning AOF_SUCCESS, overall best cloudlet", "Fqdn", repl.AppOfficialFqdn, "distance", best.distance)
-	} else {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "no app instances for app", "appkey", appkey)
-	}
+	repl.Status = dme.AppOfficialFqdnReply_AOF_SUCCESS
+	repl.Ports = copyPorts(app.Ports)
 }
 
 func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
@@ -873,7 +870,7 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 		ai.AppVers = appkey.Version
 		ai.OrgName = appkey.Organization
 		ai.Fqdn = found.appInst.uri
-		ai.Ports = copyPorts(found.appInst)
+		ai.Ports = copyPorts(found.appInst.ports)
 		cloc.Appinstances = append(cloc.Appinstances, &ai)
 	}
 	clist.Status = dme.AppInstListReply_AI_SUCCESS
@@ -906,14 +903,14 @@ func ListAppinstTbl(ctx context.Context) {
 	}
 }
 
-func copyPorts(cappInst *DmeAppInst) []*dme.AppPort {
-	if cappInst.ports == nil || len(cappInst.ports) == 0 {
+func copyPorts(cports []dme.AppPort) []*dme.AppPort {
+	if cports == nil || len(cports) == 0 {
 		return nil
 	}
-	ports := make([]*dme.AppPort, len(cappInst.ports))
-	for ii, _ := range cappInst.ports {
+	ports := make([]*dme.AppPort, len(cports))
+	for ii, _ := range cports {
 		p := dme.AppPort{}
-		p = cappInst.ports[ii]
+		p = cports[ii]
 		ports[ii] = &p
 	}
 	return ports
