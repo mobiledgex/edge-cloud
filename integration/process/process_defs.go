@@ -41,6 +41,7 @@ type Controller struct {
 	CheckpointingInterval string
 	AppDNSRoot            string
 	DeploymentTag         string
+	ChefServerPath        string
 }
 type Dme struct {
 	Common        `yaml:",inline"`
