@@ -195,8 +195,8 @@ message Cloudlet {
   map<string, string> chef_client_key = 29 [(protogen.backend) = true];
   // State for maintenance
   MaintenanceState maintenance_state = 30;
-  // Over container version from policy
-  bool policy_override = 31;
+  // Override container version from policy file
+  bool override_policy_container_version = 31;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

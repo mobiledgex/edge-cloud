@@ -1063,7 +1063,7 @@ var CloudletOptionalArgs = []string{
 	"infraconfig.externalnetworkname",
 	"infraconfig.flavorname",
 	"maintenancestate",
-	"policyoverride",
+	"overridepolicycontainerversion",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1127,7 +1127,7 @@ var CloudletComments = map[string]string{
 	"infraconfig.flavorname":              "Infra specific flavor name",
 	"chefclientkey":                       "Chef client key",
 	"maintenancestate":                    "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
-	"policyoverride":                      "Over container version from policy",
+	"overridepolicycontainerversion":      "Override container version from policy file",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1317,7 +1317,7 @@ var CreateCloudletOptionalArgs = []string{
 	"infraconfig.externalnetworkname",
 	"infraconfig.flavorname",
 	"maintenancestate",
-	"policyoverride",
+	"overridepolicycontainerversion",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1341,4 +1341,5 @@ var UpdateCloudletOptionalArgs = []string{
 	"crmoverride",
 	"accessvars",
 	"maintenancestate",
+	"overridepolicycontainerversion",
 }
