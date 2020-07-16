@@ -529,6 +529,7 @@ func (m *Alert) DeepCopyIn(src *Alert) {
 	m.Value = src.Value
 	m.NotifyId = src.NotifyId
 	m.Controller = src.Controller
+	m.Region = src.Region
 }
 
 func (s *Alert) HasFields() bool {
