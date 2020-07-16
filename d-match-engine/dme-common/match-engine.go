@@ -50,6 +50,8 @@ type DmeApp struct {
 	OfficialFqdn       string
 	AutoProvPolicies   map[string]*AutoProvPolicy
 	Deployment         string
+	// Non mapped AppPorts from App definition (used for AppOfficialFqdnReply)
+	Ports []dme.AppPort
 }
 
 type DmeCloudlet struct {
@@ -148,6 +150,8 @@ func AddApp(ctx context.Context, in *edgeproto.App) {
 	app.AndroidPackageName = in.AndroidPackageName
 	app.OfficialFqdn = in.OfficialFqdn
 	app.Deployment = in.Deployment
+	ports, _ := edgeproto.ParseAppPorts(in.AccessPorts)
+	app.Ports = ports
 	clearAutoProvStats := []string{}
 	inAP := make(map[string]struct{})
 	if in.AutoProvPolicy != "" {
@@ -739,7 +743,7 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 		mreply.Fqdn = best.appInst.uri
 		mreply.Status = dme.FindCloudletReply_FIND_FOUND
 		*mreply.CloudletLocation = best.appInst.location
-		mreply.Ports = copyPorts(best.appInst)
+		mreply.Ports = copyPorts(best.appInst.ports)
 		cloudlet := best.appInst.clusterInstKey.CloudletKey.Name
 		// Update Context variable if passed
 		updateContextWithCloudletDetails(ctx, cloudlet, best.appInstCarrier)
@@ -752,7 +756,7 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 
 func isPublicCarrier(carriername string) bool {
 	if carriername == cloudcommon.OperatorAzure ||
-		carriername == cloudcommon.OperatorGCP || 
+		carriername == cloudcommon.OperatorGCP ||
 		carriername == cloudcommon.OperatorAWS {
 		return true
 	}
@@ -797,6 +801,7 @@ func GetClientDataFromToken(token string) (*ClientToken, error) {
 }
 
 func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOfficialFqdnRequest, repl *dme.AppOfficialFqdnReply) {
+	repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 	var tbl *DmeApps
 	tbl = DmeAppTbl
 	var appkey edgeproto.AppKey
@@ -805,21 +810,18 @@ func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOffic
 	appkey.Version = ckey.AppVers
 	tbl.RLock()
 	defer tbl.RUnlock()
-	_, ok := tbl.Apps[appkey]
+	app, ok := tbl.Apps[appkey]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn cannot find app", "appkey", appkey)
-		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 		return
 	}
 	repl.AppOfficialFqdn = tbl.Apps[appkey].OfficialFqdn
 	if repl.AppOfficialFqdn == "" {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn FQDN is empty", "appkey", appkey)
-		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 		return
 	}
 	if mreq.GpsLocation == nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "missing location in request")
-		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 		return
 	}
 	var token ClientToken
@@ -828,11 +830,12 @@ func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOffic
 	byt, err := json.Marshal(token)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Unable to marshal GPS location", "mreq.GpsLocation", mreq.GpsLocation, "err", err)
-		repl.Status = dme.AppOfficialFqdnReply_AOF_FAIL
 		return
 	}
 	repl.ClientToken = base64.StdEncoding.EncodeToString(byt)
+
 	repl.Status = dme.AppOfficialFqdnReply_AOF_SUCCESS
+	repl.Ports = copyPorts(app.Ports)
 }
 
 func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
@@ -867,7 +870,7 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 		ai.AppVers = appkey.Version
 		ai.OrgName = appkey.Organization
 		ai.Fqdn = found.appInst.uri
-		ai.Ports = copyPorts(found.appInst)
+		ai.Ports = copyPorts(found.appInst.ports)
 		cloc.Appinstances = append(cloc.Appinstances, &ai)
 	}
 	clist.Status = dme.AppInstListReply_AI_SUCCESS
@@ -900,14 +903,14 @@ func ListAppinstTbl(ctx context.Context) {
 	}
 }
 
-func copyPorts(cappInst *DmeAppInst) []*dme.AppPort {
-	if cappInst.ports == nil || len(cappInst.ports) == 0 {
+func copyPorts(cports []dme.AppPort) []*dme.AppPort {
+	if cports == nil || len(cports) == 0 {
 		return nil
 	}
-	ports := make([]*dme.AppPort, len(cappInst.ports))
-	for ii, _ := range cappInst.ports {
+	ports := make([]*dme.AppPort, len(cports))
+	for ii, _ := range cports {
 		p := dme.AppPort{}
-		p = cappInst.ports[ii]
+		p = cports[ii]
 		ports[ii] = &p
 	}
 	return ports

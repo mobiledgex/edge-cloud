@@ -392,6 +392,16 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, err
 	}
 
+	ports, err := edgeproto.ParseAppPorts(in.AccessPorts)
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+
+	err = validatePortRangeForAccessType(ports, in.AccessType)
+	if err != nil {
+		return nil, err
+	}
+
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.App{}
 

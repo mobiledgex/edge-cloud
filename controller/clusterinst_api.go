@@ -303,13 +303,19 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		var err error
 		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
-		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {
+		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK &&
+			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE &&
+			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE &&
+			in.SharedVolumeSize != 0 {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
 		if in.PrivacyPolicy != "" {
 			if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
 				return fmt.Errorf("Privacy Policy not supported on %s", platName)
 			}
+		}
+		if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
+			return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
 			if in.Deployment != cloudcommon.DeploymentTypeKubernetes {
@@ -318,9 +324,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			if in.NumNodes == 0 {
 				return errors.New("NumNodes cannot be 0 for Azure or GCP")
 			}
-			if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
-				return fmt.Errorf("Cluster name limited to %d characters for GCP and Azure", cloudcommon.MaxClusterNameLength)
-			}
+
 		}
 		if in.AutoScalePolicy != "" {
 			policy := edgeproto.AutoScalePolicy{}

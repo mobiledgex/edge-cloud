@@ -90,6 +90,10 @@ extend google.protobuf.MessageOptions {
   // - val=<path.to.org> (hierarchical struct path to org in val)
   // 3. "custom" (custom hand-written org check func)
   string uses_org = 51046;
+  // generate a reverse lookup cache (val is comma separated list of sublist types)
+  string generate_lookup_by_sublist = 51048;
+  // generate a reverse lookup cache (val is comma separated list of subfield paths)
+  string generate_lookup_by_subfield = 51049;
 }
 
 extend google.protobuf.EnumOptions {

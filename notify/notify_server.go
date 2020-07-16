@@ -102,14 +102,14 @@ func (mgr *ServerMgr) RegisterServerCb(registerServer func(s *grpc.Server)) {
 	mgr.regServ = registerServer
 }
 
-func (mgr *ServerMgr) Start(addr string, tlsConfig *tls.Config) {
+func (mgr *ServerMgr) Start(name, addr string, tlsConfig *tls.Config) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 
 	if mgr.table != nil {
 		return
 	}
-	mgr.name = "server"
+	mgr.name = name
 	mgr.notifyId = 1
 	mgr.table = make(map[string]*Server)
 
@@ -165,9 +165,8 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	server := Server{}
 	server.peerAddr = peerAddr
 	server.running = make(chan struct{})
-	server.sendrecv.init(mgr.name)
+	server.sendrecv.init("server")
 	server.sendrecv.peerAddr = peerAddr
-	server.sendrecv.cliserv = "server"
 
 	mgr.mux.Lock()
 	server.notifyId = mgr.notifyId
@@ -183,7 +182,7 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	mgr.mux.Unlock()
 
 	// do initial version exchange
-	err := server.negotiate(spctx, stream)
+	err := server.negotiate(spctx, stream, mgr.name)
 	if err != nil {
 		server.logDisconnect(spctx, err)
 		close(server.running)
@@ -262,7 +261,7 @@ func (s *ServerMgr) GetSendOrder() map[reflect.Type]int {
 	return order
 }
 
-func (s *Server) negotiate(ctx context.Context, stream edgeproto.NotifyApi_StreamNoticeServer) error {
+func (s *Server) negotiate(ctx context.Context, stream edgeproto.NotifyApi_StreamNoticeServer, name string) error {
 	var notice edgeproto.Notice
 	// initial connection is version exchange
 	// this also sets the connection Id so we can ignore spurious old
@@ -291,17 +290,26 @@ func (s *Server) negotiate(ctx context.Context, stream edgeproto.NotifyApi_Strea
 	} else {
 		s.version = NotifyVersion
 	}
+	if req.Tags != nil {
+		if peer, found := req.Tags["name"]; found {
+			s.sendrecv.peer = peer
+		}
+	}
+
 	// send back my version
 	notice.Action = edgeproto.NoticeAction_VERSION
 	notice.Version = s.version
 	notice.WantObjs = s.sendrecv.localWanted
+	notice.Tags = map[string]string{
+		"name": name,
+	}
 	err = stream.Send(&notice)
 	if err != nil {
 		s.sendrecv.stats.NegotiateErrors++
 		return err
 	}
 	log.SpanLog(ctx, log.DebugLevelNotify, "Notify server connected",
-		"client", s.peerAddr, "version", s.version,
+		"client", s.peerAddr, "peer", s.sendrecv.peer, "version", s.version,
 		"supported-version", NotifyVersion,
 		"notifyid", s.notifyId,
 		"remoteWanted", s.sendrecv.remoteWanted,
@@ -321,9 +329,9 @@ func (s *Server) logDisconnect(ctx context.Context, err error) {
 	st, ok := status.FromError(err)
 	if err == context.Canceled || (ok && st.Code() == codes.Canceled || err == nil) {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Notify server connection closed",
-			"client", s.peerAddr, "err", err)
+			"client", s.peerAddr, "peer", s.sendrecv.peer, "err", err)
 	} else {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Notify server connection failed",
-			"client", s.peerAddr, "err", err)
+			"client", s.peerAddr, "peer", s.sendrecv.peer, "err", err)
 	}
 }

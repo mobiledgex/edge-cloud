@@ -180,6 +180,11 @@ func (m *Timestamp) CopyInFields(src *Timestamp) int {
 	return changed
 }
 
+func (m *Timestamp) DeepCopyIn(src *Timestamp) {
+	m.Seconds = src.Seconds
+	m.Nanos = src.Nanos
+}
+
 // Helper method to check that enums have valid values
 func (m *Timestamp) ValidateEnums() error {
 	return nil
@@ -230,6 +235,23 @@ func (m *Loc) CopyInFields(src *Loc) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *Loc) DeepCopyIn(src *Loc) {
+	m.Latitude = src.Latitude
+	m.Longitude = src.Longitude
+	m.HorizontalAccuracy = src.HorizontalAccuracy
+	m.VerticalAccuracy = src.VerticalAccuracy
+	m.Altitude = src.Altitude
+	m.Course = src.Course
+	m.Speed = src.Speed
+	if src.Timestamp != nil {
+		var tmp_Timestamp Timestamp
+		tmp_Timestamp.DeepCopyIn(src.Timestamp)
+		m.Timestamp = &tmp_Timestamp
+	} else {
+		m.Timestamp = nil
+	}
 }
 
 // Helper method to check that enums have valid values
