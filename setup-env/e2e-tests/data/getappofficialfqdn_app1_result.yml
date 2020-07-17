@@ -1,3 +1,10 @@
 appofficialfqdn: someapplication1.acmeappco.com
 clienttoken: eyJMb2NhdGlvbiI6eyJsYXRpdHVkZSI6MzYsImxvbmdpdHVkZSI6LTk2fSwiQXBwS2V5Ijp7Im9yZ2FuaXphdGlvbiI6IkFjbWVBcHBDbyIsIm5hbWUiOiJzb21lYXBwbGljYXRpb24xIiwidmVyc2lvbiI6IjEuMCJ9fQ==
 status: AofSuccess
+ports:
+- proto: LProtoTcp
+  internalport: 80
+- proto: LProtoHttp
+  internalport: 443
+- proto: LProtoUdp
+  internalport: 10002
