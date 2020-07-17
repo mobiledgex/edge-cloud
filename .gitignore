@@ -22,3 +22,5 @@ vault/vault.log
 vault/roles.yaml
 *.csr
 *.pem
+envoy/certs/envoyTlsCerts.key
+envoy/certs/envoyTlsCerts.crt
