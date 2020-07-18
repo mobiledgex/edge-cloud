@@ -1,0 +1,199 @@
+// Cloudlet VM Pool proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "result.proto";
+import "cloudlet.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
+import "gogoproto/gogo.proto";
+
+message CloudletVMNetInfo {
+  // External IP
+  string external_ip = 1;
+  // Internal IP
+  string internal_ip = 2;
+}
+
+// Cloudlet VM Type
+//
+// CloudletVMType is the current type of the CloudletVM
+enum CloudletVMType {
+	// Platform node, hosts cloudlet services
+	PLATFORM_NODE = 0;
+	// Shared root LB, hosts rootLB to be shared by other clusters/AppVMs
+	SHARED_ROOT_LB = 1;
+	// Dedicated root LB; hosts rootLB to be used by a specific cluster/AppVM
+	DEDICATED_ROOT_LB = 2;
+	// Docker node; hosts docker based applications
+	DOCKER_NODE = 3;
+	// Kubernetes cluster master
+	K8S_MASTER = 4;
+	// Kubernetes cluster node
+	K8S_NODE = 5;
+}
+
+// Cloudlet VM State
+//
+// CloudletVMState is the state of the CloudletVM
+enum CloudletVMState {
+	// Cloudlet VM is free to use
+	CLOUDLET_VM_FREE = 0;
+	// Cloudlet VM requested
+	CLOUDLET_VM_REQUESTED = 1;
+	// Cloudlet VM allocated
+	CLOUDLET_VM_ALLOCATED = 2;
+	// Cloudlet VM is in use
+	CLOUDLET_VM_IN_USE = 3;
+	// Cloudlet VM is released
+	CLOUDLET_VM_RELEASED = 4;
+	// Cloudlet VM is in error state
+	CLOUDLET_VM_ERROR = 5;
+}
+
+message CloudletVM {
+  // VM Name
+  string name = 1;
+  // VM IP
+  CloudletVMNetInfo net_info = 2 [(gogoproto.nullable) = false];
+  // VM Type
+  CloudletVMType type = 3;
+  // VM User
+  string user = 4;
+  // VM State
+  CloudletVMState state = 5;
+  // Last updated time
+  distributed_match_engine.Timestamp updated_at = 6 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+}
+
+// CloudletVMPool defines a pool of Cloudlet VMs to be part of a Cloudlet
+message CloudletVMPool {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Cloudlet key
+  CloudletKey key = 2 [(gogoproto.nullable) = false];
+  // list of Cloudlet VMs to be part of Cloudlet
+  repeated CloudletVM cloudlet_vms = 3;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.noconfig) = "CloudletVms:#.Type,CloudletVms:#.User,CloudletVms:#.State,CloudletVms:#.UpdatedAt.Seconds,CloudletVms:#.UpdatedAt.Nanos";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
+}
+
+// CloudletVMPoolMember is used to add and remove Cloudlet VM from Cloudlet VM Pool
+message CloudletVMPoolMember {
+  // Cloudlet key
+  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // Cloudlet VM part of Cloudlet VM Pool
+  CloudletVM cloudlet_vm = 2 [(gogoproto.nullable) = false];
+  option (protogen.noconfig) = "CloudletVm.Type,CloudletVm.User,CloudletVm.State,CloudletVm.UpdatedAt.Seconds,CloudletVm.UpdatedAt.Nanos";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
+}
+
+service CloudletVMPoolApi {
+  // Create CloudletVMPool. Creates Cloudlet VM pool which will have
+  // Cloudlet VMs defined.
+  rpc CreateCloudletVMPool(CloudletVMPool) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/cloudletvmpool"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
+  }
+  // Delete CloudletVMPool. Deletes Cloudlet VM pool given that none
+  // of Cloudlet VMs part of this pool is used.
+  rpc DeleteCloudletVMPool(CloudletVMPool) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/cloudetvmpool"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
+  // Update CloudletVMPool. Updates a Cloudlet VM pool's VMs.
+  rpc UpdateCloudletVMPool(CloudletVMPool) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/cloudletvmpool"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
+  // Show CloudletVMPools. Lists all the Cloudlet VMs part of the Cloudlet VM pool.
+  rpc ShowCloudletVMPool(CloudletVMPool) returns (stream CloudletVMPool) {
+    option (google.api.http) = {
+      post: "/show/cloudletvmpool"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
+  }
+  // Add CloudletVMPoolMember. Adds a Cloudlet VM to existing Cloudlet VM Pool.
+  rpc AddCloudletVMPoolMember(CloudletVMPoolMember) returns (Result) {
+    option (google.api.http) = {
+      post: "/add/cloudletvmpoolmember"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.method_also_required) = "CloudletVm.Name";
+  }
+  // Remove CloudletVMPoolMember. Removes a Cloudlet VM from existing Cloudlet VM Pool.
+  rpc RemoveCloudletVMPoolMember(CloudletVMPoolMember) returns (Result) {
+    option (google.api.http) = {
+      post: "/rm/cloudletvmpoolmember"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.method_also_required) = "CloudletVm.Name";
+  }
+}
+
+// CloudletVMSpec defines the specification of Cloudlet VM required by CRM
+message CloudletVMSpec {
+  // Cloudlet VM has external network defined or not
+  bool external_network  = 1;
+  // Cloudlet VM has internal network defined or not
+  bool internal_network  = 2;
+}
+
+// CloudletVMPoolInfo is used to manage CloudletVMPool from CRM
+message CloudletVMPoolInfo {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  CloudletKey key = 2 [(gogoproto.nullable) = false];
+  // State of Cloudlet VM request
+  CloudletVMState state = 3;
+  // Id of client assigned by server (internal use only)
+  int64 notify_id = 4 [(protogen.hidetag) = "nocmp"];
+  // Specs of VMs requested by the caller
+  repeated CloudletVMSpec vmspecs = 5;
+  // List of Cloudlet VMs allocated/released
+  repeated CloudletVM cloudlet_vms = 6;
+  // Errors if any
+  repeated string errors = 7;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.notify_flush) = true;
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.uses_org) = "none";
+}
+
+service CloudletVMPoolInfoApi {
+  // Show CloudletVMPoolInfos
+  rpc ShowCloudletVMPoolInfo(CloudletVMPoolInfo) returns (stream CloudletVMPoolInfo) {
+    option (google.api.http) = {
+      post: "/show/cloudletvmpoolinfo"
+      body: "*"
+    };
+  }
+}

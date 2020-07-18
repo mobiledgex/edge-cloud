@@ -14,6 +14,7 @@
 		autoscalepolicy.proto
 		cloudlet.proto
 		cloudletpool.proto
+		cloudletvmpool.proto
 		cluster.proto
 		clusterinst.proto
 		common.proto
@@ -72,6 +73,12 @@
 		CloudletPoolKey
 		CloudletPool
 		CloudletPoolMember
+		CloudletVMNetInfo
+		CloudletVM
+		CloudletVMPool
+		CloudletVMPoolMember
+		CloudletVMSpec
+		CloudletVMPoolInfo
 		ClusterKey
 		ClusterInstKey
 		ClusterInst
@@ -1145,6 +1152,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := PowerState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(CloudletVMType(0)):
+		if en, ok := CloudletVMType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(CloudletVMState(0)):
+		if en, ok := CloudletVMState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(NoticeAction(0)):
 		if en, ok := NoticeAction_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1182,6 +1197,8 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletRefs":       struct{}{},
 	"ShowClusterRefs":        struct{}{},
 	"ShowAppInstRefs":        struct{}{},
+	"ShowCloudletVMPool":     struct{}{},
+	"ShowCloudletVMPoolInfo": struct{}{},
 	"ShowController":         struct{}{},
 	"ShowNode":               struct{}{},
 	"ShowDevice":             struct{}{},

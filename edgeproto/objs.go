@@ -290,6 +290,33 @@ func (s *CloudletPoolMember) Validate(fields map[string]struct{}) error {
 	return s.ValidateKey()
 }
 
+func (s *CloudletVMPool) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if err := s.ValidateEnums(); err != nil {
+		return err
+	}
+
+	for _, v := range s.CloudletVms {
+		if v.NetInfo.ExternalIp != "" && net.ParseIP(v.NetInfo.ExternalIp) == nil {
+			return fmt.Errorf("Invalid Address: %s", v.NetInfo.ExternalIp)
+		}
+		if v.NetInfo.InternalIp == "" {
+			return fmt.Errorf("Missing internal IP for CloudletVM: %s", v.Name)
+		}
+		if net.ParseIP(v.NetInfo.InternalIp) == nil {
+			return fmt.Errorf("Invalid Address: %s", v.NetInfo.InternalIp)
+		}
+	}
+
+	return nil
+}
+
+func (s *CloudletVMPoolInfo) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
 func (key *ResTagTableKey) ValidateKey() error {
 	if !util.ValidName(key.Name) {
 		return errors.New("Invalid ResTagTable name")

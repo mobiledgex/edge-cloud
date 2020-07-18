@@ -106,6 +106,8 @@ enum PlatformType {
   PLATFORM_TYPE_VSPHERE = 7;
   // AWS Cloudlet
   PLATFORM_TYPE_AWS = 8;
+  // Generic Cloudlet
+  PLATFORM_TYPE_GENERIC = 9;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
