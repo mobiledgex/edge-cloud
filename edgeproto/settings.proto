@@ -12,6 +12,8 @@ message Settings {
   repeated string fields = 1;
   // Shepherd metrics collection interval for k8s and docker appInstances (duration)
   int64 shepherd_metrics_collection_interval = 2 [(gogoproto.casttype) = "Duration"];
+  // Shepherd alert evaluation interval for k8s and docker appInstances (duration)
+  int64 shepherd_alert_evaluation_interval = 20 [(gogoproto.casttype) = "Duration"];
   // Number of times Shepherd Health Check fails before we mark appInst down
   int32 shepherd_health_check_retries = 3;
   // Health Checking probing frequency (duration)

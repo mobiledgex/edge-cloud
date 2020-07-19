@@ -7,9 +7,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/mobiledgex/edge-cloud/testutil/testservices"
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -208,4 +211,17 @@ func TestCRM(t *testing.T) {
 	// wait until main is done so it can clean up properly
 	<-mainDone
 	ctrlMgr.Stop()
+}
+
+func TestNotifyOrder(t *testing.T) {
+	log.InitTracer("")
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
+	err := nodeMgr.Init(ctx, node.NodeTypeCRM)
+	require.Nil(t, err)
+	controllerData = crmutil.NewControllerData(nil, &nodeMgr)
+	mgr := notify.ServerMgr{}
+	initSrvNotify(&mgr)
+	testservices.CheckNotifySendOrder(t, mgr.GetSendOrder())
 }

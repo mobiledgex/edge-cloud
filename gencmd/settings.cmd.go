@@ -195,6 +195,7 @@ var SettingsApiCmds = []*cobra.Command{
 var SettingsRequiredArgs = []string{}
 var SettingsOptionalArgs = []string{
 	"shepherdmetricscollectioninterval",
+	"shepherdalertevaluationinterval",
 	"shepherdhealthcheckretries",
 	"shepherdhealthcheckinterval",
 	"autodeployintervalsec",
@@ -217,6 +218,7 @@ var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
 	"fields":                            "Fields are used for the Update API to specify which fields to apply",
 	"shepherdmetricscollectioninterval": "Shepherd metrics collection interval for k8s and docker appInstances (duration)",
+	"shepherdalertevaluationinterval":   "Shepherd alert evaluation interval for k8s and docker appInstances (duration)",
 	"shepherdhealthcheckretries":        "Number of times Shepherd Health Check fails before we mark appInst down",
 	"shepherdhealthcheckinterval":       "Health Checking probing frequency (duration)",
 	"autodeployintervalsec":             "Auto Provisioning Stats push and analysis interval (seconds)",

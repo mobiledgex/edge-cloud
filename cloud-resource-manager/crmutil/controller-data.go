@@ -25,6 +25,7 @@ type ControllerData struct {
 	CloudletInfoCache        edgeproto.CloudletInfoCache
 	ClusterInstInfoCache     edgeproto.ClusterInstInfoCache
 	PrivacyPolicyCache       edgeproto.PrivacyPolicyCache
+	AutoProvPolicyCache      edgeproto.AutoProvPolicyCache
 	AlertCache               edgeproto.AlertCache
 	SettingsCache            edgeproto.SettingsCache
 	ExecReqHandler           *ExecReqHandler
@@ -60,6 +61,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	edgeproto.InitClusterInstCache(&cd.ClusterInstCache)
 	edgeproto.InitAlertCache(&cd.AlertCache)
 	edgeproto.InitPrivacyPolicyCache(&cd.PrivacyPolicyCache)
+	edgeproto.InitAutoProvPolicyCache(&cd.AutoProvPolicyCache)
 	edgeproto.InitSettingsCache(&cd.SettingsCache)
 	cd.ExecReqHandler = NewExecReqHandler(cd)
 	cd.ExecReqSend = notify.NewExecRequestSend()

@@ -431,6 +431,8 @@ var AutoProvPolicyOptionalArgs = []string{
 	"cloudlets:#.loc.timestamp.nanos",
 	"minactiveinstances",
 	"maxinstances",
+	"undeployclientcount",
+	"undeployintervalcount",
 }
 var AutoProvPolicyAliasArgs = []string{
 	"app-org=key.organization",
@@ -453,6 +455,8 @@ var AutoProvPolicyComments = map[string]string{
 	"cloudlets:#.loc.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"minactiveinstances":                 "Minimum number of active instances for High-Availability",
 	"maxinstances":                       "Maximum number of instances (active or not)",
+	"undeployclientcount":                "Number of active clients for the undeploy interval below which trigers undeployment, 0 (default) disables auto undeploy",
+	"undeployintervalcount":              "Number of intervals to check before triggering undeployment",
 }
 var AutoProvPolicySpecialArgs = map[string]string{
 	"fields": "StringArray",
@@ -615,4 +619,6 @@ var CreateAutoProvPolicyOptionalArgs = []string{
 	"cloudlets:#.loc.timestamp.nanos",
 	"minactiveinstances",
 	"maxinstances",
+	"undeployclientcount",
+	"undeployintervalcount",
 }

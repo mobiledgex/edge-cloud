@@ -71,11 +71,12 @@ func (s *KeyWorkers) runWorker(worker *keyWorker) {
 			s.mux.Unlock()
 			break
 		}
-		_, ctx := log.ChildSpan(worker.ctx, log.DebugLevelApi, s.name+" KeyWorker")
+		span, ctx := log.ChildSpan(worker.ctx, log.DebugLevelApi, s.name+" KeyWorker")
 		worker.needsWork = false
 		s.mux.Unlock()
 
 		s.workFunc(ctx, worker.key)
+		span.Finish()
 	}
 	s.waitWorkers.Done()
 }
