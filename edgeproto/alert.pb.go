@@ -1132,6 +1132,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := CloudletState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(CloudletVMState(0)):
+		if en, ok := CloudletVMState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(CloudletVMAction(0)):
+		if en, ok := CloudletVMAction_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(ImageType(0)):
 		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1150,14 +1158,6 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(PowerState(0)):
 		if en, ok := PowerState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(CloudletVMType(0)):
-		if en, ok := CloudletVMType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(CloudletVMState(0)):
-		if en, ok := CloudletVMState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(NoticeAction(0)):
@@ -1185,6 +1185,8 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletPoolMember": struct{}{},
 	"ShowPoolsForCloudlet":   struct{}{},
 	"ShowCloudletsForPool":   struct{}{},
+	"ShowCloudletVMPool":     struct{}{},
+	"ShowCloudletVMPoolInfo": struct{}{},
 	"ShowAutoScalePolicy":    struct{}{},
 	"ShowApp":                struct{}{},
 	"ShowClusterInst":        struct{}{},
@@ -1197,8 +1199,6 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletRefs":       struct{}{},
 	"ShowClusterRefs":        struct{}{},
 	"ShowAppInstRefs":        struct{}{},
-	"ShowCloudletVMPool":     struct{}{},
-	"ShowCloudletVMPoolInfo": struct{}{},
 	"ShowController":         struct{}{},
 	"ShowNode":               struct{}{},
 	"ShowDevice":             struct{}{},

@@ -312,6 +312,7 @@ func startServices() error {
 	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
 	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
 	edgeproto.RegisterCloudletInfoApiServer(server, &cloudletInfoApi)
+	edgeproto.RegisterCloudletVMPoolApiServer(server, &cloudletVMPoolApi)
 	edgeproto.RegisterCloudletRefsApiServer(server, &cloudletRefsApi)
 	edgeproto.RegisterAppInstRefsApiServer(server, &appInstRefsApi)
 	edgeproto.RegisterControllerApiServer(server, &controllerApi)
@@ -348,6 +349,7 @@ func startServices() error {
 			edgeproto.RegisterOperatorCodeApiHandler,
 			edgeproto.RegisterCloudletApiHandler,
 			edgeproto.RegisterCloudletInfoApiHandler,
+			edgeproto.RegisterCloudletVMPoolApiHandler,
 			edgeproto.RegisterFlavorApiHandler,
 			edgeproto.RegisterClusterInstApiHandler,
 			edgeproto.RegisterControllerApiHandler,
@@ -467,6 +469,8 @@ func InitApis(sync *Sync) {
 	InitFlavorApi(sync)
 	InitClusterInstApi(sync)
 	InitCloudletInfoApi(sync)
+	InitCloudletVMPoolApi(sync)
+	InitCloudletVMPoolInfoApi(sync)
 	InitAppInstInfoApi(sync)
 	InitClusterInstInfoApi(sync)
 	InitCloudletRefsApi(sync)
@@ -494,6 +498,7 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
+	notify.ServerMgrOne.RegisterSendCloudletVMPoolCache(&cloudletVMPoolApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoProvPolicyCache(&autoProvPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendPrivacyPolicyCache(&privacyPolicyApi.cache)
@@ -509,6 +514,7 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	nodeMgr.RegisterServer(&notify.ServerMgrOne)
 	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletInfoRecvMany(&cloudletInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(&appInstInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletVMPoolInfoRecvMany(&cloudletVMPoolInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewClusterInstInfoRecvMany(&clusterInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(influxQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(&execApi))

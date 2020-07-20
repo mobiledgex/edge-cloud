@@ -8,8 +8,9 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
-import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import _ "github.com/gogo/protobuf/gogoproto"
+import google_protobuf1 "github.com/gogo/protobuf/types"
 
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
@@ -32,48 +33,6 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// Cloudlet VM Type
-//
-// CloudletVMType is the current type of the CloudletVM
-type CloudletVMType int32
-
-const (
-	// Platform node, hosts cloudlet services
-	CloudletVMType_PLATFORM_NODE CloudletVMType = 0
-	// Shared root LB, hosts rootLB to be shared by other clusters/AppVMs
-	CloudletVMType_SHARED_ROOT_LB CloudletVMType = 1
-	// Dedicated root LB; hosts rootLB to be used by a specific cluster/AppVM
-	CloudletVMType_DEDICATED_ROOT_LB CloudletVMType = 2
-	// Docker node; hosts docker based applications
-	CloudletVMType_DOCKER_NODE CloudletVMType = 3
-	// Kubernetes cluster master
-	CloudletVMType_K8S_MASTER CloudletVMType = 4
-	// Kubernetes cluster node
-	CloudletVMType_K8S_NODE CloudletVMType = 5
-)
-
-var CloudletVMType_name = map[int32]string{
-	0: "PLATFORM_NODE",
-	1: "SHARED_ROOT_LB",
-	2: "DEDICATED_ROOT_LB",
-	3: "DOCKER_NODE",
-	4: "K8S_MASTER",
-	5: "K8S_NODE",
-}
-var CloudletVMType_value = map[string]int32{
-	"PLATFORM_NODE":     0,
-	"SHARED_ROOT_LB":    1,
-	"DEDICATED_ROOT_LB": 2,
-	"DOCKER_NODE":       3,
-	"K8S_MASTER":        4,
-	"K8S_NODE":          5,
-}
-
-func (x CloudletVMType) String() string {
-	return proto.EnumName(CloudletVMType_name, int32(x))
-}
-func (CloudletVMType) EnumDescriptor() ([]byte, []int) { return fileDescriptorCloudletvmpool, []int{0} }
-
 // Cloudlet VM State
 //
 // CloudletVMState is the state of the CloudletVM
@@ -82,39 +41,59 @@ type CloudletVMState int32
 const (
 	// Cloudlet VM is free to use
 	CloudletVMState_CLOUDLET_VM_FREE CloudletVMState = 0
-	// Cloudlet VM requested
-	CloudletVMState_CLOUDLET_VM_REQUESTED CloudletVMState = 1
-	// Cloudlet VM allocated
-	CloudletVMState_CLOUDLET_VM_ALLOCATED CloudletVMState = 2
 	// Cloudlet VM is in use
-	CloudletVMState_CLOUDLET_VM_IN_USE CloudletVMState = 3
-	// Cloudlet VM is released
-	CloudletVMState_CLOUDLET_VM_RELEASED CloudletVMState = 4
+	CloudletVMState_CLOUDLET_VM_IN_USE CloudletVMState = 1
 	// Cloudlet VM is in error state
-	CloudletVMState_CLOUDLET_VM_ERROR CloudletVMState = 5
+	CloudletVMState_CLOUDLET_VM_ERROR CloudletVMState = 2
 )
 
 var CloudletVMState_name = map[int32]string{
 	0: "CLOUDLET_VM_FREE",
-	1: "CLOUDLET_VM_REQUESTED",
-	2: "CLOUDLET_VM_ALLOCATED",
-	3: "CLOUDLET_VM_IN_USE",
-	4: "CLOUDLET_VM_RELEASED",
-	5: "CLOUDLET_VM_ERROR",
+	1: "CLOUDLET_VM_IN_USE",
+	2: "CLOUDLET_VM_ERROR",
 }
 var CloudletVMState_value = map[string]int32{
-	"CLOUDLET_VM_FREE":      0,
-	"CLOUDLET_VM_REQUESTED": 1,
-	"CLOUDLET_VM_ALLOCATED": 2,
-	"CLOUDLET_VM_IN_USE":    3,
-	"CLOUDLET_VM_RELEASED":  4,
-	"CLOUDLET_VM_ERROR":     5,
+	"CLOUDLET_VM_FREE":   0,
+	"CLOUDLET_VM_IN_USE": 1,
+	"CLOUDLET_VM_ERROR":  2,
 }
 
 func (x CloudletVMState) String() string {
 	return proto.EnumName(CloudletVMState_name, int32(x))
 }
-func (CloudletVMState) EnumDescriptor() ([]byte, []int) { return fileDescriptorCloudletvmpool, []int{1} }
+func (CloudletVMState) EnumDescriptor() ([]byte, []int) { return fileDescriptorCloudletvmpool, []int{0} }
+
+// Cloudlet VM Action
+//
+// CloudletVMAction is the action to be performed on Cloudlet VM Pool
+type CloudletVMAction int32
+
+const (
+	// Done performing action
+	CloudletVMAction_CLOUDLET_VM_ACTION_DONE CloudletVMAction = 0
+	// Allocate Cloudlet VMs from Cloudlet VM Pool
+	CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE CloudletVMAction = 1
+	// Release VMs from Cloudlet VM Pool
+	CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE CloudletVMAction = 2
+)
+
+var CloudletVMAction_name = map[int32]string{
+	0: "CLOUDLET_VM_ACTION_DONE",
+	1: "CLOUDLET_VM_ACTION_ALLOCATE",
+	2: "CLOUDLET_VM_ACTION_RELEASE",
+}
+var CloudletVMAction_value = map[string]int32{
+	"CLOUDLET_VM_ACTION_DONE":     0,
+	"CLOUDLET_VM_ACTION_ALLOCATE": 1,
+	"CLOUDLET_VM_ACTION_RELEASE":  2,
+}
+
+func (x CloudletVMAction) String() string {
+	return proto.EnumName(CloudletVMAction_name, int32(x))
+}
+func (CloudletVMAction) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorCloudletvmpool, []int{1}
+}
 
 type CloudletVMNetInfo struct {
 	// External IP
@@ -133,14 +112,12 @@ type CloudletVM struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// VM IP
 	NetInfo CloudletVMNetInfo `protobuf:"bytes,2,opt,name=net_info,json=netInfo" json:"net_info"`
-	// VM Type
-	Type CloudletVMType `protobuf:"varint,3,opt,name=type,proto3,enum=edgeproto.CloudletVMType" json:"type,omitempty"`
 	// VM User
-	User string `protobuf:"bytes,4,opt,name=user,proto3" json:"user,omitempty"`
+	User string `protobuf:"bytes,3,opt,name=user,proto3" json:"user,omitempty"`
 	// VM State
-	State CloudletVMState `protobuf:"varint,5,opt,name=state,proto3,enum=edgeproto.CloudletVMState" json:"state,omitempty"`
+	State CloudletVMState `protobuf:"varint,4,opt,name=state,proto3,enum=edgeproto.CloudletVMState" json:"state,omitempty"`
 	// Last updated time
-	UpdatedAt distributed_match_engine.Timestamp `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt" json:"updated_at"`
+	UpdatedAt google_protobuf1.Timestamp `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt" json:"updated_at"`
 }
 
 func (m *CloudletVM) Reset()                    { *m = CloudletVM{} }
@@ -155,7 +132,11 @@ type CloudletVMPool struct {
 	// Cloudlet key
 	Key CloudletKey `protobuf:"bytes,2,opt,name=key" json:"key"`
 	// list of Cloudlet VMs to be part of Cloudlet
-	CloudletVms []*CloudletVM `protobuf:"bytes,3,rep,name=cloudlet_vms,json=cloudletVms" json:"cloudlet_vms,omitempty"`
+	CloudletVms []CloudletVM `protobuf:"bytes,3,rep,name=cloudlet_vms,json=cloudletVms" json:"cloudlet_vms"`
+	// Action performed on Cloudlet VM Pool
+	Action CloudletVMAction `protobuf:"varint,4,opt,name=action,proto3,enum=edgeproto.CloudletVMAction" json:"action,omitempty"`
+	// Errors if any
+	Error string `protobuf:"bytes,5,opt,name=error,proto3" json:"error,omitempty"`
 }
 
 func (m *CloudletVMPool) Reset()                    { *m = CloudletVMPool{} }
@@ -180,10 +161,12 @@ func (*CloudletVMPoolMember) Descriptor() ([]byte, []int) {
 
 // CloudletVMSpec defines the specification of Cloudlet VM required by CRM
 type CloudletVMSpec struct {
+	// Cloudlet VM name
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// Cloudlet VM has external network defined or not
-	ExternalNetwork bool `protobuf:"varint,1,opt,name=external_network,json=externalNetwork,proto3" json:"external_network,omitempty"`
+	ExternalNetwork bool `protobuf:"varint,2,opt,name=external_network,json=externalNetwork,proto3" json:"external_network,omitempty"`
 	// Cloudlet VM has internal network defined or not
-	InternalNetwork bool `protobuf:"varint,2,opt,name=internal_network,json=internalNetwork,proto3" json:"internal_network,omitempty"`
+	InternalNetwork bool `protobuf:"varint,3,opt,name=internal_network,json=internalNetwork,proto3" json:"internal_network,omitempty"`
 }
 
 func (m *CloudletVMSpec) Reset()                    { *m = CloudletVMSpec{} }
@@ -197,16 +180,18 @@ type CloudletVMPoolInfo struct {
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
 	Key CloudletKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// State of Cloudlet VM request
-	State CloudletVMState `protobuf:"varint,3,opt,name=state,proto3,enum=edgeproto.CloudletVMState" json:"state,omitempty"`
+	// Action performed on Cloudlet VM Pool
+	Action CloudletVMAction `protobuf:"varint,3,opt,name=action,proto3,enum=edgeproto.CloudletVMAction" json:"action,omitempty"`
 	// Id of client assigned by server (internal use only)
 	NotifyId int64 `protobuf:"varint,4,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
+	// VM User
+	User string `protobuf:"bytes,5,opt,name=user,proto3" json:"user,omitempty"`
 	// Specs of VMs requested by the caller
-	Vmspecs []*CloudletVMSpec `protobuf:"bytes,5,rep,name=vmspecs" json:"vmspecs,omitempty"`
-	// List of Cloudlet VMs allocated/released
-	CloudletVms []*CloudletVM `protobuf:"bytes,6,rep,name=cloudlet_vms,json=cloudletVms" json:"cloudlet_vms,omitempty"`
+	VmSpecs []CloudletVMSpec `protobuf:"bytes,6,rep,name=vm_specs,json=vmSpecs" json:"vm_specs"`
+	// list of Cloudlet VMs allocated
+	CloudletVms []CloudletVM `protobuf:"bytes,7,rep,name=cloudlet_vms,json=cloudletVms" json:"cloudlet_vms"`
 	// Errors if any
-	Errors []string `protobuf:"bytes,7,rep,name=errors" json:"errors,omitempty"`
+	Error string `protobuf:"bytes,8,opt,name=error,proto3" json:"error,omitempty"`
 }
 
 func (m *CloudletVMPoolInfo) Reset()                    { *m = CloudletVMPoolInfo{} }
@@ -221,8 +206,8 @@ func init() {
 	proto.RegisterType((*CloudletVMPoolMember)(nil), "edgeproto.CloudletVMPoolMember")
 	proto.RegisterType((*CloudletVMSpec)(nil), "edgeproto.CloudletVMSpec")
 	proto.RegisterType((*CloudletVMPoolInfo)(nil), "edgeproto.CloudletVMPoolInfo")
-	proto.RegisterEnum("edgeproto.CloudletVMType", CloudletVMType_name, CloudletVMType_value)
 	proto.RegisterEnum("edgeproto.CloudletVMState", CloudletVMState_name, CloudletVMState_value)
+	proto.RegisterEnum("edgeproto.CloudletVMAction", CloudletVMAction_name, CloudletVMAction_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -658,23 +643,18 @@ func (m *CloudletVM) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n1
-	if m.Type != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintCloudletvmpool(dAtA, i, uint64(m.Type))
-	}
 	if len(m.User) > 0 {
-		dAtA[i] = 0x22
+		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintCloudletvmpool(dAtA, i, uint64(len(m.User)))
 		i += copy(dAtA[i:], m.User)
 	}
 	if m.State != 0 {
-		dAtA[i] = 0x28
+		dAtA[i] = 0x20
 		i++
 		i = encodeVarintCloudletvmpool(dAtA, i, uint64(m.State))
 	}
-	dAtA[i] = 0x32
+	dAtA[i] = 0x2a
 	i++
 	i = encodeVarintCloudletvmpool(dAtA, i, uint64(m.UpdatedAt.Size()))
 	n2, err := m.UpdatedAt.MarshalTo(dAtA[i:])
@@ -735,6 +715,17 @@ func (m *CloudletVMPool) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
+	if m.Action != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintCloudletvmpool(dAtA, i, uint64(m.Action))
+	}
+	if len(m.Error) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintCloudletvmpool(dAtA, i, uint64(len(m.Error)))
+		i += copy(dAtA[i:], m.Error)
+	}
 	return i, nil
 }
 
@@ -787,8 +778,14 @@ func (m *CloudletVMSpec) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Name) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCloudletvmpool(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
 	if m.ExternalNetwork {
-		dAtA[i] = 0x8
+		dAtA[i] = 0x10
 		i++
 		if m.ExternalNetwork {
 			dAtA[i] = 1
@@ -798,7 +795,7 @@ func (m *CloudletVMSpec) MarshalTo(dAtA []byte) (int, error) {
 		i++
 	}
 	if m.InternalNetwork {
-		dAtA[i] = 0x10
+		dAtA[i] = 0x18
 		i++
 		if m.InternalNetwork {
 			dAtA[i] = 1
@@ -848,19 +845,25 @@ func (m *CloudletVMPoolInfo) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n6
-	if m.State != 0 {
+	if m.Action != 0 {
 		dAtA[i] = 0x18
 		i++
-		i = encodeVarintCloudletvmpool(dAtA, i, uint64(m.State))
+		i = encodeVarintCloudletvmpool(dAtA, i, uint64(m.Action))
 	}
 	if m.NotifyId != 0 {
 		dAtA[i] = 0x20
 		i++
 		i = encodeVarintCloudletvmpool(dAtA, i, uint64(m.NotifyId))
 	}
-	if len(m.Vmspecs) > 0 {
-		for _, msg := range m.Vmspecs {
-			dAtA[i] = 0x2a
+	if len(m.User) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintCloudletvmpool(dAtA, i, uint64(len(m.User)))
+		i += copy(dAtA[i:], m.User)
+	}
+	if len(m.VmSpecs) > 0 {
+		for _, msg := range m.VmSpecs {
+			dAtA[i] = 0x32
 			i++
 			i = encodeVarintCloudletvmpool(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -872,7 +875,7 @@ func (m *CloudletVMPoolInfo) MarshalTo(dAtA []byte) (int, error) {
 	}
 	if len(m.CloudletVms) > 0 {
 		for _, msg := range m.CloudletVms {
-			dAtA[i] = 0x32
+			dAtA[i] = 0x3a
 			i++
 			i = encodeVarintCloudletvmpool(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -882,20 +885,11 @@ func (m *CloudletVMPoolInfo) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if len(m.Errors) > 0 {
-		for _, s := range m.Errors {
-			dAtA[i] = 0x3a
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
+	if len(m.Error) > 0 {
+		dAtA[i] = 0x42
+		i++
+		i = encodeVarintCloudletvmpool(dAtA, i, uint64(len(m.Error)))
+		i += copy(dAtA[i:], m.Error)
 	}
 	return i, nil
 }
@@ -946,10 +940,6 @@ func (m *CloudletVM) CopyInFields(src *CloudletVM) int {
 		m.NetInfo.InternalIp = src.NetInfo.InternalIp
 		changed++
 	}
-	if m.Type != src.Type {
-		m.Type = src.Type
-		changed++
-	}
 	if m.User != src.User {
 		m.User = src.User
 		changed++
@@ -972,7 +962,6 @@ func (m *CloudletVM) CopyInFields(src *CloudletVM) int {
 func (m *CloudletVM) DeepCopyIn(src *CloudletVM) {
 	m.Name = src.Name
 	m.NetInfo.DeepCopyIn(&src.NetInfo)
-	m.Type = src.Type
 	m.User = src.User
 	m.State = src.State
 	m.UpdatedAt = src.UpdatedAt
@@ -982,9 +971,6 @@ func (m *CloudletVM) DeepCopyIn(src *CloudletVM) {
 func (m *CloudletVM) ValidateEnums() error {
 	if err := m.NetInfo.ValidateEnums(); err != nil {
 		return err
-	}
-	if _, ok := CloudletVMType_name[int32(m.Type)]; !ok {
-		return errors.New("invalid Type")
 	}
 	if _, ok := CloudletVMState_name[int32(m.State)]; !ok {
 		return errors.New("invalid State")
@@ -1027,6 +1013,18 @@ func (m *CloudletVMPool) Matches(o *CloudletVMPool, fopts ...MatchOpt) bool {
 			}
 		}
 	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.Action != 0 {
+			if o.Action != m.Action {
+				return false
+			}
+		}
+	}
+	if !opts.Filter || o.Error != "" {
+		if o.Error != m.Error {
+			return false
+		}
+	}
 	return true
 }
 
@@ -1038,12 +1036,13 @@ const CloudletVMPoolFieldCloudletVmsName = "3.1"
 const CloudletVMPoolFieldCloudletVmsNetInfo = "3.2"
 const CloudletVMPoolFieldCloudletVmsNetInfoExternalIp = "3.2.1"
 const CloudletVMPoolFieldCloudletVmsNetInfoInternalIp = "3.2.2"
-const CloudletVMPoolFieldCloudletVmsType = "3.3"
-const CloudletVMPoolFieldCloudletVmsUser = "3.4"
-const CloudletVMPoolFieldCloudletVmsState = "3.5"
-const CloudletVMPoolFieldCloudletVmsUpdatedAt = "3.6"
-const CloudletVMPoolFieldCloudletVmsUpdatedAtSeconds = "3.6.1"
-const CloudletVMPoolFieldCloudletVmsUpdatedAtNanos = "3.6.2"
+const CloudletVMPoolFieldCloudletVmsUser = "3.3"
+const CloudletVMPoolFieldCloudletVmsState = "3.4"
+const CloudletVMPoolFieldCloudletVmsUpdatedAt = "3.5"
+const CloudletVMPoolFieldCloudletVmsUpdatedAtSeconds = "3.5.1"
+const CloudletVMPoolFieldCloudletVmsUpdatedAtNanos = "3.5.2"
+const CloudletVMPoolFieldAction = "4"
+const CloudletVMPoolFieldError = "5"
 
 var CloudletVMPoolAllFields = []string{
 	CloudletVMPoolFieldKeyOrganization,
@@ -1051,11 +1050,12 @@ var CloudletVMPoolAllFields = []string{
 	CloudletVMPoolFieldCloudletVmsName,
 	CloudletVMPoolFieldCloudletVmsNetInfoExternalIp,
 	CloudletVMPoolFieldCloudletVmsNetInfoInternalIp,
-	CloudletVMPoolFieldCloudletVmsType,
 	CloudletVMPoolFieldCloudletVmsUser,
 	CloudletVMPoolFieldCloudletVmsState,
 	CloudletVMPoolFieldCloudletVmsUpdatedAtSeconds,
 	CloudletVMPoolFieldCloudletVmsUpdatedAtNanos,
+	CloudletVMPoolFieldAction,
+	CloudletVMPoolFieldError,
 }
 
 var CloudletVMPoolAllFieldsMap = map[string]struct{}{
@@ -1064,11 +1064,12 @@ var CloudletVMPoolAllFieldsMap = map[string]struct{}{
 	CloudletVMPoolFieldCloudletVmsName:              struct{}{},
 	CloudletVMPoolFieldCloudletVmsNetInfoExternalIp: struct{}{},
 	CloudletVMPoolFieldCloudletVmsNetInfoInternalIp: struct{}{},
-	CloudletVMPoolFieldCloudletVmsType:              struct{}{},
 	CloudletVMPoolFieldCloudletVmsUser:              struct{}{},
 	CloudletVMPoolFieldCloudletVmsState:             struct{}{},
 	CloudletVMPoolFieldCloudletVmsUpdatedAtSeconds:  struct{}{},
 	CloudletVMPoolFieldCloudletVmsUpdatedAtNanos:    struct{}{},
+	CloudletVMPoolFieldAction:                       struct{}{},
+	CloudletVMPoolFieldError:                        struct{}{},
 }
 
 var CloudletVMPoolAllFieldsStringMap = map[string]string{
@@ -1077,11 +1078,12 @@ var CloudletVMPoolAllFieldsStringMap = map[string]string{
 	CloudletVMPoolFieldCloudletVmsName:              "Cloudlet Vms Name",
 	CloudletVMPoolFieldCloudletVmsNetInfoExternalIp: "Cloudlet Vms Net Info External Ip",
 	CloudletVMPoolFieldCloudletVmsNetInfoInternalIp: "Cloudlet Vms Net Info Internal Ip",
-	CloudletVMPoolFieldCloudletVmsType:              "Cloudlet Vms Type",
 	CloudletVMPoolFieldCloudletVmsUser:              "Cloudlet Vms User",
 	CloudletVMPoolFieldCloudletVmsState:             "Cloudlet Vms State",
 	CloudletVMPoolFieldCloudletVmsUpdatedAtSeconds:  "Cloudlet Vms Updated At Seconds",
 	CloudletVMPoolFieldCloudletVmsUpdatedAtNanos:    "Cloudlet Vms Updated At Nanos",
+	CloudletVMPoolFieldAction:                       "Action",
+	CloudletVMPoolFieldError:                        "Error",
 }
 
 func (m *CloudletVMPool) IsKeyField(s string) bool {
@@ -1097,51 +1099,49 @@ func (m *CloudletVMPool) DiffFields(o *CloudletVMPool, fields map[string]struct{
 		fields[CloudletVMPoolFieldKeyName] = struct{}{}
 		fields[CloudletVMPoolFieldKey] = struct{}{}
 	}
-	if m.CloudletVms != nil && o.CloudletVms != nil {
-		if len(m.CloudletVms) != len(o.CloudletVms) {
-			fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
-		} else {
-			for i0 := 0; i0 < len(m.CloudletVms); i0++ {
-				if m.CloudletVms[i0].Name != o.CloudletVms[i0].Name {
-					fields[CloudletVMPoolFieldCloudletVmsName] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].NetInfo.ExternalIp != o.CloudletVms[i0].NetInfo.ExternalIp {
-					fields[CloudletVMPoolFieldCloudletVmsNetInfoExternalIp] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVmsNetInfo] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].NetInfo.InternalIp != o.CloudletVms[i0].NetInfo.InternalIp {
-					fields[CloudletVMPoolFieldCloudletVmsNetInfoInternalIp] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVmsNetInfo] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].Type != o.CloudletVms[i0].Type {
-					fields[CloudletVMPoolFieldCloudletVmsType] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].User != o.CloudletVms[i0].User {
-					fields[CloudletVMPoolFieldCloudletVmsUser] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].State != o.CloudletVms[i0].State {
-					fields[CloudletVMPoolFieldCloudletVmsState] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].UpdatedAt.Seconds != o.CloudletVms[i0].UpdatedAt.Seconds {
-					fields[CloudletVMPoolFieldCloudletVmsUpdatedAtSeconds] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVmsUpdatedAt] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].UpdatedAt.Nanos != o.CloudletVms[i0].UpdatedAt.Nanos {
-					fields[CloudletVMPoolFieldCloudletVmsUpdatedAtNanos] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVmsUpdatedAt] = struct{}{}
-					fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
-				}
+	if len(m.CloudletVms) != len(o.CloudletVms) {
+		fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.CloudletVms); i0++ {
+			if m.CloudletVms[i0].Name != o.CloudletVms[i0].Name {
+				fields[CloudletVMPoolFieldCloudletVmsName] = struct{}{}
+				fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].NetInfo.ExternalIp != o.CloudletVms[i0].NetInfo.ExternalIp {
+				fields[CloudletVMPoolFieldCloudletVmsNetInfoExternalIp] = struct{}{}
+				fields[CloudletVMPoolFieldCloudletVmsNetInfo] = struct{}{}
+				fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].NetInfo.InternalIp != o.CloudletVms[i0].NetInfo.InternalIp {
+				fields[CloudletVMPoolFieldCloudletVmsNetInfoInternalIp] = struct{}{}
+				fields[CloudletVMPoolFieldCloudletVmsNetInfo] = struct{}{}
+				fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].User != o.CloudletVms[i0].User {
+				fields[CloudletVMPoolFieldCloudletVmsUser] = struct{}{}
+				fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].State != o.CloudletVms[i0].State {
+				fields[CloudletVMPoolFieldCloudletVmsState] = struct{}{}
+				fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].UpdatedAt.Seconds != o.CloudletVms[i0].UpdatedAt.Seconds {
+				fields[CloudletVMPoolFieldCloudletVmsUpdatedAtSeconds] = struct{}{}
+				fields[CloudletVMPoolFieldCloudletVmsUpdatedAt] = struct{}{}
+				fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].UpdatedAt.Nanos != o.CloudletVms[i0].UpdatedAt.Nanos {
+				fields[CloudletVMPoolFieldCloudletVmsUpdatedAtNanos] = struct{}{}
+				fields[CloudletVMPoolFieldCloudletVmsUpdatedAt] = struct{}{}
+				fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
 			}
 		}
-	} else if (m.CloudletVms != nil && o.CloudletVms == nil) || (m.CloudletVms == nil && o.CloudletVms != nil) {
-		fields[CloudletVMPoolFieldCloudletVms] = struct{}{}
+	}
+	if m.Action != o.Action {
+		fields[CloudletVMPoolFieldAction] = struct{}{}
+	}
+	if m.Error != o.Error {
+		fields[CloudletVMPoolFieldError] = struct{}{}
 	}
 }
 
@@ -1151,7 +1151,6 @@ var UpdateCloudletVMPoolFieldsMap = map[string]struct{}{
 	CloudletVMPoolFieldCloudletVmsNetInfo:           struct{}{},
 	CloudletVMPoolFieldCloudletVmsNetInfoExternalIp: struct{}{},
 	CloudletVMPoolFieldCloudletVmsNetInfoInternalIp: struct{}{},
-	CloudletVMPoolFieldCloudletVmsType:              struct{}{},
 	CloudletVMPoolFieldCloudletVmsUser:              struct{}{},
 	CloudletVMPoolFieldCloudletVmsState:             struct{}{},
 	CloudletVMPoolFieldCloudletVmsUpdatedAt:         struct{}{},
@@ -1200,68 +1199,68 @@ func (m *CloudletVMPool) CopyInFields(src *CloudletVMPool) int {
 		}
 	}
 	if _, set := fmap["3"]; set {
-		if src.CloudletVms != nil {
-			if m.CloudletVms == nil || len(m.CloudletVms) != len(src.CloudletVms) {
-				m.CloudletVms = make([]*CloudletVM, len(src.CloudletVms))
-				changed++
+		if m.CloudletVms == nil || len(m.CloudletVms) != len(src.CloudletVms) {
+			m.CloudletVms = make([]CloudletVM, len(src.CloudletVms))
+			changed++
+		}
+		for i0 := 0; i0 < len(src.CloudletVms); i0++ {
+			if _, set := fmap["3.1"]; set {
+				if m.CloudletVms[i0].Name != src.CloudletVms[i0].Name {
+					m.CloudletVms[i0].Name = src.CloudletVms[i0].Name
+					changed++
+				}
 			}
-			for i0 := 0; i0 < len(src.CloudletVms); i0++ {
-				m.CloudletVms[i0] = &CloudletVM{}
-				if _, set := fmap["3.1"]; set {
-					if m.CloudletVms[i0].Name != src.CloudletVms[i0].Name {
-						m.CloudletVms[i0].Name = src.CloudletVms[i0].Name
+			if _, set := fmap["3.2"]; set {
+				if _, set := fmap["3.2.1"]; set {
+					if m.CloudletVms[i0].NetInfo.ExternalIp != src.CloudletVms[i0].NetInfo.ExternalIp {
+						m.CloudletVms[i0].NetInfo.ExternalIp = src.CloudletVms[i0].NetInfo.ExternalIp
 						changed++
 					}
 				}
-				if _, set := fmap["3.2"]; set {
-					if _, set := fmap["3.2.1"]; set {
-						if m.CloudletVms[i0].NetInfo.ExternalIp != src.CloudletVms[i0].NetInfo.ExternalIp {
-							m.CloudletVms[i0].NetInfo.ExternalIp = src.CloudletVms[i0].NetInfo.ExternalIp
-							changed++
-						}
-					}
-					if _, set := fmap["3.2.2"]; set {
-						if m.CloudletVms[i0].NetInfo.InternalIp != src.CloudletVms[i0].NetInfo.InternalIp {
-							m.CloudletVms[i0].NetInfo.InternalIp = src.CloudletVms[i0].NetInfo.InternalIp
-							changed++
-						}
-					}
-				}
-				if _, set := fmap["3.3"]; set {
-					if m.CloudletVms[i0].Type != src.CloudletVms[i0].Type {
-						m.CloudletVms[i0].Type = src.CloudletVms[i0].Type
+				if _, set := fmap["3.2.2"]; set {
+					if m.CloudletVms[i0].NetInfo.InternalIp != src.CloudletVms[i0].NetInfo.InternalIp {
+						m.CloudletVms[i0].NetInfo.InternalIp = src.CloudletVms[i0].NetInfo.InternalIp
 						changed++
-					}
-				}
-				if _, set := fmap["3.4"]; set {
-					if m.CloudletVms[i0].User != src.CloudletVms[i0].User {
-						m.CloudletVms[i0].User = src.CloudletVms[i0].User
-						changed++
-					}
-				}
-				if _, set := fmap["3.5"]; set {
-					if m.CloudletVms[i0].State != src.CloudletVms[i0].State {
-						m.CloudletVms[i0].State = src.CloudletVms[i0].State
-						changed++
-					}
-				}
-				if _, set := fmap["3.6"]; set {
-					if _, set := fmap["3.6.1"]; set {
-						if m.CloudletVms[i0].UpdatedAt.Seconds != src.CloudletVms[i0].UpdatedAt.Seconds {
-							m.CloudletVms[i0].UpdatedAt.Seconds = src.CloudletVms[i0].UpdatedAt.Seconds
-							changed++
-						}
-					}
-					if _, set := fmap["3.6.2"]; set {
-						if m.CloudletVms[i0].UpdatedAt.Nanos != src.CloudletVms[i0].UpdatedAt.Nanos {
-							m.CloudletVms[i0].UpdatedAt.Nanos = src.CloudletVms[i0].UpdatedAt.Nanos
-							changed++
-						}
 					}
 				}
 			}
-		} else if m.CloudletVms != nil {
-			m.CloudletVms = nil
+			if _, set := fmap["3.3"]; set {
+				if m.CloudletVms[i0].User != src.CloudletVms[i0].User {
+					m.CloudletVms[i0].User = src.CloudletVms[i0].User
+					changed++
+				}
+			}
+			if _, set := fmap["3.4"]; set {
+				if m.CloudletVms[i0].State != src.CloudletVms[i0].State {
+					m.CloudletVms[i0].State = src.CloudletVms[i0].State
+					changed++
+				}
+			}
+			if _, set := fmap["3.5"]; set {
+				if _, set := fmap["3.5.1"]; set {
+					if m.CloudletVms[i0].UpdatedAt.Seconds != src.CloudletVms[i0].UpdatedAt.Seconds {
+						m.CloudletVms[i0].UpdatedAt.Seconds = src.CloudletVms[i0].UpdatedAt.Seconds
+						changed++
+					}
+				}
+				if _, set := fmap["3.5.2"]; set {
+					if m.CloudletVms[i0].UpdatedAt.Nanos != src.CloudletVms[i0].UpdatedAt.Nanos {
+						m.CloudletVms[i0].UpdatedAt.Nanos = src.CloudletVms[i0].UpdatedAt.Nanos
+						changed++
+					}
+				}
+			}
+		}
+	}
+	if _, set := fmap["4"]; set {
+		if m.Action != src.Action {
+			m.Action = src.Action
+			changed++
+		}
+	}
+	if _, set := fmap["5"]; set {
+		if m.Error != src.Error {
+			m.Error = src.Error
 			changed++
 		}
 	}
@@ -1271,15 +1270,15 @@ func (m *CloudletVMPool) CopyInFields(src *CloudletVMPool) int {
 func (m *CloudletVMPool) DeepCopyIn(src *CloudletVMPool) {
 	m.Key.DeepCopyIn(&src.Key)
 	if src.CloudletVms != nil {
-		m.CloudletVms = make([]*CloudletVM, len(src.CloudletVms), len(src.CloudletVms))
+		m.CloudletVms = make([]CloudletVM, len(src.CloudletVms), len(src.CloudletVms))
 		for ii, s := range src.CloudletVms {
-			var tmp_s CloudletVM
-			tmp_s.DeepCopyIn(s)
-			m.CloudletVms[ii] = &tmp_s
+			m.CloudletVms[ii].DeepCopyIn(&s)
 		}
 	} else {
 		m.CloudletVms = nil
 	}
+	m.Action = src.Action
+	m.Error = src.Error
 }
 
 func (s *CloudletVMPool) HasFields() bool {
@@ -1815,6 +1814,9 @@ func (m *CloudletVMPool) ValidateEnums() error {
 			return err
 		}
 	}
+	if _, ok := CloudletVMAction_name[int32(m.Action)]; !ok {
+		return errors.New("invalid Action")
+	}
 	return nil
 }
 
@@ -1826,6 +1828,9 @@ func IgnoreCloudletVMPoolFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "CloudletVms.UpdatedAt")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Action")
 	}
 	return cmpopts.IgnoreFields(CloudletVMPool{}, names...)
 }
@@ -1850,10 +1855,6 @@ func (m *CloudletVMPoolMember) CopyInFields(src *CloudletVMPoolMember) int {
 	}
 	if m.CloudletVm.NetInfo.InternalIp != src.CloudletVm.NetInfo.InternalIp {
 		m.CloudletVm.NetInfo.InternalIp = src.CloudletVm.NetInfo.InternalIp
-		changed++
-	}
-	if m.CloudletVm.Type != src.CloudletVm.Type {
-		m.CloudletVm.Type = src.CloudletVm.Type
 		changed++
 	}
 	if m.CloudletVm.User != src.CloudletVm.User {
@@ -1925,6 +1926,10 @@ func IgnoreCloudletVMPoolMemberFields(taglist string) cmp.Option {
 
 func (m *CloudletVMSpec) CopyInFields(src *CloudletVMSpec) int {
 	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
 	if m.ExternalNetwork != src.ExternalNetwork {
 		m.ExternalNetwork = src.ExternalNetwork
 		changed++
@@ -1937,6 +1942,7 @@ func (m *CloudletVMSpec) CopyInFields(src *CloudletVMSpec) int {
 }
 
 func (m *CloudletVMSpec) DeepCopyIn(src *CloudletVMSpec) {
+	m.Name = src.Name
 	m.ExternalNetwork = src.ExternalNetwork
 	m.InternalNetwork = src.InternalNetwork
 }
@@ -1958,8 +1964,8 @@ func (m *CloudletVMPoolInfo) Matches(o *CloudletVMPoolInfo, fopts ...MatchOpt) b
 	if !m.Key.Matches(&o.Key, fopts...) {
 		return false
 	}
-	if !opts.Filter || o.State != 0 {
-		if o.State != m.State {
+	if !opts.Filter || o.Action != 0 {
+		if o.Action != m.Action {
 			return false
 		}
 	}
@@ -1968,14 +1974,19 @@ func (m *CloudletVMPoolInfo) Matches(o *CloudletVMPoolInfo, fopts ...MatchOpt) b
 			return false
 		}
 	}
-	if !opts.Filter || o.Vmspecs != nil {
-		if m.Vmspecs == nil && o.Vmspecs != nil || m.Vmspecs != nil && o.Vmspecs == nil {
+	if !opts.Filter || o.User != "" {
+		if o.User != m.User {
 			return false
-		} else if m.Vmspecs != nil && o.Vmspecs != nil {
-			if len(m.Vmspecs) != len(o.Vmspecs) {
+		}
+	}
+	if !opts.Filter || o.VmSpecs != nil {
+		if m.VmSpecs == nil && o.VmSpecs != nil || m.VmSpecs != nil && o.VmSpecs == nil {
+			return false
+		} else if m.VmSpecs != nil && o.VmSpecs != nil {
+			if len(m.VmSpecs) != len(o.VmSpecs) {
 				return false
 			}
-			for i := 0; i < len(m.Vmspecs); i++ {
+			for i := 0; i < len(m.VmSpecs); i++ {
 			}
 		}
 	}
@@ -1990,18 +2001,9 @@ func (m *CloudletVMPoolInfo) Matches(o *CloudletVMPoolInfo, fopts ...MatchOpt) b
 			}
 		}
 	}
-	if !opts.Filter || o.Errors != nil {
-		if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+	if !opts.Filter || o.Error != "" {
+		if o.Error != m.Error {
 			return false
-		} else if m.Errors != nil && o.Errors != nil {
-			if len(m.Errors) != len(o.Errors) {
-				return false
-			}
-			for i := 0; i < len(m.Errors); i++ {
-				if o.Errors[i] != m.Errors[i] {
-					return false
-				}
-			}
 		}
 	}
 	return true
@@ -2010,76 +2012,80 @@ func (m *CloudletVMPoolInfo) Matches(o *CloudletVMPoolInfo, fopts ...MatchOpt) b
 const CloudletVMPoolInfoFieldKey = "2"
 const CloudletVMPoolInfoFieldKeyOrganization = "2.1"
 const CloudletVMPoolInfoFieldKeyName = "2.2"
-const CloudletVMPoolInfoFieldState = "3"
+const CloudletVMPoolInfoFieldAction = "3"
 const CloudletVMPoolInfoFieldNotifyId = "4"
-const CloudletVMPoolInfoFieldVmspecs = "5"
-const CloudletVMPoolInfoFieldVmspecsExternalNetwork = "5.1"
-const CloudletVMPoolInfoFieldVmspecsInternalNetwork = "5.2"
-const CloudletVMPoolInfoFieldCloudletVms = "6"
-const CloudletVMPoolInfoFieldCloudletVmsName = "6.1"
-const CloudletVMPoolInfoFieldCloudletVmsNetInfo = "6.2"
-const CloudletVMPoolInfoFieldCloudletVmsNetInfoExternalIp = "6.2.1"
-const CloudletVMPoolInfoFieldCloudletVmsNetInfoInternalIp = "6.2.2"
-const CloudletVMPoolInfoFieldCloudletVmsType = "6.3"
-const CloudletVMPoolInfoFieldCloudletVmsUser = "6.4"
-const CloudletVMPoolInfoFieldCloudletVmsState = "6.5"
-const CloudletVMPoolInfoFieldCloudletVmsUpdatedAt = "6.6"
-const CloudletVMPoolInfoFieldCloudletVmsUpdatedAtSeconds = "6.6.1"
-const CloudletVMPoolInfoFieldCloudletVmsUpdatedAtNanos = "6.6.2"
-const CloudletVMPoolInfoFieldErrors = "7"
+const CloudletVMPoolInfoFieldUser = "5"
+const CloudletVMPoolInfoFieldVmSpecs = "6"
+const CloudletVMPoolInfoFieldVmSpecsName = "6.1"
+const CloudletVMPoolInfoFieldVmSpecsExternalNetwork = "6.2"
+const CloudletVMPoolInfoFieldVmSpecsInternalNetwork = "6.3"
+const CloudletVMPoolInfoFieldCloudletVms = "7"
+const CloudletVMPoolInfoFieldCloudletVmsName = "7.1"
+const CloudletVMPoolInfoFieldCloudletVmsNetInfo = "7.2"
+const CloudletVMPoolInfoFieldCloudletVmsNetInfoExternalIp = "7.2.1"
+const CloudletVMPoolInfoFieldCloudletVmsNetInfoInternalIp = "7.2.2"
+const CloudletVMPoolInfoFieldCloudletVmsUser = "7.3"
+const CloudletVMPoolInfoFieldCloudletVmsState = "7.4"
+const CloudletVMPoolInfoFieldCloudletVmsUpdatedAt = "7.5"
+const CloudletVMPoolInfoFieldCloudletVmsUpdatedAtSeconds = "7.5.1"
+const CloudletVMPoolInfoFieldCloudletVmsUpdatedAtNanos = "7.5.2"
+const CloudletVMPoolInfoFieldError = "8"
 
 var CloudletVMPoolInfoAllFields = []string{
 	CloudletVMPoolInfoFieldKeyOrganization,
 	CloudletVMPoolInfoFieldKeyName,
-	CloudletVMPoolInfoFieldState,
+	CloudletVMPoolInfoFieldAction,
 	CloudletVMPoolInfoFieldNotifyId,
-	CloudletVMPoolInfoFieldVmspecsExternalNetwork,
-	CloudletVMPoolInfoFieldVmspecsInternalNetwork,
+	CloudletVMPoolInfoFieldUser,
+	CloudletVMPoolInfoFieldVmSpecsName,
+	CloudletVMPoolInfoFieldVmSpecsExternalNetwork,
+	CloudletVMPoolInfoFieldVmSpecsInternalNetwork,
 	CloudletVMPoolInfoFieldCloudletVmsName,
 	CloudletVMPoolInfoFieldCloudletVmsNetInfoExternalIp,
 	CloudletVMPoolInfoFieldCloudletVmsNetInfoInternalIp,
-	CloudletVMPoolInfoFieldCloudletVmsType,
 	CloudletVMPoolInfoFieldCloudletVmsUser,
 	CloudletVMPoolInfoFieldCloudletVmsState,
 	CloudletVMPoolInfoFieldCloudletVmsUpdatedAtSeconds,
 	CloudletVMPoolInfoFieldCloudletVmsUpdatedAtNanos,
-	CloudletVMPoolInfoFieldErrors,
+	CloudletVMPoolInfoFieldError,
 }
 
 var CloudletVMPoolInfoAllFieldsMap = map[string]struct{}{
 	CloudletVMPoolInfoFieldKeyOrganization:              struct{}{},
 	CloudletVMPoolInfoFieldKeyName:                      struct{}{},
-	CloudletVMPoolInfoFieldState:                        struct{}{},
+	CloudletVMPoolInfoFieldAction:                       struct{}{},
 	CloudletVMPoolInfoFieldNotifyId:                     struct{}{},
-	CloudletVMPoolInfoFieldVmspecsExternalNetwork:       struct{}{},
-	CloudletVMPoolInfoFieldVmspecsInternalNetwork:       struct{}{},
+	CloudletVMPoolInfoFieldUser:                         struct{}{},
+	CloudletVMPoolInfoFieldVmSpecsName:                  struct{}{},
+	CloudletVMPoolInfoFieldVmSpecsExternalNetwork:       struct{}{},
+	CloudletVMPoolInfoFieldVmSpecsInternalNetwork:       struct{}{},
 	CloudletVMPoolInfoFieldCloudletVmsName:              struct{}{},
 	CloudletVMPoolInfoFieldCloudletVmsNetInfoExternalIp: struct{}{},
 	CloudletVMPoolInfoFieldCloudletVmsNetInfoInternalIp: struct{}{},
-	CloudletVMPoolInfoFieldCloudletVmsType:              struct{}{},
 	CloudletVMPoolInfoFieldCloudletVmsUser:              struct{}{},
 	CloudletVMPoolInfoFieldCloudletVmsState:             struct{}{},
 	CloudletVMPoolInfoFieldCloudletVmsUpdatedAtSeconds:  struct{}{},
 	CloudletVMPoolInfoFieldCloudletVmsUpdatedAtNanos:    struct{}{},
-	CloudletVMPoolInfoFieldErrors:                       struct{}{},
+	CloudletVMPoolInfoFieldError:                        struct{}{},
 }
 
 var CloudletVMPoolInfoAllFieldsStringMap = map[string]string{
 	CloudletVMPoolInfoFieldKeyOrganization:              "Key Organization",
 	CloudletVMPoolInfoFieldKeyName:                      "Key Name",
-	CloudletVMPoolInfoFieldState:                        "State",
+	CloudletVMPoolInfoFieldAction:                       "Action",
 	CloudletVMPoolInfoFieldNotifyId:                     "Notify Id",
-	CloudletVMPoolInfoFieldVmspecsExternalNetwork:       "Vmspecs External Network",
-	CloudletVMPoolInfoFieldVmspecsInternalNetwork:       "Vmspecs Internal Network",
+	CloudletVMPoolInfoFieldUser:                         "User",
+	CloudletVMPoolInfoFieldVmSpecsName:                  "Vm Specs Name",
+	CloudletVMPoolInfoFieldVmSpecsExternalNetwork:       "Vm Specs External Network",
+	CloudletVMPoolInfoFieldVmSpecsInternalNetwork:       "Vm Specs Internal Network",
 	CloudletVMPoolInfoFieldCloudletVmsName:              "Cloudlet Vms Name",
 	CloudletVMPoolInfoFieldCloudletVmsNetInfoExternalIp: "Cloudlet Vms Net Info External Ip",
 	CloudletVMPoolInfoFieldCloudletVmsNetInfoInternalIp: "Cloudlet Vms Net Info Internal Ip",
-	CloudletVMPoolInfoFieldCloudletVmsType:              "Cloudlet Vms Type",
 	CloudletVMPoolInfoFieldCloudletVmsUser:              "Cloudlet Vms User",
 	CloudletVMPoolInfoFieldCloudletVmsState:             "Cloudlet Vms State",
 	CloudletVMPoolInfoFieldCloudletVmsUpdatedAtSeconds:  "Cloudlet Vms Updated At Seconds",
 	CloudletVMPoolInfoFieldCloudletVmsUpdatedAtNanos:    "Cloudlet Vms Updated At Nanos",
-	CloudletVMPoolInfoFieldErrors:                       "Errors",
+	CloudletVMPoolInfoFieldError:                        "Error",
 }
 
 func (m *CloudletVMPoolInfo) IsKeyField(s string) bool {
@@ -2095,85 +2101,73 @@ func (m *CloudletVMPoolInfo) DiffFields(o *CloudletVMPoolInfo, fields map[string
 		fields[CloudletVMPoolInfoFieldKeyName] = struct{}{}
 		fields[CloudletVMPoolInfoFieldKey] = struct{}{}
 	}
-	if m.State != o.State {
-		fields[CloudletVMPoolInfoFieldState] = struct{}{}
+	if m.Action != o.Action {
+		fields[CloudletVMPoolInfoFieldAction] = struct{}{}
 	}
 	if m.NotifyId != o.NotifyId {
 		fields[CloudletVMPoolInfoFieldNotifyId] = struct{}{}
 	}
-	if m.Vmspecs != nil && o.Vmspecs != nil {
-		if len(m.Vmspecs) != len(o.Vmspecs) {
-			fields[CloudletVMPoolInfoFieldVmspecs] = struct{}{}
-		} else {
-			for i0 := 0; i0 < len(m.Vmspecs); i0++ {
-				if m.Vmspecs[i0].ExternalNetwork != o.Vmspecs[i0].ExternalNetwork {
-					fields[CloudletVMPoolInfoFieldVmspecsExternalNetwork] = struct{}{}
-					fields[CloudletVMPoolInfoFieldVmspecs] = struct{}{}
-				}
-				if m.Vmspecs[i0].InternalNetwork != o.Vmspecs[i0].InternalNetwork {
-					fields[CloudletVMPoolInfoFieldVmspecsInternalNetwork] = struct{}{}
-					fields[CloudletVMPoolInfoFieldVmspecs] = struct{}{}
-				}
-			}
-		}
-	} else if (m.Vmspecs != nil && o.Vmspecs == nil) || (m.Vmspecs == nil && o.Vmspecs != nil) {
-		fields[CloudletVMPoolInfoFieldVmspecs] = struct{}{}
+	if m.User != o.User {
+		fields[CloudletVMPoolInfoFieldUser] = struct{}{}
 	}
-	if m.CloudletVms != nil && o.CloudletVms != nil {
-		if len(m.CloudletVms) != len(o.CloudletVms) {
-			fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
-		} else {
-			for i0 := 0; i0 < len(m.CloudletVms); i0++ {
-				if m.CloudletVms[i0].Name != o.CloudletVms[i0].Name {
-					fields[CloudletVMPoolInfoFieldCloudletVmsName] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].NetInfo.ExternalIp != o.CloudletVms[i0].NetInfo.ExternalIp {
-					fields[CloudletVMPoolInfoFieldCloudletVmsNetInfoExternalIp] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVmsNetInfo] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].NetInfo.InternalIp != o.CloudletVms[i0].NetInfo.InternalIp {
-					fields[CloudletVMPoolInfoFieldCloudletVmsNetInfoInternalIp] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVmsNetInfo] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].Type != o.CloudletVms[i0].Type {
-					fields[CloudletVMPoolInfoFieldCloudletVmsType] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].User != o.CloudletVms[i0].User {
-					fields[CloudletVMPoolInfoFieldCloudletVmsUser] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].State != o.CloudletVms[i0].State {
-					fields[CloudletVMPoolInfoFieldCloudletVmsState] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].UpdatedAt.Seconds != o.CloudletVms[i0].UpdatedAt.Seconds {
-					fields[CloudletVMPoolInfoFieldCloudletVmsUpdatedAtSeconds] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVmsUpdatedAt] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
-				}
-				if m.CloudletVms[i0].UpdatedAt.Nanos != o.CloudletVms[i0].UpdatedAt.Nanos {
-					fields[CloudletVMPoolInfoFieldCloudletVmsUpdatedAtNanos] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVmsUpdatedAt] = struct{}{}
-					fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
-				}
-			}
-		}
-	} else if (m.CloudletVms != nil && o.CloudletVms == nil) || (m.CloudletVms == nil && o.CloudletVms != nil) {
-		fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
-	}
-	if len(m.Errors) != len(o.Errors) {
-		fields[CloudletVMPoolInfoFieldErrors] = struct{}{}
+	if len(m.VmSpecs) != len(o.VmSpecs) {
+		fields[CloudletVMPoolInfoFieldVmSpecs] = struct{}{}
 	} else {
-		for i0 := 0; i0 < len(m.Errors); i0++ {
-			if m.Errors[i0] != o.Errors[i0] {
-				fields[CloudletVMPoolInfoFieldErrors] = struct{}{}
-				break
+		for i0 := 0; i0 < len(m.VmSpecs); i0++ {
+			if m.VmSpecs[i0].Name != o.VmSpecs[i0].Name {
+				fields[CloudletVMPoolInfoFieldVmSpecsName] = struct{}{}
+				fields[CloudletVMPoolInfoFieldVmSpecs] = struct{}{}
+			}
+			if m.VmSpecs[i0].ExternalNetwork != o.VmSpecs[i0].ExternalNetwork {
+				fields[CloudletVMPoolInfoFieldVmSpecsExternalNetwork] = struct{}{}
+				fields[CloudletVMPoolInfoFieldVmSpecs] = struct{}{}
+			}
+			if m.VmSpecs[i0].InternalNetwork != o.VmSpecs[i0].InternalNetwork {
+				fields[CloudletVMPoolInfoFieldVmSpecsInternalNetwork] = struct{}{}
+				fields[CloudletVMPoolInfoFieldVmSpecs] = struct{}{}
 			}
 		}
+	}
+	if len(m.CloudletVms) != len(o.CloudletVms) {
+		fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.CloudletVms); i0++ {
+			if m.CloudletVms[i0].Name != o.CloudletVms[i0].Name {
+				fields[CloudletVMPoolInfoFieldCloudletVmsName] = struct{}{}
+				fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].NetInfo.ExternalIp != o.CloudletVms[i0].NetInfo.ExternalIp {
+				fields[CloudletVMPoolInfoFieldCloudletVmsNetInfoExternalIp] = struct{}{}
+				fields[CloudletVMPoolInfoFieldCloudletVmsNetInfo] = struct{}{}
+				fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].NetInfo.InternalIp != o.CloudletVms[i0].NetInfo.InternalIp {
+				fields[CloudletVMPoolInfoFieldCloudletVmsNetInfoInternalIp] = struct{}{}
+				fields[CloudletVMPoolInfoFieldCloudletVmsNetInfo] = struct{}{}
+				fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].User != o.CloudletVms[i0].User {
+				fields[CloudletVMPoolInfoFieldCloudletVmsUser] = struct{}{}
+				fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].State != o.CloudletVms[i0].State {
+				fields[CloudletVMPoolInfoFieldCloudletVmsState] = struct{}{}
+				fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].UpdatedAt.Seconds != o.CloudletVms[i0].UpdatedAt.Seconds {
+				fields[CloudletVMPoolInfoFieldCloudletVmsUpdatedAtSeconds] = struct{}{}
+				fields[CloudletVMPoolInfoFieldCloudletVmsUpdatedAt] = struct{}{}
+				fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
+			}
+			if m.CloudletVms[i0].UpdatedAt.Nanos != o.CloudletVms[i0].UpdatedAt.Nanos {
+				fields[CloudletVMPoolInfoFieldCloudletVmsUpdatedAtNanos] = struct{}{}
+				fields[CloudletVMPoolInfoFieldCloudletVmsUpdatedAt] = struct{}{}
+				fields[CloudletVMPoolInfoFieldCloudletVms] = struct{}{}
+			}
+		}
+	}
+	if m.Error != o.Error {
+		fields[CloudletVMPoolInfoFieldError] = struct{}{}
 	}
 }
 
@@ -2195,8 +2189,8 @@ func (m *CloudletVMPoolInfo) CopyInFields(src *CloudletVMPoolInfo) int {
 		}
 	}
 	if _, set := fmap["3"]; set {
-		if m.State != src.State {
-			m.State = src.State
+		if m.Action != src.Action {
+			m.Action = src.Action
 			changed++
 		}
 	}
@@ -2207,140 +2201,122 @@ func (m *CloudletVMPoolInfo) CopyInFields(src *CloudletVMPoolInfo) int {
 		}
 	}
 	if _, set := fmap["5"]; set {
-		if src.Vmspecs != nil {
-			if m.Vmspecs == nil || len(m.Vmspecs) != len(src.Vmspecs) {
-				m.Vmspecs = make([]*CloudletVMSpec, len(src.Vmspecs))
-				changed++
-			}
-			for i0 := 0; i0 < len(src.Vmspecs); i0++ {
-				m.Vmspecs[i0] = &CloudletVMSpec{}
-				if _, set := fmap["5.1"]; set {
-					if m.Vmspecs[i0].ExternalNetwork != src.Vmspecs[i0].ExternalNetwork {
-						m.Vmspecs[i0].ExternalNetwork = src.Vmspecs[i0].ExternalNetwork
-						changed++
-					}
-				}
-				if _, set := fmap["5.2"]; set {
-					if m.Vmspecs[i0].InternalNetwork != src.Vmspecs[i0].InternalNetwork {
-						m.Vmspecs[i0].InternalNetwork = src.Vmspecs[i0].InternalNetwork
-						changed++
-					}
-				}
-			}
-		} else if m.Vmspecs != nil {
-			m.Vmspecs = nil
+		if m.User != src.User {
+			m.User = src.User
 			changed++
 		}
 	}
 	if _, set := fmap["6"]; set {
-		if src.CloudletVms != nil {
-			if m.CloudletVms == nil || len(m.CloudletVms) != len(src.CloudletVms) {
-				m.CloudletVms = make([]*CloudletVM, len(src.CloudletVms))
-				changed++
-			}
-			for i0 := 0; i0 < len(src.CloudletVms); i0++ {
-				m.CloudletVms[i0] = &CloudletVM{}
-				if _, set := fmap["6.1"]; set {
-					if m.CloudletVms[i0].Name != src.CloudletVms[i0].Name {
-						m.CloudletVms[i0].Name = src.CloudletVms[i0].Name
-						changed++
-					}
-				}
-				if _, set := fmap["6.2"]; set {
-					if _, set := fmap["6.2.1"]; set {
-						if m.CloudletVms[i0].NetInfo.ExternalIp != src.CloudletVms[i0].NetInfo.ExternalIp {
-							m.CloudletVms[i0].NetInfo.ExternalIp = src.CloudletVms[i0].NetInfo.ExternalIp
-							changed++
-						}
-					}
-					if _, set := fmap["6.2.2"]; set {
-						if m.CloudletVms[i0].NetInfo.InternalIp != src.CloudletVms[i0].NetInfo.InternalIp {
-							m.CloudletVms[i0].NetInfo.InternalIp = src.CloudletVms[i0].NetInfo.InternalIp
-							changed++
-						}
-					}
-				}
-				if _, set := fmap["6.3"]; set {
-					if m.CloudletVms[i0].Type != src.CloudletVms[i0].Type {
-						m.CloudletVms[i0].Type = src.CloudletVms[i0].Type
-						changed++
-					}
-				}
-				if _, set := fmap["6.4"]; set {
-					if m.CloudletVms[i0].User != src.CloudletVms[i0].User {
-						m.CloudletVms[i0].User = src.CloudletVms[i0].User
-						changed++
-					}
-				}
-				if _, set := fmap["6.5"]; set {
-					if m.CloudletVms[i0].State != src.CloudletVms[i0].State {
-						m.CloudletVms[i0].State = src.CloudletVms[i0].State
-						changed++
-					}
-				}
-				if _, set := fmap["6.6"]; set {
-					if _, set := fmap["6.6.1"]; set {
-						if m.CloudletVms[i0].UpdatedAt.Seconds != src.CloudletVms[i0].UpdatedAt.Seconds {
-							m.CloudletVms[i0].UpdatedAt.Seconds = src.CloudletVms[i0].UpdatedAt.Seconds
-							changed++
-						}
-					}
-					if _, set := fmap["6.6.2"]; set {
-						if m.CloudletVms[i0].UpdatedAt.Nanos != src.CloudletVms[i0].UpdatedAt.Nanos {
-							m.CloudletVms[i0].UpdatedAt.Nanos = src.CloudletVms[i0].UpdatedAt.Nanos
-							changed++
-						}
-					}
-				}
-			}
-		} else if m.CloudletVms != nil {
-			m.CloudletVms = nil
+		if m.VmSpecs == nil || len(m.VmSpecs) != len(src.VmSpecs) {
+			m.VmSpecs = make([]CloudletVMSpec, len(src.VmSpecs))
 			changed++
+		}
+		for i0 := 0; i0 < len(src.VmSpecs); i0++ {
+			if _, set := fmap["6.1"]; set {
+				if m.VmSpecs[i0].Name != src.VmSpecs[i0].Name {
+					m.VmSpecs[i0].Name = src.VmSpecs[i0].Name
+					changed++
+				}
+			}
+			if _, set := fmap["6.2"]; set {
+				if m.VmSpecs[i0].ExternalNetwork != src.VmSpecs[i0].ExternalNetwork {
+					m.VmSpecs[i0].ExternalNetwork = src.VmSpecs[i0].ExternalNetwork
+					changed++
+				}
+			}
+			if _, set := fmap["6.3"]; set {
+				if m.VmSpecs[i0].InternalNetwork != src.VmSpecs[i0].InternalNetwork {
+					m.VmSpecs[i0].InternalNetwork = src.VmSpecs[i0].InternalNetwork
+					changed++
+				}
+			}
 		}
 	}
 	if _, set := fmap["7"]; set {
-		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
-			m.Errors = make([]string, len(src.Errors))
+		if m.CloudletVms == nil || len(m.CloudletVms) != len(src.CloudletVms) {
+			m.CloudletVms = make([]CloudletVM, len(src.CloudletVms))
 			changed++
 		}
-		copy(m.Errors, src.Errors)
-		changed++
+		for i0 := 0; i0 < len(src.CloudletVms); i0++ {
+			if _, set := fmap["7.1"]; set {
+				if m.CloudletVms[i0].Name != src.CloudletVms[i0].Name {
+					m.CloudletVms[i0].Name = src.CloudletVms[i0].Name
+					changed++
+				}
+			}
+			if _, set := fmap["7.2"]; set {
+				if _, set := fmap["7.2.1"]; set {
+					if m.CloudletVms[i0].NetInfo.ExternalIp != src.CloudletVms[i0].NetInfo.ExternalIp {
+						m.CloudletVms[i0].NetInfo.ExternalIp = src.CloudletVms[i0].NetInfo.ExternalIp
+						changed++
+					}
+				}
+				if _, set := fmap["7.2.2"]; set {
+					if m.CloudletVms[i0].NetInfo.InternalIp != src.CloudletVms[i0].NetInfo.InternalIp {
+						m.CloudletVms[i0].NetInfo.InternalIp = src.CloudletVms[i0].NetInfo.InternalIp
+						changed++
+					}
+				}
+			}
+			if _, set := fmap["7.3"]; set {
+				if m.CloudletVms[i0].User != src.CloudletVms[i0].User {
+					m.CloudletVms[i0].User = src.CloudletVms[i0].User
+					changed++
+				}
+			}
+			if _, set := fmap["7.4"]; set {
+				if m.CloudletVms[i0].State != src.CloudletVms[i0].State {
+					m.CloudletVms[i0].State = src.CloudletVms[i0].State
+					changed++
+				}
+			}
+			if _, set := fmap["7.5"]; set {
+				if _, set := fmap["7.5.1"]; set {
+					if m.CloudletVms[i0].UpdatedAt.Seconds != src.CloudletVms[i0].UpdatedAt.Seconds {
+						m.CloudletVms[i0].UpdatedAt.Seconds = src.CloudletVms[i0].UpdatedAt.Seconds
+						changed++
+					}
+				}
+				if _, set := fmap["7.5.2"]; set {
+					if m.CloudletVms[i0].UpdatedAt.Nanos != src.CloudletVms[i0].UpdatedAt.Nanos {
+						m.CloudletVms[i0].UpdatedAt.Nanos = src.CloudletVms[i0].UpdatedAt.Nanos
+						changed++
+					}
+				}
+			}
+		}
+	}
+	if _, set := fmap["8"]; set {
+		if m.Error != src.Error {
+			m.Error = src.Error
+			changed++
+		}
 	}
 	return changed
 }
 
 func (m *CloudletVMPoolInfo) DeepCopyIn(src *CloudletVMPoolInfo) {
 	m.Key.DeepCopyIn(&src.Key)
-	m.State = src.State
+	m.Action = src.Action
 	m.NotifyId = src.NotifyId
-	if src.Vmspecs != nil {
-		m.Vmspecs = make([]*CloudletVMSpec, len(src.Vmspecs), len(src.Vmspecs))
-		for ii, s := range src.Vmspecs {
-			var tmp_s CloudletVMSpec
-			tmp_s.DeepCopyIn(s)
-			m.Vmspecs[ii] = &tmp_s
+	m.User = src.User
+	if src.VmSpecs != nil {
+		m.VmSpecs = make([]CloudletVMSpec, len(src.VmSpecs), len(src.VmSpecs))
+		for ii, s := range src.VmSpecs {
+			m.VmSpecs[ii].DeepCopyIn(&s)
 		}
 	} else {
-		m.Vmspecs = nil
+		m.VmSpecs = nil
 	}
 	if src.CloudletVms != nil {
-		m.CloudletVms = make([]*CloudletVM, len(src.CloudletVms), len(src.CloudletVms))
+		m.CloudletVms = make([]CloudletVM, len(src.CloudletVms), len(src.CloudletVms))
 		for ii, s := range src.CloudletVms {
-			var tmp_s CloudletVM
-			tmp_s.DeepCopyIn(s)
-			m.CloudletVms[ii] = &tmp_s
+			m.CloudletVms[ii].DeepCopyIn(&s)
 		}
 	} else {
 		m.CloudletVms = nil
 	}
-	if src.Errors != nil {
-		m.Errors = make([]string, len(src.Errors), len(src.Errors))
-		for ii, s := range src.Errors {
-			m.Errors[ii] = s
-		}
-	} else {
-		m.Errors = nil
-	}
+	m.Error = src.Error
 }
 
 func (s *CloudletVMPoolInfo) HasFields() bool {
@@ -2892,10 +2868,10 @@ func (m *CloudletVMPoolInfo) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
-	if _, ok := CloudletVMState_name[int32(m.State)]; !ok {
-		return errors.New("invalid State")
+	if _, ok := CloudletVMAction_name[int32(m.Action)]; !ok {
+		return errors.New("invalid Action")
 	}
-	for _, e := range m.Vmspecs {
+	for _, e := range m.VmSpecs {
 		if err := e.ValidateEnums(); err != nil {
 			return err
 		}
@@ -2923,141 +2899,30 @@ func IgnoreCloudletVMPoolInfoFields(taglist string) cmp.Option {
 	return cmpopts.IgnoreFields(CloudletVMPoolInfo{}, names...)
 }
 
-var CloudletVMTypeStrings = []string{
-	"PLATFORM_NODE",
-	"SHARED_ROOT_LB",
-	"DEDICATED_ROOT_LB",
-	"DOCKER_NODE",
-	"K8S_MASTER",
-	"K8S_NODE",
-}
-
-const (
-	CloudletVMTypePLATFORM_NODE     uint64 = 1 << 0
-	CloudletVMTypeSHARED_ROOT_LB    uint64 = 1 << 1
-	CloudletVMTypeDEDICATED_ROOT_LB uint64 = 1 << 2
-	CloudletVMTypeDOCKER_NODE       uint64 = 1 << 3
-	CloudletVMTypeK8S_MASTER        uint64 = 1 << 4
-	CloudletVMTypeK8S_NODE          uint64 = 1 << 5
-)
-
-var CloudletVMType_CamelName = map[int32]string{
-	// PLATFORM_NODE -> PlatformNode
-	0: "PlatformNode",
-	// SHARED_ROOT_LB -> SharedRootLb
-	1: "SharedRootLb",
-	// DEDICATED_ROOT_LB -> DedicatedRootLb
-	2: "DedicatedRootLb",
-	// DOCKER_NODE -> DockerNode
-	3: "DockerNode",
-	// K8S_MASTER -> K8SMaster
-	4: "K8SMaster",
-	// K8S_NODE -> K8SNode
-	5: "K8SNode",
-}
-var CloudletVMType_CamelValue = map[string]int32{
-	"PlatformNode":    0,
-	"SharedRootLb":    1,
-	"DedicatedRootLb": 2,
-	"DockerNode":      3,
-	"K8SMaster":       4,
-	"K8SNode":         5,
-}
-
-func (e *CloudletVMType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := CloudletVMType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = CloudletVMType_CamelName[val]
-		}
-	}
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
-	}
-	*e = CloudletVMType(val)
-	return nil
-}
-
-func (e CloudletVMType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(CloudletVMType_CamelName, int32(e)), nil
-}
-
-// custom JSON encoding/decoding
-func (e *CloudletVMType) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
-		val, ok := CloudletVMType_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = CloudletVMType_CamelName[val]
-			}
-		}
-		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
-		}
-		*e = CloudletVMType(val)
-		return nil
-	}
-	var val int32
-	err = json.Unmarshal(b, &val)
-	if err == nil {
-		*e = CloudletVMType(val)
-		return nil
-	}
-	return fmt.Errorf("No enum value for %v", b)
-}
-
 var CloudletVMStateStrings = []string{
 	"CLOUDLET_VM_FREE",
-	"CLOUDLET_VM_REQUESTED",
-	"CLOUDLET_VM_ALLOCATED",
 	"CLOUDLET_VM_IN_USE",
-	"CLOUDLET_VM_RELEASED",
 	"CLOUDLET_VM_ERROR",
 }
 
 const (
-	CloudletVMStateCLOUDLET_VM_FREE      uint64 = 1 << 0
-	CloudletVMStateCLOUDLET_VM_REQUESTED uint64 = 1 << 1
-	CloudletVMStateCLOUDLET_VM_ALLOCATED uint64 = 1 << 2
-	CloudletVMStateCLOUDLET_VM_IN_USE    uint64 = 1 << 3
-	CloudletVMStateCLOUDLET_VM_RELEASED  uint64 = 1 << 4
-	CloudletVMStateCLOUDLET_VM_ERROR     uint64 = 1 << 5
+	CloudletVMStateCLOUDLET_VM_FREE   uint64 = 1 << 0
+	CloudletVMStateCLOUDLET_VM_IN_USE uint64 = 1 << 1
+	CloudletVMStateCLOUDLET_VM_ERROR  uint64 = 1 << 2
 )
 
 var CloudletVMState_CamelName = map[int32]string{
 	// CLOUDLET_VM_FREE -> CloudletVmFree
 	0: "CloudletVmFree",
-	// CLOUDLET_VM_REQUESTED -> CloudletVmRequested
-	1: "CloudletVmRequested",
-	// CLOUDLET_VM_ALLOCATED -> CloudletVmAllocated
-	2: "CloudletVmAllocated",
 	// CLOUDLET_VM_IN_USE -> CloudletVmInUse
-	3: "CloudletVmInUse",
-	// CLOUDLET_VM_RELEASED -> CloudletVmReleased
-	4: "CloudletVmReleased",
+	1: "CloudletVmInUse",
 	// CLOUDLET_VM_ERROR -> CloudletVmError
-	5: "CloudletVmError",
+	2: "CloudletVmError",
 }
 var CloudletVMState_CamelValue = map[string]int32{
-	"CloudletVmFree":      0,
-	"CloudletVmRequested": 1,
-	"CloudletVmAllocated": 2,
-	"CloudletVmInUse":     3,
-	"CloudletVmReleased":  4,
-	"CloudletVmError":     5,
+	"CloudletVmFree":  0,
+	"CloudletVmInUse": 1,
+	"CloudletVmError": 2,
 }
 
 func (e *CloudletVMState) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -3114,6 +2979,87 @@ func (e *CloudletVMState) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+
+var CloudletVMActionStrings = []string{
+	"CLOUDLET_VM_ACTION_DONE",
+	"CLOUDLET_VM_ACTION_ALLOCATE",
+	"CLOUDLET_VM_ACTION_RELEASE",
+}
+
+const (
+	CloudletVMActionCLOUDLET_VM_ACTION_DONE     uint64 = 1 << 0
+	CloudletVMActionCLOUDLET_VM_ACTION_ALLOCATE uint64 = 1 << 1
+	CloudletVMActionCLOUDLET_VM_ACTION_RELEASE  uint64 = 1 << 2
+)
+
+var CloudletVMAction_CamelName = map[int32]string{
+	// CLOUDLET_VM_ACTION_DONE -> CloudletVmActionDone
+	0: "CloudletVmActionDone",
+	// CLOUDLET_VM_ACTION_ALLOCATE -> CloudletVmActionAllocate
+	1: "CloudletVmActionAllocate",
+	// CLOUDLET_VM_ACTION_RELEASE -> CloudletVmActionRelease
+	2: "CloudletVmActionRelease",
+}
+var CloudletVMAction_CamelValue = map[string]int32{
+	"CloudletVmActionDone":     0,
+	"CloudletVmActionAllocate": 1,
+	"CloudletVmActionRelease":  2,
+}
+
+func (e *CloudletVMAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := CloudletVMAction_CamelValue[util.CamelCase(str)]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = CloudletVMAction_CamelName[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = CloudletVMAction(val)
+	return nil
+}
+
+func (e CloudletVMAction) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(CloudletVMAction_CamelName, int32(e)), nil
+}
+
+// custom JSON encoding/decoding
+func (e *CloudletVMAction) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := CloudletVMAction_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = CloudletVMAction_CamelName[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = CloudletVMAction(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = CloudletVMAction(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
 func (m *CloudletVMNetInfo) Size() (n int) {
 	var l int
 	_ = l
@@ -3137,9 +3083,6 @@ func (m *CloudletVM) Size() (n int) {
 	}
 	l = m.NetInfo.Size()
 	n += 1 + l + sovCloudletvmpool(uint64(l))
-	if m.Type != 0 {
-		n += 1 + sovCloudletvmpool(uint64(m.Type))
-	}
 	l = len(m.User)
 	if l > 0 {
 		n += 1 + l + sovCloudletvmpool(uint64(l))
@@ -3169,6 +3112,13 @@ func (m *CloudletVMPool) Size() (n int) {
 			n += 1 + l + sovCloudletvmpool(uint64(l))
 		}
 	}
+	if m.Action != 0 {
+		n += 1 + sovCloudletvmpool(uint64(m.Action))
+	}
+	l = len(m.Error)
+	if l > 0 {
+		n += 1 + l + sovCloudletvmpool(uint64(l))
+	}
 	return n
 }
 
@@ -3185,6 +3135,10 @@ func (m *CloudletVMPoolMember) Size() (n int) {
 func (m *CloudletVMSpec) Size() (n int) {
 	var l int
 	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovCloudletvmpool(uint64(l))
+	}
 	if m.ExternalNetwork {
 		n += 2
 	}
@@ -3205,14 +3159,18 @@ func (m *CloudletVMPoolInfo) Size() (n int) {
 	}
 	l = m.Key.Size()
 	n += 1 + l + sovCloudletvmpool(uint64(l))
-	if m.State != 0 {
-		n += 1 + sovCloudletvmpool(uint64(m.State))
+	if m.Action != 0 {
+		n += 1 + sovCloudletvmpool(uint64(m.Action))
 	}
 	if m.NotifyId != 0 {
 		n += 1 + sovCloudletvmpool(uint64(m.NotifyId))
 	}
-	if len(m.Vmspecs) > 0 {
-		for _, e := range m.Vmspecs {
+	l = len(m.User)
+	if l > 0 {
+		n += 1 + l + sovCloudletvmpool(uint64(l))
+	}
+	if len(m.VmSpecs) > 0 {
+		for _, e := range m.VmSpecs {
 			l = e.Size()
 			n += 1 + l + sovCloudletvmpool(uint64(l))
 		}
@@ -3223,11 +3181,9 @@ func (m *CloudletVMPoolInfo) Size() (n int) {
 			n += 1 + l + sovCloudletvmpool(uint64(l))
 		}
 	}
-	if len(m.Errors) > 0 {
-		for _, s := range m.Errors {
-			l = len(s)
-			n += 1 + l + sovCloudletvmpool(uint64(l))
-		}
+	l = len(m.Error)
+	if l > 0 {
+		n += 1 + l + sovCloudletvmpool(uint64(l))
 	}
 	return n
 }
@@ -3442,25 +3398,6 @@ func (m *CloudletVM) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
-			}
-			m.Type = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCloudletvmpool
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Type |= (CloudletVMType(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field User", wireType)
 			}
@@ -3489,7 +3426,7 @@ func (m *CloudletVM) Unmarshal(dAtA []byte) error {
 			}
 			m.User = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
 			}
@@ -3508,7 +3445,7 @@ func (m *CloudletVM) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 6:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedAt", wireType)
 			}
@@ -3673,10 +3610,58 @@ func (m *CloudletVMPool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.CloudletVms = append(m.CloudletVms, &CloudletVM{})
+			m.CloudletVms = append(m.CloudletVms, CloudletVM{})
 			if err := m.CloudletVms[len(m.CloudletVms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
+			}
+			m.Action = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudletvmpool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Action |= (CloudletVMAction(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudletvmpool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudletvmpool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Error = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3839,6 +3824,35 @@ func (m *CloudletVMSpec) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudletvmpool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudletvmpool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ExternalNetwork", wireType)
 			}
@@ -3858,7 +3872,7 @@ func (m *CloudletVMSpec) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.ExternalNetwork = bool(v != 0)
-		case 2:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InternalNetwork", wireType)
 			}
@@ -3989,9 +4003,9 @@ func (m *CloudletVMPoolInfo) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
 			}
-			m.State = 0
+			m.Action = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCloudletvmpool
@@ -4001,7 +4015,7 @@ func (m *CloudletVMPoolInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.State |= (CloudletVMState(b) & 0x7F) << shift
+				m.Action |= (CloudletVMAction(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4027,7 +4041,36 @@ func (m *CloudletVMPoolInfo) Unmarshal(dAtA []byte) error {
 			}
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Vmspecs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field User", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudletvmpool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudletvmpool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.User = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VmSpecs", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4051,12 +4094,12 @@ func (m *CloudletVMPoolInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Vmspecs = append(m.Vmspecs, &CloudletVMSpec{})
-			if err := m.Vmspecs[len(m.Vmspecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.VmSpecs = append(m.VmSpecs, CloudletVMSpec{})
+			if err := m.VmSpecs[len(m.VmSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CloudletVms", wireType)
 			}
@@ -4082,14 +4125,14 @@ func (m *CloudletVMPoolInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.CloudletVms = append(m.CloudletVms, &CloudletVM{})
+			m.CloudletVms = append(m.CloudletVms, CloudletVM{})
 			if err := m.CloudletVms[len(m.CloudletVms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 8:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Errors", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -4114,7 +4157,7 @@ func (m *CloudletVMPoolInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Errors = append(m.Errors, string(dAtA[iNdEx:postIndex]))
+			m.Error = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4245,83 +4288,80 @@ var (
 func init() { proto.RegisterFile("cloudletvmpool.proto", fileDescriptorCloudletvmpool) }
 
 var fileDescriptorCloudletvmpool = []byte{
-	// 1239 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xee, 0xd8, 0x4e, 0x1a, 0x4f, 0x4a, 0xb2, 0x19, 0x39, 0x61, 0x62, 0xda, 0x34, 0xda, 0x4a,
-	0x28, 0x54, 0xb1, 0xb7, 0x4a, 0x2f, 0x55, 0x44, 0x0f, 0x8e, 0xbd, 0x15, 0x51, 0xfc, 0xa3, 0xec,
-	0x3a, 0x91, 0x38, 0xad, 0x36, 0xde, 0x89, 0xbd, 0xd4, 0xbb, 0xb3, 0xda, 0x5d, 0x27, 0x35, 0x52,
-	0x25, 0xc4, 0x5f, 0x80, 0x8a, 0x84, 0xa0, 0xe2, 0x80, 0x38, 0x20, 0xc4, 0x01, 0xa4, 0x72, 0x02,
-	0xfe, 0x81, 0x1e, 0x2b, 0x21, 0x71, 0x44, 0x25, 0xe2, 0x80, 0xe0, 0x82, 0x54, 0xa7, 0x67, 0x34,
-	0xb3, 0xbb, 0xce, 0xc6, 0x3f, 0x4a, 0x94, 0x86, 0x8b, 0x35, 0xf3, 0xbd, 0x6f, 0xde, 0x7e, 0xf3,
-	0xcd, 0x7b, 0x33, 0x86, 0x99, 0x46, 0x9b, 0x76, 0x8c, 0x36, 0xf1, 0xf7, 0x2d, 0x87, 0xd2, 0x76,
-	0xde, 0x71, 0xa9, 0x4f, 0x51, 0x9a, 0x18, 0x4d, 0xc2, 0x87, 0xd9, 0xcb, 0x4d, 0x4a, 0x9b, 0x6d,
-	0x22, 0xe9, 0x8e, 0x29, 0xe9, 0xb6, 0x4d, 0x7d, 0xdd, 0x37, 0xa9, 0xed, 0x05, 0xc4, 0xec, 0xad,
-	0xa6, 0xe9, 0xb7, 0x3a, 0xbb, 0xf9, 0x06, 0xb5, 0x24, 0x8b, 0xee, 0x9a, 0x6d, 0xb6, 0xf0, 0xbe,
-	0xc4, 0x7e, 0x73, 0x3c, 0xb3, 0xc4, 0x79, 0x4d, 0x62, 0xf7, 0x07, 0xe1, 0xca, 0x4b, 0x2e, 0xf1,
-	0x3a, 0x6d, 0x3f, 0x9c, 0xcd, 0x44, 0x32, 0xc2, 0x79, 0xf1, 0x3f, 0xf3, 0x1a, 0x39, 0x4b, 0xf7,
-	0x1b, 0xad, 0x1c, 0xb1, 0x9b, 0xa6, 0x4d, 0x24, 0xc3, 0x22, 0x39, 0xbe, 0x54, 0x6a, 0xd3, 0x46,
-	0x98, 0x24, 0xd3, 0xa4, 0x4d, 0x1a, 0x80, 0x6c, 0x14, 0xa0, 0xe2, 0x36, 0x9c, 0x2b, 0x86, 0x1f,
-	0xdb, 0xa9, 0x54, 0x89, 0xbf, 0x69, 0xef, 0x51, 0x74, 0x15, 0x4e, 0x93, 0xfb, 0x3e, 0x71, 0x6d,
-	0xbd, 0xad, 0x99, 0x0e, 0x06, 0xcb, 0x60, 0x25, 0xad, 0xc0, 0x08, 0xda, 0x74, 0x18, 0xc1, 0xb4,
-	0x8f, 0x09, 0x89, 0x80, 0x10, 0x41, 0x9b, 0x8e, 0xf8, 0x7d, 0x02, 0xc2, 0xe3, 0xbc, 0x08, 0xc1,
-	0x94, 0xad, 0x5b, 0x24, 0xcc, 0xc4, 0xc7, 0xe8, 0x36, 0x9c, 0xb2, 0x89, 0xaf, 0x99, 0xf6, 0x1e,
-	0xe5, 0x09, 0xa6, 0xd7, 0x2e, 0xe7, 0xfb, 0x46, 0xe7, 0x87, 0x44, 0x6d, 0xa4, 0x9e, 0xfc, 0x76,
-	0xf5, 0x82, 0x72, 0xd1, 0x0e, 0x35, 0xe6, 0x60, 0xca, 0xef, 0x3a, 0x04, 0x27, 0x97, 0xc1, 0xca,
-	0xcc, 0xda, 0xe2, 0xc8, 0xa5, 0xf5, 0xae, 0x43, 0x14, 0x4e, 0x63, 0x0a, 0x3a, 0x1e, 0x71, 0x71,
-	0x2a, 0x50, 0xc0, 0xc6, 0xe8, 0x06, 0x9c, 0xf0, 0x7c, 0xdd, 0x27, 0x78, 0x82, 0xe7, 0xc8, 0x8e,
-	0xcc, 0xa1, 0x32, 0x86, 0x12, 0x10, 0xd1, 0x7b, 0x10, 0x76, 0x1c, 0x43, 0xf7, 0x89, 0xa1, 0xe9,
-	0x3e, 0x9e, 0xe4, 0xaa, 0xaf, 0xe5, 0x0d, 0xd3, 0xf3, 0x5d, 0x73, 0xb7, 0xc3, 0x60, 0x7e, 0x0c,
-	0x5a, 0x70, 0x0c, 0xf9, 0xba, 0x69, 0x11, 0xcf, 0xd7, 0x2d, 0x67, 0x63, 0xfe, 0x9b, 0x1e, 0x06,
-	0x0f, 0x1f, 0x2f, 0xa6, 0xfd, 0x08, 0xe2, 0xbb, 0x49, 0x87, 0xd9, 0x0a, 0xbe, 0xf8, 0x77, 0x02,
-	0xce, 0x1c, 0x7f, 0xf5, 0x2e, 0xa5, 0x6d, 0xb4, 0x00, 0x27, 0xf7, 0x4c, 0xd2, 0x36, 0x3c, 0x0c,
-	0x96, 0x93, 0x2b, 0x69, 0x25, 0x9c, 0xa1, 0x3c, 0x4c, 0xde, 0x23, 0xdd, 0xd0, 0xb4, 0x85, 0x11,
-	0xaa, 0xb7, 0x48, 0x37, 0xb4, 0x8b, 0x11, 0xd1, 0x2d, 0x78, 0x29, 0x2a, 0x28, 0x6d, 0xdf, 0xf2,
-	0x70, 0x72, 0x39, 0xb9, 0x32, 0xbd, 0x36, 0x3f, 0x72, 0xbb, 0xca, 0x74, 0x44, 0xdd, 0xb1, 0xbc,
-	0xf5, 0x5f, 0xc1, 0x9f, 0xcf, 0x31, 0xf8, 0xe7, 0x39, 0x06, 0x1f, 0xf6, 0x30, 0xf8, 0xb8, 0x87,
-	0xc1, 0x67, 0x6c, 0x1f, 0x47, 0xf8, 0xa0, 0x18, 0x63, 0x5d, 0xcb, 0x33, 0xa3, 0x57, 0x4f, 0x42,
-	0xdb, 0x1e, 0x71, 0x07, 0x20, 0x6e, 0xe5, 0x20, 0x2d, 0x32, 0x20, 0xaf, 0x92, 0x06, 0xb5, 0x0d,
-	0x6f, 0x6c, 0xbc, 0xaa, 0xdb, 0xd4, 0x7b, 0x74, 0x84, 0xa5, 0x48, 0xe0, 0xed, 0x2d, 0xd2, 0xcd,
-	0x57, 0x75, 0x8b, 0xac, 0x46, 0x48, 0x8e, 0xba, 0x4d, 0x8e, 0xd6, 0xdc, 0xa6, 0x6e, 0x9b, 0x1f,
-	0xf0, 0xe6, 0x7c, 0xfc, 0x02, 0x0b, 0xf7, 0x48, 0xf7, 0x76, 0x1c, 0x13, 0x7f, 0x4a, 0xc0, 0xcc,
-	0x49, 0xb7, 0x2b, 0xc4, 0xda, 0x25, 0x6e, 0xe4, 0x2d, 0x38, 0xad, 0xb7, 0x6f, 0xc3, 0xe9, 0x98,
-	0xb7, 0xe1, 0x99, 0x8c, 0xb6, 0x36, 0x5c, 0x06, 0x8f, 0x0d, 0x5e, 0xff, 0x81, 0x79, 0xd9, 0x3a,
-	0xde, 0xf1, 0xa0, 0x91, 0x83, 0x2e, 0x0e, 0x59, 0xf8, 0x52, 0xff, 0xfe, 0x2f, 0xf3, 0xf6, 0xe2,
-	0x95, 0xaa, 0x3a, 0xa4, 0x81, 0xde, 0x82, 0x42, 0xff, 0xc2, 0xb0, 0x89, 0x7f, 0x40, 0xdd, 0x7b,
-	0xdc, 0xc2, 0x29, 0x65, 0x36, 0xc2, 0xab, 0x01, 0xcc, 0xa8, 0xfd, 0xab, 0x23, 0xa2, 0x26, 0x02,
-	0x6a, 0x84, 0x87, 0x54, 0xf1, 0x61, 0x12, 0xa2, 0x93, 0x87, 0xc4, 0x3b, 0xff, 0xbc, 0xda, 0xa2,
-	0xdf, 0xfe, 0xc9, 0xd3, 0xb6, 0xff, 0x9b, 0x30, 0x6d, 0x53, 0xdf, 0xdc, 0xeb, 0x6a, 0xa6, 0xc1,
-	0x6f, 0x92, 0xe4, 0x46, 0xfa, 0xe1, 0xe3, 0xc5, 0x09, 0x9b, 0x36, 0x2c, 0x47, 0x99, 0x0a, 0x62,
-	0x9b, 0x06, 0xba, 0x09, 0x2f, 0xee, 0x5b, 0x9e, 0x43, 0x1a, 0x1e, 0x9e, 0xe0, 0xbd, 0x36, 0xfa,
-	0x7a, 0x62, 0xd6, 0x29, 0x11, 0x73, 0xa8, 0x4b, 0x27, 0x4f, 0xdb, 0xa5, 0xcc, 0x10, 0xe2, 0xba,
-	0xd4, 0xf5, 0xf0, 0xc5, 0xc0, 0x90, 0x60, 0xb6, 0xae, 0x0e, 0x36, 0xef, 0x97, 0x3d, 0x0c, 0x9e,
-	0xf5, 0x30, 0x38, 0x5b, 0x21, 0xa4, 0x6c, 0x6a, 0x93, 0xeb, 0x0f, 0xe2, 0x87, 0xcf, 0xca, 0x15,
-	0xcd, 0xc1, 0xd7, 0xee, 0x96, 0x0b, 0xf5, 0x3b, 0x35, 0xa5, 0xa2, 0x55, 0x6b, 0x25, 0x59, 0xb8,
-	0x80, 0x10, 0x9c, 0x51, 0xdf, 0x29, 0x28, 0x72, 0x49, 0x53, 0x6a, 0xb5, 0xba, 0x56, 0xde, 0x10,
-	0x00, 0x9a, 0x87, 0x73, 0x25, 0xb9, 0xb4, 0x59, 0x2c, 0xd4, 0x63, 0x70, 0x02, 0xcd, 0xc2, 0xe9,
-	0x52, 0xad, 0xb8, 0x25, 0x2b, 0xc1, 0xda, 0x24, 0x9a, 0x81, 0x70, 0xeb, 0x96, 0xaa, 0x55, 0x0a,
-	0x6a, 0x5d, 0x56, 0x84, 0x14, 0xba, 0x04, 0xa7, 0xd8, 0x9c, 0x47, 0x27, 0xae, 0x7f, 0x0d, 0xe0,
-	0xec, 0xc0, 0xe9, 0xa0, 0x0c, 0x14, 0x8a, 0xe5, 0xda, 0x76, 0xa9, 0x2c, 0xd7, 0xb5, 0x9d, 0x8a,
-	0x76, 0x47, 0x91, 0x99, 0x86, 0x45, 0x38, 0x1f, 0x47, 0x15, 0xf9, 0xdd, 0x6d, 0x59, 0xad, 0xcb,
-	0x25, 0x01, 0x0c, 0x86, 0x0a, 0xe5, 0x72, 0x8d, 0xcb, 0x12, 0x12, 0x68, 0x01, 0xa2, 0x78, 0x68,
-	0xb3, 0xaa, 0x6d, 0xab, 0x4c, 0x15, 0x86, 0x99, 0x93, 0xd9, 0xca, 0x72, 0x41, 0x95, 0x4b, 0x42,
-	0x8a, 0xed, 0x2b, 0x1e, 0x91, 0x15, 0xa5, 0xa6, 0x08, 0x13, 0x6b, 0x5f, 0x4c, 0xc5, 0x5f, 0x56,
-	0x56, 0xbc, 0x05, 0xc7, 0x44, 0xdf, 0x01, 0x98, 0x29, 0xba, 0x44, 0xf7, 0xc9, 0xc0, 0x5d, 0x3f,
-	0xba, 0x42, 0x58, 0x28, 0x3b, 0x17, 0x0b, 0x29, 0xfc, 0x6f, 0x82, 0xd8, 0xfa, 0xab, 0x87, 0x25,
-	0x85, 0x78, 0xb4, 0xe3, 0x36, 0xfa, 0x99, 0xbc, 0xd5, 0x42, 0x83, 0x1d, 0x55, 0x45, 0xb7, 0xf5,
-	0x26, 0x59, 0x1d, 0x3c, 0xc1, 0x6f, 0x5f, 0x60, 0x61, 0x10, 0xfb, 0xe8, 0x97, 0x3f, 0x3e, 0x49,
-	0xbc, 0x21, 0x2e, 0x48, 0x0d, 0xae, 0x49, 0x3a, 0xf9, 0xf7, 0x67, 0x1d, 0x5c, 0x47, 0x9f, 0x03,
-	0x98, 0x29, 0x91, 0x36, 0x79, 0x45, 0xc1, 0xea, 0x19, 0x04, 0x73, 0x71, 0x59, 0x71, 0x5e, 0x32,
-	0xf8, 0xf7, 0x03, 0x71, 0x71, 0x6d, 0x8f, 0x00, 0xcc, 0x04, 0x57, 0xdc, 0x2b, 0x69, 0xab, 0x9f,
-	0x55, 0x1b, 0x33, 0x2e, 0x78, 0xc0, 0x47, 0x18, 0xf7, 0x15, 0x80, 0x48, 0x6d, 0xd1, 0x83, 0xd3,
-	0x4b, 0x1b, 0x1f, 0xe2, 0x12, 0x73, 0xe3, 0x24, 0xee, 0x98, 0xe4, 0x60, 0x48, 0xe0, 0xd3, 0x23,
-	0x0c, 0xb8, 0xc8, 0x45, 0x31, 0x23, 0x79, 0x2d, 0x7a, 0x30, 0x2c, 0xf1, 0x06, 0x40, 0x3f, 0x02,
-	0xf8, 0x7a, 0xc1, 0x30, 0x46, 0xbe, 0x84, 0x57, 0xc7, 0xca, 0x09, 0x08, 0xa3, 0xac, 0x7c, 0xff,
-	0x0c, 0x56, 0x1e, 0x1e, 0xe1, 0xd9, 0xd8, 0x9b, 0xc5, 0xae, 0x22, 0x2e, 0x7c, 0x49, 0x5c, 0x94,
-	0x74, 0xc3, 0x18, 0xd0, 0x6d, 0xf1, 0x6f, 0x33, 0x83, 0x7f, 0x06, 0x30, 0xab, 0x10, 0x8b, 0xee,
-	0x93, 0x73, 0x93, 0x6f, 0x9e, 0xa3, 0xfc, 0x2b, 0x22, 0x96, 0x5c, 0x6b, 0x9c, 0xfa, 0xb5, 0x4f,
-	0x01, 0x9c, 0x1f, 0x7e, 0xdb, 0xd8, 0x15, 0xf1, 0x00, 0x2e, 0x0c, 0xd7, 0x0d, 0x7f, 0xf8, 0xae,
-	0x8c, 0xdd, 0x12, 0x0b, 0x67, 0x5f, 0x1e, 0x16, 0xaf, 0xf5, 0x65, 0x8d, 0x28, 0x07, 0xf6, 0x2f,
-	0x9c, 0x97, 0xc4, 0x86, 0xf0, 0xe4, 0xf7, 0xa5, 0x0b, 0x4f, 0x0e, 0x97, 0xc0, 0xd3, 0xc3, 0x25,
-	0xf0, 0xec, 0x70, 0x09, 0xec, 0x4e, 0xf2, 0x94, 0x37, 0xff, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x97,
-	0x38, 0x15, 0x4d, 0x1d, 0x0d, 0x00, 0x00,
+	// 1198 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xcf, 0x4f, 0x1b, 0x47,
+	0x1b, 0x66, 0x30, 0x10, 0x7b, 0xc8, 0x07, 0x66, 0x64, 0xc8, 0x60, 0x12, 0x83, 0x36, 0xd2, 0x27,
+	0x8a, 0xb0, 0x37, 0x22, 0x97, 0x0a, 0x95, 0x4a, 0xb6, 0x71, 0x25, 0x2b, 0x60, 0x47, 0x6b, 0x40,
+	0xbd, 0x59, 0xcb, 0xee, 0x60, 0xb6, 0x78, 0x67, 0xb6, 0xbb, 0x6b, 0x08, 0x91, 0x2a, 0x55, 0xfd,
+	0x0b, 0xaa, 0x56, 0xaa, 0xda, 0xa8, 0x87, 0xaa, 0xbd, 0x54, 0x39, 0xf4, 0x10, 0xf5, 0x52, 0xf5,
+	0x5c, 0x89, 0x23, 0x52, 0xef, 0x55, 0x8a, 0x7a, 0xa8, 0x7a, 0xaa, 0x14, 0x93, 0x5e, 0xab, 0x99,
+	0xdd, 0xb5, 0x17, 0x7b, 0x4d, 0x52, 0xc2, 0x65, 0x35, 0xf3, 0xce, 0x33, 0xef, 0x3c, 0xf3, 0xbc,
+	0x3f, 0x66, 0x61, 0x4a, 0x6b, 0xb2, 0x96, 0xde, 0x24, 0xee, 0xa1, 0x69, 0x31, 0xd6, 0xcc, 0x59,
+	0x36, 0x73, 0x19, 0x4a, 0x10, 0xbd, 0x41, 0xc4, 0x30, 0x7d, 0xbb, 0xc1, 0x58, 0xa3, 0x49, 0x64,
+	0xd5, 0x32, 0x64, 0x95, 0x52, 0xe6, 0xaa, 0xae, 0xc1, 0xa8, 0xe3, 0x01, 0xd3, 0x6f, 0x37, 0x0c,
+	0x77, 0xbf, 0xb5, 0x9b, 0xd3, 0x98, 0x29, 0x9b, 0x6c, 0xd7, 0x68, 0xf2, 0x8d, 0x8f, 0x64, 0xfe,
+	0xcd, 0x0a, 0xcf, 0xb2, 0xc0, 0x35, 0x08, 0xed, 0x0c, 0xfc, 0x9d, 0x37, 0x6d, 0xe2, 0xb4, 0x9a,
+	0xae, 0x3f, 0x9b, 0x08, 0x68, 0xf8, 0xf3, 0xe2, 0x2b, 0xfd, 0xea, 0x59, 0x53, 0x75, 0xb5, 0xfd,
+	0x2c, 0xa1, 0x0d, 0x83, 0x12, 0x59, 0x37, 0x49, 0x56, 0x6c, 0x95, 0x9b, 0x4c, 0xf3, 0x9d, 0xa4,
+	0x1a, 0xac, 0xc1, 0x3c, 0x23, 0x1f, 0xf9, 0xd6, 0x79, 0xff, 0x42, 0x62, 0xb6, 0xdb, 0xda, 0x93,
+	0x5d, 0xc3, 0x24, 0x8e, 0xab, 0x9a, 0x96, 0x07, 0x90, 0xb6, 0xe1, 0x54, 0xd1, 0x67, 0xb3, 0xb3,
+	0x59, 0x21, 0x6e, 0x99, 0xee, 0x31, 0x34, 0x0f, 0xc7, 0xc9, 0x23, 0x97, 0xd8, 0x54, 0x6d, 0xd6,
+	0x0d, 0x0b, 0x83, 0x05, 0xb0, 0x98, 0x50, 0x60, 0x60, 0x2a, 0x5b, 0x1c, 0x60, 0xd0, 0x2e, 0x60,
+	0xd8, 0x03, 0x04, 0xa6, 0xb2, 0x25, 0xfd, 0x03, 0x20, 0xec, 0xfa, 0x45, 0x08, 0x8e, 0x50, 0xd5,
+	0x24, 0xbe, 0x27, 0x31, 0x46, 0x6b, 0x30, 0x4e, 0x89, 0x5b, 0x37, 0xe8, 0x1e, 0x13, 0x0e, 0xc6,
+	0x57, 0x6e, 0xe7, 0x3a, 0x91, 0xc8, 0xf5, 0x91, 0x2a, 0x8c, 0x9c, 0xfc, 0x36, 0x3f, 0xa4, 0xdc,
+	0xa0, 0x3e, 0x47, 0x04, 0x47, 0x5a, 0x0e, 0xb1, 0x71, 0xcc, 0x73, 0xc9, 0xc7, 0xe8, 0x1e, 0x1c,
+	0x75, 0x5c, 0xd5, 0x25, 0x78, 0x64, 0x01, 0x2c, 0x4e, 0xac, 0xa4, 0x23, 0xfd, 0xd5, 0x38, 0x42,
+	0xf1, 0x80, 0xe8, 0x21, 0x84, 0x2d, 0x4b, 0x57, 0x5d, 0xa2, 0xd7, 0x55, 0x17, 0x8f, 0x0a, 0x1a,
+	0xe9, 0x9c, 0x27, 0x5a, 0x2e, 0x10, 0x2d, 0xb7, 0x15, 0x88, 0x56, 0x98, 0xfe, 0xbe, 0x8d, 0xc1,
+	0x67, 0xcf, 0x66, 0x13, 0x1d, 0x1d, 0x05, 0xab, 0x84, 0xef, 0x24, 0xef, 0x4a, 0xbf, 0xc4, 0xe0,
+	0x44, 0xf7, 0xb0, 0x87, 0x8c, 0x35, 0xd1, 0x0c, 0x1c, 0xdb, 0x33, 0x48, 0x53, 0x77, 0x30, 0x58,
+	0x88, 0x2d, 0x26, 0x14, 0x7f, 0x86, 0x72, 0x30, 0x76, 0x40, 0x8e, 0xfd, 0xcb, 0xcf, 0x44, 0x90,
+	0x7d, 0x40, 0x8e, 0xfd, 0x6b, 0x73, 0x20, 0x7a, 0x17, 0xde, 0x0c, 0x32, 0xa7, 0x7e, 0x68, 0x3a,
+	0x38, 0xb6, 0x10, 0x5b, 0x1c, 0x5f, 0x99, 0x8e, 0xbc, 0xa5, 0xbf, 0x6f, 0x3c, 0xd8, 0xb0, 0x63,
+	0x3a, 0xa8, 0x00, 0xc7, 0x54, 0x8d, 0x27, 0xb4, 0xaf, 0xcf, 0x5c, 0xe4, 0xce, 0xbc, 0x80, 0x14,
+	0xfe, 0xe7, 0xdf, 0x74, 0x94, 0x32, 0xcd, 0xb4, 0x14, 0x7f, 0x27, 0x4a, 0xc1, 0x51, 0x62, 0xdb,
+	0xcc, 0x16, 0x5a, 0x25, 0x14, 0x6f, 0xb2, 0x7a, 0x0a, 0xfe, 0x7c, 0x81, 0xc1, 0xdf, 0x2f, 0x30,
+	0xf8, 0xb8, 0x8d, 0xc1, 0xa7, 0x6d, 0x0c, 0xbe, 0xe4, 0xbb, 0xcf, 0xf1, 0x87, 0xc5, 0xee, 0xf9,
+	0xab, 0x77, 0x73, 0xdb, 0x0e, 0xb1, 0x97, 0x2f, 0x9a, 0x44, 0x38, 0x7a, 0x6c, 0xdb, 0x81, 0x9a,
+	0xb9, 0x1a, 0xd1, 0x18, 0xd5, 0x9d, 0x81, 0xeb, 0x15, 0x95, 0x32, 0x67, 0xd9, 0xa3, 0xbc, 0x5c,
+	0xe2, 0x5c, 0x9e, 0x9c, 0x63, 0x39, 0xb8, 0xf4, 0xda, 0x03, 0x72, 0x9c, 0xab, 0xa8, 0x26, 0x59,
+	0x0e, 0x2c, 0x59, 0x66, 0x37, 0x84, 0xb5, 0x6a, 0x37, 0x54, 0x6a, 0x3c, 0x16, 0xf5, 0xfd, 0xec,
+	0x25, 0x4e, 0x1e, 0x90, 0xe3, 0xb5, 0xb0, 0x4d, 0x7a, 0x3a, 0x0c, 0x53, 0x17, 0xe3, 0xb8, 0x49,
+	0xcc, 0x5d, 0x62, 0x07, 0x51, 0x03, 0xaf, 0x1b, 0xb5, 0x77, 0xe0, 0x78, 0x28, 0x6a, 0x7e, 0xb4,
+	0x2f, 0x0d, 0x1a, 0xec, 0x06, 0x6d, 0xf5, 0x3b, 0xae, 0xe2, 0xfb, 0xdd, 0xeb, 0xf7, 0x4a, 0xd8,
+	0xa7, 0xdf, 0xa5, 0xe2, 0xf5, 0x2a, 0x77, 0x5d, 0x62, 0x3d, 0x0e, 0xe7, 0x7c, 0xcd, 0x22, 0x5a,
+	0x64, 0xc5, 0xbf, 0x05, 0x93, 0x9d, 0xb6, 0x42, 0x89, 0x7b, 0xc4, 0xec, 0x03, 0x21, 0x47, 0x5c,
+	0x99, 0x0c, 0xec, 0x15, 0xcf, 0xcc, 0xa1, 0x9d, 0x06, 0x13, 0x40, 0x63, 0x1e, 0x34, 0xb0, 0xfb,
+	0x50, 0xe9, 0xc7, 0x18, 0x44, 0x17, 0x03, 0x25, 0xfa, 0xc3, 0x75, 0x15, 0xdd, 0xfd, 0x4e, 0xd1,
+	0xc4, 0x5e, 0x59, 0x34, 0x9d, 0x2a, 0xf9, 0x3f, 0x4c, 0x50, 0xe6, 0x1a, 0x7b, 0xc7, 0x75, 0x43,
+	0x17, 0xc5, 0x16, 0x2b, 0x24, 0xba, 0xb5, 0x14, 0xf7, 0xd6, 0xca, 0x7a, 0xa7, 0x89, 0x8d, 0x86,
+	0x9a, 0xd8, 0x2a, 0x8c, 0x1f, 0x9a, 0x75, 0xc7, 0x22, 0x9a, 0x83, 0xc7, 0x44, 0x85, 0xcf, 0x46,
+	0xf7, 0x31, 0x8b, 0x68, 0x41, 0x53, 0x3c, 0x34, 0xf9, 0xcc, 0xe9, 0xeb, 0x10, 0x37, 0xfe, 0x63,
+	0x87, 0xe8, 0x54, 0x77, 0x3c, 0x5c, 0xdd, 0xb5, 0xde, 0xe2, 0xfe, 0xa6, 0x8d, 0xc1, 0xf3, 0x36,
+	0x06, 0x57, 0x4b, 0x9f, 0x11, 0xca, 0x28, 0x59, 0xda, 0x81, 0x93, 0x3d, 0x3d, 0x19, 0xa5, 0x60,
+	0xb2, 0xb8, 0x51, 0xdd, 0x5e, 0xdf, 0x28, 0x6d, 0xd5, 0x77, 0x36, 0xeb, 0xef, 0x29, 0xa5, 0x52,
+	0x72, 0x08, 0xcd, 0x40, 0x14, 0xb6, 0x96, 0x2b, 0xf5, 0xed, 0x5a, 0x29, 0x09, 0xd0, 0x34, 0x9c,
+	0x0a, 0xdb, 0x4b, 0x8a, 0x52, 0x55, 0x92, 0xc3, 0x4b, 0x16, 0x4c, 0xf6, 0x86, 0x05, 0xcd, 0xc1,
+	0x5b, 0x61, 0x68, 0xbe, 0xb8, 0x55, 0xae, 0x56, 0xea, 0xeb, 0xd5, 0x0a, 0xf7, 0x3f, 0x0f, 0xe7,
+	0x22, 0x16, 0xf3, 0x1b, 0x1b, 0xd5, 0x62, 0x7e, 0x8b, 0x1f, 0x94, 0x81, 0xe9, 0x08, 0x80, 0x52,
+	0xda, 0x28, 0xe5, 0x6b, 0xa5, 0xe4, 0xf0, 0xca, 0xd7, 0xf1, 0xf0, 0x1b, 0xca, 0x13, 0x30, 0x6f,
+	0x19, 0xe8, 0x07, 0x00, 0x53, 0x45, 0x9b, 0xa8, 0x2e, 0xe9, 0x79, 0x0d, 0xa2, 0xa3, 0xc9, 0x97,
+	0xd2, 0x53, 0xa1, 0x25, 0x45, 0xfc, 0x31, 0x48, 0xfb, 0x7f, 0xb5, 0xb1, 0xac, 0x10, 0x87, 0xb5,
+	0x6c, 0xad, 0xe3, 0x29, 0xe8, 0x78, 0x9b, 0x2a, 0x55, 0x1b, 0x64, 0xb9, 0x57, 0xe3, 0xa7, 0x2f,
+	0x71, 0xb2, 0xd7, 0xf6, 0xc9, 0xaf, 0x7f, 0x7c, 0x3e, 0x3c, 0x27, 0xcd, 0xc8, 0x9a, 0xe0, 0x24,
+	0x5f, 0xfc, 0x13, 0x5a, 0x05, 0x4b, 0xe8, 0x2b, 0x00, 0x53, 0xeb, 0xa4, 0x49, 0xde, 0x90, 0x70,
+	0xed, 0x0a, 0x84, 0x05, 0xb9, 0xb4, 0x34, 0x2d, 0xeb, 0xe2, 0x7c, 0x8f, 0x5c, 0x98, 0xdb, 0x13,
+	0x00, 0x53, 0x5e, 0xeb, 0x7a, 0x23, 0x6e, 0x5b, 0x57, 0xe5, 0xc6, 0x85, 0xf3, 0x9e, 0xf8, 0x08,
+	0xe1, 0xbe, 0x05, 0x10, 0xd5, 0xf6, 0xd9, 0xd1, 0xeb, 0x53, 0x1b, 0xbc, 0x24, 0x28, 0x66, 0x07,
+	0x51, 0xdc, 0x31, 0xc8, 0x51, 0x1f, 0xc1, 0xd3, 0x73, 0x0c, 0x04, 0xc9, 0x59, 0x29, 0x25, 0x3b,
+	0xfb, 0xec, 0xa8, 0x9f, 0xe2, 0x3d, 0x80, 0x7e, 0x02, 0xf0, 0x56, 0x5e, 0xd7, 0x23, 0x5f, 0xb4,
+	0xf9, 0x81, 0x74, 0x3c, 0x40, 0x94, 0x94, 0x1f, 0x5c, 0x41, 0xca, 0xb3, 0x73, 0x3c, 0x19, 0x7a,
+	0x8b, 0x78, 0xb3, 0x10, 0xc4, 0x33, 0xd2, 0xac, 0xac, 0xea, 0x7a, 0x0f, 0x6f, 0x53, 0x9c, 0xcd,
+	0x05, 0xfe, 0x19, 0xc0, 0xb4, 0x42, 0x4c, 0x76, 0x48, 0xae, 0x8d, 0xbe, 0x71, 0x8d, 0xf4, 0xef,
+	0x48, 0x58, 0xb6, 0xcd, 0x41, 0xec, 0x57, 0xbe, 0x00, 0x70, 0xba, 0xff, 0x7d, 0xe2, 0x2d, 0xe2,
+	0x23, 0x38, 0xd3, 0x9f, 0x37, 0xe2, 0xf1, 0xba, 0x33, 0xf0, 0x4a, 0x7c, 0x39, 0x7d, 0xf9, 0xb2,
+	0x74, 0xb7, 0x43, 0x2b, 0x22, 0x1d, 0xf8, 0xff, 0xb6, 0x48, 0x89, 0x42, 0xf2, 0xe4, 0xf7, 0xcc,
+	0xd0, 0xc9, 0x59, 0x06, 0x9c, 0x9e, 0x65, 0xc0, 0xf3, 0xb3, 0x0c, 0xd8, 0x1d, 0x13, 0x2e, 0xef,
+	0xff, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x52, 0xc4, 0x50, 0xc0, 0x28, 0x0d, 0x00, 0x00,
 }

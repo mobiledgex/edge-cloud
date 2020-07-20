@@ -5,6 +5,7 @@ package gencmd
 
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+import google_protobuf "github.com/gogo/protobuf/types"
 import "strings"
 import "github.com/mobiledgex/edge-cloud/cli"
 import proto "github.com/gogo/protobuf/proto"
@@ -189,6 +190,16 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 	}
 	for i0 := 0; i0 < len(in.AppInstRefs); i0++ {
+	}
+	for i0 := 0; i0 < len(in.CloudletVmPools); i0++ {
+		for i1 := 0; i1 < len(in.CloudletVmPools[i0].CloudletVms); i1++ {
+			if _, found := tags["timestamp"]; found {
+				in.CloudletVmPools[i0].CloudletVms[i1].UpdatedAt = google_protobuf.Timestamp{}
+			}
+		}
+		if _, found := tags["nocmp"]; found {
+			in.CloudletVmPools[i0].Action = 0
+		}
 	}
 }
 
@@ -479,6 +490,18 @@ var AllDataOptionalArgs = []string{
 	"appinstrefs:#.key.version",
 	"appinstrefs:#.insts:#.key",
 	"appinstrefs:#.insts:#.value",
+	"cloudletvmpools:#.fields",
+	"cloudletvmpools:#.key.organization",
+	"cloudletvmpools:#.key.name",
+	"cloudletvmpools:#.cloudletvms:#.name",
+	"cloudletvmpools:#.cloudletvms:#.netinfo.externalip",
+	"cloudletvmpools:#.cloudletvms:#.netinfo.internalip",
+	"cloudletvmpools:#.cloudletvms:#.user",
+	"cloudletvmpools:#.cloudletvms:#.state",
+	"cloudletvmpools:#.cloudletvms:#.updatedat.seconds",
+	"cloudletvmpools:#.cloudletvms:#.updatedat.nanos",
+	"cloudletvmpools:#.action",
+	"cloudletvmpools:#.error",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -737,6 +760,18 @@ var AllDataComments = map[string]string{
 	"appinstrefs:#.key.organization":                             "App developer organization",
 	"appinstrefs:#.key.name":                                     "App name",
 	"appinstrefs:#.key.version":                                  "App version",
+	"cloudletvmpools:#.fields":                                   "Fields are used for the Update API to specify which fields to apply",
+	"cloudletvmpools:#.key.organization":                         "Organization of the cloudlet site",
+	"cloudletvmpools:#.key.name":                                 "Name of the cloudlet",
+	"cloudletvmpools:#.cloudletvms:#.name":                       "VM Name",
+	"cloudletvmpools:#.cloudletvms:#.netinfo.externalip":         "External IP",
+	"cloudletvmpools:#.cloudletvms:#.netinfo.internalip":         "Internal IP",
+	"cloudletvmpools:#.cloudletvms:#.user":                       "VM User",
+	"cloudletvmpools:#.cloudletvms:#.state":                      "VM State, one of CloudletVmFree, CloudletVmInUse, CloudletVmError",
+	"cloudletvmpools:#.cloudletvms:#.updatedat.seconds":          "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"cloudletvmpools:#.cloudletvms:#.updatedat.nanos":            "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"cloudletvmpools:#.action":                                   "Action performed on Cloudlet VM Pool, one of CloudletVmActionDone, CloudletVmActionAllocate, CloudletVmActionRelease",
+	"cloudletvmpools:#.error":                                    "Errors if any",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",
@@ -750,6 +785,7 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudletinfos:#.fields":                  "StringArray",
 	"cloudletinfos:#.flavors:#.propmap":       "StringToString",
 	"cloudletpools:#.fields":                  "StringArray",
+	"cloudletvmpools:#.fields":                "StringArray",
 	"cloudlets:#.accessvars":                  "StringToString",
 	"cloudlets:#.chefclientkey":               "StringToString",
 	"cloudlets:#.config.envvar":               "StringToString",

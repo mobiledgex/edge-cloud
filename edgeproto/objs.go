@@ -9,9 +9,11 @@ import (
 	strings "strings"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 	context "golang.org/x/net/context"
@@ -290,6 +292,22 @@ func (s *CloudletPoolMember) Validate(fields map[string]struct{}) error {
 	return s.ValidateKey()
 }
 
+func (s *CloudletVM) Validate() error {
+	if !util.ValidName(s.Name) {
+		return errors.New("Invalid Cloudlet Pool name")
+	}
+	if s.NetInfo.ExternalIp != "" && net.ParseIP(s.NetInfo.ExternalIp) == nil {
+		return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
+	}
+	if s.NetInfo.InternalIp == "" {
+		return fmt.Errorf("Missing internal IP for CloudletVM: %s", s.Name)
+	}
+	if net.ParseIP(s.NetInfo.InternalIp) == nil {
+		return fmt.Errorf("Invalid Address: %s", s.NetInfo.InternalIp)
+	}
+	return nil
+}
+
 func (s *CloudletVMPool) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
@@ -297,19 +315,21 @@ func (s *CloudletVMPool) Validate(fields map[string]struct{}) error {
 	if err := s.ValidateEnums(); err != nil {
 		return err
 	}
-
 	for _, v := range s.CloudletVms {
-		if v.NetInfo.ExternalIp != "" && net.ParseIP(v.NetInfo.ExternalIp) == nil {
-			return fmt.Errorf("Invalid Address: %s", v.NetInfo.ExternalIp)
-		}
-		if v.NetInfo.InternalIp == "" {
-			return fmt.Errorf("Missing internal IP for CloudletVM: %s", v.Name)
-		}
-		if net.ParseIP(v.NetInfo.InternalIp) == nil {
-			return fmt.Errorf("Invalid Address: %s", v.NetInfo.InternalIp)
+		if err := v.Validate(); err != nil {
+			return err
 		}
 	}
+	return nil
+}
 
+func (s *CloudletVMPoolMember) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if err := s.CloudletVm.Validate(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -811,4 +831,67 @@ func (s *AutoProvPolicy) GetCloudletKeys() map[CloudletKey]struct{} {
 		keys[cl.Key] = struct{}{}
 	}
 	return keys
+}
+
+func AllocateCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *CloudletVMPoolInfo, cloudletVMPool *CloudletVMPool) {
+	log.DebugLog(log.DebugLevelNotify, "AllocateCloudletVMsFromPool", "cloudletvmpoolinfo", cloudletVMPoolInfo, "cloudletvmpool", cloudletVMPool)
+	cloudletVMPool.Action = CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
+	cloudletVMPool.Error = ""
+	count := 0
+	for _, vmSpec := range cloudletVMPoolInfo.VmSpecs {
+		found := false
+		for ii, cloudletVm := range cloudletVMPool.CloudletVms {
+			if cloudletVm.State != CloudletVMState_CLOUDLET_VM_FREE {
+				continue
+			}
+			if vmSpec.ExternalNetwork && cloudletVm.NetInfo.ExternalIp == "" {
+				continue
+			}
+			// TODO: If only internal network is required, then avoid using
+			// VM having external connectivity, unless there are no VMs with
+			// just internal connectivity
+			if vmSpec.InternalNetwork && cloudletVm.NetInfo.InternalIp == "" {
+				continue
+			}
+			cloudletVMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_IN_USE
+			cloudletVMPool.CloudletVms[ii].User = cloudletVMPoolInfo.User
+			ts, _ := types.TimestampProto(time.Now())
+			cloudletVMPool.CloudletVms[ii].UpdatedAt = *ts
+			found = true
+			count++
+			break
+		}
+		if !found {
+			cloudletVMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with spec: %v", vmSpec)
+			break
+		}
+	}
+	log.DebugLog(log.DebugLevelNotify, "allocated cloudlet VMs", "key", cloudletVMPool.Key, "count", count)
+}
+
+func ReleaseCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *CloudletVMPoolInfo, cloudletVMPool *CloudletVMPool) {
+	log.DebugLog(log.DebugLevelNotify, "ReleaseCloudletVMsFromPool", "cloudletvmpoolinfo", cloudletVMPoolInfo, "cloudletvmpool", cloudletVMPool)
+	cloudletVMPool.Action = CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
+	cloudletVMPool.Error = ""
+	count := 0
+	for _, vmSpec := range cloudletVMPoolInfo.VmSpecs {
+		found := false
+		for ii, cloudletVm := range cloudletVMPool.CloudletVms {
+			if vmSpec.Name != cloudletVm.Name {
+				continue
+			}
+			cloudletVMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_FREE
+			cloudletVMPool.CloudletVms[ii].User = ""
+			ts, _ := types.TimestampProto(time.Now())
+			cloudletVMPool.CloudletVms[ii].UpdatedAt = *ts
+			found = true
+			count++
+			break
+		}
+		if !found {
+			cloudletVMPool.Error = fmt.Sprintf("Unable to find Cloudlet VM with spec: %v", vmSpec)
+			break
+		}
+	}
+	log.DebugLog(log.DebugLevelNotify, "released cloulet VMs", "key", cloudletVMPool.Key, "count", count)
 }

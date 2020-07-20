@@ -3,8 +3,8 @@
 
 package gencmd
 
-import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+import google_protobuf "github.com/gogo/protobuf/types"
 import "strings"
 import "github.com/spf13/cobra"
 import "context"
@@ -18,6 +18,7 @@ import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
 import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import _ "github.com/gogo/protobuf/gogoproto"
+import _ "github.com/gogo/protobuf/types"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -34,7 +35,7 @@ func CloudletVMHideTags(in *edgeproto.CloudletVM) {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["timestamp"]; found {
-		in.UpdatedAt = distributed_match_engine.Timestamp{}
+		in.UpdatedAt = google_protobuf.Timestamp{}
 	}
 }
 
@@ -48,8 +49,11 @@ func CloudletVMPoolHideTags(in *edgeproto.CloudletVMPool) {
 	}
 	for i0 := 0; i0 < len(in.CloudletVms); i0++ {
 		if _, found := tags["timestamp"]; found {
-			in.CloudletVms[i0].UpdatedAt = distributed_match_engine.Timestamp{}
+			in.CloudletVms[i0].UpdatedAt = google_protobuf.Timestamp{}
 		}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Action = 0
 	}
 }
 
@@ -62,7 +66,7 @@ func CloudletVMPoolMemberHideTags(in *edgeproto.CloudletVMPoolMember) {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["timestamp"]; found {
-		in.CloudletVm.UpdatedAt = distributed_match_engine.Timestamp{}
+		in.CloudletVm.UpdatedAt = google_protobuf.Timestamp{}
 	}
 }
 
@@ -77,11 +81,11 @@ func CloudletVMPoolInfoHideTags(in *edgeproto.CloudletVMPoolInfo) {
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
 	}
-	for i0 := 0; i0 < len(in.Vmspecs); i0++ {
+	for i0 := 0; i0 < len(in.VmSpecs); i0++ {
 	}
 	for i0 := 0; i0 < len(in.CloudletVms); i0++ {
 		if _, found := tags["timestamp"]; found {
-			in.CloudletVms[i0].UpdatedAt = distributed_match_engine.Timestamp{}
+			in.CloudletVms[i0].UpdatedAt = google_protobuf.Timestamp{}
 		}
 	}
 }
@@ -559,7 +563,6 @@ var CloudletVMOptionalArgs = []string{
 	"name",
 	"netinfo.externalip",
 	"netinfo.internalip",
-	"type",
 	"user",
 	"state",
 	"updatedat.seconds",
@@ -570,9 +573,10 @@ var CloudletVMComments = map[string]string{
 	"name":               "VM Name",
 	"netinfo.externalip": "External IP",
 	"netinfo.internalip": "Internal IP",
-	"type":               "VM Type, one of PlatformNode, SharedRootLb, DedicatedRootLb, DockerNode, K8SMaster, K8SNode",
 	"user":               "VM User",
-	"state":              "VM State, one of CloudletVmFree, CloudletVmRequested, CloudletVmAllocated, CloudletVmInUse, CloudletVmReleased, CloudletVmError",
+	"state":              "VM State, one of CloudletVmFree, CloudletVmInUse, CloudletVmError",
+	"updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 }
 var CloudletVMSpecialArgs = map[string]string{}
 var CloudletVMPoolRequiredArgs = []string{
@@ -595,9 +599,12 @@ var CloudletVMPoolComments = map[string]string{
 	"cloudletvms:#.name":               "VM Name",
 	"cloudletvms:#.netinfo.externalip": "External IP",
 	"cloudletvms:#.netinfo.internalip": "Internal IP",
-	"cloudletvms:#.type":               "VM Type, one of PlatformNode, SharedRootLb, DedicatedRootLb, DockerNode, K8SMaster, K8SNode",
 	"cloudletvms:#.user":               "VM User",
-	"cloudletvms:#.state":              "VM State, one of CloudletVmFree, CloudletVmRequested, CloudletVmAllocated, CloudletVmInUse, CloudletVmReleased, CloudletVmError",
+	"cloudletvms:#.state":              "VM State, one of CloudletVmFree, CloudletVmInUse, CloudletVmError",
+	"cloudletvms:#.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"cloudletvms:#.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"action":                           "Action performed on Cloudlet VM Pool, one of CloudletVmActionDone, CloudletVmActionAllocate, CloudletVmActionRelease",
+	"error":                            "Errors if any",
 }
 var CloudletVMPoolSpecialArgs = map[string]string{
 	"fields": "StringArray",
@@ -621,18 +628,21 @@ var CloudletVMPoolMemberComments = map[string]string{
 	"cloudletvm.name":               "VM Name",
 	"cloudletvm.netinfo.externalip": "External IP",
 	"cloudletvm.netinfo.internalip": "Internal IP",
-	"cloudletvm.type":               "VM Type, one of PlatformNode, SharedRootLb, DedicatedRootLb, DockerNode, K8SMaster, K8SNode",
 	"cloudletvm.user":               "VM User",
-	"cloudletvm.state":              "VM State, one of CloudletVmFree, CloudletVmRequested, CloudletVmAllocated, CloudletVmInUse, CloudletVmReleased, CloudletVmError",
+	"cloudletvm.state":              "VM State, one of CloudletVmFree, CloudletVmInUse, CloudletVmError",
+	"cloudletvm.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"cloudletvm.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 }
 var CloudletVMPoolMemberSpecialArgs = map[string]string{}
 var CloudletVMSpecRequiredArgs = []string{}
 var CloudletVMSpecOptionalArgs = []string{
+	"name",
 	"externalnetwork",
 	"internalnetwork",
 }
 var CloudletVMSpecAliasArgs = []string{}
 var CloudletVMSpecComments = map[string]string{
+	"name":            "Cloudlet VM name",
 	"externalnetwork": "Cloudlet VM has external network defined or not",
 	"internalnetwork": "Cloudlet VM has internal network defined or not",
 }
@@ -642,19 +652,20 @@ var CloudletVMPoolInfoRequiredArgs = []string{
 	"cloudlet",
 }
 var CloudletVMPoolInfoOptionalArgs = []string{
-	"state",
+	"action",
 	"notifyid",
+	"user",
+	"vmspecs:#.name",
 	"vmspecs:#.externalnetwork",
 	"vmspecs:#.internalnetwork",
 	"cloudletvms:#.name",
 	"cloudletvms:#.netinfo.externalip",
 	"cloudletvms:#.netinfo.internalip",
-	"cloudletvms:#.type",
 	"cloudletvms:#.user",
 	"cloudletvms:#.state",
 	"cloudletvms:#.updatedat.seconds",
 	"cloudletvms:#.updatedat.nanos",
-	"errors",
+	"error",
 }
 var CloudletVMPoolInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -664,20 +675,22 @@ var CloudletVMPoolInfoComments = map[string]string{
 	"fields":                           "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":                     "Organization of the cloudlet site",
 	"cloudlet":                         "Name of the cloudlet",
-	"state":                            "State of Cloudlet VM request, one of CloudletVmFree, CloudletVmRequested, CloudletVmAllocated, CloudletVmInUse, CloudletVmReleased, CloudletVmError",
+	"action":                           "Action performed on Cloudlet VM Pool, one of CloudletVmActionDone, CloudletVmActionAllocate, CloudletVmActionRelease",
 	"notifyid":                         "Id of client assigned by server (internal use only)",
+	"user":                             "VM User",
+	"vmspecs:#.name":                   "Cloudlet VM name",
 	"vmspecs:#.externalnetwork":        "Cloudlet VM has external network defined or not",
 	"vmspecs:#.internalnetwork":        "Cloudlet VM has internal network defined or not",
 	"cloudletvms:#.name":               "VM Name",
 	"cloudletvms:#.netinfo.externalip": "External IP",
 	"cloudletvms:#.netinfo.internalip": "Internal IP",
-	"cloudletvms:#.type":               "VM Type, one of PlatformNode, SharedRootLb, DedicatedRootLb, DockerNode, K8SMaster, K8SNode",
 	"cloudletvms:#.user":               "VM User",
-	"cloudletvms:#.state":              "VM State, one of CloudletVmFree, CloudletVmRequested, CloudletVmAllocated, CloudletVmInUse, CloudletVmReleased, CloudletVmError",
-	"errors":                           "Errors if any",
+	"cloudletvms:#.state":              "VM State, one of CloudletVmFree, CloudletVmInUse, CloudletVmError",
+	"cloudletvms:#.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"cloudletvms:#.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"error":                            "Errors if any",
 }
 var CloudletVMPoolInfoSpecialArgs = map[string]string{
-	"errors": "StringArray",
 	"fields": "StringArray",
 }
 var AddCloudletVMPoolMemberRequiredArgs = []string{

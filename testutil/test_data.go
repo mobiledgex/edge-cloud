@@ -1357,6 +1357,81 @@ var PlarformDeviceClientData = []edgeproto.Device{
 	},
 }
 
+var CloudletVMPoolData = []edgeproto.CloudletVMPool{
+	edgeproto.CloudletVMPool{
+		Key: CloudletData[0].Key,
+		CloudletVms: []edgeproto.CloudletVM{
+			edgeproto.CloudletVM{
+				Name: "vm1",
+				NetInfo: edgeproto.CloudletVMNetInfo{
+					ExternalIp: "192.168.1.101",
+					InternalIp: "192.168.100.101",
+				},
+			},
+			edgeproto.CloudletVM{
+				Name: "vm2",
+				NetInfo: edgeproto.CloudletVMNetInfo{
+					ExternalIp: "192.168.1.102",
+					InternalIp: "192.168.100.102",
+				},
+			},
+			edgeproto.CloudletVM{
+				Name: "vm3",
+				NetInfo: edgeproto.CloudletVMNetInfo{
+					InternalIp: "192.168.100.103",
+				},
+			},
+			edgeproto.CloudletVM{
+				Name: "vm4",
+				NetInfo: edgeproto.CloudletVMNetInfo{
+					InternalIp: "192.168.100.104",
+				},
+			},
+		},
+	},
+	edgeproto.CloudletVMPool{
+		Key: CloudletData[1].Key,
+		CloudletVms: []edgeproto.CloudletVM{
+			edgeproto.CloudletVM{
+				Name: "vm1",
+				NetInfo: edgeproto.CloudletVMNetInfo{
+					ExternalIp: "192.168.1.101",
+					InternalIp: "192.168.100.101",
+				},
+			},
+			edgeproto.CloudletVM{
+				Name: "vm2",
+				NetInfo: edgeproto.CloudletVMNetInfo{
+					InternalIp: "192.168.100.102",
+				},
+			},
+			edgeproto.CloudletVM{
+				Name: "vm3",
+				NetInfo: edgeproto.CloudletVMNetInfo{
+					InternalIp: "192.168.100.103",
+				},
+			},
+		},
+	},
+	edgeproto.CloudletVMPool{
+		Key: CloudletData[2].Key,
+		CloudletVms: []edgeproto.CloudletVM{
+			edgeproto.CloudletVM{
+				Name: "vm1",
+				NetInfo: edgeproto.CloudletVMNetInfo{
+					InternalIp: "192.168.100.101",
+				},
+			},
+			edgeproto.CloudletVM{
+				Name: "vm2",
+				NetInfo: edgeproto.CloudletVMNetInfo{
+					InternalIp: "192.168.100.102",
+				},
+			},
+		},
+	},
+}
+
 func GetTimestamp(t time.Time) *types.Timestamp {
 	ts, _ := types.TimestampProto(t)
 	return ts

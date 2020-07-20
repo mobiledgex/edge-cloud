@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -100,6 +101,26 @@ appinstances:
   liveness: LivenessDynamic
   flavor:
     name: x1.small
+
+cloudletvmpools:
+- key:
+    organization: TMUS
+    name: cloud2
+  cloudletvms:
+  - name: vm1
+    netinfo:
+      externalip: 192.168.1.101
+      internalip: 192.168.100.101
+  - name: vm2
+    netinfo:
+      externalip: 192.168.1.102
+      internalip: 192.168.100.102
+  - name: vm3
+    netinfo:
+      internalip: 192.168.100.103
+  - name: vm4
+    netinfo:
+      internalip: 192.168.100.104
 `
 
 func startMain(t *testing.T) (chan struct{}, error) {
@@ -170,12 +191,16 @@ func TestCRM(t *testing.T) {
 	for ii := range data.AppInstances {
 		ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
 	}
+	for ii := range data.CloudletVmPools {
+		ctrlHandler.CloudletVMPoolCache.Update(ctx, &data.CloudletVmPools[ii], 0)
+	}
 	notify.WaitFor(&controllerData.FlavorCache, 3)
 	// Note for ClusterInsts and AppInsts, only those that match
 	// myCloudlet Key will be sent.
 	log.SpanLog(ctx, log.DebugLevelApi, "wait for instances")
 	notify.WaitFor(&controllerData.ClusterInstCache, 2)
 	notify.WaitFor(&controllerData.AppInstCache, 2)
+	notify.WaitFor(&controllerData.CloudletVMPoolCache, 1)
 
 	// TODO: check that the above changes triggered cloudlet cluster/app creates
 	// for now just check stats
@@ -183,8 +208,14 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 3, len(controllerData.FlavorCache.Objs))
 	require.Equal(t, 2, len(controllerData.ClusterInstCache.Objs))
 	require.Equal(t, 2, len(controllerData.AppInstCache.Objs))
+	require.Equal(t, 1, len(controllerData.CloudletVMPoolCache.Objs))
+
+	testCloudletVMPoolInfo(t, ctx, ctrlHandler, data.CloudletVmPools)
 
 	// delete
+	for ii := range data.CloudletVmPools {
+		ctrlHandler.CloudletVMPoolCache.Delete(ctx, &data.CloudletVmPools[ii], 0)
+	}
 	for ii := range data.AppInstances {
 		ctrlHandler.AppInstCache.Delete(ctx, &data.AppInstances[ii], 0)
 	}
@@ -197,15 +228,133 @@ func TestCRM(t *testing.T) {
 	notify.WaitFor(&controllerData.FlavorCache, 0)
 	notify.WaitFor(&controllerData.ClusterInstCache, 0)
 	notify.WaitFor(&controllerData.AppInstCache, 0)
+	notify.WaitFor(&controllerData.CloudletVMPoolCache, 0)
 
 	// TODO: check that deletes triggered cloudlet cluster/app deletes.
 	require.Equal(t, 0, len(controllerData.FlavorCache.Objs))
 	require.Equal(t, 0, len(controllerData.ClusterInstCache.Objs))
 	require.Equal(t, 0, len(controllerData.AppInstCache.Objs))
+	require.Equal(t, 0, len(controllerData.CloudletVMPoolCache.Objs))
 
 	// closing the signal channel triggers main to exit
 	close(sigChan)
 	// wait until main is done so it can clean up properly
 	<-mainDone
 	ctrlMgr.Stop()
+}
+
+func waitForAction(key *edgeproto.CloudletKey, action edgeproto.CloudletVMAction) (*edgeproto.CloudletVMPoolInfo, error) {
+	info := edgeproto.CloudletVMPoolInfo{}
+	var lastAction edgeproto.CloudletVMAction
+	for i := 0; i < 100; i++ {
+		if controllerData.CloudletVMPoolInfoCache.Get(key, &info) {
+			if info.Action == action {
+				return &info, nil
+			}
+			lastAction = info.Action
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return nil, fmt.Errorf("Unable to get desired Cloudlet VM Pool action, actual action %s, desired action %s", lastAction, action)
+}
+
+func testCloudletVMPoolInfo(t *testing.T, ctx context.Context, ctrlHandler *notify.DummyHandler, cloudletVmPools []edgeproto.CloudletVMPool) {
+	vmPool := cloudletVmPools[0]
+
+	// Allocate VMs from the pool
+	info := edgeproto.CloudletVMPoolInfo{}
+	info.Key = vmPool.Key
+	info.User = "cluster:testcluster,cluster-org:testorg"
+	info.VmSpecs = []edgeproto.CloudletVMSpec{
+		edgeproto.CloudletVMSpec{
+			ExternalNetwork: true,
+		},
+		edgeproto.CloudletVMSpec{
+			InternalNetwork: true,
+		},
+	}
+	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
+	controllerData.CloudletVMPoolInfoCache.Update(ctx, &info, 0)
+
+	edgeproto.AllocateCloudletVMsFromPool(ctx, &info, &vmPool)
+	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
+
+	// wait for cloudletvmpoolinfo action to get changed to done
+	infoFound, err := waitForAction(&vmPool.Key, edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE)
+	require.Nil(t, err, "get valid cloudlet vm pool info for %v, desired action %s", info.Key, info.Action)
+	require.Empty(t, infoFound.Error, "cloudlet vm pool allocation failed")
+	require.Equal(t, 2, len(infoFound.CloudletVms), "get desired number of vms for %v", info.Key)
+
+	vmPool.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
+	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
+
+	// Allocate some more VMs from the pool
+	info.VmSpecs = []edgeproto.CloudletVMSpec{
+		edgeproto.CloudletVMSpec{
+			InternalNetwork: true,
+		},
+	}
+	info.CloudletVms = []edgeproto.CloudletVM{}
+	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
+	controllerData.CloudletVMPoolInfoCache.Update(ctx, &info, 0)
+
+	edgeproto.AllocateCloudletVMsFromPool(ctx, &info, &vmPool)
+	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
+
+	// wait for cloudletvmpoolinfo action to get changed to done
+	infoFound, err = waitForAction(&vmPool.Key, edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE)
+	require.Nil(t, err)
+	require.Empty(t, infoFound.Error, "cloudlet vm pool allocation failed")
+	require.Equal(t, 3, len(infoFound.CloudletVms), "get desired number of vms for %v", info.Key)
+
+	vmPool.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
+	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
+
+	// Allocate some more VMs from the pool, should fail
+	info.VmSpecs = []edgeproto.CloudletVMSpec{
+		edgeproto.CloudletVMSpec{
+			ExternalNetwork: true,
+		},
+		edgeproto.CloudletVMSpec{
+			ExternalNetwork: true,
+			InternalNetwork: true,
+		},
+	}
+	info.CloudletVms = []edgeproto.CloudletVM{}
+	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
+	controllerData.CloudletVMPoolInfoCache.Update(ctx, &info, 0)
+
+	edgeproto.AllocateCloudletVMsFromPool(ctx, &info, &vmPool)
+	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
+
+	// wait for cloudletvmpoolinfo action to get changed to done
+	infoFound, err = waitForAction(&vmPool.Key, edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE)
+	require.Nil(t, err)
+	require.NotEmpty(t, infoFound.Error, "cloudlet vm pool allocation failed")
+	require.Equal(t, 3, len(infoFound.CloudletVms), "get desired number of vms for %v", info.Key)
+
+	vmPool.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
+	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
+
+	// Release VMs from the pool
+	info.VmSpecs = []edgeproto.CloudletVMSpec{}
+	for _, vm := range info.CloudletVms {
+		info.VmSpecs = append(info.VmSpecs, edgeproto.CloudletVMSpec{
+			Name: vm.Name,
+		})
+	}
+	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
+	controllerData.CloudletVMPoolInfoCache.Update(ctx, &info, 0)
+
+	edgeproto.ReleaseCloudletVMsFromPool(ctx, &info, &vmPool)
+	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
+
+	// wait for cloudletvmpoolinfo action to get changed to done
+	infoFound, err = waitForAction(&vmPool.Key, edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE)
+	require.Nil(t, err)
+	require.Empty(t, infoFound.Error, "cloudlet vm pool allocation failed")
+	require.Equal(t, 0, len(infoFound.CloudletVms), "get desired number of vms for %v", info.Key)
+
+	vmPool.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
+	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
 }

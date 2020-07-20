@@ -19,10 +19,12 @@ type ControllerData struct {
 	AppCache                 edgeproto.AppCache
 	AppInstCache             edgeproto.AppInstCache
 	CloudletCache            edgeproto.CloudletCache
+	CloudletVMPoolCache      edgeproto.CloudletVMPoolCache
 	FlavorCache              edgeproto.FlavorCache
 	ClusterInstCache         edgeproto.ClusterInstCache
 	AppInstInfoCache         edgeproto.AppInstInfoCache
 	CloudletInfoCache        edgeproto.CloudletInfoCache
+	CloudletVMPoolInfoCache  edgeproto.CloudletVMPoolInfoCache
 	ClusterInstInfoCache     edgeproto.ClusterInstInfoCache
 	PrivacyPolicyCache       edgeproto.PrivacyPolicyCache
 	AlertCache               edgeproto.AlertCache
@@ -53,9 +55,11 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	edgeproto.InitAppCache(&cd.AppCache)
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
 	edgeproto.InitCloudletCache(&cd.CloudletCache)
+	edgeproto.InitCloudletVMPoolCache(&cd.CloudletVMPoolCache)
 	edgeproto.InitAppInstInfoCache(&cd.AppInstInfoCache)
 	edgeproto.InitClusterInstInfoCache(&cd.ClusterInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&cd.CloudletInfoCache)
+	edgeproto.InitCloudletVMPoolInfoCache(&cd.CloudletVMPoolInfoCache)
 	edgeproto.InitFlavorCache(&cd.FlavorCache)
 	edgeproto.InitClusterInstCache(&cd.ClusterInstCache)
 	edgeproto.InitAlertCache(&cd.AlertCache)
@@ -68,6 +72,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.AppInstCache.SetUpdatedCb(cd.appInstChanged)
 	cd.FlavorCache.SetUpdatedCb(cd.flavorChanged)
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
+	cd.CloudletVMPoolCache.SetUpdatedCb(cd.cloudletVMPoolChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
@@ -574,5 +579,44 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	}
 	if updateInfo {
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
+}
+
+func (cd *ControllerData) cloudletVMPoolChanged(ctx context.Context, old *edgeproto.CloudletVMPool, new *edgeproto.CloudletVMPool) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletVMPoolChanged", "cloudlet", new)
+	poolInfo := edgeproto.CloudletVMPoolInfo{}
+	found := cd.CloudletVMPoolInfoCache.Get(&new.Key, &poolInfo)
+	if !found {
+		log.SpanLog(ctx, log.DebugLevelInfra, "poolInfo not found for cloudlet", "key", new.Key)
+		return
+	}
+	if old == nil || old.Action == new.Action {
+		return
+	}
+	updateInfo := false
+	switch new.Action {
+	case edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE:
+		if poolInfo.Action == new.Action {
+			poolInfo.CloudletVms = []edgeproto.CloudletVM{}
+			for _, cloudletVm := range new.CloudletVms {
+				if cloudletVm.User != poolInfo.User {
+					continue
+				}
+				poolInfo.CloudletVms = append(poolInfo.CloudletVms, cloudletVm)
+			}
+			poolInfo.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
+			poolInfo.Error = new.Error
+			updateInfo = true
+		}
+	case edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE:
+		if poolInfo.Action == new.Action {
+			poolInfo.CloudletVms = []edgeproto.CloudletVM{}
+			poolInfo.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
+			poolInfo.Error = new.Error
+			updateInfo = true
+		}
+	}
+	if updateInfo {
+		cd.CloudletVMPoolInfoCache.Update(ctx, &poolInfo, 0)
 	}
 }
