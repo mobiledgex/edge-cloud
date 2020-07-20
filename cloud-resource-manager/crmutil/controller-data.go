@@ -598,15 +598,19 @@ func (cd *ControllerData) cloudletVMPoolChanged(ctx context.Context, old *edgepr
 	case edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE:
 		if poolInfo.Action == new.Action {
 			poolInfo.CloudletVms = []edgeproto.CloudletVM{}
-			for _, cloudletVm := range new.CloudletVms {
-				if cloudletVm.User != poolInfo.User {
-					continue
+			for _, vmSpec := range poolInfo.VmSpecs {
+				for _, cloudletVm := range new.CloudletVms {
+					if cloudletVm.InternalName == vmSpec.InternalName {
+						poolInfo.CloudletVms = append(poolInfo.CloudletVms, cloudletVm)
+						break
+					}
 				}
-				poolInfo.CloudletVms = append(poolInfo.CloudletVms, cloudletVm)
 			}
 			poolInfo.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
 			poolInfo.Error = new.Error
 			updateInfo = true
+		} else {
+			log.SpanLog(ctx, log.DebugLevelInfra, "invalid action", "new action", new.Action, "poolinfo action", poolInfo.Action)
 		}
 	case edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE:
 		if poolInfo.Action == new.Action {
@@ -614,6 +618,8 @@ func (cd *ControllerData) cloudletVMPoolChanged(ctx context.Context, old *edgepr
 			poolInfo.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
 			poolInfo.Error = new.Error
 			updateInfo = true
+		} else {
+			log.SpanLog(ctx, log.DebugLevelInfra, "invalid action", "new action", new.Action, "poolinfo action", poolInfo.Action)
 		}
 	}
 	if updateInfo {

@@ -855,6 +855,7 @@ func AllocateCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *Cloudl
 			}
 			cloudletVMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_IN_USE
 			cloudletVMPool.CloudletVms[ii].User = cloudletVMPoolInfo.User
+			cloudletVMPool.CloudletVms[ii].InternalName = vmSpec.InternalName
 			ts, _ := types.TimestampProto(time.Now())
 			cloudletVMPool.CloudletVms[ii].UpdatedAt = *ts
 			found = true
@@ -874,24 +875,16 @@ func ReleaseCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *Cloudle
 	cloudletVMPool.Action = CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
 	cloudletVMPool.Error = ""
 	count := 0
-	for _, vmSpec := range cloudletVMPoolInfo.VmSpecs {
-		found := false
-		for ii, cloudletVm := range cloudletVMPool.CloudletVms {
-			if vmSpec.Name != cloudletVm.Name {
-				continue
-			}
-			cloudletVMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_FREE
-			cloudletVMPool.CloudletVms[ii].User = ""
-			ts, _ := types.TimestampProto(time.Now())
-			cloudletVMPool.CloudletVms[ii].UpdatedAt = *ts
-			found = true
-			count++
-			break
+	for ii, cloudletVm := range cloudletVMPool.CloudletVms {
+		if cloudletVMPoolInfo.User != cloudletVm.User {
+			continue
 		}
-		if !found {
-			cloudletVMPool.Error = fmt.Sprintf("Unable to find Cloudlet VM with spec: %v", vmSpec)
-			break
-		}
+		cloudletVMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_FREE
+		cloudletVMPool.CloudletVms[ii].User = ""
+		cloudletVMPool.CloudletVms[ii].InternalName = ""
+		ts, _ := types.TimestampProto(time.Now())
+		cloudletVMPool.CloudletVms[ii].UpdatedAt = *ts
+		count++
 	}
-	log.DebugLog(log.DebugLevelNotify, "released cloulet VMs", "key", cloudletVMPool.Key, "count", count)
+	log.DebugLog(log.DebugLevelNotify, "released cloudlet VMs", "key", cloudletVMPool.Key, "user", cloudletVMPoolInfo.User, "count", count)
 }

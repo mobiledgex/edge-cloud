@@ -258,103 +258,91 @@ func waitForAction(key *edgeproto.CloudletKey, action edgeproto.CloudletVMAction
 	return nil, fmt.Errorf("Unable to get desired Cloudlet VM Pool action, actual action %s, desired action %s", lastAction, action)
 }
 
+var Pass = true
+var Fail = false
+
+func verifyCloudletVMAction(t *testing.T, ctx context.Context, info *edgeproto.CloudletVMPoolInfo, vmPool *edgeproto.CloudletVMPool, ctrlHandler *notify.DummyHandler, vmCount int, success bool) {
+	controllerData.CloudletVMPoolInfoCache.Update(ctx, info, 0)
+
+	if info.Action == edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE {
+		edgeproto.AllocateCloudletVMsFromPool(ctx, info, vmPool)
+	} else {
+		edgeproto.ReleaseCloudletVMsFromPool(ctx, info, vmPool)
+	}
+	ctrlHandler.CloudletVMPoolCache.Update(ctx, vmPool, 0)
+
+	// wait for cloudletvmpoolinfo action to get changed to done
+	infoFound, err := waitForAction(&info.Key, edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE)
+	require.Nil(t, err)
+	if success {
+		require.Empty(t, infoFound.Error)
+	} else {
+		require.NotEmpty(t, infoFound.Error)
+	}
+	require.Equal(t, vmCount, len(infoFound.CloudletVms), "get desired number of vms for %v", info.Key)
+
+	vmPool.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
+	ctrlHandler.CloudletVMPoolCache.Update(ctx, vmPool, 0)
+}
+
 func testCloudletVMPoolInfo(t *testing.T, ctx context.Context, ctrlHandler *notify.DummyHandler, cloudletVmPools []edgeproto.CloudletVMPool) {
 	vmPool := cloudletVmPools[0]
+	info := edgeproto.CloudletVMPoolInfo{}
 
 	// Allocate VMs from the pool
-	info := edgeproto.CloudletVMPoolInfo{}
 	info.Key = vmPool.Key
-	info.User = "cluster:testcluster,cluster-org:testorg"
+	info.User = "testcloudletvmpoolvms1"
 	info.VmSpecs = []edgeproto.CloudletVMSpec{
 		edgeproto.CloudletVMSpec{
+			InternalName:    "vm1.testcluster.testorg.mobiledgex.net",
 			ExternalNetwork: true,
 		},
 		edgeproto.CloudletVMSpec{
+			InternalName:    "vm2.testcluster.testorg.mobiledgex.net",
 			InternalNetwork: true,
 		},
 	}
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
-	controllerData.CloudletVMPoolInfoCache.Update(ctx, &info, 0)
-
-	edgeproto.AllocateCloudletVMsFromPool(ctx, &info, &vmPool)
-	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
-
-	// wait for cloudletvmpoolinfo action to get changed to done
-	infoFound, err := waitForAction(&vmPool.Key, edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE)
-	require.Nil(t, err, "get valid cloudlet vm pool info for %v, desired action %s", info.Key, info.Action)
-	require.Empty(t, infoFound.Error, "cloudlet vm pool allocation failed")
-	require.Equal(t, 2, len(infoFound.CloudletVms), "get desired number of vms for %v", info.Key)
-
-	vmPool.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
-	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
+	verifyCloudletVMAction(t, ctx, &info, &vmPool, ctrlHandler, 2, Pass)
 
 	// Allocate some more VMs from the pool
+	info.User = "testcloudletvmpoolvms2"
 	info.VmSpecs = []edgeproto.CloudletVMSpec{
 		edgeproto.CloudletVMSpec{
+			InternalName:    "vm3.testcluster.testorg.mobiledgex.net",
 			InternalNetwork: true,
 		},
 	}
 	info.CloudletVms = []edgeproto.CloudletVM{}
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
-	controllerData.CloudletVMPoolInfoCache.Update(ctx, &info, 0)
-
-	edgeproto.AllocateCloudletVMsFromPool(ctx, &info, &vmPool)
-	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
-
-	// wait for cloudletvmpoolinfo action to get changed to done
-	infoFound, err = waitForAction(&vmPool.Key, edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE)
-	require.Nil(t, err)
-	require.Empty(t, infoFound.Error, "cloudlet vm pool allocation failed")
-	require.Equal(t, 3, len(infoFound.CloudletVms), "get desired number of vms for %v", info.Key)
-
-	vmPool.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
-	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
+	verifyCloudletVMAction(t, ctx, &info, &vmPool, ctrlHandler, 1, Pass)
 
 	// Allocate some more VMs from the pool, should fail
+	info.User = "testcloudletvmpoolvms1"
 	info.VmSpecs = []edgeproto.CloudletVMSpec{
 		edgeproto.CloudletVMSpec{
+			InternalName:    "vm4.testcluster.testorg.mobiledgex.net",
 			ExternalNetwork: true,
 		},
 		edgeproto.CloudletVMSpec{
+			InternalName:    "vm5.testcluster.testorg.mobiledgex.net",
 			ExternalNetwork: true,
 			InternalNetwork: true,
 		},
 	}
 	info.CloudletVms = []edgeproto.CloudletVM{}
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
-	controllerData.CloudletVMPoolInfoCache.Update(ctx, &info, 0)
-
-	edgeproto.AllocateCloudletVMsFromPool(ctx, &info, &vmPool)
-	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
-
-	// wait for cloudletvmpoolinfo action to get changed to done
-	infoFound, err = waitForAction(&vmPool.Key, edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE)
-	require.Nil(t, err)
-	require.NotEmpty(t, infoFound.Error, "cloudlet vm pool allocation failed")
-	require.Equal(t, 3, len(infoFound.CloudletVms), "get desired number of vms for %v", info.Key)
-
-	vmPool.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
-	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
+	verifyCloudletVMAction(t, ctx, &info, &vmPool, ctrlHandler, 0, Fail)
 
 	// Release VMs from the pool
 	info.VmSpecs = []edgeproto.CloudletVMSpec{}
-	for _, vm := range info.CloudletVms {
-		info.VmSpecs = append(info.VmSpecs, edgeproto.CloudletVMSpec{
-			Name: vm.Name,
-		})
-	}
+	info.User = "testcloudletvmpoolvms1"
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
-	controllerData.CloudletVMPoolInfoCache.Update(ctx, &info, 0)
+	verifyCloudletVMAction(t, ctx, &info, &vmPool, ctrlHandler, 0, Pass)
 
-	edgeproto.ReleaseCloudletVMsFromPool(ctx, &info, &vmPool)
-	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
-
-	// wait for cloudletvmpoolinfo action to get changed to done
-	infoFound, err = waitForAction(&vmPool.Key, edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE)
-	require.Nil(t, err)
-	require.Empty(t, infoFound.Error, "cloudlet vm pool allocation failed")
-	require.Equal(t, 0, len(infoFound.CloudletVms), "get desired number of vms for %v", info.Key)
-
-	vmPool.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
-	ctrlHandler.CloudletVMPoolCache.Update(ctx, &vmPool, 0)
+	// Release VMs from the pool
+	info.VmSpecs = []edgeproto.CloudletVMSpec{}
+	info.User = "testcloudletvmpoolvms2"
+	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
+	verifyCloudletVMAction(t, ctx, &info, &vmPool, ctrlHandler, 0, Pass)
 }

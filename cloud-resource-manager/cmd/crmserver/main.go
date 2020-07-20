@@ -180,11 +180,13 @@ func main() {
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		caches := pf.Caches{
-			FlavorCache:        &controllerData.FlavorCache,
-			PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
-			ClusterInstCache:   &controllerData.ClusterInstCache,
-			AppCache:           &controllerData.AppCache,
-			AppInstCache:       &controllerData.AppInstCache,
+			FlavorCache:             &controllerData.FlavorCache,
+			PrivacyPolicyCache:      &controllerData.PrivacyPolicyCache,
+			ClusterInstCache:        &controllerData.ClusterInstCache,
+			AppCache:                &controllerData.AppCache,
+			AppInstCache:            &controllerData.AppInstCache,
+			CloudletVMPoolCache:     &controllerData.CloudletVMPoolCache,
+			CloudletVMPoolInfoCache: &controllerData.CloudletVMPoolInfoCache,
 		}
 		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &caches, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))

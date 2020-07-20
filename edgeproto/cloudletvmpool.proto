@@ -41,6 +41,8 @@ message CloudletVM {
   CloudletVMState state = 4;
   // Last updated time
   google.protobuf.Timestamp updated_at = 5 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+  // VM Internal Name
+  string internal_name = 6;
 }
 
 // CloudletVMPool defines a pool of Cloudlet VMs to be part of a Cloudlet
@@ -60,7 +62,7 @@ message CloudletVMPool {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.noconfig) = "CloudletVms:#.User,CloudletVms:#.State,CloudletVms:#.UpdatedAt.Seconds,CloudletVms:#.UpdatedAt.Nanos,Action,Error";
+  option (protogen.noconfig) = "CloudletVms:#.User,CloudletVms:#.InternalName,CloudletVms:#.State,CloudletVms:#.UpdatedAt.Seconds,CloudletVms:#.UpdatedAt.Nanos,Action,Error";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
@@ -111,7 +113,6 @@ service CloudletVMPoolApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
-    option (protogen.mc2_custom_authz) = true;
   }
   // Add CloudletVMPoolMember. Adds a Cloudlet VM to existing Cloudlet VM Pool.
   rpc AddCloudletVMPoolMember(CloudletVMPoolMember) returns (Result) {
@@ -135,8 +136,8 @@ service CloudletVMPoolApi {
 
 // CloudletVMSpec defines the specification of Cloudlet VM required by CRM
 message CloudletVMSpec {
-  // Cloudlet VM name
-  string name = 1;
+  // Cloudlet VM internal name
+  string internal_name = 1;
   // Cloudlet VM has external network defined or not
   bool external_network  = 2;
   // Cloudlet VM has internal network defined or not

@@ -567,6 +567,7 @@ var CloudletVMOptionalArgs = []string{
 	"state",
 	"updatedat.seconds",
 	"updatedat.nanos",
+	"internalname",
 }
 var CloudletVMAliasArgs = []string{}
 var CloudletVMComments = map[string]string{
@@ -577,6 +578,7 @@ var CloudletVMComments = map[string]string{
 	"state":              "VM State, one of CloudletVmFree, CloudletVmInUse, CloudletVmError",
 	"updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"internalname":       "VM Internal Name",
 }
 var CloudletVMSpecialArgs = map[string]string{}
 var CloudletVMPoolRequiredArgs = []string{
@@ -603,6 +605,7 @@ var CloudletVMPoolComments = map[string]string{
 	"cloudletvms:#.state":              "VM State, one of CloudletVmFree, CloudletVmInUse, CloudletVmError",
 	"cloudletvms:#.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"cloudletvms:#.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"cloudletvms:#.internalname":       "VM Internal Name",
 	"action":                           "Action performed on Cloudlet VM Pool, one of CloudletVmActionDone, CloudletVmActionAllocate, CloudletVmActionRelease",
 	"error":                            "Errors if any",
 }
@@ -617,6 +620,7 @@ var CloudletVMPoolMemberOptionalArgs = []string{
 	"cloudletvm.name",
 	"cloudletvm.netinfo.externalip",
 	"cloudletvm.netinfo.internalip",
+	"cloudletvm.internalname",
 }
 var CloudletVMPoolMemberAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -632,17 +636,18 @@ var CloudletVMPoolMemberComments = map[string]string{
 	"cloudletvm.state":              "VM State, one of CloudletVmFree, CloudletVmInUse, CloudletVmError",
 	"cloudletvm.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"cloudletvm.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"cloudletvm.internalname":       "VM Internal Name",
 }
 var CloudletVMPoolMemberSpecialArgs = map[string]string{}
 var CloudletVMSpecRequiredArgs = []string{}
 var CloudletVMSpecOptionalArgs = []string{
-	"name",
+	"internalname",
 	"externalnetwork",
 	"internalnetwork",
 }
 var CloudletVMSpecAliasArgs = []string{}
 var CloudletVMSpecComments = map[string]string{
-	"name":            "Cloudlet VM name",
+	"internalname":    "Cloudlet VM internal name",
 	"externalnetwork": "Cloudlet VM has external network defined or not",
 	"internalnetwork": "Cloudlet VM has internal network defined or not",
 }
@@ -655,7 +660,7 @@ var CloudletVMPoolInfoOptionalArgs = []string{
 	"action",
 	"notifyid",
 	"user",
-	"vmspecs:#.name",
+	"vmspecs:#.internalname",
 	"vmspecs:#.externalnetwork",
 	"vmspecs:#.internalnetwork",
 	"cloudletvms:#.name",
@@ -665,6 +670,7 @@ var CloudletVMPoolInfoOptionalArgs = []string{
 	"cloudletvms:#.state",
 	"cloudletvms:#.updatedat.seconds",
 	"cloudletvms:#.updatedat.nanos",
+	"cloudletvms:#.internalname",
 	"error",
 }
 var CloudletVMPoolInfoAliasArgs = []string{
@@ -678,7 +684,7 @@ var CloudletVMPoolInfoComments = map[string]string{
 	"action":                           "Action performed on Cloudlet VM Pool, one of CloudletVmActionDone, CloudletVmActionAllocate, CloudletVmActionRelease",
 	"notifyid":                         "Id of client assigned by server (internal use only)",
 	"user":                             "VM User",
-	"vmspecs:#.name":                   "Cloudlet VM name",
+	"vmspecs:#.internalname":           "Cloudlet VM internal name",
 	"vmspecs:#.externalnetwork":        "Cloudlet VM has external network defined or not",
 	"vmspecs:#.internalnetwork":        "Cloudlet VM has internal network defined or not",
 	"cloudletvms:#.name":               "VM Name",
@@ -688,6 +694,7 @@ var CloudletVMPoolInfoComments = map[string]string{
 	"cloudletvms:#.state":              "VM State, one of CloudletVmFree, CloudletVmInUse, CloudletVmError",
 	"cloudletvms:#.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"cloudletvms:#.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"cloudletvms:#.internalname":       "VM Internal Name",
 	"error":                            "Errors if any",
 }
 var CloudletVMPoolInfoSpecialArgs = map[string]string{
@@ -701,6 +708,7 @@ var AddCloudletVMPoolMemberRequiredArgs = []string{
 var AddCloudletVMPoolMemberOptionalArgs = []string{
 	"cloudletvm.netinfo.externalip",
 	"cloudletvm.netinfo.internalip",
+	"cloudletvm.internalname",
 }
 var RemoveCloudletVMPoolMemberRequiredArgs = []string{
 	"cloudlet-org",
@@ -710,4 +718,5 @@ var RemoveCloudletVMPoolMemberRequiredArgs = []string{
 var RemoveCloudletVMPoolMemberOptionalArgs = []string{
 	"cloudletvm.netinfo.externalip",
 	"cloudletvm.netinfo.internalip",
+	"cloudletvm.internalname",
 }
