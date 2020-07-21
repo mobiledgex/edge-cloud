@@ -24,9 +24,14 @@ type TestObj struct {
 }
 
 type InnerObj struct {
+	Name    string
+	Val     int
+	Mmm     map[string]string
+	Sublist []SublistObj
+}
+
+type SublistObj struct {
 	Name string
-	Val  int
-	Mmm  map[string]string
 }
 
 func TestParseArgs(t *testing.T) {
@@ -51,6 +56,14 @@ func TestParseArgs(t *testing.T) {
 			Val:  1,
 			Mmm: map[string]string{
 				"xkey": "xx",
+			},
+			Sublist: []SublistObj{
+				SublistObj{
+					Name: "sublist0",
+				},
+				SublistObj{
+					Name: "sublist1",
+				},
 			},
 		},
 		Inner2: &InnerObj{
@@ -77,7 +90,7 @@ func TestParseArgs(t *testing.T) {
 		},
 	}
 
-	args = []string{"inner1.name=name1", "inner1.val=1", "inner2.name=name2", "inner2.val=2", "inner1.mmm=xkey=xx", "arr=foo", "arr=bar", "arr=baz", "mmm=key1=val1", "mmm=key.with.dot=val.with.dot", "mmm=keye=val=with=equals", "objarr:0.name=arrin1", "objarr:0.val=3", "objarr:1.name=arrin2", "objarr:1.val=4"}
+	args = []string{"inner1.name=name1", "inner1.val=1", "inner2.name=name2", "inner2.val=2", "inner1.mmm=xkey=xx", "arr=foo", "arr=bar", "arr=baz", "mmm=key1=val1", "mmm=key.with.dot=val.with.dot", "mmm=keye=val=with=equals", "objarr:0.name=arrin1", "objarr:0.val=3", "objarr:1.name=arrin2", "objarr:1.val=4", "inner1.sublist:0.name=sublist0", "inner1.sublist:1.name=sublist1"}
 	testConversion(t, input, &ex, &TestObj{}, &TestObj{}, args)
 
 	// test with alias args
@@ -90,9 +103,10 @@ func TestParseArgs(t *testing.T) {
 			"val2=inner2.val",
 			"mmm1=inner1.mmm",
 			"mmm2=inner2.mmm",
+			"sublist1:#.name=inner1.sublist:#.name",
 		},
 	}
-	args = []string{"name1=name1", "val1=1", "name2=name2", "val2=2", "mmm1=xkey=xx", "arr=foo", "arr=bar", "arr=baz", "mmm=key1=val1", "mmm=key.with.dot=val.with.dot", "mmm=keye=val=with=equals", "objarr:0.name=arrin1", "objarr:0.val=3", "objarr:1.name=arrin2", "objarr:1.val=4"}
+	args = []string{"name1=name1", "val1=1", "name2=name2", "val2=2", "mmm1=xkey=xx", "arr=foo", "arr=bar", "arr=baz", "mmm=key1=val1", "mmm=key.with.dot=val.with.dot", "mmm=keye=val=with=equals", "objarr:0.name=arrin1", "objarr:0.val=3", "objarr:1.name=arrin2", "objarr:1.val=4", "sublist1:0.name=sublist0", "sublist1:1.name=sublist1"}
 	testConversion(t, inputAliased, &ex, &TestObj{}, &TestObj{}, args)
 
 	rf := edgeproto.Flavor{
