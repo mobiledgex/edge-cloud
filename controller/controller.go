@@ -503,6 +503,7 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterSendAppInstRefsCache(&appInstRefsApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
+	notify.ServerMgrOne.RegisterSendResTagTableCache(&resTagTableApi.cache)
 
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
