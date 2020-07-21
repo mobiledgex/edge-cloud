@@ -492,6 +492,7 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
+	notify.ServerMgrOne.RegisterSendResTagTableCache(&resTagTableApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
