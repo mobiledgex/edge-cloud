@@ -1402,6 +1402,7 @@ var CloudletVMPoolData = []edgeproto.CloudletVMPool{
 			edgeproto.CloudletVM{
 				Name: "vm2",
 				NetInfo: edgeproto.CloudletVMNetInfo{
+					ExternalIp: "192.168.1.102",
 					InternalIp: "192.168.100.102",
 				},
 			},

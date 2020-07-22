@@ -134,7 +134,7 @@ func verifyCloudletVMAction(t *testing.T, ctx context.Context, info *edgeproto.C
 
 	inuseVms := []edgeproto.CloudletVM{}
 	for _, cloudletVm := range vmPool.CloudletVms {
-		if cloudletVm.State == edgeproto.CloudletVMState_CLOUDLET_VM_IN_USE {
+		if cloudletVm.User == info.User && cloudletVm.State == edgeproto.CloudletVMState_CLOUDLET_VM_IN_USE {
 			inuseVms = append(inuseVms, cloudletVm)
 		}
 	}
@@ -145,8 +145,11 @@ func testCloudletVMPoolAction(t *testing.T, ctx context.Context) {
 	vmPool := testutil.CloudletVMPoolData[1]
 	info := edgeproto.CloudletVMPoolInfo{}
 
+	user1 := "testcloudletvmpoolVMs1"
+	user2 := "testcloudletvmpoolVMs2"
+
 	// Allocate VMs
-	info.User = "testcloudletvmpoolVMs1"
+	info.User = user1
 	info.Key = vmPool.Key
 	info.VmSpecs = []edgeproto.CloudletVMSpec{
 		edgeproto.CloudletVMSpec{
@@ -162,26 +165,54 @@ func testCloudletVMPoolAction(t *testing.T, ctx context.Context) {
 	verifyCloudletVMAction(t, ctx, &info, 2, Pass)
 
 	// Allocate some more VMs but by different user
-	info.User = "testcloudletvmpoolVMs2"
+	// Below also tests that previous VM allocation didn't use VM with external
+	// connectivity for a spec with just requesting internal network access
+	info.User = user2
 	info.VmSpecs = []edgeproto.CloudletVMSpec{
 		edgeproto.CloudletVMSpec{
 			InternalName:    "vm2.testcluster.testorg.mobiledgex.net",
-			InternalNetwork: true,
+			ExternalNetwork: true,
 		},
 	}
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
-	verifyCloudletVMAction(t, ctx, &info, 3, Pass)
+	verifyCloudletVMAction(t, ctx, &info, 1, Pass)
 
 	// Allocate some more VMs, but it should fail as there aren't enough free VMs
-	info.User = "testcloudletvmpoolVMs1"
+	info.User = user1
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
-	verifyCloudletVMAction(t, ctx, &info, 3, Fail)
+	verifyCloudletVMAction(t, ctx, &info, 2, Fail)
 
-	// Release VMs
+	// Release 1 VM from the pool
+	info.User = user1
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
-	info.VmSpecs = []edgeproto.CloudletVMSpec{}
-	info.User = "testcloudletvmpoolVMs1"
+	info.VmSpecs = []edgeproto.CloudletVMSpec{
+		edgeproto.CloudletVMSpec{
+			InternalName: "vm2.testcluster.testorg.mobiledgex.net",
+		},
+	}
 	verifyCloudletVMAction(t, ctx, &info, 1, Pass)
+
+	// A VM is free, but allocation should fail as no VM with external network
+	// connectivity is free
+	info.User = user1
+	info.VmSpecs = []edgeproto.CloudletVMSpec{
+		edgeproto.CloudletVMSpec{
+			InternalName:    "vm2.testcluster.testorg.mobiledgex.net",
+			ExternalNetwork: true,
+		},
+	}
+	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
+	verifyCloudletVMAction(t, ctx, &info, 1, Fail)
+
+	// Release 2nd VM from the pool
+	info.User = user1
+	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
+	info.VmSpecs = []edgeproto.CloudletVMSpec{
+		edgeproto.CloudletVMSpec{
+			InternalName: "vm1.testcluster.testorg.mobiledgex.net",
+		},
+	}
+	verifyCloudletVMAction(t, ctx, &info, 0, Pass)
 
 	// Add VMs to the pool
 	cm1 := edgeproto.CloudletVMPoolMember{}
@@ -189,7 +220,6 @@ func testCloudletVMPoolAction(t *testing.T, ctx context.Context) {
 	cm1.CloudletVm = edgeproto.CloudletVM{
 		Name: "vmX",
 		NetInfo: edgeproto.CloudletVMNetInfo{
-			ExternalIp: "192.168.1.111",
 			InternalIp: "192.168.100.111",
 		},
 	}
@@ -197,27 +227,45 @@ func testCloudletVMPoolAction(t *testing.T, ctx context.Context) {
 	require.Nil(t, err, "add cloudlet vm to cloudlet vm pool")
 
 	// Allocate VMs, it should succeed now
-	info.User = "testcloudletvmpoolVMs2"
+	info.User = user2
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
 	info.VmSpecs = []edgeproto.CloudletVMSpec{
 		edgeproto.CloudletVMSpec{
 			InternalName:    "vm1.testcluster.testorg.mobiledgex.net",
-			ExternalNetwork: true,
+			InternalNetwork: true,
 		},
 		edgeproto.CloudletVMSpec{
 			InternalName:    "vm2.testcluster.testorg.mobiledgex.net",
 			InternalNetwork: true,
 		},
+		// Below also tests that previous VM allocation didn't use VM with external
+		// connectivity for a spec with just requesting internal network access
 		edgeproto.CloudletVMSpec{
 			InternalName:    "vm3.testcluster.testorg.mobiledgex.net",
-			InternalNetwork: true,
+			ExternalNetwork: true,
 		},
 	}
 	verifyCloudletVMAction(t, ctx, &info, 4, Pass)
 
-	// Release VMs
+	// Release 1 VM from the pool
+	info.User = user2
+	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
+	info.VmSpecs = []edgeproto.CloudletVMSpec{
+		edgeproto.CloudletVMSpec{
+			InternalName: "vm2.testcluster.testorg.mobiledgex.net",
+		},
+	}
+	verifyCloudletVMAction(t, ctx, &info, 2, Pass)
+
+	// Release all VMs
+	info.User = user2
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
 	info.VmSpecs = []edgeproto.CloudletVMSpec{}
-	info.User = "testcloudletvmpoolVMs2"
+	verifyCloudletVMAction(t, ctx, &info, 0, Pass)
+
+	// Release all VMs
+	info.User = user1
+	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
+	info.VmSpecs = []edgeproto.CloudletVMSpec{}
 	verifyCloudletVMAction(t, ctx, &info, 0, Pass)
 }

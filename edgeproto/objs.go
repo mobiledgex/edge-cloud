@@ -86,6 +86,9 @@ func (a *AllData) Sort() {
 	sort.Slice(a.AppInstRefs[:], func(i, j int) bool {
 		return a.AppInstRefs[i].Key.GetKeyString() < a.AppInstRefs[j].Key.GetKeyString()
 	})
+	sort.Slice(a.CloudletVmPools[:], func(i, j int) bool {
+		return a.CloudletVmPools[i].Key.GetKeyString() < a.CloudletVmPools[j].Key.GetKeyString()
+	})
 }
 
 func (a *NodeData) Sort() {
@@ -837,35 +840,84 @@ func AllocateCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *Cloudl
 	log.DebugLog(log.DebugLevelNotify, "AllocateCloudletVMsFromPool", "cloudletvmpoolinfo", cloudletVMPoolInfo, "cloudletvmpool", cloudletVMPool)
 	cloudletVMPool.Action = CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
 	cloudletVMPool.Error = ""
-	count := 0
+
+	// Group available VMs
+	bothNetVms := []string{}
+	internalNetVms := []string{}
+	externalNetVms := []string{}
+	for _, cloudletVm := range cloudletVMPool.CloudletVms {
+		if cloudletVm.State != CloudletVMState_CLOUDLET_VM_FREE {
+			continue
+		}
+		if cloudletVm.NetInfo.ExternalIp != "" && cloudletVm.NetInfo.InternalIp != "" {
+			bothNetVms = append(bothNetVms, cloudletVm.Name)
+			continue
+		}
+		if cloudletVm.NetInfo.ExternalIp != "" {
+			externalNetVms = append(externalNetVms, cloudletVm.Name)
+		}
+		if cloudletVm.NetInfo.InternalIp != "" {
+			internalNetVms = append(internalNetVms, cloudletVm.Name)
+		}
+	}
+
+	// Above grouping is done for following reason:
+	//   If only internal network is required, then avoid using
+	//   VM having external connectivity, unless there are no VMs with
+	//   just internal connectivity
+
+	// Allocate VMs from above groups
+	allocatedVms := make(map[string]string)
 	for _, vmSpec := range cloudletVMPoolInfo.VmSpecs {
-		found := false
-		for ii, cloudletVm := range cloudletVMPool.CloudletVms {
-			if cloudletVm.State != CloudletVMState_CLOUDLET_VM_FREE {
-				continue
+		if vmSpec.ExternalNetwork && vmSpec.InternalNetwork {
+			if len(bothNetVms) == 0 {
+				cloudletVMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with both external and internal network connectivity")
+				return
 			}
-			if vmSpec.ExternalNetwork && cloudletVm.NetInfo.ExternalIp == "" {
-				continue
+			allocatedVms[bothNetVms[0]] = vmSpec.InternalName
+			bothNetVms = bothNetVms[1:]
+		} else if vmSpec.ExternalNetwork {
+			if len(externalNetVms) == 0 {
+				// try from bothNetVms
+				if len(bothNetVms) == 0 {
+					cloudletVMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with external network connectivity")
+					return
+				}
+				allocatedVms[bothNetVms[0]] = vmSpec.InternalName
+				bothNetVms = bothNetVms[1:]
+			} else {
+				allocatedVms[externalNetVms[0]] = vmSpec.InternalName
+				externalNetVms = externalNetVms[1:]
 			}
-			// TODO: If only internal network is required, then avoid using
-			// VM having external connectivity, unless there are no VMs with
-			// just internal connectivity
-			if vmSpec.InternalNetwork && cloudletVm.NetInfo.InternalIp == "" {
-				continue
+		} else {
+			if len(internalNetVms) == 0 {
+				// try from bothNetVms
+				if len(bothNetVms) == 0 {
+					cloudletVMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with internal network connectivity")
+					return
+				}
+				allocatedVms[bothNetVms[0]] = vmSpec.InternalName
+				bothNetVms = bothNetVms[1:]
+			} else {
+				allocatedVms[internalNetVms[0]] = vmSpec.InternalName
+				internalNetVms = internalNetVms[1:]
 			}
-			cloudletVMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_IN_USE
-			cloudletVMPool.CloudletVms[ii].User = cloudletVMPoolInfo.User
-			cloudletVMPool.CloudletVms[ii].InternalName = vmSpec.InternalName
-			ts, _ := types.TimestampProto(time.Now())
-			cloudletVMPool.CloudletVms[ii].UpdatedAt = *ts
-			found = true
-			count++
-			break
 		}
-		if !found {
-			cloudletVMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with spec: %v", vmSpec)
-			break
+	}
+
+	// Mark allocated VMs as IN_USE
+	count := 0
+	for ii, cloudletVm := range cloudletVMPool.CloudletVms {
+		internalName, ok := allocatedVms[cloudletVm.Name]
+		if !ok {
+			continue
 		}
+		cloudletVMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_IN_USE
+		cloudletVMPool.CloudletVms[ii].User = cloudletVMPoolInfo.User
+		cloudletVMPool.CloudletVms[ii].InternalName = internalName
+		ts, _ := types.TimestampProto(time.Now())
+		cloudletVMPool.CloudletVms[ii].UpdatedAt = *ts
+		count++
 	}
 	log.DebugLog(log.DebugLevelNotify, "allocated cloudlet VMs", "key", cloudletVMPool.Key, "count", count)
 }
@@ -875,16 +927,28 @@ func ReleaseCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *Cloudle
 	cloudletVMPool.Action = CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
 	cloudletVMPool.Error = ""
 	count := 0
+	freeAll := false
+	if len(cloudletVMPoolInfo.VmSpecs) == 0 {
+		// free all vms
+		freeAll = true
+	}
+	vmNames := map[string]struct{}{}
+	for _, vmSpec := range cloudletVMPoolInfo.VmSpecs {
+		vmNames[vmSpec.InternalName] = struct{}{}
+	}
 	for ii, cloudletVm := range cloudletVMPool.CloudletVms {
 		if cloudletVMPoolInfo.User != cloudletVm.User {
 			continue
 		}
-		cloudletVMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_FREE
-		cloudletVMPool.CloudletVms[ii].User = ""
-		cloudletVMPool.CloudletVms[ii].InternalName = ""
-		ts, _ := types.TimestampProto(time.Now())
-		cloudletVMPool.CloudletVms[ii].UpdatedAt = *ts
-		count++
+		_, ok := vmNames[cloudletVm.InternalName]
+		if ok || freeAll {
+			cloudletVMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_FREE
+			cloudletVMPool.CloudletVms[ii].User = ""
+			cloudletVMPool.CloudletVms[ii].InternalName = ""
+			ts, _ := types.TimestampProto(time.Now())
+			cloudletVMPool.CloudletVms[ii].UpdatedAt = *ts
+			count++
+		}
 	}
 	log.DebugLog(log.DebugLevelNotify, "released cloudlet VMs", "key", cloudletVMPool.Key, "user", cloudletVMPoolInfo.User, "count", count)
 }

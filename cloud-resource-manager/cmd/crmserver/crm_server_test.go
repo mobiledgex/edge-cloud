@@ -305,11 +305,12 @@ func testCloudletVMPoolInfo(t *testing.T, ctx context.Context, ctrlHandler *noti
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
 	verifyCloudletVMAction(t, ctx, &info, &vmPool, ctrlHandler, 2, Pass)
 
-	// Allocate some more VMs from the pool
+	// Allocate some more VMs from the pool by different user
 	info.User = "testcloudletvmpoolvms2"
 	info.VmSpecs = []edgeproto.CloudletVMSpec{
 		edgeproto.CloudletVMSpec{
 			InternalName:    "vm3.testcluster.testorg.mobiledgex.net",
+			ExternalNetwork: true,
 			InternalNetwork: true,
 		},
 	}
@@ -322,17 +323,41 @@ func testCloudletVMPoolInfo(t *testing.T, ctx context.Context, ctrlHandler *noti
 	info.VmSpecs = []edgeproto.CloudletVMSpec{
 		edgeproto.CloudletVMSpec{
 			InternalName:    "vm4.testcluster.testorg.mobiledgex.net",
-			ExternalNetwork: true,
+			InternalNetwork: true,
 		},
 		edgeproto.CloudletVMSpec{
 			InternalName:    "vm5.testcluster.testorg.mobiledgex.net",
-			ExternalNetwork: true,
 			InternalNetwork: true,
 		},
 	}
 	info.CloudletVms = []edgeproto.CloudletVM{}
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
 	verifyCloudletVMAction(t, ctx, &info, &vmPool, ctrlHandler, 0, Fail)
+
+	// Release 1 VM from the pool
+	info.VmSpecs = []edgeproto.CloudletVMSpec{
+		edgeproto.CloudletVMSpec{
+			InternalName: "vm2.testcluster.testorg.mobiledgex.net",
+		},
+	}
+	info.User = "testcloudletvmpoolvms1"
+	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
+	verifyCloudletVMAction(t, ctx, &info, &vmPool, ctrlHandler, 0, Pass)
+
+	// Retry: Allocate some more VMs from the pool, should fail
+	info.VmSpecs = []edgeproto.CloudletVMSpec{
+		edgeproto.CloudletVMSpec{
+			InternalName:    "vm4.testcluster.testorg.mobiledgex.net",
+			InternalNetwork: true,
+		},
+		edgeproto.CloudletVMSpec{
+			InternalName:    "vm5.testcluster.testorg.mobiledgex.net",
+			InternalNetwork: true,
+		},
+	}
+	info.CloudletVms = []edgeproto.CloudletVM{}
+	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
+	verifyCloudletVMAction(t, ctx, &info, &vmPool, ctrlHandler, 2, Pass)
 
 	// Release VMs from the pool
 	info.VmSpecs = []edgeproto.CloudletVMSpec{}
