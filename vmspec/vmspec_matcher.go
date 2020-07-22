@@ -91,7 +91,14 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 	}
 
 	// break request into spec and count
-	request := strings.Split(req, ":")
+	var request []string
+	if strings.Contains(req, ":") {
+		request = strings.Split(req, ":")
+	} else if strings.Contains(req, "=") {
+		// VIO syntax uses =
+		request = strings.Split(req, "=")
+	}
+
 	if len(request) == 1 {
 		// should not happen with CLI validation in place
 		if verbose {
@@ -126,7 +133,12 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 		var alias []string
 		for flav_key, flav_val := range flavor.PropMap {
 			// How many resources are supplied by this os flavor?
-			alias = strings.Split(flav_val, ":")
+			if strings.Contains(flav_val, ":") {
+				alias = strings.Split(flav_val, ":")
+			} else if strings.Contains(flav_val, "=") {
+				// VIO syntax
+				alias = strings.Split(flav_val, "=")
+			}
 			if len(alias) == 2 {
 				if flavcnt, err = strconv.Atoi(alias[1]); err != nil {
 					if verbose {
