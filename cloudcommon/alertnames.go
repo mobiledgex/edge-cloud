@@ -4,7 +4,7 @@ package cloudcommon
 var AlertAutoScaleUp = "AutoScaleUp"
 var AlertAutoScaleDown = "AutoScaleDown"
 var AlertAppInstDown = "AppInstDown"
-var AlertAutoProvDown = "AutoProvDown"
+var AlertAutoUndeploy = "AutoProvUndeploy"
 
 // Alert annotation keys
 // for autoscale:
@@ -14,3 +14,13 @@ var AlertKeyMinNodes = "minnodes"
 
 // for healthCheck:
 var AlertHealthCheckStatus = "status"
+
+func IsMonitoredAlert(alertName string) bool {
+	if alertName == AlertAutoScaleUp ||
+		alertName == AlertAutoScaleDown ||
+		alertName == AlertAppInstDown ||
+		alertName == AlertAutoUndeploy {
+		return true
+	}
+	return false
+}
