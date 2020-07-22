@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -183,7 +184,8 @@ func ConvertDecodeErr(err error, reals map[string]string) error {
 
 func getDecodeArg(name string, reals map[string]string) string {
 	arg := strings.ToLower(name)
-	if alias, found := reals[arg]; found {
+	alias := resolveAlias(arg, reals)
+	if alias != arg {
 		return alias
 	}
 	// cli arg does not include parent struct name
@@ -396,11 +398,38 @@ func hasTag(tag string, tags []string) bool {
 	return false
 }
 
-func resolveAlias(name string, aliases map[string]string) string {
-	if real, ok := aliases[name]; ok {
-		return real
+var (
+	reArrayNums   = regexp.MustCompile(`:\d+.`)
+	reArrayPlaces = regexp.MustCompile(`:#.`)
+)
+
+func resolveAlias(name string, lookup map[string]string) string {
+	// for sublist arrays, we need to convert a :1 index
+	// into the generic :# used by the alias in the mapping.
+	// Ex: array:1.name -> array:#.name
+	matches := reArrayNums.FindAll([]byte(name), -1)
+	if len(matches) == 0 {
+		if mapped, ok := lookup[name]; ok {
+			return mapped
+		}
+		return name
 	}
-	return name
+	nameGeneric := reArrayNums.ReplaceAll([]byte(name), []byte(`:#.`))
+
+	mappedGeneric, ok := lookup[string(nameGeneric)]
+	if !ok {
+		return name
+	}
+	// put back the array index values
+	nameReplaced := reArrayPlaces.ReplaceAllFunc([]byte(mappedGeneric), func(repl []byte) []byte {
+		if len(matches) == 0 {
+			return repl
+		}
+		ret := matches[0]
+		matches = matches[1:]
+		return ret
+	})
+	return string(nameReplaced)
 }
 
 func setKeyVal(dat map[string]interface{}, key string, val interface{}, argType string) {
@@ -570,9 +599,7 @@ func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]st
 		if sparg == "StringToString" {
 			name = parentName
 		}
-		if alias, ok := aliases[name]; ok {
-			name = alias
-		}
+		name = resolveAlias(name, aliases)
 
 		val := fmt.Sprintf("%v", v)
 		if strings.ContainsAny(val, " \t\r\n") || len(val) == 0 {
