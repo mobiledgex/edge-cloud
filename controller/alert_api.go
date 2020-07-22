@@ -93,8 +93,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		log.SpanLog(ctx, log.DebugLevelNotify, "alertname not found", "labels", in.Labels)
 		return
 	}
-	if name != cloudcommon.AlertAutoScaleUp && name != cloudcommon.AlertAutoScaleDown &&
-		name != cloudcommon.AlertAppInstDown {
+	if !cloudcommon.IsMonitoredAlert(name) {
 		log.SpanLog(ctx, log.DebugLevelNotify, "ignoring alert", "name", name)
 		return
 	}

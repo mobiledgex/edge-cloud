@@ -61,6 +61,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 		switch f {
 		case SettingsFieldShepherdMetricsCollectionInterval:
 			v.CheckGT(f, int64(s.ShepherdMetricsCollectionInterval), 0)
+		case SettingsFieldShepherdAlertEvaluationInterval:
+			v.CheckGT(f, int64(s.ShepherdAlertEvaluationInterval), 0)
 		case SettingsFieldShepherdHealthCheckRetries:
 			v.CheckGT(f, int64(s.ShepherdHealthCheckRetries), 0)
 		case SettingsFieldShepherdHealthCheckInterval:
@@ -92,6 +94,7 @@ func GetDefaultSettings() *Settings {
 	s := Settings{}
 	// Set default values
 	s.ShepherdMetricsCollectionInterval = Duration(5 * time.Second)
+	s.ShepherdAlertEvaluationInterval = Duration(15 * time.Second)
 	s.ShepherdHealthCheckRetries = 3
 	s.ShepherdHealthCheckInterval = Duration(5 * time.Second)
 	s.AutoDeployIntervalSec = 300
