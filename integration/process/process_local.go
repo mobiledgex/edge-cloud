@@ -797,7 +797,7 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 		}
 	}
 	for _, vaultData := range p.VaultDatas {
-		data, err := json.Marshal(vaultData)
+		data, err := json.Marshal(vaultData.Data)
 		if err != nil {
 			log.Printf("Failed to marshal vault data - %v[err:%v]\n", vaultData, err)
 			continue

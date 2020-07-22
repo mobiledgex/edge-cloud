@@ -11,8 +11,8 @@ type Vault struct {
 }
 
 type VaultData struct {
-	Path string            `json:"-"`
-	Data map[string]string `json:"data"`
+	Path string
+	Data map[string]string
 }
 
 type Etcd struct {
