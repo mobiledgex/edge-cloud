@@ -21,6 +21,8 @@ var k8sMatch = regexp.MustCompile("^[0-9a-zA-Z][-0-9a-zA-Z.]*$")
 var emailMatch = regexp.MustCompile(`(.+)@(.+)\.(.+)`)
 var dockerNameMatch = regexp.MustCompile(`^[0-9a-zA-Z][a-zA-Z0-9_.-]+$`)
 
+const maxHostnameLength = 63
+
 // region names are used in Vault approle names, which are very
 // restrictive in what characters they allow.
 var regionMatch = regexp.MustCompile(`^\w+$`)
@@ -65,7 +67,7 @@ func DockerSanitize(name string) string {
 }
 
 // DNSSanitize santizies the name string to make it usable in
-// a DNS name. Valid chars are only 0-9, a-z, and '-'.
+// a DNS name. Valid chars are only 0-9, a-z, and '-' and cannot end in '-'
 func DNSSanitize(name string) string {
 	r := strings.NewReplacer(
 		"_", "-",
@@ -74,7 +76,19 @@ func DNSSanitize(name string) string {
 		",", "",
 		".", "",
 		"!", "")
-	return strings.ToLower(r.Replace(name))
+	rval := strings.ToLower(r.Replace(name))
+	return strings.TrimRight(rval, "-")
+}
+
+// HostnameSanitize makes a valid hostname, for which the rules
+// are the same as DNSSanitize, but it cannot end in '-' and cannot
+// be > 63 digits
+func HostnameSanitize(name string) string {
+	r := DNSSanitize(name)
+	if len(r) > maxHostnameLength {
+		r = r[:maxHostnameLength]
+	}
+	return strings.TrimRight(r, "-")
 }
 
 func K8SSanitize(name string) string {
