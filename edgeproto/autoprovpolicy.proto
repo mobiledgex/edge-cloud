@@ -31,6 +31,10 @@ message AutoProvPolicy {
   uint32 min_active_instances = 6;
   // Maximum number of instances (active or not)
   uint32 max_instances = 7;
+  // Number of active clients for the undeploy interval below which trigers undeployment, 0 (default) disables auto undeploy
+  uint32 undeploy_client_count = 8;
+  // Number of intervals to check before triggering undeployment
+  uint32 undeploy_interval_count = 9;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

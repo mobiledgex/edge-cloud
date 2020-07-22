@@ -40,6 +40,10 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.CloudletMaintenanceTimeout = edgeproto.GetDefaultSettings().CloudletMaintenanceTimeout
 			modified = true
 		}
+		if cur.ShepherdAlertEvaluationInterval == 0 {
+			cur.ShepherdAlertEvaluationInterval = edgeproto.GetDefaultSettings().ShepherdAlertEvaluationInterval
+			modified = true
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}

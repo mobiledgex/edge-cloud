@@ -221,7 +221,8 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 	replies := make([]interface{}, 0)
 
 	for ii, apiRequest := range apiRequests {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		timeout := time.Duration(float64(time.Second) * (1.0 + apiRequest.RunAtIntervalSec))
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		log.Printf("RunDmeAPIiter[%d]\n", ii)
 		ok, reply := runDmeAPIiter(ctx, api, apiFile, outputDir, apiRequest, client)
