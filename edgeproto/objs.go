@@ -86,8 +86,8 @@ func (a *AllData) Sort() {
 	sort.Slice(a.AppInstRefs[:], func(i, j int) bool {
 		return a.AppInstRefs[i].Key.GetKeyString() < a.AppInstRefs[j].Key.GetKeyString()
 	})
-	sort.Slice(a.CloudletVmPools[:], func(i, j int) bool {
-		return a.CloudletVmPools[i].Key.GetKeyString() < a.CloudletVmPools[j].Key.GetKeyString()
+	sort.Slice(a.VmPools[:], func(i, j int) bool {
+		return a.VmPools[i].Key.GetKeyString() < a.VmPools[j].Key.GetKeyString()
 	})
 }
 
@@ -311,7 +311,7 @@ func (s *CloudletVM) Validate() error {
 	return nil
 }
 
-func (s *CloudletVMPool) Validate(fields map[string]struct{}) error {
+func (s *VMPool) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
@@ -326,7 +326,7 @@ func (s *CloudletVMPool) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (s *CloudletVMPoolMember) Validate(fields map[string]struct{}) error {
+func (s *VMPoolMember) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
@@ -336,7 +336,7 @@ func (s *CloudletVMPoolMember) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (s *CloudletVMPoolInfo) Validate(fields map[string]struct{}) error {
+func (s *VMPoolInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
@@ -836,16 +836,16 @@ func (s *AutoProvPolicy) GetCloudletKeys() map[CloudletKey]struct{} {
 	return keys
 }
 
-func AllocateCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *CloudletVMPoolInfo, cloudletVMPool *CloudletVMPool) {
-	log.DebugLog(log.DebugLevelNotify, "AllocateCloudletVMsFromPool", "cloudletvmpoolinfo", cloudletVMPoolInfo, "cloudletvmpool", cloudletVMPool)
-	cloudletVMPool.Action = CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
-	cloudletVMPool.Error = ""
+func AllocateCloudletVMsFromPool(ctx context.Context, VMPoolInfo *VMPoolInfo, VMPool *VMPool) {
+	log.DebugLog(log.DebugLevelNotify, "AllocateCloudletVMsFromPool", "VMPoolinfo", VMPoolInfo, "VMPool", VMPool)
+	VMPool.Action = CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
+	VMPool.Error = ""
 
 	// Group available VMs
 	bothNetVms := []string{}
 	internalNetVms := []string{}
 	externalNetVms := []string{}
-	for _, cloudletVm := range cloudletVMPool.CloudletVms {
+	for _, cloudletVm := range VMPool.CloudletVms {
 		if cloudletVm.State != CloudletVMState_CLOUDLET_VM_FREE {
 			continue
 		}
@@ -868,10 +868,10 @@ func AllocateCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *Cloudl
 
 	// Allocate VMs from above groups
 	allocatedVms := make(map[string]string)
-	for _, vmSpec := range cloudletVMPoolInfo.VmSpecs {
+	for _, vmSpec := range VMPoolInfo.VmSpecs {
 		if vmSpec.ExternalNetwork && vmSpec.InternalNetwork {
 			if len(bothNetVms) == 0 {
-				cloudletVMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with both external and internal network connectivity")
+				VMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with both external and internal network connectivity")
 				return
 			}
 			allocatedVms[bothNetVms[0]] = vmSpec.InternalName
@@ -880,7 +880,7 @@ func AllocateCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *Cloudl
 			if len(externalNetVms) == 0 {
 				// try from bothNetVms
 				if len(bothNetVms) == 0 {
-					cloudletVMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with external network connectivity")
+					VMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with external network connectivity")
 					return
 				}
 				allocatedVms[bothNetVms[0]] = vmSpec.InternalName
@@ -893,7 +893,7 @@ func AllocateCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *Cloudl
 			if len(internalNetVms) == 0 {
 				// try from bothNetVms
 				if len(bothNetVms) == 0 {
-					cloudletVMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with internal network connectivity")
+					VMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with internal network connectivity")
 					return
 				}
 				allocatedVms[bothNetVms[0]] = vmSpec.InternalName
@@ -907,48 +907,48 @@ func AllocateCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *Cloudl
 
 	// Mark allocated VMs as IN_USE
 	count := 0
-	for ii, cloudletVm := range cloudletVMPool.CloudletVms {
+	for ii, cloudletVm := range VMPool.CloudletVms {
 		internalName, ok := allocatedVms[cloudletVm.Name]
 		if !ok {
 			continue
 		}
-		cloudletVMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_IN_USE
-		cloudletVMPool.CloudletVms[ii].User = cloudletVMPoolInfo.User
-		cloudletVMPool.CloudletVms[ii].InternalName = internalName
+		VMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_IN_USE
+		VMPool.CloudletVms[ii].User = VMPoolInfo.User
+		VMPool.CloudletVms[ii].InternalName = internalName
 		ts, _ := types.TimestampProto(time.Now())
-		cloudletVMPool.CloudletVms[ii].UpdatedAt = *ts
+		VMPool.CloudletVms[ii].UpdatedAt = *ts
 		count++
 	}
-	log.DebugLog(log.DebugLevelNotify, "allocated cloudlet VMs", "key", cloudletVMPool.Key, "count", count)
+	log.DebugLog(log.DebugLevelNotify, "allocated cloudlet VMs", "key", VMPool.Key, "count", count)
 }
 
-func ReleaseCloudletVMsFromPool(ctx context.Context, cloudletVMPoolInfo *CloudletVMPoolInfo, cloudletVMPool *CloudletVMPool) {
-	log.DebugLog(log.DebugLevelNotify, "ReleaseCloudletVMsFromPool", "cloudletvmpoolinfo", cloudletVMPoolInfo, "cloudletvmpool", cloudletVMPool)
-	cloudletVMPool.Action = CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
-	cloudletVMPool.Error = ""
+func ReleaseCloudletVMsFromPool(ctx context.Context, VMPoolInfo *VMPoolInfo, VMPool *VMPool) {
+	log.DebugLog(log.DebugLevelNotify, "ReleaseCloudletVMsFromPool", "VMPoolinfo", VMPoolInfo, "VMPool", VMPool)
+	VMPool.Action = CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
+	VMPool.Error = ""
 	count := 0
 	freeAll := false
-	if len(cloudletVMPoolInfo.VmSpecs) == 0 {
+	if len(VMPoolInfo.VmSpecs) == 0 {
 		// free all vms
 		freeAll = true
 	}
 	vmNames := map[string]struct{}{}
-	for _, vmSpec := range cloudletVMPoolInfo.VmSpecs {
+	for _, vmSpec := range VMPoolInfo.VmSpecs {
 		vmNames[vmSpec.InternalName] = struct{}{}
 	}
-	for ii, cloudletVm := range cloudletVMPool.CloudletVms {
-		if cloudletVMPoolInfo.User != cloudletVm.User {
+	for ii, cloudletVm := range VMPool.CloudletVms {
+		if VMPoolInfo.User != cloudletVm.User {
 			continue
 		}
 		_, ok := vmNames[cloudletVm.InternalName]
 		if ok || freeAll {
-			cloudletVMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_FREE
-			cloudletVMPool.CloudletVms[ii].User = ""
-			cloudletVMPool.CloudletVms[ii].InternalName = ""
+			VMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_FREE
+			VMPool.CloudletVms[ii].User = ""
+			VMPool.CloudletVms[ii].InternalName = ""
 			ts, _ := types.TimestampProto(time.Now())
-			cloudletVMPool.CloudletVms[ii].UpdatedAt = *ts
+			VMPool.CloudletVms[ii].UpdatedAt = *ts
 			count++
 		}
 	}
-	log.DebugLog(log.DebugLevelNotify, "released cloudlet VMs", "key", cloudletVMPool.Key, "user", cloudletVMPoolInfo.User, "count", count)
+	log.DebugLog(log.DebugLevelNotify, "released cloudlet VMs", "key", VMPool.Key, "user", VMPoolInfo.User, "count", count)
 }

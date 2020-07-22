@@ -291,13 +291,13 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return err
 		}
 
-		if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GENERIC {
-			cloudletVMPool := edgeproto.CloudletVMPool{}
-			if !cloudletVMPoolApi.store.STMGet(stm, &in.Key, &cloudletVMPool) {
-				return fmt.Errorf("CloudletVMPool is missing for Generic platform")
+		if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+			vmPool := edgeproto.VMPool{}
+			if !vmPoolApi.store.STMGet(stm, &in.Key, &vmPool) {
+				return fmt.Errorf("VMPool is missing for VM Pool platform")
 			}
-			if cloudletVMPool.CloudletVms == nil || len(cloudletVMPool.CloudletVms) == 0 {
-				return errors.New("No CloudletVMs defined as part of CloudletVMPool")
+			if vmPool.CloudletVms == nil || len(vmPool.CloudletVms) == 0 {
+				return errors.New("No CloudletVMs defined as part of VMPool")
 			}
 		}
 

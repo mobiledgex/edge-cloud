@@ -45,8 +45,8 @@ message CloudletVM {
   string internal_name = 6;
 }
 
-// CloudletVMPool defines a pool of Cloudlet VMs to be part of a Cloudlet
-message CloudletVMPool {
+// VMPool defines a pool of Cloudlet VMs to be part of a Cloudlet
+message VMPool {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Cloudlet key
@@ -67,8 +67,8 @@ message CloudletVMPool {
   option (protogen.uses_org) = "key=Organization";
 }
 
-// CloudletVMPoolMember is used to add and remove Cloudlet VM from Cloudlet VM Pool
-message CloudletVMPoolMember {
+// VMPoolMember is used to add and remove Cloudlet VM from Cloudlet VM Pool
+message VMPoolMember {
   // Cloudlet key
   CloudletKey key = 1 [(gogoproto.nullable) = false];
   // Cloudlet VM part of Cloudlet VM Pool
@@ -78,55 +78,55 @@ message CloudletVMPoolMember {
   option (protogen.uses_org) = "key=Organization";
 }
 
-service CloudletVMPoolApi {
-  // Create CloudletVMPool. Creates Cloudlet VM pool which will have
+service VMPoolApi {
+  // Create VMPool. Creates Cloudlet VM pool which will have
   // Cloudlet VMs defined.
-  rpc CreateCloudletVMPool(CloudletVMPool) returns (Result) {
+  rpc CreateVMPool(VMPool) returns (Result) {
     option (google.api.http) = {
-      post: "/create/cloudletvmpool"
+      post: "/create/vmpool"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
-  // Delete CloudletVMPool. Deletes Cloudlet VM pool given that none
+  // Delete VMPool. Deletes Cloudlet VM pool given that none
   // of Cloudlet VMs part of this pool is used.
-  rpc DeleteCloudletVMPool(CloudletVMPool) returns (Result) {
+  rpc DeleteVMPool(VMPool) returns (Result) {
     option (google.api.http) = {
       post: "/delete/cloudetvmpool"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
-  // Update CloudletVMPool. Updates a Cloudlet VM pool's VMs.
-  rpc UpdateCloudletVMPool(CloudletVMPool) returns (Result) {
+  // Update VMPool. Updates a Cloudlet VM pool's VMs.
+  rpc UpdateVMPool(VMPool) returns (Result) {
     option (google.api.http) = {
-      post: "/update/cloudletvmpool"
+      post: "/update/vmpool"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
-  // Show CloudletVMPools. Lists all the Cloudlet VMs part of the Cloudlet VM pool.
-  rpc ShowCloudletVMPool(CloudletVMPool) returns (stream CloudletVMPool) {
+  // Show VMPools. Lists all the Cloudlet VMs part of the Cloudlet VM pool.
+  rpc ShowVMPool(VMPool) returns (stream VMPool) {
     option (google.api.http) = {
-      post: "/show/cloudletvmpool"
+      post: "/show/vmpool"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
   }
-  // Add CloudletVMPoolMember. Adds a Cloudlet VM to existing Cloudlet VM Pool.
-  rpc AddCloudletVMPoolMember(CloudletVMPoolMember) returns (Result) {
+  // Add VMPoolMember. Adds a Cloudlet VM to existing Cloudlet VM Pool.
+  rpc AddVMPoolMember(VMPoolMember) returns (Result) {
     option (google.api.http) = {
-      post: "/add/cloudletvmpoolmember"
+      post: "/add/vmpoolmember"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "CloudletVm.Name";
   }
-  // Remove CloudletVMPoolMember. Removes a Cloudlet VM from existing Cloudlet VM Pool.
-  rpc RemoveCloudletVMPoolMember(CloudletVMPoolMember) returns (Result) {
+  // Remove VMPoolMember. Removes a Cloudlet VM from existing Cloudlet VM Pool.
+  rpc RemoveVMPoolMember(VMPoolMember) returns (Result) {
     option (google.api.http) = {
-      post: "/rm/cloudletvmpoolmember"
+      post: "/rm/vmpoolmember"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
@@ -156,8 +156,8 @@ enum CloudletVMAction {
   CLOUDLET_VM_ACTION_RELEASE = 2;
 }
 
-// CloudletVMPoolInfo is used to manage CloudletVMPool from CRM
-message CloudletVMPoolInfo {
+// VMPoolInfo is used to manage VMPool from CRM
+message VMPoolInfo {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Unique identifier key
@@ -184,11 +184,11 @@ message CloudletVMPoolInfo {
   option (protogen.uses_org) = "none";
 }
 
-service CloudletVMPoolInfoApi {
-  // Show CloudletVMPoolInfos
-  rpc ShowCloudletVMPoolInfo(CloudletVMPoolInfo) returns (stream CloudletVMPoolInfo) {
+service VMPoolInfoApi {
+  // Show VMPoolInfos
+  rpc ShowVMPoolInfo(VMPoolInfo) returns (stream VMPoolInfo) {
     option (google.api.http) = {
-      post: "/show/cloudletvmpoolinfo"
+      post: "/show/vmpoolinfo"
       body: "*"
     };
   }

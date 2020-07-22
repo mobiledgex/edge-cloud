@@ -8,22 +8,22 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
-type CloudletVMPoolApi struct {
+type VMPoolApi struct {
 	sync  *Sync
-	store edgeproto.CloudletVMPoolStore
-	cache edgeproto.CloudletVMPoolCache
+	store edgeproto.VMPoolStore
+	cache edgeproto.VMPoolCache
 }
 
-var cloudletVMPoolApi = CloudletVMPoolApi{}
+var vmPoolApi = VMPoolApi{}
 
-func InitCloudletVMPoolApi(sync *Sync) {
-	cloudletVMPoolApi.sync = sync
-	cloudletVMPoolApi.store = edgeproto.NewCloudletVMPoolStore(sync.store)
-	edgeproto.InitCloudletVMPoolCache(&cloudletVMPoolApi.cache)
-	sync.RegisterCache(&cloudletVMPoolApi.cache)
+func InitVMPoolApi(sync *Sync) {
+	vmPoolApi.sync = sync
+	vmPoolApi.store = edgeproto.NewVMPoolStore(sync.store)
+	edgeproto.InitVMPoolCache(&vmPoolApi.cache)
+	sync.RegisterCache(&vmPoolApi.cache)
 }
 
-func (s *CloudletVMPoolApi) CreateCloudletVMPool(ctx context.Context, in *edgeproto.CloudletVMPool) (*edgeproto.Result, error) {
+func (s *VMPoolApi) CreateVMPool(ctx context.Context, in *edgeproto.VMPool) (*edgeproto.Result, error) {
 	if err := in.Validate(nil); err != nil {
 		return &edgeproto.Result{}, err
 	}
@@ -37,13 +37,13 @@ func (s *CloudletVMPoolApi) CreateCloudletVMPool(ctx context.Context, in *edgepr
 	return &edgeproto.Result{}, err
 }
 
-func (s *CloudletVMPoolApi) UpdateCloudletVMPool(ctx context.Context, in *edgeproto.CloudletVMPool) (*edgeproto.Result, error) {
+func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*edgeproto.Result, error) {
 	err := in.ValidateUpdateFields()
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cur := edgeproto.CloudletVMPool{}
+		cur := edgeproto.VMPool{}
 		changed := 0
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
@@ -61,9 +61,9 @@ func (s *CloudletVMPoolApi) UpdateCloudletVMPool(ctx context.Context, in *edgepr
 	return &edgeproto.Result{}, err
 }
 
-func (s *CloudletVMPoolApi) DeleteCloudletVMPool(ctx context.Context, in *edgeproto.CloudletVMPool) (*edgeproto.Result, error) {
+func (s *VMPoolApi) DeleteVMPool(ctx context.Context, in *edgeproto.VMPool) (*edgeproto.Result, error) {
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cur := edgeproto.CloudletVMPool{}
+		cur := edgeproto.VMPool{}
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
@@ -78,24 +78,24 @@ func (s *CloudletVMPoolApi) DeleteCloudletVMPool(ctx context.Context, in *edgepr
 	return &edgeproto.Result{}, err
 }
 
-func (s *CloudletVMPoolApi) ShowCloudletVMPool(in *edgeproto.CloudletVMPool, cb edgeproto.CloudletVMPoolApi_ShowCloudletVMPoolServer) error {
-	err := s.cache.Show(in, func(obj *edgeproto.CloudletVMPool) error {
+func (s *VMPoolApi) ShowVMPool(in *edgeproto.VMPool, cb edgeproto.VMPoolApi_ShowVMPoolServer) error {
+	err := s.cache.Show(in, func(obj *edgeproto.VMPool) error {
 		err := cb.Send(obj)
 		return err
 	})
 	return err
 }
 
-func (s *CloudletVMPoolApi) AddCloudletVMPoolMember(ctx context.Context, in *edgeproto.CloudletVMPoolMember) (*edgeproto.Result, error) {
+func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMember) (*edgeproto.Result, error) {
 	if err := in.Validate(nil); err != nil {
 		return &edgeproto.Result{}, err
 	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cur := edgeproto.CloudletVMPool{}
+		cur := edgeproto.VMPool{}
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		poolMember := edgeproto.CloudletVMPoolMember{}
+		poolMember := edgeproto.VMPoolMember{}
 		poolMember.Key = in.Key
 		for ii, _ := range cur.CloudletVms {
 			if cur.CloudletVms[ii].Name == in.CloudletVm.Name {
@@ -109,9 +109,9 @@ func (s *CloudletVMPoolApi) AddCloudletVMPoolMember(ctx context.Context, in *edg
 	return &edgeproto.Result{}, err
 }
 
-func (s *CloudletVMPoolApi) RemoveCloudletVMPoolMember(ctx context.Context, in *edgeproto.CloudletVMPoolMember) (*edgeproto.Result, error) {
+func (s *VMPoolApi) RemoveVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMember) (*edgeproto.Result, error) {
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cur := edgeproto.CloudletVMPool{}
+		cur := edgeproto.VMPool{}
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}

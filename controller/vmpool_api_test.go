@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCloudletVMPoolApi(t *testing.T) {
+func TestVMPoolApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify)
 	log.InitTracer("")
 	defer log.FinishTracer()
@@ -27,10 +27,10 @@ func TestCloudletVMPoolApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	testutil.InternalCloudletVMPoolTest(t, "cud", &cloudletVMPoolApi, testutil.CloudletVMPoolData)
+	testutil.InternalVMPoolTest(t, "cud", &vmPoolApi, testutil.VMPoolData)
 
 	testAddRemoveCloudletVM(t, ctx)
-	testCloudletVMPoolAction(t, ctx)
+	testVMPoolAction(t, ctx)
 
 	dummy.Stop()
 }
@@ -38,8 +38,8 @@ func TestCloudletVMPoolApi(t *testing.T) {
 func waitForAction(key *edgeproto.CloudletKey, action edgeproto.CloudletVMAction) error {
 	var lastAction edgeproto.CloudletVMAction
 	for i := 0; i < 100; i++ {
-		pool := edgeproto.CloudletVMPool{}
-		if cloudletVMPoolApi.cache.Get(key, &pool) {
+		pool := edgeproto.VMPool{}
+		if vmPoolApi.cache.Get(key, &pool) {
 			if pool.Action == action {
 				return nil
 			}
@@ -53,8 +53,8 @@ func waitForAction(key *edgeproto.CloudletKey, action edgeproto.CloudletVMAction
 
 func testAddRemoveCloudletVM(t *testing.T, ctx context.Context) {
 	// test adding cloudlet vm to the pool
-	cm1 := edgeproto.CloudletVMPoolMember{}
-	cm1.Key = testutil.CloudletVMPoolData[1].Key
+	cm1 := edgeproto.VMPoolMember{}
+	cm1.Key = testutil.VMPoolData[1].Key
 	cm1.CloudletVm = edgeproto.CloudletVM{
 		Name: "vmX",
 		NetInfo: edgeproto.CloudletVMNetInfo{
@@ -63,17 +63,17 @@ func testAddRemoveCloudletVM(t *testing.T, ctx context.Context) {
 		},
 	}
 
-	_, err := cloudletVMPoolApi.AddCloudletVMPoolMember(ctx, &cm1)
+	_, err := vmPoolApi.AddVMPoolMember(ctx, &cm1)
 	require.Nil(t, err, "add cloudlet vm to cloudlet vm pool")
 
-	vmPool := edgeproto.CloudletVMPool{}
-	found := cloudletVMPoolApi.cache.Get(&cm1.Key, &vmPool)
+	vmPool := edgeproto.VMPool{}
+	found := vmPoolApi.cache.Get(&cm1.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm1.Key)
 	require.Equal(t, 4, len(vmPool.CloudletVms))
 
 	// test adding another cloudlet vm to the pool
-	cm2 := edgeproto.CloudletVMPoolMember{}
-	cm2.Key = testutil.CloudletVMPoolData[1].Key
+	cm2 := edgeproto.VMPoolMember{}
+	cm2.Key = testutil.VMPoolData[1].Key
 	cm2.CloudletVm = edgeproto.CloudletVM{
 		Name: "vmY",
 		NetInfo: edgeproto.CloudletVMNetInfo{
@@ -82,49 +82,49 @@ func testAddRemoveCloudletVM(t *testing.T, ctx context.Context) {
 		},
 	}
 
-	_, err = cloudletVMPoolApi.AddCloudletVMPoolMember(ctx, &cm2)
+	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm2)
 	require.Nil(t, err, "add cloudlet vm to cloudlet vm pool")
 
-	found = cloudletVMPoolApi.cache.Get(&cm2.Key, &vmPool)
+	found = vmPoolApi.cache.Get(&cm2.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm2.Key)
 	require.Equal(t, 5, len(vmPool.CloudletVms))
 
 	// remove cloudlet vm from pool
-	_, err = cloudletVMPoolApi.RemoveCloudletVMPoolMember(ctx, &cm1)
+	_, err = vmPoolApi.RemoveVMPoolMember(ctx, &cm1)
 	require.Nil(t, err, "remove cloudlet vm from pool")
-	found = cloudletVMPoolApi.cache.Get(&cm1.Key, &vmPool)
+	found = vmPoolApi.cache.Get(&cm1.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm1.Key)
 	require.Equal(t, 4, len(vmPool.CloudletVms))
 
 	// remove cloudlet vm from pool
-	_, err = cloudletVMPoolApi.RemoveCloudletVMPoolMember(ctx, &cm2)
+	_, err = vmPoolApi.RemoveVMPoolMember(ctx, &cm2)
 	require.Nil(t, err, "remove cloudlet vm from pool")
-	found = cloudletVMPoolApi.cache.Get(&cm2.Key, &vmPool)
+	found = vmPoolApi.cache.Get(&cm2.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm2.Key)
 	require.Equal(t, 3, len(vmPool.CloudletVms))
 
 	// try to add cloudlet vm to non-existent pool
 	cm1.Key.Name = "SomeNonExistentCloudlet"
-	_, err = cloudletVMPoolApi.AddCloudletVMPoolMember(ctx, &cm1)
+	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm1)
 	require.NotNil(t, err)
 }
 
 var Pass = true
 var Fail = false
 
-func verifyCloudletVMAction(t *testing.T, ctx context.Context, info *edgeproto.CloudletVMPoolInfo, inUseCount int, success bool) {
+func verifyCloudletVMAction(t *testing.T, ctx context.Context, info *edgeproto.VMPoolInfo, inUseCount int, success bool) {
 	key := &info.Key
-	cloudletVMPoolInfoApi.Update(ctx, info, 0)
+	vmPoolInfoApi.Update(ctx, info, 0)
 	err := waitForAction(key, info.Action)
 	require.Nil(t, err, "cloudlet vm pool action transtions")
 
 	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
-	cloudletVMPoolInfoApi.Update(ctx, info, 0)
+	vmPoolInfoApi.Update(ctx, info, 0)
 	err = waitForAction(key, edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE)
 	require.Nil(t, err, "cloudlet vm pool action transtions")
 
-	vmPool := edgeproto.CloudletVMPool{}
-	found := cloudletVMPoolApi.cache.Get(key, &vmPool)
+	vmPool := edgeproto.VMPool{}
+	found := vmPoolApi.cache.Get(key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", vmPool.Key)
 	if success {
 		require.Empty(t, vmPool.Error)
@@ -141,12 +141,12 @@ func verifyCloudletVMAction(t *testing.T, ctx context.Context, info *edgeproto.C
 	require.Equal(t, len(inuseVms), inUseCount)
 }
 
-func testCloudletVMPoolAction(t *testing.T, ctx context.Context) {
-	vmPool := testutil.CloudletVMPoolData[1]
-	info := edgeproto.CloudletVMPoolInfo{}
+func testVMPoolAction(t *testing.T, ctx context.Context) {
+	vmPool := testutil.VMPoolData[1]
+	info := edgeproto.VMPoolInfo{}
 
-	user1 := "testcloudletvmpoolVMs1"
-	user2 := "testcloudletvmpoolVMs2"
+	user1 := "testvmpoolVMs1"
+	user2 := "testvmpoolVMs2"
 
 	// Allocate VMs
 	info.User = user1
@@ -215,7 +215,7 @@ func testCloudletVMPoolAction(t *testing.T, ctx context.Context) {
 	verifyCloudletVMAction(t, ctx, &info, 0, Pass)
 
 	// Add VMs to the pool
-	cm1 := edgeproto.CloudletVMPoolMember{}
+	cm1 := edgeproto.VMPoolMember{}
 	cm1.Key = info.Key
 	cm1.CloudletVm = edgeproto.CloudletVM{
 		Name: "vmX",
@@ -223,7 +223,7 @@ func testCloudletVMPoolAction(t *testing.T, ctx context.Context) {
 			InternalIp: "192.168.100.111",
 		},
 	}
-	_, err := cloudletVMPoolApi.AddCloudletVMPoolMember(ctx, &cm1)
+	_, err := vmPoolApi.AddVMPoolMember(ctx, &cm1)
 	require.Nil(t, err, "add cloudlet vm to cloudlet vm pool")
 
 	// Allocate VMs, it should succeed now

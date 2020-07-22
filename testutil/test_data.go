@@ -1357,8 +1357,8 @@ var PlarformDeviceClientData = []edgeproto.Device{
 	},
 }
 
-var CloudletVMPoolData = []edgeproto.CloudletVMPool{
-	edgeproto.CloudletVMPool{
+var VMPoolData = []edgeproto.VMPool{
+	edgeproto.VMPool{
 		Key: CloudletData[0].Key,
 		CloudletVms: []edgeproto.CloudletVM{
 			edgeproto.CloudletVM{
@@ -1389,7 +1389,7 @@ var CloudletVMPoolData = []edgeproto.CloudletVMPool{
 			},
 		},
 	},
-	edgeproto.CloudletVMPool{
+	edgeproto.VMPool{
 		Key: CloudletData[1].Key,
 		CloudletVms: []edgeproto.CloudletVM{
 			edgeproto.CloudletVM{
@@ -1414,7 +1414,7 @@ var CloudletVMPoolData = []edgeproto.CloudletVMPool{
 			},
 		},
 	},
-	edgeproto.CloudletVMPool{
+	edgeproto.VMPool{
 		Key: CloudletData[2].Key,
 		CloudletVms: []edgeproto.CloudletVM{
 			edgeproto.CloudletVM{

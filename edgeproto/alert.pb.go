@@ -14,7 +14,6 @@
 		autoscalepolicy.proto
 		cloudlet.proto
 		cloudletpool.proto
-		cloudletvmpool.proto
 		cluster.proto
 		clusterinst.proto
 		common.proto
@@ -34,6 +33,7 @@
 		result.proto
 		settings.proto
 		version.proto
+		vmpool.proto
 
 	It has these top-level messages:
 		Alert
@@ -73,12 +73,6 @@
 		CloudletPoolKey
 		CloudletPool
 		CloudletPoolMember
-		CloudletVMNetInfo
-		CloudletVM
-		CloudletVMPool
-		CloudletVMPoolMember
-		CloudletVMSpec
-		CloudletVMPoolInfo
 		ClusterKey
 		ClusterInstKey
 		ClusterInst
@@ -118,6 +112,12 @@
 		ResTagTable
 		Result
 		Settings
+		CloudletVMNetInfo
+		CloudletVM
+		VMPool
+		VMPoolMember
+		CloudletVMSpec
+		VMPoolInfo
 */
 package edgeproto
 
@@ -1185,8 +1185,8 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletPoolMember": struct{}{},
 	"ShowPoolsForCloudlet":   struct{}{},
 	"ShowCloudletsForPool":   struct{}{},
-	"ShowCloudletVMPool":     struct{}{},
-	"ShowCloudletVMPoolInfo": struct{}{},
+	"ShowVMPool":             struct{}{},
+	"ShowVMPoolInfo":         struct{}{},
 	"ShowAutoScalePolicy":    struct{}{},
 	"ShowApp":                struct{}{},
 	"ShowClusterInst":        struct{}{},

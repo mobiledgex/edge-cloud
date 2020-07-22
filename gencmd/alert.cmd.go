@@ -14,7 +14,6 @@ It is generated from these files:
 	autoscalepolicy.proto
 	cloudlet.proto
 	cloudletpool.proto
-	cloudletvmpool.proto
 	cluster.proto
 	clusterinst.proto
 	common.proto
@@ -34,6 +33,7 @@ It is generated from these files:
 	result.proto
 	settings.proto
 	version.proto
+	vmpool.proto
 
 It has these top-level messages:
 	Alert
@@ -73,12 +73,6 @@ It has these top-level messages:
 	CloudletPoolKey
 	CloudletPool
 	CloudletPoolMember
-	CloudletVMNetInfo
-	CloudletVM
-	CloudletVMPool
-	CloudletVMPoolMember
-	CloudletVMSpec
-	CloudletVMPoolInfo
 	ClusterKey
 	ClusterInstKey
 	ClusterInst
@@ -118,6 +112,12 @@ It has these top-level messages:
 	ResTagTable
 	Result
 	Settings
+	CloudletVMNetInfo
+	CloudletVM
+	VMPool
+	VMPoolMember
+	CloudletVMSpec
+	VMPoolInfo
 */
 package gencmd
 

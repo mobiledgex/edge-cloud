@@ -26,13 +26,13 @@ type PlatformConfig struct {
 }
 
 type Caches struct {
-	FlavorCache             *edgeproto.FlavorCache
-	PrivacyPolicyCache      *edgeproto.PrivacyPolicyCache
-	ClusterInstCache        *edgeproto.ClusterInstCache
-	AppInstCache            *edgeproto.AppInstCache
-	AppCache                *edgeproto.AppCache
-	CloudletVMPoolCache     *edgeproto.CloudletVMPoolCache
-	CloudletVMPoolInfoCache *edgeproto.CloudletVMPoolInfoCache
+	FlavorCache        *edgeproto.FlavorCache
+	PrivacyPolicyCache *edgeproto.PrivacyPolicyCache
+	ClusterInstCache   *edgeproto.ClusterInstCache
+	AppInstCache       *edgeproto.AppInstCache
+	AppCache           *edgeproto.AppCache
+	VMPoolCache        *edgeproto.VMPoolCache
+	VMPoolInfoCache    *edgeproto.VMPoolInfoCache
 }
 
 // Platform abstracts the underlying cloudlet platform.

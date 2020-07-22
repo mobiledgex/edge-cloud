@@ -19,12 +19,12 @@ type ControllerData struct {
 	AppCache                 edgeproto.AppCache
 	AppInstCache             edgeproto.AppInstCache
 	CloudletCache            edgeproto.CloudletCache
-	CloudletVMPoolCache      edgeproto.CloudletVMPoolCache
+	VMPoolCache              edgeproto.VMPoolCache
 	FlavorCache              edgeproto.FlavorCache
 	ClusterInstCache         edgeproto.ClusterInstCache
 	AppInstInfoCache         edgeproto.AppInstInfoCache
 	CloudletInfoCache        edgeproto.CloudletInfoCache
-	CloudletVMPoolInfoCache  edgeproto.CloudletVMPoolInfoCache
+	VMPoolInfoCache          edgeproto.VMPoolInfoCache
 	ClusterInstInfoCache     edgeproto.ClusterInstInfoCache
 	PrivacyPolicyCache       edgeproto.PrivacyPolicyCache
 	AlertCache               edgeproto.AlertCache
@@ -55,11 +55,11 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	edgeproto.InitAppCache(&cd.AppCache)
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
 	edgeproto.InitCloudletCache(&cd.CloudletCache)
-	edgeproto.InitCloudletVMPoolCache(&cd.CloudletVMPoolCache)
+	edgeproto.InitVMPoolCache(&cd.VMPoolCache)
 	edgeproto.InitAppInstInfoCache(&cd.AppInstInfoCache)
 	edgeproto.InitClusterInstInfoCache(&cd.ClusterInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&cd.CloudletInfoCache)
-	edgeproto.InitCloudletVMPoolInfoCache(&cd.CloudletVMPoolInfoCache)
+	edgeproto.InitVMPoolInfoCache(&cd.VMPoolInfoCache)
 	edgeproto.InitFlavorCache(&cd.FlavorCache)
 	edgeproto.InitClusterInstCache(&cd.ClusterInstCache)
 	edgeproto.InitAlertCache(&cd.AlertCache)
@@ -72,7 +72,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.AppInstCache.SetUpdatedCb(cd.appInstChanged)
 	cd.FlavorCache.SetUpdatedCb(cd.flavorChanged)
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
-	cd.CloudletVMPoolCache.SetUpdatedCb(cd.cloudletVMPoolChanged)
+	cd.VMPoolCache.SetUpdatedCb(cd.VMPoolChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
@@ -582,10 +582,10 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	}
 }
 
-func (cd *ControllerData) cloudletVMPoolChanged(ctx context.Context, old *edgeproto.CloudletVMPool, new *edgeproto.CloudletVMPool) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletVMPoolChanged", "cloudlet", new)
-	poolInfo := edgeproto.CloudletVMPoolInfo{}
-	found := cd.CloudletVMPoolInfoCache.Get(&new.Key, &poolInfo)
+func (cd *ControllerData) VMPoolChanged(ctx context.Context, old *edgeproto.VMPool, new *edgeproto.VMPool) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "VMPoolChanged", "cloudlet", new)
+	poolInfo := edgeproto.VMPoolInfo{}
+	found := cd.VMPoolInfoCache.Get(&new.Key, &poolInfo)
 	if !found {
 		log.SpanLog(ctx, log.DebugLevelInfra, "poolInfo not found for cloudlet", "key", new.Key)
 		return
@@ -623,6 +623,6 @@ func (cd *ControllerData) cloudletVMPoolChanged(ctx context.Context, old *edgepr
 		}
 	}
 	if updateInfo {
-		cd.CloudletVMPoolInfoCache.Update(ctx, &poolInfo, 0)
+		cd.VMPoolInfoCache.Update(ctx, &poolInfo, 0)
 	}
 }
