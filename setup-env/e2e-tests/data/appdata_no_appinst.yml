@@ -1,5 +1,6 @@
 settings:
   shepherdmetricscollectioninterval: 1s
+  shepherdalertevaluationinterval: 15s
   autodeployintervalsec: 1
   autodeployoffsetsec: 0.3
   createappinsttimeout: 3s

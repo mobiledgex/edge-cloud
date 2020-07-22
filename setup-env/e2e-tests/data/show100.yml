@@ -1,5 +1,6 @@
 settings:
   shepherdmetricscollectioninterval: 5s
+  shepherdalertevaluationinterval: 15s
   shepherdhealthcheckretries: 3
   shepherdhealthcheckinterval: 5s
   autodeployintervalsec: 300

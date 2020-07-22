@@ -24,10 +24,12 @@ import (
 )
 
 type TestSpec struct {
-	ApiType     string      `json:"api" yaml:"api"`
-	ApiFile     string      `json:"apifile" yaml:"apifile"`
-	Actions     []string    `json:"actions" yaml:"actions"`
-	CompareYaml CompareYaml `json:"compareyaml" yaml:"compareyaml"`
+	ApiType          string      `json:"api" yaml:"api"`
+	ApiFile          string      `json:"apifile" yaml:"apifile"`
+	Actions          []string    `json:"actions" yaml:"actions"`
+	RetryCount       int         `json:"retrycount" yaml:"retrycount"`
+	RetryIntervalSec float64     `json:"retryintervalsec" yaml:"retryintervalsec"`
+	CompareYaml      CompareYaml `json:"compareyaml" yaml:"compareyaml"`
 }
 
 type CompareYaml struct {
@@ -646,6 +648,11 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 			log.Printf("Unable to run influx api for %s\n", action)
 			errors = append(errors, "influx api failed")
 		}
+	case "cmds":
+		if !apis.RunCommands(spec.ApiFile, outputDir) {
+			log.Printf("Unable to run commands for %s\n", action)
+			errors = append(errors, "commands failed")
+		}
 	case "cleanup":
 		err := Cleanup(ctx)
 		if err != nil {
@@ -656,10 +663,59 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 		if err == nil {
 			time.Sleep(time.Second * time.Duration(t))
 		} else {
-			errors = append(errors, "Error in parsing sleeptime")
+			errors = append(errors, fmt.Sprintf("Error in parsing sleeptime: %v", err))
 		}
 	default:
 		errors = append(errors, fmt.Sprintf("invalid action %s", action))
 	}
 	return errors
+}
+
+type Retry struct {
+	Enable   bool
+	Count    int // number of retries (does not include first try)
+	Interval time.Duration
+	Try      int
+}
+
+func NewRetry(count int, intervalSec float64) *Retry {
+	r := Retry{}
+	r.Try = 1
+	r.Count = count
+	r.Interval = time.Duration(float64(time.Second) * intervalSec)
+	if r.Count > 0 {
+		r.Enable = true
+	}
+	if r.Enable && r.Interval == 0 {
+		log.Fatal("Retry interval cannot be zero")
+	}
+	return &r
+}
+
+func (r *Retry) Tries() string {
+	return fmt.Sprintf(" (try %d of %d)", r.Try, r.Try+r.Count)
+}
+
+func (r *Retry) ActionEnable() {
+	if r.Enable {
+		return
+	}
+	r.Enable = true
+	// set defaults
+	r.Count = 5
+	r.Interval = 200 * time.Millisecond
+}
+
+func (r *Retry) WillRetry() bool {
+	return r.Count > 0
+}
+
+func (r *Retry) Done() bool {
+	if r.Count == 0 {
+		return true
+	}
+	r.Count--
+	r.Try++
+	time.Sleep(r.Interval)
+	return false
 }

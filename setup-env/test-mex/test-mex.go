@@ -11,7 +11,6 @@ import (
 	"os"
 	"reflect"
 	"strings"
-	"time"
 
 	log "github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/e2eapi"
@@ -51,6 +50,7 @@ var actionChoices = map[string]string{
 	"cleanup":    "",
 	"gencerts":   "",
 	"cleancerts": "",
+	"cmds":       "",
 	"sleep":      "seconds",
 }
 
@@ -148,51 +148,36 @@ func main() {
 		util.DeploymentReplacementVars = config.Vars
 	}
 
+	retry := setupmex.NewRetry(spec.RetryCount, spec.RetryIntervalSec)
 	ranTest := false
-	retryActions := []string{}
-	for _, a := range spec.Actions {
-		util.PrintStepBanner("running action: " + a)
-		retry := false
-		errs := setupmex.RunAction(ctx, a, outputDir, &spec, mods, config.Vars, &retry)
-		errors = append(errors, errs...)
-		if retry {
-			retryActions = append(retryActions, a)
+	for {
+		tryErrs := []string{}
+		for _, a := range spec.Actions {
+			util.PrintStepBanner("running action: " + a + retry.Tries())
+			actionretry := false
+			tryErrs = setupmex.RunAction(ctx, a, outputDir, &spec, mods, config.Vars, &actionretry)
+			ranTest = true
+			if actionretry {
+				retry.ActionEnable()
+			}
 		}
-		ranTest = true
-	}
-	if len(errors) > 0 {
-		// no retry
-		retryActions = []string{}
-	}
-	if spec.CompareYaml.Yaml1 != "" && spec.CompareYaml.Yaml2 != "" {
-		retryOk := true
-		pass := false
-		maxTries := 5
-		for ii := 0; ii < maxTries && retryOk; ii++ {
-			pass = util.CompareYamlFiles(spec.CompareYaml.Yaml1,
+		if spec.CompareYaml.Yaml1 != "" && spec.CompareYaml.Yaml2 != "" {
+			pass := util.CompareYamlFiles(spec.CompareYaml.Yaml1,
 				spec.CompareYaml.Yaml2, spec.CompareYaml.FileType)
-			if pass || len(retryActions) == 0 || ii == maxTries-1 {
-				break
+			if !pass {
+				tryErrs = append(tryErrs, "compare yaml failed")
 			}
-			// retry (typically retry show command)
-			time.Sleep(200 * time.Millisecond)
-			msg := fmt.Sprintf("re-running actions %v count %d due to compare yaml failure", retryActions, ii)
-			util.PrintStepBanner(msg)
-			for _, a := range retryActions {
-				util.PrintStepBanner("re-running action: " + a)
-				retry := false
-				errs := setupmex.RunAction(ctx, a, outputDir, &spec, mods, config.Vars, &retry)
-				errors = append(errors, errs...)
-				if len(errs) > 0 {
-					retryOk = false
-					break
-				}
-			}
+			ranTest = true
 		}
-		if !pass {
-			errors = append(errors, "compare yaml failed")
+		if len(tryErrs) == 0 || retry.Done() {
+			errors = append(errors, tryErrs...)
+			break
 		}
-		ranTest = true
+		fmt.Printf("encountered failures, will retry:\n")
+		for _, e := range tryErrs {
+			fmt.Printf("- %s\n", e)
+		}
+		fmt.Printf("")
 	}
 	if !ranTest {
 		errors = append(errors, "no test content")
