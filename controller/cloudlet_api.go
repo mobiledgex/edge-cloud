@@ -322,7 +322,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
 			}
 			if err == nil {
-				// Some platform types require a flavor cache
+				// Some platform types require caches
 				caches := pf.Caches{
 					SettingsCache: &settingsApi.cache,
 					FlavorCache:   &flavorApi.cache,
