@@ -515,7 +515,7 @@ func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, noti
 {{- if .PrintSendRecv}}
 	if span != nil {
 {{- if .Cache}}
-		span.SetTag("key", buf.GetKey())
+		log.SetTags(span, buf.GetKey().GetTags())
 {{- else}}
 		span.SetTag("msg", buf)
 {{- end}}

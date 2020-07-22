@@ -26,6 +26,7 @@ type PlatformConfig struct {
 }
 
 type Caches struct {
+	SettingsCache      *edgeproto.SettingsCache
 	FlavorCache        *edgeproto.FlavorCache
 	PrivacyPolicyCache *edgeproto.PrivacyPolicyCache
 	ClusterInstCache   *edgeproto.ClusterInstCache
