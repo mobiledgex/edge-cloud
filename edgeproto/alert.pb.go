@@ -112,11 +112,11 @@
 		ResTagTable
 		Result
 		Settings
-		CloudletVMNetInfo
-		CloudletVM
+		VMNetInfo
+		VM
 		VMPool
 		VMPoolMember
-		CloudletVMSpec
+		VMSpec
 		VMPoolInfo
 */
 package edgeproto
@@ -1132,12 +1132,12 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := CloudletState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
-	case reflect.TypeOf(CloudletVMState(0)):
-		if en, ok := CloudletVMState_CamelValue[util.CamelCase(data.(string))]; ok {
+	case reflect.TypeOf(VMState(0)):
+		if en, ok := VMState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
-	case reflect.TypeOf(CloudletVMAction(0)):
-		if en, ok := CloudletVMAction_CamelValue[util.CamelCase(data.(string))]; ok {
+	case reflect.TypeOf(VMAction(0)):
+		if en, ok := VMAction_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(ImageType(0)):

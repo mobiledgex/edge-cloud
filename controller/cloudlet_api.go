@@ -296,8 +296,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if !vmPoolApi.store.STMGet(stm, &in.Key, &vmPool) {
 				return fmt.Errorf("VMPool is missing for VM Pool platform")
 			}
-			if vmPool.CloudletVms == nil || len(vmPool.CloudletVms) == 0 {
-				return errors.New("No CloudletVMs defined as part of VMPool")
+			if vmPool.Vms == nil || len(vmPool.Vms) == 0 {
+				return errors.New("No VMs defined as part of VMPool")
 			}
 		}
 

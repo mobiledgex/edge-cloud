@@ -192,9 +192,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	for i0 := 0; i0 < len(in.AppInstRefs); i0++ {
 	}
 	for i0 := 0; i0 < len(in.VmPools); i0++ {
-		for i1 := 0; i1 < len(in.VmPools[i0].CloudletVms); i1++ {
+		for i1 := 0; i1 < len(in.VmPools[i0].Vms); i1++ {
 			if _, found := tags["timestamp"]; found {
-				in.VmPools[i0].CloudletVms[i1].UpdatedAt = google_protobuf.Timestamp{}
+				in.VmPools[i0].Vms[i1].UpdatedAt = google_protobuf.Timestamp{}
 			}
 		}
 		if _, found := tags["nocmp"]; found {
@@ -493,14 +493,14 @@ var AllDataOptionalArgs = []string{
 	"vmpools:#.fields",
 	"vmpools:#.key.organization",
 	"vmpools:#.key.name",
-	"vmpools:#.cloudletvms:#.name",
-	"vmpools:#.cloudletvms:#.netinfo.externalip",
-	"vmpools:#.cloudletvms:#.netinfo.internalip",
-	"vmpools:#.cloudletvms:#.user",
-	"vmpools:#.cloudletvms:#.state",
-	"vmpools:#.cloudletvms:#.updatedat.seconds",
-	"vmpools:#.cloudletvms:#.updatedat.nanos",
-	"vmpools:#.cloudletvms:#.internalname",
+	"vmpools:#.vms:#.name",
+	"vmpools:#.vms:#.netinfo.externalip",
+	"vmpools:#.vms:#.netinfo.internalip",
+	"vmpools:#.vms:#.groupname",
+	"vmpools:#.vms:#.state",
+	"vmpools:#.vms:#.updatedat.seconds",
+	"vmpools:#.vms:#.updatedat.nanos",
+	"vmpools:#.vms:#.internalname",
 	"vmpools:#.action",
 	"vmpools:#.error",
 }
@@ -764,15 +764,15 @@ var AllDataComments = map[string]string{
 	"vmpools:#.fields":                                           "Fields are used for the Update API to specify which fields to apply",
 	"vmpools:#.key.organization":                                 "Organization of the cloudlet site",
 	"vmpools:#.key.name":                                         "Name of the cloudlet",
-	"vmpools:#.cloudletvms:#.name":                               "VM Name",
-	"vmpools:#.cloudletvms:#.netinfo.externalip":                 "External IP",
-	"vmpools:#.cloudletvms:#.netinfo.internalip":                 "Internal IP",
-	"vmpools:#.cloudletvms:#.user":                               "VM User",
-	"vmpools:#.cloudletvms:#.state":                              "VM State, one of CloudletVmFree, CloudletVmInUse, CloudletVmError",
-	"vmpools:#.cloudletvms:#.updatedat.seconds":                  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
-	"vmpools:#.cloudletvms:#.updatedat.nanos":                    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
-	"vmpools:#.cloudletvms:#.internalname":                       "VM Internal Name",
-	"vmpools:#.action":                                           "Action performed on Cloudlet VM Pool, one of CloudletVmActionDone, CloudletVmActionAllocate, CloudletVmActionRelease",
+	"vmpools:#.vms:#.name":                                       "VM Name",
+	"vmpools:#.vms:#.netinfo.externalip":                         "External IP",
+	"vmpools:#.vms:#.netinfo.internalip":                         "Internal IP",
+	"vmpools:#.vms:#.groupname":                                  "VM Group Name",
+	"vmpools:#.vms:#.state":                                      "VM State, one of VmFree, VmInUse, VmError",
+	"vmpools:#.vms:#.updatedat.seconds":                          "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"vmpools:#.vms:#.updatedat.nanos":                            "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"vmpools:#.vms:#.internalname":                               "VM Internal Name",
+	"vmpools:#.action":                                           "Action performed on VM Pool, one of VmActionDone, VmActionAllocate, VmActionRelease",
 	"vmpools:#.error":                                            "Errors if any",
 }
 var AllDataSpecialArgs = map[string]string{

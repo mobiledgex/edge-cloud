@@ -1,4 +1,4 @@
-// Cloudlet VM Pool proto
+// VM Pool proto
 
 syntax = "proto3";
 package edgeproto;
@@ -11,50 +11,50 @@ import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-message CloudletVMNetInfo {
+message VMNetInfo {
   // External IP
   string external_ip = 1;
   // Internal IP
   string internal_ip = 2;
 }
 
-// Cloudlet VM State
+// VM State
 //
-// CloudletVMState is the state of the CloudletVM
-enum CloudletVMState {
-	// Cloudlet VM is free to use
-	CLOUDLET_VM_FREE = 0;
-	// Cloudlet VM is in use
-	CLOUDLET_VM_IN_USE = 1;
-	// Cloudlet VM is in error state
-	CLOUDLET_VM_ERROR = 2;
+// VMState is the state of the VM
+enum VMState {
+	// VM is free to use
+	VM_FREE = 0;
+	// VM is in use
+	VM_IN_USE = 1;
+	// VM is in error state
+	VM_ERROR = 2;
 }
 
-message CloudletVM {
+message VM {
   // VM Name
   string name = 1;
   // VM IP
-  CloudletVMNetInfo net_info = 2 [(gogoproto.nullable) = false];
-  // VM User
-  string user = 3;
+  VMNetInfo net_info = 2 [(gogoproto.nullable) = false];
+  // VM Group Name
+  string group_name = 3;
   // VM State
-  CloudletVMState state = 4;
+  VMState state = 4;
   // Last updated time
   google.protobuf.Timestamp updated_at = 5 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // VM Internal Name
   string internal_name = 6;
 }
 
-// VMPool defines a pool of Cloudlet VMs to be part of a Cloudlet
+// VMPool defines a pool of VMs to be part of a Cloudlet
 message VMPool {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Cloudlet key
   CloudletKey key = 2 [(gogoproto.nullable) = false];
-  // list of Cloudlet VMs to be part of Cloudlet
-  repeated CloudletVM cloudlet_vms = 3 [(gogoproto.nullable) = false];
-  // Action performed on Cloudlet VM Pool
-  CloudletVMAction action = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // list of VMs to be part of Cloudlet
+  repeated VM vms = 3 [(gogoproto.nullable) = false];
+  // Action performed on VM Pool
+  VMAction action = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Errors if any
   string error = 5;
   option (protogen.generate_matches) = true;
@@ -62,25 +62,25 @@ message VMPool {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.noconfig) = "CloudletVms:#.User,CloudletVms:#.InternalName,CloudletVms:#.State,CloudletVms:#.UpdatedAt.Seconds,CloudletVms:#.UpdatedAt.Nanos,Action,Error";
+  option (protogen.noconfig) = "Vms:#.GroupName,Vms:#.InternalName,Vms:#.State,Vms:#.UpdatedAt.Seconds,Vms:#.UpdatedAt.Nanos,Action,Error";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
 
-// VMPoolMember is used to add and remove Cloudlet VM from Cloudlet VM Pool
+// VMPoolMember is used to add and remove VM from VM Pool
 message VMPoolMember {
   // Cloudlet key
   CloudletKey key = 1 [(gogoproto.nullable) = false];
-  // Cloudlet VM part of Cloudlet VM Pool
-  CloudletVM cloudlet_vm = 2 [(gogoproto.nullable) = false];
-  option (protogen.noconfig) = "CloudletVm.User,CloudletVm.State,CloudletVm.UpdatedAt.Seconds,CloudletVm.UpdatedAt.Nanos";
+  // VM part of VM Pool
+  VM vm = 2 [(gogoproto.nullable) = false];
+  option (protogen.noconfig) = "Vm.GroupName,Vm.State,Vm.UpdatedAt.Seconds,Vm.UpdatedAt.Nanos";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
 
 service VMPoolApi {
-  // Create VMPool. Creates Cloudlet VM pool which will have
-  // Cloudlet VMs defined.
+  // Create VMPool. Creates VM pool which will have
+  // VMs defined.
   rpc CreateVMPool(VMPool) returns (Result) {
     option (google.api.http) = {
       post: "/create/vmpool"
@@ -89,8 +89,8 @@ service VMPoolApi {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
-  // Delete VMPool. Deletes Cloudlet VM pool given that none
-  // of Cloudlet VMs part of this pool is used.
+  // Delete VMPool. Deletes VM pool given that none
+  // of VMs part of this pool is used.
   rpc DeleteVMPool(VMPool) returns (Result) {
     option (google.api.http) = {
       post: "/delete/cloudetvmpool"
@@ -98,7 +98,7 @@ service VMPoolApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
-  // Update VMPool. Updates a Cloudlet VM pool's VMs.
+  // Update VMPool. Updates a VM pool's VMs.
   rpc UpdateVMPool(VMPool) returns (Result) {
     option (google.api.http) = {
       post: "/update/vmpool"
@@ -106,7 +106,7 @@ service VMPoolApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
-  // Show VMPools. Lists all the Cloudlet VMs part of the Cloudlet VM pool.
+  // Show VMPools. Lists all the VMs part of the VM pool.
   rpc ShowVMPool(VMPool) returns (stream VMPool) {
     option (google.api.http) = {
       post: "/show/vmpool"
@@ -114,46 +114,46 @@ service VMPoolApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
   }
-  // Add VMPoolMember. Adds a Cloudlet VM to existing Cloudlet VM Pool.
+  // Add VMPoolMember. Adds a VM to existing VM Pool.
   rpc AddVMPoolMember(VMPoolMember) returns (Result) {
     option (google.api.http) = {
       post: "/add/vmpoolmember"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.method_also_required) = "CloudletVm.Name";
+    option (protogen.method_also_required) = "Vm.Name";
   }
-  // Remove VMPoolMember. Removes a Cloudlet VM from existing Cloudlet VM Pool.
+  // Remove VMPoolMember. Removes a VM from existing VM Pool.
   rpc RemoveVMPoolMember(VMPoolMember) returns (Result) {
     option (google.api.http) = {
       post: "/rm/vmpoolmember"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.method_also_required) = "CloudletVm.Name";
+    option (protogen.method_also_required) = "Vm.Name";
   }
 }
 
-// CloudletVMSpec defines the specification of Cloudlet VM required by CRM
-message CloudletVMSpec {
-  // Cloudlet VM internal name
+// VMSpec defines the specification of VM required by CRM
+message VMSpec {
+  // VM internal name
   string internal_name = 1;
-  // Cloudlet VM has external network defined or not
+  // VM has external network defined or not
   bool external_network  = 2;
-  // Cloudlet VM has internal network defined or not
+  // VM has internal network defined or not
   bool internal_network  = 3;
 }
 
-// Cloudlet VM Action
+// VM Action
 //
-// CloudletVMAction is the action to be performed on Cloudlet VM Pool
-enum CloudletVMAction {
+// VMAction is the action to be performed on VM Pool
+enum VMAction {
   // Done performing action
-  CLOUDLET_VM_ACTION_DONE = 0;
-  // Allocate Cloudlet VMs from Cloudlet VM Pool
-  CLOUDLET_VM_ACTION_ALLOCATE = 1;
-  // Release VMs from Cloudlet VM Pool
-  CLOUDLET_VM_ACTION_RELEASE = 2;
+  VM_ACTION_DONE = 0;
+  // Allocate VMs from VM Pool
+  VM_ACTION_ALLOCATE = 1;
+  // Release VMs from VM Pool
+  VM_ACTION_RELEASE = 2;
 }
 
 // VMPoolInfo is used to manage VMPool from CRM
@@ -162,16 +162,16 @@ message VMPoolInfo {
   repeated string fields = 1;
   // Unique identifier key
   CloudletKey key = 2 [(gogoproto.nullable) = false];
-  // Action performed on Cloudlet VM Pool
-  CloudletVMAction action = 3;
+  // Action performed on VM Pool
+  VMAction action = 3;
   // Id of client assigned by server (internal use only)
   int64 notify_id = 4 [(protogen.hidetag) = "nocmp"];
-  // VM User
-  string user = 5;
+  // VM Group Name 
+  string group_name = 5;
   // Specs of VMs requested by the caller
-  repeated CloudletVMSpec vm_specs = 6 [(gogoproto.nullable) = false];
-  // list of Cloudlet VMs allocated
-  repeated CloudletVM cloudlet_vms = 7 [(gogoproto.nullable) = false];
+  repeated VMSpec vm_specs = 6 [(gogoproto.nullable) = false];
+  // list of VMs allocated
+  repeated VM vms = 7 [(gogoproto.nullable) = false];
   // Errors if any
   string error = 8;
   option (protogen.generate_matches) = true;

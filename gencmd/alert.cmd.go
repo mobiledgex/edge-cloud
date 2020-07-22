@@ -112,11 +112,11 @@ It has these top-level messages:
 	ResTagTable
 	Result
 	Settings
-	CloudletVMNetInfo
-	CloudletVM
+	VMNetInfo
+	VM
 	VMPool
 	VMPoolMember
-	CloudletVMSpec
+	VMSpec
 	VMPoolInfo
 */
 package gencmd

@@ -1360,30 +1360,30 @@ var PlarformDeviceClientData = []edgeproto.Device{
 var VMPoolData = []edgeproto.VMPool{
 	edgeproto.VMPool{
 		Key: CloudletData[0].Key,
-		CloudletVms: []edgeproto.CloudletVM{
-			edgeproto.CloudletVM{
+		Vms: []edgeproto.VM{
+			edgeproto.VM{
 				Name: "vm1",
-				NetInfo: edgeproto.CloudletVMNetInfo{
+				NetInfo: edgeproto.VMNetInfo{
 					ExternalIp: "192.168.1.101",
 					InternalIp: "192.168.100.101",
 				},
 			},
-			edgeproto.CloudletVM{
+			edgeproto.VM{
 				Name: "vm2",
-				NetInfo: edgeproto.CloudletVMNetInfo{
+				NetInfo: edgeproto.VMNetInfo{
 					ExternalIp: "192.168.1.102",
 					InternalIp: "192.168.100.102",
 				},
 			},
-			edgeproto.CloudletVM{
+			edgeproto.VM{
 				Name: "vm3",
-				NetInfo: edgeproto.CloudletVMNetInfo{
+				NetInfo: edgeproto.VMNetInfo{
 					InternalIp: "192.168.100.103",
 				},
 			},
-			edgeproto.CloudletVM{
+			edgeproto.VM{
 				Name: "vm4",
-				NetInfo: edgeproto.CloudletVMNetInfo{
+				NetInfo: edgeproto.VMNetInfo{
 					InternalIp: "192.168.100.104",
 				},
 			},
@@ -1391,24 +1391,24 @@ var VMPoolData = []edgeproto.VMPool{
 	},
 	edgeproto.VMPool{
 		Key: CloudletData[1].Key,
-		CloudletVms: []edgeproto.CloudletVM{
-			edgeproto.CloudletVM{
+		Vms: []edgeproto.VM{
+			edgeproto.VM{
 				Name: "vm1",
-				NetInfo: edgeproto.CloudletVMNetInfo{
+				NetInfo: edgeproto.VMNetInfo{
 					ExternalIp: "192.168.1.101",
 					InternalIp: "192.168.100.101",
 				},
 			},
-			edgeproto.CloudletVM{
+			edgeproto.VM{
 				Name: "vm2",
-				NetInfo: edgeproto.CloudletVMNetInfo{
+				NetInfo: edgeproto.VMNetInfo{
 					ExternalIp: "192.168.1.102",
 					InternalIp: "192.168.100.102",
 				},
 			},
-			edgeproto.CloudletVM{
+			edgeproto.VM{
 				Name: "vm3",
-				NetInfo: edgeproto.CloudletVMNetInfo{
+				NetInfo: edgeproto.VMNetInfo{
 					InternalIp: "192.168.100.103",
 				},
 			},
@@ -1416,16 +1416,16 @@ var VMPoolData = []edgeproto.VMPool{
 	},
 	edgeproto.VMPool{
 		Key: CloudletData[2].Key,
-		CloudletVms: []edgeproto.CloudletVM{
-			edgeproto.CloudletVM{
+		Vms: []edgeproto.VM{
+			edgeproto.VM{
 				Name: "vm1",
-				NetInfo: edgeproto.CloudletVMNetInfo{
+				NetInfo: edgeproto.VMNetInfo{
 					InternalIp: "192.168.100.101",
 				},
 			},
-			edgeproto.CloudletVM{
+			edgeproto.VM{
 				Name: "vm2",
-				NetInfo: edgeproto.CloudletVMNetInfo{
+				NetInfo: edgeproto.VMNetInfo{
 					InternalIp: "192.168.100.102",
 				},
 			},

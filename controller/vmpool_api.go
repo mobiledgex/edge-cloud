@@ -67,9 +67,9 @@ func (s *VMPoolApi) DeleteVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		for _, cloudletVm := range cur.CloudletVms {
-			if cloudletVm.State == edgeproto.CloudletVMState_CLOUDLET_VM_IN_USE {
-				return fmt.Errorf("Cloudlet VM %s is in-use", cloudletVm.Name)
+		for _, vm := range cur.Vms {
+			if vm.State == edgeproto.VMState_VM_IN_USE {
+				return fmt.Errorf("Cloudlet VM %s is in-use", vm.Name)
 			}
 		}
 		s.store.STMDel(stm, &in.Key)
@@ -97,12 +97,12 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 		}
 		poolMember := edgeproto.VMPoolMember{}
 		poolMember.Key = in.Key
-		for ii, _ := range cur.CloudletVms {
-			if cur.CloudletVms[ii].Name == in.CloudletVm.Name {
+		for ii, _ := range cur.Vms {
+			if cur.Vms[ii].Name == in.Vm.Name {
 				return fmt.Errorf("Cloudlet VM with same name already exists as part of Cloudlet VM Pool")
 			}
 		}
-		cur.CloudletVms = append(cur.CloudletVms, in.CloudletVm)
+		cur.Vms = append(cur.Vms, in.Vm)
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
@@ -116,12 +116,12 @@ func (s *VMPoolApi) RemoveVMPoolMember(ctx context.Context, in *edgeproto.VMPool
 			return in.Key.NotFoundError()
 		}
 		changed := false
-		for ii, cloudletVm := range cur.CloudletVms {
-			if cloudletVm.Name == in.CloudletVm.Name {
-				if cloudletVm.State == edgeproto.CloudletVMState_CLOUDLET_VM_IN_USE {
+		for ii, vm := range cur.Vms {
+			if vm.Name == in.Vm.Name {
+				if vm.State == edgeproto.VMState_VM_IN_USE {
 					return fmt.Errorf("Cloudlet VM is in use and hence cannot be removed")
 				}
-				cur.CloudletVms = append(cur.CloudletVms[:ii], cur.CloudletVms[ii+1:]...)
+				cur.Vms = append(cur.Vms[:ii], cur.Vms[ii+1:]...)
 				changed = true
 				break
 			}

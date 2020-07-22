@@ -295,7 +295,7 @@ func (s *CloudletPoolMember) Validate(fields map[string]struct{}) error {
 	return s.ValidateKey()
 }
 
-func (s *CloudletVM) Validate() error {
+func (s *VM) Validate() error {
 	if !util.ValidName(s.Name) {
 		return errors.New("Invalid Cloudlet Pool name")
 	}
@@ -303,7 +303,7 @@ func (s *CloudletVM) Validate() error {
 		return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
 	}
 	if s.NetInfo.InternalIp == "" {
-		return fmt.Errorf("Missing internal IP for CloudletVM: %s", s.Name)
+		return fmt.Errorf("Missing internal IP for VM: %s", s.Name)
 	}
 	if net.ParseIP(s.NetInfo.InternalIp) == nil {
 		return fmt.Errorf("Invalid Address: %s", s.NetInfo.InternalIp)
@@ -318,7 +318,7 @@ func (s *VMPool) Validate(fields map[string]struct{}) error {
 	if err := s.ValidateEnums(); err != nil {
 		return err
 	}
-	for _, v := range s.CloudletVms {
+	for _, v := range s.Vms {
 		if err := v.Validate(); err != nil {
 			return err
 		}
@@ -330,7 +330,7 @@ func (s *VMPoolMember) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
-	if err := s.CloudletVm.Validate(); err != nil {
+	if err := s.Vm.Validate(); err != nil {
 		return err
 	}
 	return nil
@@ -836,28 +836,28 @@ func (s *AutoProvPolicy) GetCloudletKeys() map[CloudletKey]struct{} {
 	return keys
 }
 
-func AllocateCloudletVMsFromPool(ctx context.Context, VMPoolInfo *VMPoolInfo, VMPool *VMPool) {
-	log.DebugLog(log.DebugLevelNotify, "AllocateCloudletVMsFromPool", "VMPoolinfo", VMPoolInfo, "VMPool", VMPool)
-	VMPool.Action = CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
+func AllocateVMsFromPool(ctx context.Context, VMPoolInfo *VMPoolInfo, VMPool *VMPool) {
+	log.DebugLog(log.DebugLevelNotify, "AllocateVMsFromPool", "VMPoolinfo", VMPoolInfo, "VMPool", VMPool)
+	VMPool.Action = VMAction_VM_ACTION_ALLOCATE
 	VMPool.Error = ""
 
 	// Group available VMs
 	bothNetVms := []string{}
 	internalNetVms := []string{}
 	externalNetVms := []string{}
-	for _, cloudletVm := range VMPool.CloudletVms {
-		if cloudletVm.State != CloudletVMState_CLOUDLET_VM_FREE {
+	for _, vm := range VMPool.Vms {
+		if vm.State != VMState_VM_FREE {
 			continue
 		}
-		if cloudletVm.NetInfo.ExternalIp != "" && cloudletVm.NetInfo.InternalIp != "" {
-			bothNetVms = append(bothNetVms, cloudletVm.Name)
+		if vm.NetInfo.ExternalIp != "" && vm.NetInfo.InternalIp != "" {
+			bothNetVms = append(bothNetVms, vm.Name)
 			continue
 		}
-		if cloudletVm.NetInfo.ExternalIp != "" {
-			externalNetVms = append(externalNetVms, cloudletVm.Name)
+		if vm.NetInfo.ExternalIp != "" {
+			externalNetVms = append(externalNetVms, vm.Name)
 		}
-		if cloudletVm.NetInfo.InternalIp != "" {
-			internalNetVms = append(internalNetVms, cloudletVm.Name)
+		if vm.NetInfo.InternalIp != "" {
+			internalNetVms = append(internalNetVms, vm.Name)
 		}
 	}
 
@@ -907,24 +907,24 @@ func AllocateCloudletVMsFromPool(ctx context.Context, VMPoolInfo *VMPoolInfo, VM
 
 	// Mark allocated VMs as IN_USE
 	count := 0
-	for ii, cloudletVm := range VMPool.CloudletVms {
-		internalName, ok := allocatedVms[cloudletVm.Name]
+	for ii, vm := range VMPool.Vms {
+		internalName, ok := allocatedVms[vm.Name]
 		if !ok {
 			continue
 		}
-		VMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_IN_USE
-		VMPool.CloudletVms[ii].User = VMPoolInfo.User
-		VMPool.CloudletVms[ii].InternalName = internalName
+		VMPool.Vms[ii].State = VMState_VM_IN_USE
+		VMPool.Vms[ii].GroupName = VMPoolInfo.GroupName
+		VMPool.Vms[ii].InternalName = internalName
 		ts, _ := types.TimestampProto(time.Now())
-		VMPool.CloudletVms[ii].UpdatedAt = *ts
+		VMPool.Vms[ii].UpdatedAt = *ts
 		count++
 	}
 	log.DebugLog(log.DebugLevelNotify, "allocated cloudlet VMs", "key", VMPool.Key, "count", count)
 }
 
-func ReleaseCloudletVMsFromPool(ctx context.Context, VMPoolInfo *VMPoolInfo, VMPool *VMPool) {
-	log.DebugLog(log.DebugLevelNotify, "ReleaseCloudletVMsFromPool", "VMPoolinfo", VMPoolInfo, "VMPool", VMPool)
-	VMPool.Action = CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
+func ReleaseVMsFromPool(ctx context.Context, VMPoolInfo *VMPoolInfo, VMPool *VMPool) {
+	log.DebugLog(log.DebugLevelNotify, "ReleaseVMsFromPool", "VMPoolinfo", VMPoolInfo, "VMPool", VMPool)
+	VMPool.Action = VMAction_VM_ACTION_RELEASE
 	VMPool.Error = ""
 	count := 0
 	freeAll := false
@@ -936,19 +936,19 @@ func ReleaseCloudletVMsFromPool(ctx context.Context, VMPoolInfo *VMPoolInfo, VMP
 	for _, vmSpec := range VMPoolInfo.VmSpecs {
 		vmNames[vmSpec.InternalName] = struct{}{}
 	}
-	for ii, cloudletVm := range VMPool.CloudletVms {
-		if VMPoolInfo.User != cloudletVm.User {
+	for ii, vm := range VMPool.Vms {
+		if VMPoolInfo.GroupName != vm.GroupName {
 			continue
 		}
-		_, ok := vmNames[cloudletVm.InternalName]
+		_, ok := vmNames[vm.InternalName]
 		if ok || freeAll {
-			VMPool.CloudletVms[ii].State = CloudletVMState_CLOUDLET_VM_FREE
-			VMPool.CloudletVms[ii].User = ""
-			VMPool.CloudletVms[ii].InternalName = ""
+			VMPool.Vms[ii].State = VMState_VM_FREE
+			VMPool.Vms[ii].GroupName = ""
+			VMPool.Vms[ii].InternalName = ""
 			ts, _ := types.TimestampProto(time.Now())
-			VMPool.CloudletVms[ii].UpdatedAt = *ts
+			VMPool.Vms[ii].UpdatedAt = *ts
 			count++
 		}
 	}
-	log.DebugLog(log.DebugLevelNotify, "released cloudlet VMs", "key", VMPool.Key, "user", VMPoolInfo.User, "count", count)
+	log.DebugLog(log.DebugLevelNotify, "released cloudlet VMs", "key", VMPool.Key, "group", VMPoolInfo.GroupName, "count", count)
 }

@@ -35,25 +35,25 @@ func (s *VMPoolInfoApi) Update(ctx context.Context, in *edgeproto.VMPoolInfo, re
 			return nil
 		}
 		switch in.Action {
-		case edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE:
+		case edgeproto.VMAction_VM_ACTION_ALLOCATE:
 			fallthrough
-		case edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE:
-			if vmPool.Action != edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE {
+		case edgeproto.VMAction_VM_ACTION_RELEASE:
+			if vmPool.Action != edgeproto.VMAction_VM_ACTION_DONE {
 				// Some action is being performed on Cloudlet VM Pool
 				// TODO Wait for it be done?
 				log.DebugLog(log.DebugLevelNotify, "VMPool is busy", "key", in.Key, "action", vmPool.Action)
 				return nil
 			}
-			if in.Action == edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE {
-				edgeproto.AllocateCloudletVMsFromPool(ctx, in, &vmPool)
+			if in.Action == edgeproto.VMAction_VM_ACTION_ALLOCATE {
+				edgeproto.AllocateVMsFromPool(ctx, in, &vmPool)
 			} else {
-				edgeproto.ReleaseCloudletVMsFromPool(ctx, in, &vmPool)
+				edgeproto.ReleaseVMsFromPool(ctx, in, &vmPool)
 			}
-		case edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE:
-			if vmPool.Action == edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE {
+		case edgeproto.VMAction_VM_ACTION_DONE:
+			if vmPool.Action == edgeproto.VMAction_VM_ACTION_DONE {
 				return nil
 			}
-			vmPool.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
+			vmPool.Action = edgeproto.VMAction_VM_ACTION_DONE
 		default:
 			return fmt.Errorf("Invalid Cloudlet VM Action: %s", in.Action)
 		}

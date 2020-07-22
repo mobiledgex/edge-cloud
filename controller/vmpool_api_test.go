@@ -29,14 +29,14 @@ func TestVMPoolApi(t *testing.T) {
 
 	testutil.InternalVMPoolTest(t, "cud", &vmPoolApi, testutil.VMPoolData)
 
-	testAddRemoveCloudletVM(t, ctx)
+	testAddRemoveVM(t, ctx)
 	testVMPoolAction(t, ctx)
 
 	dummy.Stop()
 }
 
-func waitForAction(key *edgeproto.CloudletKey, action edgeproto.CloudletVMAction) error {
-	var lastAction edgeproto.CloudletVMAction
+func waitForAction(key *edgeproto.CloudletKey, action edgeproto.VMAction) error {
+	var lastAction edgeproto.VMAction
 	for i := 0; i < 100; i++ {
 		pool := edgeproto.VMPool{}
 		if vmPoolApi.cache.Get(key, &pool) {
@@ -51,13 +51,13 @@ func waitForAction(key *edgeproto.CloudletKey, action edgeproto.CloudletVMAction
 	return fmt.Errorf("Unable to get desired Cloudlet VM Pool action, actual action %s, desired action %s", lastAction, action)
 }
 
-func testAddRemoveCloudletVM(t *testing.T, ctx context.Context) {
+func testAddRemoveVM(t *testing.T, ctx context.Context) {
 	// test adding cloudlet vm to the pool
 	cm1 := edgeproto.VMPoolMember{}
 	cm1.Key = testutil.VMPoolData[1].Key
-	cm1.CloudletVm = edgeproto.CloudletVM{
+	cm1.Vm = edgeproto.VM{
 		Name: "vmX",
-		NetInfo: edgeproto.CloudletVMNetInfo{
+		NetInfo: edgeproto.VMNetInfo{
 			ExternalIp: "192.168.1.111",
 			InternalIp: "192.168.100.111",
 		},
@@ -69,14 +69,14 @@ func testAddRemoveCloudletVM(t *testing.T, ctx context.Context) {
 	vmPool := edgeproto.VMPool{}
 	found := vmPoolApi.cache.Get(&cm1.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm1.Key)
-	require.Equal(t, 4, len(vmPool.CloudletVms))
+	require.Equal(t, 4, len(vmPool.Vms))
 
 	// test adding another cloudlet vm to the pool
 	cm2 := edgeproto.VMPoolMember{}
 	cm2.Key = testutil.VMPoolData[1].Key
-	cm2.CloudletVm = edgeproto.CloudletVM{
+	cm2.Vm = edgeproto.VM{
 		Name: "vmY",
-		NetInfo: edgeproto.CloudletVMNetInfo{
+		NetInfo: edgeproto.VMNetInfo{
 			ExternalIp: "192.168.1.121",
 			InternalIp: "192.168.100.121",
 		},
@@ -87,21 +87,21 @@ func testAddRemoveCloudletVM(t *testing.T, ctx context.Context) {
 
 	found = vmPoolApi.cache.Get(&cm2.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm2.Key)
-	require.Equal(t, 5, len(vmPool.CloudletVms))
+	require.Equal(t, 5, len(vmPool.Vms))
 
 	// remove cloudlet vm from pool
 	_, err = vmPoolApi.RemoveVMPoolMember(ctx, &cm1)
 	require.Nil(t, err, "remove cloudlet vm from pool")
 	found = vmPoolApi.cache.Get(&cm1.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm1.Key)
-	require.Equal(t, 4, len(vmPool.CloudletVms))
+	require.Equal(t, 4, len(vmPool.Vms))
 
 	// remove cloudlet vm from pool
 	_, err = vmPoolApi.RemoveVMPoolMember(ctx, &cm2)
 	require.Nil(t, err, "remove cloudlet vm from pool")
 	found = vmPoolApi.cache.Get(&cm2.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm2.Key)
-	require.Equal(t, 3, len(vmPool.CloudletVms))
+	require.Equal(t, 3, len(vmPool.Vms))
 
 	// try to add cloudlet vm to non-existent pool
 	cm1.Key.Name = "SomeNonExistentCloudlet"
@@ -112,15 +112,15 @@ func testAddRemoveCloudletVM(t *testing.T, ctx context.Context) {
 var Pass = true
 var Fail = false
 
-func verifyCloudletVMAction(t *testing.T, ctx context.Context, info *edgeproto.VMPoolInfo, inUseCount int, success bool) {
+func verifyVMAction(t *testing.T, ctx context.Context, info *edgeproto.VMPoolInfo, inUseCount int, success bool) {
 	key := &info.Key
 	vmPoolInfoApi.Update(ctx, info, 0)
 	err := waitForAction(key, info.Action)
 	require.Nil(t, err, "cloudlet vm pool action transtions")
 
-	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE
+	info.Action = edgeproto.VMAction_VM_ACTION_DONE
 	vmPoolInfoApi.Update(ctx, info, 0)
-	err = waitForAction(key, edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_DONE)
+	err = waitForAction(key, edgeproto.VMAction_VM_ACTION_DONE)
 	require.Nil(t, err, "cloudlet vm pool action transtions")
 
 	vmPool := edgeproto.VMPool{}
@@ -132,10 +132,10 @@ func verifyCloudletVMAction(t *testing.T, ctx context.Context, info *edgeproto.V
 		require.NotEmpty(t, vmPool.Error, "cloudlet vm pool allocation failed")
 	}
 
-	inuseVms := []edgeproto.CloudletVM{}
-	for _, cloudletVm := range vmPool.CloudletVms {
-		if cloudletVm.User == info.User && cloudletVm.State == edgeproto.CloudletVMState_CLOUDLET_VM_IN_USE {
-			inuseVms = append(inuseVms, cloudletVm)
+	inuseVms := []edgeproto.VM{}
+	for _, vm := range vmPool.Vms {
+		if vm.GroupName == info.GroupName && vm.State == edgeproto.VMState_VM_IN_USE {
+			inuseVms = append(inuseVms, vm)
 		}
 	}
 	require.Equal(t, len(inuseVms), inUseCount)
@@ -145,81 +145,81 @@ func testVMPoolAction(t *testing.T, ctx context.Context) {
 	vmPool := testutil.VMPoolData[1]
 	info := edgeproto.VMPoolInfo{}
 
-	user1 := "testvmpoolVMs1"
-	user2 := "testvmpoolVMs2"
+	group1 := "testvmpoolVMs1"
+	group2 := "testvmpoolVMs2"
 
 	// Allocate VMs
-	info.User = user1
+	info.GroupName = group1
 	info.Key = vmPool.Key
-	info.VmSpecs = []edgeproto.CloudletVMSpec{
-		edgeproto.CloudletVMSpec{
+	info.VmSpecs = []edgeproto.VMSpec{
+		edgeproto.VMSpec{
 			InternalName:    "vm1.testcluster.testorg.mobiledgex.net",
 			ExternalNetwork: true,
 		},
-		edgeproto.CloudletVMSpec{
+		edgeproto.VMSpec{
 			InternalName:    "vm2.testcluster.testorg.mobiledgex.net",
 			InternalNetwork: true,
 		},
 	}
-	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
-	verifyCloudletVMAction(t, ctx, &info, 2, Pass)
+	info.Action = edgeproto.VMAction_VM_ACTION_ALLOCATE
+	verifyVMAction(t, ctx, &info, 2, Pass)
 
-	// Allocate some more VMs but by different user
+	// Allocate some more VMs but by different group
 	// Below also tests that previous VM allocation didn't use VM with external
 	// connectivity for a spec with just requesting internal network access
-	info.User = user2
-	info.VmSpecs = []edgeproto.CloudletVMSpec{
-		edgeproto.CloudletVMSpec{
+	info.GroupName = group2
+	info.VmSpecs = []edgeproto.VMSpec{
+		edgeproto.VMSpec{
 			InternalName:    "vm2.testcluster.testorg.mobiledgex.net",
 			ExternalNetwork: true,
 		},
 	}
-	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
-	verifyCloudletVMAction(t, ctx, &info, 1, Pass)
+	info.Action = edgeproto.VMAction_VM_ACTION_ALLOCATE
+	verifyVMAction(t, ctx, &info, 1, Pass)
 
 	// Allocate some more VMs, but it should fail as there aren't enough free VMs
-	info.User = user1
-	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
-	verifyCloudletVMAction(t, ctx, &info, 2, Fail)
+	info.GroupName = group1
+	info.Action = edgeproto.VMAction_VM_ACTION_ALLOCATE
+	verifyVMAction(t, ctx, &info, 2, Fail)
 
 	// Release 1 VM from the pool
-	info.User = user1
-	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
-	info.VmSpecs = []edgeproto.CloudletVMSpec{
-		edgeproto.CloudletVMSpec{
+	info.GroupName = group1
+	info.Action = edgeproto.VMAction_VM_ACTION_RELEASE
+	info.VmSpecs = []edgeproto.VMSpec{
+		edgeproto.VMSpec{
 			InternalName: "vm2.testcluster.testorg.mobiledgex.net",
 		},
 	}
-	verifyCloudletVMAction(t, ctx, &info, 1, Pass)
+	verifyVMAction(t, ctx, &info, 1, Pass)
 
 	// A VM is free, but allocation should fail as no VM with external network
 	// connectivity is free
-	info.User = user1
-	info.VmSpecs = []edgeproto.CloudletVMSpec{
-		edgeproto.CloudletVMSpec{
+	info.GroupName = group1
+	info.VmSpecs = []edgeproto.VMSpec{
+		edgeproto.VMSpec{
 			InternalName:    "vm2.testcluster.testorg.mobiledgex.net",
 			ExternalNetwork: true,
 		},
 	}
-	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
-	verifyCloudletVMAction(t, ctx, &info, 1, Fail)
+	info.Action = edgeproto.VMAction_VM_ACTION_ALLOCATE
+	verifyVMAction(t, ctx, &info, 1, Fail)
 
 	// Release 2nd VM from the pool
-	info.User = user1
-	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
-	info.VmSpecs = []edgeproto.CloudletVMSpec{
-		edgeproto.CloudletVMSpec{
+	info.GroupName = group1
+	info.Action = edgeproto.VMAction_VM_ACTION_RELEASE
+	info.VmSpecs = []edgeproto.VMSpec{
+		edgeproto.VMSpec{
 			InternalName: "vm1.testcluster.testorg.mobiledgex.net",
 		},
 	}
-	verifyCloudletVMAction(t, ctx, &info, 0, Pass)
+	verifyVMAction(t, ctx, &info, 0, Pass)
 
 	// Add VMs to the pool
 	cm1 := edgeproto.VMPoolMember{}
 	cm1.Key = info.Key
-	cm1.CloudletVm = edgeproto.CloudletVM{
+	cm1.Vm = edgeproto.VM{
 		Name: "vmX",
-		NetInfo: edgeproto.CloudletVMNetInfo{
+		NetInfo: edgeproto.VMNetInfo{
 			InternalIp: "192.168.100.111",
 		},
 	}
@@ -227,45 +227,45 @@ func testVMPoolAction(t *testing.T, ctx context.Context) {
 	require.Nil(t, err, "add cloudlet vm to cloudlet vm pool")
 
 	// Allocate VMs, it should succeed now
-	info.User = user2
-	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_ALLOCATE
-	info.VmSpecs = []edgeproto.CloudletVMSpec{
-		edgeproto.CloudletVMSpec{
+	info.GroupName = group2
+	info.Action = edgeproto.VMAction_VM_ACTION_ALLOCATE
+	info.VmSpecs = []edgeproto.VMSpec{
+		edgeproto.VMSpec{
 			InternalName:    "vm1.testcluster.testorg.mobiledgex.net",
 			InternalNetwork: true,
 		},
-		edgeproto.CloudletVMSpec{
+		edgeproto.VMSpec{
 			InternalName:    "vm2.testcluster.testorg.mobiledgex.net",
 			InternalNetwork: true,
 		},
 		// Below also tests that previous VM allocation didn't use VM with external
 		// connectivity for a spec with just requesting internal network access
-		edgeproto.CloudletVMSpec{
+		edgeproto.VMSpec{
 			InternalName:    "vm3.testcluster.testorg.mobiledgex.net",
 			ExternalNetwork: true,
 		},
 	}
-	verifyCloudletVMAction(t, ctx, &info, 4, Pass)
+	verifyVMAction(t, ctx, &info, 4, Pass)
 
 	// Release 1 VM from the pool
-	info.User = user2
-	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
-	info.VmSpecs = []edgeproto.CloudletVMSpec{
-		edgeproto.CloudletVMSpec{
+	info.GroupName = group2
+	info.Action = edgeproto.VMAction_VM_ACTION_RELEASE
+	info.VmSpecs = []edgeproto.VMSpec{
+		edgeproto.VMSpec{
 			InternalName: "vm2.testcluster.testorg.mobiledgex.net",
 		},
 	}
-	verifyCloudletVMAction(t, ctx, &info, 2, Pass)
+	verifyVMAction(t, ctx, &info, 2, Pass)
 
 	// Release all VMs
-	info.User = user2
-	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
-	info.VmSpecs = []edgeproto.CloudletVMSpec{}
-	verifyCloudletVMAction(t, ctx, &info, 0, Pass)
+	info.GroupName = group2
+	info.Action = edgeproto.VMAction_VM_ACTION_RELEASE
+	info.VmSpecs = []edgeproto.VMSpec{}
+	verifyVMAction(t, ctx, &info, 0, Pass)
 
 	// Release all VMs
-	info.User = user1
-	info.Action = edgeproto.CloudletVMAction_CLOUDLET_VM_ACTION_RELEASE
-	info.VmSpecs = []edgeproto.CloudletVMSpec{}
-	verifyCloudletVMAction(t, ctx, &info, 0, Pass)
+	info.GroupName = group1
+	info.Action = edgeproto.VMAction_VM_ACTION_RELEASE
+	info.VmSpecs = []edgeproto.VMSpec{}
+	verifyVMAction(t, ctx, &info, 0, Pass)
 }
