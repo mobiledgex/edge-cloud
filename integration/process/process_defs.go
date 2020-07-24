@@ -84,6 +84,7 @@ type Crm struct {
 	AppDNSRoot          string
 	ChefServerPath      string
 	DeploymentTag       string
+	VMPool              string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`

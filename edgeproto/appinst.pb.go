@@ -2978,7 +2978,7 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 	select {
 	case <-done:
 		err = nil
-		if successMsg != "" {
+		if successMsg != "" && send != nil {
 			send(&Result{Message: successMsg})
 		}
 	case <-failed:
@@ -3001,8 +3001,10 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 			// state. That means work is still in progress.
 			// Notify user that this is not an error.
 			// Do not undo since CRM is still busy.
-			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowAppInst to check current status", TrackedState_CamelName[int32(info.State)])
-			send(&Result{Message: msg})
+			if send != nil {
+				msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowAppInst to check current status", TrackedState_CamelName[int32(info.State)])
+				send(&Result{Message: msg})
+			}
 			err = nil
 		} else {
 			err = fmt.Errorf("Timed out; expected state %s but is %s",

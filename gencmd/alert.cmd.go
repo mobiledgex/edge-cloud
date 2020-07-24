@@ -114,6 +114,7 @@ It has these top-level messages:
 	Settings
 	VMNetInfo
 	VM
+	VMPoolKey
 	VMPool
 	VMPoolMember
 	VMSpec

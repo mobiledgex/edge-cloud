@@ -53,7 +53,10 @@ func VMPoolHideTags(in *edgeproto.VMPool) {
 		}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.Action = 0
+		in.State = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Errors = nil
 	}
 }
 
@@ -81,12 +84,16 @@ func VMPoolInfoHideTags(in *edgeproto.VMPoolInfo) {
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
 	}
-	for i0 := 0; i0 < len(in.VmSpecs); i0++ {
-	}
 	for i0 := 0; i0 < len(in.Vms); i0++ {
 		if _, found := tags["timestamp"]; found {
 			in.Vms[i0].UpdatedAt = google_protobuf.Timestamp{}
 		}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.State = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Errors = nil
 	}
 }
 
@@ -464,89 +471,6 @@ var VMPoolApiCmds = []*cobra.Command{
 	RemoveVMPoolMemberCmd.GenCmd(),
 }
 
-var VMPoolInfoApiCmd edgeproto.VMPoolInfoApiClient
-
-var ShowVMPoolInfoCmd = &cli.Command{
-	Use:          "ShowVMPoolInfo",
-	OptionalArgs: strings.Join(append(VMPoolInfoRequiredArgs, VMPoolInfoOptionalArgs...), " "),
-	AliasArgs:    strings.Join(VMPoolInfoAliasArgs, " "),
-	SpecialArgs:  &VMPoolInfoSpecialArgs,
-	Comments:     VMPoolInfoComments,
-	ReqData:      &edgeproto.VMPoolInfo{},
-	ReplyData:    &edgeproto.VMPoolInfo{},
-	Run:          runShowVMPoolInfo,
-}
-
-func runShowVMPoolInfo(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.VMPoolInfo)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return ShowVMPoolInfo(c, obj)
-}
-
-func ShowVMPoolInfo(c *cli.Command, in *edgeproto.VMPoolInfo) error {
-	if VMPoolInfoApiCmd == nil {
-		return fmt.Errorf("VMPoolInfoApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := VMPoolInfoApiCmd.ShowVMPoolInfo(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("ShowVMPoolInfo failed: %s", errstr)
-	}
-
-	objs := make([]*edgeproto.VMPoolInfo, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowVMPoolInfo recv failed: %s", errstr)
-		}
-		VMPoolInfoHideTags(obj)
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(objs, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func ShowVMPoolInfos(c *cli.Command, data []edgeproto.VMPoolInfo, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("ShowVMPoolInfo %v\n", data[ii])
-		myerr := ShowVMPoolInfo(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var VMPoolInfoApiCmds = []*cobra.Command{
-	ShowVMPoolInfoCmd.GenCmd(),
-}
-
 var VMNetInfoRequiredArgs = []string{}
 var VMNetInfoOptionalArgs = []string{
 	"externalip",
@@ -575,15 +499,26 @@ var VMComments = map[string]string{
 	"netinfo.externalip": "External IP",
 	"netinfo.internalip": "Internal IP",
 	"groupname":          "VM Group Name",
-	"state":              "VM State, one of VmFree, VmInUse, VmError",
+	"state":              "VM State, one of VmFree, VmInProgress, VmInUse, VmAdd, VmRemove, VmUpdate",
 	"updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"internalname":       "VM Internal Name",
 }
 var VMSpecialArgs = map[string]string{}
+var VMPoolKeyRequiredArgs = []string{}
+var VMPoolKeyOptionalArgs = []string{
+	"organization",
+	"name",
+}
+var VMPoolKeyAliasArgs = []string{}
+var VMPoolKeyComments = map[string]string{
+	"organization": "Organization of the vmpool",
+	"name":         "Name of the vmpool",
+}
+var VMPoolKeySpecialArgs = map[string]string{}
 var VMPoolRequiredArgs = []string{
-	"cloudlet-org",
-	"cloudlet",
+	"vmpool-org",
+	"vmpool",
 }
 var VMPoolOptionalArgs = []string{
 	"vms:#.name",
@@ -591,30 +526,31 @@ var VMPoolOptionalArgs = []string{
 	"vms:#.netinfo.internalip",
 }
 var VMPoolAliasArgs = []string{
-	"cloudlet-org=key.organization",
-	"cloudlet=key.name",
+	"vmpool-org=key.organization",
+	"vmpool=key.name",
 }
 var VMPoolComments = map[string]string{
 	"fields":                   "Fields are used for the Update API to specify which fields to apply",
-	"cloudlet-org":             "Organization of the cloudlet site",
-	"cloudlet":                 "Name of the cloudlet",
+	"vmpool-org":               "Organization of the vmpool",
+	"vmpool":                   "Name of the vmpool",
 	"vms:#.name":               "VM Name",
 	"vms:#.netinfo.externalip": "External IP",
 	"vms:#.netinfo.internalip": "Internal IP",
 	"vms:#.groupname":          "VM Group Name",
-	"vms:#.state":              "VM State, one of VmFree, VmInUse, VmError",
+	"vms:#.state":              "VM State, one of VmFree, VmInProgress, VmInUse, VmAdd, VmRemove, VmUpdate",
 	"vms:#.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"vms:#.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"vms:#.internalname":       "VM Internal Name",
-	"action":                   "Action performed on VM Pool, one of VmActionDone, VmActionAllocate, VmActionRelease",
-	"error":                    "Errors if any",
+	"state":                    "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"errors":                   "Any errors trying to add/remove VM to/from VM Pool",
 }
 var VMPoolSpecialArgs = map[string]string{
+	"errors": "StringArray",
 	"fields": "StringArray",
 }
 var VMPoolMemberRequiredArgs = []string{
-	"cloudlet-org",
-	"cloudlet",
+	"vmpool-org",
+	"vmpool",
 }
 var VMPoolMemberOptionalArgs = []string{
 	"vm.name",
@@ -623,17 +559,17 @@ var VMPoolMemberOptionalArgs = []string{
 	"vm.internalname",
 }
 var VMPoolMemberAliasArgs = []string{
-	"cloudlet-org=key.organization",
-	"cloudlet=key.name",
+	"vmpool-org=key.organization",
+	"vmpool=key.name",
 }
 var VMPoolMemberComments = map[string]string{
-	"cloudlet-org":          "Organization of the cloudlet site",
-	"cloudlet":              "Name of the cloudlet",
+	"vmpool-org":            "Organization of the vmpool",
+	"vmpool":                "Name of the vmpool",
 	"vm.name":               "VM Name",
 	"vm.netinfo.externalip": "External IP",
 	"vm.netinfo.internalip": "Internal IP",
 	"vm.groupname":          "VM Group Name",
-	"vm.state":              "VM State, one of VmFree, VmInUse, VmError",
+	"vm.state":              "VM State, one of VmFree, VmInProgress, VmInUse, VmAdd, VmRemove, VmUpdate",
 	"vm.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"vm.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"vm.internalname":       "VM Internal Name",
@@ -653,16 +589,11 @@ var VMSpecComments = map[string]string{
 }
 var VMSpecSpecialArgs = map[string]string{}
 var VMPoolInfoRequiredArgs = []string{
-	"cloudlet-org",
-	"cloudlet",
+	"vmpool-org",
+	"vmpool",
 }
 var VMPoolInfoOptionalArgs = []string{
-	"action",
 	"notifyid",
-	"groupname",
-	"vmspecs:#.internalname",
-	"vmspecs:#.externalnetwork",
-	"vmspecs:#.internalnetwork",
 	"vms:#.name",
 	"vms:#.netinfo.externalip",
 	"vms:#.netinfo.internalip",
@@ -671,38 +602,40 @@ var VMPoolInfoOptionalArgs = []string{
 	"vms:#.updatedat.seconds",
 	"vms:#.updatedat.nanos",
 	"vms:#.internalname",
-	"error",
+	"state",
+	"errors",
+	"status.tasknumber",
+	"status.maxtasks",
+	"status.taskname",
+	"status.stepname",
 }
 var VMPoolInfoAliasArgs = []string{
-	"cloudlet-org=key.organization",
-	"cloudlet=key.name",
+	"vmpool-org=key.organization",
+	"vmpool=key.name",
 }
 var VMPoolInfoComments = map[string]string{
-	"fields":                    "Fields are used for the Update API to specify which fields to apply",
-	"cloudlet-org":              "Organization of the cloudlet site",
-	"cloudlet":                  "Name of the cloudlet",
-	"action":                    "Action performed on VM Pool, one of VmActionDone, VmActionAllocate, VmActionRelease",
-	"notifyid":                  "Id of client assigned by server (internal use only)",
-	"groupname":                 "VM Group Name",
-	"vmspecs:#.internalname":    "VM internal name",
-	"vmspecs:#.externalnetwork": "VM has external network defined or not",
-	"vmspecs:#.internalnetwork": "VM has internal network defined or not",
-	"vms:#.name":                "VM Name",
-	"vms:#.netinfo.externalip":  "External IP",
-	"vms:#.netinfo.internalip":  "Internal IP",
-	"vms:#.groupname":           "VM Group Name",
-	"vms:#.state":               "VM State, one of VmFree, VmInUse, VmError",
-	"vms:#.updatedat.seconds":   "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
-	"vms:#.updatedat.nanos":     "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
-	"vms:#.internalname":        "VM Internal Name",
-	"error":                     "Errors if any",
+	"fields":                   "Fields are used for the Update API to specify which fields to apply",
+	"vmpool-org":               "Organization of the vmpool",
+	"vmpool":                   "Name of the vmpool",
+	"notifyid":                 "Id of client assigned by server (internal use only)",
+	"vms:#.name":               "VM Name",
+	"vms:#.netinfo.externalip": "External IP",
+	"vms:#.netinfo.internalip": "Internal IP",
+	"vms:#.groupname":          "VM Group Name",
+	"vms:#.state":              "VM State, one of VmFree, VmInProgress, VmInUse, VmAdd, VmRemove, VmUpdate",
+	"vms:#.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"vms:#.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"vms:#.internalname":       "VM Internal Name",
+	"state":                    "Current state of the VM pool on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"errors":                   "Any errors trying to add/remove VM to/from VM Pool",
 }
 var VMPoolInfoSpecialArgs = map[string]string{
+	"errors": "StringArray",
 	"fields": "StringArray",
 }
 var AddVMPoolMemberRequiredArgs = []string{
-	"cloudlet-org",
-	"cloudlet",
+	"vmpool-org",
+	"vmpool",
 	"vm.name",
 }
 var AddVMPoolMemberOptionalArgs = []string{
@@ -711,8 +644,8 @@ var AddVMPoolMemberOptionalArgs = []string{
 	"vm.internalname",
 }
 var RemoveVMPoolMemberRequiredArgs = []string{
-	"cloudlet-org",
-	"cloudlet",
+	"vmpool-org",
+	"vmpool",
 	"vm.name",
 }
 var RemoveVMPoolMemberOptionalArgs = []string{

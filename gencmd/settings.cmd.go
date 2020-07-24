@@ -212,6 +212,7 @@ var SettingsOptionalArgs = []string{
 	"chefclientinterval",
 	"influxdbmetricsretention",
 	"cloudletmaintenancetimeout",
+	"updatevmpooltimeout",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -234,6 +235,7 @@ var SettingsComments = map[string]string{
 	"chefclientinterval":                "Default chef client interval (duration)",
 	"influxdbmetricsretention":          "Default influxDB metrics retention policy (duration)",
 	"cloudletmaintenancetimeout":        "Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)",
+	"updatevmpooltimeout":               "Update VM pool timeout (duration)",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

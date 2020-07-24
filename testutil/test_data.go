@@ -1359,7 +1359,10 @@ var PlarformDeviceClientData = []edgeproto.Device{
 
 var VMPoolData = []edgeproto.VMPool{
 	edgeproto.VMPool{
-		Key: CloudletData[0].Key,
+		Key: edgeproto.VMPoolKey{
+			Organization: OperatorData[0],
+			Name:         "San Jose Site",
+		},
 		Vms: []edgeproto.VM{
 			edgeproto.VM{
 				Name: "vm1",
@@ -1390,7 +1393,10 @@ var VMPoolData = []edgeproto.VMPool{
 		},
 	},
 	edgeproto.VMPool{
-		Key: CloudletData[1].Key,
+		Key: edgeproto.VMPoolKey{
+			Organization: OperatorData[0],
+			Name:         "New York Site",
+		},
 		Vms: []edgeproto.VM{
 			edgeproto.VM{
 				Name: "vm1",
@@ -1415,7 +1421,10 @@ var VMPoolData = []edgeproto.VMPool{
 		},
 	},
 	edgeproto.VMPool{
-		Key: CloudletData[2].Key,
+		Key: edgeproto.VMPoolKey{
+			Organization: OperatorData[1],
+			Name:         "San Francisco Site",
+		},
 		Vms: []edgeproto.VM{
 			edgeproto.VM{
 				Name: "vm1",

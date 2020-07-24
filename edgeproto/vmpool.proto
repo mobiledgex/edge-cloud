@@ -6,7 +6,7 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
-import "cloudlet.proto";
+import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
@@ -24,10 +24,16 @@ message VMNetInfo {
 enum VMState {
 	// VM is free to use
 	VM_FREE = 0;
+	// VM is in progress
+	VM_IN_PROGRESS = 1;
 	// VM is in use
-	VM_IN_USE = 1;
-	// VM is in error state
-	VM_ERROR = 2;
+	VM_IN_USE = 2;
+	// Add VM
+	VM_ADD = 3;
+	// Remove VM
+	VM_REMOVE = 4;
+	// Update VM
+	VM_UPDATE = 5;
 }
 
 message VM {
@@ -45,36 +51,52 @@ message VM {
   string internal_name = 6;
 }
 
+// VMPool unique key
+//
+// VMPoolKey uniquely identifies a VMPool.
+message VMPoolKey {
+  // Organization of the vmpool
+  string organization = 1 [(protogen.keytag) = "vmpoolorg"];
+  // Name of the vmpool
+  string name = 2 [(protogen.keytag) = "vmpool"];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
 // VMPool defines a pool of VMs to be part of a Cloudlet
 message VMPool {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
-  // Cloudlet key
-  CloudletKey key = 2 [(gogoproto.nullable) = false];
-  // list of VMs to be part of Cloudlet
+  // VMPool Key
+  VMPoolKey key = 2 [(gogoproto.nullable) = false];
+  // list of VMs to be part of VM pool
   repeated VM vms = 3 [(gogoproto.nullable) = false];
-  // Action performed on VM Pool
-  VMAction action = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // Errors if any
-  string error = 5;
+  // Current state of the VM pool
+  TrackedState state = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Any errors trying to add/remove VM to/from VM Pool
+  repeated string errors = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // status is used to reflect progress of creation or other events
+  StatusInfo status = 6 [(protogen.backend) = true, (gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
+  option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.notify_cache) = true;
-  option (protogen.noconfig) = "Vms:#.GroupName,Vms:#.InternalName,Vms:#.State,Vms:#.UpdatedAt.Seconds,Vms:#.UpdatedAt.Nanos,Action,Error";
-  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.noconfig) = "Vms:#.GroupName,Vms:#.InternalName,Vms:#.State,Vms:#.UpdatedAt.Seconds,Vms:#.UpdatedAt.Nanos,State,Errors,Status";
+  option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
 
 // VMPoolMember is used to add and remove VM from VM Pool
 message VMPoolMember {
-  // Cloudlet key
-  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // VMPool key
+  VMPoolKey key = 1 [(gogoproto.nullable) = false];
   // VM part of VM Pool
   VM vm = 2 [(gogoproto.nullable) = false];
   option (protogen.noconfig) = "Vm.GroupName,Vm.State,Vm.UpdatedAt.Seconds,Vm.UpdatedAt.Nanos";
-  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
 
@@ -156,40 +178,27 @@ enum VMAction {
   VM_ACTION_RELEASE = 2;
 }
 
-// VMPoolInfo is used to manage VMPool from CRM
+// VMPoolInfo is used to manage VM pool from Cloudlet
 message VMPoolInfo {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Unique identifier key
-  CloudletKey key = 2 [(gogoproto.nullable) = false];
-  // Action performed on VM Pool
-  VMAction action = 3;
+  VMPoolKey key = 2 [(gogoproto.nullable) = false];
   // Id of client assigned by server (internal use only)
-  int64 notify_id = 4 [(protogen.hidetag) = "nocmp"];
-  // VM Group Name 
-  string group_name = 5;
-  // Specs of VMs requested by the caller
-  repeated VMSpec vm_specs = 6 [(gogoproto.nullable) = false];
-  // list of VMs allocated
-  repeated VM vms = 7 [(gogoproto.nullable) = false];
-  // Errors if any
-  string error = 8;
+  int64 notify_id = 3 [(protogen.hidetag) = "nocmp"];
+  // list of VMs
+  repeated VM vms = 4 [(gogoproto.nullable) = false];
+  // Current state of the VM pool on the Cloudlet
+  TrackedState state = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Any errors trying to add/remove VM to/from VM Pool
+  repeated string errors = 6 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // status is used to reflect progress of creation or other events
+  StatusInfo status = 7 [(protogen.backend) = true, (gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
-  option (protogen.generate_show_test) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
-  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
   option (protogen.uses_org) = "none";
-}
-
-service VMPoolInfoApi {
-  // Show VMPoolInfos
-  rpc ShowVMPoolInfo(VMPoolInfo) returns (stream VMPoolInfo) {
-    option (google.api.http) = {
-      post: "/show/vmpoolinfo"
-      body: "*"
-    };
-  }
 }

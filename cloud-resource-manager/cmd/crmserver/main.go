@@ -43,6 +43,7 @@ var commercialCerts = flag.Bool("commercialCerts", false, "Get TLS certs from Le
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
 var chefServerPath = flag.String("chefServerPath", "", "Chef server path")
 var deploymentTag = flag.String("deploymentTag", "", "Tag to indicate type of deployment setup. Ex: production, staging, etc")
+var vmPool = flag.String("vmPool", "", "Use pool of VMs as cloudlet")
 
 // myCloudletInfo is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudletInfo is provided as a configuration - either command line or
@@ -178,7 +179,6 @@ func main() {
 		}
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
-		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		caches := pf.Caches{
 			FlavorCache:        &controllerData.FlavorCache,
 			PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
@@ -188,6 +188,25 @@ func main() {
 			VMPoolCache:        &controllerData.VMPoolCache,
 			VMPoolInfoCache:    &controllerData.VMPoolInfoCache,
 		}
+
+		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+			if *vmPool == "" {
+				log.FatalLog("Missing VM pool name")
+			}
+			vmPoolKey := edgeproto.VMPoolKey{
+				Name:         *vmPool,
+				Organization: myCloudletInfo.Key.Organization,
+			}
+			var vmPool edgeproto.VMPool
+			if !controllerData.VMPoolCache.Get(&vmPoolKey, &vmPool) {
+				log.FatalLog("failed to fetch vm pool cache from controller")
+			}
+			controllerData.VMPool = vmPool
+			caches.VMPool = &controllerData.VMPool
+			caches.VMPoolMux = &controllerData.VMPoolMux
+		}
+
+		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &caches, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS

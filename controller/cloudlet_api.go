@@ -240,6 +240,23 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 	}
 
+	if in.VmPool != "" {
+		if in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+			return errors.New("VM Pool is only valid for PlatformTypeVmPool")
+		}
+		vmPoolKey := edgeproto.VMPoolKey{
+			Name:         in.VmPool,
+			Organization: in.Key.Organization,
+		}
+		if s.UsesVMPool(&vmPoolKey) {
+			return errors.New("VM Pool with this name is already in use by some other Cloudlet")
+		}
+	} else {
+		if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+			return errors.New("VM Pool is mandatory for PlatformTypeVmPool")
+		}
+	}
+
 	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 
@@ -289,16 +306,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		err := in.Validate(edgeproto.CloudletAllFieldsMap)
 		if err != nil {
 			return err
-		}
-
-		if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
-			vmPool := edgeproto.VMPool{}
-			if !vmPoolApi.store.STMGet(stm, &in.Key, &vmPool) {
-				return fmt.Errorf("VMPool is missing for VM Pool platform")
-			}
-			if vmPool.Vms == nil || len(vmPool.Vms) == 0 {
-				return errors.New("No VMs defined as part of VMPool")
-			}
 		}
 
 		if ignoreCRMState(cctx) {
@@ -1113,4 +1120,20 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, in *edgeproto.Clo
 	}
 
 	return cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig, &pfFlavor)
+}
+
+func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key, data := range s.cache.Objs {
+		val := data.Obj
+		cVMPoolKey := edgeproto.VMPoolKey{
+			Organization: key.Organization,
+			Name:         val.VmPool,
+		}
+		if vmPoolKey.Matches(&cVMPoolKey) {
+			return true
+		}
+	}
+	return false
 }

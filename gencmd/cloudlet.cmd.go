@@ -1064,6 +1064,7 @@ var CloudletOptionalArgs = []string{
 	"infraconfig.flavorname",
 	"maintenancestate",
 	"overridepolicycontainerversion",
+	"vmpool",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1128,6 +1129,7 @@ var CloudletComments = map[string]string{
 	"chefclientkey":                       "Chef client key",
 	"maintenancestate":                    "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"overridepolicycontainerversion":      "Override container version from policy file",
+	"vmpool":                              "VM Pool",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1318,6 +1320,7 @@ var CreateCloudletOptionalArgs = []string{
 	"infraconfig.flavorname",
 	"maintenancestate",
 	"overridepolicycontainerversion",
+	"vmpool",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",

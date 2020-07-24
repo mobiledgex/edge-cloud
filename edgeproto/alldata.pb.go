@@ -643,7 +643,10 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "VmPools.Vms.UpdatedAt")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "VmPools.Action")
+		names = append(names, "VmPools.State")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "VmPools.Errors")
 	}
 	return cmpopts.IgnoreFields(AllData{}, names...)
 }

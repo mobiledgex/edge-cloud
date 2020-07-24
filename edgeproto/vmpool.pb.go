@@ -12,6 +12,9 @@ import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import _ "github.com/gogo/protobuf/gogoproto"
 import google_protobuf1 "github.com/gogo/protobuf/types"
 
+import strings "strings"
+import reflect "reflect"
+
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
 
@@ -20,9 +23,9 @@ import "github.com/mobiledgex/edge-cloud/objstore"
 import "github.com/coreos/etcd/clientv3/concurrency"
 import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
-import strings "strings"
 import "errors"
 import "strconv"
+import "time"
 import "github.com/google/go-cmp/cmp"
 import "github.com/google/go-cmp/cmp/cmpopts"
 
@@ -41,21 +44,33 @@ type VMState int32
 const (
 	// VM is free to use
 	VMState_VM_FREE VMState = 0
+	// VM is in progress
+	VMState_VM_IN_PROGRESS VMState = 1
 	// VM is in use
-	VMState_VM_IN_USE VMState = 1
-	// VM is in error state
-	VMState_VM_ERROR VMState = 2
+	VMState_VM_IN_USE VMState = 2
+	// Add VM
+	VMState_VM_ADD VMState = 3
+	// Remove VM
+	VMState_VM_REMOVE VMState = 4
+	// Update VM
+	VMState_VM_UPDATE VMState = 5
 )
 
 var VMState_name = map[int32]string{
 	0: "VM_FREE",
-	1: "VM_IN_USE",
-	2: "VM_ERROR",
+	1: "VM_IN_PROGRESS",
+	2: "VM_IN_USE",
+	3: "VM_ADD",
+	4: "VM_REMOVE",
+	5: "VM_UPDATE",
 }
 var VMState_value = map[string]int32{
-	"VM_FREE":   0,
-	"VM_IN_USE": 1,
-	"VM_ERROR":  2,
+	"VM_FREE":        0,
+	"VM_IN_PROGRESS": 1,
+	"VM_IN_USE":      2,
+	"VM_ADD":         3,
+	"VM_REMOVE":      4,
+	"VM_UPDATE":      5,
 }
 
 func (x VMState) String() string {
@@ -125,29 +140,46 @@ func (m *VM) String() string            { return proto.CompactTextString(m) }
 func (*VM) ProtoMessage()               {}
 func (*VM) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{1} }
 
+// VMPool unique key
+//
+// VMPoolKey uniquely identifies a VMPool.
+type VMPoolKey struct {
+	// Organization of the vmpool
+	Organization string `protobuf:"bytes,1,opt,name=organization,proto3" json:"organization,omitempty"`
+	// Name of the vmpool
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (m *VMPoolKey) Reset()                    { *m = VMPoolKey{} }
+func (m *VMPoolKey) String() string            { return proto.CompactTextString(m) }
+func (*VMPoolKey) ProtoMessage()               {}
+func (*VMPoolKey) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{2} }
+
 // VMPool defines a pool of VMs to be part of a Cloudlet
 type VMPool struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
-	// Cloudlet key
-	Key CloudletKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// list of VMs to be part of Cloudlet
+	// VMPool Key
+	Key VMPoolKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	// list of VMs to be part of VM pool
 	Vms []VM `protobuf:"bytes,3,rep,name=vms" json:"vms"`
-	// Action performed on VM Pool
-	Action VMAction `protobuf:"varint,4,opt,name=action,proto3,enum=edgeproto.VMAction" json:"action,omitempty"`
-	// Errors if any
-	Error string `protobuf:"bytes,5,opt,name=error,proto3" json:"error,omitempty"`
+	// Current state of the VM pool
+	State TrackedState `protobuf:"varint,4,opt,name=state,proto3,enum=edgeproto.TrackedState" json:"state,omitempty"`
+	// Any errors trying to add/remove VM to/from VM Pool
+	Errors []string `protobuf:"bytes,5,rep,name=errors" json:"errors,omitempty"`
+	// status is used to reflect progress of creation or other events
+	Status StatusInfo `protobuf:"bytes,6,opt,name=status" json:"status"`
 }
 
 func (m *VMPool) Reset()                    { *m = VMPool{} }
 func (m *VMPool) String() string            { return proto.CompactTextString(m) }
 func (*VMPool) ProtoMessage()               {}
-func (*VMPool) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{2} }
+func (*VMPool) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{3} }
 
 // VMPoolMember is used to add and remove VM from VM Pool
 type VMPoolMember struct {
-	// Cloudlet key
-	Key CloudletKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	// VMPool key
+	Key VMPoolKey `protobuf:"bytes,1,opt,name=key" json:"key"`
 	// VM part of VM Pool
 	Vm VM `protobuf:"bytes,2,opt,name=vm" json:"vm"`
 }
@@ -155,7 +187,7 @@ type VMPoolMember struct {
 func (m *VMPoolMember) Reset()                    { *m = VMPoolMember{} }
 func (m *VMPoolMember) String() string            { return proto.CompactTextString(m) }
 func (*VMPoolMember) ProtoMessage()               {}
-func (*VMPoolMember) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{3} }
+func (*VMPoolMember) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{4} }
 
 // VMSpec defines the specification of VM required by CRM
 type VMSpec struct {
@@ -170,42 +202,60 @@ type VMSpec struct {
 func (m *VMSpec) Reset()                    { *m = VMSpec{} }
 func (m *VMSpec) String() string            { return proto.CompactTextString(m) }
 func (*VMSpec) ProtoMessage()               {}
-func (*VMSpec) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{4} }
+func (*VMSpec) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{5} }
 
-// VMPoolInfo is used to manage VMPool from CRM
+// VMPoolInfo is used to manage VM pool from Cloudlet
 type VMPoolInfo struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
-	Key CloudletKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// Action performed on VM Pool
-	Action VMAction `protobuf:"varint,3,opt,name=action,proto3,enum=edgeproto.VMAction" json:"action,omitempty"`
+	Key VMPoolKey `protobuf:"bytes,2,opt,name=key" json:"key"`
 	// Id of client assigned by server (internal use only)
-	NotifyId int64 `protobuf:"varint,4,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
-	// VM Group Name
-	GroupName string `protobuf:"bytes,5,opt,name=group_name,json=groupName,proto3" json:"group_name,omitempty"`
-	// Specs of VMs requested by the caller
-	VmSpecs []VMSpec `protobuf:"bytes,6,rep,name=vm_specs,json=vmSpecs" json:"vm_specs"`
-	// list of VMs allocated
-	Vms []VM `protobuf:"bytes,7,rep,name=vms" json:"vms"`
-	// Errors if any
-	Error string `protobuf:"bytes,8,opt,name=error,proto3" json:"error,omitempty"`
+	NotifyId int64 `protobuf:"varint,3,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
+	// list of VMs
+	Vms []VM `protobuf:"bytes,4,rep,name=vms" json:"vms"`
+	// Current state of the VM pool on the Cloudlet
+	State TrackedState `protobuf:"varint,5,opt,name=state,proto3,enum=edgeproto.TrackedState" json:"state,omitempty"`
+	// Any errors trying to add/remove VM to/from VM Pool
+	Errors []string `protobuf:"bytes,6,rep,name=errors" json:"errors,omitempty"`
+	// status is used to reflect progress of creation or other events
+	Status StatusInfo `protobuf:"bytes,7,opt,name=status" json:"status"`
 }
 
 func (m *VMPoolInfo) Reset()                    { *m = VMPoolInfo{} }
 func (m *VMPoolInfo) String() string            { return proto.CompactTextString(m) }
 func (*VMPoolInfo) ProtoMessage()               {}
-func (*VMPoolInfo) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{5} }
+func (*VMPoolInfo) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{6} }
 
 func init() {
 	proto.RegisterType((*VMNetInfo)(nil), "edgeproto.VMNetInfo")
 	proto.RegisterType((*VM)(nil), "edgeproto.VM")
+	proto.RegisterType((*VMPoolKey)(nil), "edgeproto.VMPoolKey")
 	proto.RegisterType((*VMPool)(nil), "edgeproto.VMPool")
 	proto.RegisterType((*VMPoolMember)(nil), "edgeproto.VMPoolMember")
 	proto.RegisterType((*VMSpec)(nil), "edgeproto.VMSpec")
 	proto.RegisterType((*VMPoolInfo)(nil), "edgeproto.VMPoolInfo")
 	proto.RegisterEnum("edgeproto.VMState", VMState_name, VMState_value)
 	proto.RegisterEnum("edgeproto.VMAction", VMAction_name, VMAction_value)
+}
+func (this *VMPoolKey) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&edgeproto.VMPoolKey{")
+	s = append(s, "Organization: "+fmt.Sprintf("%#v", this.Organization)+",\n")
+	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func valueToGoStringVmpool(v interface{}, typ string) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -489,99 +539,6 @@ var _VMPoolApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "vmpool.proto",
 }
 
-// Client API for VMPoolInfoApi service
-
-type VMPoolInfoApiClient interface {
-	// Show VMPoolInfos
-	ShowVMPoolInfo(ctx context.Context, in *VMPoolInfo, opts ...grpc.CallOption) (VMPoolInfoApi_ShowVMPoolInfoClient, error)
-}
-
-type vMPoolInfoApiClient struct {
-	cc *grpc.ClientConn
-}
-
-func NewVMPoolInfoApiClient(cc *grpc.ClientConn) VMPoolInfoApiClient {
-	return &vMPoolInfoApiClient{cc}
-}
-
-func (c *vMPoolInfoApiClient) ShowVMPoolInfo(ctx context.Context, in *VMPoolInfo, opts ...grpc.CallOption) (VMPoolInfoApi_ShowVMPoolInfoClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_VMPoolInfoApi_serviceDesc.Streams[0], c.cc, "/edgeproto.VMPoolInfoApi/ShowVMPoolInfo", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &vMPoolInfoApiShowVMPoolInfoClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type VMPoolInfoApi_ShowVMPoolInfoClient interface {
-	Recv() (*VMPoolInfo, error)
-	grpc.ClientStream
-}
-
-type vMPoolInfoApiShowVMPoolInfoClient struct {
-	grpc.ClientStream
-}
-
-func (x *vMPoolInfoApiShowVMPoolInfoClient) Recv() (*VMPoolInfo, error) {
-	m := new(VMPoolInfo)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-// Server API for VMPoolInfoApi service
-
-type VMPoolInfoApiServer interface {
-	// Show VMPoolInfos
-	ShowVMPoolInfo(*VMPoolInfo, VMPoolInfoApi_ShowVMPoolInfoServer) error
-}
-
-func RegisterVMPoolInfoApiServer(s *grpc.Server, srv VMPoolInfoApiServer) {
-	s.RegisterService(&_VMPoolInfoApi_serviceDesc, srv)
-}
-
-func _VMPoolInfoApi_ShowVMPoolInfo_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(VMPoolInfo)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(VMPoolInfoApiServer).ShowVMPoolInfo(m, &vMPoolInfoApiShowVMPoolInfoServer{stream})
-}
-
-type VMPoolInfoApi_ShowVMPoolInfoServer interface {
-	Send(*VMPoolInfo) error
-	grpc.ServerStream
-}
-
-type vMPoolInfoApiShowVMPoolInfoServer struct {
-	grpc.ServerStream
-}
-
-func (x *vMPoolInfoApiShowVMPoolInfoServer) Send(m *VMPoolInfo) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-var _VMPoolInfoApi_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "edgeproto.VMPoolInfoApi",
-	HandlerType: (*VMPoolInfoApiServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "ShowVMPoolInfo",
-			Handler:       _VMPoolInfoApi_ShowVMPoolInfo_Handler,
-			ServerStreams: true,
-		},
-	},
-	Metadata: "vmpool.proto",
-}
-
 func (m *VMNetInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -669,6 +626,36 @@ func (m *VM) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *VMPoolKey) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VMPoolKey) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Organization) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintVmpool(dAtA, i, uint64(len(m.Organization)))
+		i += copy(dAtA[i:], m.Organization)
+	}
+	if len(m.Name) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintVmpool(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
+	return i, nil
+}
+
 func (m *VMPool) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -719,17 +706,34 @@ func (m *VMPool) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.Action != 0 {
+	if m.State != 0 {
 		dAtA[i] = 0x20
 		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(m.Action))
+		i = encodeVarintVmpool(dAtA, i, uint64(m.State))
 	}
-	if len(m.Error) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(len(m.Error)))
-		i += copy(dAtA[i:], m.Error)
+	if len(m.Errors) > 0 {
+		for _, s := range m.Errors {
+			dAtA[i] = 0x2a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
 	}
+	dAtA[i] = 0x32
+	i++
+	i = encodeVarintVmpool(dAtA, i, uint64(m.Status.Size()))
+	n4, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n4
 	return i, nil
 }
 
@@ -751,19 +755,19 @@ func (m *VMPoolMember) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintVmpool(dAtA, i, uint64(m.Key.Size()))
-	n4, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n4
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintVmpool(dAtA, i, uint64(m.Vm.Size()))
-	n5, err := m.Vm.MarshalTo(dAtA[i:])
+	n5, err := m.Key.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n5
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintVmpool(dAtA, i, uint64(m.Vm.Size()))
+	n6, err := m.Vm.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n6
 	return i, nil
 }
 
@@ -844,42 +848,19 @@ func (m *VMPoolInfo) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintVmpool(dAtA, i, uint64(m.Key.Size()))
-	n6, err := m.Key.MarshalTo(dAtA[i:])
+	n7, err := m.Key.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n6
-	if m.Action != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(m.Action))
-	}
+	i += n7
 	if m.NotifyId != 0 {
-		dAtA[i] = 0x20
+		dAtA[i] = 0x18
 		i++
 		i = encodeVarintVmpool(dAtA, i, uint64(m.NotifyId))
 	}
-	if len(m.GroupName) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(len(m.GroupName)))
-		i += copy(dAtA[i:], m.GroupName)
-	}
-	if len(m.VmSpecs) > 0 {
-		for _, msg := range m.VmSpecs {
-			dAtA[i] = 0x32
-			i++
-			i = encodeVarintVmpool(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
 	if len(m.Vms) > 0 {
 		for _, msg := range m.Vms {
-			dAtA[i] = 0x3a
+			dAtA[i] = 0x22
 			i++
 			i = encodeVarintVmpool(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -889,12 +870,34 @@ func (m *VMPoolInfo) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if len(m.Error) > 0 {
-		dAtA[i] = 0x42
+	if m.State != 0 {
+		dAtA[i] = 0x28
 		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(len(m.Error)))
-		i += copy(dAtA[i:], m.Error)
+		i = encodeVarintVmpool(dAtA, i, uint64(m.State))
 	}
+	if len(m.Errors) > 0 {
+		for _, s := range m.Errors {
+			dAtA[i] = 0x32
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	dAtA[i] = 0x3a
+	i++
+	i = encodeVarintVmpool(dAtA, i, uint64(m.Status.Size()))
+	n8, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
 	return i, nil
 }
 
@@ -999,6 +1002,84 @@ func IgnoreVMFields(taglist string) cmp.Option {
 	return cmpopts.IgnoreFields(VM{}, names...)
 }
 
+func (m *VMPoolKey) Matches(o *VMPoolKey, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !opts.Filter || o.Organization != "" {
+		if o.Organization != m.Organization {
+			return false
+		}
+	}
+	if !opts.Filter || o.Name != "" {
+		if o.Name != m.Name {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *VMPoolKey) CopyInFields(src *VMPoolKey) int {
+	changed := 0
+	if m.Organization != src.Organization {
+		m.Organization = src.Organization
+		changed++
+	}
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	return changed
+}
+
+func (m *VMPoolKey) DeepCopyIn(src *VMPoolKey) {
+	m.Organization = src.Organization
+	m.Name = src.Name
+}
+
+func (m *VMPoolKey) GetKeyString() string {
+	key, err := json.Marshal(m)
+	if err != nil {
+		log.FatalLog("Failed to marshal VMPoolKey key string", "obj", m)
+	}
+	return string(key)
+}
+
+func VMPoolKeyStringParse(str string, key *VMPoolKey) {
+	err := json.Unmarshal([]byte(str), key)
+	if err != nil {
+		log.FatalLog("Failed to unmarshal VMPoolKey key string", "str", str)
+	}
+}
+
+func (m *VMPoolKey) NotFoundError() error {
+	return fmt.Errorf("VMPool key %s not found", m.GetKeyString())
+}
+
+func (m *VMPoolKey) ExistsError() error {
+	return fmt.Errorf("VMPool key %s already exists", m.GetKeyString())
+}
+
+var VMPoolKeyTagOrganization = "vmpoolorg"
+var VMPoolKeyTagName = "vmpool"
+
+func (m *VMPoolKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["vmpoolorg"] = m.Organization
+	tags["vmpool"] = m.Name
+	return tags
+}
+
+// Helper method to check that enums have valid values
+func (m *VMPoolKey) ValidateEnums() error {
+	return nil
+}
+
 func (m *VMPool) Matches(o *VMPool, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1023,16 +1104,29 @@ func (m *VMPool) Matches(o *VMPool, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.IgnoreBackend {
-		if !opts.Filter || o.Action != 0 {
-			if o.Action != m.Action {
+		if !opts.Filter || o.State != 0 {
+			if o.State != m.State {
 				return false
 			}
 		}
 	}
-	if !opts.Filter || o.Error != "" {
-		if o.Error != m.Error {
-			return false
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.Errors != nil {
+			if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+				return false
+			} else if m.Errors != nil && o.Errors != nil {
+				if len(m.Errors) != len(o.Errors) {
+					return false
+				}
+				for i := 0; i < len(m.Errors); i++ {
+					if o.Errors[i] != m.Errors[i] {
+						return false
+					}
+				}
+			}
 		}
+	}
+	if !opts.IgnoreBackend {
 	}
 	return true
 }
@@ -1051,8 +1145,13 @@ const VMPoolFieldVmsUpdatedAt = "3.5"
 const VMPoolFieldVmsUpdatedAtSeconds = "3.5.1"
 const VMPoolFieldVmsUpdatedAtNanos = "3.5.2"
 const VMPoolFieldVmsInternalName = "3.6"
-const VMPoolFieldAction = "4"
-const VMPoolFieldError = "5"
+const VMPoolFieldState = "4"
+const VMPoolFieldErrors = "5"
+const VMPoolFieldStatus = "6"
+const VMPoolFieldStatusTaskNumber = "6.1"
+const VMPoolFieldStatusMaxTasks = "6.2"
+const VMPoolFieldStatusTaskName = "6.3"
+const VMPoolFieldStatusStepName = "6.4"
 
 var VMPoolAllFields = []string{
 	VMPoolFieldKeyOrganization,
@@ -1065,8 +1164,12 @@ var VMPoolAllFields = []string{
 	VMPoolFieldVmsUpdatedAtSeconds,
 	VMPoolFieldVmsUpdatedAtNanos,
 	VMPoolFieldVmsInternalName,
-	VMPoolFieldAction,
-	VMPoolFieldError,
+	VMPoolFieldState,
+	VMPoolFieldErrors,
+	VMPoolFieldStatusTaskNumber,
+	VMPoolFieldStatusMaxTasks,
+	VMPoolFieldStatusTaskName,
+	VMPoolFieldStatusStepName,
 }
 
 var VMPoolAllFieldsMap = map[string]struct{}{
@@ -1080,8 +1183,12 @@ var VMPoolAllFieldsMap = map[string]struct{}{
 	VMPoolFieldVmsUpdatedAtSeconds:  struct{}{},
 	VMPoolFieldVmsUpdatedAtNanos:    struct{}{},
 	VMPoolFieldVmsInternalName:      struct{}{},
-	VMPoolFieldAction:               struct{}{},
-	VMPoolFieldError:                struct{}{},
+	VMPoolFieldState:                struct{}{},
+	VMPoolFieldErrors:               struct{}{},
+	VMPoolFieldStatusTaskNumber:     struct{}{},
+	VMPoolFieldStatusMaxTasks:       struct{}{},
+	VMPoolFieldStatusTaskName:       struct{}{},
+	VMPoolFieldStatusStepName:       struct{}{},
 }
 
 var VMPoolAllFieldsStringMap = map[string]string{
@@ -1095,8 +1202,12 @@ var VMPoolAllFieldsStringMap = map[string]string{
 	VMPoolFieldVmsUpdatedAtSeconds:  "Vms Updated At Seconds",
 	VMPoolFieldVmsUpdatedAtNanos:    "Vms Updated At Nanos",
 	VMPoolFieldVmsInternalName:      "Vms Internal Name",
-	VMPoolFieldAction:               "Action",
-	VMPoolFieldError:                "Error",
+	VMPoolFieldState:                "State",
+	VMPoolFieldErrors:               "Errors",
+	VMPoolFieldStatusTaskNumber:     "Status Task Number",
+	VMPoolFieldStatusMaxTasks:       "Status Max Tasks",
+	VMPoolFieldStatusTaskName:       "Status Task Name",
+	VMPoolFieldStatusStepName:       "Status Step Name",
 }
 
 func (m *VMPool) IsKeyField(s string) bool {
@@ -1154,11 +1265,34 @@ func (m *VMPool) DiffFields(o *VMPool, fields map[string]struct{}) {
 			}
 		}
 	}
-	if m.Action != o.Action {
-		fields[VMPoolFieldAction] = struct{}{}
+	if m.State != o.State {
+		fields[VMPoolFieldState] = struct{}{}
 	}
-	if m.Error != o.Error {
-		fields[VMPoolFieldError] = struct{}{}
+	if len(m.Errors) != len(o.Errors) {
+		fields[VMPoolFieldErrors] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Errors); i0++ {
+			if m.Errors[i0] != o.Errors[i0] {
+				fields[VMPoolFieldErrors] = struct{}{}
+				break
+			}
+		}
+	}
+	if m.Status.TaskNumber != o.Status.TaskNumber {
+		fields[VMPoolFieldStatusTaskNumber] = struct{}{}
+		fields[VMPoolFieldStatus] = struct{}{}
+	}
+	if m.Status.MaxTasks != o.Status.MaxTasks {
+		fields[VMPoolFieldStatusMaxTasks] = struct{}{}
+		fields[VMPoolFieldStatus] = struct{}{}
+	}
+	if m.Status.TaskName != o.Status.TaskName {
+		fields[VMPoolFieldStatusTaskName] = struct{}{}
+		fields[VMPoolFieldStatus] = struct{}{}
+	}
+	if m.Status.StepName != o.Status.StepName {
+		fields[VMPoolFieldStatusStepName] = struct{}{}
+		fields[VMPoolFieldStatus] = struct{}{}
 	}
 }
 
@@ -1277,15 +1411,43 @@ func (m *VMPool) CopyInFields(src *VMPool) int {
 		}
 	}
 	if _, set := fmap["4"]; set {
-		if m.Action != src.Action {
-			m.Action = src.Action
+		if m.State != src.State {
+			m.State = src.State
 			changed++
 		}
 	}
 	if _, set := fmap["5"]; set {
-		if m.Error != src.Error {
-			m.Error = src.Error
+		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
+			m.Errors = make([]string, len(src.Errors))
 			changed++
+		}
+		copy(m.Errors, src.Errors)
+		changed++
+	}
+	if _, set := fmap["6"]; set {
+		if _, set := fmap["6.1"]; set {
+			if m.Status.TaskNumber != src.Status.TaskNumber {
+				m.Status.TaskNumber = src.Status.TaskNumber
+				changed++
+			}
+		}
+		if _, set := fmap["6.2"]; set {
+			if m.Status.MaxTasks != src.Status.MaxTasks {
+				m.Status.MaxTasks = src.Status.MaxTasks
+				changed++
+			}
+		}
+		if _, set := fmap["6.3"]; set {
+			if m.Status.TaskName != src.Status.TaskName {
+				m.Status.TaskName = src.Status.TaskName
+				changed++
+			}
+		}
+		if _, set := fmap["6.4"]; set {
+			if m.Status.StepName != src.Status.StepName {
+				m.Status.StepName = src.Status.StepName
+				changed++
+			}
 		}
 	}
 	return changed
@@ -1301,8 +1463,16 @@ func (m *VMPool) DeepCopyIn(src *VMPool) {
 	} else {
 		m.Vms = nil
 	}
-	m.Action = src.Action
-	m.Error = src.Error
+	m.State = src.State
+	if src.Errors != nil {
+		m.Errors = make([]string, len(src.Errors), len(src.Errors))
+		for ii, s := range src.Errors {
+			m.Errors[ii] = s
+		}
+	} else {
+		m.Errors = nil
+	}
+	m.Status.DeepCopyIn(&src.Status)
 }
 
 func (s *VMPool) HasFields() bool {
@@ -1423,7 +1593,7 @@ func (s *VMPoolStore) LoadOne(key string) (*VMPool, int64, error) {
 	return &obj, rev, nil
 }
 
-func (s *VMPoolStore) STMGet(stm concurrency.STM, key *CloudletKey, buf *VMPool) bool {
+func (s *VMPoolStore) STMGet(stm concurrency.STM, key *VMPoolKey, buf *VMPool) bool {
 	keystr := objstore.DbKeyString("VMPool", key)
 	valstr := stm.Get(keystr)
 	if valstr == "" {
@@ -1448,7 +1618,7 @@ func (s *VMPoolStore) STMPut(stm concurrency.STM, obj *VMPool, ops ...objstore.K
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *VMPoolStore) STMDel(stm concurrency.STM, key *CloudletKey) {
+func (s *VMPoolStore) STMDel(stm concurrency.STM, key *VMPoolKey) {
 	keystr := objstore.DbKeyString("VMPool", key)
 	stm.Del(keystr)
 }
@@ -1465,16 +1635,16 @@ type VMPoolCacheData struct {
 // VMPoolCache caches VMPool objects in memory in a hash table
 // and keeps them in sync with the database.
 type VMPoolCache struct {
-	Objs          map[CloudletKey]*VMPoolCacheData
+	Objs          map[VMPoolKey]*VMPoolCacheData
 	Mux           util.Mutex
-	List          map[CloudletKey]struct{}
+	List          map[VMPoolKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *CloudletKey, old *VMPool, modRev int64)
+	NotifyCb      func(ctx context.Context, obj *VMPoolKey, old *VMPool, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *VMPool, new *VMPool)
 	DeletedCbs    []func(ctx context.Context, old *VMPool)
-	KeyWatchers   map[CloudletKey][]*VMPoolKeyWatcher
-	UpdatedKeyCbs []func(ctx context.Context, key *CloudletKey)
-	DeletedKeyCbs []func(ctx context.Context, key *CloudletKey)
+	KeyWatchers   map[VMPoolKey][]*VMPoolKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *VMPoolKey)
+	DeletedKeyCbs []func(ctx context.Context, key *VMPoolKey)
 }
 
 func NewVMPoolCache() *VMPoolCache {
@@ -1484,8 +1654,8 @@ func NewVMPoolCache() *VMPoolCache {
 }
 
 func InitVMPoolCache(cache *VMPoolCache) {
-	cache.Objs = make(map[CloudletKey]*VMPoolCacheData)
-	cache.KeyWatchers = make(map[CloudletKey][]*VMPoolKeyWatcher)
+	cache.Objs = make(map[VMPoolKey]*VMPoolCacheData)
+	cache.KeyWatchers = make(map[VMPoolKey][]*VMPoolKeyWatcher)
 	cache.NotifyCb = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
@@ -1497,12 +1667,12 @@ func (c *VMPoolCache) GetTypeString() string {
 	return "VMPool"
 }
 
-func (c *VMPoolCache) Get(key *CloudletKey, valbuf *VMPool) bool {
+func (c *VMPoolCache) Get(key *VMPoolKey, valbuf *VMPool) bool {
 	var modRev int64
 	return c.GetWithRev(key, valbuf, &modRev)
 }
 
-func (c *VMPoolCache) GetWithRev(key *CloudletKey, valbuf *VMPool, modRev *int64) bool {
+func (c *VMPoolCache) GetWithRev(key *VMPoolKey, valbuf *VMPool, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
@@ -1513,14 +1683,14 @@ func (c *VMPoolCache) GetWithRev(key *CloudletKey, valbuf *VMPool, modRev *int64
 	return found
 }
 
-func (c *VMPoolCache) HasKey(key *CloudletKey) bool {
+func (c *VMPoolCache) HasKey(key *VMPoolKey) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	_, found := c.Objs[*key]
 	return found
 }
 
-func (c *VMPoolCache) GetAllKeys(ctx context.Context, cb func(key *CloudletKey, modRev int64)) {
+func (c *VMPoolCache) GetAllKeys(ctx context.Context, cb func(key *VMPoolKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, data := range c.Objs {
@@ -1534,7 +1704,7 @@ func (c *VMPoolCache) Update(ctx context.Context, in *VMPool, modRev int64) {
 	})
 }
 
-func (c *VMPoolCache) UpdateModFunc(ctx context.Context, key *CloudletKey, modRev int64, modFunc func(old *VMPool) (new *VMPool, changed bool)) {
+func (c *VMPoolCache) UpdateModFunc(ctx context.Context, key *VMPoolKey, modRev int64, modFunc func(old *VMPool) (new *VMPool, changed bool)) {
 	c.Mux.Lock()
 	var old *VMPool
 	if oldData, found := c.Objs[*key]; found {
@@ -1591,8 +1761,8 @@ func (c *VMPoolCache) Delete(ctx context.Context, in *VMPool, modRev int64) {
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
-func (c *VMPoolCache) Prune(ctx context.Context, validKeys map[CloudletKey]struct{}) {
-	notify := make(map[CloudletKey]*VMPoolCacheData)
+func (c *VMPoolCache) Prune(ctx context.Context, validKeys map[VMPoolKey]struct{}) {
+	notify := make(map[VMPoolKey]*VMPoolCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -1646,13 +1816,13 @@ func (c *VMPoolCache) Show(filter *VMPool, cb func(ret *VMPool) error) error {
 	return nil
 }
 
-func VMPoolGenericNotifyCb(fn func(key *CloudletKey, old *VMPool)) func(objstore.ObjKey, objstore.Obj) {
+func VMPoolGenericNotifyCb(fn func(key *VMPoolKey, old *VMPool)) func(objstore.ObjKey, objstore.Obj) {
 	return func(objkey objstore.ObjKey, obj objstore.Obj) {
-		fn(objkey.(*CloudletKey), obj.(*VMPool))
+		fn(objkey.(*VMPoolKey), obj.(*VMPool))
 	}
 }
 
-func (c *VMPoolCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *VMPool, modRev int64)) {
+func (c *VMPoolCache) SetNotifyCb(fn func(ctx context.Context, obj *VMPoolKey, old *VMPool, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -1664,12 +1834,12 @@ func (c *VMPoolCache) SetDeletedCb(fn func(ctx context.Context, old *VMPool)) {
 	c.DeletedCbs = []func(ctx context.Context, old *VMPool){fn}
 }
 
-func (c *VMPoolCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
-	c.UpdatedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
+func (c *VMPoolCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *VMPoolKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *VMPoolKey){fn}
 }
 
-func (c *VMPoolCache) SetDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
-	c.DeletedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
+func (c *VMPoolCache) SetDeletedKeyCb(fn func(ctx context.Context, key *VMPoolKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *VMPoolKey){fn}
 }
 
 func (c *VMPoolCache) AddUpdatedCb(fn func(ctx context.Context, old *VMPool, new *VMPool)) {
@@ -1680,11 +1850,11 @@ func (c *VMPoolCache) AddDeletedCb(fn func(ctx context.Context, old *VMPool)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
 }
 
-func (c *VMPoolCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+func (c *VMPoolCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *VMPoolKey)) {
 	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
 }
 
-func (c *VMPoolCache) AddDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+func (c *VMPoolCache) AddDeletedKeyCb(fn func(ctx context.Context, key *VMPoolKey)) {
 	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
@@ -1692,7 +1862,7 @@ func (c *VMPoolCache) SetFlushAll() {
 	c.FlushAll = true
 }
 
-func (c *VMPoolCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) context.CancelFunc {
+func (c *VMPoolCache) WatchKey(key *VMPoolKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -1725,7 +1895,7 @@ func (c *VMPoolCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) c
 	}
 }
 
-func (c *VMPoolCache) TriggerKeyWatchers(ctx context.Context, key *CloudletKey) {
+func (c *VMPoolCache) TriggerKeyWatchers(ctx context.Context, key *VMPoolKey) {
 	watchers := make([]*VMPoolKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -1761,16 +1931,16 @@ func (c *VMPoolCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modR
 func (c *VMPoolCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := VMPool{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	CloudletKeyStringParse(keystr, obj.GetKey())
+	VMPoolKeyStringParse(keystr, obj.GetKey())
 	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *VMPoolCache) SyncListStart(ctx context.Context) {
-	c.List = make(map[CloudletKey]struct{})
+	c.List = make(map[VMPoolKey]struct{})
 }
 
 func (c *VMPoolCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[CloudletKey]*VMPoolCacheData)
+	deleted := make(map[VMPoolKey]*VMPoolCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1796,6 +1966,91 @@ func (c *VMPoolCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
+func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error) error {
+	curState := TrackedState_TRACKED_STATE_UNKNOWN
+	done := make(chan bool, 1)
+	failed := make(chan bool, 1)
+	var err error
+
+	cancel := c.WatchKey(key, func(ctx context.Context) {
+		info := VMPool{}
+		if c.Get(key, &info) {
+			curState = info.State
+		} else {
+			curState = TrackedState_NOT_PRESENT
+		}
+		if send != nil {
+			statusString := info.Status.ToString()
+			var msg string
+			if statusString != "" {
+				msg = statusString
+			} else {
+				msg = TrackedState_CamelName[int32(curState)]
+			}
+			send(&Result{Message: msg})
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "watch event for VMPool")
+		log.DebugLog(log.DebugLevelApi, "Watch event for VMPool", "key", key, "state", TrackedState_CamelName[int32(curState)], "status", info.Status)
+		if curState == errorState {
+			failed <- true
+		} else if curState == targetState {
+			done <- true
+		}
+	})
+	// After setting up watch, check current state,
+	// as it may have already changed to target state
+	info := VMPool{}
+	if c.Get(key, &info) {
+		curState = info.State
+	} else {
+		curState = TrackedState_NOT_PRESENT
+	}
+	if curState == targetState {
+		done <- true
+	}
+
+	select {
+	case <-done:
+		err = nil
+		if successMsg != "" && send != nil {
+			send(&Result{Message: successMsg})
+		}
+	case <-failed:
+		if c.Get(key, &info) {
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
+		} else {
+			// this shouldn't happen, since only way to get here
+			// is if info state is set to Error
+			err = errors.New("Unknown failure")
+		}
+	case <-time.After(timeout):
+		hasInfo := c.Get(key, &info)
+		if hasInfo && info.State == errorState {
+			// error may have been sent back before watch started
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
+		} else if _, found := transitionStates[info.State]; hasInfo && found {
+			// no success response, but state is a valid transition
+			// state. That means work is still in progress.
+			// Notify user that this is not an error.
+			// Do not undo since CRM is still busy.
+			if send != nil {
+				msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowVMPool to check current status", TrackedState_CamelName[int32(info.State)])
+				send(&Result{Message: msg})
+			}
+			err = nil
+		} else {
+			err = fmt.Errorf("Timed out; expected state %s but is %s",
+				TrackedState_CamelName[int32(targetState)],
+				TrackedState_CamelName[int32(curState)])
+		}
+	}
+	cancel()
+	// note: do not close done/failed, garbage collector will deal with it.
+	return err
+}
+
 func (c *VMPoolCache) UsesOrg(org string) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
@@ -1811,15 +2066,15 @@ func (m *VMPool) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
 
-func (m *VMPool) GetKey() *CloudletKey {
+func (m *VMPool) GetKey() *VMPoolKey {
 	return &m.Key
 }
 
-func (m *VMPool) GetKeyVal() CloudletKey {
+func (m *VMPool) GetKeyVal() VMPoolKey {
 	return m.Key
 }
 
-func (m *VMPool) SetKey(key *CloudletKey) {
+func (m *VMPool) SetKey(key *VMPoolKey) {
 	m.Key = *key
 }
 
@@ -1838,8 +2093,11 @@ func (m *VMPool) ValidateEnums() error {
 			return err
 		}
 	}
-	if _, ok := VMAction_name[int32(m.Action)]; !ok {
-		return errors.New("invalid Action")
+	if _, ok := TrackedState_name[int32(m.State)]; !ok {
+		return errors.New("invalid State")
+	}
+	if err := m.Status.ValidateEnums(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1854,7 +2112,10 @@ func IgnoreVMPoolFields(taglist string) cmp.Option {
 		names = append(names, "Vms.UpdatedAt")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "Action")
+		names = append(names, "State")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Errors")
 	}
 	return cmpopts.IgnoreFields(VMPool{}, names...)
 }
@@ -1913,15 +2174,15 @@ func (m *VMPoolMember) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
 
-func (m *VMPoolMember) GetKey() *CloudletKey {
+func (m *VMPoolMember) GetKey() *VMPoolKey {
 	return &m.Key
 }
 
-func (m *VMPoolMember) GetKeyVal() CloudletKey {
+func (m *VMPoolMember) GetKeyVal() VMPoolKey {
 	return m.Key
 }
 
-func (m *VMPoolMember) SetKey(key *CloudletKey) {
+func (m *VMPoolMember) SetKey(key *VMPoolKey) {
 	m.Key = *key
 }
 
@@ -1992,30 +2253,9 @@ func (m *VMPoolInfo) Matches(o *VMPoolInfo, fopts ...MatchOpt) bool {
 	if !m.Key.Matches(&o.Key, fopts...) {
 		return false
 	}
-	if !opts.Filter || o.Action != 0 {
-		if o.Action != m.Action {
-			return false
-		}
-	}
 	if !opts.Filter || o.NotifyId != 0 {
 		if o.NotifyId != m.NotifyId {
 			return false
-		}
-	}
-	if !opts.Filter || o.GroupName != "" {
-		if o.GroupName != m.GroupName {
-			return false
-		}
-	}
-	if !opts.Filter || o.VmSpecs != nil {
-		if m.VmSpecs == nil && o.VmSpecs != nil || m.VmSpecs != nil && o.VmSpecs == nil {
-			return false
-		} else if m.VmSpecs != nil && o.VmSpecs != nil {
-			if len(m.VmSpecs) != len(o.VmSpecs) {
-				return false
-			}
-			for i := 0; i < len(m.VmSpecs); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.Vms != nil {
@@ -2029,10 +2269,30 @@ func (m *VMPoolInfo) Matches(o *VMPoolInfo, fopts ...MatchOpt) bool {
 			}
 		}
 	}
-	if !opts.Filter || o.Error != "" {
-		if o.Error != m.Error {
-			return false
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.State != 0 {
+			if o.State != m.State {
+				return false
+			}
 		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.Errors != nil {
+			if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+				return false
+			} else if m.Errors != nil && o.Errors != nil {
+				if len(m.Errors) != len(o.Errors) {
+					return false
+				}
+				for i := 0; i < len(m.Errors); i++ {
+					if o.Errors[i] != m.Errors[i] {
+						return false
+					}
+				}
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
 	}
 	return true
 }
@@ -2040,35 +2300,30 @@ func (m *VMPoolInfo) Matches(o *VMPoolInfo, fopts ...MatchOpt) bool {
 const VMPoolInfoFieldKey = "2"
 const VMPoolInfoFieldKeyOrganization = "2.1"
 const VMPoolInfoFieldKeyName = "2.2"
-const VMPoolInfoFieldAction = "3"
-const VMPoolInfoFieldNotifyId = "4"
-const VMPoolInfoFieldGroupName = "5"
-const VMPoolInfoFieldVmSpecs = "6"
-const VMPoolInfoFieldVmSpecsInternalName = "6.1"
-const VMPoolInfoFieldVmSpecsExternalNetwork = "6.2"
-const VMPoolInfoFieldVmSpecsInternalNetwork = "6.3"
-const VMPoolInfoFieldVms = "7"
-const VMPoolInfoFieldVmsName = "7.1"
-const VMPoolInfoFieldVmsNetInfo = "7.2"
-const VMPoolInfoFieldVmsNetInfoExternalIp = "7.2.1"
-const VMPoolInfoFieldVmsNetInfoInternalIp = "7.2.2"
-const VMPoolInfoFieldVmsGroupName = "7.3"
-const VMPoolInfoFieldVmsState = "7.4"
-const VMPoolInfoFieldVmsUpdatedAt = "7.5"
-const VMPoolInfoFieldVmsUpdatedAtSeconds = "7.5.1"
-const VMPoolInfoFieldVmsUpdatedAtNanos = "7.5.2"
-const VMPoolInfoFieldVmsInternalName = "7.6"
-const VMPoolInfoFieldError = "8"
+const VMPoolInfoFieldNotifyId = "3"
+const VMPoolInfoFieldVms = "4"
+const VMPoolInfoFieldVmsName = "4.1"
+const VMPoolInfoFieldVmsNetInfo = "4.2"
+const VMPoolInfoFieldVmsNetInfoExternalIp = "4.2.1"
+const VMPoolInfoFieldVmsNetInfoInternalIp = "4.2.2"
+const VMPoolInfoFieldVmsGroupName = "4.3"
+const VMPoolInfoFieldVmsState = "4.4"
+const VMPoolInfoFieldVmsUpdatedAt = "4.5"
+const VMPoolInfoFieldVmsUpdatedAtSeconds = "4.5.1"
+const VMPoolInfoFieldVmsUpdatedAtNanos = "4.5.2"
+const VMPoolInfoFieldVmsInternalName = "4.6"
+const VMPoolInfoFieldState = "5"
+const VMPoolInfoFieldErrors = "6"
+const VMPoolInfoFieldStatus = "7"
+const VMPoolInfoFieldStatusTaskNumber = "7.1"
+const VMPoolInfoFieldStatusMaxTasks = "7.2"
+const VMPoolInfoFieldStatusTaskName = "7.3"
+const VMPoolInfoFieldStatusStepName = "7.4"
 
 var VMPoolInfoAllFields = []string{
 	VMPoolInfoFieldKeyOrganization,
 	VMPoolInfoFieldKeyName,
-	VMPoolInfoFieldAction,
 	VMPoolInfoFieldNotifyId,
-	VMPoolInfoFieldGroupName,
-	VMPoolInfoFieldVmSpecsInternalName,
-	VMPoolInfoFieldVmSpecsExternalNetwork,
-	VMPoolInfoFieldVmSpecsInternalNetwork,
 	VMPoolInfoFieldVmsName,
 	VMPoolInfoFieldVmsNetInfoExternalIp,
 	VMPoolInfoFieldVmsNetInfoInternalIp,
@@ -2077,47 +2332,52 @@ var VMPoolInfoAllFields = []string{
 	VMPoolInfoFieldVmsUpdatedAtSeconds,
 	VMPoolInfoFieldVmsUpdatedAtNanos,
 	VMPoolInfoFieldVmsInternalName,
-	VMPoolInfoFieldError,
+	VMPoolInfoFieldState,
+	VMPoolInfoFieldErrors,
+	VMPoolInfoFieldStatusTaskNumber,
+	VMPoolInfoFieldStatusMaxTasks,
+	VMPoolInfoFieldStatusTaskName,
+	VMPoolInfoFieldStatusStepName,
 }
 
 var VMPoolInfoAllFieldsMap = map[string]struct{}{
-	VMPoolInfoFieldKeyOrganization:        struct{}{},
-	VMPoolInfoFieldKeyName:                struct{}{},
-	VMPoolInfoFieldAction:                 struct{}{},
-	VMPoolInfoFieldNotifyId:               struct{}{},
-	VMPoolInfoFieldGroupName:              struct{}{},
-	VMPoolInfoFieldVmSpecsInternalName:    struct{}{},
-	VMPoolInfoFieldVmSpecsExternalNetwork: struct{}{},
-	VMPoolInfoFieldVmSpecsInternalNetwork: struct{}{},
-	VMPoolInfoFieldVmsName:                struct{}{},
-	VMPoolInfoFieldVmsNetInfoExternalIp:   struct{}{},
-	VMPoolInfoFieldVmsNetInfoInternalIp:   struct{}{},
-	VMPoolInfoFieldVmsGroupName:           struct{}{},
-	VMPoolInfoFieldVmsState:               struct{}{},
-	VMPoolInfoFieldVmsUpdatedAtSeconds:    struct{}{},
-	VMPoolInfoFieldVmsUpdatedAtNanos:      struct{}{},
-	VMPoolInfoFieldVmsInternalName:        struct{}{},
-	VMPoolInfoFieldError:                  struct{}{},
+	VMPoolInfoFieldKeyOrganization:      struct{}{},
+	VMPoolInfoFieldKeyName:              struct{}{},
+	VMPoolInfoFieldNotifyId:             struct{}{},
+	VMPoolInfoFieldVmsName:              struct{}{},
+	VMPoolInfoFieldVmsNetInfoExternalIp: struct{}{},
+	VMPoolInfoFieldVmsNetInfoInternalIp: struct{}{},
+	VMPoolInfoFieldVmsGroupName:         struct{}{},
+	VMPoolInfoFieldVmsState:             struct{}{},
+	VMPoolInfoFieldVmsUpdatedAtSeconds:  struct{}{},
+	VMPoolInfoFieldVmsUpdatedAtNanos:    struct{}{},
+	VMPoolInfoFieldVmsInternalName:      struct{}{},
+	VMPoolInfoFieldState:                struct{}{},
+	VMPoolInfoFieldErrors:               struct{}{},
+	VMPoolInfoFieldStatusTaskNumber:     struct{}{},
+	VMPoolInfoFieldStatusMaxTasks:       struct{}{},
+	VMPoolInfoFieldStatusTaskName:       struct{}{},
+	VMPoolInfoFieldStatusStepName:       struct{}{},
 }
 
 var VMPoolInfoAllFieldsStringMap = map[string]string{
-	VMPoolInfoFieldKeyOrganization:        "Key Organization",
-	VMPoolInfoFieldKeyName:                "Key Name",
-	VMPoolInfoFieldAction:                 "Action",
-	VMPoolInfoFieldNotifyId:               "Notify Id",
-	VMPoolInfoFieldGroupName:              "Group Name",
-	VMPoolInfoFieldVmSpecsInternalName:    "Vm Specs Internal Name",
-	VMPoolInfoFieldVmSpecsExternalNetwork: "Vm Specs External Network",
-	VMPoolInfoFieldVmSpecsInternalNetwork: "Vm Specs Internal Network",
-	VMPoolInfoFieldVmsName:                "Vms Name",
-	VMPoolInfoFieldVmsNetInfoExternalIp:   "Vms Net Info External Ip",
-	VMPoolInfoFieldVmsNetInfoInternalIp:   "Vms Net Info Internal Ip",
-	VMPoolInfoFieldVmsGroupName:           "Vms Group Name",
-	VMPoolInfoFieldVmsState:               "Vms State",
-	VMPoolInfoFieldVmsUpdatedAtSeconds:    "Vms Updated At Seconds",
-	VMPoolInfoFieldVmsUpdatedAtNanos:      "Vms Updated At Nanos",
-	VMPoolInfoFieldVmsInternalName:        "Vms Internal Name",
-	VMPoolInfoFieldError:                  "Error",
+	VMPoolInfoFieldKeyOrganization:      "Key Organization",
+	VMPoolInfoFieldKeyName:              "Key Name",
+	VMPoolInfoFieldNotifyId:             "Notify Id",
+	VMPoolInfoFieldVmsName:              "Vms Name",
+	VMPoolInfoFieldVmsNetInfoExternalIp: "Vms Net Info External Ip",
+	VMPoolInfoFieldVmsNetInfoInternalIp: "Vms Net Info Internal Ip",
+	VMPoolInfoFieldVmsGroupName:         "Vms Group Name",
+	VMPoolInfoFieldVmsState:             "Vms State",
+	VMPoolInfoFieldVmsUpdatedAtSeconds:  "Vms Updated At Seconds",
+	VMPoolInfoFieldVmsUpdatedAtNanos:    "Vms Updated At Nanos",
+	VMPoolInfoFieldVmsInternalName:      "Vms Internal Name",
+	VMPoolInfoFieldState:                "State",
+	VMPoolInfoFieldErrors:               "Errors",
+	VMPoolInfoFieldStatusTaskNumber:     "Status Task Number",
+	VMPoolInfoFieldStatusMaxTasks:       "Status Max Tasks",
+	VMPoolInfoFieldStatusTaskName:       "Status Task Name",
+	VMPoolInfoFieldStatusStepName:       "Status Step Name",
 }
 
 func (m *VMPoolInfo) IsKeyField(s string) bool {
@@ -2133,32 +2393,8 @@ func (m *VMPoolInfo) DiffFields(o *VMPoolInfo, fields map[string]struct{}) {
 		fields[VMPoolInfoFieldKeyName] = struct{}{}
 		fields[VMPoolInfoFieldKey] = struct{}{}
 	}
-	if m.Action != o.Action {
-		fields[VMPoolInfoFieldAction] = struct{}{}
-	}
 	if m.NotifyId != o.NotifyId {
 		fields[VMPoolInfoFieldNotifyId] = struct{}{}
-	}
-	if m.GroupName != o.GroupName {
-		fields[VMPoolInfoFieldGroupName] = struct{}{}
-	}
-	if len(m.VmSpecs) != len(o.VmSpecs) {
-		fields[VMPoolInfoFieldVmSpecs] = struct{}{}
-	} else {
-		for i0 := 0; i0 < len(m.VmSpecs); i0++ {
-			if m.VmSpecs[i0].InternalName != o.VmSpecs[i0].InternalName {
-				fields[VMPoolInfoFieldVmSpecsInternalName] = struct{}{}
-				fields[VMPoolInfoFieldVmSpecs] = struct{}{}
-			}
-			if m.VmSpecs[i0].ExternalNetwork != o.VmSpecs[i0].ExternalNetwork {
-				fields[VMPoolInfoFieldVmSpecsExternalNetwork] = struct{}{}
-				fields[VMPoolInfoFieldVmSpecs] = struct{}{}
-			}
-			if m.VmSpecs[i0].InternalNetwork != o.VmSpecs[i0].InternalNetwork {
-				fields[VMPoolInfoFieldVmSpecsInternalNetwork] = struct{}{}
-				fields[VMPoolInfoFieldVmSpecs] = struct{}{}
-			}
-		}
 	}
 	if len(m.Vms) != len(o.Vms) {
 		fields[VMPoolInfoFieldVms] = struct{}{}
@@ -2202,8 +2438,34 @@ func (m *VMPoolInfo) DiffFields(o *VMPoolInfo, fields map[string]struct{}) {
 			}
 		}
 	}
-	if m.Error != o.Error {
-		fields[VMPoolInfoFieldError] = struct{}{}
+	if m.State != o.State {
+		fields[VMPoolInfoFieldState] = struct{}{}
+	}
+	if len(m.Errors) != len(o.Errors) {
+		fields[VMPoolInfoFieldErrors] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Errors); i0++ {
+			if m.Errors[i0] != o.Errors[i0] {
+				fields[VMPoolInfoFieldErrors] = struct{}{}
+				break
+			}
+		}
+	}
+	if m.Status.TaskNumber != o.Status.TaskNumber {
+		fields[VMPoolInfoFieldStatusTaskNumber] = struct{}{}
+		fields[VMPoolInfoFieldStatus] = struct{}{}
+	}
+	if m.Status.MaxTasks != o.Status.MaxTasks {
+		fields[VMPoolInfoFieldStatusMaxTasks] = struct{}{}
+		fields[VMPoolInfoFieldStatus] = struct{}{}
+	}
+	if m.Status.TaskName != o.Status.TaskName {
+		fields[VMPoolInfoFieldStatusTaskName] = struct{}{}
+		fields[VMPoolInfoFieldStatus] = struct{}{}
+	}
+	if m.Status.StepName != o.Status.StepName {
+		fields[VMPoolInfoFieldStatusStepName] = struct{}{}
+		fields[VMPoolInfoFieldStatus] = struct{}{}
 	}
 }
 
@@ -2225,102 +2487,64 @@ func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
 		}
 	}
 	if _, set := fmap["3"]; set {
-		if m.Action != src.Action {
-			m.Action = src.Action
-			changed++
-		}
-	}
-	if _, set := fmap["4"]; set {
 		if m.NotifyId != src.NotifyId {
 			m.NotifyId = src.NotifyId
 			changed++
 		}
 	}
-	if _, set := fmap["5"]; set {
-		if m.GroupName != src.GroupName {
-			m.GroupName = src.GroupName
-			changed++
-		}
-	}
-	if _, set := fmap["6"]; set {
-		if m.VmSpecs == nil || len(m.VmSpecs) != len(src.VmSpecs) {
-			m.VmSpecs = make([]VMSpec, len(src.VmSpecs))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.VmSpecs); i0++ {
-			if _, set := fmap["6.1"]; set {
-				if m.VmSpecs[i0].InternalName != src.VmSpecs[i0].InternalName {
-					m.VmSpecs[i0].InternalName = src.VmSpecs[i0].InternalName
-					changed++
-				}
-			}
-			if _, set := fmap["6.2"]; set {
-				if m.VmSpecs[i0].ExternalNetwork != src.VmSpecs[i0].ExternalNetwork {
-					m.VmSpecs[i0].ExternalNetwork = src.VmSpecs[i0].ExternalNetwork
-					changed++
-				}
-			}
-			if _, set := fmap["6.3"]; set {
-				if m.VmSpecs[i0].InternalNetwork != src.VmSpecs[i0].InternalNetwork {
-					m.VmSpecs[i0].InternalNetwork = src.VmSpecs[i0].InternalNetwork
-					changed++
-				}
-			}
-		}
-	}
-	if _, set := fmap["7"]; set {
+	if _, set := fmap["4"]; set {
 		if m.Vms == nil || len(m.Vms) != len(src.Vms) {
 			m.Vms = make([]VM, len(src.Vms))
 			changed++
 		}
 		for i0 := 0; i0 < len(src.Vms); i0++ {
-			if _, set := fmap["7.1"]; set {
+			if _, set := fmap["4.1"]; set {
 				if m.Vms[i0].Name != src.Vms[i0].Name {
 					m.Vms[i0].Name = src.Vms[i0].Name
 					changed++
 				}
 			}
-			if _, set := fmap["7.2"]; set {
-				if _, set := fmap["7.2.1"]; set {
+			if _, set := fmap["4.2"]; set {
+				if _, set := fmap["4.2.1"]; set {
 					if m.Vms[i0].NetInfo.ExternalIp != src.Vms[i0].NetInfo.ExternalIp {
 						m.Vms[i0].NetInfo.ExternalIp = src.Vms[i0].NetInfo.ExternalIp
 						changed++
 					}
 				}
-				if _, set := fmap["7.2.2"]; set {
+				if _, set := fmap["4.2.2"]; set {
 					if m.Vms[i0].NetInfo.InternalIp != src.Vms[i0].NetInfo.InternalIp {
 						m.Vms[i0].NetInfo.InternalIp = src.Vms[i0].NetInfo.InternalIp
 						changed++
 					}
 				}
 			}
-			if _, set := fmap["7.3"]; set {
+			if _, set := fmap["4.3"]; set {
 				if m.Vms[i0].GroupName != src.Vms[i0].GroupName {
 					m.Vms[i0].GroupName = src.Vms[i0].GroupName
 					changed++
 				}
 			}
-			if _, set := fmap["7.4"]; set {
+			if _, set := fmap["4.4"]; set {
 				if m.Vms[i0].State != src.Vms[i0].State {
 					m.Vms[i0].State = src.Vms[i0].State
 					changed++
 				}
 			}
-			if _, set := fmap["7.5"]; set {
-				if _, set := fmap["7.5.1"]; set {
+			if _, set := fmap["4.5"]; set {
+				if _, set := fmap["4.5.1"]; set {
 					if m.Vms[i0].UpdatedAt.Seconds != src.Vms[i0].UpdatedAt.Seconds {
 						m.Vms[i0].UpdatedAt.Seconds = src.Vms[i0].UpdatedAt.Seconds
 						changed++
 					}
 				}
-				if _, set := fmap["7.5.2"]; set {
+				if _, set := fmap["4.5.2"]; set {
 					if m.Vms[i0].UpdatedAt.Nanos != src.Vms[i0].UpdatedAt.Nanos {
 						m.Vms[i0].UpdatedAt.Nanos = src.Vms[i0].UpdatedAt.Nanos
 						changed++
 					}
 				}
 			}
-			if _, set := fmap["7.6"]; set {
+			if _, set := fmap["4.6"]; set {
 				if m.Vms[i0].InternalName != src.Vms[i0].InternalName {
 					m.Vms[i0].InternalName = src.Vms[i0].InternalName
 					changed++
@@ -2328,10 +2552,44 @@ func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
 			}
 		}
 	}
-	if _, set := fmap["8"]; set {
-		if m.Error != src.Error {
-			m.Error = src.Error
+	if _, set := fmap["5"]; set {
+		if m.State != src.State {
+			m.State = src.State
 			changed++
+		}
+	}
+	if _, set := fmap["6"]; set {
+		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
+			m.Errors = make([]string, len(src.Errors))
+			changed++
+		}
+		copy(m.Errors, src.Errors)
+		changed++
+	}
+	if _, set := fmap["7"]; set {
+		if _, set := fmap["7.1"]; set {
+			if m.Status.TaskNumber != src.Status.TaskNumber {
+				m.Status.TaskNumber = src.Status.TaskNumber
+				changed++
+			}
+		}
+		if _, set := fmap["7.2"]; set {
+			if m.Status.MaxTasks != src.Status.MaxTasks {
+				m.Status.MaxTasks = src.Status.MaxTasks
+				changed++
+			}
+		}
+		if _, set := fmap["7.3"]; set {
+			if m.Status.TaskName != src.Status.TaskName {
+				m.Status.TaskName = src.Status.TaskName
+				changed++
+			}
+		}
+		if _, set := fmap["7.4"]; set {
+			if m.Status.StepName != src.Status.StepName {
+				m.Status.StepName = src.Status.StepName
+				changed++
+			}
 		}
 	}
 	return changed
@@ -2339,17 +2597,7 @@ func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
 
 func (m *VMPoolInfo) DeepCopyIn(src *VMPoolInfo) {
 	m.Key.DeepCopyIn(&src.Key)
-	m.Action = src.Action
 	m.NotifyId = src.NotifyId
-	m.GroupName = src.GroupName
-	if src.VmSpecs != nil {
-		m.VmSpecs = make([]VMSpec, len(src.VmSpecs), len(src.VmSpecs))
-		for ii, s := range src.VmSpecs {
-			m.VmSpecs[ii].DeepCopyIn(&s)
-		}
-	} else {
-		m.VmSpecs = nil
-	}
 	if src.Vms != nil {
 		m.Vms = make([]VM, len(src.Vms), len(src.Vms))
 		for ii, s := range src.Vms {
@@ -2358,7 +2606,16 @@ func (m *VMPoolInfo) DeepCopyIn(src *VMPoolInfo) {
 	} else {
 		m.Vms = nil
 	}
-	m.Error = src.Error
+	m.State = src.State
+	if src.Errors != nil {
+		m.Errors = make([]string, len(src.Errors), len(src.Errors))
+		for ii, s := range src.Errors {
+			m.Errors[ii] = s
+		}
+	} else {
+		m.Errors = nil
+	}
+	m.Status.DeepCopyIn(&src.Status)
 }
 
 func (s *VMPoolInfo) HasFields() bool {
@@ -2479,7 +2736,7 @@ func (s *VMPoolInfoStore) LoadOne(key string) (*VMPoolInfo, int64, error) {
 	return &obj, rev, nil
 }
 
-func (s *VMPoolInfoStore) STMGet(stm concurrency.STM, key *CloudletKey, buf *VMPoolInfo) bool {
+func (s *VMPoolInfoStore) STMGet(stm concurrency.STM, key *VMPoolKey, buf *VMPoolInfo) bool {
 	keystr := objstore.DbKeyString("VMPoolInfo", key)
 	valstr := stm.Get(keystr)
 	if valstr == "" {
@@ -2504,7 +2761,7 @@ func (s *VMPoolInfoStore) STMPut(stm concurrency.STM, obj *VMPoolInfo, ops ...ob
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *VMPoolInfoStore) STMDel(stm concurrency.STM, key *CloudletKey) {
+func (s *VMPoolInfoStore) STMDel(stm concurrency.STM, key *VMPoolKey) {
 	keystr := objstore.DbKeyString("VMPoolInfo", key)
 	stm.Del(keystr)
 }
@@ -2521,16 +2778,16 @@ type VMPoolInfoCacheData struct {
 // VMPoolInfoCache caches VMPoolInfo objects in memory in a hash table
 // and keeps them in sync with the database.
 type VMPoolInfoCache struct {
-	Objs          map[CloudletKey]*VMPoolInfoCacheData
+	Objs          map[VMPoolKey]*VMPoolInfoCacheData
 	Mux           util.Mutex
-	List          map[CloudletKey]struct{}
+	List          map[VMPoolKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *CloudletKey, old *VMPoolInfo, modRev int64)
+	NotifyCb      func(ctx context.Context, obj *VMPoolKey, old *VMPoolInfo, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *VMPoolInfo, new *VMPoolInfo)
 	DeletedCbs    []func(ctx context.Context, old *VMPoolInfo)
-	KeyWatchers   map[CloudletKey][]*VMPoolInfoKeyWatcher
-	UpdatedKeyCbs []func(ctx context.Context, key *CloudletKey)
-	DeletedKeyCbs []func(ctx context.Context, key *CloudletKey)
+	KeyWatchers   map[VMPoolKey][]*VMPoolInfoKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *VMPoolKey)
+	DeletedKeyCbs []func(ctx context.Context, key *VMPoolKey)
 }
 
 func NewVMPoolInfoCache() *VMPoolInfoCache {
@@ -2540,8 +2797,8 @@ func NewVMPoolInfoCache() *VMPoolInfoCache {
 }
 
 func InitVMPoolInfoCache(cache *VMPoolInfoCache) {
-	cache.Objs = make(map[CloudletKey]*VMPoolInfoCacheData)
-	cache.KeyWatchers = make(map[CloudletKey][]*VMPoolInfoKeyWatcher)
+	cache.Objs = make(map[VMPoolKey]*VMPoolInfoCacheData)
+	cache.KeyWatchers = make(map[VMPoolKey][]*VMPoolInfoKeyWatcher)
 	cache.NotifyCb = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
@@ -2553,12 +2810,12 @@ func (c *VMPoolInfoCache) GetTypeString() string {
 	return "VMPoolInfo"
 }
 
-func (c *VMPoolInfoCache) Get(key *CloudletKey, valbuf *VMPoolInfo) bool {
+func (c *VMPoolInfoCache) Get(key *VMPoolKey, valbuf *VMPoolInfo) bool {
 	var modRev int64
 	return c.GetWithRev(key, valbuf, &modRev)
 }
 
-func (c *VMPoolInfoCache) GetWithRev(key *CloudletKey, valbuf *VMPoolInfo, modRev *int64) bool {
+func (c *VMPoolInfoCache) GetWithRev(key *VMPoolKey, valbuf *VMPoolInfo, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
@@ -2569,14 +2826,14 @@ func (c *VMPoolInfoCache) GetWithRev(key *CloudletKey, valbuf *VMPoolInfo, modRe
 	return found
 }
 
-func (c *VMPoolInfoCache) HasKey(key *CloudletKey) bool {
+func (c *VMPoolInfoCache) HasKey(key *VMPoolKey) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	_, found := c.Objs[*key]
 	return found
 }
 
-func (c *VMPoolInfoCache) GetAllKeys(ctx context.Context, cb func(key *CloudletKey, modRev int64)) {
+func (c *VMPoolInfoCache) GetAllKeys(ctx context.Context, cb func(key *VMPoolKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, data := range c.Objs {
@@ -2590,7 +2847,7 @@ func (c *VMPoolInfoCache) Update(ctx context.Context, in *VMPoolInfo, modRev int
 	})
 }
 
-func (c *VMPoolInfoCache) UpdateModFunc(ctx context.Context, key *CloudletKey, modRev int64, modFunc func(old *VMPoolInfo) (new *VMPoolInfo, changed bool)) {
+func (c *VMPoolInfoCache) UpdateModFunc(ctx context.Context, key *VMPoolKey, modRev int64, modFunc func(old *VMPoolInfo) (new *VMPoolInfo, changed bool)) {
 	c.Mux.Lock()
 	var old *VMPoolInfo
 	if oldData, found := c.Objs[*key]; found {
@@ -2647,8 +2904,8 @@ func (c *VMPoolInfoCache) Delete(ctx context.Context, in *VMPoolInfo, modRev int
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
-func (c *VMPoolInfoCache) Prune(ctx context.Context, validKeys map[CloudletKey]struct{}) {
-	notify := make(map[CloudletKey]*VMPoolInfoCacheData)
+func (c *VMPoolInfoCache) Prune(ctx context.Context, validKeys map[VMPoolKey]struct{}) {
+	notify := make(map[VMPoolKey]*VMPoolInfoCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -2683,7 +2940,7 @@ func (c *VMPoolInfoCache) GetCount() int {
 
 func (c *VMPoolInfoCache) Flush(ctx context.Context, notifyId int64) {
 	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush VMPoolInfo", "notifyId", notifyId, "FlushAll", c.FlushAll)
-	flushed := make(map[CloudletKey]*VMPoolInfoCacheData)
+	flushed := make(map[VMPoolKey]*VMPoolInfoCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if !c.FlushAll && val.Obj.NotifyId != notifyId {
@@ -2730,13 +2987,13 @@ func (c *VMPoolInfoCache) Show(filter *VMPoolInfo, cb func(ret *VMPoolInfo) erro
 	return nil
 }
 
-func VMPoolInfoGenericNotifyCb(fn func(key *CloudletKey, old *VMPoolInfo)) func(objstore.ObjKey, objstore.Obj) {
+func VMPoolInfoGenericNotifyCb(fn func(key *VMPoolKey, old *VMPoolInfo)) func(objstore.ObjKey, objstore.Obj) {
 	return func(objkey objstore.ObjKey, obj objstore.Obj) {
-		fn(objkey.(*CloudletKey), obj.(*VMPoolInfo))
+		fn(objkey.(*VMPoolKey), obj.(*VMPoolInfo))
 	}
 }
 
-func (c *VMPoolInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *VMPoolInfo, modRev int64)) {
+func (c *VMPoolInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *VMPoolKey, old *VMPoolInfo, modRev int64)) {
 	c.NotifyCb = fn
 }
 
@@ -2748,12 +3005,12 @@ func (c *VMPoolInfoCache) SetDeletedCb(fn func(ctx context.Context, old *VMPoolI
 	c.DeletedCbs = []func(ctx context.Context, old *VMPoolInfo){fn}
 }
 
-func (c *VMPoolInfoCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
-	c.UpdatedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
+func (c *VMPoolInfoCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *VMPoolKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *VMPoolKey){fn}
 }
 
-func (c *VMPoolInfoCache) SetDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
-	c.DeletedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
+func (c *VMPoolInfoCache) SetDeletedKeyCb(fn func(ctx context.Context, key *VMPoolKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *VMPoolKey){fn}
 }
 
 func (c *VMPoolInfoCache) AddUpdatedCb(fn func(ctx context.Context, old *VMPoolInfo, new *VMPoolInfo)) {
@@ -2764,11 +3021,11 @@ func (c *VMPoolInfoCache) AddDeletedCb(fn func(ctx context.Context, old *VMPoolI
 	c.DeletedCbs = append(c.DeletedCbs, fn)
 }
 
-func (c *VMPoolInfoCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+func (c *VMPoolInfoCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *VMPoolKey)) {
 	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
 }
 
-func (c *VMPoolInfoCache) AddDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+func (c *VMPoolInfoCache) AddDeletedKeyCb(fn func(ctx context.Context, key *VMPoolKey)) {
 	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
@@ -2776,7 +3033,7 @@ func (c *VMPoolInfoCache) SetFlushAll() {
 	c.FlushAll = true
 }
 
-func (c *VMPoolInfoCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) context.CancelFunc {
+func (c *VMPoolInfoCache) WatchKey(key *VMPoolKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -2809,7 +3066,7 @@ func (c *VMPoolInfoCache) WatchKey(key *CloudletKey, cb func(ctx context.Context
 	}
 }
 
-func (c *VMPoolInfoCache) TriggerKeyWatchers(ctx context.Context, key *CloudletKey) {
+func (c *VMPoolInfoCache) TriggerKeyWatchers(ctx context.Context, key *VMPoolKey) {
 	watchers := make([]*VMPoolInfoKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -2845,16 +3102,16 @@ func (c *VMPoolInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev, 
 func (c *VMPoolInfoCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := VMPoolInfo{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	CloudletKeyStringParse(keystr, obj.GetKey())
+	VMPoolKeyStringParse(keystr, obj.GetKey())
 	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *VMPoolInfoCache) SyncListStart(ctx context.Context) {
-	c.List = make(map[CloudletKey]struct{})
+	c.List = make(map[VMPoolKey]struct{})
 }
 
 func (c *VMPoolInfoCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[CloudletKey]*VMPoolInfoCacheData)
+	deleted := make(map[VMPoolKey]*VMPoolInfoCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -2888,15 +3145,15 @@ func (m *VMPoolInfo) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
 
-func (m *VMPoolInfo) GetKey() *CloudletKey {
+func (m *VMPoolInfo) GetKey() *VMPoolKey {
 	return &m.Key
 }
 
-func (m *VMPoolInfo) GetKeyVal() CloudletKey {
+func (m *VMPoolInfo) GetKeyVal() VMPoolKey {
 	return m.Key
 }
 
-func (m *VMPoolInfo) SetKey(key *CloudletKey) {
+func (m *VMPoolInfo) SetKey(key *VMPoolKey) {
 	m.Key = *key
 }
 
@@ -2910,18 +3167,16 @@ func (m *VMPoolInfo) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
-	if _, ok := VMAction_name[int32(m.Action)]; !ok {
-		return errors.New("invalid Action")
-	}
-	for _, e := range m.VmSpecs {
-		if err := e.ValidateEnums(); err != nil {
-			return err
-		}
-	}
 	for _, e := range m.Vms {
 		if err := e.ValidateEnums(); err != nil {
 			return err
 		}
+	}
+	if _, ok := TrackedState_name[int32(m.State)]; !ok {
+		return errors.New("invalid State")
+	}
+	if err := m.Status.ValidateEnums(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2938,33 +3193,54 @@ func IgnoreVMPoolInfoFields(taglist string) cmp.Option {
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "Vms.UpdatedAt")
 	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "State")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Errors")
+	}
 	return cmpopts.IgnoreFields(VMPoolInfo{}, names...)
 }
 
 var VMStateStrings = []string{
 	"VM_FREE",
+	"VM_IN_PROGRESS",
 	"VM_IN_USE",
-	"VM_ERROR",
+	"VM_ADD",
+	"VM_REMOVE",
+	"VM_UPDATE",
 }
 
 const (
-	VMStateVM_FREE   uint64 = 1 << 0
-	VMStateVM_IN_USE uint64 = 1 << 1
-	VMStateVM_ERROR  uint64 = 1 << 2
+	VMStateVM_FREE        uint64 = 1 << 0
+	VMStateVM_IN_PROGRESS uint64 = 1 << 1
+	VMStateVM_IN_USE      uint64 = 1 << 2
+	VMStateVM_ADD         uint64 = 1 << 3
+	VMStateVM_REMOVE      uint64 = 1 << 4
+	VMStateVM_UPDATE      uint64 = 1 << 5
 )
 
 var VMState_CamelName = map[int32]string{
 	// VM_FREE -> VmFree
 	0: "VmFree",
+	// VM_IN_PROGRESS -> VmInProgress
+	1: "VmInProgress",
 	// VM_IN_USE -> VmInUse
-	1: "VmInUse",
-	// VM_ERROR -> VmError
-	2: "VmError",
+	2: "VmInUse",
+	// VM_ADD -> VmAdd
+	3: "VmAdd",
+	// VM_REMOVE -> VmRemove
+	4: "VmRemove",
+	// VM_UPDATE -> VmUpdate
+	5: "VmUpdate",
 }
 var VMState_CamelValue = map[string]int32{
-	"VmFree":  0,
-	"VmInUse": 1,
-	"VmError": 2,
+	"VmFree":       0,
+	"VmInProgress": 1,
+	"VmInUse":      2,
+	"VmAdd":        3,
+	"VmRemove":     4,
+	"VmUpdate":     5,
 }
 
 func (e *VMState) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -3141,6 +3417,20 @@ func (m *VM) Size() (n int) {
 	return n
 }
 
+func (m *VMPoolKey) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Organization)
+	if l > 0 {
+		n += 1 + l + sovVmpool(uint64(l))
+	}
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovVmpool(uint64(l))
+	}
+	return n
+}
+
 func (m *VMPool) Size() (n int) {
 	var l int
 	_ = l
@@ -3158,13 +3448,17 @@ func (m *VMPool) Size() (n int) {
 			n += 1 + l + sovVmpool(uint64(l))
 		}
 	}
-	if m.Action != 0 {
-		n += 1 + sovVmpool(uint64(m.Action))
+	if m.State != 0 {
+		n += 1 + sovVmpool(uint64(m.State))
 	}
-	l = len(m.Error)
-	if l > 0 {
-		n += 1 + l + sovVmpool(uint64(l))
+	if len(m.Errors) > 0 {
+		for _, s := range m.Errors {
+			l = len(s)
+			n += 1 + l + sovVmpool(uint64(l))
+		}
 	}
+	l = m.Status.Size()
+	n += 1 + l + sovVmpool(uint64(l))
 	return n
 }
 
@@ -3205,21 +3499,8 @@ func (m *VMPoolInfo) Size() (n int) {
 	}
 	l = m.Key.Size()
 	n += 1 + l + sovVmpool(uint64(l))
-	if m.Action != 0 {
-		n += 1 + sovVmpool(uint64(m.Action))
-	}
 	if m.NotifyId != 0 {
 		n += 1 + sovVmpool(uint64(m.NotifyId))
-	}
-	l = len(m.GroupName)
-	if l > 0 {
-		n += 1 + l + sovVmpool(uint64(l))
-	}
-	if len(m.VmSpecs) > 0 {
-		for _, e := range m.VmSpecs {
-			l = e.Size()
-			n += 1 + l + sovVmpool(uint64(l))
-		}
 	}
 	if len(m.Vms) > 0 {
 		for _, e := range m.Vms {
@@ -3227,10 +3508,17 @@ func (m *VMPoolInfo) Size() (n int) {
 			n += 1 + l + sovVmpool(uint64(l))
 		}
 	}
-	l = len(m.Error)
-	if l > 0 {
-		n += 1 + l + sovVmpool(uint64(l))
+	if m.State != 0 {
+		n += 1 + sovVmpool(uint64(m.State))
 	}
+	if len(m.Errors) > 0 {
+		for _, s := range m.Errors {
+			l = len(s)
+			n += 1 + l + sovVmpool(uint64(l))
+		}
+	}
+	l = m.Status.Size()
+	n += 1 + l + sovVmpool(uint64(l))
 	return n
 }
 
@@ -3571,6 +3859,114 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *VMPoolKey) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowVmpool
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VMPoolKey: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VMPoolKey: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Organization", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVmpool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Organization = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVmpool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipVmpool(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *VMPool) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3692,9 +4088,9 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
 			}
-			m.Action = 0
+			m.State = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowVmpool
@@ -3704,14 +4100,14 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Action |= (VMAction(b) & 0x7F) << shift
+				m.State |= (TrackedState(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Errors", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3736,7 +4132,37 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Error = string(dAtA[iNdEx:postIndex])
+			m.Errors = append(m.Errors, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVmpool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4078,25 +4504,6 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
-			}
-			m.Action = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowVmpool
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Action |= (VMAction(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NotifyId", wireType)
 			}
 			m.NotifyId = 0
@@ -4114,67 +4521,7 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowVmpool
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthVmpool
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.GroupName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VmSpecs", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowVmpool
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthVmpool
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.VmSpecs = append(m.VmSpecs, VMSpec{})
-			if err := m.VmSpecs[len(m.VmSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 7:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Vms", wireType)
 			}
@@ -4205,9 +4552,28 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 8:
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+			}
+			m.State = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVmpool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.State |= (TrackedState(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Errors", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -4232,7 +4598,37 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Error = string(dAtA[iNdEx:postIndex])
+			m.Errors = append(m.Errors, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVmpool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4363,80 +4759,83 @@ var (
 func init() { proto.RegisterFile("vmpool.proto", fileDescriptorVmpool) }
 
 var fileDescriptorVmpool = []byte{
-	// 1186 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xcd, 0x6f, 0x1b, 0xc5,
-	0x1b, 0xee, 0xd8, 0x89, 0x63, 0x4f, 0x9c, 0xd4, 0x99, 0x36, 0xf9, 0xed, 0xcf, 0x40, 0x12, 0x6d,
-	0x04, 0x0a, 0x21, 0xf6, 0x22, 0x57, 0x48, 0x28, 0x52, 0x0e, 0x4e, 0x6a, 0xc0, 0x6a, 0xec, 0x54,
-	0xeb, 0xd4, 0x12, 0x48, 0x68, 0xd9, 0xec, 0x4e, 0x36, 0xab, 0xec, 0xce, 0xac, 0x76, 0xd7, 0x4e,
-	0xc3, 0x01, 0xa1, 0x72, 0x81, 0x0b, 0x20, 0x40, 0x88, 0x8f, 0x0b, 0x47, 0xc4, 0xb1, 0x7f, 0x45,
-	0x8e, 0x48, 0xdc, 0x51, 0x89, 0x38, 0xa0, 0x1e, 0x00, 0xa9, 0x4e, 0xcf, 0x68, 0x66, 0x67, 0xd7,
-	0x1f, 0x49, 0xd5, 0x36, 0xca, 0xc5, 0x9a, 0xf7, 0x99, 0x77, 0xde, 0x79, 0xe6, 0x79, 0x3f, 0xd6,
-	0x30, 0xdf, 0x75, 0x3d, 0x4a, 0x9d, 0xb2, 0xe7, 0xd3, 0x90, 0xa2, 0x1c, 0x36, 0x2d, 0xcc, 0x97,
-	0xc5, 0x17, 0x2d, 0x4a, 0x2d, 0x07, 0x2b, 0xba, 0x67, 0x2b, 0x3a, 0x21, 0x34, 0xd4, 0x43, 0x9b,
-	0x92, 0x20, 0x72, 0x2c, 0xbe, 0x69, 0xd9, 0xe1, 0x7e, 0x67, 0xb7, 0x6c, 0x50, 0x57, 0x71, 0xe9,
-	0xae, 0xed, 0xb0, 0x83, 0x77, 0x15, 0xf6, 0x5b, 0x32, 0x1c, 0xda, 0x31, 0x15, 0xee, 0x67, 0x61,
-	0x92, 0x2c, 0xc4, 0xc9, 0xbc, 0x8f, 0x83, 0x8e, 0x13, 0x0a, 0x6b, 0x9a, 0x3b, 0x3b, 0x38, 0xb6,
-	0x37, 0x9f, 0x1a, 0xd7, 0x2c, 0xb9, 0x7a, 0x68, 0xec, 0x97, 0x30, 0xb1, 0x6c, 0x82, 0x15, 0xd3,
-	0xc5, 0x25, 0x7e, 0x54, 0x71, 0xa8, 0x21, 0x82, 0x5c, 0xb7, 0xa8, 0x45, 0x23, 0x90, 0xad, 0x04,
-	0xba, 0x20, 0x1e, 0xc4, 0xad, 0xdd, 0xce, 0x9e, 0x12, 0xda, 0x2e, 0x0e, 0x42, 0xdd, 0xf5, 0x22,
-	0x07, 0xb9, 0x01, 0x73, 0xed, 0x46, 0x13, 0x87, 0x75, 0xb2, 0x47, 0xd1, 0x02, 0x9c, 0xc4, 0x77,
-	0x43, 0xec, 0x13, 0xdd, 0xd1, 0x6c, 0x4f, 0x02, 0x8b, 0x60, 0x39, 0xa7, 0xc2, 0x18, 0xaa, 0x7b,
-	0xcc, 0xc1, 0x26, 0x7d, 0x87, 0x54, 0xe4, 0x10, 0x43, 0x75, 0x4f, 0xfe, 0x22, 0x05, 0x53, 0xed,
-	0x06, 0x42, 0x70, 0x8c, 0xe8, 0x2e, 0x16, 0x11, 0xf8, 0x1a, 0xbd, 0x01, 0xb3, 0x04, 0x87, 0x9a,
-	0x4d, 0xf6, 0x28, 0x3f, 0x38, 0x59, 0xb9, 0x5e, 0x4e, 0x94, 0x2f, 0x27, 0x24, 0x36, 0xc6, 0x8e,
-	0x7f, 0x5f, 0xb8, 0xa2, 0x4e, 0x10, 0xc1, 0xe9, 0x25, 0x08, 0x2d, 0x9f, 0x76, 0x3c, 0x8d, 0x07,
-	0x4c, 0xf3, 0x80, 0x39, 0x8e, 0x34, 0x59, 0xd4, 0x65, 0x38, 0x1e, 0x84, 0x7a, 0x88, 0xa5, 0xb1,
-	0x45, 0xb0, 0x3c, 0x5d, 0x41, 0x43, 0x21, 0x5b, 0x6c, 0x47, 0x8d, 0x1c, 0xd0, 0x6d, 0x08, 0x3b,
-	0x9e, 0xa9, 0x87, 0xd8, 0xd4, 0xf4, 0x50, 0x1a, 0xe7, 0x0c, 0x8a, 0xe5, 0x48, 0x9f, 0x72, 0xac,
-	0x4f, 0x79, 0x27, 0xd6, 0x67, 0x63, 0xf6, 0xe7, 0x9e, 0x04, 0xbe, 0xba, 0xff, 0xff, 0x5c, 0x22,
-	0x19, 0x27, 0x96, 0x13, 0x41, 0xaa, 0x21, 0x5a, 0x82, 0x53, 0x89, 0x1a, 0x9c, 0x5d, 0x86, 0xb3,
-	0xcb, 0xc7, 0x20, 0x23, 0x28, 0x7f, 0x93, 0x86, 0x99, 0x76, 0xe3, 0x36, 0xa5, 0x0e, 0x9a, 0x83,
-	0x99, 0x3d, 0x1b, 0x3b, 0x66, 0x20, 0x81, 0xc5, 0xf4, 0x72, 0x4e, 0x15, 0x16, 0x2a, 0xc3, 0xf4,
-	0x01, 0x3e, 0x12, 0xa2, 0xcc, 0x0d, 0xbc, 0x60, 0x53, 0xd4, 0xc9, 0x2d, 0x7c, 0x24, 0x64, 0x61,
-	0x8e, 0xe8, 0x65, 0x98, 0xee, 0xba, 0x81, 0x94, 0x5e, 0x4c, 0x2f, 0x4f, 0x56, 0xa6, 0x86, 0x5e,
-	0x1c, 0xbb, 0x75, 0xdd, 0x00, 0xad, 0xc1, 0x8c, 0x6e, 0xb0, 0xfa, 0x15, 0xda, 0x5c, 0x1b, 0xf2,
-	0xac, 0xf2, 0xad, 0x8d, 0x29, 0xf1, 0xca, 0x71, 0x42, 0x0d, 0xd7, 0x53, 0xc5, 0x09, 0x74, 0x1d,
-	0x8e, 0x63, 0xdf, 0xa7, 0x3e, 0xd7, 0x29, 0xa7, 0x46, 0xc6, 0xda, 0x31, 0xf8, 0xeb, 0x91, 0x04,
-	0xfe, 0x7d, 0x24, 0x81, 0x8f, 0x7b, 0x12, 0xf8, 0xb2, 0x27, 0x81, 0xef, 0xd8, 0xe9, 0x53, 0xc9,
-	0x6e, 0xbb, 0xc1, 0xda, 0x52, 0xf9, 0xed, 0x38, 0x2d, 0xab, 0x91, 0x5d, 0x1f, 0x10, 0x42, 0x40,
-	0x3c, 0x25, 0x62, 0x7d, 0x27, 0x56, 0xb2, 0xdc, 0xc2, 0x06, 0x25, 0x66, 0x70, 0x06, 0x6f, 0xea,
-	0x84, 0x06, 0xab, 0x11, 0xd5, 0xd5, 0x1a, 0xe3, 0xf0, 0xc3, 0xa9, 0xa4, 0xc4, 0xed, 0xb3, 0x7e,
-	0x0b, 0x1f, 0x95, 0x79, 0xec, 0x18, 0x29, 0x51, 0xdf, 0xe2, 0xe8, 0xb6, 0x6f, 0xe9, 0xc4, 0xfe,
-	0x90, 0xb7, 0xef, 0xfd, 0xc7, 0x52, 0xe1, 0x00, 0x1f, 0xad, 0x0f, 0x62, 0xf2, 0xdf, 0x00, 0xe6,
-	0xa3, 0xb4, 0x34, 0xb0, 0xbb, 0x8b, 0xfd, 0x38, 0x09, 0xe0, 0x59, 0x93, 0xb0, 0x04, 0x53, 0x5d,
-	0x57, 0xe4, 0xec, 0xdc, 0x1c, 0xa4, 0xba, 0xee, 0xda, 0xa7, 0x4c, 0x9c, 0xf5, 0xb6, 0x3b, 0xa4,
-	0x4c, 0xa2, 0xc1, 0xb9, 0x02, 0x8c, 0xbe, 0xfe, 0xb2, 0x1e, 0xfc, 0x09, 0x60, 0x75, 0xd8, 0xf2,
-	0xb0, 0x71, 0xb6, 0x6e, 0xc1, 0xd9, 0xba, 0x45, 0xaf, 0xc2, 0x42, 0x32, 0x0b, 0x08, 0x0e, 0x0f,
-	0xa9, 0x7f, 0xc0, 0x5f, 0x9b, 0x55, 0xaf, 0xc6, 0x78, 0x33, 0x82, 0x99, 0x6b, 0x3f, 0x9e, 0x70,
-	0x4d, 0x47, 0xae, 0x49, 0xc8, 0x08, 0x96, 0x3f, 0x4f, 0x43, 0x18, 0xc9, 0xce, 0x9b, 0xfb, 0xb2,
-	0x3a, 0xe2, 0xb5, 0xa4, 0xd4, 0xd3, 0x4f, 0x2c, 0xf5, 0xa4, 0xb6, 0x5f, 0x81, 0x39, 0x42, 0x43,
-	0x7b, 0xef, 0x48, 0xb3, 0x4d, 0xde, 0x1a, 0xe9, 0x8d, 0x5c, 0xbf, 0x03, 0xb2, 0xd1, 0x5e, 0xdd,
-	0x1c, 0x99, 0x3c, 0xe3, 0xa3, 0x93, 0xa7, 0x02, 0xb3, 0x5d, 0x57, 0x0b, 0x3c, 0x6c, 0x04, 0x52,
-	0x86, 0xb7, 0xe2, 0xcc, 0xf0, 0xf0, 0xf1, 0xb0, 0x11, 0x0f, 0xb3, 0xae, 0xcb, 0xac, 0x20, 0xee,
-	0xdc, 0x89, 0xa7, 0x74, 0x6e, 0xd2, 0x7d, 0xd9, 0xc1, 0xee, 0x6b, 0x8d, 0x36, 0xdf, 0x4f, 0x3d,
-	0x09, 0x3c, 0xe8, 0x49, 0xe0, 0x62, 0x25, 0x32, 0x46, 0x28, 0xc1, 0x2b, 0x37, 0xe0, 0x84, 0x98,
-	0x93, 0x68, 0x92, 0x2d, 0xb5, 0xb7, 0xd4, 0x5a, 0xad, 0x70, 0x05, 0x4d, 0xb1, 0xef, 0x82, 0x56,
-	0x6f, 0x6a, 0x77, 0x5a, 0xb5, 0x02, 0x40, 0x79, 0x98, 0x6d, 0x37, 0xb4, 0x9a, 0xaa, 0x6e, 0xab,
-	0x85, 0xd4, 0x4a, 0x83, 0x59, 0x91, 0xaa, 0x08, 0xc1, 0xe9, 0x76, 0x43, 0xab, 0x6e, 0xee, 0xd4,
-	0xb7, 0x9b, 0xda, 0xcd, 0xed, 0x26, 0x3b, 0x3c, 0x07, 0x51, 0x1f, 0xab, 0x6e, 0x6d, 0x6d, 0x6f,
-	0x56, 0x77, 0x58, 0x94, 0x59, 0x38, 0xd3, 0xc7, 0xd5, 0xda, 0x56, 0xad, 0xda, 0xaa, 0x15, 0x52,
-	0x95, 0x7f, 0x32, 0xec, 0x32, 0x56, 0x14, 0x55, 0xcf, 0x46, 0xdf, 0x02, 0x98, 0xdf, 0xf4, 0xb1,
-	0x1e, 0x62, 0x31, 0x36, 0x87, 0x65, 0x65, 0x50, 0x71, 0x10, 0x52, 0xf9, 0xa7, 0x55, 0xfe, 0xe0,
-	0x61, 0x4f, 0x52, 0x54, 0x1c, 0xd0, 0x8e, 0x6f, 0xe0, 0xb8, 0x4c, 0xe2, 0xd9, 0xd1, 0xd0, 0x89,
-	0x6e, 0xe1, 0xd5, 0x51, 0x15, 0x7e, 0x79, 0x2c, 0x15, 0x46, 0xb1, 0x7b, 0xbf, 0xfd, 0xf9, 0x75,
-	0xea, 0x9a, 0x3c, 0xad, 0x18, 0x9c, 0x83, 0x12, 0xfd, 0x55, 0x58, 0x03, 0x2b, 0xe8, 0x33, 0x00,
-	0xf3, 0x37, 0xb1, 0x83, 0x9f, 0x93, 0x58, 0xeb, 0x02, 0xc4, 0x38, 0x89, 0xa2, 0x3c, 0xab, 0x98,
-	0xfc, 0xbe, 0x28, 0xbb, 0x38, 0xec, 0x73, 0xb9, 0x07, 0x60, 0x3e, 0x1a, 0x14, 0xcf, 0xc5, 0x65,
-	0xeb, 0xa2, 0x5c, 0x98, 0x20, 0xd1, 0x87, 0x6f, 0x40, 0x90, 0x8f, 0x20, 0x6c, 0xed, 0xd3, 0xc3,
-	0x67, 0x63, 0x10, 0x41, 0xf2, 0x3b, 0x0f, 0x7b, 0x52, 0xe9, 0x49, 0x0c, 0xda, 0x36, 0x3e, 0x3c,
-	0xff, 0xfe, 0x19, 0x39, 0xaf, 0x04, 0xfb, 0xf4, 0xb0, 0x7f, 0xfb, 0xeb, 0x00, 0x7d, 0x0f, 0xe0,
-	0xd5, 0xaa, 0x69, 0x0e, 0x8d, 0xf1, 0xff, 0x9d, 0xb9, 0x32, 0xda, 0x38, 0x4f, 0x8d, 0xf7, 0x2e,
-	0xa0, 0xc6, 0xc9, 0xa9, 0x34, 0xd1, 0x76, 0x79, 0x87, 0x71, 0x62, 0x73, 0xf2, 0x8c, 0xa2, 0x9b,
-	0xa6, 0xe0, 0xe5, 0xf2, 0xbb, 0x98, 0x36, 0x3f, 0x02, 0x88, 0x54, 0xec, 0xd2, 0x2e, 0xbe, 0x30,
-	0xbd, 0x77, 0x2f, 0x81, 0xde, 0xac, 0x5c, 0x50, 0x7c, 0x77, 0x94, 0x5d, 0x85, 0xc0, 0xa9, 0xfe,
-	0x14, 0x66, 0x4d, 0xf7, 0x3e, 0x9c, 0xee, 0xa7, 0x92, 0x8f, 0xe6, 0xd9, 0x33, 0x4c, 0x19, 0x5c,
-	0x3c, 0x1f, 0x96, 0x5f, 0x48, 0x6e, 0x1b, 0xc8, 0x12, 0xfb, 0xab, 0xc7, 0x33, 0xb5, 0x51, 0x38,
-	0xfe, 0x63, 0xfe, 0xca, 0xf1, 0xc9, 0x3c, 0xf8, 0xf5, 0x64, 0x1e, 0x3c, 0x38, 0x99, 0x07, 0xbb,
-	0x19, 0x1e, 0xe2, 0xc6, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x5d, 0xee, 0xc2, 0x20, 0x8b, 0x0b,
-	0x00, 0x00,
+	// 1233 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xcf, 0x6f, 0x1b, 0x45,
+	0x14, 0xee, 0xf8, 0x57, 0xe2, 0x89, 0xd3, 0x3a, 0x43, 0xd3, 0x0e, 0x11, 0x24, 0xd1, 0x56, 0x45,
+	0xa1, 0xd8, 0x5e, 0x08, 0x42, 0xa0, 0x88, 0x1e, 0xec, 0xc4, 0x14, 0xab, 0xb1, 0x1d, 0xad, 0x53,
+	0x4b, 0x70, 0x31, 0x9b, 0xdd, 0xc9, 0x66, 0x95, 0xdd, 0x9d, 0xd5, 0xee, 0xda, 0x69, 0x38, 0x20,
+	0x54, 0xb8, 0x20, 0x21, 0x81, 0x8a, 0x84, 0xf8, 0x71, 0xe1, 0x88, 0x38, 0xa1, 0x1e, 0xfb, 0x17,
+	0xf4, 0x88, 0xc4, 0x11, 0x09, 0x95, 0x88, 0x43, 0xd5, 0x0b, 0xa0, 0x38, 0x11, 0x47, 0x34, 0x33,
+	0xbb, 0xfe, 0x95, 0x20, 0x92, 0x90, 0x4b, 0x34, 0xf3, 0xcd, 0x37, 0xef, 0x7d, 0xfb, 0xbd, 0xf7,
+	0x26, 0x86, 0x99, 0x8e, 0xed, 0x52, 0x6a, 0x15, 0x5c, 0x8f, 0x06, 0x14, 0xa5, 0x89, 0x6e, 0x10,
+	0xbe, 0x9c, 0x79, 0xce, 0xa0, 0xd4, 0xb0, 0x88, 0xac, 0xba, 0xa6, 0xac, 0x3a, 0x0e, 0x0d, 0xd4,
+	0xc0, 0xa4, 0x8e, 0x2f, 0x88, 0x33, 0x6f, 0x18, 0x66, 0xb0, 0xd5, 0xde, 0x28, 0x68, 0xd4, 0x96,
+	0x6d, 0xba, 0x61, 0x5a, 0xec, 0xe2, 0x5d, 0x99, 0xfd, 0xcd, 0x6b, 0x16, 0x6d, 0xeb, 0x32, 0xe7,
+	0x19, 0xc4, 0xe9, 0x2d, 0xc2, 0x9b, 0x19, 0x8f, 0xf8, 0x6d, 0x2b, 0x88, 0x76, 0x1a, 0xb5, 0x6d,
+	0x1a, 0x9d, 0x2d, 0xff, 0x67, 0x54, 0x3d, 0x6f, 0xab, 0x81, 0xb6, 0x95, 0x27, 0x8e, 0x61, 0x3a,
+	0x44, 0xd6, 0x6d, 0x92, 0xe7, 0x57, 0x65, 0x8b, 0x6a, 0x61, 0x90, 0xcb, 0x06, 0x35, 0xa8, 0x00,
+	0xd9, 0x2a, 0x44, 0xe7, 0xc2, 0xcf, 0xe1, 0xbb, 0x8d, 0xf6, 0xa6, 0x1c, 0x98, 0x36, 0xf1, 0x03,
+	0xd5, 0x76, 0x05, 0x41, 0xaa, 0xc2, 0x74, 0xb3, 0x5a, 0x23, 0x41, 0xc5, 0xd9, 0xa4, 0x68, 0x0e,
+	0x4e, 0x90, 0xbb, 0x01, 0xf1, 0x1c, 0xd5, 0x6a, 0x99, 0x2e, 0x06, 0xf3, 0x60, 0x21, 0xad, 0xc0,
+	0x08, 0xaa, 0xb8, 0x8c, 0x60, 0x3a, 0x7d, 0x42, 0x4c, 0x10, 0x22, 0xa8, 0xe2, 0x4a, 0x9f, 0xc5,
+	0x60, 0xac, 0x59, 0x45, 0x08, 0x26, 0x1c, 0xd5, 0x26, 0x61, 0x04, 0xbe, 0x46, 0xaf, 0xc1, 0x71,
+	0x87, 0x04, 0x2d, 0xd3, 0xd9, 0xa4, 0xfc, 0xe2, 0xc4, 0xe2, 0xe5, 0x42, 0xcf, 0xf7, 0x42, 0x4f,
+	0x44, 0x29, 0xf1, 0xe8, 0xd7, 0xb9, 0x0b, 0xca, 0x98, 0x13, 0x6a, 0x7a, 0x1e, 0x42, 0xc3, 0xa3,
+	0x6d, 0xb7, 0xc5, 0x03, 0xc6, 0x79, 0xc0, 0x34, 0x47, 0x6a, 0x2c, 0xea, 0x02, 0x4c, 0xfa, 0x81,
+	0x1a, 0x10, 0x9c, 0x98, 0x07, 0x0b, 0x17, 0x17, 0xd1, 0x50, 0xc8, 0x06, 0x3b, 0x51, 0x04, 0x01,
+	0xad, 0x41, 0xd8, 0x76, 0x75, 0x35, 0x20, 0x7a, 0x4b, 0x0d, 0x70, 0x92, 0x2b, 0x98, 0x29, 0x08,
+	0x7f, 0x0a, 0x91, 0x3f, 0x85, 0xf5, 0xc8, 0x9f, 0xd2, 0xf4, 0xf7, 0x5d, 0x0c, 0xee, 0x3f, 0x78,
+	0x36, 0xdd, 0xb3, 0x8c, 0x0b, 0x4b, 0x87, 0x41, 0x8a, 0x01, 0xba, 0x06, 0x27, 0x7b, 0x6e, 0x70,
+	0x75, 0x29, 0xae, 0x2e, 0x13, 0x81, 0x4c, 0xa0, 0x64, 0x31, 0x83, 0xd7, 0x28, 0xb5, 0x6e, 0x93,
+	0x5d, 0xf4, 0x0a, 0xcc, 0x50, 0xcf, 0x50, 0x1d, 0xf3, 0x7d, 0xde, 0x56, 0xc2, 0x9f, 0xd2, 0xe4,
+	0xc3, 0x43, 0x9c, 0x16, 0x0d, 0x49, 0x3d, 0x43, 0x19, 0xa2, 0xa0, 0xd9, 0xd0, 0x4a, 0xee, 0x75,
+	0x09, 0x3e, 0x3c, 0xc4, 0x29, 0x41, 0x15, 0xb6, 0x2e, 0x65, 0x9e, 0xec, 0x63, 0xf0, 0xf7, 0x3e,
+	0x06, 0x3f, 0x7e, 0x37, 0x07, 0xa4, 0xbf, 0xe2, 0x30, 0x25, 0xd2, 0xa1, 0x2b, 0x30, 0xb5, 0x69,
+	0x12, 0x4b, 0xf7, 0x31, 0x98, 0x8f, 0x2f, 0xa4, 0x95, 0x70, 0x87, 0x72, 0x30, 0xbe, 0x4d, 0x76,
+	0x8f, 0x2d, 0x41, 0x28, 0x33, 0x2c, 0x01, 0xa3, 0xa1, 0xeb, 0x30, 0xde, 0xb1, 0x7d, 0x1c, 0x9f,
+	0x8f, 0x2f, 0x4c, 0x2c, 0x4e, 0x0e, 0xb1, 0x23, 0x5a, 0xc7, 0xf6, 0xd1, 0x9b, 0xc3, 0x65, 0xb8,
+	0x3a, 0x40, 0x5c, 0xf7, 0x54, 0x6d, 0x9b, 0xe8, 0xbc, 0x16, 0xa5, 0xc9, 0xd0, 0xd4, 0xa4, 0x43,
+	0x35, 0xdb, 0x8d, 0x4a, 0x73, 0x1d, 0xa6, 0x88, 0xe7, 0x51, 0xcf, 0xc7, 0x49, 0x26, 0x75, 0x94,
+	0x15, 0x1e, 0xa2, 0xd7, 0x61, 0x8a, 0xf1, 0xdb, 0x3e, 0x37, 0x7a, 0x62, 0x71, 0x7a, 0x20, 0x4b,
+	0x83, 0x1f, 0xf0, 0x06, 0x1a, 0x67, 0xb7, 0xb9, 0xb4, 0x90, 0xbe, 0xf4, 0x0b, 0x60, 0x26, 0xfd,
+	0xb9, 0x8f, 0xc1, 0x87, 0x5d, 0x0c, 0x3e, 0xef, 0x62, 0xf0, 0x55, 0x17, 0x83, 0x87, 0x5d, 0x9c,
+	0x19, 0x14, 0x77, 0xff, 0x00, 0xbb, 0x4d, 0xdb, 0x5f, 0xba, 0x56, 0xb8, 0x15, 0xb5, 0x57, 0x4e,
+	0xec, 0x2b, 0x03, 0x05, 0x0d, 0x21, 0x7e, 0x23, 0x5c, 0xdf, 0x89, 0x3a, 0xa2, 0xd0, 0x20, 0x1a,
+	0x75, 0x74, 0xff, 0x08, 0x5e, 0x53, 0x1d, 0xea, 0xe7, 0xc4, 0x9d, 0x32, 0xff, 0x98, 0x9c, 0x10,
+	0xfc, 0xcd, 0x01, 0x7e, 0x49, 0x94, 0xf3, 0xe6, 0x6d, 0xb2, 0x5b, 0xe0, 0x09, 0xc4, 0x3e, 0x4f,
+	0x3d, 0x83, 0x63, 0xf5, 0x81, 0x6e, 0x78, 0x70, 0x88, 0xb3, 0xdb, 0x64, 0xf7, 0xe6, 0x20, 0x26,
+	0x3d, 0x01, 0x30, 0x23, 0x6a, 0x57, 0x25, 0xf6, 0x06, 0xf1, 0xa2, 0x0a, 0x83, 0x93, 0x55, 0xf8,
+	0x1a, 0x8c, 0x75, 0xec, 0xb0, 0x1d, 0x8e, 0x2d, 0x70, 0xac, 0x63, 0x2f, 0x7d, 0x0c, 0xee, 0x1f,
+	0xe0, 0x9b, 0x4d, 0x7b, 0xc8, 0x9a, 0x9e, 0x09, 0xc7, 0x3a, 0x30, 0xfa, 0xf9, 0xe7, 0xf1, 0xa9,
+	0x1f, 0x01, 0xd6, 0xde, 0x0d, 0x97, 0x68, 0x47, 0x87, 0x0f, 0x1c, 0x1d, 0x3e, 0xf4, 0x22, 0xcc,
+	0xf6, 0x1e, 0x34, 0x87, 0x04, 0x3b, 0xd4, 0xdb, 0xe6, 0x5f, 0x3a, 0xae, 0x5c, 0x8a, 0xf0, 0x9a,
+	0x80, 0x19, 0xb5, 0x1f, 0x2f, 0xa4, 0xc6, 0x05, 0xb5, 0x17, 0x52, 0xc0, 0xd2, 0xa7, 0x71, 0x08,
+	0x85, 0x95, 0xfc, 0x85, 0x3a, 0x9f, 0x41, 0x7b, 0x01, 0xa6, 0x1d, 0x1a, 0x98, 0x9b, 0xbb, 0x2d,
+	0x53, 0xe7, 0x89, 0xe3, 0xa5, 0x74, 0x7f, 0x04, 0xc6, 0xc5, 0x59, 0x45, 0x8f, 0x06, 0x32, 0x71,
+	0xd2, 0x81, 0x4c, 0xfe, 0xbf, 0x81, 0x4c, 0x9d, 0x6c, 0x20, 0xc7, 0x4e, 0x37, 0x90, 0xb7, 0x47,
+	0xe7, 0xf1, 0x71, 0x17, 0x83, 0xd3, 0x37, 0x48, 0xc2, 0xa1, 0x0e, 0xb9, 0xa1, 0xc1, 0xb1, 0xf0,
+	0xa9, 0x47, 0x13, 0x6c, 0xd9, 0x7a, 0x4b, 0x29, 0x97, 0xb3, 0x17, 0x10, 0x82, 0x17, 0x9b, 0xd5,
+	0x56, 0xa5, 0xd6, 0x5a, 0x53, 0xea, 0xb7, 0x94, 0x72, 0xa3, 0x91, 0x05, 0x68, 0x92, 0xbd, 0xc6,
+	0x0c, 0xbb, 0xd3, 0x28, 0x67, 0x63, 0x08, 0xb2, 0x76, 0x6a, 0x15, 0x57, 0x56, 0xb2, 0xf1, 0xf0,
+	0x48, 0x29, 0x57, 0xeb, 0xcd, 0x72, 0x36, 0x11, 0x6e, 0xef, 0xac, 0xad, 0x14, 0xd7, 0xcb, 0xd9,
+	0xe4, 0x8d, 0x2a, 0x1c, 0x6f, 0x56, 0x8b, 0x1a, 0x7f, 0x92, 0x45, 0xe0, 0xe2, 0xf2, 0x7a, 0xa5,
+	0x5e, 0x6b, 0xad, 0xd4, 0x6b, 0x2c, 0xd9, 0x15, 0x88, 0xfa, 0x58, 0x71, 0x75, 0xb5, 0xbe, 0xcc,
+	0xee, 0x01, 0x34, 0x0d, 0xa7, 0xfa, 0xb8, 0x52, 0x5e, 0x2d, 0x17, 0x59, 0xe2, 0xc5, 0x3f, 0x52,
+	0xd1, 0xbf, 0x85, 0xa2, 0x6b, 0xa2, 0x2f, 0x01, 0xcc, 0x2c, 0x7b, 0x44, 0x0d, 0x48, 0xf8, 0x76,
+	0x4f, 0x1d, 0xe9, 0x96, 0x99, 0x41, 0x48, 0xe1, 0xbf, 0x25, 0xa4, 0xf7, 0x9e, 0x76, 0xb1, 0xac,
+	0x10, 0x9f, 0xb6, 0x3d, 0x8d, 0x2c, 0xb3, 0x1f, 0x0a, 0x16, 0x09, 0xfc, 0x9c, 0x50, 0x59, 0x55,
+	0x1d, 0xd5, 0x20, 0xb9, 0x51, 0xd7, 0x7e, 0x38, 0xc4, 0xd9, 0x51, 0xec, 0xde, 0xcf, 0xbf, 0x7f,
+	0x11, 0x7b, 0x46, 0xba, 0x28, 0x6b, 0x5c, 0x83, 0x2c, 0x4c, 0x5f, 0x02, 0x37, 0xd0, 0x27, 0x00,
+	0x66, 0x56, 0x88, 0x45, 0x4e, 0x29, 0xac, 0x71, 0x06, 0x61, 0x5c, 0xc4, 0x8c, 0x34, 0x2d, 0xeb,
+	0x3c, 0x9f, 0xcc, 0x7f, 0xf8, 0x90, 0xa0, 0xaf, 0xe5, 0x1e, 0x80, 0x19, 0xf1, 0xa4, 0x9c, 0x4a,
+	0xcb, 0xea, 0x59, 0xb5, 0x30, 0x43, 0xc4, 0xff, 0xfa, 0x01, 0x43, 0x3e, 0x80, 0xb0, 0xb1, 0x45,
+	0x77, 0x4e, 0xa6, 0x40, 0x40, 0xd2, 0xdb, 0x4f, 0xbb, 0x38, 0xff, 0x6f, 0x0a, 0x9a, 0x26, 0xd9,
+	0x39, 0x3e, 0xff, 0x94, 0x94, 0x91, 0xfd, 0x2d, 0xba, 0xd3, 0xcf, 0xfe, 0x32, 0x40, 0x5f, 0x03,
+	0x78, 0xa9, 0xa8, 0xeb, 0x43, 0xcf, 0xfd, 0xd5, 0x23, 0x29, 0xc5, 0xc1, 0x71, 0x6e, 0xbc, 0x7b,
+	0x06, 0x37, 0xf6, 0x0e, 0xf0, 0x58, 0xd3, 0xe6, 0xf3, 0xc8, 0x85, 0x5d, 0x91, 0xa6, 0x64, 0x55,
+	0xd7, 0x43, 0x5d, 0x36, 0xcf, 0xc5, 0xbc, 0xf9, 0x16, 0x40, 0xa4, 0x10, 0x9b, 0x76, 0xc8, 0x99,
+	0xe5, 0xbd, 0x73, 0x0e, 0xf2, 0xa6, 0xa5, 0xac, 0xec, 0xd9, 0xa3, 0xea, 0x4a, 0xd9, 0x47, 0xbf,
+	0xcd, 0x5e, 0x78, 0xb4, 0x37, 0x0b, 0x7e, 0xda, 0x9b, 0x05, 0x8f, 0xf7, 0x66, 0xc1, 0x46, 0x8a,
+	0xa7, 0x7e, 0xf5, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x12, 0x6b, 0x0e, 0xf1, 0x0c, 0x0c, 0x00,
+	0x00,
 }

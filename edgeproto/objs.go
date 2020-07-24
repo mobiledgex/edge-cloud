@@ -9,11 +9,9 @@ import (
 	strings "strings"
 	"time"
 
-	"github.com/gogo/protobuf/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 	context "golang.org/x/net/context"
@@ -307,6 +305,16 @@ func (s *VM) Validate() error {
 	}
 	if net.ParseIP(s.NetInfo.InternalIp) == nil {
 		return fmt.Errorf("Invalid Address: %s", s.NetInfo.InternalIp)
+	}
+	return nil
+}
+
+func (key *VMPoolKey) ValidateKey() error {
+	if !util.ValidName(key.Organization) {
+		return errors.New("Invalid organization name")
+	}
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid vmpool name")
 	}
 	return nil
 }
@@ -834,121 +842,4 @@ func (s *AutoProvPolicy) GetCloudletKeys() map[CloudletKey]struct{} {
 		keys[cl.Key] = struct{}{}
 	}
 	return keys
-}
-
-func AllocateVMsFromPool(ctx context.Context, VMPoolInfo *VMPoolInfo, VMPool *VMPool) {
-	log.DebugLog(log.DebugLevelNotify, "AllocateVMsFromPool", "VMPoolinfo", VMPoolInfo, "VMPool", VMPool)
-	VMPool.Action = VMAction_VM_ACTION_ALLOCATE
-	VMPool.Error = ""
-
-	// Group available VMs
-	bothNetVms := []string{}
-	internalNetVms := []string{}
-	externalNetVms := []string{}
-	for _, vm := range VMPool.Vms {
-		if vm.State != VMState_VM_FREE {
-			continue
-		}
-		if vm.NetInfo.ExternalIp != "" && vm.NetInfo.InternalIp != "" {
-			bothNetVms = append(bothNetVms, vm.Name)
-			continue
-		}
-		if vm.NetInfo.ExternalIp != "" {
-			externalNetVms = append(externalNetVms, vm.Name)
-		}
-		if vm.NetInfo.InternalIp != "" {
-			internalNetVms = append(internalNetVms, vm.Name)
-		}
-	}
-
-	// Above grouping is done for following reason:
-	//   If only internal network is required, then avoid using
-	//   VM having external connectivity, unless there are no VMs with
-	//   just internal connectivity
-
-	// Allocate VMs from above groups
-	allocatedVms := make(map[string]string)
-	for _, vmSpec := range VMPoolInfo.VmSpecs {
-		if vmSpec.ExternalNetwork && vmSpec.InternalNetwork {
-			if len(bothNetVms) == 0 {
-				VMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with both external and internal network connectivity")
-				return
-			}
-			allocatedVms[bothNetVms[0]] = vmSpec.InternalName
-			bothNetVms = bothNetVms[1:]
-		} else if vmSpec.ExternalNetwork {
-			if len(externalNetVms) == 0 {
-				// try from bothNetVms
-				if len(bothNetVms) == 0 {
-					VMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with external network connectivity")
-					return
-				}
-				allocatedVms[bothNetVms[0]] = vmSpec.InternalName
-				bothNetVms = bothNetVms[1:]
-			} else {
-				allocatedVms[externalNetVms[0]] = vmSpec.InternalName
-				externalNetVms = externalNetVms[1:]
-			}
-		} else {
-			if len(internalNetVms) == 0 {
-				// try from bothNetVms
-				if len(bothNetVms) == 0 {
-					VMPool.Error = fmt.Sprintf("Unable to find a free Cloudlet VM with internal network connectivity")
-					return
-				}
-				allocatedVms[bothNetVms[0]] = vmSpec.InternalName
-				bothNetVms = bothNetVms[1:]
-			} else {
-				allocatedVms[internalNetVms[0]] = vmSpec.InternalName
-				internalNetVms = internalNetVms[1:]
-			}
-		}
-	}
-
-	// Mark allocated VMs as IN_USE
-	count := 0
-	for ii, vm := range VMPool.Vms {
-		internalName, ok := allocatedVms[vm.Name]
-		if !ok {
-			continue
-		}
-		VMPool.Vms[ii].State = VMState_VM_IN_USE
-		VMPool.Vms[ii].GroupName = VMPoolInfo.GroupName
-		VMPool.Vms[ii].InternalName = internalName
-		ts, _ := types.TimestampProto(time.Now())
-		VMPool.Vms[ii].UpdatedAt = *ts
-		count++
-	}
-	log.DebugLog(log.DebugLevelNotify, "allocated cloudlet VMs", "key", VMPool.Key, "count", count)
-}
-
-func ReleaseVMsFromPool(ctx context.Context, VMPoolInfo *VMPoolInfo, VMPool *VMPool) {
-	log.DebugLog(log.DebugLevelNotify, "ReleaseVMsFromPool", "VMPoolinfo", VMPoolInfo, "VMPool", VMPool)
-	VMPool.Action = VMAction_VM_ACTION_RELEASE
-	VMPool.Error = ""
-	count := 0
-	freeAll := false
-	if len(VMPoolInfo.VmSpecs) == 0 {
-		// free all vms
-		freeAll = true
-	}
-	vmNames := map[string]struct{}{}
-	for _, vmSpec := range VMPoolInfo.VmSpecs {
-		vmNames[vmSpec.InternalName] = struct{}{}
-	}
-	for ii, vm := range VMPool.Vms {
-		if VMPoolInfo.GroupName != vm.GroupName {
-			continue
-		}
-		_, ok := vmNames[vm.InternalName]
-		if ok || freeAll {
-			VMPool.Vms[ii].State = VMState_VM_FREE
-			VMPool.Vms[ii].GroupName = ""
-			VMPool.Vms[ii].InternalName = ""
-			ts, _ := types.TimestampProto(time.Now())
-			VMPool.Vms[ii].UpdatedAt = *ts
-			count++
-		}
-	}
-	log.DebugLog(log.DebugLevelNotify, "released cloudlet VMs", "key", VMPool.Key, "group", VMPoolInfo.GroupName, "count", count)
 }

@@ -114,6 +114,7 @@
 		Settings
 		VMNetInfo
 		VM
+		VMPoolKey
 		VMPool
 		VMPoolMember
 		VMSpec
@@ -1186,7 +1187,6 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowPoolsForCloudlet":   struct{}{},
 	"ShowCloudletsForPool":   struct{}{},
 	"ShowVMPool":             struct{}{},
-	"ShowVMPoolInfo":         struct{}{},
 	"ShowAutoScalePolicy":    struct{}{},
 	"ShowApp":                struct{}{},
 	"ShowClusterInst":        struct{}{},

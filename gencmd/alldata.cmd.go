@@ -198,7 +198,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			}
 		}
 		if _, found := tags["nocmp"]; found {
-			in.VmPools[i0].Action = 0
+			in.VmPools[i0].State = 0
+		}
+		if _, found := tags["nocmp"]; found {
+			in.VmPools[i0].Errors = nil
 		}
 	}
 }
@@ -230,6 +233,7 @@ var AllDataOptionalArgs = []string{
 	"settings.chefclientinterval",
 	"settings.influxdbmetricsretention",
 	"settings.cloudletmaintenancetimeout",
+	"settings.updatevmpooltimeout",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -302,6 +306,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.chefclientkey",
 	"cloudlets:#.maintenancestate",
 	"cloudlets:#.overridepolicycontainerversion",
+	"cloudlets:#.vmpool",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -501,8 +506,12 @@ var AllDataOptionalArgs = []string{
 	"vmpools:#.vms:#.updatedat.seconds",
 	"vmpools:#.vms:#.updatedat.nanos",
 	"vmpools:#.vms:#.internalname",
-	"vmpools:#.action",
-	"vmpools:#.error",
+	"vmpools:#.state",
+	"vmpools:#.errors",
+	"vmpools:#.status.tasknumber",
+	"vmpools:#.status.maxtasks",
+	"vmpools:#.status.taskname",
+	"vmpools:#.status.stepname",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -531,6 +540,7 @@ var AllDataComments = map[string]string{
 	"settings.chefclientinterval":                                "Default chef client interval (duration)",
 	"settings.influxdbmetricsretention":                          "Default influxDB metrics retention policy (duration)",
 	"settings.cloudletmaintenancetimeout":                        "Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)",
+	"settings.updatevmpooltimeout":                               "Update VM pool timeout (duration)",
 	"operatorcodes:#.code":                                       "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                               "Operator Organization name",
 	"restagtables:#.key.name":                                    "Resource Table Name",
@@ -595,6 +605,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.chefclientkey":                                  "Chef client key",
 	"cloudlets:#.maintenancestate":                               "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"cloudlets:#.overridepolicycontainerversion":                 "Override container version from policy file",
+	"cloudlets:#.vmpool":                                         "VM Pool",
 	"cloudletinfos:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                   "Name of the cloudlet",
@@ -762,18 +773,18 @@ var AllDataComments = map[string]string{
 	"appinstrefs:#.key.name":                                     "App name",
 	"appinstrefs:#.key.version":                                  "App version",
 	"vmpools:#.fields":                                           "Fields are used for the Update API to specify which fields to apply",
-	"vmpools:#.key.organization":                                 "Organization of the cloudlet site",
-	"vmpools:#.key.name":                                         "Name of the cloudlet",
+	"vmpools:#.key.organization":                                 "Organization of the vmpool",
+	"vmpools:#.key.name":                                         "Name of the vmpool",
 	"vmpools:#.vms:#.name":                                       "VM Name",
 	"vmpools:#.vms:#.netinfo.externalip":                         "External IP",
 	"vmpools:#.vms:#.netinfo.internalip":                         "Internal IP",
 	"vmpools:#.vms:#.groupname":                                  "VM Group Name",
-	"vmpools:#.vms:#.state":                                      "VM State, one of VmFree, VmInUse, VmError",
+	"vmpools:#.vms:#.state":                                      "VM State, one of VmFree, VmInProgress, VmInUse, VmAdd, VmRemove, VmUpdate",
 	"vmpools:#.vms:#.updatedat.seconds":                          "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"vmpools:#.vms:#.updatedat.nanos":                            "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"vmpools:#.vms:#.internalname":                               "VM Internal Name",
-	"vmpools:#.action":                                           "Action performed on VM Pool, one of VmActionDone, VmActionAllocate, VmActionRelease",
-	"vmpools:#.error":                                            "Errors if any",
+	"vmpools:#.state":                                            "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"vmpools:#.errors":                                           "Any errors trying to add/remove VM to/from VM Pool",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",
@@ -801,5 +812,6 @@ var AllDataSpecialArgs = map[string]string{
 	"restagtables:#.fields":                   "StringArray",
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",
+	"vmpools:#.errors":                        "StringArray",
 	"vmpools:#.fields":                        "StringArray",
 }
