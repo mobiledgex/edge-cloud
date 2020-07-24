@@ -206,7 +206,7 @@ func (s *VMPoolApi) updateVMPoolInternal(ctx context.Context, key *edgeproto.VMP
 }
 
 func (s *VMPoolApi) UpdateFromInfo(ctx context.Context, in *edgeproto.VMPoolInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update VMPool from info", "info", in)
+	log.SpanLog(ctx, log.DebugLevelApi, "Update VMPool from info", "info", in)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		vmPool := edgeproto.VMPool{}
 		if !s.store.STMGet(stm, &in.Key, &vmPool) {
