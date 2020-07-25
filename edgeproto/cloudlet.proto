@@ -106,6 +106,8 @@ enum PlatformType {
   PLATFORM_TYPE_VSPHERE = 7;
   // AWS Cloudlet
   PLATFORM_TYPE_AWS = 8;
+  // VM Pool Cloudlet
+  PLATFORM_TYPE_VM_POOL = 9;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
@@ -197,6 +199,8 @@ message Cloudlet {
   MaintenanceState maintenance_state = 30;
   // Override container version from policy file
   bool override_policy_container_version = 31;
+  // VM Pool
+  string vm_pool = 32;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -259,7 +263,7 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.method_noconfig) = "PlatformType,DeploymentLocal,Flavor,PhysicalName,EnvVar,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,OverridePolicyContainerVersion";
+    option (protogen.method_noconfig) = "PlatformType,DeploymentLocal,Flavor,PhysicalName,EnvVar,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,OverridePolicyContainerVersion,VmPool";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.

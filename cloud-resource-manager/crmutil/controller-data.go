@@ -3,6 +3,7 @@ package crmutil
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -10,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/mobiledgex/edge-cloud/util/tasks"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
@@ -19,10 +21,12 @@ type ControllerData struct {
 	AppCache                 edgeproto.AppCache
 	AppInstCache             edgeproto.AppInstCache
 	CloudletCache            edgeproto.CloudletCache
+	VMPoolCache              edgeproto.VMPoolCache
 	FlavorCache              edgeproto.FlavorCache
 	ClusterInstCache         edgeproto.ClusterInstCache
 	AppInstInfoCache         edgeproto.AppInstInfoCache
 	CloudletInfoCache        edgeproto.CloudletInfoCache
+	VMPoolInfoCache          edgeproto.VMPoolInfoCache
 	ClusterInstInfoCache     edgeproto.ClusterInstInfoCache
 	PrivacyPolicyCache       edgeproto.PrivacyPolicyCache
 	AutoProvPolicyCache      edgeproto.AutoProvPolicyCache
@@ -36,6 +40,9 @@ type ControllerData struct {
 	ControllerSyncDone       chan bool
 	settings                 edgeproto.Settings
 	NodeMgr                  *node.NodeMgr
+	VMPool                   edgeproto.VMPool
+	VMPoolMux                sync.Mutex
+	updateVMWorkers          tasks.KeyWorkers
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -55,9 +62,11 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	edgeproto.InitAppCache(&cd.AppCache)
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
 	edgeproto.InitCloudletCache(&cd.CloudletCache)
+	edgeproto.InitVMPoolCache(&cd.VMPoolCache)
 	edgeproto.InitAppInstInfoCache(&cd.AppInstInfoCache)
 	edgeproto.InitClusterInstInfoCache(&cd.ClusterInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&cd.CloudletInfoCache)
+	edgeproto.InitVMPoolInfoCache(&cd.VMPoolInfoCache)
 	edgeproto.InitFlavorCache(&cd.FlavorCache)
 	edgeproto.InitClusterInstCache(&cd.ClusterInstCache)
 	edgeproto.InitAlertCache(&cd.AlertCache)
@@ -72,11 +81,14 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.AppInstCache.SetUpdatedCb(cd.appInstChanged)
 	cd.FlavorCache.SetUpdatedCb(cd.flavorChanged)
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
+	cd.VMPoolCache.SetUpdatedCb(cd.VMPoolChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
 
 	cd.NodeMgr = nodeMgr
+
+	cd.updateVMWorkers.Init("vmpool-updatevm", cd.UpdatedVMPool)
 	return cd
 }
 
@@ -578,5 +590,150 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	}
 	if updateInfo {
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
+}
+
+// This func must be called with cd.VMPoolMux lock held
+func (cd *ControllerData) updateVMPoolInfo(ctx context.Context, state edgeproto.TrackedState, errStr string) {
+	info := edgeproto.VMPoolInfo{}
+	info.Key = cd.VMPool.Key
+	info.Vms = cd.VMPool.Vms
+	info.State = state
+	// note that if there are no errors, this should clear any existing errors state at the Controller
+	if errStr != "" {
+		info.Errors = []string{errStr}
+	}
+	cd.VMPoolInfoCache.Update(ctx, &info, 0)
+}
+
+func (cd *ControllerData) VMPoolChanged(ctx context.Context, old *edgeproto.VMPool, new *edgeproto.VMPool) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "VMPoolChanged", "newvmpool", new)
+	if old == nil || old.State == new.State {
+		return
+	}
+	if new.State != edgeproto.TrackedState_UPDATE_REQUESTED {
+		return
+	}
+
+	cd.updateVMWorkers.NeedsWork(ctx, new.Key)
+}
+
+func (cd *ControllerData) UpdatedVMPool(ctx context.Context, k interface{}) {
+	key, ok := k.(edgeproto.VMPoolKey)
+	if !ok {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Unexpected failure, key not VMPoolKey", "key", key)
+		return
+	}
+	log.SetContextTags(ctx, key.GetTags())
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdatedVMPool", "vmpoolkey", key)
+
+	var vmPool edgeproto.VMPool
+	if !cd.VMPoolCache.Get(&key, &vmPool) {
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to fetch vm pool cache from controller")
+		return
+	}
+
+	// Validate VMs
+	validateVMs := []edgeproto.VM{}
+	changed := false
+	for _, vm := range vmPool.Vms {
+		if vm.State == edgeproto.VMState_VM_ADD ||
+			vm.State == edgeproto.VMState_VM_UPDATE {
+			validateVMs = append(validateVMs, vm)
+			changed = true
+		} else if vm.State == edgeproto.VMState_VM_REMOVE {
+			changed = true
+		}
+	}
+
+	// verify if new/updated VM is reachable
+	err := cd.platform.VerifyVMs(ctx, validateVMs)
+
+	cd.VMPoolMux.Lock()
+	defer cd.VMPoolMux.Unlock()
+
+	if !changed {
+		// notify controller, nothing to update
+		cd.updateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
+		return
+	}
+
+	if err != nil {
+		cd.updateVMPoolInfo(
+			ctx,
+			edgeproto.TrackedState_UPDATE_ERROR,
+			fmt.Sprintf("%v", err))
+		return
+	}
+
+	existingVMs := make(map[string]edgeproto.VMState)
+	for _, vm := range cd.VMPool.Vms {
+		existingVMs[vm.Name] = vm.State
+	}
+
+	deleteVMs := make(map[string]edgeproto.VM)
+	updateVMs := make(map[string]edgeproto.VM)
+	for _, vm := range vmPool.Vms {
+		curState, vmExists := existingVMs[vm.Name]
+		switch vm.State {
+		case edgeproto.VMState_VM_ADD:
+			if vmExists {
+				cd.updateVMPoolInfo(
+					ctx,
+					edgeproto.TrackedState_UPDATE_ERROR,
+					fmt.Sprintf("VM %s already exists", vm.Name))
+				return
+			}
+			updateVMs[vm.Name] = vm
+		case edgeproto.VMState_VM_REMOVE:
+			if !vmExists {
+				// VM is already removed
+				continue
+			}
+			if curState != edgeproto.VMState_VM_FREE {
+				cd.updateVMPoolInfo(
+					ctx,
+					edgeproto.TrackedState_UPDATE_ERROR,
+					fmt.Sprintf("Unable to delete VM %s, as it is busy", vm.Name))
+				return
+			}
+			deleteVMs[vm.Name] = vm
+		case edgeproto.VMState_VM_UPDATE:
+			if !vmExists {
+				cd.updateVMPoolInfo(
+					ctx,
+					edgeproto.TrackedState_UPDATE_ERROR,
+					fmt.Sprintf("Unable to find VM %s", vm.Name))
+				return
+			}
+			if curState != edgeproto.VMState_VM_FREE {
+				cd.updateVMPoolInfo(
+					ctx,
+					edgeproto.TrackedState_UPDATE_ERROR,
+					fmt.Sprintf("Unable to update VM %s, as it is busy", vm.Name))
+				return
+			}
+			updateVMs[vm.Name] = vm
+		}
+	}
+	if len(deleteVMs) > 0 || len(updateVMs) > 0 {
+		// save VM to VM pool
+		newVMs := []edgeproto.VM{}
+		for _, poolVM := range cd.VMPool.Vms {
+			if _, ok := deleteVMs[poolVM.Name]; ok {
+				continue
+			}
+			if vm, ok := updateVMs[poolVM.Name]; ok {
+				newVMs = append(newVMs, vm)
+				continue
+			}
+			newVMs = append(newVMs, poolVM)
+		}
+		cd.VMPool.Vms = newVMs
+
+		// notify controller
+		cd.updateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
+
+		// TODO calculate Flavor info and send CloudletInfo again
 	}
 }

@@ -1357,6 +1357,91 @@ var PlarformDeviceClientData = []edgeproto.Device{
 	},
 }
 
+var VMPoolData = []edgeproto.VMPool{
+	edgeproto.VMPool{
+		Key: edgeproto.VMPoolKey{
+			Organization: OperatorData[0],
+			Name:         "San Jose Site",
+		},
+		Vms: []edgeproto.VM{
+			edgeproto.VM{
+				Name: "vm1",
+				NetInfo: edgeproto.VMNetInfo{
+					ExternalIp: "192.168.1.101",
+					InternalIp: "192.168.100.101",
+				},
+			},
+			edgeproto.VM{
+				Name: "vm2",
+				NetInfo: edgeproto.VMNetInfo{
+					ExternalIp: "192.168.1.102",
+					InternalIp: "192.168.100.102",
+				},
+			},
+			edgeproto.VM{
+				Name: "vm3",
+				NetInfo: edgeproto.VMNetInfo{
+					InternalIp: "192.168.100.103",
+				},
+			},
+			edgeproto.VM{
+				Name: "vm4",
+				NetInfo: edgeproto.VMNetInfo{
+					InternalIp: "192.168.100.104",
+				},
+			},
+		},
+	},
+	edgeproto.VMPool{
+		Key: edgeproto.VMPoolKey{
+			Organization: OperatorData[0],
+			Name:         "New York Site",
+		},
+		Vms: []edgeproto.VM{
+			edgeproto.VM{
+				Name: "vm1",
+				NetInfo: edgeproto.VMNetInfo{
+					ExternalIp: "192.168.1.101",
+					InternalIp: "192.168.100.101",
+				},
+			},
+			edgeproto.VM{
+				Name: "vm2",
+				NetInfo: edgeproto.VMNetInfo{
+					ExternalIp: "192.168.1.102",
+					InternalIp: "192.168.100.102",
+				},
+			},
+			edgeproto.VM{
+				Name: "vm3",
+				NetInfo: edgeproto.VMNetInfo{
+					InternalIp: "192.168.100.103",
+				},
+			},
+		},
+	},
+	edgeproto.VMPool{
+		Key: edgeproto.VMPoolKey{
+			Organization: OperatorData[1],
+			Name:         "San Francisco Site",
+		},
+		Vms: []edgeproto.VM{
+			edgeproto.VM{
+				Name: "vm1",
+				NetInfo: edgeproto.VMNetInfo{
+					InternalIp: "192.168.100.101",
+				},
+			},
+			edgeproto.VM{
+				Name: "vm2",
+				NetInfo: edgeproto.VMNetInfo{
+					InternalIp: "192.168.100.102",
+				},
+			},
+		},
+	},
+}
+
 func GetTimestamp(t time.Time) *types.Timestamp {
 	ts, _ := types.TimestampProto(t)
 	return ts
