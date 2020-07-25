@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -288,6 +289,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		in.AccessVars = nil
 	}
 
+	vmPool := edgeproto.VMPool{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
 			if !cctx.Undo {
@@ -302,6 +304,15 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if in.Flavor.Name != "" && in.Flavor.Name != DefaultPlatformFlavor.Key.Name {
 			if !flavorApi.store.STMGet(stm, &in.Flavor, &pfFlavor) {
 				return fmt.Errorf("Platform Flavor %s not found", in.Flavor.Name)
+			}
+		}
+		if in.VmPool != "" {
+			vmPoolKey := edgeproto.VMPoolKey{
+				Name:         in.VmPool,
+				Organization: in.Key.Organization,
+			}
+			if !vmPoolApi.store.STMGet(stm, &vmPoolKey, &vmPool) {
+				return fmt.Errorf("VM Pool %s not found", in.VmPool)
 			}
 		}
 		err := in.Validate(edgeproto.CloudletAllFieldsMap)
@@ -344,6 +355,18 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				caches := pf.Caches{
 					SettingsCache: &settingsApi.cache,
 					FlavorCache:   &flavorApi.cache,
+				}
+				if vmPool.Key.Name != "" {
+					var vmPoolMux sync.Mutex
+					caches.VMPool = &vmPool
+					caches.VMPoolMux = &vmPoolMux
+					caches.VMPoolInfoCache = &vmPoolInfoApi.cache
+					// This is required to update VMPool object on controller
+					caches.VMPoolInfoCache.SetUpdatedCb(func(ctx context.Context, old *edgeproto.VMPoolInfo, new *edgeproto.VMPoolInfo) {
+						log.SpanLog(ctx, log.DebugLevelInfo, "VMPoolInfo UpdatedCb", "vmpoolinfo", new)
+						vmPoolApi.UpdateFromInfo(ctx, new)
+					})
+
 				}
 				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, &caches, updatecb.cb)
 				if err != nil && len(accessVars) > 0 {
