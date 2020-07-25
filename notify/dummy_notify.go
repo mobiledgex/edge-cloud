@@ -59,8 +59,8 @@ func NewDummyHandler() *DummyHandler {
 func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendSettingsCache(&s.SettingsCache)
 	mgr.RegisterSendFlavorCache(&s.FlavorCache)
-	mgr.RegisterSendCloudletCache(&s.CloudletCache)
 	mgr.RegisterSendVMPoolCache(&s.VMPoolCache)
+	mgr.RegisterSendCloudletCache(&s.CloudletCache)
 	mgr.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
 	mgr.RegisterSendAutoScalePolicyCache(&s.AutoScalePolicyCache)
 	mgr.RegisterSendAutoProvPolicyCache(&s.AutoProvPolicyCache)
