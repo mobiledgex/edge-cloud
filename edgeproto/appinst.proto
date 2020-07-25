@@ -10,6 +10,7 @@ import "app.proto";
 import "flavor.proto";
 import "clusterinst.proto";
 import "common.proto";
+import "autoscalepolicy.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
 import "gogoproto/gogo.proto";
@@ -268,4 +269,13 @@ service AppInstMetricsApi {
       body: "*"
     };
   }
+}
+
+// AppInstLookup is used to generate reverse lookup caches
+message AppInstLookup {
+  // unique key
+  AppInstKey key = 1 [(gogoproto.nullable) = false];
+  // lookup by AutoProvPolicy
+  PolicyKey policy_key = 2 [(gogoproto.nullable) = false];
+  option (protogen.generate_lookup_by_subfield) = "PolicyKey";
 }

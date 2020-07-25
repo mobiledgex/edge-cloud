@@ -857,6 +857,32 @@ var AppInstMetricsComments = map[string]string{
 	"something": "what goes here? Note that metrics for grpc calls can be done by a prometheus interceptor in grpc, so adding call metrics here may be redundant unless theyre needed for billing.",
 }
 var AppInstMetricsSpecialArgs = map[string]string{}
+var AppInstLookupRequiredArgs = []string{
+	"key.appkey.organization",
+	"key.appkey.name",
+	"key.appkey.version",
+	"key.clusterinstkey.clusterkey.name",
+	"key.clusterinstkey.cloudletkey.organization",
+	"key.clusterinstkey.cloudletkey.name",
+	"key.clusterinstkey.organization",
+}
+var AppInstLookupOptionalArgs = []string{
+	"policykey.organization",
+	"policykey.name",
+}
+var AppInstLookupAliasArgs = []string{}
+var AppInstLookupComments = map[string]string{
+	"key.appkey.organization":                     "App developer organization",
+	"key.appkey.name":                             "App name",
+	"key.appkey.version":                          "App version",
+	"key.clusterinstkey.clusterkey.name":          "Cluster name",
+	"key.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
+	"key.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
+	"key.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
+	"policykey.organization":                      "Name of the organization for the cluster that this policy will apply to",
+	"policykey.name":                              "Policy name",
+}
+var AppInstLookupSpecialArgs = map[string]string{}
 var CreateAppInstRequiredArgs = []string{
 	"app-org",
 	"appname",

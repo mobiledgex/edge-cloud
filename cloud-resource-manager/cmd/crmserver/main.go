@@ -184,6 +184,8 @@ func main() {
 			ClusterInstCache:   &controllerData.ClusterInstCache,
 			AppCache:           &controllerData.AppCache,
 			AppInstCache:       &controllerData.AppInstCache,
+			ResTagTableCache:   &controllerData.ResTagTableCache,
+			CloudletCache:      &controllerData.CloudletCache,
 			VMPoolCache:        &controllerData.VMPoolCache,
 			VMPoolInfoCache:    &controllerData.VMPoolInfoCache,
 		}

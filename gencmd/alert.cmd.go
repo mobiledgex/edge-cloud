@@ -47,6 +47,7 @@ It has these top-level messages:
 	AppInstRuntime
 	AppInstInfo
 	AppInstMetrics
+	AppInstLookup
 	AppInstClientKey
 	AppInstClient
 	AutoProvPolicy

@@ -47,6 +47,7 @@
 		AppInstRuntime
 		AppInstInfo
 		AppInstMetrics
+		AppInstLookup
 		AppInstClientKey
 		AppInstClient
 		AutoProvPolicy
