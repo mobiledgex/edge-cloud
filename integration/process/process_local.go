@@ -464,10 +464,6 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--deploymentTag")
 		args = append(args, p.DeploymentTag)
 	}
-	if p.VMPool != "" {
-		args = append(args, "--vmPool")
-		args = append(args, p.VMPool)
-	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {

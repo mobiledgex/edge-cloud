@@ -7,18 +7,11 @@ import (
 )
 
 type VMPoolInfoApi struct {
-	sync  *Sync
-	store edgeproto.VMPoolInfoStore
-	cache edgeproto.VMPoolInfoCache
 }
 
 var vmPoolInfoApi = VMPoolInfoApi{}
 
 func InitVMPoolInfoApi(sync *Sync) {
-	vmPoolInfoApi.sync = sync
-	vmPoolInfoApi.store = edgeproto.NewVMPoolInfoStore(sync.store)
-	edgeproto.InitVMPoolInfoCache(&vmPoolInfoApi.cache)
-	sync.RegisterCache(&vmPoolInfoApi.cache)
 }
 
 func (s *VMPoolInfoApi) Update(ctx context.Context, in *edgeproto.VMPoolInfo, rev int64) {
@@ -26,7 +19,7 @@ func (s *VMPoolInfoApi) Update(ctx context.Context, in *edgeproto.VMPoolInfo, re
 }
 
 func (s *VMPoolInfoApi) Delete(ctx context.Context, in *edgeproto.VMPoolInfo, rev int64) {
-	s.store.Delete(ctx, in, nil)
+	// no-op
 }
 
 func (s *VMPoolInfoApi) Flush(ctx context.Context, notifyId int64) {

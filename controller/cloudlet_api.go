@@ -231,7 +231,8 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 	}
 
-	if in.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS {
+	if in.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS &&
+		in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
 		if in.InfraConfig.FlavorName == "" {
 			return errors.New("Infra flavor name is required for private deployments")
 		}
@@ -380,9 +381,15 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return err
 		}
 		if in.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS {
-			cb.Send(&edgeproto.Result{
-				Message: "Cloudlet configured successfully. Please run `GetCloudletManifest` to bringup Platform VM(s) for cloudlet services",
-			})
+			if in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+				cb.Send(&edgeproto.Result{
+					Message: "Cloudlet configured successfully. Please run `GetCloudletManifest` to bringup Platform VM(s) for cloudlet services",
+				})
+			} else {
+				cb.Send(&edgeproto.Result{
+					Message: "Cloudlet configured successfully. Please bringup cloudlet services manually",
+				})
+			}
 			return nil
 		}
 		// Wait for CRM to connect to controller
@@ -1097,6 +1104,10 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, in *edgeproto.Clo
 	cloudlet := &edgeproto.Cloudlet{}
 	if !cloudletApi.cache.Get(&in.Key, cloudlet) {
 		return nil, in.Key.NotFoundError()
+	}
+
+	if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+		return nil, fmt.Errorf("Not supported for PlatformTypeVmPool")
 	}
 
 	pfFlavor := edgeproto.Flavor{}

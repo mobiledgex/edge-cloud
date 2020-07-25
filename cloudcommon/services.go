@@ -91,7 +91,6 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		AppDNSRoot:          appDNSRoot,
 		ChefServerPath:      chefServerPath,
 		DeploymentTag:       deploymentTag,
-		VMPool:              cloudlet.VmPool,
 	}, opts, nil
 }
 

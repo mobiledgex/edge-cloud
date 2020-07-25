@@ -101,8 +101,8 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
 	if cloudletApi.UsesVMPool(&in.Key) {
 		updateVMs := make(map[string]edgeproto.VM)
-		updateVMs[in.Vm.Name] = in.Vm
 		in.Vm.State = edgeproto.VMState_VM_ADD
+		updateVMs[in.Vm.Name] = in.Vm
 		err = s.updateVMPoolInternal(ctx, &in.Key, updateVMs)
 	} else {
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -131,8 +131,8 @@ func (s *VMPoolApi) RemoveVMPoolMember(ctx context.Context, in *edgeproto.VMPool
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
 	if cloudletApi.UsesVMPool(&in.Key) {
 		updateVMs := make(map[string]edgeproto.VM)
-		updateVMs[in.Vm.Name] = in.Vm
 		in.Vm.State = edgeproto.VMState_VM_REMOVE
+		updateVMs[in.Vm.Name] = in.Vm
 		err = s.updateVMPoolInternal(ctx, &in.Key, updateVMs)
 	} else {
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -169,12 +169,16 @@ func (s *VMPoolApi) updateVMPoolInternal(ctx context.Context, key *edgeproto.VMP
 	if len(vms) == 0 {
 		return fmt.Errorf("no VMs specified")
 	}
+	log.SpanLog(ctx, log.DebugLevelApi, "UpdateVMPoolInternal", "key", key, "vms", vms)
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.VMPool{}
 		if !s.store.STMGet(stm, key, &cur) {
 			return key.NotFoundError()
 		}
 		existingVMs := make(map[string]struct{})
+		if cur.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+			return fmt.Errorf("Update already in progress, please try again later")
+		}
 		for ii, vm := range cur.Vms {
 			existingVMs[vm.Name] = struct{}{}
 			updateVM, ok := vms[vm.Name]
@@ -192,16 +196,30 @@ func (s *VMPoolApi) updateVMPoolInternal(ctx context.Context, key *edgeproto.VMP
 					return fmt.Errorf("VM %s does not exist in the pool", vmName)
 				}
 			}
+			if vm.State == edgeproto.VMState_VM_ADD {
+				cur.Vms = append(cur.Vms, vm)
+			}
 		}
+		log.SpanLog(ctx, log.DebugLevelApi, "Update VMPool", "newPool", cur)
 		cur.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
-	err = vmPoolApi.cache.WaitForState(ctx, key, edgeproto.TrackedState_READY, UpdateVMPoolTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateVmPoolTimeout.TimeDuration(), "Updated VM Pool Successfully", nil)
 	if err != nil {
-		// Update Failed
 		return err
 	}
+	err = vmPoolApi.cache.WaitForState(ctx, key, edgeproto.TrackedState_READY, UpdateVMPoolTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateVmPoolTimeout.TimeDuration(), "Updated VM Pool Successfully", nil)
+	// State state back to Unknown & Error to nil, as user is notified about the error, if any
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.VMPool{}
+		if !s.store.STMGet(stm, key, &cur) {
+			return key.NotFoundError()
+		}
+		cur.State = edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
+		cur.Errors = nil
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
 	return err
 }
 

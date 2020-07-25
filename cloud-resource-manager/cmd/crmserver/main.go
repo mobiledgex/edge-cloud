@@ -43,7 +43,6 @@ var commercialCerts = flag.Bool("commercialCerts", false, "Get TLS certs from Le
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
 var chefServerPath = flag.String("chefServerPath", "", "Chef server path")
 var deploymentTag = flag.String("deploymentTag", "", "Tag to indicate type of deployment setup. Ex: production, staging, etc")
-var vmPool = flag.String("vmPool", "", "Use pool of VMs as cloudlet")
 
 // myCloudletInfo is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudletInfo is provided as a configuration - either command line or
@@ -190,11 +189,11 @@ func main() {
 		}
 
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
-			if *vmPool == "" {
-				log.FatalLog("Missing VM pool name")
+			if cloudlet.VmPool == "" {
+				log.FatalLog("Cloudlet is missing VM pool name")
 			}
 			vmPoolKey := edgeproto.VMPoolKey{
-				Name:         *vmPool,
+				Name:         cloudlet.VmPool,
 				Organization: myCloudletInfo.Key.Organization,
 			}
 			var vmPool edgeproto.VMPool

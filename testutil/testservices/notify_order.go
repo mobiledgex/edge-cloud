@@ -15,6 +15,7 @@ import (
 // and service-specific dependencies.
 func CheckNotifySendOrder(t *testing.T, order map[reflect.Type]int) {
 	flavor := reflect.TypeOf((*notify.FlavorSendMany)(nil))
+	vmPool := reflect.TypeOf((*notify.VMPoolSendMany)(nil))
 	cloudlet := reflect.TypeOf((*notify.CloudletSendMany)(nil))
 	clusterInst := reflect.TypeOf((*notify.ClusterInstSendMany)(nil))
 	app := reflect.TypeOf((*notify.AppSendMany)(nil))
@@ -27,6 +28,7 @@ func CheckNotifySendOrder(t *testing.T, order map[reflect.Type]int) {
 	// Cloudlet dependencies
 	if o, found := order[cloudlet]; found {
 		CheckDep(t, order, o, flavor)
+		CheckDep(t, order, o, vmPool)
 	}
 	// ClusterInst dependencies
 	if o, found := order[clusterInst]; found {
