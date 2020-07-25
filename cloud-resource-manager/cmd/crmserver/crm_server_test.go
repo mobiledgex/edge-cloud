@@ -103,6 +103,26 @@ appinstances:
   liveness: LivenessDynamic
   flavor:
     name: x1.small
+
+vmpools:
+- key:
+    organization: DMUUS
+    name: cloud2
+  vms:
+  - name: vm1
+    netinfo:
+      externalip: 192.168.1.101
+      internalip: 192.168.100.101
+  - name: vm2
+    netinfo:
+      externalip: 192.168.1.102
+      internalip: 192.168.100.102
+  - name: vm3
+    netinfo:
+      internalip: 192.168.100.103
+  - name: vm4
+    netinfo:
+      internalip: 192.168.100.104
 `
 
 func startMain(t *testing.T) (chan struct{}, error) {
@@ -173,12 +193,16 @@ func TestCRM(t *testing.T) {
 	for ii := range data.AppInstances {
 		ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
 	}
+	for ii := range data.VmPools {
+		ctrlHandler.VMPoolCache.Update(ctx, &data.VmPools[ii], 0)
+	}
 	notify.WaitFor(&controllerData.FlavorCache, 3)
 	// Note for ClusterInsts and AppInsts, only those that match
 	// myCloudlet Key will be sent.
 	log.SpanLog(ctx, log.DebugLevelApi, "wait for instances")
 	notify.WaitFor(&controllerData.ClusterInstCache, 2)
 	notify.WaitFor(&controllerData.AppInstCache, 2)
+	notify.WaitFor(&controllerData.VMPoolCache, 1)
 
 	// TODO: check that the above changes triggered cloudlet cluster/app creates
 	// for now just check stats
@@ -186,8 +210,12 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 3, len(controllerData.FlavorCache.Objs))
 	require.Equal(t, 2, len(controllerData.ClusterInstCache.Objs))
 	require.Equal(t, 2, len(controllerData.AppInstCache.Objs))
+	require.Equal(t, 1, len(controllerData.VMPoolCache.Objs))
 
 	// delete
+	for ii := range data.VmPools {
+		ctrlHandler.VMPoolCache.Delete(ctx, &data.VmPools[ii], 0)
+	}
 	for ii := range data.AppInstances {
 		ctrlHandler.AppInstCache.Delete(ctx, &data.AppInstances[ii], 0)
 	}
@@ -200,11 +228,13 @@ func TestCRM(t *testing.T) {
 	notify.WaitFor(&controllerData.FlavorCache, 0)
 	notify.WaitFor(&controllerData.ClusterInstCache, 0)
 	notify.WaitFor(&controllerData.AppInstCache, 0)
+	notify.WaitFor(&controllerData.VMPoolCache, 0)
 
 	// TODO: check that deletes triggered cloudlet cluster/app deletes.
 	require.Equal(t, 0, len(controllerData.FlavorCache.Objs))
 	require.Equal(t, 0, len(controllerData.ClusterInstCache.Objs))
 	require.Equal(t, 0, len(controllerData.AppInstCache.Objs))
+	require.Equal(t, 0, len(controllerData.VMPoolCache.Objs))
 
 	// closing the signal channel triggers main to exit
 	close(sigChan)

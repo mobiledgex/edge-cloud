@@ -85,6 +85,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, int64(s.DeleteClusterInstTimeout), 0)
 		case SettingsFieldCloudletMaintenanceTimeout:
 			v.CheckGT(f, int64(s.CloudletMaintenanceTimeout), 0)
+		case SettingsFieldUpdateVmPoolTimeout:
+			v.CheckGT(f, int64(s.UpdateVmPoolTimeout), 0)
 		}
 	}
 	return v.err
@@ -111,6 +113,7 @@ func GetDefaultSettings() *Settings {
 	s.MaxTrackedDmeClients = 100
 	s.ChefClientInterval = Duration(10 * time.Minute)
 	s.CloudletMaintenanceTimeout = Duration(5 * time.Minute)
+	s.UpdateVmPoolTimeout = Duration(20 * time.Minute)
 	return &s
 }
 
