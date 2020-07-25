@@ -16,11 +16,13 @@ type DummyHandler struct {
 	AppCache             edgeproto.AppCache
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
+	VMPoolCache          edgeproto.VMPoolCache
 	FlavorCache          edgeproto.FlavorCache
 	ClusterInstCache     edgeproto.ClusterInstCache
 	AppInstInfoCache     edgeproto.AppInstInfoCache
 	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
 	CloudletInfoCache    edgeproto.CloudletInfoCache
+	VMPoolInfoCache      edgeproto.VMPoolInfoCache
 	AlertCache           edgeproto.AlertCache
 	NodeCache            edgeproto.NodeCache
 	AutoScalePolicyCache edgeproto.AutoScalePolicyCache
@@ -37,9 +39,11 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitAppCache(&h.AppCache)
 	edgeproto.InitAppInstCache(&h.AppInstCache)
 	edgeproto.InitCloudletCache(&h.CloudletCache)
+	edgeproto.InitVMPoolCache(&h.VMPoolCache)
 	edgeproto.InitAppInstInfoCache(&h.AppInstInfoCache)
 	edgeproto.InitClusterInstInfoCache(&h.ClusterInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&h.CloudletInfoCache)
+	edgeproto.InitVMPoolInfoCache(&h.VMPoolInfoCache)
 	edgeproto.InitFlavorCache(&h.FlavorCache)
 	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
 	edgeproto.InitAlertCache(&h.AlertCache)
@@ -56,6 +60,7 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendSettingsCache(&s.SettingsCache)
 	mgr.RegisterSendFlavorCache(&s.FlavorCache)
 	mgr.RegisterSendCloudletCache(&s.CloudletCache)
+	mgr.RegisterSendVMPoolCache(&s.VMPoolCache)
 	mgr.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
 	mgr.RegisterSendAutoScalePolicyCache(&s.AutoScalePolicyCache)
 	mgr.RegisterSendAutoProvPolicyCache(&s.AutoProvPolicyCache)
@@ -68,6 +73,7 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterRecvAppInstInfoCache(&s.AppInstInfoCache)
 	mgr.RegisterRecvClusterInstInfoCache(&s.ClusterInstInfoCache)
 	mgr.RegisterRecvCloudletInfoCache(&s.CloudletInfoCache)
+	mgr.RegisterRecvVMPoolInfoCache(&s.VMPoolInfoCache)
 	mgr.RegisterRecvAlertCache(&s.AlertCache)
 	mgr.RegisterRecvNodeCache(&s.NodeCache)
 	mgr.RegisterRecvDeviceCache(&s.DeviceCache)
@@ -78,6 +84,7 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 	cl.RegisterSendAppInstInfoCache(&s.AppInstInfoCache)
 	cl.RegisterSendClusterInstInfoCache(&s.ClusterInstInfoCache)
 	cl.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
+	cl.RegisterSendVMPoolInfoCache(&s.VMPoolInfoCache)
 	cl.RegisterSendAlertCache(&s.AlertCache)
 	cl.RegisterSendNodeCache(&s.NodeCache)
 
@@ -85,6 +92,7 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 	cl.RegisterRecvAppCache(&s.AppCache)
 	cl.RegisterRecvAppInstCache(&s.AppInstCache)
 	cl.RegisterRecvCloudletCache(&s.CloudletCache)
+	cl.RegisterRecvVMPoolCache(&s.VMPoolCache)
 	cl.RegisterRecvFlavorCache(&s.FlavorCache)
 	cl.RegisterRecvClusterInstCache(&s.ClusterInstCache)
 	cl.RegisterRecvAutoProvPolicyCache(&s.AutoProvPolicyCache)
@@ -111,6 +119,8 @@ const (
 	AlertType
 	NodeType
 	FreeReservableClusterInstType
+	VMPoolType
+	VMPoolInfoType
 )
 
 type WaitForCache interface {
@@ -133,6 +143,8 @@ func (s *DummyHandler) GetCache(typ CacheType) WaitForCache {
 		cache = &s.AppInstCache
 	case CloudletType:
 		cache = &s.CloudletCache
+	case VMPoolType:
+		cache = &s.VMPoolCache
 	case FlavorType:
 		cache = &s.FlavorCache
 	case ClusterInstType:
@@ -143,6 +155,8 @@ func (s *DummyHandler) GetCache(typ CacheType) WaitForCache {
 		cache = &s.ClusterInstInfoCache
 	case CloudletInfoType:
 		cache = &s.CloudletInfoCache
+	case VMPoolInfoType:
+		cache = &s.VMPoolInfoCache
 	case AlertType:
 		cache = &s.AlertCache
 	case NodeType:
@@ -161,6 +175,8 @@ func (c CacheType) String() string {
 		return "AppInstCache"
 	case CloudletType:
 		return "CloudletCache"
+	case VMPoolType:
+		return "VMPoolCache"
 	case FlavorType:
 		return "FlavorCache"
 	case ClusterInstType:
@@ -171,6 +187,8 @@ func (c CacheType) String() string {
 		return "ClusterInstCache"
 	case CloudletInfoType:
 		return "CloudletInfoCache"
+	case VMPoolInfoType:
+		return "VMPoolInfoCache"
 	case AlertType:
 		return "AlertCache"
 	case NodeType:
@@ -207,6 +225,10 @@ func (s *DummyHandler) WaitForCloudletInfo(count int) error {
 	return WaitFor(&s.CloudletInfoCache, count)
 }
 
+func (s *DummyHandler) WaitForVMPoolInfo(count int) error {
+	return WaitFor(&s.VMPoolInfoCache, count)
+}
+
 func (s *DummyHandler) WaitForApps(count int) error {
 	return WaitFor(&s.AppCache, count)
 }
@@ -217,6 +239,10 @@ func (s *DummyHandler) WaitForAppInsts(count int) error {
 
 func (s *DummyHandler) WaitForCloudlets(count int) error {
 	return WaitFor(&s.CloudletCache, count)
+}
+
+func (s *DummyHandler) WaitForVMPools(count int) error {
+	return WaitFor(&s.VMPoolCache, count)
 }
 
 func (s *DummyHandler) WaitForFlavors(count int) error {

@@ -84,6 +84,9 @@ func (a *AllData) Sort() {
 	sort.Slice(a.AppInstRefs[:], func(i, j int) bool {
 		return a.AppInstRefs[i].Key.GetKeyString() < a.AppInstRefs[j].Key.GetKeyString()
 	})
+	sort.Slice(a.VmPools[:], func(i, j int) bool {
+		return a.VmPools[i].Key.GetKeyString() < a.VmPools[j].Key.GetKeyString()
+	})
 }
 
 func (a *NodeData) Sort() {
@@ -288,6 +291,61 @@ func (key *CloudletPoolMember) ValidateKey() error {
 
 func (s *CloudletPoolMember) Validate(fields map[string]struct{}) error {
 	return s.ValidateKey()
+}
+
+func (s *VM) Validate() error {
+	if !util.ValidName(s.Name) {
+		return errors.New("Invalid Cloudlet Pool name")
+	}
+	if s.NetInfo.ExternalIp != "" && net.ParseIP(s.NetInfo.ExternalIp) == nil {
+		return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
+	}
+	if s.NetInfo.InternalIp == "" {
+		return fmt.Errorf("Missing internal IP for VM: %s", s.Name)
+	}
+	if net.ParseIP(s.NetInfo.InternalIp) == nil {
+		return fmt.Errorf("Invalid Address: %s", s.NetInfo.InternalIp)
+	}
+	return nil
+}
+
+func (key *VMPoolKey) ValidateKey() error {
+	if !util.ValidName(key.Organization) {
+		return errors.New("Invalid organization name")
+	}
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid vmpool name")
+	}
+	return nil
+}
+
+func (s *VMPool) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if err := s.ValidateEnums(); err != nil {
+		return err
+	}
+	for _, v := range s.Vms {
+		if err := v.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *VMPoolMember) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if err := s.Vm.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *VMPoolInfo) Validate(fields map[string]struct{}) error {
+	return nil
 }
 
 func (key *ResTagTableKey) ValidateKey() error {

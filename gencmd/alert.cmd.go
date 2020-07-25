@@ -33,6 +33,7 @@ It is generated from these files:
 	result.proto
 	settings.proto
 	version.proto
+	vmpool.proto
 
 It has these top-level messages:
 	Alert
@@ -112,6 +113,13 @@ It has these top-level messages:
 	ResTagTable
 	Result
 	Settings
+	VMNetInfo
+	VM
+	VMPoolKey
+	VMPool
+	VMPoolMember
+	VMSpec
+	VMPoolInfo
 */
 package gencmd
 

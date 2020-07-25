@@ -178,7 +178,6 @@ func main() {
 		}
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
-		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		caches := pf.Caches{
 			FlavorCache:        &controllerData.FlavorCache,
 			PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
@@ -187,7 +186,28 @@ func main() {
 			AppInstCache:       &controllerData.AppInstCache,
 			ResTagTableCache:   &controllerData.ResTagTableCache,
 			CloudletCache:      &controllerData.CloudletCache,
+			VMPoolCache:        &controllerData.VMPoolCache,
+			VMPoolInfoCache:    &controllerData.VMPoolInfoCache,
 		}
+
+		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+			if cloudlet.VmPool == "" {
+				log.FatalLog("Cloudlet is missing VM pool name")
+			}
+			vmPoolKey := edgeproto.VMPoolKey{
+				Name:         cloudlet.VmPool,
+				Organization: myCloudletInfo.Key.Organization,
+			}
+			var vmPool edgeproto.VMPool
+			if !controllerData.VMPoolCache.Get(&vmPoolKey, &vmPool) {
+				log.FatalLog("failed to fetch vm pool cache from controller")
+			}
+			controllerData.VMPool = vmPool
+			caches.VMPool = &controllerData.VMPool
+			caches.VMPoolMux = &controllerData.VMPoolMux
+		}
+
+		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &caches, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS

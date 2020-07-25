@@ -32,6 +32,7 @@ type AllDataOut struct {
 	ClusterInsts            [][]edgeproto.Result
 	Apps                    []edgeproto.Result
 	AppInstances            [][]edgeproto.Result
+	VmPools                 []edgeproto.Result
 	Errors                  []Err
 }
 
@@ -51,10 +52,12 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	run.ClusterInstApi(&in.ClusterInsts, inMap["clusterinsts"], &out.ClusterInsts)
 	run.AppApi(&in.Apps, inMap["apps"], &out.Apps)
 	run.AppInstApi(&in.AppInstances, inMap["appinstances"], &out.AppInstances)
+	run.VMPoolApi(&in.VmPools, inMap["vmpools"], &out.VmPools)
 	out.Errors = run.Errs
 }
 
 func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{}, out *AllDataOut) {
+	run.VMPoolApi(&in.VmPools, inMap["vmpools"], &out.VmPools)
 	run.AppInstApi(&in.AppInstances, inMap["appinstances"], &out.AppInstances)
 	run.AppApi(&in.Apps, inMap["apps"], &out.Apps)
 	run.ClusterInstApi(&in.ClusterInsts, inMap["clusterinsts"], &out.ClusterInsts)
@@ -89,4 +92,5 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.AppApi(&in.Apps, nil, &out.Apps)
 	run.AppInstApi(&in.AppInstances, nil, &out.AppInstances)
 	run.AppInstRefsApi(&in.AppInstRefs, nil, &out.AppInstRefs)
+	run.VMPoolApi(&in.VmPools, nil, &out.VmPools)
 }

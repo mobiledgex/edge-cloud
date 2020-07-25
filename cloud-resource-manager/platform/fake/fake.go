@@ -172,3 +172,7 @@ func (s *Platform) GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.
 	log.SpanLog(ctx, log.DebugLevelInfra, "Get cloudlet manifest", "cloudletName", cloudlet.Key.Name)
 	return &edgeproto.CloudletManifest{Manifest: "fake manifest", ImagePath: "http://fake.path"}, nil
 }
+
+func (s *Platform) VerifyVMs(ctx context.Context, vms []edgeproto.VM) error {
+	return nil
+}
