@@ -8,6 +8,7 @@ import "operatorcode.proto";
 import "restagtable.proto";
 import "cloudlet.proto";
 import "cloudletpool.proto";
+import "vmpool.proto";
 import "autoprovpolicy.proto";
 import "autoscalepolicy.proto";
 import "privacypolicy.proto";
@@ -39,6 +40,7 @@ message AllData {
   repeated App apps = 16 [(gogoproto.nullable) = false];
   repeated AppInst app_instances = 17 [(gogoproto.nullable) = false];
   repeated AppInstRefs app_inst_refs = 18 [(gogoproto.nullable) = false];
+  repeated VMPool vm_pools = 19 [(gogoproto.nullable) = false];
   option (protogen.e2edata) = true;
   option (protogen.generate_copy_in_fields) = false;
 }

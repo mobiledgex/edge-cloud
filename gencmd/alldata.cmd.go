@@ -5,6 +5,7 @@ package gencmd
 
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+import google_protobuf "github.com/gogo/protobuf/types"
 import "strings"
 import "github.com/mobiledgex/edge-cloud/cli"
 import proto "github.com/gogo/protobuf/proto"
@@ -190,6 +191,19 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.AppInstRefs); i0++ {
 	}
+	for i0 := 0; i0 < len(in.VmPools); i0++ {
+		for i1 := 0; i1 < len(in.VmPools[i0].Vms); i1++ {
+			if _, found := tags["timestamp"]; found {
+				in.VmPools[i0].Vms[i1].UpdatedAt = google_protobuf.Timestamp{}
+			}
+		}
+		if _, found := tags["nocmp"]; found {
+			in.VmPools[i0].State = 0
+		}
+		if _, found := tags["nocmp"]; found {
+			in.VmPools[i0].Errors = nil
+		}
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -220,6 +234,7 @@ var AllDataOptionalArgs = []string{
 	"settings.chefclientinterval",
 	"settings.influxdbmetricsretention",
 	"settings.cloudletmaintenancetimeout",
+	"settings.updatevmpooltimeout",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -292,6 +307,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.chefclientkey",
 	"cloudlets:#.maintenancestate",
 	"cloudlets:#.overridepolicycontainerversion",
+	"cloudlets:#.vmpool",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -482,6 +498,23 @@ var AllDataOptionalArgs = []string{
 	"appinstrefs:#.key.version",
 	"appinstrefs:#.insts:#.key",
 	"appinstrefs:#.insts:#.value",
+	"vmpools:#.fields",
+	"vmpools:#.key.organization",
+	"vmpools:#.key.name",
+	"vmpools:#.vms:#.name",
+	"vmpools:#.vms:#.netinfo.externalip",
+	"vmpools:#.vms:#.netinfo.internalip",
+	"vmpools:#.vms:#.groupname",
+	"vmpools:#.vms:#.state",
+	"vmpools:#.vms:#.updatedat.seconds",
+	"vmpools:#.vms:#.updatedat.nanos",
+	"vmpools:#.vms:#.internalname",
+	"vmpools:#.state",
+	"vmpools:#.errors",
+	"vmpools:#.status.tasknumber",
+	"vmpools:#.status.maxtasks",
+	"vmpools:#.status.taskname",
+	"vmpools:#.status.stepname",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -511,6 +544,7 @@ var AllDataComments = map[string]string{
 	"settings.chefclientinterval":                                "Default chef client interval (duration)",
 	"settings.influxdbmetricsretention":                          "Default influxDB metrics retention policy (duration)",
 	"settings.cloudletmaintenancetimeout":                        "Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)",
+	"settings.updatevmpooltimeout":                               "Update VM pool timeout (duration)",
 	"operatorcodes:#.code":                                       "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                               "Operator Organization name",
 	"restagtables:#.key.name":                                    "Resource Table Name",
@@ -540,7 +574,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.state":                                          "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"cloudlets:#.crmoverride":                                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"cloudlets:#.deploymentlocal":                                "Deploy cloudlet services locally",
-	"cloudlets:#.platformtype":                                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAws",
+	"cloudlets:#.platformtype":                                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAws, PlatformTypeVmPool",
 	"cloudlets:#.notifysrvaddr":                                  "Address for the CRM notify listener to run on",
 	"cloudlets:#.flavor.name":                                    "Flavor name",
 	"cloudlets:#.physicalname":                                   "Physical infrastructure cloudlet name",
@@ -575,6 +609,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.chefclientkey":                                  "Chef client key",
 	"cloudlets:#.maintenancestate":                               "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"cloudlets:#.overridepolicycontainerversion":                 "Override container version from policy file",
+	"cloudlets:#.vmpool":                                         "VM Pool",
 	"cloudletinfos:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                   "Name of the cloudlet",
@@ -743,6 +778,19 @@ var AllDataComments = map[string]string{
 	"appinstrefs:#.key.organization":                             "App developer organization",
 	"appinstrefs:#.key.name":                                     "App name",
 	"appinstrefs:#.key.version":                                  "App version",
+	"vmpools:#.fields":                                           "Fields are used for the Update API to specify which fields to apply",
+	"vmpools:#.key.organization":                                 "Organization of the vmpool",
+	"vmpools:#.key.name":                                         "Name of the vmpool",
+	"vmpools:#.vms:#.name":                                       "VM Name",
+	"vmpools:#.vms:#.netinfo.externalip":                         "External IP",
+	"vmpools:#.vms:#.netinfo.internalip":                         "Internal IP",
+	"vmpools:#.vms:#.groupname":                                  "VM Group Name",
+	"vmpools:#.vms:#.state":                                      "VM State, one of VmFree, VmInProgress, VmInUse, VmAdd, VmRemove, VmUpdate",
+	"vmpools:#.vms:#.updatedat.seconds":                          "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"vmpools:#.vms:#.updatedat.nanos":                            "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"vmpools:#.vms:#.internalname":                               "VM Internal Name",
+	"vmpools:#.state":                                            "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"vmpools:#.errors":                                           "Any errors trying to add/remove VM to/from VM Pool",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",
@@ -770,4 +818,6 @@ var AllDataSpecialArgs = map[string]string{
 	"restagtables:#.fields":                   "StringArray",
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",
+	"vmpools:#.errors":                        "StringArray",
+	"vmpools:#.fields":                        "StringArray",
 }
