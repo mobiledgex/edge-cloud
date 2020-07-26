@@ -18,6 +18,7 @@ settings:
   chefclientinterval: 10m
   influxdbmetricsretention: 2h
   cloudletmaintenancetimeout: 2s
+  updatevmpooltimeout: 20m0s
 flavors:
 - key:
     name: x1.tiny

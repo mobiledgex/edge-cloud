@@ -16,6 +16,7 @@ settings:
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
   cloudletmaintenancetimeout: 5m
+  updatevmpooltimeout: 20m0s
 cloudlets:
 - key:
     organization: dmuus
