@@ -78,6 +78,8 @@ message VMPool {
   repeated string errors = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // status is used to reflect progress of creation or other events
   StatusInfo status = 6 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  // Override actions to CRM
+  CRMOverride crm_override = 7 [(protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -95,7 +97,9 @@ message VMPoolMember {
   VMPoolKey key = 1 [(gogoproto.nullable) = false];
   // VM part of VM Pool
   VM vm = 2 [(gogoproto.nullable) = false];
-  option (protogen.noconfig) = "Vm.GroupName,Vm.State,Vm.UpdatedAt.Seconds,Vm.UpdatedAt.Nanos";
+  // Override actions to CRM
+  CRMOverride crm_override = 3 [(protogen.hidetag) = "nocmp"];
+  option (protogen.noconfig) = "Vm.GroupName,Vm.State,Vm.UpdatedAt,Vm.InternalName";
   option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
@@ -143,7 +147,7 @@ service VMPoolApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.method_also_required) = "Vm.Name";
+    option (protogen.method_also_required) = "Vm.Name,Vm.NetInfo";
   }
   // Remove VMPoolMember. Removes a VM from existing VM Pool.
   rpc RemoveVMPoolMember(VMPoolMember) returns (Result) {
