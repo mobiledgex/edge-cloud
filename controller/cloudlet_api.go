@@ -267,6 +267,7 @@ func getCaches(ctx context.Context, vmPool *edgeproto.VMPool) *pf.Caches {
 	caches := pf.Caches{
 		SettingsCache: &settingsApi.cache,
 		FlavorCache:   &flavorApi.cache,
+		CloudletCache: &cloudletApi.cache,
 	}
 	if vmPool != nil && vmPool.Key.Name != "" {
 		var vmPoolMux sync.Mutex
