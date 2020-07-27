@@ -262,6 +262,27 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 
+func getCaches(ctx context.Context, vmPool *edgeproto.VMPool) *pf.Caches {
+	// Some platform types require caches
+	caches := pf.Caches{
+		SettingsCache: &settingsApi.cache,
+		FlavorCache:   &flavorApi.cache,
+	}
+	if vmPool != nil && vmPool.Key.Name != "" {
+		var vmPoolMux sync.Mutex
+		caches.VMPool = vmPool
+		caches.VMPoolMux = &vmPoolMux
+		caches.VMPoolInfoCache = &vmPoolInfoApi.cache
+		// This is required to update VMPool object on controller
+		caches.VMPoolInfoCache.SetUpdatedCb(func(ctx context.Context, old *edgeproto.VMPoolInfo, new *edgeproto.VMPoolInfo) {
+			log.SpanLog(ctx, log.DebugLevelInfo, "VMPoolInfo UpdatedCb", "vmpoolinfo", new)
+			vmPoolApi.UpdateFromInfo(ctx, new)
+		})
+
+	}
+	return &caches
+}
+
 func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := cb.Context()
@@ -352,23 +373,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 			if err == nil {
 				// Some platform types require caches
-				caches := pf.Caches{
-					SettingsCache: &settingsApi.cache,
-					FlavorCache:   &flavorApi.cache,
-				}
-				if vmPool.Key.Name != "" {
-					var vmPoolMux sync.Mutex
-					caches.VMPool = &vmPool
-					caches.VMPoolMux = &vmPoolMux
-					caches.VMPoolInfoCache = &vmPoolInfoApi.cache
-					// This is required to update VMPool object on controller
-					caches.VMPoolInfoCache.SetUpdatedCb(func(ctx context.Context, old *edgeproto.VMPoolInfo, new *edgeproto.VMPoolInfo) {
-						log.SpanLog(ctx, log.DebugLevelInfo, "VMPoolInfo UpdatedCb", "vmpoolinfo", new)
-						vmPoolApi.UpdateFromInfo(ctx, new)
-					})
-
-				}
-				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, &caches, updatecb.cb)
+				caches := getCaches(ctx, &vmPool)
+				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, caches, updatecb.cb)
 				if err != nil && len(accessVars) > 0 {
 					deleteAccessVars = true
 				}
@@ -826,6 +832,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cctx.SetOverride(&in.CrmOverride)
 
+	vmPool := edgeproto.VMPool{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
@@ -833,6 +840,15 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if ignoreCRMState(cctx) {
 			// delete happens later, this STM just checks for existence
 			return nil
+		}
+		if in.VmPool != "" {
+			vmPoolKey := edgeproto.VMPoolKey{
+				Name:         in.VmPool,
+				Organization: in.Key.Organization,
+			}
+			if !vmPoolApi.store.STMGet(stm, &vmPoolKey, &vmPool) {
+				return fmt.Errorf("VM Pool %s not found", in.VmPool)
+			}
 		}
 		if !cctx.Undo {
 			if in.State == edgeproto.TrackedState_CREATE_REQUESTED ||
@@ -870,7 +886,9 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			var cloudletPlatform pf.Platform
 			cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 			if err == nil {
-				err = cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, updatecb.cb)
+				// Some platform types require caches
+				caches := getCaches(ctx, &vmPool)
+				err = cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, caches, updatecb.cb)
 			}
 		}
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
