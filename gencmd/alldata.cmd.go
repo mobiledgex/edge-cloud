@@ -203,6 +203,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.VmPools[i0].Errors = nil
 		}
+		if _, found := tags["nocmp"]; found {
+			in.VmPools[i0].CrmOverride = 0
+		}
 	}
 }
 
@@ -515,6 +518,7 @@ var AllDataOptionalArgs = []string{
 	"vmpools:#.status.maxtasks",
 	"vmpools:#.status.taskname",
 	"vmpools:#.status.stepname",
+	"vmpools:#.crmoverride",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -791,6 +795,7 @@ var AllDataComments = map[string]string{
 	"vmpools:#.vms:#.internalname":                               "VM Internal Name",
 	"vmpools:#.state":                                            "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"vmpools:#.errors":                                           "Any errors trying to add/remove VM to/from VM Pool",
+	"vmpools:#.crmoverride":                                      "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",

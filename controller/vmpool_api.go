@@ -47,6 +47,9 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 		return &edgeproto.Result{}, err
 	}
 
+	cctx := DefCallContext()
+	cctx.SetOverride(&in.CrmOverride)
+
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
 	if cloudletApi.UsesVMPool(&in.Key) {
 		updateVMs := make(map[string]edgeproto.VM)
@@ -54,7 +57,7 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 			vm.State = edgeproto.VMState_VM_UPDATE
 			updateVMs[vm.Name] = vm
 		}
-		err = s.updateVMPoolInternal(ctx, &in.Key, updateVMs)
+		err = s.updateVMPoolInternal(cctx, ctx, &in.Key, updateVMs)
 	} else {
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			cur := edgeproto.VMPool{}
@@ -97,13 +100,16 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 		return &edgeproto.Result{}, err
 	}
 
+	cctx := DefCallContext()
+	cctx.SetOverride(&in.CrmOverride)
+
 	var err error
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
 	if cloudletApi.UsesVMPool(&in.Key) {
 		updateVMs := make(map[string]edgeproto.VM)
 		in.Vm.State = edgeproto.VMState_VM_ADD
 		updateVMs[in.Vm.Name] = in.Vm
-		err = s.updateVMPoolInternal(ctx, &in.Key, updateVMs)
+		err = s.updateVMPoolInternal(cctx, ctx, &in.Key, updateVMs)
 	} else {
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			cur := edgeproto.VMPool{}
@@ -128,12 +134,16 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 
 func (s *VMPoolApi) RemoveVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMember) (*edgeproto.Result, error) {
 	var err error
+
+	cctx := DefCallContext()
+	cctx.SetOverride(&in.CrmOverride)
+
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
 	if cloudletApi.UsesVMPool(&in.Key) {
 		updateVMs := make(map[string]edgeproto.VM)
 		in.Vm.State = edgeproto.VMState_VM_REMOVE
 		updateVMs[in.Vm.Name] = in.Vm
-		err = s.updateVMPoolInternal(ctx, &in.Key, updateVMs)
+		err = s.updateVMPoolInternal(cctx, ctx, &in.Key, updateVMs)
 	} else {
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			cur := edgeproto.VMPool{}
@@ -165,19 +175,20 @@ var UpdateVMPoolTransitions = map[edgeproto.TrackedState]struct{}{
 	edgeproto.TrackedState_UPDATING: struct{}{},
 }
 
-func (s *VMPoolApi) updateVMPoolInternal(ctx context.Context, key *edgeproto.VMPoolKey, vms map[string]edgeproto.VM) error {
+func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context, key *edgeproto.VMPoolKey, vms map[string]edgeproto.VM) error {
 	if len(vms) == 0 {
 		return fmt.Errorf("no VMs specified")
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "UpdateVMPoolInternal", "key", key, "vms", vms)
+
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.VMPool{}
 		if !s.store.STMGet(stm, key, &cur) {
 			return key.NotFoundError()
 		}
 		existingVMs := make(map[string]struct{})
-		if cur.State == edgeproto.TrackedState_UPDATE_REQUESTED {
-			return fmt.Errorf("Update already in progress, please try again later")
+		if cur.State == edgeproto.TrackedState_UPDATE_REQUESTED && !ignoreTransient(cctx, cur.State) {
+			return fmt.Errorf("Action already in progress, please try again later")
 		}
 		for ii, vm := range cur.Vms {
 			existingVMs[vm.Name] = struct{}{}
@@ -201,12 +212,17 @@ func (s *VMPoolApi) updateVMPoolInternal(ctx context.Context, key *edgeproto.VMP
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "Update VMPool", "newPool", cur)
-		cur.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		if !ignoreCRM(cctx) {
+			cur.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
 	if err != nil {
 		return err
+	}
+	if ignoreCRM(cctx) {
+		return nil
 	}
 	err = vmPoolApi.cache.WaitForState(ctx, key, edgeproto.TrackedState_READY, UpdateVMPoolTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateVmPoolTimeout.TimeDuration(), "Updated VM Pool Successfully", nil)
 	// State state back to Unknown & Error to nil, as user is notified about the error, if any

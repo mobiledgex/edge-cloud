@@ -58,6 +58,9 @@ func VMPoolHideTags(in *edgeproto.VMPool) {
 	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
 	}
+	if _, found := tags["nocmp"]; found {
+		in.CrmOverride = 0
+	}
 }
 
 func VMPoolMemberHideTags(in *edgeproto.VMPoolMember) {
@@ -70,6 +73,9 @@ func VMPoolMemberHideTags(in *edgeproto.VMPoolMember) {
 	}
 	if _, found := tags["timestamp"]; found {
 		in.Vm.UpdatedAt = google_protobuf.Timestamp{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.CrmOverride = 0
 	}
 }
 
@@ -524,6 +530,7 @@ var VMPoolOptionalArgs = []string{
 	"vms:#.name",
 	"vms:#.netinfo.externalip",
 	"vms:#.netinfo.internalip",
+	"crmoverride",
 }
 var VMPoolAliasArgs = []string{
 	"vmpool-org=key.organization",
@@ -543,6 +550,7 @@ var VMPoolComments = map[string]string{
 	"vms:#.internalname":       "VM Internal Name",
 	"state":                    "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"errors":                   "Any errors trying to add/remove VM to/from VM Pool",
+	"crmoverride":              "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 }
 var VMPoolSpecialArgs = map[string]string{
 	"errors": "StringArray",
@@ -556,7 +564,9 @@ var VMPoolMemberOptionalArgs = []string{
 	"vm.name",
 	"vm.netinfo.externalip",
 	"vm.netinfo.internalip",
-	"vm.internalname",
+	"vm.updatedat.seconds",
+	"vm.updatedat.nanos",
+	"crmoverride",
 }
 var VMPoolMemberAliasArgs = []string{
 	"vmpool-org=key.organization",
@@ -573,6 +583,7 @@ var VMPoolMemberComments = map[string]string{
 	"vm.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"vm.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"vm.internalname":       "VM Internal Name",
+	"crmoverride":           "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 }
 var VMPoolMemberSpecialArgs = map[string]string{}
 var VMSpecRequiredArgs = []string{}
@@ -637,11 +648,13 @@ var AddVMPoolMemberRequiredArgs = []string{
 	"vmpool-org",
 	"vmpool",
 	"vm.name",
-}
-var AddVMPoolMemberOptionalArgs = []string{
 	"vm.netinfo.externalip",
 	"vm.netinfo.internalip",
-	"vm.internalname",
+}
+var AddVMPoolMemberOptionalArgs = []string{
+	"vm.updatedat.seconds",
+	"vm.updatedat.nanos",
+	"crmoverride",
 }
 var RemoveVMPoolMemberRequiredArgs = []string{
 	"vmpool-org",
@@ -651,5 +664,7 @@ var RemoveVMPoolMemberRequiredArgs = []string{
 var RemoveVMPoolMemberOptionalArgs = []string{
 	"vm.netinfo.externalip",
 	"vm.netinfo.internalip",
-	"vm.internalname",
+	"vm.updatedat.seconds",
+	"vm.updatedat.nanos",
+	"crmoverride",
 }
