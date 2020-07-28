@@ -147,7 +147,7 @@ service VMPoolApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.method_also_required) = "Vm.Name,Vm.NetInfo";
+    option (protogen.method_also_required) = "Vm.Name,Vm.NetInfo.InternalIp";
   }
   // Remove VMPoolMember. Removes a VM from existing VM Pool.
   rpc RemoveVMPoolMember(VMPoolMember) returns (Result) {

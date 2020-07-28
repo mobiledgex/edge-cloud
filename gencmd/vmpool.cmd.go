@@ -648,10 +648,10 @@ var AddVMPoolMemberRequiredArgs = []string{
 	"vmpool-org",
 	"vmpool",
 	"vm.name",
-	"vm.netinfo.externalip",
 	"vm.netinfo.internalip",
 }
 var AddVMPoolMemberOptionalArgs = []string{
+	"vm.netinfo.externalip",
 	"vm.updatedat.seconds",
 	"vm.updatedat.nanos",
 	"crmoverride",
