@@ -294,8 +294,11 @@ func (s *CloudletPoolMember) Validate(fields map[string]struct{}) error {
 }
 
 func (s *VM) Validate() error {
+	if s.Name == "" {
+		return errors.New("Missing VM name")
+	}
 	if !util.ValidName(s.Name) {
-		return errors.New("Invalid Cloudlet Pool name")
+		return errors.New("Invalid VM name")
 	}
 	if s.NetInfo.ExternalIp != "" && net.ParseIP(s.NetInfo.ExternalIp) == nil {
 		return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
@@ -314,7 +317,7 @@ func (key *VMPoolKey) ValidateKey() error {
 		return errors.New("Invalid organization name")
 	}
 	if !util.ValidName(key.Name) {
-		return errors.New("Invalid vmpool name")
+		return errors.New("Invalid VM pool name")
 	}
 	return nil
 }
