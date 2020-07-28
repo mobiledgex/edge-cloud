@@ -654,6 +654,7 @@ func (cd *ControllerData) UpdatedVMPool(ctx context.Context, k interface{}) {
 
 	if !changed {
 		// notify controller, nothing to update
+		log.SpanLog(ctx, log.DebugLevelInfra, "UpdatedVMPool, nothing to update", "vmpoolkey", key)
 		cd.updateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
 		return
 	}
