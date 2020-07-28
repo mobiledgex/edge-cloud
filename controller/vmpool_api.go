@@ -51,7 +51,7 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 	cctx.SetOverride(&in.CrmOverride)
 
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
-	if cloudletApi.UsesVMPool(&in.Key) {
+	if cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
 		updateVMs := make(map[string]edgeproto.VM)
 		for _, vm := range in.Vms {
 			vm.State = edgeproto.VMState_VM_UPDATE
@@ -112,7 +112,7 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 
 	var err error
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
-	if cloudletApi.UsesVMPool(&in.Key) {
+	if cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
 		updateVMs := make(map[string]edgeproto.VM)
 		in.Vm.State = edgeproto.VMState_VM_ADD
 		updateVMs[in.Vm.Name] = in.Vm
@@ -146,7 +146,7 @@ func (s *VMPoolApi) RemoveVMPoolMember(ctx context.Context, in *edgeproto.VMPool
 	cctx.SetOverride(&in.CrmOverride)
 
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
-	if cloudletApi.UsesVMPool(&in.Key) {
+	if cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
 		updateVMs := make(map[string]edgeproto.VM)
 		in.Vm.State = edgeproto.VMState_VM_REMOVE
 		updateVMs[in.Vm.Name] = in.Vm
