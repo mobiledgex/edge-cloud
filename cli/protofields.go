@@ -38,6 +38,18 @@ func getFields(data map[string]interface{}, t reflect.Type, ns FieldNamespace, f
 			subfields := getFields(subdata, sf.Type, ns, append(fvals, fval))
 			fields = append(fields, subfields...)
 			continue
+		} else if subdatalist, ok := val.([]map[string]interface{}); ok {
+
+			// arrayed struct
+			if sf.Type.Kind() != reflect.Slice {
+				continue
+			}
+			elemt := sf.Type.Elem()
+			for _, subdata := range subdatalist {
+				subfields := getFields(subdata, elemt, ns, append(fvals, fval))
+				fields = append(fields, subfields...)
+			}
+			continue
 		}
 		fstr := strings.Join(append(fvals, fval), ".")
 		fields = append(fields, fstr)
@@ -100,6 +112,18 @@ func pruneFields(data map[string]interface{}, fmap map[string]struct{}, t reflec
 		if subdata, ok := val.(map[string]interface{}); ok {
 			// sub struct
 			pruneFields(subdata, fmap, sf.Type, ns, append(fvals, fval))
+		} else if subdatalist, ok := val.([]interface{}); ok {
+			// arrayed struct
+			if sf.Type.Kind() != reflect.Slice {
+				continue
+			}
+			elemt := sf.Type.Elem()
+			for _, subdata := range subdatalist {
+				if obj, ok := subdata.(map[string]interface{}); ok {
+					pruneFields(obj, fmap, elemt, ns, append(fvals, fval))
+				}
+			}
+			continue
 		}
 	}
 }

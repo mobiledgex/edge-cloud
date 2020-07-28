@@ -36,6 +36,9 @@ authpublickey: "-----BEGIN PUBLIC KEY-----\nsomekey\n-----END PUBLIC KEY-----\n"
 `
 	testGetFieldsYaml(t, &edgeproto.App{}, dat,
 		[]string{"2.1", "2.2", "2.3", "4", "5", "15", "9.1", "7", "25", "18", "12"})
+	testGetFieldsArgs(t, &edgeproto.VMPool{},
+		[]string{"key.organization=TDG", `key.name=vmpool`, "vms:0.name=vm1", "vms:0.netinfo.externalip=80.101.255.192", "vms:0.netinfo.internalip=10.101.255.192"},
+		[]string{"2.1", "2.2", "3.1", "3.2.1", "3.2.2"})
 }
 
 func testGetFieldsArgs(t *testing.T, obj interface{}, args []string, expected []string) {
