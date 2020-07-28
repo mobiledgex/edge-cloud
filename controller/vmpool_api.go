@@ -72,6 +72,7 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 			if changed == 0 {
 				return nil
 			}
+			cur.State = edgeproto.TrackedState_READY
 			s.store.STMPut(stm, &cur)
 			return nil
 		})
@@ -131,6 +132,7 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 				}
 			}
 			cur.Vms = append(cur.Vms, in.Vm)
+			cur.State = edgeproto.TrackedState_READY
 			s.store.STMPut(stm, &cur)
 			return nil
 		})
@@ -168,6 +170,7 @@ func (s *VMPoolApi) RemoveVMPoolMember(ctx context.Context, in *edgeproto.VMPool
 			if !changed {
 				return nil
 			}
+			cur.State = edgeproto.TrackedState_READY
 			s.store.STMPut(stm, &cur)
 			return nil
 		})
