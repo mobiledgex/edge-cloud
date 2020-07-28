@@ -51,7 +51,7 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 	cctx.SetOverride(&in.CrmOverride)
 
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
-	if cloudletApi.UsesVMPool(&in.Key) {
+	if cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
 		updateVMs := make(map[string]edgeproto.VM)
 		for _, vm := range in.Vms {
 			vm.State = edgeproto.VMState_VM_UPDATE
@@ -72,6 +72,7 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 			if changed == 0 {
 				return nil
 			}
+			cur.State = edgeproto.TrackedState_READY
 			s.store.STMPut(stm, &cur)
 			return nil
 		})
@@ -82,9 +83,16 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 func (s *VMPoolApi) DeleteVMPool(ctx context.Context, in *edgeproto.VMPool) (*edgeproto.Result, error) {
 	// Validate if pool is in use by Cloudlet
 	if cloudletApi.UsesVMPool(&in.Key) {
-		return &edgeproto.Result{}, fmt.Errorf("VMPool in use by Cloudlet")
+		return &edgeproto.Result{}, fmt.Errorf("VM pool in use by Cloudlet")
 	}
-	return s.store.Delete(ctx, in, s.sync.syncWait)
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, nil) {
+			return in.Key.NotFoundError()
+		}
+		s.store.STMDel(stm, &in.Key)
+		return nil
+	})
+	return &edgeproto.Result{}, err
 }
 
 func (s *VMPoolApi) ShowVMPool(in *edgeproto.VMPool, cb edgeproto.VMPoolApi_ShowVMPoolServer) error {
@@ -105,7 +113,7 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 
 	var err error
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
-	if cloudletApi.UsesVMPool(&in.Key) {
+	if cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
 		updateVMs := make(map[string]edgeproto.VM)
 		in.Vm.State = edgeproto.VMState_VM_ADD
 		updateVMs[in.Vm.Name] = in.Vm
@@ -120,10 +128,11 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 			poolMember.Key = in.Key
 			for ii, _ := range cur.Vms {
 				if cur.Vms[ii].Name == in.Vm.Name {
-					return fmt.Errorf("Cloudlet VM with same name already exists as part of Cloudlet VM Pool")
+					return fmt.Errorf("VM with same name already exists as part of VM pool")
 				}
 			}
 			cur.Vms = append(cur.Vms, in.Vm)
+			cur.State = edgeproto.TrackedState_READY
 			s.store.STMPut(stm, &cur)
 			return nil
 		})
@@ -139,7 +148,7 @@ func (s *VMPoolApi) RemoveVMPoolMember(ctx context.Context, in *edgeproto.VMPool
 	cctx.SetOverride(&in.CrmOverride)
 
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
-	if cloudletApi.UsesVMPool(&in.Key) {
+	if cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
 		updateVMs := make(map[string]edgeproto.VM)
 		in.Vm.State = edgeproto.VMState_VM_REMOVE
 		updateVMs[in.Vm.Name] = in.Vm
@@ -161,6 +170,7 @@ func (s *VMPoolApi) RemoveVMPoolMember(ctx context.Context, in *edgeproto.VMPool
 			if !changed {
 				return nil
 			}
+			cur.State = edgeproto.TrackedState_READY
 			s.store.STMPut(stm, &cur)
 			return nil
 		})
@@ -197,7 +207,7 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 				continue
 			}
 			if vm.State == edgeproto.VMState_VM_ADD {
-				return fmt.Errorf("VM %s already exists as part of VM Pool", vm.Name)
+				return fmt.Errorf("VM %s already exists as part of VM pool", vm.Name)
 			}
 			cur.Vms[ii] = updateVM
 		}
@@ -240,7 +250,7 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 }
 
 func (s *VMPoolApi) UpdateFromInfo(ctx context.Context, in *edgeproto.VMPoolInfo) {
-	log.SpanLog(ctx, log.DebugLevelApi, "Update VMPool from info", "info", in)
+	log.SpanLog(ctx, log.DebugLevelApi, "Update VM pool from info", "info", in)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		vmPool := edgeproto.VMPool{}
 		if !s.store.STMGet(stm, &in.Key, &vmPool) {
