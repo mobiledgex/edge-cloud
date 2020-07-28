@@ -44,6 +44,10 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.ShepherdAlertEvaluationInterval = edgeproto.GetDefaultSettings().ShepherdAlertEvaluationInterval
 			modified = true
 		}
+		if cur.UpdateVmPoolTimeout == 0 {
+			cur.UpdateVmPoolTimeout = edgeproto.GetDefaultSettings().UpdateVmPoolTimeout
+			modified = true
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}

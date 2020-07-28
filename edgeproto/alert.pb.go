@@ -33,6 +33,7 @@
 		result.proto
 		settings.proto
 		version.proto
+		vmpool.proto
 
 	It has these top-level messages:
 		Alert
@@ -112,6 +113,13 @@
 		ResTagTable
 		Result
 		Settings
+		VMNetInfo
+		VM
+		VMPoolKey
+		VMPool
+		VMPoolMember
+		VMSpec
+		VMPoolInfo
 */
 package edgeproto
 
@@ -1149,6 +1157,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := CloudletState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(VMState(0)):
+		if en, ok := VMState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(VMAction(0)):
+		if en, ok := VMAction_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(ImageType(0)):
 		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1194,6 +1210,7 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletPoolMember": struct{}{},
 	"ShowPoolsForCloudlet":   struct{}{},
 	"ShowCloudletsForPool":   struct{}{},
+	"ShowVMPool":             struct{}{},
 	"ShowAutoScalePolicy":    struct{}{},
 	"ShowApp":                struct{}{},
 	"ShowClusterInst":        struct{}{},

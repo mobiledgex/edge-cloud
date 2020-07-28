@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
@@ -34,6 +35,12 @@ type Caches struct {
 	AppCache           *edgeproto.AppCache
 	ResTagTableCache   *edgeproto.ResTagTableCache
 	CloudletCache      *edgeproto.CloudletCache
+	VMPoolCache        *edgeproto.VMPoolCache
+	VMPoolInfoCache    *edgeproto.VMPoolInfoCache
+
+	// VMPool object managed by CRM
+	VMPool    *edgeproto.VMPool
+	VMPoolMux *sync.Mutex
 }
 
 // Platform abstracts the underlying cloudlet platform.
@@ -75,7 +82,7 @@ type Platform interface {
 	// Create Cloudlet
 	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet
-	DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
+	DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *Caches, updateCallback edgeproto.CacheUpdateCallback) error
 	// Save Cloudlet AccessVars
 	SaveCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, accessVarsIn map[string]string, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet AccessVars
@@ -84,6 +91,8 @@ type Platform interface {
 	SyncControllerCache(ctx context.Context, caches *Caches, cloudletState edgeproto.CloudletState) error
 	// Get Cloudlet Manifest Config
 	GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor) (*edgeproto.CloudletManifest, error)
+	// Verify VM
+	VerifyVMs(ctx context.Context, vms []edgeproto.VM) error
 }
 
 type ClusterSvc interface {
