@@ -30,7 +30,7 @@ type DebugRequest struct {
 	Node NodeKey `protobuf:"bytes,1,opt,name=node" json:"node"`
 	// Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,infra,metrics,upgrade,info,sampled
 	Levels string `protobuf:"bytes,2,opt,name=levels,proto3" json:"levels,omitempty"`
-	// Debug command
+	// Debug command (use "help" to see available commands)
 	Cmd string `protobuf:"bytes,3,opt,name=cmd,proto3" json:"cmd,omitempty"`
 	// if possible, make output pretty
 	Pretty bool `protobuf:"varint,4,opt,name=pretty,proto3" json:"pretty,omitempty"`
