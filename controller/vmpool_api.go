@@ -213,11 +213,11 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 		}
 		for vmName, vm := range vms {
 			if _, ok := existingVMs[vmName]; !ok {
-				if vm.State == edgeproto.VMState_VM_UPDATE || vm.State == edgeproto.VMState_VM_REMOVE {
+				if vm.State == edgeproto.VMState_VM_REMOVE {
 					return fmt.Errorf("VM %s does not exist in the pool", vmName)
 				}
 			}
-			if vm.State == edgeproto.VMState_VM_ADD {
+			if vm.State == edgeproto.VMState_VM_ADD || vm.State == edgeproto.VMState_VM_UPDATE {
 				cur.Vms = append(cur.Vms, vm)
 			}
 		}

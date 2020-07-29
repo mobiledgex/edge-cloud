@@ -88,7 +88,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 
 	cd.NodeMgr = nodeMgr
 
-	cd.updateVMWorkers.Init("vmpool-updatevm", cd.UpdatedVMPool)
+	cd.updateVMWorkers.Init("vmpool-updatevm", cd.UpdateVMPool)
 	return cd
 }
 
@@ -607,7 +607,7 @@ func (cd *ControllerData) updateVMPoolInfo(ctx context.Context, state edgeproto.
 }
 
 func (cd *ControllerData) VMPoolChanged(ctx context.Context, old *edgeproto.VMPool, new *edgeproto.VMPool) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "VMPoolChanged", "newvmpool", new)
+	log.SpanLog(ctx, log.DebugLevelInfra, "VMPoolChanged", "newvmpool", new, "oldvmpool", old)
 	if old == nil || old.State == new.State {
 		return
 	}
@@ -618,14 +618,28 @@ func (cd *ControllerData) VMPoolChanged(ctx context.Context, old *edgeproto.VMPo
 	cd.updateVMWorkers.NeedsWork(ctx, new.Key)
 }
 
-func (cd *ControllerData) UpdatedVMPool(ctx context.Context, k interface{}) {
+func isVMChanged(old *edgeproto.VM, new *edgeproto.VM) bool {
+	if old == nil {
+		return true
+	}
+	if new == nil {
+		return false
+	}
+	if new.NetInfo.ExternalIp != old.NetInfo.ExternalIp ||
+		new.NetInfo.InternalIp != old.NetInfo.InternalIp {
+		return true
+	}
+	return false
+}
+
+func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 	key, ok := k.(edgeproto.VMPoolKey)
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelInfra, "Unexpected failure, key not VMPoolKey", "key", key)
 		return
 	}
 	log.SetContextTags(ctx, key.GetTags())
-	log.SpanLog(ctx, log.DebugLevelInfra, "UpdatedVMPool", "vmpoolkey", key)
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateVMPool", "vmpoolkey", key)
 
 	var vmPool edgeproto.VMPool
 	if !cd.VMPoolCache.Get(&key, &vmPool) {
@@ -637,26 +651,55 @@ func (cd *ControllerData) UpdatedVMPool(ctx context.Context, k interface{}) {
 
 	// Validate VMs
 	validateVMs := []edgeproto.VM{}
+	updateVMs := make(map[string]edgeproto.VM)
 	changed := false
 	for _, vm := range vmPool.Vms {
-		if vm.State == edgeproto.VMState_VM_ADD ||
-			vm.State == edgeproto.VMState_VM_UPDATE {
+		if vm.State == edgeproto.VMState_VM_ADD {
 			validateVMs = append(validateVMs, vm)
 			changed = true
+		} else if vm.State == edgeproto.VMState_VM_UPDATE {
+			updateVMs[vm.Name] = vm
 		} else if vm.State == edgeproto.VMState_VM_REMOVE {
 			changed = true
 		}
 	}
 
+	if len(updateVMs) > 0 {
+		cd.VMPoolMux.Lock()
+		// Get list of VMs to be validated
+		updatedVms := make(map[string]struct{})
+		for _, vm := range cd.VMPool.Vms {
+			if updateVM, ok := updateVMs[vm.Name]; ok {
+				updatedVms[vm.Name] = struct{}{}
+				// validate VM only if network info has changed
+				if isVMChanged(&vm, &updateVM) {
+					validateVMs = append(validateVMs, updateVM)
+					changed = true
+				}
+			}
+		}
+		for _, vm := range updateVMs {
+			// add new VMs from the update list, if any
+			if _, ok := updatedVms[vm.Name]; !ok {
+				validateVMs = append(validateVMs, vm)
+				changed = true
+			}
+		}
+		cd.VMPoolMux.Unlock()
+	}
+
 	// verify if new/updated VM is reachable
-	err := cd.platform.VerifyVMs(ctx, validateVMs)
+	var err error
+	if changed {
+		err = cd.platform.VerifyVMs(ctx, validateVMs)
+	}
 
 	cd.VMPoolMux.Lock()
 	defer cd.VMPoolMux.Unlock()
 
 	if !changed {
 		// notify controller, nothing to update
-		log.SpanLog(ctx, log.DebugLevelInfra, "UpdatedVMPool, nothing to update", "vmpoolkey", key)
+		log.SpanLog(ctx, log.DebugLevelInfra, "UpdateVMPool, nothing to update", "vmpoolkey", key)
 		cd.updateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
 		return
 	}
@@ -669,16 +712,16 @@ func (cd *ControllerData) UpdatedVMPool(ctx context.Context, k interface{}) {
 		return
 	}
 
-	existingVMs := make(map[string]edgeproto.VMState)
+	existingVMs := make(map[string]edgeproto.VM)
 	for _, vm := range cd.VMPool.Vms {
-		existingVMs[vm.Name] = vm.State
+		existingVMs[vm.Name] = vm
 	}
 
 	deleteVMs := make(map[string]edgeproto.VM)
-	updateVMs := make(map[string]edgeproto.VM)
+	updateVMs = make(map[string]edgeproto.VM)
 	addVMs := make(map[string]edgeproto.VM)
 	for _, vm := range vmPool.Vms {
-		curState, vmExists := existingVMs[vm.Name]
+		curVM, vmExists := existingVMs[vm.Name]
 		switch vm.State {
 		case edgeproto.VMState_VM_ADD:
 			if vmExists {
@@ -694,44 +737,51 @@ func (cd *ControllerData) UpdatedVMPool(ctx context.Context, k interface{}) {
 				// VM is already removed
 				continue
 			}
-			if curState != edgeproto.VMState_VM_FREE {
-				log.SpanLog(ctx, log.DebugLevelInfra, "UpdatedVMPool, conflicting state", "vm", vm.Name, "state", curState)
+			if curVM.State != edgeproto.VMState_VM_FREE {
+				log.SpanLog(ctx, log.DebugLevelInfra, "UpdateVMPool, conflicting state", "vm", vm.Name, "state", curVM.State)
 				cd.updateVMPoolInfo(
 					ctx,
 					edgeproto.TrackedState_UPDATE_ERROR,
-					fmt.Sprintf("Unable to delete VM %s, as it is busy", vm.Name))
+					fmt.Sprintf("Unable to delete VM %s, as it is in use", vm.Name))
 				return
 			}
 			deleteVMs[vm.Name] = vm
 		case edgeproto.VMState_VM_UPDATE:
-			if !vmExists {
-				cd.updateVMPoolInfo(
-					ctx,
-					edgeproto.TrackedState_UPDATE_ERROR,
-					fmt.Sprintf("Unable to find VM %s", vm.Name))
-				return
-			}
-			if curState != edgeproto.VMState_VM_FREE {
-				log.SpanLog(ctx, log.DebugLevelInfra, "UpdatedVMPool, conflicting state", "vm", vm.Name, "state", curState)
-				cd.updateVMPoolInfo(
-					ctx,
-					edgeproto.TrackedState_UPDATE_ERROR,
-					fmt.Sprintf("Unable to update VM %s, as it is busy", vm.Name))
-				return
+			if isVMChanged(&curVM, &vm) {
+				if curVM.State != edgeproto.VMState_VM_FREE {
+					log.SpanLog(ctx, log.DebugLevelInfra, "UpdateVMPool, conflicting state", "vm", vm.Name, "state", curVM.State)
+					cd.updateVMPoolInfo(
+						ctx,
+						edgeproto.TrackedState_UPDATE_ERROR,
+						fmt.Sprintf("Unable to update VM %s, as it is in use", vm.Name))
+					return
+				}
 			}
 			updateVMs[vm.Name] = vm
 		}
 	}
-	if len(deleteVMs) > 0 || len(updateVMs) > 0 || len(addVMs) > 0 {
-		// save VM to VM pool
-		newVMs := []edgeproto.VM{}
+	newVMs := []edgeproto.VM{}
+	if len(updateVMs) > 0 {
+		updatedVms := make(map[string]struct{})
 		for _, poolVM := range cd.VMPool.Vms {
-			if _, ok := deleteVMs[poolVM.Name]; ok {
+			if vm, ok := updateVMs[poolVM.Name]; ok {
+				netInfo := vm.NetInfo
+				vm = poolVM
+				vm.NetInfo = netInfo
+				newVMs = append(newVMs, vm)
+				updatedVms[vm.Name] = struct{}{}
 				continue
 			}
-			if vm, ok := updateVMs[poolVM.Name]; ok {
-				vm.State = edgeproto.VMState_VM_FREE
+		}
+		// add new VMs from the update list, if any
+		for _, vm := range updateVMs {
+			if _, ok := updatedVms[vm.Name]; !ok {
 				newVMs = append(newVMs, vm)
+			}
+		}
+	} else if len(deleteVMs) > 0 || len(addVMs) > 0 {
+		for _, poolVM := range cd.VMPool.Vms {
+			if _, ok := deleteVMs[poolVM.Name]; ok {
 				continue
 			}
 			newVMs = append(newVMs, poolVM)
@@ -740,6 +790,9 @@ func (cd *ControllerData) UpdatedVMPool(ctx context.Context, k interface{}) {
 			vm.State = edgeproto.VMState_VM_FREE
 			newVMs = append(newVMs, vm)
 		}
+	}
+	if len(newVMs) > 0 {
+		// save VM to VM pool
 		cd.VMPool.Vms = newVMs
 
 		// notify controller
