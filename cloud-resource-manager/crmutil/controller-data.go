@@ -667,23 +667,20 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 	if len(updateVMs) > 0 {
 		cd.VMPoolMux.Lock()
 		// Get list of VMs to be validated
-		updatedVms := make(map[string]struct{})
 		for _, vm := range cd.VMPool.Vms {
 			if updateVM, ok := updateVMs[vm.Name]; ok {
-				updatedVms[vm.Name] = struct{}{}
 				// validate VM only if network info has changed
 				if isVMChanged(&vm, &updateVM) {
 					validateVMs = append(validateVMs, updateVM)
 					changed = true
 				}
+				delete(updateVMs, vm.Name)
 			}
 		}
 		for _, vm := range updateVMs {
 			// add new VMs from the update list, if any
-			if _, ok := updatedVms[vm.Name]; !ok {
-				validateVMs = append(validateVMs, vm)
-				changed = true
-			}
+			validateVMs = append(validateVMs, vm)
+			changed = true
 		}
 		cd.VMPoolMux.Unlock()
 	}
@@ -762,24 +759,22 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 	}
 	newVMs := []edgeproto.VM{}
 	if len(updateVMs) > 0 {
-		updatedVms := make(map[string]struct{})
 		for _, poolVM := range cd.VMPool.Vms {
 			if vm, ok := updateVMs[poolVM.Name]; ok {
 				netInfo := vm.NetInfo
 				vm = poolVM
 				vm.NetInfo = netInfo
 				newVMs = append(newVMs, vm)
-				updatedVms[vm.Name] = struct{}{}
+				delete(updateVMs, vm.Name)
 				continue
 			}
 		}
 		// add new VMs from the update list, if any
 		for _, vm := range updateVMs {
-			if _, ok := updatedVms[vm.Name]; !ok {
-				newVMs = append(newVMs, vm)
-			}
+			newVMs = append(newVMs, vm)
 		}
-	} else if len(deleteVMs) > 0 || len(addVMs) > 0 {
+	}
+	if len(deleteVMs) > 0 || len(addVMs) > 0 {
 		for _, poolVM := range cd.VMPool.Vms {
 			if _, ok := deleteVMs[poolVM.Name]; ok {
 				continue
