@@ -12,7 +12,7 @@ message DebugRequest {
   NodeKey node = 1 [(gogoproto.nullable) = false];
   // Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,infra,metrics,upgrade,info,sampled
   string levels = 2;
-  // Debug command
+  // Debug command (use "help" to see available commands)
   string cmd = 3;
   // if possible, make output pretty
   bool pretty = 4;

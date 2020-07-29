@@ -103,6 +103,9 @@ func (s *DebugNode) RecvDebugRequest(ctx context.Context, req *edgeproto.DebugRe
 // Handle DebugRequest via grpc API call.
 // Replies are sent back to the grpc client.
 func (s *DebugNode) DebugRequest(req *edgeproto.DebugRequest, cb edgeproto.DebugApi_RunDebugServer) error {
+	if req.Cmd == "" {
+		return fmt.Errorf("no cmd specified")
+	}
 	req.Id = rand.Uint64()
 	if req.Timeout == 0 {
 		req.Timeout = edgeproto.Duration(DefaultDebugTimeout)
