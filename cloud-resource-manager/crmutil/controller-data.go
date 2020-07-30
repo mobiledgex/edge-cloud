@@ -813,13 +813,11 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 			newVMs = append(newVMs, vm)
 		}
 	}
-	if len(newVMs) > 0 {
-		// save VM to VM pool
-		cd.VMPool.Vms = newVMs
+	// save VM to VM pool
+	cd.VMPool.Vms = newVMs
 
-		// notify controller
-		cd.updateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
+	// notify controller
+	cd.updateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
 
-		// TODO calculate Flavor info and send CloudletInfo again
-	}
+	// TODO calculate Flavor info and send CloudletInfo again
 }
