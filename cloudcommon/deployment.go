@@ -141,7 +141,6 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 		}
 		missingPorts := []string{}
 		for _, appPort := range ports {
-			// http is mapped to tcp
 			if appPort.EndPort != 0 {
 				// We have a range-port notation on the dme.AppPort
 				// while our manifest exhaustively enumerates each as a kubePort
@@ -164,8 +163,9 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 				continue
 			}
 			tp := appPort
-			// No need to test TLS as part of manifest
+			// No need to test TLS or nginx as part of manifest
 			tp.Tls = false
+			tp.Nginx = false
 			if _, found := objPorts[tp.String()]; found {
 				continue
 			}
@@ -173,7 +173,7 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 			missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, tp.InternalPort))
 		}
 		if len(missingPorts) > 0 {
-			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest (note http is mapped to tcp)", strings.Join(missingPorts, ","))
+			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest", strings.Join(missingPorts, ","))
 		}
 	}
 	return nil

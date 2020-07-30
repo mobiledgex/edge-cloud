@@ -21,6 +21,7 @@ var AppPortOptionalArgs = []string{
 	"fqdnprefix",
 	"endport",
 	"tls",
+	"nginx",
 }
 var AppPortAliasArgs = []string{}
 var AppPortComments = map[string]string{
@@ -30,5 +31,6 @@ var AppPortComments = map[string]string{
 	"fqdnprefix":   "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"tls":          "TLS termination for this port",
+	"nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 }
 var AppPortSpecialArgs = map[string]string{}

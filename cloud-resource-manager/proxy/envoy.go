@@ -16,11 +16,6 @@ import (
 	ssh "github.com/mobiledgex/golang-ssh"
 )
 
-// Envoy is now handling all of our L4 TCP loadbalancing
-// Eventually L7 and UDP Proxying support will be added so
-// all of our loadbalancing is handled by envoy.
-// UDP proxying is currently blocked by: https://github.com/envoyproxy/envoy/issues/492
-
 var envoyYamlT *template.Template
 
 // this is the default value in envoy, for DOS protection
@@ -66,7 +61,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	// container name is envoy+name for now to avoid conflicts with the nginx containers
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", "envoy" + name}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_TCP, listenIP)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dockermgmt.EnvoyProxy, listenIP)...)
 	}
 	if opts.DockerNetwork != "" {
 		// For dind, we use the network which the dind cluster is on.
@@ -78,7 +73,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	}
 	cmdArgs = append(cmdArgs, []string{
 		"-v", certsDir + ":/etc/envoy/certs",
-		"-v", accesslogFile + ":/var/log/access.log",
+		"-v", accesslogFile + ":/tmp/access.log",
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl@" + EnvoyImageDigest}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
@@ -172,6 +167,22 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 				}
 				tcpPort.ConcurrentConns = tcpconns
 				spec.TCPSpec = append(spec.TCPSpec, &tcpPort)
+			case dme.LProto_L_PROTO_UDP:
+				if p.Nginx { // defv specified nginx for this port (range)
+					continue
+				}
+				udpPort := UDPSpecDetail{
+					ListenPort:  pubPort,
+					ListenIP:    listenIP,
+					BackendIP:   backendIP,
+					BackendPort: internalPort,
+				}
+				udpconns, err := getUDPConcurrentConnections()
+				if err != nil {
+					return err
+				}
+				udpPort.ConcurrentConns = udpconns
+				spec.UDPSpec = append(spec.UDPSpec, &udpPort)
 			}
 			internalPort++
 		}
@@ -209,7 +220,7 @@ static_resources:
           access_log:
             - name: envoy.file_access_log
               config:
-                path: /var/log/access.log
+                path: /tmp/access.log
                 json_format: {
                   "start_time": "%START_TIME%",
                   "duration": "%DURATION%",
@@ -225,8 +236,23 @@ static_resources:
             - certificate_chain:
                 filename: "/etc/envoy/certs/{{$.CertName}}.crt"
               private_key:
-                filename: "/etc/envoy/certs/{{$.CertName}}.key"
+              filename: "/etc/envoy/certs/{{$.CertName}}.key"
       {{- end}}
+  {{- end}}
+  {{- range .UDPSpec}}
+  - name: listener_0
+    address:
+      socket_address:
+        protocol: UDP
+        address: 0.0.0.0
+        port_value: {{.ListenPort}}
+    listener_filters:
+      name: envoy.filters.udp_listener.udp_proxy
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.filters.udp.udp_proxy.v3.UdpProxyConfig
+        stat_prefix: downstream{{.BackendPort}}
+        cluster: udp_backend{{.BackendPort}}
+    reuse_port: true
   {{- end}}
   clusters:
   {{- range .TCPSpec}}
@@ -252,8 +278,26 @@ static_resources:
         no_traffic_interval: 5s
     {{- end}}
 {{- end}}
+{{- range .UDPSpec}}
+  - name: udp_backend{{.BackendPort}}
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    circuit_breakers:
+      thresholds:
+        max_connections: {{.ConcurrentConns}}
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: udp_backend{{.BackendPort}}
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: {{.BackendIP}}
+                port_value: {{.BackendPort}}
+{{- end}}
 admin:
-  access_log_path: "/var/log/admin.log"
+  access_log_path: "/tmp/admin.log"
   address:
     socket_address:
       address: 0.0.0.0

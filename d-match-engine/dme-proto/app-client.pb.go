@@ -3435,6 +3435,10 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 				m.Ports[i0].Tls = src.Ports[i0].Tls
 				changed++
 			}
+			if m.Ports[i0].Nginx != src.Ports[i0].Nginx {
+				m.Ports[i0].Nginx = src.Ports[i0].Nginx
+				changed++
+			}
 		}
 	} else if m.Ports != nil {
 		m.Ports = nil
@@ -4069,6 +4073,10 @@ func (m *Appinstance) CopyInFields(src *Appinstance) int {
 				m.Ports[i0].Tls = src.Ports[i0].Tls
 				changed++
 			}
+			if m.Ports[i0].Nginx != src.Ports[i0].Nginx {
+				m.Ports[i0].Nginx = src.Ports[i0].Nginx
+				changed++
+			}
 		}
 >>>>>>> Removed http
 	} else if m.Ports != nil {
@@ -4223,6 +4231,10 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 					}
 					if m.Appinstances[i0].Ports[i1].Tls != src.Appinstances[i0].Ports[i1].Tls {
 						m.Appinstances[i0].Ports[i1].Tls = src.Appinstances[i0].Ports[i1].Tls
+						changed++
+					}
+					if m.Appinstances[i0].Ports[i1].Nginx != src.Appinstances[i0].Ports[i1].Nginx {
+						m.Appinstances[i0].Ports[i1].Nginx = src.Appinstances[i0].Ports[i1].Nginx
 						changed++
 					}
 				}
@@ -4408,6 +4420,10 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 							}
 							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls != src.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls {
 								m.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls
+								changed++
+							}
+							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].Nginx != src.Cloudlets[i0].Appinstances[i1].Ports[i2].Nginx {
+								m.Cloudlets[i0].Appinstances[i1].Ports[i2].Nginx = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Nginx
 								changed++
 							}
 						}

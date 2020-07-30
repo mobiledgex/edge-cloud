@@ -43,7 +43,7 @@ func getTCPConcurrentConnections() (uint64, error) {
 	return conns, nil
 }
 
-func getUDPConcurrentConnectionsPerIP() (uint64, error) {
+func getUDPConcurrentConnections() (uint64, error) {
 	var err error
 	connStr := os.Getenv("MEX_LB_CONCURRENT_UDP_CONNS")
 	conns := defaultConcurrentConnsPerIP
@@ -68,7 +68,11 @@ func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {
 		case dme.LProto_L_PROTO_TCP:
 			needEnvoy = true
 		case dme.LProto_L_PROTO_UDP:
-			needNginx = true
+			if p.Nginx {
+				needNginx = true
+			} else {
+				needEnvoy = true
+			}
 		}
 	}
 	return needEnvoy, needNginx
@@ -143,7 +147,7 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", containerName}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_UDP, listenIP)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dockermgmt.NginxProxy, listenIP)...)
 	}
 	if opts.DockerNetwork != "" {
 		// For dind, we use the network which the dind cluster is on.
@@ -178,17 +182,20 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, lis
 		MetricPort: cloudcommon.ProxyMetricsPort,
 	}
 
-	udpconns, err := getUDPConcurrentConnectionsPerIP()
+	udpconns, err := getUDPConcurrentConnections()
 	if err != nil {
 		return err
 	}
 	for _, p := range ports {
 		if p.Proto == dme.LProto_L_PROTO_UDP {
+			if !p.Nginx { // use envoy
+				continue
+			}
 			udpPort := UDPSpecDetail{
-				ListenIP:             listenIP,
-				BackendIP:            backendIP,
-				BackendPort:          p.InternalPort,
-				ConcurrentConnsPerIP: udpconns,
+				ListenIP:        listenIP,
+				BackendIP:       backendIP,
+				BackendPort:     p.InternalPort,
+				ConcurrentConns: udpconns,
 			}
 			endPort := p.EndPort
 			if endPort == 0 {
@@ -200,11 +207,11 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, lis
 				}
 			}
 			for pnum := p.PublicPort; pnum <= endPort; pnum++ {
-				udpPort.ListenPorts = append(udpPort.ListenPorts, pnum)
+				udpPort.NginxListenPorts = append(udpPort.NginxListenPorts, pnum)
 			}
 			// if there is more than one listen port, we don't use the backend port as the
 			// listen port is used as the backend port in the case of a range
-			if len(udpPort.ListenPorts) > 1 {
+			if len(udpPort.NginxListenPorts) > 1 {
 				udpPort.BackendPort = 0
 			}
 			spec.UDPSpec = append(spec.UDPSpec, &udpPort)
@@ -246,11 +253,12 @@ type TCPSpecDetail struct {
 }
 
 type UDPSpecDetail struct {
-	ListenIP             string
-	ListenPorts          []int32
-	BackendIP            string
-	BackendPort          int32
-	ConcurrentConnsPerIP uint64
+	ListenIP         string
+	ListenPort       int32
+	NginxListenPorts []int32
+	BackendIP        string
+	BackendPort      int32
+	ConcurrentConns  uint64
 }
 
 var nginxConf = `
@@ -268,8 +276,8 @@ stream {
     limit_conn_zone $binary_remote_addr zone=ipaddr:10m;
 	{{- range .UDPSpec}}
 	server {
-		limit_conn ipaddr {{.ConcurrentConnsPerIP}}; 
-		{{range $portnum := .ListenPorts}}
+		limit_conn ipaddr {{.ConcurrentConns}}; 
+		{{range $portnum := .NginxListenPorts}}
 		listen {{$portnum}} udp; 
 		{{end}}
 		{{if eq .BackendPort 0}}

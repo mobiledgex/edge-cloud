@@ -11,6 +11,7 @@ type PortSpec struct {
 	Port    string
 	EndPort string // mfw XXX ? why two type and parse rtns for AppPort? (3 actually kube.go is another)
 	Tls     bool
+	Nginx   bool
 }
 
 func ParsePorts(accessPorts string) ([]PortSpec, error) {
@@ -23,7 +24,7 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 
 	for _, pstr := range pstrs {
 		pp := strings.Split(pstr, ":")
-		if len(pp) != 2 && !(len(pp) == 3 && pp[2] == "tls") {
+		if len(pp) != 2 && !(len(pp) == 3 && (strings.ToLower(pp[2]) == "tls" || strings.ToLower(pp[2]) == "nginx")) {
 			return nil, fmt.Errorf("invalid AccessPorts format '%s'", pstr)
 		}
 		// within each pp[1], we may have a hypenated range of ports ex: udp:M-N inclusive
@@ -62,11 +63,16 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 			Port:    strconv.FormatInt(baseport, 10),
 			EndPort: strconv.FormatInt(endport, 10),
 		}
-		if len(pp) == 3 {
-			if portSpec.Proto != "http" && portSpec.Proto != "tcp" {
+		if len(pp) == 3 && strings.ToLower(pp[2]) == "tls" {
+			if portSpec.Proto != "tcp" {
 				return nil, fmt.Errorf("Invalid protocol %s, not available for tls support", portSpec.Proto)
 			}
 			portSpec.Tls = true
+		} else if len(pp) == 3 && strings.ToLower(pp[2]) == "nginx" {
+			if portSpec.Proto != "udp" {
+				return nil, fmt.Errorf("Invalid protocol %s, not available for nginx support", portSpec.Proto)
+			}
+			portSpec.Nginx = true
 		}
 		ports = append(ports, portSpec)
 	}

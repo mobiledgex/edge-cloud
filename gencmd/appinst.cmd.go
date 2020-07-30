@@ -770,6 +770,7 @@ var AppInstComments = map[string]string{
 	"mappedports:#.fqdnprefix":       "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"mappedports:#.endport":          "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"mappedports:#.tls":              "TLS termination for this port",
+	"mappedports:#.nginx":            "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"flavor":                         "Flavor name",
 	"state":                          "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
