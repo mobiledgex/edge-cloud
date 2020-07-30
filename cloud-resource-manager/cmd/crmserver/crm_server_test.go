@@ -399,6 +399,9 @@ func testVMPoolUpdates(t *testing.T, ctx context.Context, vmPool *edgeproto.VMPo
 
 	// Update VM
 	vmPoolUpdate3 := copyCrmVMPool()
+	controllerData.VMPool.Vms[0].State = edgeproto.VMState_VM_IN_USE
+	controllerData.VMPool.Vms[0].InternalName = "testname"
+	controllerData.VMPool.Vms[0].GroupName = "testgroup"
 	vmPoolUpdate3.Vms[3].NetInfo.ExternalIp = "1.1.1.1"
 	// As part of Update, remove a VM as well
 	vmPoolUpdate3.Vms = vmPoolUpdate3.Vms[:len(vmPoolUpdate3.Vms)-1]
@@ -415,6 +418,10 @@ func testVMPoolUpdates(t *testing.T, ctx context.Context, vmPool *edgeproto.VMPo
 	vmPoolUpdate3.State = edgeproto.TrackedState_UPDATE_REQUESTED
 	verifyVMPoolUpdate(t, ctx, vmPoolUpdate3, ctrlHandler, Pass)
 	require.Equal(t, 5, len(controllerData.VMPool.Vms), "matches crm global vmpool")
+	// Make sure existing VM details didnt change as part of update
+	require.Equal(t, edgeproto.VMState_VM_IN_USE, controllerData.VMPool.Vms[0].State, "matches old entry")
+	require.Equal(t, "testname", controllerData.VMPool.Vms[0].InternalName, "matches old entry")
+	require.Equal(t, "testgroup", controllerData.VMPool.Vms[0].GroupName, "matches old entry")
 
 	// Add already existing VM, should fail
 	vmPoolUpdate4 := copyCrmVMPool()
@@ -431,7 +438,6 @@ func testVMPoolUpdates(t *testing.T, ctx context.Context, vmPool *edgeproto.VMPo
 
 	// Remove a VM which is busy
 	vmPoolUpdate5 := copyCrmVMPool()
-	controllerData.VMPool.Vms[0].State = edgeproto.VMState_VM_IN_USE
 	vmPoolUpdate5.Vms[0].State = edgeproto.VMState_VM_REMOVE
 	vmPoolUpdate5.State = edgeproto.TrackedState_UPDATE_REQUESTED
 	verifyVMPoolUpdate(t, ctx, vmPoolUpdate5, ctrlHandler, Fail)

@@ -688,9 +688,11 @@ func (cd *ControllerData) markUpdateVMs(ctx context.Context, vmPool *edgeproto.V
 				}
 				oldVMs[vm.Name] = vm
 				validateVMs = append(validateVMs, cVM)
+				updateVMs[vm.Name] = cVM
+			} else {
+				updateVMs[vm.Name] = vm
 			}
 			changed = true
-			updateVMs[vm.Name] = cVM
 		default:
 			newVMs = append(newVMs, vm)
 		}
