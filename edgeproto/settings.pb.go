@@ -1013,7 +1013,7 @@ type SettingsCache struct {
 	Mux           util.Mutex
 	List          map[SettingsKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *SettingsKey, old *Settings, modRev int64)
+	NotifyCbs     []func(ctx context.Context, obj *SettingsKey, old *Settings, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *Settings, new *Settings)
 	DeletedCbs    []func(ctx context.Context, old *Settings)
 	KeyWatchers   map[SettingsKey][]*SettingsKeyWatcher
@@ -1030,7 +1030,7 @@ func NewSettingsCache() *SettingsCache {
 func InitSettingsCache(cache *SettingsCache) {
 	cache.Objs = make(map[SettingsKey]*SettingsCacheData)
 	cache.KeyWatchers = make(map[SettingsKey][]*SettingsKeyWatcher)
-	cache.NotifyCb = nil
+	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
 	cache.UpdatedKeyCbs = nil
@@ -1094,8 +1094,10 @@ func (c *SettingsCache) UpdateModFunc(ctx context.Context, key *SettingsKey, mod
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
-	if c.NotifyCb != nil {
-		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
 	}
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
@@ -1121,8 +1123,10 @@ func (c *SettingsCache) Delete(ctx context.Context, in *Settings, modRev int64) 
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
 	}
 	if old != nil {
 		for _, cb := range c.DeletedCbs {
@@ -1140,7 +1144,7 @@ func (c *SettingsCache) Prune(ctx context.Context, validKeys map[SettingsKey]str
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1148,8 +1152,10 @@ func (c *SettingsCache) Prune(ctx context.Context, validKeys map[SettingsKey]str
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -1197,7 +1203,7 @@ func SettingsGenericNotifyCb(fn func(key *SettingsKey, old *Settings)) func(objs
 }
 
 func (c *SettingsCache) SetNotifyCb(fn func(ctx context.Context, obj *SettingsKey, old *Settings, modRev int64)) {
-	c.NotifyCb = fn
+	c.NotifyCbs = []func(ctx context.Context, obj *SettingsKey, old *Settings, modRev int64){fn}
 }
 
 func (c *SettingsCache) SetUpdatedCb(fn func(ctx context.Context, old *Settings, new *Settings)) {
@@ -1222,6 +1228,10 @@ func (c *SettingsCache) AddUpdatedCb(fn func(ctx context.Context, old *Settings,
 
 func (c *SettingsCache) AddDeletedCb(fn func(ctx context.Context, old *Settings)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *SettingsCache) AddNotifyCb(fn func(ctx context.Context, obj *SettingsKey, old *Settings, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
 func (c *SettingsCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *SettingsKey)) {
@@ -1325,8 +1335,10 @@ func (c *SettingsCache) SyncListEnd(ctx context.Context) {
 	c.List = nil
 	c.Mux.Unlock()
 	for key, val := range deleted {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
