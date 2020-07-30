@@ -855,7 +855,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedDynamicIps: 2,
 	},
 	// ClusterInstData[1,4], ClusterInstAutoData[0]: (shared,shared,shared)
-	// AppInstData[2,3] -> ports[tcp:443;tcp:80,tcp:443]
+	// AppInstData[2,3] -> ports[tcp:443;tcp:80,tcp:443,tcp:81,udp:10002]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
 		Clusters: []edgeproto.ClusterKey{
@@ -866,10 +866,10 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedRam:     GetCloudletUsedRam(1, 4, -1, 0),
 		UsedVcores:  GetCloudletUsedVcores(1, 4, -1, 0),
 		UsedDisk:    GetCloudletUsedDisk(1, 4, -1, 0),
-		RootLbPorts: map[int32]int32{80: 1, 81: 1, 10002: 3},
+		RootLbPorts: map[int32]int32{80: 1, 81: 1, 443: 1, 10000: 1, 10002: 3},
 	},
 	// ClusterInstData[2,5], ClusterInstAutoData[1,2]: (shared,dedicated,shared,dedicated)
-	// AppInstData[4,5] -> ports[tcp:443,udp:11111;udp:2024,tcp:80,udp:8001]
+	// AppInstData[4,5] -> ports[tcp:443,udp:11111;udp:2024]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[2].Key,
 		Clusters: []edgeproto.ClusterKey{
@@ -882,7 +882,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedVcores:     GetCloudletUsedVcores(2, 5, -1, 1, 2),
 		UsedDisk:       GetCloudletUsedDisk(2, 5, -1, 1, 2),
 		UsedDynamicIps: 2,
-		RootLbPorts:    map[int32]int32{10000: 1, 11111: 2, 2024: 2},
+		RootLbPorts:    map[int32]int32{443: 1, 11111: 2, 2024: 2},
 	},
 	// ClusterInstData[6]: (no app insts on this clusterinst) (shared)
 	edgeproto.CloudletRefs{
