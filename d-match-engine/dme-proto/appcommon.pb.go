@@ -186,10 +186,10 @@ func (m *AppPort) DeepCopyIn(src *AppPort) {
 	m.Proto = src.Proto
 	m.InternalPort = src.InternalPort
 	m.PublicPort = src.PublicPort
-	m.PathPrefix = src.PathPrefix
 	m.FqdnPrefix = src.FqdnPrefix
 	m.EndPort = src.EndPort
 	m.Tls = src.Tls
+	m.Nginx = src.Nginx
 }
 
 // Helper method to check that enums have valid values

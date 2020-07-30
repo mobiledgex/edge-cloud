@@ -272,7 +272,7 @@ var E_UsesOrg = &proto.ExtensionDesc{
 }
 
 var E_GenerateLookupBySublist = &proto.ExtensionDesc{
-	ExtendedType:  (*google_protobuf.MessageOptions)(nil),
+	ExtendedType:  (*descriptor.MessageOptions)(nil),
 	ExtensionType: (*string)(nil),
 	Field:         51048,
 	Name:          "protogen.generate_lookup_by_sublist",
@@ -281,7 +281,7 @@ var E_GenerateLookupBySublist = &proto.ExtensionDesc{
 }
 
 var E_GenerateLookupBySubfield = &proto.ExtensionDesc{
-	ExtendedType:  (*google_protobuf.MessageOptions)(nil),
+	ExtendedType:  (*descriptor.MessageOptions)(nil),
 	ExtensionType: (*string)(nil),
 	Field:         51049,
 	Name:          "protogen.generate_lookup_by_subfield",
@@ -522,9 +522,9 @@ func init() {
 	proto.RegisterExtension(E_DummyServer)
 }
 
-func init() { proto.RegisterFile("protogen.proto", fileDescriptor_protogen_072c411cebe58de8) }
+func init() { proto.RegisterFile("protogen.proto", fileDescriptor_protogen_727b312bd15b7485) }
 
-var fileDescriptorProtogen = []byte{
+var fileDescriptor_protogen_727b312bd15b7485 = []byte{
 	// 1206 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x97, 0x49, 0x73, 0x1c, 0x35,
 	0x14, 0x80, 0xcb, 0x45, 0x11, 0x3b, 0xf2, 0xc4, 0x89, 0xc7, 0x26, 0x49, 0x05, 0x30, 0xe1, 0xc6,

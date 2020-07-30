@@ -4789,8 +4789,46 @@ func (m *AppOfficialFqdnReply) CopyInFields(src *AppOfficialFqdnReply) int {
 		changed++
 	}
 	if src.Ports != nil {
+<<<<<<< HEAD
 		m.Ports = src.Ports
 		changed++
+=======
+		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
+			m.Ports = make([]*AppPort, len(src.Ports))
+			changed++
+		}
+		for i0 := 0; i0 < len(src.Ports); i0++ {
+			m.Ports[i0] = &AppPort{}
+			if m.Ports[i0].Proto != src.Ports[i0].Proto {
+				m.Ports[i0].Proto = src.Ports[i0].Proto
+				changed++
+			}
+			if m.Ports[i0].InternalPort != src.Ports[i0].InternalPort {
+				m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
+				changed++
+			}
+			if m.Ports[i0].PublicPort != src.Ports[i0].PublicPort {
+				m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
+				changed++
+			}
+			if m.Ports[i0].FqdnPrefix != src.Ports[i0].FqdnPrefix {
+				m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
+				changed++
+			}
+			if m.Ports[i0].EndPort != src.Ports[i0].EndPort {
+				m.Ports[i0].EndPort = src.Ports[i0].EndPort
+				changed++
+			}
+			if m.Ports[i0].Tls != src.Ports[i0].Tls {
+				m.Ports[i0].Tls = src.Ports[i0].Tls
+				changed++
+			}
+			if m.Ports[i0].Nginx != src.Ports[i0].Nginx {
+				m.Ports[i0].Nginx = src.Ports[i0].Nginx
+				changed++
+			}
+		}
+>>>>>>> autogen files
 	} else if m.Ports != nil {
 		m.Ports = nil
 		changed++

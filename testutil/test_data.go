@@ -78,7 +78,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.0",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessPorts:   "http:443,tcp:10002,udp:10002",
+		AccessPorts:   "tcp:443,tcp:10002,udp:10002",
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
@@ -89,7 +89,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.1",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessPorts:   "tcp:80,http:443,tcp:81:tls",
+		AccessPorts:   "tcp:80,tcp:443,tcp:81:tls",
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
@@ -168,7 +168,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.0",
 		},
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessPorts:   "tcp:80,http:443,udp:10002,tcp:5000-5002", // new port range notation
+		AccessPorts:   "tcp:80,tcp:443,udp:10002,tcp:5000-5002", // new port range notation
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
@@ -841,7 +841,7 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 // and ports are reserved with the creation of app insts.
 var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[0,3,7]: (dedicated,dedicated,shared)
-	// AppInstData[0,1] -> ports[http:443;http:443]:
+	// AppInstData[0,1] -> ports[tcp:443;tcp:443]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[0].Key,
 		Clusters: []edgeproto.ClusterKey{
@@ -855,7 +855,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedDynamicIps: 2,
 	},
 	// ClusterInstData[1,4], ClusterInstAutoData[0]: (shared,shared,shared)
-	// AppInstData[2,3] -> ports[http:443;tcp:80,http:443]
+	// AppInstData[2,3] -> ports[tcp:443;tcp:80,tcp:443]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
 		Clusters: []edgeproto.ClusterKey{
