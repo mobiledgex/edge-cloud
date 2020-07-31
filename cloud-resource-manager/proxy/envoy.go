@@ -21,7 +21,7 @@ var envoyYamlT *template.Template
 // this is the default value in envoy, for DOS protection
 const defaultConcurrentConns uint64 = 1024
 
-const EnvoyImageDigest = "sha256:e7046b34eb39cf573fcfd6afa5977e14c69d0ed064fb69dae0411c353358f306"
+const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df"
 
 func init() {
 	envoyYamlT = template.Must(template.New("yaml").Parse(envoyYaml))
