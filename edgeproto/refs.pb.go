@@ -919,7 +919,7 @@ type CloudletRefsCache struct {
 	Mux           util.Mutex
 	List          map[CloudletKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *CloudletKey, old *CloudletRefs, modRev int64)
+	NotifyCbs     []func(ctx context.Context, obj *CloudletKey, old *CloudletRefs, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)
 	DeletedCbs    []func(ctx context.Context, old *CloudletRefs)
 	KeyWatchers   map[CloudletKey][]*CloudletRefsKeyWatcher
@@ -936,7 +936,7 @@ func NewCloudletRefsCache() *CloudletRefsCache {
 func InitCloudletRefsCache(cache *CloudletRefsCache) {
 	cache.Objs = make(map[CloudletKey]*CloudletRefsCacheData)
 	cache.KeyWatchers = make(map[CloudletKey][]*CloudletRefsKeyWatcher)
-	cache.NotifyCb = nil
+	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
 	cache.UpdatedKeyCbs = nil
@@ -1000,8 +1000,10 @@ func (c *CloudletRefsCache) UpdateModFunc(ctx context.Context, key *CloudletKey,
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
-	if c.NotifyCb != nil {
-		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
 	}
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
@@ -1027,8 +1029,10 @@ func (c *CloudletRefsCache) Delete(ctx context.Context, in *CloudletRefs, modRev
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
 	}
 	if old != nil {
 		for _, cb := range c.DeletedCbs {
@@ -1046,7 +1050,7 @@ func (c *CloudletRefsCache) Prune(ctx context.Context, validKeys map[CloudletKey
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1054,8 +1058,10 @@ func (c *CloudletRefsCache) Prune(ctx context.Context, validKeys map[CloudletKey
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -1103,7 +1109,7 @@ func CloudletRefsGenericNotifyCb(fn func(key *CloudletKey, old *CloudletRefs)) f
 }
 
 func (c *CloudletRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *CloudletRefs, modRev int64)) {
-	c.NotifyCb = fn
+	c.NotifyCbs = []func(ctx context.Context, obj *CloudletKey, old *CloudletRefs, modRev int64){fn}
 }
 
 func (c *CloudletRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)) {
@@ -1128,6 +1134,10 @@ func (c *CloudletRefsCache) AddUpdatedCb(fn func(ctx context.Context, old *Cloud
 
 func (c *CloudletRefsCache) AddDeletedCb(fn func(ctx context.Context, old *CloudletRefs)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *CloudletRefsCache) AddNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *CloudletRefs, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
 func (c *CloudletRefsCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
@@ -1231,8 +1241,10 @@ func (c *CloudletRefsCache) SyncListEnd(ctx context.Context) {
 	c.List = nil
 	c.Mux.Unlock()
 	for key, val := range deleted {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -1551,7 +1563,7 @@ type ClusterRefsCache struct {
 	Mux           util.Mutex
 	List          map[ClusterInstKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs, modRev int64)
+	NotifyCbs     []func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)
 	DeletedCbs    []func(ctx context.Context, old *ClusterRefs)
 	KeyWatchers   map[ClusterInstKey][]*ClusterRefsKeyWatcher
@@ -1568,7 +1580,7 @@ func NewClusterRefsCache() *ClusterRefsCache {
 func InitClusterRefsCache(cache *ClusterRefsCache) {
 	cache.Objs = make(map[ClusterInstKey]*ClusterRefsCacheData)
 	cache.KeyWatchers = make(map[ClusterInstKey][]*ClusterRefsKeyWatcher)
-	cache.NotifyCb = nil
+	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
 	cache.UpdatedKeyCbs = nil
@@ -1632,8 +1644,10 @@ func (c *ClusterRefsCache) UpdateModFunc(ctx context.Context, key *ClusterInstKe
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
-	if c.NotifyCb != nil {
-		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
 	}
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
@@ -1659,8 +1673,10 @@ func (c *ClusterRefsCache) Delete(ctx context.Context, in *ClusterRefs, modRev i
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
 	}
 	if old != nil {
 		for _, cb := range c.DeletedCbs {
@@ -1678,7 +1694,7 @@ func (c *ClusterRefsCache) Prune(ctx context.Context, validKeys map[ClusterInstK
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1686,8 +1702,10 @@ func (c *ClusterRefsCache) Prune(ctx context.Context, validKeys map[ClusterInstK
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -1735,7 +1753,7 @@ func ClusterRefsGenericNotifyCb(fn func(key *ClusterInstKey, old *ClusterRefs)) 
 }
 
 func (c *ClusterRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs, modRev int64)) {
-	c.NotifyCb = fn
+	c.NotifyCbs = []func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs, modRev int64){fn}
 }
 
 func (c *ClusterRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)) {
@@ -1760,6 +1778,10 @@ func (c *ClusterRefsCache) AddUpdatedCb(fn func(ctx context.Context, old *Cluste
 
 func (c *ClusterRefsCache) AddDeletedCb(fn func(ctx context.Context, old *ClusterRefs)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *ClusterRefsCache) AddNotifyCb(fn func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
 func (c *ClusterRefsCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *ClusterInstKey)) {
@@ -1863,8 +1885,10 @@ func (c *ClusterRefsCache) SyncListEnd(ctx context.Context) {
 	c.List = nil
 	c.Mux.Unlock()
 	for key, val := range deleted {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -2131,7 +2155,7 @@ type AppInstRefsCache struct {
 	Mux           util.Mutex
 	List          map[AppKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *AppKey, old *AppInstRefs, modRev int64)
+	NotifyCbs     []func(ctx context.Context, obj *AppKey, old *AppInstRefs, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *AppInstRefs, new *AppInstRefs)
 	DeletedCbs    []func(ctx context.Context, old *AppInstRefs)
 	KeyWatchers   map[AppKey][]*AppInstRefsKeyWatcher
@@ -2148,7 +2172,7 @@ func NewAppInstRefsCache() *AppInstRefsCache {
 func InitAppInstRefsCache(cache *AppInstRefsCache) {
 	cache.Objs = make(map[AppKey]*AppInstRefsCacheData)
 	cache.KeyWatchers = make(map[AppKey][]*AppInstRefsKeyWatcher)
-	cache.NotifyCb = nil
+	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
 	cache.UpdatedKeyCbs = nil
@@ -2212,8 +2236,10 @@ func (c *AppInstRefsCache) UpdateModFunc(ctx context.Context, key *AppKey, modRe
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
-	if c.NotifyCb != nil {
-		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
 	}
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
@@ -2239,8 +2265,10 @@ func (c *AppInstRefsCache) Delete(ctx context.Context, in *AppInstRefs, modRev i
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
 	}
 	if old != nil {
 		for _, cb := range c.DeletedCbs {
@@ -2258,7 +2286,7 @@ func (c *AppInstRefsCache) Prune(ctx context.Context, validKeys map[AppKey]struc
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -2266,8 +2294,10 @@ func (c *AppInstRefsCache) Prune(ctx context.Context, validKeys map[AppKey]struc
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -2315,7 +2345,7 @@ func AppInstRefsGenericNotifyCb(fn func(key *AppKey, old *AppInstRefs)) func(obj
 }
 
 func (c *AppInstRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *AppKey, old *AppInstRefs, modRev int64)) {
-	c.NotifyCb = fn
+	c.NotifyCbs = []func(ctx context.Context, obj *AppKey, old *AppInstRefs, modRev int64){fn}
 }
 
 func (c *AppInstRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInstRefs, new *AppInstRefs)) {
@@ -2340,6 +2370,10 @@ func (c *AppInstRefsCache) AddUpdatedCb(fn func(ctx context.Context, old *AppIns
 
 func (c *AppInstRefsCache) AddDeletedCb(fn func(ctx context.Context, old *AppInstRefs)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AppInstRefsCache) AddNotifyCb(fn func(ctx context.Context, obj *AppKey, old *AppInstRefs, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
 func (c *AppInstRefsCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AppKey)) {
@@ -2443,8 +2477,10 @@ func (c *AppInstRefsCache) SyncListEnd(ctx context.Context) {
 	c.List = nil
 	c.Mux.Unlock()
 	for key, val := range deleted {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
