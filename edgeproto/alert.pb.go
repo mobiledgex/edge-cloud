@@ -671,7 +671,7 @@ type AlertCache struct {
 	Mux           util.Mutex
 	List          map[AlertKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *AlertKey, old *Alert, modRev int64)
+	NotifyCbs     []func(ctx context.Context, obj *AlertKey, old *Alert, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *Alert, new *Alert)
 	DeletedCbs    []func(ctx context.Context, old *Alert)
 	KeyWatchers   map[AlertKey][]*AlertKeyWatcher
@@ -688,7 +688,7 @@ func NewAlertCache() *AlertCache {
 func InitAlertCache(cache *AlertCache) {
 	cache.Objs = make(map[AlertKey]*AlertCacheData)
 	cache.KeyWatchers = make(map[AlertKey][]*AlertKeyWatcher)
-	cache.NotifyCb = nil
+	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
 	cache.UpdatedKeyCbs = nil
@@ -752,8 +752,10 @@ func (c *AlertCache) UpdateModFunc(ctx context.Context, key *AlertKey, modRev in
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
-	if c.NotifyCb != nil {
-		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
 	}
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
@@ -779,8 +781,10 @@ func (c *AlertCache) Delete(ctx context.Context, in *Alert, modRev int64) {
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
 	}
 	if old != nil {
 		for _, cb := range c.DeletedCbs {
@@ -798,7 +802,7 @@ func (c *AlertCache) Prune(ctx context.Context, validKeys map[AlertKey]struct{})
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -806,8 +810,10 @@ func (c *AlertCache) Prune(ctx context.Context, validKeys map[AlertKey]struct{})
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -842,8 +848,10 @@ func (c *AlertCache) Flush(ctx context.Context, notifyId int64) {
 	c.Mux.Unlock()
 	if len(flushed) > 0 {
 		for key, old := range flushed {
-			if c.NotifyCb != nil {
-				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+			for _, cb := range c.NotifyCbs {
+				if cb != nil {
+					cb(ctx, &key, old.Obj, old.ModRev)
+				}
 			}
 			for _, cb := range c.DeletedKeyCbs {
 				cb(ctx, &key)
@@ -883,7 +891,7 @@ func AlertGenericNotifyCb(fn func(key *AlertKey, old *Alert)) func(objstore.ObjK
 }
 
 func (c *AlertCache) SetNotifyCb(fn func(ctx context.Context, obj *AlertKey, old *Alert, modRev int64)) {
-	c.NotifyCb = fn
+	c.NotifyCbs = []func(ctx context.Context, obj *AlertKey, old *Alert, modRev int64){fn}
 }
 
 func (c *AlertCache) SetUpdatedCb(fn func(ctx context.Context, old *Alert, new *Alert)) {
@@ -908,6 +916,10 @@ func (c *AlertCache) AddUpdatedCb(fn func(ctx context.Context, old *Alert, new *
 
 func (c *AlertCache) AddDeletedCb(fn func(ctx context.Context, old *Alert)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AlertCache) AddNotifyCb(fn func(ctx context.Context, obj *AlertKey, old *Alert, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
 func (c *AlertCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AlertKey)) {
@@ -1011,8 +1023,10 @@ func (c *AlertCache) SyncListEnd(ctx context.Context) {
 	c.List = nil
 	c.Mux.Unlock()
 	for key, val := range deleted {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)

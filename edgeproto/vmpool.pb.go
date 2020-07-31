@@ -1673,7 +1673,7 @@ type VMPoolCache struct {
 	Mux           util.Mutex
 	List          map[VMPoolKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *VMPoolKey, old *VMPool, modRev int64)
+	NotifyCbs     []func(ctx context.Context, obj *VMPoolKey, old *VMPool, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *VMPool, new *VMPool)
 	DeletedCbs    []func(ctx context.Context, old *VMPool)
 	KeyWatchers   map[VMPoolKey][]*VMPoolKeyWatcher
@@ -1690,7 +1690,7 @@ func NewVMPoolCache() *VMPoolCache {
 func InitVMPoolCache(cache *VMPoolCache) {
 	cache.Objs = make(map[VMPoolKey]*VMPoolCacheData)
 	cache.KeyWatchers = make(map[VMPoolKey][]*VMPoolKeyWatcher)
-	cache.NotifyCb = nil
+	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
 	cache.UpdatedKeyCbs = nil
@@ -1754,8 +1754,10 @@ func (c *VMPoolCache) UpdateModFunc(ctx context.Context, key *VMPoolKey, modRev 
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
-	if c.NotifyCb != nil {
-		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
 	}
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
@@ -1781,8 +1783,10 @@ func (c *VMPoolCache) Delete(ctx context.Context, in *VMPool, modRev int64) {
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
 	}
 	if old != nil {
 		for _, cb := range c.DeletedCbs {
@@ -1800,7 +1804,7 @@ func (c *VMPoolCache) Prune(ctx context.Context, validKeys map[VMPoolKey]struct{
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1808,8 +1812,10 @@ func (c *VMPoolCache) Prune(ctx context.Context, validKeys map[VMPoolKey]struct{
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -1857,7 +1863,7 @@ func VMPoolGenericNotifyCb(fn func(key *VMPoolKey, old *VMPool)) func(objstore.O
 }
 
 func (c *VMPoolCache) SetNotifyCb(fn func(ctx context.Context, obj *VMPoolKey, old *VMPool, modRev int64)) {
-	c.NotifyCb = fn
+	c.NotifyCbs = []func(ctx context.Context, obj *VMPoolKey, old *VMPool, modRev int64){fn}
 }
 
 func (c *VMPoolCache) SetUpdatedCb(fn func(ctx context.Context, old *VMPool, new *VMPool)) {
@@ -1882,6 +1888,10 @@ func (c *VMPoolCache) AddUpdatedCb(fn func(ctx context.Context, old *VMPool, new
 
 func (c *VMPoolCache) AddDeletedCb(fn func(ctx context.Context, old *VMPool)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *VMPoolCache) AddNotifyCb(fn func(ctx context.Context, obj *VMPoolKey, old *VMPool, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
 func (c *VMPoolCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *VMPoolKey)) {
@@ -1985,8 +1995,10 @@ func (c *VMPoolCache) SyncListEnd(ctx context.Context) {
 	c.List = nil
 	c.Mux.Unlock()
 	for key, val := range deleted {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -2833,7 +2845,7 @@ type VMPoolInfoCache struct {
 	Mux           util.Mutex
 	List          map[VMPoolKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *VMPoolKey, old *VMPoolInfo, modRev int64)
+	NotifyCbs     []func(ctx context.Context, obj *VMPoolKey, old *VMPoolInfo, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *VMPoolInfo, new *VMPoolInfo)
 	DeletedCbs    []func(ctx context.Context, old *VMPoolInfo)
 	KeyWatchers   map[VMPoolKey][]*VMPoolInfoKeyWatcher
@@ -2850,7 +2862,7 @@ func NewVMPoolInfoCache() *VMPoolInfoCache {
 func InitVMPoolInfoCache(cache *VMPoolInfoCache) {
 	cache.Objs = make(map[VMPoolKey]*VMPoolInfoCacheData)
 	cache.KeyWatchers = make(map[VMPoolKey][]*VMPoolInfoKeyWatcher)
-	cache.NotifyCb = nil
+	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
 	cache.UpdatedKeyCbs = nil
@@ -2914,8 +2926,10 @@ func (c *VMPoolInfoCache) UpdateModFunc(ctx context.Context, key *VMPoolKey, mod
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
-	if c.NotifyCb != nil {
-		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
 	}
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
@@ -2941,8 +2955,10 @@ func (c *VMPoolInfoCache) Delete(ctx context.Context, in *VMPoolInfo, modRev int
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
 	}
 	if old != nil {
 		for _, cb := range c.DeletedCbs {
@@ -2960,7 +2976,7 @@ func (c *VMPoolInfoCache) Prune(ctx context.Context, validKeys map[VMPoolKey]str
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -2968,8 +2984,10 @@ func (c *VMPoolInfoCache) Prune(ctx context.Context, validKeys map[VMPoolKey]str
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -3004,8 +3022,10 @@ func (c *VMPoolInfoCache) Flush(ctx context.Context, notifyId int64) {
 	c.Mux.Unlock()
 	if len(flushed) > 0 {
 		for key, old := range flushed {
-			if c.NotifyCb != nil {
-				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+			for _, cb := range c.NotifyCbs {
+				if cb != nil {
+					cb(ctx, &key, old.Obj, old.ModRev)
+				}
 			}
 			for _, cb := range c.DeletedKeyCbs {
 				cb(ctx, &key)
@@ -3045,7 +3065,7 @@ func VMPoolInfoGenericNotifyCb(fn func(key *VMPoolKey, old *VMPoolInfo)) func(ob
 }
 
 func (c *VMPoolInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *VMPoolKey, old *VMPoolInfo, modRev int64)) {
-	c.NotifyCb = fn
+	c.NotifyCbs = []func(ctx context.Context, obj *VMPoolKey, old *VMPoolInfo, modRev int64){fn}
 }
 
 func (c *VMPoolInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *VMPoolInfo, new *VMPoolInfo)) {
@@ -3070,6 +3090,10 @@ func (c *VMPoolInfoCache) AddUpdatedCb(fn func(ctx context.Context, old *VMPoolI
 
 func (c *VMPoolInfoCache) AddDeletedCb(fn func(ctx context.Context, old *VMPoolInfo)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *VMPoolInfoCache) AddNotifyCb(fn func(ctx context.Context, obj *VMPoolKey, old *VMPoolInfo, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
 func (c *VMPoolInfoCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *VMPoolKey)) {
@@ -3173,8 +3197,10 @@ func (c *VMPoolInfoCache) SyncListEnd(ctx context.Context) {
 	c.List = nil
 	c.Mux.Unlock()
 	for key, val := range deleted {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
