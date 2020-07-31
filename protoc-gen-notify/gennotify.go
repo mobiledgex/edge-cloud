@@ -147,7 +147,7 @@ type Recv{{.Name}}Handler interface {
 type {{.Name}}CacheHandler interface {
 	Send{{.Name}}Handler
 	Recv{{.Name}}Handler
-	SetNotifyCb(fn func(ctx context.Context, obj *{{.KeyType}}, old *{{.NameType}}, modRev int64))
+	AddNotifyCb(fn func(ctx context.Context, obj *{{.KeyType}}, old *{{.NameType}}, modRev int64))
 }
 
 {{- else}}
@@ -605,7 +605,7 @@ func (s *{{.Name}}RecvMany) Flush(ctx context.Context, notifyId int64) {
 func (mgr *ServerMgr) RegisterSend{{.Name}}Cache(cache {{.Name}}CacheHandler) {
 	send := New{{.Name}}SendMany(cache)
 	mgr.RegisterSend(send)
-	cache.SetNotifyCb(send.Update)
+	cache.AddNotifyCb(send.Update)
 }
 
 func (mgr *ServerMgr) RegisterRecv{{.Name}}Cache(cache {{.Name}}CacheHandler) {
@@ -616,7 +616,7 @@ func (mgr *ServerMgr) RegisterRecv{{.Name}}Cache(cache {{.Name}}CacheHandler) {
 func (s *Client) RegisterSend{{.Name}}Cache(cache {{.Name}}CacheHandler) {
 	send := New{{.Name}}Send(cache)
 	s.RegisterSend(send)
-	cache.SetNotifyCb(send.Update)
+	cache.AddNotifyCb(send.Update)
 }
 
 func (s *Client) RegisterRecv{{.Name}}Cache(cache {{.Name}}CacheHandler) {
