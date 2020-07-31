@@ -77,6 +77,12 @@ func DecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
 				return data, err
 			}
 			return Duration(dur), nil
+		case reflect.TypeOf(time.Duration(0)):
+			dur, err := time.ParseDuration(data.(string))
+			if err != nil {
+				return data, err
+			}
+			return dur, nil
 		case reflect.TypeOf(time.Time{}):
 			return time.Parse(time.RFC3339, data.(string))
 		}

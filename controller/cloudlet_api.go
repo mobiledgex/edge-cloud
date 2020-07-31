@@ -950,7 +950,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 		}
 	}
-	cloudletPoolMemberApi.cloudletDeleted(ctx, &in.Key)
+	cloudletPoolApi.cloudletDeleted(ctx, &in.Key)
 	cloudletInfoApi.cleanupCloudletInfo(ctx, &in.Key)
 	return nil
 }

@@ -24,7 +24,6 @@ type AllDataOut struct {
 	Cloudlets               [][]edgeproto.Result
 	CloudletInfos           []edgeproto.Result
 	CloudletPools           []edgeproto.Result
-	CloudletPoolMembers     []edgeproto.Result
 	AutoProvPolicies        []edgeproto.Result
 	AutoProvPolicyCloudlets []edgeproto.Result
 	AutoScalePolicies       []edgeproto.Result
@@ -44,7 +43,6 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
 	run.CloudletPoolApi(&in.CloudletPools, inMap["cloudletpools"], &out.CloudletPools)
-	run.CloudletPoolMemberApi(&in.CloudletPoolMembers, inMap["cloudletpoolmembers"], &out.CloudletPoolMembers)
 	run.AutoProvPolicyApi(&in.AutoProvPolicies, inMap["autoprovpolicies"], &out.AutoProvPolicies)
 	run.AutoProvPolicyApi_AutoProvPolicyCloudlet(&in.AutoProvPolicyCloudlets, inMap["autoprovpolicycloudlets"], &out.AutoProvPolicyCloudlets)
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, inMap["autoscalepolicies"], &out.AutoScalePolicies)
@@ -65,7 +63,6 @@ func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]int
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, inMap["autoscalepolicies"], &out.AutoScalePolicies)
 	run.AutoProvPolicyApi_AutoProvPolicyCloudlet(&in.AutoProvPolicyCloudlets, inMap["autoprovpolicycloudlets"], &out.AutoProvPolicyCloudlets)
 	run.AutoProvPolicyApi(&in.AutoProvPolicies, inMap["autoprovpolicies"], &out.AutoProvPolicies)
-	run.CloudletPoolMemberApi(&in.CloudletPoolMembers, inMap["cloudletpoolmembers"], &out.CloudletPoolMembers)
 	run.CloudletPoolApi(&in.CloudletPools, inMap["cloudletpools"], &out.CloudletPools)
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
@@ -84,7 +81,6 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.CloudletApi(&in.Cloudlets, nil, &out.Cloudlets)
 	run.CloudletInfoApi(&in.CloudletInfos, nil, &out.CloudletInfos)
 	run.CloudletPoolApi(&in.CloudletPools, nil, &out.CloudletPools)
-	run.CloudletPoolMemberApi(&in.CloudletPoolMembers, nil, &out.CloudletPoolMembers)
 	run.AutoProvPolicyApi(&in.AutoProvPolicies, nil, &out.AutoProvPolicies)
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, nil, &out.AutoScalePolicies)
 	run.PrivacyPolicyApi(&in.PrivacyPolicies, nil, &out.PrivacyPolicies)

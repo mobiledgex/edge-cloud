@@ -5,47 +5,48 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "cloudlet.proto";
 import "result.proto";
 import "gogoproto/gogo.proto";
 
+// CloudletPool unique key
+//
+// CloudletPoolKey uniquely identifies a CloudletPool.
 message CloudletPoolKey {
+  // Name of the organization this pool belongs to
+  string organization = 1 [(protogen.keytag) = "cloudletpoolorg"];
   // CloudletPool Name
-  string name = 1 [(protogen.keytag) = "cloudletpool"];
+  string name = 2 [(protogen.keytag) = "cloudletpool"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
 }
 
+// CloudletPool defines a pool of Cloudlets that have restricted access.
 message CloudletPool {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // CloudletPool key
   CloudletPoolKey key = 2 [(gogoproto.nullable) = false];
+  // Cloudlets part of the pool
+  repeated string cloudlets = 3;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_test_update) = false;
   option (protogen.generate_cache) = true;
   option (protogen.noconfig) = "Members";
-  option (protogen.alias) = "name=Key.Name";
-  option (protogen.uses_org) = "none";
+  option (protogen.alias) = "name=Key.Name,org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
 }
 
+// CloudletPoolMember is used to add and remove a Cloudlet from a CloudletPool
 message CloudletPoolMember {
   // CloudletPool key
-  CloudletPoolKey pool_key = 1 [(gogoproto.nullable) = false];
+  CloudletPoolKey key = 1 [(gogoproto.nullable) = false];
   // Cloudlet key
-  CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
-  option (protogen.generate_matches) = true;
-  option (protogen.obj_and_key) = true;
-  option (gogoproto.gostring) = true;
-  option (protogen.generate_cud) = true;
-  option (protogen.generate_cud_test) = true;
-  option (protogen.generate_cud_test_update) = false;
-  option (protogen.generate_cache) = true;
-  option (protogen.alias) = "pool=PoolKey.Name,cloudlet=CloudletKey.Name,organization=CloudletKey.Organization";
-  option (protogen.uses_org) = "none";
+  string cloudlet_name = 2;
+  option (protogen.alias) = "pool=Key.Name,cloudlet=CloudletName,org=Key.Organization";
+  //  option (protogen.uses_org) = "none";
 }
 
 service CloudletPoolApi {
@@ -55,7 +56,8 @@ service CloudletPoolApi {
       post: "/create/cloudletpool"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
+    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
   // Delete a CloudletPool
   rpc DeleteCloudletPool(CloudletPool) returns (Result) {
@@ -63,64 +65,38 @@ service CloudletPoolApi {
       post: "/delete/cloudletpool"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
-    option (protogen.mc2_custom_authz) = true;
- }
+    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.Organization";
+  }
+  // Update a CloudletPool
+  rpc UpdateCloudletPool(CloudletPool) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/cloudletpool"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.Organization";
+  }
   // Show CloudletPools
   rpc ShowCloudletPool(CloudletPool) returns (stream CloudletPool) {
     option (google.api.http) = {
       post: "/show/cloudletpool"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionView,";
+    option (protogen.mc2_api) = "ResourceCloudletPools,ActionView,Key.Organization";
   }
-}
-
-service CloudletPoolMemberApi {
   // Add a Cloudlet to a CloudletPool
-  rpc CreateCloudletPoolMember(CloudletPoolMember) returns (Result) {
+  rpc AddCloudletPoolMember(CloudletPoolMember) returns (Result) {
     option (google.api.http) = {
       post: "/add/cloudletpoolmember"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
+    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.Organization";
   }
   // Remove a Cloudlet from a CloudletPool
-  rpc DeleteCloudletPoolMember(CloudletPoolMember) returns (Result) {
+  rpc RemoveCloudletPoolMember(CloudletPoolMember) returns (Result) {
     option (google.api.http) = {
       post: "/remove/cloudletpoolmember"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,";
-  }
-  // Show the Cloudlet to CloudletPool relationships
-  rpc ShowCloudletPoolMember(CloudletPoolMember) returns (stream CloudletPoolMember) {
-    option (google.api.http) = {
-      post: "/show/cloudletpoolmember"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionView,";
-  }
-}
-
-service CloudletPoolShowApi {
-  option (protogen.dummy_server) = false;
-  // Show CloudletPools that have Cloudlet as a member
-  rpc ShowPoolsForCloudlet(CloudletKey) returns (stream CloudletPool) {
-    option (google.api.http) = {
-      post: "/show/poolsforcloudlet"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionView,";
-    option (protogen.input_required) = true;
-  }
-  // Show Cloudlets that belong to the Pool
-  rpc ShowCloudletsForPool(CloudletPoolKey) returns (stream Cloudlet) {
-    option (google.api.http) = {
-      post: "/show/cloudletsforpool"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionView,";
-    option (protogen.input_required) = true;
+    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.Organization";
   }
 }
