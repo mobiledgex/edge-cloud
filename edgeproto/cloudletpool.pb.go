@@ -29,9 +29,14 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// CloudletPool unique key
+//
+// CloudletPoolKey uniquely identifies a CloudletPool.
 type CloudletPoolKey struct {
+	// Name of the organization this pool belongs to
+	Organization string `protobuf:"bytes,1,opt,name=organization,proto3" json:"organization,omitempty"`
 	// CloudletPool Name
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
 
 func (m *CloudletPoolKey) Reset()                    { *m = CloudletPoolKey{} }
@@ -39,11 +44,14 @@ func (m *CloudletPoolKey) String() string            { return proto.CompactTextS
 func (*CloudletPoolKey) ProtoMessage()               {}
 func (*CloudletPoolKey) Descriptor() ([]byte, []int) { return fileDescriptorCloudletpool, []int{0} }
 
+// CloudletPool defines a pool of Cloudlets that have restricted access.
 type CloudletPool struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// CloudletPool key
 	Key CloudletPoolKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	// Cloudlets part of the pool
+	Cloudlets []string `protobuf:"bytes,3,rep,name=cloudlets" json:"cloudlets,omitempty"`
 }
 
 func (m *CloudletPool) Reset()                    { *m = CloudletPool{} }
@@ -51,11 +59,12 @@ func (m *CloudletPool) String() string            { return proto.CompactTextStri
 func (*CloudletPool) ProtoMessage()               {}
 func (*CloudletPool) Descriptor() ([]byte, []int) { return fileDescriptorCloudletpool, []int{1} }
 
+// CloudletPoolMember is used to add and remove a Cloudlet from a CloudletPool
 type CloudletPoolMember struct {
 	// CloudletPool key
-	PoolKey CloudletPoolKey `protobuf:"bytes,1,opt,name=pool_key,json=poolKey" json:"pool_key"`
+	Key CloudletPoolKey `protobuf:"bytes,1,opt,name=key" json:"key"`
 	// Cloudlet key
-	CloudletKey CloudletKey `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey" json:"cloudlet_key"`
+	CloudletName string `protobuf:"bytes,2,opt,name=cloudlet_name,json=cloudletName,proto3" json:"cloudlet_name,omitempty"`
 }
 
 func (m *CloudletPoolMember) Reset()                    { *m = CloudletPoolMember{} }
@@ -72,20 +81,10 @@ func (this *CloudletPoolKey) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 5)
-	s = append(s, "&edgeproto.CloudletPoolKey{")
-	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *CloudletPoolMember) GoString() string {
-	if this == nil {
-		return "nil"
-	}
 	s := make([]string, 0, 6)
-	s = append(s, "&edgeproto.CloudletPoolMember{")
-	s = append(s, "PoolKey: "+strings.Replace(this.PoolKey.GoString(), `&`, ``, 1)+",\n")
-	s = append(s, "CloudletKey: "+strings.Replace(this.CloudletKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "&edgeproto.CloudletPoolKey{")
+	s = append(s, "Organization: "+fmt.Sprintf("%#v", this.Organization)+",\n")
+	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -113,8 +112,14 @@ type CloudletPoolApiClient interface {
 	CreateCloudletPool(ctx context.Context, in *CloudletPool, opts ...grpc.CallOption) (*Result, error)
 	// Delete a CloudletPool
 	DeleteCloudletPool(ctx context.Context, in *CloudletPool, opts ...grpc.CallOption) (*Result, error)
+	// Update a CloudletPool
+	UpdateCloudletPool(ctx context.Context, in *CloudletPool, opts ...grpc.CallOption) (*Result, error)
 	// Show CloudletPools
 	ShowCloudletPool(ctx context.Context, in *CloudletPool, opts ...grpc.CallOption) (CloudletPoolApi_ShowCloudletPoolClient, error)
+	// Add a Cloudlet to a CloudletPool
+	AddCloudletPoolMember(ctx context.Context, in *CloudletPoolMember, opts ...grpc.CallOption) (*Result, error)
+	// Remove a Cloudlet from a CloudletPool
+	RemoveCloudletPoolMember(ctx context.Context, in *CloudletPoolMember, opts ...grpc.CallOption) (*Result, error)
 }
 
 type cloudletPoolApiClient struct {
@@ -137,6 +142,15 @@ func (c *cloudletPoolApiClient) CreateCloudletPool(ctx context.Context, in *Clou
 func (c *cloudletPoolApiClient) DeleteCloudletPool(ctx context.Context, in *CloudletPool, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
 	err := grpc.Invoke(ctx, "/edgeproto.CloudletPoolApi/DeleteCloudletPool", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cloudletPoolApiClient) UpdateCloudletPool(ctx context.Context, in *CloudletPool, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := grpc.Invoke(ctx, "/edgeproto.CloudletPoolApi/UpdateCloudletPool", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +189,24 @@ func (x *cloudletPoolApiShowCloudletPoolClient) Recv() (*CloudletPool, error) {
 	return m, nil
 }
 
+func (c *cloudletPoolApiClient) AddCloudletPoolMember(ctx context.Context, in *CloudletPoolMember, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := grpc.Invoke(ctx, "/edgeproto.CloudletPoolApi/AddCloudletPoolMember", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cloudletPoolApiClient) RemoveCloudletPoolMember(ctx context.Context, in *CloudletPoolMember, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := grpc.Invoke(ctx, "/edgeproto.CloudletPoolApi/RemoveCloudletPoolMember", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for CloudletPoolApi service
 
 type CloudletPoolApiServer interface {
@@ -182,8 +214,14 @@ type CloudletPoolApiServer interface {
 	CreateCloudletPool(context.Context, *CloudletPool) (*Result, error)
 	// Delete a CloudletPool
 	DeleteCloudletPool(context.Context, *CloudletPool) (*Result, error)
+	// Update a CloudletPool
+	UpdateCloudletPool(context.Context, *CloudletPool) (*Result, error)
 	// Show CloudletPools
 	ShowCloudletPool(*CloudletPool, CloudletPoolApi_ShowCloudletPoolServer) error
+	// Add a Cloudlet to a CloudletPool
+	AddCloudletPoolMember(context.Context, *CloudletPoolMember) (*Result, error)
+	// Remove a Cloudlet from a CloudletPool
+	RemoveCloudletPoolMember(context.Context, *CloudletPoolMember) (*Result, error)
 }
 
 func RegisterCloudletPoolApiServer(s *grpc.Server, srv CloudletPoolApiServer) {
@@ -226,6 +264,24 @@ func _CloudletPoolApi_DeleteCloudletPool_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CloudletPoolApi_UpdateCloudletPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloudletPool)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CloudletPoolApiServer).UpdateCloudletPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.CloudletPoolApi/UpdateCloudletPool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CloudletPoolApiServer).UpdateCloudletPool(ctx, req.(*CloudletPool))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CloudletPoolApi_ShowCloudletPool_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(CloudletPool)
 	if err := stream.RecvMsg(m); err != nil {
@@ -247,6 +303,42 @@ func (x *cloudletPoolApiShowCloudletPoolServer) Send(m *CloudletPool) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _CloudletPoolApi_AddCloudletPoolMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloudletPoolMember)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CloudletPoolApiServer).AddCloudletPoolMember(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.CloudletPoolApi/AddCloudletPoolMember",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CloudletPoolApiServer).AddCloudletPoolMember(ctx, req.(*CloudletPoolMember))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CloudletPoolApi_RemoveCloudletPoolMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloudletPoolMember)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CloudletPoolApiServer).RemoveCloudletPoolMember(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.CloudletPoolApi/RemoveCloudletPoolMember",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CloudletPoolApiServer).RemoveCloudletPoolMember(ctx, req.(*CloudletPoolMember))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _CloudletPoolApi_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "edgeproto.CloudletPoolApi",
 	HandlerType: (*CloudletPoolApiServer)(nil),
@@ -259,330 +351,23 @@ var _CloudletPoolApi_serviceDesc = grpc.ServiceDesc{
 			MethodName: "DeleteCloudletPool",
 			Handler:    _CloudletPoolApi_DeleteCloudletPool_Handler,
 		},
+		{
+			MethodName: "UpdateCloudletPool",
+			Handler:    _CloudletPoolApi_UpdateCloudletPool_Handler,
+		},
+		{
+			MethodName: "AddCloudletPoolMember",
+			Handler:    _CloudletPoolApi_AddCloudletPoolMember_Handler,
+		},
+		{
+			MethodName: "RemoveCloudletPoolMember",
+			Handler:    _CloudletPoolApi_RemoveCloudletPoolMember_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "ShowCloudletPool",
 			Handler:       _CloudletPoolApi_ShowCloudletPool_Handler,
-			ServerStreams: true,
-		},
-	},
-	Metadata: "cloudletpool.proto",
-}
-
-// Client API for CloudletPoolMemberApi service
-
-type CloudletPoolMemberApiClient interface {
-	// Add a Cloudlet to a CloudletPool
-	CreateCloudletPoolMember(ctx context.Context, in *CloudletPoolMember, opts ...grpc.CallOption) (*Result, error)
-	// Remove a Cloudlet from a CloudletPool
-	DeleteCloudletPoolMember(ctx context.Context, in *CloudletPoolMember, opts ...grpc.CallOption) (*Result, error)
-	// Show the Cloudlet to CloudletPool relationships
-	ShowCloudletPoolMember(ctx context.Context, in *CloudletPoolMember, opts ...grpc.CallOption) (CloudletPoolMemberApi_ShowCloudletPoolMemberClient, error)
-}
-
-type cloudletPoolMemberApiClient struct {
-	cc *grpc.ClientConn
-}
-
-func NewCloudletPoolMemberApiClient(cc *grpc.ClientConn) CloudletPoolMemberApiClient {
-	return &cloudletPoolMemberApiClient{cc}
-}
-
-func (c *cloudletPoolMemberApiClient) CreateCloudletPoolMember(ctx context.Context, in *CloudletPoolMember, opts ...grpc.CallOption) (*Result, error) {
-	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.CloudletPoolMemberApi/CreateCloudletPoolMember", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *cloudletPoolMemberApiClient) DeleteCloudletPoolMember(ctx context.Context, in *CloudletPoolMember, opts ...grpc.CallOption) (*Result, error) {
-	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.CloudletPoolMemberApi/DeleteCloudletPoolMember", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *cloudletPoolMemberApiClient) ShowCloudletPoolMember(ctx context.Context, in *CloudletPoolMember, opts ...grpc.CallOption) (CloudletPoolMemberApi_ShowCloudletPoolMemberClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_CloudletPoolMemberApi_serviceDesc.Streams[0], c.cc, "/edgeproto.CloudletPoolMemberApi/ShowCloudletPoolMember", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &cloudletPoolMemberApiShowCloudletPoolMemberClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type CloudletPoolMemberApi_ShowCloudletPoolMemberClient interface {
-	Recv() (*CloudletPoolMember, error)
-	grpc.ClientStream
-}
-
-type cloudletPoolMemberApiShowCloudletPoolMemberClient struct {
-	grpc.ClientStream
-}
-
-func (x *cloudletPoolMemberApiShowCloudletPoolMemberClient) Recv() (*CloudletPoolMember, error) {
-	m := new(CloudletPoolMember)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-// Server API for CloudletPoolMemberApi service
-
-type CloudletPoolMemberApiServer interface {
-	// Add a Cloudlet to a CloudletPool
-	CreateCloudletPoolMember(context.Context, *CloudletPoolMember) (*Result, error)
-	// Remove a Cloudlet from a CloudletPool
-	DeleteCloudletPoolMember(context.Context, *CloudletPoolMember) (*Result, error)
-	// Show the Cloudlet to CloudletPool relationships
-	ShowCloudletPoolMember(*CloudletPoolMember, CloudletPoolMemberApi_ShowCloudletPoolMemberServer) error
-}
-
-func RegisterCloudletPoolMemberApiServer(s *grpc.Server, srv CloudletPoolMemberApiServer) {
-	s.RegisterService(&_CloudletPoolMemberApi_serviceDesc, srv)
-}
-
-func _CloudletPoolMemberApi_CreateCloudletPoolMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CloudletPoolMember)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CloudletPoolMemberApiServer).CreateCloudletPoolMember(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edgeproto.CloudletPoolMemberApi/CreateCloudletPoolMember",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CloudletPoolMemberApiServer).CreateCloudletPoolMember(ctx, req.(*CloudletPoolMember))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CloudletPoolMemberApi_DeleteCloudletPoolMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CloudletPoolMember)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CloudletPoolMemberApiServer).DeleteCloudletPoolMember(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edgeproto.CloudletPoolMemberApi/DeleteCloudletPoolMember",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CloudletPoolMemberApiServer).DeleteCloudletPoolMember(ctx, req.(*CloudletPoolMember))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CloudletPoolMemberApi_ShowCloudletPoolMember_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(CloudletPoolMember)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(CloudletPoolMemberApiServer).ShowCloudletPoolMember(m, &cloudletPoolMemberApiShowCloudletPoolMemberServer{stream})
-}
-
-type CloudletPoolMemberApi_ShowCloudletPoolMemberServer interface {
-	Send(*CloudletPoolMember) error
-	grpc.ServerStream
-}
-
-type cloudletPoolMemberApiShowCloudletPoolMemberServer struct {
-	grpc.ServerStream
-}
-
-func (x *cloudletPoolMemberApiShowCloudletPoolMemberServer) Send(m *CloudletPoolMember) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-var _CloudletPoolMemberApi_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "edgeproto.CloudletPoolMemberApi",
-	HandlerType: (*CloudletPoolMemberApiServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CreateCloudletPoolMember",
-			Handler:    _CloudletPoolMemberApi_CreateCloudletPoolMember_Handler,
-		},
-		{
-			MethodName: "DeleteCloudletPoolMember",
-			Handler:    _CloudletPoolMemberApi_DeleteCloudletPoolMember_Handler,
-		},
-	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "ShowCloudletPoolMember",
-			Handler:       _CloudletPoolMemberApi_ShowCloudletPoolMember_Handler,
-			ServerStreams: true,
-		},
-	},
-	Metadata: "cloudletpool.proto",
-}
-
-// Client API for CloudletPoolShowApi service
-
-type CloudletPoolShowApiClient interface {
-	// Show CloudletPools that have Cloudlet as a member
-	ShowPoolsForCloudlet(ctx context.Context, in *CloudletKey, opts ...grpc.CallOption) (CloudletPoolShowApi_ShowPoolsForCloudletClient, error)
-	// Show Cloudlets that belong to the Pool
-	ShowCloudletsForPool(ctx context.Context, in *CloudletPoolKey, opts ...grpc.CallOption) (CloudletPoolShowApi_ShowCloudletsForPoolClient, error)
-}
-
-type cloudletPoolShowApiClient struct {
-	cc *grpc.ClientConn
-}
-
-func NewCloudletPoolShowApiClient(cc *grpc.ClientConn) CloudletPoolShowApiClient {
-	return &cloudletPoolShowApiClient{cc}
-}
-
-func (c *cloudletPoolShowApiClient) ShowPoolsForCloudlet(ctx context.Context, in *CloudletKey, opts ...grpc.CallOption) (CloudletPoolShowApi_ShowPoolsForCloudletClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_CloudletPoolShowApi_serviceDesc.Streams[0], c.cc, "/edgeproto.CloudletPoolShowApi/ShowPoolsForCloudlet", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &cloudletPoolShowApiShowPoolsForCloudletClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type CloudletPoolShowApi_ShowPoolsForCloudletClient interface {
-	Recv() (*CloudletPool, error)
-	grpc.ClientStream
-}
-
-type cloudletPoolShowApiShowPoolsForCloudletClient struct {
-	grpc.ClientStream
-}
-
-func (x *cloudletPoolShowApiShowPoolsForCloudletClient) Recv() (*CloudletPool, error) {
-	m := new(CloudletPool)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *cloudletPoolShowApiClient) ShowCloudletsForPool(ctx context.Context, in *CloudletPoolKey, opts ...grpc.CallOption) (CloudletPoolShowApi_ShowCloudletsForPoolClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_CloudletPoolShowApi_serviceDesc.Streams[1], c.cc, "/edgeproto.CloudletPoolShowApi/ShowCloudletsForPool", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &cloudletPoolShowApiShowCloudletsForPoolClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type CloudletPoolShowApi_ShowCloudletsForPoolClient interface {
-	Recv() (*Cloudlet, error)
-	grpc.ClientStream
-}
-
-type cloudletPoolShowApiShowCloudletsForPoolClient struct {
-	grpc.ClientStream
-}
-
-func (x *cloudletPoolShowApiShowCloudletsForPoolClient) Recv() (*Cloudlet, error) {
-	m := new(Cloudlet)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-// Server API for CloudletPoolShowApi service
-
-type CloudletPoolShowApiServer interface {
-	// Show CloudletPools that have Cloudlet as a member
-	ShowPoolsForCloudlet(*CloudletKey, CloudletPoolShowApi_ShowPoolsForCloudletServer) error
-	// Show Cloudlets that belong to the Pool
-	ShowCloudletsForPool(*CloudletPoolKey, CloudletPoolShowApi_ShowCloudletsForPoolServer) error
-}
-
-func RegisterCloudletPoolShowApiServer(s *grpc.Server, srv CloudletPoolShowApiServer) {
-	s.RegisterService(&_CloudletPoolShowApi_serviceDesc, srv)
-}
-
-func _CloudletPoolShowApi_ShowPoolsForCloudlet_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(CloudletKey)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(CloudletPoolShowApiServer).ShowPoolsForCloudlet(m, &cloudletPoolShowApiShowPoolsForCloudletServer{stream})
-}
-
-type CloudletPoolShowApi_ShowPoolsForCloudletServer interface {
-	Send(*CloudletPool) error
-	grpc.ServerStream
-}
-
-type cloudletPoolShowApiShowPoolsForCloudletServer struct {
-	grpc.ServerStream
-}
-
-func (x *cloudletPoolShowApiShowPoolsForCloudletServer) Send(m *CloudletPool) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _CloudletPoolShowApi_ShowCloudletsForPool_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(CloudletPoolKey)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(CloudletPoolShowApiServer).ShowCloudletsForPool(m, &cloudletPoolShowApiShowCloudletsForPoolServer{stream})
-}
-
-type CloudletPoolShowApi_ShowCloudletsForPoolServer interface {
-	Send(*Cloudlet) error
-	grpc.ServerStream
-}
-
-type cloudletPoolShowApiShowCloudletsForPoolServer struct {
-	grpc.ServerStream
-}
-
-func (x *cloudletPoolShowApiShowCloudletsForPoolServer) Send(m *Cloudlet) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-var _CloudletPoolShowApi_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "edgeproto.CloudletPoolShowApi",
-	HandlerType: (*CloudletPoolShowApiServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "ShowPoolsForCloudlet",
-			Handler:       _CloudletPoolShowApi_ShowPoolsForCloudlet_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "ShowCloudletsForPool",
-			Handler:       _CloudletPoolShowApi_ShowCloudletsForPool_Handler,
 			ServerStreams: true,
 		},
 	},
@@ -604,8 +389,14 @@ func (m *CloudletPoolKey) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Name) > 0 {
+	if len(m.Organization) > 0 {
 		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCloudletpool(dAtA, i, uint64(len(m.Organization)))
+		i += copy(dAtA[i:], m.Organization)
+	}
+	if len(m.Name) > 0 {
+		dAtA[i] = 0x12
 		i++
 		i = encodeVarintCloudletpool(dAtA, i, uint64(len(m.Name)))
 		i += copy(dAtA[i:], m.Name)
@@ -651,6 +442,21 @@ func (m *CloudletPool) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n1
+	if len(m.Cloudlets) > 0 {
+		for _, s := range m.Cloudlets {
+			dAtA[i] = 0x1a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
 	return i, nil
 }
 
@@ -671,20 +477,18 @@ func (m *CloudletPoolMember) MarshalTo(dAtA []byte) (int, error) {
 	_ = l
 	dAtA[i] = 0xa
 	i++
-	i = encodeVarintCloudletpool(dAtA, i, uint64(m.PoolKey.Size()))
-	n2, err := m.PoolKey.MarshalTo(dAtA[i:])
+	i = encodeVarintCloudletpool(dAtA, i, uint64(m.Key.Size()))
+	n2, err := m.Key.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n2
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintCloudletpool(dAtA, i, uint64(m.CloudletKey.Size()))
-	n3, err := m.CloudletKey.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	if len(m.CloudletName) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCloudletpool(dAtA, i, uint64(len(m.CloudletName)))
+		i += copy(dAtA[i:], m.CloudletName)
 	}
-	i += n3
 	return i, nil
 }
 
@@ -706,6 +510,11 @@ func (m *CloudletPoolKey) Matches(o *CloudletPoolKey, fopts ...MatchOpt) bool {
 		}
 		return false
 	}
+	if !opts.Filter || o.Organization != "" {
+		if o.Organization != m.Organization {
+			return false
+		}
+	}
 	if !opts.Filter || o.Name != "" {
 		if o.Name != m.Name {
 			return false
@@ -716,6 +525,10 @@ func (m *CloudletPoolKey) Matches(o *CloudletPoolKey, fopts ...MatchOpt) bool {
 
 func (m *CloudletPoolKey) CopyInFields(src *CloudletPoolKey) int {
 	changed := 0
+	if m.Organization != src.Organization {
+		m.Organization = src.Organization
+		changed++
+	}
 	if m.Name != src.Name {
 		m.Name = src.Name
 		changed++
@@ -724,6 +537,7 @@ func (m *CloudletPoolKey) CopyInFields(src *CloudletPoolKey) int {
 }
 
 func (m *CloudletPoolKey) DeepCopyIn(src *CloudletPoolKey) {
+	m.Organization = src.Organization
 	m.Name = src.Name
 }
 
@@ -750,10 +564,12 @@ func (m *CloudletPoolKey) ExistsError() error {
 	return fmt.Errorf("CloudletPool key %s already exists", m.GetKeyString())
 }
 
+var CloudletPoolKeyTagOrganization = "cloudletpoolorg"
 var CloudletPoolKeyTagName = "cloudletpool"
 
 func (m *CloudletPoolKey) GetTags() map[string]string {
 	tags := make(map[string]string)
+	tags["cloudletpoolorg"] = m.Organization
 	tags["cloudletpool"] = m.Name
 	return tags
 }
@@ -775,22 +591,44 @@ func (m *CloudletPool) Matches(o *CloudletPool, fopts ...MatchOpt) bool {
 	if !m.Key.Matches(&o.Key, fopts...) {
 		return false
 	}
+	if !opts.Filter || o.Cloudlets != nil {
+		if m.Cloudlets == nil && o.Cloudlets != nil || m.Cloudlets != nil && o.Cloudlets == nil {
+			return false
+		} else if m.Cloudlets != nil && o.Cloudlets != nil {
+			if len(m.Cloudlets) != len(o.Cloudlets) {
+				return false
+			}
+			for i := 0; i < len(m.Cloudlets); i++ {
+				if o.Cloudlets[i] != m.Cloudlets[i] {
+					return false
+				}
+			}
+		}
+	}
 	return true
 }
 
 const CloudletPoolFieldKey = "2"
-const CloudletPoolFieldKeyName = "2.1"
+const CloudletPoolFieldKeyOrganization = "2.1"
+const CloudletPoolFieldKeyName = "2.2"
+const CloudletPoolFieldCloudlets = "3"
 
 var CloudletPoolAllFields = []string{
+	CloudletPoolFieldKeyOrganization,
 	CloudletPoolFieldKeyName,
+	CloudletPoolFieldCloudlets,
 }
 
 var CloudletPoolAllFieldsMap = map[string]struct{}{
-	CloudletPoolFieldKeyName: struct{}{},
+	CloudletPoolFieldKeyOrganization: struct{}{},
+	CloudletPoolFieldKeyName:         struct{}{},
+	CloudletPoolFieldCloudlets:       struct{}{},
 }
 
 var CloudletPoolAllFieldsStringMap = map[string]string{
-	CloudletPoolFieldKeyName: "Key Name",
+	CloudletPoolFieldKeyOrganization: "Key Organization",
+	CloudletPoolFieldKeyName:         "Key Name",
+	CloudletPoolFieldCloudlets:       "Cloudlets",
 }
 
 func (m *CloudletPool) IsKeyField(s string) bool {
@@ -798,10 +636,51 @@ func (m *CloudletPool) IsKeyField(s string) bool {
 }
 
 func (m *CloudletPool) DiffFields(o *CloudletPool, fields map[string]struct{}) {
+	if m.Key.Organization != o.Key.Organization {
+		fields[CloudletPoolFieldKeyOrganization] = struct{}{}
+		fields[CloudletPoolFieldKey] = struct{}{}
+	}
 	if m.Key.Name != o.Key.Name {
 		fields[CloudletPoolFieldKeyName] = struct{}{}
 		fields[CloudletPoolFieldKey] = struct{}{}
 	}
+	if len(m.Cloudlets) != len(o.Cloudlets) {
+		fields[CloudletPoolFieldCloudlets] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Cloudlets); i0++ {
+			if m.Cloudlets[i0] != o.Cloudlets[i0] {
+				fields[CloudletPoolFieldCloudlets] = struct{}{}
+				break
+			}
+		}
+	}
+}
+
+var UpdateCloudletPoolFieldsMap = map[string]struct{}{
+	CloudletPoolFieldCloudlets: struct{}{},
+}
+
+func (m *CloudletPool) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateCloudletPoolFieldsMap[field]; !ok {
+			if _, ok := CloudletPoolAllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, CloudletPoolAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
 }
 
 func (m *CloudletPool) CopyInFields(src *CloudletPool) int {
@@ -809,17 +688,39 @@ func (m *CloudletPool) CopyInFields(src *CloudletPool) int {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
+			if m.Key.Organization != src.Key.Organization {
+				m.Key.Organization = src.Key.Organization
+				changed++
+			}
+		}
+		if _, set := fmap["2.2"]; set {
 			if m.Key.Name != src.Key.Name {
 				m.Key.Name = src.Key.Name
 				changed++
 			}
 		}
 	}
+	if _, set := fmap["3"]; set {
+		if m.Cloudlets == nil || len(m.Cloudlets) != len(src.Cloudlets) {
+			m.Cloudlets = make([]string, len(src.Cloudlets))
+			changed++
+		}
+		copy(m.Cloudlets, src.Cloudlets)
+		changed++
+	}
 	return changed
 }
 
 func (m *CloudletPool) DeepCopyIn(src *CloudletPool) {
 	m.Key.DeepCopyIn(&src.Key)
+	if src.Cloudlets != nil {
+		m.Cloudlets = make([]string, len(src.Cloudlets), len(src.Cloudlets))
+		for ii, s := range src.Cloudlets {
+			m.Cloudlets[ii] = s
+		}
+	} else {
+		m.Cloudlets = nil
+	}
 }
 
 func (s *CloudletPool) HasFields() bool {
@@ -1326,6 +1227,13 @@ func (c *CloudletPoolCache) SyncListEnd(ctx context.Context) {
 }
 
 func (c *CloudletPoolCache) UsesOrg(org string) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		if key.Organization == org {
+			return true
+		}
+	}
 	return false
 }
 
@@ -1358,595 +1266,51 @@ func (m *CloudletPool) ValidateEnums() error {
 	return nil
 }
 
-func (m *CloudletPoolMember) Matches(o *CloudletPoolMember, fopts ...MatchOpt) bool {
-	opts := MatchOptions{}
-	applyMatchOptions(&opts, fopts...)
-	if o == nil {
-		if opts.Filter {
-			return true
-		}
-		return false
-	}
-	if !m.PoolKey.Matches(&o.PoolKey, fopts...) {
-		return false
-	}
-	if !m.CloudletKey.Matches(&o.CloudletKey, fopts...) {
-		return false
-	}
-	return true
-}
-
 func (m *CloudletPoolMember) CopyInFields(src *CloudletPoolMember) int {
 	changed := 0
-	if m.PoolKey.Name != src.PoolKey.Name {
-		m.PoolKey.Name = src.PoolKey.Name
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
 		changed++
 	}
-	if m.CloudletKey.Organization != src.CloudletKey.Organization {
-		m.CloudletKey.Organization = src.CloudletKey.Organization
+	if m.Key.Name != src.Key.Name {
+		m.Key.Name = src.Key.Name
 		changed++
 	}
-	if m.CloudletKey.Name != src.CloudletKey.Name {
-		m.CloudletKey.Name = src.CloudletKey.Name
+	if m.CloudletName != src.CloudletName {
+		m.CloudletName = src.CloudletName
 		changed++
 	}
 	return changed
 }
 
 func (m *CloudletPoolMember) DeepCopyIn(src *CloudletPoolMember) {
-	m.PoolKey.DeepCopyIn(&src.PoolKey)
-	m.CloudletKey.DeepCopyIn(&src.CloudletKey)
-}
-
-func (s *CloudletPoolMember) HasFields() bool {
-	return false
-}
-
-type CloudletPoolMemberStore struct {
-	kvstore objstore.KVStore
-}
-
-func NewCloudletPoolMemberStore(kvstore objstore.KVStore) CloudletPoolMemberStore {
-	return CloudletPoolMemberStore{kvstore: kvstore}
-}
-
-func (s *CloudletPoolMemberStore) Create(ctx context.Context, m *CloudletPoolMember, wait func(int64)) (*Result, error) {
-	err := m.ValidateKey()
-	if err != nil {
-		return nil, err
-	}
-	key := objstore.DbKeyString("CloudletPoolMember", m.GetKey())
-	val, err := json.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-	rev, err := s.kvstore.Create(ctx, key, string(val))
-	if err != nil {
-		return nil, err
-	}
-	if wait != nil {
-		wait(rev)
-	}
-	return &Result{}, err
-}
-
-func (s *CloudletPoolMemberStore) Update(ctx context.Context, m *CloudletPoolMember, wait func(int64)) (*Result, error) {
-	err := m.ValidateKey()
-	if err != nil {
-		return nil, err
-	}
-	key := objstore.DbKeyString("CloudletPoolMember", m.GetKey())
-	var vers int64 = 0
-	val, err := json.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
-	if err != nil {
-		return nil, err
-	}
-	if wait != nil {
-		wait(rev)
-	}
-	return &Result{}, err
-}
-
-func (s *CloudletPoolMemberStore) Put(ctx context.Context, m *CloudletPoolMember, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
-	err := m.ValidateKey()
-	if err != nil {
-		return nil, err
-	}
-	key := objstore.DbKeyString("CloudletPoolMember", m.GetKey())
-	var val []byte
-	val, err = json.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
-	if err != nil {
-		return nil, err
-	}
-	if wait != nil {
-		wait(rev)
-	}
-	return &Result{}, err
-}
-
-func (s *CloudletPoolMemberStore) Delete(ctx context.Context, m *CloudletPoolMember, wait func(int64)) (*Result, error) {
-	err := m.GetKey().ValidateKey()
-	if err != nil {
-		return nil, err
-	}
-	key := objstore.DbKeyString("CloudletPoolMember", m.GetKey())
-	rev, err := s.kvstore.Delete(ctx, key)
-	if err != nil {
-		return nil, err
-	}
-	if wait != nil {
-		wait(rev)
-	}
-	return &Result{}, err
-}
-
-func (s *CloudletPoolMemberStore) LoadOne(key string) (*CloudletPoolMember, int64, error) {
-	val, rev, _, err := s.kvstore.Get(key)
-	if err != nil {
-		return nil, 0, err
-	}
-	var obj CloudletPoolMember
-	err = json.Unmarshal(val, &obj)
-	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse CloudletPoolMember data", "val", string(val), "err", err)
-		return nil, 0, err
-	}
-	return &obj, rev, nil
-}
-
-func (s *CloudletPoolMemberStore) STMGet(stm concurrency.STM, key *CloudletPoolMember, buf *CloudletPoolMember) bool {
-	keystr := objstore.DbKeyString("CloudletPoolMember", key)
-	valstr := stm.Get(keystr)
-	if valstr == "" {
-		return false
-	}
-	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
-		if err != nil {
-			return false
-		}
-	}
-	return true
-}
-
-func (s *CloudletPoolMemberStore) STMPut(stm concurrency.STM, obj *CloudletPoolMember, ops ...objstore.KVOp) {
-	keystr := objstore.DbKeyString("CloudletPoolMember", obj.GetKey())
-	val, err := json.Marshal(obj)
-	if err != nil {
-		log.InfoLog("CloudletPoolMember json marsahal failed", "obj", obj, "err", err)
-	}
-	v3opts := GetSTMOpts(ops...)
-	stm.Put(keystr, string(val), v3opts...)
-}
-
-func (s *CloudletPoolMemberStore) STMDel(stm concurrency.STM, key *CloudletPoolMember) {
-	keystr := objstore.DbKeyString("CloudletPoolMember", key)
-	stm.Del(keystr)
-}
-
-type CloudletPoolMemberKeyWatcher struct {
-	cb func(ctx context.Context)
-}
-
-type CloudletPoolMemberCacheData struct {
-	Obj    *CloudletPoolMember
-	ModRev int64
-}
-
-// CloudletPoolMemberCache caches CloudletPoolMember objects in memory in a hash table
-// and keeps them in sync with the database.
-type CloudletPoolMemberCache struct {
-	Objs          map[CloudletPoolMember]*CloudletPoolMemberCacheData
-	Mux           util.Mutex
-	List          map[CloudletPoolMember]struct{}
-	FlushAll      bool
-	NotifyCbs     []func(ctx context.Context, obj *CloudletPoolMember, old *CloudletPoolMember, modRev int64)
-	UpdatedCbs    []func(ctx context.Context, old *CloudletPoolMember, new *CloudletPoolMember)
-	DeletedCbs    []func(ctx context.Context, old *CloudletPoolMember)
-	KeyWatchers   map[CloudletPoolMember][]*CloudletPoolMemberKeyWatcher
-	UpdatedKeyCbs []func(ctx context.Context, key *CloudletPoolMember)
-	DeletedKeyCbs []func(ctx context.Context, key *CloudletPoolMember)
-}
-
-func NewCloudletPoolMemberCache() *CloudletPoolMemberCache {
-	cache := CloudletPoolMemberCache{}
-	InitCloudletPoolMemberCache(&cache)
-	return &cache
-}
-
-func InitCloudletPoolMemberCache(cache *CloudletPoolMemberCache) {
-	cache.Objs = make(map[CloudletPoolMember]*CloudletPoolMemberCacheData)
-	cache.KeyWatchers = make(map[CloudletPoolMember][]*CloudletPoolMemberKeyWatcher)
-	cache.NotifyCbs = nil
-	cache.UpdatedCbs = nil
-	cache.DeletedCbs = nil
-	cache.UpdatedKeyCbs = nil
-	cache.DeletedKeyCbs = nil
-}
-
-func (c *CloudletPoolMemberCache) GetTypeString() string {
-	return "CloudletPoolMember"
-}
-
-func (c *CloudletPoolMemberCache) Get(key *CloudletPoolMember, valbuf *CloudletPoolMember) bool {
-	var modRev int64
-	return c.GetWithRev(key, valbuf, &modRev)
-}
-
-func (c *CloudletPoolMemberCache) GetWithRev(key *CloudletPoolMember, valbuf *CloudletPoolMember, modRev *int64) bool {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	inst, found := c.Objs[*key]
-	if found {
-		valbuf.DeepCopyIn(inst.Obj)
-		*modRev = inst.ModRev
-	}
-	return found
-}
-
-func (c *CloudletPoolMemberCache) HasKey(key *CloudletPoolMember) bool {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	_, found := c.Objs[*key]
-	return found
-}
-
-func (c *CloudletPoolMemberCache) GetAllKeys(ctx context.Context, cb func(key *CloudletPoolMember, modRev int64)) {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for key, data := range c.Objs {
-		cb(&key, data.ModRev)
-	}
-}
-
-func (c *CloudletPoolMemberCache) Update(ctx context.Context, in *CloudletPoolMember, modRev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *CloudletPoolMember) (*CloudletPoolMember, bool) {
-		return in, true
-	})
-}
-
-func (c *CloudletPoolMemberCache) UpdateModFunc(ctx context.Context, key *CloudletPoolMember, modRev int64, modFunc func(old *CloudletPoolMember) (new *CloudletPoolMember, changed bool)) {
-	c.Mux.Lock()
-	var old *CloudletPoolMember
-	if oldData, found := c.Objs[*key]; found {
-		old = oldData.Obj
-	}
-	new, changed := modFunc(old)
-	if !changed {
-		c.Mux.Unlock()
-		return
-	}
-	for _, cb := range c.UpdatedCbs {
-		newCopy := &CloudletPoolMember{}
-		newCopy.DeepCopyIn(new)
-		defer cb(ctx, old, newCopy)
-	}
-	for _, cb := range c.NotifyCbs {
-		if cb != nil {
-			defer cb(ctx, new.GetKey(), old, modRev)
-		}
-	}
-	for _, cb := range c.UpdatedKeyCbs {
-		defer cb(ctx, key)
-	}
-	store := &CloudletPoolMember{}
-	store.DeepCopyIn(new)
-	c.Objs[new.GetKeyVal()] = &CloudletPoolMemberCacheData{
-		Obj:    store,
-		ModRev: modRev,
-	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
-	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, new.GetKey())
-}
-
-func (c *CloudletPoolMemberCache) Delete(ctx context.Context, in *CloudletPoolMember, modRev int64) {
-	c.Mux.Lock()
-	var old *CloudletPoolMember
-	oldData, found := c.Objs[in.GetKeyVal()]
-	if found {
-		old = oldData.Obj
-	}
-	delete(c.Objs, in.GetKeyVal())
-	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	c.Mux.Unlock()
-	for _, cb := range c.NotifyCbs {
-		if cb != nil {
-			cb(ctx, in.GetKey(), old, modRev)
-		}
-	}
-	if old != nil {
-		for _, cb := range c.DeletedCbs {
-			cb(ctx, old)
-		}
-	}
-	for _, cb := range c.DeletedKeyCbs {
-		cb(ctx, in.GetKey())
-	}
-	c.TriggerKeyWatchers(ctx, in.GetKey())
-}
-
-func (c *CloudletPoolMemberCache) Prune(ctx context.Context, validKeys map[CloudletPoolMember]struct{}) {
-	notify := make(map[CloudletPoolMember]*CloudletPoolMemberCacheData)
-	c.Mux.Lock()
-	for key, _ := range c.Objs {
-		if _, ok := validKeys[key]; !ok {
-			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
-				notify[key] = c.Objs[key]
-			}
-			delete(c.Objs, key)
-		}
-	}
-	c.Mux.Unlock()
-	for key, old := range notify {
-		for _, cb := range c.NotifyCbs {
-			if cb != nil {
-				cb(ctx, &key, old.Obj, old.ModRev)
-			}
-		}
-		for _, cb := range c.DeletedKeyCbs {
-			cb(ctx, &key)
-		}
-		if old.Obj != nil {
-			for _, cb := range c.DeletedCbs {
-				cb(ctx, old.Obj)
-			}
-		}
-		c.TriggerKeyWatchers(ctx, &key)
-	}
-}
-
-func (c *CloudletPoolMemberCache) GetCount() int {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	return len(c.Objs)
-}
-
-func (c *CloudletPoolMemberCache) Flush(ctx context.Context, notifyId int64) {
-}
-
-func (c *CloudletPoolMemberCache) Show(filter *CloudletPoolMember, cb func(ret *CloudletPoolMember) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show CloudletPoolMember", "count", len(c.Objs))
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare CloudletPoolMember", "filter", filter, "data", data)
-		if !data.Obj.Matches(filter, MatchFilter()) {
-			continue
-		}
-		log.DebugLog(log.DebugLevelApi, "Show CloudletPoolMember", "obj", data.Obj)
-		err := cb(data.Obj)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func CloudletPoolMemberGenericNotifyCb(fn func(key *CloudletPoolMember, old *CloudletPoolMember)) func(objstore.ObjKey, objstore.Obj) {
-	return func(objkey objstore.ObjKey, obj objstore.Obj) {
-		fn(objkey.(*CloudletPoolMember), obj.(*CloudletPoolMember))
-	}
-}
-
-func (c *CloudletPoolMemberCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletPoolMember, old *CloudletPoolMember, modRev int64)) {
-	c.NotifyCbs = []func(ctx context.Context, obj *CloudletPoolMember, old *CloudletPoolMember, modRev int64){fn}
-}
-
-func (c *CloudletPoolMemberCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletPoolMember, new *CloudletPoolMember)) {
-	c.UpdatedCbs = []func(ctx context.Context, old *CloudletPoolMember, new *CloudletPoolMember){fn}
-}
-
-func (c *CloudletPoolMemberCache) SetDeletedCb(fn func(ctx context.Context, old *CloudletPoolMember)) {
-	c.DeletedCbs = []func(ctx context.Context, old *CloudletPoolMember){fn}
-}
-
-func (c *CloudletPoolMemberCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *CloudletPoolMember)) {
-	c.UpdatedKeyCbs = []func(ctx context.Context, key *CloudletPoolMember){fn}
-}
-
-func (c *CloudletPoolMemberCache) SetDeletedKeyCb(fn func(ctx context.Context, key *CloudletPoolMember)) {
-	c.DeletedKeyCbs = []func(ctx context.Context, key *CloudletPoolMember){fn}
-}
-
-func (c *CloudletPoolMemberCache) AddUpdatedCb(fn func(ctx context.Context, old *CloudletPoolMember, new *CloudletPoolMember)) {
-	c.UpdatedCbs = append(c.UpdatedCbs, fn)
-}
-
-func (c *CloudletPoolMemberCache) AddDeletedCb(fn func(ctx context.Context, old *CloudletPoolMember)) {
-	c.DeletedCbs = append(c.DeletedCbs, fn)
-}
-
-func (c *CloudletPoolMemberCache) AddNotifyCb(fn func(ctx context.Context, obj *CloudletPoolMember, old *CloudletPoolMember, modRev int64)) {
-	c.NotifyCbs = append(c.NotifyCbs, fn)
-}
-
-func (c *CloudletPoolMemberCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *CloudletPoolMember)) {
-	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
-}
-
-func (c *CloudletPoolMemberCache) AddDeletedKeyCb(fn func(ctx context.Context, key *CloudletPoolMember)) {
-	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
-}
-
-func (c *CloudletPoolMemberCache) SetFlushAll() {
-	c.FlushAll = true
-}
-
-func (c *CloudletPoolMemberCache) WatchKey(key *CloudletPoolMember, cb func(ctx context.Context)) context.CancelFunc {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	list, ok := c.KeyWatchers[*key]
-	if !ok {
-		list = make([]*CloudletPoolMemberKeyWatcher, 0)
-	}
-	watcher := CloudletPoolMemberKeyWatcher{cb: cb}
-	c.KeyWatchers[*key] = append(list, &watcher)
-	log.DebugLog(log.DebugLevelApi, "Watching CloudletPoolMember", "key", key)
-	return func() {
-		c.Mux.Lock()
-		defer c.Mux.Unlock()
-		list, ok := c.KeyWatchers[*key]
-		if !ok {
-			return
-		}
-		for ii, _ := range list {
-			if list[ii] != &watcher {
-				continue
-			}
-			if len(list) == 1 {
-				delete(c.KeyWatchers, *key)
-				return
-			}
-			list[ii] = list[len(list)-1]
-			list[len(list)-1] = nil
-			c.KeyWatchers[*key] = list[:len(list)-1]
-			return
-		}
-	}
-}
-
-func (c *CloudletPoolMemberCache) TriggerKeyWatchers(ctx context.Context, key *CloudletPoolMember) {
-	watchers := make([]*CloudletPoolMemberKeyWatcher, 0)
-	c.Mux.Lock()
-	if list, ok := c.KeyWatchers[*key]; ok {
-		watchers = append(watchers, list...)
-	}
-	c.Mux.Unlock()
-	for ii, _ := range watchers {
-		watchers[ii].cb(ctx)
-	}
-}
-
-// Note that we explicitly ignore the global revision number, because of the way
-// the notify framework sends updates (by hashing keys and doing lookups, instead
-// of sequentially through a history buffer), updates may be done out-of-order
-// or multiple updates compressed into one update, so the state of the cache at
-// any point in time may not by in sync with a particular database revision number.
-
-func (c *CloudletPoolMemberCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
-	obj := CloudletPoolMember{}
-	err := json.Unmarshal(val, &obj)
-	if err != nil {
-		log.WarnLog("Failed to parse CloudletPoolMember data", "val", string(val), "err", err)
-		return
-	}
-	c.Update(ctx, &obj, modRev)
-	c.Mux.Lock()
-	if c.List != nil {
-		c.List[obj.GetKeyVal()] = struct{}{}
-	}
-	c.Mux.Unlock()
-}
-
-func (c *CloudletPoolMemberCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
-	obj := CloudletPoolMember{}
-	keystr := objstore.DbKeyPrefixRemove(string(key))
-	CloudletPoolMemberStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, modRev)
-}
-
-func (c *CloudletPoolMemberCache) SyncListStart(ctx context.Context) {
-	c.List = make(map[CloudletPoolMember]struct{})
-}
-
-func (c *CloudletPoolMemberCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[CloudletPoolMember]*CloudletPoolMemberCacheData)
-	c.Mux.Lock()
-	for key, val := range c.Objs {
-		if _, found := c.List[key]; !found {
-			deleted[key] = val
-			delete(c.Objs, key)
-		}
-	}
-	c.List = nil
-	c.Mux.Unlock()
-	for key, val := range deleted {
-		for _, cb := range c.NotifyCbs {
-			if cb != nil {
-				cb(ctx, &key, val.Obj, val.ModRev)
-			}
-		}
-		for _, cb := range c.DeletedKeyCbs {
-			cb(ctx, &key)
-		}
-		if val.Obj != nil {
-			for _, cb := range c.DeletedCbs {
-				cb(ctx, val.Obj)
-			}
-		}
-		c.TriggerKeyWatchers(ctx, &key)
-	}
-}
-
-func (c *CloudletPoolMemberCache) UsesOrg(org string) bool {
-	return false
-}
-func (m *CloudletPoolMember) GetKeyString() string {
-	key, err := json.Marshal(m)
-	if err != nil {
-		log.FatalLog("Failed to marshal CloudletPoolMember key string", "obj", m)
-	}
-	return string(key)
-}
-
-func CloudletPoolMemberStringParse(str string, key *CloudletPoolMember) {
-	err := json.Unmarshal([]byte(str), key)
-	if err != nil {
-		log.FatalLog("Failed to unmarshal CloudletPoolMember key string", "str", str)
-	}
-}
-
-func (m *CloudletPoolMember) NotFoundError() error {
-	return fmt.Errorf("CloudletPoolMember key %s not found", m.GetKeyString())
-}
-
-func (m *CloudletPoolMember) ExistsError() error {
-	return fmt.Errorf("CloudletPoolMember key %s already exists", m.GetKeyString())
-}
-
-func (m *CloudletPoolMember) GetTags() map[string]string {
-	tags := make(map[string]string)
-	tags["cloudletpool"] = m.PoolKey.Name
-	tags["cloudletorg"] = m.CloudletKey.Organization
-	tags["cloudlet"] = m.CloudletKey.Name
-	return tags
+	m.Key.DeepCopyIn(&src.Key)
+	m.CloudletName = src.CloudletName
 }
 
 func (m *CloudletPoolMember) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
 
-func (m *CloudletPoolMember) GetKey() *CloudletPoolMember {
-	return m
+func (m *CloudletPoolMember) GetKey() *CloudletPoolKey {
+	return &m.Key
 }
 
-func (m *CloudletPoolMember) GetKeyVal() CloudletPoolMember {
-	return *m
+func (m *CloudletPoolMember) GetKeyVal() CloudletPoolKey {
+	return m.Key
 }
 
-func (m *CloudletPoolMember) SetKey(key *CloudletPoolMember) {
-	*m = *key
+func (m *CloudletPoolMember) SetKey(key *CloudletPoolKey) {
+	m.Key = *key
 }
 
 func CmpSortCloudletPoolMember(a CloudletPoolMember, b CloudletPoolMember) bool {
-	return a.GetKeyString() < b.GetKeyString()
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
 
 // Helper method to check that enums have valid values
 func (m *CloudletPoolMember) ValidateEnums() error {
-	if err := m.PoolKey.ValidateEnums(); err != nil {
-		return err
-	}
-	if err := m.CloudletKey.ValidateEnums(); err != nil {
+	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
@@ -1955,6 +1319,10 @@ func (m *CloudletPoolMember) ValidateEnums() error {
 func (m *CloudletPoolKey) Size() (n int) {
 	var l int
 	_ = l
+	l = len(m.Organization)
+	if l > 0 {
+		n += 1 + l + sovCloudletpool(uint64(l))
+	}
 	l = len(m.Name)
 	if l > 0 {
 		n += 1 + l + sovCloudletpool(uint64(l))
@@ -1973,16 +1341,24 @@ func (m *CloudletPool) Size() (n int) {
 	}
 	l = m.Key.Size()
 	n += 1 + l + sovCloudletpool(uint64(l))
+	if len(m.Cloudlets) > 0 {
+		for _, s := range m.Cloudlets {
+			l = len(s)
+			n += 1 + l + sovCloudletpool(uint64(l))
+		}
+	}
 	return n
 }
 
 func (m *CloudletPoolMember) Size() (n int) {
 	var l int
 	_ = l
-	l = m.PoolKey.Size()
+	l = m.Key.Size()
 	n += 1 + l + sovCloudletpool(uint64(l))
-	l = m.CloudletKey.Size()
-	n += 1 + l + sovCloudletpool(uint64(l))
+	l = len(m.CloudletName)
+	if l > 0 {
+		n += 1 + l + sovCloudletpool(uint64(l))
+	}
 	return n
 }
 
@@ -2029,6 +1405,35 @@ func (m *CloudletPoolKey) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Organization", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudletpool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudletpool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Organization = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
 			}
@@ -2166,6 +1571,35 @@ func (m *CloudletPool) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Cloudlets", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudletpool
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudletpool
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Cloudlets = append(m.Cloudlets, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCloudletpool(dAtA[iNdEx:])
@@ -2218,7 +1652,7 @@ func (m *CloudletPoolMember) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolKey", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2242,15 +1676,15 @@ func (m *CloudletPoolMember) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.PoolKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CloudletKey", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CloudletName", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCloudletpool
@@ -2260,21 +1694,20 @@ func (m *CloudletPoolMember) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCloudletpool
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.CloudletKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.CloudletName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2405,51 +1838,45 @@ var (
 func init() { proto.RegisterFile("cloudletpool.proto", fileDescriptorCloudletpool) }
 
 var fileDescriptorCloudletpool = []byte{
-	// 734 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0xcd, 0x4f, 0x13, 0x4f,
-	0x18, 0xc7, 0xfb, 0xb4, 0x0d, 0xfc, 0x18, 0xfa, 0x53, 0x5c, 0xb0, 0x8c, 0x15, 0x0a, 0xae, 0x1e,
-	0x88, 0xc1, 0x2e, 0xa9, 0x17, 0x52, 0x43, 0x0c, 0x45, 0x89, 0x82, 0xf8, 0x52, 0x13, 0xaf, 0x64,
-	0xdb, 0x0e, 0xcb, 0xc6, 0xdd, 0x9d, 0x66, 0xb7, 0x15, 0xeb, 0xc9, 0x78, 0x32, 0x46, 0x13, 0xe3,
-	0x4b, 0x34, 0x9c, 0x8c, 0x7f, 0x01, 0xf1, 0x64, 0x3c, 0x79, 0x6c, 0xe2, 0x85, 0xc4, 0xbb, 0x51,
-	0xe2, 0xc1, 0x70, 0x32, 0x69, 0x97, 0x78, 0x34, 0x33, 0xfb, 0xc2, 0xb6, 0xa5, 0xa4, 0xe0, 0xa5,
-	0x99, 0xe9, 0x33, 0xcf, 0xf7, 0xf9, 0xcc, 0xf3, 0x7d, 0x66, 0x91, 0x50, 0xd0, 0x68, 0xa5, 0xa8,
-	0x91, 0x72, 0x89, 0x52, 0x2d, 0x55, 0x32, 0x69, 0x99, 0x0a, 0x7d, 0xa4, 0xa8, 0x10, 0xbe, 0x4c,
-	0x8c, 0x28, 0x94, 0x2a, 0x1a, 0x91, 0xe4, 0x92, 0x2a, 0xc9, 0x86, 0x41, 0xcb, 0x72, 0x59, 0xa5,
-	0x86, 0xe5, 0x1c, 0x4c, 0x4c, 0x2b, 0x6a, 0x79, 0xb5, 0x92, 0x4f, 0x15, 0xa8, 0x2e, 0xe9, 0x34,
-	0xaf, 0x6a, 0x2c, 0xf1, 0xbe, 0xc4, 0x7e, 0xcf, 0x71, 0x5d, 0x89, 0x9f, 0x53, 0x88, 0xe1, 0x2f,
-	0xdc, 0xcc, 0x23, 0x5e, 0x59, 0x77, 0x1f, 0x33, 0x89, 0x55, 0xd1, 0xbc, 0xdd, 0x90, 0x42, 0x15,
-	0xca, 0x97, 0x12, 0x5b, 0x39, 0xff, 0x8a, 0x97, 0xd1, 0xd1, 0x39, 0x37, 0xeb, 0x26, 0xa5, 0xda,
-	0x22, 0xa9, 0x0a, 0x67, 0x50, 0xd4, 0x90, 0x75, 0x82, 0x61, 0x1c, 0x26, 0xfa, 0xb2, 0x03, 0x9f,
-	0x76, 0x70, 0x2c, 0x78, 0x9f, 0x1c, 0x8f, 0x66, 0x62, 0xbf, 0xea, 0x18, 0xfe, 0xd4, 0x31, 0x6c,
-	0xbc, 0x1b, 0x03, 0xf1, 0x15, 0xa0, 0x58, 0x50, 0x47, 0x88, 0xa3, 0x9e, 0x15, 0x95, 0x68, 0x45,
-	0x0b, 0xc3, 0x78, 0x64, 0xa2, 0x2f, 0xe7, 0xee, 0x84, 0x34, 0x8a, 0xdc, 0x25, 0x55, 0x1c, 0x1e,
-	0x87, 0x89, 0xfe, 0x74, 0x22, 0xe5, 0x37, 0x25, 0xd5, 0x42, 0x91, 0x8d, 0xd6, 0xbe, 0x8d, 0x85,
-	0x72, 0xec, 0x70, 0x66, 0x9a, 0x95, 0xfa, 0x5d, 0xc7, 0xf0, 0xb0, 0x81, 0xe1, 0x6d, 0x03, 0xc3,
-	0x0b, 0x1b, 0xf7, 0x2e, 0x11, 0x3d, 0x4f, 0x4c, 0x6b, 0xdd, 0xc6, 0xff, 0x33, 0x9e, 0x99, 0x45,
-	0x52, 0x4d, 0x5d, 0x97, 0x75, 0xb2, 0x61, 0xe3, 0xd0, 0x87, 0x1d, 0x1c, 0x35, 0xa8, 0x41, 0xc4,
-	0x67, 0x61, 0x24, 0x04, 0x85, 0x9d, 0x24, 0xe1, 0x02, 0xfa, 0x8f, 0xdd, 0x64, 0x99, 0x91, 0x40,
-	0x97, 0x24, 0xbd, 0x25, 0xb7, 0x3d, 0x17, 0x91, 0xdf, 0x8e, 0xe5, 0xdd, 0xab, 0xc4, 0xf7, 0x10,
-	0xd8, 0x4d, 0xee, 0x2f, 0xec, 0xfe, 0x95, 0xa9, 0xb6, 0x5e, 0x67, 0xdd, 0xc6, 0xb7, 0x98, 0xfa,
-	0x8c, 0x5b, 0x91, 0xdf, 0x63, 0xd2, 0x4b, 0x99, 0x09, 0xc8, 0x39, 0x11, 0x6a, 0x2a, 0xb2, 0xa1,
-	0x3e, 0xe0, 0x53, 0xd3, 0x14, 0xbd, 0x11, 0x08, 0xb0, 0x3e, 0x7c, 0xb6, 0x31, 0x78, 0xbd, 0x60,
-	0x36, 0xa5, 0x3f, 0x46, 0x9a, 0xed, 0x9e, 0x2d, 0xa9, 0xc2, 0x63, 0x40, 0xc2, 0x9c, 0x49, 0xe4,
-	0x32, 0x69, 0x32, 0x70, 0xb8, 0x43, 0x47, 0x12, 0xc7, 0x02, 0x81, 0x1c, 0x1f, 0x30, 0x71, 0x7e,
-	0xbb, 0x81, 0x4f, 0xe7, 0x88, 0x45, 0x2b, 0x66, 0xa1, 0x49, 0xc5, 0x9a, 0x9c, 0x2d, 0x30, 0x98,
-	0x25, 0xd9, 0x90, 0x15, 0x32, 0xf9, 0xe8, 0xeb, 0xcf, 0x97, 0xe1, 0x13, 0xe2, 0x90, 0x54, 0xe0,
-	0xf5, 0xa4, 0xe0, 0x58, 0x65, 0xe0, 0xac, 0xf0, 0x14, 0x90, 0x70, 0x89, 0x68, 0xe4, 0x1f, 0x50,
-	0x16, 0xba, 0x44, 0xd9, 0xb4, 0x31, 0xf8, 0x38, 0x45, 0x5e, 0xb3, 0x0d, 0xe7, 0x09, 0xa0, 0x81,
-	0xdb, 0xab, 0x74, 0xad, 0x3b, 0x98, 0x4e, 0x01, 0x31, 0xbb, 0xdd, 0xc0, 0xa7, 0xf6, 0x43, 0xba,
-	0xa3, 0x92, 0x35, 0xa7, 0x37, 0xc3, 0xa2, 0x20, 0x59, 0xab, 0x74, 0xad, 0x15, 0x65, 0x0a, 0xd2,
-	0xf5, 0x08, 0x3a, 0xde, 0x3e, 0xca, 0xcc, 0xc0, 0x37, 0x80, 0x70, 0xbb, 0x81, 0xee, 0xa8, 0x8f,
-	0x76, 0xa0, 0x72, 0xc2, 0x7b, 0x75, 0xf0, 0xea, 0x41, 0xcc, 0x1c, 0x11, 0x87, 0x25, 0xb9, 0x58,
-	0x6c, 0xe2, 0xd5, 0xb9, 0x34, 0x6b, 0xe0, 0x3a, 0x20, 0xdc, 0xee, 0xe7, 0xa1, 0xc9, 0xae, 0x1d,
-	0x84, 0x6c, 0x4c, 0x4c, 0x48, 0x26, 0xd1, 0xe9, 0x3d, 0xd2, 0x01, 0xee, 0x3d, 0xa0, 0x78, 0xab,
-	0xbb, 0xdd, 0xa1, 0xed, 0x1f, 0x16, 0xaf, 0x74, 0xef, 0xf7, 0xa8, 0x88, 0xdb, 0xfd, 0xf6, 0x11,
-	0xa7, 0x20, 0xfd, 0x25, 0x8c, 0x06, 0x83, 0x12, 0x0c, 0x98, 0x79, 0xfe, 0x1a, 0xd0, 0x10, 0x5b,
-	0x73, 0xd9, 0x79, 0x6a, 0x7a, 0x67, 0x84, 0x0e, 0xdf, 0xa1, 0xce, 0xd3, 0xb9, 0xd0, 0x15, 0x6d,
-	0xcd, 0x7b, 0x2e, 0x27, 0xc5, 0xb8, 0x43, 0xcc, 0x48, 0xad, 0x15, 0x6a, 0x7a, 0xe4, 0x9c, 0xd7,
-	0xe7, 0xf2, 0x84, 0x18, 0x1b, 0x7f, 0x36, 0xfb, 0x7c, 0x60, 0x13, 0x83, 0x7b, 0xc4, 0x0e, 0xcd,
-	0xe5, 0xf1, 0x30, 0x36, 0xff, 0xf5, 0x24, 0xa2, 0xcf, 0x6d, 0x1c, 0xca, 0x0e, 0xd4, 0x7e, 0x24,
-	0x43, 0xb5, 0xad, 0x24, 0x6c, 0x6e, 0x25, 0xe1, 0xfb, 0x56, 0x12, 0xf2, 0x3d, 0xbc, 0xea, 0xf9,
-	0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xd3, 0x17, 0x08, 0xad, 0xb2, 0x07, 0x00, 0x00,
+	// 634 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x93, 0x4b, 0x6b, 0x13, 0x51,
+	0x14, 0xc7, 0x7b, 0xdb, 0xd2, 0x92, 0x6b, 0xa4, 0xf1, 0x5a, 0xcd, 0x35, 0xc4, 0xa4, 0x8c, 0x2e,
+	0x8a, 0xc4, 0x8c, 0xa6, 0x0b, 0x4b, 0x30, 0x8b, 0xa4, 0xee, 0x4a, 0x55, 0x46, 0x2c, 0x14, 0x04,
+	0x99, 0x64, 0x8e, 0x93, 0xb1, 0x33, 0x73, 0xc3, 0xcc, 0xc4, 0x18, 0x17, 0x22, 0x7e, 0x04, 0xdd,
+	0x94, 0xac, 0x5c, 0xb8, 0xaa, 0x2e, 0x8a, 0xcb, 0x7e, 0x82, 0x2c, 0x85, 0xee, 0x45, 0x83, 0xa0,
+	0x74, 0x25, 0xe4, 0x81, 0x4b, 0x99, 0x9b, 0xd7, 0x24, 0x4e, 0x44, 0x8d, 0xe0, 0x26, 0x9c, 0x7b,
+	0x9e, 0xbf, 0xf3, 0xcf, 0x19, 0x4c, 0x0a, 0x3a, 0x2b, 0x2b, 0x3a, 0x38, 0x25, 0xc6, 0xf4, 0x64,
+	0xc9, 0x62, 0x0e, 0x23, 0x01, 0x50, 0x54, 0xe0, 0x66, 0x24, 0xaa, 0x32, 0xa6, 0xea, 0x20, 0xca,
+	0x25, 0x4d, 0x94, 0x4d, 0x93, 0x39, 0xb2, 0xa3, 0x31, 0xd3, 0xee, 0x26, 0x46, 0xd6, 0x55, 0xcd,
+	0x29, 0x96, 0xf3, 0xc9, 0x02, 0x33, 0x44, 0x83, 0xe5, 0x35, 0xdd, 0x2d, 0x7c, 0x2c, 0xba, 0xbf,
+	0x97, 0x79, 0x5f, 0x91, 0xe7, 0xa9, 0x60, 0x0e, 0x8c, 0x5e, 0x65, 0xd0, 0x02, 0xbb, 0xac, 0x3b,
+	0xbd, 0xd7, 0xb2, 0xca, 0x54, 0xc6, 0x4d, 0xd1, 0xb5, 0xba, 0x5e, 0xe1, 0x29, 0x5e, 0xda, 0xe8,
+	0xc1, 0xdd, 0x66, 0x4c, 0xdf, 0x84, 0x2a, 0xb9, 0x86, 0x83, 0xcc, 0x52, 0x65, 0x53, 0x7b, 0xc2,
+	0x39, 0x28, 0x5a, 0x41, 0xab, 0x81, 0xdc, 0xe9, 0xc3, 0x0e, 0x5d, 0xf2, 0xee, 0xc1, 0x2c, 0x55,
+	0x1a, 0x49, 0x24, 0x17, 0xf1, 0xbc, 0x29, 0x1b, 0x40, 0x67, 0x79, 0x41, 0xe8, 0xb0, 0x43, 0x83,
+	0xde, 0x02, 0x89, 0x47, 0xd3, 0xc1, 0xaf, 0x4d, 0x8a, 0xbe, 0x37, 0x29, 0x3a, 0x78, 0x15, 0x47,
+	0xc2, 0x11, 0xc2, 0x41, 0x2f, 0x00, 0x39, 0x8b, 0x17, 0x1e, 0x68, 0xa0, 0x2b, 0x36, 0x45, 0x2b,
+	0x73, 0xab, 0x01, 0xa9, 0xf7, 0x22, 0x29, 0x3c, 0xb7, 0x0b, 0x55, 0xde, 0xfb, 0x44, 0x2a, 0x92,
+	0x1c, 0xa8, 0x97, 0x1c, 0xc3, 0xcf, 0xcd, 0xd7, 0x3f, 0xc4, 0x67, 0x24, 0x37, 0x99, 0x44, 0x71,
+	0xa0, 0x0f, 0x60, 0xd3, 0x39, 0xde, 0x6e, 0xe8, 0x48, 0xef, 0xb8, 0x20, 0xdf, 0x9a, 0x14, 0x3d,
+	0x6b, 0x51, 0xb4, 0xd7, 0xa2, 0xe8, 0x45, 0x9b, 0x2e, 0x6e, 0x81, 0x91, 0x07, 0xcb, 0xae, 0xb5,
+	0xa9, 0xe0, 0xd2, 0x66, 0x36, 0xa1, 0x9a, 0xbc, 0x29, 0x1b, 0x90, 0x60, 0x96, 0xca, 0x1f, 0xb7,
+	0x3c, 0x1b, 0x1f, 0xb4, 0xe9, 0xcc, 0xbb, 0x0e, 0x0d, 0xed, 0x42, 0x35, 0xe3, 0xf5, 0x0b, 0x6f,
+	0x10, 0x26, 0x5e, 0xae, 0x6e, 0xd7, 0xfe, 0x0e, 0xe8, 0x4f, 0x76, 0xb8, 0x80, 0x4f, 0xf6, 0x91,
+	0xef, 0x0f, 0xd5, 0x95, 0x06, 0xca, 0xba, 0x70, 0xe9, 0xeb, 0xb5, 0x36, 0x5d, 0x77, 0x35, 0x1e,
+	0xf2, 0xf6, 0xe3, 0x99, 0x0d, 0x4f, 0xa2, 0xef, 0x16, 0xa9, 0x2f, 0x8b, 0xa3, 0x47, 0x90, 0x2d,
+	0x69, 0xe4, 0xad, 0xbb, 0x81, 0x05, 0xb2, 0x03, 0x23, 0xff, 0x4e, 0x78, 0x02, 0x74, 0xe4, 0x94,
+	0x27, 0x20, 0xf1, 0xb3, 0x13, 0x1e, 0x1e, 0xb7, 0xe8, 0x9a, 0x04, 0x36, 0x2b, 0x5b, 0x85, 0x91,
+	0x2e, 0x76, 0x22, 0x5b, 0x70, 0x07, 0x6f, 0xc9, 0xa6, 0xac, 0x42, 0x62, 0x9c, 0x67, 0xbf, 0x43,
+	0x43, 0xe3, 0xbe, 0xe7, 0x47, 0x9f, 0x5f, 0xce, 0x9e, 0x13, 0x96, 0xc5, 0x02, 0x67, 0x12, 0xbd,
+	0x77, 0x95, 0x46, 0x97, 0xc8, 0x1e, 0xc2, 0xe4, 0x06, 0xe8, 0x30, 0x05, 0xee, 0xf6, 0x5f, 0xe2,
+	0x0e, 0xd0, 0x14, 0x3e, 0xdf, 0x17, 0xed, 0x6e, 0x49, 0x91, 0xff, 0x27, 0x5a, 0x99, 0xcf, 0xff,
+	0x09, 0xad, 0x86, 0x70, 0xe8, 0x4e, 0x91, 0x55, 0x7e, 0x0f, 0x6c, 0x52, 0x40, 0x90, 0x8e, 0x5b,
+	0xf4, 0xea, 0xaf, 0xf0, 0xb6, 0x35, 0xa8, 0xf8, 0xc3, 0x85, 0x05, 0x22, 0xda, 0x45, 0x56, 0x19,
+	0x47, 0xbb, 0x82, 0xc8, 0x6b, 0x84, 0xcf, 0x64, 0x15, 0xc5, 0xe7, 0x33, 0x3a, 0x3f, 0x01, 0xa4,
+	0x1b, 0xf6, 0x13, 0x70, 0x67, 0x1a, 0x01, 0xa3, 0x42, 0x58, 0x94, 0x15, 0x65, 0x04, 0xd1, 0xe0,
+	0xa3, 0x5c, 0x0d, 0xf7, 0x11, 0xa6, 0x12, 0x18, 0xec, 0x11, 0xfc, 0x13, 0xd2, 0x7b, 0xd3, 0x90,
+	0xc6, 0x85, 0x88, 0x68, 0x71, 0x16, 0x7f, 0xd8, 0x5c, 0xa8, 0xfe, 0x29, 0x36, 0x53, 0x6f, 0xc4,
+	0xd0, 0xfb, 0x46, 0x0c, 0x7d, 0x6c, 0xc4, 0x50, 0x7e, 0x81, 0x4f, 0x5f, 0xfb, 0x11, 0x00, 0x00,
+	0xff, 0xff, 0x74, 0x77, 0x10, 0x0b, 0xa3, 0x06, 0x00, 0x00,
 }

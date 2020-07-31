@@ -16,16 +16,6 @@ func (s *DummyServer) AddDummyObjs(ctx context.Context, num int) {
 		flavor := edgeproto.Flavor{}
 		flavor.Key.Name = name
 		s.FlavorCache.Update(ctx, &flavor, int64(ii))
-
-		pool := edgeproto.CloudletPool{}
-		pool.Key.Name = name
-		s.CloudletPoolCache.Update(ctx, &pool, int64(ii))
-
-		member := edgeproto.CloudletPoolMember{}
-		member.PoolKey.Name = name
-		member.CloudletKey.Name = name
-		member.CloudletKey.Organization = name
-		s.CloudletPoolMemberCache.Update(ctx, &member, int64(ii))
 	}
 }
 
@@ -57,6 +47,12 @@ func (s *DummyServer) AddDummyOrgObjs(ctx context.Context, org string, num int) 
 		cloudletInfo.Key.Organization = org
 		cloudletInfo.Key.Name = name
 		s.CloudletInfoCache.Update(ctx, &cloudletInfo, int64(ii))
+
+		pool := edgeproto.CloudletPool{}
+		pool.Key.Name = name
+		pool.Key.Organization = org
+		pool.Cloudlets = []string{"cloudlet1", "cloudlet2", "cloudlet3"}
+		s.CloudletPoolCache.Update(ctx, &pool, int64(ii))
 	}
 }
 

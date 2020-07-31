@@ -108,9 +108,27 @@ type CloudletPoolKeyV0_OrgRestructure struct {
 }
 
 type CloudletPoolMemberV0_OrgRestructure struct {
-	PoolKey     CloudletPoolKey              `protobuf:"bytes,1,opt,name=pool_key,json=poolKey" json:"pool_key"`
-	CloudletKey CloudletKeyV0_OrgRestructure `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey" json:"cloudlet_key"`
+	PoolKey     CloudletPoolKeyV0_OrgRestructure `protobuf:"bytes,1,opt,name=pool_key,json=poolKey" json:"pool_key"`
+	CloudletKey CloudletKeyV0_OrgRestructure     `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey" json:"cloudlet_key"`
 }
+
+type CloudletPoolMemberV1_OrgRestructure struct {
+	PoolKey     CloudletPoolKeyV0_OrgRestructure `protobuf:"bytes,1,opt,name=pool_key,json=poolKey" json:"pool_key"`
+	CloudletKey CloudletKey                      `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey" json:"cloudlet_key"`
+}
+
+func (m *CloudletPoolMemberV1_OrgRestructure) GetKeyString() string {
+	key, err := json.Marshal(m)
+	if err != nil {
+		log.FatalLog("Failed to marshal CloudletPoolMember key string", "obj", m)
+	}
+	return string(key)
+}
+
+func (m *CloudletPoolMemberV1_OrgRestructure) ValidateKey() error         { return nil }
+func (m *CloudletPoolMemberV1_OrgRestructure) NotFoundError() error       { return nil }
+func (m *CloudletPoolMemberV1_OrgRestructure) ExistsError() error         { return nil }
+func (m *CloudletPoolMemberV1_OrgRestructure) GetTags() map[string]string { return nil }
 
 type CloudletInfoV0_OrgRestructure struct {
 	Fields            []string                     `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
@@ -512,13 +530,13 @@ func OrgRestructure(ctx context.Context, objStore objstore.KVStore) error {
 			return err2
 		}
 		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgrading Cloudlet Pool Member from V0 to current", "cloudletPoolMemberV0", cloudletPoolMemberV0)
-		cloudletPoolMemberV1 := CloudletPoolMember{}
+		cloudletPoolMemberV1 := CloudletPoolMemberV1_OrgRestructure{}
 		cloudletPoolMemberV1.PoolKey = cloudletPoolMemberV0.PoolKey
 		cloudletPoolMemberV1.CloudletKey.Organization = cloudletPoolMemberV0.CloudletKey.OperatorKey.Name
 		cloudletPoolMemberV1.CloudletKey.Name = cloudletPoolMemberV0.CloudletKey.Name
 
 		log.SpanLog(ctx, log.DebugLevelUpgrade, "Upgraded cloudlet", "cloudletPoolMemberV1", cloudletPoolMemberV1)
-		newkey := objstore.DbKeyString("CloudletPoolMember", cloudletPoolMemberV1.GetKey())
+		newkey := objstore.DbKeyString("CloudletPoolMember", &cloudletPoolMemberV1)
 		val, err2 = json.Marshal(cloudletPoolMemberV1)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", cloudletPoolMemberV1, "err", err2)
@@ -1126,6 +1144,43 @@ func AppInstRefsUpgrade(ctx context.Context, objStore objstore.KVStore) error {
 		}
 		objStore.Put(ctx, keystr, string(val))
 	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func RedoCloudletPools(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "RedoCloudletPools")
+
+	// The general format and organization of CloudletPools is changed
+	// to be more in line with other structs that have sublists.
+	// CloudletPools also now belong to specific operators so need a
+	// new Organization field in their key. Due to these non-backwards
+	// compatible changes and the fact that pools are not really in use
+	// currently, we remove all old-format pools and members.
+
+	// delete old Pools
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("CloudletPool"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		_, err := objStore.Delete(ctx, string(key))
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to delete CloudletPool key", "key", string(key))
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	// delete old CloudletPoolMembers (they were their own db struct)
+	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("CloudletPoolMember"))
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		_, err := objStore.Delete(ctx, string(key))
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to delete CloudletPoolMember key", "key", string(key))
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
