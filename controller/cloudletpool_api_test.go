@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -31,113 +32,62 @@ func TestCloudletPoolApi(t *testing.T) {
 
 	testutil.InternalCloudletPoolTest(t, "cud", &cloudletPoolApi, testutil.CloudletPoolData)
 
-	testutil.InternalCloudletPoolMemberTest(t, "cud", &cloudletPoolMemberApi, testutil.CloudletPoolMemberData)
-
-	// test pools for cloudlets api
-	for _, cloudlet := range testutil.CloudletData {
-		expected := expectedPoolsForCloudlet(t, &cloudlet.Key)
-		show := testutil.ShowCloudletPool{}
-		show.Init()
-		show.Ctx = ctx
-		err := cloudletPoolMemberApi.ShowPoolsForCloudlet(&cloudlet.Key, &show)
-		require.Nil(t, err, "show pools for cloudlet key %v", cloudlet.Key)
-		require.Equal(t, len(expected), len(show.Data), "num pools for cloudlet key %v", cloudlet.Key)
-		for _, pool := range expected {
-			show.AssertFound(t, pool)
-		}
+	// create test cloudlet
+	cloudlet := edgeproto.Cloudlet{
+		Key: edgeproto.CloudletKey{
+			Name:         "testcloudlet",
+			Organization: testutil.CloudletPoolData[0].Key.Organization,
+		},
+		NumDynamicIps: 100,
+		Location: dme.Loc{
+			Latitude:  40.712776,
+			Longitude: -74.005974,
+		},
+		CrmOverride: edgeproto.CRMOverride_IGNORE_CRM,
 	}
+	err := cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
 
-	// test ShowCloudletsForPools api
-	for _, pool := range testutil.CloudletPoolData {
-		expected := expectedCloudletsForPools(t, pool.Key)
-		show := testutil.ShowCloudlet{}
-		show.Init()
-		show.Ctx = ctx
-		err := cloudletPoolMemberApi.ShowCloudletsForPool(&pool.Key, &show)
-		require.Nil(t, err, "show cloudlets for pool %v", pool.Key)
-		require.Equal(t, len(expected), len(show.Data), "num cloudlets for pool key %v", pool.Key)
-		for _, cloudlet := range expected {
-			show.AssertFound(t, cloudlet)
-		}
-	}
+	// set up test data
+	poolKey := testutil.CloudletPoolData[0].Key
+	member := edgeproto.CloudletPoolMember{}
+	member.Key = poolKey
+	member.CloudletName = cloudlet.Key.Name
+	pool := edgeproto.CloudletPool{}
 
-	// delete cloudlet, check that it cleans up members
-	{
-		in := testutil.CloudletData[3]
-		// first check that there's something to clean up
-		count := countMembersForCloudlet(t, ctx, &in.Key)
-		require.True(t, count > 0, "members exist to clean up")
+	// add member to pool
+	_, err = cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
+	require.Nil(t, err)
+	found := cloudletPoolApi.cache.Get(&poolKey, &pool)
+	require.True(t, found, "get pool %v", poolKey)
+	require.Equal(t, 2, len(pool.Cloudlets))
 
-		out := testutil.NewCudStreamoutCloudlet(ctx)
-		err := cloudletApi.DeleteCloudlet(&in, out)
-		require.Nil(t, err, "delete cloudlet")
-		count = countMembersForCloudlet(t, ctx, &in.Key)
-		require.Equal(t, 0, count, "members deleted")
-	}
-	// delete pool, check that it cleans up members
-	{
-		in := testutil.CloudletPoolData[1]
-		// first check that there's something to clean up
-		count := countMembersForPool(t, ctx, &in.Key)
-		require.True(t, count > 0, "members exist to clean up")
+	// add duplicate should fail
+	_, err = cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
+	require.NotNil(t, err)
 
-		_, err := cloudletPoolApi.DeleteCloudletPool(ctx, &in)
-		require.Nil(t, err, "delete cloudlet pool")
-		count = countMembersForPool(t, ctx, &in.Key)
-		require.Equal(t, 0, count, "members deleted")
-	}
-}
+	// remove member from pool
+	_, err = cloudletPoolApi.RemoveCloudletPoolMember(ctx, &member)
+	require.Nil(t, err)
+	found = cloudletPoolApi.cache.Get(&poolKey, &pool)
+	require.True(t, found, "get pool %v", poolKey)
+	require.Equal(t, 1, len(pool.Cloudlets))
 
-func expectedPoolsForCloudlet(t *testing.T, cloudletKey *edgeproto.CloudletKey) map[edgeproto.CloudletPoolKey]*edgeproto.CloudletPool {
-	pools := make(map[edgeproto.CloudletPoolKey]*edgeproto.CloudletPool)
-	for _, member := range testutil.CloudletPoolMemberData {
-		if !cloudletKey.Matches(&member.CloudletKey) {
-			continue
-		}
-		pool, found := testutil.FindCloudletPoolData(&member.PoolKey, testutil.CloudletPoolData)
-		require.True(t, found, "find cloudlet pool %v", &member.PoolKey)
-		pools[pool.Key] = pool
-	}
-	return pools
-}
+	// add member to pool for next test
+	_, err = cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
+	require.Nil(t, err)
+	found = cloudletPoolApi.cache.Get(&poolKey, &pool)
+	require.True(t, found, "get pool %v", poolKey)
+	require.Equal(t, 2, len(pool.Cloudlets))
 
-func expectedCloudletsForPools(t *testing.T, poolKeys ...edgeproto.CloudletPoolKey) map[edgeproto.CloudletKey]*edgeproto.Cloudlet {
-	keysMap := make(map[edgeproto.CloudletPoolKey]struct{})
-	for _, poolKey := range poolKeys {
-		keysMap[poolKey] = struct{}{}
-	}
-	cloudlets := make(map[edgeproto.CloudletKey]*edgeproto.Cloudlet)
-	for _, member := range testutil.CloudletPoolMemberData {
-		if _, found := keysMap[member.PoolKey]; !found {
-			continue
-		}
-		cloudlet, found := testutil.FindCloudletData(&member.CloudletKey, testutil.CloudletData)
-		require.True(t, found, "find cloudlet %v", &member.CloudletKey)
-		cloudlets[cloudlet.Key] = cloudlet
-	}
-	return cloudlets
-}
+	// delete cloudlet, see it gets removed from pool
+	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	found = cloudletPoolApi.cache.Get(&poolKey, &pool)
+	require.True(t, found, "get pool %v", poolKey)
+	require.Equal(t, 1, len(pool.Cloudlets))
 
-func countMembersForCloudlet(t *testing.T, ctx context.Context, key *edgeproto.CloudletKey) int {
-	show := testutil.ShowCloudletPoolMember{}
-	show.Init()
-	show.Ctx = ctx
-	filter := edgeproto.CloudletPoolMember{
-		CloudletKey: *key,
-	}
-	err := cloudletPoolMemberApi.ShowCloudletPoolMember(&filter, &show)
-	require.Nil(t, err, "show cloudlet pool member")
-	return len(show.Data)
-}
-
-func countMembersForPool(t *testing.T, ctx context.Context, key *edgeproto.CloudletPoolKey) int {
-	show := testutil.ShowCloudletPoolMember{}
-	show.Init()
-	show.Ctx = ctx
-	filter := edgeproto.CloudletPoolMember{
-		PoolKey: *key,
-	}
-	err := cloudletPoolMemberApi.ShowCloudletPoolMember(&filter, &show)
-	require.Nil(t, err, "show cloudlet pool member")
-	return len(show.Data)
+	// add cloudlet that doesn't exist, should fail
+	_, err = cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
+	require.NotNil(t, err)
 }

@@ -319,8 +319,6 @@ func startServices() error {
 	edgeproto.RegisterNodeApiServer(server, &nodeApi)
 	edgeproto.RegisterExecApiServer(server, &execApi)
 	edgeproto.RegisterCloudletPoolApiServer(server, &cloudletPoolApi)
-	edgeproto.RegisterCloudletPoolMemberApiServer(server, &cloudletPoolMemberApi)
-	edgeproto.RegisterCloudletPoolShowApiServer(server, &cloudletPoolMemberApi)
 	edgeproto.RegisterAlertApiServer(server, &alertApi)
 	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
@@ -355,8 +353,6 @@ func startServices() error {
 			edgeproto.RegisterControllerApiHandler,
 			edgeproto.RegisterNodeApiHandler,
 			edgeproto.RegisterCloudletPoolApiHandler,
-			edgeproto.RegisterCloudletPoolMemberApiHandler,
-			edgeproto.RegisterCloudletPoolShowApiHandler,
 			edgeproto.RegisterAlertApiHandler,
 			edgeproto.RegisterAutoScalePolicyApiHandler,
 			edgeproto.RegisterAutoProvPolicyApiHandler,
@@ -477,7 +473,6 @@ func InitApis(sync *Sync) {
 	InitAppInstRefsApi(sync)
 	InitControllerApi(sync)
 	InitCloudletPoolApi(sync)
-	InitCloudletPoolMemberApi(sync)
 	InitExecApi()
 	InitAlertApi(sync)
 	InitAutoScalePolicyApi(sync)
