@@ -26,6 +26,8 @@ var envoyYamlT *template.Template
 // this is the default value in envoy, for DOS protection
 const defaultConcurrentConns uint64 = 1024
 
+const EnvoyImageDigest = "sha256:e7046b34eb39cf573fcfd6afa5977e14c69d0ed064fb69dae0411c353358f306"
+
 func init() {
 	envoyYamlT = template.Must(template.New("yaml").Parse(envoyYaml))
 }
@@ -78,7 +80,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		"-v", certsDir + ":/etc/envoy/certs",
 		"-v", accesslogFile + ":/var/log/access.log",
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
-		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl"}...)
+		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl@" + EnvoyImageDigest}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
 	log.SpanLog(ctx, log.DebugLevelInfra, "envoy docker command", "name", "envoy"+name,
 		"cmd", cmd)
