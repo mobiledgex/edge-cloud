@@ -642,6 +642,13 @@ func (cd *ControllerData) markUpdateVMs(ctx context.Context, vmPool *edgeproto.V
 		changeVMs[vm.Name] = vm
 	}
 
+	// Incoming VM pool will have one of four cases:
+	//  - All VMs in pool, with some VMs with VMState ADD, to add new VMs
+	//  - All VMs in pool, with some VMs with VMState REMOVE, to remove some VMs
+	//  - All VMs in pool, with all VMs with VMState UPDATE, to replace existing set of VMs with new set
+	//  - All VMs in pool with no ADD/REMOVE/UPDATE states, this happens on notify reconnect. We treat it as UPDATE above
+	//  - It should never be the case that VMs will have more than one of ADD/REMOVE/UPDATE set on them in a single update
+
 	changed := false
 	newVMs := []edgeproto.VM{}
 	validateVMs := []edgeproto.VM{}
@@ -650,6 +657,9 @@ func (cd *ControllerData) markUpdateVMs(ctx context.Context, vmPool *edgeproto.V
 	for _, vm := range cd.VMPool.Vms {
 		cVM, ok := changeVMs[vm.Name]
 		if !ok {
+			// Ignored for UPDATE.
+			// For ADD/REMOVE, this really shouldn't happen,
+			// but preserve the VM we have locally.
 			newVMs = append(newVMs, vm)
 			continue
 		}
