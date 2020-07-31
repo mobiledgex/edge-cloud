@@ -196,30 +196,25 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 		if !s.store.STMGet(stm, key, &cur) {
 			return key.NotFoundError()
 		}
-		existingVMs := make(map[string]struct{})
 		if cur.State == edgeproto.TrackedState_UPDATE_REQUESTED && !ignoreTransient(cctx, cur.State) {
 			return fmt.Errorf("Action already in progress, please try again later")
 		}
 		for ii, vm := range cur.Vms {
-			existingVMs[vm.Name] = struct{}{}
 			updateVM, ok := vms[vm.Name]
 			if !ok {
 				continue
 			}
-			if vm.State == edgeproto.VMState_VM_ADD {
+			if updateVM.State == edgeproto.VMState_VM_ADD {
 				return fmt.Errorf("VM %s already exists as part of VM pool", vm.Name)
 			}
 			cur.Vms[ii] = updateVM
+			delete(vms, vm.Name)
 		}
 		for vmName, vm := range vms {
-			if _, ok := existingVMs[vmName]; !ok {
-				if vm.State == edgeproto.VMState_VM_UPDATE || vm.State == edgeproto.VMState_VM_REMOVE {
-					return fmt.Errorf("VM %s does not exist in the pool", vmName)
-				}
+			if vm.State == edgeproto.VMState_VM_REMOVE {
+				return fmt.Errorf("VM %s does not exist in the pool", vmName)
 			}
-			if vm.State == edgeproto.VMState_VM_ADD {
-				cur.Vms = append(cur.Vms, vm)
-			}
+			cur.Vms = append(cur.Vms, vm)
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "Update VMPool", "newPool", cur)
 		if !ignoreCRM(cctx) {
