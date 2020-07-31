@@ -1131,7 +1131,7 @@ type {{.Name}}Cache struct {
 	Mux util.Mutex
 	List map[{{.KeyType}}]struct{}
 	FlushAll bool
-	NotifyCb func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}}, modRev int64)
+	NotifyCbs []func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}}, modRev int64)
 	UpdatedCbs []func(ctx context.Context, old *{{.Name}}, new *{{.Name}})
 	DeletedCbs []func(ctx context.Context, old *{{.Name}})
 	KeyWatchers map[{{.KeyType}}][]*{{.Name}}KeyWatcher
@@ -1148,7 +1148,7 @@ func New{{.Name}}Cache() *{{.Name}}Cache {
 func Init{{.Name}}Cache(cache *{{.Name}}Cache) {
 	cache.Objs = make(map[{{.KeyType}}]*{{.Name}}CacheData)
 	cache.KeyWatchers = make(map[{{.KeyType}}][]*{{.Name}}KeyWatcher)
-	cache.NotifyCb = nil
+	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
 	cache.UpdatedKeyCbs = nil
@@ -1212,8 +1212,10 @@ func (c *{{.Name}}Cache) UpdateModFunc(ctx context.Context, key *{{.KeyType}}, m
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
-	if c.NotifyCb != nil {
-		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
 	}
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
@@ -1239,8 +1241,10 @@ func (c *{{.Name}}Cache) Delete(ctx context.Context, in *{{.Name}}, modRev int64
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
 	}
 	if old != nil {
 		for _, cb := range c.DeletedCbs {
@@ -1258,7 +1262,7 @@ func (c *{{.Name}}Cache) Prune(ctx context.Context, validKeys map[{{.KeyType}}]s
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1266,8 +1270,10 @@ func (c *{{.Name}}Cache) Prune(ctx context.Context, validKeys map[{{.KeyType}}]s
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+	        for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -1303,8 +1309,10 @@ func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
 	c.Mux.Unlock()
 	if len(flushed) > 0 {
 		for key, old := range flushed {
-			if c.NotifyCb != nil {
-				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		        for _, cb := range c.NotifyCbs {
+				if cb != nil {
+					cb(ctx, &key, old.Obj, old.ModRev)
+				}
 			}
 			for _, cb := range c.DeletedKeyCbs {
 				cb(ctx, &key)
@@ -1348,7 +1356,7 @@ func {{.Name}}GenericNotifyCb(fn func(key *{{.KeyType}}, old *{{.Name}})) func(o
 
 
 func (c *{{.Name}}Cache) SetNotifyCb(fn func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}}, modRev int64)) {
-	c.NotifyCb = fn
+	c.NotifyCbs = []func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}}, modRev int64){fn}
 }
 
 func (c *{{.Name}}Cache) SetUpdatedCb(fn func(ctx context.Context, old *{{.Name}}, new *{{.Name}})) {
@@ -1373,6 +1381,10 @@ func (c *{{.Name}}Cache) AddUpdatedCb(fn func(ctx context.Context, old *{{.Name}
 
 func (c *{{.Name}}Cache) AddDeletedCb(fn func(ctx context.Context, old *{{.Name}})) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *{{.Name}}Cache) AddNotifyCb(fn func(ctx context.Context, obj *{{.KeyType}}, old *{{.Name}}, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
 func (c *{{.Name}}Cache) AddUpdatedKeyCb(fn func(ctx context.Context, key *{{.KeyType}})) {
@@ -1480,8 +1492,10 @@ func (c *{{.Name}}Cache) SyncListEnd(ctx context.Context) {
 	c.List = nil
 	c.Mux.Unlock()
 	for key, val := range deleted {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+	        for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
