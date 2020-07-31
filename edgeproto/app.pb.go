@@ -1913,7 +1913,7 @@ type AppCache struct {
 	Mux           util.Mutex
 	List          map[AppKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *AppKey, old *App, modRev int64)
+	NotifyCbs     []func(ctx context.Context, obj *AppKey, old *App, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *App, new *App)
 	DeletedCbs    []func(ctx context.Context, old *App)
 	KeyWatchers   map[AppKey][]*AppKeyWatcher
@@ -1930,7 +1930,7 @@ func NewAppCache() *AppCache {
 func InitAppCache(cache *AppCache) {
 	cache.Objs = make(map[AppKey]*AppCacheData)
 	cache.KeyWatchers = make(map[AppKey][]*AppKeyWatcher)
-	cache.NotifyCb = nil
+	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
 	cache.UpdatedKeyCbs = nil
@@ -1994,8 +1994,10 @@ func (c *AppCache) UpdateModFunc(ctx context.Context, key *AppKey, modRev int64,
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
-	if c.NotifyCb != nil {
-		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
 	}
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
@@ -2021,8 +2023,10 @@ func (c *AppCache) Delete(ctx context.Context, in *App, modRev int64) {
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
 	}
 	if old != nil {
 		for _, cb := range c.DeletedCbs {
@@ -2040,7 +2044,7 @@ func (c *AppCache) Prune(ctx context.Context, validKeys map[AppKey]struct{}) {
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -2048,8 +2052,10 @@ func (c *AppCache) Prune(ctx context.Context, validKeys map[AppKey]struct{}) {
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -2097,7 +2103,7 @@ func AppGenericNotifyCb(fn func(key *AppKey, old *App)) func(objstore.ObjKey, ob
 }
 
 func (c *AppCache) SetNotifyCb(fn func(ctx context.Context, obj *AppKey, old *App, modRev int64)) {
-	c.NotifyCb = fn
+	c.NotifyCbs = []func(ctx context.Context, obj *AppKey, old *App, modRev int64){fn}
 }
 
 func (c *AppCache) SetUpdatedCb(fn func(ctx context.Context, old *App, new *App)) {
@@ -2122,6 +2128,10 @@ func (c *AppCache) AddUpdatedCb(fn func(ctx context.Context, old *App, new *App)
 
 func (c *AppCache) AddDeletedCb(fn func(ctx context.Context, old *App)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AppCache) AddNotifyCb(fn func(ctx context.Context, obj *AppKey, old *App, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
 func (c *AppCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AppKey)) {
@@ -2225,8 +2235,10 @@ func (c *AppCache) SyncListEnd(ctx context.Context) {
 	c.List = nil
 	c.Mux.Unlock()
 	for key, val := range deleted {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)

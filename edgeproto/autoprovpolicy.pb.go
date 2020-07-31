@@ -1398,7 +1398,7 @@ type AutoProvPolicyCache struct {
 	Mux           util.Mutex
 	List          map[PolicyKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy, modRev int64)
+	NotifyCbs     []func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy)
 	DeletedCbs    []func(ctx context.Context, old *AutoProvPolicy)
 	KeyWatchers   map[PolicyKey][]*AutoProvPolicyKeyWatcher
@@ -1415,7 +1415,7 @@ func NewAutoProvPolicyCache() *AutoProvPolicyCache {
 func InitAutoProvPolicyCache(cache *AutoProvPolicyCache) {
 	cache.Objs = make(map[PolicyKey]*AutoProvPolicyCacheData)
 	cache.KeyWatchers = make(map[PolicyKey][]*AutoProvPolicyKeyWatcher)
-	cache.NotifyCb = nil
+	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
 	cache.UpdatedKeyCbs = nil
@@ -1479,8 +1479,10 @@ func (c *AutoProvPolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey,
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
-	if c.NotifyCb != nil {
-		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
 	}
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
@@ -1506,8 +1508,10 @@ func (c *AutoProvPolicyCache) Delete(ctx context.Context, in *AutoProvPolicy, mo
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
 	}
 	if old != nil {
 		for _, cb := range c.DeletedCbs {
@@ -1525,7 +1529,7 @@ func (c *AutoProvPolicyCache) Prune(ctx context.Context, validKeys map[PolicyKey
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1533,8 +1537,10 @@ func (c *AutoProvPolicyCache) Prune(ctx context.Context, validKeys map[PolicyKey
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -1582,7 +1588,7 @@ func AutoProvPolicyGenericNotifyCb(fn func(key *PolicyKey, old *AutoProvPolicy))
 }
 
 func (c *AutoProvPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy, modRev int64)) {
-	c.NotifyCb = fn
+	c.NotifyCbs = []func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy, modRev int64){fn}
 }
 
 func (c *AutoProvPolicyCache) SetUpdatedCb(fn func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy)) {
@@ -1607,6 +1613,10 @@ func (c *AutoProvPolicyCache) AddUpdatedCb(fn func(ctx context.Context, old *Aut
 
 func (c *AutoProvPolicyCache) AddDeletedCb(fn func(ctx context.Context, old *AutoProvPolicy)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AutoProvPolicyCache) AddNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
 func (c *AutoProvPolicyCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
@@ -1710,8 +1720,10 @@ func (c *AutoProvPolicyCache) SyncListEnd(ctx context.Context) {
 	c.List = nil
 	c.Mux.Unlock()
 	for key, val := range deleted {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -2530,7 +2542,7 @@ type AutoProvInfoCache struct {
 	Mux           util.Mutex
 	List          map[CloudletKey]struct{}
 	FlushAll      bool
-	NotifyCb      func(ctx context.Context, obj *CloudletKey, old *AutoProvInfo, modRev int64)
+	NotifyCbs     []func(ctx context.Context, obj *CloudletKey, old *AutoProvInfo, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *AutoProvInfo, new *AutoProvInfo)
 	DeletedCbs    []func(ctx context.Context, old *AutoProvInfo)
 	KeyWatchers   map[CloudletKey][]*AutoProvInfoKeyWatcher
@@ -2547,7 +2559,7 @@ func NewAutoProvInfoCache() *AutoProvInfoCache {
 func InitAutoProvInfoCache(cache *AutoProvInfoCache) {
 	cache.Objs = make(map[CloudletKey]*AutoProvInfoCacheData)
 	cache.KeyWatchers = make(map[CloudletKey][]*AutoProvInfoKeyWatcher)
-	cache.NotifyCb = nil
+	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
 	cache.UpdatedKeyCbs = nil
@@ -2611,8 +2623,10 @@ func (c *AutoProvInfoCache) UpdateModFunc(ctx context.Context, key *CloudletKey,
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
-	if c.NotifyCb != nil {
-		defer c.NotifyCb(ctx, new.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
 	}
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
@@ -2638,8 +2652,10 @@ func (c *AutoProvInfoCache) Delete(ctx context.Context, in *AutoProvInfo, modRev
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old, modRev)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
 	}
 	if old != nil {
 		for _, cb := range c.DeletedCbs {
@@ -2657,7 +2673,7 @@ func (c *AutoProvInfoCache) Prune(ctx context.Context, validKeys map[CloudletKey
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -2665,8 +2681,10 @@ func (c *AutoProvInfoCache) Prune(ctx context.Context, validKeys map[CloudletKey
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
@@ -2701,8 +2719,10 @@ func (c *AutoProvInfoCache) Flush(ctx context.Context, notifyId int64) {
 	c.Mux.Unlock()
 	if len(flushed) > 0 {
 		for key, old := range flushed {
-			if c.NotifyCb != nil {
-				c.NotifyCb(ctx, &key, old.Obj, old.ModRev)
+			for _, cb := range c.NotifyCbs {
+				if cb != nil {
+					cb(ctx, &key, old.Obj, old.ModRev)
+				}
 			}
 			for _, cb := range c.DeletedKeyCbs {
 				cb(ctx, &key)
@@ -2742,7 +2762,7 @@ func AutoProvInfoGenericNotifyCb(fn func(key *CloudletKey, old *AutoProvInfo)) f
 }
 
 func (c *AutoProvInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *AutoProvInfo, modRev int64)) {
-	c.NotifyCb = fn
+	c.NotifyCbs = []func(ctx context.Context, obj *CloudletKey, old *AutoProvInfo, modRev int64){fn}
 }
 
 func (c *AutoProvInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *AutoProvInfo, new *AutoProvInfo)) {
@@ -2767,6 +2787,10 @@ func (c *AutoProvInfoCache) AddUpdatedCb(fn func(ctx context.Context, old *AutoP
 
 func (c *AutoProvInfoCache) AddDeletedCb(fn func(ctx context.Context, old *AutoProvInfo)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AutoProvInfoCache) AddNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *AutoProvInfo, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
 func (c *AutoProvInfoCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
@@ -2870,8 +2894,10 @@ func (c *AutoProvInfoCache) SyncListEnd(ctx context.Context) {
 	c.List = nil
 	c.Mux.Unlock()
 	for key, val := range deleted {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, val.Obj, val.ModRev)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
 		for _, cb := range c.DeletedKeyCbs {
 			cb(ctx, &key)
