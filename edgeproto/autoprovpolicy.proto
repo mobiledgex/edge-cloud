@@ -98,6 +98,7 @@ service AutoProvPolicyApi {
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "MinNodes,MaxNodes";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Delete an Auto Provisioning Policy
   rpc DeleteAutoProvPolicy(AutoProvPolicy) returns (Result) {
@@ -114,6 +115,7 @@ service AutoProvPolicyApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Show Auto Provisioning Policies. Any fields specified will be used to filter results.
   rpc ShowAutoProvPolicy(AutoProvPolicy) returns (stream AutoProvPolicy) {
@@ -131,6 +133,7 @@ service AutoProvPolicyApi {
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
     option (protogen.input_required) = true;
+    option (protogen.mc2_custom_authz) = true;
   }
   // Remove a Cloudlet from the Auto Provisioning Policy
   rpc RemoveAutoProvPolicyCloudlet(AutoProvPolicyCloudlet) returns (Result) {
