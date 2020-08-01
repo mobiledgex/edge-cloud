@@ -436,7 +436,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if err != nil {
 		cb.Send(&edgeproto.Result{Message: "Deleting Cloudlet due to failures"})
-		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, pfConfig, cb)
+		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create Cloudlet", "undoErr", undoErr)
 		}
@@ -804,14 +804,10 @@ func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.Cl
 }
 
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
-	pfConfig, err := getPlatformConfig(cb.Context(), in)
-	if err != nil {
-		return err
-	}
-	return s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
+	return s.deleteCloudletInternal(DefCallContext(), in, cb)
 }
 
-func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
+func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
 	ctx := cb.Context()
 
 	defer func() {
@@ -833,10 +829,16 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cctx.SetOverride(&in.CrmOverride)
 
+	var pfConfig *edgeproto.PlatformConfig
 	vmPool := edgeproto.VMPool{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
+		}
+		var err error
+		pfConfig, err = getPlatformConfig(cb.Context(), in)
+		if err != nil {
+			return err
 		}
 		if ignoreCRMState(cctx) {
 			// delete happens later, this STM just checks for existence
