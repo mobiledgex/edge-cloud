@@ -88,3 +88,9 @@ service DeviceApi {
     option (protogen.mc2_api) = "ResourceConfig,ActionView,";
   }
 }
+
+message DeviceData {
+  repeated Device devices = 1 [(gogoproto.nullable) = false];
+  option (protogen.e2edata) = true;
+  option (protogen.generate_copy_in_fields) = false;
+}
