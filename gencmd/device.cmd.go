@@ -33,6 +33,12 @@ func DeviceHideTags(in *edgeproto.Device) {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
+		in.FirstSeen = nil
+	}
+	if _, found := tags["nocmp"]; found {
+		in.LastSeen = nil
+	}
+	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
 	}
 }
@@ -46,6 +52,12 @@ func DeviceDataHideTags(in *edgeproto.DeviceData) {
 		tags[tag] = struct{}{}
 	}
 	for i0 := 0; i0 < len(in.Devices); i0++ {
+		if _, found := tags["nocmp"]; found {
+			in.Devices[i0].FirstSeen = nil
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Devices[i0].LastSeen = nil
+		}
 		if _, found := tags["nocmp"]; found {
 			in.Devices[i0].NotifyId = 0
 		}

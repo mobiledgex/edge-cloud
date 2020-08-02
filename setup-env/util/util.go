@@ -575,7 +575,7 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err1 = ReadYamlFile(firstYamlFile, &r1)
 		err2 = ReadYamlFile(secondYamlFile, &r2)
 		copts = []cmp.Option{
-			cmpopts.IgnoreFields(edgeproto.Device{}, "FirstSeen", "LastSeen", "NotifyId"),
+			edgeproto.IgnoreDeviceFields("nocmp"),
 			cmpopts.SortSlices(func(a edgeproto.Device, b edgeproto.Device) bool {
 				return a.GetKey().GetKeyString() < b.GetKey().GetKeyString()
 			}),
