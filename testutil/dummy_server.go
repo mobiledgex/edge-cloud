@@ -53,6 +53,26 @@ func (s *DummyServer) AddDummyOrgObjs(ctx context.Context, org string, num int) 
 		pool.Key.Organization = org
 		pool.Cloudlets = []string{"cloudlet1", "cloudlet2", "cloudlet3"}
 		s.CloudletPoolCache.Update(ctx, &pool, int64(ii))
+
+		vmpool := edgeproto.VMPool{}
+		vmpool.Key.Name = name
+		vmpool.Key.Organization = org
+		s.VMPoolCache.Update(ctx, &vmpool, int64(ii))
+
+		autoprov := edgeproto.AutoProvPolicy{}
+		autoprov.Key.Name = name + "autoprov"
+		autoprov.Key.Organization = org
+		s.AutoProvPolicyCache.Update(ctx, &autoprov, int64(ii))
+
+		autoscale := edgeproto.AutoScalePolicy{}
+		autoscale.Key.Name = name + "autoscale"
+		autoscale.Key.Organization = org
+		s.AutoScalePolicyCache.Update(ctx, &autoscale, int64(ii))
+
+		priv := edgeproto.PrivacyPolicy{}
+		priv.Key.Name = name + "privacy"
+		priv.Key.Organization = org
+		s.PrivacyPolicyCache.Update(ctx, &priv, int64(ii))
 	}
 }
 
