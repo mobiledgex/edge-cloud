@@ -33,7 +33,34 @@ func DeviceHideTags(in *edgeproto.Device) {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
+		in.FirstSeen = nil
+	}
+	if _, found := tags["nocmp"]; found {
+		in.LastSeen = nil
+	}
+	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
+	}
+}
+
+func DeviceDataHideTags(in *edgeproto.DeviceData) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	for i0 := 0; i0 < len(in.Devices); i0++ {
+		if _, found := tags["nocmp"]; found {
+			in.Devices[i0].FirstSeen = nil
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Devices[i0].LastSeen = nil
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Devices[i0].NotifyId = 0
+		}
 	}
 }
 
@@ -368,4 +395,28 @@ var DeviceComments = map[string]string{
 }
 var DeviceSpecialArgs = map[string]string{
 	"fields": "StringArray",
+}
+var DeviceDataRequiredArgs = []string{}
+var DeviceDataOptionalArgs = []string{
+	"devices:#.fields",
+	"devices:#.key.uniqueidtype",
+	"devices:#.key.uniqueid",
+	"devices:#.firstseen.seconds",
+	"devices:#.firstseen.nanos",
+	"devices:#.lastseen.seconds",
+	"devices:#.lastseen.nanos",
+	"devices:#.notifyid",
+}
+var DeviceDataAliasArgs = []string{}
+var DeviceDataComments = map[string]string{
+	"devices:#.key.uniqueidtype":  "Type of unique ID provided by the client",
+	"devices:#.key.uniqueid":      "Unique identification of the client device or user. May be overridden by the server.",
+	"devices:#.firstseen.seconds": "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"devices:#.firstseen.nanos":   "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"devices:#.lastseen.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"devices:#.lastseen.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"devices:#.notifyid":          "Id of client assigned by server (internal use only)",
+}
+var DeviceDataSpecialArgs = map[string]string{
+	"devices:#.fields": "StringArray",
 }

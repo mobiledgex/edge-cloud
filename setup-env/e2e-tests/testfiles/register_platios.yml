@@ -1,7 +1,17 @@
 ##
 tests:
 
+- name: send register api with platos-built device
+  apifile: "{{datadir}}/register_platos_device.yml"
+  actions: [dmeapi-register]
+
 - name: send register api with platos enabling layer
   apifile: "{{datadir}}/register_platos.yml"
   actions: [dmeapi-register]
 
+- name: check device show to have both of the devices
+  actions: [ctrlapi-deviceshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/device_show.yml"
+    filetype: deviceshow

@@ -1,0 +1,9 @@
+registerclientrequest:
+  carriername: dmuus
+  orgname: AcmeAppCo
+  appname: someapplication1
+  appvers: "1.0"
+  authtoken: "GENTOKEN:authtoken_private.pem"
+  cellid: 1234
+  uniqueidtype: "GSAFKDF:platos:platosEnablementLayer"
+  uniqueid: "123"

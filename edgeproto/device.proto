@@ -42,9 +42,9 @@ message Device {
   // Key 
   DeviceKey key = 2 [(gogoproto.nullable) = false];
   // Timestamp when the device was registered
-  google.protobuf.Timestamp first_seen = 3;
+  google.protobuf.Timestamp first_seen = 3[(protogen.hidetag) = "nocmp"];
   // Timestamp when the device was last seen(Future use)
-  google.protobuf.Timestamp last_seen = 4;
+  google.protobuf.Timestamp last_seen = 4[(protogen.hidetag) = "nocmp"];
   // Id of client assigned by server (internal use only)
   int64 notify_id = 5 [(protogen.hidetag) = "nocmp"];
 
@@ -87,4 +87,10 @@ service DeviceApi {
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionView,";
   }
+}
+
+message DeviceData {
+  repeated Device devices = 1 [(gogoproto.nullable) = false];
+  option (protogen.e2edata) = true;
+  option (protogen.generate_copy_in_fields) = false;
 }

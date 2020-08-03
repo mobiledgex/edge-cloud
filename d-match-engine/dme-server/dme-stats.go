@@ -2,6 +2,7 @@ package main
 
 import (
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -257,7 +258,8 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		call.key.AppKey.Version = typ.AppVers
 		// For platform App clients we need to do accounting of devices
 		if err == nil {
-			if cloudcommon.IsPlatformApp(typ.OrgName, typ.AppName) {
+			if cloudcommon.IsPlatformApp(typ.OrgName, typ.AppName) ||
+				strings.Contains(typ.UniqueIdType, cloudcommon.Organizationplatos) {
 				go recordDevice(ctx, typ)
 			}
 		}
