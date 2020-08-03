@@ -123,6 +123,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "debug") {
 		runDebug(run, api, apiFile, outputDir)
+	} else if api == "deviceshow" {
+		output := &edgeproto.DeviceData{}
+		run.Mode = "show"
+		run.DeviceApi(nil, nil, &output.Devices)
+		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "organization") {
 		runOrg(run, api, apiFile, outputDir)
 	} else {

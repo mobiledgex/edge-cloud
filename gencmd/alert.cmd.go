@@ -87,6 +87,7 @@ It has these top-level messages:
 	DeviceReport
 	DeviceKey
 	Device
+	DeviceData
 	CloudletMgmtNode
 	RunCmd
 	RunVMConsole
