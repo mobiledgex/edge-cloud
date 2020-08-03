@@ -205,6 +205,8 @@ func main() {
 			controllerData.VMPool = vmPool
 			caches.VMPool = &controllerData.VMPool
 			caches.VMPoolMux = &controllerData.VMPoolMux
+			// Update VMPool Info, this is to notify shepherd about VMPool
+			controllerData.UpdateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
 		}
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
