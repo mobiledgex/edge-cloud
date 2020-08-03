@@ -594,7 +594,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 }
 
 // This func must be called with cd.VMPoolMux lock held
-func (cd *ControllerData) updateVMPoolInfo(ctx context.Context, state edgeproto.TrackedState, errStr string) {
+func (cd *ControllerData) UpdateVMPoolInfo(ctx context.Context, state edgeproto.TrackedState, errStr string) {
 	info := edgeproto.VMPoolInfo{}
 	info.Key = cd.VMPool.Key
 	info.Vms = cd.VMPool.Vms
@@ -666,7 +666,7 @@ func (cd *ControllerData) markUpdateVMs(ctx context.Context, vmPool *edgeproto.V
 		delete(changeVMs, vm.Name)
 		switch cVM.State {
 		case edgeproto.VMState_VM_ADD:
-			cd.updateVMPoolInfo(
+			cd.UpdateVMPoolInfo(
 				ctx,
 				edgeproto.TrackedState_UPDATE_ERROR,
 				fmt.Sprintf("VM %s already exists", vm.Name),
@@ -675,7 +675,7 @@ func (cd *ControllerData) markUpdateVMs(ctx context.Context, vmPool *edgeproto.V
 		case edgeproto.VMState_VM_REMOVE:
 			if vm.State != edgeproto.VMState_VM_FREE {
 				log.SpanLog(ctx, log.DebugLevelInfra, "UpdateVMPool, conflicting state", "vm", vm.Name, "state", vm.State)
-				cd.updateVMPoolInfo(
+				cd.UpdateVMPoolInfo(
 					ctx,
 					edgeproto.TrackedState_UPDATE_ERROR,
 					fmt.Sprintf("Unable to delete VM %s, as it is in use", vm.Name),
@@ -689,7 +689,7 @@ func (cd *ControllerData) markUpdateVMs(ctx context.Context, vmPool *edgeproto.V
 			if isVMChanged(&vm, &cVM) {
 				if vm.State != edgeproto.VMState_VM_FREE {
 					log.SpanLog(ctx, log.DebugLevelInfra, "UpdateVMPool, conflicting state", "vm", vm.Name, "state", vm.State)
-					cd.updateVMPoolInfo(
+					cd.UpdateVMPoolInfo(
 						ctx,
 						edgeproto.TrackedState_UPDATE_ERROR,
 						fmt.Sprintf("Unable to update VM %s, as it is in use", vm.Name),
@@ -729,7 +729,7 @@ func (cd *ControllerData) markUpdateVMs(ctx context.Context, vmPool *edgeproto.V
 			} else {
 				if vm.State != edgeproto.VMState_VM_FREE {
 					log.SpanLog(ctx, log.DebugLevelInfra, "UpdateVMPool, conflicting state", "vm", vm.Name, "state", vm.State)
-					cd.updateVMPoolInfo(
+					cd.UpdateVMPoolInfo(
 						ctx,
 						edgeproto.TrackedState_UPDATE_ERROR,
 						fmt.Sprintf("Unable to delete VM %s, as it is in use", vm.Name),
@@ -749,7 +749,7 @@ func (cd *ControllerData) markUpdateVMs(ctx context.Context, vmPool *edgeproto.V
 	} else {
 		// notify controller, nothing to update
 		log.SpanLog(ctx, log.DebugLevelInfra, "UpdateVMPool, nothing to update", "vmpoolkey", vmPool.Key)
-		cd.updateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
+		cd.UpdateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
 	}
 	return changed, oldVMs, validateVMs
 }
@@ -803,7 +803,7 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 			revertVMs = append(revertVMs, vm)
 		}
 		cd.VMPool.Vms = revertVMs
-		cd.updateVMPoolInfo(
+		cd.UpdateVMPoolInfo(
 			ctx,
 			edgeproto.TrackedState_UPDATE_ERROR,
 			fmt.Sprintf("%v", err))
@@ -829,7 +829,7 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 	cd.VMPool.Vms = newVMs
 
 	// notify controller
-	cd.updateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
+	cd.UpdateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
 
 	// TODO calculate Flavor info and send CloudletInfo again
 }
