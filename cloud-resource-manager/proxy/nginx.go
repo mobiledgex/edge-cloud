@@ -23,6 +23,8 @@ import (
 // Access to an AppInst is handled by a per-AppInst dedicated
 // nginx instance for better isolation.
 
+var NginxL7Name = "nginxL7"
+
 var nginxConfT *template.Template
 
 // defaultConcurrentConnsPerIP is the default DOS protection setting for connections per source IP
@@ -58,6 +60,25 @@ func getUDPConcurrentConnections() (uint64, error) {
 
 func init() {
 	nginxConfT = template.Must(template.New("conf").Parse(nginxConf))
+}
+
+// This actually deletes the L7 proxy for backwards compatibility, so it doesnt conflict with tcp:443 apps
+func InitL7Proxy(ctx context.Context, client ssh.Client, ops ...Op) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "InitL7Proxy")
+
+	out, err := client.Output("docker kill " + NginxL7Name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "kill nginx result", "out", out, "err", err)
+
+	if err != nil && !strings.Contains(string(out), "No such container") {
+		return nil
+	}
+	// container should autoremove on kill but just in case
+	out, err = client.Output("docker rm " + NginxL7Name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "rm nginx result", "out", out, "err", err)
+	if err != nil && !strings.Contains(string(out), "No such container") {
+		return nil
+	}
+	return err
 }
 
 func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {

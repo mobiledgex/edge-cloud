@@ -236,7 +236,7 @@ static_resources:
             - certificate_chain:
                 filename: "/etc/envoy/certs/{{$.CertName}}.crt"
               private_key:
-              filename: "/etc/envoy/certs/{{$.CertName}}.key"
+                filename: "/etc/envoy/certs/{{$.CertName}}.key"
       {{- end}}
   {{- end}}
   {{- range .UDPSpec}}
