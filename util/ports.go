@@ -24,8 +24,20 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 
 	for _, pstr := range pstrs {
 		pp := strings.Split(pstr, ":")
-		if len(pp) != 2 && !(len(pp) == 3 && (strings.ToLower(pp[2]) == "tls" || strings.ToLower(pp[2]) == "nginx")) {
+		if len(pp) < 2 {
 			return nil, fmt.Errorf("invalid AccessPorts format '%s'", pstr)
+		}
+		annotations := make(map[string]string)
+		for _, kv := range pp[2:] {
+			keyval := strings.Split(kv, "=")
+			if len(keyval) == 1 {
+				// boolean annotation
+				annotations[kv] = "true"
+			} else if len(keyval) == 2 {
+				annotations[keyval[0]] = keyval[1]
+			} else {
+				return nil, fmt.Errorf("invalid AccessPorts annotation %s for port %s, expected format is either key or key=val", kv, pp[1])
+			}
 		}
 		// within each pp[1], we may have a hypenated range of ports ex: udp:M-N inclusive
 		portrange := strings.Split(pp[1], "-")
@@ -63,16 +75,21 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 			Port:    strconv.FormatInt(baseport, 10),
 			EndPort: strconv.FormatInt(endport, 10),
 		}
-		if len(pp) == 3 && strings.ToLower(pp[2]) == "tls" {
-			if portSpec.Proto != "tcp" {
-				return nil, fmt.Errorf("Invalid protocol %s, not available for tls support", portSpec.Proto)
+		for key, val := range annotations {
+			switch key {
+			case "tls":
+				if portSpec.Proto != "tcp" {
+					return nil, fmt.Errorf("Invalid protocol %s, not available for tls support", portSpec.Proto)
+				}
+				portSpec.Tls = true
+			case "nginx":
+				if portSpec.Proto != "udp" {
+					return nil, fmt.Errorf("Invalid annotation \"nginx\" for %s ports", portSpec.Proto)
+				}
+				portSpec.Nginx = true
+			default:
+				return nil, fmt.Errorf("unrecognized annotation %s for port %s", key+"="+val, pp[1])
 			}
-			portSpec.Tls = true
-		} else if len(pp) == 3 && strings.ToLower(pp[2]) == "nginx" {
-			if portSpec.Proto != "udp" {
-				return nil, fmt.Errorf("Invalid protocol %s, not available for nginx support", portSpec.Proto)
-			}
-			portSpec.Nginx = true
 		}
 		ports = append(ports, portSpec)
 	}
