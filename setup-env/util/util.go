@@ -568,6 +568,20 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		y1 = r1
 		y2 = r2
+	} else if fileType == "deviceshow" {
+		var r1 edgeproto.DeviceData
+		var r2 edgeproto.DeviceData
+
+		err1 = ReadYamlFile(firstYamlFile, &r1)
+		err2 = ReadYamlFile(secondYamlFile, &r2)
+		copts = []cmp.Option{
+			edgeproto.IgnoreDeviceFields("nocmp"),
+			cmpopts.SortSlices(func(a edgeproto.Device, b edgeproto.Device) bool {
+				return a.GetKey().GetKeyString() < b.GetKey().GetKeyString()
+			}),
+		}
+		y1 = r1
+		y2 = r2
 	} else if fileType == "debugoutput" {
 		var r1 testutil.DebugDataOut
 		var r2 testutil.DebugDataOut

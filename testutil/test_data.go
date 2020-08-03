@@ -1334,6 +1334,10 @@ var PlarformDeviceClientDataKeys = []edgeproto.DeviceKey{
 		UniqueIdType: "Mex",
 		UniqueId:     "1",
 	},
+	edgeproto.DeviceKey{
+		UniqueIdType: "GSAFKDF:platos:platosEnablementLayer",
+		UniqueId:     "1",
+	},
 }
 
 var PlarformDeviceClientData = []edgeproto.Device{
@@ -1351,6 +1355,11 @@ var PlarformDeviceClientData = []edgeproto.Device{
 		Key: PlarformDeviceClientDataKeys[2],
 		// 2009-12-10 23:00:00 +0000 UTC
 		FirstSeen: GetTimestamp(time.Date(2009, time.December, 10, 23, 0, 0, 0, time.UTC)),
+	},
+	edgeproto.Device{
+		Key: PlarformDeviceClientDataKeys[3],
+		// 2009-10-10 23:30:00 +0000 UTC
+		FirstSeen: GetTimestamp(time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)),
 	},
 }
 
