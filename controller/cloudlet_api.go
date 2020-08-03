@@ -747,9 +747,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		maintenance = edgeproto.MaintenanceState_MAINTENANCE_START_NO_FAILOVER
 	}
 	if maintenance == edgeproto.MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
-		log.SpanLog(ctx, log.DebugLevelApi, "Start CRM failover")
+		log.SpanLog(ctx, log.DebugLevelApi, "Start CRM maintenance")
 		cb.Send(&edgeproto.Result{
-			Message: "Starting CRM failover",
+			Message: "Starting CRM maintenance",
 		})
 		if !ignoreCRMState(cctx) {
 			timeout := settingsApi.Get().CloudletMaintenanceTimeout.TimeDuration()
@@ -765,14 +765,14 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			}
 			if cloudletInfo.MaintenanceState == edgeproto.MaintenanceState_CRM_ERROR {
 				undoErr := s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION)
-				log.SpanLog(ctx, log.DebugLevelApi, "AutoProv maintenance failures", "err", err, "undoErr", undoErr)
+				log.SpanLog(ctx, log.DebugLevelApi, "CRM maintenance failures", "err", err, "undoErr", undoErr)
 				return fmt.Errorf("CRM encountered some errors, aborting maintenance")
 			}
 		}
 		cb.Send(&edgeproto.Result{
-			Message: "CRM failover complete",
+			Message: "CRM maintenance started",
 		})
-		log.SpanLog(ctx, log.DebugLevelApi, "CRM failover complete")
+		log.SpanLog(ctx, log.DebugLevelApi, "CRM maintenance started")
 		// transition to maintenance
 		err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_UNDER_MAINTENANCE)
 		if err != nil {
