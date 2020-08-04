@@ -69,13 +69,13 @@ func InitL7Proxy(ctx context.Context, client ssh.Client, ops ...Op) error {
 	out, err := client.Output("docker kill " + NginxL7Name)
 	log.SpanLog(ctx, log.DebugLevelInfra, "kill nginx result", "out", out, "err", err)
 
-	if err != nil && !strings.Contains(string(out), "No such container") {
+	if err != nil && strings.Contains(string(out), "No such container") {
 		return nil
 	}
 	// container should autoremove on kill but just in case
 	out, err = client.Output("docker rm " + NginxL7Name)
 	log.SpanLog(ctx, log.DebugLevelInfra, "rm nginx result", "out", out, "err", err)
-	if err != nil && !strings.Contains(string(out), "No such container") {
+	if err != nil && strings.Contains(string(out), "No such container") {
 		return nil
 	}
 	return err
