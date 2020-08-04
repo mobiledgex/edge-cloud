@@ -22,7 +22,7 @@ func CheckForHttpPorts(ctx context.Context, objStore objstore.KVStore) error {
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appInst", appInst)
 			cbErrs = append(cbErrs, err2)
-			return err2
+			return nil
 		}
 		log.SpanLog(ctx, log.DebugLevelUpgrade, "Checking AppInst for invalid legacy http ports", "appInst", appInst)
 		for _, mappedPort := range appInst.MappedPorts {
@@ -36,7 +36,7 @@ func CheckForHttpPorts(ctx context.Context, objStore objstore.KVStore) error {
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Invalid protocol found", "appInst", appInst, "AppPort", mappedPort)
 				err3 := fmt.Errorf("Invalid protocol found: %d", mappedPort.Proto)
 				cbErrs = append(cbErrs, err3)
-				return err3
+				return nil
 			}
 		}
 		return nil
