@@ -436,7 +436,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if err != nil {
 		cb.Send(&edgeproto.Result{Message: "Deleting Cloudlet due to failures"})
-		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, pfConfig, cb)
+		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create Cloudlet", "undoErr", undoErr)
 		}
@@ -747,9 +747,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		maintenance = edgeproto.MaintenanceState_MAINTENANCE_START_NO_FAILOVER
 	}
 	if maintenance == edgeproto.MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
-		log.SpanLog(ctx, log.DebugLevelApi, "Start CRM failover")
+		log.SpanLog(ctx, log.DebugLevelApi, "Start CRM maintenance")
 		cb.Send(&edgeproto.Result{
-			Message: "Starting CRM failover",
+			Message: "Starting CRM maintenance",
 		})
 		if !ignoreCRMState(cctx) {
 			timeout := settingsApi.Get().CloudletMaintenanceTimeout.TimeDuration()
@@ -765,14 +765,14 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			}
 			if cloudletInfo.MaintenanceState == edgeproto.MaintenanceState_CRM_ERROR {
 				undoErr := s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION)
-				log.SpanLog(ctx, log.DebugLevelApi, "AutoProv maintenance failures", "err", err, "undoErr", undoErr)
+				log.SpanLog(ctx, log.DebugLevelApi, "CRM maintenance failures", "err", err, "undoErr", undoErr)
 				return fmt.Errorf("CRM encountered some errors, aborting maintenance")
 			}
 		}
 		cb.Send(&edgeproto.Result{
-			Message: "CRM failover complete",
+			Message: "CRM maintenance started",
 		})
-		log.SpanLog(ctx, log.DebugLevelApi, "CRM failover complete")
+		log.SpanLog(ctx, log.DebugLevelApi, "CRM maintenance started")
 		// transition to maintenance
 		err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_UNDER_MAINTENANCE)
 		if err != nil {
@@ -804,14 +804,10 @@ func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.Cl
 }
 
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
-	pfConfig, err := getPlatformConfig(cb.Context(), in)
-	if err != nil {
-		return err
-	}
-	return s.deleteCloudletInternal(DefCallContext(), in, pfConfig, cb)
+	return s.deleteCloudletInternal(DefCallContext(), in, cb)
 }
 
-func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, cb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
+func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
 	ctx := cb.Context()
 
 	defer func() {
@@ -833,10 +829,16 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cctx.SetOverride(&in.CrmOverride)
 
+	var pfConfig *edgeproto.PlatformConfig
 	vmPool := edgeproto.VMPool{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
+		}
+		var err error
+		pfConfig, err = getPlatformConfig(cb.Context(), in)
+		if err != nil {
+			return err
 		}
 		if ignoreCRMState(cctx) {
 			// delete happens later, this STM just checks for existence
@@ -950,7 +952,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 		}
 	}
-	cloudletPoolMemberApi.cloudletDeleted(ctx, &in.Key)
+	cloudletPoolApi.cloudletDeleted(ctx, &in.Key)
 	cloudletInfoApi.cleanupCloudletInfo(ctx, &in.Key)
 	return nil
 }

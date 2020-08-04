@@ -76,8 +76,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
 	}
-	for i0 := 0; i0 < len(in.CloudletPoolMembers); i0++ {
-	}
 	for i0 := 0; i0 < len(in.AutoProvPolicies); i0++ {
 		for i1 := 0; i1 < len(in.AutoProvPolicies[i0].Cloudlets); i1++ {
 		}
@@ -340,10 +338,9 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.controllercachereceived",
 	"cloudletinfos:#.maintenancestate",
 	"cloudletpools:#.fields",
+	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
-	"cloudletpoolmembers:#.poolkey.name",
-	"cloudletpoolmembers:#.cloudletkey.organization",
-	"cloudletpoolmembers:#.cloudletkey.name",
+	"cloudletpools:#.cloudlets",
 	"autoprovpolicies:#.fields",
 	"autoprovpolicies:#.key.organization",
 	"autoprovpolicies:#.key.name",
@@ -637,10 +634,9 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.controllercachereceived":                    "Indicates all controller data has been sent to CRM",
 	"cloudletinfos:#.maintenancestate":                           "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"cloudletpools:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
+	"cloudletpools:#.key.organization":                           "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                   "CloudletPool Name",
-	"cloudletpoolmembers:#.poolkey.name":                         "CloudletPool Name",
-	"cloudletpoolmembers:#.cloudletkey.organization":             "Organization of the cloudlet site",
-	"cloudletpoolmembers:#.cloudletkey.name":                     "Name of the cloudlet",
+	"cloudletpools:#.cloudlets":                                  "Cloudlets part of the pool",
 	"autoprovpolicies:#.fields":                                  "Fields are used for the Update API to specify which fields to apply",
 	"autoprovpolicies:#.key.organization":                        "Name of the organization for the cluster that this policy will apply to",
 	"autoprovpolicies:#.key.name":                                "Policy name",
@@ -808,6 +804,7 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudletinfos:#.errors":                  "StringArray",
 	"cloudletinfos:#.fields":                  "StringArray",
 	"cloudletinfos:#.flavors:#.propmap":       "StringToString",
+	"cloudletpools:#.cloudlets":               "StringArray",
 	"cloudletpools:#.fields":                  "StringArray",
 	"cloudlets:#.accessvars":                  "StringToString",
 	"cloudlets:#.chefclientkey":               "StringToString",

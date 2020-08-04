@@ -899,33 +899,30 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 var CloudletPoolData = []edgeproto.CloudletPool{
 	edgeproto.CloudletPool{
 		Key: edgeproto.CloudletPoolKey{
-			Name: "private",
+			Organization: OperatorData[1],
+			Name:         "private",
+		},
+		Cloudlets: []string{
+			CloudletData[2].Key.Name,
 		},
 	},
 	edgeproto.CloudletPool{
 		Key: edgeproto.CloudletPoolKey{
-			Name: "test-and-dev",
+			Organization: OperatorData[2],
+			Name:         "test-and-dev",
+		},
+		Cloudlets: []string{
+			CloudletData[3].Key.Name,
 		},
 	},
 	edgeproto.CloudletPool{
 		Key: edgeproto.CloudletPoolKey{
-			Name: "enterprise",
+			Organization: OperatorData[2],
+			Name:         "enterprise",
 		},
-	},
-}
-
-var CloudletPoolMemberData = []edgeproto.CloudletPoolMember{
-	edgeproto.CloudletPoolMember{
-		PoolKey:     CloudletPoolData[0].Key, // private
-		CloudletKey: CloudletData[3].Key,
-	},
-	edgeproto.CloudletPoolMember{
-		PoolKey:     CloudletPoolData[1].Key, // test-and-dev
-		CloudletKey: CloudletData[2].Key,
-	},
-	edgeproto.CloudletPoolMember{
-		PoolKey:     CloudletPoolData[2].Key, // enterprise
-		CloudletKey: CloudletData[3].Key,
+		Cloudlets: []string{
+			CloudletData[3].Key.Name,
+		},
 	},
 }
 
@@ -1337,6 +1334,10 @@ var PlarformDeviceClientDataKeys = []edgeproto.DeviceKey{
 		UniqueIdType: "Mex",
 		UniqueId:     "1",
 	},
+	edgeproto.DeviceKey{
+		UniqueIdType: "GSAFKDF:Samsung:SamsungEnablementLayer",
+		UniqueId:     "1",
+	},
 }
 
 var PlarformDeviceClientData = []edgeproto.Device{
@@ -1354,6 +1355,11 @@ var PlarformDeviceClientData = []edgeproto.Device{
 		Key: PlarformDeviceClientDataKeys[2],
 		// 2009-12-10 23:00:00 +0000 UTC
 		FirstSeen: GetTimestamp(time.Date(2009, time.December, 10, 23, 0, 0, 0, time.UTC)),
+	},
+	edgeproto.Device{
+		Key: PlarformDeviceClientDataKeys[3],
+		// 2009-10-10 23:30:00 +0000 UTC
+		FirstSeen: GetTimestamp(time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)),
 	},
 }
 
