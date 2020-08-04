@@ -532,7 +532,7 @@ func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *ed
 		return errors.New("Cloudlet under maintenance, please try again later")
 	}
 	if in.PrivacyPolicy != "" {
-		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
+		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
 			platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
 			return fmt.Errorf("Privacy Policy not supported on %s", platName)
 		}
