@@ -778,6 +778,12 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 		} else {
 			inst.Errors = nil
 		}
+		if inst.ChefClientKey == nil {
+			inst.ChefClientKey = make(map[string]string)
+		}
+		for k, v := range in.ChefClientKey {
+			inst.ChefClientKey[k] = v
+		}
 		s.store.STMPut(stm, &inst)
 		return nil
 	})

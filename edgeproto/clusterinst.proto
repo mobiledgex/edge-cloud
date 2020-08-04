@@ -83,6 +83,8 @@ message ClusterInst {
   string master_node_flavor = 25 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
   // Prevents cleanup of resources on failure within CRM, used for diagnostic purposes
   bool skip_crm_cleanup_on_failure = 26 [(protogen.hidetag) = "nocmp"];
+  // Chef client key
+  map<string, string> chef_client_key = 27 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -91,7 +93,7 @@ message ClusterInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "Liveness,Auto,MasterNodeFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy,State,Errors";
+  option (protogen.noconfig) = "Liveness,Auto,MasterNodeFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy,State,Errors,ChefClientKey";
   option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,cloudlet-org=Key.CloudletKey.Organization,cluster-org=Key.Organization,flavor=Flavor.Name";
   option (protogen.mc2_target_cloudlet) = "Key.CloudletKey";
@@ -157,6 +159,8 @@ message ClusterInstInfo {
   repeated string errors = 5;
   // status is used to reflect progress of creation or other events
   StatusInfo status = 6 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  // Chef client key
+  map<string, string> chef_client_key = 7 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

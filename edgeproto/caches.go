@@ -73,6 +73,23 @@ func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey
 	return err
 }
 
+func (s *ClusterInstInfoCache) SetStateChefKey(ctx context.Context, key *ClusterInstKey, state TrackedState, chefKeys map[string]string) {
+	info := ClusterInstInfo{}
+	if !s.Get(key, &info) {
+		info.Key = *key
+	}
+	info.Errors = nil
+	info.State = state
+	info.Status = StatusInfo{}
+	if info.ChefClientKey == nil {
+		info.ChefClientKey = make(map[string]string)
+	}
+	for k, v := range chefKeys {
+		info.ChefClientKey[k] = v
+	}
+	s.Update(ctx, &info, 0)
+}
+
 func (s *ClusterInstInfoCache) SetStatusTask(ctx context.Context, key *ClusterInstKey, taskName string) {
 	log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
 	info := ClusterInstInfo{}

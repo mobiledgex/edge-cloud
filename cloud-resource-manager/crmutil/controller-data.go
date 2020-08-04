@@ -205,7 +205,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 
 			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
-			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
+			cd.ClusterInstInfoCache.SetStateChefKey(ctx, &new.Key, edgeproto.TrackedState_READY, new.ChefClientKey)
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst update", "ClusterInst", *new)
@@ -233,7 +233,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		}
 
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
-		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
+		cd.ClusterInstInfoCache.SetStateChefKey(ctx, &new.Key, edgeproto.TrackedState_READY, new.ChefClientKey)
 
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst delete", "ClusterInst", *new)
