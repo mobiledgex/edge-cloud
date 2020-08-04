@@ -298,9 +298,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
-		if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
-			return errors.New("Cloudlet under maintenance, please try again later")
-		}
 		var err error
 		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
 		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK &&
@@ -308,11 +305,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE &&
 			in.SharedVolumeSize != 0 {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
-		}
-		if in.PrivacyPolicy != "" {
-			if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
-				return fmt.Errorf("Privacy Policy not supported on %s", platName)
-			}
 		}
 		if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
 			return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
@@ -326,23 +318,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 
 		}
-		if in.AutoScalePolicy != "" {
-			policy := edgeproto.AutoScalePolicy{}
-			if err := autoScalePolicyApi.STMFind(stm, in.AutoScalePolicy, in.Key.Organization, &policy); err != nil {
-				return err
-			}
-			if in.NumNodes < policy.MinNodes {
-				in.NumNodes = policy.MinNodes
-			}
-			if in.NumNodes > policy.MaxNodes {
-				in.NumNodes = policy.MaxNodes
-			}
-		}
-		if in.PrivacyPolicy != "" {
-			policy := edgeproto.PrivacyPolicy{}
-			if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Organization, &policy); err != nil {
-				return err
-			}
+		if err := validateClusterInstUpdates(ctx, stm, in); err != nil {
+			return err
 		}
 		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
@@ -514,6 +491,9 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			// nothing changed
 			return nil
 		}
+		if err := validateClusterInstUpdates(ctx, stm, in); err != nil {
+			return err
+		}
 		if !ignoreCRM(cctx) {
 			inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
@@ -541,6 +521,39 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateClusterInstTimeout.TimeDuration(), "Updated ClusterInst successfully", cb.Send)
 	return err
+}
+
+func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst) error {
+	cloudlet := edgeproto.Cloudlet{}
+	if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
+		return errors.New("Specified Cloudlet not found")
+	}
+	if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
+		return errors.New("Cloudlet under maintenance, please try again later")
+	}
+	if in.PrivacyPolicy != "" {
+		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
+			platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
+			return fmt.Errorf("Privacy Policy not supported on %s", platName)
+		}
+		policy := edgeproto.PrivacyPolicy{}
+		if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Organization, &policy); err != nil {
+			return err
+		}
+	}
+	if in.AutoScalePolicy != "" {
+		policy := edgeproto.AutoScalePolicy{}
+		if err := autoScalePolicyApi.STMFind(stm, in.AutoScalePolicy, in.Key.Organization, &policy); err != nil {
+			return err
+		}
+		if in.NumNodes < policy.MinNodes {
+			in.NumNodes = policy.MinNodes
+		}
+		if in.NumNodes > policy.MaxNodes {
+			in.NumNodes = policy.MaxNodes
+		}
+	}
+	return nil
 }
 
 func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
