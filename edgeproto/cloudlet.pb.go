@@ -3549,10 +3549,8 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 		}
 	}
 	if _, set := fmap["10"]; set {
-		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
-			m.Errors = make([]string, len(src.Errors))
-			changed++
-		}
+		m.Errors = src.Errors
+		changed++
 		copy(m.Errors, src.Errors)
 		changed++
 	}
@@ -5167,19 +5165,15 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 		}
 	}
 	if _, set := fmap["9"]; set {
-		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
-			m.Errors = make([]string, len(src.Errors))
-			changed++
-		}
+		m.Errors = src.Errors
+		changed++
 		copy(m.Errors, src.Errors)
 		changed++
 	}
 	if _, set := fmap["10"]; set {
 		if src.Flavors != nil {
-			if m.Flavors == nil || len(m.Flavors) != len(src.Flavors) {
-				m.Flavors = make([]*FlavorInfo, len(src.Flavors))
-				changed++
-			}
+			m.Flavors = src.Flavors
+			changed++
 			for i0 := 0; i0 < len(src.Flavors); i0++ {
 				m.Flavors[i0] = &FlavorInfo{}
 				if _, set := fmap["10.1"]; set {
@@ -5257,10 +5251,8 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 	}
 	if _, set := fmap["13"]; set {
 		if src.AvailabilityZones != nil {
-			if m.AvailabilityZones == nil || len(m.AvailabilityZones) != len(src.AvailabilityZones) {
-				m.AvailabilityZones = make([]*OSAZone, len(src.AvailabilityZones))
-				changed++
-			}
+			m.AvailabilityZones = src.AvailabilityZones
+			changed++
 			for i0 := 0; i0 < len(src.AvailabilityZones); i0++ {
 				m.AvailabilityZones[i0] = &OSAZone{}
 				if _, set := fmap["13.1"]; set {
@@ -5283,10 +5275,8 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 	}
 	if _, set := fmap["14"]; set {
 		if src.OsImages != nil {
-			if m.OsImages == nil || len(m.OsImages) != len(src.OsImages) {
-				m.OsImages = make([]*OSImage, len(src.OsImages))
-				changed++
-			}
+			m.OsImages = src.OsImages
+			changed++
 			for i0 := 0; i0 < len(src.OsImages); i0++ {
 				m.OsImages[i0] = &OSImage{}
 				if _, set := fmap["14.1"]; set {

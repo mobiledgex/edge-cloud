@@ -685,10 +685,8 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 		m.Key.Name = src.Key.Name
 		changed++
 	}
-	if m.Clusters == nil || len(m.Clusters) != len(src.Clusters) {
-		m.Clusters = make([]ClusterKey, len(src.Clusters))
-		changed++
-	}
+	m.Clusters = src.Clusters
+	changed++
 	for i0 := 0; i0 < len(src.Clusters); i0++ {
 		if m.Clusters[i0].Name != src.Clusters[i0].Name {
 			m.Clusters[i0].Name = src.Clusters[i0].Name
@@ -1365,10 +1363,8 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
 		m.Key.Organization = src.Key.Organization
 		changed++
 	}
-	if m.Apps == nil || len(m.Apps) != len(src.Apps) {
-		m.Apps = make([]AppKey, len(src.Apps))
-		changed++
-	}
+	m.Apps = src.Apps
+	changed++
 	for i0 := 0; i0 < len(src.Apps); i0++ {
 		if m.Apps[i0].Organization != src.Apps[i0].Organization {
 			m.Apps[i0].Organization = src.Apps[i0].Organization

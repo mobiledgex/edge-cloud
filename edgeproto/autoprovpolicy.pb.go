@@ -1097,10 +1097,8 @@ func (m *AutoProvPolicy) CopyInFields(src *AutoProvPolicy) int {
 	}
 	if _, set := fmap["5"]; set {
 		if src.Cloudlets != nil {
-			if m.Cloudlets == nil || len(m.Cloudlets) != len(src.Cloudlets) {
-				m.Cloudlets = make([]*AutoProvCloudlet, len(src.Cloudlets))
-				changed++
-			}
+			m.Cloudlets = src.Cloudlets
+			changed++
 			for i0 := 0; i0 < len(src.Cloudlets); i0++ {
 				m.Cloudlets[i0] = &AutoProvCloudlet{}
 				if _, set := fmap["5.1"]; set {
@@ -2039,10 +2037,8 @@ func (m *AutoProvCounts) CopyInFields(src *AutoProvCounts) int {
 		changed++
 	}
 	if src.Counts != nil {
-		if m.Counts == nil || len(m.Counts) != len(src.Counts) {
-			m.Counts = make([]*AutoProvCount, len(src.Counts))
-			changed++
-		}
+		m.Counts = src.Counts
+		changed++
 		for i0 := 0; i0 < len(src.Counts); i0++ {
 			m.Counts[i0] = &AutoProvCount{}
 			if m.Counts[i0].AppKey.Organization != src.Counts[i0].AppKey.Organization {
@@ -2338,18 +2334,14 @@ func (m *AutoProvInfo) CopyInFields(src *AutoProvInfo) int {
 		}
 	}
 	if _, set := fmap["5"]; set {
-		if m.Completed == nil || len(m.Completed) != len(src.Completed) {
-			m.Completed = make([]string, len(src.Completed))
-			changed++
-		}
+		m.Completed = src.Completed
+		changed++
 		copy(m.Completed, src.Completed)
 		changed++
 	}
 	if _, set := fmap["6"]; set {
-		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
-			m.Errors = make([]string, len(src.Errors))
-			changed++
-		}
+		m.Errors = src.Errors
+		changed++
 		copy(m.Errors, src.Errors)
 		changed++
 	}

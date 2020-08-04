@@ -2421,35 +2421,27 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		}
 	}
 	if _, set := fmap["26"]; set {
-		if m.RepeatedInt == nil || len(m.RepeatedInt) != len(src.RepeatedInt) {
-			m.RepeatedInt = make([]int64, len(src.RepeatedInt))
-			changed++
-		}
+		m.RepeatedInt = src.RepeatedInt
+		changed++
 		copy(m.RepeatedInt, src.RepeatedInt)
 		changed++
 	}
 	if _, set := fmap["27"]; set {
-		if m.Ip == nil || len(m.Ip) != len(src.Ip) {
-			m.Ip = make([]byte, len(src.Ip))
-			changed++
-		}
+		m.Ip = src.Ip
+		changed++
 		copy(m.Ip, src.Ip)
 		changed++
 	}
 	if _, set := fmap["28"]; set {
-		if m.Names == nil || len(m.Names) != len(src.Names) {
-			m.Names = make([]string, len(src.Names))
-			changed++
-		}
+		m.Names = src.Names
+		changed++
 		copy(m.Names, src.Names)
 		changed++
 	}
 	if _, set := fmap["29"]; set {
 		if src.RepeatedMsg != nil {
-			if m.RepeatedMsg == nil || len(m.RepeatedMsg) != len(src.RepeatedMsg) {
-				m.RepeatedMsg = make([]*IncludeMessage, len(src.RepeatedMsg))
-				changed++
-			}
+			m.RepeatedMsg = src.RepeatedMsg
+			changed++
 			for i0 := 0; i0 < len(src.RepeatedMsg); i0++ {
 				m.RepeatedMsg[i0] = &IncludeMessage{}
 				if _, set := fmap["29.1"]; set {
@@ -2485,10 +2477,8 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		}
 	}
 	if _, set := fmap["30"]; set {
-		if m.RepeatedMsgNonnull == nil || len(m.RepeatedMsgNonnull) != len(src.RepeatedMsgNonnull) {
-			m.RepeatedMsgNonnull = make([]IncludeMessage, len(src.RepeatedMsgNonnull))
-			changed++
-		}
+		m.RepeatedMsgNonnull = src.RepeatedMsgNonnull
+		changed++
 		for i0 := 0; i0 < len(src.RepeatedMsgNonnull); i0++ {
 			if _, set := fmap["30.1"]; set {
 				if m.RepeatedMsgNonnull[i0].Name != src.RepeatedMsgNonnull[i0].Name {
@@ -2520,10 +2510,8 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["31"]; set {
 		if src.RepeatedFields != nil {
-			if m.RepeatedFields == nil || len(m.RepeatedFields) != len(src.RepeatedFields) {
-				m.RepeatedFields = make([]*IncludeFields, len(src.RepeatedFields))
-				changed++
-			}
+			m.RepeatedFields = src.RepeatedFields
+			changed++
 			for i0 := 0; i0 < len(src.RepeatedFields); i0++ {
 				m.RepeatedFields[i0] = &IncludeFields{}
 				if _, set := fmap["31.2"]; set {
@@ -2539,10 +2527,8 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		}
 	}
 	if _, set := fmap["32"]; set {
-		if m.RepeatedFieldsNonnull == nil || len(m.RepeatedFieldsNonnull) != len(src.RepeatedFieldsNonnull) {
-			m.RepeatedFieldsNonnull = make([]IncludeFields, len(src.RepeatedFieldsNonnull))
-			changed++
-		}
+		m.RepeatedFieldsNonnull = src.RepeatedFieldsNonnull
+		changed++
 		for i0 := 0; i0 < len(src.RepeatedFieldsNonnull); i0++ {
 			if _, set := fmap["32.2"]; set {
 				if m.RepeatedFieldsNonnull[i0].Name != src.RepeatedFieldsNonnull[i0].Name {
@@ -2554,10 +2540,8 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["33"]; set {
 		if src.RepeatedInnerMsg != nil {
-			if m.RepeatedInnerMsg == nil || len(m.RepeatedInnerMsg) != len(src.RepeatedInnerMsg) {
-				m.RepeatedInnerMsg = make([]*TestGen_InnerMessage, len(src.RepeatedInnerMsg))
-				changed++
-			}
+			m.RepeatedInnerMsg = src.RepeatedInnerMsg
+			changed++
 			for i0 := 0; i0 < len(src.RepeatedInnerMsg); i0++ {
 				m.RepeatedInnerMsg[i0] = &TestGen_InnerMessage{}
 				if _, set := fmap["33.1"]; set {
@@ -2579,10 +2563,8 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		}
 	}
 	if _, set := fmap["34"]; set {
-		if m.RepeatedInnerMsgNonnull == nil || len(m.RepeatedInnerMsgNonnull) != len(src.RepeatedInnerMsgNonnull) {
-			m.RepeatedInnerMsgNonnull = make([]TestGen_InnerMessage, len(src.RepeatedInnerMsgNonnull))
-			changed++
-		}
+		m.RepeatedInnerMsgNonnull = src.RepeatedInnerMsgNonnull
+		changed++
 		for i0 := 0; i0 < len(src.RepeatedInnerMsgNonnull); i0++ {
 			if _, set := fmap["34.1"]; set {
 				if m.RepeatedInnerMsgNonnull[i0].Url != src.RepeatedInnerMsgNonnull[i0].Url {
@@ -2600,10 +2582,8 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["35"]; set {
 		if src.RepeatedLoc != nil {
-			if m.RepeatedLoc == nil || len(m.RepeatedLoc) != len(src.RepeatedLoc) {
-				m.RepeatedLoc = make([]*distributed_match_engine.Loc, len(src.RepeatedLoc))
-				changed++
-			}
+			m.RepeatedLoc = src.RepeatedLoc
+			changed++
 			for i0 := 0; i0 < len(src.RepeatedLoc); i0++ {
 				m.RepeatedLoc[i0] = &distributed_match_engine.Loc{}
 				if _, set := fmap["35.1"]; set {
@@ -2675,10 +2655,8 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		}
 	}
 	if _, set := fmap["36"]; set {
-		if m.RepeatedLocNonnull == nil || len(m.RepeatedLocNonnull) != len(src.RepeatedLocNonnull) {
-			m.RepeatedLocNonnull = make([]distributed_match_engine.Loc, len(src.RepeatedLocNonnull))
-			changed++
-		}
+		m.RepeatedLocNonnull = src.RepeatedLocNonnull
+		changed++
 		for i0 := 0; i0 < len(src.RepeatedLocNonnull); i0++ {
 			if _, set := fmap["36.1"]; set {
 				if m.RepeatedLocNonnull[i0].Latitude != src.RepeatedLocNonnull[i0].Latitude {

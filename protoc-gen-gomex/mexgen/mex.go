@@ -480,11 +480,8 @@ func (m *mex) printCopyInMakeArray(name string, desc *generator.Descriptor, fiel
 		}
 		m.P("m.", name, " = make(map[", mapType.KeyType, "]", valType, ")")
 	} else {
-		typ, _ := m.gen.GoType(desc, field)
-		m.P("if m.", name, " == nil || len(m.", name, ") != len(src.", name, ") {")
-		m.P("m.", name, " = make(", typ, ", len(src.", name, "))")
+		m.P("m.", name, " = src.", name)
 		m.P("changed++")
-		m.P("}")
 	}
 }
 

@@ -556,10 +556,8 @@ func (m *PrivacyPolicy) CopyInFields(src *PrivacyPolicy) int {
 		}
 	}
 	if _, set := fmap["3"]; set {
-		if m.OutboundSecurityRules == nil || len(m.OutboundSecurityRules) != len(src.OutboundSecurityRules) {
-			m.OutboundSecurityRules = make([]OutboundSecurityRule, len(src.OutboundSecurityRules))
-			changed++
-		}
+		m.OutboundSecurityRules = src.OutboundSecurityRules
+		changed++
 		for i0 := 0; i0 < len(src.OutboundSecurityRules); i0++ {
 			if _, set := fmap["3.1"]; set {
 				if m.OutboundSecurityRules[i0].Protocol != src.OutboundSecurityRules[i0].Protocol {

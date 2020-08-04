@@ -2210,10 +2210,8 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 		}
 	}
 	if _, set := fmap["9"]; set {
-		if m.MappedPorts == nil || len(m.MappedPorts) != len(src.MappedPorts) {
-			m.MappedPorts = make([]distributed_match_engine1.AppPort, len(src.MappedPorts))
-			changed++
-		}
+		m.MappedPorts = src.MappedPorts
+		changed++
 		for i0 := 0; i0 < len(src.MappedPorts); i0++ {
 			if _, set := fmap["9.1"]; set {
 				if m.MappedPorts[i0].Proto != src.MappedPorts[i0].Proto {
@@ -2274,10 +2272,8 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 		}
 	}
 	if _, set := fmap["15"]; set {
-		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
-			m.Errors = make([]string, len(src.Errors))
-			changed++
-		}
+		m.Errors = src.Errors
+		changed++
 		copy(m.Errors, src.Errors)
 		changed++
 	}
@@ -2289,10 +2285,8 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 	}
 	if _, set := fmap["17"]; set {
 		if _, set := fmap["17.1"]; set {
-			if m.RuntimeInfo.ContainerIds == nil || len(m.RuntimeInfo.ContainerIds) != len(src.RuntimeInfo.ContainerIds) {
-				m.RuntimeInfo.ContainerIds = make([]string, len(src.RuntimeInfo.ContainerIds))
-				changed++
-			}
+			m.RuntimeInfo.ContainerIds = src.RuntimeInfo.ContainerIds
+			changed++
 			copy(m.RuntimeInfo.ContainerIds, src.RuntimeInfo.ContainerIds)
 			changed++
 		}
@@ -2363,10 +2357,8 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 	}
 	if _, set := fmap["27"]; set {
 		if src.Configs != nil {
-			if m.Configs == nil || len(m.Configs) != len(src.Configs) {
-				m.Configs = make([]*ConfigFile, len(src.Configs))
-				changed++
-			}
+			m.Configs = src.Configs
+			changed++
 			for i0 := 0; i0 < len(src.Configs); i0++ {
 				m.Configs[i0] = &ConfigFile{}
 				if _, set := fmap["27.1"]; set {
@@ -3211,10 +3203,8 @@ func IgnoreAppInstFields(taglist string) cmp.Option {
 
 func (m *AppInstRuntime) CopyInFields(src *AppInstRuntime) int {
 	changed := 0
-	if m.ContainerIds == nil || len(m.ContainerIds) != len(src.ContainerIds) {
-		m.ContainerIds = make([]string, len(src.ContainerIds))
-		changed++
-	}
+	m.ContainerIds = src.ContainerIds
+	changed++
 	copy(m.ContainerIds, src.ContainerIds)
 	changed++
 	return changed
@@ -3535,19 +3525,15 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) int {
 		}
 	}
 	if _, set := fmap["5"]; set {
-		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
-			m.Errors = make([]string, len(src.Errors))
-			changed++
-		}
+		m.Errors = src.Errors
+		changed++
 		copy(m.Errors, src.Errors)
 		changed++
 	}
 	if _, set := fmap["6"]; set {
 		if _, set := fmap["6.1"]; set {
-			if m.RuntimeInfo.ContainerIds == nil || len(m.RuntimeInfo.ContainerIds) != len(src.RuntimeInfo.ContainerIds) {
-				m.RuntimeInfo.ContainerIds = make([]string, len(src.RuntimeInfo.ContainerIds))
-				changed++
-			}
+			m.RuntimeInfo.ContainerIds = src.RuntimeInfo.ContainerIds
+			changed++
 			copy(m.RuntimeInfo.ContainerIds, src.RuntimeInfo.ContainerIds)
 			changed++
 		}

@@ -1378,10 +1378,8 @@ func (m *VMPool) CopyInFields(src *VMPool) int {
 		}
 	}
 	if _, set := fmap["3"]; set {
-		if m.Vms == nil || len(m.Vms) != len(src.Vms) {
-			m.Vms = make([]VM, len(src.Vms))
-			changed++
-		}
+		m.Vms = src.Vms
+		changed++
 		for i0 := 0; i0 < len(src.Vms); i0++ {
 			if _, set := fmap["3.1"]; set {
 				if m.Vms[i0].Name != src.Vms[i0].Name {
@@ -1444,10 +1442,8 @@ func (m *VMPool) CopyInFields(src *VMPool) int {
 		}
 	}
 	if _, set := fmap["5"]; set {
-		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
-			m.Errors = make([]string, len(src.Errors))
-			changed++
-		}
+		m.Errors = src.Errors
+		changed++
 		copy(m.Errors, src.Errors)
 		changed++
 	}
@@ -2556,10 +2552,8 @@ func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
 		}
 	}
 	if _, set := fmap["4"]; set {
-		if m.Vms == nil || len(m.Vms) != len(src.Vms) {
-			m.Vms = make([]VM, len(src.Vms))
-			changed++
-		}
+		m.Vms = src.Vms
+		changed++
 		for i0 := 0; i0 < len(src.Vms); i0++ {
 			if _, set := fmap["4.1"]; set {
 				if m.Vms[i0].Name != src.Vms[i0].Name {
@@ -2622,10 +2616,8 @@ func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
 		}
 	}
 	if _, set := fmap["6"]; set {
-		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
-			m.Errors = make([]string, len(src.Errors))
-			changed++
-		}
+		m.Errors = src.Errors
+		changed++
 		copy(m.Errors, src.Errors)
 		changed++
 	}
