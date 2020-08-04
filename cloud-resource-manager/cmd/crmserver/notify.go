@@ -38,6 +38,8 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 
 func initSrvNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendSettingsCache(&controllerData.SettingsCache)
+	notifyServer.RegisterSendVMPoolCache(&controllerData.VMPoolCache)
+	notifyServer.RegisterSendVMPoolInfoCache(&controllerData.VMPoolInfoCache)
 	notifyServer.RegisterSendCloudletCache(&controllerData.CloudletCache)
 	notifyServer.RegisterSendAutoProvPolicyCache(&controllerData.AutoProvPolicyCache)
 	notifyServer.RegisterSendAppCache(&controllerData.AppCache)

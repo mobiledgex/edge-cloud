@@ -142,6 +142,10 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 	return nil
 }
 
+func getConfigDir(names *KubeNames) string {
+	return names.ClusterName + "_" + names.AppName + names.AppOrg + names.AppVersion
+}
+
 func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
 	mf, err := cloudcommon.GetDeploymentManifest(ctx, vaultConfig, app.DeploymentManifest)
 	if err != nil {
@@ -152,18 +156,29 @@ func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, clien
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to merge env vars", "error", err)
 		return fmt.Errorf("error merging environment variables config file: %s", err)
 	}
+	configDir := getConfigDir(names)
+
+	err = pc.CreateDir(ctx, client, configDir, pc.NoOverwrite)
+	if err != nil {
+		return err
+	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "writing config file", "kubeManifest", mf)
-	file := names.AppName + names.AppRevision + ".yaml"
+	file := configDir + "/manifest.yaml"
 	err = pc.WriteFile(client, file, mf, "K8s Deployment", pc.NoSudo)
 	if err != nil {
 		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "running kubectl", "action", action, "file", file)
-	cmd := fmt.Sprintf("%s kubectl %s -f %s", names.KconfEnv, action, file)
-
+	// Kubernetes provides 3 styles of object management.
+	// We use the Declarative Object configuration style, to be able to
+	// update and prune.
+	// Note that "kubectl create" does NOT fall under this style.
+	// Only "apply" and "delete" should be used. All configuration files
+	// for an AppInst must be stored in their own directory.
+	cmd := fmt.Sprintf("%s kubectl apply -f %s --prune --all", names.KconfEnv, configDir)
+	log.SpanLog(ctx, log.DebugLevelInfra, "running kubectl", "action", action, "cmd", cmd)
 	out, err := client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("error running kubectl %s command %s, %v", action, out, err)
+		return fmt.Errorf("error running kubectl command %s: %s, %v", cmd, out, err)
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "done kubectl", "action", action)
 	return nil
@@ -183,11 +198,21 @@ func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 }
 
 func DeleteAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "deleting app", "name", names.AppName)
-	// for delete, we use the appInst revision which may be behind the app revision
-	file := names.AppName + names.AppInstRevision + ".yaml"
-	cmd := fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, file)
-	out, err := client.Output(cmd)
+	var cmd string
+	configDir := getConfigDir(names)
+	out, err := client.Output("ls -d " + configDir)
+	if err == nil {
+		cmd = fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, configDir)
+	} else {
+		// this is retained for backwards compatibility, from before
+		// we moved to Declarative Object style configuration management.
+
+		// for delete, we use the appInst revision which may be behind the app revision
+		file := names.AppName + names.AppInstRevision + ".yaml"
+		cmd = fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, file)
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting app", "name", names.AppName, "cmd", cmd)
+	out, err = client.Output(cmd)
 	if err != nil {
 		if strings.Contains(string(out), "not found") {
 			log.SpanLog(ctx, log.DebugLevelInfra, "app not found, cannot delete", "name", names.AppName)

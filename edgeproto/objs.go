@@ -60,9 +60,6 @@ func (a *AllData) Sort() {
 	sort.Slice(a.CloudletPools[:], func(i, j int) bool {
 		return a.CloudletPools[i].Key.GetKeyString() < a.CloudletPools[j].Key.GetKeyString()
 	})
-	sort.Slice(a.CloudletPoolMembers[:], func(i, j int) bool {
-		return a.CloudletPoolMembers[i].GetKeyString() < a.CloudletPoolMembers[j].GetKeyString()
-	})
 	sort.Slice(a.AutoScalePolicies[:], func(i, j int) bool {
 		return a.AutoScalePolicies[i].Key.GetKeyString() < a.AutoScalePolicies[j].Key.GetKeyString()
 	})
@@ -266,6 +263,9 @@ func (s *CloudletInfo) Validate(fields map[string]struct{}) error {
 }
 
 func (key *CloudletPoolKey) ValidateKey() error {
+	if !util.ValidName(key.Organization) {
+		return errors.New("Invalid organization name")
+	}
 	if !util.ValidName(key.Name) {
 		return errors.New("Invalid Cloudlet Pool name")
 	}
@@ -277,20 +277,6 @@ func (s *CloudletPool) Validate(fields map[string]struct{}) error {
 		return err
 	}
 	return nil
-}
-
-func (key *CloudletPoolMember) ValidateKey() error {
-	if err := key.CloudletKey.ValidateKey(); err != nil {
-		return err
-	}
-	if err := key.PoolKey.ValidateKey(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *CloudletPoolMember) Validate(fields map[string]struct{}) error {
-	return s.ValidateKey()
 }
 
 func (s *VM) Validate() error {
