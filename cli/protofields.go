@@ -39,7 +39,6 @@ func getFields(data map[string]interface{}, t reflect.Type, ns FieldNamespace, f
 			fields = append(fields, subfields...)
 			continue
 		} else if subdatalist, ok := val.([]map[string]interface{}); ok {
-
 			// arrayed struct
 			if sf.Type.Kind() != reflect.Slice {
 				continue
@@ -49,7 +48,6 @@ func getFields(data map[string]interface{}, t reflect.Type, ns FieldNamespace, f
 				subfields := getFields(subdata, elemt, ns, append(fvals, fval))
 				fields = append(fields, subfields...)
 			}
-			continue
 		}
 		fstr := strings.Join(append(fvals, fval), ".")
 		fields = append(fields, fstr)
