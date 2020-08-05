@@ -320,6 +320,12 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
+	// dont allow tls on vms with direct access
+	for _, port := range ports {
+		if port.Tls && in.Deployment == cloudcommon.DeploymentTypeVM && in.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+			return &edgeproto.Result{}, fmt.Errorf("Tls unsupported on VM based deployments with direct access")
+		}
+	}
 	// check that health check skip ports are parsable
 	if in.SkipHcPorts != "all" {
 		_, err = edgeproto.ParseAppPorts(in.SkipHcPorts)
