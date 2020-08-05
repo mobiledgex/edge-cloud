@@ -701,12 +701,13 @@ func (m *CloudletPool) CopyInFields(src *CloudletPool) int {
 		}
 	}
 	if _, set := fmap["3"]; set {
-		if m.Cloudlets == nil || len(m.Cloudlets) != len(src.Cloudlets) {
-			m.Cloudlets = make([]string, len(src.Cloudlets))
+		if src.Cloudlets != nil {
+			m.Cloudlets = src.Cloudlets
+			changed++
+		} else if m.Cloudlets != nil {
+			m.Cloudlets = nil
 			changed++
 		}
-		copy(m.Cloudlets, src.Cloudlets)
-		changed++
 	}
 	return changed
 }

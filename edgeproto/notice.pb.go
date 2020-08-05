@@ -307,18 +307,17 @@ func (m *Notice) CopyInFields(src *Notice) int {
 		m.Any.TypeUrl = src.Any.TypeUrl
 		changed++
 	}
-	if m.Any.Value == nil || len(m.Any.Value) != len(src.Any.Value) {
-		m.Any.Value = make([]byte, len(src.Any.Value))
+	if src.Any.Value != nil {
+		m.Any.Value = src.Any.Value
 		changed++
 	}
-	copy(m.Any.Value, src.Any.Value)
-	changed++
-	if m.WantObjs == nil || len(m.WantObjs) != len(src.WantObjs) {
-		m.WantObjs = make([]string, len(src.WantObjs))
+	if src.WantObjs != nil {
+		m.WantObjs = src.WantObjs
+		changed++
+	} else if m.WantObjs != nil {
+		m.WantObjs = nil
 		changed++
 	}
-	copy(m.WantObjs, src.WantObjs)
-	changed++
 	if m.FilterCloudletKey != src.FilterCloudletKey {
 		m.FilterCloudletKey = src.FilterCloudletKey
 		changed++

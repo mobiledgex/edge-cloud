@@ -446,37 +446,15 @@ func (m *Metric) CopyInFields(src *Metric) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*MetricTag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &MetricTag{}
-			if m.Tags[i0].Name != src.Tags[i0].Name {
-				m.Tags[i0].Name = src.Tags[i0].Name
-				changed++
-			}
-			if m.Tags[i0].Val != src.Tags[i0].Val {
-				m.Tags[i0].Val = src.Tags[i0].Val
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
 	}
 	if src.Vals != nil {
-		if m.Vals == nil || len(m.Vals) != len(src.Vals) {
-			m.Vals = make([]*MetricVal, len(src.Vals))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Vals); i0++ {
-			m.Vals[i0] = &MetricVal{}
-			if m.Vals[i0].Name != src.Vals[i0].Name {
-				m.Vals[i0].Name = src.Vals[i0].Name
-				changed++
-			}
-		}
+		m.Vals = src.Vals
+		changed++
 	} else if m.Vals != nil {
 		m.Vals = nil
 		changed++

@@ -3113,21 +3113,8 @@ func (m *RegisterClientRequest) CopyInFields(src *RegisterClientRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3194,21 +3181,8 @@ func (m *RegisterClientReply) CopyInFields(src *RegisterClientReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3315,21 +3289,8 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3393,21 +3354,8 @@ func (m *PlatformFindCloudletRequest) CopyInFields(src *PlatformFindCloudletRequ
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3457,41 +3405,8 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 		changed++
 	}
 	if src.Ports != nil {
-		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
-			m.Ports = make([]*AppPort, len(src.Ports))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Ports); i0++ {
-			m.Ports[i0] = &AppPort{}
-			if m.Ports[i0].Proto != src.Ports[i0].Proto {
-				m.Ports[i0].Proto = src.Ports[i0].Proto
-				changed++
-			}
-			if m.Ports[i0].InternalPort != src.Ports[i0].InternalPort {
-				m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
-				changed++
-			}
-			if m.Ports[i0].PublicPort != src.Ports[i0].PublicPort {
-				m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
-				changed++
-			}
-			if m.Ports[i0].PathPrefix != src.Ports[i0].PathPrefix {
-				m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
-				changed++
-			}
-			if m.Ports[i0].FqdnPrefix != src.Ports[i0].FqdnPrefix {
-				m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
-				changed++
-			}
-			if m.Ports[i0].EndPort != src.Ports[i0].EndPort {
-				m.Ports[i0].EndPort = src.Ports[i0].EndPort
-				changed++
-			}
-			if m.Ports[i0].Tls != src.Ports[i0].Tls {
-				m.Ports[i0].Tls = src.Ports[i0].Tls
-				changed++
-			}
-		}
+		m.Ports = src.Ports
+		changed++
 	} else if m.Ports != nil {
 		m.Ports = nil
 		changed++
@@ -3545,21 +3460,8 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3692,21 +3594,8 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3771,21 +3660,8 @@ func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3845,21 +3721,8 @@ func (m *GetLocationRequest) CopyInFields(src *GetLocationRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3961,21 +3824,8 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4094,21 +3944,8 @@ func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4169,41 +4006,8 @@ func (m *Appinstance) CopyInFields(src *Appinstance) int {
 		changed++
 	}
 	if src.Ports != nil {
-		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
-			m.Ports = make([]*AppPort, len(src.Ports))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Ports); i0++ {
-			m.Ports[i0] = &AppPort{}
-			if m.Ports[i0].Proto != src.Ports[i0].Proto {
-				m.Ports[i0].Proto = src.Ports[i0].Proto
-				changed++
-			}
-			if m.Ports[i0].InternalPort != src.Ports[i0].InternalPort {
-				m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
-				changed++
-			}
-			if m.Ports[i0].PublicPort != src.Ports[i0].PublicPort {
-				m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
-				changed++
-			}
-			if m.Ports[i0].PathPrefix != src.Ports[i0].PathPrefix {
-				m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
-				changed++
-			}
-			if m.Ports[i0].FqdnPrefix != src.Ports[i0].FqdnPrefix {
-				m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
-				changed++
-			}
-			if m.Ports[i0].EndPort != src.Ports[i0].EndPort {
-				m.Ports[i0].EndPort = src.Ports[i0].EndPort
-				changed++
-			}
-			if m.Ports[i0].Tls != src.Ports[i0].Tls {
-				m.Ports[i0].Tls = src.Ports[i0].Tls
-				changed++
-			}
-		}
+		m.Ports = src.Ports
+		changed++
 	} else if m.Ports != nil {
 		m.Ports = nil
 		changed++
@@ -4305,69 +4109,8 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 		changed++
 	}
 	if src.Appinstances != nil {
-		if m.Appinstances == nil || len(m.Appinstances) != len(src.Appinstances) {
-			m.Appinstances = make([]*Appinstance, len(src.Appinstances))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Appinstances); i0++ {
-			m.Appinstances[i0] = &Appinstance{}
-			if m.Appinstances[i0].AppName != src.Appinstances[i0].AppName {
-				m.Appinstances[i0].AppName = src.Appinstances[i0].AppName
-				changed++
-			}
-			if m.Appinstances[i0].AppVers != src.Appinstances[i0].AppVers {
-				m.Appinstances[i0].AppVers = src.Appinstances[i0].AppVers
-				changed++
-			}
-			if m.Appinstances[i0].Fqdn != src.Appinstances[i0].Fqdn {
-				m.Appinstances[i0].Fqdn = src.Appinstances[i0].Fqdn
-				changed++
-			}
-			if src.Appinstances[i0].Ports != nil {
-				if m.Appinstances[i0].Ports == nil || len(m.Appinstances[i0].Ports) != len(src.Appinstances[i0].Ports) {
-					m.Appinstances[i0].Ports = make([]*AppPort, len(src.Appinstances[i0].Ports))
-					changed++
-				}
-				for i1 := 0; i1 < len(src.Appinstances[i0].Ports); i1++ {
-					m.Appinstances[i0].Ports[i1] = &AppPort{}
-					if m.Appinstances[i0].Ports[i1].Proto != src.Appinstances[i0].Ports[i1].Proto {
-						m.Appinstances[i0].Ports[i1].Proto = src.Appinstances[i0].Ports[i1].Proto
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].InternalPort != src.Appinstances[i0].Ports[i1].InternalPort {
-						m.Appinstances[i0].Ports[i1].InternalPort = src.Appinstances[i0].Ports[i1].InternalPort
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].PublicPort != src.Appinstances[i0].Ports[i1].PublicPort {
-						m.Appinstances[i0].Ports[i1].PublicPort = src.Appinstances[i0].Ports[i1].PublicPort
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].PathPrefix != src.Appinstances[i0].Ports[i1].PathPrefix {
-						m.Appinstances[i0].Ports[i1].PathPrefix = src.Appinstances[i0].Ports[i1].PathPrefix
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].FqdnPrefix != src.Appinstances[i0].Ports[i1].FqdnPrefix {
-						m.Appinstances[i0].Ports[i1].FqdnPrefix = src.Appinstances[i0].Ports[i1].FqdnPrefix
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].EndPort != src.Appinstances[i0].Ports[i1].EndPort {
-						m.Appinstances[i0].Ports[i1].EndPort = src.Appinstances[i0].Ports[i1].EndPort
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].Tls != src.Appinstances[i0].Ports[i1].Tls {
-						m.Appinstances[i0].Ports[i1].Tls = src.Appinstances[i0].Ports[i1].Tls
-						changed++
-					}
-				}
-			} else if m.Appinstances[i0].Ports != nil {
-				m.Appinstances[i0].Ports = nil
-				changed++
-			}
-			if m.Appinstances[i0].OrgName != src.Appinstances[i0].OrgName {
-				m.Appinstances[i0].OrgName = src.Appinstances[i0].OrgName
-				changed++
-			}
-		}
+		m.Appinstances = src.Appinstances
+		changed++
 	} else if m.Appinstances != nil {
 		m.Appinstances = nil
 		changed++
@@ -4422,161 +4165,15 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 		changed++
 	}
 	if src.Cloudlets != nil {
-		if m.Cloudlets == nil || len(m.Cloudlets) != len(src.Cloudlets) {
-			m.Cloudlets = make([]*CloudletLocation, len(src.Cloudlets))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Cloudlets); i0++ {
-			m.Cloudlets[i0] = &CloudletLocation{}
-			if m.Cloudlets[i0].CarrierName != src.Cloudlets[i0].CarrierName {
-				m.Cloudlets[i0].CarrierName = src.Cloudlets[i0].CarrierName
-				changed++
-			}
-			if m.Cloudlets[i0].CloudletName != src.Cloudlets[i0].CloudletName {
-				m.Cloudlets[i0].CloudletName = src.Cloudlets[i0].CloudletName
-				changed++
-			}
-			if src.Cloudlets[i0].GpsLocation != nil {
-				m.Cloudlets[i0].GpsLocation = &Loc{}
-				if m.Cloudlets[i0].GpsLocation.Latitude != src.Cloudlets[i0].GpsLocation.Latitude {
-					m.Cloudlets[i0].GpsLocation.Latitude = src.Cloudlets[i0].GpsLocation.Latitude
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.Longitude != src.Cloudlets[i0].GpsLocation.Longitude {
-					m.Cloudlets[i0].GpsLocation.Longitude = src.Cloudlets[i0].GpsLocation.Longitude
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.HorizontalAccuracy != src.Cloudlets[i0].GpsLocation.HorizontalAccuracy {
-					m.Cloudlets[i0].GpsLocation.HorizontalAccuracy = src.Cloudlets[i0].GpsLocation.HorizontalAccuracy
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.VerticalAccuracy != src.Cloudlets[i0].GpsLocation.VerticalAccuracy {
-					m.Cloudlets[i0].GpsLocation.VerticalAccuracy = src.Cloudlets[i0].GpsLocation.VerticalAccuracy
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.Altitude != src.Cloudlets[i0].GpsLocation.Altitude {
-					m.Cloudlets[i0].GpsLocation.Altitude = src.Cloudlets[i0].GpsLocation.Altitude
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.Course != src.Cloudlets[i0].GpsLocation.Course {
-					m.Cloudlets[i0].GpsLocation.Course = src.Cloudlets[i0].GpsLocation.Course
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.Speed != src.Cloudlets[i0].GpsLocation.Speed {
-					m.Cloudlets[i0].GpsLocation.Speed = src.Cloudlets[i0].GpsLocation.Speed
-					changed++
-				}
-				if src.Cloudlets[i0].GpsLocation.Timestamp != nil {
-					m.Cloudlets[i0].GpsLocation.Timestamp = &Timestamp{}
-					if m.Cloudlets[i0].GpsLocation.Timestamp.Seconds != src.Cloudlets[i0].GpsLocation.Timestamp.Seconds {
-						m.Cloudlets[i0].GpsLocation.Timestamp.Seconds = src.Cloudlets[i0].GpsLocation.Timestamp.Seconds
-						changed++
-					}
-					if m.Cloudlets[i0].GpsLocation.Timestamp.Nanos != src.Cloudlets[i0].GpsLocation.Timestamp.Nanos {
-						m.Cloudlets[i0].GpsLocation.Timestamp.Nanos = src.Cloudlets[i0].GpsLocation.Timestamp.Nanos
-						changed++
-					}
-				} else if m.Cloudlets[i0].GpsLocation.Timestamp != nil {
-					m.Cloudlets[i0].GpsLocation.Timestamp = nil
-					changed++
-				}
-			} else if m.Cloudlets[i0].GpsLocation != nil {
-				m.Cloudlets[i0].GpsLocation = nil
-				changed++
-			}
-			if m.Cloudlets[i0].Distance != src.Cloudlets[i0].Distance {
-				m.Cloudlets[i0].Distance = src.Cloudlets[i0].Distance
-				changed++
-			}
-			if src.Cloudlets[i0].Appinstances != nil {
-				if m.Cloudlets[i0].Appinstances == nil || len(m.Cloudlets[i0].Appinstances) != len(src.Cloudlets[i0].Appinstances) {
-					m.Cloudlets[i0].Appinstances = make([]*Appinstance, len(src.Cloudlets[i0].Appinstances))
-					changed++
-				}
-				for i1 := 0; i1 < len(src.Cloudlets[i0].Appinstances); i1++ {
-					m.Cloudlets[i0].Appinstances[i1] = &Appinstance{}
-					if m.Cloudlets[i0].Appinstances[i1].AppName != src.Cloudlets[i0].Appinstances[i1].AppName {
-						m.Cloudlets[i0].Appinstances[i1].AppName = src.Cloudlets[i0].Appinstances[i1].AppName
-						changed++
-					}
-					if m.Cloudlets[i0].Appinstances[i1].AppVers != src.Cloudlets[i0].Appinstances[i1].AppVers {
-						m.Cloudlets[i0].Appinstances[i1].AppVers = src.Cloudlets[i0].Appinstances[i1].AppVers
-						changed++
-					}
-					if m.Cloudlets[i0].Appinstances[i1].Fqdn != src.Cloudlets[i0].Appinstances[i1].Fqdn {
-						m.Cloudlets[i0].Appinstances[i1].Fqdn = src.Cloudlets[i0].Appinstances[i1].Fqdn
-						changed++
-					}
-					if src.Cloudlets[i0].Appinstances[i1].Ports != nil {
-						if m.Cloudlets[i0].Appinstances[i1].Ports == nil || len(m.Cloudlets[i0].Appinstances[i1].Ports) != len(src.Cloudlets[i0].Appinstances[i1].Ports) {
-							m.Cloudlets[i0].Appinstances[i1].Ports = make([]*AppPort, len(src.Cloudlets[i0].Appinstances[i1].Ports))
-							changed++
-						}
-						for i2 := 0; i2 < len(src.Cloudlets[i0].Appinstances[i1].Ports); i2++ {
-							m.Cloudlets[i0].Appinstances[i1].Ports[i2] = &AppPort{}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto != src.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort != src.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort != src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix != src.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix != src.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort != src.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls != src.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls
-								changed++
-							}
-						}
-					} else if m.Cloudlets[i0].Appinstances[i1].Ports != nil {
-						m.Cloudlets[i0].Appinstances[i1].Ports = nil
-						changed++
-					}
-					if m.Cloudlets[i0].Appinstances[i1].OrgName != src.Cloudlets[i0].Appinstances[i1].OrgName {
-						m.Cloudlets[i0].Appinstances[i1].OrgName = src.Cloudlets[i0].Appinstances[i1].OrgName
-						changed++
-					}
-				}
-			} else if m.Cloudlets[i0].Appinstances != nil {
-				m.Cloudlets[i0].Appinstances = nil
-				changed++
-			}
-		}
+		m.Cloudlets = src.Cloudlets
+		changed++
 	} else if m.Cloudlets != nil {
 		m.Cloudlets = nil
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4642,21 +4239,8 @@ func (m *FqdnListRequest) CopyInFields(src *FqdnListRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4704,12 +4288,13 @@ func (m *AppFqdn) CopyInFields(src *AppFqdn) int {
 		m.OrgName = src.OrgName
 		changed++
 	}
-	if m.Fqdns == nil || len(m.Fqdns) != len(src.Fqdns) {
-		m.Fqdns = make([]string, len(src.Fqdns))
+	if src.Fqdns != nil {
+		m.Fqdns = src.Fqdns
+		changed++
+	} else if m.Fqdns != nil {
+		m.Fqdns = nil
 		changed++
 	}
-	copy(m.Fqdns, src.Fqdns)
-	changed++
 	if m.AndroidPackageName != src.AndroidPackageName {
 		m.AndroidPackageName = src.AndroidPackageName
 		changed++
@@ -4744,35 +4329,8 @@ func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
 		changed++
 	}
 	if src.AppFqdns != nil {
-		if m.AppFqdns == nil || len(m.AppFqdns) != len(src.AppFqdns) {
-			m.AppFqdns = make([]*AppFqdn, len(src.AppFqdns))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.AppFqdns); i0++ {
-			m.AppFqdns[i0] = &AppFqdn{}
-			if m.AppFqdns[i0].AppName != src.AppFqdns[i0].AppName {
-				m.AppFqdns[i0].AppName = src.AppFqdns[i0].AppName
-				changed++
-			}
-			if m.AppFqdns[i0].AppVers != src.AppFqdns[i0].AppVers {
-				m.AppFqdns[i0].AppVers = src.AppFqdns[i0].AppVers
-				changed++
-			}
-			if m.AppFqdns[i0].OrgName != src.AppFqdns[i0].OrgName {
-				m.AppFqdns[i0].OrgName = src.AppFqdns[i0].OrgName
-				changed++
-			}
-			if m.AppFqdns[i0].Fqdns == nil || len(m.AppFqdns[i0].Fqdns) != len(src.AppFqdns[i0].Fqdns) {
-				m.AppFqdns[i0].Fqdns = make([]string, len(src.AppFqdns[i0].Fqdns))
-				changed++
-			}
-			copy(m.AppFqdns[i0].Fqdns, src.AppFqdns[i0].Fqdns)
-			changed++
-			if m.AppFqdns[i0].AndroidPackageName != src.AppFqdns[i0].AndroidPackageName {
-				m.AppFqdns[i0].AndroidPackageName = src.AppFqdns[i0].AndroidPackageName
-				changed++
-			}
-		}
+		m.AppFqdns = src.AppFqdns
+		changed++
 	} else if m.AppFqdns != nil {
 		m.AppFqdns = nil
 		changed++
@@ -4782,21 +4340,8 @@ func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4906,21 +4451,8 @@ func (m *AppOfficialFqdnRequest) CopyInFields(src *AppOfficialFqdnRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4982,61 +4514,15 @@ func (m *AppOfficialFqdnReply) CopyInFields(src *AppOfficialFqdnReply) int {
 		changed++
 	}
 	if src.Ports != nil {
-		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
-			m.Ports = make([]*AppPort, len(src.Ports))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Ports); i0++ {
-			m.Ports[i0] = &AppPort{}
-			if m.Ports[i0].Proto != src.Ports[i0].Proto {
-				m.Ports[i0].Proto = src.Ports[i0].Proto
-				changed++
-			}
-			if m.Ports[i0].InternalPort != src.Ports[i0].InternalPort {
-				m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
-				changed++
-			}
-			if m.Ports[i0].PublicPort != src.Ports[i0].PublicPort {
-				m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
-				changed++
-			}
-			if m.Ports[i0].PathPrefix != src.Ports[i0].PathPrefix {
-				m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
-				changed++
-			}
-			if m.Ports[i0].FqdnPrefix != src.Ports[i0].FqdnPrefix {
-				m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
-				changed++
-			}
-			if m.Ports[i0].EndPort != src.Ports[i0].EndPort {
-				m.Ports[i0].EndPort = src.Ports[i0].EndPort
-				changed++
-			}
-			if m.Ports[i0].Tls != src.Ports[i0].Tls {
-				m.Ports[i0].Tls = src.Ports[i0].Tls
-				changed++
-			}
-		}
+		m.Ports = src.Ports
+		changed++
 	} else if m.Ports != nil {
 		m.Ports = nil
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -5116,21 +4602,8 @@ func (m *DynamicLocGroupRequest) CopyInFields(src *DynamicLocGroupRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -5189,21 +4662,8 @@ func (m *DynamicLocGroupReply) CopyInFields(src *DynamicLocGroupReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -5319,30 +4779,34 @@ func (m *QosPosition) ValidateEnums() error {
 
 func (m *BandSelection) CopyInFields(src *BandSelection) int {
 	changed := 0
-	if m.Rat_2G == nil || len(m.Rat_2G) != len(src.Rat_2G) {
-		m.Rat_2G = make([]string, len(src.Rat_2G))
+	if src.Rat_2G != nil {
+		m.Rat_2G = src.Rat_2G
+		changed++
+	} else if m.Rat_2G != nil {
+		m.Rat_2G = nil
 		changed++
 	}
-	copy(m.Rat_2G, src.Rat_2G)
-	changed++
-	if m.Rat_3G == nil || len(m.Rat_3G) != len(src.Rat_3G) {
-		m.Rat_3G = make([]string, len(src.Rat_3G))
+	if src.Rat_3G != nil {
+		m.Rat_3G = src.Rat_3G
+		changed++
+	} else if m.Rat_3G != nil {
+		m.Rat_3G = nil
 		changed++
 	}
-	copy(m.Rat_3G, src.Rat_3G)
-	changed++
-	if m.Rat_4G == nil || len(m.Rat_4G) != len(src.Rat_4G) {
-		m.Rat_4G = make([]string, len(src.Rat_4G))
+	if src.Rat_4G != nil {
+		m.Rat_4G = src.Rat_4G
+		changed++
+	} else if m.Rat_4G != nil {
+		m.Rat_4G = nil
 		changed++
 	}
-	copy(m.Rat_4G, src.Rat_4G)
-	changed++
-	if m.Rat_5G == nil || len(m.Rat_5G) != len(src.Rat_5G) {
-		m.Rat_5G = make([]string, len(src.Rat_5G))
+	if src.Rat_5G != nil {
+		m.Rat_5G = src.Rat_5G
+		changed++
+	} else if m.Rat_5G != nil {
+		m.Rat_5G = nil
 		changed++
 	}
-	copy(m.Rat_5G, src.Rat_5G)
-	changed++
 	return changed
 }
 
@@ -5397,65 +4861,8 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 		changed++
 	}
 	if src.Positions != nil {
-		if m.Positions == nil || len(m.Positions) != len(src.Positions) {
-			m.Positions = make([]*QosPosition, len(src.Positions))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Positions); i0++ {
-			m.Positions[i0] = &QosPosition{}
-			if m.Positions[i0].Positionid != src.Positions[i0].Positionid {
-				m.Positions[i0].Positionid = src.Positions[i0].Positionid
-				changed++
-			}
-			if src.Positions[i0].GpsLocation != nil {
-				m.Positions[i0].GpsLocation = &Loc{}
-				if m.Positions[i0].GpsLocation.Latitude != src.Positions[i0].GpsLocation.Latitude {
-					m.Positions[i0].GpsLocation.Latitude = src.Positions[i0].GpsLocation.Latitude
-					changed++
-				}
-				if m.Positions[i0].GpsLocation.Longitude != src.Positions[i0].GpsLocation.Longitude {
-					m.Positions[i0].GpsLocation.Longitude = src.Positions[i0].GpsLocation.Longitude
-					changed++
-				}
-				if m.Positions[i0].GpsLocation.HorizontalAccuracy != src.Positions[i0].GpsLocation.HorizontalAccuracy {
-					m.Positions[i0].GpsLocation.HorizontalAccuracy = src.Positions[i0].GpsLocation.HorizontalAccuracy
-					changed++
-				}
-				if m.Positions[i0].GpsLocation.VerticalAccuracy != src.Positions[i0].GpsLocation.VerticalAccuracy {
-					m.Positions[i0].GpsLocation.VerticalAccuracy = src.Positions[i0].GpsLocation.VerticalAccuracy
-					changed++
-				}
-				if m.Positions[i0].GpsLocation.Altitude != src.Positions[i0].GpsLocation.Altitude {
-					m.Positions[i0].GpsLocation.Altitude = src.Positions[i0].GpsLocation.Altitude
-					changed++
-				}
-				if m.Positions[i0].GpsLocation.Course != src.Positions[i0].GpsLocation.Course {
-					m.Positions[i0].GpsLocation.Course = src.Positions[i0].GpsLocation.Course
-					changed++
-				}
-				if m.Positions[i0].GpsLocation.Speed != src.Positions[i0].GpsLocation.Speed {
-					m.Positions[i0].GpsLocation.Speed = src.Positions[i0].GpsLocation.Speed
-					changed++
-				}
-				if src.Positions[i0].GpsLocation.Timestamp != nil {
-					m.Positions[i0].GpsLocation.Timestamp = &Timestamp{}
-					if m.Positions[i0].GpsLocation.Timestamp.Seconds != src.Positions[i0].GpsLocation.Timestamp.Seconds {
-						m.Positions[i0].GpsLocation.Timestamp.Seconds = src.Positions[i0].GpsLocation.Timestamp.Seconds
-						changed++
-					}
-					if m.Positions[i0].GpsLocation.Timestamp.Nanos != src.Positions[i0].GpsLocation.Timestamp.Nanos {
-						m.Positions[i0].GpsLocation.Timestamp.Nanos = src.Positions[i0].GpsLocation.Timestamp.Nanos
-						changed++
-					}
-				} else if m.Positions[i0].GpsLocation.Timestamp != nil {
-					m.Positions[i0].GpsLocation.Timestamp = nil
-					changed++
-				}
-			} else if m.Positions[i0].GpsLocation != nil {
-				m.Positions[i0].GpsLocation = nil
-				changed++
-			}
-		}
+		m.Positions = src.Positions
+		changed++
 	} else if m.Positions != nil {
 		m.Positions = nil
 		changed++
@@ -5466,30 +4873,34 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 	}
 	if src.BandSelection != nil {
 		m.BandSelection = &BandSelection{}
-		if m.BandSelection.Rat_2G == nil || len(m.BandSelection.Rat_2G) != len(src.BandSelection.Rat_2G) {
-			m.BandSelection.Rat_2G = make([]string, len(src.BandSelection.Rat_2G))
+		if src.BandSelection.Rat_2G != nil {
+			m.BandSelection.Rat_2G = src.BandSelection.Rat_2G
+			changed++
+		} else if m.BandSelection.Rat_2G != nil {
+			m.BandSelection.Rat_2G = nil
 			changed++
 		}
-		copy(m.BandSelection.Rat_2G, src.BandSelection.Rat_2G)
-		changed++
-		if m.BandSelection.Rat_3G == nil || len(m.BandSelection.Rat_3G) != len(src.BandSelection.Rat_3G) {
-			m.BandSelection.Rat_3G = make([]string, len(src.BandSelection.Rat_3G))
+		if src.BandSelection.Rat_3G != nil {
+			m.BandSelection.Rat_3G = src.BandSelection.Rat_3G
+			changed++
+		} else if m.BandSelection.Rat_3G != nil {
+			m.BandSelection.Rat_3G = nil
 			changed++
 		}
-		copy(m.BandSelection.Rat_3G, src.BandSelection.Rat_3G)
-		changed++
-		if m.BandSelection.Rat_4G == nil || len(m.BandSelection.Rat_4G) != len(src.BandSelection.Rat_4G) {
-			m.BandSelection.Rat_4G = make([]string, len(src.BandSelection.Rat_4G))
+		if src.BandSelection.Rat_4G != nil {
+			m.BandSelection.Rat_4G = src.BandSelection.Rat_4G
+			changed++
+		} else if m.BandSelection.Rat_4G != nil {
+			m.BandSelection.Rat_4G = nil
 			changed++
 		}
-		copy(m.BandSelection.Rat_4G, src.BandSelection.Rat_4G)
-		changed++
-		if m.BandSelection.Rat_5G == nil || len(m.BandSelection.Rat_5G) != len(src.BandSelection.Rat_5G) {
-			m.BandSelection.Rat_5G = make([]string, len(src.BandSelection.Rat_5G))
+		if src.BandSelection.Rat_5G != nil {
+			m.BandSelection.Rat_5G = src.BandSelection.Rat_5G
+			changed++
+		} else if m.BandSelection.Rat_5G != nil {
+			m.BandSelection.Rat_5G = nil
 			changed++
 		}
-		copy(m.BandSelection.Rat_5G, src.BandSelection.Rat_5G)
-		changed++
 	} else if m.BandSelection != nil {
 		m.BandSelection = nil
 		changed++
@@ -5499,21 +4910,8 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -5705,121 +5103,15 @@ func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) int {
 		changed++
 	}
 	if src.PositionResults != nil {
-		if m.PositionResults == nil || len(m.PositionResults) != len(src.PositionResults) {
-			m.PositionResults = make([]*QosPositionKpiResult, len(src.PositionResults))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.PositionResults); i0++ {
-			m.PositionResults[i0] = &QosPositionKpiResult{}
-			if m.PositionResults[i0].Positionid != src.PositionResults[i0].Positionid {
-				m.PositionResults[i0].Positionid = src.PositionResults[i0].Positionid
-				changed++
-			}
-			if src.PositionResults[i0].GpsLocation != nil {
-				m.PositionResults[i0].GpsLocation = &Loc{}
-				if m.PositionResults[i0].GpsLocation.Latitude != src.PositionResults[i0].GpsLocation.Latitude {
-					m.PositionResults[i0].GpsLocation.Latitude = src.PositionResults[i0].GpsLocation.Latitude
-					changed++
-				}
-				if m.PositionResults[i0].GpsLocation.Longitude != src.PositionResults[i0].GpsLocation.Longitude {
-					m.PositionResults[i0].GpsLocation.Longitude = src.PositionResults[i0].GpsLocation.Longitude
-					changed++
-				}
-				if m.PositionResults[i0].GpsLocation.HorizontalAccuracy != src.PositionResults[i0].GpsLocation.HorizontalAccuracy {
-					m.PositionResults[i0].GpsLocation.HorizontalAccuracy = src.PositionResults[i0].GpsLocation.HorizontalAccuracy
-					changed++
-				}
-				if m.PositionResults[i0].GpsLocation.VerticalAccuracy != src.PositionResults[i0].GpsLocation.VerticalAccuracy {
-					m.PositionResults[i0].GpsLocation.VerticalAccuracy = src.PositionResults[i0].GpsLocation.VerticalAccuracy
-					changed++
-				}
-				if m.PositionResults[i0].GpsLocation.Altitude != src.PositionResults[i0].GpsLocation.Altitude {
-					m.PositionResults[i0].GpsLocation.Altitude = src.PositionResults[i0].GpsLocation.Altitude
-					changed++
-				}
-				if m.PositionResults[i0].GpsLocation.Course != src.PositionResults[i0].GpsLocation.Course {
-					m.PositionResults[i0].GpsLocation.Course = src.PositionResults[i0].GpsLocation.Course
-					changed++
-				}
-				if m.PositionResults[i0].GpsLocation.Speed != src.PositionResults[i0].GpsLocation.Speed {
-					m.PositionResults[i0].GpsLocation.Speed = src.PositionResults[i0].GpsLocation.Speed
-					changed++
-				}
-				if src.PositionResults[i0].GpsLocation.Timestamp != nil {
-					m.PositionResults[i0].GpsLocation.Timestamp = &Timestamp{}
-					if m.PositionResults[i0].GpsLocation.Timestamp.Seconds != src.PositionResults[i0].GpsLocation.Timestamp.Seconds {
-						m.PositionResults[i0].GpsLocation.Timestamp.Seconds = src.PositionResults[i0].GpsLocation.Timestamp.Seconds
-						changed++
-					}
-					if m.PositionResults[i0].GpsLocation.Timestamp.Nanos != src.PositionResults[i0].GpsLocation.Timestamp.Nanos {
-						m.PositionResults[i0].GpsLocation.Timestamp.Nanos = src.PositionResults[i0].GpsLocation.Timestamp.Nanos
-						changed++
-					}
-				} else if m.PositionResults[i0].GpsLocation.Timestamp != nil {
-					m.PositionResults[i0].GpsLocation.Timestamp = nil
-					changed++
-				}
-			} else if m.PositionResults[i0].GpsLocation != nil {
-				m.PositionResults[i0].GpsLocation = nil
-				changed++
-			}
-			if m.PositionResults[i0].DluserthroughputMin != src.PositionResults[i0].DluserthroughputMin {
-				m.PositionResults[i0].DluserthroughputMin = src.PositionResults[i0].DluserthroughputMin
-				changed++
-			}
-			if m.PositionResults[i0].DluserthroughputAvg != src.PositionResults[i0].DluserthroughputAvg {
-				m.PositionResults[i0].DluserthroughputAvg = src.PositionResults[i0].DluserthroughputAvg
-				changed++
-			}
-			if m.PositionResults[i0].DluserthroughputMax != src.PositionResults[i0].DluserthroughputMax {
-				m.PositionResults[i0].DluserthroughputMax = src.PositionResults[i0].DluserthroughputMax
-				changed++
-			}
-			if m.PositionResults[i0].UluserthroughputMin != src.PositionResults[i0].UluserthroughputMin {
-				m.PositionResults[i0].UluserthroughputMin = src.PositionResults[i0].UluserthroughputMin
-				changed++
-			}
-			if m.PositionResults[i0].UluserthroughputAvg != src.PositionResults[i0].UluserthroughputAvg {
-				m.PositionResults[i0].UluserthroughputAvg = src.PositionResults[i0].UluserthroughputAvg
-				changed++
-			}
-			if m.PositionResults[i0].UluserthroughputMax != src.PositionResults[i0].UluserthroughputMax {
-				m.PositionResults[i0].UluserthroughputMax = src.PositionResults[i0].UluserthroughputMax
-				changed++
-			}
-			if m.PositionResults[i0].LatencyMin != src.PositionResults[i0].LatencyMin {
-				m.PositionResults[i0].LatencyMin = src.PositionResults[i0].LatencyMin
-				changed++
-			}
-			if m.PositionResults[i0].LatencyAvg != src.PositionResults[i0].LatencyAvg {
-				m.PositionResults[i0].LatencyAvg = src.PositionResults[i0].LatencyAvg
-				changed++
-			}
-			if m.PositionResults[i0].LatencyMax != src.PositionResults[i0].LatencyMax {
-				m.PositionResults[i0].LatencyMax = src.PositionResults[i0].LatencyMax
-				changed++
-			}
-		}
+		m.PositionResults = src.PositionResults
+		changed++
 	} else if m.PositionResults != nil {
 		m.PositionResults = nil
 		changed++
 	}
 	if src.Tags != nil {
-		if m.Tags == nil || len(m.Tags) != len(src.Tags) {
-			m.Tags = make([]*Tag, len(src.Tags))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Tags); i0++ {
-			m.Tags[i0] = &Tag{}
-			if m.Tags[i0].Type != src.Tags[i0].Type {
-				m.Tags[i0].Type = src.Tags[i0].Type
-				changed++
-			}
-			if m.Tags[i0].Data != src.Tags[i0].Data {
-				m.Tags[i0].Data = src.Tags[i0].Data
-				changed++
-			}
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
