@@ -565,8 +565,6 @@ var VMPoolMemberOptionalArgs = []string{
 	"vm.name",
 	"vm.netinfo.externalip",
 	"vm.netinfo.internalip",
-	"vm.updatedat.seconds",
-	"vm.updatedat.nanos",
 	"crmoverride",
 }
 var VMPoolMemberAliasArgs = []string{
@@ -663,8 +661,6 @@ var AddVMPoolMemberRequiredArgs = []string{
 }
 var AddVMPoolMemberOptionalArgs = []string{
 	"vm.netinfo.externalip",
-	"vm.updatedat.seconds",
-	"vm.updatedat.nanos",
 	"crmoverride",
 }
 var RemoveVMPoolMemberRequiredArgs = []string{
@@ -673,9 +669,5 @@ var RemoveVMPoolMemberRequiredArgs = []string{
 	"vm.name",
 }
 var RemoveVMPoolMemberOptionalArgs = []string{
-	"vm.netinfo.externalip",
-	"vm.netinfo.internalip",
-	"vm.updatedat.seconds",
-	"vm.updatedat.nanos",
 	"crmoverride",
 }
