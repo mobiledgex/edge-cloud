@@ -1667,6 +1667,9 @@ func (m *App) CopyInFields(src *App) int {
 		if src.AutoProvPolicies != nil {
 			m.AutoProvPolicies = src.AutoProvPolicies
 			changed++
+		} else if m.AutoProvPolicies != nil {
+			m.AutoProvPolicies = nil
+			changed++
 		}
 	}
 	if _, set := fmap["33"]; set {

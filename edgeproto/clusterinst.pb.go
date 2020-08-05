@@ -1472,6 +1472,9 @@ func (m *ClusterInst) CopyInFields(src *ClusterInst) int {
 		if src.Errors != nil {
 			m.Errors = src.Errors
 			changed++
+		} else if m.Errors != nil {
+			m.Errors = nil
+			changed++
 		}
 	}
 	if _, set := fmap["6"]; set {
@@ -2527,6 +2530,9 @@ func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) int {
 	if _, set := fmap["5"]; set {
 		if src.Errors != nil {
 			m.Errors = src.Errors
+			changed++
+		} else if m.Errors != nil {
+			m.Errors = nil
 			changed++
 		}
 	}

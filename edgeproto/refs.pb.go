@@ -688,6 +688,9 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 	if src.Clusters != nil {
 		m.Clusters = src.Clusters
 		changed++
+	} else if m.Clusters != nil {
+		m.Clusters = nil
+		changed++
 	}
 	if m.UsedRam != src.UsedRam {
 		m.UsedRam = src.UsedRam
@@ -1362,6 +1365,9 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
 	if src.Apps != nil {
 		m.Apps = src.Apps
 		changed++
+	} else if m.Apps != nil {
+		m.Apps = nil
+		changed++
 	}
 	if m.UsedRam != src.UsedRam {
 		m.UsedRam = src.UsedRam
@@ -1966,9 +1972,14 @@ func (m *AppInstRefs) CopyInFields(src *AppInstRefs) int {
 		m.Key.Version = src.Key.Version
 		changed++
 	}
-	m.Insts = make(map[string]uint32)
-	for k0, _ := range src.Insts {
-		m.Insts[k0] = src.Insts[k0]
+	if src.Insts != nil {
+		m.Insts = make(map[string]uint32)
+		for k0, _ := range src.Insts {
+			m.Insts[k0] = src.Insts[k0]
+		}
+	} else if m.Insts != nil {
+		m.Insts = nil
+		changed++
 	}
 	return changed
 }

@@ -314,6 +314,9 @@ func (m *Notice) CopyInFields(src *Notice) int {
 	if src.WantObjs != nil {
 		m.WantObjs = src.WantObjs
 		changed++
+	} else if m.WantObjs != nil {
+		m.WantObjs = nil
+		changed++
 	}
 	if m.FilterCloudletKey != src.FilterCloudletKey {
 		m.FilterCloudletKey = src.FilterCloudletKey

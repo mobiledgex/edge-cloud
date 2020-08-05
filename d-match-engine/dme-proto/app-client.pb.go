@@ -4291,6 +4291,9 @@ func (m *AppFqdn) CopyInFields(src *AppFqdn) int {
 	if src.Fqdns != nil {
 		m.Fqdns = src.Fqdns
 		changed++
+	} else if m.Fqdns != nil {
+		m.Fqdns = nil
+		changed++
 	}
 	if m.AndroidPackageName != src.AndroidPackageName {
 		m.AndroidPackageName = src.AndroidPackageName
@@ -4779,17 +4782,29 @@ func (m *BandSelection) CopyInFields(src *BandSelection) int {
 	if src.Rat_2G != nil {
 		m.Rat_2G = src.Rat_2G
 		changed++
+	} else if m.Rat_2G != nil {
+		m.Rat_2G = nil
+		changed++
 	}
 	if src.Rat_3G != nil {
 		m.Rat_3G = src.Rat_3G
+		changed++
+	} else if m.Rat_3G != nil {
+		m.Rat_3G = nil
 		changed++
 	}
 	if src.Rat_4G != nil {
 		m.Rat_4G = src.Rat_4G
 		changed++
+	} else if m.Rat_4G != nil {
+		m.Rat_4G = nil
+		changed++
 	}
 	if src.Rat_5G != nil {
 		m.Rat_5G = src.Rat_5G
+		changed++
+	} else if m.Rat_5G != nil {
+		m.Rat_5G = nil
 		changed++
 	}
 	return changed
@@ -4861,17 +4876,29 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 		if src.BandSelection.Rat_2G != nil {
 			m.BandSelection.Rat_2G = src.BandSelection.Rat_2G
 			changed++
+		} else if m.BandSelection.Rat_2G != nil {
+			m.BandSelection.Rat_2G = nil
+			changed++
 		}
 		if src.BandSelection.Rat_3G != nil {
 			m.BandSelection.Rat_3G = src.BandSelection.Rat_3G
+			changed++
+		} else if m.BandSelection.Rat_3G != nil {
+			m.BandSelection.Rat_3G = nil
 			changed++
 		}
 		if src.BandSelection.Rat_4G != nil {
 			m.BandSelection.Rat_4G = src.BandSelection.Rat_4G
 			changed++
+		} else if m.BandSelection.Rat_4G != nil {
+			m.BandSelection.Rat_4G = nil
+			changed++
 		}
 		if src.BandSelection.Rat_5G != nil {
 			m.BandSelection.Rat_5G = src.BandSelection.Rat_5G
+			changed++
+		} else if m.BandSelection.Rat_5G != nil {
+			m.BandSelection.Rat_5G = nil
 			changed++
 		}
 	} else if m.BandSelection != nil {

@@ -2213,6 +2213,9 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 		if src.MappedPorts != nil {
 			m.MappedPorts = src.MappedPorts
 			changed++
+		} else if m.MappedPorts != nil {
+			m.MappedPorts = nil
+			changed++
 		}
 	}
 	if _, set := fmap["12"]; set {
@@ -2233,6 +2236,9 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 		if src.Errors != nil {
 			m.Errors = src.Errors
 			changed++
+		} else if m.Errors != nil {
+			m.Errors = nil
+			changed++
 		}
 	}
 	if _, set := fmap["16"]; set {
@@ -2245,6 +2251,9 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 		if _, set := fmap["17.1"]; set {
 			if src.RuntimeInfo.ContainerIds != nil {
 				m.RuntimeInfo.ContainerIds = src.RuntimeInfo.ContainerIds
+				changed++
+			} else if m.RuntimeInfo.ContainerIds != nil {
+				m.RuntimeInfo.ContainerIds = nil
 				changed++
 			}
 		}
@@ -3149,6 +3158,9 @@ func (m *AppInstRuntime) CopyInFields(src *AppInstRuntime) int {
 	if src.ContainerIds != nil {
 		m.ContainerIds = src.ContainerIds
 		changed++
+	} else if m.ContainerIds != nil {
+		m.ContainerIds = nil
+		changed++
 	}
 	return changed
 }
@@ -3471,12 +3483,18 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) int {
 		if src.Errors != nil {
 			m.Errors = src.Errors
 			changed++
+		} else if m.Errors != nil {
+			m.Errors = nil
+			changed++
 		}
 	}
 	if _, set := fmap["6"]; set {
 		if _, set := fmap["6.1"]; set {
 			if src.RuntimeInfo.ContainerIds != nil {
 				m.RuntimeInfo.ContainerIds = src.RuntimeInfo.ContainerIds
+				changed++
+			} else if m.RuntimeInfo.ContainerIds != nil {
+				m.RuntimeInfo.ContainerIds = nil
 				changed++
 			}
 		}

@@ -559,6 +559,9 @@ func (m *PrivacyPolicy) CopyInFields(src *PrivacyPolicy) int {
 		if src.OutboundSecurityRules != nil {
 			m.OutboundSecurityRules = src.OutboundSecurityRules
 			changed++
+		} else if m.OutboundSecurityRules != nil {
+			m.OutboundSecurityRules = nil
+			changed++
 		}
 	}
 	return changed

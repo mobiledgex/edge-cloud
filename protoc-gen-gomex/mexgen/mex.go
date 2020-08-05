@@ -753,7 +753,7 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 			numStr := strings.Join(append(nums, num), ".")
 			m.P("if _, set := fmap[\"", numStr, "\"]; set {")
 		}
-		if nullableMessage {
+		if nullableMessage || *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 			m.P("if src.", hierName, " != nil {")
 		}
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
@@ -762,14 +762,8 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 				depth := fmt.Sprintf("%d", len(parents))
 				if mapType == nil {
 					skipMap = true
-					if !nullableMessage {
-						m.P("if src.", hierName, " != nil {")
-					}
 					m.P("m.", hierName, " = src.", hierName)
 					m.P("changed++")
-					if !nullableMessage {
-						m.P("}")
-					}
 				} else {
 					m.P("for k", depth, ", _ := range src.", hierName, " {")
 					idx = "[k" + depth + "]"
@@ -806,14 +800,8 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 			m.P("}")
 		default:
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-				if !nullableMessage {
-					m.P("if src.", hierName, " != nil {")
-				}
 				m.P("m.", hierName, " = src.", hierName)
 				m.P("changed++")
-				if !nullableMessage {
-					m.P("}")
-				}
 			} else {
 				m.P("if m.", hierName, " != src.", hierName, "{")
 				m.P("m.", hierName, " = src.", hierName)
@@ -826,7 +814,7 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 				m.P("}")
 			}
 		}
-		if nullableMessage {
+		if nullableMessage || *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 			m.P("} else if m.", hierName, " != nil {")
 			m.P("m.", hierName, " = nil")
 			m.P("changed++")

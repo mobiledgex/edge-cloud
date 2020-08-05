@@ -704,6 +704,9 @@ func (m *CloudletPool) CopyInFields(src *CloudletPool) int {
 		if src.Cloudlets != nil {
 			m.Cloudlets = src.Cloudlets
 			changed++
+		} else if m.Cloudlets != nil {
+			m.Cloudlets = nil
+			changed++
 		}
 	}
 	return changed

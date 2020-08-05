@@ -3552,6 +3552,9 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 		if src.Errors != nil {
 			m.Errors = src.Errors
 			changed++
+		} else if m.Errors != nil {
+			m.Errors = nil
+			changed++
 		}
 	}
 	if _, set := fmap["11"]; set {
@@ -5167,6 +5170,9 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 	if _, set := fmap["9"]; set {
 		if src.Errors != nil {
 			m.Errors = src.Errors
+			changed++
+		} else if m.Errors != nil {
+			m.Errors = nil
 			changed++
 		}
 	}

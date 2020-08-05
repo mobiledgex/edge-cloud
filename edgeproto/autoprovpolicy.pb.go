@@ -2209,11 +2209,17 @@ func (m *AutoProvInfo) CopyInFields(src *AutoProvInfo) int {
 		if src.Completed != nil {
 			m.Completed = src.Completed
 			changed++
+		} else if m.Completed != nil {
+			m.Completed = nil
+			changed++
 		}
 	}
 	if _, set := fmap["6"]; set {
 		if src.Errors != nil {
 			m.Errors = src.Errors
+			changed++
+		} else if m.Errors != nil {
+			m.Errors = nil
 			changed++
 		}
 	}
