@@ -54,7 +54,9 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 	if cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
 		updateVMs := make(map[string]edgeproto.VM)
 		for _, vm := range in.Vms {
-			vm.State = edgeproto.VMState_VM_UPDATE
+			if vm.State != edgeproto.VMState_VM_FORCE_FREE {
+				vm.State = edgeproto.VMState_VM_UPDATE
+			}
 			updateVMs[vm.Name] = vm
 		}
 		err = s.updateVMPoolInternal(cctx, ctx, &in.Key, updateVMs)
