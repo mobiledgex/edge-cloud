@@ -646,6 +646,7 @@ func (cd *ControllerData) markUpdateVMs(ctx context.Context, vmPool *edgeproto.V
 	//  - All VMs in pool, with some VMs with VMState ADD, to add new VMs
 	//  - All VMs in pool, with some VMs with VMState REMOVE, to remove some VMs
 	//  - All VMs in pool, with all VMs with VMState UPDATE, to replace existing set of VMs with new set
+	//  - All VMs in pool, with some VMs with VMState FORCE_FREE, to forcefully free some VMs
 	//  - All VMs in pool with no ADD/REMOVE/UPDATE states, this happens on notify reconnect. We treat it as UPDATE above
 	//  - It should never be the case that VMs will have more than one of ADD/REMOVE/UPDATE set on them in a single update
 
@@ -702,6 +703,13 @@ func (cd *ControllerData) markUpdateVMs(ctx context.Context, vmPool *edgeproto.V
 			} else {
 				updateVMs[vm.Name] = vm
 			}
+			changed = true
+		case edgeproto.VMState_VM_FORCE_FREE:
+			log.SpanLog(ctx, log.DebugLevelInfra, "UpdateVMPool, forcefully free vm", "vm", vm.Name, "current state", vm.State)
+			vm.State = edgeproto.VMState_VM_FREE
+			vm.InternalName = ""
+			vm.GroupName = ""
+			updateVMs[vm.Name] = vm
 			changed = true
 		default:
 			newVMs = append(newVMs, vm)

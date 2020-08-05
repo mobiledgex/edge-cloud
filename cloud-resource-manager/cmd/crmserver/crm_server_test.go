@@ -324,7 +324,7 @@ func verifyVMPoolUpdate(t *testing.T, ctx context.Context, vmPool *edgeproto.VMP
 	deleteVMs := make(map[string]struct{})
 	updateVMs := make(map[string]edgeproto.VM)
 	for _, vm := range vmPool.Vms {
-		if vm.State == edgeproto.VMState_VM_UPDATE {
+		if vm.State == edgeproto.VMState_VM_UPDATE || vm.State == edgeproto.VMState_VM_FORCE_FREE {
 			updateVMs[vm.Name] = vm
 			count++
 		} else {
@@ -350,6 +350,11 @@ func verifyVMPoolUpdate(t *testing.T, ctx context.Context, vmPool *edgeproto.VMP
 		}
 		if len(updateVMs) > 0 {
 			updatedVM, ok := updateVMs[vm.Name]
+			if updatedVM.State == edgeproto.VMState_VM_FORCE_FREE {
+				require.Equal(t, edgeproto.VMState_VM_FREE, vm.State, "vm is forcefully freed")
+				require.Empty(t, vm.InternalName)
+				require.Empty(t, vm.GroupName)
+			}
 			require.True(t, ok, "vm should be updated")
 			require.Equal(t, updatedVM.NetInfo.InternalIp, vm.NetInfo.InternalIp, "vm internal ip matches")
 			require.Equal(t, updatedVM.NetInfo.ExternalIp, vm.NetInfo.ExternalIp, "vm external ip matches")
@@ -457,5 +462,17 @@ func testVMPoolUpdates(t *testing.T, ctx context.Context, vmPool *edgeproto.VMPo
 	}
 	vmPoolUpdate6.State = edgeproto.TrackedState_UPDATE_REQUESTED
 	verifyVMPoolUpdate(t, ctx, vmPoolUpdate6, ctrlHandler, Fail)
+	require.Equal(t, 5, len(controllerData.VMPool.Vms), "matches crm global vmpool")
+
+	// Forcefully free a VM which is busy
+	vmPoolUpdate7 := copyCrmVMPool()
+	vmPoolUpdate7.Vms[0].State = edgeproto.VMState_VM_FORCE_FREE
+	for ii, _ := range vmPoolUpdate7.Vms {
+		if vmPoolUpdate7.Vms[ii].State != edgeproto.VMState_VM_FORCE_FREE {
+			vmPoolUpdate7.Vms[ii].State = edgeproto.VMState_VM_UPDATE
+		}
+	}
+	vmPoolUpdate7.State = edgeproto.TrackedState_UPDATE_REQUESTED
+	verifyVMPoolUpdate(t, ctx, vmPoolUpdate7, ctrlHandler, Pass)
 	require.Equal(t, 5, len(controllerData.VMPool.Vms), "matches crm global vmpool")
 }
