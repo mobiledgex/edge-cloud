@@ -392,16 +392,6 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, err
 	}
 
-	ports, err := edgeproto.ParseAppPorts(in.AccessPorts)
-	if err != nil {
-		return &edgeproto.Result{}, err
-	}
-
-	err = validatePortRangeForAccessType(ports, in.AccessType)
-	if err != nil {
-		return nil, err
-	}
-
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.App{}
 
@@ -431,6 +421,14 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		cur.CopyInFields(in)
 		if err := s.validatePolicies(stm, &cur); err != nil {
+			return err
+		}
+		ports, err := edgeproto.ParseAppPorts(cur.AccessPorts)
+		if err != nil {
+			return err
+		}
+		err = validatePortRangeForAccessType(ports, cur.AccessType)
+		if err != nil {
 			return err
 		}
 		newRevision := in.Revision
