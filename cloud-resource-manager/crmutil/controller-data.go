@@ -721,6 +721,11 @@ func (cd *ControllerData) markUpdateVMs(ctx context.Context, vmPool *edgeproto.V
 			newVMs = append(newVMs, vm)
 		} else if vm.State == edgeproto.VMState_VM_UPDATE {
 			updateVMs[vm.Name] = vm
+		} else if vm.State == edgeproto.VMState_VM_FORCE_FREE {
+			vm.State = edgeproto.VMState_VM_FREE
+			vm.InternalName = ""
+			vm.GroupName = ""
+			updateVMs[vm.Name] = vm
 		}
 		changed = true
 	}
