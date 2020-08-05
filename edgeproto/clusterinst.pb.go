@@ -1469,12 +1469,13 @@ func (m *ClusterInst) CopyInFields(src *ClusterInst) int {
 		}
 	}
 	if _, set := fmap["5"]; set {
-		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
-			m.Errors = make([]string, len(src.Errors))
+		if src.Errors != nil {
+			m.Errors = src.Errors
+			changed++
+		} else if m.Errors != nil {
+			m.Errors = nil
 			changed++
 		}
-		copy(m.Errors, src.Errors)
-		changed++
 	}
 	if _, set := fmap["6"]; set {
 		if m.CrmOverride != src.CrmOverride {
@@ -2527,12 +2528,13 @@ func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) int {
 		}
 	}
 	if _, set := fmap["5"]; set {
-		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
-			m.Errors = make([]string, len(src.Errors))
+		if src.Errors != nil {
+			m.Errors = src.Errors
+			changed++
+		} else if m.Errors != nil {
+			m.Errors = nil
 			changed++
 		}
-		copy(m.Errors, src.Errors)
-		changed++
 	}
 	if _, set := fmap["6"]; set {
 		if _, set := fmap["6.1"]; set {
