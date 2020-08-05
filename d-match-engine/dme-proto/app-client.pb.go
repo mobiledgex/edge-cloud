@@ -3113,8 +3113,10 @@ func (m *RegisterClientRequest) CopyInFields(src *RegisterClientRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3181,8 +3183,10 @@ func (m *RegisterClientReply) CopyInFields(src *RegisterClientReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3289,8 +3293,10 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3354,8 +3360,10 @@ func (m *PlatformFindCloudletRequest) CopyInFields(src *PlatformFindCloudletRequ
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3405,8 +3413,10 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 		changed++
 	}
 	if src.Ports != nil {
-		m.Ports = src.Ports
-		changed++
+		if src.Ports != nil {
+			m.Ports = src.Ports
+			changed++
+		}
 	} else if m.Ports != nil {
 		m.Ports = nil
 		changed++
@@ -3460,8 +3470,10 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3594,8 +3606,10 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3660,8 +3674,10 @@ func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3721,8 +3737,10 @@ func (m *GetLocationRequest) CopyInFields(src *GetLocationRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3824,8 +3842,10 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -3944,8 +3964,10 @@ func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4006,8 +4028,10 @@ func (m *Appinstance) CopyInFields(src *Appinstance) int {
 		changed++
 	}
 	if src.Ports != nil {
-		m.Ports = src.Ports
-		changed++
+		if src.Ports != nil {
+			m.Ports = src.Ports
+			changed++
+		}
 	} else if m.Ports != nil {
 		m.Ports = nil
 		changed++
@@ -4109,8 +4133,10 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 		changed++
 	}
 	if src.Appinstances != nil {
-		m.Appinstances = src.Appinstances
-		changed++
+		if src.Appinstances != nil {
+			m.Appinstances = src.Appinstances
+			changed++
+		}
 	} else if m.Appinstances != nil {
 		m.Appinstances = nil
 		changed++
@@ -4165,15 +4191,19 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 		changed++
 	}
 	if src.Cloudlets != nil {
-		m.Cloudlets = src.Cloudlets
-		changed++
+		if src.Cloudlets != nil {
+			m.Cloudlets = src.Cloudlets
+			changed++
+		}
 	} else if m.Cloudlets != nil {
 		m.Cloudlets = nil
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4239,8 +4269,10 @@ func (m *FqdnListRequest) CopyInFields(src *FqdnListRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4324,8 +4356,10 @@ func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
 		changed++
 	}
 	if src.AppFqdns != nil {
-		m.AppFqdns = src.AppFqdns
-		changed++
+		if src.AppFqdns != nil {
+			m.AppFqdns = src.AppFqdns
+			changed++
+		}
 	} else if m.AppFqdns != nil {
 		m.AppFqdns = nil
 		changed++
@@ -4335,8 +4369,10 @@ func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4446,8 +4482,10 @@ func (m *AppOfficialFqdnRequest) CopyInFields(src *AppOfficialFqdnRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4509,15 +4547,19 @@ func (m *AppOfficialFqdnReply) CopyInFields(src *AppOfficialFqdnReply) int {
 		changed++
 	}
 	if src.Ports != nil {
-		m.Ports = src.Ports
-		changed++
+		if src.Ports != nil {
+			m.Ports = src.Ports
+			changed++
+		}
 	} else if m.Ports != nil {
 		m.Ports = nil
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4597,8 +4639,10 @@ func (m *DynamicLocGroupRequest) CopyInFields(src *DynamicLocGroupRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4657,8 +4701,10 @@ func (m *DynamicLocGroupReply) CopyInFields(src *DynamicLocGroupReply) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -4836,8 +4882,10 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 		changed++
 	}
 	if src.Positions != nil {
-		m.Positions = src.Positions
-		changed++
+		if src.Positions != nil {
+			m.Positions = src.Positions
+			changed++
+		}
 	} else if m.Positions != nil {
 		m.Positions = nil
 		changed++
@@ -4865,8 +4913,10 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
@@ -5058,15 +5108,19 @@ func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) int {
 		changed++
 	}
 	if src.PositionResults != nil {
-		m.PositionResults = src.PositionResults
-		changed++
+		if src.PositionResults != nil {
+			m.PositionResults = src.PositionResults
+			changed++
+		}
 	} else if m.PositionResults != nil {
 		m.PositionResults = nil
 		changed++
 	}
 	if src.Tags != nil {
-		m.Tags = src.Tags
-		changed++
+		if src.Tags != nil {
+			m.Tags = src.Tags
+			changed++
+		}
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++

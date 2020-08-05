@@ -2425,8 +2425,10 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		changed++
 	}
 	if _, set := fmap["27"]; set {
-		m.Ip = src.Ip
-		changed++
+		if src.Ip != nil {
+			m.Ip = src.Ip
+			changed++
+		}
 	}
 	if _, set := fmap["28"]; set {
 		m.Names = src.Names
@@ -2434,55 +2436,71 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["29"]; set {
 		if src.RepeatedMsg != nil {
-			m.RepeatedMsg = src.RepeatedMsg
-			changed++
+			if src.RepeatedMsg != nil {
+				m.RepeatedMsg = src.RepeatedMsg
+				changed++
+			}
 		} else if m.RepeatedMsg != nil {
 			m.RepeatedMsg = nil
 			changed++
 		}
 	}
 	if _, set := fmap["30"]; set {
-		m.RepeatedMsgNonnull = src.RepeatedMsgNonnull
-		changed++
+		if src.RepeatedMsgNonnull != nil {
+			m.RepeatedMsgNonnull = src.RepeatedMsgNonnull
+			changed++
+		}
 	}
 	if _, set := fmap["31"]; set {
 		if src.RepeatedFields != nil {
-			m.RepeatedFields = src.RepeatedFields
-			changed++
+			if src.RepeatedFields != nil {
+				m.RepeatedFields = src.RepeatedFields
+				changed++
+			}
 		} else if m.RepeatedFields != nil {
 			m.RepeatedFields = nil
 			changed++
 		}
 	}
 	if _, set := fmap["32"]; set {
-		m.RepeatedFieldsNonnull = src.RepeatedFieldsNonnull
-		changed++
+		if src.RepeatedFieldsNonnull != nil {
+			m.RepeatedFieldsNonnull = src.RepeatedFieldsNonnull
+			changed++
+		}
 	}
 	if _, set := fmap["33"]; set {
 		if src.RepeatedInnerMsg != nil {
-			m.RepeatedInnerMsg = src.RepeatedInnerMsg
-			changed++
+			if src.RepeatedInnerMsg != nil {
+				m.RepeatedInnerMsg = src.RepeatedInnerMsg
+				changed++
+			}
 		} else if m.RepeatedInnerMsg != nil {
 			m.RepeatedInnerMsg = nil
 			changed++
 		}
 	}
 	if _, set := fmap["34"]; set {
-		m.RepeatedInnerMsgNonnull = src.RepeatedInnerMsgNonnull
-		changed++
+		if src.RepeatedInnerMsgNonnull != nil {
+			m.RepeatedInnerMsgNonnull = src.RepeatedInnerMsgNonnull
+			changed++
+		}
 	}
 	if _, set := fmap["35"]; set {
 		if src.RepeatedLoc != nil {
-			m.RepeatedLoc = src.RepeatedLoc
-			changed++
+			if src.RepeatedLoc != nil {
+				m.RepeatedLoc = src.RepeatedLoc
+				changed++
+			}
 		} else if m.RepeatedLoc != nil {
 			m.RepeatedLoc = nil
 			changed++
 		}
 	}
 	if _, set := fmap["36"]; set {
-		m.RepeatedLocNonnull = src.RepeatedLocNonnull
-		changed++
+		if src.RepeatedLocNonnull != nil {
+			m.RepeatedLocNonnull = src.RepeatedLocNonnull
+			changed++
+		}
 	}
 	if _, set := fmap["37"]; set {
 		if src.IntMap != nil {

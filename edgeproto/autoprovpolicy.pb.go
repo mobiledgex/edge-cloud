@@ -1097,8 +1097,10 @@ func (m *AutoProvPolicy) CopyInFields(src *AutoProvPolicy) int {
 	}
 	if _, set := fmap["5"]; set {
 		if src.Cloudlets != nil {
-			m.Cloudlets = src.Cloudlets
-			changed++
+			if src.Cloudlets != nil {
+				m.Cloudlets = src.Cloudlets
+				changed++
+			}
 		} else if m.Cloudlets != nil {
 			m.Cloudlets = nil
 			changed++
@@ -1956,8 +1958,10 @@ func (m *AutoProvCounts) CopyInFields(src *AutoProvCounts) int {
 		changed++
 	}
 	if src.Counts != nil {
-		m.Counts = src.Counts
-		changed++
+		if src.Counts != nil {
+			m.Counts = src.Counts
+			changed++
+		}
 	} else if m.Counts != nil {
 		m.Counts = nil
 		changed++

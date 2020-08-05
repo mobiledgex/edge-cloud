@@ -685,8 +685,10 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 		m.Key.Name = src.Key.Name
 		changed++
 	}
-	m.Clusters = src.Clusters
-	changed++
+	if src.Clusters != nil {
+		m.Clusters = src.Clusters
+		changed++
+	}
 	if m.UsedRam != src.UsedRam {
 		m.UsedRam = src.UsedRam
 		changed++
@@ -1357,8 +1359,10 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
 		m.Key.Organization = src.Key.Organization
 		changed++
 	}
-	m.Apps = src.Apps
-	changed++
+	if src.Apps != nil {
+		m.Apps = src.Apps
+		changed++
+	}
 	if m.UsedRam != src.UsedRam {
 		m.UsedRam = src.UsedRam
 		changed++

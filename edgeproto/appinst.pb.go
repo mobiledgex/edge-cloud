@@ -2210,8 +2210,10 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 		}
 	}
 	if _, set := fmap["9"]; set {
-		m.MappedPorts = src.MappedPorts
-		changed++
+		if src.MappedPorts != nil {
+			m.MappedPorts = src.MappedPorts
+			changed++
+		}
 	}
 	if _, set := fmap["12"]; set {
 		if _, set := fmap["12.1"]; set {
@@ -2309,8 +2311,10 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 	}
 	if _, set := fmap["27"]; set {
 		if src.Configs != nil {
-			m.Configs = src.Configs
-			changed++
+			if src.Configs != nil {
+				m.Configs = src.Configs
+				changed++
+			}
 		} else if m.Configs != nil {
 			m.Configs = nil
 			changed++

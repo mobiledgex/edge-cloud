@@ -762,8 +762,10 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 				depth := fmt.Sprintf("%d", len(parents))
 				if mapType == nil {
 					skipMap = true
+					m.P("if src.", hierName, " != nil {")
 					m.P("m.", hierName, " = src.", hierName)
 					m.P("changed++")
+					m.P("}")
 				} else {
 					m.P("for k", depth, ", _ := range src.", hierName, " {")
 					idx = "[k" + depth + "]"
@@ -794,8 +796,10 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 			// deprecated in proto3
 		case descriptor.FieldDescriptorProto_TYPE_BYTES:
 			m.printCopyInMakeArray(hierName, desc, field)
+			m.P("if src.", hierName, " != nil {")
 			m.P("m.", hierName, " = src.", hierName)
 			m.P("changed++")
+			m.P("}")
 		default:
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 				m.P("m.", hierName, " = src.", hierName)

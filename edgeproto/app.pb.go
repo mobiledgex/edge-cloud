@@ -1596,8 +1596,10 @@ func (m *App) CopyInFields(src *App) int {
 	}
 	if _, set := fmap["21"]; set {
 		if src.Configs != nil {
-			m.Configs = src.Configs
-			changed++
+			if src.Configs != nil {
+				m.Configs = src.Configs
+				changed++
+			}
 		} else if m.Configs != nil {
 			m.Configs = nil
 			changed++
