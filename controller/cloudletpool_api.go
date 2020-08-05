@@ -70,7 +70,7 @@ func (s *CloudletPoolApi) UpdateCloudletPool(ctx context.Context, in *edgeproto.
 		if err := s.checkCloudletsExist(stm, &cur); err != nil {
 			return err
 		}
-		s.store.STMDel(stm, &in.Key)
+		s.store.STMPut(stm, &cur)
 		return nil
 	})
 	return &edgeproto.Result{}, err
