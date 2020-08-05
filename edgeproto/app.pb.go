@@ -1596,10 +1596,8 @@ func (m *App) CopyInFields(src *App) int {
 	}
 	if _, set := fmap["21"]; set {
 		if src.Configs != nil {
-			if src.Configs != nil {
-				m.Configs = src.Configs
-				changed++
-			}
+			m.Configs = src.Configs
+			changed++
 		} else if m.Configs != nil {
 			m.Configs = nil
 			changed++
@@ -1666,8 +1664,10 @@ func (m *App) CopyInFields(src *App) int {
 		}
 	}
 	if _, set := fmap["32"]; set {
-		m.AutoProvPolicies = src.AutoProvPolicies
-		changed++
+		if src.AutoProvPolicies != nil {
+			m.AutoProvPolicies = src.AutoProvPolicies
+			changed++
+		}
 	}
 	if _, set := fmap["33"]; set {
 		if m.TemplateDelimiter != src.TemplateDelimiter {

@@ -2421,8 +2421,10 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		}
 	}
 	if _, set := fmap["26"]; set {
-		m.RepeatedInt = src.RepeatedInt
-		changed++
+		if src.RepeatedInt != nil {
+			m.RepeatedInt = src.RepeatedInt
+			changed++
+		}
 	}
 	if _, set := fmap["27"]; set {
 		if src.Ip != nil {
@@ -2431,15 +2433,15 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		}
 	}
 	if _, set := fmap["28"]; set {
-		m.Names = src.Names
-		changed++
+		if src.Names != nil {
+			m.Names = src.Names
+			changed++
+		}
 	}
 	if _, set := fmap["29"]; set {
 		if src.RepeatedMsg != nil {
-			if src.RepeatedMsg != nil {
-				m.RepeatedMsg = src.RepeatedMsg
-				changed++
-			}
+			m.RepeatedMsg = src.RepeatedMsg
+			changed++
 		} else if m.RepeatedMsg != nil {
 			m.RepeatedMsg = nil
 			changed++
@@ -2453,10 +2455,8 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["31"]; set {
 		if src.RepeatedFields != nil {
-			if src.RepeatedFields != nil {
-				m.RepeatedFields = src.RepeatedFields
-				changed++
-			}
+			m.RepeatedFields = src.RepeatedFields
+			changed++
 		} else if m.RepeatedFields != nil {
 			m.RepeatedFields = nil
 			changed++
@@ -2470,10 +2470,8 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["33"]; set {
 		if src.RepeatedInnerMsg != nil {
-			if src.RepeatedInnerMsg != nil {
-				m.RepeatedInnerMsg = src.RepeatedInnerMsg
-				changed++
-			}
+			m.RepeatedInnerMsg = src.RepeatedInnerMsg
+			changed++
 		} else if m.RepeatedInnerMsg != nil {
 			m.RepeatedInnerMsg = nil
 			changed++
@@ -2487,10 +2485,8 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["35"]; set {
 		if src.RepeatedLoc != nil {
-			if src.RepeatedLoc != nil {
-				m.RepeatedLoc = src.RepeatedLoc
-				changed++
-			}
+			m.RepeatedLoc = src.RepeatedLoc
+			changed++
 		} else if m.RepeatedLoc != nil {
 			m.RepeatedLoc = nil
 			changed++

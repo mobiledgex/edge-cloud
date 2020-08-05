@@ -762,10 +762,14 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 				depth := fmt.Sprintf("%d", len(parents))
 				if mapType == nil {
 					skipMap = true
-					m.P("if src.", hierName, " != nil {")
+					if !nullableMessage {
+						m.P("if src.", hierName, " != nil {")
+					}
 					m.P("m.", hierName, " = src.", hierName)
 					m.P("changed++")
-					m.P("}")
+					if !nullableMessage {
+						m.P("}")
+					}
 				} else {
 					m.P("for k", depth, ", _ := range src.", hierName, " {")
 					idx = "[k" + depth + "]"
@@ -802,8 +806,14 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 			m.P("}")
 		default:
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				if !nullableMessage {
+					m.P("if src.", hierName, " != nil {")
+				}
 				m.P("m.", hierName, " = src.", hierName)
 				m.P("changed++")
+				if !nullableMessage {
+					m.P("}")
+				}
 			} else {
 				m.P("if m.", hierName, " != src.", hierName, "{")
 				m.P("m.", hierName, " = src.", hierName)

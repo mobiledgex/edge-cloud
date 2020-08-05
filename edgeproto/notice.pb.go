@@ -311,8 +311,10 @@ func (m *Notice) CopyInFields(src *Notice) int {
 		m.Any.Value = src.Any.Value
 		changed++
 	}
-	m.WantObjs = src.WantObjs
-	changed++
+	if src.WantObjs != nil {
+		m.WantObjs = src.WantObjs
+		changed++
+	}
 	if m.FilterCloudletKey != src.FilterCloudletKey {
 		m.FilterCloudletKey = src.FilterCloudletKey
 		changed++

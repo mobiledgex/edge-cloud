@@ -2230,8 +2230,10 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 		}
 	}
 	if _, set := fmap["15"]; set {
-		m.Errors = src.Errors
-		changed++
+		if src.Errors != nil {
+			m.Errors = src.Errors
+			changed++
+		}
 	}
 	if _, set := fmap["16"]; set {
 		if m.CrmOverride != src.CrmOverride {
@@ -2241,8 +2243,10 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 	}
 	if _, set := fmap["17"]; set {
 		if _, set := fmap["17.1"]; set {
-			m.RuntimeInfo.ContainerIds = src.RuntimeInfo.ContainerIds
-			changed++
+			if src.RuntimeInfo.ContainerIds != nil {
+				m.RuntimeInfo.ContainerIds = src.RuntimeInfo.ContainerIds
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["21"]; set {
@@ -2311,10 +2315,8 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 	}
 	if _, set := fmap["27"]; set {
 		if src.Configs != nil {
-			if src.Configs != nil {
-				m.Configs = src.Configs
-				changed++
-			}
+			m.Configs = src.Configs
+			changed++
 		} else if m.Configs != nil {
 			m.Configs = nil
 			changed++
@@ -3144,8 +3146,10 @@ func IgnoreAppInstFields(taglist string) cmp.Option {
 
 func (m *AppInstRuntime) CopyInFields(src *AppInstRuntime) int {
 	changed := 0
-	m.ContainerIds = src.ContainerIds
-	changed++
+	if src.ContainerIds != nil {
+		m.ContainerIds = src.ContainerIds
+		changed++
+	}
 	return changed
 }
 
@@ -3464,13 +3468,17 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) int {
 		}
 	}
 	if _, set := fmap["5"]; set {
-		m.Errors = src.Errors
-		changed++
+		if src.Errors != nil {
+			m.Errors = src.Errors
+			changed++
+		}
 	}
 	if _, set := fmap["6"]; set {
 		if _, set := fmap["6.1"]; set {
-			m.RuntimeInfo.ContainerIds = src.RuntimeInfo.ContainerIds
-			changed++
+			if src.RuntimeInfo.ContainerIds != nil {
+				m.RuntimeInfo.ContainerIds = src.RuntimeInfo.ContainerIds
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["7"]; set {

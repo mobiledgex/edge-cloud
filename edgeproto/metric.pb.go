@@ -446,19 +446,15 @@ func (m *Metric) CopyInFields(src *Metric) int {
 		changed++
 	}
 	if src.Tags != nil {
-		if src.Tags != nil {
-			m.Tags = src.Tags
-			changed++
-		}
+		m.Tags = src.Tags
+		changed++
 	} else if m.Tags != nil {
 		m.Tags = nil
 		changed++
 	}
 	if src.Vals != nil {
-		if src.Vals != nil {
-			m.Vals = src.Vals
-			changed++
-		}
+		m.Vals = src.Vals
+		changed++
 	} else if m.Vals != nil {
 		m.Vals = nil
 		changed++

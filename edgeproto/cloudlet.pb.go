@@ -3549,8 +3549,10 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 		}
 	}
 	if _, set := fmap["10"]; set {
-		m.Errors = src.Errors
-		changed++
+		if src.Errors != nil {
+			m.Errors = src.Errors
+			changed++
+		}
 	}
 	if _, set := fmap["11"]; set {
 		if _, set := fmap["11.1"]; set {
@@ -5163,15 +5165,15 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 		}
 	}
 	if _, set := fmap["9"]; set {
-		m.Errors = src.Errors
-		changed++
+		if src.Errors != nil {
+			m.Errors = src.Errors
+			changed++
+		}
 	}
 	if _, set := fmap["10"]; set {
 		if src.Flavors != nil {
-			if src.Flavors != nil {
-				m.Flavors = src.Flavors
-				changed++
-			}
+			m.Flavors = src.Flavors
+			changed++
 		} else if m.Flavors != nil {
 			m.Flavors = nil
 			changed++
@@ -5211,10 +5213,8 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 	}
 	if _, set := fmap["13"]; set {
 		if src.AvailabilityZones != nil {
-			if src.AvailabilityZones != nil {
-				m.AvailabilityZones = src.AvailabilityZones
-				changed++
-			}
+			m.AvailabilityZones = src.AvailabilityZones
+			changed++
 		} else if m.AvailabilityZones != nil {
 			m.AvailabilityZones = nil
 			changed++
@@ -5222,10 +5222,8 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 	}
 	if _, set := fmap["14"]; set {
 		if src.OsImages != nil {
-			if src.OsImages != nil {
-				m.OsImages = src.OsImages
-				changed++
-			}
+			m.OsImages = src.OsImages
+			changed++
 		} else if m.OsImages != nil {
 			m.OsImages = nil
 			changed++

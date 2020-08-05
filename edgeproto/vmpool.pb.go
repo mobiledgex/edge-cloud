@@ -1390,8 +1390,10 @@ func (m *VMPool) CopyInFields(src *VMPool) int {
 		}
 	}
 	if _, set := fmap["5"]; set {
-		m.Errors = src.Errors
-		changed++
+		if src.Errors != nil {
+			m.Errors = src.Errors
+			changed++
+		}
 	}
 	if _, set := fmap["6"]; set {
 		if _, set := fmap["6.1"]; set {
@@ -2510,8 +2512,10 @@ func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
 		}
 	}
 	if _, set := fmap["6"]; set {
-		m.Errors = src.Errors
-		changed++
+		if src.Errors != nil {
+			m.Errors = src.Errors
+			changed++
+		}
 	}
 	if _, set := fmap["7"]; set {
 		if _, set := fmap["7.1"]; set {
