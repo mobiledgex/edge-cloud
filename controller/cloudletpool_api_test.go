@@ -73,8 +73,12 @@ func TestCloudletPoolApi(t *testing.T) {
 	require.True(t, found, "get pool %v", poolKey)
 	require.Equal(t, 1, len(pool.Cloudlets))
 
-	// add member to pool for next test
-	_, err = cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
+	// use update to set members for next test
+	poolUpdate := testutil.CloudletPoolData[0]
+	poolUpdate.Cloudlets = append(poolUpdate.Cloudlets, member.CloudletName)
+	poolUpdate.Fields = []string{edgeproto.CloudletPoolFieldCloudlets}
+	require.Equal(t, 2, len(poolUpdate.Cloudlets))
+	_, err = cloudletPoolApi.UpdateCloudletPool(ctx, &poolUpdate)
 	require.Nil(t, err)
 	found = cloudletPoolApi.cache.Get(&poolKey, &pool)
 	require.True(t, found, "get pool %v", poolKey)
