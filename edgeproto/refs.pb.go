@@ -685,15 +685,12 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 		m.Key.Name = src.Key.Name
 		changed++
 	}
-	if m.Clusters == nil || len(m.Clusters) != len(src.Clusters) {
-		m.Clusters = make([]ClusterKey, len(src.Clusters))
+	if src.Clusters != nil {
+		m.Clusters = src.Clusters
 		changed++
-	}
-	for i0 := 0; i0 < len(src.Clusters); i0++ {
-		if m.Clusters[i0].Name != src.Clusters[i0].Name {
-			m.Clusters[i0].Name = src.Clusters[i0].Name
-			changed++
-		}
+	} else if m.Clusters != nil {
+		m.Clusters = nil
+		changed++
 	}
 	if m.UsedRam != src.UsedRam {
 		m.UsedRam = src.UsedRam
@@ -1365,23 +1362,12 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
 		m.Key.Organization = src.Key.Organization
 		changed++
 	}
-	if m.Apps == nil || len(m.Apps) != len(src.Apps) {
-		m.Apps = make([]AppKey, len(src.Apps))
+	if src.Apps != nil {
+		m.Apps = src.Apps
 		changed++
-	}
-	for i0 := 0; i0 < len(src.Apps); i0++ {
-		if m.Apps[i0].Organization != src.Apps[i0].Organization {
-			m.Apps[i0].Organization = src.Apps[i0].Organization
-			changed++
-		}
-		if m.Apps[i0].Name != src.Apps[i0].Name {
-			m.Apps[i0].Name = src.Apps[i0].Name
-			changed++
-		}
-		if m.Apps[i0].Version != src.Apps[i0].Version {
-			m.Apps[i0].Version = src.Apps[i0].Version
-			changed++
-		}
+	} else if m.Apps != nil {
+		m.Apps = nil
+		changed++
 	}
 	if m.UsedRam != src.UsedRam {
 		m.UsedRam = src.UsedRam
@@ -1986,9 +1972,14 @@ func (m *AppInstRefs) CopyInFields(src *AppInstRefs) int {
 		m.Key.Version = src.Key.Version
 		changed++
 	}
-	m.Insts = make(map[string]uint32)
-	for k0, _ := range src.Insts {
-		m.Insts[k0] = src.Insts[k0]
+	if src.Insts != nil {
+		m.Insts = make(map[string]uint32)
+		for k0, _ := range src.Insts {
+			m.Insts[k0] = src.Insts[k0]
+		}
+	} else if m.Insts != nil {
+		m.Insts = nil
+		changed++
 	}
 	return changed
 }

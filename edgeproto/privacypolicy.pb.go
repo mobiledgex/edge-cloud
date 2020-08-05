@@ -556,35 +556,12 @@ func (m *PrivacyPolicy) CopyInFields(src *PrivacyPolicy) int {
 		}
 	}
 	if _, set := fmap["3"]; set {
-		if m.OutboundSecurityRules == nil || len(m.OutboundSecurityRules) != len(src.OutboundSecurityRules) {
-			m.OutboundSecurityRules = make([]OutboundSecurityRule, len(src.OutboundSecurityRules))
+		if src.OutboundSecurityRules != nil {
+			m.OutboundSecurityRules = src.OutboundSecurityRules
 			changed++
-		}
-		for i0 := 0; i0 < len(src.OutboundSecurityRules); i0++ {
-			if _, set := fmap["3.1"]; set {
-				if m.OutboundSecurityRules[i0].Protocol != src.OutboundSecurityRules[i0].Protocol {
-					m.OutboundSecurityRules[i0].Protocol = src.OutboundSecurityRules[i0].Protocol
-					changed++
-				}
-			}
-			if _, set := fmap["3.2"]; set {
-				if m.OutboundSecurityRules[i0].PortRangeMin != src.OutboundSecurityRules[i0].PortRangeMin {
-					m.OutboundSecurityRules[i0].PortRangeMin = src.OutboundSecurityRules[i0].PortRangeMin
-					changed++
-				}
-			}
-			if _, set := fmap["3.3"]; set {
-				if m.OutboundSecurityRules[i0].PortRangeMax != src.OutboundSecurityRules[i0].PortRangeMax {
-					m.OutboundSecurityRules[i0].PortRangeMax = src.OutboundSecurityRules[i0].PortRangeMax
-					changed++
-				}
-			}
-			if _, set := fmap["3.4"]; set {
-				if m.OutboundSecurityRules[i0].RemoteCidr != src.OutboundSecurityRules[i0].RemoteCidr {
-					m.OutboundSecurityRules[i0].RemoteCidr = src.OutboundSecurityRules[i0].RemoteCidr
-					changed++
-				}
-			}
+		} else if m.OutboundSecurityRules != nil {
+			m.OutboundSecurityRules = nil
+			changed++
 		}
 	}
 	return changed
