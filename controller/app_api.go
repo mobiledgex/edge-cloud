@@ -433,6 +433,12 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		if err != nil {
 			return err
 		}
+		// dont allow tls on vms with direct access
+		for _, port := range ports {
+			if port.Tls && cur.Deployment == cloudcommon.DeploymentTypeVM && cur.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+				return fmt.Errorf("Tls unsupported on VM based deployments with direct access")
+			}
+		}
 		err = validatePortRangeForAccessType(ports, cur.AccessType)
 		if err != nil {
 			return err
