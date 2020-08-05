@@ -1380,60 +1380,6 @@ func (m *VMPool) CopyInFields(src *VMPool) int {
 	if _, set := fmap["3"]; set {
 		m.Vms = src.Vms
 		changed++
-		for i0 := 0; i0 < len(src.Vms); i0++ {
-			if _, set := fmap["3.1"]; set {
-				if m.Vms[i0].Name != src.Vms[i0].Name {
-					m.Vms[i0].Name = src.Vms[i0].Name
-					changed++
-				}
-			}
-			if _, set := fmap["3.2"]; set {
-				if _, set := fmap["3.2.1"]; set {
-					if m.Vms[i0].NetInfo.ExternalIp != src.Vms[i0].NetInfo.ExternalIp {
-						m.Vms[i0].NetInfo.ExternalIp = src.Vms[i0].NetInfo.ExternalIp
-						changed++
-					}
-				}
-				if _, set := fmap["3.2.2"]; set {
-					if m.Vms[i0].NetInfo.InternalIp != src.Vms[i0].NetInfo.InternalIp {
-						m.Vms[i0].NetInfo.InternalIp = src.Vms[i0].NetInfo.InternalIp
-						changed++
-					}
-				}
-			}
-			if _, set := fmap["3.3"]; set {
-				if m.Vms[i0].GroupName != src.Vms[i0].GroupName {
-					m.Vms[i0].GroupName = src.Vms[i0].GroupName
-					changed++
-				}
-			}
-			if _, set := fmap["3.4"]; set {
-				if m.Vms[i0].State != src.Vms[i0].State {
-					m.Vms[i0].State = src.Vms[i0].State
-					changed++
-				}
-			}
-			if _, set := fmap["3.5"]; set {
-				if _, set := fmap["3.5.1"]; set {
-					if m.Vms[i0].UpdatedAt.Seconds != src.Vms[i0].UpdatedAt.Seconds {
-						m.Vms[i0].UpdatedAt.Seconds = src.Vms[i0].UpdatedAt.Seconds
-						changed++
-					}
-				}
-				if _, set := fmap["3.5.2"]; set {
-					if m.Vms[i0].UpdatedAt.Nanos != src.Vms[i0].UpdatedAt.Nanos {
-						m.Vms[i0].UpdatedAt.Nanos = src.Vms[i0].UpdatedAt.Nanos
-						changed++
-					}
-				}
-			}
-			if _, set := fmap["3.6"]; set {
-				if m.Vms[i0].InternalName != src.Vms[i0].InternalName {
-					m.Vms[i0].InternalName = src.Vms[i0].InternalName
-					changed++
-				}
-			}
-		}
 	}
 	if _, set := fmap["4"]; set {
 		if m.State != src.State {
@@ -1443,8 +1389,6 @@ func (m *VMPool) CopyInFields(src *VMPool) int {
 	}
 	if _, set := fmap["5"]; set {
 		m.Errors = src.Errors
-		changed++
-		copy(m.Errors, src.Errors)
 		changed++
 	}
 	if _, set := fmap["6"]; set {
@@ -2554,60 +2498,6 @@ func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
 	if _, set := fmap["4"]; set {
 		m.Vms = src.Vms
 		changed++
-		for i0 := 0; i0 < len(src.Vms); i0++ {
-			if _, set := fmap["4.1"]; set {
-				if m.Vms[i0].Name != src.Vms[i0].Name {
-					m.Vms[i0].Name = src.Vms[i0].Name
-					changed++
-				}
-			}
-			if _, set := fmap["4.2"]; set {
-				if _, set := fmap["4.2.1"]; set {
-					if m.Vms[i0].NetInfo.ExternalIp != src.Vms[i0].NetInfo.ExternalIp {
-						m.Vms[i0].NetInfo.ExternalIp = src.Vms[i0].NetInfo.ExternalIp
-						changed++
-					}
-				}
-				if _, set := fmap["4.2.2"]; set {
-					if m.Vms[i0].NetInfo.InternalIp != src.Vms[i0].NetInfo.InternalIp {
-						m.Vms[i0].NetInfo.InternalIp = src.Vms[i0].NetInfo.InternalIp
-						changed++
-					}
-				}
-			}
-			if _, set := fmap["4.3"]; set {
-				if m.Vms[i0].GroupName != src.Vms[i0].GroupName {
-					m.Vms[i0].GroupName = src.Vms[i0].GroupName
-					changed++
-				}
-			}
-			if _, set := fmap["4.4"]; set {
-				if m.Vms[i0].State != src.Vms[i0].State {
-					m.Vms[i0].State = src.Vms[i0].State
-					changed++
-				}
-			}
-			if _, set := fmap["4.5"]; set {
-				if _, set := fmap["4.5.1"]; set {
-					if m.Vms[i0].UpdatedAt.Seconds != src.Vms[i0].UpdatedAt.Seconds {
-						m.Vms[i0].UpdatedAt.Seconds = src.Vms[i0].UpdatedAt.Seconds
-						changed++
-					}
-				}
-				if _, set := fmap["4.5.2"]; set {
-					if m.Vms[i0].UpdatedAt.Nanos != src.Vms[i0].UpdatedAt.Nanos {
-						m.Vms[i0].UpdatedAt.Nanos = src.Vms[i0].UpdatedAt.Nanos
-						changed++
-					}
-				}
-			}
-			if _, set := fmap["4.6"]; set {
-				if m.Vms[i0].InternalName != src.Vms[i0].InternalName {
-					m.Vms[i0].InternalName = src.Vms[i0].InternalName
-					changed++
-				}
-			}
-		}
 	}
 	if _, set := fmap["5"]; set {
 		if m.State != src.State {
@@ -2617,8 +2507,6 @@ func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
 	}
 	if _, set := fmap["6"]; set {
 		m.Errors = src.Errors
-		changed++
-		copy(m.Errors, src.Errors)
 		changed++
 	}
 	if _, set := fmap["7"]; set {

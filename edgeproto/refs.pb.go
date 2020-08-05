@@ -687,12 +687,6 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 	}
 	m.Clusters = src.Clusters
 	changed++
-	for i0 := 0; i0 < len(src.Clusters); i0++ {
-		if m.Clusters[i0].Name != src.Clusters[i0].Name {
-			m.Clusters[i0].Name = src.Clusters[i0].Name
-			changed++
-		}
-	}
 	if m.UsedRam != src.UsedRam {
 		m.UsedRam = src.UsedRam
 		changed++
@@ -1365,20 +1359,6 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
 	}
 	m.Apps = src.Apps
 	changed++
-	for i0 := 0; i0 < len(src.Apps); i0++ {
-		if m.Apps[i0].Organization != src.Apps[i0].Organization {
-			m.Apps[i0].Organization = src.Apps[i0].Organization
-			changed++
-		}
-		if m.Apps[i0].Name != src.Apps[i0].Name {
-			m.Apps[i0].Name = src.Apps[i0].Name
-			changed++
-		}
-		if m.Apps[i0].Version != src.Apps[i0].Version {
-			m.Apps[i0].Version = src.Apps[i0].Version
-			changed++
-		}
-	}
 	if m.UsedRam != src.UsedRam {
 		m.UsedRam = src.UsedRam
 		changed++

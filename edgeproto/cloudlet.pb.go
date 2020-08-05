@@ -3551,8 +3551,6 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 	if _, set := fmap["10"]; set {
 		m.Errors = src.Errors
 		changed++
-		copy(m.Errors, src.Errors)
-		changed++
 	}
 	if _, set := fmap["11"]; set {
 		if _, set := fmap["11.1"]; set {
@@ -5167,51 +5165,11 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 	if _, set := fmap["9"]; set {
 		m.Errors = src.Errors
 		changed++
-		copy(m.Errors, src.Errors)
-		changed++
 	}
 	if _, set := fmap["10"]; set {
 		if src.Flavors != nil {
 			m.Flavors = src.Flavors
 			changed++
-			for i0 := 0; i0 < len(src.Flavors); i0++ {
-				m.Flavors[i0] = &FlavorInfo{}
-				if _, set := fmap["10.1"]; set {
-					if m.Flavors[i0].Name != src.Flavors[i0].Name {
-						m.Flavors[i0].Name = src.Flavors[i0].Name
-						changed++
-					}
-				}
-				if _, set := fmap["10.2"]; set {
-					if m.Flavors[i0].Vcpus != src.Flavors[i0].Vcpus {
-						m.Flavors[i0].Vcpus = src.Flavors[i0].Vcpus
-						changed++
-					}
-				}
-				if _, set := fmap["10.3"]; set {
-					if m.Flavors[i0].Ram != src.Flavors[i0].Ram {
-						m.Flavors[i0].Ram = src.Flavors[i0].Ram
-						changed++
-					}
-				}
-				if _, set := fmap["10.4"]; set {
-					if m.Flavors[i0].Disk != src.Flavors[i0].Disk {
-						m.Flavors[i0].Disk = src.Flavors[i0].Disk
-						changed++
-					}
-				}
-				if _, set := fmap["10.5"]; set {
-					if src.Flavors[i0].PropMap != nil {
-						m.Flavors[i0].PropMap = make(map[string]string)
-						for k1, _ := range src.Flavors[i0].PropMap {
-							m.Flavors[i0].PropMap[k1] = src.Flavors[i0].PropMap[k1]
-						}
-					} else if m.Flavors[i0].PropMap != nil {
-						m.Flavors[i0].PropMap = nil
-						changed++
-					}
-				}
-			}
 		} else if m.Flavors != nil {
 			m.Flavors = nil
 			changed++
@@ -5253,21 +5211,6 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 		if src.AvailabilityZones != nil {
 			m.AvailabilityZones = src.AvailabilityZones
 			changed++
-			for i0 := 0; i0 < len(src.AvailabilityZones); i0++ {
-				m.AvailabilityZones[i0] = &OSAZone{}
-				if _, set := fmap["13.1"]; set {
-					if m.AvailabilityZones[i0].Name != src.AvailabilityZones[i0].Name {
-						m.AvailabilityZones[i0].Name = src.AvailabilityZones[i0].Name
-						changed++
-					}
-				}
-				if _, set := fmap["13.2"]; set {
-					if m.AvailabilityZones[i0].Status != src.AvailabilityZones[i0].Status {
-						m.AvailabilityZones[i0].Status = src.AvailabilityZones[i0].Status
-						changed++
-					}
-				}
-			}
 		} else if m.AvailabilityZones != nil {
 			m.AvailabilityZones = nil
 			changed++
@@ -5277,33 +5220,6 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 		if src.OsImages != nil {
 			m.OsImages = src.OsImages
 			changed++
-			for i0 := 0; i0 < len(src.OsImages); i0++ {
-				m.OsImages[i0] = &OSImage{}
-				if _, set := fmap["14.1"]; set {
-					if m.OsImages[i0].Name != src.OsImages[i0].Name {
-						m.OsImages[i0].Name = src.OsImages[i0].Name
-						changed++
-					}
-				}
-				if _, set := fmap["14.2"]; set {
-					if m.OsImages[i0].Tags != src.OsImages[i0].Tags {
-						m.OsImages[i0].Tags = src.OsImages[i0].Tags
-						changed++
-					}
-				}
-				if _, set := fmap["14.3"]; set {
-					if m.OsImages[i0].Properties != src.OsImages[i0].Properties {
-						m.OsImages[i0].Properties = src.OsImages[i0].Properties
-						changed++
-					}
-				}
-				if _, set := fmap["14.4"]; set {
-					if m.OsImages[i0].DiskFormat != src.OsImages[i0].DiskFormat {
-						m.OsImages[i0].DiskFormat = src.OsImages[i0].DiskFormat
-						changed++
-					}
-				}
-			}
 		} else if m.OsImages != nil {
 			m.OsImages = nil
 			changed++

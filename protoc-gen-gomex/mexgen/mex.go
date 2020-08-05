@@ -479,9 +479,6 @@ func (m *mex) printCopyInMakeArray(name string, desc *generator.Descriptor, fiel
 			valType = "*" + valType
 		}
 		m.P("m.", name, " = make(map[", mapType.KeyType, "]", valType, ")")
-	} else {
-		m.P("m.", name, " = src.", name)
-		m.P("changed++")
 	}
 }
 
@@ -764,8 +761,9 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 			if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 				depth := fmt.Sprintf("%d", len(parents))
 				if mapType == nil {
-					m.P("for i", depth, " := 0; i", depth, " < len(src.", hierName, "); i", depth, "++ {")
-					idx = "[i" + depth + "]"
+					skipMap = true
+					m.P("m.", hierName, " = src.", hierName)
+					m.P("changed++")
 				} else {
 					m.P("for k", depth, ", _ := range src.", hierName, " {")
 					idx = "[k" + depth + "]"
@@ -796,11 +794,11 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 			// deprecated in proto3
 		case descriptor.FieldDescriptorProto_TYPE_BYTES:
 			m.printCopyInMakeArray(hierName, desc, field)
-			m.P("copy(m.", hierName, ", src.", hierName, ")")
+			m.P("m.", hierName, " = src.", hierName)
 			m.P("changed++")
 		default:
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-				m.P("copy(m.", hierName, ", src.", hierName, ")")
+				m.P("m.", hierName, " = src.", hierName)
 				m.P("changed++")
 			} else {
 				m.P("if m.", hierName, " != src.", hierName, "{")
@@ -810,7 +808,9 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 			}
 		}
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED && *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
-			m.P("}")
+			if mapType != nil {
+				m.P("}")
+			}
 		}
 		if nullableMessage {
 			m.P("} else if m.", hierName, " != nil {")

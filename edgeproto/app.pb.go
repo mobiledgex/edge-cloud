@@ -1598,21 +1598,6 @@ func (m *App) CopyInFields(src *App) int {
 		if src.Configs != nil {
 			m.Configs = src.Configs
 			changed++
-			for i0 := 0; i0 < len(src.Configs); i0++ {
-				m.Configs[i0] = &ConfigFile{}
-				if _, set := fmap["21.1"]; set {
-					if m.Configs[i0].Kind != src.Configs[i0].Kind {
-						m.Configs[i0].Kind = src.Configs[i0].Kind
-						changed++
-					}
-				}
-				if _, set := fmap["21.2"]; set {
-					if m.Configs[i0].Config != src.Configs[i0].Config {
-						m.Configs[i0].Config = src.Configs[i0].Config
-						changed++
-					}
-				}
-			}
 		} else if m.Configs != nil {
 			m.Configs = nil
 			changed++
@@ -1680,8 +1665,6 @@ func (m *App) CopyInFields(src *App) int {
 	}
 	if _, set := fmap["32"]; set {
 		m.AutoProvPolicies = src.AutoProvPolicies
-		changed++
-		copy(m.AutoProvPolicies, src.AutoProvPolicies)
 		changed++
 	}
 	if _, set := fmap["33"]; set {

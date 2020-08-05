@@ -1099,87 +1099,6 @@ func (m *AutoProvPolicy) CopyInFields(src *AutoProvPolicy) int {
 		if src.Cloudlets != nil {
 			m.Cloudlets = src.Cloudlets
 			changed++
-			for i0 := 0; i0 < len(src.Cloudlets); i0++ {
-				m.Cloudlets[i0] = &AutoProvCloudlet{}
-				if _, set := fmap["5.1"]; set {
-					if _, set := fmap["5.1.1"]; set {
-						if m.Cloudlets[i0].Key.Organization != src.Cloudlets[i0].Key.Organization {
-							m.Cloudlets[i0].Key.Organization = src.Cloudlets[i0].Key.Organization
-							changed++
-						}
-					}
-					if _, set := fmap["5.1.2"]; set {
-						if m.Cloudlets[i0].Key.Name != src.Cloudlets[i0].Key.Name {
-							m.Cloudlets[i0].Key.Name = src.Cloudlets[i0].Key.Name
-							changed++
-						}
-					}
-				}
-				if _, set := fmap["5.2"]; set {
-					if _, set := fmap["5.2.1"]; set {
-						if m.Cloudlets[i0].Loc.Latitude != src.Cloudlets[i0].Loc.Latitude {
-							m.Cloudlets[i0].Loc.Latitude = src.Cloudlets[i0].Loc.Latitude
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.2"]; set {
-						if m.Cloudlets[i0].Loc.Longitude != src.Cloudlets[i0].Loc.Longitude {
-							m.Cloudlets[i0].Loc.Longitude = src.Cloudlets[i0].Loc.Longitude
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.3"]; set {
-						if m.Cloudlets[i0].Loc.HorizontalAccuracy != src.Cloudlets[i0].Loc.HorizontalAccuracy {
-							m.Cloudlets[i0].Loc.HorizontalAccuracy = src.Cloudlets[i0].Loc.HorizontalAccuracy
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.4"]; set {
-						if m.Cloudlets[i0].Loc.VerticalAccuracy != src.Cloudlets[i0].Loc.VerticalAccuracy {
-							m.Cloudlets[i0].Loc.VerticalAccuracy = src.Cloudlets[i0].Loc.VerticalAccuracy
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.5"]; set {
-						if m.Cloudlets[i0].Loc.Altitude != src.Cloudlets[i0].Loc.Altitude {
-							m.Cloudlets[i0].Loc.Altitude = src.Cloudlets[i0].Loc.Altitude
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.6"]; set {
-						if m.Cloudlets[i0].Loc.Course != src.Cloudlets[i0].Loc.Course {
-							m.Cloudlets[i0].Loc.Course = src.Cloudlets[i0].Loc.Course
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.7"]; set {
-						if m.Cloudlets[i0].Loc.Speed != src.Cloudlets[i0].Loc.Speed {
-							m.Cloudlets[i0].Loc.Speed = src.Cloudlets[i0].Loc.Speed
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.8"]; set {
-						if src.Cloudlets[i0].Loc.Timestamp != nil {
-							m.Cloudlets[i0].Loc.Timestamp = &distributed_match_engine.Timestamp{}
-							if _, set := fmap["5.2.8.1"]; set {
-								if m.Cloudlets[i0].Loc.Timestamp.Seconds != src.Cloudlets[i0].Loc.Timestamp.Seconds {
-									m.Cloudlets[i0].Loc.Timestamp.Seconds = src.Cloudlets[i0].Loc.Timestamp.Seconds
-									changed++
-								}
-							}
-							if _, set := fmap["5.2.8.2"]; set {
-								if m.Cloudlets[i0].Loc.Timestamp.Nanos != src.Cloudlets[i0].Loc.Timestamp.Nanos {
-									m.Cloudlets[i0].Loc.Timestamp.Nanos = src.Cloudlets[i0].Loc.Timestamp.Nanos
-									changed++
-								}
-							}
-						} else if m.Cloudlets[i0].Loc.Timestamp != nil {
-							m.Cloudlets[i0].Loc.Timestamp = nil
-							changed++
-						}
-					}
-				}
-			}
 		} else if m.Cloudlets != nil {
 			m.Cloudlets = nil
 			changed++
@@ -2039,53 +1958,6 @@ func (m *AutoProvCounts) CopyInFields(src *AutoProvCounts) int {
 	if src.Counts != nil {
 		m.Counts = src.Counts
 		changed++
-		for i0 := 0; i0 < len(src.Counts); i0++ {
-			m.Counts[i0] = &AutoProvCount{}
-			if m.Counts[i0].AppKey.Organization != src.Counts[i0].AppKey.Organization {
-				m.Counts[i0].AppKey.Organization = src.Counts[i0].AppKey.Organization
-				changed++
-			}
-			if m.Counts[i0].AppKey.Name != src.Counts[i0].AppKey.Name {
-				m.Counts[i0].AppKey.Name = src.Counts[i0].AppKey.Name
-				changed++
-			}
-			if m.Counts[i0].AppKey.Version != src.Counts[i0].AppKey.Version {
-				m.Counts[i0].AppKey.Version = src.Counts[i0].AppKey.Version
-				changed++
-			}
-			if m.Counts[i0].CloudletKey.Organization != src.Counts[i0].CloudletKey.Organization {
-				m.Counts[i0].CloudletKey.Organization = src.Counts[i0].CloudletKey.Organization
-				changed++
-			}
-			if m.Counts[i0].CloudletKey.Name != src.Counts[i0].CloudletKey.Name {
-				m.Counts[i0].CloudletKey.Name = src.Counts[i0].CloudletKey.Name
-				changed++
-			}
-			if m.Counts[i0].Count != src.Counts[i0].Count {
-				m.Counts[i0].Count = src.Counts[i0].Count
-				changed++
-			}
-			if m.Counts[i0].ProcessNow != src.Counts[i0].ProcessNow {
-				m.Counts[i0].ProcessNow = src.Counts[i0].ProcessNow
-				changed++
-			}
-			if m.Counts[i0].DeployNowKey.ClusterKey.Name != src.Counts[i0].DeployNowKey.ClusterKey.Name {
-				m.Counts[i0].DeployNowKey.ClusterKey.Name = src.Counts[i0].DeployNowKey.ClusterKey.Name
-				changed++
-			}
-			if m.Counts[i0].DeployNowKey.CloudletKey.Organization != src.Counts[i0].DeployNowKey.CloudletKey.Organization {
-				m.Counts[i0].DeployNowKey.CloudletKey.Organization = src.Counts[i0].DeployNowKey.CloudletKey.Organization
-				changed++
-			}
-			if m.Counts[i0].DeployNowKey.CloudletKey.Name != src.Counts[i0].DeployNowKey.CloudletKey.Name {
-				m.Counts[i0].DeployNowKey.CloudletKey.Name = src.Counts[i0].DeployNowKey.CloudletKey.Name
-				changed++
-			}
-			if m.Counts[i0].DeployNowKey.Organization != src.Counts[i0].DeployNowKey.Organization {
-				m.Counts[i0].DeployNowKey.Organization = src.Counts[i0].DeployNowKey.Organization
-				changed++
-			}
-		}
 	} else if m.Counts != nil {
 		m.Counts = nil
 		changed++
@@ -2336,13 +2208,9 @@ func (m *AutoProvInfo) CopyInFields(src *AutoProvInfo) int {
 	if _, set := fmap["5"]; set {
 		m.Completed = src.Completed
 		changed++
-		copy(m.Completed, src.Completed)
-		changed++
 	}
 	if _, set := fmap["6"]; set {
 		m.Errors = src.Errors
-		changed++
-		copy(m.Errors, src.Errors)
 		changed++
 	}
 	return changed

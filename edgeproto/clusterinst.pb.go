@@ -1471,8 +1471,6 @@ func (m *ClusterInst) CopyInFields(src *ClusterInst) int {
 	if _, set := fmap["5"]; set {
 		m.Errors = src.Errors
 		changed++
-		copy(m.Errors, src.Errors)
-		changed++
 	}
 	if _, set := fmap["6"]; set {
 		if m.CrmOverride != src.CrmOverride {
@@ -2526,8 +2524,6 @@ func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) int {
 	}
 	if _, set := fmap["5"]; set {
 		m.Errors = src.Errors
-		changed++
-		copy(m.Errors, src.Errors)
 		changed++
 	}
 	if _, set := fmap["6"]; set {
