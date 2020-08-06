@@ -46,7 +46,7 @@ message Device {
   // Timestamp when the device was last seen(Future use)
   google.protobuf.Timestamp last_seen = 4[(protogen.hidetag) = "nocmp"];
   // Id of client assigned by server (internal use only)
-  int64 notify_id = 5 [(protogen.hidetag) = "nocmp"];
+  int64 notify_id = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
