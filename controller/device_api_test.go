@@ -55,10 +55,14 @@ func TestDeviceApi(t *testing.T) {
 	show.Init()
 	err := deviceApi.ShowDeviceReport(&report, &show)
 	require.Nil(t, err)
-	require.Equal(t, 1, len(show.Data))
-	// Verify that the one we got was correct
+	require.Equal(t, 2, len(show.Data))
+	// Verify that the two devices got were correct
 	for _, dev := range show.Data {
-		require.Equal(t, testutil.PlarformDeviceClientData[2], dev)
+		if dev.Key.UniqueIdType == testutil.PlarformDeviceClientData[2].Key.UniqueIdType {
+			require.Equal(t, testutil.PlarformDeviceClientData[2], dev)
+		} else {
+			require.Equal(t, testutil.PlarformDeviceClientData[4], dev)
+		}
 	}
 
 	// I want to call testutil.ApiClient.ShowDeviceReport()...
