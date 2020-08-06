@@ -259,7 +259,7 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		// For platform App clients we need to do accounting of devices
 		if err == nil {
 			if cloudcommon.IsPlatformApp(typ.OrgName, typ.AppName) ||
-				strings.Contains(typ.UniqueIdType, cloudcommon.Organizationplatos) {
+				strings.Contains(strings.ToLower(typ.UniqueIdType), strings.ToLower(cloudcommon.Organizationplatos)) {
 				go recordDevice(ctx, typ)
 			}
 		}
