@@ -58,3 +58,7 @@ func (s *Platform) GetNodePlatformClient(ctx context.Context, node *edgeproto.Cl
 func (s *Platform) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst) ([]edgeproto.CloudletMgmtNode, error) {
 	return []edgeproto.CloudletMgmtNode{}, nil
 }
+
+func (s *Platform) GetCloudletProps(ctx context.Context) (*edgeproto.CloudletProps, error) {
+	return nil, nil
+}
