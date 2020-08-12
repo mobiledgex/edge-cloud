@@ -482,7 +482,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  liveness: LivenessDynamic
+  liveness: LivenessAutoprov
   mappedports:
   - proto: LProtoTcp
     internalport: 81
