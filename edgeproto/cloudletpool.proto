@@ -66,6 +66,7 @@ service CloudletPoolApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Update a CloudletPool
   rpc UpdateCloudletPool(CloudletPool) returns (Result) {
