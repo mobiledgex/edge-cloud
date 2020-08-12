@@ -23,17 +23,19 @@ message VMNetInfo {
 // VMState is the state of the VM
 enum VMState {
 	// VM is free to use
-	VM_FREE = 0;
+	VM_FREE = 0 [(protogen.enum_backend) = true];
 	// VM is in progress
-	VM_IN_PROGRESS = 1;
+	VM_IN_PROGRESS = 1 [(protogen.enum_backend) = true];
 	// VM is in use
-	VM_IN_USE = 2;
+	VM_IN_USE = 2 [(protogen.enum_backend) = true];
 	// Add VM
-	VM_ADD = 3;
+	VM_ADD = 3 [(protogen.enum_backend) = true];
 	// Remove VM
-	VM_REMOVE = 4;
+	VM_REMOVE = 4 [(protogen.enum_backend) = true];
 	// Update VM
-	VM_UPDATE = 5;
+	VM_UPDATE = 5 [(protogen.enum_backend) = true];
+	// Forcefully free a VM, to be used at user's discretion
+	VM_FORCE_FREE = 6;
 }
 
 message VM {
@@ -86,7 +88,7 @@ message VMPool {
   option (protogen.generate_cache) = true;
   option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.notify_cache) = true;
-  option (protogen.noconfig) = "Vms:#.GroupName,Vms:#.InternalName,Vms:#.State,Vms:#.UpdatedAt.Seconds,Vms:#.UpdatedAt.Nanos,State,Errors,Status";
+  option (protogen.noconfig) = "Vms:#.GroupName,Vms:#.InternalName,Vms:#.UpdatedAt.Seconds,Vms:#.UpdatedAt.Nanos,State,Errors,Status";
   option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
@@ -99,7 +101,7 @@ message VMPoolMember {
   VM vm = 2 [(gogoproto.nullable) = false];
   // Override actions to CRM
   CRMOverride crm_override = 3 [(protogen.hidetag) = "nocmp"];
-  option (protogen.noconfig) = "Vm.GroupName,Vm.State,Vm.UpdatedAt,Vm.InternalName";
+  option (protogen.noconfig) = "Vm.GroupName,Vm.State,Vm.UpdatedAt.Seconds,Vm.UpdatedAt.Nanos,Vm.InternalName";
   option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
@@ -114,6 +116,7 @@ service VMPoolApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
+    option (protogen.method_noconfig) = "Vms:#.State";
   }
   // Delete VMPool. Deletes VM pool given that none
   // of VMs part of this pool is used.
@@ -157,6 +160,7 @@ service VMPoolApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "Vm.Name";
+    option (protogen.method_noconfig) = "Vm.NetInfo.ExternalIp,Vm.NetInfo.InternalIp";
   }
 }
 

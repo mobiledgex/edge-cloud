@@ -1596,25 +1596,8 @@ func (m *App) CopyInFields(src *App) int {
 	}
 	if _, set := fmap["21"]; set {
 		if src.Configs != nil {
-			if m.Configs == nil || len(m.Configs) != len(src.Configs) {
-				m.Configs = make([]*ConfigFile, len(src.Configs))
-				changed++
-			}
-			for i0 := 0; i0 < len(src.Configs); i0++ {
-				m.Configs[i0] = &ConfigFile{}
-				if _, set := fmap["21.1"]; set {
-					if m.Configs[i0].Kind != src.Configs[i0].Kind {
-						m.Configs[i0].Kind = src.Configs[i0].Kind
-						changed++
-					}
-				}
-				if _, set := fmap["21.2"]; set {
-					if m.Configs[i0].Config != src.Configs[i0].Config {
-						m.Configs[i0].Config = src.Configs[i0].Config
-						changed++
-					}
-				}
-			}
+			m.Configs = src.Configs
+			changed++
 		} else if m.Configs != nil {
 			m.Configs = nil
 			changed++
@@ -1681,12 +1664,13 @@ func (m *App) CopyInFields(src *App) int {
 		}
 	}
 	if _, set := fmap["32"]; set {
-		if m.AutoProvPolicies == nil || len(m.AutoProvPolicies) != len(src.AutoProvPolicies) {
-			m.AutoProvPolicies = make([]string, len(src.AutoProvPolicies))
+		if src.AutoProvPolicies != nil {
+			m.AutoProvPolicies = src.AutoProvPolicies
+			changed++
+		} else if m.AutoProvPolicies != nil {
+			m.AutoProvPolicies = nil
 			changed++
 		}
-		copy(m.AutoProvPolicies, src.AutoProvPolicies)
-		changed++
 	}
 	if _, set := fmap["33"]; set {
 		if m.TemplateDelimiter != src.TemplateDelimiter {
