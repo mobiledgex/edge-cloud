@@ -3405,41 +3405,8 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 		changed++
 	}
 	if src.Ports != nil {
-		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
-			m.Ports = make([]*AppPort, len(src.Ports))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Ports); i0++ {
-			m.Ports[i0] = &AppPort{}
-			if m.Ports[i0].Proto != src.Ports[i0].Proto {
-				m.Ports[i0].Proto = src.Ports[i0].Proto
-				changed++
-			}
-			if m.Ports[i0].InternalPort != src.Ports[i0].InternalPort {
-				m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
-				changed++
-			}
-			if m.Ports[i0].PublicPort != src.Ports[i0].PublicPort {
-				m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
-				changed++
-			}
-			if m.Ports[i0].FqdnPrefix != src.Ports[i0].FqdnPrefix {
-				m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
-				changed++
-			}
-			if m.Ports[i0].EndPort != src.Ports[i0].EndPort {
-				m.Ports[i0].EndPort = src.Ports[i0].EndPort
-				changed++
-			}
-			if m.Ports[i0].Tls != src.Ports[i0].Tls {
-				m.Ports[i0].Tls = src.Ports[i0].Tls
-				changed++
-			}
-			if m.Ports[i0].Nginx != src.Ports[i0].Nginx {
-				m.Ports[i0].Nginx = src.Ports[i0].Nginx
-				changed++
-			}
-		}
+		m.Ports = src.Ports
+		changed++
 	} else if m.Ports != nil {
 		m.Ports = nil
 		changed++
@@ -4039,46 +4006,8 @@ func (m *Appinstance) CopyInFields(src *Appinstance) int {
 		changed++
 	}
 	if src.Ports != nil {
-<<<<<<< HEAD
 		m.Ports = src.Ports
 		changed++
-=======
-		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
-			m.Ports = make([]*AppPort, len(src.Ports))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Ports); i0++ {
-			m.Ports[i0] = &AppPort{}
-			if m.Ports[i0].Proto != src.Ports[i0].Proto {
-				m.Ports[i0].Proto = src.Ports[i0].Proto
-				changed++
-			}
-			if m.Ports[i0].InternalPort != src.Ports[i0].InternalPort {
-				m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
-				changed++
-			}
-			if m.Ports[i0].PublicPort != src.Ports[i0].PublicPort {
-				m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
-				changed++
-			}
-			if m.Ports[i0].FqdnPrefix != src.Ports[i0].FqdnPrefix {
-				m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
-				changed++
-			}
-			if m.Ports[i0].EndPort != src.Ports[i0].EndPort {
-				m.Ports[i0].EndPort = src.Ports[i0].EndPort
-				changed++
-			}
-			if m.Ports[i0].Tls != src.Ports[i0].Tls {
-				m.Ports[i0].Tls = src.Ports[i0].Tls
-				changed++
-			}
-			if m.Ports[i0].Nginx != src.Ports[i0].Nginx {
-				m.Ports[i0].Nginx = src.Ports[i0].Nginx
-				changed++
-			}
-		}
->>>>>>> Removed http
 	} else if m.Ports != nil {
 		m.Ports = nil
 		changed++
@@ -4180,74 +4109,8 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 		changed++
 	}
 	if src.Appinstances != nil {
-<<<<<<< HEAD
 		m.Appinstances = src.Appinstances
 		changed++
-=======
-		if m.Appinstances == nil || len(m.Appinstances) != len(src.Appinstances) {
-			m.Appinstances = make([]*Appinstance, len(src.Appinstances))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Appinstances); i0++ {
-			m.Appinstances[i0] = &Appinstance{}
-			if m.Appinstances[i0].AppName != src.Appinstances[i0].AppName {
-				m.Appinstances[i0].AppName = src.Appinstances[i0].AppName
-				changed++
-			}
-			if m.Appinstances[i0].AppVers != src.Appinstances[i0].AppVers {
-				m.Appinstances[i0].AppVers = src.Appinstances[i0].AppVers
-				changed++
-			}
-			if m.Appinstances[i0].Fqdn != src.Appinstances[i0].Fqdn {
-				m.Appinstances[i0].Fqdn = src.Appinstances[i0].Fqdn
-				changed++
-			}
-			if src.Appinstances[i0].Ports != nil {
-				if m.Appinstances[i0].Ports == nil || len(m.Appinstances[i0].Ports) != len(src.Appinstances[i0].Ports) {
-					m.Appinstances[i0].Ports = make([]*AppPort, len(src.Appinstances[i0].Ports))
-					changed++
-				}
-				for i1 := 0; i1 < len(src.Appinstances[i0].Ports); i1++ {
-					m.Appinstances[i0].Ports[i1] = &AppPort{}
-					if m.Appinstances[i0].Ports[i1].Proto != src.Appinstances[i0].Ports[i1].Proto {
-						m.Appinstances[i0].Ports[i1].Proto = src.Appinstances[i0].Ports[i1].Proto
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].InternalPort != src.Appinstances[i0].Ports[i1].InternalPort {
-						m.Appinstances[i0].Ports[i1].InternalPort = src.Appinstances[i0].Ports[i1].InternalPort
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].PublicPort != src.Appinstances[i0].Ports[i1].PublicPort {
-						m.Appinstances[i0].Ports[i1].PublicPort = src.Appinstances[i0].Ports[i1].PublicPort
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].FqdnPrefix != src.Appinstances[i0].Ports[i1].FqdnPrefix {
-						m.Appinstances[i0].Ports[i1].FqdnPrefix = src.Appinstances[i0].Ports[i1].FqdnPrefix
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].EndPort != src.Appinstances[i0].Ports[i1].EndPort {
-						m.Appinstances[i0].Ports[i1].EndPort = src.Appinstances[i0].Ports[i1].EndPort
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].Tls != src.Appinstances[i0].Ports[i1].Tls {
-						m.Appinstances[i0].Ports[i1].Tls = src.Appinstances[i0].Ports[i1].Tls
-						changed++
-					}
-					if m.Appinstances[i0].Ports[i1].Nginx != src.Appinstances[i0].Ports[i1].Nginx {
-						m.Appinstances[i0].Ports[i1].Nginx = src.Appinstances[i0].Ports[i1].Nginx
-						changed++
-					}
-				}
-			} else if m.Appinstances[i0].Ports != nil {
-				m.Appinstances[i0].Ports = nil
-				changed++
-			}
-			if m.Appinstances[i0].OrgName != src.Appinstances[i0].OrgName {
-				m.Appinstances[i0].OrgName = src.Appinstances[i0].OrgName
-				changed++
-			}
-		}
->>>>>>> Removed http
 	} else if m.Appinstances != nil {
 		m.Appinstances = nil
 		changed++
@@ -4302,146 +4165,8 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 		changed++
 	}
 	if src.Cloudlets != nil {
-<<<<<<< HEAD
 		m.Cloudlets = src.Cloudlets
 		changed++
-=======
-		if m.Cloudlets == nil || len(m.Cloudlets) != len(src.Cloudlets) {
-			m.Cloudlets = make([]*CloudletLocation, len(src.Cloudlets))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Cloudlets); i0++ {
-			m.Cloudlets[i0] = &CloudletLocation{}
-			if m.Cloudlets[i0].CarrierName != src.Cloudlets[i0].CarrierName {
-				m.Cloudlets[i0].CarrierName = src.Cloudlets[i0].CarrierName
-				changed++
-			}
-			if m.Cloudlets[i0].CloudletName != src.Cloudlets[i0].CloudletName {
-				m.Cloudlets[i0].CloudletName = src.Cloudlets[i0].CloudletName
-				changed++
-			}
-			if src.Cloudlets[i0].GpsLocation != nil {
-				m.Cloudlets[i0].GpsLocation = &Loc{}
-				if m.Cloudlets[i0].GpsLocation.Latitude != src.Cloudlets[i0].GpsLocation.Latitude {
-					m.Cloudlets[i0].GpsLocation.Latitude = src.Cloudlets[i0].GpsLocation.Latitude
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.Longitude != src.Cloudlets[i0].GpsLocation.Longitude {
-					m.Cloudlets[i0].GpsLocation.Longitude = src.Cloudlets[i0].GpsLocation.Longitude
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.HorizontalAccuracy != src.Cloudlets[i0].GpsLocation.HorizontalAccuracy {
-					m.Cloudlets[i0].GpsLocation.HorizontalAccuracy = src.Cloudlets[i0].GpsLocation.HorizontalAccuracy
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.VerticalAccuracy != src.Cloudlets[i0].GpsLocation.VerticalAccuracy {
-					m.Cloudlets[i0].GpsLocation.VerticalAccuracy = src.Cloudlets[i0].GpsLocation.VerticalAccuracy
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.Altitude != src.Cloudlets[i0].GpsLocation.Altitude {
-					m.Cloudlets[i0].GpsLocation.Altitude = src.Cloudlets[i0].GpsLocation.Altitude
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.Course != src.Cloudlets[i0].GpsLocation.Course {
-					m.Cloudlets[i0].GpsLocation.Course = src.Cloudlets[i0].GpsLocation.Course
-					changed++
-				}
-				if m.Cloudlets[i0].GpsLocation.Speed != src.Cloudlets[i0].GpsLocation.Speed {
-					m.Cloudlets[i0].GpsLocation.Speed = src.Cloudlets[i0].GpsLocation.Speed
-					changed++
-				}
-				if src.Cloudlets[i0].GpsLocation.Timestamp != nil {
-					m.Cloudlets[i0].GpsLocation.Timestamp = &Timestamp{}
-					if m.Cloudlets[i0].GpsLocation.Timestamp.Seconds != src.Cloudlets[i0].GpsLocation.Timestamp.Seconds {
-						m.Cloudlets[i0].GpsLocation.Timestamp.Seconds = src.Cloudlets[i0].GpsLocation.Timestamp.Seconds
-						changed++
-					}
-					if m.Cloudlets[i0].GpsLocation.Timestamp.Nanos != src.Cloudlets[i0].GpsLocation.Timestamp.Nanos {
-						m.Cloudlets[i0].GpsLocation.Timestamp.Nanos = src.Cloudlets[i0].GpsLocation.Timestamp.Nanos
-						changed++
-					}
-				} else if m.Cloudlets[i0].GpsLocation.Timestamp != nil {
-					m.Cloudlets[i0].GpsLocation.Timestamp = nil
-					changed++
-				}
-			} else if m.Cloudlets[i0].GpsLocation != nil {
-				m.Cloudlets[i0].GpsLocation = nil
-				changed++
-			}
-			if m.Cloudlets[i0].Distance != src.Cloudlets[i0].Distance {
-				m.Cloudlets[i0].Distance = src.Cloudlets[i0].Distance
-				changed++
-			}
-			if src.Cloudlets[i0].Appinstances != nil {
-				if m.Cloudlets[i0].Appinstances == nil || len(m.Cloudlets[i0].Appinstances) != len(src.Cloudlets[i0].Appinstances) {
-					m.Cloudlets[i0].Appinstances = make([]*Appinstance, len(src.Cloudlets[i0].Appinstances))
-					changed++
-				}
-				for i1 := 0; i1 < len(src.Cloudlets[i0].Appinstances); i1++ {
-					m.Cloudlets[i0].Appinstances[i1] = &Appinstance{}
-					if m.Cloudlets[i0].Appinstances[i1].AppName != src.Cloudlets[i0].Appinstances[i1].AppName {
-						m.Cloudlets[i0].Appinstances[i1].AppName = src.Cloudlets[i0].Appinstances[i1].AppName
-						changed++
-					}
-					if m.Cloudlets[i0].Appinstances[i1].AppVers != src.Cloudlets[i0].Appinstances[i1].AppVers {
-						m.Cloudlets[i0].Appinstances[i1].AppVers = src.Cloudlets[i0].Appinstances[i1].AppVers
-						changed++
-					}
-					if m.Cloudlets[i0].Appinstances[i1].Fqdn != src.Cloudlets[i0].Appinstances[i1].Fqdn {
-						m.Cloudlets[i0].Appinstances[i1].Fqdn = src.Cloudlets[i0].Appinstances[i1].Fqdn
-						changed++
-					}
-					if src.Cloudlets[i0].Appinstances[i1].Ports != nil {
-						if m.Cloudlets[i0].Appinstances[i1].Ports == nil || len(m.Cloudlets[i0].Appinstances[i1].Ports) != len(src.Cloudlets[i0].Appinstances[i1].Ports) {
-							m.Cloudlets[i0].Appinstances[i1].Ports = make([]*AppPort, len(src.Cloudlets[i0].Appinstances[i1].Ports))
-							changed++
-						}
-						for i2 := 0; i2 < len(src.Cloudlets[i0].Appinstances[i1].Ports); i2++ {
-							m.Cloudlets[i0].Appinstances[i1].Ports[i2] = &AppPort{}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto != src.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort != src.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort != src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix != src.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort != src.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].EndPort
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls != src.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Tls
-								changed++
-							}
-							if m.Cloudlets[i0].Appinstances[i1].Ports[i2].Nginx != src.Cloudlets[i0].Appinstances[i1].Ports[i2].Nginx {
-								m.Cloudlets[i0].Appinstances[i1].Ports[i2].Nginx = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Nginx
-								changed++
-							}
-						}
-					} else if m.Cloudlets[i0].Appinstances[i1].Ports != nil {
-						m.Cloudlets[i0].Appinstances[i1].Ports = nil
-						changed++
-					}
-					if m.Cloudlets[i0].Appinstances[i1].OrgName != src.Cloudlets[i0].Appinstances[i1].OrgName {
-						m.Cloudlets[i0].Appinstances[i1].OrgName = src.Cloudlets[i0].Appinstances[i1].OrgName
-						changed++
-					}
-				}
-			} else if m.Cloudlets[i0].Appinstances != nil {
-				m.Cloudlets[i0].Appinstances = nil
-				changed++
-			}
-		}
->>>>>>> Removed http
 	} else if m.Cloudlets != nil {
 		m.Cloudlets = nil
 		changed++
@@ -4789,46 +4514,8 @@ func (m *AppOfficialFqdnReply) CopyInFields(src *AppOfficialFqdnReply) int {
 		changed++
 	}
 	if src.Ports != nil {
-<<<<<<< HEAD
 		m.Ports = src.Ports
 		changed++
-=======
-		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
-			m.Ports = make([]*AppPort, len(src.Ports))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Ports); i0++ {
-			m.Ports[i0] = &AppPort{}
-			if m.Ports[i0].Proto != src.Ports[i0].Proto {
-				m.Ports[i0].Proto = src.Ports[i0].Proto
-				changed++
-			}
-			if m.Ports[i0].InternalPort != src.Ports[i0].InternalPort {
-				m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
-				changed++
-			}
-			if m.Ports[i0].PublicPort != src.Ports[i0].PublicPort {
-				m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
-				changed++
-			}
-			if m.Ports[i0].FqdnPrefix != src.Ports[i0].FqdnPrefix {
-				m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
-				changed++
-			}
-			if m.Ports[i0].EndPort != src.Ports[i0].EndPort {
-				m.Ports[i0].EndPort = src.Ports[i0].EndPort
-				changed++
-			}
-			if m.Ports[i0].Tls != src.Ports[i0].Tls {
-				m.Ports[i0].Tls = src.Ports[i0].Tls
-				changed++
-			}
-			if m.Ports[i0].Nginx != src.Ports[i0].Nginx {
-				m.Ports[i0].Nginx = src.Ports[i0].Nginx
-				changed++
-			}
-		}
->>>>>>> autogen files
 	} else if m.Ports != nil {
 		m.Ports = nil
 		changed++

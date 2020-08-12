@@ -2217,50 +2217,6 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 			m.MappedPorts = nil
 			changed++
 		}
-		for i0 := 0; i0 < len(src.MappedPorts); i0++ {
-			if _, set := fmap["9.1"]; set {
-				if m.MappedPorts[i0].Proto != src.MappedPorts[i0].Proto {
-					m.MappedPorts[i0].Proto = src.MappedPorts[i0].Proto
-					changed++
-				}
-			}
-			if _, set := fmap["9.2"]; set {
-				if m.MappedPorts[i0].InternalPort != src.MappedPorts[i0].InternalPort {
-					m.MappedPorts[i0].InternalPort = src.MappedPorts[i0].InternalPort
-					changed++
-				}
-			}
-			if _, set := fmap["9.3"]; set {
-				if m.MappedPorts[i0].PublicPort != src.MappedPorts[i0].PublicPort {
-					m.MappedPorts[i0].PublicPort = src.MappedPorts[i0].PublicPort
-					changed++
-				}
-			}
-			if _, set := fmap["9.4"]; set {
-				if m.MappedPorts[i0].FqdnPrefix != src.MappedPorts[i0].FqdnPrefix {
-					m.MappedPorts[i0].FqdnPrefix = src.MappedPorts[i0].FqdnPrefix
-					changed++
-				}
-			}
-			if _, set := fmap["9.5"]; set {
-				if m.MappedPorts[i0].EndPort != src.MappedPorts[i0].EndPort {
-					m.MappedPorts[i0].EndPort = src.MappedPorts[i0].EndPort
-					changed++
-				}
-			}
-			if _, set := fmap["9.6"]; set {
-				if m.MappedPorts[i0].Tls != src.MappedPorts[i0].Tls {
-					m.MappedPorts[i0].Tls = src.MappedPorts[i0].Tls
-					changed++
-				}
-			}
-			if _, set := fmap["9.7"]; set {
-				if m.MappedPorts[i0].Nginx != src.MappedPorts[i0].Nginx {
-					m.MappedPorts[i0].Nginx = src.MappedPorts[i0].Nginx
-					changed++
-				}
-			}
-		}
 	}
 	if _, set := fmap["12"]; set {
 		if _, set := fmap["12.1"]; set {
