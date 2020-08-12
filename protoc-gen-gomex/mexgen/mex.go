@@ -50,10 +50,8 @@ type mex struct {
 	importReflect          bool
 	importJson             bool
 	firstFile              string
-	lastFile               string
 	support                gensupport.PluginSupport
 	keyMessages            []descriptor.DescriptorProto
-	keyTagConflicts        map[string][]string
 }
 
 func (m *mex) Name() string {
@@ -72,8 +70,6 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.subfieldLookupTemplate = template.Must(template.New("subfield").Parse(subfieldLookupTemplateIn))
 	m.support.Init(gen.Request)
 	m.firstFile = gensupport.GetFirstFile(gen)
-	m.lastFile = gensupport.GetLastFile(gen)
-	m.keyTagConflicts = make(map[string][]string)
 }
 
 // P forwards to g.gen.P
@@ -120,14 +116,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 		m.P(matchOptions)
 		m.generateEnumDecodeHook()
 		m.generateShowCheck()
-	}
-	if m.lastFile == *file.FileDescriptorProto.Name {
-		for tag, list := range m.keyTagConflicts {
-			if len(list) <= 1 {
-				continue
-			}
-			m.gen.Fail("KeyTag conflict for", tag, "between", fmt.Sprintf("%v", list))
-		}
+		m.generateAllKeyTags()
 	}
 }
 
@@ -2033,21 +2022,19 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 
 		hasKeyTags := false
 		for _, field := range message.Field {
-			tag := GetKeyTag(field)
 			if field.Type == nil || field.OneofIndex != nil {
 				continue
 			}
 			if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 				continue
 			}
+			tag := GetKeyTag(field)
 			if tag == "" {
 				m.gen.Fail(*message.Name, "field", *field.Name, "missing protogen.keytag")
 			}
 			fname := generator.CamelCase(*field.Name)
-
 			m.P("var ", message.Name, "Tag", fname, " = \"", tag, "\"")
 			hasKeyTags = true
-			m.keyTagConflicts[tag] = append(m.keyTagConflicts[tag], *message.Name+"."+fname)
 		}
 		if hasKeyTags {
 			m.P()
@@ -2370,6 +2357,55 @@ func (m *mex) generateShowCheck() {
 	m.P("func IsShow(cmd string) bool {")
 	m.P("_, found := ShowMethodNames[cmd]")
 	m.P("return found")
+	m.P("}")
+	m.P()
+}
+
+func (m *mex) generateAllKeyTags() {
+	tags := make(map[string]string)
+	for _, file := range m.gen.Request.ProtoFile {
+		if !m.support.GenFile(*file.Name) {
+			continue
+		}
+		for _, message := range file.MessageType {
+			for _, field := range message.Field {
+				if field.Type == nil || field.OneofIndex != nil {
+					continue
+				}
+				if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+					continue
+				}
+				tag := GetKeyTag(field)
+				if tag == "" {
+					continue
+				}
+				fname := generator.CamelCase(*field.Name)
+				tagLoc := *message.Name + "." + fname
+				if conflict, found := tags[tag]; found {
+					m.gen.Fail("KeyTag conflict for", tag, "between", tagLoc, "and", conflict)
+				}
+				tags[tag] = tagLoc
+			}
+		}
+	}
+	if len(tags) == 0 {
+		return
+	}
+	list := []string{}
+	for t, _ := range tags {
+		list = append(list, t)
+	}
+	sort.Strings(list)
+	m.P("var AllKeyTags = []string{")
+	for _, tag := range list {
+		m.P(`"`, tag, `",`)
+	}
+	m.P("}")
+	m.P()
+	m.P("var AllKeyTagsMap = map[string]struct{}{")
+	for _, tag := range list {
+		m.P(`"`, tag, `": struct{}{},`)
+	}
 	m.P("}")
 	m.P()
 }

@@ -714,13 +714,3 @@ func GetFirstFile(gen *generator.Generator) string {
 	}
 	return ""
 }
-
-func GetLastFile(gen *generator.Generator) string {
-	files := make([]string, len(gen.Request.FileToGenerate))
-	copy(files, gen.Request.FileToGenerate)
-	sort.Strings(files)
-	if len(files) > 0 {
-		return files[len(files)-1]
-	}
-	return ""
-}
