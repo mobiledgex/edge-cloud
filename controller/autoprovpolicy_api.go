@@ -9,16 +9,17 @@ import (
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/opentracing/opentracing-go"
+	"github.com/mobiledgex/edge-cloud/util/tasks"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
 type AutoProvPolicyApi struct {
-	sync    *Sync
-	store   edgeproto.AutoProvPolicyStore
-	cache   edgeproto.AutoProvPolicyCache
-	influxQ *influxq.InfluxQ
+	sync             *Sync
+	store            edgeproto.AutoProvPolicyStore
+	cache            edgeproto.AutoProvPolicyCache
+	influxQ          *influxq.InfluxQ
+	deployImmWorkers tasks.KeyWorkers
 }
 
 var autoProvPolicyApi = AutoProvPolicyApi{}
@@ -28,6 +29,7 @@ func InitAutoProvPolicyApi(sync *Sync) {
 	autoProvPolicyApi.store = edgeproto.NewAutoProvPolicyStore(sync.store)
 	edgeproto.InitAutoProvPolicyCache(&autoProvPolicyApi.cache)
 	sync.RegisterCache(&autoProvPolicyApi.cache)
+	autoProvPolicyApi.deployImmWorkers.Init("AutoProvDeployImmediate", deployImmediate)
 }
 
 func (s *AutoProvPolicyApi) SetInfluxQ(influxQ *influxq.InfluxQ) {
@@ -152,28 +154,11 @@ func (s *AutoProvPolicyApi) RecvAutoProvCounts(ctx context.Context, msg *edgepro
 	if len(msg.Counts) == 1 && msg.Counts[0].ProcessNow {
 		target := msg.Counts[0]
 		log.SpanLog(ctx, log.DebugLevelMetrics, "auto-prov count recv immedate", "target", target)
-		go func() {
-			span := log.StartSpan(log.DebugLevelMetrics, "AutoProvCreateAppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-			log.SetTags(span, target.AppKey.GetTags())
-			log.SetTags(span, target.DeployNowKey.GetTags())
-			ctx := log.ContextWithSpan(context.Background(), span)
-			stream := streamoutAppInst{
-				ctx:      ctx,
-				debugLvl: log.DebugLevelMetrics,
-			}
-			md := metadata.Pairs(
-				cloudcommon.CallerAutoProv, "",
-				cloudcommon.AutoProvReason,
-				cloudcommon.AutoProvReasonDemand,
-				cloudcommon.AutoProvPolicyName, "")
-			ctx = metadata.NewIncomingContext(ctx, md)
-			appInst := edgeproto.AppInst{}
-			appInst.Key.AppKey = target.AppKey
-			appInst.Key.ClusterInstKey = target.DeployNowKey
-			err := appInstApi.createAppInstInternal(DefCallContext(), &appInst, &stream)
-			log.SpanLog(ctx, log.DebugLevelMetrics, "auto prov now", "appInst", appInst.Key, "err", err)
-			span.Finish()
-		}()
+		appInstKey := edgeproto.AppInstKey{
+			AppKey:         target.AppKey,
+			ClusterInstKey: target.DeployNowKey,
+		}
+		s.deployImmWorkers.NeedsWork(ctx, appInstKey)
 		return
 	}
 	// push stats to influxdb
@@ -182,6 +167,30 @@ func (s *AutoProvPolicyApi) RecvAutoProvCounts(ctx context.Context, msg *edgepro
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelMetrics, "failed to push auto-prov counts to influxdb", "err", err)
 	}
+}
+
+func deployImmediate(ctx context.Context, k interface{}) {
+	key, ok := k.(edgeproto.AppInstKey)
+	if !ok {
+		log.SpanLog(ctx, log.DebugLevelApi, "Unexpected failure, key not AppInstKey", "key", k)
+		return
+	}
+	log.SetContextTags(ctx, key.GetTags())
+	log.SpanLog(ctx, log.DebugLevelApi, "deploy immediate", "key", key)
+	md := metadata.Pairs(
+		cloudcommon.CallerAutoProv, "",
+		cloudcommon.AutoProvReason,
+		cloudcommon.AutoProvReasonDemand,
+		cloudcommon.AutoProvPolicyName, "dme-process-now")
+	ctx = metadata.NewIncomingContext(ctx, md)
+	appInst := edgeproto.AppInst{}
+	appInst.Key = key
+	stream := streamoutAppInst{
+		ctx:      ctx,
+		debugLvl: log.DebugLevelApi,
+	}
+	err := appInstApi.createAppInstInternal(DefCallContext(), &appInst, &stream)
+	log.SpanLog(ctx, log.DebugLevelApi, "auto prov now", "appInst", appInst.Key, "err", err)
 }
 
 type streamoutAppInst struct {
