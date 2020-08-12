@@ -93,6 +93,8 @@ type Platform interface {
 	GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor) (*edgeproto.CloudletManifest, error)
 	// Verify VM
 	VerifyVMs(ctx context.Context, vms []edgeproto.VM) error
+	// Get Cloudlet Properties
+	GetCloudletProps(ctx context.Context) (*edgeproto.CloudletProps, error)
 }
 
 type ClusterSvc interface {
