@@ -66,6 +66,8 @@
 		Cloudlet
 		FlavorMatch
 		CloudletManifest
+		PropertyInfo
+		CloudletProps
 		FlavorInfo
 		OSAZone
 		OSImage
@@ -1221,6 +1223,56 @@ var ShowMethodNames = map[string]struct{}{
 func IsShow(cmd string) bool {
 	_, found := ShowMethodNames[cmd]
 	return found
+}
+
+var AllKeyTags = []string{
+	"app",
+	"apporg",
+	"appver",
+	"cloudlet",
+	"cloudletorg",
+	"cloudletpool",
+	"cloudletpoolorg",
+	"cluster",
+	"clusterorg",
+	"controlleraddr",
+	"deviceid",
+	"deviceidtype",
+	"flavor",
+	"node",
+	"noderegion",
+	"nodetype",
+	"policy",
+	"policyorg",
+	"restagtable",
+	"restagtableorg",
+	"vmpool",
+	"vmpoolorg",
+}
+
+var AllKeyTagsMap = map[string]struct{}{
+	"app":             struct{}{},
+	"apporg":          struct{}{},
+	"appver":          struct{}{},
+	"cloudlet":        struct{}{},
+	"cloudletorg":     struct{}{},
+	"cloudletpool":    struct{}{},
+	"cloudletpoolorg": struct{}{},
+	"cluster":         struct{}{},
+	"clusterorg":      struct{}{},
+	"controlleraddr":  struct{}{},
+	"deviceid":        struct{}{},
+	"deviceidtype":    struct{}{},
+	"flavor":          struct{}{},
+	"node":            struct{}{},
+	"noderegion":      struct{}{},
+	"nodetype":        struct{}{},
+	"policy":          struct{}{},
+	"policyorg":       struct{}{},
+	"restagtable":     struct{}{},
+	"restagtableorg":  struct{}{},
+	"vmpool":          struct{}{},
+	"vmpoolorg":       struct{}{},
 }
 
 func (m *Alert) Size() (n int) {
