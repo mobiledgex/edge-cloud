@@ -708,7 +708,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				}
 				// port range is validated on app create, but checked again here in case there were
 				// pre-existing apps which violate the supported range
-				err = validatePortRangeForAccessType(ports, app.AccessType)
+				err = validatePortRangeForAccessType(ports, app.AccessType, app.Deployment)
 				if err != nil {
 					return err
 				}
