@@ -66,6 +66,8 @@
 		Cloudlet
 		FlavorMatch
 		CloudletManifest
+		PropertyInfo
+		CloudletProps
 		FlavorInfo
 		OSAZone
 		OSImage
