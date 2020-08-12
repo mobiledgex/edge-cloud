@@ -1193,3 +1193,13 @@ func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
 	}
 	return false
 }
+
+func (s *CloudletApi) GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error) {
+
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String())
+	if err != nil {
+		return nil, err
+	}
+
+	return cloudletPlatform.GetCloudletProps(ctx)
+}

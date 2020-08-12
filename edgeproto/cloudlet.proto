@@ -229,6 +229,28 @@ message CloudletManifest {
   string manifest = 2;
 }
 
+message PropertyInfo {
+  // Name of the property
+  string name = 1;
+  // Description of the property
+  string description = 2;
+  // Default value of the property
+  string value = 3;
+  // Is the property a secret value, will be hidden
+  bool secret = 4;
+  // Is the property mandatory
+  bool mandatory = 5;
+  // Is the property internal, not to be set by Operator
+  bool internal = 6;
+}
+
+message CloudletProps {
+  // Platform type
+  PlatformType platform_type = 1;
+  // Single Key-Value pair of env var to be passed to CRM
+  map<string, PropertyInfo> properties = 2;
+}
+
 service CloudletApi {
   // Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
   // and integrated as part of MobiledgeX edge resource portfolio.
@@ -282,6 +304,16 @@ service CloudletApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
+  // Get Cloudlet Properties. Shows all the infra properties used to setup cloudlet
+  rpc GetCloudletProps(CloudletProps) returns (CloudletProps) {
+    option (google.api.http) = {
+      post: "/get/cloudlet/props"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+    option (protogen.method_noconfig) = "Properties";
+    option (protogen.method_also_required) = "PlatformType";
   }
 
   // Add Optional Resource tag table
