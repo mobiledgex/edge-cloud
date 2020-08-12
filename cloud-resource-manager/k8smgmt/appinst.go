@@ -177,6 +177,12 @@ func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, clien
 	cmd := fmt.Sprintf("%s kubectl apply -f %s --prune --all", names.KconfEnv, configDir)
 	log.SpanLog(ctx, log.DebugLevelInfra, "running kubectl", "action", action, "cmd", cmd)
 	out, err := client.Output(cmd)
+	if err != nil && strings.Contains(string(out), `pruning nonNamespaced object /v1, Kind=Namespace: namespaces "kube-system" is forbidden: this namespace may not be deleted`) {
+		// odd error that occurs on Azure, probably due to some system
+		// object they have in their k8s cluster setup. Ignore it
+		// since it doesn't affect the other aspects of the apply.
+		err = nil
+	}
 	if err != nil {
 		return fmt.Errorf("error running kubectl command %s: %s, %v", cmd, out, err)
 	}
