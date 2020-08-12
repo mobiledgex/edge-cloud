@@ -629,6 +629,26 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 	}
 }
 
+func (r *Run) CloudletApi_CloudletProps(data *[]edgeproto.CloudletProps, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for CloudletProps", "mode", r.Mode)
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "get":
+			out, err := r.client.GetCloudletProps(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletApi_CloudletProps[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.CloudletProps)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi_CloudletProps expected dataOut type *[]edgeproto.CloudletProps, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		}
+	}
+}
+
 func (r *Run) CloudletApi_CloudletResMap(data *[]edgeproto.CloudletResMap, dataMap interface{}, dataOut interface{}) {
 	log.DebugLog(log.DebugLevelApi, "API for CloudletResMap", "mode", r.Mode)
 	for ii, objD := range *data {
@@ -973,6 +993,18 @@ func (s *CliClient) GetCloudletManifest(ctx context.Context, in *edgeproto.Cloud
 	return &out, err
 }
 
+func (s *ApiClient) GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	return api.GetCloudletProps(ctx, in)
+}
+
+func (s *CliClient) GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error) {
+	out := edgeproto.CloudletProps{}
+	args := append(s.BaseArgs, "controller", "GetCloudletProps")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
 func (s *ApiClient) AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
 	return api.AddCloudletResMapping(ctx, in)
@@ -1015,6 +1047,7 @@ type CloudletApiClient interface {
 	UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
 	ShowCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Cloudlet, error)
 	GetCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error)
+	GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error)
 	AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error)

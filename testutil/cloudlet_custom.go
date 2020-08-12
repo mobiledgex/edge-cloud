@@ -18,3 +18,7 @@ func (s *DummyServer) RemoveCloudletResMapping(ctx context.Context, in *edgeprot
 func (s *DummyServer) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error) {
 	return in, nil
 }
+
+func (s *DummyServer) GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error) {
+	return in, nil
+}

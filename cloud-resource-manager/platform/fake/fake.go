@@ -23,6 +23,21 @@ func (s *Platform) GetType() string {
 	return "fake"
 }
 
+var fakeProps = map[string]*edgeproto.PropertyInfo{
+	// Property: Default-Value
+	"PROP_1": &edgeproto.PropertyInfo{
+		Name:        "Property 1",
+		Description: "First Property",
+		Secret:      true,
+		Mandatory:   true,
+	},
+	"PROP_2": &edgeproto.PropertyInfo{
+		Name:        "Property 2",
+		Description: "Second Property",
+		Mandatory:   true,
+	},
+}
+
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
@@ -175,4 +190,8 @@ func (s *Platform) GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.
 
 func (s *Platform) VerifyVMs(ctx context.Context, vms []edgeproto.VM) error {
 	return nil
+}
+
+func (s *Platform) GetCloudletProps(ctx context.Context) (*edgeproto.CloudletProps, error) {
+	return &edgeproto.CloudletProps{Properties: fakeProps}, nil
 }

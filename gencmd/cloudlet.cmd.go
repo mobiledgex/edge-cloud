@@ -460,6 +460,63 @@ func GetCloudletManifests(c *cli.Command, data []edgeproto.Cloudlet, err *error)
 	}
 }
 
+var GetCloudletPropsCmd = &cli.Command{
+	Use:          "GetCloudletProps",
+	RequiredArgs: strings.Join(GetCloudletPropsRequiredArgs, " "),
+	OptionalArgs: strings.Join(GetCloudletPropsOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletPropsAliasArgs, " "),
+	SpecialArgs:  &CloudletPropsSpecialArgs,
+	Comments:     CloudletPropsComments,
+	ReqData:      &edgeproto.CloudletProps{},
+	ReplyData:    &edgeproto.CloudletProps{},
+	Run:          runGetCloudletProps,
+}
+
+func runGetCloudletProps(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletProps)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetCloudletProps(c, obj)
+}
+
+func GetCloudletProps(c *cli.Command, in *edgeproto.CloudletProps) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.GetCloudletProps(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetCloudletProps failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetCloudletPropss(c *cli.Command, data []edgeproto.CloudletProps, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetCloudletProps %v\n", data[ii])
+		myerr := GetCloudletProps(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var AddCloudletResMappingCmd = &cli.Command{
 	Use:          "AddCloudletResMapping",
 	RequiredArgs: strings.Join(CloudletResMapRequiredArgs, " "),
@@ -637,6 +694,7 @@ var CloudletApiCmds = []*cobra.Command{
 	UpdateCloudletCmd.GenCmd(),
 	ShowCloudletCmd.GenCmd(),
 	GetCloudletManifestCmd.GenCmd(),
+	GetCloudletPropsCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
@@ -1168,6 +1226,47 @@ var CloudletManifestComments = map[string]string{
 	"manifest":  "Manifest to bringup cloudlet VM and services",
 }
 var CloudletManifestSpecialArgs = map[string]string{}
+var PropertyInfoRequiredArgs = []string{}
+var PropertyInfoOptionalArgs = []string{
+	"name",
+	"description",
+	"value",
+	"secret",
+	"mandatory",
+	"internal",
+}
+var PropertyInfoAliasArgs = []string{}
+var PropertyInfoComments = map[string]string{
+	"name":        "Name of the property",
+	"description": "Description of the property",
+	"value":       "Default value of the property",
+	"secret":      "Is the property a secret value, will be hidden",
+	"mandatory":   "Is the property mandatory",
+	"internal":    "Is the property internal, not to be set by Operator",
+}
+var PropertyInfoSpecialArgs = map[string]string{}
+var CloudletPropsRequiredArgs = []string{}
+var CloudletPropsOptionalArgs = []string{
+	"platformtype",
+	"properties:#.key",
+	"properties:#.value.name",
+	"properties:#.value.description",
+	"properties:#.value.value",
+	"properties:#.value.secret",
+	"properties:#.value.mandatory",
+	"properties:#.value.internal",
+}
+var CloudletPropsAliasArgs = []string{}
+var CloudletPropsComments = map[string]string{
+	"platformtype":                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAws, PlatformTypeVmPool",
+	"properties:#.value.name":        "Name of the property",
+	"properties:#.value.description": "Description of the property",
+	"properties:#.value.value":       "Default value of the property",
+	"properties:#.value.secret":      "Is the property a secret value, will be hidden",
+	"properties:#.value.mandatory":   "Is the property mandatory",
+	"properties:#.value.internal":    "Is the property internal, not to be set by Operator",
+}
+var CloudletPropsSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",
@@ -1345,3 +1444,7 @@ var UpdateCloudletOptionalArgs = []string{
 	"accessvars",
 	"maintenancestate",
 }
+var GetCloudletPropsRequiredArgs = []string{
+	"platformtype",
+}
+var GetCloudletPropsOptionalArgs = []string{}
