@@ -7,7 +7,6 @@ import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
 import "common.proto";
-import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
