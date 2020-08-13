@@ -142,9 +142,13 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	return false
 }
 
-func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.AccessType) error {
+func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.AccessType, deploymentType string) error {
 	maxPorts := settingsApi.Get().LoadBalancerMaxPortRange
 	for ii, _ := range ports {
+		// dont allow tls on vms with direct access
+		if ports[ii].Tls && deploymentType == cloudcommon.DeploymentTypeVM && accessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+			return fmt.Errorf("Tls unsupported on VM based deployments with direct access")
+		}
 		ports[ii].PublicPort = ports[ii].InternalPort
 		if ports[ii].EndPort != 0 {
 			numPortsInRange := ports[ii].EndPort - ports[ii].PublicPort + 1
@@ -333,7 +337,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			return &edgeproto.Result{}, fmt.Errorf("Invalid deployment manifest, %v", err)
 		}
 	}
-	err = validatePortRangeForAccessType(ports, in.AccessType)
+	err = validatePortRangeForAccessType(ports, in.AccessType, in.Deployment)
 	if err != nil {
 		return nil, err
 	}
@@ -427,7 +431,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		if err != nil {
 			return err
 		}
-		err = validatePortRangeForAccessType(ports, cur.AccessType)
+		err = validatePortRangeForAccessType(ports, cur.AccessType, cur.Deployment)
 		if err != nil {
 			return err
 		}
