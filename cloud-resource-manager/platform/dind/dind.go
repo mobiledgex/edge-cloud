@@ -18,7 +18,7 @@ func (s *Platform) GetType() string {
 }
 
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, controllerData *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
-	// set up L7 load balancer
+	// for backwards compatibility, removes l7 proxies, can delete this later
 	client, err := s.GetNodePlatformClient(ctx, nil)
 	if err != nil {
 		return err

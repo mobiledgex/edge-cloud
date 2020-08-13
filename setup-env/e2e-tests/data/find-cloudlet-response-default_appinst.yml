@@ -4,7 +4,7 @@ ports:
 - proto: LProtoTcp
   internalport: 80
   publicport: 80
-- proto: LProtoHttp
+- proto: LProtoTcp
   internalport: 443
   publicport: 443
 - proto: LProtoUdp
