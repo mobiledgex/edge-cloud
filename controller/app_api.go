@@ -147,7 +147,7 @@ func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.Ac
 	for ii, _ := range ports {
 		// dont allow tls on vms with direct access
 		if ports[ii].Tls && deploymentType == cloudcommon.DeploymentTypeVM && accessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
-			return fmt.Errorf("Tls unsupported on VM based deployments with direct access")
+			return fmt.Errorf("TLS unsupported on VM based deployments with direct access")
 		}
 		ports[ii].PublicPort = ports[ii].InternalPort
 		if ports[ii].EndPort != 0 {
@@ -308,11 +308,6 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		in.AccessType = newAccessType
 	}
 
-	if in.Deployment == cloudcommon.DeploymentTypeDocker || in.Deployment == cloudcommon.DeploymentTypeVM {
-		if strings.Contains(strings.ToLower(in.AccessPorts), "http") {
-			return &edgeproto.Result{}, fmt.Errorf("Deployment Type and HTTP access ports are incompatible")
-		}
-	}
 	if in.Deployment == cloudcommon.DeploymentTypeVM && in.Command != "" {
 		return &edgeproto.Result{}, fmt.Errorf("Invalid argument, command is not supported for VM based deployments")
 	}

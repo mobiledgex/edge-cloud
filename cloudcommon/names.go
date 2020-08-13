@@ -122,8 +122,6 @@ func IsPlatformApp(devname string, appname string) bool {
 
 var AllocatedIpDynamic = "dynamic"
 
-var RootLBL7Port int32 = 443
-
 // GetRootLBFQDN gets the global Load Balancer's Fully Qualified Domain Name
 // for apps using "shared" IP access.
 func GetRootLBFQDN(key *edgeproto.CloudletKey, domain string) string {
@@ -171,16 +169,6 @@ func FqdnPrefix(svcName string) string {
 
 func ServiceFQDN(svcName, baseFQDN string) string {
 	return fmt.Sprintf("%s%s", FqdnPrefix(svcName), baseFQDN)
-}
-
-// GetL7Path gets the L7 path for L7 access behind the "shared"
-// global Load Balancer (reverse proxy). This only the path and
-// does not include the Fqdn and port.
-func GetL7Path(key *edgeproto.AppInstKey, internalPort int32) string {
-	dev := util.DNSSanitize(key.AppKey.Organization)
-	app := util.DNSSanitize(key.AppKey.Name)
-	ver := util.DNSSanitize(key.AppKey.Version)
-	return fmt.Sprintf("%s/%s%s/p%d", dev, app, ver, internalPort)
 }
 
 // For the DME and CRM that require a cloudlet key to be specified

@@ -4,7 +4,7 @@ status: AofSuccess
 ports:
 - proto: LProtoTcp
   internalport: 80
-- proto: LProtoHttp
+- proto: LProtoTcp
   internalport: 443
 - proto: LProtoUdp
   internalport: 10002
