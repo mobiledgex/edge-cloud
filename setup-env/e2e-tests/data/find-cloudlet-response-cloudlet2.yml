@@ -5,10 +5,10 @@ ports:
   internalport: 80
   publicport: 80
   fqdnprefix: someapplication1-tcp.
-- proto: LProtoHttp
+- proto: LProtoTcp
   internalport: 443
   publicport: 443
-  pathprefix: acmeappco/someapplication110/p443
+  fqdnprefix: someapplication1-tcp.
 - proto: LProtoUdp
   internalport: 10002
   publicport: 10002

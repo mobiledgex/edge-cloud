@@ -1615,10 +1615,10 @@ const AppInstFieldMappedPorts = "9"
 const AppInstFieldMappedPortsProto = "9.1"
 const AppInstFieldMappedPortsInternalPort = "9.2"
 const AppInstFieldMappedPortsPublicPort = "9.3"
-const AppInstFieldMappedPortsPathPrefix = "9.4"
-const AppInstFieldMappedPortsFqdnPrefix = "9.5"
-const AppInstFieldMappedPortsEndPort = "9.6"
-const AppInstFieldMappedPortsTls = "9.7"
+const AppInstFieldMappedPortsFqdnPrefix = "9.4"
+const AppInstFieldMappedPortsEndPort = "9.5"
+const AppInstFieldMappedPortsTls = "9.6"
+const AppInstFieldMappedPortsNginx = "9.7"
 const AppInstFieldFlavor = "12"
 const AppInstFieldFlavorName = "12.1"
 const AppInstFieldState = "14"
@@ -1672,10 +1672,10 @@ var AppInstAllFields = []string{
 	AppInstFieldMappedPortsProto,
 	AppInstFieldMappedPortsInternalPort,
 	AppInstFieldMappedPortsPublicPort,
-	AppInstFieldMappedPortsPathPrefix,
 	AppInstFieldMappedPortsFqdnPrefix,
 	AppInstFieldMappedPortsEndPort,
 	AppInstFieldMappedPortsTls,
+	AppInstFieldMappedPortsNginx,
 	AppInstFieldFlavorName,
 	AppInstFieldState,
 	AppInstFieldErrors,
@@ -1725,10 +1725,10 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldMappedPortsProto:                         struct{}{},
 	AppInstFieldMappedPortsInternalPort:                  struct{}{},
 	AppInstFieldMappedPortsPublicPort:                    struct{}{},
-	AppInstFieldMappedPortsPathPrefix:                    struct{}{},
 	AppInstFieldMappedPortsFqdnPrefix:                    struct{}{},
 	AppInstFieldMappedPortsEndPort:                       struct{}{},
 	AppInstFieldMappedPortsTls:                           struct{}{},
+	AppInstFieldMappedPortsNginx:                         struct{}{},
 	AppInstFieldFlavorName:                               struct{}{},
 	AppInstFieldState:                                    struct{}{},
 	AppInstFieldErrors:                                   struct{}{},
@@ -1778,10 +1778,10 @@ var AppInstAllFieldsStringMap = map[string]string{
 	AppInstFieldMappedPortsProto:                         "Mapped Ports Proto",
 	AppInstFieldMappedPortsInternalPort:                  "Mapped Ports Internal Port",
 	AppInstFieldMappedPortsPublicPort:                    "Mapped Ports Public Port",
-	AppInstFieldMappedPortsPathPrefix:                    "Mapped Ports Path Prefix",
 	AppInstFieldMappedPortsFqdnPrefix:                    "Mapped Ports Fqdn Prefix",
 	AppInstFieldMappedPortsEndPort:                       "Mapped Ports End Port",
 	AppInstFieldMappedPortsTls:                           "Mapped Ports Tls",
+	AppInstFieldMappedPortsNginx:                         "Mapped Ports Nginx",
 	AppInstFieldFlavorName:                               "Flavor Name",
 	AppInstFieldState:                                    "State",
 	AppInstFieldErrors:                                   "Errors",
@@ -1917,10 +1917,6 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 				fields[AppInstFieldMappedPortsPublicPort] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
-			if m.MappedPorts[i0].PathPrefix != o.MappedPorts[i0].PathPrefix {
-				fields[AppInstFieldMappedPortsPathPrefix] = struct{}{}
-				fields[AppInstFieldMappedPorts] = struct{}{}
-			}
 			if m.MappedPorts[i0].FqdnPrefix != o.MappedPorts[i0].FqdnPrefix {
 				fields[AppInstFieldMappedPortsFqdnPrefix] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
@@ -1931,6 +1927,10 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 			}
 			if m.MappedPorts[i0].Tls != o.MappedPorts[i0].Tls {
 				fields[AppInstFieldMappedPortsTls] = struct{}{}
+				fields[AppInstFieldMappedPorts] = struct{}{}
+			}
+			if m.MappedPorts[i0].Nginx != o.MappedPorts[i0].Nginx {
+				fields[AppInstFieldMappedPortsNginx] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
 		}
