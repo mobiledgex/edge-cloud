@@ -61,7 +61,7 @@ apps:
     name: x1.small
   cluster:
     name: SmallCluster
-  accessports: "tcp:80,http:443,udp:10002"
+  accessports: "tcp:80,tcp:443,udp:10002"
 
 appinstances:
 - key:

@@ -158,4 +158,11 @@ func TestAllUpgradeFuncs(t *testing.T) {
 		// Stop it, so it's re-created again
 		objStore.Stop()
 	}
+	//manually test a failure of checkHttpPorts upgrade
+	objStore.Start()
+	err := buildDbFromTestData(&objStore, "CheckForHttpPortsFail")
+	require.Nil(t, err, "Unable to build db from testData")
+	err = edgeproto.RunSingleUpgrade(ctx, &objStore, edgeproto.CheckForHttpPorts)
+	require.NotNil(t, err, "Upgrade did not fail")
+	objStore.Stop()
 }

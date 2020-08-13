@@ -221,7 +221,7 @@ apps:
   defaultflavor:
     name: m1.small
   imagetype: ImageTypeDocker
-  accessports: "tcp:80,http:443,udp:10002"
+  accessports: "tcp:80,tcp:443,udp:10002"
   ipaccess: IpAccessShared
 appinstances:
 - key:

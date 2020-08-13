@@ -2,8 +2,8 @@ package deploygen
 
 import (
 	"bytes"
-	"strings"
 	"strconv"
+	"strings"
 	"text/template"
 
 	"github.com/mobiledgex/edge-cloud/util"
@@ -30,7 +30,8 @@ type kubePort struct {
 	Proto     string
 	KubeProto string
 	Port      string
-	Tls		  bool
+	Tls       bool
+	Nginx     bool
 }
 
 func kubeBasic(app *AppSpec) (string, error) {
@@ -39,7 +40,7 @@ func kubeBasic(app *AppSpec) (string, error) {
 		files: []string{},
 		ports: setKubePorts(app.Ports),
 	}
-	gen.kubeLb([]string{"tcp", "http"})
+	gen.kubeLb([]string{"tcp"})
 	gen.kubeLb([]string{"udp"})
 	gen.kubeApp()
 	if gen.err != nil {
@@ -70,19 +71,18 @@ func setKubePorts(ports []util.PortSpec) []kubePort {
 			for i := start; i <= end; i++ {
 
 				p := strconv.Itoa(int(i))
-				kp =  kubePort {
+				kp = kubePort{
 					Proto: strings.ToLower(port.Proto),
-					Port: p,
+					Port:  p,
 				}
 				switch port.Proto {
 				case "tcp":
-					fallthrough
-				case "http":
 					kp.KubeProto = "TCP"
 				case "udp":
 					kp.KubeProto = "UDP"
 				}
 				kp.Tls = port.Tls
+				kp.Nginx = port.Nginx
 				kports = append(kports, kp)
 			}
 
@@ -95,13 +95,12 @@ func setKubePorts(ports []util.PortSpec) []kubePort {
 
 			switch port.Proto {
 			case "tcp":
-				fallthrough
-			case "http":
 				kp.KubeProto = "TCP"
 			case "udp":
 				kp.KubeProto = "UDP"
 			}
 			kp.Tls = port.Tls
+			kp.Nginx = port.Nginx
 			kports = append(kports, kp)
 		}
 	}
@@ -155,7 +154,7 @@ spec:
   type: LoadBalancer
   ports:
 {{- range .Ports}}
-  - name: {{.Proto}}{{.Port}}{{if .Tls}}tls{{end}}
+  - name: {{.Proto}}{{.Port}}{{if .Tls}}tls{{end}}{{if .Nginx}}nginx{{end}}
     protocol: {{.KubeProto}}
     port: {{.Port}}
     targetPort: {{.Port}}
