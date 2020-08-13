@@ -27,24 +27,25 @@ type DockerNetworkingMode string
 var DockerHostMode DockerNetworkingMode = "hostMode"
 var DockerBridgeMode DockerNetworkingMode = "bridgeMode"
 
+var EnvoyProxy = "envoy"
+var NginxProxy = "nginx"
+
 func GetContainerName(appKey *edgeproto.AppKey) string {
 	return util.DNSSanitize(appKey.Name + appKey.Version)
 }
 
 // Helper function that generates the ports string for docker command
 // Example : "-p 80:80/http -p 7777:7777/tcp"
-func GetDockerPortString(ports []dme.AppPort, containerPortType string, protoMatch dme.LProto, listenIP string) []string {
+func GetDockerPortString(ports []dme.AppPort, containerPortType string, proxyMatch, listenIP string) []string {
 	var cmdArgs []string
-
+	// ensure envoy and nginx docker commands are only opening the udp ports they are managing, not all of the apps udp ports
 	for _, p := range ports {
-		if p.Proto == dme.LProto_L_PROTO_HTTP {
-			// L7 not allowed for docker
-			continue
-		}
-		// quick fix to deal with the fact that nginx and envoy both try to listen to a superset of ports.
-		// remove this when we go to 100% envoy
-		if protoMatch != dme.LProto_L_PROTO_UNKNOWN && protoMatch != p.Proto {
-			continue
+		if p.Proto == dme.LProto_L_PROTO_UDP {
+			if proxyMatch == EnvoyProxy && p.Nginx {
+				continue
+			} else if proxyMatch == NginxProxy && !p.Nginx {
+				continue
+			}
 		}
 		proto, err := edgeproto.LProtoStr(p.Proto)
 		if err != nil {
@@ -228,7 +229,7 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 	if app.DeploymentManifest == "" {
 		cmd := fmt.Sprintf("%s -d -l edge-cloud -l cloudlet=%s -l cluster=%s  -l %s=%s -l %s=%s --restart=unless-stopped --name=%s %s %s %s", base_cmd,
 			cloudlet, cluster, cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel, versionLabelVal, name,
-			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer, dme.LProto_L_PROTO_UNKNOWN, cloudcommon.IPAddrAllInterfaces), " "), image, app.Command)
+			strings.Join(GetDockerPortString(appInst.MappedPorts, UseInternalPortInContainer, "", cloudcommon.IPAddrAllInterfaces), " "), image, app.Command)
 		log.DebugLog(log.DebugLevelInfra, "running docker run ", "cmd", cmd)
 
 		out, err := client.Output(cmd)

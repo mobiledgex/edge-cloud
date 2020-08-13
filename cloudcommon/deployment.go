@@ -141,13 +141,9 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 		}
 		missingPorts := []string{}
 		for _, appPort := range ports {
-			// http is mapped to tcp
 			if appPort.EndPort != 0 {
 				// We have a range-port notation on the dme.AppPort
 				// while our manifest exhaustively enumerates each as a kubePort
-				if appPort.Proto == dme.LProto_L_PROTO_HTTP {
-					return fmt.Errorf("Port range not allowed for HTTP")
-				}
 				start := appPort.InternalPort
 				end := appPort.EndPort
 				for i := start; i <= end; i++ {
@@ -156,9 +152,6 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 						Proto:        appPort.Proto,
 						InternalPort: int32(i),
 						EndPort:      int32(0),
-					}
-					if appPort.Proto == dme.LProto_L_PROTO_HTTP {
-						appPort.Proto = dme.LProto_L_PROTO_TCP
 					}
 
 					if _, found := objPorts[tp.String()]; found {
@@ -169,12 +162,10 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 				}
 				continue
 			}
-			if appPort.Proto == dme.LProto_L_PROTO_HTTP {
-				appPort.Proto = dme.LProto_L_PROTO_TCP
-			}
 			tp := appPort
-			// No need to test TLS as part of manifest
+			// No need to test TLS or nginx as part of manifest
 			tp.Tls = false
+			tp.Nginx = false
 			if _, found := objPorts[tp.String()]; found {
 				continue
 			}
@@ -182,7 +173,7 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 			missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, tp.InternalPort))
 		}
 		if len(missingPorts) > 0 {
-			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest (note http is mapped to tcp)", strings.Join(missingPorts, ","))
+			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest", strings.Join(missingPorts, ","))
 		}
 	}
 	return nil

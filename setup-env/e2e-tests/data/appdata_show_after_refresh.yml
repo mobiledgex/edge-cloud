@@ -258,7 +258,7 @@ apps:
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:2.0
   imagetype: ImageTypeDocker
-  accessports: tcp:80,http:443,udp:10002,tcp:81:tls,http:444:tls
+  accessports: tcp:80,tcp:443,udp:10002,tcp:81:tls,tcp:444:tls
   officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
     name: x1.small
@@ -483,10 +483,10 @@ appinstances:
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    pathprefix: acmeappco/someapplication110/p443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
@@ -496,10 +496,10 @@ appinstances:
     publicport: 81
     fqdnprefix: someapplication1-tcp.
     tls: true
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 444
-    publicport: 443
-    pathprefix: acmeappco/someapplication110/p444
+    publicport: 444
+    fqdnprefix: someapplication1-tcp.
     tls: true
   flavor:
     name: x1.small

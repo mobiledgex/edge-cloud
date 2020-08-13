@@ -253,9 +253,6 @@ func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 func getProtocolBitMap(proto dme.LProto) (int32, error) {
 	var bitmap int32
 	switch proto {
-	//put all "TCP" protocols below here
-	case dme.LProto_L_PROTO_HTTP:
-		fallthrough
 	case dme.LProto_L_PROTO_TCP:
 		bitmap = 1 //01
 		break
@@ -629,11 +626,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				if port.EndPort != 0 {
 					return fmt.Errorf("Shared IP access with port range not allowed")
 				}
-				if setL7Port(&ports[ii], &in.Key) {
-					log.SpanLog(ctx, log.DebugLevelApi,
-						"skip L7 port", "port", ports[ii])
-					continue
-				}
 				// platos enabling layer ignores port mapping.
 				// Attempt to use the internal port as the
 				// external port so port remap is not required.
@@ -648,7 +640,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					// rootLB has its own ports it uses
 					// before any apps are even present.
 					iport := ports[ii].InternalPort
-					if iport != 22 && iport != cloudcommon.RootLBL7Port && iport != cloudcommon.ProxyMetricsPort {
+					if iport != 22 && iport != cloudcommon.ProxyMetricsPort {
 						eport = iport
 					}
 				}
@@ -677,33 +669,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				//dedicated access in which each service gets a different ip
 				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
 				for ii, _ := range ports {
-					// No rootLB to do L7 muxing, and each
-					// service has it's own IP anyway so
-					// no muxing is needed. Treat http as tcp.
-					if ports[ii].Proto == dme.LProto_L_PROTO_HTTP {
-						ports[ii].Proto = dme.LProto_L_PROTO_TCP
-					}
 					ports[ii].PublicPort = ports[ii].InternalPort
 				}
 			} else {
 				//dedicated access in which IP is that of the LB
 				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
-				// Docker deployments do not need an L7 reverse
-				// proxy (because they all bind to ports on the
-				// same VM, so multiple containers trying to bind
-				// to port 80 would fail, and if they're binding
-				// to different ports, then they don't need the
-				// L7 proxy).
-				// Kubernetes deployments may want it, but so far
-				// no devs are using L7, and if they did, they
-				// probably would have an ingress controller
-				// built into their k8s manifest. So for now,
-				// do not support http on k8s either. If we see
-				// demand/use cases for it we can add it in later.
 				for ii, _ := range ports {
-					if ports[ii].Proto == dme.LProto_L_PROTO_HTTP {
-						ports[ii].Proto = dme.LProto_L_PROTO_TCP
-					}
 					ports[ii].PublicPort = ports[ii].InternalPort
 				}
 				// port range is validated on app create, but checked again here in case there were
@@ -1108,9 +1079,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// shared root load balancer
 			log.SpanLog(ctx, log.DebugLevelApi, "refs", "AppInst", in)
 			for ii, _ := range in.MappedPorts {
-				if in.MappedPorts[ii].Proto == dme.LProto_L_PROTO_HTTP {
-					continue
-				}
 
 				p := in.MappedPorts[ii].PublicPort
 				protocol, err := getProtocolBitMap(in.MappedPorts[ii].Proto)
@@ -1411,15 +1379,6 @@ func setPortFQDNPrefix(port *dme.AppPort, objs []runtime.Object) {
 			}
 		}
 	}
-}
-
-func setL7Port(port *dme.AppPort, key *edgeproto.AppInstKey) bool {
-	if port.Proto != dme.LProto_L_PROTO_HTTP {
-		return false
-	}
-	port.PublicPort = cloudcommon.RootLBL7Port
-	port.PathPrefix = cloudcommon.GetL7Path(key, port.InternalPort)
-	return true
 }
 
 func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, event cloudcommon.InstanceEvent, serverStatus string) {

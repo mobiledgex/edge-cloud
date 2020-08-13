@@ -49,17 +49,6 @@ func TestAppApi(t *testing.T) {
 	_, err = appApi.DeleteApp(ctx, &obj)
 	require.Nil(t, err)
 
-	// vmapp with http should fail
-	vmapp := testutil.AppData[3]
-	vmapp.AccessPorts = "http:443"
-	_, err = appApi.CreateApp(ctx, &vmapp)
-	require.NotNil(t, err, "Create vmapp with http port")
-	require.Contains(t, err.Error(), "Deployment Type and HTTP access ports are incompatible")
-	vmapp.AccessPorts = "HTTP:443"
-	_, err = appApi.CreateApp(ctx, &vmapp)
-	require.NotNil(t, err, "Create vmapp with http port")
-	require.Contains(t, err.Error(), "Deployment Type and HTTP access ports are incompatible")
-
 	// image path is optional for docker deployments if
 	// deployment manifest is specified.
 	app := edgeproto.App{
