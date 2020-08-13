@@ -66,6 +66,8 @@ It has these top-level messages:
 	Cloudlet
 	FlavorMatch
 	CloudletManifest
+	PropertyInfo
+	CloudletProps
 	FlavorInfo
 	OSAZone
 	OSImage

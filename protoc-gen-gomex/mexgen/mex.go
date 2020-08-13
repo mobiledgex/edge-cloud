@@ -50,10 +50,8 @@ type mex struct {
 	importReflect          bool
 	importJson             bool
 	firstFile              string
-	lastFile               string
 	support                gensupport.PluginSupport
 	keyMessages            []descriptor.DescriptorProto
-	keyTagConflicts        map[string][]string
 }
 
 func (m *mex) Name() string {
@@ -72,8 +70,6 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.subfieldLookupTemplate = template.Must(template.New("subfield").Parse(subfieldLookupTemplateIn))
 	m.support.Init(gen.Request)
 	m.firstFile = gensupport.GetFirstFile(gen)
-	m.lastFile = gensupport.GetLastFile(gen)
-	m.keyTagConflicts = make(map[string][]string)
 }
 
 // P forwards to g.gen.P
@@ -120,14 +116,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 		m.P(matchOptions)
 		m.generateEnumDecodeHook()
 		m.generateShowCheck()
-	}
-	if m.lastFile == *file.FileDescriptorProto.Name {
-		for tag, list := range m.keyTagConflicts {
-			if len(list) <= 1 {
-				continue
-			}
-			m.gen.Fail("KeyTag conflict for", tag, "between", fmt.Sprintf("%v", list))
-		}
+		m.generateAllKeyTags()
 	}
 }
 
@@ -479,12 +468,6 @@ func (m *mex) printCopyInMakeArray(name string, desc *generator.Descriptor, fiel
 			valType = "*" + valType
 		}
 		m.P("m.", name, " = make(map[", mapType.KeyType, "]", valType, ")")
-	} else {
-		typ, _ := m.gen.GoType(desc, field)
-		m.P("if m.", name, " == nil || len(m.", name, ") != len(src.", name, ") {")
-		m.P("m.", name, " = make(", typ, ", len(src.", name, "))")
-		m.P("changed++")
-		m.P("}")
 	}
 }
 
@@ -759,7 +742,7 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 			numStr := strings.Join(append(nums, num), ".")
 			m.P("if _, set := fmap[\"", numStr, "\"]; set {")
 		}
-		if nullableMessage {
+		if nullableMessage || *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 			m.P("if src.", hierName, " != nil {")
 		}
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
@@ -767,8 +750,9 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 			if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 				depth := fmt.Sprintf("%d", len(parents))
 				if mapType == nil {
-					m.P("for i", depth, " := 0; i", depth, " < len(src.", hierName, "); i", depth, "++ {")
-					idx = "[i" + depth + "]"
+					skipMap = true
+					m.P("m.", hierName, " = src.", hierName)
+					m.P("changed++")
 				} else {
 					m.P("for k", depth, ", _ := range src.", hierName, " {")
 					idx = "[k" + depth + "]"
@@ -799,11 +783,13 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 			// deprecated in proto3
 		case descriptor.FieldDescriptorProto_TYPE_BYTES:
 			m.printCopyInMakeArray(hierName, desc, field)
-			m.P("copy(m.", hierName, ", src.", hierName, ")")
+			m.P("if src.", hierName, " != nil {")
+			m.P("m.", hierName, " = src.", hierName)
 			m.P("changed++")
+			m.P("}")
 		default:
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-				m.P("copy(m.", hierName, ", src.", hierName, ")")
+				m.P("m.", hierName, " = src.", hierName)
 				m.P("changed++")
 			} else {
 				m.P("if m.", hierName, " != src.", hierName, "{")
@@ -813,9 +799,11 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 			}
 		}
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED && *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
-			m.P("}")
+			if mapType != nil {
+				m.P("}")
+			}
 		}
-		if nullableMessage {
+		if nullableMessage || *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 			m.P("} else if m.", hierName, " != nil {")
 			m.P("m.", hierName, " = nil")
 			m.P("changed++")
@@ -2034,21 +2022,19 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 
 		hasKeyTags := false
 		for _, field := range message.Field {
-			tag := GetKeyTag(field)
 			if field.Type == nil || field.OneofIndex != nil {
 				continue
 			}
 			if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 				continue
 			}
+			tag := GetKeyTag(field)
 			if tag == "" {
 				m.gen.Fail(*message.Name, "field", *field.Name, "missing protogen.keytag")
 			}
 			fname := generator.CamelCase(*field.Name)
-
 			m.P("var ", message.Name, "Tag", fname, " = \"", tag, "\"")
 			hasKeyTags = true
-			m.keyTagConflicts[tag] = append(m.keyTagConflicts[tag], *message.Name+"."+fname)
 		}
 		if hasKeyTags {
 			m.P()
@@ -2371,6 +2357,55 @@ func (m *mex) generateShowCheck() {
 	m.P("func IsShow(cmd string) bool {")
 	m.P("_, found := ShowMethodNames[cmd]")
 	m.P("return found")
+	m.P("}")
+	m.P()
+}
+
+func (m *mex) generateAllKeyTags() {
+	tags := make(map[string]string)
+	for _, file := range m.gen.Request.ProtoFile {
+		if !m.support.GenFile(*file.Name) {
+			continue
+		}
+		for _, message := range file.MessageType {
+			for _, field := range message.Field {
+				if field.Type == nil || field.OneofIndex != nil {
+					continue
+				}
+				if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+					continue
+				}
+				tag := GetKeyTag(field)
+				if tag == "" {
+					continue
+				}
+				fname := generator.CamelCase(*field.Name)
+				tagLoc := *message.Name + "." + fname
+				if conflict, found := tags[tag]; found {
+					m.gen.Fail("KeyTag conflict for", tag, "between", tagLoc, "and", conflict)
+				}
+				tags[tag] = tagLoc
+			}
+		}
+	}
+	if len(tags) == 0 {
+		return
+	}
+	list := []string{}
+	for t, _ := range tags {
+		list = append(list, t)
+	}
+	sort.Strings(list)
+	m.P("var AllKeyTags = []string{")
+	for _, tag := range list {
+		m.P(`"`, tag, `",`)
+	}
+	m.P("}")
+	m.P()
+	m.P("var AllKeyTagsMap = map[string]struct{}{")
+	for _, tag := range list {
+		m.P(`"`, tag, `": struct{}{},`)
+	}
 	m.P("}")
 	m.P()
 }
