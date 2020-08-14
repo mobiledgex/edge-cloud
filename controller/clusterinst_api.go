@@ -201,11 +201,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
-	if !ignoreCRM(cctx) {
-		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-			return err
-		}
-	}
 
 	defer func() {
 		if reterr == nil {
@@ -273,6 +268,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
+			return err
+		}
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
 				if in.State == edgeproto.TrackedState_CREATE_ERROR {
@@ -460,11 +458,6 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 
 	cctx.SetOverride(&in.CrmOverride)
-	if !ignoreCRM(cctx) {
-		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-			return err
-		}
-	}
 
 	var inbuf edgeproto.ClusterInst
 	var changeCount int
@@ -476,6 +469,9 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		if inbuf.NumMasters == 0 {
 			return fmt.Errorf("cannot modify single node clusters")
+		}
+		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
+			return err
 		}
 
 		if !cctx.Undo && inbuf.State != edgeproto.TrackedState_READY && !ignoreTransient(cctx, inbuf.State) {
@@ -528,9 +524,6 @@ func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *ed
 	if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 		return errors.New("Specified Cloudlet not found")
 	}
-	if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
-		return errors.New("Cloudlet under maintenance, please try again later")
-	}
 	if in.PrivacyPolicy != "" {
 		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
 			platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
@@ -568,11 +561,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 	//}
 	cctx.SetOverride(&in.CrmOverride)
-	if !ignoreCRM(cctx) {
-		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-			return err
-		}
-	}
 	ctx := cb.Context()
 
 	var prevState edgeproto.TrackedState
@@ -580,6 +568,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
+		}
+		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
+			return err
 		}
 		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
 			if in.State == edgeproto.TrackedState_DELETE_ERROR {
@@ -629,6 +620,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			log.WarnLog("Delete ClusterInst: cloudlet not found",
 				"cloudlet", in.Key.CloudletKey)
+		}
+		if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
+			return errors.New("Cloudlet under maintenance, please try again later")
 		}
 		refs := edgeproto.CloudletRefs{}
 		if cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
