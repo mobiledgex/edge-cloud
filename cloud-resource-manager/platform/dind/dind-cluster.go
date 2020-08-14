@@ -11,7 +11,6 @@ import (
 
 	sh "github.com/codeskyblue/go-sh"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -112,17 +111,6 @@ func (s *Platform) CreateDINDCluster(ctx context.Context, clusterName, kconfName
 	out, err = sh.Command("cat", home+"/.kube/config").CombinedOutput()
 	log.SpanLog(ctx, log.DebugLevelInfra, "config file", "home", home, "out", string(out), "err", err)
 
-	// bridge nginxL7 network to this cluster's network
-	out, err = sh.Command("docker", "network", "connect",
-		GetDockerNetworkName(&cluster), proxy.NginxL7Name).CombinedOutput()
-	if err != nil && strings.Contains(string(out), "already exists") {
-		err = nil
-	}
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "cannot connect nginx network",
-			"cluster", cluster, "out", out, "err", err)
-		return fmt.Errorf("failed to connect nginxL7 network, %s, %v", out, err)
-	}
 	return nil
 }
 
@@ -141,20 +129,9 @@ func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto
 		return fmt.Errorf("ERROR - Cluster %s not found, %v", clusterName, err)
 	}
 
-	// disconnect nginxL7 network
-	out, err := sh.Command("docker", "network", "disconnect",
-		GetDockerNetworkName(cluster), proxy.NginxL7Name).CombinedOutput()
-	if err != nil && strings.Contains(string(out), "is not connected") {
-		err = nil
-	}
-	if err != nil {
-		return fmt.Errorf("docker network disconnect failed, %s, %v",
-			out, err)
-	}
-
 	os.Setenv("DIND_LABEL", cluster.ClusterName)
 	os.Setenv("CLUSTER_ID", GetClusterID(cluster.ClusterID))
-	out, err = sh.Command(cloudcommon.DindScriptName, "clean").CombinedOutput()
+	out, err := sh.Command(cloudcommon.DindScriptName, "clean").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%s %v", out, err)
 	}
