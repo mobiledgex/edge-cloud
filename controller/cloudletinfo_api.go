@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -167,28 +168,36 @@ func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) edgeproto
 	return edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 }
 
-func (s *CloudletInfoApi) checkCloudletReady(key *edgeproto.CloudletKey) error {
+func checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.CloudletKey) error {
+	if cctx != nil && ignoreCRM(cctx) {
+		return nil
+	}
 	// Get tracked state, it could be that cloudlet has initiated
 	// upgrade but cloudletInfo is yet to transition to it
 	cloudlet := edgeproto.Cloudlet{}
-	if !cloudletApi.cache.Get(key, &cloudlet) {
+	if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
 		return key.NotFoundError()
 	}
 	if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
 		cloudlet.State == edgeproto.TrackedState_UPDATING {
 		return fmt.Errorf("Cloudlet %v is upgrading", key)
 	}
+	if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
+		return errors.New("Cloudlet under maintenance, please try again later")
+	}
 
 	if cloudlet.State == edgeproto.TrackedState_UPDATE_ERROR {
 		return fmt.Errorf("Cloudlet %v is in failed upgrade state, please upgrade it manually", key)
 	}
-
-	state := s.getCloudletState(key)
-	if state == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+	info := edgeproto.CloudletInfo{}
+	if !cloudletInfoApi.store.STMGet(stm, key, &info) {
+		return key.NotFoundError()
+	}
+	if info.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
 		return nil
 	}
 	return fmt.Errorf("Cloudlet %v not ready, state is %s", key,
-		edgeproto.CloudletState_name[int32(state)])
+		edgeproto.CloudletState_name[int32(info.State)])
 }
 
 // Clean up CloudletInfo after Cloudlet delete.

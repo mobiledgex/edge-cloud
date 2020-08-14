@@ -325,11 +325,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 	}
 	cctx.SetOverride(&in.CrmOverride)
-	if !ignoreCRM(cctx) {
-		if err := cloudletInfoApi.checkCloudletReady(&in.Key.ClusterInstKey.CloudletKey); err != nil {
-			return err
-		}
-	}
 
 	var autocluster bool
 	tenant := isTenantAppInst(&in.Key)
@@ -365,8 +360,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
-		if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
-			return errors.New("Cloudlet under maintenance, please try again later")
+		if err := checkCloudletReady(cctx, stm, &in.Key.ClusterInstKey.CloudletKey); err != nil {
+			return err
 		}
 
 		cikey := &in.Key.ClusterInstKey
@@ -749,8 +744,6 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 		return false, err
 	}
 
-	cloudletErr := cloudletInfoApi.checkCloudletReady(&key.ClusterInstKey.CloudletKey)
-
 	var app edgeproto.App
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -778,6 +771,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 			crmUpdateRequired = false
 		} else {
 			// check cloudlet state before updating
+			cloudletErr := checkCloudletReady(cctx, stm, &key.ClusterInstKey.CloudletKey)
 			if crmUpdateRequired && cloudletErr != nil {
 				return cloudletErr
 			}
@@ -1020,12 +1014,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return err
 	}
 
-	if !ignoreCRM(cctx) {
-		if err := cloudletInfoApi.checkCloudletReady(&in.Key.ClusterInstKey.CloudletKey); err != nil {
-			return err
-		}
-	}
-
 	// check if we are deleting an autocluster instance we need to set the key correctly.
 	if strings.HasPrefix(in.Key.ClusterInstKey.ClusterKey.Name, ClusterAutoPrefix) && in.Key.ClusterInstKey.Organization == "" {
 		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
@@ -1048,14 +1036,15 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if err := in.Key.ClusterInstKey.ValidateKey(); err != nil {
 			return err
 		}
-
 		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_ERROR && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
 			log.SpanLog(ctx, log.DebugLevelApi, "AppInst busy, cannot delete", "state", in.State)
 			return errors.New("AppInst busy, cannot delete")
 		}
+		if err := checkCloudletReady(cctx, stm, &in.Key.ClusterInstKey.CloudletKey); err != nil {
+			return err
+		}
 
 		var cloudlet edgeproto.Cloudlet
-
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
 			return fmt.Errorf("For AppInst, %v", in.Key.ClusterInstKey.CloudletKey.NotFoundError())
 		}
