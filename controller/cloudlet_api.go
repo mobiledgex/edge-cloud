@@ -1151,17 +1151,15 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, in *edgeproto.Clo
 		return nil, in.Key.NotFoundError()
 	}
 
-	if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
-		return nil, fmt.Errorf("Not supported for PlatformTypeVmPool")
-	}
-
 	pfFlavor := edgeproto.Flavor{}
-	if in.Flavor.Name == "" || in.Flavor.Name == DefaultPlatformFlavor.Key.Name {
-		in.Flavor = DefaultPlatformFlavor.Key
-		pfFlavor = DefaultPlatformFlavor
-	} else {
-		if !flavorApi.cache.Get(&in.Flavor, &pfFlavor) {
-			return nil, in.Flavor.NotFoundError()
+	if in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+		if in.Flavor.Name == "" || in.Flavor.Name == DefaultPlatformFlavor.Key.Name {
+			in.Flavor = DefaultPlatformFlavor.Key
+			pfFlavor = DefaultPlatformFlavor
+		} else {
+			if !flavorApi.cache.Get(&in.Flavor, &pfFlavor) {
+				return nil, in.Flavor.NotFoundError()
+			}
 		}
 	}
 
