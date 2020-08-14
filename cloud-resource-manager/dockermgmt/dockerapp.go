@@ -27,6 +27,19 @@ type DockerNetworkingMode string
 var DockerHostMode DockerNetworkingMode = "hostMode"
 var DockerBridgeMode DockerNetworkingMode = "bridgeMode"
 
+type DockerOptions struct {
+	ForceImagePull bool
+}
+
+type DockerReqOp func(do *DockerOptions) error
+
+func WithForceImagePull(force bool) DockerReqOp {
+	return func(d *DockerOptions) error {
+		d.ForceImagePull = force
+		return nil
+	}
+}
+
 var EnvoyProxy = "envoy"
 var NginxProxy = "nginx"
 
@@ -90,7 +103,13 @@ func parseDockerComposeManifest(client ssh.Client, dir string, dm *cloudcommon.D
 	return nil
 }
 
-func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
+func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, action string, opts ...DockerReqOp) error {
+	var dockerOpt DockerOptions
+	for _, op := range opts {
+		if err := op(&dockerOpt); err != nil {
+			return err
+		}
+	}
 	dir := util.DockerSanitize(app.Key.Name + app.Key.Organization + app.Key.Version)
 	filename := dir + "/manifest.zip"
 	log.SpanLog(ctx, log.DebugLevelInfra, "docker zip", "filename", filename, "action", action)
@@ -173,6 +192,15 @@ func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client 
 		return fmt.Errorf("no docker compose files in manifest: %v", err)
 	}
 	for _, d := range dm.DockerComposeFiles {
+		if action == createZip && dockerOpt.ForceImagePull {
+			log.SpanLog(ctx, log.DebugLevelInfra, "forcing image pull", "file", d)
+			pullcmd := fmt.Sprintf("docker-compose -f %s/%s %s", dir, d, "pull")
+			out, err := client.Output(pullcmd)
+			if err != nil {
+				return fmt.Errorf("error pulling image for docker-compose file: %s, %s, %v", d, out, err)
+			}
+		}
+
 		cmd := fmt.Sprintf("docker-compose -f %s/%s %s", dir, d, dockerComposeCommand)
 		log.SpanLog(ctx, log.DebugLevelInfra, "running docker-compose", "cmd", cmd)
 		out, err := client.Output(cmd)
@@ -256,7 +284,13 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 	return nil
 }
 
-func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, opts ...DockerReqOp) error {
+	var dockerOpt DockerOptions
+	for _, op := range opts {
+		if err := op(&dockerOpt); err != nil {
+			return err
+		}
+	}
 	image := app.ImagePath
 	nameLabelVal := util.DNSSanitize(app.Key.Name)
 	versionLabelVal := util.DNSSanitize(app.Key.Version)
@@ -266,6 +300,14 @@ func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 	}
 
 	if app.DeploymentManifest == "" {
+		if dockerOpt.ForceImagePull {
+			log.SpanLog(ctx, log.DebugLevelInfra, "forcing image pull", "image", image)
+			pullcmd := "docker image pull " + image
+			out, err := client.Output(pullcmd)
+			if err != nil {
+				return fmt.Errorf("error pulling docker image: %s, %s, %v", image, out, err)
+			}
+		}
 		cmd := fmt.Sprintf("%s -d -l %s=%s -l %s=%s --restart=unless-stopped --network=host --name=%s %s %s", base_cmd,
 			cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel,
 			versionLabelVal, GetContainerName(&app.Key), image, app.Command)
@@ -277,11 +319,19 @@ func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 		log.SpanLog(ctx, log.DebugLevelInfra, "done docker run ")
 	} else {
 		if strings.HasSuffix(app.DeploymentManifest, ".zip") {
-			return handleDockerZipfile(ctx, vaultConfig, client, app, appInst, createZip)
+			return handleDockerZipfile(ctx, vaultConfig, client, app, appInst, createZip, opts...)
 		}
 		filename, err := createDockerComposeFile(client, app, appInst)
 		if err != nil {
 			return err
+		}
+		if dockerOpt.ForceImagePull {
+			log.SpanLog(ctx, log.DebugLevelInfra, "forcing image pull", "filename", filename)
+			pullcmd := fmt.Sprintf("docker-compose -f %s pull", filename)
+			out, err := client.Output(pullcmd)
+			if err != nil {
+				return fmt.Errorf("error pulling image for docker-compose file: %s, %s, %v", filename, out, err)
+			}
 		}
 		// TODO - missing a label for the metaAppInst label.
 		// There is a feature request in docker for it - https://github.com/docker/compose/issues/6159
@@ -352,7 +402,7 @@ func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "DeleteAppInst failed, proceeding with create", "appkey", app.Key, "err", err)
 	}
-	return CreateAppInst(ctx, vaultConfig, client, app, appInst)
+	return CreateAppInst(ctx, vaultConfig, client, app, appInst, WithForceImagePull(true))
 }
 
 func appendContainerIdsFromDockerComposeImages(client ssh.Client, dockerComposeFile string, rt *edgeproto.AppInstRuntime) error {
