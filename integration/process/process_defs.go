@@ -3,11 +3,18 @@ package process
 import "os/exec"
 
 type Vault struct {
-	Common    `yaml:",inline"`
-	DmeSecret string
-	Regions   string
-	cmd       *exec.Cmd
+	Common     `yaml:",inline"`
+	DmeSecret  string
+	Regions    string
+	VaultDatas []VaultData
+	cmd        *exec.Cmd
 }
+
+type VaultData struct {
+	Path string
+	Data map[string]string
+}
+
 type Etcd struct {
 	Common         `yaml:",inline"`
 	DataDir        string

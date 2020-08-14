@@ -262,6 +262,7 @@ func startServices() error {
 	}
 	services.events = events
 
+	InitNotify(influxQ, &appInstClientApi)
 	if *notifyParentAddrs != "" {
 		addrs := strings.Split(*notifyParentAddrs, ",")
 		tlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
@@ -273,9 +274,10 @@ func startServices() error {
 		}
 		dialOption := tls.GetGrpcDialOption(tlsConfig)
 		notifyClient := notify.NewClient(nodeMgr.Name(), addrs, dialOption)
+		notifyClient.RegisterSendAlertCache(&alertApi.cache)
+		nodeMgr.RegisterClient(notifyClient)
 		notifyClient.Start()
 		services.notifyClient = notifyClient
-		nodeMgr.RegisterClient(notifyClient)
 	}
 	notifyServerTls, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
 		nodeMgr.CommonName(),
@@ -287,7 +289,6 @@ func startServices() error {
 	if err != nil {
 		return err
 	}
-	InitNotify(influxQ, &appInstClientApi)
 	notify.ServerMgrOne.Start(nodeMgr.Name(), *notifyAddr, notifyServerTls)
 	services.notifyServerMgr = true
 
