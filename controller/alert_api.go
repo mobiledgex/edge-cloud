@@ -98,6 +98,8 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		return
 	}
 	in.Controller = ControllerId
+	// Add a region label
+	in.Labels["region"] = *region
 	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
 	if name == cloudcommon.AlertAppInstDown {
 		state, ok := in.Labels[cloudcommon.AlertHealthCheckStatus]
@@ -119,6 +121,8 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	buf := edgeproto.Alert{}
 	var foundAlert bool
+	// Add a region label
+	in.Labels["region"] = *region
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, in.GetKey(), &buf) {
 			return nil

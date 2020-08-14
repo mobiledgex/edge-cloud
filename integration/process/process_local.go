@@ -796,6 +796,21 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 			return err
 		}
 	}
+	for _, vaultData := range p.VaultDatas {
+		data, err := json.Marshal(vaultData.Data)
+		if err != nil {
+			log.Printf("Failed to marshal vault data - %v[err:%v]\n", vaultData, err)
+			continue
+		}
+		// get a reader for the data
+		reader := strings.NewReader(string(data))
+		p.RunWithInput("vault", fmt.Sprintf("kv put %s -", vaultData.Path), reader, &err)
+		if err != nil {
+			log.Printf("Failed to store secret in [%s] - err:%v\n", vaultData.Path, err)
+			continue
+		}
+
+	}
 	return err
 }
 
@@ -843,6 +858,21 @@ func (p *Vault) Run(bin, args string, err *error) string {
 	}
 	cmd := exec.Command(bin, strings.Split(args, " ")...)
 	cmd.Env = append(os.Environ(), fmt.Sprintf("VAULT_ADDR=%s", VaultAddress))
+	out, cerr := cmd.CombinedOutput()
+	if cerr != nil {
+		*err = fmt.Errorf("cmd '%s %s' failed, %s, %v", bin, args, string(out), cerr.Error())
+		return string(out)
+	}
+	return string(out)
+}
+
+func (p *Vault) RunWithInput(bin, args string, input io.Reader, err *error) string {
+	if *err != nil {
+		return ""
+	}
+	cmd := exec.Command(bin, strings.Split(args, " ")...)
+	cmd.Env = append(os.Environ(), fmt.Sprintf("VAULT_ADDR=%s", VaultAddress))
+	cmd.Stdin = input
 	out, cerr := cmd.CombinedOutput()
 	if cerr != nil {
 		*err = fmt.Errorf("cmd '%s %s' failed, %s, %v", bin, args, string(out), cerr.Error())

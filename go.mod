@@ -132,6 +132,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce // indirect
 	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	gotest.tools v2.2.0+incompatible // indirect
 	//	k8s.io/api v0.0.0-20180516102522-184e700b32b7
 	k8s.io/api v0.0.0-20190222213804-5cb15d344471
