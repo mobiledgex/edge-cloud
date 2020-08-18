@@ -70,6 +70,58 @@ func testAddRemoveVM(t *testing.T, ctx context.Context) {
 	require.True(t, found, "get cloudlet vm pool %v", cm2.Key)
 	require.Equal(t, 5, len(vmPool.Vms))
 
+	// add/update VM with same external/internal IP as another VM to the pool
+	cm3 := edgeproto.VMPoolMember{}
+	cm3.Key = testutil.VMPoolData[1].Key
+	cm3.Vm = edgeproto.VM{
+		Name: "vmZ",
+		NetInfo: edgeproto.VMNetInfo{
+			ExternalIp: "192.168.1.121",
+			InternalIp: "192.168.100.129",
+		},
+	}
+
+	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm3)
+	require.NotNil(t, err, "add cloudlet vm to cloudlet vm pool should fail as same externalIP exists")
+
+	cm3.Vm = edgeproto.VM{
+		Name: "vmZ",
+		NetInfo: edgeproto.VMNetInfo{
+			InternalIp: "192.168.100.121",
+		},
+	}
+
+	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm3)
+	require.NotNil(t, err, "add cloudlet vm to cloudlet vm pool should fail as same internalIP exists")
+
+	updateCM := edgeproto.VMPool{}
+	updateCM.Key = testutil.VMPoolData[1].Key
+	updateCM.Vms = []edgeproto.VM{
+		edgeproto.VM{
+			Name: "vmX",
+			NetInfo: edgeproto.VMNetInfo{
+				ExternalIp: "192.168.1.111",
+				InternalIp: "192.168.100.111",
+			},
+		},
+		edgeproto.VM{
+			Name: "vmY",
+			NetInfo: edgeproto.VMNetInfo{
+				InternalIp: "192.168.100.111",
+			},
+		},
+	}
+	updateCM.Fields = []string{
+		edgeproto.VMPoolFieldVmsNetInfoExternalIp,
+		edgeproto.VMPoolFieldVmsNetInfoInternalIp,
+	}
+	_, err = vmPoolApi.UpdateVMPool(ctx, &updateCM)
+	require.NotNil(t, err, "update cloudlet vm should fail as same internalIP exists")
+
+	found = vmPoolApi.cache.Get(&cm3.Key, &vmPool)
+	require.True(t, found, "get cloudlet vm pool %v", cm3.Key)
+	require.Equal(t, 5, len(vmPool.Vms))
+
 	// remove cloudlet vm from pool
 	_, err = vmPoolApi.RemoveVMPoolMember(ctx, &cm1)
 	require.Nil(t, err, "remove cloudlet vm from pool")

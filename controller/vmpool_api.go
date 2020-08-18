@@ -132,13 +132,22 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 				if cur.Vms[ii].Name == in.Vm.Name {
 					return fmt.Errorf("VM with same name already exists as part of VM pool")
 				}
+				if cur.Vms[ii].NetInfo.ExternalIp != "" {
+					if cur.Vms[ii].NetInfo.ExternalIp == in.Vm.NetInfo.ExternalIp {
+						return fmt.Errorf("VM with same external IP already exists as part of VM pool")
+					}
+				}
+				if cur.Vms[ii].NetInfo.InternalIp != "" {
+					if cur.Vms[ii].NetInfo.InternalIp == in.Vm.NetInfo.InternalIp {
+						return fmt.Errorf("VM with same internal IP already exists as part of VM pool")
+					}
+				}
 			}
 			cur.Vms = append(cur.Vms, in.Vm)
 			cur.State = edgeproto.TrackedState_READY
 			s.store.STMPut(stm, &cur)
 			return nil
 		})
-
 	}
 	return &edgeproto.Result{}, err
 }
@@ -202,12 +211,28 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 			return fmt.Errorf("Action already in progress, please try again later")
 		}
 		for ii, vm := range cur.Vms {
+			for updateVMName, updateVM := range vms {
+				if updateVM.State == edgeproto.VMState_VM_ADD || updateVM.State == edgeproto.VMState_VM_UPDATE {
+					if vm.NetInfo.ExternalIp != "" {
+						if vm.NetInfo.ExternalIp == updateVM.NetInfo.ExternalIp {
+							return fmt.Errorf("VM with same external IP already exists as part of VM pool")
+						}
+					}
+					if vm.NetInfo.InternalIp != "" {
+						if vm.NetInfo.InternalIp == updateVM.NetInfo.InternalIp {
+							return fmt.Errorf("VM with same internal IP already exists as part of VM pool")
+						}
+					}
+				}
+				if vm.Name == updateVMName {
+					if updateVM.State == edgeproto.VMState_VM_ADD {
+						return fmt.Errorf("VM %s already exists as part of VM pool", vm.Name)
+					}
+				}
+			}
 			updateVM, ok := vms[vm.Name]
 			if !ok {
 				continue
-			}
-			if updateVM.State == edgeproto.VMState_VM_ADD {
-				return fmt.Errorf("VM %s already exists as part of VM pool", vm.Name)
 			}
 			cur.Vms[ii] = updateVM
 			delete(vms, vm.Name)

@@ -395,6 +395,19 @@ func testVMPoolUpdates(t *testing.T, ctx context.Context, vmPool *edgeproto.VMPo
 	verifyVMPoolUpdate(t, ctx, vmPoolUpdate1, ctrlHandler, Pass)
 	require.Equal(t, 6, len(controllerData.VMPool.Vms), "matches crm global vmpool")
 
+	// Add another VM which will fail verification
+	vmPoolAddMember := copyCrmVMPool()
+	vmPoolAddMember.Vms = append(vmPoolAddMember.Vms, edgeproto.VM{
+		Name: "vmFailVerification",
+		NetInfo: edgeproto.VMNetInfo{
+			InternalIp: "192.168.100.106",
+		},
+		State: edgeproto.VMState_VM_ADD,
+	})
+	vmPoolAddMember.State = edgeproto.TrackedState_UPDATE_REQUESTED
+	verifyVMPoolUpdate(t, ctx, vmPoolAddMember, ctrlHandler, Fail)
+	require.Equal(t, 6, len(controllerData.VMPool.Vms), "matches crm global vmpool")
+
 	// Remove VM
 	vmPoolUpdate2 := copyCrmVMPool()
 	vmPoolUpdate2.Vms[5].State = edgeproto.VMState_VM_REMOVE
