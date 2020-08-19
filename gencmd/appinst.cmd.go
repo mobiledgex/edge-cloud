@@ -48,9 +48,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
 	}
-	if _, found := tags["nocmp"]; found {
-		in.RuntimeInfo.ContainerIds = nil
-	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
@@ -85,19 +82,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 }
 
-func AppInstRuntimeHideTags(in *edgeproto.AppInstRuntime) {
-	if cli.HideTags == "" {
-		return
-	}
-	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cli.HideTags, ",") {
-		tags[tag] = struct{}{}
-	}
-	if _, found := tags["nocmp"]; found {
-		in.ContainerIds = nil
-	}
-}
-
 func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	if cli.HideTags == "" {
 		return
@@ -108,9 +92,6 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.RuntimeInfo.ContainerIds = nil
 	}
 }
 
