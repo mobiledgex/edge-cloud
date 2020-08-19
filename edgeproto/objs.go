@@ -315,9 +315,28 @@ func (s *VMPool) Validate(fields map[string]struct{}) error {
 	if err := s.ValidateEnums(); err != nil {
 		return err
 	}
+	externalIPMap := make(map[string]struct{})
+	internalIPMap := make(map[string]struct{})
 	for _, v := range s.Vms {
 		if err := v.Validate(); err != nil {
 			return err
+		}
+		if v.NetInfo.ExternalIp != "" {
+			if _, ok := externalIPMap[v.NetInfo.ExternalIp]; ok {
+				return fmt.Errorf("VM with same external IP %s already exists", v.NetInfo.ExternalIp)
+			}
+			externalIPMap[v.NetInfo.ExternalIp] = struct{}{}
+		}
+		if v.NetInfo.InternalIp != "" {
+			if _, ok := internalIPMap[v.NetInfo.InternalIp]; ok {
+				return fmt.Errorf("VM with same internal IP %s already exists", v.NetInfo.InternalIp)
+			}
+			internalIPMap[v.NetInfo.InternalIp] = struct{}{}
+		}
+		if _, found := fields[VMPoolFieldVmsState]; found {
+			if v.State != VMState_VM_FORCE_FREE {
+				return errors.New("Invalid VM state, only VmForceFree state is allowed")
+			}
 		}
 	}
 	return nil

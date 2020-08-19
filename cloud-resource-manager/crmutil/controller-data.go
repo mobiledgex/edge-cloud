@@ -799,12 +799,13 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 	defer cd.VMPoolMux.Unlock()
 
 	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to verify VMs", "vms", validateVMs, "err", err)
 		// revert intermediate states
 		revertVMs := []edgeproto.VM{}
 		for _, vm := range cd.VMPool.Vms {
 			switch vm.State {
 			case edgeproto.VMState_VM_ADD:
-				vm.State = edgeproto.VMState_VM_FREE
+				continue
 			case edgeproto.VMState_VM_REMOVE:
 				vm.State = edgeproto.VMState_VM_FREE
 			case edgeproto.VMState_VM_UPDATE:
