@@ -132,15 +132,9 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 				if cur.Vms[ii].Name == in.Vm.Name {
 					return fmt.Errorf("VM with same name already exists as part of VM pool")
 				}
-				if cur.Vms[ii].NetInfo.ExternalIp != "" {
-					if cur.Vms[ii].NetInfo.ExternalIp == in.Vm.NetInfo.ExternalIp {
-						return fmt.Errorf("VM with same external IP already exists as part of VM pool")
-					}
-				}
-				if cur.Vms[ii].NetInfo.InternalIp != "" {
-					if cur.Vms[ii].NetInfo.InternalIp == in.Vm.NetInfo.InternalIp {
-						return fmt.Errorf("VM with same internal IP already exists as part of VM pool")
-					}
+				err := validateVMNetInfo(&cur.Vms[ii], &in.Vm)
+				if err != nil {
+					return err
 				}
 			}
 			cur.Vms = append(cur.Vms, in.Vm)
@@ -196,6 +190,20 @@ var UpdateVMPoolTransitions = map[edgeproto.TrackedState]struct{}{
 	edgeproto.TrackedState_UPDATING: struct{}{},
 }
 
+func validateVMNetInfo(vmCur, vmNew *edgeproto.VM) error {
+	if vmCur.NetInfo.ExternalIp != "" {
+		if vmCur.NetInfo.ExternalIp == vmNew.NetInfo.ExternalIp {
+			return fmt.Errorf("VM with same external IP already exists as part of VM pool")
+		}
+	}
+	if vmCur.NetInfo.InternalIp != "" {
+		if vmCur.NetInfo.InternalIp == vmNew.NetInfo.InternalIp {
+			return fmt.Errorf("VM with same internal IP already exists as part of VM pool")
+		}
+	}
+	return nil
+}
+
 func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context, key *edgeproto.VMPoolKey, vms map[string]edgeproto.VM) error {
 	if len(vms) == 0 {
 		return fmt.Errorf("no VMs specified")
@@ -213,15 +221,9 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 		for ii, vm := range cur.Vms {
 			for updateVMName, updateVM := range vms {
 				if updateVM.State == edgeproto.VMState_VM_ADD || updateVM.State == edgeproto.VMState_VM_UPDATE {
-					if vm.NetInfo.ExternalIp != "" {
-						if vm.NetInfo.ExternalIp == updateVM.NetInfo.ExternalIp {
-							return fmt.Errorf("VM with same external IP already exists as part of VM pool")
-						}
-					}
-					if vm.NetInfo.InternalIp != "" {
-						if vm.NetInfo.InternalIp == updateVM.NetInfo.InternalIp {
-							return fmt.Errorf("VM with same internal IP already exists as part of VM pool")
-						}
+					err := validateVMNetInfo(&vm, &updateVM)
+					if err != nil {
+						return err
 					}
 				}
 				if vm.Name == updateVMName {
