@@ -189,6 +189,12 @@ func (s *Platform) GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.
 }
 
 func (s *Platform) VerifyVMs(ctx context.Context, vms []edgeproto.VM) error {
+	for _, vm := range vms {
+		// For unit testing
+		if vm.Name == "vmFailVerification" {
+			return fmt.Errorf("failed to verify VM")
+		}
+	}
 	return nil
 }
 
