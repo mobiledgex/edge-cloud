@@ -234,25 +234,23 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		// Update Runtime info of apps deployed on this Cluster
 		log.SpanLog(ctx, log.DebugLevelInfra, "update appinst runtime info", "clusterkey", new.Key)
 		var app edgeproto.App
-		cd.AppInstCache.Mux.Lock()
-		for key, data := range cd.AppInstCache.Objs {
-			val := data.Obj
-			if key.ClusterInstKey.Matches(&new.Key) && cd.AppCache.Get(&val.Key.AppKey, &app) {
-				if val.State != edgeproto.TrackedState_READY {
-					continue
+		cd.AppInstCache.Show(&edgeproto.AppInst{}, func(obj *edgeproto.AppInst) error {
+			if obj.Key.ClusterInstKey.Matches(&new.Key) && cd.AppCache.Get(&obj.Key.AppKey, &app) {
+				if obj.State != edgeproto.TrackedState_READY {
+					return nil
 				}
 				if app.Deployment != cloudcommon.DeploymentTypeKubernetes {
-					continue
+					return nil
 				}
-				rt, err := cd.platform.GetAppInstRuntime(ctx, new, &app, val)
+				rt, err := cd.platform.GetAppInstRuntime(ctx, new, &app, obj)
 				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", val.Key, "err", err)
+					log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", obj.Key, "err", err)
 				} else {
-					cd.appInstInfoRuntime(ctx, &val.Key, edgeproto.TrackedState_READY, rt)
+					cd.appInstInfoRuntime(ctx, &obj.Key, edgeproto.TrackedState_READY, rt)
 				}
 			}
-		}
-		cd.AppInstCache.Mux.Unlock()
+			return nil
+		})
 
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
 		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
