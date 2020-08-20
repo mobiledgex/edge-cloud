@@ -16,7 +16,6 @@ type RunTimeStats struct {
 	start  time.Time
 	end    time.Time
 	upTime time.Duration
-	event  cloudcommon.Usage_event
 	status string
 }
 

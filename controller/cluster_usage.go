@@ -21,7 +21,7 @@ type ClusterCheckpoint struct {
 
 var ClusterUsageInfluxQueryTemplate = `SELECT %s from "%s" WHERE "clusterorg"='%s' AND "cluster"='%s' AND "cloudlet"='%s' AND "cloudletorg"='%s' %sAND time >= '%s' AND time < '%s' order by time desc`
 
-func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterInst, endTime time.Time, usageEvent cloudcommon.Usage_event) error {
+func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterInst, endTime time.Time) error {
 	var metric *edgeproto.Metric
 	// query from the checkpoint up to the event
 	selectors := []string{"\"event\"", "\"status\""}
@@ -51,8 +51,7 @@ func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterIns
 	}
 
 	stats := RunTimeStats{
-		end:   endTime,
-		event: usageEvent,
+		end: endTime,
 	}
 	err = GetRunTimeStats(usageTypeCluster, *checkpoint, cluster.Key, logs, &stats)
 	if err != nil {
@@ -60,13 +59,13 @@ func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterIns
 	}
 
 	// write the usage record to influx
-	metric = createClusterUsageMetric(cluster, stats.start, stats.end, stats.upTime, usageEvent, stats.status)
+	metric = createClusterUsageMetric(cluster, stats.start, stats.end, stats.upTime, stats.status)
 
 	services.events.AddMetric(metric)
 	return nil
 }
 
-func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime time.Time, runTime time.Duration, usageEvent cloudcommon.Usage_event, status string) *edgeproto.Metric {
+func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime time.Time, runTime time.Duration, status string) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.ClusterInstUsage
 	now := time.Now()
@@ -91,14 +90,7 @@ func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime
 	} else {
 		metric.AddTag("org", cluster.Key.Organization)
 	}
-	checkpointVal := ""
-	writeStatus := ""
-	if usageEvent == cloudcommon.USAGE_EVENT_CHECKPOINT {
-		checkpointVal = "CHECKPOINT"
-		writeStatus = status // only care about the status if its a checkpoint
-	}
-	metric.AddTag("checkpoint", checkpointVal)
-	metric.AddTag("status", writeStatus)
+	metric.AddTag("status", status)
 	return &metric
 }
 
@@ -159,7 +151,7 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 					continue
 				}
 				//record the usage up to this point
-				err = CreateClusterUsageRecord(ctx, &info, timestamp, cloudcommon.USAGE_EVENT_CHECKPOINT)
+				err = CreateClusterUsageRecord(ctx, &info, timestamp)
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelMetrics, "Unable to create cluster usage record of checkpointed cluster", "cluster", key, "err", err)
 				}
@@ -212,7 +204,7 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 			log.SpanLog(ctx, log.DebugLevelMetrics, "Could not find clusterinst even though event log indicates it is up", "cluster", key)
 			continue
 		}
-		err = CreateClusterUsageRecord(ctx, &info, timestamp, cloudcommon.USAGE_EVENT_CHECKPOINT)
+		err = CreateClusterUsageRecord(ctx, &info, timestamp)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelMetrics, "Unable to create cluster usage record of checkpointed cluster", "cluster", key, "err", err)
 		}
