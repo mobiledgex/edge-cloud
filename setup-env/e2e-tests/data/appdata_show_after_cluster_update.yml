@@ -71,7 +71,7 @@ clusterinsts:
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
-  numnodes: 2
+  numnodes: 3
 - key:
     clusterkey:
       name: SmallCluster
@@ -94,28 +94,13 @@ operatorcodes:
 
 cloudlets:
 - key:
-    organization: gcp
-    name: gcp-cloud-5
-  accessuri: cloud5.gcp
-  location:
-    latitude: 36
-    longitude: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-  platformtype: PlatformTypeFake
-  flavor:
-    name: DefaultPlatformFlavor
-  physicalname: gcp-cloud-5
-  containerversion: 2019-10-24
-- key:
     organization: dmuus
     name: dmuus-cloud-1
-  accessuri: cloud1.tmo
   location:
-    latitude: 40
-    longitude: -99
+    latitude: 31
+    longitude: -91
   ipsupport: IpSupportDynamic
-  numdynamicips: 100
+  numdynamicips: 254
   platformtype: PlatformTypeFake
   flavor:
     name: DefaultPlatformFlavor
@@ -124,7 +109,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-2
-  accessuri: cloud2.tmo
   location:
     latitude: 35
     longitude: -95
@@ -151,7 +135,6 @@ cloudlets:
 - key:
     organization: azure
     name: azure-cloud-4
-  accessuri: cloud4.azure
   location:
     latitude: 32
     longitude: -91
@@ -162,13 +145,44 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: azure-cloud-4
   containerversion: 2019-10-24
+- key:
+    organization: gcp
+    name: gcp-cloud-5
+  location:
+    latitude: 36
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+  flavor:
+    name: DefaultPlatformFlavor
+  physicalname: gcp-cloud-5
+  containerversion: 2019-10-24
 
 cloudletinfos:
+- key:
+    organization: gcp
+    name: gcp-cloud-5
+  state: CloudletStateReady
+  notifyid: 34
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
 - key:
     organization: dmuus
     name: dmuus-cloud-1
   state: CloudletStateReady
-  notifyid: 39
+  notifyid: 35
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 500
   osmaxvcores: 50
@@ -186,7 +200,7 @@ cloudletinfos:
     organization: dmuus
     name: dmuus-cloud-2
   state: CloudletStateReady
-  notifyid: 40
+  notifyid: 36
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 500
   osmaxvcores: 50
@@ -204,7 +218,7 @@ cloudletinfos:
     organization: dmuus
     name: dmuus-cloud-3
   state: CloudletStateReady
-  notifyid: 41
+  notifyid: 32
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 500
   osmaxvcores: 50
@@ -222,25 +236,7 @@ cloudletinfos:
     organization: azure
     name: azure-cloud-4
   state: CloudletStateReady
-  notifyid: 42
-  controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
-  osmaxvcores: 50
-  osmaxvolgb: 5000
-  flavors:
-  - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
-  containerversion: "2019-10-24"
-- key:
-    organization: gcp
-    name: gcp-cloud-5
-  state: CloudletStateReady
-  notifyid: 43
+  notifyid: 33
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 500
   osmaxvcores: 50
@@ -257,25 +253,11 @@ cloudletinfos:
 
 apps:
 - key:
-    organization: platos
-    name: PlatosEnablingLayer
-    version: "1.0"
-  imagepath: registry.mobiledgex.net/dummyvalue
-  imagetype: ImageTypeDocker
-  deployment: kubernetes
-  accessports: tcp:64000
-  defaultflavor:
-    name: x1.small
-  cluster:
-    name: SmallCluster
-  accesstype: AccessTypeLoadBalancer
-- key:
     organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
-  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:2.0
   imagetype: ImageTypeDocker
-  deployment: kubernetes
   accessports: tcp:80,tcp:443,udp:10002,tcp:81:tls,tcp:444:tls
   officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
@@ -292,7 +274,9 @@ apps:
     QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
     /QIDAQAB
     -----END PUBLIC KEY-----
+  deployment: kubernetes
   androidpackagename: com.acme.someapplication1
+  revision: 1
   accesstype: AccessTypeLoadBalancer
 - key:
     organization: AcmeAppCo
@@ -300,7 +284,6 @@ apps:
     version: "1.0"
   imagepath: mobiledgex/AcmeAppCo/helmApplication
   imagetype: ImageTypeHelm
-  deployment: helm
   accessports: udp:20002
   defaultflavor:
     name: x1.small
@@ -316,7 +299,42 @@ apps:
     QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
     /QIDAQAB
     -----END PUBLIC KEY-----
+  deployment: helm
   androidpackagename: com.acme.helmApplication
+  accesstype: AccessTypeLoadBalancer
+- key:
+    organization: MobiledgeX
+    name: NFSAutoProvision
+    version: "1.0"
+  imagepath: stable/nfs-client-provisioner
+  imagetype: ImageTypeHelm
+  defaultflavor:
+    name: x1.medium
+  annotations: version=1.2.8
+  deployment: helm
+  accesstype: AccessTypeLoadBalancer
+  configs:
+  - kind: helmCustomizationYaml
+    config: |
+      nfs:
+        path: /share
+        server: [[ .Deployment.ClusterIp ]]
+      storageClass:
+        name: standard
+        defaultClass: true
+  internalports: true
+- key:
+    organization: platos
+    name: PlatosEnablingLayer
+    version: "1.0"
+  imagepath: registry.mobiledgex.net/dummyvalue
+  imagetype: ImageTypeDocker
+  accessports: tcp:64000
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+  deployment: kubernetes
   accesstype: AccessTypeLoadBalancer
 - key:
     organization: MobiledgeX
@@ -374,27 +392,6 @@ apps:
         mexAppName: "mexprometheusappname"
         mexAppVersion: "10"
 - key:
-    organization: MobiledgeX
-    name: NFSAutoProvision
-    version: "1.0"
-  imagepath: stable/nfs-client-provisioner
-  imagetype: ImageTypeHelm
-  defaultflavor:
-    name: x1.medium
-  annotations: version=1.2.8
-  deployment: helm
-  accesstype: AccessTypeLoadBalancer
-  configs:
-  - kind: helmCustomizationYaml
-    config: |
-      nfs:
-        path: /share
-        server: [[ .Deployment.ClusterIp ]]
-      storageClass:
-        name: standard
-        defaultClass: true
-  internalports: true
-- key:
     organization: AcmeAppCo1
     name: vmapp1
     version: "1.0"
@@ -441,7 +438,30 @@ apps:
   deployment: kubernetes
   officialfqdn: noportsapp.acmeappco.com
   accesstype: AccessTypeLoadBalancer
+
 appinstances:
+- key:
+    appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
+  flavor:
+    name: x1.small
 - key:
     appkey:
       organization: AcmeAppCo
@@ -455,8 +475,8 @@ appinstances:
         name: dmuus-cloud-1
       organization: AcmeAppCo
   cloudletloc:
-    latitude: 40
-    longitude: -99
+    latitude: 31
+    longitude: -91
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -487,6 +507,48 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
+    - appOnClusterNode2
+  revision: 1
+- key:
+    appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+      organization: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      organization: MobiledgeX
+      name: NFSAutoProvision
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
 - key:
     appkey:
       organization: AcmeAppCo
@@ -545,75 +607,13 @@ appinstances:
         name: dmuus-cloud-1
       organization: AcmeAppCo
   cloudletloc:
-    latitude: 40
-    longitude: -99
+    latitude: 31
+    longitude: -91
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoUdp
     internalport: 20002
     publicport: 20002
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      name: MEXPrometheusAppName
-      version: "1.0"
-      organization: MobiledgeX
-    clusterinstkey:
-      clusterkey:
-        name: SmallCluster
-      cloudletkey:
-        organization: dmuus
-        name: dmuus-cloud-2
-      organization: AcmeAppCo
-  cloudletloc:
-    latitude: 35
-    longitude: -95
-  liveness: LivenessStatic
-  mappedports:
-  - proto: LProtoTcp
-    internalport: 9090
-    publicport: 9090
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      organization: MobiledgeX
-      name: NFSAutoProvision
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: SmallCluster
-      cloudletkey:
-        organization: dmuus
-        name: dmuus-cloud-1
-      organization: AcmeAppCo
-  cloudletloc:
-    latitude: 40
-    longitude: -99
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      name: MEXPrometheusAppName
-      version: "1.0"
-      organization: MobiledgeX
-    clusterinstkey:
-      clusterkey:
-        name: SmallCluster
-      cloudletkey:
-        organization: dmuus
-        name: dmuus-cloud-1
-      organization: AcmeAppCo
-  cloudletloc:
-    latitude: 40
-    longitude: -99
-  liveness: LivenessStatic
-  mappedports:
-  - proto: LProtoTcp
-    internalport: 9090
-    publicport: 9090
   flavor:
     name: x1.small
 - key:
@@ -629,8 +629,8 @@ appinstances:
         name: dmuus-cloud-1
       organization: AcmeAppCo1
   cloudletloc:
-    latitude: 40
-    longitude: -99
+    latitude: 31
+    longitude: -91
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -685,8 +685,8 @@ appinstances:
         name: dmuus-cloud-1
       organization: AcmeAppCo
   cloudletloc:
-    latitude: 40
-    longitude: -99
+    latitude: 31
+    longitude: -91
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -694,8 +694,34 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
+    - appOnClusterNode2
 
 appinstrefs:
+- key:
+    organization: platos
+    name: PlatosEnablingLayer
+    version: "1.0"
+- key:
+    organization: AcmeAppCo1
+    name: vmapp1
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultVMCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo1"}}'
+    : 1
+- key:
+    organization: AcmeAppCo1
+    name: vmapp2
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultVMCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo1"}}'
+    : 1
+- key:
+    organization: AcmeAppCo
+    name: NoPortsApp
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"NoPortsApp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
 - key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
@@ -727,29 +753,4 @@ appinstrefs:
     version: "1.0"
   insts:
     ? '{"app_key":{"organization":"AcmeAppCo","name":"helmApplication","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
-    : 1
-- key:
-    organization: platos
-    name: PlatosEnablingLayer
-    version: "1.0"
-- key:
-    organization: AcmeAppCo1
-    name: vmapp1
-    version: "1.0"
-  insts:
-    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultVMCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo1"}}'
-    : 1
-- key:
-    organization: AcmeAppCo1
-    name: vmapp2
-    version: "1.0"
-  insts:
-    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultVMCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo1"}}'
-    : 1
-- key:
-    organization: AcmeAppCo
-    name: NoPortsApp
-    version: "1.0"
-  insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"NoPortsApp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
     : 1
