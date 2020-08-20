@@ -522,6 +522,10 @@ appinstances:
     tls: true
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
 - key:
     appkey:
       organization: MobiledgeX
@@ -585,6 +589,10 @@ appinstances:
     tls: true
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
 - key: 
     appkey:
       organization: AcmeAppCo
@@ -681,6 +689,10 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
 
 appinstrefs:
 - key:
