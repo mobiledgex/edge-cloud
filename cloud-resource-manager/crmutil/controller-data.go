@@ -231,6 +231,26 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str)
 			return
 		}
+		// Update Runtime info of apps deployed on this Cluster
+		log.SpanLog(ctx, log.DebugLevelInfra, "update appinst runtime info", "clusterkey", new.Key)
+		var app edgeproto.App
+		cd.AppInstCache.Show(&edgeproto.AppInst{}, func(obj *edgeproto.AppInst) error {
+			if obj.Key.ClusterInstKey.Matches(&new.Key) && cd.AppCache.Get(&obj.Key.AppKey, &app) {
+				if obj.State != edgeproto.TrackedState_READY {
+					return nil
+				}
+				if app.Deployment != cloudcommon.DeploymentTypeKubernetes {
+					return nil
+				}
+				rt, err := cd.platform.GetAppInstRuntime(ctx, new, &app, obj)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", obj.Key, "err", err)
+				} else {
+					cd.appInstInfoRuntime(ctx, &obj.Key, edgeproto.TrackedState_READY, rt)
+				}
+			}
+			return nil
+		})
 
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
 		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)

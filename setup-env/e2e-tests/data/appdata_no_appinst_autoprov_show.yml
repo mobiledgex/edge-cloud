@@ -490,6 +490,9 @@ appinstances:
     fqdnprefix: autoprovapp-tcp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 
 autoprovpolicies:
 - key:

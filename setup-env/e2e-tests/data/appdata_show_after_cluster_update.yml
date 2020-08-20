@@ -67,12 +67,11 @@ clusterinsts:
   flavor:
     name: x1.small
   sharedvolumesize: 100
-  
   liveness: LivenessStatic
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
-  numnodes: 2
+  numnodes: 3
 - key:
     clusterkey:
       name: SmallCluster
@@ -162,10 +161,28 @@ cloudlets:
 
 cloudletinfos:
 - key:
+    organization: gcp
+    name: gcp-cloud-5
+  state: CloudletStateReady
+  notifyid: 34
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+- key:
     organization: tmus
     name: tmus-cloud-1
   state: CloudletStateReady
-  notifyid: 7
+  notifyid: 35
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 500
   osmaxvcores: 50
@@ -183,7 +200,7 @@ cloudletinfos:
     organization: tmus
     name: tmus-cloud-2
   state: CloudletStateReady
-  notifyid: 8
+  notifyid: 36
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 500
   osmaxvcores: 50
@@ -201,7 +218,7 @@ cloudletinfos:
     organization: tmus
     name: tmus-cloud-3
   state: CloudletStateReady
-  notifyid: 9
+  notifyid: 32
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 500
   osmaxvcores: 50
@@ -219,25 +236,7 @@ cloudletinfos:
     organization: azure
     name: azure-cloud-4
   state: CloudletStateReady
-  notifyid: 10
-  controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
-  osmaxvcores: 50
-  osmaxvolgb: 5000
-  flavors:
-  - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
-  containerversion: "2019-10-24"
-- key:
-    organization: gcp
-    name: gcp-cloud-5
-  state: CloudletStateReady
-  notifyid: 11
+  notifyid: 33
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 500
   osmaxvcores: 50
@@ -257,7 +256,7 @@ apps:
     organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
-  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:2.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,tcp:443,udp:10002,tcp:81:tls,tcp:444:tls
   officialfqdn: someapplication1.acmeappco.com
@@ -277,6 +276,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
+  revision: 1
   accesstype: AccessTypeLoadBalancer
 - key:
     organization: AcmeAppCo
@@ -438,8 +438,9 @@ apps:
   deployment: kubernetes
   officialfqdn: noportsapp.acmeappco.com
   accesstype: AccessTypeLoadBalancer
+
 appinstances:
-- key: 
+- key:
     appkey:
       organization: MobiledgeX
       name: MEXPrometheusAppName
@@ -454,7 +455,6 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: smallcluster.tmus-cloud-1.tmus.mobiledgex.net   
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -462,7 +462,76 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-- key: 
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: tmus
+        name: tmus-cloud-1
+      organization: AcmeAppCo
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 80
+    publicport: 80
+    fqdnprefix: someapplication1-tcp.
+  - proto: LProtoTcp
+    internalport: 443
+    publicport: 443
+    fqdnprefix: someapplication1-tcp.
+  - proto: LProtoUdp
+    internalport: 10002
+    publicport: 10002
+    fqdnprefix: someapplication1-udp.
+  - proto: LProtoTcp
+    internalport: 81
+    publicport: 81
+    fqdnprefix: someapplication1-tcp.
+    tls: true
+  - proto: LProtoTcp
+    internalport: 444
+    publicport: 444
+    fqdnprefix: someapplication1-tcp.
+    tls: true
+  flavor:
+    name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
+    - appOnClusterNode2
+  revision: 1
+- key:
+    appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: tmus
+        name: tmus-cloud-2
+      organization: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTcp
+    internalport: 9090
+    publicport: 9090
+  flavor:
+    name: x1.small
+- key:
     appkey:
       organization: MobiledgeX
       name: NFSAutoProvision
@@ -480,74 +549,6 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
-
-- key: 
-    appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: SmallCluster
-      cloudletkey:
-        organization: tmus
-        name: tmus-cloud-1
-      organization: AcmeAppCo
-  cloudletloc:
-    latitude: 31
-    longitude: -91
-  liveness: LivenessStatic
-  mappedports:
-  - proto: LProtoTcp
-    internalport: 80
-    publicport: 80
-    fqdnprefix: someapplication1-tcp.
-  - proto: LProtoTcp
-    internalport: 443
-    publicport: 443
-    fqdnprefix: someapplication1-tcp.
-  - proto: LProtoUdp
-    internalport: 10002
-    publicport: 10002
-    fqdnprefix: someapplication1-udp.
-  - proto: LProtoTcp
-    internalport: 81
-    publicport: 81
-    fqdnprefix: someapplication1-tcp.
-    tls: true
-  - proto: LProtoTcp
-    internalport: 444
-    publicport: 444
-    fqdnprefix: someapplication1-tcp.
-    tls: true
-  flavor:
-    name: x1.small
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-    - appOnClusterNode1
-- key:
-    appkey:
-      organization: MobiledgeX
-      name: MEXPrometheusAppName
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: SmallCluster
-      cloudletkey:
-        organization: tmus
-        name: tmus-cloud-2
-      organization: AcmeAppCo
-  cloudletloc:
-    latitude: 35
-    longitude: -95
-  liveness: LivenessStatic
-  mappedports:
-  - proto: LProtoTcp
-    internalport: 9090
-    publicport: 9090
-  flavor:
-    name: x1.small
 - key:
     appkey:
       organization: AcmeAppCo
@@ -593,7 +594,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
-- key: 
+- key:
     appkey:
       organization: AcmeAppCo
       name: helmApplication
@@ -671,7 +672,7 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
-- key: 
+- key:
     appkey:
       organization: AcmeAppCo
       name: NoPortsApp
@@ -693,24 +694,9 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
+    - appOnClusterNode2
 
 appinstrefs:
-- key:
-    organization: AcmeAppCo
-    name: someapplication1
-    version: "1.0"
-  insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
-    : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
-    : 1
-- key:
-    organization: AcmeAppCo
-    name: helmApplication
-    version: "1.0"
-  insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"helmApplication","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
-    : 1
 - key:
     organization: Samsung
     name: SamsungEnablingLayer
@@ -751,4 +737,20 @@ appinstrefs:
     version: "1.0"
   insts:
     ? '{"app_key":{"organization":"MobiledgeX","name":"NFSAutoProvision","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+- key:
+    organization: AcmeAppCo
+    name: someapplication1
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    : 1
+- key:
+    organization: AcmeAppCo
+    name: helmApplication
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"helmApplication","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
     : 1
