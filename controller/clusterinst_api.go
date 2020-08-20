@@ -859,15 +859,4 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 		metric.AddStringVal("other", fmt.Sprintf("%v", nodeFlavor.OptResMap))
 	}
 	services.events.AddMetric(&metric)
-
-	// if it's a delete, create a usage record of it
-	// get all the logs for this clusterinst since the last checkpoint
-	go func() {
-		if event == cloudcommon.DELETED || event == cloudcommon.UNRESERVED {
-			err := CreateClusterUsageRecord(ctx, &info, now, cloudcommon.USAGE_EVENT_END)
-			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelMetrics, "unable to create cluster usage record", "cluster", clusterInstKey, "err", err)
-			}
-		}
-	}()
 }

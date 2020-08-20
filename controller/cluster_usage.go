@@ -102,7 +102,7 @@ func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime
 	return &metric
 }
 
-// This is checkpointing for BILLING PERIODS ONLY, custom checkpointing, coming later, will not create(or at least store) usage records upon checkpointing
+// This is checkpointing for the usage api, from month to month
 func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 	if err := checkpointTimeValid(timestamp); err != nil { // we dont know if there will be more creates and deletes before the timestamp occurs
 		return err
