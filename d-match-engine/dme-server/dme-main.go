@@ -48,17 +48,18 @@ var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to
 var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
 var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
-var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
 var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
+var edgeEventsCookieExpiration = flag.Duration("edgeEventsCookieExpiration", time.Minute*10, "Edge Events Cookie expiration time")
 var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
+var eesolib = flag.String("eeplugin", "", "plugin file")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
 var cloudletDme = flag.Bool("cloudletDme", false, "this is a cloudlet DME deployed on cloudlet infrastructure and uses the crm access key")
 
-// TODO: carrier arg is redundant with Organization in myCloudletKey, and
+// TODO: carrier arg is redundant with Organization in MyCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
 // verify location API behavior and e2e test setups.
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for no external APIs")
@@ -68,10 +69,6 @@ var operatorApiGw op.OperatorApiGw
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
 
-// myCloudlet is the information for the cloudlet in which the DME is instantiated.
-// The key for myCloudlet is provided as a configuration - either command line or
-// from a file.
-var myCloudletKey edgeproto.CloudletKey
 var nodeMgr node.NodeMgr
 
 var sigChan chan os.Signal
@@ -102,7 +99,9 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request, invalid location", "loc", req.GpsLocation, "err", err)
 		return reply, err
 	}
-	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply)
+	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, edgeEventsCookieExpiration)
+	// TODO: Once DME per cloudlet is implemented, This should be the DNS name for the DME on the cloudlet of app inst provided
+	reply.DmeFqdn = nodeMgr.CommonName()
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -148,7 +147,9 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, invalid location", "loc", tokdata.Location, "err", err)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
-	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply)
+	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply, cookieExpiration)
+	// TODO: Once DME per cloudlet is implemented, This should be the DNS name for the DME on the cloudlet of app inst provided
+	reply.DmeFqdn = nodeMgr.CommonName()
 	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -354,6 +355,38 @@ func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.Ma
 	return operatorApiGw.GetQOSPositionKPI(req, getQosSvr)
 }
 
+func (s *server) StreamEdgeEvent(streamEdgeEventSvr dme.MatchEngineApi_StreamEdgeEventServer) error {
+	ctx := streamEdgeEventSvr.Context()
+	log.SpanLog(ctx, log.DebugLevelDmereq, "StreamEdgeEvent")
+	return dmecommon.StreamEdgeEvent(ctx, streamEdgeEventSvr)
+}
+
+// Loads EdgeEvent Plugin functions into corresponding dmecommon functions
+func initEdgeEventsPlugin(ctx context.Context) error {
+	// Load Edge Events Plugin
+	*eesolib = os.Getenv("GOPATH") + "/plugins/edgeevents.so"
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Loading plugin", "plugin", *eesolib)
+	plug, err := plugin.Open(*eesolib)
+	if err != nil {
+		log.WarnLog("failed to load plugin", "plugin", *eesolib, "error", err)
+		return err
+	}
+	sym, err := plug.Lookup("GetEdgeEventsHandler")
+	if err != nil {
+		log.FatalLog("plugin does not have GetEdgeEventsHandler symbol", "plugin", *eesolib)
+	}
+	getEdgeEventsHandlerFunc, ok := sym.(func(ctx context.Context) (dmecommon.EdgeEventsHandler, error))
+	if !ok {
+		log.FatalLog("plugin GetEdgeEventsHandler symbol does not implement func(ctx context.Context) (dmecommon.EdgeEventsHandler, error)", "plugin", *solib)
+	}
+	eehandler, err := getEdgeEventsHandlerFunc(ctx)
+	if err != nil {
+		return err
+	}
+	dmecommon.EEHandler = eehandler
+	return nil
+}
+
 func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, error) {
 	if operatorName == "" || operatorName == "standalone" {
 		return &defaultoperator.OperatorApiGw{}, nil
@@ -410,8 +443,8 @@ func main() {
 		// Regional DME not associated with any Cloudlet
 		myCertIssuer = node.CertIssuerRegional
 	}
-	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &myCloudletKey)
-	ctx, span, err := nodeMgr.Init(node.NodeTypeDME, myCertIssuer, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey), node.WithRegion(*region))
+	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &dmecommon.MyCloudletKey)
+	ctx, span, err := nodeMgr.Init(node.NodeTypeDME, myCertIssuer, node.WithName(*dmecommon.ScaleID), node.WithCloudletKey(&dmecommon.MyCloudletKey), node.WithRegion(*region))
 	if err != nil {
 		log.FatalLog("Failed init node", "err", err)
 	}
@@ -429,6 +462,12 @@ func main() {
 
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "plugin init done", "operatorApiGw", operatorApiGw)
+
+	err = initEdgeEventsPlugin(ctx)
+	if err != nil {
+		span.Finish()
+		log.FatalLog("Failed to init edge events plugin")
+	}
 
 	err = dmecommon.InitVault(nodeMgr.VaultAddr, *region)
 	if err != nil {
@@ -481,15 +520,15 @@ func main() {
 	defer notifyClient.Stop()
 
 	interval := time.Duration(*statsInterval) * time.Second
-	stats := NewDmeStats(interval, *statsShards, sendMetric.Update)
-	stats.Start()
-	defer stats.Stop()
+	dmecommon.Stats = dmecommon.NewDmeStats(interval, *statsShards, sendMetric.Update)
+	dmecommon.Stats.Start()
+	defer dmecommon.Stats.Stop()
 
-	InitAppInstClients()
+	dmecommon.InitAppInstClients()
 
 	grpcOpts = append(grpcOpts,
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
@@ -506,6 +545,8 @@ func main() {
 	s := grpc.NewServer(grpcOpts...)
 
 	dme.RegisterMatchEngineApiServer(s, &server{})
+
+	InitDebug(&nodeMgr)
 
 	// Register reflection service on gRPC server.
 	reflection.Register(s)

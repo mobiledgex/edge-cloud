@@ -524,6 +524,11 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err1 = ReadYamlFile(firstYamlFile, &f1)
 		err2 = ReadYamlFile(secondYamlFile, &f2)
 
+		// Ignore EdgeEventsCookie
+		copts = []cmp.Option{
+			cmpopts.IgnoreFields(dmeproto.FindCloudletReply{}, "EdgeEventsCookie"),
+		}
+
 		//publicport is variable so we nil it out for comparison purposes.
 		clearFindCloudletPorts(&f1)
 		clearFindCloudletPorts(&f2)
@@ -536,6 +541,11 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		err1 = ReadYamlFile(firstYamlFile, &f1)
 		err2 = ReadYamlFile(secondYamlFile, &f2)
+
+		// Ignore EdgeEventsCookie
+		copts = []cmp.Option{
+			cmpopts.IgnoreFields(dmeproto.FindCloudletReply{}, "EdgeEventsCookie"),
+		}
 
 		//publicport is variable so we nil it out for comparison purposes.
 		for _, reply := range f1 {
@@ -643,6 +653,23 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		dat2, err2 = ioutil.ReadFile(secondYamlFile)
 		y1 = string(dat1)
 		y2 = string(dat2)
+	} else if fileType == "streamedgeevent" {
+		var s1 dmeproto.ServerEdgeEvent
+		var s2 dmeproto.ServerEdgeEvent
+
+		err1 = ReadYamlFile(firstYamlFile, &s1)
+		err2 = ReadYamlFile(secondYamlFile, &s2)
+
+		// Ignore Timestamp in latency
+		ss := []dmeproto.ServerEdgeEvent{s1, s2}
+		for _, s := range ss {
+			if s.Latency != nil {
+				s.Latency.Timestamp.Seconds = 0
+				s.Latency.Timestamp.Nanos = 0
+			}
+		}
+		y1 = s1
+		y2 = s2
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1)
 		err2 = ReadYamlFile(secondYamlFile, &y2)

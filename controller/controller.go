@@ -377,6 +377,7 @@ func startServices() error {
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
 	edgeproto.RegisterDeviceApiServer(server, &deviceApi)
 	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
+	edgeproto.RegisterAppInstLatencyApiServer(server, &appInstLatencyApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -548,6 +549,7 @@ func InitApis(sync *Sync) {
 	InitAppInstClientApi()
 	InitDeviceApi(sync)
 	InitOrganizationApi(sync)
+	InitAppInstLatencyApi(sync)
 }
 
 func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {

@@ -35,6 +35,7 @@ func main() {
 	notifyServer.RegisterServerCb(func(s *grpc.Server) {
 		edgeproto.RegisterNodeApiServer(s, &nodeApi)
 		edgeproto.RegisterDebugApiServer(s, &debugApi)
+		edgeproto.RegisterAppInstLatencyApiServer(s, &appInstLatencyApi)
 	})
 	tlsConfig, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
 		nodeMgr.CommonName(),

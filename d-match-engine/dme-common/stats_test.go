@@ -1,4 +1,4 @@
-package main
+package dmecommon
 
 import (
 	"context"
@@ -10,18 +10,17 @@ import (
 	"testing"
 	"time"
 
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/stretchr/testify/assert"
 )
 
 type testdb struct {
-	stats map[dmecommon.StatKey]*ApiStat
+	stats map[StatKey]*ApiStat
 	mux   sync.Mutex
 }
 
 func (n *testdb) Init() {
-	n.stats = make(map[dmecommon.StatKey]*ApiStat)
+	n.stats = make(map[StatKey]*ApiStat)
 }
 
 func (n *testdb) send(ctx context.Context, metric *edgeproto.Metric) bool {
@@ -47,7 +46,7 @@ func TestStatDrops(t *testing.T) {
 	for ii := 0; ii < numThreads; ii++ {
 		wg.Add(1)
 		go func(id int) {
-			key := dmecommon.StatKey{}
+			key := StatKey{}
 			key.AppKey.Organization = "dev" + strconv.Itoa(id)
 			key.AppKey.Name = "app"
 			key.AppKey.Version = "1.0.0"
@@ -64,9 +63,9 @@ func TestStatDrops(t *testing.T) {
 					done = true
 				default:
 					stats.RecordApiStatCall(&ApiStatCall{
-						key:     key,
-						fail:    rand.Intn(2) == 1,
-						latency: time.Duration(rand.Intn(200)) * time.Millisecond,
+						Key:     key,
+						Fail:    rand.Intn(2) == 1,
+						Latency: time.Duration(rand.Intn(200)) * time.Millisecond,
 					})
 					atomic.AddUint64(&count, 1)
 					time.Sleep(100 * time.Microsecond)
@@ -83,7 +82,7 @@ func TestStatDrops(t *testing.T) {
 	dbCount := uint64(0)
 	db.mux.Lock()
 	for _, stat := range db.stats {
-		dbCount += stat.reqs
+		dbCount += stat.Reqs
 	}
 	assert.Equal(t, numThreads, len(db.stats), "stat count")
 	db.mux.Unlock()
@@ -101,7 +100,7 @@ func TestStatChanged(t *testing.T) {
 	defer stats.Stop()
 	var mux = &sync.Mutex{}
 
-	key := dmecommon.StatKey{}
+	key := StatKey{}
 	key.AppKey.Organization = "dev"
 	key.AppKey.Name = "app"
 	key.AppKey.Version = "1.0.0"
@@ -112,15 +111,15 @@ func TestStatChanged(t *testing.T) {
 
 	mux.Lock()
 	stats.RecordApiStatCall(&ApiStatCall{
-		key:     key,
-		fail:    false,
-		latency: 50 * time.Millisecond,
+		Key:     key,
+		Fail:    false,
+		Latency: 50 * time.Millisecond,
 	})
 	time.Sleep(100 * time.Microsecond)
-	assert.True(t, stats.shards[0].apiStatMap[key].changed)
+	assert.True(t, stats.shards[0].apiStatMap[key].Changed)
 	mux.Unlock()
 
 	// sleep two intervals to make sure that stats are uploaded to the controller
 	time.Sleep(2 * notifyInterval)
-	assert.False(t, stats.shards[0].apiStatMap[key].changed)
+	assert.False(t, stats.shards[0].apiStatMap[key].Changed)
 }

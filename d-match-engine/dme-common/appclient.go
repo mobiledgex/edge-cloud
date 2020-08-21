@@ -1,11 +1,11 @@
-package main
+package dmecommon
 
 import (
 	"fmt"
 	"sync"
 
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/notify"
 	"golang.org/x/net/context"
 )
 
@@ -15,6 +15,9 @@ type ClientsMap struct {
 }
 
 var clientsMap *ClientsMap
+
+var ClientSender *notify.AppInstClientSend
+var AppInstClientKeyCache edgeproto.AppInstClientKeyCache
 
 func InitAppInstClients() {
 	clientsMap = new(ClientsMap)

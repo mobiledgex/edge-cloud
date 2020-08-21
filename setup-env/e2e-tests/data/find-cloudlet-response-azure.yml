@@ -16,3 +16,4 @@ ports:
 cloudletlocation:
   latitude: 32
   longitude: -91
+dmefqdn: dme.mobiledgex.net

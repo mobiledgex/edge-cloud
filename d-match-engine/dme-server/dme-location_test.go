@@ -20,8 +20,10 @@ func TestVerifyLoc(t *testing.T) {
 	span := log.SpanFromContext(ctx)
 
 	dmecommon.SetupMatchEngine()
-	InitAppInstClients()
+	dmecommon.InitAppInstClients()
 	operatorApiGw, _ = initOperator(ctx, "standalone")
+	err := initEdgeEventsPlugin(ctx)
+	require.Nil(t, err, "init edge events plugin")
 	setupJwks()
 
 	// add all data

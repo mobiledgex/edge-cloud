@@ -25,7 +25,7 @@ func TestNotify(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	dmecommon.SetupMatchEngine()
-	InitAppInstClients()
+	dmecommon.InitAppInstClients()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
 
@@ -121,30 +121,30 @@ func TestNotify(t *testing.T) {
 
 	// add a new device - see that it makes it to the server
 	for _, reg := range dmetest.DeviceData {
-		recordDevice(ctx, &reg)
+		dmecommon.RecordDevice(ctx, &reg)
 	}
 	// verify the devices were added to the server
 	count := len(dmetest.DeviceData) - 1 // Since one is a duplicate
 	// verify that devices are in local cache
-	assert.Equal(t, count, len(platformClientsCache.Objs))
+	assert.Equal(t, count, len(dmecommon.PlatformClientsCache.Objs))
 	serverHandler.WaitForDevices(count)
 	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
 	// Delete all elements from local cache directly
-	for _, data := range platformClientsCache.Objs {
+	for _, data := range dmecommon.PlatformClientsCache.Objs {
 		obj := data.Obj
-		delete(platformClientsCache.Objs, obj.GetKeyVal())
-		delete(platformClientsCache.List, obj.GetKeyVal())
+		delete(dmecommon.PlatformClientsCache.Objs, obj.GetKeyVal())
+		delete(dmecommon.PlatformClientsCache.List, obj.GetKeyVal())
 	}
-	assert.Equal(t, 0, len(platformClientsCache.Objs))
+	assert.Equal(t, 0, len(dmecommon.PlatformClientsCache.Objs))
 	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
 	// Add a single device - make sure count in local cache is updated
-	recordDevice(ctx, &dmetest.DeviceData[0])
-	assert.Equal(t, 1, len(platformClientsCache.Objs))
+	dmecommon.RecordDevice(ctx, &dmetest.DeviceData[0])
+	assert.Equal(t, 1, len(dmecommon.PlatformClientsCache.Objs))
 	// Make sure that count in the server cache is the same
 	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
 	// Add the same device, check that nothing is updated
-	recordDevice(ctx, &dmetest.DeviceData[0])
-	assert.Equal(t, 1, len(platformClientsCache.Objs))
+	dmecommon.RecordDevice(ctx, &dmetest.DeviceData[0])
+	assert.Equal(t, 1, len(dmecommon.PlatformClientsCache.Objs))
 	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
 
 	serverMgr.Stop()

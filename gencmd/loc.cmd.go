@@ -46,3 +46,20 @@ var LocComments = map[string]string{
 	"speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 }
 var LocSpecialArgs = map[string]string{}
+var LatencyRequiredArgs = []string{}
+var LatencyOptionalArgs = []string{
+	"avg",
+	"min",
+	"max",
+	"stddev",
+	"variance",
+	"numsamples",
+	"timestamp.seconds",
+	"timestamp.nanos",
+}
+var LatencyAliasArgs = []string{}
+var LatencyComments = map[string]string{
+	"stddev":   "Square root of unbiased variance",
+	"variance": "Unbiased variance",
+}
+var LatencySpecialArgs = map[string]string{}
