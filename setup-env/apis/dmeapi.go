@@ -33,6 +33,7 @@ type dmeApiRequest struct {
 	Fqreq            dmeproto.FqdnListRequest             `yaml:"fqdnlistrequest"`
 	Qosreq           dmeproto.QosPositionRequest          `yaml:"qospositionrequest"`
 	AppOFqreq        dmeproto.AppOfficialFqdnRequest      `yaml:"appofficialfqdnrequest"`
+	Eereq            dmeproto.ClientEdgeEvent             `yaml:"clientedgeevent"`
 	TokenServerPath  string                               `yaml:"token-server-path"`
 	ErrorExpected    string                               `yaml:"error-expected"`
 	Repeat           int                                  `yaml:"repeat"`
@@ -164,6 +165,10 @@ func (c *dmeRestClient) GetAppOfficialFqdn(ctx context.Context, in *dmeproto.App
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *dmeRestClient) SendEdgeEvent(ctx context.Context, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_SendEdgeEventClient, error) {
+	return nil, fmt.Errorf("SendEdgeEvent not supported yet in E2E via REST")
 }
 
 func readDMEApiFile(apifile string) {
@@ -436,6 +441,14 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 		apiRequest.Qosreq.SessionCookie = sessionCookie
 		log.Printf("getqospositionkpi request: %+v\n", apiRequest.Qosreq)
 		resp, err := client.GetQosPositionKpi(ctx, &apiRequest.Qosreq)
+		if err == nil {
+			dmereply, err = resp.Recv()
+		}
+		dmeerror = err
+	case "sendedgeevent":
+		apiRequest.Eereq.SessionCookie = sessionCookie
+		log.Printf("sendedgeevent request: %+v\n", apiRequest.Eereq)
+		resp, err := client.SendEdgeEvent(ctx)
 		if err == nil {
 			dmereply, err = resp.Recv()
 		}

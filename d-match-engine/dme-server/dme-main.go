@@ -5,6 +5,7 @@ import (
 	ctls "crypto/tls"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	baselog "log"
 	"net"
@@ -67,6 +68,14 @@ var operatorApiGw op.OperatorApiGw
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
+
+// Struct to monitor EdgeEvent receive and send goroutines
+type EdgeEventPersistentMgr struct {
+	mux       util.Mutex
+	err       error
+	terminate bool
+	msg       string
+}
 
 // myCloudlet is the information for the cloudlet in which the DME is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
@@ -352,6 +361,90 @@ func (s *server) AddUserToGroup(ctx context.Context,
 func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {
 	log.SpanLog(getQosSvr.Context(), log.DebugLevelDmereq, "GetQosPositionKpi", "request", req)
 	return operatorApiGw.GetQOSPositionKPI(req, getQosSvr)
+}
+
+func (s *server) SendEdgeEvent(sendEdgeEventSvr dme.MatchEngineApi_SendEdgeEventServer) error {
+	ctx := sendEdgeEventSvr.Context()
+	log.SpanLog(ctx, log.DebugLevelDmereq, "SendEdgeEvent")
+	mgr := new(EdgeEventPersistentMgr)
+
+	// Receive goroutine
+	go func() {
+		for {
+			if mgr.terminate == true {
+				return
+			}
+			// receive data from stream
+			cupdate, err := sendEdgeEventSvr.Recv()
+
+			mgr.mux.Lock()
+			if err != nil && err != io.EOF {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "error on receive", "error", err)
+				if strings.Contains(err.Error(), "rpc error") {
+					mgr.err = err
+					mgr.mux.Unlock()
+					return
+				}
+			}
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate)
+
+			if cupdate.Terminate == true {
+				mgr.terminate = true
+				mgr.msg = "Client initiated termination of persistent connection"
+				mgr.mux.Unlock()
+				return
+			}
+			// clientEdgeEventHandler()
+			mgr.mux.Unlock()
+		}
+	}()
+
+	// Send goroutine
+	go func() {
+		var iter uint32 = 1
+		for {
+			if mgr.terminate == true {
+				return
+			}
+			// update latency send it to stream
+			// receiveEdgeEvent
+			supdate := new(dme.ServerEdgeEvent)
+
+			mgr.mux.Lock()
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Loop number", "iteration: ", iter)
+			supdate.Latency = iter
+			if err := sendEdgeEventSvr.Send(supdate); err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "error on send", "error", err)
+				if strings.Contains(err.Error(), "rpc error") {
+					mgr.err = err
+					mgr.mux.Unlock()
+					return
+				}
+			}
+			mgr.mux.Unlock()
+			iter++
+			time.Sleep(5 * time.Second)
+		}
+	}()
+
+	// monitor persistent connection
+	for {
+		select {
+		case <-ctx.Done():
+			mgr.terminate = true
+			return ctx.Err()
+		default:
+		}
+		if mgr.err != nil {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "terminating persistent connection", "error", mgr.err)
+			mgr.terminate = true
+			return mgr.err
+		}
+		if mgr.terminate == true {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "terminating persistent connection", "reason", mgr.msg)
+			return nil
+		}
+	}
 }
 
 func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, error) {

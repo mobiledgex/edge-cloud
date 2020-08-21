@@ -51,10 +51,20 @@ func (a ServerStreamWrapper) RecvMsg(m interface{}) error {
 		cookie = typ.SessionCookie
 		// Verify session cookie
 		ckey, err := VerifyCookie(a.Context(), cookie)
-		log.SpanLog(a.Context(), log.DebugLevelDmereq, "VerifyCookie result", "ckey", ckey, "err", err)
+		log.SpanLog(a.Context(), log.DebugLevelDmereq, "QosPosition VerifyCookie result", "ckey", ckey, "err", err)
 		if err != nil {
 			return grpc.Errorf(codes.Unauthenticated, err.Error())
 		}
+	case *dme.ClientEdgeEvent:
+		// CONSOLIDATE CODE
+		cookie = typ.SessionCookie
+		// Verify session cookie
+		ckey, err := VerifyCookie(a.Context(), cookie)
+		log.SpanLog(a.Context(), log.DebugLevelDmereq, "EdgeEvent VerifyCookie result", "ckey", ckey, "err", err)
+		if err != nil {
+			return grpc.Errorf(codes.Unauthenticated, err.Error())
+		}
+		break
 	default:
 		log.InfoLog("Unknown streaming operation, cannot verify cookie", "type", reflect.TypeOf(m).String())
 		return grpc.Errorf(codes.Unauthenticated, err.Error())
