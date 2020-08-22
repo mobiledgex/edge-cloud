@@ -1,4 +1,4 @@
-#
+´#
 # docker build -t mobiledgex/edge-cloud -f Dockerfile.edge-cloud .
 # docker run -it --rm mobiledgex/edge-cloud 
 #   entry point here is bash. Inside docker ls /go/bin, you will
@@ -85,6 +85,7 @@ COPY --from=build /go/bin/controller \
 		  /go/bin/resource-tracker \
 		  /go/bin/autoprov \
 		  /go/bin/notifyroot \
+		  /go/bin/alertmgr-sidecar \
 		  /usr/local/bin/
 COPY --from=build /go/plugins /plugins
 
