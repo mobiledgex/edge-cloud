@@ -228,7 +228,7 @@ func GetAppDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, ap
 
 func GetRemoteZipDockerManifests(ctx context.Context, vaultConfig *vault.Config, manifest, zipfile, downloadAction string) ([]map[string]DockerContainer, error) {
 	if zipfile == "" {
-		zipfile = "/tmp/temp.zip"
+		zipfile = "/var/tmp/temp.zip"
 	}
 	if downloadAction == Download {
 		err := GetRemoteManifestToFile(ctx, vaultConfig, manifest, zipfile)
