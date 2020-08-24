@@ -50,7 +50,7 @@ func (s *Platform) SyncControllerCache(ctx context.Context, caches *platform.Cac
 	return nil
 }
 
-func (s *Platform) GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor) (*edgeproto.CloudletManifest, error) {
+func (s *Platform) GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *platform.Caches) (*edgeproto.CloudletManifest, error) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "Get cloudlet manifest", "cloudletName", cloudlet.Key.Name)
 	return &edgeproto.CloudletManifest{Manifest: "dind manifest", ImagePath: "http://dind.path"}, nil
 }
