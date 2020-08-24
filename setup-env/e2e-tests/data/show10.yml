@@ -751,6 +751,9 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -782,6 +785,9 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -813,6 +819,9 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -844,6 +853,9 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -875,6 +887,9 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -906,6 +921,9 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -937,6 +955,9 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -968,6 +989,9 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -999,6 +1023,9 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1030,6 +1057,9 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1061,6 +1091,9 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1092,6 +1125,9 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1123,6 +1159,9 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1154,6 +1193,9 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1185,6 +1227,9 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1216,6 +1261,9 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1247,6 +1295,9 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1278,6 +1329,9 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1309,6 +1363,9 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1340,6 +1397,9 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 
 appinstrefs:
 - key:

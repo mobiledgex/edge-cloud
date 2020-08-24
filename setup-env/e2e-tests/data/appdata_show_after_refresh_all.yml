@@ -521,6 +521,10 @@ appinstances:
     tls: true
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
   revision: 1
 - key:
     appkey:
@@ -585,6 +589,10 @@ appinstances:
     tls: true
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
   revision: 1
 - key:
     appkey:
@@ -682,6 +690,10 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
 
 appinstrefs:
 - key:

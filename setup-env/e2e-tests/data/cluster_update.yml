@@ -1,0 +1,9 @@
+clusterinsts:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      organization: tmus
+      name: tmus-cloud-1
+    organization: AcmeAppCo
+  numnodes: 3

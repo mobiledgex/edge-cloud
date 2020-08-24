@@ -64,7 +64,8 @@ func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.Cloud
 }
 
 func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error {
-	return fmt.Errorf("update cluster not supported for fake cloudlets")
+	updateCallback(edgeproto.UpdateTask, "Updating Cluster Inst")
+	return nil
 }
 func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake CreateClusterInst", "clusterInst", clusterInst, "privacyPolicy", privacyPolicy)
@@ -96,6 +97,13 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 }
 
 func (s *Platform) GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
+	if app.Deployment == cloudcommon.DeploymentTypeKubernetes {
+		rt := &edgeproto.AppInstRuntime{}
+		for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
+			rt.ContainerIds = append(rt.ContainerIds, fmt.Sprintf("appOnClusterNode%d", ii))
+		}
+		return rt, nil
+	}
 	return &edgeproto.AppInstRuntime{}, nil
 }
 

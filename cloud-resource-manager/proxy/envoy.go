@@ -240,7 +240,7 @@ static_resources:
       {{- end}}
   {{- end}}
   {{- range .UDPSpec}}
-  - name: listener_0
+  - name: udp_listener_{{.ListenPort}}
     address:
       socket_address:
         protocol: UDP

@@ -151,9 +151,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].CrmOverride = 0
 		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].RuntimeInfo.ContainerIds = nil
-		}
 		if _, found := tags["timestamp"]; found {
 			in.AppInstances[i0].CreatedAt = distributed_match_engine.Timestamp{}
 		}

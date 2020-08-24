@@ -39,6 +39,14 @@ tests:
     yaml2: "{{datadir}}/appdata_show_after_refresh_all.yml"
     filetype: appdata
 
+- name: Update cluster instance
+  apifile: "{{datadir}}/cluster_update.yml"
+  actions: [ctrlapi-update,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_show_after_cluster_update.yml"
+    filetype: appdata
+
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]
   apifile: "{{datadir}}/appdata.yml"

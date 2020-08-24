@@ -580,9 +580,6 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.CrmOverride")
 	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.RuntimeInfo.ContainerIds")
-	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "AppInstances.CreatedAt")
 	}
