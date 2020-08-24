@@ -83,6 +83,9 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 }
 
 func (s *VMPoolApi) DeleteVMPool(ctx context.Context, in *edgeproto.VMPool) (*edgeproto.Result, error) {
+	if err := in.Validate(nil); err != nil {
+		return &edgeproto.Result{}, err
+	}
 	// Validate if pool is in use by Cloudlet
 	if cloudletApi.UsesVMPool(&in.Key) {
 		return &edgeproto.Result{}, fmt.Errorf("VM pool in use by Cloudlet")
@@ -147,6 +150,10 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 }
 
 func (s *VMPoolApi) RemoveVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMember) (*edgeproto.Result, error) {
+	if err := in.Validate(nil); err != nil {
+		return &edgeproto.Result{}, err
+	}
+
 	var err error
 
 	cctx := DefCallContext()
