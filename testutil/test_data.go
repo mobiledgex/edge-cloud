@@ -1385,6 +1385,12 @@ var VMPoolData = []edgeproto.VMPool{
 					ExternalIp: "192.168.1.101",
 					InternalIp: "192.168.100.101",
 				},
+				Flavor: &edgeproto.FlavorInfo{
+					Name:  "vm1-flavor",
+					Vcpus: uint64(2),
+					Ram:   uint64(2048),
+					Disk:  uint64(20),
+				},
 			},
 			edgeproto.VM{
 				Name: "vm2",
@@ -1392,17 +1398,47 @@ var VMPoolData = []edgeproto.VMPool{
 					ExternalIp: "192.168.1.102",
 					InternalIp: "192.168.100.102",
 				},
+				Flavor: &edgeproto.FlavorInfo{
+					Name:  "vm2-flavor",
+					Vcpus: uint64(2),
+					Ram:   uint64(2048),
+					Disk:  uint64(20),
+				},
 			},
 			edgeproto.VM{
 				Name: "vm3",
 				NetInfo: edgeproto.VMNetInfo{
 					InternalIp: "192.168.100.103",
 				},
+				Flavor: &edgeproto.FlavorInfo{
+					Name:  "vm3-flavor",
+					Vcpus: uint64(2),
+					Ram:   uint64(2048),
+					Disk:  uint64(20),
+				},
 			},
 			edgeproto.VM{
 				Name: "vm4",
 				NetInfo: edgeproto.VMNetInfo{
 					InternalIp: "192.168.100.104",
+				},
+				Flavor: &edgeproto.FlavorInfo{
+					Name:  "vm4-flavor",
+					Vcpus: uint64(2),
+					Ram:   uint64(2048),
+					Disk:  uint64(20),
+				},
+			},
+			edgeproto.VM{
+				Name: "vm5",
+				NetInfo: edgeproto.VMNetInfo{
+					InternalIp: "192.168.100.105",
+				},
+				Flavor: &edgeproto.FlavorInfo{
+					Name:  "vm5-flavor",
+					Vcpus: uint64(3),
+					Ram:   uint64(4096),
+					Disk:  uint64(50),
 				},
 			},
 		},
@@ -1419,6 +1455,12 @@ var VMPoolData = []edgeproto.VMPool{
 					ExternalIp: "192.168.1.101",
 					InternalIp: "192.168.100.101",
 				},
+				Flavor: &edgeproto.FlavorInfo{
+					Name:  "vm1-flavor",
+					Vcpus: uint64(2),
+					Ram:   uint64(2048),
+					Disk:  uint64(20),
+				},
 			},
 			edgeproto.VM{
 				Name: "vm2",
@@ -1426,11 +1468,23 @@ var VMPoolData = []edgeproto.VMPool{
 					ExternalIp: "192.168.1.102",
 					InternalIp: "192.168.100.102",
 				},
+				Flavor: &edgeproto.FlavorInfo{
+					Name:  "vm2-flavor",
+					Vcpus: uint64(2),
+					Ram:   uint64(2048),
+					Disk:  uint64(20),
+				},
 			},
 			edgeproto.VM{
 				Name: "vm3",
 				NetInfo: edgeproto.VMNetInfo{
 					InternalIp: "192.168.100.103",
+				},
+				Flavor: &edgeproto.FlavorInfo{
+					Name:  "vm3-flavor",
+					Vcpus: uint64(2),
+					Ram:   uint64(2048),
+					Disk:  uint64(20),
 				},
 			},
 		},
@@ -1446,11 +1500,23 @@ var VMPoolData = []edgeproto.VMPool{
 				NetInfo: edgeproto.VMNetInfo{
 					InternalIp: "192.168.100.101",
 				},
+				Flavor: &edgeproto.FlavorInfo{
+					Name:  "vm1-flavor",
+					Vcpus: uint64(2),
+					Ram:   uint64(2048),
+					Disk:  uint64(20),
+				},
 			},
 			edgeproto.VM{
 				Name: "vm2",
 				NetInfo: edgeproto.VMNetInfo{
 					InternalIp: "192.168.100.102",
+				},
+				Flavor: &edgeproto.FlavorInfo{
+					Name:  "vm2-flavor",
+					Vcpus: uint64(2),
+					Ram:   uint64(2048),
+					Disk:  uint64(20),
 				},
 			},
 		},
