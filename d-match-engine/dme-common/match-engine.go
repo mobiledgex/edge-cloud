@@ -4,18 +4,23 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
+	"io"
 	"net"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/peer"
 )
 
 // 1 km is considered near enough to call 2 locations equivalent
@@ -39,6 +44,8 @@ type DmeAppInst struct {
 	maintenanceState edgeproto.MaintenanceState
 	// Health state of the appInst
 	appInstHealth edgeproto.HealthCheck
+	// RTT latency from device to appinst and backend
+	latency int64
 }
 
 type DmeAppInsts struct {
@@ -101,6 +108,18 @@ type StatKey struct {
 type StatKeyContextType string
 
 var StatKeyContextKey = StatKeyContextType("statKey")
+
+// Struct to monitor EdgeEvent receive and send goroutines
+type EdgeEventPersistentMgr struct {
+	mux        util.Mutex
+	err        error
+	terminated chan bool
+	msg        string
+}
+
+// EdgeEvents Functions implemented by plugin
+var ListenForLatencyUpdatesFunc func() int
+var ListenForEdgeEventsFunc func() string
 
 func SetupMatchEngine() {
 	DmeAppTbl = new(DmeApps)
@@ -231,6 +250,11 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		cl.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
 		cl.maintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
 	}
+
+	runtimeInfo := appInst.RuntimeInfo
+	cl.latency = runtimeInfo.Latency
+	log.SpanLog(ctx, log.DebugLevelDmereq, "blahhhh: updating latency in dme", "latency", cl.latency)
+
 	log.SpanLog(ctx, log.DebugLevelDmedb, logMsg,
 		"appName", app.AppKey.Name,
 		"appVersion", app.AppKey.Version,
@@ -927,6 +951,117 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 		cloc.Appinstances = append(cloc.Appinstances, &ai)
 	}
 	clist.Status = dme.AppInstListReply_AI_SUCCESS
+}
+
+func SendEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventServer, cancel context.CancelFunc) error {
+	mgr := new(EdgeEventPersistentMgr)
+
+	peer, ok := peer.FromContext(ctx)
+	if !ok {
+		return errors.New("SendEdgeEventServer unable to get peer context")
+	}
+	log.SpanLog(ctx, log.DebugLevelDmereq, "got peer ip", "peer", peer.Addr)
+
+	//receive goroutine
+	go handleClientEdgeEvents(ctx, svr, mgr, cancel)
+
+	//send goroutine
+	go listenForServerEdgeEvents(ctx, svr, mgr, cancel)
+
+	// monitor persistent connection
+	for {
+		select {
+		case <-ctx.Done():
+			if mgr.err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "terminating persistent connection in ctx done", "error", mgr.err)
+				return mgr.err
+			}
+			return ctx.Err()
+		case <-mgr.terminated:
+			if mgr.err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "terminating persistent connection in mgr terminated", "error", mgr.err)
+				return mgr.err
+			}
+			return ctx.Err()
+		default:
+		}
+	}
+}
+
+//receive edge events from SDK. Helper function for SendEdgeEvent
+func handleClientEdgeEvents(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventServer, mgr *EdgeEventPersistentMgr, cancel context.CancelFunc) {
+	for {
+		//check if EdgeEvent persistent connection has been cancelled
+		select {
+		case <-ctx.Done():
+			log.SpanLog(ctx, log.DebugLevelDmereq, "handle client edge event cancelled")
+			return
+		default:
+		}
+
+		//receive data from stream
+		mgr.mux.Lock()
+		cupdate, err := (*svr).Recv()
+		mgr.mux.Unlock()
+
+		//check receive errors
+		if err != nil && err != io.EOF {
+			mgr.mux.Lock()
+			log.SpanLog(ctx, log.DebugLevelDmereq, "error on receive", "error", err)
+			if strings.Contains(err.Error(), "rpc error") {
+				mgr.err = err
+				// cancel()
+				mgr.terminated <- true
+				mgr.mux.Unlock()
+				return
+			}
+			mgr.mux.Unlock()
+		}
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate)
+
+		//check if client sent a request to terminate persistent connection
+		if cupdate.Terminate == true {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Client initiated termination of persistent connection")
+			// cancel()
+			mgr.terminated <- true
+			return
+		}
+	}
+}
+
+//listen for edge events (HA, latency, health checks) to send to SDK. Helper function for SendEdgeEvent
+func listenForServerEdgeEvents(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventServer, mgr *EdgeEventPersistentMgr, cancel context.CancelFunc) {
+	var iter uint32 = 1
+	for {
+		//check if EdgeEvent persistent connection has been cancelled
+		select {
+		case <-ctx.Done():
+			log.SpanLog(ctx, log.DebugLevelDmereq, "listen for server cancelled")
+			return
+		default:
+		}
+
+		//update latency send it to stream
+		supdate := new(dme.ServerEdgeEvent)
+
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Loop number", "iteration: ", iter)
+		supdate.Latency = uint32(ListenForLatencyUpdatesFunc())
+		supdate.Msg = ListenForEdgeEventsFunc()
+		if err := (*svr).Send(supdate); err != nil {
+			mgr.mux.Lock()
+			log.SpanLog(ctx, log.DebugLevelDmereq, "error on send", "error", err)
+			if strings.Contains(err.Error(), "rpc error") {
+				mgr.err = err
+				// cancel()
+				mgr.terminated <- true
+				mgr.mux.Unlock()
+				return
+			}
+			mgr.mux.Unlock()
+		}
+		iter++
+		time.Sleep(5 * time.Second)
+	}
 }
 
 func ListAppinstTbl(ctx context.Context) {

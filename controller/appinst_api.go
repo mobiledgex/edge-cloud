@@ -1268,7 +1268,7 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 }
 
 func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState)
+	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState, "latency", in.RuntimeInfo.Latency)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -1510,4 +1510,20 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 
 func isTenantAppInst(appInstKey *edgeproto.AppInstKey) bool {
 	return appInstKey.ClusterInstKey.Organization == cloudcommon.OrganizationMobiledgeX && appInstKey.AppKey.Organization != cloudcommon.OrganizationMobiledgeX
+}
+
+func (s *AppInstApi) MeasureLatency(in *edgeproto.AppInst, cb edgeproto.AppInstApi_MeasureLatencyServer) error {
+	ctx := cb.Context()
+	log.SpanLog(ctx, log.DebugLevelApi, "In Measure Latency", "appinst", in)
+	// TODO: Check if app inst in valid state to measure latency
+	// TODO: Check if valid app inst
+
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		in.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		in.MeasureLatency = true
+		s.store.STMPut(stm, in)
+		return nil
+	})
+
+	return err
 }

@@ -98,6 +98,8 @@ type Platform interface {
 	VerifyVMs(ctx context.Context, vms []edgeproto.VM) error
 	// Get Cloudlet Properties
 	GetCloudletProps(ctx context.Context) (*edgeproto.CloudletProps, error)
+	// Monitor Latency
+	MonitorLatency(ctx context.Context, updateCallback edgeproto.CacheUpdateCallback) (int64, error)
 }
 
 type ClusterSvc interface {

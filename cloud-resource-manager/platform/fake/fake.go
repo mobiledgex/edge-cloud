@@ -38,6 +38,8 @@ var fakeProps = map[string]*edgeproto.PropertyInfo{
 	},
 }
 
+var latency = 1
+
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
@@ -220,4 +222,17 @@ func (s *Platform) VerifyVMs(ctx context.Context, vms []edgeproto.VM) error {
 
 func (s *Platform) GetCloudletProps(ctx context.Context) (*edgeproto.CloudletProps, error) {
 	return &edgeproto.CloudletProps{Properties: fakeProps}, nil
+}
+
+func (s *Platform) MonitorLatency(ctx context.Context, updateCallback edgeproto.CacheUpdateCallback) (int64, error) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "Monitor Latency in fake")
+	// try to run ping to client ip
+	client, _ := s.GetNodePlatformClient(ctx, nil)
+	cmd := `ping`
+	out, _ := client.Output(cmd)
+	log.SpanLog(ctx, log.DebugLevelInfra, "Monitor latency ping", "ping output", out)
+
+	// updateCallback(edgeproto.UpdateLatency, strconv.Itoa(latency))
+	latency++
+	return int64(latency - 1), nil
 }
