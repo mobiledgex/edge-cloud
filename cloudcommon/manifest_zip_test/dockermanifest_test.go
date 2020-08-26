@@ -16,7 +16,7 @@ import (
 
 func zipManifests() error {
 	// Get a Buffer to Write To
-	zipfile := "/tmp/temp.zip"
+	zipfile := "/var/tmp/temp.zip"
 	outFile, err := os.Create(zipfile)
 	if err != nil {
 		return err
