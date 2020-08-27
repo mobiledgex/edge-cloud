@@ -1441,6 +1441,7 @@ var UpdateCloudletOptionalArgs = []string{
 	"timelimits.updateappinsttimeout",
 	"timelimits.deleteappinsttimeout",
 	"crmoverride",
+	"envvar",
 	"accessvars",
 	"maintenancestate",
 }
