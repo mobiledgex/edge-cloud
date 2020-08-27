@@ -223,9 +223,7 @@ message FlavorMatch {
 }
 
 message CloudletManifest {
-  // Image path of cloudlet VM base image
-  string image_path = 1;
-  // Manifest to bringup cloudlet VM and services
+  // Manifest to bringup cloudlet VM and services.
   string manifest = 2;
 }
 
