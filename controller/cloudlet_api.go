@@ -740,7 +740,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		err = s.WaitForCloudlet(
 			ctx, &in.Key,
 			edgeproto.TrackedState_UPDATE_ERROR, // Set error state
-			"Cloudlet upgraded successfully",    // Set success message
+			"Cloudlet updated successfully",     // Set success message
 			PlatformInitTimeout, updatecb.cb,
 		)
 
