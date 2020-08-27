@@ -546,7 +546,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 				done <- true
 			}
 		}
-
 	}
 
 	log.SpanLog(ctx, log.DebugLevelApi, "watch event for CloudletInfo")
@@ -743,7 +742,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			"Cloudlet updated successfully",     // Set success message
 			PlatformInitTimeout, updatecb.cb,
 		)
-
 		return err
 	}
 
