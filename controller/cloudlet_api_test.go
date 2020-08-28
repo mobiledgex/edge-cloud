@@ -178,6 +178,18 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 
 	cloudlet.State = edgeproto.TrackedState_READY
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+	cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
+	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE, crm_v1)
+	require.Nil(t, err, "cloudlet state transition")
+
+	cloudlet.State = edgeproto.TrackedState_UPDATING
+	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+	require.Nil(t, err, "cloudlet state transition")
 }
 
 func testManualBringup(t *testing.T, ctx context.Context) {
