@@ -285,7 +285,7 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.method_noconfig) = "PlatformType,DeploymentLocal,Flavor,PhysicalName,EnvVar,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,OverridePolicyContainerVersion,VmPool";
+    option (protogen.method_noconfig) = "PlatformType,DeploymentLocal,Flavor,PhysicalName,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,OverridePolicyContainerVersion,VmPool";
     option (protogen.mc2_streamer_cache) = true;
   }
   // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.

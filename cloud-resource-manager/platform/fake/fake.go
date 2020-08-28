@@ -154,6 +154,14 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	return nil
 }
 
+func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error {
+	log.DebugLog(log.DebugLevelInfra, "update fake Cloudlet", "cloudlet", cloudlet)
+	for key, val := range cloudlet.EnvVar {
+		updateCallback(edgeproto.UpdateTask, fmt.Sprintf("Updating envvar, %s=%s", key, val))
+	}
+	return nil
+}
+
 func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.DebugLog(log.DebugLevelInfra, "delete fake Cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")
