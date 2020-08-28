@@ -611,6 +611,61 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	if updateInfo {
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	}
+
+	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
+		switch updateType {
+		case edgeproto.UpdateTask:
+			cd.CloudletInfoCache.SetStatusTask(ctx, &new.Key, value)
+		case edgeproto.UpdateStep:
+			cd.CloudletInfoCache.SetStatusStep(ctx, &new.Key, value)
+		}
+	}
+
+	if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+		// Reset old Status
+		cd.CloudletInfoCache.StatusReset(ctx, &new.Key)
+
+		cloudlet := edgeproto.Cloudlet{}
+		// Check current thread state
+		if cloudletFound := cd.CloudletCache.Get(&new.Key, &cloudlet); cloudletFound {
+			if cloudlet.State == edgeproto.TrackedState_UPDATING {
+				return
+			}
+		}
+		cloudletInfo := edgeproto.CloudletInfo{}
+		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
+			return
+		}
+		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+			// Cloudlet is already upgrading
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet update already in progress", "key", new.Key)
+			return
+		}
+		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE
+		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+
+		err := cd.platform.UpdateCloudlet(ctx, new, updateCloudletCallback)
+		if err != nil {
+			errstr := fmt.Sprintf("Update Cloudlet failed: %v", err)
+			log.InfoLog("can't update cloudlet", "error", errstr, "key", new.Key)
+
+			cloudletInfo.Errors = append(cloudletInfo.Errors, errstr)
+			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
+			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+			return
+		}
+		// fetch cloudletInfo again, as status might have changed as part of UpdateCloudlet
+		found = cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
+			return
+		}
+		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+		cloudletInfo.Status.StatusReset()
+		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
 }
 
 // This func must be called with cd.VMPoolMux lock held
