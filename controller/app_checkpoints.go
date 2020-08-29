@@ -65,7 +65,7 @@ func CreateAppUsageRecord(ctx context.Context, app *edgeproto.AppInst, endTime t
 
 func createAppUsageMetric(app *edgeproto.AppInst, startTime, endTime time.Time, runTime time.Duration, status string) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
-	metric.Name = cloudcommon.VMAppInstUsage
+	metric.Name = cloudcommon.AppInstCheckpoints
 	now := time.Now()
 	ts, _ := types.TimestampProto(now)
 	metric.Timestamp = *ts
@@ -171,9 +171,9 @@ func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 
 	// check for apps that got checkpointed but did not have any log events between PrevCheckpoint and this one
 	selectors = []string{"\"app\"", "\"org\"", "\"ver\"", "\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\""}
-	influxCheckpointQuery := fmt.Sprintf(CreateCheckpointInfluxUsageQueryTemplate,
+	influxCheckpointQuery := fmt.Sprintf(CreateCheckpointInfluxQueryTemplate,
 		strings.Join(selectors, ","),
-		cloudcommon.VMAppInstUsage,
+		cloudcommon.AppInstCheckpoints,
 		PrevCheckpoint.Add(-1*time.Minute).Format(time.RFC3339), //small delta to account for conversion rounding inconsistencies
 		PrevCheckpoint.Add(time.Minute).Format(time.RFC3339))
 	checkpoints, err := services.events.QueryDB(influxCheckpointQuery)
@@ -181,7 +181,7 @@ func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 		return fmt.Errorf("Unable to query influx: %v", err)
 	}
 
-	empty, err = checkInfluxQueryOutput(checkpoints, cloudcommon.VMAppInstUsage)
+	empty, err = checkInfluxQueryOutput(checkpoints, cloudcommon.AppInstCheckpoints)
 	if err != nil {
 		return err
 	} else if empty {
@@ -245,7 +245,7 @@ func GetVmAppCheckpoint(ctx context.Context, org string, timestamp time.Time) (*
 	selectors := []string{"\"app\"", "\"ver\"", "\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\"", "\"status\"", "\"end\""}
 	influxCheckpointQuery := fmt.Sprintf(GetCheckpointInfluxQueryTemplate,
 		strings.Join(selectors, ","),
-		cloudcommon.VMAppInstUsage,
+		cloudcommon.AppInstCheckpoints,
 		org,
 		timestamp.Format(time.RFC3339))
 	checkpoints, err := services.events.QueryDB(influxCheckpointQuery)
@@ -259,7 +259,7 @@ func GetVmAppCheckpoint(ctx context.Context, org string, timestamp time.Time) (*
 		Status:    make([]string, 0),
 	}
 
-	empty, err := checkInfluxQueryOutput(checkpoints, cloudcommon.VMAppInstUsage)
+	empty, err := checkInfluxQueryOutput(checkpoints, cloudcommon.AppInstCheckpoints)
 	if err != nil {
 		return nil, err
 	} else if empty {

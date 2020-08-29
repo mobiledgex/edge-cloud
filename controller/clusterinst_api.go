@@ -855,8 +855,10 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 		metric.AddIntVal("ram", nodeFlavor.Ram)
 		metric.AddIntVal("vcpu", nodeFlavor.Vcpus)
 		metric.AddIntVal("disk", nodeFlavor.Disk)
-		metric.AddIntVal("nodeCount", uint64(info.NumMasters+info.NumNodes))
+		metric.AddIntVal("nodecount", uint64(info.NumMasters+info.NumNodes))
 		metric.AddStringVal("other", fmt.Sprintf("%v", nodeFlavor.OptResMap))
 	}
+	metric.AddStringVal("ipaccess", info.IpAccess.String())
+
 	services.events.AddMetric(&metric)
 }

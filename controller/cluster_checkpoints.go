@@ -35,6 +35,7 @@ func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterIns
 	if err != nil {
 		return fmt.Errorf("unable to retrieve Checkpoint: %v", err)
 	}
+	fmt.Printf("got checkpoint: %+v\n", checkpoint)
 	influxLogQuery := fmt.Sprintf(ClusterUsageInfluxQueryTemplate,
 		strings.Join(selectors, ","),
 		cloudcommon.ClusterInstEvent,
@@ -67,9 +68,8 @@ func CreateClusterUsageRecord(ctx context.Context, cluster *edgeproto.ClusterIns
 
 func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime time.Time, runTime time.Duration, status string) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
-	metric.Name = cloudcommon.ClusterInstUsage
-	now := time.Now()
-	ts, _ := types.TimestampProto(now)
+	metric.Name = cloudcommon.ClusterInstCheckpoints
+	ts, _ := types.TimestampProto(endTime)
 	metric.Timestamp = *ts
 	utc, _ := time.LoadLocation("UTC")
 	//start and endtimes end up being put into different timezones somehow when going through calculations so force them both to the same here
@@ -82,6 +82,8 @@ func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime
 	metric.AddTag("cluster", cluster.Key.ClusterKey.Name)
 	metric.AddTag("clusterorg", cluster.Key.Organization)
 	metric.AddTag("flavor", cluster.Flavor.Name)
+	metric.AddIntVal("nodecount", uint64(cluster.NumMasters+cluster.NumNodes))
+	metric.AddStringVal("ipaccess", cluster.IpAccess.String())
 	metric.AddStringVal("start", startUTC.Format(time.RFC3339))
 	metric.AddStringVal("end", endUTC.Format(time.RFC3339))
 	metric.AddDoubleVal("uptime", runTime.Seconds())
@@ -159,11 +161,11 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 		}
 	}
 
-	// check for apps that got checkpointed but did not have any log events between PrevCheckpoint and this one
+	// check for clusters that got checkpointed but did not have any log events between PrevCheckpoint and this one
 	selectors = []string{"\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\""}
-	influxCheckpointQuery := fmt.Sprintf(CreateCheckpointInfluxUsageQueryTemplate,
+	influxCheckpointQuery := fmt.Sprintf(CreateCheckpointInfluxQueryTemplate,
 		strings.Join(selectors, ","),
-		cloudcommon.ClusterInstUsage,
+		cloudcommon.ClusterInstCheckpoints,
 		PrevCheckpoint.Add(-1*time.Minute).Format(time.RFC3339), //small delta to account for conversion rounding inconsistencies
 		PrevCheckpoint.Add(time.Minute).Format(time.RFC3339))
 	checkpoints, err := services.events.QueryDB(influxCheckpointQuery)
@@ -171,7 +173,7 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 		return fmt.Errorf("Unable to query influx: %v", err)
 	}
 
-	empty, err = checkInfluxQueryOutput(checkpoints, cloudcommon.ClusterInstUsage)
+	empty, err = checkInfluxQueryOutput(checkpoints, cloudcommon.ClusterInstCheckpoints)
 	if err != nil {
 		return err
 	} else if empty {
@@ -223,7 +225,7 @@ func GetClusterCheckpoint(ctx context.Context, org string, timestamp time.Time) 
 	selectors := []string{"\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\"", "\"status\"", "\"end\""}
 	influxCheckpointQuery := fmt.Sprintf(GetCheckpointInfluxQueryTemplate,
 		strings.Join(selectors, ","),
-		cloudcommon.ClusterInstUsage,
+		cloudcommon.ClusterInstCheckpoints,
 		org,
 		timestamp.Format(time.RFC3339))
 	checkpoints, err := services.events.QueryDB(influxCheckpointQuery)
@@ -237,7 +239,7 @@ func GetClusterCheckpoint(ctx context.Context, org string, timestamp time.Time) 
 		Status:    make([]string, 0),
 	}
 
-	empty, err := checkInfluxQueryOutput(checkpoints, cloudcommon.ClusterInstUsage)
+	empty, err := checkInfluxQueryOutput(checkpoints, cloudcommon.ClusterInstCheckpoints)
 	if err != nil {
 		return nil, err
 	} else if empty {
