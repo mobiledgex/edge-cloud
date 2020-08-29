@@ -101,7 +101,7 @@ func runCheckpoints(ctx context.Context) {
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create cluster checkpoint", "time", checkpointTime, "err", err)
 			}
-			err = CreateVmAppCheckpoint(ctx, checkpointTime)
+			err = CreateAppCheckpoint(ctx, checkpointTime)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create app checkpoint", "time", checkpointTime, "err", err)
 			}

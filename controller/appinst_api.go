@@ -995,9 +995,16 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	ctx := cb.Context()
 
 	var app edgeproto.App
+
+	// get appinst info for flavor
+	appInstInfo := edgeproto.AppInst{}
+	if !appInstApi.cache.Get(&in.Key, &appInstInfo) {
+		return fmt.Errorf("Unable to get appInst info for app: %v", in.Key)
+	}
+	eventCtx := context.WithValue(ctx, in.Key, appInstInfo)
 	defer func() {
 		if reterr == nil {
-			RecordAppInstEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
+			RecordAppInstEvent(eventCtx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
 	}()
 
@@ -1392,6 +1399,19 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 		return
 	}
 	metric.AddStringVal("deployment", app.Deployment)
+
+	// have to grab the appinst here because its now possible to create apps without a default flavor
+	// on deletes, the appinst is passed into the context otherwise we wont be able to get it
+	appInst, ok := ctx.Value(*appInstKey).(edgeproto.AppInst)
+	if !ok {
+		if !appInstApi.cache.Get(appInstKey, &appInst) {
+			log.SpanLog(ctx, log.DebugLevelMetrics, "Cannot find appdata for app", "app", appInstKey.AppKey)
+			return
+		}
+	}
+	if app.Deployment == cloudcommon.DeploymentTypeKubernetes { //TODO: change this to VM when done
+		metric.AddStringVal("flavor", appInst.Flavor.Name)
+	}
 
 	services.events.AddMetric(&metric)
 
