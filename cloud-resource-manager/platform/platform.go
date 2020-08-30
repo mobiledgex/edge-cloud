@@ -81,6 +81,7 @@ type Platform interface {
 	SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Create Cloudlet
 	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches, updateCallback edgeproto.CacheUpdateCallback) error
+	UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet
 	DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *Caches, updateCallback edgeproto.CacheUpdateCallback) error
 	// Save Cloudlet AccessVars
