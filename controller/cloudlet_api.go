@@ -1230,8 +1230,9 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, in *edgeproto.Clo
 	if err != nil {
 		return nil, err
 	}
-
-	return cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig, &pfFlavor)
+	vmPool := edgeproto.VMPool{}
+	caches := getCaches(ctx, &vmPool)
+	return cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig, &pfFlavor, caches)
 }
 
 func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
