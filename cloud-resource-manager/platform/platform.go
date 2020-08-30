@@ -91,7 +91,7 @@ type Platform interface {
 	// Sync data with controller
 	SyncControllerCache(ctx context.Context, caches *Caches, cloudletState edgeproto.CloudletState) error
 	// Get Cloudlet Manifest Config
-	GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor) (*edgeproto.CloudletManifest, error)
+	GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches) (*edgeproto.CloudletManifest, error)
 	// Verify VM
 	VerifyVMs(ctx context.Context, vms []edgeproto.VM) error
 	// Get Cloudlet Properties
