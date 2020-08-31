@@ -1093,8 +1093,6 @@ var CloudletOptionalArgs = []string{
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
-	"location.timestamp.seconds",
-	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
 	"numdynamicips",
@@ -1389,8 +1387,6 @@ var CreateCloudletRequiredArgs = []string{
 }
 var CreateCloudletOptionalArgs = []string{
 	"location.altitude",
-	"location.timestamp.seconds",
-	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
 	"timelimits.createclusterinsttimeout",
@@ -1427,8 +1423,6 @@ var UpdateCloudletOptionalArgs = []string{
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
-	"location.timestamp.seconds",
-	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
 	"numdynamicips",
