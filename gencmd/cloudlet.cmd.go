@@ -1093,8 +1093,6 @@ var CloudletOptionalArgs = []string{
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
-	"location.timestamp.seconds",
-	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
 	"numdynamicips",
@@ -1217,13 +1215,11 @@ var FlavorMatchComments = map[string]string{
 var FlavorMatchSpecialArgs = map[string]string{}
 var CloudletManifestRequiredArgs = []string{}
 var CloudletManifestOptionalArgs = []string{
-	"imagepath",
 	"manifest",
 }
 var CloudletManifestAliasArgs = []string{}
 var CloudletManifestComments = map[string]string{
-	"imagepath": "Image path of cloudlet VM base image",
-	"manifest":  "Manifest to bringup cloudlet VM and services",
+	"manifest": "Manifest to bringup cloudlet VM and services.",
 }
 var CloudletManifestSpecialArgs = map[string]string{}
 var PropertyInfoRequiredArgs = []string{}
@@ -1391,8 +1387,6 @@ var CreateCloudletRequiredArgs = []string{
 }
 var CreateCloudletOptionalArgs = []string{
 	"location.altitude",
-	"location.timestamp.seconds",
-	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
 	"timelimits.createclusterinsttimeout",
@@ -1429,8 +1423,6 @@ var UpdateCloudletOptionalArgs = []string{
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
-	"location.timestamp.seconds",
-	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
 	"numdynamicips",
@@ -1441,6 +1433,7 @@ var UpdateCloudletOptionalArgs = []string{
 	"timelimits.updateappinsttimeout",
 	"timelimits.deleteappinsttimeout",
 	"crmoverride",
+	"envvar",
 	"accessvars",
 	"maintenancestate",
 }
