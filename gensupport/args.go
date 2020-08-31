@@ -110,11 +110,21 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 		if _, found := requiredMap[arg.Name]; found {
 			continue
 		}
-		if _, found := noconfigMap[arg.Name]; found {
-			continue
-		}
 		parts := strings.Split(arg.Name, ".")
-		if _, found := noconfigMap[parts[0]]; found {
+		checkStr := ""
+		noconfigFound := false
+		for _, part := range parts {
+			if checkStr == "" {
+				checkStr = part
+			} else {
+				checkStr = checkStr + "." + part
+			}
+			if _, found := noconfigMap[checkStr]; found {
+				noconfigFound = true
+				break
+			}
+		}
+		if noconfigFound {
 			continue
 		}
 		parts = strings.Split(arg.Name, ":")

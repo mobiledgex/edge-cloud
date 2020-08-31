@@ -475,8 +475,6 @@ var RunCommandRequiredArgs = []string{
 var RunCommandOptionalArgs = []string{
 	"cluster-org",
 	"containerid",
-	"node-type",
-	"node-name",
 	"webrtc",
 }
 var RunConsoleRequiredArgs = []string{
