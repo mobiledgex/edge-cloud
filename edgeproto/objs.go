@@ -279,12 +279,19 @@ func (s *CloudletPool) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (s *VM) Validate() error {
+func (s *VM) ValidateName() error {
 	if s.Name == "" {
 		return errors.New("Missing VM name")
 	}
 	if !util.ValidName(s.Name) {
 		return errors.New("Invalid VM name")
+	}
+	return nil
+}
+
+func (s *VM) Validate() error {
+	if err := s.ValidateName(); err != nil {
+		return err
 	}
 	if s.NetInfo.ExternalIp != "" && net.ParseIP(s.NetInfo.ExternalIp) == nil {
 		return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
