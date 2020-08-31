@@ -115,7 +115,7 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 		noconfigFound := false
 		for _, part := range parts {
 			if checkStr == "" {
-				checkStr += part
+				checkStr = part
 			} else {
 				checkStr = checkStr + "." + part
 			}
