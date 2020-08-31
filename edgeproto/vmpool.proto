@@ -163,7 +163,7 @@ service VMPoolApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "Vm.Name";
-    option (protogen.method_noconfig) = "Vm.NetInfo.ExternalIp,Vm.NetInfo.InternalIp";
+    option (protogen.method_noconfig) = "Vm.NetInfo.ExternalIp,Vm.NetInfo.InternalIp,Vm.Flavor";
   }
 }
 
