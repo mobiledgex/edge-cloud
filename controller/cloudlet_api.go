@@ -396,7 +396,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			newState = edgeproto.TrackedState_READY
 		}
 		cloudlet := edgeproto.Cloudlet{}
-		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if !s.store.STMGet(stm, &in.Key, &cloudlet) {
 				return in.Key.NotFoundError()
 			}
@@ -964,7 +964,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if !s.store.STMGet(stm, &in.Key, &updateCloudlet) {
 			return in.Key.NotFoundError()
 		}
-		if err != nil {
+		if !cctx.Undo && err != nil {
 			updateCloudlet.State = edgeproto.TrackedState_DELETE_ERROR
 			s.store.STMPut(stm, &updateCloudlet)
 			return nil
