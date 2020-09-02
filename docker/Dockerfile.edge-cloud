@@ -85,6 +85,7 @@ COPY --from=build /go/bin/controller \
 		  /go/bin/resource-tracker \
 		  /go/bin/autoprov \
 		  /go/bin/notifyroot \
+		  /go/bin/alertmgr-sidecar \
 		  /usr/local/bin/
 COPY --from=build /go/plugins /plugins
 
