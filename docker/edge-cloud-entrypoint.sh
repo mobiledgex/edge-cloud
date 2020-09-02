@@ -20,7 +20,7 @@ case "$1" in
     mcctl|\
     notifyroot|\
     shepherd|\
-	alertmgr-sidecar|\
+    alertmgr-sidecar|\
     tok-srv-sim)
 	"$@"
 	;;
