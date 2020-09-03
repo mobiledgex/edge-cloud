@@ -41,18 +41,44 @@ type CookieKey struct {
 	Kid          int    `json:"kid,omitempty"`
 }
 
+type EdgeEventsCookieKey struct {
+	ClusterOrg   string `json:"clusterorg,omitempty"`
+	ClusterName  string `json:"clustername,omitempty"`
+	CloudletOrg  string `json:"cloudletorg,omitempty"`
+	CloudletName string `json:"cloudletname,omitempty"`
+	Kid          int    `json:"kid,omitempty"`
+}
+
 type dmeClaims struct {
 	jwt.StandardClaims
 	Key *CookieKey `json:"key,omitempty"`
 }
 
+type edgeEventsClaims struct {
+	jwt.StandardClaims
+	Key *EdgeEventsCookieKey `json:"key,omitempty"`
+}
+
 type ctxCookieKey struct{}
+
+type ctxEdgeEventsCookieKey struct{}
 
 func (d *dmeClaims) GetKid() (int, error) {
 	if d.Key == nil {
 		return 0, fmt.Errorf("Invalid cookie, no key")
 	}
 	return d.Key.Kid, nil
+}
+
+func (e *edgeEventsClaims) SetKid(kid int) {
+	e.Key.Kid = kid
+}
+
+func (e *edgeEventsClaims) GetKid() (int, error) {
+	if e.Key == nil {
+		return 0, fmt.Errorf("Invalid cookie, no key")
+	}
+	return e.Key.Kid, nil
 }
 
 func (d *dmeClaims) SetKid(kid int) {
@@ -85,6 +111,26 @@ func VerifyCookie(ctx context.Context, cookie string) (*CookieKey, error) {
 	return claims.Key, nil
 }
 
+func VerifyEdgeEventsCookie(ctx context.Context, cookie string) (*EdgeEventsCookieKey, error) {
+	claims := edgeEventsClaims{}
+	token, err := Jwks.VerifyCookie(cookie, &claims)
+	if err != nil {
+		log.InfoLog("error in verifycookie", "cookie", cookie, "err", err)
+		return nil, err
+	}
+	if claims.Key == nil {
+		log.InfoLog("no key parsed", "cookie", cookie, "err", err)
+		return nil, errors.New("No Key data in cookie")
+	}
+	if !token.Valid {
+		log.InfoLog("cookie is invalid or expired", "cookie", cookie, "claims", claims)
+		return nil, errors.New("invalid or expired cookie")
+	}
+
+	log.SpanLog(ctx, log.DebugLevelDmereq, "verified cookie", "cookie", cookie, "expires", claims.ExpiresAt)
+	return claims.Key, nil
+}
+
 func GenerateCookie(key *CookieKey, ctx context.Context, cookieExpiration *time.Duration) (string, error) {
 	p, ok := peer.FromContext(ctx)
 	if !ok {
@@ -111,6 +157,21 @@ func GenerateCookie(key *CookieKey, ctx context.Context, cookieExpiration *time.
 
 	cookie, err := Jwks.GenerateCookie(&claims)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "generated cookie", "key", key, "cookie", cookie, "err", err)
+	return cookie, err
+}
+
+func GenerateEdgeEventsCookie(key *EdgeEventsCookieKey, ctx context.Context, cookieExpiration *time.Duration) (string, error) {
+	claims := edgeEventsClaims{
+		StandardClaims: jwt.StandardClaims{
+			IssuedAt: time.Now().Unix(),
+			// 1 day expiration for now
+			ExpiresAt: time.Now().Add(*cookieExpiration).Unix(),
+		},
+		Key: key,
+	}
+
+	cookie, err := Jwks.GenerateCookie(&claims)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "generated edge events cookie", "key", key, "cookie", cookie, "err", err)
 	return cookie, err
 }
 

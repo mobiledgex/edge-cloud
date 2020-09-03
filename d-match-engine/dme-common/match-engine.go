@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 	"io"
+	"math"
 	"net"
 	"strings"
 	"sync"
@@ -40,12 +41,10 @@ type DmeAppInst struct {
 	// Ports and L7 Paths
 	ports []dme.AppPort
 	// State of the cloudlet - copy of the DmeCloudlet
-	cloudletState    edgeproto.CloudletState
-	maintenanceState edgeproto.MaintenanceState
+	CloudletState    edgeproto.CloudletState
+	MaintenanceState edgeproto.MaintenanceState
 	// Health state of the appInst
-	appInstHealth edgeproto.HealthCheck
-	// RTT latency from device to appinst and backend
-	latency int64
+	AppInstHealth edgeproto.HealthCheck
 }
 
 type DmeAppInsts struct {
@@ -111,15 +110,20 @@ var StatKeyContextKey = StatKeyContextType("statKey")
 
 // Struct to monitor EdgeEvent receive and send goroutines
 type EdgeEventPersistentMgr struct {
-	mux        util.Mutex
-	err        error
-	terminated chan bool
-	msg        string
+	Mux        util.Mutex
+	Svr        *dme.MatchEngineApi_SendEdgeEventServer
+	Err        error
+	Terminated chan bool
+	Msg        string
+	Firstrcv   bool
 }
 
-// EdgeEvents Functions implemented by plugin
-var ListenForLatencyUpdatesFunc func() int
-var ListenForEdgeEventsFunc func() string
+// Edge Events Plugin functions
+var AddClient func(ctx context.Context, key *edgeproto.AppInstKey, p *peer.Peer, mgr *EdgeEventPersistentMgr)
+var RemoveClient func(ctx context.Context, key *edgeproto.AppInstKey, p *peer.Peer)
+var MeasureLatency func(ctx context.Context, appInst *DmeAppInst, key *edgeproto.AppInstKey)
+var UpdateAppInstState func(ctx context.Context, appInst *DmeAppInst, key *edgeproto.AppInstKey)
+var UpdateClients func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *EdgeEventPersistentMgr)
 
 func SetupMatchEngine() {
 	DmeAppTbl = new(DmeApps)
@@ -136,11 +140,11 @@ func IsAppInstUsable(appInst *DmeAppInst) bool {
 	if appInst == nil {
 		return false
 	}
-	if appInst.maintenanceState == edgeproto.MaintenanceState_UNDER_MAINTENANCE {
+	if appInst.MaintenanceState == edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE {
 		return false
 	}
-	if appInst.cloudletState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-		return appInst.appInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_OK || appInst.appInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN
+	if appInst.CloudletState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+		return appInst.AppInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_OK || appInst.AppInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN
 	}
 	return false
 }
@@ -242,18 +246,31 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	cl.uri = appInst.Uri
 	cl.location = appInst.CloudletLoc
 	cl.ports = appInst.MappedPorts
-	cl.appInstHealth = appInst.HealthCheck
+
+	appInstCheckChanged := false
+	if cl.AppInstHealth != appInst.HealthCheck {
+		appInstCheckChanged = true
+	}
+	cl.AppInstHealth = appInst.HealthCheck
 	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
-		cl.cloudletState = cloudlet.State
-		cl.maintenanceState = cloudlet.MaintenanceState
+		if cl.CloudletState != cloudlet.State || cl.MaintenanceState != cloudlet.MaintenanceState {
+			appInstCheckChanged = true
+		}
+		cl.CloudletState = cloudlet.State
+		cl.MaintenanceState = cloudlet.MaintenanceState
 	} else {
-		cl.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
-		cl.maintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+		cl.CloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+		cl.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
 	}
 
-	runtimeInfo := appInst.RuntimeInfo
-	cl.latency = runtimeInfo.Latency
-	log.SpanLog(ctx, log.DebugLevelDmereq, "blahhhh: updating latency in dme", "latency", cl.latency)
+	// Check for changed in Cloudlet State and Health Check
+	if appInst.MeasureLatency {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "AppInst update in DME. Request to Measure Latency")
+		MeasureLatency(ctx, cl, &appInst.Key)
+	} else if appInstCheckChanged {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "AppInst update in DME")
+		UpdateAppInstState(ctx, cl, &appInst.Key)
+	}
 
 	log.SpanLog(ctx, log.DebugLevelDmedb, logMsg,
 		"appName", app.AppKey.Name,
@@ -284,6 +301,7 @@ func RemoveApp(ctx context.Context, in *edgeproto.App) {
 	}
 }
 
+// TODO: When an appinst or cloudlet is deleted, should send an edge event
 func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	var app *DmeApp
 	var tbl *DmeApps
@@ -298,6 +316,11 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		app.Lock()
 		if c, foundCarrier := app.Carriers[carrierName]; foundCarrier {
 			if cl, foundAppInst := c.Insts[appInst.Key.ClusterInstKey]; foundAppInst {
+
+				log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
+				cl.AppInstHealth = edgeproto.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
+				UpdateAppInstState(ctx, cl, &appInst.Key)
+
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
 				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
 					"appName", appkey.Name,
@@ -376,9 +399,9 @@ func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey)
 		app.Lock()
 		if c, found := app.Carriers[carrier]; found {
 			for clusterInstKey, _ := range c.Insts {
-				if cloudletKeyEqual(&clusterInstKey.CloudletKey, cloudletKey) {
-					c.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
-					c.Insts[clusterInstKey].maintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
+					c.Insts[clusterInstKey].CloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+					c.Insts[clusterInstKey].MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
 				}
 			}
 		}
@@ -402,8 +425,8 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 		for _, carr := range app.Carriers {
 			for clusterInstKey, _ := range carr.Insts {
 				if _, found := cloudlets[clusterInstKey.CloudletKey]; !found {
-					carr.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
-					carr.Insts[clusterInstKey].maintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+					carr.Insts[clusterInstKey].CloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+					carr.Insts[clusterInstKey].MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
 				}
 			}
 		}
@@ -536,7 +559,8 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 		if c, found := app.Carriers[carrier]; found {
 			for clusterInstKey, _ := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
-					c.Insts[clusterInstKey].cloudletState = info.State
+					c.Insts[clusterInstKey].CloudletState = info.State
+					c.Insts[clusterInstKey].MaintenanceState = info.MaintenanceState
 				}
 			}
 		}
@@ -811,7 +835,7 @@ func updateContextWithCloudletDetails(ctx context.Context, cloudlet, carrier str
 	}
 }
 
-func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply) error {
+func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply, cookieExpiration *time.Duration) error {
 	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
 
@@ -831,6 +855,16 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 		*mreply.CloudletLocation = best.appInst.location
 		mreply.Ports = copyPorts(best.appInst.ports)
 		cloudlet := best.appInst.clusterInstKey.CloudletKey.Name
+
+		key := EdgeEventsCookieKey{
+			ClusterOrg:   best.appInst.clusterInstKey.Organization,
+			ClusterName:  best.appInst.clusterInstKey.ClusterKey.Name,
+			CloudletOrg:  best.appInst.clusterInstKey.CloudletKey.Organization,
+			CloudletName: best.appInst.clusterInstKey.CloudletKey.Name,
+		}
+		cookie, _ := GenerateEdgeEventsCookie(&key, ctx, cookieExpiration)
+		mreply.EdgeEventsCookie = cookie
+
 		// Update Context variable if passed
 		updateContextWithCloudletDetails(ctx, cloudlet, best.appInstCarrier)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", best.distance)
@@ -955,113 +989,148 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 
 func SendEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventServer, cancel context.CancelFunc) error {
 	mgr := new(EdgeEventPersistentMgr)
+	mgr.Svr = svr
+	mgr.Firstrcv = true
+	var appInstKey *edgeproto.AppInstKey
+	var p *peer.Peer
 
-	peer, ok := peer.FromContext(ctx)
-	if !ok {
-		return errors.New("SendEdgeEventServer unable to get peer context")
-	}
-	log.SpanLog(ctx, log.DebugLevelDmereq, "got peer ip", "peer", peer.Addr)
+	// latency vars
+	var latencies []float64
+	numPings := 0
 
-	//receive goroutine
-	go handleClientEdgeEvents(ctx, svr, mgr, cancel)
-
-	//send goroutine
-	go listenForServerEdgeEvents(ctx, svr, mgr, cancel)
-
-	// monitor persistent connection
-	for {
-		select {
-		case <-ctx.Done():
-			if mgr.err != nil {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "terminating persistent connection in ctx done", "error", mgr.err)
-				return mgr.err
-			}
-			return ctx.Err()
-		case <-mgr.terminated:
-			if mgr.err != nil {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "terminating persistent connection in mgr terminated", "error", mgr.err)
-				return mgr.err
-			}
-			return ctx.Err()
-		default:
-		}
-	}
-}
-
-//receive edge events from SDK. Helper function for SendEdgeEvent
-func handleClientEdgeEvents(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventServer, mgr *EdgeEventPersistentMgr, cancel context.CancelFunc) {
 	for {
 		//check if EdgeEvent persistent connection has been cancelled
 		select {
 		case <-ctx.Done():
 			log.SpanLog(ctx, log.DebugLevelDmereq, "handle client edge event cancelled")
-			return
+			mgr.Err = ctx.Err()
+		case <-mgr.Terminated:
+			if mgr.Err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "terminating persistent connection in mgr terminated", "error", mgr.Err)
+				break
+			}
+			mgr.Err = ctx.Err()
+			break
 		default:
 		}
 
 		//receive data from stream
-		mgr.mux.Lock()
-		cupdate, err := (*svr).Recv()
-		mgr.mux.Unlock()
+		cupdate, err := (*mgr.Svr).Recv()
 
 		//check receive errors
 		if err != nil && err != io.EOF {
-			mgr.mux.Lock()
 			log.SpanLog(ctx, log.DebugLevelDmereq, "error on receive", "error", err)
 			if strings.Contains(err.Error(), "rpc error") {
-				mgr.err = err
-				// cancel()
-				mgr.terminated <- true
-				mgr.mux.Unlock()
-				return
+				mgr.Err = err
+				mgr.Terminated <- true
+				break
 			}
-			mgr.mux.Unlock()
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate)
+
+		// Calculate RTT latency and send back to client if message is a pong
+		if cupdate.Pong {
+			numPings++
+			currTimestamp := cloudcommon.TimeToTimestamp(time.Now())
+			oldTimestamp := cupdate.Timestamp
+			rtt := (currTimestamp.Nanos - oldTimestamp.Nanos) / 1000000
+			log.SpanLog(ctx, log.DebugLevelDmereq, "received pong from client", "old timestamp", oldTimestamp.Nanos, "new timestamp", currTimestamp.Nanos, "rtt", rtt)
+			latencies = append(latencies, float64(rtt))
+
+			if numPings == 5 {
+				serverEdgeEvent := new(dme.ServerEdgeEvent)
+				serverEdgeEvent.LatencyRequested = true
+				latency := new(dme.Latency)
+
+				// calc avg, min, max
+				sum := 0.0
+				for _, val := range latencies {
+					if val < latency.Min || latency.Min == 0.0 {
+						latency.Min = val
+					}
+					if val > latency.Max || latency.Max == 0.0 {
+						latency.Max = val
+					}
+					sum += val
+				}
+				latency.Avg = sum / 5
+
+				// calc std dev
+				squaredDiffs := 0.0
+				for _, val := range latencies {
+					diff := val - latency.Avg
+					squaredDiffs += diff * diff
+				}
+				latency.StdDev = math.Sqrt(squaredDiffs / 5)
+
+				serverEdgeEvent.Latency = latency
+				UpdateClients(ctx, serverEdgeEvent, mgr)
+
+				// reset
+				numPings = 0
+				latencies = latencies[:0]
+			}
+			continue
+		}
 
 		//check if client sent a request to terminate persistent connection
 		if cupdate.Terminate == true {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Client initiated termination of persistent connection")
-			// cancel()
-			mgr.terminated <- true
-			return
-		}
-	}
-}
-
-//listen for edge events (HA, latency, health checks) to send to SDK. Helper function for SendEdgeEvent
-func listenForServerEdgeEvents(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventServer, mgr *EdgeEventPersistentMgr, cancel context.CancelFunc) {
-	var iter uint32 = 1
-	for {
-		//check if EdgeEvent persistent connection has been cancelled
-		select {
-		case <-ctx.Done():
-			log.SpanLog(ctx, log.DebugLevelDmereq, "listen for server cancelled")
-			return
-		default:
+			mgr.Terminated <- true
+			break
 		}
 
-		//update latency send it to stream
-		supdate := new(dme.ServerEdgeEvent)
-
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Loop number", "iteration: ", iter)
-		supdate.Latency = uint32(ListenForLatencyUpdatesFunc())
-		supdate.Msg = ListenForEdgeEventsFunc()
-		if err := (*svr).Send(supdate); err != nil {
-			mgr.mux.Lock()
-			log.SpanLog(ctx, log.DebugLevelDmereq, "error on send", "error", err)
-			if strings.Contains(err.Error(), "rpc error") {
-				mgr.err = err
-				// cancel()
-				mgr.terminated <- true
-				mgr.mux.Unlock()
-				return
+		// Add connection to Plugin hashmaps
+		if mgr.Firstrcv {
+			// Grab CookieKey
+			key, err := VerifyCookie(ctx, cupdate.SessionCookie)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "VerifyCookie result", "key", key, "err", err)
+			if err != nil {
+				mgr.Err = grpc.Errorf(codes.Unauthenticated, err.Error())
+				break
 			}
-			mgr.mux.Unlock()
+
+			// Grab EdgeEventsCookieKey
+			eekey, err := VerifyEdgeEventsCookie(ctx, cupdate.EeCookie)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent VerifyEdgeEventsCookie result", "key", eekey, "err", err)
+			if err != nil {
+				mgr.Err = grpc.Errorf(codes.Unauthenticated, err.Error())
+				break
+			}
+
+			appInstKey = &edgeproto.AppInstKey{
+				AppKey: edgeproto.AppKey{
+					Organization: key.OrgName,
+					Name:         key.AppName,
+					Version:      key.AppVers,
+				},
+				ClusterInstKey: edgeproto.ClusterInstKey{
+					ClusterKey: edgeproto.ClusterKey{
+						Name: eekey.ClusterName,
+					},
+					CloudletKey: edgeproto.CloudletKey{
+						Organization: eekey.CloudletOrg,
+						Name:         eekey.CloudletName,
+					},
+					Organization: eekey.ClusterOrg,
+				},
+			}
+
+			p, ok := peer.FromContext(ctx)
+			if !ok {
+				mgr.Err = errors.New("SendEdgeEventServer unable to get peer context")
+				break
+			}
+			log.SpanLog(ctx, log.DebugLevelDmereq, "got peer ip", "peer", p.Addr)
+
+			AddClient(ctx, appInstKey, p, mgr)
+
+			mgr.Firstrcv = false
 		}
-		iter++
-		time.Sleep(5 * time.Second)
 	}
+	RemoveClient(ctx, appInstKey, p)
+
+	return mgr.Err
 }
 
 func ListAppinstTbl(ctx context.Context) {

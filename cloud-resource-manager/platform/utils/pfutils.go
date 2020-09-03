@@ -14,6 +14,8 @@ import (
 
 var solib = ""
 
+var platformPath = "/plugins/platforms.so"
+
 func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 	// Building plugins is slow, so directly importable
 	// platforms are not built as plugins.
@@ -23,7 +25,7 @@ func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 		return &fake.Platform{}, nil
 	}
 
-	plug, err := loadPlugin(ctx)
+	plug, err := loadPlugin(ctx, platformPath)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +45,7 @@ func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 }
 
 func GetClusterSvc(ctx context.Context, pluginRequired bool) (pf.ClusterSvc, error) {
-	plug, err := loadPlugin(ctx)
+	plug, err := loadPlugin(ctx, platformPath)
 	if err != nil {
 		if !pluginRequired {
 			log.SpanLog(ctx, log.DebugLevelInfo, "plugin not required, ignoring load plugin failure", "err", err)
@@ -64,10 +66,10 @@ func GetClusterSvc(ctx context.Context, pluginRequired bool) (pf.ClusterSvc, err
 	return getClusterSvcFunc()
 }
 
-func loadPlugin(ctx context.Context) (*plugin.Plugin, error) {
+func loadPlugin(ctx context.Context, path string) (*plugin.Plugin, error) {
 	// Load platform from plugin
 	if solib == "" {
-		solib = os.Getenv("GOPATH") + "/plugins/platforms.so"
+		solib = os.Getenv("GOPATH") + path
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "Loading plugin", "plugin", solib)
 	plug, err := plugin.Open(solib)

@@ -500,8 +500,8 @@ func ShowAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	}
 }
 
-var MeasureLatencyCmd = &cli.Command{
-	Use:          "MeasureLatency",
+var MeasureAppInstLatencyCmd = &cli.Command{
+	Use:          "MeasureAppInstLatency",
 	RequiredArgs: strings.Join(AppInstRequiredArgs, " "),
 	OptionalArgs: strings.Join(AppInstOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
@@ -509,10 +509,10 @@ var MeasureLatencyCmd = &cli.Command{
 	Comments:     AppInstComments,
 	ReqData:      &edgeproto.AppInst{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runMeasureLatency,
+	Run:          runMeasureAppInstLatency,
 }
 
-func runMeasureLatency(c *cli.Command, args []string) error {
+func runMeasureAppInstLatency(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
@@ -521,22 +521,22 @@ func runMeasureLatency(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return MeasureLatency(c, obj)
+	return MeasureAppInstLatency(c, obj)
 }
 
-func MeasureLatency(c *cli.Command, in *edgeproto.AppInst) error {
+func MeasureAppInstLatency(c *cli.Command, in *edgeproto.AppInst) error {
 	if AppInstApiCmd == nil {
 		return fmt.Errorf("AppInstApi client not initialized")
 	}
 	ctx := context.Background()
-	stream, err := AppInstApiCmd.MeasureLatency(ctx, in)
+	stream, err := AppInstApiCmd.MeasureAppInstLatency(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("MeasureLatency failed: %s", errstr)
+		return fmt.Errorf("MeasureAppInstLatency failed: %s", errstr)
 	}
 
 	objs := make([]*edgeproto.Result, 0)
@@ -551,7 +551,7 @@ func MeasureLatency(c *cli.Command, in *edgeproto.AppInst) error {
 			if ok {
 				errstr = st.Message()
 			}
-			return fmt.Errorf("MeasureLatency recv failed: %s", errstr)
+			return fmt.Errorf("MeasureAppInstLatency recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}
@@ -563,13 +563,13 @@ func MeasureLatency(c *cli.Command, in *edgeproto.AppInst) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func MeasureLatencys(c *cli.Command, data []edgeproto.AppInst, err *error) {
+func MeasureAppInstLatencys(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("MeasureLatency %v\n", data[ii])
-		myerr := MeasureLatency(c, &data[ii])
+		fmt.Printf("MeasureAppInstLatency %v\n", data[ii])
+		myerr := MeasureAppInstLatency(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -583,7 +583,7 @@ var AppInstApiCmds = []*cobra.Command{
 	RefreshAppInstCmd.GenCmd(),
 	UpdateAppInstCmd.GenCmd(),
 	ShowAppInstCmd.GenCmd(),
-	MeasureLatencyCmd.GenCmd(),
+	MeasureAppInstLatencyCmd.GenCmd(),
 }
 
 var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient
@@ -837,7 +837,6 @@ var AppInstComments = map[string]string{
 	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"crmoverride":                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"runtimeinfo.containerids":       "List of container names",
-	"runtimeinfo.latency":            "RTT latency from device to appinst and backend",
 	"autoclusteripaccess":            "IpAccess for auto-clusters. Ignored otherwise., one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
 	"revision":                       "Revision changes each time the App is updated.  Refreshing the App Instance will sync the revision with that of the App",
 	"forceupdate":                    "Force Appinst refresh even if revision number matches App revision number.",
@@ -862,12 +861,10 @@ var AppInstSpecialArgs = map[string]string{
 var AppInstRuntimeRequiredArgs = []string{}
 var AppInstRuntimeOptionalArgs = []string{
 	"containerids",
-	"latency",
 }
 var AppInstRuntimeAliasArgs = []string{}
 var AppInstRuntimeComments = map[string]string{
 	"containerids": "List of container names",
-	"latency":      "RTT latency from device to appinst and backend",
 }
 var AppInstRuntimeSpecialArgs = map[string]string{
 	"containerids": "StringArray",
@@ -886,7 +883,6 @@ var AppInstInfoOptionalArgs = []string{
 	"state",
 	"errors",
 	"runtimeinfo.containerids",
-	"runtimeinfo.latency",
 	"status.tasknumber",
 	"status.maxtasks",
 	"status.taskname",
@@ -907,7 +903,6 @@ var AppInstInfoComments = map[string]string{
 	"state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"errors":                                      "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"runtimeinfo.containerids":                    "List of container names",
-	"runtimeinfo.latency":                         "RTT latency from device to appinst and backend",
 	"powerstate":                                  "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 }
 var AppInstInfoSpecialArgs = map[string]string{

@@ -33,6 +33,7 @@ import (
 	"github.com/segmentio/ksuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -54,7 +55,7 @@ var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memo
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
 var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
-var eesolib = flag.String("plugin2", "", "plugin file")
+var eesolib = flag.String("eeplugin", "", "plugin file")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
 var cloudletDme = flag.Bool("cloudletDme", false, "this is a cloudlet DME deployed on cloudlet infrastructure and uses the crm access key")
@@ -65,8 +66,6 @@ var cloudletDme = flag.Bool("cloudletDme", false, "this is a cloudlet DME deploy
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for no external APIs")
 
 var operatorApiGw op.OperatorApiGw
-
-var edgeEventPlugin *plugin.Plugin
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
@@ -105,7 +104,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request, invalid location", "loc", req.GpsLocation, "err", err)
 		return reply, err
 	}
-	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply)
+	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, cookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -151,7 +150,7 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, invalid location", "loc", tokdata.Location, "err", err)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
-	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply)
+	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply, cookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -365,6 +364,79 @@ func (s *server) SendEdgeEvent(sendEdgeEventSvr dme.MatchEngineApi_SendEdgeEvent
 	return dmecommon.SendEdgeEvent(ctx, &sendEdgeEventSvr, cancel)
 }
 
+func initEdgeEventsPlugin(ctx context.Context) error {
+	// Load Edge Events Plugin
+	*eesolib = os.Getenv("GOPATH") + "/plugins/edgeevents.so"
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Loading plugin", "plugin", *eesolib)
+	plug, err := plugin.Open(*eesolib)
+	if err != nil {
+		log.WarnLog("failed to load plugin", "plugin", *eesolib, "error", err)
+		return err
+	}
+
+	// Load AddClient in Plugin
+	sym, err := plug.Lookup("AddClient")
+	if err != nil {
+		log.FatalLog("plugin does not have AddClient symbol", "plugin", *eesolib)
+		return err
+	}
+	addClientFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, mgr *dmecommon.EdgeEventPersistentMgr))
+	if !ok {
+		log.FatalLog("plugin AddClient symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, mgr *EdgeEventPersistentMgr)", "plugin", *eesolib)
+	}
+	dmecommon.AddClient = addClientFunc
+
+	// Load RemoveClient in Plugin
+	sym, err = plug.Lookup("RemoveClient")
+	if err != nil {
+		log.FatalLog("plugin does not have RemoveClient symbol", "plugin", *eesolib)
+		return err
+	}
+	removeClientFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer))
+	if !ok {
+		log.FatalLog("plugin AddClient symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer)", "plugin", *eesolib)
+	}
+	dmecommon.RemoveClient = removeClientFunc
+
+	// Load MeasureLatency in Plugin
+	sym, err = plug.Lookup("MeasureLatency")
+	if err != nil {
+		log.FatalLog("plugin does not have MeasureLatency symbol", "plugin", *eesolib)
+		return err
+	}
+	measureLatencyFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey))
+	if !ok {
+		log.FatalLog("plugin MeasureLatency symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
+	}
+	dmecommon.MeasureLatency = measureLatencyFunc
+
+	// Load UpdateAppInstState in Plugin
+	sym, err = plug.Lookup("UpdateAppInstState")
+	if err != nil {
+		log.FatalLog("plugin does not have UpdateAppInstState symbol", "plugin", *eesolib)
+		return err
+	}
+	updateAppInstStateFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey))
+	if !ok {
+		log.FatalLog("plugin UpdateAppInstState symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
+	}
+	dmecommon.UpdateAppInstState = updateAppInstStateFunc
+
+	// Load UpdateClients in Plugin
+	sym, err = plug.Lookup("UpdateClients")
+	if err != nil {
+		log.FatalLog("plugin does not have UpdateClients symbol", "plugin", *eesolib)
+		return err
+	}
+	updateClientsFunc, ok := sym.(func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *dmecommon.EdgeEventPersistentMgr))
+	if !ok {
+		log.FatalLog("plugin UpdateClients symbol does not implement func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *EdgeEventPersistentMgr)", "plugin", *eesolib)
+	}
+	dmecommon.UpdateClients = updateClientsFunc
+
+	return nil
+}
+
 func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, error) {
 	if operatorName == "" || operatorName == "standalone" {
 		return &defaultoperator.OperatorApiGw{}, nil
@@ -387,39 +459,6 @@ func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, e
 		log.FatalLog("plugin GetOperatorApiGw symbol does not implement func(ctx context.Context, opername string) (op.OperatorApiGw, error)", "plugin", *solib)
 	}
 	return getOperatorFunc(ctx, operatorName)
-}
-
-func initEdgeEvent(ctx context.Context) error {
-	*eesolib = os.Getenv("GOPATH") + "/plugins/edgeevents.so"
-	log.SpanLog(ctx, log.DebugLevelDmereq, "Loading plugin", "plugin", *eesolib)
-	plug, err := plugin.Open(*eesolib)
-	if err != nil {
-		log.WarnLog("failed to load plugin", "plugin", *eesolib, "error", err)
-		return err
-	}
-	edgeEventPlugin = plug
-
-	listenlatency, err := edgeEventPlugin.Lookup("ListenForLatencyUpdates")
-	if err != nil {
-		log.FatalLog("plugin does not have ListenForLatencyUpdates symbol", "plugin", *eesolib)
-	}
-	listenlatencyfunc, ok := listenlatency.(func() int)
-	if !ok {
-		log.FatalLog("plugin ListenForLatencyUpdates symbol does not implement func() int", "plugin", *eesolib)
-	}
-	dmecommon.ListenForLatencyUpdatesFunc = listenlatencyfunc
-
-	listenedgeevents, err2 := edgeEventPlugin.Lookup("ListenForEdgeEvents")
-	if err2 != nil {
-		log.FatalLog("plugin does not have ListenForEdgeEvents symbol", "plugin", *eesolib)
-	}
-	listenedgeeventsfunc, ok2 := listenedgeevents.(func() string)
-	if !ok2 {
-		log.FatalLog("plugin ListenForEdgeEvents symbol does not implement func() string", "plugin", *eesolib)
-	}
-	dmecommon.ListenForEdgeEventsFunc = listenedgeeventsfunc
-
-	return nil
 }
 
 // allowCORS allows Cross Origin Resoruce Sharing from any origin.
@@ -474,10 +513,10 @@ func main() {
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "plugin init done", "operatorApiGw", operatorApiGw)
 
-	err = initEdgeEvent(ctx)
+	err = initEdgeEventsPlugin(ctx)
 	if err != nil {
 		span.Finish()
-		log.FatalLog("failed to init edge events plugin", "err", err)
+		log.FatalLog("Failed init edge events plugin")
 	}
 
 	err = dmecommon.InitVault(nodeMgr.VaultAddr, *region)

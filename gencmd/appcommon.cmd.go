@@ -36,3 +36,14 @@ var AppPortComments = map[string]string{
 	"nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 }
 var AppPortSpecialArgs = map[string]string{}
+var LatencyRequiredArgs = []string{}
+var LatencyOptionalArgs = []string{
+	"avg",
+	"min",
+	"max",
+	"stddev",
+	"numsamples",
+}
+var LatencyAliasArgs = []string{}
+var LatencyComments = map[string]string{}
+var LatencySpecialArgs = map[string]string{}
