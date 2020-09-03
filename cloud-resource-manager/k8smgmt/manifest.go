@@ -104,7 +104,6 @@ func GetAppEnvVars(ctx context.Context, app *edgeproto.App, vaultConfig *vault.C
 // Merge in all the environment variables into
 func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto.App, kubeManifest string, imagePullSecrets []string) (string, error) {
 	var files []string
-	var err error
 
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
 	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecrets", imagePullSecrets)
