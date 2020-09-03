@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -299,6 +300,12 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if err := validateAppConfigsForDeployment(in.Configs, in.Deployment); err != nil {
 		return &edgeproto.Result{}, err
 	}
+	if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
+		_, err := k8smgmt.GetAppEnvVars(ctx, in, vaultConfig, &k8smgmt.TestReplacementVars)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
+	}
 	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment, in.DeploymentManifest)
 	if err != nil {
 		return &edgeproto.Result{}, err
@@ -425,6 +432,16 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		ports, err := edgeproto.ParseAppPorts(cur.AccessPorts)
 		if err != nil {
 			return err
+		}
+		err = cloudcommon.IsValidDeploymentManifest(cur.Deployment, cur.Command, cur.DeploymentManifest, ports)
+		if err != nil {
+			return fmt.Errorf("Invalid deployment manifest, %v", err)
+		}
+		if cur.Deployment == cloudcommon.DeploymentTypeKubernetes {
+			_, err := k8smgmt.GetAppEnvVars(ctx, &cur, vaultConfig, &k8smgmt.TestReplacementVars)
+			if err != nil {
+				return err
+			}
 		}
 		err = validatePortRangeForAccessType(ports, cur.AccessType, cur.Deployment)
 		if err != nil {

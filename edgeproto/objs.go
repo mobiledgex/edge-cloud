@@ -34,6 +34,10 @@ var ValidConfigKinds = map[string]struct{}{
 	AppConfigEnvYaml:       struct{}{},
 }
 
+var ReservedPlatformPorts = map[string]string{
+	"tcp:22": "Platform inter-node SSH",
+}
+
 // sort each slice by key
 func (a *AllData) Sort() {
 	sort.Slice(a.AppInstances[:], func(i, j int) bool {
@@ -662,7 +666,6 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	}
 
 	portSpecs, err := util.ParsePorts(ports)
-
 	if err != nil {
 		return nil, err
 	}
@@ -683,6 +686,19 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 		endport, err = strconv.ParseInt(portSpec.EndPort, 10, 32)
 		if err != nil {
 			return nil, fmt.Errorf("unable to convert port range end value")
+		}
+
+		// loop through to verify we are not using a platform reserved port
+		lastPort := endport
+		if lastPort == 0 {
+			lastPort = baseport
+		}
+		for pnum := baseport; pnum <= lastPort; pnum++ {
+			pstring := fmt.Sprintf("%s:%d", strings.ToLower(portSpec.Proto), pnum)
+			desc, reserved := ReservedPlatformPorts[pstring]
+			if reserved {
+				return nil, fmt.Errorf("App cannot use port %s - reserved for %s", pstring, desc)
+			}
 		}
 
 		p := dme.AppPort{
