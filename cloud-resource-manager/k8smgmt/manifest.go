@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"strings"
 
-	yaml "github.com/ghodss/yaml"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vault"
+	yaml "github.com/mobiledgex/yaml/v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,6 +20,18 @@ import (
 )
 
 const MexAppLabel = "mex-app"
+
+// TestReplacementVars are used to syntax check app envvars
+var TestReplacementVars = crmutil.DeploymentReplaceVars{
+	Deployment: crmutil.CrmReplaceVars{
+		ClusterIp:    "99.99.99.99",
+		CloudletName: "dummyCloudlet",
+		ClusterName:  "dummyCluster",
+		CloudletOrg:  "dummyCloudletOrg",
+		AppOrg:       "dummyAppOrg",
+		DnsZone:      "dummy.net",
+	},
+}
 
 func addEnvVars(ctx context.Context, template *v1.PodTemplateSpec, envVars []v1.EnvVar) {
 	// walk the containers and append environment variables to each
@@ -59,41 +71,45 @@ func addAppInstLabels(meta *metav1.ObjectMeta, app *edgeproto.App) {
 	meta.Labels[cloudcommon.MexAppVersionLabel] = util.DNSSanitize(app.Key.Version)
 }
 
-// Merge in all the environment variables into
-func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto.App, kubeManifest string, imagePullSecrets []string) (string, error) {
+func GetAppEnvVars(ctx context.Context, app *edgeproto.App, vaultConfig *vault.Config, deploymentVars *crmutil.DeploymentReplaceVars) (*[]v1.EnvVar, error) {
 	var envVars []v1.EnvVar
-	var files []string
-	var err error
-
-	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
-	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecrets", imagePullSecrets)
-
-	// Walk the Configs in the App and get all the environment variables together
 	for _, v := range app.Configs {
 		if v.Kind == edgeproto.AppConfigEnvYaml {
 			var curVars []v1.EnvVar
-			// config can either be remote, or local
 			cfg, err := cloudcommon.GetDeploymentManifest(ctx, vaultConfig, v.Config)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
-			// Fill in the Deployment Vars passed as a variable through the context
-			if varsFound {
+			if deploymentVars != nil {
 				cfg, err = crmutil.ReplaceDeploymentVars(cfg, app.TemplateDelimiter, deploymentVars)
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "failed to replace Crm variables",
 						"EnvVars ", v.Config, "DeploymentVars", deploymentVars, "error", err)
-					return "", err
+					return nil, err
 				}
 			}
-
-			if err1 := yaml.Unmarshal([]byte(cfg), &curVars); err1 != nil {
+			err = yaml.Unmarshal([]byte(cfg), &curVars)
+			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "cannot unmarshal env vars", "kind", v.Kind,
-					"config", cfg, "error", err1)
+					"config", cfg, "error", err)
+				return nil, fmt.Errorf("cannot unmarshal env vars: %s - %v", cfg, err)
 			} else {
 				envVars = append(envVars, curVars...)
 			}
 		}
+	}
+	return &envVars, nil
+}
+
+// Merge in all the environment variables into
+func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto.App, kubeManifest string, imagePullSecrets []string) (string, error) {
+	var files []string
+
+	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
+	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecrets", imagePullSecrets)
+	envVars, err := GetAppEnvVars(ctx, app, vaultConfig, deploymentVars)
+	if err != nil {
+		return "", err
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "Merging environment variables", "envVars", envVars)
 	mf, err := cloudcommon.GetDeploymentManifest(ctx, vaultConfig, kubeManifest)
@@ -136,7 +152,7 @@ func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto
 		if template == nil {
 			continue
 		}
-		addEnvVars(ctx, template, envVars)
+		addEnvVars(ctx, template, *envVars)
 		addMexLabel(&template.ObjectMeta, name)
 		// Add labels for all the appKey data
 		addAppInstLabels(&template.ObjectMeta, app)
