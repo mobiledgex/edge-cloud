@@ -312,7 +312,8 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 			AppKey:         app.Key,
 			ClusterInstKey: clusterInst.Key,
 		},
-		Flavor: clusterInst.Flavor,
+		Flavor:   clusterInst.Flavor,
+		Internal: true,
 	}
 	if clusterSvcPlugin != nil && clusterInst.AutoScalePolicy != "" {
 		policy := edgeproto.AutoScalePolicy{}

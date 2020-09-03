@@ -771,6 +771,7 @@ var AppInstComments = map[string]string{
 	"availabilityzone":               "Optional Availability Zone if any",
 	"vmflavor":                       "OS node flavor to use",
 	"optres":                         "Optional Resources required by OS flavor if any",
+	"internal":                       "Internal App or user created app",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
