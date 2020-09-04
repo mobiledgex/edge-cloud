@@ -70,8 +70,13 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 			endport = 0
 		}
 
+		proto := strings.ToLower(pp[0])
+		if proto != "tcp" && proto != "udp" {
+			return nil, fmt.Errorf("Unsupported protocol: %s", pp[0])
+		}
+
 		portSpec := PortSpec{
-			Proto:   strings.ToLower(pp[0]),
+			Proto:   proto,
 			Port:    strconv.FormatInt(baseport, 10),
 			EndPort: strconv.FormatInt(endport, 10),
 		}
