@@ -636,7 +636,7 @@ func GetLProto(s string) (dme.LProto, error) {
 	case "udp":
 		return dme.LProto_L_PROTO_UDP, nil
 	}
-	return 0, fmt.Errorf("%s is not a supported Protocol", s)
+	return 0, fmt.Errorf("Unsupported protocol: %s", s)
 }
 
 func LProtoStr(proto dme.LProto) (string, error) {
