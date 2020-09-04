@@ -535,7 +535,7 @@ func (s *PrivacyPolicy) Validate(fields map[string]struct{}) error {
 			if o.PortRangeMax > maxPort {
 				return fmt.Errorf("Invalid max port range: %d", o.PortRangeMax)
 			}
-			if o.PortRangeMin > o.PortRangeMax && o.PortRangeMax != 0 {
+			if o.PortRangeMin > o.PortRangeMax {
 				return fmt.Errorf("Min port range: %d cannot be higher than max: %d", o.PortRangeMin, o.PortRangeMax)
 			}
 		}

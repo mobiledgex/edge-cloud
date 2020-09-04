@@ -51,6 +51,13 @@ func (s *PrivacyPolicyApi) UpdatePrivacyPolicy(ctx context.Context, in *edgeprot
 	if appInstApi.UsesPrivacyPolicy(&in.Key) {
 		return &edgeproto.Result{}, fmt.Errorf("Update not allowed because policy in use by AppInst")
 	}
+	// port range max is optional, set it to min if min is present but not max
+	for i, o := range in.OutboundSecurityRules {
+		if o.PortRangeMax == 0 {
+			log.SpanLog(ctx, log.DebugLevelApi, "Setting PortRangeMax equal to min", "PortRangeMin", o.PortRangeMin)
+			in.OutboundSecurityRules[i].PortRangeMax = o.PortRangeMin
+		}
+	}
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cur) {
