@@ -999,7 +999,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// get appinst info for flavor
 	appInstInfo := edgeproto.AppInst{}
 	if !appInstApi.cache.Get(&in.Key, &appInstInfo) {
-		return fmt.Errorf("Unable to get appInst info for app: %v", in.Key)
+		return in.Key.NotFoundError()
 	}
 	eventCtx := context.WithValue(ctx, in.Key, appInstInfo)
 	defer func() {
