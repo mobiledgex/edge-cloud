@@ -91,7 +91,7 @@ func createAppUsageMetric(appInst *edgeproto.AppInst, appInfo *edgeproto.App, st
 	metric.AddDoubleVal("uptime", runTime.Seconds())
 	metric.AddTag("status", status)
 
-	if appInfo.Deployment == cloudcommon.DeploymentTypeKubernetes { //TODO: change this to vm
+	if appInfo.Deployment == cloudcommon.DeploymentTypeVM {
 		metric.AddTag("flavor", appInst.Flavor.Name)
 	}
 

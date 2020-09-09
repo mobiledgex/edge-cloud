@@ -1409,7 +1409,7 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 			return
 		}
 	}
-	if app.Deployment == cloudcommon.DeploymentTypeKubernetes { //TODO: change this to VM when done
+	if app.Deployment == cloudcommon.DeploymentTypeVM {
 		metric.AddStringVal("flavor", appInst.Flavor.Name)
 	}
 
