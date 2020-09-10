@@ -18,7 +18,7 @@ type Process interface {
 	// Get the hostname of the process
 	GetHostname() string
 	// Get EnvVars
-	GetEnvVars() map[string]string
+	GetEnv() []string
 	// Start the process
 	StartLocal(logfile string, opts ...StartOp) error
 	// Stop the process
@@ -50,8 +50,12 @@ func (c *Common) GetHostname() string {
 	return c.Hostname
 }
 
-func (c *Common) GetEnvVars() map[string]string {
-	return c.EnvVars
+func (c *Common) GetEnv() []string {
+	envs := []string{}
+	for k, v := range c.EnvVars {
+		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
+	}
+	return envs
 }
 
 // options

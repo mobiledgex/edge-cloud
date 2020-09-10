@@ -24,7 +24,7 @@ func TestInfluxQ(t *testing.T) {
 	log.InitTracer("")
 	defer log.FinishTracer()
 
-	addr := "http://127.0.0.1:8086"
+	addr := "127.0.0.1:8086"
 	// lower the interval so we don't have to wait so long
 	influxq.InfluxQPushInterval = 10 * time.Millisecond
 	influxq.InfluxQReconnectDelay = 10 * time.Millisecond
@@ -45,7 +45,7 @@ func TestInfluxQ(t *testing.T) {
 	}
 
 	q := influxq.NewInfluxQ("metrics", "", "")
-	err = q.Start(addr)
+	err = q.Start("http://" + addr)
 	require.Nil(t, err, "new influx q")
 	defer q.Stop()
 

@@ -65,11 +65,11 @@ func WithBindAddr(addr string) InfluxOp {
 	return func(opts *InfluxOptions) { opts.BindAddr = addr }
 }
 
-func WithSeverCert(cert string) InfluxOp {
+func WithServerCert(cert string) InfluxOp {
 	return func(opts *InfluxOptions) { opts.TlsCertfile = cert }
 }
 
-func WithSeverCertKey(key string) InfluxOp {
+func WithServerCertKey(key string) InfluxOp {
 	return func(opts *InfluxOptions) { opts.TlsCertKey = key }
 }
 
