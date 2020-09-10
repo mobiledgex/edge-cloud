@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"math/rand"
 	"io"
-	"math"
 	"net"
 	"strings"
 	"sync"
@@ -119,11 +118,16 @@ type EdgeEventPersistentMgr struct {
 }
 
 // Edge Events Plugin functions
-var AddClient func(ctx context.Context, key *edgeproto.AppInstKey, p *peer.Peer, mgr *EdgeEventPersistentMgr)
-var RemoveClient func(ctx context.Context, key *edgeproto.AppInstKey, p *peer.Peer)
-var MeasureLatency func(ctx context.Context, appInst *DmeAppInst, key *edgeproto.AppInstKey)
-var UpdateAppInstState func(ctx context.Context, appInst *DmeAppInst, key *edgeproto.AppInstKey)
-var UpdateClients func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *EdgeEventPersistentMgr)
+var AddClientKey func(ctx context.Context, key *edgeproto.AppInstKey, p *peer.Peer, mgr *EdgeEventPersistentMgr)
+var RemoveClientKey func(ctx context.Context, key *edgeproto.AppInstKey, p *peer.Peer)
+var RemoveAppInstKey func(ctx context.Context, key *edgeproto.AppInstKey)
+var SendLatencyEdgeEvent func(ctx context.Context, appInst *DmeAppInst, key *edgeproto.AppInstKey)
+var SendAppInstStateEvent func(ctx context.Context, appInst *DmeAppInst, key *edgeproto.AppInstKey)
+var SendEdgeEventToClient func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *EdgeEventPersistentMgr)
+
+// Edge Events Plugin contatns
+var NumSamples int
+var NumSamplesLoad int
 
 func SetupMatchEngine() {
 	DmeAppTbl = new(DmeApps)
@@ -266,10 +270,10 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	// Check for changed in Cloudlet State and Health Check
 	if appInst.MeasureLatency {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "AppInst update in DME. Request to Measure Latency")
-		MeasureLatency(ctx, cl, &appInst.Key)
+		SendLatencyEdgeEvent(ctx, cl, &appInst.Key)
 	} else if appInstCheckChanged {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "AppInst update in DME")
-		UpdateAppInstState(ctx, cl, &appInst.Key)
+		SendAppInstStateEvent(ctx, cl, &appInst.Key)
 	}
 
 	log.SpanLog(ctx, log.DebugLevelDmedb, logMsg,
@@ -319,7 +323,8 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 
 				log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
 				cl.AppInstHealth = edgeproto.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
-				UpdateAppInstState(ctx, cl, &appInst.Key)
+				SendAppInstStateEvent(ctx, cl, &appInst.Key)
+				RemoveAppInstKey(ctx, &appInst.Key)
 
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
 				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
@@ -994,10 +999,6 @@ func SendEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventSer
 	var appInstKey *edgeproto.AppInstKey
 	var p *peer.Peer
 
-	// latency vars
-	var latencies []float64
-	numPings := 0
-
 	for {
 		//check if EdgeEvent persistent connection has been cancelled
 		select {
@@ -1015,7 +1016,9 @@ func SendEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventSer
 		}
 
 		//receive data from stream
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Before receive Edge Event from client")
 		cupdate, err := (*mgr.Svr).Recv()
+		log.SpanLog(ctx, log.DebugLevelDmereq, "After receive Edge Event from client")
 
 		//check receive errors
 		if err != nil && err != io.EOF {
@@ -1028,59 +1031,19 @@ func SendEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventSer
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate)
 
-		// Calculate RTT latency and send back to client if message is a pong
-		if cupdate.Pong {
-			numPings++
-			currTimestamp := cloudcommon.TimeToTimestamp(time.Now())
-			oldTimestamp := cupdate.Timestamp
-			rtt := (currTimestamp.Nanos - oldTimestamp.Nanos) / 1000000
-			log.SpanLog(ctx, log.DebugLevelDmereq, "received pong from client", "old timestamp", oldTimestamp.Nanos, "new timestamp", currTimestamp.Nanos, "rtt", rtt)
-			latencies = append(latencies, float64(rtt))
-
-			if numPings == 5 {
-				serverEdgeEvent := new(dme.ServerEdgeEvent)
-				serverEdgeEvent.LatencyRequested = true
-				latency := new(dme.Latency)
-
-				// calc avg, min, max
-				sum := 0.0
-				for _, val := range latencies {
-					if val < latency.Min || latency.Min == 0.0 {
-						latency.Min = val
-					}
-					if val > latency.Max || latency.Max == 0.0 {
-						latency.Max = val
-					}
-					sum += val
-				}
-				latency.Avg = sum / 5
-
-				// calc std dev
-				squaredDiffs := 0.0
-				for _, val := range latencies {
-					diff := val - latency.Avg
-					squaredDiffs += diff * diff
-				}
-				latency.StdDev = math.Sqrt(squaredDiffs / 5)
-
-				serverEdgeEvent.Latency = latency
-				UpdateClients(ctx, serverEdgeEvent, mgr)
-
-				// reset
-				numPings = 0
-				latencies = latencies[:0]
-			}
-			continue
-		}
-
-		//check if client sent a request to terminate persistent connection
-		if cupdate.Terminate == true {
+		switch cupdate.Event {
+		case dme.EventType_EVENT_LATENCY:
+			// TODO: Push Latency and Location to Influxdb
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Latency results: ", "latency", cupdate.Latency)
+		case dme.EventType_EVENT_LOCATION_UPDATE:
+			log.SpanLog(ctx, log.DebugLevelDmereq, "New Client gps location: ", "location", cupdate.GpsLocation)
+		case dme.EventType_EVENT_TERMINATE_CONNECTION:
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Client initiated termination of persistent connection")
 			mgr.Terminated <- true
 			break
 		}
 
-		// Add connection to Plugin hashmaps
+		// Add connection, client, and appinst to Plugin hashmap
 		if mgr.Firstrcv {
 			// Grab CookieKey
 			key, err := VerifyCookie(ctx, cupdate.SessionCookie)
@@ -1089,15 +1052,14 @@ func SendEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventSer
 				mgr.Err = grpc.Errorf(codes.Unauthenticated, err.Error())
 				break
 			}
-
 			// Grab EdgeEventsCookieKey
-			eekey, err := VerifyEdgeEventsCookie(ctx, cupdate.EeCookie)
+			eekey, err := VerifyEdgeEventsCookie(ctx, cupdate.EdgeEventsCookie)
 			log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent VerifyEdgeEventsCookie result", "key", eekey, "err", err)
 			if err != nil {
 				mgr.Err = grpc.Errorf(codes.Unauthenticated, err.Error())
 				break
 			}
-
+			// Create AppInstKey from SessionCookie and EdgeEventsCookie
 			appInstKey = &edgeproto.AppInstKey{
 				AppKey: edgeproto.AppKey{
 					Organization: key.OrgName,
@@ -1115,21 +1077,17 @@ func SendEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventSer
 					Organization: eekey.ClusterOrg,
 				},
 			}
-
+			// Grab Peer info
 			p, ok := peer.FromContext(ctx)
 			if !ok {
 				mgr.Err = errors.New("SendEdgeEventServer unable to get peer context")
 				break
 			}
-			log.SpanLog(ctx, log.DebugLevelDmereq, "got peer ip", "peer", p.Addr)
-
-			AddClient(ctx, appInstKey, p, mgr)
-
+			AddClientKey(ctx, appInstKey, p, mgr)
 			mgr.Firstrcv = false
 		}
 	}
-	RemoveClient(ctx, appInstKey, p)
-
+	RemoveClientKey(ctx, appInstKey, p)
 	return mgr.Err
 }
 

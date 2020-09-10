@@ -3,7 +3,9 @@ package dmecommon
 import (
 	"context"
 	"reflect"
+	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"google.golang.org/grpc"
@@ -38,6 +40,11 @@ func (s ServerStreamWrapper) Context() context.Context {
 
 func (s ServerStreamWrapper) SendMsg(m interface{}) error {
 	log.SpanLog(s.Context(), log.DebugLevelDmereq, "SendMsg Streamed message", "type", reflect.TypeOf(m).String())
+	switch typ := m.(type) {
+	case *dme.ServerEdgeEvent:
+		currTimestamp := cloudcommon.TimeToTimestamp(time.Now())
+		typ.Timestamp = &currTimestamp
+	}
 	return s.inner.SendMsg(m)
 }
 

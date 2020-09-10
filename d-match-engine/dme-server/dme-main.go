@@ -374,65 +374,77 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		return err
 	}
 
-	// Load AddClient in Plugin
-	sym, err := plug.Lookup("AddClient")
+	// Load AddClientKey in Plugin
+	sym, err := plug.Lookup("AddClientKey")
 	if err != nil {
-		log.FatalLog("plugin does not have AddClient symbol", "plugin", *eesolib)
+		log.FatalLog("plugin does not have AddClientKey symbol", "plugin", *eesolib)
 		return err
 	}
-	addClientFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, mgr *dmecommon.EdgeEventPersistentMgr))
+	addClientKeyFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, mgr *dmecommon.EdgeEventPersistentMgr))
 	if !ok {
-		log.FatalLog("plugin AddClient symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, mgr *EdgeEventPersistentMgr)", "plugin", *eesolib)
+		log.FatalLog("plugin AddClientKey symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, mgr *EdgeEventPersistentMgr)", "plugin", *eesolib)
 	}
-	dmecommon.AddClient = addClientFunc
+	dmecommon.AddClientKey = addClientKeyFunc
 
-	// Load RemoveClient in Plugin
-	sym, err = plug.Lookup("RemoveClient")
+	// Load RemoveClientKey in Plugin
+	sym, err = plug.Lookup("RemoveClientKey")
 	if err != nil {
-		log.FatalLog("plugin does not have RemoveClient symbol", "plugin", *eesolib)
+		log.FatalLog("plugin does not have RemoveClientKey symbol", "plugin", *eesolib)
 		return err
 	}
-	removeClientFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer))
+	removeClientKeyFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer))
 	if !ok {
-		log.FatalLog("plugin AddClient symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer)", "plugin", *eesolib)
+		log.FatalLog("plugin RemoveClientKey symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer)", "plugin", *eesolib)
 	}
-	dmecommon.RemoveClient = removeClientFunc
+	dmecommon.RemoveClientKey = removeClientKeyFunc
 
-	// Load MeasureLatency in Plugin
-	sym, err = plug.Lookup("MeasureLatency")
+	// Load RemoveAppInstKey in Plugin
+	sym, err = plug.Lookup("RemoveAppInstKey")
 	if err != nil {
-		log.FatalLog("plugin does not have MeasureLatency symbol", "plugin", *eesolib)
+		log.FatalLog("plugin does not have RemoveAppInstKey symbol", "plugin", *eesolib)
 		return err
 	}
-	measureLatencyFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey))
+	removeAppInstKeyFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey))
 	if !ok {
-		log.FatalLog("plugin MeasureLatency symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
+		log.FatalLog("plugin RemoveAppInstKey symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
 	}
-	dmecommon.MeasureLatency = measureLatencyFunc
+	dmecommon.RemoveAppInstKey = removeAppInstKeyFunc
 
-	// Load UpdateAppInstState in Plugin
-	sym, err = plug.Lookup("UpdateAppInstState")
+	// Load SendLatencyEdgeEvent in Plugin
+	sym, err = plug.Lookup("SendLatencyEdgeEvent")
 	if err != nil {
-		log.FatalLog("plugin does not have UpdateAppInstState symbol", "plugin", *eesolib)
+		log.FatalLog("plugin does not have SendLatencyEdgeEvent symbol", "plugin", *eesolib)
 		return err
 	}
-	updateAppInstStateFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey))
+	sendLatencyEdgeEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey))
 	if !ok {
-		log.FatalLog("plugin UpdateAppInstState symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
+		log.FatalLog("plugin SendLatencyEdgeEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
 	}
-	dmecommon.UpdateAppInstState = updateAppInstStateFunc
+	dmecommon.SendLatencyEdgeEvent = sendLatencyEdgeEventFunc
 
-	// Load UpdateClients in Plugin
-	sym, err = plug.Lookup("UpdateClients")
+	// Load SendAppInstStateEvent in Plugin
+	sym, err = plug.Lookup("SendAppInstStateEvent")
 	if err != nil {
-		log.FatalLog("plugin does not have UpdateClients symbol", "plugin", *eesolib)
+		log.FatalLog("plugin does not have SendAppInstStateEvent symbol", "plugin", *eesolib)
 		return err
 	}
-	updateClientsFunc, ok := sym.(func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *dmecommon.EdgeEventPersistentMgr))
+	sendAppInstStateEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey))
 	if !ok {
-		log.FatalLog("plugin UpdateClients symbol does not implement func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *EdgeEventPersistentMgr)", "plugin", *eesolib)
+		log.FatalLog("plugin SendAppInstStateEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
 	}
-	dmecommon.UpdateClients = updateClientsFunc
+	dmecommon.SendAppInstStateEvent = sendAppInstStateEventFunc
+
+	// Load SendEdgeEventToClient in Plugin
+	sym, err = plug.Lookup("SendEdgeEventToClient")
+	if err != nil {
+		log.FatalLog("plugin does not have SendEdgeEventToClient symbol", "plugin", *eesolib)
+		return err
+	}
+	sendEdgeEventToClientFunc, ok := sym.(func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *dmecommon.EdgeEventPersistentMgr))
+	if !ok {
+		log.FatalLog("plugin SendEdgeEventToClient symbol does not implement func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *EdgeEventPersistentMgr)", "plugin", *eesolib)
+	}
+	dmecommon.SendEdgeEventToClient = sendEdgeEventToClientFunc
 
 	return nil
 }
@@ -579,6 +591,7 @@ func main() {
 	grpcOpts = append(grpcOpts,
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))
+	// grpc.StatsHandler(stats.GetStreamStatsHandler(ctx)))
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
