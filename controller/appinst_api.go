@@ -1172,12 +1172,14 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 			// nothing to do
 			return nil
 		}
-		// healthy -> not healthy
 		if inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_OK && state != edgeproto.HealthCheck_HEALTH_CHECK_OK {
+			// healthy -> not healthy
 			RecordAppInstEvent(ctx, &inst.Key, cloudcommon.HEALTH_CHECK_FAIL, cloudcommon.InstanceDown)
-			// not healthy -> healthy
+			nodeMgr.Event(ctx, "AppInst offline", in.Key.AppKey.Organization, in.Key.GetTags(), nil, "state", state.String())
 		} else if inst.HealthCheck != edgeproto.HealthCheck_HEALTH_CHECK_OK && state == edgeproto.HealthCheck_HEALTH_CHECK_OK {
+			// not healthy -> healthy
 			RecordAppInstEvent(ctx, &inst.Key, cloudcommon.HEALTH_CHECK_OK, cloudcommon.InstanceUp)
+			nodeMgr.Event(ctx, "AppInst online", in.Key.AppKey.Organization, in.Key.GetTags(), nil, "state", state.String())
 		}
 		inst.HealthCheck = state
 		s.store.STMPut(stm, &inst)

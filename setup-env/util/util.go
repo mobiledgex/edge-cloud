@@ -90,21 +90,22 @@ type TLSCertInfo struct {
 }
 
 type DeploymentData struct {
-	TLSCerts    []*TLSCertInfo        `yaml:"tlscerts"`
-	Locsims     []*process.LocApiSim  `yaml:"locsims"`
-	Toksims     []*process.TokSrvSim  `yaml:"toksims"`
-	Vaults      []*process.Vault      `yaml:"vaults"`
-	Etcds       []*process.Etcd       `yaml:"etcds"`
-	Controllers []*process.Controller `yaml:"controllers"`
-	Dmes        []*process.Dme        `yaml:"dmes"`
-	SampleApps  []*process.SampleApp  `yaml:"sampleapps"`
-	Influxs     []*process.Influx     `yaml:"influxs"`
-	ClusterSvcs []*process.ClusterSvc `yaml:"clustersvcs"`
-	Crms        []*process.Crm        `yaml:"crms"`
-	Jaegers     []*process.Jaeger     `yaml:"jaegers"`
-	Traefiks    []*process.Traefik    `yaml:"traefiks"`
-	NotifyRoots []*process.NotifyRoot `yaml:"notifyroots"`
-	EdgeTurns   []*process.EdgeTurn   `yaml:"edgeturns"`
+	TLSCerts       []*TLSCertInfo           `yaml:"tlscerts"`
+	Locsims        []*process.LocApiSim     `yaml:"locsims"`
+	Toksims        []*process.TokSrvSim     `yaml:"toksims"`
+	Vaults         []*process.Vault         `yaml:"vaults"`
+	Etcds          []*process.Etcd          `yaml:"etcds"`
+	Controllers    []*process.Controller    `yaml:"controllers"`
+	Dmes           []*process.Dme           `yaml:"dmes"`
+	SampleApps     []*process.SampleApp     `yaml:"sampleapps"`
+	Influxs        []*process.Influx        `yaml:"influxs"`
+	ClusterSvcs    []*process.ClusterSvc    `yaml:"clustersvcs"`
+	Crms           []*process.Crm           `yaml:"crms"`
+	Jaegers        []*process.Jaeger        `yaml:"jaegers"`
+	Traefiks       []*process.Traefik       `yaml:"traefiks"`
+	NotifyRoots    []*process.NotifyRoot    `yaml:"notifyroots"`
+	EdgeTurns      []*process.EdgeTurn      `yaml:"edgeturns"`
+	ElasticSearchs []*process.ElasticSearch `yaml:"elasticsearchs"`
 }
 
 type errorReply struct {
@@ -152,6 +153,9 @@ func GetAllProcesses() []process.Process {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.EdgeTurns {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.ElasticSearchs {
 		all = append(all, p)
 	}
 	return all

@@ -139,10 +139,19 @@ type ClusterSvc struct {
 	TLS            TLSCerts
 	cmd            *exec.Cmd
 }
+type DockerGeneric struct {
+	Common        `yaml:",inline"`
+	Links         []string
+	DockerEnvVars map[string]string
+	TLS           TLSCerts
+	cmd           *exec.Cmd
+}
 type Jaeger struct {
-	Common `yaml:",inline"`
-	TLS    TLSCerts
-	cmd    *exec.Cmd
+	DockerGeneric `yaml:",inline"`
+}
+type ElasticSearch struct {
+	DockerGeneric `yaml:",inline"`
+	Type          string
 }
 type Traefik struct {
 	Common `yaml:",inline"`

@@ -55,6 +55,9 @@ controllers:
   usevaultcas: true
   edgeturnaddr: "127.0.0.1:6080"
   appdnsroot: localtest.net
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    ES_E2ETEST: true
 
 - name: ctrl2
   etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
@@ -73,6 +76,9 @@ controllers:
   usevaultcerts: true
   edgeturnaddr: "127.0.0.1:6080"
   appdnsroot: localtest.net
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    ES_E2ETEST: true
 
 clustersvcs:
 - name: cluster-svc1
@@ -84,6 +90,9 @@ clustersvcs:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    ES_E2ETEST: true
 
 - name: cluster-svc2
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
@@ -94,6 +103,9 @@ clustersvcs:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    ES_E2ETEST: true
 
 dmes:
 - name: dme1
@@ -108,6 +120,9 @@ dmes:
     serverkey: "{{tlsoutdir}}/mex-server.key"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    ES_E2ETEST: true
 
 - name: dme2
   apiaddr: "0.0.0.0:50052"
@@ -121,6 +136,9 @@ dmes:
     serverkey: "{{tlsoutdir}}/mex-server.key"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    ES_E2ETEST: true
 
 traefiks:
 - name: traefik-e2e
@@ -130,9 +148,33 @@ traefiks:
     cacert: "{{tlsoutdir}}/mex-ca.crt"
   hostname: "127.0.0.1"
 
+elasticsearchs:
+- name: elasticsearch-e2e
+  hostname: "127.0.0.1"
+- name: kibana-e2e
+  type: kibana
+  links:
+  - elasticsearch-e2e:elasticsearch
+  hostname: "127.0.0.1"
+- name: es-proxy
+  type: nginx-proxy
+  links:
+  - elasticsearch-e2e
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
+  hostname: "127.0.0.1"
+
 jaegers:
 - name: jaeger-e2e
+  links:
+  - elasticsearch-e2e
   hostname: "127.0.0.1"
+  dockerenvvars:
+    SPAN_STORAGE_TYPE: elasticsearch
+    ES_SERVER_URLS: http://elasticsearch-e2e:9200
+    ES_INDEX_PREFIX: main
 
 notifyroots:
 - name: notifyroot
@@ -146,7 +188,7 @@ edgeturns:
 - name: edgeturn
   hostname: "127.0.0.1"
   testmode: true
-  usevaultcas: true
   vaultaddr: "http://127.0.0.1:8200"
+  usevaultcas: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"

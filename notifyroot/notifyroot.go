@@ -29,7 +29,7 @@ func main() {
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	err := nodeMgr.Init(ctx, node.NodeTypeNotifyRoot)
+	err := nodeMgr.Init(ctx, node.NodeTypeNotifyRoot, node.CertIssuerGlobal)
 	if err != nil {
 		log.FatalLog("Failed to init node", "err", err)
 	}

@@ -83,6 +83,14 @@ func SetTags(span opentracing.Span, tags map[string]string) {
 	}
 }
 
+func GetTags(span opentracing.Span) map[string]interface{} {
+	sp, ok := span.(*Span)
+	if !ok {
+		return make(map[string]interface{})
+	}
+	return sp.Span.Tags()
+}
+
 func SetContextTags(ctx context.Context, tags map[string]string) {
 	SetTags(SpanFromContext(ctx), tags)
 }
