@@ -61,6 +61,7 @@ var ClusterInstEvent = "clusterinst"
 var ClusterInstCheckpoints = "clusterinst-checkpoints"
 var AppInstEvent = "appinst"
 var AppInstCheckpoints = "appinst-checkpoints"
+var MonthlyInterval = "MONTH"
 
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"

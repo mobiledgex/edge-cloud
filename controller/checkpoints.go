@@ -32,7 +32,6 @@ var NextCheckpoint = InfluxMaximumTimestamp //for unit tests, so getClusterCheck
 var GetCheckpointInfluxQueryTemplate = `SELECT %s from "%s" WHERE "org"='%s' AND time <= '%s' order by time desc`
 var CreateCheckpointInfluxQueryTemplate = `SELECT %s from "%s" WHERE time >= '%s' AND time < '%s' order by time desc`
 
-var monthlyInterval = "MONTH"
 var interval time.Duration
 
 func InitUsage() error {
@@ -65,7 +64,7 @@ func InitUsage() error {
 }
 
 func checkInterval() error {
-	if *checkpointInterval != monthlyInterval {
+	if *checkpointInterval != cloudcommon.MonthlyInterval {
 		var err error
 		interval, err = time.ParseDuration(*checkpointInterval)
 		if err != nil {
@@ -77,7 +76,7 @@ func checkInterval() error {
 }
 
 func getNextCheckpoint(t time.Time) time.Time {
-	if *checkpointInterval != monthlyInterval {
+	if *checkpointInterval != cloudcommon.MonthlyInterval {
 		return t.Truncate(interval).Add(interval) // truncate so the times look nice
 	}
 	y, m, _ := t.Date()
