@@ -603,7 +603,7 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 			cmpopts.SortSlices(func(a edgeproto.Node, b edgeproto.Node) bool {
 				// ignore nocmp fields, include internalPki
 				// because one controller has a different
-				// one and the keys end up being thes same.
+				// one and the keys end up being the same.
 				ca := a.Key.Type + a.Key.Region + a.Key.CloudletKey.GetKeyString() + a.InternalPki
 				cb := b.Key.Type + b.Key.Region + b.Key.CloudletKey.GetKeyString() + b.InternalPki
 				return ca < cb
