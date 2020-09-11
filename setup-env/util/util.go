@@ -592,6 +592,25 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		copts = append(copts, cmpopts.SortSlices(edgeproto.CmpSortDebugReply))
 		y1 = r1
 		y2 = r2
+	} else if fileType == "nodedata" {
+		var r1 edgeproto.NodeData
+		var r2 edgeproto.NodeData
+
+		err1 = ReadYamlFile(firstYamlFile, &r1)
+		err2 = ReadYamlFile(secondYamlFile, &r2)
+		copts = []cmp.Option{
+			edgeproto.IgnoreNodeFields("nocmp"),
+			cmpopts.SortSlices(func(a edgeproto.Node, b edgeproto.Node) bool {
+				// ignore nocmp fields, include internalPki
+				// because one controller has a different
+				// one and the keys end up being the same.
+				ca := a.Key.Type + a.Key.Region + a.Key.CloudletKey.GetKeyString() + a.InternalPki
+				cb := b.Key.Type + b.Key.Region + b.Key.CloudletKey.GetKeyString() + b.InternalPki
+				return ca < cb
+			}),
+		}
+		y1 = r1
+		y2 = r2
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1)
 		err2 = ReadYamlFile(secondYamlFile, &y2)

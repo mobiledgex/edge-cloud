@@ -12,7 +12,7 @@ vaults:
 influxs:
 - name: influx1
   datadir: /var/tmp/edge-cloud-local-influx/influx1
-  httpaddr: "http://127.0.0.1:8086"
+  httpaddr: "127.0.0.1:8086"
   hostname: "127.0.0.1"
 
 etcds:
@@ -70,6 +70,7 @@ controllers:
   testmode: true
   versiontag: "2019-10-24"
   notifyparentaddrs: "127.0.0.1:53001"
+  usevaultcerts: true
   edgeturnaddr: "127.0.0.1:6080"
   appdnsroot: localtest.net
 
@@ -78,6 +79,7 @@ clustersvcs:
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   ctrladdrs: "127.0.0.1:55001"
   vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -87,6 +89,7 @@ clustersvcs:
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   ctrladdrs: "127.0.0.1:55002"
   vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -99,6 +102,7 @@ dmes:
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   cloudletkey: '{"organization":"dmuus","name":"dmuus-cloud-1"}'
   vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
@@ -111,6 +115,7 @@ dmes:
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   cloudletkey: '{"organization":"dmuus","name":"dmuus-cloud-2"}'
   vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
@@ -133,6 +138,7 @@ notifyroots:
 - name: notifyroot
   hostname: "127.0.0.1"
   vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
 

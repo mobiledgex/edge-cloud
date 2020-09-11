@@ -62,7 +62,7 @@ path "secret/data/$REGION/accounts/*" {
   capabilities = [ "read" ]
 }
 
-path "pki-regional/issue/*" {
+path "pki-regional/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
 EOF
@@ -99,7 +99,7 @@ path "secret/data/cloudlet/openstack/mexenv.json" {
   capabilities = [ "read" ]
 }
 
-path "pki-regional-cloudlet/issue/*" {
+path "pki-regional-cloudlet/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
 EOF
@@ -129,7 +129,7 @@ path "certs/*" {
   capabilities = ["read"]
 }
 
-path "pki-regional-cloudlet/issue/*" {
+path "pki-regional-cloudlet/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
 EOF
@@ -146,7 +146,7 @@ path "auth/approle/login" {
   capabilities = [ "create", "read" ]
 }
 
-path "pki-regional/issue/*" {
+path "pki-regional/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
 EOF
@@ -198,7 +198,7 @@ path "auth/approle/login" {
   capabilities = [ "create", "read" ]
 }
 
-path "pki-regional/issue/*" {
+path "pki-regional/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
 EOF
