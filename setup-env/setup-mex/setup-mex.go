@@ -466,6 +466,11 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 			return false
 		}
 	}
+	for _, p := range util.Deployment.ElasticSearchs {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
 	for _, p := range util.Deployment.Jaegers {
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
@@ -477,7 +482,7 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 		}
 	}
 	for _, p := range util.Deployment.NotifyRoots {
-		opts = append(opts, process.WithDebug("api,notify"))
+		opts = append(opts, process.WithDebug("api,notify,events"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
@@ -490,27 +495,27 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 		}
 	}
 	for _, p := range util.Deployment.Controllers {
-		opts = append(opts, process.WithDebug("etcd,api,notify,metrics,infra"))
+		opts = append(opts, process.WithDebug("etcd,api,notify,metrics,infra,events"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
 	}
 	for _, p := range util.Deployment.Dmes {
 		opts = append(opts, process.WithRolesFile(rolesfile))
-		opts = append(opts, process.WithDebug("locapi,dmedb,dmereq,notify,metrics"))
+		opts = append(opts, process.WithDebug("locapi,dmedb,dmereq,notify,metrics,events"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
 	}
 	for _, p := range util.Deployment.ClusterSvcs {
 		opts = append(opts, process.WithRolesFile(rolesfile))
-		opts = append(opts, process.WithDebug("notify,infra,api"))
+		opts = append(opts, process.WithDebug("notify,infra,api,events"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
 	}
 	for _, p := range util.Deployment.Crms {
-		opts = append(opts, process.WithDebug("notify,infra,api"))
+		opts = append(opts, process.WithDebug("notify,infra,api,events"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}

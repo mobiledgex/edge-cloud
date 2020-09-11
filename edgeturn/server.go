@@ -100,7 +100,7 @@ func main() {
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	err := nodeMgr.Init(ctx, node.NodeTypeEdgeTurn, node.WithRegion(*region))
+	err := nodeMgr.Init(ctx, node.NodeTypeEdgeTurn, node.CertIssuerRegional, node.WithRegion(*region))
 	if err != nil {
 		span.Finish()
 		log.FatalLog("Failed to init node", "err", err)

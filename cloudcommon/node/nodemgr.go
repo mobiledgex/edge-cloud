@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 
+	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -32,6 +33,7 @@ type NodeMgr struct {
 	Region         string
 	InternalPki    internalPki
 	InternalDomain string
+	ESClient       *elasticsearch.Client
 }
 
 // Most of the time there will only be one NodeMgr per process, and these
@@ -46,7 +48,7 @@ func (s *NodeMgr) InitFlags() {
 	flag.StringVar(&s.InternalDomain, "internalDomain", "mobiledgex.net", "domain name for internal PKI")
 }
 
-func (s *NodeMgr) Init(ctx context.Context, nodeType string, ops ...NodeOp) error {
+func (s *NodeMgr) Init(ctx context.Context, nodeType, eventTlsClientIssuer string, ops ...NodeOp) error {
 	opts := &NodeOptions{}
 	opts.updateMyNode = true
 	for _, op := range ops {
@@ -82,6 +84,10 @@ func (s *NodeMgr) Init(ctx context.Context, nodeType string, ops ...NodeOp) erro
 	if err != nil {
 		return err
 	}
+	err = s.initEvents(ctx, eventTlsClientIssuer, opts)
+	if err != nil {
+		return err
+	}
 
 	edgeproto.InitNodeCache(&s.NodeCache.NodeCache)
 	s.NodeCache.setRegion = opts.region
@@ -104,6 +110,7 @@ type NodeOptions struct {
 	containerVersion string
 	region           string
 	vaultConfig      *vault.Config
+	esUrls           string
 }
 
 type NodeOp func(s *NodeOptions)
@@ -130,6 +137,10 @@ func WithRegion(region string) NodeOp {
 
 func WithVaultConfig(vaultConfig *vault.Config) NodeOp {
 	return func(opts *NodeOptions) { opts.vaultConfig = vaultConfig }
+}
+
+func WithESUrls(urls string) NodeOp {
+	return func(opts *NodeOptions) { opts.esUrls = urls }
 }
 
 func (s *NodeMgr) UpdateMyNode(ctx context.Context) {

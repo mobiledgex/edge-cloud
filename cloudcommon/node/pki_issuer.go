@@ -10,6 +10,7 @@ const (
 	CertIssuerGlobal           = "pki-global"
 	CertIssuerRegional         = "pki-regional"
 	CertIssuerRegionalCloudlet = "pki-regional-cloudlet"
+	NoEventTlsClientIssuer     = ""
 )
 
 // To avoid services from one region to be able to talk to services from
