@@ -433,9 +433,11 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		if err != nil {
 			return err
 		}
-		err = cloudcommon.IsValidDeploymentManifest(cur.Deployment, cur.Command, cur.DeploymentManifest, ports)
-		if err != nil {
-			return fmt.Errorf("Invalid deployment manifest, %v", err)
+		if in.DeploymentManifest != "" {
+			err = cloudcommon.IsValidDeploymentManifest(cur.Deployment, cur.Command, in.DeploymentManifest, ports)
+			if err != nil {
+				return fmt.Errorf("Invalid deployment manifest, %v", err)
+			}
 		}
 		if cur.Deployment == cloudcommon.DeploymentTypeKubernetes {
 			_, err := k8smgmt.GetAppEnvVars(ctx, &cur, vaultConfig, &k8smgmt.TestReplacementVars)
