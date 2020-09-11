@@ -227,11 +227,13 @@ func (s *internalPki) GetClientTlsConfig(ctx context.Context, commonName, client
 		return nil, err
 	}
 
-	caPool, err := s.getCAs(ctx, serverIssuers)
-	if err != nil {
-		return nil, err
+	var caPool *x509.CertPool
+	if !opts.usePublicCAPool {
+		caPool, err = s.getCAs(ctx, serverIssuers)
+		if err != nil {
+			return nil, err
+		}
 	}
-
 	// Use the GetClientCertificate func to be able to refresh certs
 	config := &tls.Config{
 		MinVersion:            tls.VersionTLS12,
@@ -240,6 +242,9 @@ func (s *internalPki) GetClientTlsConfig(ctx context.Context, commonName, client
 		RootCAs:               caPool,
 		GetClientCertificate:  s.getClientCertificateFunc(id),
 		VerifyPeerCertificate: s.getVerifyFunc(serverIssuers),
+	}
+	if opts.usePublicCAPool {
+		config.VerifyPeerCertificate = nil
 	}
 	return config, nil
 }
@@ -523,9 +528,10 @@ func (s *NodeMgr) CommonName() string {
 }
 
 type TlsOptions struct {
-	serverName   string
-	skipVerify   bool
-	noMutualAuth bool
+	serverName      string
+	skipVerify      bool
+	noMutualAuth    bool
+	usePublicCAPool bool
 }
 
 type TlsOp func(s *TlsOptions)
@@ -541,4 +547,8 @@ func WithTlsSkipVerify(skipVerify bool) TlsOp {
 
 func WithNoMutualAuth(noMutualAuth bool) TlsOp {
 	return func(opts *TlsOptions) { opts.noMutualAuth = noMutualAuth }
+}
+
+func WithPublicCAPool() TlsOp {
+	return func(opts *TlsOptions) { opts.usePublicCAPool = true }
 }

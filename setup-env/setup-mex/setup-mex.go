@@ -422,16 +422,6 @@ func StartLocal(processName, outputDir string, p process.Process, opts ...proces
 	if !IsLocalIP(p.GetHostname()) {
 		return true
 	}
-	envvars := p.GetEnvVars()
-	if envvars != nil {
-		for k, v := range envvars {
-			// doing it this way means the variable is set for
-			// other commands too. Not ideal but not
-			// problematic, and only will happen on local
-			// process deploy
-			os.Setenv(k, v)
-		}
-	}
 	typ := process.GetTypeString(p)
 	log.Printf("Starting %s %s+v\n", typ, p)
 	logfile := getLogFile(p.GetName(), outputDir)
