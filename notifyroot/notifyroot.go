@@ -43,7 +43,10 @@ func main() {
 	tlsConfig, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
 		nodeMgr.CommonName(),
 		node.CertIssuerGlobal,
-		[]node.MatchCA{node.AnyRegionalMatchCA()})
+		[]node.MatchCA{
+			node.AnyRegionalMatchCA(),
+			node.GlobalMatchCA(),
+		})
 	if err != nil {
 		log.FatalLog("Failed to get tls config", "err", err)
 	}

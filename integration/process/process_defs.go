@@ -118,6 +118,7 @@ type Influx struct {
 	Common   `yaml:",inline"`
 	DataDir  string
 	HttpAddr string
+	BindAddr string
 	Config   string // set during Start
 	TLS      TLSCerts
 	Auth     LocalAuth

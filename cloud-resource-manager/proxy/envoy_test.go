@@ -19,7 +19,7 @@ func TestPortMap(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, 3, len(testMap))
 	// test ranges
-	testPorts = "tcp:1-10,tcp:20-25,udp:5-10"
+	testPorts = "tcp:1-10,tcp:23-28,udp:5-10"
 	testMap, err = buildPortsMapFromString(testPorts)
 	require.Nil(t, err)
 	require.Equal(t, 22, len(testMap))
@@ -28,7 +28,7 @@ func TestPortMap(t *testing.T) {
 		_, found = testMap[key]
 		require.True(t, found)
 	}
-	for ii := 20; ii <= 25; ii++ {
+	for ii := 23; ii <= 28; ii++ {
 		key := fmt.Sprintf("tcp:%d", ii)
 		_, found = testMap[key]
 		require.True(t, found)
