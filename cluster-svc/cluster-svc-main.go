@@ -329,33 +329,35 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 		appInst.Configs = configs
 	}
 
+	eventStart := time.Now()
 	res, err := appInstCreateApi(ctx, apiClient, appInst)
 	if err != nil {
 		// Handle non-fatal errors
 		if strings.Contains(err.Error(), appInst.Key.ExistsError().Error()) {
 			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "app", app.String(), "cluster", clusterInst.Key.String())
 			updateExistingAppInst(ctx, apiClient, &appInst)
-			return nil
-		}
-		if strings.Contains(err.Error(), "not found") {
+			err = nil
+		} else if strings.Contains(err.Error(), "not found") {
 			log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist, create it first", "app", app.String())
 			// Create the app
-			if err = createAppCommon(ctx, dialOpts, app); err == nil {
-				if res, err = appInstCreateApi(ctx, apiClient, appInst); err == nil {
-					log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", appInst.String(), "result", res.String())
-					return nil
-				}
+			if nerr := createAppCommon(ctx, dialOpts, app); nerr == nil {
+				eventStart = time.Now()
+				res, err = appInstCreateApi(ctx, apiClient, appInst)
 			}
+		} else {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			err = fmt.Errorf("CreateAppInst failed: %s", errstr)
 		}
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("CreateAppInst failed: %s", errstr)
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", appInst.String(), "result", res.String())
-	return nil
+	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", appInst.String(), "result", res.String(), "err", err)
+	if err == nil {
+		nodeMgr.TimedEvent(ctx, "cluster-svc create AppInst", app.Key.Organization, node.EventType, appInst.Key.GetTags(), err, eventStart, time.Now())
+	}
+	return err
 
 }
 
@@ -428,23 +430,28 @@ func createAppCommon(ctx context.Context, dialOpts grpc.DialOption, app *edgepro
 	if err = fillAppConfigs(app, *scrapeInterval); err != nil {
 		return err
 	}
+	eventStart := time.Now()
 	apiClient := edgeproto.NewAppApiClient(conn)
 	res, err := apiClient.CreateApp(ctx, app)
 	if err != nil {
 		// Handle non-fatal errors
 		if strings.Contains(err.Error(), app.Key.ExistsError().Error()) {
 			log.SpanLog(ctx, log.DebugLevelApi, "app already exists", "app", app.String())
-			return nil
+			err = nil
+		} else {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			err = fmt.Errorf("CreateApp failed: %s", errstr)
 		}
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("CreateApp failed: %s", errstr)
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "create app", "app", app.String(), "result", res.String())
-	return nil
+	if err == nil {
+		nodeMgr.TimedEvent(ctx, "cluster-svc create App", app.Key.Organization, node.EventType, app.Key.GetTags(), err, eventStart, time.Now())
+	}
+	return err
 }
 
 func getAppFromController(ctx context.Context, appkey *edgeproto.AppKey, apiClient edgeproto.AppApiClient) (*edgeproto.App, error) {
@@ -512,10 +519,13 @@ func updateAppInsts(ctx context.Context, appkey *edgeproto.AppKey) {
 			},
 			UpdateMultiple: true,
 		}
+		eventStart := time.Now()
 		res, err := appInstRefreshApi(ctx, apiClient, &appInst)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Unable to update appinst",
 				"appinst", appInst, "error", err.Error())
+		} else {
+			nodeMgr.TimedEvent(ctx, "cluster-svc refresh AppInsts", appkey.Organization, node.EventType, appInst.Key.GetTags(), nil, eventStart, time.Now())
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "update appinst", "appinst", appInst.String(), "result", res.String())
 	}
@@ -613,7 +623,7 @@ func main() {
 	span := log.StartSpan(log.DebugLevelInfo, "main")
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	err = nodeMgr.Init(ctx, node.NodeTypeClusterSvc, node.WithName(*hostname), node.WithRegion(*region))
+	err = nodeMgr.Init(ctx, node.NodeTypeClusterSvc, node.CertIssuerRegional, node.WithName(*hostname), node.WithRegion(*region))
 	if err != nil {
 		log.FatalLog("init node mgr failed", "err", err)
 	}

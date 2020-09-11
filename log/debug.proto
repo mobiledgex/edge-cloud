@@ -15,4 +15,5 @@ enum DebugLevel {
   upgrade = 8;
   info = 9;
   sampled = 10;
+  events = 11;
 }

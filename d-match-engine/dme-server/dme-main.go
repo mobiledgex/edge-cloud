@@ -404,7 +404,7 @@ func main() {
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &myCloudletKey)
-	err := nodeMgr.Init(ctx, node.NodeTypeDME, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey), node.WithRegion(*region))
+	err := nodeMgr.Init(ctx, node.NodeTypeDME, node.CertIssuerRegionalCloudlet, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey), node.WithRegion(*region))
 	if err != nil {
 		log.FatalLog("Failed init node", "err", err)
 	}

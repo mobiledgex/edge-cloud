@@ -23,6 +23,7 @@ import (
 	"time"
 
 	ct "github.com/daviddengcn/go-colortext"
+	"github.com/elastic/go-elasticsearch/v7"
 	influxclient "github.com/influxdata/influxdb/client/v2"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/influxsup"
 	mextls "github.com/mobiledgex/edge-cloud/tls"
@@ -670,6 +671,7 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.ClusterSvcSecretID),
 		)
 	}
+
 	// Append extra args convert from [arg1=val1, arg2] into ["-arg1", "val1", "-arg2"]
 	if len(options.ExtraArgs) > 0 {
 		for _, v := range options.ExtraArgs {
@@ -1096,29 +1098,206 @@ func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
 		"traefik.http.services.jaeger-c.loadbalancer.server.port=14268",
 		"traefik.http.services.jaeger-ui-notls.loadbalancer.server.port=16686",
 	}
-	args := []string{
-		"run", "--rm", "--name", p.Name,
-	}
+	args := p.getRunArgs()
 	for _, l := range labels {
 		args = append(args, "-l", l)
 	}
-	args = append(args, "jaegertracing/all-in-one:1.13")
+	// jaeger version should match "jaeger_version" in
+	// ansible/roles/jaeger/defaults/main.yaml
+	args = append(args, "jaegertracing/all-in-one:1.17.1")
 
 	var err error
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
-func (p *Jaeger) StopLocal() {
+func (p *DockerGeneric) getRunArgs() []string {
+	args := []string{
+		"run", "--rm", "--name", p.Name,
+	}
+	for k, v := range p.DockerEnvVars {
+		args = append(args, "-e", fmt.Sprintf("%s=%s", k, v))
+	}
+	for _, link := range p.Links {
+		args = append(args, "--link", link)
+	}
+	return args
+}
+
+func (p *DockerGeneric) StopLocal() {
 	StopLocal(p.cmd)
 	// if container is from previous aborted run
 	cmd := exec.Command("docker", "kill", p.Name)
 	cmd.Run()
 }
 
-func (p *Jaeger) GetExeName() string { return "docker" }
+func (p *DockerGeneric) GetExeName() string { return "docker" }
 
-func (p *Jaeger) LookupArgs() string { return p.Name }
+func (p *DockerGeneric) LookupArgs() string { return p.Name }
+
+func (p *ElasticSearch) StartLocal(logfile string, opts ...StartOp) error {
+	switch p.Type {
+	case "kibana":
+		return p.StartKibana(logfile, opts...)
+	case "nginx-proxy":
+		return p.StartNginxProxy(logfile, opts...)
+	default:
+		return p.StartElasticSearch(logfile, opts...)
+	}
+}
+
+func (p *ElasticSearch) StartElasticSearch(logfile string, opts ...StartOp) error {
+	// simple single node cluster
+	args := p.getRunArgs()
+	args = append(args,
+		"-p", "9200:9200",
+		"-p", "9300:9300",
+		"-e", "discovery.type=single-node",
+		"-e", "xpack.security.enabled=false",
+		"docker.elastic.co/elasticsearch/elasticsearch:7.6.2",
+	)
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
+	if err == nil {
+		// wait until up
+		addr := "http://127.0.0.1:9200"
+		cfg := elasticsearch.Config{
+			Addresses: []string{addr},
+		}
+		client, perr := elasticsearch.NewClient(cfg)
+		if perr != nil {
+			return perr
+		}
+		for ii := 0; ii < 30; ii++ {
+			res, perr := client.Info()
+			log.Printf("elasticsearch info %s try %d: res %v, perr %v\n", addr, ii, res, perr)
+			if perr == nil {
+				res.Body.Close()
+			}
+			if perr == nil && res.StatusCode == http.StatusOK {
+				break
+			}
+			time.Sleep(2 * time.Second)
+		}
+		if perr != nil {
+			return perr
+		}
+	}
+	return err
+}
+
+func (p *ElasticSearch) StartKibana(logfile string, opts ...StartOp) error {
+	args := p.getRunArgs()
+	args = append(args,
+		"-p", "5601:5601",
+		"docker.elastic.co/kibana/kibana:7.6.2",
+	)
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
+	return err
+}
+
+func (p *ElasticSearch) StartNginxProxy(logfile string, opts ...StartOp) error {
+	// Terminate TLS using mex-ca.crt and vault CAs.
+	if p.TLS.ServerCert == "" || p.TLS.ServerKey == "" || p.TLS.CACert == "" {
+		err := fmt.Errorf("ElasticSearch NginxProxy requires TLS config")
+		log.Printf("%v\n", err)
+		return err
+	}
+	certsDir := path.Dir(p.TLS.ServerCert)
+
+	configDir := path.Dir(logfile) + "/es-nginxproxy"
+	if err := os.MkdirAll(configDir, 0777); err != nil {
+		return err
+	}
+
+	// combine all cas into one for nginx config
+	// Note that nginx requires the full CA chain, so must include
+	// the root's public CA cert as well (not just intermediates).
+	// Note we can remove p.TLS.CACert once we transition to all services
+	// using "useVaultCerts" instead of "useVaultCAs".
+	cmd := exec.Command("bash", "-c",
+		"cat /tmp/vault_pki/*.pem "+p.TLS.CACert+" > "+configDir+"/allcas.pem")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s, %s", string(out), err)
+	}
+
+	if len(p.Links) == 0 {
+		return fmt.Errorf("Must specify Links field for elasticsearch nginx proxy")
+	}
+
+	// create config file
+	configArgs := esNginxConfigArgs{
+		ServerName: p.Name,
+		ServerCert: path.Base(p.TLS.ServerCert),
+		ServerKey:  path.Base(p.TLS.ServerKey),
+		CACert:     path.Base(p.TLS.CACert),
+		Target:     p.Links[0],
+	}
+	tmpl := template.Must(template.New("esnginx").Parse(esNginxConfig))
+	f, err := os.Create(configDir + "/nginx.conf")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	wr := bufio.NewWriter(f)
+	err = tmpl.Execute(wr, configArgs)
+	if err != nil {
+		return err
+	}
+	wr.Flush()
+
+	args := p.getRunArgs()
+	args = append(args,
+		"-p", "9201:9201",
+		"-v", fmt.Sprintf("%s:/certs", certsDir),
+		"-v", fmt.Sprintf("%s:/etc/nginx", configDir),
+		"nginx:latest",
+	)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
+	return err
+}
+
+type esNginxConfigArgs struct {
+	ServerName string
+	ServerCert string
+	ServerKey  string
+	CACert     string
+	Target     string
+}
+
+var esNginxConfig = `
+events {
+  worker_connections 100;
+}
+http {
+  server {
+    listen 9201 ssl;
+    listen [::]:9201 ssl;
+    ssl_certificate /certs/{{.ServerCert}};
+    ssl_certificate_key /certs/{{.ServerKey}};
+    ssl_client_certificate /etc/nginx/allcas.pem;
+    ssl_verify_client on;
+    ssl_verify_depth 2;
+    ssl_session_cache shared:le_nginx_SSL:1m;
+    ssl_session_cache shared:le_nginx_SSL:1m;
+    ssl_protocols TLSv1.2;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS";
+
+    server_name {{.ServerName}};
+
+    proxy_buffering off;
+    proxy_read_timeout 30m;
+
+    location / {
+      proxy_pass         http://{{.Target}}:9200;
+    }
+  }
+}
+`
 
 func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{}
