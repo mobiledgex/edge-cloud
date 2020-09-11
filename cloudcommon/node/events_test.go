@@ -35,27 +35,27 @@ func TestEvents(t *testing.T) {
 	starttime := time.Date(2020, time.August, 1, 0, 0, 0, 0, time.UTC)
 	ts := starttime
 
+	org := "devOrg"
+	operOrg := "operOrg"
 	keyTags := map[string]string{
 		"app":         "myapp",
-		"apporg":      "devOrg",
+		"apporg":      org,
 		"appver":      "1.0",
 		"cloudlet":    "cloudlet1",
-		"cloudletorg": "operOrg",
+		"cloudletorg": operOrg,
 		"cluster":     "testclust",
 		"clusterorg":  "MobiledgeX",
 	}
 	keyTags2 := map[string]string{
 		"cloudlet":    "cloudlet1",
-		"cloudletorg": "operOrg",
+		"cloudletorg": operOrg,
 	}
 	// create events
-	org := "devOrg"
-	org2 := "operOrg"
 	ts = ts.Add(time.Minute)
-	nodeMgr.EventAtTime(ctx, "test start", "", "event", nil, nil, ts)
+	nodeMgr.EventAtTime(ctx, "test start", NoOrg, "event", nil, nil, ts)
 
 	ts = ts.Add(time.Minute)
-	nodeMgr.EventAtTime(ctx, "cloudlet online", org2, "event", keyTags2, nil, ts)
+	nodeMgr.EventAtTime(ctx, "cloudlet online", operOrg, "event", keyTags2, nil, ts)
 
 	ts = ts.Add(time.Minute)
 	nodeMgr.EventAtTime(ctx, "create AppInst", org, "event", keyTags, nil, ts)
@@ -94,7 +94,7 @@ func TestEvents(t *testing.T) {
 			"delete AppInst",
 			"test start",
 		},
-		Orgs:    []string{"", "devOrg", "operOrg"},
+		Orgs:    []string{NoOrg, org, operOrg},
 		Types:   []string{"event"},
 		Regions: []string{"unit-test"},
 		TagKeys: []string{
@@ -119,7 +119,7 @@ func TestEvents(t *testing.T) {
 
 	// check terms aggregations filtered by allowed org
 	es := search
-	es.AllowedOrgs = []string{"devOrg"}
+	es.AllowedOrgs = []string{org}
 	terms, err = nodeMgr.EventTerms(ctx, &es)
 	require.Nil(t, err)
 	expectedTerms = EventTerms{
@@ -165,6 +165,18 @@ func TestEvents(t *testing.T) {
 
 	// find all events
 	events, err := nodeMgr.ShowEvents(ctx, &search)
+	require.Nil(t, err)
+	require.Equal(t, 5, len(events))
+	require.Equal(t, "delete AppInst", events[0].Name)
+	require.Equal(t, "create AppInst", events[1].Name)
+	require.Equal(t, "create AppInst", events[2].Name)
+	require.Equal(t, "cloudlet online", events[3].Name)
+	require.Equal(t, "test start", events[4].Name)
+
+	// find all events (wildcard)
+	es = search
+	es.Match.Names = []string{"*"}
+	events, err = nodeMgr.ShowEvents(ctx, &es)
 	require.Nil(t, err)
 	require.Equal(t, 5, len(events))
 	require.Equal(t, "delete AppInst", events[0].Name)
@@ -255,7 +267,7 @@ func TestEvents(t *testing.T) {
 	// search by org
 	// for security, org is a keyword so requires an exact string match
 	es = search
-	es.Match.Orgs = []string{"devOrg"}
+	es.Match.Orgs = []string{org}
 	events, err = nodeMgr.ShowEvents(ctx, &es)
 	require.Nil(t, err)
 	require.Equal(t, 3, len(events))
@@ -367,7 +379,7 @@ func TestEvents(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 0, len(events))
 	es = search
-	es.Match.Orgs = []string{"devOrg"}
+	es.Match.Orgs = []string{org}
 	es.AllowedOrgs = []string{"otherOrg"}
 	events, err = nodeMgr.ShowEvents(ctx, &es)
 	require.Nil(t, err)
@@ -375,7 +387,7 @@ func TestEvents(t *testing.T) {
 
 	// find all events for multiple allowed orgs
 	es = search
-	es.AllowedOrgs = []string{org, org2}
+	es.AllowedOrgs = []string{org, operOrg}
 	events, err = nodeMgr.ShowEvents(ctx, &es)
 	require.Nil(t, err)
 	require.Equal(t, 4, len(events))
@@ -402,7 +414,7 @@ func TestEvents(t *testing.T) {
 
 	// search looking for error message
 	es = search
-	es.Match.Orgs = []string{"devOrg", "operOrg"}
+	es.Match.Orgs = []string{org, operOrg}
 	es.Match.Error = "failed"
 	es.Match.Tags = map[string]string{
 		"app":        "myapp",
@@ -420,7 +432,7 @@ func TestEvents(t *testing.T) {
 
 	// search looking for failed autoprov
 	es = search
-	es.Match.Orgs = []string{"devOrg", "operOrg"}
+	es.Match.Orgs = []string{org, operOrg}
 	es.Match.Failed = true
 	es.Match.Tags = map[string]string{
 		"app":        "myapp",
@@ -438,7 +450,7 @@ func TestEvents(t *testing.T) {
 
 	// search for autoprov creates
 	es = search
-	es.Match.Orgs = []string{"devOrg", "operOrg"}
+	es.Match.Orgs = []string{org, operOrg}
 	es.Match.Names = []string{"*create*"}
 	es.Match.Tags = map[string]string{
 		"app":      "myapp",
@@ -461,7 +473,7 @@ func TestEvents(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 0, len(events))
 	es = search
-	es.Match.Orgs = []string{"devOrg"}
+	es.Match.Orgs = []string{org}
 	es.AllowedOrgs = []string{"otherOrg"}
 	events, err = nodeMgr.FindEvents(ctx, &es)
 	require.Nil(t, err)
@@ -513,4 +525,25 @@ func TestEvents(t *testing.T) {
 	require.Equal(t, 2, len(events))
 	require.Equal(t, "cloudlet online", events[0].Name)
 	require.Equal(t, "test start", events[1].Name)
+
+	//
+	// ---------------------------------------------------
+	// Test failures
+	// ---------------------------------------------------
+	//
+
+	// test error check for -, should be ok for keywords
+	es = search
+	es.Match.Names = []string{"create-App*", "delete App*"}
+	events, err = nodeMgr.ShowEvents(ctx, &es)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(events))
+	require.Equal(t, "delete AppInst", events[0].Name)
+	// test error check for - in text
+	es = search
+	es.Match.Tags = map[string]string{
+		"somekey": "bad-wildcard*",
+	}
+	_, err = nodeMgr.ShowEvents(ctx, &es)
+	require.NotNil(t, err)
 }

@@ -354,7 +354,7 @@ func testGetTlsConfig(t *testing.T, ctx context.Context, vroles *process.VaultRo
 	vc := getVaultConfig(cfg.VaultNodeType, cfg.VaultRegion, vroles)
 	mgr := node.NodeMgr{}
 	mgr.InternalPki.UseVaultCerts = true
-	mgr.Init(ctx, cfg.NodeType, "", node.WithRegion(cfg.Region), node.WithVaultConfig(vc))
+	mgr.Init(ctx, cfg.NodeType, node.NoEventTlsClientIssuer, node.WithRegion(cfg.Region), node.WithVaultConfig(vc))
 	_, err := mgr.InternalPki.GetServerTlsConfig(ctx,
 		mgr.CommonName(),
 		cfg.LocalIssuer,

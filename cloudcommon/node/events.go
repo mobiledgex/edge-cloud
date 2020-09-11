@@ -81,6 +81,8 @@ var (
 
 	EventType = "event"
 	AuditType = "audit"
+
+	DefaultTimeDuration = 48 * time.Hour
 )
 
 type EventData struct {
@@ -232,14 +234,13 @@ func (s *NodeMgr) writeIndex(ctx context.Context) error {
 		Body: strings.NewReader(eventMapping),
 	}
 	res, err := req.Do(ctx, s.ESClient)
-	if err == nil && res.StatusCode/100 != http.StatusOK/100 {
-		defer res.Body.Close()
-		return fmt.Errorf("Bad status: %v", res)
-	}
 	if err != nil {
 		return fmt.Errorf("Error: %v", err)
 	}
 	defer res.Body.Close()
+	if res.StatusCode/100 != http.StatusOK/100 {
+		return fmt.Errorf("Bad status: %v", res)
+	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "write event-log index template", "res", res)
 	return nil
 }
@@ -432,7 +433,7 @@ func (s *NodeMgr) getQuery(ctx context.Context, searchType string, search *Event
 	}
 	// time range is always specified
 	// Resolve{} is idempotent so may already have been done.
-	err = search.TimeRange.Resolve(48 * time.Hour)
+	err = search.TimeRange.Resolve(DefaultTimeDuration)
 	if err != nil {
 		return nil, err
 	}
@@ -545,9 +546,6 @@ func esSearchText(typ, field, val, searchType string) map[string]interface{} {
 	if typ == "match" && strings.ContainsRune(val, '*') {
 		// if user specified * they probably want wildcard matching
 		// for some reason text must be lower case or it won't match
-		if strings.ContainsRune(val, '-') {
-
-		}
 		typ = "wildcard"
 		qmap := make(map[string]interface{})
 		qmap["value"] = strings.ToLower(val)
@@ -684,12 +682,12 @@ func (s *NodeMgr) EventTerms(ctx context.Context, search *EventSearch) (*EventTe
 	for k, v := range aggrs {
 		m, ok := v.(map[string]interface{})
 		if !ok {
-			log.SpanLog(ctx, log.DebugLevelEvents, "key not a struct", "key", k)
+			log.SpanLog(ctx, log.DebugLevelEvents, "value not a struct", "key", k, "value", v)
 			continue
 		}
 		if k == "tagkeys" {
 			// nested fields have an extra layer of hierarchy
-			m, err = getMap(m, "tagkeys")
+			m, err = getMap(m, k)
 			if err != nil {
 				return nil, err
 			}

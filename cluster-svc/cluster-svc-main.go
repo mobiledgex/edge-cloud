@@ -353,7 +353,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 			err = fmt.Errorf("CreateAppInst failed: %s", errstr)
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", appInst.String(), "result", res.String())
+	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", appInst.String(), "result", res.String(), "err", err)
 	if err == nil {
 		nodeMgr.TimedEvent(ctx, "cluster-svc create AppInst", app.Key.Organization, node.EventType, appInst.Key.GetTags(), err, eventStart, time.Now())
 	}
