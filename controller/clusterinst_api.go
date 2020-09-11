@@ -487,7 +487,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			// nothing changed
 			return nil
 		}
-		if err := validateClusterInstUpdates(ctx, stm, in); err != nil {
+		if err := validateClusterInstUpdates(ctx, stm, &inbuf); err != nil {
 			return err
 		}
 		if !ignoreCRM(cctx) {
