@@ -754,7 +754,7 @@ var AllDataComments = map[string]string{
 	"appinstances:#.mappedports:#.proto":                         "TCP (L4) or UDP (L4) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp",
 	"appinstances:#.mappedports:#.internalport":                  "Container port",
 	"appinstances:#.mappedports:#.publicport":                    "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
-	"appinstances:#.mappedports:#.fqdnprefix":                    "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
+	"appinstances:#.mappedports:#.fqdnprefix":                    "skip 4 to preserve the numbering. 4 was path_prefix but was removed since we dont need it after removed http FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"appinstances:#.mappedports:#.endport":                       "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"appinstances:#.mappedports:#.tls":                           "TLS termination for this port",
 	"appinstances:#.mappedports:#.nginx":                         "use nginx proxy for this port if you really need a transparent proxy (udp only)",

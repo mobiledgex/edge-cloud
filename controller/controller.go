@@ -169,7 +169,7 @@ func startServices() error {
 		return fmt.Errorf("invalid region name")
 	}
 
-	err = nodeMgr.Init(ctx, node.NodeTypeController, node.WithName(ControllerId), node.WithContainerVersion(*versionTag), node.WithRegion(*region))
+	err = nodeMgr.Init(ctx, node.NodeTypeController, node.CertIssuerRegional, node.WithName(ControllerId), node.WithContainerVersion(*versionTag), node.WithRegion(*region))
 	if err != nil {
 		return err
 	}

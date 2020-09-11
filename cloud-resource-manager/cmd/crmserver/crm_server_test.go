@@ -251,7 +251,7 @@ func TestNotifyOrder(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
-	err := nodeMgr.Init(ctx, node.NodeTypeCRM)
+	err := nodeMgr.Init(ctx, node.NodeTypeCRM, node.NoEventTlsClientIssuer)
 	require.Nil(t, err)
 	controllerData = crmutil.NewControllerData(nil, &nodeMgr)
 	mgr := notify.ServerMgr{}
