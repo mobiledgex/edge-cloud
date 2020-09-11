@@ -63,7 +63,7 @@ func (p *Etcd) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--name", p.Name, "--data-dir", p.DataDir, "--listen-peer-urls", p.PeerAddrs, "--listen-client-urls", p.ClientAddrs, "--advertise-client-urls", p.ClientAddrs, "--initial-advertise-peer-urls", p.PeerAddrs, "--initial-cluster", p.InitialCluster}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
@@ -170,7 +170,7 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, p.ChefServerPath)
 	}
 
-	var envs []string
+	envs := p.GetEnv()
 	if options.RolesFile != "" {
 		dat, err := ioutil.ReadFile(options.RolesFile)
 		if err != nil {
@@ -182,13 +182,12 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 			return err
 		}
 		rr := roles.GetRegionRoles(p.Region)
-		envs = []string{
+		envs = append(envs,
 			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.CtrlRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.CtrlSecretID),
 			fmt.Sprintf("VAULT_CRM_ROLE_ID=%s", rr.CRMRoleID),
 			fmt.Sprintf("VAULT_CRM_SECRET_ID=%s", rr.CRMSecretID),
-		}
-		log.Printf("controller envs: %v\n", envs)
+		)
 	}
 
 	var err error
@@ -327,7 +326,7 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
-	var envs []string
+	envs := p.GetEnv()
 	if options.RolesFile != "" {
 		dat, err := ioutil.ReadFile(options.RolesFile)
 		if err != nil {
@@ -339,11 +338,10 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 			return err
 		}
 		rr := roles.GetRegionRoles(p.Region)
-		envs = []string{
+		envs = append(envs,
 			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.DmeRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.DmeSecretID),
-		}
-		log.Printf("dme envs: %v\n", envs)
+		)
 	}
 
 	var err error
@@ -480,11 +478,7 @@ func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 	var err error
 
 	args := p.GetArgs(opts...)
-	envVars := []string{}
-	for k, v := range p.GetEnvVars() {
-		envVars = append(envVars, fmt.Sprintf("%s=%s", k, v))
-	}
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envVars, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
@@ -525,14 +519,29 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 		}
 	}
 
-	configFile, err := influxsup.SetupInflux(p.DataDir,
-		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey), influxsup.WithAuth(p.Auth.User != ""))
+	influxops := []influxsup.InfluxOp{
+		influxsup.WithAuth(p.Auth.User != ""),
+	}
+	if p.TLS.ServerCert != "" {
+		influxops = append(influxops, influxsup.WithServerCert(p.TLS.ServerCert))
+	}
+	if p.TLS.ServerKey != "" {
+		influxops = append(influxops, influxsup.WithServerCertKey(p.TLS.ServerKey))
+	}
+	if p.BindAddr != "" {
+		influxops = append(influxops, influxsup.WithBindAddr(p.BindAddr))
+	}
+	if p.HttpAddr != "" {
+		influxops = append(influxops, influxsup.WithHttpAddr(p.HttpAddr))
+	}
+
+	configFile, err := influxsup.SetupInflux(p.DataDir, influxops...)
 	if err != nil {
 		return err
 	}
 	p.Config = configFile
 	args := []string{"-config", configFile}
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	if err != nil {
 		return err
 	}
@@ -581,14 +590,20 @@ func (p *Influx) StopLocal() {
 
 func (p *Influx) GetExeName() string { return "influxd" }
 
-func (p *Influx) LookupArgs() string { return "" }
+func (p *Influx) LookupArgs() string { return "-config " + p.Config }
 
 func (p *Influx) ResetData() error {
 	return os.RemoveAll(p.DataDir)
 }
 
 func (p *Influx) GetClient() (influxclient.Client, error) {
-	return influxsup.GetClient(p.HttpAddr, p.Auth.User, p.Auth.Pass)
+	httpaddr := ""
+	if p.TLS.ServerCert != "" {
+		httpaddr = "https://" + p.HttpAddr
+	} else {
+		httpaddr = "http://" + p.HttpAddr
+	}
+	return influxsup.GetClient(httpaddr, p.Auth.User, p.Auth.Pass)
 }
 
 // ClusterSvc process
@@ -628,6 +643,9 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 	if p.UseVaultCerts {
 		args = append(args, "--useVaultCerts")
 	}
+	if p.Region != "" {
+		args = append(args, "--region", p.Region)
+	}
 	args = append(args, "--hostname", p.Name)
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -635,7 +653,7 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
-	var envs []string
+	envs := p.GetEnv()
 	if options.RolesFile != "" {
 		dat, err := ioutil.ReadFile(options.RolesFile)
 		if err != nil {
@@ -647,11 +665,10 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 			return err
 		}
 		rr := roles.GetRegionRoles(p.Region)
-		envs = []string{
+		envs = append(envs,
 			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.ClusterSvcRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.ClusterSvcSecretID),
-		}
-		log.Printf("dme envs: %v\n", envs)
+		)
 	}
 	// Append extra args convert from [arg1=val1, arg2] into ["-arg1", "val1", "-arg2"]
 	if len(options.ExtraArgs) > 0 {
@@ -721,7 +738,7 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 
 	args := []string{"server", "-dev"}
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	if err != nil {
 		return err
 	}
@@ -991,7 +1008,7 @@ func (p *Traefik) StartLocal(logfile string, opts ...StartOp) error {
 	}
 	out.Flush()
 
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
@@ -1088,7 +1105,7 @@ func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
 	args = append(args, "jaegertracing/all-in-one:1.13")
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
@@ -1125,7 +1142,7 @@ func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
-	var envs []string
+	envs := p.GetEnv()
 	if options.RolesFile != "" {
 		dat, err := ioutil.ReadFile(options.RolesFile)
 		if err != nil {
@@ -1136,11 +1153,10 @@ func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 		if err != nil {
 			return err
 		}
-		envs = []string{
+		envs = append(envs,
 			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.NotifyRootRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.NotifyRootSecretID),
-		}
-		log.Printf("notifyroot envs: %v\n", envs)
+		)
 	}
 
 	var err error
@@ -1192,7 +1208,7 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
-	var envs []string
+	envs := p.GetEnv()
 	if options.RolesFile != "" {
 		dat, err := ioutil.ReadFile(options.RolesFile)
 		if err != nil {
@@ -1204,11 +1220,10 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 			return err
 		}
 		rr := roles.GetRegionRoles(p.Region)
-		envs = []string{
+		envs = append(envs,
 			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.EdgeTurnRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.EdgeTurnSecretID),
-		}
-		log.Printf("edgeturn envs: %v\n", envs)
+		)
 	}
 	var err error
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envs, logfile)
@@ -1226,8 +1241,10 @@ func (p *EdgeTurn) LookupArgs() string { return "" }
 // Support funcs
 
 func StartLocal(name, bin string, args, envs []string, logfile string) (*exec.Cmd, error) {
+	log.Printf("StartLocal:\n%s %s\n", bin, strings.Join(args, " "))
 	cmd := exec.Command(bin, args...)
-	if envs != nil {
+	if len(envs) > 0 {
+		log.Printf("%s env: %v\n", name, envs)
 		// Append to the current process's env
 		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, envs...)
@@ -1277,7 +1294,7 @@ func (p *LocApiSim) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-country", p.Country)
 	}
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
@@ -1300,7 +1317,7 @@ func (p *TokSrvSim) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, p.Token)
 	}
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
@@ -1318,7 +1335,7 @@ func (p *TokSrvSim) LookupArgs() string {
 
 func (p *SampleApp) StartLocal(logfile string, opts ...StartOp) error {
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), p.Args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), p.Args, p.GetEnv(), logfile)
 	return err
 }
 
