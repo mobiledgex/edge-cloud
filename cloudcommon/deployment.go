@@ -408,3 +408,11 @@ func DownloadFile(ctx context.Context, vaultConfig *vault.Config, fileUrlPath st
 
 	return nil
 }
+
+// Transform AppInst deployment type to ClusterInst deployment type
+func AppInstToClusterDeployment(deployment string) string {
+	if deployment == DeploymentTypeHelm {
+		deployment = DeploymentTypeKubernetes
+	}
+	return deployment
+}
