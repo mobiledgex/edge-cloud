@@ -146,9 +146,10 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.AccessType, deploymentType string) error {
 	maxPorts := settingsApi.Get().LoadBalancerMaxPortRange
 	for ii, _ := range ports {
-		// dont allow tls on vms with direct access
-		if ports[ii].Tls && deploymentType == cloudcommon.DeploymentTypeVM && accessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
-			return fmt.Errorf("TLS unsupported on VM based deployments with direct access")
+		// dont allow tls on vms or docker with direct access
+		if ports[ii].Tls && accessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT &&
+			(deploymentType == cloudcommon.DeploymentTypeVM || deploymentType == cloudcommon.DeploymentTypeDocker) {
+			return fmt.Errorf("TLS unsupported on VM and docker deployments with direct access")
 		}
 		ports[ii].PublicPort = ports[ii].InternalPort
 		if ports[ii].EndPort != 0 {
