@@ -674,7 +674,7 @@ func (s *searchAppInst) searchPotential(ctx context.Context, policy *AutoProvPol
 		// make sure there's a free reservable ClusterInst
 		// on the cloudlet. if cinsts exists there is at
 		// least one free.
-		cinstKey := DmeAppTbl.FreeReservableClusterInsts.GetForCloudlet(&cl.Key, s.appDeployment)
+		cinstKey := DmeAppTbl.FreeReservableClusterInsts.GetForCloudlet(&cl.Key, s.appDeployment, cloudcommon.AppInstToClusterDeployment)
 		if cinstKey == nil {
 			continue
 		}
