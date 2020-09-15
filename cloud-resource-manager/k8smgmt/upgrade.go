@@ -18,12 +18,12 @@ var crmConfigVersion = 1
 
 // This function is called after CRM starts and has received all the
 // cache data from the controller.
-func UpgradeConfig(ctx context.Context, caches *platform.Caches, client ssh.Client) error {
+func UpgradeConfig(ctx context.Context, caches *platform.Caches, sharedRootLBClient ssh.Client, getClient func(context.Context, *edgeproto.ClusterInst, string) (ssh.Client, error)) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "upgrade k8smgmt config")
 	// Config version file tracks which version the k8s manifest config
 	// files are at. We had a few different ways of managing the manifest files.
 	version := 0
-	out, err := client.Output("cat " + crmConfigVersionFile)
+	out, err := sharedRootLBClient.Output("cat " + crmConfigVersionFile)
 	if err == nil {
 		version, err = strconv.Atoi(string(out))
 		if err != nil {
@@ -33,15 +33,15 @@ func UpgradeConfig(ctx context.Context, caches *platform.Caches, client ssh.Clie
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "upgrade k8smgmt config", "version", version)
 	if version < 1 {
-		err = upgradeVersionSingleClusterConfigDir(ctx, caches, client)
+		err = upgradeVersionSingleClusterConfigDir(ctx, caches, getClient)
 		if err != nil {
-			return nil
+			return err
 		}
 	}
 
 	// upgrades complete
 	log.SpanLog(ctx, log.DebugLevelInfra, "upgrades complete")
-	err = pc.WriteFile(client, crmConfigVersionFile, fmt.Sprintf("%d", crmConfigVersion), "crm config version", pc.NoSudo)
+	err = pc.WriteFile(sharedRootLBClient, crmConfigVersionFile, fmt.Sprintf("%d", crmConfigVersion), "crm config version", pc.NoSudo)
 	return err
 }
 
@@ -51,7 +51,7 @@ func getConfigDirNameOld(names *KubeNames) (string, string) {
 
 // Moves all AppInst manifests for a cluster into a single directory that can
 // use declarative configuration management with the "prune" option.
-func upgradeVersionSingleClusterConfigDir(ctx context.Context, caches *platform.Caches, client ssh.Client) error {
+func upgradeVersionSingleClusterConfigDir(ctx context.Context, caches *platform.Caches, getClient func(context.Context, *edgeproto.ClusterInst, string) (ssh.Client, error)) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "upgrade k8smgmt single cluster config dir")
 	appInsts := make([]*edgeproto.AppInst, 0)
 
@@ -84,6 +84,12 @@ func upgradeVersionSingleClusterConfigDir(ctx context.Context, caches *platform.
 			log.SpanLog(ctx, log.DebugLevelInfra, "upgrade version single cluster config dir, names failed", "AppInst", appInst.Key, "err", err)
 			continue
 		}
+		client, err := getClient(ctx, &cinst, cloudcommon.ClientTypeRootLB)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "upgrade version single cluster config dir, get client failed", "AppInst", appInst.Key, "err", err)
+			continue
+		}
+
 		// make new config dir if necessary (may already have been created
 		// if multiple AppInsts in ClusterInst)
 		configDir, configName := getConfigDirName(names)
