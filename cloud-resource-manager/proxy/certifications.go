@@ -25,6 +25,9 @@ var DedicatedClients map[string]ssh.Client
 var DedicatedTls access.TLSCert
 var DedicatedMux sync.Mutex
 
+var DedicatedVmAppClients map[string]ssh.Client
+var DedicatedVmAppMux sync.Mutex
+
 var selfSignedCmd = `openssl req -new -newkey rsa:2048 -nodes -days 90 -nodes -x509 -config <(
 cat <<-EOF
 [req]
@@ -112,12 +115,20 @@ func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, 
 	}
 	if err == nil {
 		writeCertToRootLb(ctx, &tls, SharedRootLbClient, certsDir, certFile, keyFile)
+		// dedicated clusters
 		DedicatedMux.Lock()
 		DedicatedTls = tls
 		for _, client := range DedicatedClients {
 			writeCertToRootLb(ctx, &tls, client, certsDir, certFile, keyFile)
 		}
 		DedicatedMux.Unlock()
+
+		// VM Apps
+		DedicatedVmAppMux.Lock()
+		for _, client := range DedicatedVmAppClients {
+			writeCertToRootLb(ctx, &tls, client, certsDir, certFile, keyFile)
+		}
+		DedicatedVmAppMux.Unlock()
 	} else {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Unable to get certs", "err", err)
 	}
@@ -240,4 +251,22 @@ func RemoveDedicatedCluster(ctx context.Context, clustername string) {
 	DedicatedMux.Lock()
 	defer DedicatedMux.Unlock()
 	delete(DedicatedClients, clustername)
+}
+
+func NewDedicatedVmApp(ctx context.Context, appname string, client ssh.Client) {
+	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Error: failed to get cert dir and files", "appname", appname, "err", err)
+		return
+	}
+	DedicatedVmAppMux.Lock()
+	defer DedicatedVmAppMux.Unlock()
+	DedicatedVmAppClients[appname] = client
+	writeCertToRootLb(ctx, &DedicatedTls, client, certsDir, certFile, keyFile)
+}
+
+func RemoveDedicatedVmApp(ctx context.Context, appname string) {
+	DedicatedVmAppMux.Lock()
+	defer DedicatedVmAppMux.Unlock()
+	delete(DedicatedVmAppClients, appname)
 }
