@@ -142,8 +142,8 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 	return nil
 }
 
-func getConfigDir(names *KubeNames) string {
-	return names.ClusterName + "_" + names.AppName + names.AppOrg + names.AppVersion
+func getConfigDirName(names *KubeNames) (string, string) {
+	return names.ClusterName, names.AppName + names.AppOrg + names.AppVersion + ".yaml"
 }
 
 func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
@@ -156,14 +156,13 @@ func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, clien
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to merge env vars", "error", err)
 		return fmt.Errorf("error merging environment variables config file: %s", err)
 	}
-	configDir := getConfigDir(names)
-
+	configDir, configName := getConfigDirName(names)
 	err = pc.CreateDir(ctx, client, configDir, pc.NoOverwrite)
 	if err != nil {
 		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "writing config file", "kubeManifest", mf)
-	file := configDir + "/manifest.yaml"
+	file := configDir + "/" + configName
+	log.SpanLog(ctx, log.DebugLevelInfra, "writing config file", "file", file, "kubeManifest", mf)
 	err = pc.WriteFile(client, file, mf, "K8s Deployment", pc.NoSudo)
 	if err != nil {
 		return err
@@ -204,21 +203,11 @@ func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 }
 
 func DeleteAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	var cmd string
-	configDir := getConfigDir(names)
-	out, err := client.Output("ls -d " + configDir)
-	if err == nil {
-		cmd = fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, configDir)
-	} else {
-		// this is retained for backwards compatibility, from before
-		// we moved to Declarative Object style configuration management.
-
-		// for delete, we use the appInst revision which may be behind the app revision
-		file := names.AppName + names.AppInstRevision + ".yaml"
-		cmd = fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, file)
-	}
+	configDir, configName := getConfigDirName(names)
+	file := configDir + "/" + configName
+	cmd := fmt.Sprintf("%s kubectl delete -f %s", names.KconfEnv, file)
 	log.SpanLog(ctx, log.DebugLevelInfra, "deleting app", "name", names.AppName, "cmd", cmd)
-	out, err = client.Output(cmd)
+	out, err := client.Output(cmd)
 	if err != nil {
 		if strings.Contains(string(out), "not found") {
 			log.SpanLog(ctx, log.DebugLevelInfra, "app not found, cannot delete", "name", names.AppName)
@@ -227,6 +216,13 @@ func DeleteAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app
 		}
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "deleted deployment", "name", names.AppName)
+	// remove manifest file since directory contains all AppInst manifests for
+	// the ClusterInst.
+	log.SpanLog(ctx, log.DebugLevelInfra, "remove app manifest", "name", names.AppName, "file", file)
+	out, err = client.Output("rm " + file)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfra, "error deleting manifest", "file", file, "out", string(out), "err", err)
+	}
 	//Note wait for deletion of appinst can be done here in a generic place, but wait for creation is split
 	// out in each platform specific task so that we can optimize the time taken for create by allowing the
 	// wait to be run in parallel with other tasks
