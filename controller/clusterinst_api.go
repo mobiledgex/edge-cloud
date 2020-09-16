@@ -846,6 +846,12 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	}
 	// if this is a clusterinst use the org its reserved for instead of MobiledgeX
 	metric.AddTag("reservedBy", info.ReservedBy)
+	// org field so that influx queries are a lot simpler to retrieve reserved clusters
+	if info.ReservedBy != "" {
+		metric.AddTag("org", info.ReservedBy)
+	} else {
+		metric.AddTag("org", clusterInstKey.Organization)
+	}
 	// errors should never happen here since to get to this point the flavor should have already been checked previously, but just in case
 	nodeFlavor := edgeproto.Flavor{}
 	if !flavorApi.cache.Get(&info.Flavor, &nodeFlavor) {
