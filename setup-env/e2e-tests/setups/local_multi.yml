@@ -57,7 +57,7 @@ controllers:
   appdnsroot: localtest.net
   envvars:
     ES_SERVER_URLS: https://localhost:9201
-    ES_E2ETEST: true
+    E2ETEST_TLS: true
 
 - name: ctrl2
   etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
@@ -78,7 +78,7 @@ controllers:
   appdnsroot: localtest.net
   envvars:
     ES_SERVER_URLS: https://localhost:9201
-    ES_E2ETEST: true
+    E2ETEST_TLS: true
 
 clustersvcs:
 - name: cluster-svc1
@@ -92,7 +92,7 @@ clustersvcs:
   hostname: "127.0.0.1"
   envvars:
     ES_SERVER_URLS: https://localhost:9201
-    ES_E2ETEST: true
+    E2ETEST_TLS: true
 
 - name: cluster-svc2
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
@@ -105,7 +105,7 @@ clustersvcs:
   hostname: "127.0.0.1"
   envvars:
     ES_SERVER_URLS: https://localhost:9201
-    ES_E2ETEST: true
+    E2ETEST_TLS: true
 
 dmes:
 - name: dme1
@@ -122,7 +122,7 @@ dmes:
   hostname: "127.0.0.1"
   envvars:
     ES_SERVER_URLS: https://localhost:9201
-    ES_E2ETEST: true
+    E2ETEST_TLS: true
 
 - name: dme2
   apiaddr: "0.0.0.0:50052"
@@ -138,7 +138,7 @@ dmes:
   hostname: "127.0.0.1"
   envvars:
     ES_SERVER_URLS: https://localhost:9201
-    ES_E2ETEST: true
+    E2ETEST_TLS: true
 
 traefiks:
 - name: traefik-e2e
