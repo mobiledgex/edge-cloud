@@ -58,6 +58,9 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["nocmp"]; found {
 		in.SkipCrmCleanupOnFailure = false
 	}
+	if _, found := tags["nocmp"]; found {
+		in.OptRes = ""
+	}
 }
 
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
@@ -521,6 +524,7 @@ var ClusterInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"privacypolicy",
 	"skipcrmcleanuponfailure",
+	"optres",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -557,6 +561,7 @@ var ClusterInstComments = map[string]string{
 	"privacypolicy":           "Optional privacy policy name",
 	"masternodeflavor":        "Generic flavor for k8s master VM when worker nodes > 0",
 	"skipcrmcleanuponfailure": "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
+	"optres":                  "Optional Resources required by OS flavor if any",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors": "StringArray",
@@ -603,4 +608,5 @@ var UpdateClusterInstOptionalArgs = []string{
 	"numnodes",
 	"autoscalepolicy",
 	"skipcrmcleanuponfailure",
+	"optres",
 }
