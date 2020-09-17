@@ -166,7 +166,7 @@ func (s *NodeMgr) initEvents(ctx context.Context, tlsClientIssuer string, opts *
 	tlsOpts := []TlsOp{
 		WithPublicCAPool(),
 	}
-	if e2e := os.Getenv("ES_E2ETEST"); e2e != "" {
+	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
 		// skip verifying elastic search cert if e2e-tests
 		tlsOpts = append(tlsOpts, WithTlsSkipVerify(true))
 	}
