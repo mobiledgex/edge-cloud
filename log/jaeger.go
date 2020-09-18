@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mobiledgex/edge-cloud/tls"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	jaeger "github.com/uber/jaeger-client-go"
@@ -30,7 +30,7 @@ var SpanServiceName string
 // InitTracer configures the Jaeger OpenTracing client to log traces.
 // Set JAEGER_ENDPOINT to http://<jaegerhost>:14268/api/traces to
 // specify the Jaeger server.
-func InitTracer(tlsCertFile string) {
+func InitTracer(tlsConfig *tls.Config) {
 	SpanServiceName = filepath.Base(os.Args[0])
 
 	jaegerEndpoint := os.Getenv("JAEGER_ENDPOINT")
@@ -43,11 +43,6 @@ func InitTracer(tlsCertFile string) {
 	}
 
 	// Set up client-side TLS
-	skipVerify := false
-	tlsConfig, err := tls.GetTLSClientConfig(ur.Host, tlsCertFile, "", skipVerify)
-	if err != nil {
-		panic(fmt.Sprintf("ERROR: failed to init TLS client config for cert %s, %v", tlsCertFile, err))
-	}
 	if tlsConfig == nil {
 		ur.Scheme = "http"
 	} else {

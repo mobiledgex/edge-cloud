@@ -91,20 +91,16 @@ func main() {
 	nodeMgr.InitFlags()
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer(nodeMgr.TlsCertFile)
-	defer log.FinishTracer()
 
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	span := log.StartSpan(log.DebugLevelInfo, "main")
-	ctx := log.ContextWithSpan(context.Background(), span)
-
-	err := nodeMgr.Init(ctx, node.NodeTypeEdgeTurn, node.CertIssuerRegional, node.WithRegion(*region))
+	ctx, span, err := nodeMgr.Init(node.NodeTypeEdgeTurn, node.CertIssuerRegional, node.WithRegion(*region))
 	if err != nil {
 		span.Finish()
 		log.FatalLog("Failed to init node", "err", err)
 	}
+	defer nodeMgr.Finish()
 
 	started := make(chan bool)
 	go func() {

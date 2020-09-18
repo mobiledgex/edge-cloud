@@ -615,18 +615,14 @@ func validateAppRevision(ctx context.Context, appkey *edgeproto.AppKey) error {
 
 func main() {
 	nodeMgr.InitFlags()
-	var err error
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer(nodeMgr.TlsCertFile)
-	defer log.FinishTracer()
-	span := log.StartSpan(log.DebugLevelInfo, "main")
-	ctx := log.ContextWithSpan(context.Background(), span)
 
-	err = nodeMgr.Init(ctx, node.NodeTypeClusterSvc, node.CertIssuerRegional, node.WithName(*hostname), node.WithRegion(*region))
+	ctx, span, err := nodeMgr.Init(node.NodeTypeClusterSvc, node.CertIssuerRegional, node.WithName(*hostname), node.WithRegion(*region))
 	if err != nil {
 		log.FatalLog("init node mgr failed", "err", err)
 	}
+	defer nodeMgr.Finish()
 
 	clusterSvcPlugin, err = pfutils.GetClusterSvc(ctx, *pluginRequired)
 	if err != nil {
