@@ -149,19 +149,12 @@ func startServices() error {
 			return err
 		}
 	}
-	log.InitTracer(nodeMgr.TlsCertFile)
-	span := log.StartSpan(log.DebugLevelInfo, "main")
-	span.SetTag("level", "init")
-	defer span.Finish()
-	ctx := log.ContextWithSpan(context.Background(), span)
-
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "nohostname"
 	}
 	ControllerId = hostname + "@" + *externalApiAddr
 
-	log.SpanLog(ctx, log.DebugLevelInfo, "Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
 	// region number for etcd is a deprecated concept since we decided
 	// etcd is per-region.
 	objstore.InitRegion(uint32(1))
@@ -169,12 +162,14 @@ func startServices() error {
 		return fmt.Errorf("invalid region name")
 	}
 
-	err = nodeMgr.Init(ctx, node.NodeTypeController, node.CertIssuerRegional, node.WithName(ControllerId), node.WithContainerVersion(*versionTag), node.WithRegion(*region))
+	ctx, span, err := nodeMgr.Init(node.NodeTypeController, node.CertIssuerRegional, node.WithName(ControllerId), node.WithContainerVersion(*versionTag), node.WithRegion(*region))
 	if err != nil {
 		return err
 	}
+	defer span.Finish()
 	vaultConfig = nodeMgr.VaultConfig
 
+	log.SpanLog(ctx, log.DebugLevelInfo, "Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
 	err = validateFields(ctx)
 	if err != nil {
 		return err
@@ -428,7 +423,7 @@ func stopServices() {
 	if services.etcdLocal != nil {
 		services.etcdLocal.StopLocal()
 	}
-	log.FinishTracer()
+	nodeMgr.Finish()
 }
 
 // Helper function to verify the compatibility of etcd version and

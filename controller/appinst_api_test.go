@@ -16,7 +16,7 @@ import (
 
 func TestAppInstApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
@@ -287,8 +287,6 @@ func ClientAppInstCachedFieldsTest(t *testing.T, ctx context.Context, appApi edg
 
 func TestAutoClusterInst(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	log.InitTracer("")
-	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
 

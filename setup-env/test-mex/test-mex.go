@@ -110,7 +110,7 @@ func validateArgs(config *e2eapi.TestConfig, spec *setupmex.TestSpec) {
 
 func main() {
 	flag.Parse()
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	util.SetLogFormat()

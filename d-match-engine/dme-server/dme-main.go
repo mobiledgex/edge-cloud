@@ -398,16 +398,13 @@ func main() {
 	nodeMgr.InitFlags()
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer(nodeMgr.TlsCertFile)
-	defer log.FinishTracer()
-	span := log.StartSpan(log.DebugLevelInfo, "main")
-	ctx := log.ContextWithSpan(context.Background(), span)
 
 	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &myCloudletKey)
-	err := nodeMgr.Init(ctx, node.NodeTypeDME, node.CertIssuerRegionalCloudlet, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey), node.WithRegion(*region))
+	ctx, span, err := nodeMgr.Init(node.NodeTypeDME, node.CertIssuerRegionalCloudlet, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey), node.WithRegion(*region))
 	if err != nil {
 		log.FatalLog("Failed init node", "err", err)
 	}
+	defer nodeMgr.Finish()
 	operatorApiGw, err = initOperator(ctx, *carrier)
 	if err != nil {
 		span.Finish()
