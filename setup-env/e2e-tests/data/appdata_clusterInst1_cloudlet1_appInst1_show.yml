@@ -51,6 +51,7 @@ cloudletinfos:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
+  controllercachereceived: true
 flavors:
 - key:
     name: x1.tiny
