@@ -67,27 +67,17 @@ func main() {
 		*debugLevels = strings.ReplaceAll(*debugLevels, "mexos", "infra")
 	}
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer(nodeMgr.TlsCertFile)
-	defer log.FinishTracer()
-
-	var span opentracing.Span
-	if *parentSpan != "" {
-		span = log.NewSpanFromString(log.DebugLevelInfo, *parentSpan, "main")
-	} else {
-		span = log.StartSpan(log.DebugLevelInfo, "main")
-	}
-	ctx := log.ContextWithSpan(context.Background(), span)
 
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
 	standalone := false
 	cloudcommon.ParseMyCloudletKey(standalone, cloudletKeyStr, &myCloudletInfo.Key)
-	err := nodeMgr.Init(ctx, node.NodeTypeCRM, node.CertIssuerRegionalCloudlet, node.WithName(*hostname), node.WithCloudletKey(&myCloudletInfo.Key), node.WithNoUpdateMyNode(), node.WithRegion(*region))
+	ctx, span, err := nodeMgr.Init(node.NodeTypeCRM, node.CertIssuerRegionalCloudlet, node.WithName(*hostname), node.WithCloudletKey(&myCloudletInfo.Key), node.WithNoUpdateMyNode(), node.WithRegion(*region), node.WithParentSpan(*parentSpan))
 	if err != nil {
-		span.Finish()
 		log.FatalLog(err.Error())
 	}
+	defer nodeMgr.Finish()
 	log.SetTags(span, myCloudletInfo.Key.GetTags())
 	crmutil.InitDebug(&nodeMgr)
 

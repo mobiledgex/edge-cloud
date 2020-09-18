@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/mobiledgex/edge-cloud/version"
+	"github.com/opentracing/opentracing-go"
 )
 
 var NodeTypeCRM = "crm"
@@ -26,21 +27,23 @@ type NodeMgr struct {
 	TlsCertFile string
 	VaultAddr   string
 
-	MyNode         edgeproto.Node
-	NodeCache      RegionNodeCache
-	Debug          DebugNode
-	VaultConfig    *vault.Config
-	Region         string
-	InternalPki    internalPki
-	InternalDomain string
-	ESClient       *elasticsearch.Client
+	MyNode          edgeproto.Node
+	NodeCache       RegionNodeCache
+	Debug           DebugNode
+	VaultConfig     *vault.Config
+	Region          string
+	InternalPki     internalPki
+	InternalDomain  string
+	ESClient        *elasticsearch.Client
+	tlsClientIssuer string
 }
 
 // Most of the time there will only be one NodeMgr per process, and these
 // settings will come from command line input.
 func (s *NodeMgr) InitFlags() {
-	// TlsCertFile remains for backwards compatibility. It will eventually be
-	// removed once all CRMs transition over to Vault internal PKI.
+	// itls uses a set of file-based certs for internal mTLS auth
+	// between services. It is not production-safe and should only be
+	// used if Vault-PKI cannot be used.
 	flag.StringVar(&s.TlsCertFile, "tls", "", "server tls cert file. Keyfile and CA file must be in same directory, CA file should be \"mex-ca.crt\", and key file should be same name as cert file but extension \".key\"")
 	flag.StringVar(&s.VaultAddr, "vaultAddr", "", "Vault address; local vault runs at http://127.0.0.1:8200")
 	flag.BoolVar(&s.InternalPki.UseVaultCAs, "useVaultCAs", false, "Include use of Vault CAs for internal TLS authentication")
@@ -48,7 +51,7 @@ func (s *NodeMgr) InitFlags() {
 	flag.StringVar(&s.InternalDomain, "internalDomain", "mobiledgex.net", "domain name for internal PKI")
 }
 
-func (s *NodeMgr) Init(ctx context.Context, nodeType, eventTlsClientIssuer string, ops ...NodeOp) error {
+func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context.Context, opentracing.Span, error) {
 	opts := &NodeOptions{}
 	opts.updateMyNode = true
 	for _, op := range ops {
@@ -68,6 +71,9 @@ func (s *NodeMgr) Init(ctx context.Context, nodeType, eventTlsClientIssuer strin
 	s.MyNode.Hostname = cloudcommon.Hostname()
 	s.MyNode.ContainerVersion = opts.containerVersion
 	s.Region = opts.region
+	s.tlsClientIssuer = tlsClientIssuer
+
+	initCtx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
 
 	// init vault before pki
 	s.VaultConfig = opts.vaultConfig
@@ -75,18 +81,42 @@ func (s *NodeMgr) Init(ctx context.Context, nodeType, eventTlsClientIssuer strin
 		var err error
 		s.VaultConfig, err = vault.BestConfig(s.VaultAddr)
 		if err != nil {
-			return err
+			return initCtx, nil, err
 		}
-		log.SpanLog(ctx, log.DebugLevelInfo, "vault auth", "type", s.VaultConfig.Auth.Type())
+		log.SpanLog(initCtx, log.DebugLevelInfo, "vault auth", "type", s.VaultConfig.Auth.Type())
 	}
 
-	err := s.initInternalPki(ctx)
+	// init pki before logging, because access to logger needs pki certs
+	err := s.initInternalPki(initCtx)
 	if err != nil {
-		return err
+		return initCtx, nil, err
 	}
-	err = s.initEvents(ctx, eventTlsClientIssuer, opts)
+
+	// init logger
+	loggerTls, err := s.GetPublicClientTlsConfig(initCtx)
 	if err != nil {
-		return err
+		return initCtx, nil, err
+	}
+	log.InitTracer(loggerTls)
+
+	// logging is initialized so start the real span
+	// nodemgr init should always be started from main.
+	// Caller needs to handle span.Finish()
+	var span opentracing.Span
+	if opts.parentSpan != "" {
+		span = log.NewSpanFromString(log.DebugLevelInfo, opts.parentSpan, "main")
+	} else {
+		span = log.StartSpan(log.DebugLevelInfo, "main")
+	}
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	// start pki refresh after logging initialized
+	s.InternalPki.start()
+
+	err = s.initEvents(ctx, opts)
+	if err != nil {
+		span.Finish()
+		return initCtx, nil, err
 	}
 
 	edgeproto.InitNodeCache(&s.NodeCache.NodeCache)
@@ -96,11 +126,15 @@ func (s *NodeMgr) Init(ctx context.Context, nodeType, eventTlsClientIssuer strin
 	if opts.updateMyNode {
 		s.UpdateMyNode(ctx)
 	}
-	return nil
+	return ctx, span, nil
 }
 
 func (s *NodeMgr) Name() string {
 	return s.MyNode.Key.Name
+}
+
+func (s *NodeMgr) Finish() {
+	log.FinishTracer()
 }
 
 type NodeOptions struct {
@@ -111,6 +145,7 @@ type NodeOptions struct {
 	region           string
 	vaultConfig      *vault.Config
 	esUrls           string
+	parentSpan       string
 }
 
 type NodeOp func(s *NodeOptions)
@@ -141,6 +176,10 @@ func WithVaultConfig(vaultConfig *vault.Config) NodeOp {
 
 func WithESUrls(urls string) NodeOp {
 	return func(opts *NodeOptions) { opts.esUrls = urls }
+}
+
+func WithParentSpan(parentSpan string) NodeOp {
+	return func(opts *NodeOptions) { opts.parentSpan = parentSpan }
 }
 
 func (s *NodeMgr) UpdateMyNode(ctx context.Context) {

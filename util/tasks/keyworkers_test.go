@@ -10,7 +10,7 @@ import (
 )
 
 func TestKeyWorkers(t *testing.T) {
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 

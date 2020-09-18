@@ -154,7 +154,7 @@ type AggrVal struct {
 	DocCount int    `json:"doc_count"`
 }
 
-func (s *NodeMgr) initEvents(ctx context.Context, tlsClientIssuer string, opts *NodeOptions) error {
+func (s *NodeMgr) initEvents(ctx context.Context, opts *NodeOptions) error {
 	// ES_SERVER_URLS should be set in environment, it exists as an parameter
 	// option just for unit-tests.
 	if opts.esUrls == "" {
@@ -163,13 +163,6 @@ func (s *NodeMgr) initEvents(ctx context.Context, tlsClientIssuer string, opts *
 	if opts.esUrls == "" {
 		return nil
 	}
-	tlsOpts := []TlsOp{
-		WithPublicCAPool(),
-	}
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
-		// skip verifying elastic search cert if e2e-tests
-		tlsOpts = append(tlsOpts, WithTlsSkipVerify(true))
-	}
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "new elastic client", "esurls", opts.esUrls)
 	config := elasticsearch.Config{
@@ -177,17 +170,12 @@ func (s *NodeMgr) initEvents(ctx context.Context, tlsClientIssuer string, opts *
 		Username:  os.Getenv("ES_USERNAME"),
 		Password:  os.Getenv("ES_PASSWORD"),
 	}
-	if tlsClientIssuer != "" {
-		// Note that ElasticSearch will have a public-CA issued cert
-		tlsConfig, err := s.InternalPki.GetClientTlsConfig(ctx,
-			s.CommonName(),
-			tlsClientIssuer,
-			[]MatchCA{},
-			tlsOpts...)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "tlsConfig error", "err", err)
-			return err
-		}
+	tlsConfig, err := s.GetPublicClientTlsConfig(ctx)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "failed to get elastic search client tls config", "err", err)
+		return err
+	}
+	if tlsConfig != nil {
 		transport := http.Transport{
 			// settings from http.DefaultTransport
 			Proxy: http.ProxyFromEnvironment,
@@ -206,7 +194,6 @@ func (s *NodeMgr) initEvents(ctx context.Context, tlsClientIssuer string, opts *
 		config.Transport = &transport
 	}
 
-	var err error
 	s.ESClient, err = elasticsearch.NewClient(config)
 	if err != nil {
 		return err

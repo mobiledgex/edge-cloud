@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -24,15 +23,12 @@ func main() {
 	nodeMgr.InitFlags()
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer(nodeMgr.TlsCertFile)
-	defer log.FinishTracer()
-	span := log.StartSpan(log.DebugLevelInfo, "main")
-	ctx := log.ContextWithSpan(context.Background(), span)
 
-	err := nodeMgr.Init(ctx, node.NodeTypeNotifyRoot, node.CertIssuerGlobal)
+	ctx, span, err := nodeMgr.Init(node.NodeTypeNotifyRoot, node.CertIssuerGlobal)
 	if err != nil {
 		log.FatalLog("Failed to init node", "err", err)
 	}
+	defer nodeMgr.Finish()
 
 	notifyServer := &notify.ServerMgr{}
 	nodeMgr.RegisterServer(notifyServer)

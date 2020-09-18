@@ -13,7 +13,7 @@ import (
 
 func TestAutoProvStats(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq | log.DebugLevelMetrics)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
