@@ -340,6 +340,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if err != nil {
 			return err
 		}
+		if resTagTableApi.UsesGpu(ctx, stm, *vmspec.FlavorInfo, cloudlet) {
+			in.OptRes = "gpu"
+		}
 		in.NodeFlavor = vmspec.FlavorName
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
