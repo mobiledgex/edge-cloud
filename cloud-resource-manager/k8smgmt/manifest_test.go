@@ -346,3 +346,10 @@ func TestImagePullSecrets(t *testing.T) {
 	fmt.Println(newMf)
 	require.Equal(t, newMf, expectedDeploymentManifest)
 }
+
+func TestNames(t *testing.T) {
+	// CleanupClusterConfig requires that we can get names for just
+	// the ClusterInst without any data in App or AppInst
+	_, err := GetKubeNames(&edgeproto.ClusterInst{}, &edgeproto.App{}, &edgeproto.AppInst{})
+	require.Nil(t, err)
+}

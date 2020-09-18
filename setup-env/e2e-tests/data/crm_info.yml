@@ -139,6 +139,7 @@ cloudletinfos:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
+  controllercachereceived: true
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -156,6 +157,7 @@ cloudletinfos:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
+  controllercachereceived: true
 
 apps:
 - key:
