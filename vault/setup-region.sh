@@ -106,6 +106,10 @@ path "pki-regional-cloudlet/issue/$REGION" {
 path "secret/data/keys/id_rsa_mex" {
   capabilities = [ "read" ]
 }
+
+path "ssh/sign/machine" {
+  capabilities = [ "create", "update" ]
+}
 EOF
 vault policy write $REGION.crm /tmp/crm-pol.hcl
 rm /tmp/crm-pol.hcl

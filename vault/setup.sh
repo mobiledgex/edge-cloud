@@ -100,3 +100,41 @@ vault write auth/approle/role/notifyroot period="720h" policies="notifyroot"
 # get notifyroot app roleID and generate secretID
 vault read auth/approle/role/notifyroot/role-id
 vault write -f auth/approle/role/notifyroot/secret-id
+
+# enable vault ssh secrets engine
+vault secrets enable -path=ssh ssh
+vault write ssh/config/ca generate_signing_key=true
+vault write ssh/roles/machine -<<"EOH"
+{
+  "allow_user_certificates": true,
+  "allowed_users": "*",
+  "allowed_extensions": "permit-pty,permit-port-forwarding",
+  "default_extensions": [
+    {
+      "permit-pty": "",
+      "permit-port-forwarding": ""
+    }
+  ],
+  "key_type": "ca",
+  "default_user": "ubuntu",
+  "ttl": "72h",
+  "max_ttl": "72h"
+}
+EOH
+vault write ssh/roles/user -<<"EOH"
+{
+  "allow_user_certificates": true,
+  "allowed_users": "*",
+  "allowed_extensions": "permit-pty,permit-port-forwarding",
+  "default_extensions": [
+    {
+      "permit-pty": "",
+      "permit-port-forwarding": ""
+    }
+  ],
+  "key_type": "ca",
+  "default_user": "ubuntu",
+  "ttl": "5m",
+  "max_ttl": "60m"
+}
+EOH
