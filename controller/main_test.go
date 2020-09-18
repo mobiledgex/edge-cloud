@@ -25,7 +25,7 @@ func getGrpcClient(t *testing.T) (*grpc.ClientConn, error) {
 
 func TestController(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify | log.DebugLevelApi | log.DebugLevelUpgrade)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	flag.Parse() // set defaults
@@ -175,7 +175,7 @@ func TestDataGen(t *testing.T) {
 
 func TestEdgeCloudBug26(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	flag.Parse()

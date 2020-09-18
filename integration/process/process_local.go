@@ -1199,7 +1199,7 @@ func (p *ElasticSearch) StartKibana(logfile string, opts ...StartOp) error {
 
 func (p *ElasticSearch) StartNginxProxy(logfile string, opts ...StartOp) error {
 	// Terminate TLS using mex-ca.crt and vault CAs.
-	if p.TLS.ServerCert == "" || p.TLS.ServerKey == "" || p.TLS.CACert == "" {
+	if p.TLS.ServerCert == "" || p.TLS.ServerKey == "" {
 		err := fmt.Errorf("ElasticSearch NginxProxy requires TLS config")
 		log.Printf("%v\n", err)
 		return err
@@ -1216,8 +1216,11 @@ func (p *ElasticSearch) StartNginxProxy(logfile string, opts ...StartOp) error {
 	// the root's public CA cert as well (not just intermediates).
 	// Note we can remove p.TLS.CACert once we transition to all services
 	// using "useVaultCerts" instead of "useVaultCAs".
-	cmd := exec.Command("bash", "-c",
-		"cat /tmp/vault_pki/*.pem "+p.TLS.CACert+" > "+configDir+"/allcas.pem")
+	certs := "/tmp/vault_pki/*.pem"
+	if p.TLS.CACert != "" {
+		certs += " " + p.TLS.CACert
+	}
+	cmd := exec.Command("bash", "-c", "cat "+certs+" > "+configDir+"/allcas.pem")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%s, %s", string(out), err)
@@ -1232,9 +1235,9 @@ func (p *ElasticSearch) StartNginxProxy(logfile string, opts ...StartOp) error {
 		ServerName: p.Name,
 		ServerCert: path.Base(p.TLS.ServerCert),
 		ServerKey:  path.Base(p.TLS.ServerKey),
-		CACert:     path.Base(p.TLS.CACert),
 		Target:     p.Links[0],
 	}
+
 	tmpl := template.Must(template.New("esnginx").Parse(esNginxConfig))
 	f, err := os.Create(configDir + "/nginx.conf")
 	if err != nil {
@@ -1264,7 +1267,6 @@ type esNginxConfigArgs struct {
 	ServerName string
 	ServerCert string
 	ServerKey  string
-	CACert     string
 	Target     string
 }
 
