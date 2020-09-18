@@ -116,6 +116,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].SkipCrmCleanupOnFailure = false
 		}
+		if _, found := tags["nocmp"]; found {
+			in.ClusterInsts[i0].OptRes = ""
+		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -408,6 +411,7 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.privacypolicy",
 	"clusterinsts:#.masternodeflavor",
 	"clusterinsts:#.skipcrmcleanuponfailure",
+	"clusterinsts:#.optres",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -703,6 +707,7 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.privacypolicy":                               "Optional privacy policy name",
 	"clusterinsts:#.masternodeflavor":                            "Generic flavor for k8s master VM when worker nodes > 0",
 	"clusterinsts:#.skipcrmcleanuponfailure":                     "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
+	"clusterinsts:#.optres":                                      "Optional Resources required by OS flavor if any",
 	"apps:#.fields":                                              "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                    "App developer organization",
 	"apps:#.key.name":                                            "App name",

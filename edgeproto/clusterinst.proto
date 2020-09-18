@@ -83,6 +83,8 @@ message ClusterInst {
   string master_node_flavor = 25 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
   // Prevents cleanup of resources on failure within CRM, used for diagnostic purposes
   bool skip_crm_cleanup_on_failure = 26 [(protogen.hidetag) = "nocmp"];
+  // Optional Resources required by OS flavor if any
+  string opt_res = 27 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
