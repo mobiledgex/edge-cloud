@@ -15,7 +15,8 @@ import (
 // Wrap Span so we can override Finish()
 type Span struct {
 	*jaeger.Span
-	suppress bool // ignore log for show commands etc
+	suppress  bool // ignore log for show commands etc
+	noTracing bool // special span that only logs to disk
 }
 
 var IgnoreLvl uint64 = 99999
@@ -60,6 +61,16 @@ func StartSpan(lvl uint64, operationName string, opts ...opentracing.StartSpanOp
 	if jspan.SpanContext().IsSampled() && !span.suppress {
 		ec := zapcore.NewEntryCaller(runtime.Caller(1))
 		spanlogger.Info(getSpanMsg(span, ec.TrimmedPath(), "start "+operationName))
+	}
+	return span
+}
+
+// This span only logs to disk, and does not actually do any tracing.
+// It is primarily for use during init for logging to disk before Jaeger
+// is initialized, or for unit tests.
+func NoTracingSpan() opentracing.Span {
+	span := &Span{
+		noTracing: true,
 	}
 	return span
 }
@@ -112,12 +123,18 @@ func SpanLog(ctx context.Context, lvl uint64, msg string, keysAndValues ...inter
 	if !ok {
 		panic("non-edge-cloud Span not supported")
 	}
-	if !span.SpanContext().IsSampled() {
+	if !span.noTracing && !span.SpanContext().IsSampled() {
 		return
 	}
 
-	ec := zapcore.NewEntryCaller(runtime.Caller(1))
+	ec := zapcore.NewEntryCaller(runtime.Caller(2))
 	lineno := ec.TrimmedPath()
+	if span.noTracing {
+		// just log to disk
+		zfields := getFields(keysAndValues)
+		spanlogger.Info(getSpanMsg(nil, lineno, msg), zfields...)
+		return
+	}
 	fields := []trlog.Field{
 		trlog.String("msg", msg),
 		trlog.String("lineno", lineno),
@@ -156,7 +173,7 @@ func getFields(args []interface{}) []zap.Field {
 	return fields
 }
 
-// Convenience function for test routines
+// Convenience function for test routines. Does not require InitTracer().
 func StartTestSpan(ctx context.Context) context.Context {
 	span := StartSpan(DebugLevelInfo, "test")
 	// ignore span.Finish()
@@ -164,7 +181,7 @@ func StartTestSpan(ctx context.Context) context.Context {
 }
 
 func (s *Span) Finish() {
-	if s.suppress {
+	if s.suppress || s.noTracing {
 		return
 	}
 	s.Span.Finish()

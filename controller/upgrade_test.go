@@ -141,7 +141,7 @@ func TestAllUpgradeFuncs(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelUpgrade | log.DebugLevelApi)
 	objStore := dummyEtcd{}
 	objstore.InitRegion(1)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	for ii, fn := range edgeproto.VersionHash_UpgradeFuncs {

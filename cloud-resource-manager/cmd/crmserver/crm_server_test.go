@@ -146,7 +146,7 @@ func startMain(t *testing.T) (chan struct{}, error) {
 func TestCRM(t *testing.T) {
 	var err error
 	log.SetDebugLevel(log.DebugLevelApi | log.DebugLevelNotify | log.DebugLevelInfra)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
@@ -247,12 +247,9 @@ func TestCRM(t *testing.T) {
 }
 
 func TestNotifyOrder(t *testing.T) {
-	log.InitTracer("")
-	defer log.FinishTracer()
-	ctx := log.StartTestSpan(context.Background())
-
-	err := nodeMgr.Init(ctx, node.NodeTypeCRM, node.NoEventTlsClientIssuer)
+	_, _, err := nodeMgr.Init(node.NodeTypeCRM, node.NoTlsClientIssuer)
 	require.Nil(t, err)
+	defer nodeMgr.Finish()
 	controllerData = crmutil.NewControllerData(nil, &nodeMgr)
 	mgr := notify.ServerMgr{}
 	initSrvNotify(&mgr)
