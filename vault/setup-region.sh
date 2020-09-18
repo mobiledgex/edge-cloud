@@ -102,6 +102,10 @@ path "secret/data/cloudlet/openstack/mexenv.json" {
 path "pki-regional-cloudlet/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
+
+path "secret/data/keys/id_rsa_mex" {
+  capabilities = [ "read" ]
+}
 EOF
 vault policy write $REGION.crm /tmp/crm-pol.hcl
 rm /tmp/crm-pol.hcl
