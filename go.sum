@@ -281,6 +281,8 @@ github.com/mobiledgex/golang-ssh v0.0.8 h1:h86ltTZ1ZnE+YSllrq16AEDKAcQPLGdA/Oy4K
 github.com/mobiledgex/golang-ssh v0.0.8/go.mod h1:lOpuGpjEhPMO4gxtlLkeC04vN+pB1xmZsYeQZWg0mMI=
 github.com/mobiledgex/golang-ssh v0.0.9 h1:GZOhc9S10P+yZy8LpyfC8ActOLvBRLv5RDbvlcggXAY=
 github.com/mobiledgex/golang-ssh v0.0.9/go.mod h1:lOpuGpjEhPMO4gxtlLkeC04vN+pB1xmZsYeQZWg0mMI=
+github.com/mobiledgex/golang-ssh v0.0.10 h1:GwcGZGAsKkC4XgIDQ15+XbDWkpGZM8tHbT/6YOYrCDo=
+github.com/mobiledgex/golang-ssh v0.0.10/go.mod h1:lOpuGpjEhPMO4gxtlLkeC04vN+pB1xmZsYeQZWg0mMI=
 github.com/mobiledgex/mapstructure v1.2.2 h1:itDfhergxnMSo8uwfb1Psck7hZQ94BUqHkowa7l5cOs=
 github.com/mobiledgex/mapstructure v1.2.2/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/mobiledgex/mapstructure v1.2.4-0.20200427235940-30d27df8e747 h1:vRTJWwkGJ77wjHthCcrAf5yitjshfOedff3/4glV+iw=
