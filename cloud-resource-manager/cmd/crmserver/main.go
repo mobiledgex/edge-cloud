@@ -214,27 +214,26 @@ func main() {
 				myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
 				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 			} else {
-				if myCloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC {
-					log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-					controllerData.ControllerSyncInProgress = true
-					controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC
+				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+				controllerData.ControllerSyncInProgress = true
+				controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 
-					// Wait for CRM to receive cluster and appinst data from notify
-					select {
-					case <-controllerData.ControllerSyncDone:
-						if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, &cloudlet) {
-							log.FatalLog("failed to get sync data from controller")
-						}
-					case <-time.After(ControllerTimeout):
-						log.FatalLog("Timed out waiting for sync data from controller")
+				// Wait for CRM to receive cluster and appinst data from notify
+				select {
+				case <-controllerData.ControllerSyncDone:
+					if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, &cloudlet) {
+						log.FatalLog("failed to get sync data from controller")
 					}
-					log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
-					myCloudletInfo.ControllerCacheReceived = true
-					controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
-					err := platform.SyncControllerCache(ctx, &caches, myCloudletInfo.State)
-					if err != nil {
-						log.FatalLog("Platform sync fail", "err", err)
-					}
+				case <-time.After(ControllerTimeout):
+					log.FatalLog("Timed out waiting for sync data from controller")
+				}
+				log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
+				myCloudletInfo.ControllerCacheReceived = true
+				controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+				err := platform.SyncControllerCache(ctx, &caches, myCloudletInfo.State)
+				if err != nil {
+					log.FatalLog("Platform sync fail", "err", err)
 				}
 				myCloudletInfo.Errors = nil
 				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
