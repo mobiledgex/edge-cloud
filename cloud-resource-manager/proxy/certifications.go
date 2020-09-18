@@ -68,6 +68,7 @@ var certEnd = "-----END CERTIFICATE-----"
 
 func init() {
 	DedicatedClients = make(map[string]ssh.Client)
+	DedicatedVmAppClients = make(map[string]ssh.Client)
 }
 
 // GetCertsDirAndFiles returns certsDir, certFile, keyFile
