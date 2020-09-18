@@ -21,7 +21,7 @@ import (
 
 func TestInfluxQ(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelMetrics)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 
 	addr := "127.0.0.1:8086"

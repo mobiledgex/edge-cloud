@@ -1,7 +1,6 @@
 package node
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -14,9 +13,6 @@ import (
 
 func TestEvents(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelEvents)
-	log.InitTracer("")
-	defer log.FinishTracer()
-	ctx := log.StartTestSpan(context.Background())
 
 	// elasticsearch docker takes a while to start up (~20s),
 	// so make sure to include all unit-testing against it here.
@@ -28,7 +24,7 @@ func TestEvents(t *testing.T) {
 
 	// events rely on nodeMgr
 	nodeMgr := NodeMgr{}
-	err = nodeMgr.Init(ctx, NodeTypeController, "", WithRegion("unit-test"),
+	ctx, _, err := nodeMgr.Init(NodeTypeController, "", WithRegion("unit-test"),
 		WithESUrls("http://localhost:9200"))
 	require.Nil(t, err)
 

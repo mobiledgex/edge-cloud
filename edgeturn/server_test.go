@@ -16,7 +16,7 @@ import (
 
 func TestEdgeTurnServer(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelApi | log.DebugLevelInfo)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	flag.Parse() // set defaults
 

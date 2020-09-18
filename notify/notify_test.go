@@ -15,7 +15,7 @@ import (
 
 func TestNotifyBasic(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelNotify)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 

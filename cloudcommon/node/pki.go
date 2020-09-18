@@ -99,6 +99,13 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 	return nil
 }
 
+// Must be called after Jaeger is initialized because it creates new spans.
+func (s *internalPki) start() {
+	if s.UseVaultCerts {
+		go s.refreshCerts()
+	}
+}
+
 // Load certs specified on command line.
 func (s *internalPki) loadCerts(tlsCertFile string) error {
 	dir := path.Dir(tlsCertFile)
