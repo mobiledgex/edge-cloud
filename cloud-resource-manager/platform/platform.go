@@ -24,6 +24,7 @@ type PlatformConfig struct {
 	AppDNSRoot          string
 	ChefServerPath      string
 	DeploymentTag       string
+	Upgrade             bool
 }
 
 type Caches struct {
