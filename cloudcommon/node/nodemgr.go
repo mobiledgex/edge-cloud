@@ -24,8 +24,10 @@ var NodeTypeEdgeTurn = "edgeturn"
 // Node tracks all the nodes connected via notify, and handles common
 // requests over all nodes.
 type NodeMgr struct {
-	TlsCertFile string
-	VaultAddr   string
+	iTlsCertFile string
+	iTlsKeyFile  string
+	iTlsCAFile   string
+	VaultAddr    string
 
 	MyNode          edgeproto.Node
 	NodeCache       RegionNodeCache
@@ -36,6 +38,7 @@ type NodeMgr struct {
 	InternalDomain  string
 	ESClient        *elasticsearch.Client
 	tlsClientIssuer string
+	commonName      string
 }
 
 // Most of the time there will only be one NodeMgr per process, and these
@@ -44,14 +47,18 @@ func (s *NodeMgr) InitFlags() {
 	// itls uses a set of file-based certs for internal mTLS auth
 	// between services. It is not production-safe and should only be
 	// used if Vault-PKI cannot be used.
-	flag.StringVar(&s.TlsCertFile, "tls", "", "server tls cert file. Keyfile and CA file must be in same directory, CA file should be \"mex-ca.crt\", and key file should be same name as cert file but extension \".key\"")
+	flag.StringVar(&s.iTlsCertFile, "itlsCert", "", "internal mTLS cert file for communication between services")
+	flag.StringVar(&s.iTlsKeyFile, "itlsKey", "", "internal mTLS key file for communication between services")
+	flag.StringVar(&s.iTlsCAFile, "itlsCA", "", "internal mTLS CA file for communication between servcies")
 	flag.StringVar(&s.VaultAddr, "vaultAddr", "", "Vault address; local vault runs at http://127.0.0.1:8200")
-	flag.BoolVar(&s.InternalPki.UseVaultCAs, "useVaultCAs", false, "Include use of Vault CAs for internal TLS authentication")
-	flag.BoolVar(&s.InternalPki.UseVaultCerts, "useVaultCerts", false, "Use Vault Certs for internal TLS; implies useVaultCAs")
+	flag.BoolVar(&s.InternalPki.UseVaultCAs, "useVaultCAs", false, "Include use of Vault CAs for internal mTLS authentication")
+	flag.BoolVar(&s.InternalPki.UseVaultCerts, "useVaultCerts", false, "Use Vault Certs for internal mTLS; implies useVaultCAs")
 	flag.StringVar(&s.InternalDomain, "internalDomain", "mobiledgex.net", "domain name for internal PKI")
+	flag.StringVar(&s.commonName, "commonName", "", "common name to use for vault internal pki issued certificates")
 }
 
 func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context.Context, opentracing.Span, error) {
+	log.DebugLog(log.DebugLevelInfo, "start main nodeMgr init")
 	opts := &NodeOptions{}
 	opts.updateMyNode = true
 	for _, op := range ops {
@@ -194,4 +201,29 @@ func (s *NodeMgr) RegisterClient(client *notify.Client) {
 func (s *NodeMgr) RegisterServer(server *notify.ServerMgr) {
 	server.RegisterRecvNodeCache(&s.NodeCache)
 	s.Debug.RegisterServer(server)
+}
+
+func (s *NodeMgr) GetInternalTlsCertFile() string {
+	return s.iTlsCertFile
+}
+
+func (s *NodeMgr) GetInternalTlsKeyFile() string {
+	return s.iTlsKeyFile
+}
+
+func (s *NodeMgr) GetInternalTlsCAFile() string {
+	return s.iTlsCAFile
+}
+
+// setters are only used for unit testing
+func (s *NodeMgr) SetInternalTlsCertFile(file string) {
+	s.iTlsCertFile = file
+}
+
+func (s *NodeMgr) SetInternalTlsKeyFile(file string) {
+	s.iTlsKeyFile = file
+}
+
+func (s *NodeMgr) SetInternalTlsCAFile(file string) {
+	s.iTlsCAFile = file
 }
