@@ -7,7 +7,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
-	"path"
 	"strings"
 	"sync"
 	"time"
@@ -58,10 +57,13 @@ type certId struct {
 func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 	pkiDesc := []string{}
 
-	if s.TlsCertFile != "" {
-		log.SpanLog(ctx, log.DebugLevelInfo, "enable TLS from files", "certfile", s.TlsCertFile)
+	if s.iTlsCertFile != "" || s.iTlsKeyFile != "" || s.iTlsCAFile != "" {
+		if s.iTlsCertFile == "" || s.iTlsKeyFile == "" || s.iTlsCAFile == "" {
+			return fmt.Errorf("For internal mTLS authentication between services, all three of key, cert, and CA files must be specified")
+		}
+		log.SpanLog(ctx, log.DebugLevelInfo, "enable TLS from files", "certfile", s.iTlsCertFile, "key", s.iTlsKeyFile, "ca", s.iTlsCAFile)
 		// load certs from command line
-		err := s.InternalPki.loadCerts(s.TlsCertFile)
+		err := s.InternalPki.loadCerts(s.iTlsCertFile, s.iTlsKeyFile, s.iTlsCAFile)
 		if err != nil {
 			return err
 		}
@@ -107,10 +109,8 @@ func (s *internalPki) start() {
 }
 
 // Load certs specified on command line.
-func (s *internalPki) loadCerts(tlsCertFile string) error {
-	dir := path.Dir(tlsCertFile)
+func (s *internalPki) loadCerts(certFile, keyFile, caFile string) error {
 	// load CA file
-	caFile := dir + "/" + "mex-ca.crt"
 	cabs, err := ioutil.ReadFile(caFile)
 	if err != nil {
 		return fmt.Errorf("failed to read %s: %v", caFile, err)
@@ -121,10 +121,9 @@ func (s *internalPki) loadCerts(tlsCertFile string) error {
 	}
 
 	// load public and private key
-	keyFile := strings.Replace(tlsCertFile, "crt", "key", 1)
-	cert, err := tls.LoadX509KeyPair(tlsCertFile, keyFile)
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		return fmt.Errorf("failed to load key pair %s: %v", tlsCertFile, err)
+		return fmt.Errorf("failed to load key pair %s: %v", certFile, err)
 	}
 
 	s.mux.Lock()
@@ -527,6 +526,9 @@ func (s *internalPki) getVaultCAs(ctx context.Context, pool *x509.CertPool, issu
 }
 
 func (s *NodeMgr) CommonName() string {
+	if s.commonName != "" {
+		return s.commonName
+	}
 	cn := s.MyNode.Key.Type
 	if cn == NodeTypeController {
 		cn = "ctrl"

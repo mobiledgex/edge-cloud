@@ -43,6 +43,19 @@ type TLSCerts struct {
 	ApiKey     string
 }
 
+func (s *TLSCerts) AddInternalPkiArgs(args []string) []string {
+	if s.ServerCert != "" {
+		args = append(args, "--itlsCert", s.ServerCert)
+	}
+	if s.ServerCert != "" {
+		args = append(args, "--itlsKey", s.ServerKey)
+	}
+	if s.CACert != "" {
+		args = append(args, "--itlsCA", s.CACert)
+	}
+	return args
+}
+
 type LocalAuth struct {
 	User string `json:"user"`
 	Pass string `json:"pass"`
@@ -92,10 +105,7 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--httpAddr")
 		args = append(args, p.HttpAddr)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.InfluxAddr != "" {
 		args = append(args, "--influxAddr")
 		args = append(args, p.InfluxAddr)
@@ -291,10 +301,7 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--cloudletKey")
 		args = append(args, p.CloudletKey)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
 		if p.TLS.ApiCert != "" {
 			args = append(args, "--tlsApiCertFile", p.TLS.ApiCert)
@@ -398,10 +405,7 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--cloudletKey")
 		args = append(args, p.CloudletKey)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.Name != "" {
 		args = append(args, "--hostname")
 		args = append(args, p.Name)
@@ -615,10 +619,7 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--ctrlAddrs")
 		args = append(args, p.CtrlAddrs)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.PromPorts != "" {
 		args = append(args, "--prometheus-ports")
 		args = append(args, p.PromPorts)
@@ -1307,10 +1308,7 @@ func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.UseVaultCAs {
 		args = append(args, "--useVaultCAs")
 	}
@@ -1363,10 +1361,7 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--proxyAddr")
 		args = append(args, p.ProxyAddr)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
 	}
