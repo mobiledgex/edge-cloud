@@ -30,6 +30,8 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	envVars := make(map[string]string)
 	notifyCtrlAddrs := ""
 	tlsCertFile := ""
+	tlsKeyFile := ""
+	tlsCAFile := ""
 	vaultAddr := ""
 	testMode := false
 	span := ""
@@ -47,6 +49,8 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		}
 		notifyCtrlAddrs = pfConfig.NotifyCtrlAddrs
 		tlsCertFile = pfConfig.TlsCertFile
+		tlsKeyFile = pfConfig.TlsKeyFile
+		tlsCAFile = pfConfig.TlsCaFile
 		vaultAddr = pfConfig.VaultAddr
 		testMode = pfConfig.TestMode
 		span = pfConfig.Span
@@ -76,6 +80,8 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		},
 		TLS: process.TLSCerts{
 			ServerCert: tlsCertFile,
+			ServerKey:  tlsKeyFile,
+			CACert:     tlsCAFile,
 		},
 		VaultAddr:           vaultAddr,
 		PhysicalName:        cloudlet.PhysicalName,

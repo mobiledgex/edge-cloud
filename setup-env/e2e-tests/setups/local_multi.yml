@@ -46,6 +46,8 @@ controllers:
   vaultaddr: "http://127.0.0.1:8200"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   registryfqdn: "docker.mobiledgex.net"
@@ -67,6 +69,8 @@ controllers:
   vaultaddr: "http://127.0.0.1:8200"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   registryfqdn: "docker.mobiledgex.net"
@@ -88,7 +92,8 @@ clustersvcs:
   usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
-    clientcert: "{{tlsoutdir}}/mex-client.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
   hostname: "127.0.0.1"
   envvars:
     ES_SERVER_URLS: https://localhost:9201
@@ -101,7 +106,8 @@ clustersvcs:
   usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
-    clientcert: "{{tlsoutdir}}/mex-client.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
   hostname: "127.0.0.1"
   envvars:
     ES_SERVER_URLS: https://localhost:9201
@@ -118,7 +124,7 @@ dmes:
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
-    clientcert: "{{tlsoutdir}}/mex-client.crt"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
   hostname: "127.0.0.1"
   envvars:
     ES_SERVER_URLS: https://localhost:9201
@@ -134,7 +140,7 @@ dmes:
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
-    clientcert: "{{tlsoutdir}}/mex-client.crt"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
   hostname: "127.0.0.1"
   envvars:
     ES_SERVER_URLS: https://localhost:9201
@@ -183,6 +189,8 @@ notifyroots:
   usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
 
 edgeturns:
 - name: edgeturn
@@ -192,3 +200,5 @@ edgeturns:
   usevaultcas: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
