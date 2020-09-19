@@ -140,7 +140,9 @@ func getCrmEnv(vars map[string]string) {
 func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edgeproto.PlatformConfig, error) {
 	pfConfig := edgeproto.PlatformConfig{}
 	pfConfig.PlatformTag = cloudlet.ContainerVersion
-	pfConfig.TlsCertFile = nodeMgr.TlsCertFile
+	pfConfig.TlsCertFile = nodeMgr.GetInternalTlsCertFile()
+	pfConfig.TlsKeyFile = nodeMgr.GetInternalTlsKeyFile()
+	pfConfig.TlsCaFile = nodeMgr.GetInternalTlsCAFile()
 	pfConfig.VaultAddr = nodeMgr.VaultAddr
 	pfConfig.UseVaultCas = nodeMgr.InternalPki.UseVaultCAs
 	pfConfig.UseVaultCerts = nodeMgr.InternalPki.UseVaultCerts

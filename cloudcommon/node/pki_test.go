@@ -244,11 +244,15 @@ func TestInternalPki(t *testing.T) {
 		Region:   "us",
 		Type:     node.NodeTypeController,
 		CertFile: "./ctrl.crt",
+		CertKey:  "./ctrl.key",
+		CAFile:   "./mex-ca.crt",
 	}
 	nodePhase1 := &PkiConfig{
 		Region:      "us",
 		Type:        node.NodeTypeController,
 		CertFile:    "./ctrl.crt",
+		CertKey:     "./ctrl.key",
+		CAFile:      "./mex-ca.crt",
 		UseVaultCAs: true,
 		RemoteCAs: []node.MatchCA{
 			node.SameRegionalMatchCA(),
@@ -258,6 +262,8 @@ func TestInternalPki(t *testing.T) {
 		Region:        "us",
 		Type:          node.NodeTypeController,
 		CertFile:      "./ctrl.crt",
+		CertKey:       "./ctrl.key",
+		CAFile:        "./mex-ca.crt",
 		UseVaultCerts: true,
 		LocalIssuer:   node.CertIssuerRegional,
 		RemoteCAs: []node.MatchCA{
@@ -373,6 +379,8 @@ type PkiConfig struct {
 	Type          string
 	LocalIssuer   string
 	CertFile      string
+	CertKey       string
+	CAFile        string
 	UseVaultCAs   bool
 	UseVaultCerts bool
 	RemoteCAs     []node.MatchCA
@@ -389,7 +397,9 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 	fmt.Printf("******************* testExchange %s *********************\n", cs.Line)
 	serverVault := getVaultConfig(cs.Server.Type, cs.Server.Region, vroles)
 	serverNode := node.NodeMgr{}
-	serverNode.TlsCertFile = cs.Server.CertFile
+	serverNode.SetInternalTlsCertFile(cs.Server.CertFile)
+	serverNode.SetInternalTlsKeyFile(cs.Server.CertKey)
+	serverNode.SetInternalTlsCAFile(cs.Server.CAFile)
 	serverNode.InternalPki.UseVaultCAs = cs.Server.UseVaultCAs
 	serverNode.InternalPki.UseVaultCerts = cs.Server.UseVaultCerts
 	serverNode.InternalDomain = "mobiledgex.net"
@@ -408,7 +418,9 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 
 	clientVault := getVaultConfig(cs.Client.Type, cs.Client.Region, vroles)
 	clientNode := node.NodeMgr{}
-	clientNode.TlsCertFile = cs.Client.CertFile
+	clientNode.SetInternalTlsCertFile(cs.Client.CertFile)
+	clientNode.SetInternalTlsKeyFile(cs.Client.CertKey)
+	clientNode.SetInternalTlsCAFile(cs.Client.CAFile)
 	clientNode.InternalPki.UseVaultCAs = cs.Client.UseVaultCAs
 	clientNode.InternalPki.UseVaultCerts = cs.Client.UseVaultCerts
 	clientNode.InternalDomain = "mobiledgex.net"
