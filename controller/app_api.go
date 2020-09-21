@@ -259,7 +259,6 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 			}
 		}
 	}
-
 	deploymf, err := cloudcommon.GetAppDeploymentManifest(ctx, vaultConfig, in)
 	if err != nil {
 		return err
@@ -426,6 +425,13 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				return err
 			}
 		}
+		if in.DeploymentManifest != "" {
+			// reset the deployment generator
+			cur.DeploymentGenerator = ""
+		} else if in.AccessPorts != "" {
+			// force regeneration of manifest
+			cur.DeploymentManifest = ""
+		}
 		cur.CopyInFields(in)
 		if err := s.validatePolicies(stm, &cur); err != nil {
 			return err
@@ -434,8 +440,16 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		if err != nil {
 			return err
 		}
+		newRevision := in.Revision
+		if newRevision == "" {
+			newRevision = time.Now().Format("2006-01-02T150405")
+			log.SpanLog(ctx, log.DebugLevelApi, "Setting new revision to current timestamp", "Revision", in.Revision)
+		}
+		if err := updateAppFields(ctx, &cur, newRevision); err != nil {
+			return err
+		}
 		if in.DeploymentManifest != "" {
-			err = cloudcommon.IsValidDeploymentManifest(cur.Deployment, cur.Command, in.DeploymentManifest, ports)
+			err = cloudcommon.IsValidDeploymentManifest(cur.Deployment, cur.Command, cur.DeploymentManifest, ports)
 			if err != nil {
 				return fmt.Errorf("Invalid deployment manifest, %v", err)
 			}
@@ -448,14 +462,6 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		err = validatePortRangeForAccessType(ports, cur.AccessType, cur.Deployment)
 		if err != nil {
-			return err
-		}
-		newRevision := in.Revision
-		if newRevision == "" {
-			newRevision = time.Now().Format("2006-01-02T150405")
-			log.SpanLog(ctx, log.DebugLevelApi, "Setting new revision to current timestamp", "Revision", in.Revision)
-		}
-		if err := updateAppFields(ctx, &cur, newRevision); err != nil {
 			return err
 		}
 		s.store.STMPut(stm, &cur)
