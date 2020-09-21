@@ -28,7 +28,7 @@ const (
 	// For K8s/Docker based Apps
 	ShortTimeout = edgeproto.Duration(6 * time.Second)
 	// For VM based Apps
-	LongTimeout = edgeproto.Duration(20 * time.Second)
+	LongTimeout = edgeproto.Duration(60 * time.Second)
 )
 
 var execApi = ExecApi{}
