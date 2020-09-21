@@ -209,6 +209,19 @@ var AppData = []edgeproto.App{
 			AutoProvPolicyData[3].Key.Name,
 		},
 	},
+	edgeproto.App{
+		Key: edgeproto.AppKey{
+			Organization: DevData[0],
+			Name:         "vm lb",
+			Version:      "1.0.2",
+		},
+		Deployment:    "vm",
+		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
+		ImagePath:     "http://somerepo/image/path/myreality/0.0.1#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
+		AccessPorts:   "tcp:10003",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		DefaultFlavor: FlavorData[0].Key,
+	},
 }
 var OperatorData = []string{
 	"UFGT Inc.",
@@ -534,6 +547,17 @@ var AppInstData = []edgeproto.AppInst{
 		},
 		CloudletLoc: CloudletData[1].Location,
 	},
+	edgeproto.AppInst{ // 11
+		Key: edgeproto.AppInstKey{
+			AppKey: AppData[12].Key, //vm app with lb
+			ClusterInstKey: edgeproto.ClusterInstKey{
+				ClusterKey:   edgeproto.ClusterKey{Name: "DefaultVMCluster"},
+				CloudletKey:  CloudletData[0].Key,
+				Organization: DevData[0],
+			},
+		},
+		CloudletLoc: CloudletData[1].Location,
+	},
 }
 
 var AppInstInfoData = []edgeproto.AppInstInfo{
@@ -629,6 +653,12 @@ var AppInstRefsData = []edgeproto.AppInstRefs{
 	edgeproto.AppInstRefs{
 		Key:   AppData[11].Key,
 		Insts: map[string]uint32{},
+	},
+	edgeproto.AppInstRefs{
+		Key: AppData[12].Key,
+		Insts: map[string]uint32{
+			AppInstData[11].Key.GetKeyString(): 1,
+		},
 	},
 }
 
