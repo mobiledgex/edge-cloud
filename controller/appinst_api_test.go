@@ -189,7 +189,7 @@ func TestAppInstApi(t *testing.T) {
 	for _, data := range appInstApi.cache.Objs {
 		obj := data.Obj
 		app_name := util.K8SSanitize(obj.Key.AppKey.Name)
-		if app_name == "helmapp" {
+		if app_name == "helmapp" || app_name == "vmlb" {
 			continue
 		}
 		for _, port := range obj.MappedPorts {
