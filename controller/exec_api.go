@@ -140,19 +140,17 @@ func (s *ExecApi) RunConsole(ctx context.Context, req *edgeproto.ExecRequest) (*
 }
 
 func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
-	if !req.Webrtc {
-		// Make sure EdgeTurn Server Address is present
-		if *edgeTurnAddr == "" {
-			return nil, fmt.Errorf("EdgeTurn server address is required to run commands in Non Webrtc mode")
-		}
-		req.EdgeTurnAddr = *edgeTurnAddr
-		reqId := ksuid.New()
-		req.Offer = reqId.String()
-		// Increase timeout, as for EdgeTurn based implemention,
-		// CRM connects to EdgeTurn server. Hence it can take some
-		// time to reply back
-		req.Timeout = LongTimeout
+	// Make sure EdgeTurn Server Address is present
+	if *edgeTurnAddr == "" {
+		return nil, fmt.Errorf("EdgeTurn server address is required to run commands")
 	}
+	req.EdgeTurnAddr = *edgeTurnAddr
+	reqId := ksuid.New()
+	req.Offer = reqId.String()
+	// Increase timeout, as for EdgeTurn based implemention,
+	// CRM connects to EdgeTurn server. Hence it can take some
+	// time to reply back
+	req.Timeout = LongTimeout
 	// Forward the offer.
 	// Currently we don't know which controller has the CRM connected
 	// (or if it's even present), so just broadcast to all.
@@ -190,9 +188,6 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 	}
 	if req.Err != "" {
 		return nil, fmt.Errorf("%s", req.Err)
-	}
-	if req.Webrtc && req.Answer == "" {
-		return nil, fmt.Errorf("no one answered the offer")
 	}
 	log.DebugLog(log.DebugLevelApi, "ExecRequest answered", "req", req)
 	return req, nil

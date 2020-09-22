@@ -419,7 +419,6 @@ var ExecRequestOptionalArgs = []string{
 	"tail",
 	"timestamps",
 	"follow",
-	"webrtc",
 }
 var ExecRequestAliasArgs = []string{
 	"app-org=appinstkey.appkey.organization",
@@ -446,8 +445,8 @@ var ExecRequestComments = map[string]string{
 	"cloudlet":     "Name of the cloudlet",
 	"cluster-org":  "Name of Developer organization that this cluster belongs to",
 	"containerid":  "ContainerId is the name or ID of the target container, if applicable",
-	"offer":        "WebRTC Offer",
-	"answer":       "WebRTC Answer",
+	"offer":        "Offer",
+	"answer":       "Answer",
 	"err":          "Any error message",
 	"command":      "Command or Shell",
 	"node-type":    "Type of Cloudlet Mgmt Node",
@@ -458,7 +457,6 @@ var ExecRequestComments = map[string]string{
 	"follow":       "Stream data",
 	"console.url":  "VM Console URL",
 	"timeout":      "Timeout",
-	"webrtc":       "WebRTC",
 	"accessurl":    "Access URL",
 	"edgeturnaddr": "EdgeTurn Server Address",
 }
@@ -475,7 +473,6 @@ var RunCommandRequiredArgs = []string{
 var RunCommandOptionalArgs = []string{
 	"cluster-org",
 	"containerid",
-	"webrtc",
 }
 var RunConsoleRequiredArgs = []string{
 	"app-org",
@@ -487,7 +484,6 @@ var RunConsoleRequiredArgs = []string{
 var RunConsoleOptionalArgs = []string{
 	"cluster",
 	"cluster-org",
-	"webrtc",
 }
 var ShowLogsRequiredArgs = []string{
 	"app-org",
@@ -504,7 +500,6 @@ var ShowLogsOptionalArgs = []string{
 	"tail",
 	"timestamps",
 	"follow",
-	"webrtc",
 }
 var AccessCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -514,5 +509,4 @@ var AccessCloudletOptionalArgs = []string{
 	"command",
 	"node-type",
 	"node-name",
-	"webrtc",
 }

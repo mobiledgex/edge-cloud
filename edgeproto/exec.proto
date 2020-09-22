@@ -35,15 +35,15 @@ message ShowLog {
   bool follow = 4;
 }
 
-// ExecRequest is a common struct for enabling a webrtc connection do execute some work on a container.
+// ExecRequest is a common struct for enabling a connection to execute some work on a container.
 message ExecRequest {
   // Target AppInst
   AppInstKey app_inst_key = 1 [(gogoproto.nullable) = false];
   // ContainerId is the name or ID of the target container, if applicable
   string container_id = 3;
-  // WebRTC Offer
+  // Offer
   string offer = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // WebRTC Answer
+  // Answer
   string answer = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Any error message
   string err = 6;
@@ -55,8 +55,6 @@ message ExecRequest {
   RunVMConsole console = 11;
   // Timeout
   int64 timeout = 12 [(gogoproto.casttype) = "Duration"];
-  // WebRTC
-  bool webrtc = 13;
   // Access URL
   string access_url = 14 [(protogen.backend) = true];
   // EdgeTurn Server Address
