@@ -11,6 +11,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -66,6 +67,8 @@ var privKeyEnd = "-----END PRIVATE KEY-----"
 var certStart = "-----BEGIN CERTIFICATE-----"
 var certEnd = "-----END CERTIFICATE-----"
 
+var sudoType = pc.NoSudo
+
 func init() {
 	DedicatedClients = make(map[string]ssh.Client)
 	DedicatedVmAppClients = make(map[string]ssh.Client)
@@ -85,7 +88,10 @@ func GetCertsDirAndFiles(ctx context.Context, client ssh.Client) (string, string
 }
 
 // get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
-func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultAddr string, client ssh.Client, commercialCerts bool) {
+func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultAddr, platformType string, client ssh.Client, commercialCerts bool) {
+	if platformType == cloudcommon.CloudletKindOpenStack {
+		sudoType = pc.SudoOn
+	}
 	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Error: Unable to get cert info", "dedicatedCommonName", dedicatedCommonName, "err", err)
@@ -137,16 +143,15 @@ func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, 
 
 func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Client, certsDir, certFile, keyFile string) {
 	// write it to rootlb
-
 	err := pc.Run(client, "mkdir -p "+certsDir)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "can't create cert dir on rootlb", "certDir", certsDir)
 	} else {
-		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", pc.NoSudo)
+		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", sudoType)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
 		}
-		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", pc.NoSudo)
+		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", sudoType)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
 		}
