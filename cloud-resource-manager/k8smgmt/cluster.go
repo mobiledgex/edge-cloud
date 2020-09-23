@@ -23,7 +23,6 @@ func DeleteNodes(ctx context.Context, client ssh.Client, kconfName string, nodes
 }
 
 func CleanupClusterConfig(ctx context.Context, client ssh.Client, clusterInst *edgeproto.ClusterInst) error {
-
 	names, err := GetKubeNames(clusterInst, &edgeproto.App{}, &edgeproto.AppInst{})
 	if err != nil {
 		return err
