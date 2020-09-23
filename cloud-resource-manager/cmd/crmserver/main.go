@@ -267,7 +267,7 @@ func main() {
 			cloudcommon.ClientTypeRootLB,
 		)
 		if err == nil {
-			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, nodeMgr.VaultAddr, rootlb, *commercialCerts)
+			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, nodeMgr.VaultAddr, platform.GetType(), rootlb, *commercialCerts)
 		}
 		tlsSpan.Finish()
 	}()
