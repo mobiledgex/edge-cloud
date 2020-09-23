@@ -66,6 +66,14 @@ var privKeyEnd = "-----END PRIVATE KEY-----"
 var certStart = "-----BEGIN CERTIFICATE-----"
 var certEnd = "-----END CERTIFICATE-----"
 
+var sudoType = pc.SudoOn
+var noSudoMap = map[string]int{
+	"fake":      1,
+	"fakeinfra": 1,
+	"edgebox":   1,
+	"dind":      1,
+}
+
 func init() {
 	DedicatedClients = make(map[string]ssh.Client)
 	DedicatedVmAppClients = make(map[string]ssh.Client)
@@ -85,7 +93,11 @@ func GetCertsDirAndFiles(ctx context.Context, client ssh.Client) (string, string
 }
 
 // get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
-func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultAddr string, client ssh.Client, commercialCerts bool) {
+func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultAddr, platformType string, client ssh.Client, commercialCerts bool) {
+	_, found := noSudoMap[platformType]
+	if found {
+		sudoType = pc.NoSudo
+	}
 	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Error: Unable to get cert info", "dedicatedCommonName", dedicatedCommonName, "err", err)
@@ -137,16 +149,15 @@ func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, 
 
 func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Client, certsDir, certFile, keyFile string) {
 	// write it to rootlb
-
 	err := pc.Run(client, "mkdir -p "+certsDir)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "can't create cert dir on rootlb", "certDir", certsDir)
 	} else {
-		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", pc.NoSudo)
+		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", sudoType)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
 		}
-		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", pc.NoSudo)
+		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", sudoType)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
 		}
