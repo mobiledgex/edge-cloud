@@ -11,7 +11,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -67,7 +66,13 @@ var privKeyEnd = "-----END PRIVATE KEY-----"
 var certStart = "-----BEGIN CERTIFICATE-----"
 var certEnd = "-----END CERTIFICATE-----"
 
-var sudoType = pc.NoSudo
+var sudoType = pc.SudoOn
+var noSudoMap = map[string]int{
+	"fake":      1,
+	"fakeinfra": 1,
+	"edgebox":   1,
+	"dind":      1,
+}
 
 func init() {
 	DedicatedClients = make(map[string]ssh.Client)
@@ -89,8 +94,9 @@ func GetCertsDirAndFiles(ctx context.Context, client ssh.Client) (string, string
 
 // get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
 func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultAddr, platformType string, client ssh.Client, commercialCerts bool) {
-	if platformType == cloudcommon.CloudletKindOpenStack {
-		sudoType = pc.SudoOn
+	_, found := noSudoMap[platformType]
+	if found {
+		sudoType = pc.NoSudo
 	}
 	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
 	if err != nil {
