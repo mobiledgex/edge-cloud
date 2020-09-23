@@ -79,7 +79,8 @@ func getNextCheckpoint(t time.Time) time.Time {
 	if *checkpointInterval != cloudcommon.MonthlyInterval {
 		return t.Truncate(interval).Add(interval) // truncate so the times look nice
 	}
-	y, m, _ := t.Date()
+	// turn it to utc to make sure we're getting the right year and month
+	y, m, _ := t.UTC().Date()
 	return time.Date(y, m+1, 1, 0, 0, 0, 0, time.UTC)
 }
 
