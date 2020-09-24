@@ -29,6 +29,9 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 		}
 		annotations := make(map[string]string)
 		for _, kv := range pp[2:] {
+			if kv == "" {
+				return nil, fmt.Errorf("invalid AccessPorts annotation %s for port %s, expected format is either key or key=val", kv, pp[1])
+			}
 			keyval := strings.Split(kv, "=")
 			if len(keyval) == 1 {
 				// boolean annotation
@@ -70,8 +73,13 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 			endport = 0
 		}
 
+		proto := strings.ToLower(pp[0])
+		if proto != "tcp" && proto != "udp" {
+			return nil, fmt.Errorf("Unsupported protocol: %s", pp[0])
+		}
+
 		portSpec := PortSpec{
-			Proto:   strings.ToLower(pp[0]),
+			Proto:   proto,
 			Port:    strconv.FormatInt(baseport, 10),
 			EndPort: strconv.FormatInt(endport, 10),
 		}

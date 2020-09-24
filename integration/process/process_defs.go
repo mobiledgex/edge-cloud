@@ -118,6 +118,7 @@ type Influx struct {
 	Common   `yaml:",inline"`
 	DataDir  string
 	HttpAddr string
+	BindAddr string
 	Config   string // set during Start
 	TLS      TLSCerts
 	Auth     LocalAuth
@@ -138,10 +139,19 @@ type ClusterSvc struct {
 	TLS            TLSCerts
 	cmd            *exec.Cmd
 }
+type DockerGeneric struct {
+	Common        `yaml:",inline"`
+	Links         []string
+	DockerEnvVars map[string]string
+	TLS           TLSCerts
+	cmd           *exec.Cmd
+}
 type Jaeger struct {
-	Common `yaml:",inline"`
-	TLS    TLSCerts
-	cmd    *exec.Cmd
+	DockerGeneric `yaml:",inline"`
+}
+type ElasticSearch struct {
+	DockerGeneric `yaml:",inline"`
+	Type          string
 }
 type Traefik struct {
 	Common `yaml:",inline"`

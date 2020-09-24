@@ -62,7 +62,7 @@ path "secret/data/$REGION/accounts/*" {
   capabilities = [ "read" ]
 }
 
-path "pki-regional/issue/*" {
+path "pki-regional/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
 EOF
@@ -99,8 +99,16 @@ path "secret/data/cloudlet/openstack/mexenv.json" {
   capabilities = [ "read" ]
 }
 
-path "pki-regional-cloudlet/issue/*" {
+path "pki-regional-cloudlet/issue/$REGION" {
   capabilities = [ "read", "update" ]
+}
+
+path "secret/data/keys/id_rsa_mex" {
+  capabilities = [ "read" ]
+}
+
+path "ssh/sign/machine" {
+  capabilities = [ "create", "update" ]
 }
 EOF
 vault policy write $REGION.crm /tmp/crm-pol.hcl
@@ -129,7 +137,7 @@ path "certs/*" {
   capabilities = ["read"]
 }
 
-path "pki-regional-cloudlet/issue/*" {
+path "pki-regional-cloudlet/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
 EOF
@@ -146,7 +154,7 @@ path "auth/approle/login" {
   capabilities = [ "create", "read" ]
 }
 
-path "pki-regional/issue/*" {
+path "pki-regional/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
 EOF
@@ -198,7 +206,7 @@ path "auth/approle/login" {
   capabilities = [ "create", "read" ]
 }
 
-path "pki-regional/issue/*" {
+path "pki-regional/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
 EOF

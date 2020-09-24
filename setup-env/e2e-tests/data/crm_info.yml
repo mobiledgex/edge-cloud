@@ -139,6 +139,7 @@ cloudletinfos:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
+  controllercachereceived: true
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -156,6 +157,7 @@ cloudletinfos:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
+  controllercachereceived: true
 
 apps:
 - key:
@@ -241,7 +243,7 @@ apps:
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication2:1.0
   imagetype: ImageTypeDocker
-  accessports: tcp:22,udp:10003
+  accessports: tcp:23,udp:10003
   defaultflavor:
     name: x1.small
   deployment: kubernetes
@@ -255,10 +257,10 @@ apps:
     spec:
       type: LoadBalancer
       ports:
-      - name: tcp22
+      - name: tcp23
         protocol: TCP
-        port: 22
-        targetPort: 22
+        port: 23
+        targetPort: 23
       selector:
         run: someapplication2
     ---
@@ -299,7 +301,7 @@ apps:
             image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication2:1.0
             imagePullPolicy: Always
             ports:
-            - containerPort: 22
+            - containerPort: 23
               protocol: TCP
             - containerPort: 10003
               protocol: UDP
@@ -476,8 +478,8 @@ appinstances:
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
-    internalport: 22
-    publicport: 10000
+    internalport: 23
+    publicport: 23
     fqdnprefix: someapplication2-tcp.
   - proto: LProtoUdp
     internalport: 10003

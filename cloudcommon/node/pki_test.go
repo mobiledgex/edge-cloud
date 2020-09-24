@@ -20,7 +20,7 @@ import (
 // dependencies on process package.
 
 func TestInternalPki(t *testing.T) {
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	// Set up local Vault process.
@@ -244,11 +244,15 @@ func TestInternalPki(t *testing.T) {
 		Region:   "us",
 		Type:     node.NodeTypeController,
 		CertFile: "./ctrl.crt",
+		CertKey:  "./ctrl.key",
+		CAFile:   "./mex-ca.crt",
 	}
 	nodePhase1 := &PkiConfig{
 		Region:      "us",
 		Type:        node.NodeTypeController,
 		CertFile:    "./ctrl.crt",
+		CertKey:     "./ctrl.key",
+		CAFile:      "./mex-ca.crt",
 		UseVaultCAs: true,
 		RemoteCAs: []node.MatchCA{
 			node.SameRegionalMatchCA(),
@@ -258,6 +262,8 @@ func TestInternalPki(t *testing.T) {
 		Region:        "us",
 		Type:          node.NodeTypeController,
 		CertFile:      "./ctrl.crt",
+		CertKey:       "./ctrl.key",
+		CAFile:        "./mex-ca.crt",
 		UseVaultCerts: true,
 		LocalIssuer:   node.CertIssuerRegional,
 		RemoteCAs: []node.MatchCA{
@@ -354,8 +360,9 @@ func testGetTlsConfig(t *testing.T, ctx context.Context, vroles *process.VaultRo
 	vc := getVaultConfig(cfg.VaultNodeType, cfg.VaultRegion, vroles)
 	mgr := node.NodeMgr{}
 	mgr.InternalPki.UseVaultCerts = true
-	mgr.Init(ctx, cfg.NodeType, node.WithRegion(cfg.Region), node.WithVaultConfig(vc))
-	_, err := mgr.InternalPki.GetServerTlsConfig(ctx,
+	_, _, err := mgr.Init(cfg.NodeType, node.NoTlsClientIssuer, node.WithRegion(cfg.Region), node.WithVaultConfig(vc))
+	require.Nil(t, err)
+	_, err = mgr.InternalPki.GetServerTlsConfig(ctx,
 		mgr.CommonName(),
 		cfg.LocalIssuer,
 		cfg.RemoteCAs)
@@ -372,6 +379,8 @@ type PkiConfig struct {
 	Type          string
 	LocalIssuer   string
 	CertFile      string
+	CertKey       string
+	CAFile        string
 	UseVaultCAs   bool
 	UseVaultCerts bool
 	RemoteCAs     []node.MatchCA
@@ -388,11 +397,13 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 	fmt.Printf("******************* testExchange %s *********************\n", cs.Line)
 	serverVault := getVaultConfig(cs.Server.Type, cs.Server.Region, vroles)
 	serverNode := node.NodeMgr{}
-	serverNode.TlsCertFile = cs.Server.CertFile
+	serverNode.SetInternalTlsCertFile(cs.Server.CertFile)
+	serverNode.SetInternalTlsKeyFile(cs.Server.CertKey)
+	serverNode.SetInternalTlsCAFile(cs.Server.CAFile)
 	serverNode.InternalPki.UseVaultCAs = cs.Server.UseVaultCAs
 	serverNode.InternalPki.UseVaultCerts = cs.Server.UseVaultCerts
 	serverNode.InternalDomain = "mobiledgex.net"
-	err := serverNode.Init(ctx, cs.Server.Type,
+	_, _, err := serverNode.Init(cs.Server.Type, node.NoTlsClientIssuer,
 		node.WithRegion(cs.Server.Region),
 		node.WithVaultConfig(serverVault))
 	require.Nil(t, err)
@@ -407,11 +418,13 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 
 	clientVault := getVaultConfig(cs.Client.Type, cs.Client.Region, vroles)
 	clientNode := node.NodeMgr{}
-	clientNode.TlsCertFile = cs.Client.CertFile
+	clientNode.SetInternalTlsCertFile(cs.Client.CertFile)
+	clientNode.SetInternalTlsKeyFile(cs.Client.CertKey)
+	clientNode.SetInternalTlsCAFile(cs.Client.CAFile)
 	clientNode.InternalPki.UseVaultCAs = cs.Client.UseVaultCAs
 	clientNode.InternalPki.UseVaultCerts = cs.Client.UseVaultCerts
 	clientNode.InternalDomain = "mobiledgex.net"
-	err = clientNode.Init(ctx, cs.Client.Type,
+	_, _, err = clientNode.Init(cs.Client.Type, node.NoTlsClientIssuer,
 		node.WithRegion(cs.Client.Region),
 		node.WithVaultConfig(clientVault))
 	require.Nil(t, err)

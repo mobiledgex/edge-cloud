@@ -16,7 +16,7 @@ import (
 
 func TestAppInstApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
@@ -189,7 +189,7 @@ func TestAppInstApi(t *testing.T) {
 	for _, data := range appInstApi.cache.Objs {
 		obj := data.Obj
 		app_name := util.K8SSanitize(obj.Key.AppKey.Name)
-		if app_name == "helmapp" {
+		if app_name == "helmapp" || app_name == "vmlb" {
 			continue
 		}
 		for _, port := range obj.MappedPorts {
@@ -287,8 +287,6 @@ func ClientAppInstCachedFieldsTest(t *testing.T, ctx context.Context, appApi edg
 
 func TestAutoClusterInst(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	log.InitTracer("")
-	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
 

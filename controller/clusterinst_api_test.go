@@ -18,7 +18,7 @@ import (
 
 func TestClusterInstApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
@@ -91,6 +91,26 @@ func TestClusterInstApi(t *testing.T) {
 	err = clusterInstApi.DeleteClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "delete overrides create error")
 	checkClusterInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
+
+	// test update of autoscale policy
+	obj = testutil.ClusterInstData[0]
+	obj.Key.Organization = testutil.AutoScalePolicyData[1].Key.Organization
+	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err, "create ClusterInst")
+	check := edgeproto.ClusterInst{}
+	found := clusterInstApi.cache.Get(&obj.Key, &check)
+	require.True(t, found)
+	require.Equal(t, 2, int(check.NumNodes))
+
+	obj.AutoScalePolicy = testutil.AutoScalePolicyData[1].Key.Name
+	obj.Fields = []string{edgeproto.ClusterInstFieldAutoScalePolicy}
+	err = clusterInstApi.UpdateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err)
+	check = edgeproto.ClusterInst{}
+	found = clusterInstApi.cache.Get(&obj.Key, &check)
+	require.True(t, found)
+	require.Equal(t, testutil.AutoScalePolicyData[1].Key.Name, check.AutoScalePolicy)
+	require.Equal(t, 4, int(check.NumNodes))
 
 	// override CRM error
 	responder.SetSimulateClusterCreateFailure(true)

@@ -69,7 +69,9 @@ func (s *FreeReservableClusterInstCache) Prune(ctx context.Context, validKeys ma
 
 func (s *FreeReservableClusterInstCache) Flush(ctx context.Context, notifyId int64) {}
 
-func (s *FreeReservableClusterInstCache) GetForCloudlet(key *CloudletKey, deployment string) *ClusterInstKey {
+func (s *FreeReservableClusterInstCache) GetForCloudlet(key *CloudletKey, deployment string, deploymentTransformFunc func(string) string) *ClusterInstKey {
+	// need a transform func to avoid import cycle
+	deployment = deploymentTransformFunc(deployment)
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 	cinsts, found := s.InstsByCloudlet[*key]

@@ -52,7 +52,20 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	// for now assume all fields have been specified
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
-	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
+	changedToOnline := false
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		info := edgeproto.CloudletInfo{}
+		if s.store.STMGet(stm, &in.Key, &info) {
+			if in.State == edgeproto.CloudletState_CLOUDLET_STATE_READY && info.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
+				changedToOnline = true
+			}
+		}
+		s.store.STMPut(stm, in, objstore.WithLease(controllerAliveLease))
+		return nil
+	})
+	if changedToOnline {
+		nodeMgr.Event(ctx, "Cloudlet online", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String())
+	}
 
 	cloudlet := edgeproto.Cloudlet{}
 	if !cloudletApi.cache.Get(&in.Key, &cloudlet) {
@@ -88,7 +101,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_UPDATING)
 	}
 	if err != nil {
-		log.DebugLog(log.DebugLevelNotify, "CloudletInfo state transition error",
+		log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo state transition error",
 			"key", in.Key, "err", err)
 	}
 }
@@ -115,7 +128,7 @@ func (s *CloudletInfoApi) Delete(ctx context.Context, in *edgeproto.CloudletInfo
 		return nil
 	})
 	if err != nil {
-		log.DebugLog(log.DebugLevelNotify, "notify delete CloudletInfo",
+		log.SpanLog(ctx, log.DebugLevelNotify, "notify delete CloudletInfo",
 			"key", in.Key, "err", err)
 	}
 }
@@ -144,12 +157,14 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 				}
 			}
 			info.State = edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE
-			log.DebugLog(log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "notifyid", notifyId)
+			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "notifyid", notifyId)
 			s.store.STMPut(stm, &info, objstore.WithLease(controllerAliveLease))
 			return nil
 		})
 		if err != nil {
-			log.DebugLog(log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "err", err)
+			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "err", err)
+		} else {
+			nodeMgr.Event(ctx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
 		}
 	}
 }

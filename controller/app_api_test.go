@@ -13,8 +13,6 @@ import (
 func TestAppApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	testinit()
-	log.InitTracer("")
-	defer log.FinishTracer()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -25,6 +23,8 @@ func TestAppApi(t *testing.T) {
 	defer sync.Done()
 
 	// cannot create apps without developer
+	log.InitTracer(nil)
+	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	for _, obj := range testutil.AppData {
 		_, err := appApi.CreateApp(ctx, &obj)

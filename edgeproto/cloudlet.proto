@@ -56,6 +56,10 @@ message PlatformConfig {
   string vault_addr  = 4;
   // TLS cert file
   string tls_cert_file = 5;
+  // TLS key file
+  string tls_key_file = 20;
+  // TLS ca file
+  string tls_ca_file = 21;
   // Environment variables
   map<string, string> env_var = 6;
   // Tag of edge-cloud image

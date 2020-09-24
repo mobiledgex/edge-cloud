@@ -146,9 +146,10 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.AccessType, deploymentType string) error {
 	maxPorts := settingsApi.Get().LoadBalancerMaxPortRange
 	for ii, _ := range ports {
-		// dont allow tls on vms with direct access
-		if ports[ii].Tls && deploymentType == cloudcommon.DeploymentTypeVM && accessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
-			return fmt.Errorf("TLS unsupported on VM based deployments with direct access")
+		// dont allow tls on vms or docker with direct access
+		if ports[ii].Tls && accessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT &&
+			(deploymentType == cloudcommon.DeploymentTypeVM || deploymentType == cloudcommon.DeploymentTypeDocker) {
+			return fmt.Errorf("TLS unsupported on VM and docker deployments with direct access")
 		}
 		ports[ii].PublicPort = ports[ii].InternalPort
 		if ports[ii].EndPort != 0 {
@@ -258,7 +259,6 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 			}
 		}
 	}
-
 	deploymf, err := cloudcommon.GetAppDeploymentManifest(ctx, vaultConfig, in)
 	if err != nil {
 		return err
@@ -425,25 +425,23 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				return err
 			}
 		}
+		if in.DeploymentManifest != "" {
+			// reset the deployment generator
+			cur.DeploymentGenerator = ""
+		} else if in.AccessPorts != "" {
+			// force regeneration of manifest
+			if cur.DeploymentGenerator == "" {
+				// No generator means the user previously provided a manifest.  Force them to do so again when changing ports so
+				// that they do not accidentally lose their provided manifest details
+				return fmt.Errorf("manifest which was previously specified must be provided again when changing access ports")
+			}
+			cur.DeploymentManifest = ""
+		}
 		cur.CopyInFields(in)
 		if err := s.validatePolicies(stm, &cur); err != nil {
 			return err
 		}
 		ports, err := edgeproto.ParseAppPorts(cur.AccessPorts)
-		if err != nil {
-			return err
-		}
-		err = cloudcommon.IsValidDeploymentManifest(cur.Deployment, cur.Command, cur.DeploymentManifest, ports)
-		if err != nil {
-			return fmt.Errorf("Invalid deployment manifest, %v", err)
-		}
-		if cur.Deployment == cloudcommon.DeploymentTypeKubernetes {
-			_, err := k8smgmt.GetAppEnvVars(ctx, &cur, vaultConfig, &k8smgmt.TestReplacementVars)
-			if err != nil {
-				return err
-			}
-		}
-		err = validatePortRangeForAccessType(ports, cur.AccessType, cur.Deployment)
 		if err != nil {
 			return err
 		}
@@ -453,6 +451,22 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			log.SpanLog(ctx, log.DebugLevelApi, "Setting new revision to current timestamp", "Revision", in.Revision)
 		}
 		if err := updateAppFields(ctx, &cur, newRevision); err != nil {
+			return err
+		}
+		if in.DeploymentManifest != "" {
+			err = cloudcommon.IsValidDeploymentManifest(cur.Deployment, cur.Command, cur.DeploymentManifest, ports)
+			if err != nil {
+				return fmt.Errorf("Invalid deployment manifest, %v", err)
+			}
+		}
+		if cur.Deployment == cloudcommon.DeploymentTypeKubernetes {
+			_, err := k8smgmt.GetAppEnvVars(ctx, &cur, vaultConfig, &k8smgmt.TestReplacementVars)
+			if err != nil {
+				return err
+			}
+		}
+		err = validatePortRangeForAccessType(ports, cur.AccessType, cur.Deployment)
+		if err != nil {
 			return err
 		}
 		s.store.STMPut(stm, &cur)

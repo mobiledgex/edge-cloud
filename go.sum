@@ -81,6 +81,10 @@ github.com/docker/go-units v0.3.3 h1:Xk8S3Xj5sLGlG5g67hJmYMmUgXv5N4PhkjJHHqrwnTk
 github.com/docker/go-units v0.3.3/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/duosecurity/duo_api_golang v0.0.0-20190308151101-6c680f768e74 h1:2MIhn2R6oXQbgW5yHfS+d6YqyMfXiu2L55rFZC4UD/M=
 github.com/duosecurity/duo_api_golang v0.0.0-20190308151101-6c680f768e74/go.mod h1:UqXY1lYT/ERa4OEAywUqdok1T4RCRdArkhic1Opuavo=
+github.com/elastic/go-elasticsearch/v7 v7.5.0 h1:kXW+EKls2BwsyQujTmVrxANb3U0qoz9wEq8Zkf/JEco=
+github.com/elastic/go-elasticsearch/v7 v7.5.0/go.mod h1:OJ4wdbtDNk5g503kvlHLyErCgQwwzmDtaFC4XyOxXA4=
+github.com/elastic/go-elasticsearch/v7 v7.9.0 h1:UEau+a1MiiE/F+UrDj60kqIHFWdzU1M2y/YtBU2NC2M=
+github.com/elastic/go-elasticsearch/v7 v7.9.0/go.mod h1:OJ4wdbtDNk5g503kvlHLyErCgQwwzmDtaFC4XyOxXA4=
 github.com/elazarl/go-bindata-assetfs v1.0.0 h1:G/bYguwHIzWq9ZoyUQqrjTmJbbYn3j3CKKpKinvZLFk=
 github.com/elazarl/go-bindata-assetfs v1.0.0/go.mod h1:v+YaWX3bdea5J/mo8dSETolEo7R71Vk1u8bnjau5yw4=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
@@ -275,6 +279,10 @@ github.com/mobiledgex/golang-ssh v0.0.7 h1:RLtsT/qUvXVCfU9G/TecaRF73nMh9ejwGVuce
 github.com/mobiledgex/golang-ssh v0.0.7/go.mod h1:lOpuGpjEhPMO4gxtlLkeC04vN+pB1xmZsYeQZWg0mMI=
 github.com/mobiledgex/golang-ssh v0.0.8 h1:h86ltTZ1ZnE+YSllrq16AEDKAcQPLGdA/Oy4KY0v2ww=
 github.com/mobiledgex/golang-ssh v0.0.8/go.mod h1:lOpuGpjEhPMO4gxtlLkeC04vN+pB1xmZsYeQZWg0mMI=
+github.com/mobiledgex/golang-ssh v0.0.9 h1:GZOhc9S10P+yZy8LpyfC8ActOLvBRLv5RDbvlcggXAY=
+github.com/mobiledgex/golang-ssh v0.0.9/go.mod h1:lOpuGpjEhPMO4gxtlLkeC04vN+pB1xmZsYeQZWg0mMI=
+github.com/mobiledgex/golang-ssh v0.0.10 h1:GwcGZGAsKkC4XgIDQ15+XbDWkpGZM8tHbT/6YOYrCDo=
+github.com/mobiledgex/golang-ssh v0.0.10/go.mod h1:lOpuGpjEhPMO4gxtlLkeC04vN+pB1xmZsYeQZWg0mMI=
 github.com/mobiledgex/mapstructure v1.2.2 h1:itDfhergxnMSo8uwfb1Psck7hZQ94BUqHkowa7l5cOs=
 github.com/mobiledgex/mapstructure v1.2.2/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/mobiledgex/mapstructure v1.2.4-0.20200427235940-30d27df8e747 h1:vRTJWwkGJ77wjHthCcrAf5yitjshfOedff3/4glV+iw=

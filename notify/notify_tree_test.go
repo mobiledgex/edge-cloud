@@ -29,7 +29,7 @@ const (
 // a balanced binary tree.
 func TestNotifyTree(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelNotify | log.DebugLevelApi)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
@@ -95,9 +95,9 @@ func TestNotifyTree(t *testing.T) {
 	// crms at all levels get all flavors
 	// mid level gets the appInsts and clusterInsts for all below it.
 	// low level only gets the ones for itself.
-	checkClientCache(t, low21, 3, 3, 5, 1)
+	checkClientCache(t, low21, 3, 3, 6, 1)
 	checkClientCache(t, low22, 3, 2, 3, 1)
-	checkClientCache(t, mid2, 3, 5, 8, 2)
+	checkClientCache(t, mid2, 3, 5, 9, 2)
 	checkCache(t, mid1, FreeReservableClusterInstType, 1)
 
 	// Add info objs to low nodes
@@ -168,9 +168,9 @@ func TestNotifyTree(t *testing.T) {
 	checkCache(t, mid2, AlertType, 1)
 
 	low21.startClient()
-	checkClientCache(t, low21, 3, 3, 5, 1)
+	checkClientCache(t, low21, 3, 3, 6, 1)
 	checkClientCache(t, low22, 3, 2, 3, 1)
-	checkClientCache(t, mid2, 3, 5, 8, 2)
+	checkClientCache(t, mid2, 3, 5, 9, 2)
 	checkCache(t, mid1, FreeReservableClusterInstType, 1)
 	mid2.handler.WaitForCloudletInfo(2)
 

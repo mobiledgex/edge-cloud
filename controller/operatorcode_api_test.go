@@ -12,7 +12,7 @@ import (
 func TestOperatorCodeApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	testinit()
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 
 	dummy := dummyEtcd{}

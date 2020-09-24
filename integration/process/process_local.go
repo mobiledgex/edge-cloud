@@ -23,6 +23,7 @@ import (
 	"time"
 
 	ct "github.com/daviddengcn/go-colortext"
+	"github.com/elastic/go-elasticsearch/v7"
 	influxclient "github.com/influxdata/influxdb/client/v2"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/influxsup"
 	mextls "github.com/mobiledgex/edge-cloud/tls"
@@ -40,6 +41,19 @@ type TLSCerts struct {
 	ClientCert string
 	ApiCert    string
 	ApiKey     string
+}
+
+func (s *TLSCerts) AddInternalPkiArgs(args []string) []string {
+	if s.ServerCert != "" {
+		args = append(args, "--itlsCert", s.ServerCert)
+	}
+	if s.ServerCert != "" {
+		args = append(args, "--itlsKey", s.ServerKey)
+	}
+	if s.CACert != "" {
+		args = append(args, "--itlsCA", s.CACert)
+	}
+	return args
 }
 
 type LocalAuth struct {
@@ -63,7 +77,7 @@ func (p *Etcd) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--name", p.Name, "--data-dir", p.DataDir, "--listen-peer-urls", p.PeerAddrs, "--listen-client-urls", p.ClientAddrs, "--advertise-client-urls", p.ClientAddrs, "--initial-advertise-peer-urls", p.PeerAddrs, "--initial-cluster", p.InitialCluster}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
@@ -91,10 +105,7 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--httpAddr")
 		args = append(args, p.HttpAddr)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.InfluxAddr != "" {
 		args = append(args, "--influxAddr")
 		args = append(args, p.InfluxAddr)
@@ -170,7 +181,7 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, p.ChefServerPath)
 	}
 
-	var envs []string
+	envs := p.GetEnv()
 	if options.RolesFile != "" {
 		dat, err := ioutil.ReadFile(options.RolesFile)
 		if err != nil {
@@ -182,13 +193,12 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 			return err
 		}
 		rr := roles.GetRegionRoles(p.Region)
-		envs = []string{
+		envs = append(envs,
 			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.CtrlRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.CtrlSecretID),
 			fmt.Sprintf("VAULT_CRM_ROLE_ID=%s", rr.CRMRoleID),
 			fmt.Sprintf("VAULT_CRM_SECRET_ID=%s", rr.CRMSecretID),
-		}
-		log.Printf("controller envs: %v\n", envs)
+		)
 	}
 
 	var err error
@@ -291,10 +301,7 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--cloudletKey")
 		args = append(args, p.CloudletKey)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
 		if p.TLS.ApiCert != "" {
 			args = append(args, "--tlsApiCertFile", p.TLS.ApiCert)
@@ -327,7 +334,7 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
-	var envs []string
+	envs := p.GetEnv()
 	if options.RolesFile != "" {
 		dat, err := ioutil.ReadFile(options.RolesFile)
 		if err != nil {
@@ -339,11 +346,10 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 			return err
 		}
 		rr := roles.GetRegionRoles(p.Region)
-		envs = []string{
+		envs = append(envs,
 			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.DmeRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.DmeSecretID),
-		}
-		log.Printf("dme envs: %v\n", envs)
+		)
 	}
 
 	var err error
@@ -399,10 +405,7 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--cloudletKey")
 		args = append(args, p.CloudletKey)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.Name != "" {
 		args = append(args, "--hostname")
 		args = append(args, p.Name)
@@ -480,11 +483,7 @@ func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 	var err error
 
 	args := p.GetArgs(opts...)
-	envVars := []string{}
-	for k, v := range p.GetEnvVars() {
-		envVars = append(envVars, fmt.Sprintf("%s=%s", k, v))
-	}
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envVars, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
@@ -525,14 +524,29 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 		}
 	}
 
-	configFile, err := influxsup.SetupInflux(p.DataDir,
-		influxsup.WithSeverCert(p.TLS.ServerCert), influxsup.WithSeverCertKey(p.TLS.ServerKey), influxsup.WithAuth(p.Auth.User != ""))
+	influxops := []influxsup.InfluxOp{
+		influxsup.WithAuth(p.Auth.User != ""),
+	}
+	if p.TLS.ServerCert != "" {
+		influxops = append(influxops, influxsup.WithServerCert(p.TLS.ServerCert))
+	}
+	if p.TLS.ServerKey != "" {
+		influxops = append(influxops, influxsup.WithServerCertKey(p.TLS.ServerKey))
+	}
+	if p.BindAddr != "" {
+		influxops = append(influxops, influxsup.WithBindAddr(p.BindAddr))
+	}
+	if p.HttpAddr != "" {
+		influxops = append(influxops, influxsup.WithHttpAddr(p.HttpAddr))
+	}
+
+	configFile, err := influxsup.SetupInflux(p.DataDir, influxops...)
 	if err != nil {
 		return err
 	}
 	p.Config = configFile
 	args := []string{"-config", configFile}
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	if err != nil {
 		return err
 	}
@@ -581,14 +595,20 @@ func (p *Influx) StopLocal() {
 
 func (p *Influx) GetExeName() string { return "influxd" }
 
-func (p *Influx) LookupArgs() string { return "" }
+func (p *Influx) LookupArgs() string { return "-config " + p.Config }
 
 func (p *Influx) ResetData() error {
 	return os.RemoveAll(p.DataDir)
 }
 
 func (p *Influx) GetClient() (influxclient.Client, error) {
-	return influxsup.GetClient(p.HttpAddr, p.Auth.User, p.Auth.Pass)
+	httpaddr := ""
+	if p.TLS.ServerCert != "" {
+		httpaddr = "https://" + p.HttpAddr
+	} else {
+		httpaddr = "http://" + p.HttpAddr
+	}
+	return influxsup.GetClient(httpaddr, p.Auth.User, p.Auth.Pass)
 }
 
 // ClusterSvc process
@@ -599,10 +619,7 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--ctrlAddrs")
 		args = append(args, p.CtrlAddrs)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.PromPorts != "" {
 		args = append(args, "--prometheus-ports")
 		args = append(args, p.PromPorts)
@@ -628,6 +645,9 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 	if p.UseVaultCerts {
 		args = append(args, "--useVaultCerts")
 	}
+	if p.Region != "" {
+		args = append(args, "--region", p.Region)
+	}
 	args = append(args, "--hostname", p.Name)
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -635,7 +655,7 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
-	var envs []string
+	envs := p.GetEnv()
 	if options.RolesFile != "" {
 		dat, err := ioutil.ReadFile(options.RolesFile)
 		if err != nil {
@@ -647,12 +667,12 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 			return err
 		}
 		rr := roles.GetRegionRoles(p.Region)
-		envs = []string{
+		envs = append(envs,
 			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.ClusterSvcRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.ClusterSvcSecretID),
-		}
-		log.Printf("dme envs: %v\n", envs)
+		)
 	}
+
 	// Append extra args convert from [arg1=val1, arg2] into ["-arg1", "val1", "-arg2"]
 	if len(options.ExtraArgs) > 0 {
 		for _, v := range options.ExtraArgs {
@@ -721,7 +741,7 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 
 	args := []string{"server", "-dev"}
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	if err != nil {
 		return err
 	}
@@ -991,7 +1011,7 @@ func (p *Traefik) StartLocal(logfile string, opts ...StartOp) error {
 	}
 	out.Flush()
 
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
@@ -1079,29 +1099,208 @@ func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
 		"traefik.http.services.jaeger-c.loadbalancer.server.port=14268",
 		"traefik.http.services.jaeger-ui-notls.loadbalancer.server.port=16686",
 	}
-	args := []string{
-		"run", "--rm", "--name", p.Name,
-	}
+	args := p.getRunArgs()
 	for _, l := range labels {
 		args = append(args, "-l", l)
 	}
-	args = append(args, "jaegertracing/all-in-one:1.13")
+	// jaeger version should match "jaeger_version" in
+	// ansible/roles/jaeger/defaults/main.yaml
+	args = append(args, "jaegertracing/all-in-one:1.17.1")
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
-func (p *Jaeger) StopLocal() {
+func (p *DockerGeneric) getRunArgs() []string {
+	args := []string{
+		"run", "--rm", "--name", p.Name,
+	}
+	for k, v := range p.DockerEnvVars {
+		args = append(args, "-e", fmt.Sprintf("%s=%s", k, v))
+	}
+	for _, link := range p.Links {
+		args = append(args, "--link", link)
+	}
+	return args
+}
+
+func (p *DockerGeneric) StopLocal() {
 	StopLocal(p.cmd)
 	// if container is from previous aborted run
 	cmd := exec.Command("docker", "kill", p.Name)
 	cmd.Run()
 }
 
-func (p *Jaeger) GetExeName() string { return "docker" }
+func (p *DockerGeneric) GetExeName() string { return "docker" }
 
-func (p *Jaeger) LookupArgs() string { return p.Name }
+func (p *DockerGeneric) LookupArgs() string { return p.Name }
+
+func (p *ElasticSearch) StartLocal(logfile string, opts ...StartOp) error {
+	switch p.Type {
+	case "kibana":
+		return p.StartKibana(logfile, opts...)
+	case "nginx-proxy":
+		return p.StartNginxProxy(logfile, opts...)
+	default:
+		return p.StartElasticSearch(logfile, opts...)
+	}
+}
+
+func (p *ElasticSearch) StartElasticSearch(logfile string, opts ...StartOp) error {
+	// simple single node cluster
+	args := p.getRunArgs()
+	args = append(args,
+		"-p", "9200:9200",
+		"-p", "9300:9300",
+		"-e", "discovery.type=single-node",
+		"-e", "xpack.security.enabled=false",
+		"docker.elastic.co/elasticsearch/elasticsearch:7.6.2",
+	)
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
+	if err == nil {
+		// wait until up
+		addr := "http://127.0.0.1:9200"
+		cfg := elasticsearch.Config{
+			Addresses: []string{addr},
+		}
+		client, perr := elasticsearch.NewClient(cfg)
+		if perr != nil {
+			return perr
+		}
+		for ii := 0; ii < 30; ii++ {
+			res, perr := client.Info()
+			log.Printf("elasticsearch info %s try %d: res %v, perr %v\n", addr, ii, res, perr)
+			if perr == nil {
+				res.Body.Close()
+			}
+			if perr == nil && res.StatusCode == http.StatusOK {
+				break
+			}
+			time.Sleep(2 * time.Second)
+		}
+		if perr != nil {
+			return perr
+		}
+	}
+	return err
+}
+
+func (p *ElasticSearch) StartKibana(logfile string, opts ...StartOp) error {
+	args := p.getRunArgs()
+	args = append(args,
+		"-p", "5601:5601",
+		"docker.elastic.co/kibana/kibana:7.6.2",
+	)
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
+	return err
+}
+
+func (p *ElasticSearch) StartNginxProxy(logfile string, opts ...StartOp) error {
+	// Terminate TLS using mex-ca.crt and vault CAs.
+	if p.TLS.ServerCert == "" || p.TLS.ServerKey == "" {
+		err := fmt.Errorf("ElasticSearch NginxProxy requires TLS config")
+		log.Printf("%v\n", err)
+		return err
+	}
+	certsDir := path.Dir(p.TLS.ServerCert)
+
+	configDir := path.Dir(logfile) + "/es-nginxproxy"
+	if err := os.MkdirAll(configDir, 0777); err != nil {
+		return err
+	}
+
+	// combine all cas into one for nginx config
+	// Note that nginx requires the full CA chain, so must include
+	// the root's public CA cert as well (not just intermediates).
+	// Note we can remove p.TLS.CACert once we transition to all services
+	// using "useVaultCerts" instead of "useVaultCAs".
+	certs := "/tmp/vault_pki/*.pem"
+	if p.TLS.CACert != "" {
+		certs += " " + p.TLS.CACert
+	}
+	cmd := exec.Command("bash", "-c", "cat "+certs+" > "+configDir+"/allcas.pem")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s, %s", string(out), err)
+	}
+
+	if len(p.Links) == 0 {
+		return fmt.Errorf("Must specify Links field for elasticsearch nginx proxy")
+	}
+
+	// create config file
+	configArgs := esNginxConfigArgs{
+		ServerName: p.Name,
+		ServerCert: path.Base(p.TLS.ServerCert),
+		ServerKey:  path.Base(p.TLS.ServerKey),
+		Target:     p.Links[0],
+	}
+
+	tmpl := template.Must(template.New("esnginx").Parse(esNginxConfig))
+	f, err := os.Create(configDir + "/nginx.conf")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	wr := bufio.NewWriter(f)
+	err = tmpl.Execute(wr, configArgs)
+	if err != nil {
+		return err
+	}
+	wr.Flush()
+
+	args := p.getRunArgs()
+	args = append(args,
+		"-p", "9201:9201",
+		"-v", fmt.Sprintf("%s:/certs", certsDir),
+		"-v", fmt.Sprintf("%s:/etc/nginx", configDir),
+		"nginx:latest",
+	)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
+	return err
+}
+
+type esNginxConfigArgs struct {
+	ServerName string
+	ServerCert string
+	ServerKey  string
+	Target     string
+}
+
+var esNginxConfig = `
+events {
+  worker_connections 100;
+}
+http {
+  server {
+    listen 9201 ssl;
+    listen [::]:9201 ssl;
+    ssl_certificate /certs/{{.ServerCert}};
+    ssl_certificate_key /certs/{{.ServerKey}};
+    ssl_client_certificate /etc/nginx/allcas.pem;
+    ssl_verify_client on;
+    ssl_verify_depth 2;
+    ssl_session_cache shared:le_nginx_SSL:1m;
+    ssl_session_cache shared:le_nginx_SSL:1m;
+    ssl_protocols TLSv1.2;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS";
+
+    server_name {{.ServerName}};
+
+    proxy_buffering off;
+    proxy_read_timeout 30m;
+
+    location / {
+      proxy_pass         http://{{.Target}}:9200;
+    }
+  }
+}
+`
 
 func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{}
@@ -1109,10 +1308,7 @@ func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.UseVaultCAs {
 		args = append(args, "--useVaultCAs")
 	}
@@ -1125,7 +1321,7 @@ func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
-	var envs []string
+	envs := p.GetEnv()
 	if options.RolesFile != "" {
 		dat, err := ioutil.ReadFile(options.RolesFile)
 		if err != nil {
@@ -1136,11 +1332,10 @@ func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 		if err != nil {
 			return err
 		}
-		envs = []string{
+		envs = append(envs,
 			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.NotifyRootRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.NotifyRootSecretID),
-		}
-		log.Printf("notifyroot envs: %v\n", envs)
+		)
 	}
 
 	var err error
@@ -1166,10 +1361,7 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--proxyAddr")
 		args = append(args, p.ProxyAddr)
 	}
-	if p.TLS.ServerCert != "" {
-		args = append(args, "--tls")
-		args = append(args, p.TLS.ServerCert)
-	}
+	args = p.TLS.AddInternalPkiArgs(args)
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
 	}
@@ -1192,7 +1384,7 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
-	var envs []string
+	envs := p.GetEnv()
 	if options.RolesFile != "" {
 		dat, err := ioutil.ReadFile(options.RolesFile)
 		if err != nil {
@@ -1204,11 +1396,10 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 			return err
 		}
 		rr := roles.GetRegionRoles(p.Region)
-		envs = []string{
+		envs = append(envs,
 			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.EdgeTurnRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.EdgeTurnSecretID),
-		}
-		log.Printf("edgeturn envs: %v\n", envs)
+		)
 	}
 	var err error
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envs, logfile)
@@ -1226,8 +1417,10 @@ func (p *EdgeTurn) LookupArgs() string { return "" }
 // Support funcs
 
 func StartLocal(name, bin string, args, envs []string, logfile string) (*exec.Cmd, error) {
+	log.Printf("StartLocal:\n%s %s\n", bin, strings.Join(args, " "))
 	cmd := exec.Command(bin, args...)
-	if envs != nil {
+	if len(envs) > 0 {
+		log.Printf("%s env: %v\n", name, envs)
 		// Append to the current process's env
 		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, envs...)
@@ -1277,7 +1470,7 @@ func (p *LocApiSim) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "-country", p.Country)
 	}
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
@@ -1300,7 +1493,7 @@ func (p *TokSrvSim) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, p.Token)
 	}
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 
@@ -1318,7 +1511,7 @@ func (p *TokSrvSim) LookupArgs() string {
 
 func (p *SampleApp) StartLocal(logfile string, opts ...StartOp) error {
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.GetExeName(), p.Args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), p.Args, p.GetEnv(), logfile)
 	return err
 }
 

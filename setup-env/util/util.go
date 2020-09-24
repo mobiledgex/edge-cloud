@@ -90,21 +90,22 @@ type TLSCertInfo struct {
 }
 
 type DeploymentData struct {
-	TLSCerts    []*TLSCertInfo        `yaml:"tlscerts"`
-	Locsims     []*process.LocApiSim  `yaml:"locsims"`
-	Toksims     []*process.TokSrvSim  `yaml:"toksims"`
-	Vaults      []*process.Vault      `yaml:"vaults"`
-	Etcds       []*process.Etcd       `yaml:"etcds"`
-	Controllers []*process.Controller `yaml:"controllers"`
-	Dmes        []*process.Dme        `yaml:"dmes"`
-	SampleApps  []*process.SampleApp  `yaml:"sampleapps"`
-	Influxs     []*process.Influx     `yaml:"influxs"`
-	ClusterSvcs []*process.ClusterSvc `yaml:"clustersvcs"`
-	Crms        []*process.Crm        `yaml:"crms"`
-	Jaegers     []*process.Jaeger     `yaml:"jaegers"`
-	Traefiks    []*process.Traefik    `yaml:"traefiks"`
-	NotifyRoots []*process.NotifyRoot `yaml:"notifyroots"`
-	EdgeTurns   []*process.EdgeTurn   `yaml:"edgeturns"`
+	TLSCerts       []*TLSCertInfo           `yaml:"tlscerts"`
+	Locsims        []*process.LocApiSim     `yaml:"locsims"`
+	Toksims        []*process.TokSrvSim     `yaml:"toksims"`
+	Vaults         []*process.Vault         `yaml:"vaults"`
+	Etcds          []*process.Etcd          `yaml:"etcds"`
+	Controllers    []*process.Controller    `yaml:"controllers"`
+	Dmes           []*process.Dme           `yaml:"dmes"`
+	SampleApps     []*process.SampleApp     `yaml:"sampleapps"`
+	Influxs        []*process.Influx        `yaml:"influxs"`
+	ClusterSvcs    []*process.ClusterSvc    `yaml:"clustersvcs"`
+	Crms           []*process.Crm           `yaml:"crms"`
+	Jaegers        []*process.Jaeger        `yaml:"jaegers"`
+	Traefiks       []*process.Traefik       `yaml:"traefiks"`
+	NotifyRoots    []*process.NotifyRoot    `yaml:"notifyroots"`
+	EdgeTurns      []*process.EdgeTurn      `yaml:"edgeturns"`
+	ElasticSearchs []*process.ElasticSearch `yaml:"elasticsearchs"`
 }
 
 type errorReply struct {
@@ -152,6 +153,9 @@ func GetAllProcesses() []process.Process {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.EdgeTurns {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.ElasticSearchs {
 		all = append(all, p)
 	}
 	return all
@@ -590,6 +594,25 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err2 = ReadYamlFile(secondYamlFile, &r2)
 		copts = append(copts, edgeproto.IgnoreDebugReplyFields("nocmp"))
 		copts = append(copts, cmpopts.SortSlices(edgeproto.CmpSortDebugReply))
+		y1 = r1
+		y2 = r2
+	} else if fileType == "nodedata" {
+		var r1 edgeproto.NodeData
+		var r2 edgeproto.NodeData
+
+		err1 = ReadYamlFile(firstYamlFile, &r1)
+		err2 = ReadYamlFile(secondYamlFile, &r2)
+		copts = []cmp.Option{
+			edgeproto.IgnoreNodeFields("nocmp"),
+			cmpopts.SortSlices(func(a edgeproto.Node, b edgeproto.Node) bool {
+				// ignore nocmp fields, include internalPki
+				// because one controller has a different
+				// one and the keys end up being the same.
+				ca := a.Key.Type + a.Key.Region + a.Key.CloudletKey.GetKeyString() + a.InternalPki
+				cb := b.Key.Type + b.Key.Region + b.Key.CloudletKey.GetKeyString() + b.InternalPki
+				return ca < cb
+			}),
+		}
 		y1 = r1
 		y2 = r2
 	} else {

@@ -18,10 +18,16 @@ case "$auths" in
     *) vault auth enable approle
 esac
 
+CADIR=/tmp/vault_pki
+
+rm -Rf $CADIR
+mkdir $CADIR
+
 # enable root pki
 vault secrets enable pki
 # generate root cert
-vault write pki/root/generate/internal common_name=localhost
+vault write -format=json pki/root/generate/internal \
+      common_name=localhost | jq -r '.data.certificate' > $CADIR/rootca.pem
 vault write pki/config/urls \
     issuing_certificates="$VAULT_ADDR/v1/pki/ca" \
     crl_distribution_points="$VAULT_ADDR/v1/pki/crl"
@@ -34,12 +40,12 @@ vault write pki-global/config/urls \
     crl_distribution_points="$VAULT_ADDR/v1/pki-global/crl"
 # generate intermediate cert
 vault write -format=json pki-global/intermediate/generate/internal \
-      common_name="pki-global" | jq -r '.data.csr' > pki_global.csr
+      common_name="pki-global" | jq -r '.data.csr' > $CADIR/pki_global.csr
 # sign intermediate with root
-vault write -format=json pki/root/sign-intermediate csr=@pki_global.csr \
-      format=pem_bundle | jq -r '.data.certificate' > global.cert.pem
+vault write -format=json pki/root/sign-intermediate csr=@$CADIR/pki_global.csr \
+      format=pem_bundle | jq -r '.data.certificate' > $CADIR/global.cert.pem
 # imported signed intermediate cert
-vault write pki-global/intermediate/set-signed certificate=@global.cert.pem
+vault write pki-global/intermediate/set-signed certificate=@$CADIR/global.cert.pem
 
 # enable regional secure intermediate pki
 vault secrets enable -path=pki-regional pki
@@ -49,12 +55,12 @@ vault write pki-regional/config/urls \
     crl_distribution_points="$VAULT_ADDR/v1/pki-regional/crl"
 # generate intermediate cert
 vault write -format=json pki-regional/intermediate/generate/internal \
-      common_name="pki-regional" | jq -r '.data.csr' > pki_regional.csr
+      common_name="pki-regional" | jq -r '.data.csr' > $CADIR/pki_regional.csr
 # sign intermediate with root
-vault write -format=json pki/root/sign-intermediate csr=@pki_regional.csr \
-      format=pem_bundle | jq -r '.data.certificate' > regional.cert.pem
+vault write -format=json pki/root/sign-intermediate csr=@$CADIR/pki_regional.csr \
+      format=pem_bundle | jq -r '.data.certificate' > $CADIR/regional.cert.pem
 # imported signed intermediate cert
-vault write pki-regional/intermediate/set-signed certificate=@regional.cert.pem
+vault write pki-regional/intermediate/set-signed certificate=@$CADIR/regional.cert.pem
 
 # enable regional cloudlet intermediate pki
 vault secrets enable -path=pki-regional-cloudlet pki
@@ -64,12 +70,12 @@ vault write pki-regional-cloudlet/config/urls \
     crl_distribution_points="$VAULT_ADDR/v1/pki-regional-cloudlet/crl"
 # generate intermediate cert
 vault write -format=json pki-regional-cloudlet/intermediate/generate/internal \
-      common_name="pki-regional-cloudlet" | jq -r '.data.csr' > pki_cloudlet_regional.csr
+      common_name="pki-regional-cloudlet" | jq -r '.data.csr' > $CADIR/pki_cloudlet_regional.csr
 # sign intermediate with root
-vault write -format=json pki/root/sign-intermediate csr=@pki_cloudlet_regional.csr \
-      format=pem_bundle | jq -r '.data.certificate' > cloudlet.regional.cert.pem
+vault write -format=json pki/root/sign-intermediate csr=@$CADIR/pki_cloudlet_regional.csr \
+      format=pem_bundle | jq -r '.data.certificate' > $CADIR/cloudlet.regional.cert.pem
 # imported signed intermediate cert
-vault write pki-regional-cloudlet/intermediate/set-signed certificate=@cloudlet.regional.cert.pem
+vault write pki-regional-cloudlet/intermediate/set-signed certificate=@$CADIR/cloudlet.regional.cert.pem
 
 # set up global cert issuer role
 vault write pki-global/roles/default \
@@ -94,3 +100,41 @@ vault write auth/approle/role/notifyroot period="720h" policies="notifyroot"
 # get notifyroot app roleID and generate secretID
 vault read auth/approle/role/notifyroot/role-id
 vault write -f auth/approle/role/notifyroot/secret-id
+
+# enable vault ssh secrets engine
+vault secrets enable -path=ssh ssh
+vault write ssh/config/ca generate_signing_key=true
+vault write ssh/roles/machine -<<"EOH"
+{
+  "allow_user_certificates": true,
+  "allowed_users": "*",
+  "allowed_extensions": "permit-pty,permit-port-forwarding",
+  "default_extensions": [
+    {
+      "permit-pty": "",
+      "permit-port-forwarding": ""
+    }
+  ],
+  "key_type": "ca",
+  "default_user": "ubuntu",
+  "ttl": "72h",
+  "max_ttl": "72h"
+}
+EOH
+vault write ssh/roles/user -<<"EOH"
+{
+  "allow_user_certificates": true,
+  "allowed_users": "*",
+  "allowed_extensions": "permit-pty,permit-port-forwarding",
+  "default_extensions": [
+    {
+      "permit-pty": "",
+      "permit-port-forwarding": ""
+    }
+  ],
+  "key_type": "ca",
+  "default_user": "ubuntu",
+  "ttl": "5m",
+  "max_ttl": "60m"
+}
+EOH
