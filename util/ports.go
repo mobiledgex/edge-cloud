@@ -29,6 +29,9 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 		}
 		annotations := make(map[string]string)
 		for _, kv := range pp[2:] {
+			if kv == "" {
+				return nil, fmt.Errorf("invalid AccessPorts annotation %s for port %s, expected format is either key or key=val", kv, pp[1])
+			}
 			keyval := strings.Split(kv, "=")
 			if len(keyval) == 1 {
 				// boolean annotation
