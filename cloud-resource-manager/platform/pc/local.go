@@ -37,7 +37,7 @@ func (s *LocalClient) Shell(sin io.Reader, sout, serr io.Writer, args ...string)
 
 	// wait until all data has been written to avoid
 	// race conditions between write back and caller closing
-	// the webrtc data channel.
+	// the connection.
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
