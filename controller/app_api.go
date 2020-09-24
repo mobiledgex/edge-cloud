@@ -431,7 +431,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		} else if in.AccessPorts != "" {
 			// force regeneration of manifest
 			if cur.DeploymentGenerator == "" {
-				// no generator means we previously provide a manifest.  Force them to do so again when changing ports so
+				// No generator means the user previously provided a manifest.  Force them to do so again when changing ports so
 				// that they do not accidentally lose their provided manifest details
 				return fmt.Errorf("manifest which was previously specified must be provided again when changing access ports")
 			}
