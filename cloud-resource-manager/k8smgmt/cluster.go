@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -27,9 +28,10 @@ func CleanupClusterConfig(ctx context.Context, client ssh.Client, clusterInst *e
 		return err
 	}
 	configDir, _ := getConfigDirName(names)
-	out, err := client.Output("rmdir " + configDir)
+	log.SpanLog(ctx, log.DebugLevelInfra, "CleanupClusterConfig remove dir", "configDir", configDir)
+	err = pc.DeleteDir(ctx, client, configDir, pc.NoSudo)
 	if err != nil {
-		return fmt.Errorf("failed to delete cluster config dir %s: %s, %s", configDir, string(out), err)
+		return fmt.Errorf("failed to delete cluster config dir %s: %v", configDir, err)
 	}
 	return nil
 }
