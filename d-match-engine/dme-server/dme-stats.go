@@ -11,13 +11,10 @@ import (
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	log "github.com/mobiledgex/edge-cloud/log"
 	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
 	"github.com/mobiledgex/edge-cloud/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/stats"
 )
 
 var LatencyTimes = []time.Duration{
@@ -56,11 +53,6 @@ type DmeStats struct {
 	send      func(ctx context.Context, metric *edgeproto.Metric) bool
 	waitGroup sync.WaitGroup
 	stop      chan struct{}
-}
-
-type StreamStatsHandler struct {
-	ctx context.Context
-	mux sync.Mutex
 }
 
 func NewDmeStats(interval time.Duration, numShards uint, send func(ctx context.Context, metric *edgeproto.Metric) bool) *DmeStats {
@@ -122,7 +114,11 @@ func (s *DmeStats) RunNotify() {
 				s.shards[ii].mux.Lock()
 				for key, stat := range s.shards[ii].apiStatMap {
 					if stat.changed {
-						s.send(ctx, ApiStatToMetric(ts, &key, stat))
+						if key.Method == EdgeEventLatencyMethod {
+							s.send(ctx, EdgeEventStatToMetric(ts, &key, stat))
+						} else {
+							s.send(ctx, ApiStatToMetric(ts, &key, stat))
+						}
 						stat.changed = false
 					}
 				}
@@ -156,6 +152,25 @@ func ApiStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *ApiStat)
 	return &metric
 }
 
+func EdgeEventStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *ApiStat) *edgeproto.Metric {
+	metric := edgeproto.Metric{}
+	metric.Timestamp = *ts
+	metric.Name = EdgeEventLatencyMethod
+	metric.AddTag("app", key.AppKey.Name)
+	metric.AddTag("apporg", key.AppKey.Organization)
+	metric.AddTag("appver", key.AppKey.Version)
+	metric.AddTag("cloudlet", key.CloudletFound.Name)
+	metric.AddTag("cloudletorg", key.CloudletFound.Organization)
+	metric.AddTag("cluster", key.ClusterKey.Name)
+	metric.AddTag("clusterorg", key.ClusterInstOrg)
+
+	metric.AddIntVal("reqs", stat.reqs)
+	metric.AddIntVal("errs", stat.errs)
+
+	stat.latency.AddToMetric(&metric)
+	return &metric
+}
+
 func MetricToStat(metric *edgeproto.Metric) (*dmecommon.StatKey, *ApiStat) {
 	key := &dmecommon.StatKey{}
 	stat := &ApiStat{}
@@ -169,6 +184,10 @@ func MetricToStat(metric *edgeproto.Metric) (*dmecommon.StatKey, *ApiStat) {
 			key.AppKey.Version = tag.Val
 		case "method":
 			key.Method = tag.Val
+		case "clusterinstorg":
+			key.ClusterInstOrg = tag.Val
+		case "clustername":
+			key.ClusterKey.Name = tag.Val
 		}
 	}
 	for _, val := range metric.Vals {
@@ -348,47 +367,4 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 	s.RecordApiStatCall(&call)
 
 	return resp, err
-}
-
-func (h *StreamStatsHandler) TagRPC(ctx context.Context, info *stats.RPCTagInfo) context.Context {
-	// no-op
-	return ctx
-}
-
-func (h *StreamStatsHandler) HandleRPC(ctx context.Context, s stats.RPCStats) {
-	switch typ := s.(type) {
-	case *stats.End:
-		beginTime := typ.BeginTime
-		endTime := typ.EndTime
-		log.SpanLog(h.ctx, log.DebugLevelDmereq, "handle rpc stats end", "begin time", beginTime, "end time", endTime)
-	case *stats.InPayload:
-		recvTime := typ.RecvTime
-		log.SpanLog(h.ctx, log.DebugLevelDmereq, "handle rpc stats end", "recv time", recvTime)
-		md, ok := metadata.FromIncomingContext(ctx)
-		if !ok {
-			log.SpanLog(h.ctx, log.DebugLevelDmereq, "unable to get metadata")
-		}
-		log.SpanLog(h.ctx, log.DebugLevelDmereq, "received metadata", "timeout is", md["timeout"])
-	case *stats.OutPayload:
-		sentTime := typ.SentTime
-		ctx = metadata.AppendToOutgoingContext(ctx, "timeout", strconv.Itoa(sentTime.Nanosecond()))
-		log.SpanLog(h.ctx, log.DebugLevelDmereq, "handle rpc stats end", "sent time", sentTime)
-	}
-}
-
-func (h *StreamStatsHandler) TagConn(ctx context.Context, info *stats.ConnTagInfo) context.Context {
-	// no-op
-	return ctx
-}
-
-func (h *StreamStatsHandler) HandleConn(ctx context.Context, s stats.ConnStats) {
-}
-
-func (s *DmeStats) GetStreamStatsHandler(ctx context.Context) stats.Handler {
-	span := log.StartSpan(log.DebugLevelDmereq, "handle rpc")
-	// defer span.Finish()
-	cctx := log.ContextWithSpan(ctx, span)
-	return &StreamStatsHandler{
-		ctx: cctx,
-	}
 }

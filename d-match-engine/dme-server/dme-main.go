@@ -53,6 +53,7 @@ var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the
 var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
+var edgeEventsCookieExpiration = flag.Duration("edgeEventsCookieExpiration", time.Minute*10, "Edge Events Cookie expiration time")
 var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
 var eesolib = flag.String("eeplugin", "", "plugin file")
@@ -104,7 +105,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request, invalid location", "loc", req.GpsLocation, "err", err)
 		return reply, err
 	}
-	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, cookieExpiration)
+	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, edgeEventsCookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -357,13 +358,12 @@ func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.Ma
 }
 
 func (s *server) SendEdgeEvent(sendEdgeEventSvr dme.MatchEngineApi_SendEdgeEventServer) error {
-	// ctx := sendEdgeEventSvr.Context()
-	ctx, cancel := context.WithCancel(sendEdgeEventSvr.Context())
+	ctx := sendEdgeEventSvr.Context()
 	log.SpanLog(ctx, log.DebugLevelDmereq, "SendEdgeEvent")
-
-	return dmecommon.SendEdgeEvent(ctx, &sendEdgeEventSvr, cancel)
+	return dmecommon.SendEdgeEvent(ctx, &sendEdgeEventSvr)
 }
 
+// Loads EdgeEvent Plugin functions into corresponding dmecommon functions
 func initEdgeEventsPlugin(ctx context.Context) error {
 	// Load Edge Events Plugin
 	*eesolib = os.Getenv("GOPATH") + "/plugins/edgeevents.so"
@@ -373,7 +373,6 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.WarnLog("failed to load plugin", "plugin", *eesolib, "error", err)
 		return err
 	}
-
 	// Load AddClientKey in Plugin
 	sym, err := plug.Lookup("AddClientKey")
 	if err != nil {
@@ -385,7 +384,6 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.FatalLog("plugin AddClientKey symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, mgr *EdgeEventPersistentMgr)", "plugin", *eesolib)
 	}
 	dmecommon.AddClientKey = addClientKeyFunc
-
 	// Load RemoveClientKey in Plugin
 	sym, err = plug.Lookup("RemoveClientKey")
 	if err != nil {
@@ -397,7 +395,6 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.FatalLog("plugin RemoveClientKey symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer)", "plugin", *eesolib)
 	}
 	dmecommon.RemoveClientKey = removeClientKeyFunc
-
 	// Load RemoveAppInstKey in Plugin
 	sym, err = plug.Lookup("RemoveAppInstKey")
 	if err != nil {
@@ -409,31 +406,39 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.FatalLog("plugin RemoveAppInstKey symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
 	}
 	dmecommon.RemoveAppInstKey = removeAppInstKeyFunc
-
-	// Load SendLatencyEdgeEvent in Plugin
-	sym, err = plug.Lookup("SendLatencyEdgeEvent")
+	// Load SendLatencyRequestEdgeEvent in Plugin
+	sym, err = plug.Lookup("SendLatencyRequestEdgeEvent")
 	if err != nil {
-		log.FatalLog("plugin does not have SendLatencyEdgeEvent symbol", "plugin", *eesolib)
+		log.FatalLog("plugin does not have SendLatencyRequestEdgeEvent symbol", "plugin", *eesolib)
 		return err
 	}
-	sendLatencyEdgeEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey))
+	sendLatencyRequestEdgeEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey))
 	if !ok {
-		log.FatalLog("plugin SendLatencyEdgeEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
+		log.FatalLog("plugin SendLatencyRequestEdgeEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
 	}
-	dmecommon.SendLatencyEdgeEvent = sendLatencyEdgeEventFunc
-
+	dmecommon.SendLatencyRequestEdgeEvent = sendLatencyRequestEdgeEventFunc
+	// Load ProcessLatencySamples in Plugin
+	sym, err = plug.Lookup("ProcessLatencySamples")
+	if err != nil {
+		log.FatalLog("plugin does not have ProcessLatencySamples symbol", "plugin", *eesolib)
+		return err
+	}
+	processLatencySamplesFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, samples []float64) (*dme.Latency, bool))
+	if !ok {
+		log.FatalLog("plugin ProcessLatencySamples symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, samples []float64) (*dme.Latency, bool)", "plugin", *eesolib)
+	}
+	dmecommon.ProcessLatencySamples = processLatencySamplesFunc
 	// Load SendAppInstStateEvent in Plugin
 	sym, err = plug.Lookup("SendAppInstStateEvent")
 	if err != nil {
 		log.FatalLog("plugin does not have SendAppInstStateEvent symbol", "plugin", *eesolib)
 		return err
 	}
-	sendAppInstStateEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey))
+	sendAppInstStateEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey, eventType dme.EventType))
 	if !ok {
-		log.FatalLog("plugin SendAppInstStateEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
+		log.FatalLog("plugin SendAppInstStateEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey, eventType dme.EventType)", "plugin", *eesolib)
 	}
 	dmecommon.SendAppInstStateEvent = sendAppInstStateEventFunc
-
 	// Load SendEdgeEventToClient in Plugin
 	sym, err = plug.Lookup("SendEdgeEventToClient")
 	if err != nil {
@@ -528,7 +533,7 @@ func main() {
 	err = initEdgeEventsPlugin(ctx)
 	if err != nil {
 		span.Finish()
-		log.FatalLog("Failed init edge events plugin")
+		log.FatalLog("Failed to init edge events plugin")
 	}
 
 	err = dmecommon.InitVault(nodeMgr.VaultAddr, *region)
@@ -590,8 +595,7 @@ func main() {
 
 	grpcOpts = append(grpcOpts,
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))
-	// grpc.StatsHandler(stats.GetStreamStatsHandler(ctx)))
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamAuthInterceptor(), stats.GetStreamStatsInterceptor())))
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {

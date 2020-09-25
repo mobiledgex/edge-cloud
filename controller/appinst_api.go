@@ -1514,30 +1514,33 @@ func isTenantAppInst(appInstKey *edgeproto.AppInstKey) bool {
 
 func (s *AppInstApi) MeasureAppInstLatency(in *edgeproto.AppInst, cb edgeproto.AppInstApi_MeasureAppInstLatencyServer) error {
 	ctx := cb.Context()
-	log.SpanLog(ctx, log.DebugLevelApi, "In Measure Latency", "appinst", in, "appinst state", in.State)
-	// TODO: Check if app inst in valid state to measure latency
-	// TODO: Check if valid app inst
 
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		in.MeasureLatency = true
-		s.store.STMPut(stm, in)
-		return nil
-	})
+	err := in.Validate(edgeproto.AppInstAllFieldsMap)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Change measure_latency back to false
-	log.SpanLog(ctx, log.DebugLevelApi, "done Measure Latency", "appinst", in, "appinst state", in.State)
+	// populate the clusterinst developer from the app developer if not already present
+	if in.Key.ClusterInstKey.Organization == "" {
+		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
+		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
+	}
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		in.MeasureLatency = true
+		s.store.STMPut(stm, in)
+		return nil
+	})
+
+	reverr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		in.MeasureLatency = false
 		in.State = edgeproto.TrackedState_READY
 		s.store.STMPut(stm, in)
 		return nil
 	})
 
-	log.SpanLog(ctx, log.DebugLevelApi, "done reverting fields", "appinst", in, "appinst state", in.State)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return reverr
 }

@@ -221,7 +221,7 @@ service AppInstApi {
       post: "/latency/appinst"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.Organization";
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
   }
 }
 
