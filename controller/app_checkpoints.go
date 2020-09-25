@@ -21,13 +21,13 @@ type AppCheckpoint struct {
 
 var AppUsageInfluxQueryTemplate = `SELECT %s from "%s" WHERE "apporg"='%s' AND "app"='%s' AND "ver"='%s' AND "cluster"='%s' AND "clusterorg"='%s' AND "cloudlet"='%s' AND "cloudletorg"='%s' AND time >= '%s' AND time < '%s' order by time desc`
 
-func CreateVmAppUsageRecord(ctx context.Context, app *edgeproto.AppInst, endTime time.Time, usageEvent cloudcommon.Usage_event) error {
+func CreateAppUsageRecord(ctx context.Context, app *edgeproto.AppInst, endTime time.Time) error {
 	var metric *edgeproto.Metric
 	// query from the checkpoint up to the event
 	selectors := []string{"\"event\"", "\"status\""}
 	org := app.Key.AppKey.Organization
 
-	checkpoint, err := GetVmAppCheckpoint(ctx, org, endTime)
+	checkpoint, err := GetAppCheckpoint(ctx, org, endTime)
 	if err != nil {
 		return fmt.Errorf("unable to retrieve Checkpoint: %v", err)
 	}
@@ -49,8 +49,7 @@ func CreateVmAppUsageRecord(ctx context.Context, app *edgeproto.AppInst, endTime
 	}
 
 	stats := RunTimeStats{
-		end:   endTime,
-		event: usageEvent,
+		end: endTime,
 	}
 	err = GetRunTimeStats(usageTypeVmApp, *checkpoint, app.Key, logs, &stats)
 	if err != nil {
@@ -58,17 +57,20 @@ func CreateVmAppUsageRecord(ctx context.Context, app *edgeproto.AppInst, endTime
 	}
 
 	// write the usage record to influx
-	metric = createAppUsageMetric(app, stats.start, stats.end, stats.upTime, stats.event, stats.status)
+	appInfo := edgeproto.App{}
+	if !appApi.cache.Get(&app.Key.AppKey, &appInfo) {
+		return fmt.Errorf("Could not find appinst even though event log indicates it is up. App: %v", app.Key.AppKey)
+	}
+	metric = createAppUsageMetric(app, &appInfo, stats.start, stats.end, stats.upTime, stats.status)
 
 	services.events.AddMetric(metric)
 	return nil
 }
 
-func createAppUsageMetric(app *edgeproto.AppInst, startTime, endTime time.Time, runTime time.Duration, usageEvent cloudcommon.Usage_event, status string) *edgeproto.Metric {
+func createAppUsageMetric(appInst *edgeproto.AppInst, appInfo *edgeproto.App, startTime, endTime time.Time, runTime time.Duration, status string) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
-	metric.Name = cloudcommon.VMAppInstUsage
-	now := time.Now()
-	ts, _ := types.TimestampProto(now)
+	metric.Name = cloudcommon.AppInstCheckpoints
+	ts, _ := types.TimestampProto(endTime)
 	metric.Timestamp = *ts
 	utc, _ := time.LoadLocation("UTC")
 	//start and endtimes end up being put into different timezones somehow when going through calculations so force them both to the same here
@@ -76,30 +78,28 @@ func createAppUsageMetric(app *edgeproto.AppInst, startTime, endTime time.Time, 
 	endUTC := endTime.In(utc)
 
 	// influx requires that at least one field must be specified when querying so these cant be all tags
-	metric.AddStringVal("cloudletorg", app.Key.ClusterInstKey.CloudletKey.Organization)
-	metric.AddTag("cloudlet", app.Key.ClusterInstKey.CloudletKey.Name)
-	metric.AddTag("cluster", app.Key.ClusterInstKey.ClusterKey.Name)
-	metric.AddTag("clusterorg", app.Key.ClusterInstKey.Organization)
-	metric.AddTag("org", app.Key.AppKey.Organization)
-	metric.AddTag("app", app.Key.AppKey.Name)
-	metric.AddTag("ver", app.Key.AppKey.Version)
-	metric.AddTag("flavor", app.VmFlavor)
+	metric.AddStringVal("cloudletorg", appInst.Key.ClusterInstKey.CloudletKey.Organization)
+	metric.AddTag("cloudlet", appInst.Key.ClusterInstKey.CloudletKey.Name)
+	metric.AddTag("cluster", appInst.Key.ClusterInstKey.ClusterKey.Name)
+	metric.AddTag("clusterorg", appInst.Key.ClusterInstKey.Organization)
+	metric.AddTag("org", appInst.Key.AppKey.Organization)
+	metric.AddTag("app", appInst.Key.AppKey.Name)
+	metric.AddTag("ver", appInst.Key.AppKey.Version)
+	metric.AddTag("deployment", appInfo.Deployment)
 	metric.AddStringVal("start", startUTC.Format(time.RFC3339))
 	metric.AddStringVal("end", endUTC.Format(time.RFC3339))
 	metric.AddDoubleVal("uptime", runTime.Seconds())
-	checkpointVal := ""
-	writeStatus := ""
-	if usageEvent == cloudcommon.USAGE_EVENT_CHECKPOINT {
-		checkpointVal = "CHECKPOINT"
-		writeStatus = status // only care about the status if its a checkpoint
+	metric.AddTag("status", status)
+
+	if appInfo.Deployment == cloudcommon.DeploymentTypeVM {
+		metric.AddTag("flavor", appInst.Flavor.Name)
 	}
-	metric.AddTag("checkpoint", checkpointVal)
-	metric.AddTag("status", writeStatus)
+
 	return &metric
 }
 
-// This is checkpointing for VM based app BILLING PERIODS ONLY, custom checkpointing, coming later, will not create(or at least store) usage records upon checkpointing
-func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
+// This is checkpointing for all appinsts
+func CreateAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 	if err := checkpointTimeValid(timestamp); err != nil { // we dont know if there will be more creates and deletes before the timestamp occurs
 		return err
 	}
@@ -160,16 +160,13 @@ func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 			seenApps[key] = true
 			// if its still up, record it
 			if event != cloudcommon.DELETED {
-				if isVm, _ := isVmApp(&key.AppKey); !isVm {
-					continue // only record vm based apps
-				}
 				info := edgeproto.AppInst{}
 				if !appInstApi.cache.Get(&key, &info) {
 					log.SpanLog(ctx, log.DebugLevelMetrics, "Could not find appinst even though event log indicates it is up", "app", key)
 					continue
 				}
 				//record the usage up to this point
-				err = CreateVmAppUsageRecord(ctx, &info, timestamp, cloudcommon.USAGE_EVENT_CHECKPOINT)
+				err = CreateAppUsageRecord(ctx, &info, timestamp)
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelMetrics, "Unable to create app usage record of checkpointed app", "app", key, "err", err)
 				}
@@ -179,9 +176,9 @@ func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 
 	// check for apps that got checkpointed but did not have any log events between PrevCheckpoint and this one
 	selectors = []string{"\"app\"", "\"org\"", "\"ver\"", "\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\""}
-	influxCheckpointQuery := fmt.Sprintf(CreateCheckpointInfluxUsageQueryTemplate,
+	influxCheckpointQuery := fmt.Sprintf(CreateCheckpointInfluxQueryTemplate,
 		strings.Join(selectors, ","),
-		cloudcommon.VMAppInstUsage,
+		cloudcommon.AppInstCheckpoints,
 		PrevCheckpoint.Add(-1*time.Minute).Format(time.RFC3339), //small delta to account for conversion rounding inconsistencies
 		PrevCheckpoint.Add(time.Minute).Format(time.RFC3339))
 	checkpoints, err := services.events.QueryDB(influxCheckpointQuery)
@@ -189,7 +186,7 @@ func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 		return fmt.Errorf("Unable to query influx: %v", err)
 	}
 
-	empty, err = checkInfluxQueryOutput(checkpoints, cloudcommon.VMAppInstUsage)
+	empty, err = checkInfluxQueryOutput(checkpoints, cloudcommon.AppInstCheckpoints)
 	if err != nil {
 		return err
 	} else if empty {
@@ -226,15 +223,12 @@ func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 		}
 		seenApps[key] = true
 		// record it
-		if isVm, _ := isVmApp(&key.AppKey); !isVm {
-			continue // only record vm based apps
-		}
 		info := edgeproto.AppInst{}
 		if !appInstApi.cache.Get(&key, &info) {
 			log.SpanLog(ctx, log.DebugLevelMetrics, "Could not find appinst even though event log indicates it is up", "app", key)
 			continue
 		}
-		err = CreateVmAppUsageRecord(ctx, &info, timestamp, cloudcommon.USAGE_EVENT_CHECKPOINT)
+		err = CreateAppUsageRecord(ctx, &info, timestamp)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelMetrics, "Unable to create app usage record of checkpointed app", "app", key, "err", err)
 		}
@@ -244,7 +238,7 @@ func CreateVmAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 }
 
 // returns all the checkpointed appinsts of the most recent checkpoint with regards to timestamp
-func GetVmAppCheckpoint(ctx context.Context, org string, timestamp time.Time) (*AppCheckpoint, error) {
+func GetAppCheckpoint(ctx context.Context, org string, timestamp time.Time) (*AppCheckpoint, error) {
 	// wait until the current checkpoint is done if we want to access it, to prevent race conditions with CreateCheckpoint
 	for timestamp.After(NextCheckpoint) {
 		time.Sleep(time.Second)
@@ -253,7 +247,7 @@ func GetVmAppCheckpoint(ctx context.Context, org string, timestamp time.Time) (*
 	selectors := []string{"\"app\"", "\"ver\"", "\"cluster\"", "\"clusterorg\"", "\"cloudlet\"", "\"cloudletorg\"", "\"status\"", "\"end\""}
 	influxCheckpointQuery := fmt.Sprintf(GetCheckpointInfluxQueryTemplate,
 		strings.Join(selectors, ","),
-		cloudcommon.VMAppInstUsage,
+		cloudcommon.AppInstCheckpoints,
 		org,
 		timestamp.Format(time.RFC3339))
 	checkpoints, err := services.events.QueryDB(influxCheckpointQuery)
@@ -267,7 +261,7 @@ func GetVmAppCheckpoint(ctx context.Context, org string, timestamp time.Time) (*
 		Status:    make([]string, 0),
 	}
 
-	empty, err := checkInfluxQueryOutput(checkpoints, cloudcommon.VMAppInstUsage)
+	empty, err := checkInfluxQueryOutput(checkpoints, cloudcommon.AppInstCheckpoints)
 	if err != nil {
 		return nil, err
 	} else if empty {
@@ -315,13 +309,4 @@ func GetVmAppCheckpoint(ctx context.Context, org string, timestamp time.Time) (*
 		}
 	}
 	return &result, nil
-}
-
-func isVmApp(key *edgeproto.AppKey) (bool, error) {
-	// only log VM based appinsts
-	appInfo := edgeproto.App{}
-	if !appApi.cache.Get(key, &appInfo) {
-		return false, fmt.Errorf("Cannot locate app: %v", key)
-	}
-	return appInfo.Deployment == cloudcommon.DeploymentTypeVM, nil
 }

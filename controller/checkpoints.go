@@ -16,7 +16,6 @@ type RunTimeStats struct {
 	start  time.Time
 	end    time.Time
 	upTime time.Duration
-	event  cloudcommon.Usage_event
 	status string
 }
 
@@ -30,15 +29,16 @@ var InfluxMaximumTimestamp, _ = time.Parse(time.RFC3339, "2262-04-11T23:47:15Z")
 var PrevCheckpoint = InfluxMinimumTimestamp
 var NextCheckpoint = InfluxMaximumTimestamp //for unit tests, so getClusterCheckpoint will never sleep
 
-var GetCheckpointInfluxQueryTemplate = `SELECT %s from "%s" WHERE "org"='%s' AND "checkpoint"='CHECKPOINT' AND time <= '%s' order by time desc`
+var GetCheckpointInfluxQueryTemplate = `SELECT %s from "%s" WHERE "org"='%s' AND time <= '%s' order by time desc`
 var CreateCheckpointInfluxQueryTemplate = `SELECT %s from "%s" WHERE time >= '%s' AND time < '%s' order by time desc`
-var CreateCheckpointInfluxUsageQueryTemplate = `SELECT %s from "%s" WHERE checkpoint='CHECKPOINT' AND time >= '%s' AND time < '%s' order by time desc`
+
+var interval time.Duration
 
 func InitUsage() error {
 	// set the first NextCheckpoint,
-	NextCheckpoint = time.Now().Truncate(time.Minute).Add(*checkpointInterval)
+	NextCheckpoint = getNextCheckpoint(time.Now())
 	//set PrevCheckpoint, should not necessarily start at InfluxMinimumTimestamp if controller was restarted halway through operation
-	influxQuery := fmt.Sprintf(`SELECT * from "%s" WHERE "checkpoint"='CHECKPOINT' order by time desc limit 1`, cloudcommon.ClusterInstUsage)
+	influxQuery := fmt.Sprintf(`SELECT * from "%s" WHERE "checkpoint"='CHECKPOINT' order by time desc limit 1`, cloudcommon.ClusterInstCheckpoints)
 	checkpoint, err := services.events.QueryDB(influxQuery)
 	if err != nil {
 		return fmt.Errorf("Unable to query influx: %v", err)
@@ -50,7 +50,7 @@ func InitUsage() error {
 		len(checkpoint[0].Series) != 1 ||
 		len(checkpoint[0].Series[0].Values) == 0 ||
 		len(checkpoint[0].Series[0].Values[0]) == 0 ||
-		checkpoint[0].Series[0].Name != cloudcommon.ClusterInstUsage {
+		checkpoint[0].Series[0].Name != cloudcommon.ClusterInstCheckpoints {
 		// should only be 1 series, the 'clusterinst' one
 		return fmt.Errorf("Error parsing influx response")
 	}
@@ -58,9 +58,30 @@ func InitUsage() error {
 	PrevCheckpoint, err = time.Parse(time.RFC3339, fmt.Sprintf("%v", checkpoint[0].Series[0].Values[0][0]))
 	if err != nil {
 		PrevCheckpoint = InfluxMinimumTimestamp
-		return fmt.Errorf("Error creating parsing checkpoint time: %v", err)
+		return fmt.Errorf("Error parsing checkpoint time: %v", err)
 	}
 	return nil
+}
+
+func checkInterval() error {
+	if *checkpointInterval != cloudcommon.MonthlyInterval {
+		var err error
+		interval, err = time.ParseDuration(*checkpointInterval)
+		if err != nil {
+			return fmt.Errorf("Invalid checkpoint interval %s, error parsing into duration: %v", *checkpointInterval, err)
+		}
+		return nil
+	}
+	return nil
+}
+
+func getNextCheckpoint(t time.Time) time.Time {
+	if *checkpointInterval != cloudcommon.MonthlyInterval {
+		return t.Truncate(interval).Add(interval) // truncate so the times look nice
+	}
+	// turn it to utc to make sure we're getting the right year and month
+	y, m, _ := t.UTC().Date()
+	return time.Date(y, m+1, 1, 0, 0, 0, 0, time.UTC)
 }
 
 func runCheckpoints(ctx context.Context) {
@@ -80,13 +101,13 @@ func runCheckpoints(ctx context.Context) {
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create cluster checkpoint", "time", checkpointTime, "err", err)
 			}
-			err = CreateVmAppCheckpoint(ctx, checkpointTime)
+			err = CreateAppCheckpoint(ctx, checkpointTime)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create app checkpoint", "time", checkpointTime, "err", err)
 			}
 			// this must be AFTER the checkpoint is created, see the comments about race conditions above GetClusterCheckpoint
 			PrevCheckpoint = NextCheckpoint
-			NextCheckpoint = NextCheckpoint.Add(*checkpointInterval)
+			NextCheckpoint = getNextCheckpoint(NextCheckpoint)
 		}
 	}
 }
