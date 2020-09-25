@@ -211,7 +211,7 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 		}
 		name := generator.CamelCase(*field.Name)
 		hierName := strings.Join(append(parents, name), ".")
-		comment := support.GetComments(desc.File(), fmt.Sprintf("%s,2,%d", desc.Path(), i))
+		comment := support.GetComments(desc.File().GetName(), fmt.Sprintf("%s,2,%d", desc.Path(), i))
 		comment = strings.TrimSpace(strings.Map(RemoveNewLines, comment))
 		arg := Arg{
 			Name:    hierName,

@@ -7,6 +7,7 @@ import (
 	"net"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
@@ -183,15 +184,17 @@ func TestInternalPki(t *testing.T) {
 	})
 	// crm from EU cannot connect to US controller
 	csTests.add(ClientServer{
-		Server:    controllerServerUS,
-		Client:    crmClientEU,
-		ExpectErr: "region mismatch",
+		Server:          controllerServerUS,
+		Client:          crmClientEU,
+		ExpectClientErr: "region mismatch",
+		ExpectServerErr: "remote error: tls: bad certificate",
 	})
 	// crm cannot connect to notifyroot
 	csTests.add(ClientServer{
-		Server:    notifyRootServer,
-		Client:    crmClientUS,
-		ExpectErr: "certificate signed by unknown authority",
+		Server:          notifyRootServer,
+		Client:          crmClientUS,
+		ExpectClientErr: "certificate signed by unknown authority",
+		ExpectServerErr: "remote error: tls: bad certificate",
 	})
 	// crm can connect to edgeturn
 	csTests.add(ClientServer{
@@ -200,39 +203,45 @@ func TestInternalPki(t *testing.T) {
 	})
 	// crm from US cannot connect to EU edgeturn
 	csTests.add(ClientServer{
-		Server:    edgeTurnEU,
-		Client:    crmClientUS,
-		ExpectErr: "region mismatch",
+		Server:          edgeTurnEU,
+		Client:          crmClientUS,
+		ExpectClientErr: "region mismatch",
+		ExpectServerErr: "remote error: tls: bad certificate",
 	})
 	// crm from EU cannot connect to US edgeturn
 	csTests.add(ClientServer{
-		Server:    edgeTurnUS,
-		Client:    crmClientEU,
-		ExpectErr: "region mismatch",
+		Server:          edgeTurnUS,
+		Client:          crmClientEU,
+		ExpectClientErr: "region mismatch",
+		ExpectServerErr: "remote error: tls: bad certificate",
 	})
 	// rogue crm cannot connect to notify root
 	csTests.add(ClientServer{
-		Server:    notifyRootServer,
-		Client:    crmRogueEU,
-		ExpectErr: "remote error: tls: bad certificate",
+		Server:          notifyRootServer,
+		Client:          crmRogueEU,
+		ExpectClientErr: "remote error: tls: bad certificate",
+		ExpectServerErr: "certificate signed by unknown authority",
 	})
 	// rogue crm cannot connect to other region controller
 	csTests.add(ClientServer{
-		Server:    controllerServerUS,
-		Client:    crmRogueEU,
-		ExpectErr: "region mismatch",
+		Server:          controllerServerUS,
+		Client:          crmRogueEU,
+		ExpectClientErr: "region mismatch",
+		ExpectServerErr: "remote error: tls: bad certificate",
 	})
 	// rogue crm cannot pretend to be controller
 	csTests.add(ClientServer{
-		Server:    crmRogueEU,
-		Client:    crmClientEU,
-		ExpectErr: "certificate signed by unknown authority",
+		Server:          crmRogueEU,
+		Client:          crmClientEU,
+		ExpectClientErr: "certificate signed by unknown authority",
+		ExpectServerErr: "remote error: tls: bad certificate",
 	})
 	// rogue crm cannot pretend to be notifyroot
 	csTests.add(ClientServer{
-		Server:    crmRogueEU,
-		Client:    controllerClientUS,
-		ExpectErr: "certificate signed by unknown authority",
+		Server:          crmRogueEU,
+		Client:          controllerClientUS,
+		ExpectClientErr: "certificate signed by unknown authority",
+		ExpectServerErr: "remote error: tls: bad certificate",
 	})
 
 	// These test config options and rollout phases
@@ -329,9 +338,10 @@ func TestInternalPki(t *testing.T) {
 		Client: nodePhase2,
 	})
 	csTests.add(ClientServer{
-		Server:    nodePhase3,
-		Client:    nodeFileOnly,
-		ExpectErr: "certificate signed by unknown authority",
+		Server:          nodePhase3,
+		Client:          nodeFileOnly,
+		ExpectClientErr: "certificate signed by unknown authority",
+		ExpectServerErr: "remote error: tls: bad certificate",
 	})
 
 	for _, test := range csTests {
@@ -387,13 +397,22 @@ type PkiConfig struct {
 }
 
 type ClientServer struct {
-	Server    *PkiConfig
-	Client    *PkiConfig
-	ExpectErr string
-	Line      string
+	Server          *PkiConfig
+	Client          *PkiConfig
+	ExpectServerErr string
+	ExpectClientErr string
+	Line            string
 }
 
 func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles, cs *ClientServer) {
+	if !strings.HasPrefix(runtime.Version(), "go1.12") {
+		// After go1.12, the client side Dial/Handshake does not return
+		// error when the server decides to abort the connection.
+		// Only the server side returns an error.
+		if cs.ExpectClientErr == "remote error: tls: bad certificate" {
+			cs.ExpectClientErr = ""
+		}
+	}
 	fmt.Printf("******************* testExchange %s *********************\n", cs.Line)
 	serverVault := getVaultConfig(cs.Server.Type, cs.Server.Region, vroles)
 	serverNode := node.NodeMgr{}
@@ -443,22 +462,21 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 	require.Nil(t, err)
 	defer lis.Close()
 
-	go func() {
-		for i := 0; i < 2; i++ {
-			sconn, err := lis.Accept()
-			require.Nil(t, err, "accept")
-			defer sconn.Close()
-
-			if serverTls != nil {
-				srv := tls.Server(sconn, serverTls)
-				srv.Handshake()
-			}
-		}
-	}()
-
+	connDone := make(chan bool, 2)
 	// loop twice so we can test cert refresh
 	for i := 0; i < 2; i++ {
-		log.SpanLog(ctx, log.DebugLevelInfo, "client dial")
+		var serr error
+		go func() {
+			var sconn net.Conn
+			sconn, serr = lis.Accept()
+			defer sconn.Close()
+			if serverTls != nil {
+				srv := tls.Server(sconn, serverTls)
+				serr = srv.Handshake()
+			}
+			connDone <- true
+		}()
+		log.SpanLog(ctx, log.DebugLevelInfo, "client dial", "addr", lis.Addr().String())
 		var err error
 		if clientTls == nil {
 			var conn net.Conn
@@ -474,11 +492,18 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 				err = conn.Handshake()
 			}
 		}
-		if cs.ExpectErr == "" {
+		<-connDone
+		if cs.ExpectClientErr == "" {
 			require.Nil(t, err, "client dial/handshake [%d] %s", i, cs.Line)
 		} else {
 			require.NotNil(t, err, "client dial [%d] %s", i, cs.Line)
-			require.Contains(t, err.Error(), cs.ExpectErr, "error check for [%d] %s", i, cs.Line)
+			require.Contains(t, err.Error(), cs.ExpectClientErr, "client error check for [%d] %s", i, cs.Line)
+		}
+		if cs.ExpectServerErr == "" {
+			require.Nil(t, serr, "server dial/handshake [%d] %s", i, cs.Line)
+		} else {
+			require.NotNil(t, serr, "server accept [%d] %s", i, cs.Line)
+			require.Contains(t, serr.Error(), cs.ExpectServerErr, "server error check for [%d] %s", i, cs.Line)
 		}
 		if i == 1 {
 			// no need to refresh on last iteration

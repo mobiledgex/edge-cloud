@@ -15,6 +15,10 @@ import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "google/protobuf/timestamp.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // AutoProvPolicy defines the automated provisioning policy
 message AutoProvPolicy {
   // Fields are used for the Update API to specify which fields to apply

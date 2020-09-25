@@ -134,7 +134,7 @@ func (s *PluginSupport) GetPackageName(obj generator.Object) string {
 func (s *PluginSupport) GetPackage(obj generator.Object) string {
 	pkg := s.GetPackageName(obj)
 	if pkg != "" {
-		s.UsedPkgs[pkg] = obj.File()
+		s.UsedPkgs[pkg] = obj.File().FileDescriptorProto
 		pkg += "."
 	}
 	return pkg
@@ -172,13 +172,13 @@ func (s *PluginSupport) PrintUsedImports(g *generator.Generator) {
 			// Timestamp, Empty, etc.
 			ipath = builtinPath
 		}
-		g.PrintImport(pkg, ipath)
+		g.PrintImport(generator.GoPackageName(pkg), generator.GoImportPath(ipath))
 	}
 }
 
 // See generator.GetComments(). The path is a comma separated list of integers.
-func (s *PluginSupport) GetComments(file *descriptor.FileDescriptorProto, path string) string {
-	comments, ok := s.Comments[file.GetName()]
+func (s *PluginSupport) GetComments(fileName string, path string) string {
+	comments, ok := s.Comments[fileName]
 	if !ok {
 		return ""
 	}

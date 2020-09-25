@@ -9,6 +9,10 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 import "autoscalepolicy.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 message OutboundSecurityRule {
   // tcp, udp, icmp
   string protocol = 1;
