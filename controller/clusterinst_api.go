@@ -846,6 +846,12 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	}
 	// if this is a clusterinst use the org its reserved for instead of MobiledgeX
 	metric.AddTag("reservedBy", info.ReservedBy)
+	// org field so that influx queries are a lot simpler to retrieve reserved clusters
+	if info.ReservedBy != "" {
+		metric.AddTag("org", info.ReservedBy)
+	} else {
+		metric.AddTag("org", clusterInstKey.Organization)
+	}
 	// errors should never happen here since to get to this point the flavor should have already been checked previously, but just in case
 	nodeFlavor := edgeproto.Flavor{}
 	if !flavorApi.cache.Get(&info.Flavor, &nodeFlavor) {
@@ -855,19 +861,10 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 		metric.AddIntVal("ram", nodeFlavor.Ram)
 		metric.AddIntVal("vcpu", nodeFlavor.Vcpus)
 		metric.AddIntVal("disk", nodeFlavor.Disk)
-		metric.AddIntVal("nodeCount", uint64(info.NumMasters+info.NumNodes))
+		metric.AddIntVal("nodecount", uint64(info.NumMasters+info.NumNodes))
 		metric.AddStringVal("other", fmt.Sprintf("%v", nodeFlavor.OptResMap))
 	}
-	services.events.AddMetric(&metric)
+	metric.AddStringVal("ipaccess", info.IpAccess.String())
 
-	// if it's a delete, create a usage record of it
-	// get all the logs for this clusterinst since the last checkpoint
-	go func() {
-		if event == cloudcommon.DELETED || event == cloudcommon.UNRESERVED {
-			err := CreateClusterUsageRecord(ctx, &info, now, cloudcommon.USAGE_EVENT_END)
-			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelMetrics, "unable to create cluster usage record", "cluster", clusterInstKey, "err", err)
-			}
-		}
-	}()
+	services.events.AddMetric(&metric)
 }
