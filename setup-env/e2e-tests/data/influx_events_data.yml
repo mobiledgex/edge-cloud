@@ -9,10 +9,14 @@
     - cloudletorg
     - cluster
     - clusterorg
+    - deployment
     - disk
     - event
     - flavor
-    - nodeCount
+    - flavor_1
+    - ipaccess
+    - nodecount
+    - org
     - other
     - ram
     - status
@@ -26,8 +30,12 @@
       - dmuus
       - SmallCluster
       - AcmeAppCo
+      - kubernetes
       - null
       - CREATED
+      - null
+      - null
+      - null
       - null
       - null
       - null
@@ -42,8 +50,12 @@
       - dmuus
       - SmallCluster
       - AcmeAppCo
+      - kubernetes
       - null
       - DELETED
+      - null
+      - null
+      - null
       - null
       - null
       - null
@@ -58,8 +70,12 @@
       - dmuus
       - SmallCluster
       - AcmeAppCo
+      - kubernetes
       - null
       - CREATED
+      - null
+      - null
+      - null
       - null
       - null
       - null
@@ -74,8 +90,12 @@
       - dmuus
       - SmallCluster
       - AcmeAppCo
+      - kubernetes
       - null
       - DELETED
+      - null
+      - null
+      - null
       - null
       - null
       - null
@@ -94,10 +114,14 @@
     - cloudletorg
     - cluster
     - clusterorg
+    - deployment
     - disk
     - event
     - flavor
-    - nodeCount
+    - flavor_1
+    - ipaccess
+    - nodecount
+    - org
     - other
     - ram
     - status
@@ -112,7 +136,11 @@
       - null
       - null
       - null
+      - null
       - CREATED
+      - null
+      - null
+      - null
       - null
       - null
       - null
@@ -128,7 +156,11 @@
       - null
       - null
       - null
+      - null
       - DELETED
+      - null
+      - null
+      - null
       - null
       - null
       - null
@@ -147,10 +179,14 @@
     - cloudletorg
     - cluster
     - clusterorg
+    - deployment
     - disk
     - event
     - flavor
-    - nodeCount
+    - flavor_1
+    - ipaccess
+    - nodecount
+    - org
     - other
     - ram
     - status
@@ -164,10 +200,14 @@
       - dmuus
       - SmallCluster
       - AcmeAppCo
+      - null
       - 2
       - CREATED
+      - null
       - x1.small
+      - IP_ACCESS_SHARED
       - 3
+      - AcmeAppCo
       - map[]
       - 2048
       - UP
@@ -180,10 +220,14 @@
       - dmuus
       - SmallCluster
       - AcmeAppCo
+      - null
       - 2
       - DELETED
+      - null
       - x1.small
+      - IP_ACCESS_SHARED
       - 3
+      - AcmeAppCo
       - map[]
       - 2048
       - DOWN
