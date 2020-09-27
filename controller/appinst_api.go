@@ -996,6 +996,10 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	var app edgeproto.App
 
+	s.setDefaultVMClusterKey(ctx, &in.Key)
+	if err := in.Key.AppKey.ValidateKey(); err != nil {
+		return err
+	}
 	// get appinst info for flavor
 	appInstInfo := edgeproto.AppInst{}
 	if !appInstApi.cache.Get(&in.Key, &appInstInfo) {
@@ -1013,10 +1017,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if in.Key.ClusterInstKey.Organization == "" {
 		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
-	}
-	s.setDefaultVMClusterKey(ctx, &in.Key)
-	if err := in.Key.AppKey.ValidateKey(); err != nil {
-		return err
 	}
 
 	// check if we are deleting an autocluster instance we need to set the key correctly.
