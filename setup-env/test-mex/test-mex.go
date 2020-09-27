@@ -155,7 +155,7 @@ func main() {
 		for _, a := range spec.Actions {
 			util.PrintStepBanner("running action: " + a + retry.Tries())
 			actionretry := false
-			tryErrs = setupmex.RunAction(ctx, a, outputDir, &spec, mods, config.Vars, &actionretry)
+			tryErrs = append(tryErrs, setupmex.RunAction(ctx, a, outputDir, &spec, mods, config.Vars, &actionretry)...)
 			ranTest = true
 			if actionretry {
 				retry.ActionEnable()
