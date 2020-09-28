@@ -3,68 +3,181 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import _ "github.com/gogo/protobuf/gogoproto"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import strings "strings"
-import "github.com/google/go-cmp/cmp"
-import "github.com/google/go-cmp/cmp/cmpopts"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	dme_proto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+
 // AppKey uniquely identifies an App
 type AppInstClientKey struct {
 	// AppInst Key
-	Key AppInstKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	Key AppInstKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// AppInstClient Unique Id
 	UniqueId string `protobuf:"bytes,2,opt,name=unique_id,json=uniqueId,proto3" json:"unique_id,omitempty"`
 	// AppInstClient Unique Id Type
 	UniqueIdType string `protobuf:"bytes,3,opt,name=unique_id_type,json=uniqueIdType,proto3" json:"unique_id_type,omitempty"`
 }
 
-func (m *AppInstClientKey) Reset()                    { *m = AppInstClientKey{} }
-func (m *AppInstClientKey) String() string            { return proto.CompactTextString(m) }
-func (*AppInstClientKey) ProtoMessage()               {}
-func (*AppInstClientKey) Descriptor() ([]byte, []int) { return fileDescriptorAppinstclient, []int{0} }
+func (m *AppInstClientKey) Reset()         { *m = AppInstClientKey{} }
+func (m *AppInstClientKey) String() string { return proto.CompactTextString(m) }
+func (*AppInstClientKey) ProtoMessage()    {}
+func (*AppInstClientKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a8b03148dc570743, []int{0}
+}
+func (m *AppInstClientKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AppInstClientKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AppInstClientKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AppInstClientKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AppInstClientKey.Merge(m, src)
+}
+func (m *AppInstClientKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *AppInstClientKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_AppInstClientKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AppInstClientKey proto.InternalMessageInfo
 
 // Client is an AppInst client that called FindCloudlet DME Api
 type AppInstClient struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
-	ClientKey AppInstClientKey `protobuf:"bytes,2,opt,name=client_key,json=clientKey" json:"client_key"`
+	ClientKey AppInstClientKey `protobuf:"bytes,2,opt,name=client_key,json=clientKey,proto3" json:"client_key"`
 	// Location of the Client
-	Location distributed_match_engine.Loc `protobuf:"bytes,3,opt,name=location" json:"location"`
+	Location dme_proto.Loc `protobuf:"bytes,3,opt,name=location,proto3" json:"location"`
 	// Id of client assigned by server (internal use only)
 	NotifyId int64 `protobuf:"varint,4,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
 }
 
-func (m *AppInstClient) Reset()                    { *m = AppInstClient{} }
-func (m *AppInstClient) String() string            { return proto.CompactTextString(m) }
-func (*AppInstClient) ProtoMessage()               {}
-func (*AppInstClient) Descriptor() ([]byte, []int) { return fileDescriptorAppinstclient, []int{1} }
+func (m *AppInstClient) Reset()         { *m = AppInstClient{} }
+func (m *AppInstClient) String() string { return proto.CompactTextString(m) }
+func (*AppInstClient) ProtoMessage()    {}
+func (*AppInstClient) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a8b03148dc570743, []int{1}
+}
+func (m *AppInstClient) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AppInstClient) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AppInstClient.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AppInstClient) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AppInstClient.Merge(m, src)
+}
+func (m *AppInstClient) XXX_Size() int {
+	return m.Size()
+}
+func (m *AppInstClient) XXX_DiscardUnknown() {
+	xxx_messageInfo_AppInstClient.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AppInstClient proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*AppInstClientKey)(nil), "edgeproto.AppInstClientKey")
 	proto.RegisterType((*AppInstClient)(nil), "edgeproto.AppInstClient")
+}
+
+func init() { proto.RegisterFile("appinstclient.proto", fileDescriptor_a8b03148dc570743) }
+
+var fileDescriptor_a8b03148dc570743 = []byte{
+	// 660 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0xcf, 0x4f, 0x13, 0x41,
+	0x14, 0xee, 0xb4, 0x48, 0xda, 0x45, 0x8c, 0x2e, 0x6a, 0x86, 0x1f, 0xae, 0x4d, 0xe3, 0xa1, 0x21,
+	0x6d, 0x97, 0xe0, 0x41, 0x43, 0x62, 0xb4, 0x70, 0x22, 0x10, 0x4d, 0x8a, 0xe1, 0xda, 0x4c, 0x67,
+	0x1f, 0xdb, 0x89, 0xbb, 0x33, 0xe3, 0xee, 0xac, 0xb8, 0x9e, 0x88, 0xff, 0x80, 0x44, 0x6f, 0xc6,
+	0x3f, 0x80, 0x9b, 0x86, 0x8b, 0x57, 0x8f, 0x1c, 0x49, 0xbc, 0x78, 0x32, 0x08, 0x1e, 0x8c, 0x27,
+	0x12, 0x0a, 0x67, 0xb3, 0x3f, 0xd8, 0xb4, 0x28, 0x9a, 0x78, 0x69, 0x67, 0xde, 0xfb, 0xbe, 0xef,
+	0xcd, 0xcb, 0xf7, 0x65, 0xb5, 0x31, 0x22, 0x25, 0xe3, 0xbe, 0xa2, 0x0e, 0x03, 0xae, 0x1a, 0xd2,
+	0x13, 0x4a, 0xe8, 0x25, 0xb0, 0x6c, 0x88, 0x8f, 0x13, 0x53, 0xb6, 0x10, 0xb6, 0x03, 0x26, 0x91,
+	0xcc, 0x24, 0x9c, 0x0b, 0x45, 0x14, 0x13, 0xdc, 0x4f, 0x80, 0x13, 0x77, 0x6d, 0xa6, 0xba, 0x41,
+	0xa7, 0x41, 0x85, 0x6b, 0xba, 0xa2, 0xc3, 0x9c, 0x88, 0xf8, 0xdc, 0x8c, 0x7e, 0xeb, 0xd4, 0x11,
+	0x81, 0x65, 0xc6, 0x38, 0x1b, 0x78, 0x76, 0x48, 0x99, 0x0b, 0xff, 0x64, 0x5a, 0x75, 0x97, 0x28,
+	0xda, 0xad, 0x03, 0xb7, 0x19, 0x07, 0xd3, 0x72, 0xa1, 0x1e, 0x53, 0x4d, 0x47, 0xd0, 0x54, 0x64,
+	0x34, 0x7d, 0x7c, 0x7a, 0xbd, 0x6a, 0x0b, 0x5b, 0x24, 0x98, 0xe8, 0x94, 0x54, 0x2b, 0x1f, 0x0b,
+	0xda, 0xe5, 0xa6, 0x94, 0x8b, 0xdc, 0x57, 0x0b, 0xf1, 0x92, 0x4b, 0x10, 0xea, 0x75, 0xad, 0xf0,
+	0x04, 0x42, 0x8c, 0xca, 0xa8, 0x3a, 0x32, 0x7b, 0xad, 0x91, 0xed, 0xdb, 0x48, 0x91, 0x4b, 0x10,
+	0xce, 0x0f, 0xed, 0x7c, 0xbd, 0x99, 0x6b, 0x45, 0x38, 0x7d, 0x52, 0x2b, 0x05, 0x9c, 0x3d, 0x0d,
+	0xa0, 0xcd, 0x2c, 0x9c, 0x2f, 0xa3, 0x6a, 0xa9, 0x55, 0x4c, 0x0a, 0x8b, 0x96, 0x7e, 0x4b, 0xbb,
+	0x94, 0x35, 0xdb, 0x2a, 0x94, 0x80, 0x0b, 0x31, 0xe2, 0xe2, 0x29, 0xe2, 0x71, 0x28, 0x61, 0xee,
+	0x43, 0xfe, 0xc7, 0x11, 0x46, 0x87, 0x47, 0x18, 0x6d, 0xf4, 0x30, 0xda, 0xec, 0x61, 0xf4, 0xa9,
+	0x87, 0xd1, 0xdb, 0x63, 0xfc, 0x2a, 0x4f, 0xa4, 0xe4, 0xc4, 0x85, 0x7b, 0x4b, 0x10, 0x46, 0xf3,
+	0xa3, 0xbf, 0x87, 0xc4, 0x85, 0x1a, 0x91, 0xf2, 0x19, 0x78, 0x7e, 0x7f, 0x7d, 0x15, 0x3c, 0x9f,
+	0x09, 0x1e, 0xb5, 0xea, 0xc2, 0xb3, 0xfb, 0x5b, 0x8f, 0x3c, 0x9b, 0x70, 0xf6, 0x22, 0xf6, 0xa7,
+	0x46, 0x9d, 0xc0, 0x57, 0xe0, 0xc5, 0xfd, 0x85, 0xe4, 0x9c, 0xae, 0x75, 0x7a, 0xcd, 0xa6, 0xa4,
+	0xd0, 0x4c, 0xee, 0x0c, 0xfc, 0x8c, 0xac, 0x08, 0x2c, 0x07, 0xd4, 0x9f, 0x75, 0x93, 0x5e, 0x9f,
+	0x70, 0x52, 0x38, 0x4f, 0xb9, 0x9f, 0xd0, 0x3f, 0x65, 0xfb, 0x04, 0x0f, 0x71, 0xc1, 0xa1, 0xb2,
+	0x87, 0xb4, 0xd1, 0x01, 0xe7, 0xf4, 0xeb, 0xda, 0xf0, 0x1a, 0x03, 0xc7, 0xf2, 0x31, 0x2a, 0x17,
+	0xaa, 0xa5, 0x56, 0x7a, 0xd3, 0x1f, 0x68, 0x5a, 0x12, 0xe0, 0x76, 0xe4, 0x6a, 0x3e, 0x76, 0x75,
+	0xf2, 0x77, 0x57, 0x33, 0xff, 0x53, 0x6f, 0x4b, 0x34, 0x0b, 0xc4, 0x7d, 0xad, 0xe8, 0x08, 0x1a,
+	0xcf, 0x8f, 0xed, 0x1b, 0x99, 0xbd, 0xd1, 0xb0, 0x98, 0xaf, 0x3c, 0xd6, 0x09, 0x14, 0x58, 0xed,
+	0x38, 0x8b, 0xed, 0x24, 0x8b, 0x8d, 0x65, 0x41, 0x53, 0x85, 0x8c, 0xa4, 0x4f, 0x6b, 0x25, 0x2e,
+	0x14, 0x5b, 0x0b, 0xa3, 0x88, 0x0c, 0x95, 0x51, 0xb5, 0x30, 0x3f, 0xba, 0xd5, 0xc3, 0xe8, 0xf5,
+	0xf6, 0xf8, 0x05, 0x2e, 0xa8, 0x2b, 0x5b, 0xc5, 0xa4, 0xbf, 0x68, 0xcd, 0x15, 0x23, 0xeb, 0x0f,
+	0x7b, 0x38, 0x37, 0xfb, 0x2e, 0x7f, 0x26, 0x9c, 0x4d, 0xc9, 0xf4, 0xf7, 0x48, 0xbb, 0xb2, 0xd2,
+	0x15, 0xeb, 0x83, 0xbb, 0xff, 0x6d, 0x9f, 0x09, 0x7c, 0x5e, 0xb3, 0x42, 0x7e, 0xf6, 0xf0, 0x9d,
+	0x16, 0xf8, 0x22, 0xf0, 0x28, 0x34, 0xa5, 0x6c, 0x72, 0xe2, 0x84, 0x8a, 0x51, 0xbf, 0xd6, 0xa4,
+	0xd1, 0xc3, 0x57, 0x19, 0xac, 0xd7, 0xce, 0x89, 0xd1, 0xd6, 0x31, 0x46, 0x1b, 0x27, 0x18, 0xbd,
+	0xfc, 0xfc, 0xfd, 0x4d, 0x1e, 0x57, 0xc6, 0x4c, 0xbf, 0x2b, 0xd6, 0xcd, 0x81, 0x2f, 0xc6, 0x1c,
+	0x9a, 0x9e, 0x41, 0xfa, 0xaa, 0x36, 0xbe, 0xa2, 0x3c, 0x20, 0xee, 0xc0, 0x6c, 0x7f, 0x59, 0x50,
+	0xe2, 0xfc, 0xef, 0xc3, 0x73, 0x33, 0x68, 0x7e, 0x6a, 0xe7, 0x9b, 0x91, 0xdb, 0xd9, 0x37, 0xd0,
+	0xee, 0xbe, 0x81, 0xf6, 0xf6, 0x0d, 0xb4, 0x79, 0x60, 0xe4, 0x76, 0x0f, 0x8c, 0xdc, 0x97, 0x03,
+	0x23, 0xd7, 0x19, 0x8e, 0x69, 0xb7, 0x7f, 0x05, 0x00, 0x00, 0xff, 0xff, 0x67, 0x27, 0x2c, 0xc1,
+	0xc4, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -75,8 +188,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for AppInstClientApi service
-
+// AppInstClientApiClient is the client API for AppInstClientApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type AppInstClientApiClient interface {
 	// Show application instance clients.
 	ShowAppInstClient(ctx context.Context, in *AppInstClientKey, opts ...grpc.CallOption) (AppInstClientApi_ShowAppInstClientClient, error)
@@ -93,7 +207,7 @@ func NewAppInstClientApiClient(cc *grpc.ClientConn) AppInstClientApiClient {
 }
 
 func (c *appInstClientApiClient) ShowAppInstClient(ctx context.Context, in *AppInstClientKey, opts ...grpc.CallOption) (AppInstClientApi_ShowAppInstClientClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_AppInstClientApi_serviceDesc.Streams[0], c.cc, "/edgeproto.AppInstClientApi/ShowAppInstClient", opts...)
+	stream, err := c.cc.NewStream(ctx, &_AppInstClientApi_serviceDesc.Streams[0], "/edgeproto.AppInstClientApi/ShowAppInstClient", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +239,7 @@ func (x *appInstClientApiShowAppInstClientClient) Recv() (*AppInstClient, error)
 }
 
 func (c *appInstClientApiClient) StreamAppInstClientsLocal(ctx context.Context, in *AppInstClientKey, opts ...grpc.CallOption) (AppInstClientApi_StreamAppInstClientsLocalClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_AppInstClientApi_serviceDesc.Streams[1], c.cc, "/edgeproto.AppInstClientApi/StreamAppInstClientsLocal", opts...)
+	stream, err := c.cc.NewStream(ctx, &_AppInstClientApi_serviceDesc.Streams[1], "/edgeproto.AppInstClientApi/StreamAppInstClientsLocal", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -156,13 +270,23 @@ func (x *appInstClientApiStreamAppInstClientsLocalClient) Recv() (*AppInstClient
 	return m, nil
 }
 
-// Server API for AppInstClientApi service
-
+// AppInstClientApiServer is the server API for AppInstClientApi service.
 type AppInstClientApiServer interface {
 	// Show application instance clients.
 	ShowAppInstClient(*AppInstClientKey, AppInstClientApi_ShowAppInstClientServer) error
 	// This is used unternally to forward AppInstClients to other Controllers
 	StreamAppInstClientsLocal(*AppInstClientKey, AppInstClientApi_StreamAppInstClientsLocalServer) error
+}
+
+// UnimplementedAppInstClientApiServer can be embedded to have forward compatible implementations.
+type UnimplementedAppInstClientApiServer struct {
+}
+
+func (*UnimplementedAppInstClientApiServer) ShowAppInstClient(req *AppInstClientKey, srv AppInstClientApi_ShowAppInstClientServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowAppInstClient not implemented")
+}
+func (*UnimplementedAppInstClientApiServer) StreamAppInstClientsLocal(req *AppInstClientKey, srv AppInstClientApi_StreamAppInstClientsLocalServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamAppInstClientsLocal not implemented")
 }
 
 func RegisterAppInstClientApiServer(s *grpc.Server, srv AppInstClientApiServer) {
@@ -233,7 +357,7 @@ var _AppInstClientApi_serviceDesc = grpc.ServiceDesc{
 func (m *AppInstClientKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -241,37 +365,46 @@ func (m *AppInstClientKey) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AppInstClientKey) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AppInstClientKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintAppinstclient(dAtA, i, uint64(m.Key.Size()))
-	n1, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	if len(m.UniqueId) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintAppinstclient(dAtA, i, uint64(len(m.UniqueId)))
-		i += copy(dAtA[i:], m.UniqueId)
-	}
 	if len(m.UniqueIdType) > 0 {
-		dAtA[i] = 0x1a
-		i++
+		i -= len(m.UniqueIdType)
+		copy(dAtA[i:], m.UniqueIdType)
 		i = encodeVarintAppinstclient(dAtA, i, uint64(len(m.UniqueIdType)))
-		i += copy(dAtA[i:], m.UniqueIdType)
+		i--
+		dAtA[i] = 0x1a
 	}
-	return i, nil
+	if len(m.UniqueId) > 0 {
+		i -= len(m.UniqueId)
+		copy(dAtA[i:], m.UniqueId)
+		i = encodeVarintAppinstclient(dAtA, i, uint64(len(m.UniqueId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAppinstclient(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *AppInstClient) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -279,57 +412,62 @@ func (m *AppInstClient) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AppInstClient) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AppInstClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
+	if m.NotifyId != 0 {
+		i = encodeVarintAppinstclient(dAtA, i, uint64(m.NotifyId))
+		i--
+		dAtA[i] = 0x20
+	}
+	{
+		size, err := m.Location.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAppinstclient(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size, err := m.ClientKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAppinstclient(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
 	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintAppinstclient(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
 			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
 		}
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintAppinstclient(dAtA, i, uint64(m.ClientKey.Size()))
-	n2, err := m.ClientKey.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintAppinstclient(dAtA, i, uint64(m.Location.Size()))
-	n3, err := m.Location.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n3
-	if m.NotifyId != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintAppinstclient(dAtA, i, uint64(m.NotifyId))
-	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintAppinstclient(dAtA []byte, offset int, v uint64) int {
+	offset -= sovAppinstclient(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *AppInstClientKey) Matches(o *AppInstClientKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -1294,6 +1432,9 @@ func IgnoreAppInstClientFields(taglist string) cmp.Option {
 }
 
 func (m *AppInstClientKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = m.Key.Size()
@@ -1310,6 +1451,9 @@ func (m *AppInstClientKey) Size() (n int) {
 }
 
 func (m *AppInstClient) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -1329,14 +1473,7 @@ func (m *AppInstClient) Size() (n int) {
 }
 
 func sovAppinstclient(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozAppinstclient(x uint64) (n int) {
 	return sovAppinstclient(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -1356,7 +1493,7 @@ func (m *AppInstClientKey) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1384,7 +1521,7 @@ func (m *AppInstClientKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1393,6 +1530,9 @@ func (m *AppInstClientKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAppinstclient
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinstclient
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1414,7 +1554,7 @@ func (m *AppInstClientKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1424,6 +1564,9 @@ func (m *AppInstClientKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAppinstclient
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinstclient
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1443,7 +1586,7 @@ func (m *AppInstClientKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1453,6 +1596,9 @@ func (m *AppInstClientKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAppinstclient
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinstclient
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1465,6 +1611,9 @@ func (m *AppInstClientKey) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthAppinstclient
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthAppinstclient
 			}
 			if (iNdEx + skippy) > l {
@@ -1494,7 +1643,7 @@ func (m *AppInstClient) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1522,7 +1671,7 @@ func (m *AppInstClient) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1532,6 +1681,9 @@ func (m *AppInstClient) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAppinstclient
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinstclient
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1551,7 +1703,7 @@ func (m *AppInstClient) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1560,6 +1712,9 @@ func (m *AppInstClient) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAppinstclient
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinstclient
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1581,7 +1736,7 @@ func (m *AppInstClient) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1590,6 +1745,9 @@ func (m *AppInstClient) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAppinstclient
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinstclient
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1611,7 +1769,7 @@ func (m *AppInstClient) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.NotifyId |= (int64(b) & 0x7F) << shift
+				m.NotifyId |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1623,6 +1781,9 @@ func (m *AppInstClient) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthAppinstclient
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthAppinstclient
 			}
 			if (iNdEx + skippy) > l {
@@ -1640,6 +1801,7 @@ func (m *AppInstClient) Unmarshal(dAtA []byte) error {
 func skipAppinstclient(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -1671,10 +1833,8 @@ func skipAppinstclient(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -1691,100 +1851,34 @@ func skipAppinstclient(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthAppinstclient
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowAppinstclient
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipAppinstclient(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupAppinstclient
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthAppinstclient
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthAppinstclient = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowAppinstclient   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthAppinstclient        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowAppinstclient          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupAppinstclient = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("appinstclient.proto", fileDescriptorAppinstclient) }
-
-var fileDescriptorAppinstclient = []byte{
-	// 648 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0x4f, 0x6b, 0x13, 0x4f,
-	0x18, 0xce, 0x24, 0xfd, 0x95, 0x64, 0xfa, 0xab, 0xd4, 0xad, 0xca, 0xb4, 0xd5, 0x18, 0x82, 0x87,
-	0x50, 0x92, 0x6c, 0xa9, 0x07, 0xa5, 0x20, 0x9a, 0xf6, 0x54, 0x5a, 0x14, 0x52, 0xe9, 0x35, 0x4c,
-	0x66, 0xdf, 0x6e, 0x06, 0x77, 0x67, 0xc6, 0xdd, 0x59, 0xeb, 0x7a, 0x2a, 0x7e, 0x01, 0x45, 0x6f,
-	0xe2, 0x07, 0xe8, 0x4d, 0xe9, 0xc5, 0xab, 0xc7, 0x1e, 0x05, 0xef, 0x52, 0x8b, 0x07, 0xf1, 0x54,
-	0x68, 0xda, 0xb3, 0xec, 0x9f, 0x2e, 0x49, 0x35, 0x0a, 0x5e, 0x92, 0x99, 0xf7, 0x79, 0xde, 0xe7,
-	0x9d, 0x97, 0xe7, 0x61, 0xf1, 0x34, 0x55, 0x8a, 0x0b, 0x5f, 0x33, 0x87, 0x83, 0xd0, 0x4d, 0xe5,
-	0x49, 0x2d, 0x8d, 0x12, 0x58, 0x36, 0xc4, 0xc7, 0xd9, 0xab, 0xb6, 0x94, 0xb6, 0x03, 0x26, 0x55,
-	0xdc, 0xa4, 0x42, 0x48, 0x4d, 0x35, 0x97, 0xc2, 0x4f, 0x88, 0xb3, 0xb7, 0x6d, 0xae, 0x7b, 0x41,
-	0xb7, 0xc9, 0xa4, 0x6b, 0xba, 0xb2, 0xcb, 0x9d, 0xa8, 0xf1, 0xa9, 0x19, 0xfd, 0x36, 0x98, 0x23,
-	0x03, 0xcb, 0x8c, 0x79, 0x36, 0x88, 0xec, 0x90, 0x76, 0xae, 0xfc, 0xb5, 0xd3, 0x6a, 0xb8, 0x54,
-	0xb3, 0x5e, 0x03, 0x84, 0xcd, 0x05, 0x98, 0x96, 0x0b, 0x8d, 0xb8, 0xd5, 0x74, 0x24, 0x4b, 0x45,
-	0x26, 0xd3, 0xc7, 0xa7, 0xd7, 0x4b, 0xb6, 0xb4, 0x65, 0xc2, 0x89, 0x4e, 0x49, 0xb5, 0xfa, 0xa1,
-	0x80, 0xa7, 0x5a, 0x4a, 0xad, 0x0a, 0x5f, 0xaf, 0xc4, 0x4b, 0xae, 0x41, 0x68, 0x34, 0x70, 0xe1,
-	0x11, 0x84, 0x04, 0x55, 0x50, 0x6d, 0x62, 0xf1, 0x72, 0x33, 0xdb, 0xb7, 0x99, 0x32, 0xd7, 0x20,
-	0x5c, 0x1e, 0xdb, 0xff, 0x72, 0x3d, 0xd7, 0x8e, 0x78, 0xc6, 0x1c, 0x2e, 0x05, 0x82, 0x3f, 0x0e,
-	0xa0, 0xc3, 0x2d, 0x92, 0xaf, 0xa0, 0x5a, 0xa9, 0x5d, 0x4c, 0x0a, 0xab, 0x96, 0x71, 0x03, 0x5f,
-	0xc8, 0xc0, 0x8e, 0x0e, 0x15, 0x90, 0x42, 0xcc, 0xf8, 0xff, 0x8c, 0xf1, 0x30, 0x54, 0xb0, 0xf4,
-	0x3e, 0xff, 0xfd, 0x98, 0xa0, 0xa3, 0x63, 0x82, 0x76, 0xfa, 0x04, 0xbd, 0xec, 0x13, 0xf4, 0xb1,
-	0x4f, 0xd0, 0x9b, 0x13, 0xf2, 0x22, 0x4f, 0x95, 0x12, 0xd4, 0x85, 0x3b, 0x6b, 0x10, 0x46, 0xf3,
-	0xa3, 0xbf, 0xfb, 0xd4, 0x85, 0x3a, 0x55, 0xea, 0x09, 0x78, 0xfe, 0x60, 0x7d, 0x13, 0x3c, 0x9f,
-	0x4b, 0x11, 0x41, 0x0d, 0xe9, 0xd9, 0x83, 0xd0, 0x03, 0xcf, 0xa6, 0x82, 0x3f, 0x8b, 0xfd, 0xa9,
-	0x33, 0x27, 0xf0, 0x35, 0x78, 0x31, 0xbe, 0x92, 0x9c, 0xd3, 0xb5, 0xce, 0xae, 0xd9, 0x94, 0x94,
-	0x9a, 0xc9, 0x9d, 0xa3, 0x9f, 0x93, 0x95, 0x81, 0xe5, 0x80, 0xfe, 0xbd, 0x6e, 0x82, 0x0d, 0x08,
-	0x27, 0x85, 0x51, 0xca, 0x83, 0x0d, 0x83, 0x53, 0xf6, 0x4e, 0xc9, 0x98, 0x90, 0x02, 0xaa, 0x07,
-	0x08, 0x4f, 0x0e, 0x39, 0x67, 0x5c, 0xc1, 0xe3, 0x5b, 0x1c, 0x1c, 0xcb, 0x27, 0xa8, 0x52, 0xa8,
-	0x95, 0xda, 0xe9, 0xcd, 0xb8, 0x87, 0x71, 0x12, 0xe0, 0x4e, 0xe4, 0x6a, 0x3e, 0x76, 0x75, 0xee,
-	0x57, 0x57, 0x33, 0xff, 0x53, 0x6f, 0x4b, 0x2c, 0x0b, 0xc4, 0x5d, 0x5c, 0x74, 0x24, 0x8b, 0xe7,
-	0xc7, 0xf6, 0x4d, 0x2c, 0x5e, 0x6b, 0x5a, 0xdc, 0xd7, 0x1e, 0xef, 0x06, 0x1a, 0xac, 0x4e, 0x9c,
-	0xc5, 0x4e, 0x92, 0xc5, 0xe6, 0xba, 0x64, 0xa9, 0x42, 0xd6, 0x64, 0xcc, 0xe3, 0x92, 0x90, 0x9a,
-	0x6f, 0x85, 0x51, 0x44, 0xc6, 0x2a, 0xa8, 0x56, 0x58, 0x9e, 0xdc, 0xed, 0x13, 0xf4, 0x6a, 0x6f,
-	0xe6, 0x3f, 0x21, 0x99, 0xab, 0xda, 0xc5, 0x04, 0x5f, 0xb5, 0x96, 0x8a, 0x91, 0xf5, 0x47, 0x7d,
-	0x92, 0x5b, 0x7c, 0x9b, 0x3f, 0x17, 0xce, 0x96, 0xe2, 0xc6, 0x3b, 0x84, 0x2f, 0x6e, 0xf4, 0xe4,
-	0xf6, 0xf0, 0xee, 0x7f, 0xda, 0x67, 0x96, 0x8c, 0x02, 0xab, 0xf4, 0x47, 0x9f, 0xdc, 0x6a, 0x83,
-	0x2f, 0x03, 0x8f, 0x41, 0x4b, 0xa9, 0x96, 0xa0, 0x4e, 0xa8, 0x39, 0xf3, 0xeb, 0x2d, 0x16, 0x3d,
-	0x7c, 0x93, 0xc3, 0x76, 0x7d, 0x44, 0x8c, 0x76, 0x4f, 0x08, 0xda, 0x39, 0x25, 0xe8, 0xf9, 0xe7,
-	0x6f, 0xaf, 0xf3, 0xa4, 0x3a, 0x6d, 0xfa, 0x3d, 0xb9, 0x6d, 0x0e, 0x7d, 0x31, 0x96, 0xd0, 0xfc,
-	0x02, 0x32, 0x36, 0xf1, 0xcc, 0x86, 0xf6, 0x80, 0xba, 0x43, 0xb3, 0xfd, 0x75, 0xc9, 0xa8, 0xf3,
-	0xaf, 0x0f, 0xcf, 0x2d, 0xa0, 0xe5, 0xa9, 0xfd, 0xaf, 0xe5, 0xdc, 0xfe, 0x61, 0x19, 0x7d, 0x3a,
-	0x2c, 0xa3, 0x83, 0xc3, 0x32, 0xea, 0x8e, 0xc7, 0xd4, 0x9b, 0x3f, 0x03, 0x00, 0x00, 0xff, 0xff,
-	0xd0, 0xea, 0x78, 0xf8, 0xb8, 0x04, 0x00, 0x00,
-}

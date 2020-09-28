@@ -3,24 +3,30 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-
-import strings "strings"
-import reflect "reflect"
-
-import "github.com/mobiledgex/edge-cloud/log"
-import "encoding/json"
-
-import io "io"
+import (
+	"encoding/json"
+	fmt "fmt"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/log"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	reflect "reflect"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // ClusterKey uniquely identifies a Cluster.
 type ClusterKey struct {
@@ -28,14 +34,61 @@ type ClusterKey struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (m *ClusterKey) Reset()                    { *m = ClusterKey{} }
-func (m *ClusterKey) String() string            { return proto.CompactTextString(m) }
-func (*ClusterKey) ProtoMessage()               {}
-func (*ClusterKey) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{0} }
+func (m *ClusterKey) Reset()         { *m = ClusterKey{} }
+func (m *ClusterKey) String() string { return proto.CompactTextString(m) }
+func (*ClusterKey) ProtoMessage()    {}
+func (*ClusterKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3cfb3b8ec240c376, []int{0}
+}
+func (m *ClusterKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClusterKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClusterKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ClusterKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClusterKey.Merge(m, src)
+}
+func (m *ClusterKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClusterKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClusterKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClusterKey proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*ClusterKey)(nil), "edgeproto.ClusterKey")
 }
+
+func init() { proto.RegisterFile("cluster.proto", fileDescriptor_3cfb3b8ec240c376) }
+
+var fileDescriptor_3cfb3b8ec240c376 = []byte{
+	// 186 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4d, 0xce, 0x29, 0x2d,
+	0x2e, 0x49, 0x2d, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4c, 0x4d, 0x49, 0x4f, 0x05,
+	0x33, 0xa5, 0x2c, 0xd2, 0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x73, 0xf3,
+	0x93, 0x32, 0x73, 0x40, 0x52, 0x15, 0xfa, 0x20, 0x52, 0x37, 0x39, 0x27, 0xbf, 0x34, 0x45, 0x1f,
+	0xac, 0x2e, 0x3d, 0x35, 0x0f, 0xce, 0x80, 0x18, 0x22, 0x25, 0x92, 0x9e, 0x9f, 0x9e, 0x0f, 0x66,
+	0xea, 0x83, 0x58, 0x10, 0x51, 0x25, 0x6b, 0x2e, 0x2e, 0x67, 0x88, 0x5d, 0xde, 0xa9, 0x95, 0x42,
+	0xf2, 0x5c, 0x2c, 0x79, 0x89, 0xb9, 0xa9, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c, 0x4e, 0xdc, 0xbb,
+	0xbe, 0x49, 0xb0, 0x43, 0x5d, 0x12, 0x04, 0x96, 0xb0, 0xe2, 0x79, 0xf1, 0x59, 0x82, 0xf1, 0xc7,
+	0x67, 0x09, 0xc6, 0x0d, 0x0b, 0xe4, 0x19, 0x9d, 0x64, 0x4e, 0x3c, 0x94, 0x63, 0x38, 0xf1, 0x48,
+	0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0,
+	0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x24, 0x36, 0xb0, 0x0d, 0xc6, 0x80, 0x00, 0x00, 0x00,
+	0xff, 0xff, 0x8a, 0x23, 0x87, 0x32, 0xcd, 0x00, 0x00, 0x00,
+}
+
 func (this *ClusterKey) GoString() string {
 	if this == nil {
 		return "nil"
@@ -57,7 +110,7 @@ func valueToGoStringCluster(v interface{}, typ string) string {
 func (m *ClusterKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -65,27 +118,35 @@ func (m *ClusterKey) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *ClusterKey) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ClusterKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	if len(m.Name) > 0 {
-		dAtA[i] = 0xa
-		i++
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
 		i = encodeVarintCluster(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
+		i--
+		dAtA[i] = 0xa
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintCluster(dAtA []byte, offset int, v uint64) int {
+	offset -= sovCluster(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *ClusterKey) Matches(o *ClusterKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -154,6 +215,9 @@ func (m *ClusterKey) ValidateEnums() error {
 }
 
 func (m *ClusterKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Name)
@@ -164,14 +228,7 @@ func (m *ClusterKey) Size() (n int) {
 }
 
 func sovCluster(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozCluster(x uint64) (n int) {
 	return sovCluster(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -191,7 +248,7 @@ func (m *ClusterKey) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -219,7 +276,7 @@ func (m *ClusterKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -229,6 +286,9 @@ func (m *ClusterKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCluster
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCluster
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -241,6 +301,9 @@ func (m *ClusterKey) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCluster
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCluster
 			}
 			if (iNdEx + skippy) > l {
@@ -258,6 +321,7 @@ func (m *ClusterKey) Unmarshal(dAtA []byte) error {
 func skipCluster(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -289,10 +353,8 @@ func skipCluster(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -309,70 +371,34 @@ func skipCluster(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthCluster
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowCluster
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipCluster(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupCluster
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthCluster
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthCluster = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowCluster   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthCluster        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowCluster          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupCluster = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("cluster.proto", fileDescriptorCluster) }
-
-var fileDescriptorCluster = []byte{
-	// 173 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4d, 0xce, 0x29, 0x2d,
-	0x2e, 0x49, 0x2d, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4c, 0x4d, 0x49, 0x4f, 0x05,
-	0x33, 0xa5, 0x2c, 0xd2, 0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x73, 0xf3,
-	0x93, 0x32, 0x73, 0x40, 0x52, 0x15, 0xfa, 0x20, 0x52, 0x37, 0x39, 0x27, 0xbf, 0x34, 0x45, 0x1f,
-	0xac, 0x2e, 0x3d, 0x35, 0x0f, 0xce, 0x80, 0x18, 0x22, 0x25, 0x92, 0x9e, 0x9f, 0x9e, 0x0f, 0x66,
-	0xea, 0x83, 0x58, 0x10, 0x51, 0x25, 0x6b, 0x2e, 0x2e, 0x67, 0x88, 0x5d, 0xde, 0xa9, 0x95, 0x42,
-	0xf2, 0x5c, 0x2c, 0x79, 0x89, 0xb9, 0xa9, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c, 0x4e, 0xdc, 0xbb,
-	0xbe, 0x49, 0xb0, 0x43, 0x5d, 0x12, 0x04, 0x96, 0xb0, 0xe2, 0x79, 0xf1, 0x59, 0x82, 0xf1, 0xc7,
-	0x67, 0x09, 0xc6, 0x0d, 0x0b, 0xe4, 0x19, 0x9d, 0x04, 0x4e, 0x3c, 0x94, 0x63, 0x38, 0xf1, 0x48,
-	0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x93, 0xd8, 0xc0, 0xa6, 0x1a, 0x03,
-	0x02, 0x00, 0x00, 0xff, 0xff, 0x04, 0x98, 0x37, 0x9b, 0xc1, 0x00, 0x00, 0x00,
-}

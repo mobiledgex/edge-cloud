@@ -12,6 +12,10 @@ import "flavor.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 message VMNetInfo {
   // External IP
   string external_ip = 1;

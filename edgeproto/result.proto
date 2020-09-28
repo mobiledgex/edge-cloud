@@ -3,6 +3,12 @@
 syntax = "proto3";
 package edgeproto;
 
+import "gogoproto/gogo.proto";
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // Result is a generic object for returning the result of an API call. In general, result is not used. The error value returned by the GRPC API call is used instead.
 message Result {
   // Message, may be success or failure message

@@ -8,6 +8,10 @@ import "cloudlet.proto";
 import "gogoproto/gogo.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // NodeKey uniquely identifies a DME or CRM node
 message NodeKey {
   // Name or hostname of node

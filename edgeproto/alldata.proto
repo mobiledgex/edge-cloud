@@ -18,6 +18,10 @@ import "appinst.proto";
 import "refs.proto";
 import "gogoproto/gogo.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // AllData contains all data that may be used for declarative
 // create/delete, or as input for e2e tests.
 // The order of fields here is important, as objects will be

@@ -9,6 +9,10 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "flavor.proto";
 import "gogoproto/gogo.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // It is important that embedded key structs are not referenced by a
 // pointer, otherwise the enclosing struct cannot properly function
 // as the key to a hash table. Thus embedded key structs have nullable false.
