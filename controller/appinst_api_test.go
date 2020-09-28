@@ -34,6 +34,7 @@ func TestAppInstApi(t *testing.T) {
 	reduceInfoTimeouts(t, ctx)
 
 	InfluxUsageUnitTestSetup(t)
+	defer InfluxUsageUnitTestStop()
 
 	// cannote create instances without apps and cloudlets
 	for _, obj := range testutil.AppInstData {

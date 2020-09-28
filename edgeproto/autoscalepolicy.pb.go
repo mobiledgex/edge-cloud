@@ -3,31 +3,38 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-
-import strings "strings"
-import reflect "reflect"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	reflect "reflect"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type PolicyKey struct {
 	// Name of the organization for the cluster that this policy will apply to
@@ -36,18 +43,46 @@ type PolicyKey struct {
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (m *PolicyKey) Reset()                    { *m = PolicyKey{} }
-func (m *PolicyKey) String() string            { return proto.CompactTextString(m) }
-func (*PolicyKey) ProtoMessage()               {}
-func (*PolicyKey) Descriptor() ([]byte, []int) { return fileDescriptorAutoscalepolicy, []int{0} }
+func (m *PolicyKey) Reset()         { *m = PolicyKey{} }
+func (m *PolicyKey) String() string { return proto.CompactTextString(m) }
+func (*PolicyKey) ProtoMessage()    {}
+func (*PolicyKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b83abf40cad3a321, []int{0}
+}
+func (m *PolicyKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PolicyKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PolicyKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PolicyKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PolicyKey.Merge(m, src)
+}
+func (m *PolicyKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *PolicyKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_PolicyKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PolicyKey proto.InternalMessageInfo
 
 // AutoScalePolicy defines when and how ClusterInsts will have their
 // nodes scaled up or down.
 type AutoScalePolicy struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
-	Key PolicyKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key PolicyKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// Minimum number of cluster nodes
 	MinNodes uint32 `protobuf:"varint,3,opt,name=min_nodes,json=minNodes,proto3" json:"min_nodes,omitempty"`
 	// Maximum number of cluster nodes
@@ -60,15 +95,93 @@ type AutoScalePolicy struct {
 	TriggerTimeSec uint32 `protobuf:"varint,7,opt,name=trigger_time_sec,json=triggerTimeSec,proto3" json:"trigger_time_sec,omitempty"`
 }
 
-func (m *AutoScalePolicy) Reset()                    { *m = AutoScalePolicy{} }
-func (m *AutoScalePolicy) String() string            { return proto.CompactTextString(m) }
-func (*AutoScalePolicy) ProtoMessage()               {}
-func (*AutoScalePolicy) Descriptor() ([]byte, []int) { return fileDescriptorAutoscalepolicy, []int{1} }
+func (m *AutoScalePolicy) Reset()         { *m = AutoScalePolicy{} }
+func (m *AutoScalePolicy) String() string { return proto.CompactTextString(m) }
+func (*AutoScalePolicy) ProtoMessage()    {}
+func (*AutoScalePolicy) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b83abf40cad3a321, []int{1}
+}
+func (m *AutoScalePolicy) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AutoScalePolicy) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AutoScalePolicy.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AutoScalePolicy) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AutoScalePolicy.Merge(m, src)
+}
+func (m *AutoScalePolicy) XXX_Size() int {
+	return m.Size()
+}
+func (m *AutoScalePolicy) XXX_DiscardUnknown() {
+	xxx_messageInfo_AutoScalePolicy.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AutoScalePolicy proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*PolicyKey)(nil), "edgeproto.PolicyKey")
 	proto.RegisterType((*AutoScalePolicy)(nil), "edgeproto.AutoScalePolicy")
 }
+
+func init() { proto.RegisterFile("autoscalepolicy.proto", fileDescriptor_b83abf40cad3a321) }
+
+var fileDescriptor_b83abf40cad3a321 = []byte{
+	// 685 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x93, 0xcf, 0x6b, 0x13, 0x5b,
+	0x14, 0xc7, 0x73, 0xdb, 0x34, 0xef, 0xe5, 0xbe, 0xf6, 0xbd, 0x74, 0xda, 0x3c, 0x2f, 0xb1, 0x4c,
+	0x4b, 0x56, 0xa5, 0xa4, 0x19, 0xdb, 0x22, 0x48, 0xa1, 0x8b, 0xa6, 0xdd, 0x95, 0x56, 0x99, 0xfe,
+	0x70, 0xe1, 0x22, 0xdc, 0xce, 0x1c, 0x6f, 0x2e, 0x9d, 0x99, 0x3b, 0xcc, 0x0f, 0xd3, 0xb8, 0x12,
+	0x71, 0xe1, 0xb2, 0xe0, 0x46, 0x5c, 0x09, 0x6e, 0xc4, 0x95, 0xb8, 0xec, 0x5f, 0xd0, 0x8d, 0x50,
+	0x70, 0x23, 0x08, 0xa2, 0xa9, 0x0b, 0xe9, 0x4a, 0x68, 0x1a, 0x04, 0x37, 0x32, 0x77, 0x86, 0x18,
+	0x43, 0x2d, 0xa8, 0x1b, 0x37, 0xc3, 0x39, 0xe7, 0xfb, 0x3d, 0x77, 0x3e, 0xf7, 0x9c, 0x19, 0x9c,
+	0xa7, 0x61, 0x20, 0x7c, 0x83, 0x5a, 0xe0, 0x0a, 0x8b, 0x1b, 0x8d, 0xb2, 0xeb, 0x89, 0x40, 0x28,
+	0x59, 0x30, 0x19, 0xc8, 0xb0, 0x30, 0xc6, 0x84, 0x60, 0x16, 0x68, 0xd4, 0xe5, 0x1a, 0x75, 0x1c,
+	0x11, 0xd0, 0x80, 0x0b, 0xc7, 0x8f, 0x8d, 0x85, 0x41, 0x0f, 0xfc, 0xd0, 0x0a, 0x92, 0xec, 0x0a,
+	0xe3, 0x41, 0x2d, 0xdc, 0x2e, 0x1b, 0xc2, 0xd6, 0x6c, 0xb1, 0xcd, 0xad, 0xe8, 0x98, 0x5d, 0x2d,
+	0x7a, 0x4e, 0x1b, 0x96, 0x08, 0x4d, 0x4d, 0xfa, 0x18, 0x38, 0x9d, 0x20, 0xe9, 0x1c, 0x65, 0x82,
+	0x09, 0x19, 0x6a, 0x51, 0x14, 0x57, 0x8b, 0x16, 0xce, 0x5e, 0x93, 0x58, 0x2b, 0xd0, 0x50, 0x66,
+	0xf0, 0xa0, 0xf0, 0x18, 0x75, 0xf8, 0x6d, 0x49, 0x40, 0xd0, 0x04, 0x9a, 0xcc, 0x56, 0x86, 0xf6,
+	0xdb, 0x24, 0x1b, 0xb3, 0x0b, 0x8f, 0xe9, 0xdf, 0x59, 0x14, 0x15, 0xa7, 0x1d, 0x6a, 0x03, 0xe9,
+	0x93, 0x56, 0xbc, 0xdf, 0x26, 0x99, 0xd8, 0xaa, 0xcb, 0xfa, 0xfc, 0xe0, 0xc7, 0x13, 0x82, 0x3e,
+	0x9f, 0x10, 0xf4, 0xfc, 0xf1, 0x38, 0x2a, 0x7e, 0xe9, 0xc3, 0xff, 0x2d, 0x86, 0x81, 0x58, 0x8f,
+	0xc6, 0x11, 0xbf, 0x57, 0xf9, 0x1f, 0x67, 0x6e, 0x72, 0xb0, 0x4c, 0x9f, 0xa0, 0x89, 0xfe, 0xc9,
+	0xac, 0x9e, 0x64, 0x4a, 0x09, 0xf7, 0xef, 0x40, 0x43, 0x1e, 0xfc, 0xcf, 0xec, 0x68, 0xb9, 0x33,
+	0xae, 0x72, 0x87, 0xb7, 0x92, 0x3e, 0x78, 0x3b, 0x9e, 0xd2, 0x23, 0x9b, 0x72, 0x11, 0x67, 0x6d,
+	0xee, 0x54, 0x1d, 0x61, 0x82, 0x4f, 0xfa, 0x27, 0xd0, 0xe4, 0x90, 0xfe, 0xb7, 0xcd, 0x9d, 0xb5,
+	0x28, 0x97, 0x22, 0xdd, 0x4d, 0xc4, 0x74, 0x22, 0xd2, 0xdd, 0x58, 0x9c, 0xc6, 0x23, 0x72, 0x3b,
+	0xd5, 0xd0, 0xad, 0x1a, 0x6e, 0x58, 0x0d, 0x6a, 0x1e, 0xf8, 0x35, 0x32, 0x20, 0x6d, 0x39, 0x29,
+	0x6d, 0xba, 0x4b, 0x6e, 0xb8, 0x21, 0xeb, 0xca, 0x0c, 0xce, 0xc7, 0x76, 0x53, 0xd4, 0x9d, 0xee,
+	0x86, 0x8c, 0x6c, 0x50, 0xa4, 0xb8, 0x2c, 0xea, 0xce, 0xb7, 0x96, 0x32, 0xce, 0x05, 0x1e, 0x67,
+	0x0c, 0xbc, 0x6a, 0xc0, 0x6d, 0xa8, 0xfa, 0x60, 0x90, 0xbf, 0x22, 0x77, 0x25, 0x7d, 0xbf, 0x45,
+	0x90, 0xfe, 0x6f, 0xa2, 0x6e, 0x70, 0x1b, 0xd6, 0xc1, 0x98, 0xdf, 0x8a, 0x66, 0xf6, 0xe9, 0x84,
+	0xa0, 0x3b, 0x2d, 0x82, 0xf6, 0x5a, 0x04, 0x3d, 0x6c, 0x11, 0xf4, 0xe8, 0x94, 0x4c, 0x45, 0x13,
+	0x5d, 0x58, 0x81, 0x46, 0x79, 0x8d, 0xda, 0x50, 0x32, 0xac, 0xd0, 0x0f, 0xc0, 0x9b, 0x16, 0x1e,
+	0x93, 0xc5, 0xab, 0x5d, 0x7b, 0x79, 0xd1, 0x26, 0xb9, 0x1d, 0x68, 0x2c, 0x74, 0xd7, 0x66, 0xdf,
+	0x0c, 0x60, 0xa5, 0x67, 0xfa, 0x8b, 0x2e, 0x57, 0x5e, 0x22, 0x9c, 0x5f, 0xf2, 0x80, 0x06, 0xd0,
+	0xbb, 0x9a, 0x42, 0xd7, 0xd4, 0x7b, 0xb4, 0xc2, 0x70, 0x97, 0xa6, 0xcb, 0x2f, 0xb4, 0x78, 0x0f,
+	0x1d, 0xb7, 0xc8, 0x65, 0x1d, 0x7c, 0x11, 0x7a, 0x06, 0x2c, 0xc3, 0x2d, 0xb0, 0x84, 0x0b, 0x5e,
+	0xdc, 0x50, 0x5a, 0x34, 0x22, 0x88, 0x55, 0xea, 0x50, 0x06, 0xa5, 0x5e, 0xde, 0xe6, 0x29, 0x19,
+	0x5e, 0x4d, 0xd6, 0x55, 0x5a, 0x4d, 0x56, 0xf3, 0xac, 0x4d, 0x72, 0xbd, 0xc6, 0xbb, 0xaf, 0x3e,
+	0x3c, 0xe8, 0x1b, 0x2b, 0x5e, 0xd0, 0x0c, 0x49, 0xac, 0xf5, 0xfc, 0x5c, 0xf3, 0x68, 0x4a, 0x79,
+	0x82, 0x70, 0x7e, 0x19, 0x2c, 0xf8, 0xed, 0xfb, 0xdc, 0xf8, 0xe5, 0xeb, 0x74, 0x28, 0x4d, 0xc9,
+	0xf1, 0x23, 0xca, 0x4d, 0xd7, 0xa4, 0x7f, 0x02, 0x65, 0x28, 0x39, 0xce, 0xa2, 0x7c, 0x8a, 0xf0,
+	0xc8, 0x7a, 0x4d, 0xd4, 0x7f, 0x86, 0xf1, 0x1c, 0xad, 0x78, 0xfd, 0xb8, 0x45, 0xe6, 0xce, 0x87,
+	0xdd, 0xe2, 0x50, 0x3f, 0x1b, 0xb5, 0x50, 0xcc, 0x6b, 0x7e, 0x4d, 0xd4, 0xcf, 0x00, 0xbd, 0x84,
+	0x2a, 0x63, 0x07, 0xef, 0xd5, 0xd4, 0x41, 0x53, 0x45, 0x87, 0x4d, 0x15, 0xbd, 0x6b, 0xaa, 0x68,
+	0xef, 0x48, 0x4d, 0x1d, 0x1e, 0xa9, 0xa9, 0xd7, 0x47, 0x6a, 0x6a, 0x3b, 0x23, 0x79, 0xe6, 0xbe,
+	0x06, 0x00, 0x00, 0xff, 0xff, 0xdc, 0x19, 0x99, 0xe0, 0x8e, 0x05, 0x00, 0x00,
+}
+
 func (this *PolicyKey) GoString() string {
 	if this == nil {
 		return "nil"
@@ -97,8 +210,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for AutoScalePolicyApi service
-
+// AutoScalePolicyApiClient is the client API for AutoScalePolicyApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type AutoScalePolicyApiClient interface {
 	// Create an Auto Scale Policy
 	CreateAutoScalePolicy(ctx context.Context, in *AutoScalePolicy, opts ...grpc.CallOption) (*Result, error)
@@ -120,7 +234,7 @@ func NewAutoScalePolicyApiClient(cc *grpc.ClientConn) AutoScalePolicyApiClient {
 
 func (c *autoScalePolicyApiClient) CreateAutoScalePolicy(ctx context.Context, in *AutoScalePolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AutoScalePolicyApi/CreateAutoScalePolicy", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AutoScalePolicyApi/CreateAutoScalePolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +243,7 @@ func (c *autoScalePolicyApiClient) CreateAutoScalePolicy(ctx context.Context, in
 
 func (c *autoScalePolicyApiClient) DeleteAutoScalePolicy(ctx context.Context, in *AutoScalePolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AutoScalePolicyApi/DeleteAutoScalePolicy", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AutoScalePolicyApi/DeleteAutoScalePolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +252,7 @@ func (c *autoScalePolicyApiClient) DeleteAutoScalePolicy(ctx context.Context, in
 
 func (c *autoScalePolicyApiClient) UpdateAutoScalePolicy(ctx context.Context, in *AutoScalePolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AutoScalePolicyApi/UpdateAutoScalePolicy", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AutoScalePolicyApi/UpdateAutoScalePolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +260,7 @@ func (c *autoScalePolicyApiClient) UpdateAutoScalePolicy(ctx context.Context, in
 }
 
 func (c *autoScalePolicyApiClient) ShowAutoScalePolicy(ctx context.Context, in *AutoScalePolicy, opts ...grpc.CallOption) (AutoScalePolicyApi_ShowAutoScalePolicyClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_AutoScalePolicyApi_serviceDesc.Streams[0], c.cc, "/edgeproto.AutoScalePolicyApi/ShowAutoScalePolicy", opts...)
+	stream, err := c.cc.NewStream(ctx, &_AutoScalePolicyApi_serviceDesc.Streams[0], "/edgeproto.AutoScalePolicyApi/ShowAutoScalePolicy", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -177,8 +291,7 @@ func (x *autoScalePolicyApiShowAutoScalePolicyClient) Recv() (*AutoScalePolicy, 
 	return m, nil
 }
 
-// Server API for AutoScalePolicyApi service
-
+// AutoScalePolicyApiServer is the server API for AutoScalePolicyApi service.
 type AutoScalePolicyApiServer interface {
 	// Create an Auto Scale Policy
 	CreateAutoScalePolicy(context.Context, *AutoScalePolicy) (*Result, error)
@@ -188,6 +301,23 @@ type AutoScalePolicyApiServer interface {
 	UpdateAutoScalePolicy(context.Context, *AutoScalePolicy) (*Result, error)
 	// Show Auto Scale Policies. Any fields specified will be used to filter results.
 	ShowAutoScalePolicy(*AutoScalePolicy, AutoScalePolicyApi_ShowAutoScalePolicyServer) error
+}
+
+// UnimplementedAutoScalePolicyApiServer can be embedded to have forward compatible implementations.
+type UnimplementedAutoScalePolicyApiServer struct {
+}
+
+func (*UnimplementedAutoScalePolicyApiServer) CreateAutoScalePolicy(ctx context.Context, req *AutoScalePolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAutoScalePolicy not implemented")
+}
+func (*UnimplementedAutoScalePolicyApiServer) DeleteAutoScalePolicy(ctx context.Context, req *AutoScalePolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAutoScalePolicy not implemented")
+}
+func (*UnimplementedAutoScalePolicyApiServer) UpdateAutoScalePolicy(ctx context.Context, req *AutoScalePolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAutoScalePolicy not implemented")
+}
+func (*UnimplementedAutoScalePolicyApiServer) ShowAutoScalePolicy(req *AutoScalePolicy, srv AutoScalePolicyApi_ShowAutoScalePolicyServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowAutoScalePolicy not implemented")
 }
 
 func RegisterAutoScalePolicyApiServer(s *grpc.Server, srv AutoScalePolicyApiServer) {
@@ -299,7 +429,7 @@ var _AutoScalePolicyApi_serviceDesc = grpc.ServiceDesc{
 func (m *PolicyKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -307,29 +437,36 @@ func (m *PolicyKey) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *PolicyKey) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PolicyKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Organization) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(len(m.Organization)))
-		i += copy(dAtA[i:], m.Organization)
-	}
 	if len(m.Name) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
 		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.Organization) > 0 {
+		i -= len(m.Organization)
+		copy(dAtA[i:], m.Organization)
+		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(len(m.Organization)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *AutoScalePolicy) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -337,69 +474,72 @@ func (m *AutoScalePolicy) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AutoScalePolicy) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AutoScalePolicy) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintAutoscalepolicy(dAtA, i, uint64(m.Key.Size()))
-	n1, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	if m.MinNodes != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(m.MinNodes))
-	}
-	if m.MaxNodes != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(m.MaxNodes))
-	}
-	if m.ScaleUpCpuThresh != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(m.ScaleUpCpuThresh))
+	if m.TriggerTimeSec != 0 {
+		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(m.TriggerTimeSec))
+		i--
+		dAtA[i] = 0x38
 	}
 	if m.ScaleDownCpuThresh != 0 {
-		dAtA[i] = 0x30
-		i++
 		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(m.ScaleDownCpuThresh))
+		i--
+		dAtA[i] = 0x30
 	}
-	if m.TriggerTimeSec != 0 {
-		dAtA[i] = 0x38
-		i++
-		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(m.TriggerTimeSec))
+	if m.ScaleUpCpuThresh != 0 {
+		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(m.ScaleUpCpuThresh))
+		i--
+		dAtA[i] = 0x28
 	}
-	return i, nil
+	if m.MaxNodes != 0 {
+		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(m.MaxNodes))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.MinNodes != 0 {
+		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(m.MinNodes))
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAutoscalepolicy(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintAutoscalepolicy(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintAutoscalepolicy(dAtA []byte, offset int, v uint64) int {
+	offset -= sovAutoscalepolicy(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *PolicyKey) Matches(o *PolicyKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -1222,6 +1362,9 @@ func (m *AutoScalePolicy) ValidateEnums() error {
 }
 
 func (m *PolicyKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Organization)
@@ -1236,6 +1379,9 @@ func (m *PolicyKey) Size() (n int) {
 }
 
 func (m *AutoScalePolicy) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -1265,14 +1411,7 @@ func (m *AutoScalePolicy) Size() (n int) {
 }
 
 func sovAutoscalepolicy(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozAutoscalepolicy(x uint64) (n int) {
 	return sovAutoscalepolicy(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -1292,7 +1431,7 @@ func (m *PolicyKey) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1320,7 +1459,7 @@ func (m *PolicyKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1330,6 +1469,9 @@ func (m *PolicyKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoscalepolicy
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoscalepolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1349,7 +1491,7 @@ func (m *PolicyKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1359,6 +1501,9 @@ func (m *PolicyKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoscalepolicy
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoscalepolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1371,6 +1516,9 @@ func (m *PolicyKey) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthAutoscalepolicy
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthAutoscalepolicy
 			}
 			if (iNdEx + skippy) > l {
@@ -1400,7 +1548,7 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1428,7 +1576,7 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1438,6 +1586,9 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoscalepolicy
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoscalepolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1457,7 +1608,7 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1466,6 +1617,9 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoscalepolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoscalepolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1487,7 +1641,7 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MinNodes |= (uint32(b) & 0x7F) << shift
+				m.MinNodes |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1506,7 +1660,7 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MaxNodes |= (uint32(b) & 0x7F) << shift
+				m.MaxNodes |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1525,7 +1679,7 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ScaleUpCpuThresh |= (uint32(b) & 0x7F) << shift
+				m.ScaleUpCpuThresh |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1544,7 +1698,7 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ScaleDownCpuThresh |= (uint32(b) & 0x7F) << shift
+				m.ScaleDownCpuThresh |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1563,7 +1717,7 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TriggerTimeSec |= (uint32(b) & 0x7F) << shift
+				m.TriggerTimeSec |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1575,6 +1729,9 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthAutoscalepolicy
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthAutoscalepolicy
 			}
 			if (iNdEx + skippy) > l {
@@ -1592,6 +1749,7 @@ func (m *AutoScalePolicy) Unmarshal(dAtA []byte) error {
 func skipAutoscalepolicy(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -1623,10 +1781,8 @@ func skipAutoscalepolicy(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -1643,101 +1799,34 @@ func skipAutoscalepolicy(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthAutoscalepolicy
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowAutoscalepolicy
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipAutoscalepolicy(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupAutoscalepolicy
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthAutoscalepolicy
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthAutoscalepolicy = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowAutoscalepolicy   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthAutoscalepolicy        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowAutoscalepolicy          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupAutoscalepolicy = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("autoscalepolicy.proto", fileDescriptorAutoscalepolicy) }
-
-var fileDescriptorAutoscalepolicy = []byte{
-	// 668 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x93, 0xcf, 0x6b, 0x13, 0x41,
-	0x14, 0xc7, 0x3b, 0x6d, 0x1a, 0xcd, 0xd8, 0x6a, 0xba, 0x6d, 0x74, 0x88, 0x25, 0x2d, 0x39, 0x95,
-	0x92, 0x66, 0x6d, 0x8b, 0x20, 0x85, 0x1e, 0x9a, 0xf6, 0x56, 0x5a, 0x65, 0xfb, 0xc3, 0x83, 0x87,
-	0x30, 0xdd, 0x7d, 0x4e, 0x86, 0xee, 0xee, 0x2c, 0xbb, 0xb3, 0xa6, 0xf1, 0x24, 0xe2, 0xc1, 0xa3,
-	0xe0, 0x45, 0x3c, 0x09, 0x5e, 0xc4, 0x93, 0x78, 0xec, 0x5f, 0xd0, 0x8b, 0x20, 0x78, 0x14, 0x44,
-	0x83, 0x07, 0xe9, 0x49, 0x68, 0x1a, 0x04, 0x2f, 0xb2, 0xb3, 0x4b, 0x8c, 0xa1, 0x16, 0xd4, 0x8b,
-	0x97, 0xe5, 0xbd, 0xf7, 0xfd, 0xbe, 0xd9, 0xcf, 0xbc, 0xb7, 0x8b, 0x73, 0x34, 0x94, 0x22, 0x30,
-	0xa9, 0x0d, 0x9e, 0xb0, 0xb9, 0xd9, 0x28, 0x7b, 0xbe, 0x90, 0x42, 0xcb, 0x80, 0xc5, 0x40, 0x85,
-	0xf9, 0x71, 0x26, 0x04, 0xb3, 0x41, 0xa7, 0x1e, 0xd7, 0xa9, 0xeb, 0x0a, 0x49, 0x25, 0x17, 0x6e,
-	0x10, 0x1b, 0xf3, 0x43, 0x3e, 0x04, 0xa1, 0x2d, 0x93, 0xec, 0x1a, 0xe3, 0xb2, 0x16, 0xee, 0x94,
-	0x4d, 0xe1, 0xe8, 0x8e, 0xd8, 0xe1, 0x76, 0x74, 0xcc, 0x9e, 0x1e, 0x3d, 0x67, 0x4c, 0x5b, 0x84,
-	0x96, 0xae, 0x7c, 0x0c, 0xdc, 0x4e, 0x90, 0x74, 0x8e, 0x31, 0xc1, 0x84, 0x0a, 0xf5, 0x28, 0x8a,
-	0xab, 0x45, 0x1b, 0x67, 0x6e, 0x28, 0xac, 0x55, 0x68, 0x68, 0xb3, 0x78, 0x48, 0xf8, 0x8c, 0xba,
-	0xfc, 0xae, 0x22, 0x20, 0x68, 0x12, 0x4d, 0x65, 0x2a, 0xc3, 0xfb, 0x6d, 0x92, 0x89, 0xd9, 0x85,
-	0xcf, 0x8c, 0x5f, 0x2c, 0x5a, 0x01, 0xa7, 0x5c, 0xea, 0x00, 0xe9, 0x57, 0x56, 0xbc, 0xdf, 0x26,
-	0xe9, 0xd8, 0x6a, 0xa8, 0xfa, 0xc2, 0xd0, 0x97, 0x23, 0x82, 0xbe, 0x1d, 0x11, 0xf4, 0xea, 0xd9,
-	0x04, 0x2a, 0x7e, 0xef, 0xc7, 0x17, 0x96, 0x42, 0x29, 0x36, 0xa2, 0x71, 0xc4, 0xef, 0xd5, 0x2e,
-	0xe2, 0xf4, 0x6d, 0x0e, 0xb6, 0x15, 0x10, 0x34, 0x39, 0x30, 0x95, 0x31, 0x92, 0x4c, 0x2b, 0xe1,
-	0x81, 0x5d, 0x68, 0xa8, 0x83, 0xcf, 0xcd, 0x8d, 0x95, 0x3b, 0xe3, 0x2a, 0x77, 0x78, 0x2b, 0xa9,
-	0x83, 0x0f, 0x13, 0x7d, 0x46, 0x64, 0xd3, 0x2e, 0xe3, 0x8c, 0xc3, 0xdd, 0xaa, 0x2b, 0x2c, 0x08,
-	0xc8, 0xc0, 0x24, 0x9a, 0x1a, 0x36, 0xce, 0x3a, 0xdc, 0x5d, 0x8f, 0x72, 0x25, 0xd2, 0xbd, 0x44,
-	0x4c, 0x25, 0x22, 0xdd, 0x8b, 0xc5, 0x19, 0x3c, 0xaa, 0xb6, 0x53, 0x0d, 0xbd, 0xaa, 0xe9, 0x85,
-	0x55, 0x59, 0xf3, 0x21, 0xa8, 0x91, 0x41, 0x65, 0xcb, 0x2a, 0x69, 0xcb, 0x5b, 0xf6, 0xc2, 0x4d,
-	0x55, 0xd7, 0x66, 0x71, 0x2e, 0xb6, 0x5b, 0xa2, 0xee, 0x76, 0x37, 0xa4, 0x55, 0x83, 0xa6, 0xc4,
-	0x15, 0x51, 0x77, 0x7f, 0xb6, 0x94, 0x71, 0x56, 0xfa, 0x9c, 0x31, 0xf0, 0xab, 0x92, 0x3b, 0x50,
-	0x0d, 0xc0, 0x24, 0x67, 0x22, 0x77, 0x25, 0xf5, 0xb0, 0x45, 0x90, 0x71, 0x3e, 0x51, 0x37, 0xb9,
-	0x03, 0x1b, 0x60, 0x2e, 0x6c, 0x47, 0x33, 0xfb, 0x7a, 0x44, 0xd0, 0xbd, 0x16, 0x41, 0x8f, 0x5a,
-	0x04, 0x3d, 0x69, 0x11, 0xf4, 0xf4, 0x98, 0x4c, 0x47, 0x13, 0x5d, 0x5c, 0x85, 0x46, 0x79, 0x9d,
-	0x3a, 0x50, 0x32, 0xed, 0x30, 0x90, 0xe0, 0xcf, 0x08, 0x9f, 0xa9, 0xe2, 0xf5, 0xae, 0xbd, 0xbc,
-	0x6e, 0x93, 0xec, 0x2e, 0x34, 0x16, 0xbb, 0x6b, 0x73, 0xef, 0x07, 0xb1, 0xd6, 0x33, 0xfd, 0x25,
-	0x8f, 0x6b, 0x6f, 0x10, 0xce, 0x2d, 0xfb, 0x40, 0x25, 0xf4, 0xae, 0x26, 0xdf, 0x35, 0xf5, 0x1e,
-	0x2d, 0x3f, 0xd2, 0xa5, 0x19, 0xea, 0x0b, 0x2d, 0x3e, 0x40, 0x87, 0x2d, 0x72, 0xd5, 0x80, 0x40,
-	0x84, 0xbe, 0x09, 0x2b, 0x70, 0x07, 0x6c, 0xe1, 0x81, 0x1f, 0x37, 0x94, 0x96, 0xcc, 0x08, 0x62,
-	0x8d, 0xba, 0x94, 0x41, 0xa9, 0x97, 0xb7, 0x79, 0x4c, 0x46, 0xd6, 0x92, 0x75, 0x95, 0xd6, 0x92,
-	0xd5, 0xbc, 0x6c, 0x93, 0x6c, 0xaf, 0xf1, 0xfe, 0xbb, 0xcf, 0x8f, 0xfb, 0xc7, 0x8b, 0x97, 0x74,
-	0x53, 0x11, 0xeb, 0x3d, 0x3f, 0xd7, 0x02, 0x9a, 0xd6, 0x9e, 0x23, 0x9c, 0x5b, 0x01, 0x1b, 0xfe,
-	0xf9, 0x3e, 0xb7, 0xfe, 0xfa, 0x3a, 0x1d, 0x4a, 0x4b, 0x71, 0xfc, 0x8e, 0x72, 0xcb, 0xb3, 0xe8,
-	0xff, 0x40, 0x19, 0x2a, 0x8e, 0x93, 0x28, 0x5f, 0x20, 0x3c, 0xba, 0x51, 0x13, 0xf5, 0x3f, 0x61,
-	0x3c, 0x45, 0x2b, 0xde, 0x3c, 0x6c, 0x91, 0xf9, 0xd3, 0x61, 0xb7, 0x39, 0xd4, 0x4f, 0x46, 0xcd,
-	0x17, 0x73, 0x7a, 0x50, 0x13, 0xf5, 0x13, 0x40, 0xaf, 0xa0, 0x4a, 0xf6, 0xe0, 0x53, 0xa1, 0xef,
-	0xa0, 0x59, 0x40, 0x6f, 0x9b, 0x05, 0xf4, 0xb1, 0x59, 0x40, 0x3b, 0x69, 0xc5, 0x30, 0xff, 0x23,
-	0x00, 0x00, 0xff, 0xff, 0x67, 0x1b, 0x09, 0x36, 0x82, 0x05, 0x00, 0x00,
-}

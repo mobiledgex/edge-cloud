@@ -58,7 +58,7 @@ func (g *GenNotify) Generate(file *generator.FileDescriptor) {
 	}
 	dogen := false
 	for _, desc := range file.Messages() {
-		if desc.File() != file.FileDescriptorProto {
+		if desc.File() != file {
 			continue
 		}
 		if GetNotifyCache(desc.DescriptorProto) || GetNotifyMessage(desc.DescriptorProto) {
@@ -73,7 +73,7 @@ func (g *GenNotify) Generate(file *generator.FileDescriptor) {
 	g.P(gensupport.AutoGenComment)
 
 	for _, desc := range file.Messages() {
-		if desc.File() != file.FileDescriptorProto {
+		if desc.File() != file {
 			continue
 		}
 		g.generateMessage(file, desc)
